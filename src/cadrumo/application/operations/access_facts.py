@@ -96,6 +96,7 @@ _LOCAL_READS: Final = (
     "ledger.view",
     # A capture reads the tax agency through a browser and stores what it saw.
     # The live operations listed here read what earlier captures stored.
+    "live.borrador.100.compare",
     "live.borrador.100.query",
     "live.borrador.100.read",
     "live.expedientes.latest",

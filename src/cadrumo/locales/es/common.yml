@@ -4132,8 +4132,7 @@ desktop:
       partial: Los grupos y los totales esperan a que se lea todo.
     withholding:
       absence:
-        not_listed: Las indicaciones anteriores aún no se pueden listar. Aquí se muestran
-          las que hagas o retires en esta ventana.
+        history: Indicaciones retiradas
         title: Sin retenciones
         what: Indica que ningún pagador retuvo en una clase de renta este año.
       action:
@@ -4480,7 +4479,7 @@ desktop:
     dismiss: Descartar el aviso
     edit_field: Editar {field}
     ejercicio: Ejercicio
-    ejercicio_help: "El año que declara esta respuesta. Los demás conservan la suya."
+    ejercicio_help: El año que declara esta respuesta. Los demás conservan la suya.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: Ningún dato coincide con estos filtros. Prueba otra búsqueda o sección.
     entries_count: 'Registros: {count}'
@@ -8669,6 +8668,18 @@ tui:
         calculation_review_xlsx: Revisión del cálculo guardado (XLSX)
         fichero_boe: Fichero BOE para presentar en la AEAT
         label: Documento a exportar
+      instalment_election:
+        conditions: Pagar en dos plazos no tiene intereses ni recargos. La declaración
+          debe presentarse dentro de plazo, y una autoliquidación rectificativa no
+          se puede pagar así. El 60 % se paga al presentar; si no se paga a tiempo,
+          se exige el importe total. Si también domicilias el primer plazo, el segundo
+          se carga en la misma cuenta.
+        label: 'Resultado a ingresar: de una vez o en dos plazos'
+        single: Pagarlo todo de una vez
+        two_instalments_second_debited: 'Dos plazos: el 60 % al presentar y el 40
+          % restante domiciliado'
+        two_instalments_second_paid: 'Dos plazos: el 60 % al presentar y el 40 % restante
+          lo pagas tú con el modelo 102'
       payment_election:
         cuenta_corriente: Cuenta corriente tributaria
         domiciliacion: Domiciliación bancaria
@@ -9635,8 +9646,23 @@ workspace:
       save_next: Dejar y pasar a la siguiente
       unreadable: No se ha podido leer este valor.
     export:
+      account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma los valores supuestos antes de generar el fichero o
         registrar la presentación (por confirmar: {count}).'
+      election:
+        amendment: Una autoliquidación rectificativa no se puede pagar en dos plazos.
+        filing_window_unknown: No se conoce el plazo de presentación de esta declaración,
+          así que no se puede ofrecer el pago en dos plazos.
+        no_open_account: Ninguna de tus cuentas bancarias propias está abierta. Añade
+          una a tus cuentas propias para recibir la devolución.
+        no_spanish_account: Ninguna de tus cuentas propias abiertas es española, y
+          la domiciliación lo necesita. Añade una a tus cuentas propias.
+        nothing_to_pay: El resultado no es una cantidad a ingresar, así que esto no
+          se aplica.
+        nothing_to_refund: El resultado no es una devolución, así que esto no se aplica.
+        past_filing_window: El plazo de presentación ha terminado, y pagar en dos
+          plazos exige presentar la declaración dentro de él.
+        result_unknown: 'Calcula antes la declaración: su resultado lo decide.'
       file_format:
         fixed_width: Fichero de la AEAT con el diseño de registro BOE de ancho fijo
         xml_dictionary: Fichero XML de la AEAT

@@ -171,6 +171,7 @@ from .operation_composition_ledger import (
     compose_workflow_run_read_operation,
 )
 from .operation_composition_live import (
+    compose_live_borrador_100_compare_operation,
     compose_live_borrador_100_operation,
     compose_live_expedientes_capture_operation,
     compose_live_expedientes_read_operation,
@@ -321,6 +322,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.ledger.track_operation": compose_ledger_track_operation,
     "application.ledger.update_operation": compose_ledger_update_operation,
     "application.ledger.view_operation": compose_ledger_view_operation,
+    "application.live.borrador_100_comparison_operation": compose_live_borrador_100_compare_operation,
     "application.live.borrador_100_operation": compose_live_borrador_100_operation,
     "application.live.expedientes_capture_operation": compose_live_expedientes_capture_operation,
     "application.live.expedientes_read_operation": compose_live_expedientes_read_operation,

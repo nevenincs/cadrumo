@@ -425,6 +425,7 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
     "ledger.evidence.query",
     "ledger.evidence.review.summary",
     "ledger.history.typed",
+    "live.borrador.100.compare",
     "live.borrador.100.query",
     "live.sede.view",
     "live.sync.status",

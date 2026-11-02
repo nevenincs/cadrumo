@@ -26,6 +26,7 @@ from typing import cast
 
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.core.toml import TomlDecodeError, parse_toml
+from cadrumo.domain.calculations.registry.modelo_localization import form_heading_edition_locale_key
 from cadrumo.domain.user_profile.labels import profile_schema_locale_keys
 from dev.registry.compiler.loader import load_modelo_locale_key_projection
 from dev.registry.compiler.profile_schema import capture_profile_schema
@@ -223,25 +224,42 @@ def scan_form_layout_heading_keys() -> frozenset[str]:
 
     root = bundled_path("registry", "aeat").resolve()
     keys = {f"{SHARED_COLUMN_HEADING_KEY_PREFIX}.{member}" for member in SHARED_COLUMN_KEYS}
-
-    def _walk(node: object) -> None:
-        if isinstance(node, dict):
-            for key, value in node.items():
-                if key == "heading_key" and isinstance(value, str) and is_form_layout_heading_candidate(value):
-                    keys.add(value)
-                _walk(value)
-        elif isinstance(node, list):
-            for value in node:
-                _walk(value)
-
     for path in sorted(root.glob(_FORM_LAYOUT_FRAGMENT_GLOB)):
         try:
-            _walk(parse_toml(path.read_text(encoding="utf-8")))
+            document = parse_toml(path.read_text(encoding="utf-8"))
         except (OSError, UnicodeError, TomlDecodeError) as exc:
             raise LocaleRegistryEnumerationError(
                 f"cannot enumerate form layout heading keys from {path}: {type(exc).__name__}: {exc}"
             ) from exc
+        declared: set[str] = set()
+        _collect_heading_keys(document, declared)
+        keys |= declared
+        keys |= _edition_heading_keys(declared, modelo_id=path.parts[-5], document=document)
     return frozenset(keys)
+
+
+def _collect_heading_keys(node: object, keys: set[str]) -> None:
+    if isinstance(node, dict):
+        for key, value in node.items():
+            if key == "heading_key" and isinstance(value, str) and is_form_layout_heading_candidate(value):
+                keys.add(value)
+            _collect_heading_keys(value, keys)
+    elif isinstance(node, list):
+        for value in node:
+            _collect_heading_keys(value, keys)
+
+
+def _edition_heading_keys(declared: set[str], *, modelo_id: str, document: object) -> set[str]:
+    """The edition-scoped key each revision a fragment declares gives the heading keys it names."""
+    revisions = document.get("revisions") if isinstance(document, dict) else None
+    if not isinstance(revisions, dict):
+        return set()
+    editions = (
+        form_heading_edition_locale_key(modelo_id, str(revision_id), key)
+        for revision_id in revisions
+        for key in declared
+    )
+    return {edition for edition in editions if edition is not None}
 
 
 def require_category_profile_fact(document: object, path: Path) -> Mapping[str, object]:

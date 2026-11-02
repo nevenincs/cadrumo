@@ -106,10 +106,13 @@ from .calculation_notes import read_recorded_notes
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
 from .export_accounts import (
     build_export_producer_snapshot,
+    export_charge_account,
     export_completeness_unverified,
+    export_refund_account,
     m303_nota_three_requires_refund_account,
     refund_account_country,
     require_domiciliation_before_cutoff,
+    require_instalment_election_admissible,
     require_m360_solicitud_for_export,
     resolve_export_accounts,
     selected_account_reference,
@@ -139,6 +142,7 @@ from .export_preparation import (
     requireprior_domiciliation_marker_layout,
     resolve_work_unit_period,
 )
+from .export_settlement import declared_result_amount, settlement_dictionary_values
 from .filing_revision_persistence import require_filing_instance_evidence_for_work_unit
 from .iva_wallet_gate import require_persisted_iva_compensation_decision_matches_revision
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
@@ -200,6 +204,15 @@ def _persist_exported_draft(
         exported_at=exported_at,
         operation=operation,
     )
+    require_instalment_election_admissible(
+        command,
+        work_unit=work_unit,
+        revision=revision,
+        resolved_result_disposition=resolved_result_disposition,
+        accounts=accounts,
+        exported_at=exported_at,
+        operation=operation,
+    )
     producer_snapshot = build_export_producer_snapshot(
         command=command,
         work_unit=work_unit,
@@ -228,6 +241,18 @@ def _persist_exported_draft(
         export_subview,
         export_layout,
     )
+    if dictionary_values is not None:
+        dictionary_values.update(
+            settlement_dictionary_values(
+                disposition=resolved_result_disposition,
+                result_amount=declared_result_amount(
+                    str(work_unit.modelo), {value.casilla_id: value.value for value in approved.values}
+                ),
+                instalment=command.instalment_election,
+                charge_account=export_charge_account(accounts),
+                refund_account=export_refund_account(accounts),
+            )
+        )
     receipt: DeclaracionExportResult | FilingExportConsumedResult
     if payload_consumer is not None:
         receipt = _consume_export_payload(
@@ -530,6 +555,8 @@ def _emit_export_event(
         ResultDisposition.CUENTA_CORRIENTE_INGRESO,
     }:
         event_payload["payment_election"] = command.payment_election.value
+        if command.instalment_election.splits:
+            event_payload["instalment_election"] = command.instalment_election.value
     if resolved_result_disposition in {
         ResultDisposition.COMPENSACION,
         ResultDisposition.DEVOLUCION,

@@ -147,6 +147,8 @@ def _counts(total: int) -> ModeloFormCounts:
         default_to_confirm=total,
         not_applicable=0,
         blocked=0,
+        needs_you=total,
+        could_not_calculate=0,
     )
 
 
@@ -166,6 +168,7 @@ def _assumed_boxes(*section_sizes: int) -> ModeloWorkForm:
                 official_heading=None,
                 blocks=tuple(ModeloFormFieldBlock(id=f"f{field.box}", field=field) for field in fields),
                 counts=_counts(size),
+                applies=True,
             )
         )
     page = ModeloFormPage(

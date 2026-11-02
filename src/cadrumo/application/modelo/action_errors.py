@@ -464,6 +464,16 @@ class ModeloPaymentElectionCapabilityRefusedError(ModeloError):
     """
 
 
+class ModeloInstalmentElectionRefusedError(ModeloError):
+    """Raised when a two-instalment payment is elected where the law does not admit it.
+
+    The split exists only for a modelo that declares it, only for a result to
+    pay, never for a corrective declaration, and only when the declaration is
+    filed within its period; a second instalment direct-debited needs a charge
+    account. The context's ``reason`` names which condition failed.
+    """
+
+
 class ModeloResultDispositionUncodifiedError(ModeloError):
     """Raised when a layout declares "Tipo de declaración" but no code set is codified.
 
@@ -591,6 +601,7 @@ __all__ = [
     "ModeloEditContractIncompatibleError",
     "ModeloEditIntentUnsupportedError",
     "ModeloEditRefusedError",
+    "ModeloInstalmentElectionRefusedError",
     "ModeloLocalObservationError",
     "ModeloPaymentElectionCapabilityRefusedError",
     "ModeloPaymentElectionIncompatibleError",

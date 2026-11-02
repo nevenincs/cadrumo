@@ -159,6 +159,8 @@ def modelo_project(
                 source_kind=row.source_kind,
                 reason=row.reason,
                 note=row.note,
+                source_words=row.source_words,
+                words=row.words,
             )
             for row in service_result.unresolved_bindings
         ],
@@ -166,12 +168,14 @@ def modelo_project(
             UnresolvedCasillaPayload(
                 casilla_id=row.casilla_id,
                 reason=row.reason,
+                reason_words=row.reason_words,
                 formula_id=row.formula_id,
                 legal_refs=tuple(row.legal_refs),
                 source_refs=tuple(row.source_refs),
             )
             for row in service_result.unresolved_casillas
         ],
+        words_language=service_result.words_language,
     )
     extrapolation_note = (
         f" (extrapolated from {service_result.quarters_filed}Q)" if service_result.is_extrapolated else ""
@@ -193,11 +197,11 @@ def modelo_project(
         f"m100_cuota_liquida_autonomica\t{service_result.m100_projection.cuota_liquida_autonomica}",
         f"m100_cuota_resultante\t{service_result.m100_projection.cuota_resultante}",
         *(
-            f"unresolved\t{row.casilla_id or '-'}\t{row.binding_id}\t{row.note or row.reason}"
+            f"unresolved\t{row.casilla_id or '-'}\t{row.binding_id}\t{row.words}"
             for row in service_result.unresolved_bindings
         ),
         *(
-            f"unresolved\t{row.casilla_id}\t{row.formula_id}\t{row.reason}"
+            f"unresolved\t{row.casilla_id}\t{row.formula_id}\t{row.reason_words}"
             for row in service_result.unresolved_casillas
         ),
     ]

@@ -50,6 +50,19 @@ def compose_live_borrador_100_operation(inputs: OperationCompositionInputs) -> O
     return built(definitions, build_borrador_100_operation_registrations(definitions))
 
 
+def compose_live_borrador_100_compare_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose live borrador 100 compare operation."""
+    from ..application.live.borrador_100_comparison_operation import (
+        build_borrador_100_compare_definition,
+        build_borrador_100_compare_registration,
+    )
+    from .live_borrador_operation_composition import build_borrador_100_comparison_ports
+
+    del inputs
+    definition = build_borrador_100_compare_definition(build_borrador_100_comparison_ports)
+    return built((definition,), (build_borrador_100_compare_registration(definition),))
+
+
 def compose_live_filed_history_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose live filed history operation."""
     from ..adapters.outbound.aeat.browser.factory import BrowserRuntimeResourceScope

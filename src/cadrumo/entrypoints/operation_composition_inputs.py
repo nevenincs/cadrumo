@@ -117,6 +117,7 @@ def build_modelo_invoice_withholding_capture_ports(*, profile_id: str) -> Modelo
 
 def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthorityOperation) -> ModeloWorkbenchReadPorts:
     """Bind the repositories one declaration's workbench reads from to the worker's profile."""
+    from ..adapters.persistence.profile.own_accounts import OwnAccountRepository
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.modelo.workbench_read import ModeloWorkbenchReadPorts
     from .adapter_composition_ports import build_borrador_100_snapshot_repository
@@ -139,6 +140,7 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
         holiday_territory=partial(profile_holiday_territory, bucket_id, operation),
         bucket_events=ports.bucket_event_repository,
         filings=ports.filing_repository,
+        own_accounts=OwnAccountRepository(objects=objects),
     )
 
 

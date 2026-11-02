@@ -990,6 +990,60 @@ application:
           a mezőket.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Egyezik
+          differ: Eltér
+          not_comparable: Nem hasonlítható össze
+          only_in_borrador: Csak az AEAT-tervezetben
+          only_in_calculation: Csak a számításodban
+        evidence:
+          borrador: Az AEAT nyomtatta a tervezetébe, te pedig ide importáltad. Ez
+            megfigyelés, nem hitelesített bevallás.
+          calculation: Ezen a számítógépen számoltuk ki a nyilvántartásaid alapján.
+            Helyi eredmény, nem az AEAT-nál benyújtott bevallás.
+        reason:
+          borrador_does_not_read_box: A tervezet importálása nem olvassa be ezt a
+            rovatot, így a hiányzó tervezetérték semmit sem mond róla.
+          borrador_printed_no_value: A számításodban van érték, de az AEAT-tervezet
+            ennél a rovatnál nem mutat semmit.
+          borrador_value_ambiguous: Az AEAT-tervezetben több érték is szerepel ennél
+            a rovatnál, így nem hasonlítható össze.
+          borrador_value_not_kept: Az AEAT-tervezet mutatja ezt a rovatot, de az importálás
+            nem őrzi meg az értékét, így nem hasonlítható össze.
+          calculation_blocked: A számításod nem tudta meghatározni ezt a rovatot,
+            így nem hasonlítható össze.
+          calculation_has_no_value: Az AEAT-tervezet értéket mutat, de a számításodban
+            ennél a rovatnál nincs érték.
+          calculation_not_applicable: A számításod szerint ez a rovat rád nem vonatkozik,
+            az AEAT-tervezet mégis értéket mutat.
+          not_applicable_zero: Az AEAT-tervezet nullát mutat, a számításod pedig azt,
+            hogy ez a rovat rád nem vonatkozik.
+          same_value: Az AEAT-tervezetben és a számításodban ugyanaz az érték szerepel.
+          taken_from_borrador: A számításod ezt az értéket az AEAT-tervezetből vette
+            át, így az egyezés nem erősíti meg függetlenül.
+          value_kinds_differ: Az egyik oldalon összeg, a másikon szöveg szerepel,
+            így nem hasonlíthatók össze.
+          values_differ: Az AEAT-tervezetben és a számításodban eltérő érték szerepel.
+        stale:
+          calculation_outdated: A szabályok a számításod mentése után megváltoztak,
+            ezért újra kell számolni.
+          calculation_used_other_capture: A számításod egy másik AEAT-tervezetből
+            készült, mint amelyet itt összehasonlítunk.
+          newer_capture_refused: Egy később importált tervezeted tárolva van, de nem
+            olvasható, ezért ez az összehasonlítás egy korábbit használ.
+        status:
+          capture_refused: Erre az évre vannak tárolt AEAT-tervezetek, de a jelenlegi
+            szabályok szerint egyik sem olvasható; importáld újra a tervezetet.
+          compared: Az importált AEAT-tervezetet és a mentett számításodat rovatonként
+            összehasonlítottuk.
+          no_calculation: Ennek a bevallásnak még nincs mentett számítása, így a tervezet
+            nem hasonlítható össze; előbb számold ki.
+          no_capture: Erre az évre nem importáltál AEAT-tervezetet, így nincs mit
+            összehasonlítani.
+          stale: Mindkettőt beolvastuk, de már nem felelnek meg egymásnak; számold
+            újra, vagy importáld újra a tervezetet, mielőtt erre az összehasonlításra
+            hagyatkozol.
       errors:
         binding_keys_not_admitted: 'Ez a tárolt borrador olyan kulcsok alatt tart
           értékeket, amelyeket a nyomtatványdefiníciók nem fogadnak el, ezért nem
@@ -2445,11 +2499,32 @@ application:
           profiladata nem támogatott típusú: %{value_type}.'
         enum_boolean_invalid: A(z) %{binding_id} értékforrás profiladata logikai értékre
           oldódott fel; a logikai adatok nem érvényes kulcsok.
+    projection_words:
+      binding_unresolved: Ehhez az értékhez a nyilvántartásaidból nem sikerült értéket
+        kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
+        igazolást, majd vetíts újra.
+      casilla_reason:
+        m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
+          adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
+        m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény
+          szerinti kulcs kell az országra és a jövedelem fajtájára, de ez nem elérhető,
+          ezért nincs értéke.
+        other: Ezt a rovatot nem sikerült kiszámolni, ezért nincs értéke. Soha nem
+          jelenik meg nullaként.
+        unresolved_operand: Ez a rovat olyan értéket ad össze vagy olvas, amelynek
+          még nincs értéke, ezért neki sincs. Soha nem jelenik meg nullaként.
     quickfile:
       stage_incomplete: A `quickfile` %{stage} szakasza %{status} állapottal fejeződött
         be.
       stage_refused: 'A `quickfile` a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
+    taxation_comparison_words:
+      below_materiality: A két eredmény {difference} összeggel tér el, ami kevesebb,
+        mint {threshold}, ezért bármelyik adózási mód megfelelő.
+      conjunta_lower_result: 'A közös adózás kedvezőbb: az eredményed közösen {conjunta},
+        egyénileg {individual}, a különbség {difference}.'
+      individual_lower_result: 'Az egyéni adózás kedvezőbb: az eredményed egyénileg
+        {individual}, közösen {conjunta}, a különbség {difference}.'
     value_date:
       month_01: jan.
       month_02: febr.
@@ -2871,6 +2946,8 @@ application:
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
       profile_authentication_refused: A profiljelszó hitelesítése sikertelen.
+      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni;
+        add meg, melyik adóévre vonatkozik ez a válasz.
       profile_password_contains_surrogate: A profiljelszó olyan értéket tartalmaz,
         amely nem kódolható szigorú UTF-8 formában.
       profile_password_too_few_scalars: A profiljelszónak legalább {minimum_scalars}
@@ -2881,7 +2958,6 @@ application:
         {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
       profile_proof_cancelled: A profiljelszó ellenőrzése megszakadt, mielőtt befejeződött
         volna.
-      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni; add meg, melyik adóévre vonatkozik ez a válasz.
       profile_text_too_long: A(z) %{field} mező legfeljebb %{limit} karaktert enged
         meg; rövidítsd le.
       recovery_already_enrolled: Ehhez a profilhoz már tartozik helyreállítási kód.

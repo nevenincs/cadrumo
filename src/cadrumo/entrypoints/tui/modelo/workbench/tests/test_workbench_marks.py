@@ -124,7 +124,10 @@ def _section(*fields: ModeloFormField) -> ModeloFormSection:
             default_to_confirm=sum(1 for item in fields if item.origin is ModeloFormOrigin.DEFAULT_TO_CONFIRM),
             not_applicable=0,
             blocked=sum(1 for item in fields if item.blockers),
+            needs_you=sum(1 for item in fields if item.standing is ModeloFormStanding.NEEDS_YOU),
+            could_not_calculate=sum(1 for item in fields if item.origin is ModeloFormOrigin.CALCULATION_FAILED),
         ),
+        applies=True,
     )
 
 

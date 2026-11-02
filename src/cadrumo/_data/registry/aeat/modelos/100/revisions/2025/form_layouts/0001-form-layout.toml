@@ -7,7 +7,7 @@ revision_id = "2025"
 seed_source = "xml_dictionary"
 review = { state = "generated" }
 generator_version = 1
-source_state_digest = "786a14706db8059838713f86bd4aee5c9c5c111ac29ab05c3a100c2d9d96ed17"
+source_state_digest = "bf3d62bba7a188c7e9f89c3a4a43d1a62871b154135d5105096d6190b41f97dc"
 design_sources = [
     { source_ref = "aeat-dr-100-2025-dictionary", sha256 = "67409ad3027f2548d90bd64ea5eeff7fa344ace87377a048527d2c7de92fe93b" },
     { source_ref = "aeat-dr-100-2025-input-dictionary", sha256 = "ef63737b6d52e22a4c1c4b7934975488b93b0f37f9a8bc10f6c365219b6ecade" },
@@ -5034,4 +5034,175 @@ id = "inputs"
 heading_key = "modelo.schema.100.form.section.inputs.heading"
 blocks = [
     { kind = "binding_inputs", id = "binding-inputs", binding_ids = ["renta-modelo-100-estimacion-directa-es-normal"] },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "income-holders"
+heading_key = "modelo.schema.100.form.outline.income-holders.heading"
+sections = [
+    { page_id = "datoseconomicos", section_id = "general" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "employment"
+heading_key = "modelo.schema.100.form.outline.employment.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "rdtotrabajores" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "rdtotrabajo" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "rdtotrabajo-2" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "movable-capital"
+heading_key = "modelo.schema.100.form.outline.movable-capital.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "rdtocapitalmobiliariores" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "rdtocapitalmobiliario" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "real-estate"
+heading_key = "modelo.schema.100.form.outline.real-estate.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "inmueblesres" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "inmuebles" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "inmuebles-2" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "inmuebles-3" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "activities"
+heading_key = "modelo.schema.100.form.outline.activities.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "regestimadirectares" },
+    { page_id = "datoseconomicos-resultados", section_id = "regestimaobjres" },
+    { page_id = "datoseconomicos-resultados", section_id = "regestimaobjagricolares" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimadirecta" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimaobj" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regestimaobjagricola" },
+    { page_id = "other-inputs", section_id = "inputs" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "attributed-income"
+heading_key = "modelo.schema.100.form.outline.attributed-income.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "regimenesespecialesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "regimenesespecialesres-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-3" },
+    { page_id = "datoseconomicos-resultados", section_id = "regimenesespecialesres-3" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regimenesespeciales" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "capital-gains"
+heading_key = "modelo.schema.100.form.outline.capital-gains.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "gppremiosres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpfondosres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpfondoscotires" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpaccionesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpderechosres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotroscriptomonedasres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotrosinmueblesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotroselementosres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotrasgananciasres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpotrasgananciasejerantres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gpreinversionres" },
+    { page_id = "datoseconomicos-resultados", section_id = "gcambioresidenciaextres" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gppremios" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "dt9" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpfondos" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpfondoscoti" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpacciones" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpderechos" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotroscriptomonedas" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotroscriptomonedas-2" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrosinmuebles" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrosinmuebles-2" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrosinmuebles-3" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotroselementos" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotroselementos-2" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrasganancias" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpotrasgananciasejerant" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gpreinversion" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "gcambioresidenciaext" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regimenespecial" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "regimenespecial-2" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "tax-bases"
+heading_key = "modelo.schema.100.form.outline.tax-bases.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "integracionres" },
+    { page_id = "datoseconomicos-resultados", section_id = "baseimponibleres" },
+    { page_id = "datoseconomicos-resultados", section_id = "integracionres-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "baseimponibleres-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "redbaseimponibleres" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "redbaseimponible" },
+    { page_id = "datoseconomicos-resultados", section_id = "baseliquidableres" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "family-minimum"
+heading_key = "modelo.schema.100.form.outline.family-minimum.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "minimoperfamres" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "tax-calculation"
+heading_key = "modelo.schema.100.form.outline.tax-calculation.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "datosadicionalesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-4" },
+    { page_id = "datoseconomicos-resultados", section_id = "irpfccaares" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "general-deductions"
+heading_key = "modelo.schema.100.form.outline.general-deductions.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-2" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-3" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-5" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-4" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-5" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-6" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-7" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-8" },
+    { page_id = "datoseconomicos-tomadatosampliada", section_id = "anexoa" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-9" },
+    { page_id = "datoseconomicos-resultados", section_id = "anexoares-10" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-6" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "regional-deductions"
+heading_key = "modelo.schema.100.form.outline.regional-deductions.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "deduccionautonomicares" },
+    { page_id = "datoseconomicos-resultados", section_id = "datosadicionalesanexob" },
+    { page_id = "datoseconomicos-resultados", section_id = "datosadicionalesanexob-2" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "other-information"
+heading_key = "modelo.schema.100.form.outline.other-information.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "anexocres" },
+]
+
+[[revisions.2025.form_layouts.outline]]
+id = "result"
+heading_key = "modelo.schema.100.form.outline.result.heading"
+sections = [
+    { page_id = "datoseconomicos-resultados", section_id = "regularizacionres" },
+    { page_id = "datoseconomicos-resultados", section_id = "compensacionconyugesres" },
+    { page_id = "datoseconomicos-resultados", section_id = "ingresodevolucionres" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores" },
+    { page_id = "datoseconomicos-resultados", section_id = "calculoimpuestores-7" },
 ]

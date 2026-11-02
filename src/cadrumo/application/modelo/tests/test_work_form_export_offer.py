@@ -78,29 +78,107 @@ def _offer(operation: PinnedAuthorityOperation, modelo: str, year: int, code: st
     )
 
 
-def test_elections_are_asked_exactly_where_the_terminal_asked_them(operation: PinnedAuthorityOperation) -> None:
-    """The workbench asked the payment and refund elections for Modelo 303 and no other modelo."""
+def test_elections_are_asked_where_a_design_declares_a_carry_or_the_law_a_split(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Modelo 303 declares carrying a credit or refunding it; Modelo 100's result may be paid in two instalments."""
     asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo)}
 
-    assert asked == {"303"}
+    assert asked == {"100", "303"}
 
 
 def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
     operation: PinnedAuthorityOperation,
 ) -> None:
     offer = _offer(operation, "303", 2026, "1T")
+    payable = _calculated(operation, "303", 2026, "1T", Decimal("120.00"))
     other = _offer(operation, "130", 2026, "1T")
 
     questions = {question.election: question for question in offer.elections}
-    assert offer.asks_elections and set(questions) == set(ModeloFormElection)
-    assert questions[ModeloFormElection.REFUND].default == RefundElection.COMPENSAR.value
-    assert questions[ModeloFormElection.PAYMENT].default == PaymentElection.INGRESO.value
-    assert questions[ModeloFormElection.PRIOR_DOMICILIATION].default == PriorDomiciliationElection.KEEP.value
-    assert {choice.value for choice in questions[ModeloFormElection.PAYMENT].choices} == {
-        member.value for member in PaymentElection
+    assert offer.asks_elections and set(questions) == {
+        ModeloFormElection.REFUND,
+        ModeloFormElection.PAYMENT,
+        ModeloFormElection.PRIOR_DOMICILIATION,
     }
+    assert questions[ModeloFormElection.REFUND].default == RefundElection.COMPENSAR.value
+    assert questions[ModeloFormElection.PRIOR_DOMICILIATION].default == PriorDomiciliationElection.KEEP.value
+    unknown = questions[ModeloFormElection.PAYMENT]
+    assert unknown.state is ModeloFormElectionState.UNAVAILABLE
+    assert unknown.reason is ModeloFormElectionReason.RESULT_UNKNOWN and unknown.state_words
+    assert unknown.default is None and unknown.choices == ()
+    payment = _questions(operation, payable)[ModeloFormElection.PAYMENT]
+    assert payment.state is ModeloFormElectionState.AVAILABLE and payment.request_field == "payment_election"
+    assert payment.default == PaymentElection.INGRESO.value
+    assert {choice.value for choice in payment.choices} == {member.value for member in PaymentElection}
     assert all(choice.words != choice.value for question in offer.elections for choice in question.choices)
     assert not other.asks_elections and other.elections == ()
+
+
+_TODAY = date(2026, 5, 4)
+_SPANISH_IBAN = "ES9121000418450200051332"
+_GERMAN_IBAN = "DE89370400440532013000"
+
+
+def _deadline(days: int) -> ModeloFormDeadline:
+    closes = _TODAY + timedelta(days=days)
+    return ModeloFormDeadline(
+        closes_on=closes,
+        nominal_closes_on=closes,
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+        reference_on=_TODAY,
+        days_remaining=days if days >= 0 else None,
+        days_overdue=-days if days < 0 else None,
+    )
+
+
+def _calculated(
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    year: int,
+    code: str,
+    result: Decimal,
+    *,
+    deadline: ModeloFormDeadline | None = None,
+) -> ModeloWorkForm:
+    """A calculated form whose settlement box holds ``result``, built by the real builder."""
+    blank = built_form(operation, modelo, year, code, entered=frozenset())
+    assert blank.result is not None
+    form = built_form(
+        operation, modelo, year, code, held={str(blank.result.casilla_id): result}, entered=frozenset()
+    )
+    return form.model_copy(update={"calculation_revision_id": "c" * 64, "deadline": deadline})
+
+
+def _register(*accounts: tuple[str, str], designate: str | None = None) -> OwnAccountRegister:
+    register = OwnAccountRegister()
+    for label, iban in accounts:
+        register = register.with_new_account(
+            OwnBankAccountDetails(
+                label=label,
+                holding=OwnAccountHolding.TITULAR,
+                iban=iban,
+                swift_bic="" if iban.startswith("ES") else "COBADEFFXXX",
+            )
+        )
+    if designate is not None:
+        for role in OwnAccountRole:
+            register = register.with_designation(OwnAccountDesignation(role=role, own_account_id=designate))
+    return register
+
+
+def _questions(
+    operation: PinnedAuthorityOperation,
+    form: ModeloWorkForm,
+    *,
+    own_accounts: OwnAccountRegister | None = None,
+    amended: bool = False,
+) -> dict[ModeloFormElection, ModeloFormElectionQuestion]:
+    modelo = str(form.modelo)
+    snapshot = form_snapshot(operation, modelo, form.filing_year, str(form.period.code))
+    offer = form_export_offer(
+        modelo, snapshot, _EN, form=form, verified=False, filed=False, own_accounts=own_accounts, amended=amended
+    )
+    return {question.election: question for question in offer.elections}
 
 
 def test_every_export_artefact_is_offered_in_order(operation: PinnedAuthorityOperation) -> None:

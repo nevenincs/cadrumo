@@ -21,7 +21,11 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
-from ....application.modelo.taxation_comparison import TaxationComparisonResult, TaxationRecommendation
+from ....application.modelo.taxation_comparison import (
+    TaxationComparisonResult,
+    TaxationRecommendation,
+    TaxationRecommendationReason,
+)
 from ....core.modelo import Modelo
 from ..modelo_reconcile_results import WorkCompareTaxationResult
 
@@ -37,7 +41,8 @@ _CANONICAL_FIELDS = {
     "individual_resultado": "150.00",
     "delta_resultado": "450.00",
     "recommendation": TaxationRecommendation.CONJUNTA,
-    "recommendation_reason": "conjunta is 450.00 EUR cheaper",
+    "recommendation_reason": TaxationRecommendationReason.CONJUNTA_LOWER_RESULT,
+    "recommendation_reason_words": "Joint filing comes out lower, by 450.00 EUR.",
     "individual_branch_single_earner_only": True,
 }
 
@@ -94,7 +99,7 @@ def test_canonical_result_also_refuses_non_finite_amounts() -> None:
             individual_resultado=Decimal("150.00"),
             delta_resultado=Decimal("450.00"),
             recommendation=TaxationRecommendation.CONJUNTA,
-            recommendation_reason="reason",
+            recommendation_reason=TaxationRecommendationReason.CONJUNTA_LOWER_RESULT,
         )
 
 
@@ -121,7 +126,9 @@ def test_blank_revision_and_reason_are_refused() -> None:
     with pytest.raises(ValidationError):
         _payload(revision="")
     with pytest.raises(ValidationError):
-        _payload(recommendation_reason="")
+        _payload(recommendation_reason_words="")
+    with pytest.raises(ValidationError):
+        _payload(recommendation_reason="conjunta is 450.00 EUR cheaper")
 
 
 def test_single_earner_scope_flag_is_required() -> None:

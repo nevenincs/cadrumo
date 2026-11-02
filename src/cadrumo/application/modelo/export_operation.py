@@ -261,6 +261,7 @@ class ModeloExportExecutor:
                 actor=actor,
                 refund_election=payload.refund_election,
                 payment_election=payload.payment_election,
+                instalment_election=payload.instalment_election,
                 prior_domiciliation_election=payload.prior_domiciliation_election,
                 charge_account_id=payload.charge_account_id,
                 refund_account_id=payload.refund_account_id,

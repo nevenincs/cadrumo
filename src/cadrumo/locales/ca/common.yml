@@ -4131,8 +4131,7 @@ desktop:
       partial: Els grups i els totals esperen que es llegeixi tot.
     withholding:
       absence:
-        not_listed: Les indicacions anteriors encara no es poden llistar. Aquí es
-          mostren les que facis o retiris en aquesta finestra.
+        history: Indicacions retirades
         title: Sense retencions
         what: Indica que cap pagador no va retenir en una classe de renda aquest any.
       action:
@@ -4481,7 +4480,7 @@ desktop:
     dismiss: Descarta l’avís
     edit_field: Edita {field}
     ejercicio: Exercici
-    ejercicio_help: "L'any que declara aquesta resposta. Els altres conserven la seva."
+    ejercicio_help: L'any que declara aquesta resposta. Els altres conserven la seva.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
     entries_count: 'Registres: {count}'
@@ -8656,6 +8655,18 @@ tui:
         calculation_review_xlsx: Revisió del càlcul desat (XLSX)
         fichero_boe: Fitxer BOE per presentar a l'AEAT
         label: Document a exportar
+      instalment_election:
+        conditions: Pagar en dos terminis no té interessos ni recàrrecs. La declaració
+          s'ha de presentar dins de termini, i una autoliquidació rectificativa no
+          es pot pagar així. El 60 % es paga en presentar-la; si no es paga a temps,
+          s'exigeix l'import total. Si també domicilies el primer termini, el segon
+          es carrega al mateix compte.
+        label: 'Resultat a ingressar: d''una vegada o en dos terminis'
+        single: Pagar-ho tot d'una vegada
+        two_instalments_second_debited: 'Dos terminis: el 60 % en presentar-la i el
+          40 % restant domiciliat'
+        two_instalments_second_paid: 'Dos terminis: el 60 % en presentar-la i el 40
+          % restant el pagues tu amb el model 102'
       payment_election:
         cuenta_corriente: Compte corrent tributari
         domiciliacion: Domiciliació bancària
@@ -9623,8 +9634,23 @@ workspace:
       save_next: Deixar i passar a la següent
       unreadable: No s'ha pogut llegir aquest valor.
     export:
+      account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma els valors suposats abans de generar el fitxer o registrar
         la presentació (per confirmar: {count}).'
+      election:
+        amendment: Una autoliquidació rectificativa no es pot pagar en dos terminis.
+        filing_window_unknown: No es coneix el termini de presentació d'aquesta declaració,
+          així que no es pot oferir el pagament en dos terminis.
+        no_open_account: Cap dels teus comptes bancaris propis no és obert. Afegeix-ne
+          un als teus comptes propis per rebre la devolució.
+        no_spanish_account: Cap dels teus comptes propis oberts no és espanyol, i
+          la domiciliació ho necessita. Afegeix-ne un als teus comptes propis.
+        nothing_to_pay: El resultat no és una quantitat a ingressar, així que això
+          no s'aplica.
+        nothing_to_refund: El resultat no és una devolució, així que això no s'aplica.
+        past_filing_window: El termini de presentació ha acabat, i pagar en dos terminis
+          exigeix presentar la declaració dins d'aquest termini.
+        result_unknown: 'Calcula abans la declaració: el seu resultat ho decideix.'
       file_format:
         fixed_width: Fitxer de l'AEAT amb el disseny de registre BOE d'amplada fixa
         xml_dictionary: Fitxer XML de l'AEAT

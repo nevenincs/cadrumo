@@ -949,6 +949,59 @@ application:
           the labels did not cover stay empty: %{fields}. Fill them in yourself.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Agree
+          differ: Differ
+          not_comparable: Cannot be compared
+          only_in_borrador: Only in the AEAT draft
+          only_in_calculation: Only in your calculation
+        evidence:
+          borrador: Printed by the AEAT in its draft and imported here. It is an observation,
+            not an authenticated filing.
+          calculation: Worked out on this computer from your records. It is local,
+            not a filing with the AEAT.
+        reason:
+          borrador_does_not_read_box: The draft import does not read this box, so
+            a missing draft value says nothing about it.
+          borrador_printed_no_value: Your calculation holds a value, but the AEAT
+            draft prints none for this box.
+          borrador_value_ambiguous: The AEAT draft holds more than one value for this
+            box, so it cannot be compared.
+          borrador_value_not_kept: The AEAT draft prints this box, but the import
+            keeps no value for it, so it cannot be compared.
+          calculation_blocked: Your calculation could not settle this box, so it cannot
+            be compared.
+          calculation_has_no_value: The AEAT draft prints a value, but your calculation
+            holds none for this box.
+          calculation_not_applicable: Your calculation shows this box does not apply
+            to you, but the AEAT draft prints a value.
+          not_applicable_zero: The AEAT draft prints zero, and your calculation shows
+            this box does not apply to you.
+          same_value: The AEAT draft and your calculation hold the same value.
+          taken_from_borrador: Your calculation took this value from the AEAT draft,
+            so the agreement does not confirm it independently.
+          value_kinds_differ: One side holds an amount and the other a text, so they
+            cannot be compared.
+          values_differ: The AEAT draft and your calculation hold different values.
+        stale:
+          calculation_outdated: The rules changed after your calculation was saved,
+            so it needs recalculating.
+          calculation_used_other_capture: Your calculation was worked out from a different
+            AEAT draft than the one compared here.
+          newer_capture_refused: A draft you imported later is stored but cannot be
+            read, so this comparison uses an earlier one.
+        status:
+          capture_refused: AEAT drafts are stored for this year, but none can be read
+            under the current rules; import the draft again.
+          compared: Your imported AEAT draft and your saved calculation were compared
+            box by box.
+          no_calculation: This declaration has no saved calculation yet, so the draft
+            cannot be compared; calculate it first.
+          no_capture: You have not imported an AEAT draft for this year, so there
+            is nothing to compare.
+          stale: Both were read, but they no longer describe each other, so recalculate
+            or import the draft again before you rely on this comparison.
       errors:
         binding_keys_not_admitted: 'This stored borrador holds values under keys the
           modelo definitions do not admit, so it cannot be used; import the document
@@ -2350,10 +2403,30 @@ application:
           %{binding_id} has unsupported value type %{value_type}.
         enum_boolean_invalid: The profile fact for value source %{binding_id} resolved
           to a boolean; boolean facts are not valid keys.
+    projection_words:
+      binding_unresolved: No value could be worked out for this figure from your records,
+        so it stays unresolved instead of counting as zero. Record the missing evidence,
+        then project again.
+      casilla_reason:
+        m210_baseline_tipo_deferred: This box needs the general rate for this kind
+          of income, which is not yet grounded for the year, so it has no value.
+        m210_convenio_rate_missing: This box needs the tax-treaty rate for the country
+          and the kind of income, which is not available, so it has no value.
+        other: This box could not be worked out, so it has no value. It is never shown
+          as zero.
+        unresolved_operand: This box adds up or reads a figure that has no value yet,
+          so it has none either. It is never shown as zero.
     quickfile:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
+    taxation_comparison_words:
+      below_materiality: The two results differ by {difference}, less than {threshold},
+        so either filing mode is acceptable.
+      conjunta_lower_result: 'Joint filing comes out lower: your result is {conjunta}
+        jointly and {individual} individually, a difference of {difference}.'
+      individual_lower_result: 'Individual filing comes out lower: your result is
+        {individual} individually and {conjunta} jointly, a difference of {difference}.'
     value_date:
       month_01: Jan
       month_02: Feb
@@ -2766,6 +2839,8 @@ application:
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
       profile_authentication_refused: The profile password was not accepted.
+      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say
+        which ejercicio this answer is for.
       profile_password_contains_surrogate: The profile password contains a value that
         cannot be encoded as strict UTF-8.
       profile_password_too_few_scalars: The profile password must be at least {minimum_scalars}
@@ -2776,7 +2851,6 @@ application:
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
       profile_proof_cancelled: The profile password check was cancelled before it
         finished.
-      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say which ejercicio this answer is for.
       profile_text_too_long: The field %{field} holds at most %{limit} characters;
         shorten it.
       recovery_already_enrolled: This profile already has a recovery code. Disable

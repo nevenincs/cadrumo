@@ -1,0 +1,130 @@
+# Navigation outlines a reviewer declared over a revision's generated layout, grouping its sections by subject.
+#
+# Each outline names one revision and lists its groups in the order a filer meets them; each group lists the
+# sections it gathers as `page/section`, by the layout's own ids. The layout validator refuses an outline that
+# names a section the layout does not have, names one twice, or leaves one out. A group's heading is the
+# catalogue entry `modelo.schema.<modelo>.form.outline.<group>.heading`, shared by every revision that declares
+# a group of that id, so a group id keeps one subject. Edit this file, then run
+# `python -m dev.registry.form_layout generate`.
+#
+# Modelo 100 2025: Renta's dictionaries split the return into a results container (Resultados), a data-entry
+# container (TomaDatosAmpliada) and a container of income holders (DatosEconomicos). The groups follow the
+# subjects of the return: each income source with its summary, the bases, the personal and family minimum, the
+# tax calculation, the annexes of deductions and other information, and the result. Section subjects were read
+# from the 2025 declaration and input dictionaries: each section's XML container paths and its boxes' official
+# descriptions.
+
+[[outlines]]
+modelo = "100"
+revision = "2025"
+groups = [
+    { id = "income-holders", sections = ["datoseconomicos/general"] },
+    { id = "employment", sections = [
+        "datoseconomicos-resultados/rdtotrabajores",
+        "datoseconomicos-tomadatosampliada/rdtotrabajo",
+        "datoseconomicos-tomadatosampliada/rdtotrabajo-2",
+    ] },
+    { id = "movable-capital", sections = [
+        "datoseconomicos-resultados/rdtocapitalmobiliariores",
+        "datoseconomicos-tomadatosampliada/rdtocapitalmobiliario",
+    ] },
+    { id = "real-estate", sections = [
+        "datoseconomicos-resultados/inmueblesres",
+        "datoseconomicos-tomadatosampliada/inmuebles",
+        "datoseconomicos-tomadatosampliada/inmuebles-2",
+        "datoseconomicos-tomadatosampliada/inmuebles-3",
+    ] },
+    { id = "activities", sections = [
+        "datoseconomicos-resultados/regestimadirectares",
+        "datoseconomicos-resultados/regestimaobjres",
+        "datoseconomicos-resultados/regestimaobjagricolares",
+        "datoseconomicos-tomadatosampliada/regestimadirecta",
+        "datoseconomicos-tomadatosampliada/regestimaobj",
+        "datoseconomicos-tomadatosampliada/regestimaobjagricola",
+        "other-inputs/inputs",
+    ] },
+    { id = "attributed-income", sections = [
+        "datoseconomicos-resultados/regimenesespecialesres",
+        "datoseconomicos-resultados/calculoimpuestores-2",
+        "datoseconomicos-resultados/regimenesespecialesres-2",
+        "datoseconomicos-resultados/calculoimpuestores-3",
+        "datoseconomicos-resultados/regimenesespecialesres-3",
+        "datoseconomicos-tomadatosampliada/regimenesespeciales",
+    ] },
+    { id = "capital-gains", sections = [
+        "datoseconomicos-resultados/gppremiosres",
+        "datoseconomicos-resultados/gpfondosres",
+        "datoseconomicos-resultados/gpfondoscotires",
+        "datoseconomicos-resultados/gpaccionesres",
+        "datoseconomicos-resultados/gpderechosres",
+        "datoseconomicos-resultados/gpotroscriptomonedasres",
+        "datoseconomicos-resultados/gpotrosinmueblesres",
+        "datoseconomicos-resultados/gpotroselementosres",
+        "datoseconomicos-resultados/gpotrasgananciasres",
+        "datoseconomicos-resultados/gpotrasgananciasejerantres",
+        "datoseconomicos-resultados/gpreinversionres",
+        "datoseconomicos-resultados/gcambioresidenciaextres",
+        "datoseconomicos-tomadatosampliada/gppremios",
+        "datoseconomicos-tomadatosampliada/dt9",
+        "datoseconomicos-tomadatosampliada/gpfondos",
+        "datoseconomicos-tomadatosampliada/gpfondoscoti",
+        "datoseconomicos-tomadatosampliada/gpacciones",
+        "datoseconomicos-tomadatosampliada/gpderechos",
+        "datoseconomicos-tomadatosampliada/gpotroscriptomonedas",
+        "datoseconomicos-tomadatosampliada/gpotroscriptomonedas-2",
+        "datoseconomicos-tomadatosampliada/gpotrosinmuebles",
+        "datoseconomicos-tomadatosampliada/gpotrosinmuebles-2",
+        "datoseconomicos-tomadatosampliada/gpotrosinmuebles-3",
+        "datoseconomicos-tomadatosampliada/gpotroselementos",
+        "datoseconomicos-tomadatosampliada/gpotroselementos-2",
+        "datoseconomicos-tomadatosampliada/gpotrasganancias",
+        "datoseconomicos-tomadatosampliada/gpotrasgananciasejerant",
+        "datoseconomicos-tomadatosampliada/gpreinversion",
+        "datoseconomicos-tomadatosampliada/gcambioresidenciaext",
+        "datoseconomicos-tomadatosampliada/regimenespecial",
+        "datoseconomicos-tomadatosampliada/regimenespecial-2",
+    ] },
+    { id = "tax-bases", sections = [
+        "datoseconomicos-resultados/integracionres",
+        "datoseconomicos-resultados/baseimponibleres",
+        "datoseconomicos-resultados/integracionres-2",
+        "datoseconomicos-resultados/baseimponibleres-2",
+        "datoseconomicos-resultados/redbaseimponibleres",
+        "datoseconomicos-tomadatosampliada/redbaseimponible",
+        "datoseconomicos-resultados/baseliquidableres",
+    ] },
+    { id = "family-minimum", sections = ["datoseconomicos-resultados/minimoperfamres"] },
+    { id = "tax-calculation", sections = [
+        "datoseconomicos-resultados/datosadicionalesres",
+        "datoseconomicos-resultados/calculoimpuestores-4",
+        "datoseconomicos-resultados/irpfccaares",
+    ] },
+    { id = "general-deductions", sections = [
+        "datoseconomicos-resultados/anexoares",
+        "datoseconomicos-resultados/anexoares-2",
+        "datoseconomicos-resultados/anexoares-3",
+        "datoseconomicos-resultados/calculoimpuestores-5",
+        "datoseconomicos-resultados/anexoares-4",
+        "datoseconomicos-resultados/anexoares-5",
+        "datoseconomicos-resultados/anexoares-6",
+        "datoseconomicos-resultados/anexoares-7",
+        "datoseconomicos-resultados/anexoares-8",
+        "datoseconomicos-tomadatosampliada/anexoa",
+        "datoseconomicos-resultados/anexoares-9",
+        "datoseconomicos-resultados/anexoares-10",
+        "datoseconomicos-resultados/calculoimpuestores-6",
+    ] },
+    { id = "regional-deductions", sections = [
+        "datoseconomicos-resultados/deduccionautonomicares",
+        "datoseconomicos-resultados/datosadicionalesanexob",
+        "datoseconomicos-resultados/datosadicionalesanexob-2",
+    ] },
+    { id = "other-information", sections = ["datoseconomicos-resultados/anexocres"] },
+    { id = "result", sections = [
+        "datoseconomicos-resultados/regularizacionres",
+        "datoseconomicos-resultados/compensacionconyugesres",
+        "datoseconomicos-resultados/ingresodevolucionres",
+        "datoseconomicos-resultados/calculoimpuestores",
+        "datoseconomicos-resultados/calculoimpuestores-7",
+    ] },
+]

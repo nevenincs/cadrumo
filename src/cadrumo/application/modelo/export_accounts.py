@@ -45,6 +45,7 @@ from typing import NamedTuple
 
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.modelo import Modelo
+from ...core.payment_instalment_election import two_instalments_declared
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.time.clock import MADRID_TZ
@@ -102,6 +103,7 @@ from ..prorrata_register.service import require_prorrata_register_coordinates_cu
 from .action_errors import (
     ModeloChargeAccountMissingError,
     ModeloDomiciliationPastCutoffError,
+    ModeloInstalmentElectionRefusedError,
     ModeloRefundAccountMissingError,
 )
 from .export_contracts import (
@@ -346,6 +348,96 @@ def require_domiciliation_before_cutoff(
         context["payment_cutoff_rule"] = f"{resolution.clause.variant_id}, {resolution.procedure.variant_id}"
         message_key = "errors.refused.refused_modelo_domiciliation_past_cutoff_derived"
     raise ModeloDomiciliationPastCutoffError(translated_message=message_key, context=context)
+
+
+_INSTALMENT_PAYABLE: frozenset[ResultDisposition] = frozenset(
+    {ResultDisposition.INGRESO, ResultDisposition.DOMICILIACION},
+)
+
+
+def require_instalment_election_admissible(
+    command: ModeloExportCommand,
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    resolved_result_disposition: ResultDisposition | None,
+    accounts: _ExportAccounts,
+    exported_at: datetime,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a two-instalment payment the law does not admit for this export.
+
+    RD 439/2007 art. 62.2, as the Manual práctico de Renta 2025 states its
+    conditions: the modelo declares the split, the result is to pay, the
+    declaration is not corrective, and it is filed within its period. A
+    second instalment direct-debited also needs a Spanish charge account.
+    """
+    election = command.instalment_election
+    if not election.splits:
+        return
+    modelo = str(work_unit.modelo)
+    context: dict[str, object] = {
+        "calculation_revision_id": command.calculation_revision_id,
+        "modelo": modelo,
+        "instalment_election": election.value,
+    }
+    reason = _instalment_refusal_reason(
+        work_unit=work_unit,
+        revision=revision,
+        resolved_result_disposition=resolved_result_disposition,
+        exported_at=exported_at,
+        operation=operation,
+    )
+    if reason is not None:
+        raise ModeloInstalmentElectionRefusedError(
+            translated_message="errors.refused.refused_modelo_instalment_election",
+            context={**context, "reason": reason},
+        )
+    if not election.debits_second:
+        return
+    charge_account = _charge_account_projection(accounts.charge)
+    if charge_account is None:
+        raise _missing_account_error(OwnAccountRole.CHARGE, context=_unavailable_context(context, accounts.charge))
+    require_admissible_charge_account(work_unit=work_unit, charge_account=charge_account)
+
+
+def _instalment_refusal_reason(
+    *,
+    work_unit: WorkUnit,
+    revision: CalculationRevision,
+    resolved_result_disposition: ResultDisposition | None,
+    exported_at: datetime,
+    operation: PinnedAuthorityOperation,
+) -> str | None:
+    """Name the first condition of the split the export fails, or ``None`` when it meets them all."""
+    if not two_instalments_declared(str(work_unit.modelo)):
+        return "not_declared"
+    if resolved_result_disposition not in _INSTALMENT_PAYABLE:
+        return "nothing_to_pay"
+    if revision.amendment_identity is not None:
+        return "amendment"
+    resolved_window = resolve_filing_window(
+        str(work_unit.modelo),
+        work_unit.filing_year,
+        work_unit.period,
+        authority=operation,
+    )
+    window = None if resolved_window is None else resolved_window.dated_window
+    if window is None:
+        return "filing_window_unknown"
+    if exported_at.astimezone(MADRID_TZ).date() > window.closes_on:
+        return "past_filing_window"
+    return None
+
+
+def export_charge_account(accounts: _ExportAccounts) -> ChargeAccount | None:
+    """The charge account the export may debit, or ``None`` when none can serve."""
+    return _charge_account_projection(accounts.charge)
+
+
+def export_refund_account(accounts: _ExportAccounts) -> RefundAccount | None:
+    """The refund account the export may pay into, or ``None`` when none can serve."""
+    return _refund_account_projection(accounts.refund)
 
 
 def _charge_account_projection(resolved: _ResolvedOwnAccount) -> ChargeAccount | None:

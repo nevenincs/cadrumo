@@ -4068,8 +4068,7 @@ desktop:
       partial: Grouping and totals wait for the whole window.
     withholding:
       absence:
-        not_listed: Statements made earlier cannot be listed yet. Those you make or
-          withdraw in this window are shown here.
+        history: Withdrawn statements
         title: No withholding
         what: State that no payer withheld on an income class this year.
       action:
@@ -4413,7 +4412,7 @@ desktop:
     dismiss: Dismiss
     edit_field: Edit {field}
     ejercicio: Tax year
-    ejercicio_help: "The year this answer states. Other years keep theirs."
+    ejercicio_help: The year this answer states. Other years keep theirs.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: No details match these filters. Try another search or section.
     entries_count: 'Entries: {count}'
@@ -8495,6 +8494,18 @@ tui:
         calculation_review_xlsx: Saved calculation review (XLSX)
         fichero_boe: Fichero BOE for presentation at AEAT
         label: Document to export
+      instalment_election:
+        conditions: Paying in two instalments adds no interest or surcharge. The return
+          must be filed within its filing period, and a corrective return cannot be
+          paid this way. The 60% is paid when you file; if it is not paid on time,
+          the whole amount falls due. When the first instalment is direct-debited
+          too, the second is charged to the same account.
+        label: 'Result to pay: at once or in two instalments'
+        single: Pay it all at once
+        two_instalments_second_debited: 'Two instalments: 60% when you file, the other
+          40% by direct debit'
+        two_instalments_second_paid: 'Two instalments: 60% when you file, the other
+          40% paid by you with Modelo 102'
       payment_election:
         cuenta_corriente: Tax current account (cuenta corriente tributaria)
         domiciliacion: Direct debit
@@ -9448,8 +9459,22 @@ workspace:
       save_next: Keep and go to next
       unreadable: This value could not be read.
     export:
+      account_choice: '%{label} (%{account})'
       confirm_first: 'Confirm the assumed values before creating the file or recording
         the filing (to confirm: {count}).'
+      election:
+        amendment: A corrective return cannot be paid in two instalments.
+        filing_window_unknown: The filing period of this declaration is not known,
+          so paying in two instalments cannot be offered.
+        no_open_account: None of your own bank accounts is open. Add one to your own
+          accounts to receive the refund.
+        no_spanish_account: None of your open own bank accounts is Spanish, which
+          a direct debit needs. Add one to your own accounts.
+        nothing_to_pay: The result is not an amount to pay, so this does not apply.
+        nothing_to_refund: The result is not a refund, so this does not apply.
+        past_filing_window: The filing period has ended, and paying in two instalments
+          needs the return filed within it.
+        result_unknown: 'Calculate the declaration first: its result decides this.'
       file_format:
         fixed_width: AEAT file in the fixed-width BOE design
         xml_dictionary: AEAT XML file

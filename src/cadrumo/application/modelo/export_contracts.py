@@ -52,6 +52,7 @@ from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.payment_election import PaymentElection
+from ...core.payment_instalment_election import PaymentInstalmentElection
 from ...core.period import Period
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
@@ -249,6 +250,10 @@ class ModeloExportCommand(BaseModel):
             ``INGRESO`` retains the standard declaration type, while a supported
             Modelo 303 ``DOMICILIACION`` resolves to ``U``. Unsupported or
             sign-incompatible elections are refused by the shared resolver.
+        instalment_election: Whether a positive result is paid at once or in
+            two instalments (60/40), and whether the second is direct-debited.
+            Only a modelo that declares the split admits anything but
+            ``SINGLE``; the export refuses it elsewhere.
         prior_domiciliation_election: Explicit Modelo 303 action for a prior
             domiciliation. ``None`` resolves the neutral ``KEEP`` value, except
             for a Modelo 303 rectificativa stating casilla 111, where the choice
@@ -276,6 +281,7 @@ class ModeloExportCommand(BaseModel):
     amendment_evidence: AmendmentEvidence | None = None
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
+    instalment_election: PaymentInstalmentElection = PaymentInstalmentElection.SINGLE
     prior_domiciliation_election: PriorDomiciliationElection | None = None
     charge_account_id: OwnAccountId | None = None
     refund_account_id: OwnAccountId | None = None
