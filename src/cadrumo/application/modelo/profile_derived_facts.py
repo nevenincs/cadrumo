@@ -12,6 +12,10 @@ from ...core.decimal.coercion import coerce_decimal
 from ...core.parsing.dates import parse_iso8601_date
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.formula_runtime_ops import resolve_parameter
+from ...domain.calculations.registry.irpf_regimes import (
+    irpf_estimation_regime_directa_normal_token,
+    irpf_estimation_regime_directa_simplificada_token,
+)
 from ...domain.calculations.registry.m303_schema_vocabulary import (
     m303_tax_territory_state_attribution_ratio,
 )
@@ -27,7 +31,8 @@ from ...domain.contribuyente.renta_codes import RentaDeclaracionType, RentaMarit
 from ...domain.modelos.errors import ModeloError
 from ...domain.user_profile.registry_contract import profile_binding_selectors
 from ...domain.user_profile.schema import ProfileSchemaDefinition
-from ...domain.user_profile.values import UserProfileFactValue
+from ...domain.user_profile.values import UserProfileFactValue, UserProfileRecord
+from ..aggregation.renta_imputation import ActivityImputationCriterion, declared_imputation_criteria
 from ..user_profile.projections import profile_fact_index
 
 if TYPE_CHECKING:
@@ -134,6 +139,33 @@ def family_fact_context(
         filing_period=coordinate,
         devengo_date=coordinate,
     )
+
+
+def inject_derived_cash_election_fact(
+    fact_index: dict[str, UserProfileFactValue],
+    record: object,
+    filing_year: int,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """State casilla 0169's election for the ejercicio, when the regime is direct estimation and it is declared.
+
+    The dated criterion answers one year; an undeclared year stays absent rather than
+    reading as a blank box, which would state accrual on the taxpayer's behalf.
+    """
+    if not isinstance(record, UserProfileRecord):
+        return
+    regime = str(fact_index.get("irpf.estimation_regime", ""))
+    if regime not in {
+        str(irpf_estimation_regime_directa_normal_token(authority=operation)),
+        str(irpf_estimation_regime_directa_simplificada_token(authority=operation)),
+    }:
+        return
+    declared = declared_imputation_criteria(record).declared(filing_year)
+    if declared is not None:
+        fact_index["irpf.activity_income_cash_criterion_elected"] = (
+            declared is ActivityImputationCriterion.COBROS_Y_PAGOS
+        )
 
 
 def inject_ordinary_work_maritime_facts(fact_index: dict[str, UserProfileFactValue]) -> None:

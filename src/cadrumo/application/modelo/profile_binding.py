@@ -80,6 +80,7 @@ from .profile_derived_facts import (
     family_fact_context,
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
+    inject_derived_cash_election_fact,
     inject_derived_deduccion_maternidad_facts,
     inject_derived_incremento_guarderia_facts,
     inject_derived_marriage_facts,
@@ -422,6 +423,7 @@ def _load_profile_facts(
     family_context = family_fact_context(snapshot, operation=operation)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     inject_ordinary_work_maritime_facts(fact_index)
+    inject_derived_cash_election_fact(fact_index, record, snapshot.filing_year, operation=operation)
     declared_selectors = declared_profile_selectors(snapshot.revision)
     inject_derived_anualidades_eligibility_facts(
         fact_index,
