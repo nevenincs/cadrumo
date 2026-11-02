@@ -1,0 +1,25 @@
+# How long a taxpayer who elected cobros y pagos stays bound by it: RD 439/2007 art. 7.2.1.º.
+# The election is made by stating it in the return, so the term runs from that ejercicio.
+[fact]
+fact_id = "rirpf-art-7-cash-election-minimum-years"
+family = "scalar"
+
+[[fact.variants]]
+variant_id = "rirpf-art-7-cash-election-minimum-years:2007-04-01"
+date_axis = "filing_period"
+valid_from = 2007-04-01
+legal_refs = ["rd-439-2007:art-7"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = [
+  "por el solo hecho de así manifestarlo en la correspondiente declaración, y deberá mantenerse durante un plazo mínimo de tres años",
+]
+
+[fact.variants.payload]
+kind = "scalar"
+value = 3
+unit = "years"

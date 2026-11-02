@@ -18,6 +18,8 @@ from typing import TYPE_CHECKING, Final
 from ...core.aggregation import BindingValueOutcome
 from ...core.parsing.utils import parse_bool
 from ...core.period import Period
+from ...domain.calculations.registry.cash_election_minimum_years import cash_election_minimum_years
+from ...domain.calculations.registry.errors import GovernedFactNotApplicableError
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
@@ -109,7 +111,6 @@ class ImputationUnresolved(StrEnum):
 _CRITERION_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
 _COMMERCIAL_ACCOUNTING_PATH: Final[str] = "irpf.codigo_comercio_accounting"
 _ESTIMATION_REGIME_PATH: Final[str] = "irpf.estimation_regime"
-_MINIMUM_ELECTION_YEARS: Final[int] = 3
 
 
 def _dated_values(facts: Iterable[UserProfileFact], path: str, year: int) -> set[object]:
@@ -181,7 +182,7 @@ class ImputationCriteria:
             return self._regime_declared(year) and self._commercial_accounting(year) is False
         if declared is ActivityImputationCriterion.DEVENGO and self._commercial_accounting(year) is not True:
             first_cash_year = self._first_binding_cash_year(year)
-            return first_cash_year is None or year - first_cash_year >= _MINIMUM_ELECTION_YEARS
+            return first_cash_year is None or year - first_cash_year >= cash_election_minimum_years(filing_year=year)
         return True
 
     def _in_force(self, year: int) -> ActivityImputationCriterion | None:
@@ -191,7 +192,11 @@ class ImputationCriteria:
     def _first_binding_cash_year(self, year: int) -> int | None:
         """Return the first year of the cash run reaching into the two years before ``year``, if any."""
         cash = ActivityImputationCriterion.COBROS_Y_PAGOS
-        for back in range(1, _MINIMUM_ELECTION_YEARS):
+        try:
+            minimum_years = cash_election_minimum_years(filing_year=year)
+        except GovernedFactNotApplicableError:
+            return None
+        for back in range(1, minimum_years):
             first = year - back
             if self._in_force(first) is cash:
                 while self._in_force(first - 1) is cash:
@@ -218,7 +223,10 @@ class ImputationCriteria:
         if declared is not ActivityImputationCriterion.DEVENGO or self._commercial_accounting(year) is True:
             return None
         first_cash_year = self._first_binding_cash_year(year)
-        if first_cash_year is None or year - first_cash_year >= _MINIMUM_ELECTION_YEARS:
+        if first_cash_year is None:
+            return None
+        minimum_years = cash_election_minimum_years(filing_year=year)
+        if year - first_cash_year >= minimum_years:
             return None
         filed = sorted(
             on_file
@@ -229,7 +237,7 @@ class ImputationCriteria:
             return None
         return (
             f"the filed return of {filed[0]} states cobros_y_pagos, which binds through "
-            f"{first_cash_year + _MINIMUM_ELECTION_YEARS - 1} (RIRPF art. 7.2.1), but the profile declares "
+            f"{first_cash_year + minimum_years - 1} (RIRPF art. 7.2.1), but the profile declares "
             f"{declared.value} for {year}"
         )
 
@@ -254,8 +262,6 @@ _CASH_ELECTION_ROLES: Final[frozenset[str]] = frozenset(
 """The semantic roles of the cash-election boxes: estimacion directa, objetiva and its agricultural block.
 
 A box is named by its role in the revision that edition declares, never by its number."""
-
-_ELECTION_LOOKBACK_YEARS: Final[int] = 3
 
 _RECORD_DESIGN_FLAG_MARK: Final[str] = "X"
 """The mark a record design prints in a checked box; any other affirmative is a yes/no word."""
@@ -288,7 +294,8 @@ def imputation_filing_history(
     supported_years = authority.supported_filing_years().years
     stated: dict[int, ActivityImputationCriterion] = {}
     filed_on: dict[int, date] = {}
-    for past in range(year - _ELECTION_LOOKBACK_YEARS, year + 1):
+    lookback_years = cash_election_minimum_years(filing_year=year, authority=authority)
+    for past in range(year - lookback_years, year + 1):
         period = Period.from_year_and_code(past, annual_period_code)
         record = filing_records.current_for(bucket_id=bucket_id, modelo=annual_form, filing_year=past, period=period)
         if record is not None:
