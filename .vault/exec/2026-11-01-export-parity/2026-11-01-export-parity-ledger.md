@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:dafc3466f5d824ef89437c1e397f7919a0278fc30a5d304140a1c9acca9e253f'
+body_hash: 'sha256:fe89d2dc31af1aff720154e3df3da063c1f49159176efd108613c2455f9b74c2'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -537,6 +537,32 @@ related:
 - `S06` `M` `src/cadrumo/domain/calculations/registry/query_builders.py`
 - `S06` `verify:` `pytest test_modelo_100_bindings_list_across_supported_years.py test_modelo_registry_bindings_surface.py test_modelo_bindings_grounding_parity.py test_binding_borrador_participation.py test_retencion_soportada_bindings.py test_borrador_binding.py` -> `pass`
 - `S06` `by:` `implementation-engineer-high`
+- `S29` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S29` `M` `src/cadrumo/application/aggregation/retencion_soportada_absence_repository.py`
+- `S29` `M` `src/cadrumo/application/retencion_soportada_absence/contracts.py`
+- `S29` `M` `src/cadrumo/application/retencion_soportada_absence/executor.py`
+- `S29` `M` `src/cadrumo/application/retencion_soportada_absence/projections.py`
+- `S29` `M` `src/cadrumo/application/retencion_soportada_absence/registered_operation.py`
+- `S29` `M` `src/cadrumo/application/retencion_soportada_absence/requests.py`
+- `S29` `M` `src/cadrumo/application/retencion_soportada_absence/results.py`
+- `S29` `M` `src/cadrumo/application/retencion_soportada_certificado/results.py`
+- `S29` `A` `src/cadrumo/core/retencion_soportada_label.py`
+- `S29` `A` `src/cadrumo/core/tests/test_retencion_soportada_label.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_app_ledger_retencion_soportada_absence_command_specs.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/operation_ledger_retencion_soportada_absence.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/retencion_soportada_absence_commands.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/retencion_soportada_absence_results.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_absence_cli.py`
+- `S29` `M` `src/cadrumo/entrypoints/operation_composition_retencion_soportada_absence.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/conformance_families.py`
+- `S29` `A` `src/cadrumo/entrypoints/tests/conformance_retencion_soportada_absence_support.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/conformance_retencion_soportada_support.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/test_retencion_soportada_absence_executor.py`
+- `S29` `verify:` `pytest retencion_soportada tests + conformance retencion` -> `pass`
+- `S29` `verify:` `operation_contract_manifest.generate --check` -> `pass`
+- `S29` `verify:` `lint-imports` -> `pass`
+- `S29` `verify:` `ruff check/format` -> `pass`
+- `S29` `by:` `standard-implementer`
 
 ## Notes
 
