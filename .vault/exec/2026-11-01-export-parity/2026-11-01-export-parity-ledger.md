@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e71153f00f5445309b93095db7310da82bd276b7f2e1a8422dfa8d3fd1f8c266'
+body_hash: 'sha256:7710fdcc9318f4fed5e9d3a0a49862bef1485afa81e120d12ddfdaa67e41d57a'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -605,6 +605,22 @@ related:
 - `S06` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
 - `S06` `verify:` `python -m dev.quality.types --full, no diagnostics on touched files` -> `pass`
 - `S06` `by:` `implementation-engineer-high`
+- `S06` `M` `src/cadrumo/application/modelo/projection_operation.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/modelo_projection_commands.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/modelo_query_results.py`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_source_owned_overrides.py`
+- `S06` `A` `src/cadrumo/entrypoints/tests/profile_persistence/projection_m130_seeding_support.py`
+- `S06` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_suffered_withholding_credits.py`
+- `S06` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S06` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S06` `verify:` `pytest projection service, operation, CLI and credit tests (97)` -> `pass`
+- `S06` `verify:` `pytest -m integration projection CLI, runtime, MCP and registered-executor conformance (358 of 362; 4 ledger.* conformance failures outside the projection)` -> `pass`
+- `S06` `verify:` `pytest CLI payload, determinism, public schema bounds and window contract (77)` -> `pass`
+- `S06` `verify:` `python -m dev.operation_contract_manifest.generate --check` -> `pass`
+- `S06` `verify:` `modelo_fixtures.py relay_contracts.py --check` -> `pass`
+- `S06` `verify:` `ruff format+check touched files` -> `pass`
+- `S06` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S06` `verify:` `python -m dev.quality.types --full, no diagnostics on touched files` -> `pass`
 
 ## Notes
 
@@ -635,3 +651,5 @@ related:
 - `S29` Commit 52d53539e6 was made by another committer from in-progress S29 work and also carries a non-S29 `test_borrador_binding.py` hunk; history was not rewritten. Native CLI test `test_retencion_soportada_absence_cli.py` stays red until `contract_manifest.json` is regenerated.
 - `S06` just check-types fails on 9 ty diagnostics in `test_verify_invoice_drift_gate.py` and 2 basedpyright in `invoice_filing_fingerprint.py,` both outside S06; CLI and acceptance journeys keyed on the retired 0596 binding stay open pending S18/S29 operator paths
 - `S06` modelo-100-export-file golden record frame `result.row.revision_id` differs between two releases; `dev/docs/tests/test_sequence_goldens.py::test_another_release_changes_only_the_enrolled_export_paths` fails; central mask decision left open
+- `S06` Commit 009999acb4 also swept in 18 `profile_persistence` test files another worker had staged in the shared index; content unchanged, reported to the orchestrator
+- `S06` filing-readiness-project-refine stays blocked (Modelo 100 2026 uncovered), so no sequence refresh; its --casilla 0513 example is a computed box on covered years
