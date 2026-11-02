@@ -22,13 +22,12 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.identity.aeat_certificado import AeatCertificadoId
 from ...core.operations import OperationEffect
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
 from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_data_ports import FiledEffectGuard
@@ -205,13 +204,12 @@ def resolve_notification_document_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile document disclosure and a fresh COMMIT fence."""
-    payload = require_access_request_profile_payload(
+    resolved = resolve_ledger_request_read_access(
         request,
+        context,
         definition_id=NOTIFICATION_DOCUMENT_CAPTURE_DEFINITION_ID,
-        payload_type=NotificationDocumentCaptureRequest,
-        access_profile_id=context.profile_id,
+        request_type=NotificationDocumentCaptureRequest,
     )
-    resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
     disclosures = resolved.policy.disclosures
     if context.action is AccessAction.RESULT:
         schema = context.contract.result_schema
