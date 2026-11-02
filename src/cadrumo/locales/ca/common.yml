@@ -4481,7 +4481,7 @@ desktop:
     dismiss: Descarta l’avís
     edit_field: Edita {field}
     ejercicio: Exercici
-    ejercicio_help: "L'any que declara aquesta resposta. Els altres conserven la seva."
+    ejercicio_help: L'any que declara aquesta resposta. Els altres conserven la seva.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
     entries_count: 'Registres: {count}'
@@ -9253,11 +9253,9 @@ workspace:
       vigente: Presentació registrada vigent
     holiday_coverage:
       calendar_unavailable: Festius sense comprovar
-      national_only: Festius autonòmics sense comprovar
-      territory_unverified: Festius autonòmics sense confirmar
     hub:
-      holidays_national_only: Els terminis tenen en compte els festius estatals; els
-        autonòmics no es comproven.
+      holidays_unchecked: Alguns terminis no s'han pogut comprovar amb el calendari
+        de dies inhàbils.
     lifecycle:
       amended: Correcció iniciada
       calculated: Càlcul completat

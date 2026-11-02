@@ -14,7 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from functools import cached_property, partial
+from functools import cached_property
 from typing import TYPE_CHECKING
 from uuid import UUID
 
@@ -81,7 +81,6 @@ if TYPE_CHECKING:
     from ..core.identity_check_verdict import IdentityCheckVerdictValue
     from ..domain.attachments.protocols import AttachmentStoreProtocol
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ..domain.deadlines.festivos import CalendarCCAA
 
 
 def supplied[T](value: T | None, default: T) -> T:
@@ -136,27 +135,9 @@ def build_modelo_workbench_read_ports(bucket_id: str, operation: PinnedAuthority
         verifications=calculation_binding.verification_repository(),
         activity_assets=ports.activity_asset_history_repository,
         borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
-        holiday_territory=partial(profile_holiday_territory, bucket_id, operation),
         bucket_events=ports.bucket_event_repository,
         filings=ports.filing_repository,
     )
-
-
-def profile_holiday_territory(bucket_id: str, operation: PinnedAuthorityOperation) -> CalendarCCAA | None:
-    """Read the profile's holiday territory, or ``None`` while the profile cannot say.
-
-    An absent or incomplete profile leaves the deadline on the national
-    holidays, which the form discloses, rather than keeping the workbench shut.
-    """
-    from ..application.modelo.action_errors import ModeloProfileReadinessError
-    from ..application.modelo.m303_regimen_simplificado_scope import taxpayer_profile_for_work
-    from ..application.modelo.profile_readiness_gate import load_modelo_work_profile
-
-    profile = load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=operation.profile_decode_context())
-    try:
-        return taxpayer_profile_for_work(profile).holiday_territory
-    except ModeloProfileReadinessError:
-        return None
 
 
 def build_modelo_aggregate_operation_ports(*, profile_id: str) -> ModeloAggregateOperationPorts:

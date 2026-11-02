@@ -2,10 +2,12 @@
 
 A deadline window's close is the date AEAT publishes, already moved past
 weekends and national inhábil days; a window projected from the governed rule
-is moved the same way. When that day is still not a business day for the filer
-the deadline moves to the next one (Ley 39/2015 art. 30.5, applied to tax
-procedure through Ley 58/2003 art. 7.2), and whether a day is a business day
-depends on the holiday calendar and on the filer's territory (art. 30.6).
+is moved the same way. When that day is still not a business day the deadline
+moves to the next one (Ley 39/2015 art. 30.5, applied to tax procedure through
+Ley 58/2003 art. 7.2). An electronic filing counts days on the State's calendar
+of días inhábiles (art. 31.3, which excludes art. 30.6), so only weekends and
+national inhábiles move a close, and the effective date is the same for every
+filer whatever their territory.
 Every surface that says whether a declaration is on time or late
 -- the calculate command, the declaration editor and the filing calendar --
 reads that effective date here, so none of them can judge lateness against the
@@ -35,7 +37,6 @@ from ...core.logging import get_logger
 from ...core.period import Period
 from ...domain.deadlines.errors import DeadlineValidationError
 from ...domain.deadlines.festivos import (
-    CalendarCCAA,
     DeadlineHolidayCoverage,
     HolidayJurisdiction,
     shift_deadline,
@@ -107,18 +108,15 @@ def effective_filing_deadline(
     nominal_closes_on: date,
     *,
     modelo: str,
-    holiday_territory: CalendarCCAA | None,
     operation: PinnedAuthorityOperation,
 ) -> EffectiveFilingDeadline:
-    """Apply the business-day rule to one nominal close date.
+    """Apply the national business-day rule to one nominal close date.
 
-    ``holiday_territory`` is the filer's autonomous community; ``None`` checks
-    national holidays only and the coverage says so. A holiday calendar the
-    pinned authority cannot resolve keeps the nominal date with
+    A holiday calendar the pinned authority cannot resolve keeps the nominal date with
     ``CALENDAR_UNAVAILABLE`` coverage rather than failing the read.
     """
     try:
-        shift = shift_deadline(nominal_closes_on, modelo=modelo, ccaa_code=holiday_territory, operation=operation)
+        shift = shift_deadline(nominal_closes_on, modelo=modelo, operation=operation)
     except DeadlineValidationError as exc:
         _LOG.debug(
             "deadline business-day shift unavailable; keeping the nominal close date",
@@ -149,7 +147,6 @@ def resolve_effective_filing_deadline(
     filing_year: int,
     period: Period,
     *,
-    holiday_territory: CalendarCCAA | None,
     operation: PinnedAuthorityOperation,
 ) -> EffectiveFilingDeadline | None:
     """Resolve a declaration's deadline window and its effective close date, or ``None`` without a window.
@@ -173,9 +170,7 @@ def resolve_effective_filing_deadline(
             shift_reason=CALENDAR_UNAVAILABLE_SHIFT_REASON,
             close_known=False,
         )
-    return effective_filing_deadline(
-        resolution.closes_on, modelo=modelo, holiday_territory=holiday_territory, operation=operation
-    )
+    return effective_filing_deadline(resolution.closes_on, modelo=modelo, operation=operation)
 
 
 __all__ = [

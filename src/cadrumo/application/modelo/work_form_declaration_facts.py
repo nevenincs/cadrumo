@@ -74,8 +74,8 @@ class ModeloFormDeadline(ModeloFormBase):
 
     ``nominal_closes_on`` is the date the registry declares; ``closes_on`` is
     the date after the business-day shift, and ``holiday_coverage`` says which
-    holidays that shift accounted for, so a date computed without the filer's
-    regional holidays is never passed off as final. Exactly one of
+    holidays that shift accounted for, so a date computed without its holiday
+    calendar is never passed off as final. Exactly one of
     ``days_remaining`` and ``days_overdue`` is set, counted from
     ``reference_on``.
     """

@@ -2585,17 +2585,9 @@ application:
       holiday_coverage:
         calendar_unavailable: calendari de festius no disponible; el termini original
           no s'ha comprovat
-        national_and_territory: festius nacionals i de %{territory} comprovats; festius
-          locals sense comprovar
-        national_and_territory_without_name: festius nacionals i autonòmics aplicables
-          comprovats; festius locals sense comprovar
-        national_only: només festius nacionals; festius autonòmics i locals sense
-          comprovar
+        national_only: dissabtes, diumenges i dies inhàbils estatals comprovats; els
+          festius autonòmics i locals no mouen el termini de presentació
         not_shifted: el termini d'aquest model no es trasllada per dies inhàbils
-        territory_unverified: només festius nacionals; els festius autonòmics de %{territory}
-          d'aquest any no s'han comprovat i els locals no es comproven
-        territory_unverified_without_name: només festius nacionals; el calendari autonòmic
-          aplicable no està verificat; els festius locals no es comproven
       shift:
         business_day: Dia hàbil
         calendar_unavailable: Calendari no disponible

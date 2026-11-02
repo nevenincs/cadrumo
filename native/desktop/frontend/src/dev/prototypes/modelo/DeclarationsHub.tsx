@@ -310,7 +310,7 @@ export function DeclarationsHub({
               r.calendar && coverageWords(r.calendar.holiday_coverage, locale),
           ) && (
             <p className="text-base text-faint">
-              {w("workspace.declarations.hub.holidays_national_only", locale)}
+              {w("workspace.declarations.hub.holidays_unchecked", locale)}
             </p>
           )}
         </div>

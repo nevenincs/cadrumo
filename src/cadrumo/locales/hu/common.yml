@@ -4457,7 +4457,7 @@ desktop:
     dismiss: Elrejtés
     edit_field: '{field} szerkesztése'
     ejercicio: Adóév
-    ejercicio_help: "Az év, amelyre ez a válasz szól. A többi év megtartja a sajátját."
+    ejercicio_help: Az év, amelyre ez a válasz szól. A többi év megtartja a sajátját.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
     entries_count: 'Bejegyzések: {count}'
@@ -9216,11 +9216,8 @@ workspace:
       vigente: Aktuális rögzített benyújtás
     holiday_coverage:
       calendar_unavailable: Az ünnepnapok nincsenek ellenőrizve
-      national_only: A regionális ünnepnapok nincsenek ellenőrizve
-      territory_unverified: A regionális ünnepnapok nincsenek megerősítve
     hub:
-      holidays_national_only: A határidők az országos ünnepnapokkal számolnak; a regionálisakat
-        nem ellenőrizzük.
+      holidays_unchecked: Néhány határidőt nem tudtunk az ünnepnapi naptárral ellenőrizni.
     lifecycle:
       amended: Helyesbítés elindítva
       calculated: Számítás elkészült

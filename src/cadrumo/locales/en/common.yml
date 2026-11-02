@@ -4413,7 +4413,7 @@ desktop:
     dismiss: Dismiss
     edit_field: Edit {field}
     ejercicio: Tax year
-    ejercicio_help: "The year this answer states. Other years keep theirs."
+    ejercicio_help: The year this answer states. Other years keep theirs.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: No details match these filters. Try another search or section.
     entries_count: 'Entries: {count}'
@@ -9084,11 +9084,9 @@ workspace:
       vigente: Current recorded filing
     holiday_coverage:
       calendar_unavailable: Holidays not checked
-      national_only: Regional holidays not checked
-      territory_unverified: Regional holidays not confirmed
     hub:
-      holidays_national_only: Deadlines count national holidays; regional ones are
-        not checked.
+      holidays_unchecked: Some deadlines could not be checked against the holiday
+        calendar.
     lifecycle:
       amended: Correction started
       calculated: Calculation completed

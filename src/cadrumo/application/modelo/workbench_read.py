@@ -45,7 +45,6 @@ from .work_form_typing_effect import ModeloFormTypingEffect, form_typing_effects
 if TYPE_CHECKING:
     from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from ...domain.deadlines.festivos import CalendarCCAA
     from ...domain.modelos.protocols import (
         CalculationRevisionCatalogueRepositoryProtocol,
         ModeloRecordCatalogueRepositoryProtocol,
@@ -61,9 +60,7 @@ class ModeloWorkbenchReadPorts:
     """The profile repositories one declaration's workbench is read from.
 
     ``borrador_snapshots`` is the profile's AEAT draft store, read to say when
-    replayed AEAT data was imported; ``holiday_territory`` reads the profile's
-    holiday territory afresh on each read, so a deadline shifts for the filer's
-    own regional holidays and not the national ones only; ``bucket_events`` is
+    replayed AEAT data was imported; ``bucket_events`` is
     the profile's event history, read to say when the latest file for the AEAT
     was created and whether it still matches; ``filings`` is the profile's
     filing records, read to say whether a recorded filing's AEAT receipt is
@@ -75,7 +72,6 @@ class ModeloWorkbenchReadPorts:
     verifications: VerificationReportCatalogueRepositoryProtocol
     activity_assets: ActivityAssetHistoryRepository | None = None
     borrador_snapshots: Borrador100SnapshotRepository | None = None
-    holiday_territory: Callable[[], CalendarCCAA | None] | None = None
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None
     filings: ModeloRecordCatalogueRepositoryProtocol | None = None
 
@@ -191,7 +187,6 @@ def read_modelo_workbench_form(
         operation=operation,
         operation_contracts=operation_contracts,
     )
-    territory = ports.holiday_territory
     loaded = load_modelo_work_form(
         bucket_id,
         unit.modelo,
@@ -205,7 +200,6 @@ def read_modelo_workbench_form(
         admission=admission,
         language=language,
         borrador_snapshots=ports.borrador_snapshots,
-        holiday_territory=None if territory is None else territory(),
         bucket_events=ports.bucket_events,
         activity_assets=ports.activity_assets,
     )
