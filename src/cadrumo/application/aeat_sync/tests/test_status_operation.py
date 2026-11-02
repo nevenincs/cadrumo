@@ -127,7 +127,7 @@ def _borrador(operation: PinnedAuthorityOperation, *captured: datetime) -> tuple
             period=period,
             captured_at=captured_at,
             source_url=f"file-import:sha256:{index:064x}",
-            binding_values={"casilla.0550": Decimal(index)},
+            binding_values={"renta-certificado-trabajo-retenciones": Decimal(index)},
             operation=operation,
         )
     return service.list_snapshots(operation=operation)

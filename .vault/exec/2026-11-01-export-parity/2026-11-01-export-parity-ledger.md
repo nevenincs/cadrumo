@@ -5,40 +5,14 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:498a7950676aab340dbf217589436c56efa664a69977248199e7743fae2dec9b'
+body_hash: 'sha256:e90f67c38fe022c00eea62c29b62eef27665f60ba3f97aae6fa28c667dcf8b71'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `export-parity` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S14` `M` `dev/locales/fstring_registry.py`
 - `S14` `M` `dev/locales/tests/test_audit.py`
@@ -183,6 +157,67 @@ related:
 - `S16` `verify:` `pytest-profile_persistence-fold-tests` -> `pass`
 - `S16` `verify:` `just-check-style-format-types` -> `pass`
 - `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/observation_seeding_support.py`
+- `S15` `A` `src/cadrumo/application/live/borrador_100_keys.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_import.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_contracts.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_operation.py`
+- `S15` `M` `src/cadrumo/application/modelo/borrador_binding.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/binding_terminal_origin.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/app_live_borrador_commands.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/app_live_borrador_results.py`
+- `S15` `M` `src/cadrumo/locales/en/cli.yml`
+- `S15` `M` `src/cadrumo/locales/es/cli.yml`
+- `S15` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S15` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S15` `M` `src/cadrumo/locales/en/application.yml`
+- `S15` `M` `src/cadrumo/locales/es/application.yml`
+- `S15` `M` `src/cadrumo/locales/ca/application.yml`
+- `S15` `M` `src/cadrumo/locales/hu/application.yml`
+- `S15` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.json`
+- `S15` `M` `docs/technical/articles/063-live-snapshots-and-filed-data-capture-operations.md`
+- `S15` `A` `src/cadrumo/application/live/tests/test_borrador_100_keys.py`
+- `S15` `M` `src/cadrumo/application/live/tests/test_borrador_100.py`
+- `S15` `M` `src/cadrumo/application/live/tests/test_borrador_100_operation.py`
+- `S15` `M` `src/cadrumo/application/modelo/tests/test_borrador_binding.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/tests/test_borrador_100_roundtrip.py`
+- `S15` `M` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/conformance_live_borrador_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py`
+- `S15` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_app_live_borrador_import.py`
+- `S15` `M` `dev/runtime_lifecycle/tests/test_installed_borrador_stdio.py`
+- `S15` `verify:` `pytest focused borrador and terminal-origin tests (621)` -> `pass`
+- `S15` `verify:` `pytest -m integration test_app_live_borrador_import.py (35)` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `just check-format` -> `pass`
+- `S15` `verify:` `just check-types` -> `pass`
+- `S15` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S15` `verify:` `python -m dev.registry.conformance valid` -> `pass`
+- `S15` `verify:` `just check-bindings` -> `pass`
+- `S15` `by:` `implementation-engineer-high`
+- `S01` `M` `.vault/adr/2026-11-01-export-parity-binding-capability-grade-adr.md`
+- `S01` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S02` `M` `.vault/adr/2026-11-01-export-parity-observation-filing-kind-adr.md`
+- `S02` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S03` `M` `.vault/adr/2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr.md`
+- `S03` `M` `.vault/adr/2026-06-10-calculation-aggregation-taxonomy-adr.md`
+- `S03` `verify:` `vaultspec-core vault check all --feature calculation-aggregation-taxonomy` -> `pass`
+- `S12` `M` `.vault/adr/2026-11-01-export-parity-suffered-withholding-schemas-adr.md`
+- `S12` `M` `.vault/reference/2026-11-01-export-parity-suffered-withholding-schemas-reference.md`
+- `S12` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S13` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S13` `M` `.vault/research/2026-11-01-export-parity-income-imputation-criterion-research.md`
+- `S13` `A` `.vault/research/2026-11-01-export-parity-withholding-legal-readings-research.md`
+- `S13` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-binding-capability-grade-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-observation-filing-kind-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-suffered-withholding-schemas-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S27` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S28` `M` `.vault/plan/2026-11-01-export-parity-plan.md`
 
 ## Notes
 
@@ -194,3 +229,5 @@ related:
 - `S14` post-close regression fix: fixtures seeded unstamped revisions outside the calculation producer; dirs went 36 failed to 4 failed, the 4 outside S14 (0599 proven-zero diagnostic, 0604 fold)
 - `S05` post-close test alignment
 - `S16` post-close test alignment
+- `S15` Every target casilla of the 2022-2023 borrador profile is computed, so a real import stores no value and reports all five as unowned; installed stdio acceptance fixture updated but not run (disposable host only)
+- `S28` coordination with IVA and registry sessions happened after S16 landed; consumer-domain items forwarded to operator

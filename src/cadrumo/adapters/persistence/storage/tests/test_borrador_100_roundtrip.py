@@ -49,6 +49,8 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     period="0A",
 )
 _BUCKET_ID = "50505050-5050-4050-8050-505050505050"
+_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+_RESIDENCE = "renta-profile-tax-residence-ccaa"
 _OTHER_BUCKET_ID = "51515151-5151-4151-8151-515151515151"
 
 
@@ -92,16 +94,14 @@ def _borrador_detail_url(expediente_id: str) -> str:
 def _populated_snapshot(*, bucket_id: str) -> Borrador100Snapshot:
     captured_at = datetime(2024, 4, 12, 11, 30, 0, tzinfo=UTC)
     binding_values = {
-        "casilla.0500": Decimal("42500.00"),
-        "casilla.0501": Decimal("8750.50"),
-        "casilla.identity.declarant_label": "Persona Prueba",
+        _CERTIFICATE: Decimal("8750.50"),
+        _RESIDENCE: "madrid",
     }
     source_url = _borrador_detail_url("202410013522456T")
     snapshot_id = derive_borrador_100_snapshot_id(
         filing_year=2024,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        captured_at=captured_at,
         source_url=source_url,
         binding_values=binding_values,
     )
@@ -128,15 +128,14 @@ def _save_superseded_original(
 
     captured_at = datetime(2024, 3, 11, 9, 15, 0, tzinfo=UTC)
     binding_values = {
-        "casilla.0500": Decimal("39800.00"),
-        "casilla.identity.declarant_label": "Persona Prueba",
+        _CERTIFICATE: Decimal("8120.00"),
+        _RESIDENCE: "madrid",
     }
     source_url = _borrador_detail_url("202410013522401X")
     snapshot_id = derive_borrador_100_snapshot_id(
         filing_year=2024,
         period=_PERIOD,
         registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
-        captured_at=captured_at,
         source_url=source_url,
         binding_values=binding_values,
     )
@@ -172,13 +171,11 @@ def test_borrador_100_snapshot_survives_encrypted_storage_roundtrip(
         assert profile.paths.database_file.is_file()
         assert loaded == original
         # Witness the Decimal entries survive the union resolution.
-        assert loaded.binding_values["casilla.0500"] == Decimal("42500.00")
-        assert isinstance(loaded.binding_values["casilla.0500"], Decimal)
-        assert loaded.binding_values["casilla.0501"] == Decimal("8750.50")
-        assert isinstance(loaded.binding_values["casilla.0501"], Decimal)
+        assert loaded.binding_values[_CERTIFICATE] == Decimal("8750.50")
+        assert isinstance(loaded.binding_values[_CERTIFICATE], Decimal)
         # And the str entries are still str (not coerced to Decimal).
-        assert loaded.binding_values["casilla.identity.declarant_label"] == "Persona Prueba"
-        assert isinstance(loaded.binding_values["casilla.identity.declarant_label"], str)
+        assert loaded.binding_values[_RESIDENCE] == "madrid"
+        assert isinstance(loaded.binding_values[_RESIDENCE], str)
 
 
 def test_borrador_100_repository_default_refuses_active_bucket_mismatch(tmp_path: Path) -> None:

@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:12dde70e8e73a2287cb242575277508ff049b65f9dbdec7204365fe4aca9c8e0'
+body_hash: 'sha256:a4ba603b4a29cdae42b53823f168a18da4f21dc5a16d276ea113bdadd4fb10f1'
 ---
 
 # `export-parity` plan
@@ -36,14 +36,14 @@ Out of scope: monthly withholding filers and monthly Modelo 123 (the tested refu
 
 Draft and accept the decision records and grounding that every later Phase builds on; no product code.
 
-- [ ] `P01.S01` - Draft the per-binding capability grade decision so an advisory value blocks verify and export but not calculation or preview; `.vault/adr/`.
-- [ ] `P01.S02` - Draft the typed original or complementaria filing-kind decision for captured observations; `.vault/adr/`.
-- [ ] `P01.S03` - Draft the aggregation-taxonomy amendment making tier divergence on filing-bound bindings a blocking finding; `.vault/adr/2026-06-10-calculation-aggregation-taxonomy-adr.md`.
-- [ ] `P01.S12` - Ground and draft the suffered-withholding, reconciliation and resolution-record schemas as a code reference and an export-parity ADR amendment; `.vault/reference/ and .vault/adr/`.
-- [ ] `P01.S13` - Ground the income imputation criterion in primary LIRPF, RIRPF, DGT and TEAC text and draft its profile-fact decision; `.vault/research/ and .vault/adr/`.
+- [x] `P01.S01` - Draft the per-binding capability grade decision so an advisory value blocks verify and export but not calculation or preview; `.vault/adr/`.
+- [x] `P01.S02` - Draft the typed original or complementaria filing-kind decision for captured observations; `.vault/adr/`.
+- [x] `P01.S03` - Draft the aggregation-taxonomy amendment making tier divergence on filing-bound bindings a blocking finding; `.vault/adr/2026-06-10-calculation-aggregation-taxonomy-adr.md`.
+- [x] `P01.S12` - Ground and draft the suffered-withholding, reconciliation and resolution-record schemas as a code reference and an export-parity ADR amendment; `.vault/reference/ and .vault/adr/`.
+- [x] `P01.S13` - Ground the income imputation criterion in primary LIRPF, RIRPF, DGT and TEAC text and draft its profile-fact decision; `.vault/research/ and .vault/adr/`.
 - [ ] `P01.S04` - Ground the AEAT datos fiscales download format against an official specimen or record design; `.vault/research/`.
-- [ ] `P01.S28` - Coordinate the tier-divergence and filing-kind effects with the IVA, registry-binding and consumer domains before P02.S16 and P04.S07; `.vault/plan/`.
-- [ ] `P01.S27` - Present the open rulings from the decision records (zero cap, casilla 06 endpoint, absent imputation fact, legal readings, cross-domain coordination) and record the operator's answers; `.vault/adr/`.
+- [x] `P01.S28` - Coordinate the tier-divergence and filing-kind effects with the IVA, registry-binding and consumer domains before P02.S16 and P04.S07; `.vault/plan/`.
+- [x] `P01.S27` - Present the open rulings from the decision records (zero cap, casilla 06 endpoint, absent imputation fact, legal readings, cross-domain coordination) and record the operator's answers; `.vault/adr/`.
 
 ### Phase `P02` - Build the grade, filing-kind and borrador foundations
 
@@ -52,7 +52,7 @@ Land the blocking advisory grade, the typed filing kind and the single borrador 
 - [x] `P02.S14` - Implement the per-binding capability grade and its export and verify block, applied to Modelo 130 casilla 06; `src/cadrumo/domain/calculations/registry/ and src/cadrumo/application/modelo/`.
 - [x] `P02.S05` - Rebase and merge the Modelo 100 casilla 0599 ledger binding under the advisory grade; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 - [x] `P02.S16` - Capture the typed filing kind and let the 0604 fold prove casilla 18 zero for originals only; `src/cadrumo/application/live/ and src/cadrumo/domain/calculations/registry/observation_fold.py`.
-- [ ] `P02.S15` - Project borrador imports through the bound-casilla map, refuse old snapshot keys and add terminal-origin classes; `src/cadrumo/application/live/borrador_100_import.py and src/cadrumo/application/modelo/borrador_binding.py`.
+- [x] `P02.S15` - Project borrador imports through the bound-casilla map, refuse old snapshot keys and add terminal-origin classes; `src/cadrumo/application/live/borrador_100_import.py and src/cadrumo/application/modelo/borrador_binding.py`.
 
 ### Phase `P03` - Introduce the suffered-withholding evidence family
 

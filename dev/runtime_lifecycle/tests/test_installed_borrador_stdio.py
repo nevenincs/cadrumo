@@ -41,7 +41,6 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.public_period import PublicPeriod
 from cadrumo.application.operations.registry import OperationPublicDefinitionContractV1
-from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.hashing import canonical_json_bytes
 from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
@@ -49,7 +48,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.authority_location import bundled_authority_descriptor_path
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.entrypoints.adapter_composition_ports import build_borrador_100_snapshot_repository
-from cadrumo.tests.fixtures.borrador.generate import corpus_casilla_values, corpus_years
+from cadrumo.tests.fixtures.borrador.generate import corpus_years
 from cadrumo.tests.os_keychain_hook import require_os_credential_store
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
@@ -85,7 +84,9 @@ def _fixture_year() -> int:
 
 
 _FILING_YEAR = _fixture_year()
-_CASILLAS = ("0505", "0545", "0546", "0585", "0586")
+# A stored borrador is keyed by the bindings its revision admits; the work
+# certificate binding is the one such binding in the fixture revision.
+_SEEDED_BINDINGS = {"renta-certificado-trabajo-retenciones": Decimal("1834.27")}
 
 
 @dataclass(frozen=True, slots=True)
@@ -144,11 +145,7 @@ def _prepare_profile(
     under the same pinned authority operation before runtime admission.
     """
     period = Period.from_year_and_code(_FILING_YEAR, "0A")
-    printed = corpus_casilla_values(_FILING_YEAR)
-    bindings = {
-        f"casilla.{casilla}": printed[validated_casilla_id(casilla, surface="test.installed_query")]
-        for casilla in _CASILLAS
-    }
+    bindings = dict(_SEEDED_BINDINGS)
     source_url = "test-secret-source:" + uuid4().hex
     service = Borrador100SnapshotService(
         bucket_id=str(profile_id),
@@ -329,7 +326,7 @@ async def test_installed_mcp_queries_borrador_without_releasing_source_provenanc
                     )
                     assert len(listed.rows) == 1
                     assert listed.rows[0].snapshot_id == snapshot_id
-                    assert listed.rows[0].binding_count == len(_CASILLAS)
+                    assert listed.rows[0].binding_count == len(_SEEDED_BINDINGS)
 
                     viewed = await _query(
                         client,
@@ -346,12 +343,7 @@ async def test_installed_mcp_queries_borrador_without_releasing_source_provenanc
                     assert viewed.snapshot.snapshot_id == snapshot_id
                     assert viewed.snapshot.state.value == "active"
                     actual_values = viewed.snapshot.binding_map()
-                    printed = corpus_casilla_values(_FILING_YEAR)
-                    expected_values = {
-                        f"casilla.{casilla}": printed[validated_casilla_id(casilla, surface="test.installed_query")]
-                        for casilla in _CASILLAS
-                    }
-                    assert actual_values == expected_values
+                    assert actual_values == _SEEDED_BINDINGS
                     assert all(isinstance(value, Decimal) for value in actual_values.values())
 
                     latest = await _query(

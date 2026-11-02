@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 
 import pytest
@@ -19,6 +19,7 @@ from ..borrador_100 import (
     BorradorSnapshotNotFoundError,
     derive_borrador_100_snapshot_id,
 )
+from ..errors import LiveApplicationInputError
 from ..snapshot_base import SnapshotLifecycleState
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
@@ -136,11 +137,65 @@ def test_borrador_100_snapshot_service_captures_content_addressed_snapshot() -> 
         filing_year=2025,
         period=_PERIOD,
         registry_snapshot_ref=snapshot.registry_snapshot_ref,
-        captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
         binding_values=values,
     )
     assert repository.load(snapshot.snapshot_id) == snapshot
+
+
+def test_borrador_100_snapshot_identity_ignores_the_capture_instant_and_follows_the_values() -> None:
+    repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
+    service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
+
+    def capture(*, hours: int, amount: str) -> Borrador100Snapshot:
+        return service.capture(
+            filing_year=2025,
+            period=_PERIOD,
+            captured_at=_CAPTURED_AT + timedelta(hours=hours),
+            source_url=_SOURCE,
+            binding_values={"renta-certificado-trabajo-retenciones": Decimal(amount)},
+        )
+
+    first = capture(hours=0, amount="15.25")
+    again = capture(hours=30, amount="15.25")
+    changed = capture(hours=31, amount="15.26")
+
+    assert again.snapshot_id == first.snapshot_id
+    assert again.captured_at == first.captured_at == _CAPTURED_AT
+    assert changed.snapshot_id != first.snapshot_id
+    assert repository.load(first.snapshot_id).superseded_by_snapshot_id == changed.snapshot_id
+
+
+@pytest.mark.parametrize(
+    "stored_key",
+    [
+        pytest.param("casilla.0596", id="free-casilla-key"),
+        pytest.param("renta-retencion-trabajo-retirada", id="binding-the-revision-does-not-declare"),
+        pytest.param("renta-profile-minimo-descendientes-estatal", id="binding-not-admitted-to-the-borrador"),
+    ],
+)
+def test_borrador_reads_refuse_a_stored_key_the_pinned_revision_does_not_admit(stored_key: str) -> None:
+    repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
+    service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
+    stored = service.capture(
+        filing_year=2025,
+        period=_PERIOD,
+        captured_at=_CAPTURED_AT,
+        source_url=_SOURCE,
+        binding_values={stored_key: Decimal("15.25")},
+    )
+
+    with bundled_indexed_authority().operation() as operation:
+        for read in (
+            lambda: service.show(stored.snapshot_id, operation=operation),
+            lambda: service.list_snapshots(operation=operation),
+            lambda: service.latest_for_year(filing_year=2025, operation=operation),
+        ):
+            with pytest.raises(LiveApplicationInputError) as refused:
+                read()
+            assert refused.value.translated_message == "application.live.borrador.errors.binding_keys_not_admitted"
+            assert refused.value.context == {"bindings": stored_key}
+    assert repository.load(stored.snapshot_id).binding_values == {stored_key: Decimal("15.25")}
 
 
 def test_borrador_show_refuses_persisted_registry_revision_divergence() -> None:
