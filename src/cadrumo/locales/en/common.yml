@@ -196,6 +196,8 @@ aggregation:
         already stored for it.
       own_tax_id: The payer's tax ID (NIF) is your own; withholding you practise yourself
         is not a credit in your favour.
+      stale_revision: The suffered-withholding record changed after you read it. Load
+        it again and retry.
   retenciones:
     errors:
       filing_year_out_of_range: Filing year %{filing_year} is outside the supported

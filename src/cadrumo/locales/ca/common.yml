@@ -207,6 +207,8 @@ aggregation:
         o el certificat ja desats per a ell.
       own_tax_id: El NIF del pagador és el teu; una retenció que practiques tu no
         és un pagament a compte a favor teu.
+      stale_revision: El registre de la retenció suportada ha canviat després que
+        el llegissis. Torna'l a carregar i prova-ho una altra vegada.
   retenciones:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès

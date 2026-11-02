@@ -200,6 +200,8 @@ aggregation:
         vagy igazolással.
       own_tax_id: A kifizető adóazonosítója (NIF) a sajátod; az általad végzett levonás
         nem a javadra szóló előleg.
+      stale_revision: A levonás rekordja megváltozott, miután beolvastad. Töltsd be
+        újra, és próbáld meg még egyszer.
   retenciones:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
@@ -2462,7 +2464,7 @@ desktop:
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:
-      art_104_tres_exclusion: 104.Tres. cikk szerinti kizárás
+      art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
       attachment_ids: Mellékletek
       booked_date: Könyvelési dátum
       business_pct: Üzleti arány
