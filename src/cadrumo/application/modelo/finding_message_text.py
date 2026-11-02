@@ -111,10 +111,14 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "rnt_value": FindingFactKind.MONEY,
         "sublimit": FindingFactKind.MONEY,
         "total_base": FindingFactKind.MONEY,
+        "base_amount": FindingFactKind.MONEY,
+        "expected_cuota": FindingFactKind.MONEY,
+        "recorded_cuota": FindingFactKind.MONEY,
         # Other figures.
         "declared": FindingFactKind.NUMBER,
         "transaction_amount": FindingFactKind.NUMBER,
         "threshold": FindingFactKind.NUMBER,
+        "iva_rate_percent": FindingFactKind.NUMBER,
         "weighted_count": FindingFactKind.NUMBER,
         # Counts.
         "own_missing_count": FindingFactKind.COUNT,

@@ -144,6 +144,9 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.iva_import_document_unrecordable": (
             "application.modelo.work_form.finding_action.file_another_way"
         ),
+        "application.modelo.findings.iva_cuota_disagrees_with_rate": (
+            "application.modelo.work_form.finding_action.correct_and_recalculate"
+        ),
         "application.modelo.findings.iva_reagp_document_unrecordable": (
             "application.modelo.work_form.finding_action.file_another_way"
         ),

@@ -45,6 +45,7 @@ _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
             "application.modelo.findings.iva_selected_scope_evidence_failure",
             "application.modelo.findings.iva_intra_eu_self_assessment_unrecordable",
             "application.modelo.findings.iva_import_document_unrecordable",
+            "application.modelo.findings.iva_cuota_disagrees_with_rate",
             "application.modelo.findings.iva_reagp_document_unrecordable",
             "application.modelo.findings.iva_rectification_document_unrecordable",
         }

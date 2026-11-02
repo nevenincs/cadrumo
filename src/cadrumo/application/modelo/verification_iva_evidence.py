@@ -20,6 +20,7 @@ from ...domain.modelos.verification_report import (
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.iva_cuota_disagreement import CuotaDisagreement, cuota_disagreement
 from .action_errors import (
     WORKFLOW_GATE_LEGAL_REFS,
 )
@@ -89,6 +90,62 @@ def unrecordable_deduction_documents(
             continue
         documents.append(UnrecordableDeductionDocument(transaction, authority, scenario))
     return tuple(documents)
+
+
+@dataclass(frozen=True, slots=True)
+class CuotaDisagreeingDocument:
+    """A retained ledger row whose recorded cuota is not its base at its tipo."""
+
+    transaction: Transaction
+    disagreement: CuotaDisagreement
+
+
+def cuota_disagreeing_documents(
+    target: CalculationRevision,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    *,
+    excluded_transaction_ids: tuple[str, ...] = (),
+) -> tuple[CuotaDisagreeingDocument, ...]:
+    """Read each held-back row's base, tipo and cuota, keeping the rows whose cuota disagrees.
+
+    The persisted issue carries no figures, so they are read from the ledger row
+    as it stands now. A row that is gone or no longer disagrees keeps the general
+    finding, since its persisted evidence failure is not erased by editing it.
+    Rows named in ``excluded_transaction_ids`` have their own finding already.
+    """
+    transaction_ids = selected_scope_transaction_ids(target) - set(excluded_transaction_ids)
+    if not transaction_ids:
+        return ()
+    catalogue = transaction_repository.load()
+    documents: list[CuotaDisagreeingDocument] = []
+    for transaction_id in sorted(transaction_ids):
+        transaction = catalogue.get(transaction_id)
+        if transaction is None:
+            continue
+        disagreement = cuota_disagreement(transaction)
+        if disagreement is not None:
+            documents.append(CuotaDisagreeingDocument(transaction, disagreement))
+    return tuple(documents)
+
+
+def cuota_disagreement_finding(document: CuotaDisagreeingDocument) -> ModeloVerificationFinding:
+    """State one row's base, tipo, expected cuota and recorded cuota under its exact ledger subject."""
+    transaction = document.transaction
+    disagreement = document.disagreement
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+        severity=ModeloVerificationFindingSeverity.BLOCKING,
+        message_locale_key="application.modelo.findings.iva_cuota_disagrees_with_rate",
+        message_facts={
+            "transaction_ids": transaction.transaction_id,
+            "transaction_date": transaction.raw.booked_date.isoformat(),
+            "base_amount": disagreement.base,
+            "iva_rate_percent": (disagreement.rate * 100).normalize(),
+            "expected_cuota": disagreement.expected,
+            "recorded_cuota": disagreement.declared,
+        },
+        legal_refs=WORKFLOW_GATE_LEGAL_REFS,
+    )
 
 
 def general_selected_scope_evidence_issues(
@@ -197,6 +254,25 @@ def append_iva_selected_scope_evidence_finding(
     """
     documents = unrecordable_deduction_documents(target, transaction_repository)
     unrecordable_transaction_ids = tuple(document.transaction.transaction_id for document in documents)
+    cuota_documents = cuota_disagreeing_documents(
+        target, transaction_repository, excluded_transaction_ids=unrecordable_transaction_ids
+    )
+    for cuota_document in cuota_documents:
+        cuota_finding = cuota_disagreement_finding(cuota_document)
+        findings.append(cuota_finding)
+        failures_by_finding_id[id(cuota_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=work_unit.work_unit_id,
+            condition_id="modelo.work.verify.iva_selected_scope_evidence.complete",
+            scenario_id="modelo.work.verify.iva_selected_scope_evidence.cuota_disagrees_with_rate",
+            evidence_id="modelo.work.verify.iva_selected_scope_evidence",
+            evidence_values={
+                "modelo": str(work_unit.modelo),
+                "transaction_ids": cuota_document.transaction.transaction_id,
+            },
+            provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
+        )
+    unrecordable_transaction_ids += tuple(document.transaction.transaction_id for document in cuota_documents)
     for document in documents:
         finding = unrecordable_deduction_document_finding(document)
         findings.append(finding)

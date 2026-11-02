@@ -2226,6 +2226,11 @@ application:
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.
+      iva_cuota_disagrees_with_rate: A(z) %{transaction_date} dátumú IVA-bejegyzés
+        %{recorded_cuota} EUR IVA-összeget rögzít, de a(z) %{base_amount} EUR alap
+        %{iva_rate_percent}%-os kulcs mellett %{expected_cuota} EUR-t ad. Javítsd
+        az IVA-összeget, az alapot vagy a kulcsot, majd számolj újra, mielőtt ellenőrzöd
+        ezt a nyilatkozatot.
       iva_import_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
         %{transaction_currency} összegű tételhez a behozatal vámáru-nyilatkozata szükséges.
         A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a bevallás nem mehet át
@@ -2871,6 +2876,8 @@ application:
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
       profile_authentication_refused: A profiljelszó hitelesítése sikertelen.
+      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni;
+        add meg, melyik adóévre vonatkozik ez a válasz.
       profile_password_contains_surrogate: A profiljelszó olyan értéket tartalmaz,
         amely nem kódolható szigorú UTF-8 formában.
       profile_password_too_few_scalars: A profiljelszónak legalább {minimum_scalars}
@@ -2881,7 +2888,6 @@ application:
         {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
       profile_proof_cancelled: A profiljelszó ellenőrzése megszakadt, mielőtt befejeződött
         volna.
-      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni; add meg, melyik adóévre vonatkozik ez a válasz.
       profile_text_too_long: A(z) %{field} mező legfeljebb %{limit} karaktert enged
         meg; rövidítsd le.
       recovery_already_enrolled: Ehhez a profilhoz már tartozik helyreállítási kód.

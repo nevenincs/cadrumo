@@ -2140,6 +2140,10 @@ application:
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.
+      iva_cuota_disagrees_with_rate: The VAT entry dated %{transaction_date} records
+        a cuota of %{recorded_cuota} EUR, but its base of %{base_amount} EUR at a
+        rate of %{iva_rate_percent}% gives %{expected_cuota} EUR. Correct the cuota,
+        the base or the rate, then calculate again before checking this declaration.
       iva_import_document_unrecordable: The entry dated %{transaction_date} for %{transaction_amount}
         %{transaction_currency} needs a customs declaration for the import. Cadrumo
         cannot yet record it, so this declaration cannot pass the check. File this
@@ -2766,6 +2770,8 @@ application:
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
       profile_authentication_refused: The profile password was not accepted.
+      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say
+        which ejercicio this answer is for.
       profile_password_contains_surrogate: The profile password contains a value that
         cannot be encoded as strict UTF-8.
       profile_password_too_few_scalars: The profile password must be at least {minimum_scalars}
@@ -2776,7 +2782,6 @@ application:
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
       profile_proof_cancelled: The profile password check was cancelled before it
         finished.
-      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say which ejercicio this answer is for.
       profile_text_too_long: The field %{field} holds at most %{limit} characters;
         shorten it.
       recovery_already_enrolled: This profile already has a recovery code. Disable

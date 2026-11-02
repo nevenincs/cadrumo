@@ -2270,6 +2270,10 @@ application:
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.
+      iva_cuota_disagrees_with_rate: La entrada de IVA con fecha %{transaction_date}
+        registra una cuota de %{recorded_cuota} EUR, pero su base de %{base_amount}
+        EUR al tipo del %{iva_rate_percent} % da %{expected_cuota} EUR. Corrige la
+        cuota, la base o el tipo y vuelve a calcular antes de comprobar esta declaración.
       iva_import_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
         %{transaction_currency} necesita la declaración aduanera de la importación.
         Cadrumo todavía no puede registrarla, por lo que esta declaración no puede
@@ -2916,6 +2920,8 @@ application:
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
       profile_authentication_refused: No se aceptó la contraseña del perfil.
+      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica
+        a qué ejercicio corresponde esta respuesta.
       profile_password_contains_surrogate: La contraseña del perfil contiene un valor
         que no puede codificarse como UTF-8 estricto.
       profile_password_too_few_scalars: La contraseña del perfil debe tener al menos
@@ -2926,7 +2932,6 @@ application:
         máximo {maximum_utf8_bytes} bytes UTF-8; se recibieron {utf8_byte_count}.
       profile_proof_cancelled: Se canceló la comprobación de la contraseña del perfil
         antes de terminar.
-      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica a qué ejercicio corresponde esta respuesta.
       profile_text_too_long: El campo %{field} admite como máximo %{limit} caracteres;
         acórtalo.
       recovery_already_enrolled: Este perfil ya tiene un código de recuperación. Desactívalo
