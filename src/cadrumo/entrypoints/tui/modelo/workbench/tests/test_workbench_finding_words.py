@@ -149,11 +149,37 @@ def _returned_dict_keys(module: ast.Module, name: str) -> set[str]:
     raise _UnreadableFactsError(f"no function {name} returning a dict literal")
 
 
+def _builder_keys(module: ast.Module, name: str) -> set[str]:
+    """The keys of the dict a module function of that name builds in one local and returns."""
+    for node in ast.walk(module):
+        if isinstance(node, ast.FunctionDef) and node.name == name:
+            returned = [
+                inner.value.id
+                for inner in ast.walk(node)
+                if isinstance(inner, ast.Return) and isinstance(inner.value, ast.Name)
+            ]
+            if len(returned) != 1:
+                raise _UnreadableFactsError(f"{name} does not return one local dict")
+            return _local_keys(module, node, returned[0])
+    raise _UnreadableFactsError(f"no function {name} building a dict")
+
+
 def _local_keys(module: ast.Module, function: ast.AST, name: str) -> set[str]:
     """Every fact key bound to the local ``name``: its dict literal or builder, and each key assigned to it."""
     keys: set[str] = set()
     bound = False
     for node in ast.walk(function):
+        if (
+            isinstance(node, ast.AugAssign)
+            and isinstance(node.op, ast.BitOr)
+            and isinstance(node.target, ast.Name)
+            and node.target.id == name
+        ):
+            literal, splats = _dict_keys(node.value)
+            if splats:
+                raise _UnreadableFactsError(f"{name} splats {splats}")
+            keys |= literal
+            bound = True
         if isinstance(node, ast.Assign | ast.AnnAssign):
             targets = node.targets if isinstance(node, ast.Assign) else [node.target]
             value = node.value
@@ -198,6 +224,8 @@ def _call_site_keys(module: ast.Module, function_name: str) -> set[str]:
 def _fact_names(module: ast.Module, call: ast.Call, facts: ast.expr) -> set[str]:
     if isinstance(facts, ast.Name):
         return _local_keys(module, _enclosing(module, call), facts.id)
+    if isinstance(facts, ast.Call) and isinstance(facts.func, ast.Name):
+        return _builder_keys(module, facts.func.id)
     keys, splats = _dict_keys(facts)
     for _ in splats:
         keys |= _call_site_keys(module, _enclosing(module, call).name)
