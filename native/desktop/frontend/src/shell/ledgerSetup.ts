@@ -540,6 +540,14 @@ export type WithholdingAbsence = {
   withdrawn_at: string | null;
   revision_id: string;
 };
+export type WithholdingAbsenceListRequest = { ejercicio: number };
+/** Every stored attestation of an ejercicio, active and withdrawn, each with
+ * the income class's label in the person's language. */
+export type WithholdingAbsenceListResult = {
+  profile_id: string;
+  ejercicio: number;
+  attestations: (WithholdingAbsence & { income_class_label: string })[];
+};
 export type WithholdingAbsenceReason =
   | "ejercicio_unsupported"
   | "family_not_declared"
