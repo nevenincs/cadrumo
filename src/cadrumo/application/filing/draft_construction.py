@@ -948,13 +948,17 @@ def _decimal_input(input_id: str, value: object) -> Decimal:
     if isinstance(value, bool):
         raise _refuse_decimal_input(input_id, value)
     if isinstance(value, Decimal):
-        return value
-    if isinstance(value, int | str):
+        parsed = value
+    elif isinstance(value, int | str):
         try:
-            return Decimal(value)
+            parsed = Decimal(value)
         except (InvalidOperation, ValueError, TypeError) as exc:
             raise _refuse_decimal_input(input_id, value) from exc
-    raise _refuse_decimal_input(input_id, value)
+    else:
+        raise _refuse_decimal_input(input_id, value)
+    if not parsed.is_finite():
+        raise _refuse_decimal_input(input_id, value)
+    return parsed
 
 
 def _boolean_input(input_id: str, value: object) -> bool:

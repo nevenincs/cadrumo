@@ -22,6 +22,7 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from datetime import date, datetime
+from decimal import Decimal
 
 import pytest
 
@@ -65,6 +66,14 @@ class TestFamiliesTheLiteralChainHandled:
     def test_integer_refuses_a_fractional_value(self) -> None:
         with pytest.raises(ModeloBuilderError):
             _binding_input("b", "7.5", _binding("integer"))
+
+    @pytest.mark.parametrize("data_type", ("integer", "decimal", "money"))
+    @pytest.mark.parametrize("token", ("Infinity", "-Infinity", "NaN", "sNaN"))
+    @pytest.mark.parametrize("as_decimal", (False, True))
+    def test_non_finite_numeric_value_is_refused(self, data_type: str, token: str, as_decimal: bool) -> None:
+        value: object = Decimal(token) if as_decimal else token
+        with pytest.raises(ModeloBuilderError):
+            _binding_input("b", value, _binding(data_type))
 
     def test_boolean_returns_a_bool(self) -> None:
         assert _binding_input("b", "si", _binding("boolean")) is True
