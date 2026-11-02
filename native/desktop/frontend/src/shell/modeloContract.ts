@@ -489,6 +489,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "ungrounded_income_substrate"
     | "unusable_sales_invoice_evidence"
     | "devengo_date_proxy_attribution"
+    | "iva_row_placed_on_movement_date"
+    | "iva_operation_date_after_movement"
     | "oss_no_live_source"
     | "withholding_detail_absent"
     | "missing_transaction_evidence"
