@@ -478,6 +478,14 @@ class IvaRateRecord(_IvaStrictFrozen):
         default=(),
         description="Registry source-reference identities backing this rate.",
     )
+    published_on_date: bool = Field(
+        default=True,
+        description="False when the rate was read from the nearest edition: it prices, it proves nothing.",
+    )
+    projected_from_date: date | None = Field(
+        default=None,
+        description="The edition edge a projected read came from, when the read was projected.",
+    )
     supersedes_tier_default: bool = Field(
         default=False,
         description="A rate that applies ALONGSIDE its tier's ordinary rate, not instead of it.",

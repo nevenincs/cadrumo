@@ -59,7 +59,7 @@ from ...domain.currency.service import published_eur_rate_on_day_or_next_publica
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import TransactionKind, require_transaction_kind
-from ...domain.iva.lookup import lookup_rate, tier_rates_within
+from ...domain.iva.lookup import lookup_published_rate, lookup_rate, tier_rates_within
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
 from ..exchange_rate_provider import exchange_rate_provider
@@ -150,7 +150,7 @@ def _expected_iva_amount(
     Returns:
         The expected IVA amount rounded to two decimal places.
     """
-    rate = lookup_rate(
+    rate = lookup_published_rate(
         candidate.destination_member_state,
         candidate.rate_kind,
         candidate.transaction_date,

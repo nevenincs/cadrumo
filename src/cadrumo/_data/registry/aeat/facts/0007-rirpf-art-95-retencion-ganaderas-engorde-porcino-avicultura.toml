@@ -2,6 +2,8 @@
 fact_id = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura"
 family = "scalar"
 
+[fact.standing_rate]
+
 [[fact.variants]]
 variant_id = "rirpf-art-95:retencion-actividades-ganaderas-engorde-porcino-avicultura:2007-04-01"
 date_axis = "filing_period"
