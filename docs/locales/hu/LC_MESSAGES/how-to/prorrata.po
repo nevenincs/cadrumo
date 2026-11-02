@@ -134,8 +134,9 @@ msgstr ""
 "A **végleges százalék** az év végén készül el, az egész év levonási "
 "joggal és anélkül végzett ügyleteinek forgalmából (LIVA art. 104.Dos). "
 "Soha nem egyetlen negyedévből származik. Az eszköz ezeket a forgalmakat "
-"az elszámolási időszak számításának éves forgalmi casilláiból olvassa; ha"
-" nincsenek megadva, jelzi, ahelyett hogy találgatna."
+"az éves forgalmi casilla értékeiből veszi, amelyek az elszámolási időszak"
+" számításában szerepelnek; ha nincsenek megadva, jelzi, ahelyett hogy "
+"találgatna."
 
 #: ../../how-to/prorrata.md:46
 msgid ""
@@ -394,7 +395,7 @@ msgstr ""
 "Mindegyikhez az eszköz veszi a levonható bruttó bejövő áfát, alkalmazza a"
 " végleges százalékot, és kivonja azt a levonást, amelyet az az időszak "
 "ténylegesen az ideiglenes százalékon érvényesített. A különbség, pozitív "
-"vagy negatív, a 44-es casillába kerül."
+"vagy negatív, a 44-es casilla értéke lesz."
 
 #: ../../how-to/prorrata.md:159
 msgid ""
@@ -406,7 +407,7 @@ msgstr ""
 "Az eszköz a korábbi időszakok bruttó bejövő áfáját újra levezeti a "
 "főkönyvedből, az érvényesített levonást pedig az adott időszak benyújtott"
 " megfigyeléséből olvassa. A Modelo 390 szabályosítási mezője a benyújtott"
-" elszámolás 44-es casilláját ismétli meg."
+" elszámolás 44-es casilla értékét ismétli meg."
 
 #: ../../how-to/prorrata.md:163
 msgid ""
