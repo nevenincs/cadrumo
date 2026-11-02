@@ -748,4 +748,14 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.application.ledger.actions_classification.ClassificationRuleSearchRefusedError",
+        ErrorCode(
+            code="REFUSED_CLASSIFICATION_RULE_SEARCH",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_classification_rule_search",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

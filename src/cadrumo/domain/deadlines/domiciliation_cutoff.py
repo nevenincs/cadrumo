@@ -38,6 +38,7 @@ from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field
 
+from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
 from ..calculations.registry.errors import RegistryValidationError
@@ -453,7 +454,7 @@ class UnavailablePaymentCutoff(BaseModel):
         return None
 
 
-class _CalendarGapError(Exception):
+class _CalendarGapError(CadrumoError):
     """A year the derivation walks cannot classify its days."""
 
     def __init__(self, reason: PaymentCutoffUnavailableReason) -> None:
