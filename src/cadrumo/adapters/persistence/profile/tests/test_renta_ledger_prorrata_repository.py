@@ -15,8 +15,13 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 )
 
 from .....application.aggregation.renta_ledger import aggregate_renta_ledger_expenses_from_repositories
-from .....application.aggregation.renta_ledger_models import RentaLedgerExpenseAggregation
+from .....application.aggregation.renta_gasto_ledger import aggregate_renta_gasto_ledger_from_repositories
+from .....application.aggregation.renta_ledger_models import (
+    RentaLedgerAggregationIssueReason,
+    RentaLedgerExpenseAggregation,
+)
 from .....application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from .....core.casilla_id import validated_casilla_id
 from .....core.period import Period
 from .....core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from .....domain.categories.spending_category import SpendingCategory
@@ -218,8 +223,11 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
             ejercicio=2025,
             regime=ProrrataRegisterRegime.from_registry("general"),
             especial_transition=None,
-            provisional_percentage=Decimal("70"),
+            provisional_percentage=Decimal("90"),
             provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+            definitive_percentage=Decimal("70"),
+            definitive_volume_con_derecho=Decimal("7000"),
+            definitive_volume_sin_derecho=Decimal("3000"),
             source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
         ),
     )
@@ -229,6 +237,110 @@ def test_repository_wrapper_general_prorrata_register_joins_the_non_deductible_s
     assert result.issues == ()
     assert result.observations[0].deductible_amount == Decimal("1063.00")
     assert result.observations[0].non_deductible_amount == Decimal("147.00")
+
+
+def _save_priced_row_with_prorrata(
+    secure_objects: SecureObjectRepository, *, provisional: str, definitive: str | None
+) -> None:
+    """Save one row of base 1000 and IVA 210 and the year's general prorrata."""
+    row = _transaction(
+        "row-prorrata",
+        amount=Decimal("1210.00"),
+        category=SpendingCategory.from_registry("material_oficina"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+    )
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((row,)),
+    )
+    settlement = (
+        {}
+        if definitive is None
+        else {
+            "definitive_percentage": Decimal(definitive),
+            "definitive_volume_con_derecho": Decimal(definitive),
+            "definitive_volume_sin_derecho": Decimal("100") - Decimal(definitive),
+        }
+    )
+    ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).upsert_entry(
+        ProrrataRegisterEntry(
+            ejercicio=2025,
+            regime=ProrrataRegisterRegime.from_registry("general"),
+            especial_transition=None,
+            provisional_percentage=Decimal(provisional),
+            provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+            source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
+            **settlement,
+        ),
+    )
+
+
+def test_the_annual_return_takes_the_definitive_prorrata_not_the_provisional(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """LIVA art. 105.Cuatro and Seis: 1000 + 210 x (1 - 0,60) = 1084, not 1000 + 210 x (1 - 0,80) = 1042."""
+    _save_priced_row_with_prorrata(secure_objects, provisional="80", definitive="60")
+
+    result = _aggregate_2025_expenses(secure_objects)
+
+    assert result.issues == (), [(issue.reason, issue.detail) for issue in result.issues]
+    assert result.observations[0].deductible_amount == Decimal("1084.00")
+    assert result.observations[0].non_deductible_amount == Decimal("126.00")
+
+
+def test_an_unsettled_year_leaves_the_iva_bearing_row_unresolved(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """No definitive percentage: the row reports why it is missing, and 1042 is not offered in its place."""
+    _save_priced_row_with_prorrata(secure_objects, provisional="80", definitive=None)
+
+    result = _aggregate_2025_expenses(secure_objects)
+
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [RentaLedgerAggregationIssueReason.DEFINITIVE_PRORRATA_PENDING]
+    assert _M100_ASESORIA_CASILLA not in result.casilla_values
+
+
+def test_an_unsettled_year_still_counts_a_row_with_no_iva(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Only the IVA share is unknown, so a row bearing none keeps its known figure."""
+    _save_priced_row_with_prorrata(secure_objects, provisional="80", definitive=None)
+    untaxed = _transaction(
+        "row-untaxed",
+        amount=Decimal("500.00"),
+        category=SpendingCategory.from_registry("material_oficina"),
+        taxable_base=Decimal("500.00"),
+        iva_amount=Decimal("0.00"),
+    )
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((untaxed,)),
+    )
+
+    result = _aggregate_2025_expenses(secure_objects)
+
+    assert result.issues == ()
+    assert result.observations[0].deductible_amount == Decimal("500.00")
+
+
+def test_a_quarter_keeps_the_provisional_prorrata_it_is_liquidated_at(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """Modelo 130 runs on the provisional percentage, 1000 + 210 x 0,20 = 1042, settled or not."""
+    _save_priced_row_with_prorrata(secure_objects, provisional="80", definitive="60")
+
+    result = aggregate_renta_gasto_ledger_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=Period.from_year_and_code(2025, "2T"),
+        modelo="130",
+        target_casilla_id=validated_casilla_id("02"),
+        accept_activity_marker=True,
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+    )
+
+    assert result.issues == (), [(issue.reason, issue.detail) for issue in result.issues]
+    assert result.observations[0].deductible_amount == Decimal("1042.00")
 
 
 def test_repository_wrapper_ninguna_prorrata_regime_is_byte_identical_to_absent_entry(
@@ -296,8 +408,11 @@ def test_repository_wrapper_uses_the_explicit_secondary_prorrata_store_while_pri
                     ejercicio=2025,
                     regime=ProrrataRegisterRegime.from_registry("general"),
                     especial_transition=None,
-                    provisional_percentage=Decimal("80"),
+                    provisional_percentage=Decimal("90"),
                     provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+                    definitive_percentage=Decimal("80"),
+                    definitive_volume_con_derecho=Decimal("8000"),
+                    definitive_volume_sin_derecho=Decimal("2000"),
                     source_registry_snapshot_refs=(_prior_m303_snapshot_ref(),),
                 )
             )

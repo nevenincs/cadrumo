@@ -56,6 +56,7 @@ from ...domain.contribuyente.tax_residence import ResidenceTerritory, classify_t
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.prorrata_register.register import ProrrataRegister
 from ...domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
     RentaDeductibilityResult,
@@ -380,6 +381,87 @@ def resolve_iva_deduction_ratio(
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
             )
+    source = _iva_deduction_source(
+        bucket_id=bucket_id,
+        ejercicio=ejercicio,
+        profile_record=profile_record,
+        prorrata_register_repository=prorrata_register_repository,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
+    if source.exempt_ratio is not None or source.register is None:
+        return source.exempt_ratio
+    resolution = source.register.resolve_provisional(ejercicio, sector_id=None)
+    if resolution.percentage is None:
+        return None
+    return resolution.percentage / source.percentage_divisor
+
+
+@dataclass(frozen=True, slots=True)
+class AnnualIvaDeduction:
+    """The year's IVA-deduction fraction as an annual return reads it.
+
+    Attributes:
+        ratio: The fraction, or ``None`` when no regime rations the deduction.
+        definitive_pending: The prorrata applies but no definitive percentage is
+            registered yet, so the year's non-deductible IVA is not known. The
+            provisional percentage does not stand in for it.
+    """
+
+    ratio: Decimal | None
+    definitive_pending: bool = False
+
+
+def resolve_annual_iva_deduction(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    profile_record: UserProfileRecord | None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> AnnualIvaDeduction:
+    """Resolve the IVA-deduction fraction that closes the year for the annual return.
+
+    The provisional percentage only governs the year's liquidations; the last one
+    computes the definitive prorrata and regularises them (LIVA art. 105.Cuatro), and
+    that percentage applies to all the year's cuotas (art. 105.Seis). The non-deductible
+    IVA that joins the acquisition cost (Manual Renta, ch. 7) is therefore the definitive one.
+    """
+    source = _iva_deduction_source(
+        bucket_id=bucket_id,
+        ejercicio=ejercicio,
+        profile_record=profile_record,
+        prorrata_register_repository=prorrata_register_repository,
+        profile_decode_context=profile_decode_context,
+        operation=operation,
+    )
+    if source.exempt_ratio is not None or source.register is None:
+        return AnnualIvaDeduction(ratio=source.exempt_ratio)
+    entry = source.register.entry_for(ejercicio, sector_id=None)
+    if entry is None or entry.definitive_percentage is None:
+        return AnnualIvaDeduction(ratio=None, definitive_pending=True)
+    return AnnualIvaDeduction(ratio=entry.definitive_percentage / source.percentage_divisor)
+
+
+@dataclass(frozen=True, slots=True)
+class _IvaDeductionSource:
+    """Where a year's IVA-deduction fraction comes from: an exempt regime, or an apportioning register."""
+
+    percentage_divisor: Decimal
+    exempt_ratio: Decimal | None = None
+    register: ProrrataRegister | None = None
+
+
+def _iva_deduction_source(
+    *,
+    bucket_id: str,
+    ejercicio: int,
+    profile_record: UserProfileRecord | None,
+    prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
+    profile_decode_context: ProfileDecodeContext | None,
+    operation: PinnedAuthorityOperation,
+) -> _IvaDeductionSource:
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
     ratio_policy = _registry_renta_iva_ratio_declarations(filing_year=ejercicio, operation=operation)
@@ -396,16 +478,13 @@ def resolve_iva_deduction_ratio(
         exempt_ratio=exempt_ratio,
     )
     if profile_exempt_ratio is not None:
-        return profile_exempt_ratio
+        return _IvaDeductionSource(percentage_divisor=percentage_divisor, exempt_ratio=profile_exempt_ratio)
 
     register = require_prorrata_register_coordinates_current(prorrata_register_repository.load(), operation=operation)
     entry = register.entry_for(ejercicio, sector_id=None)
     if entry is None or not regime_apportions_deduction(entry.regime):
-        return None
-    resolution = register.resolve_provisional(ejercicio, sector_id=None)
-    if resolution.percentage is None:
-        return None
-    return resolution.percentage / percentage_divisor
+        return _IvaDeductionSource(percentage_divisor=percentage_divisor)
+    return _IvaDeductionSource(percentage_divisor=percentage_divisor, register=register)
 
 
 def _profile_exempt_iva_ratio(
@@ -683,7 +762,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         operation=operation,
     )
     resolved_ejercicio = profile_year if profile_year is not None else period.filing_year
-    iva_deduction_ratio = resolve_iva_deduction_ratio(
+    iva_deduction = resolve_annual_iva_deduction(
         bucket_id=bucket_id,
         ejercicio=resolved_ejercicio,
         profile_record=profile_record,
@@ -702,7 +781,8 @@ def aggregate_renta_ledger_expenses_from_repositories(
         modelo=modelo,
         residence_ccaa=residence_ccaa,
         region_category_overrides=region_category_overrides,
-        iva_deduction_ratio=iva_deduction_ratio,
+        iva_deduction_ratio=iva_deduction.ratio,
+        definitive_prorrata_pending=iva_deduction.definitive_pending,
         profile_record=profile_record,
         profile_decode_context=profile_decode_context,
         operation=operation,
@@ -725,6 +805,7 @@ def aggregate_renta_ledger_expenses(
     residence_ccaa: CCAA | None = None,
     region_category_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]] | None = None,
     iva_deduction_ratio: Decimal | None = None,
+    definitive_prorrata_pending: bool = False,
     profile_record: UserProfileRecord | None = None,
     profile_decode_context: ProfileDecodeContext | None = None,
     operation: PinnedAuthorityOperation | None = None,
@@ -791,6 +872,7 @@ def aggregate_renta_ledger_expenses(
                 residence_ccaa=residence_ccaa,
                 region_category_overrides=region_category_overrides,
                 iva_deduction_ratio=iva_deduction_ratio,
+                definitive_prorrata_pending=definitive_prorrata_pending,
                 profile_record=profile_record,
                 profile_decode_context=profile_decode_context,
                 operation=indexed_operation,
@@ -838,6 +920,7 @@ def aggregate_renta_ledger_expenses(
             context=rules.context,
             activity_key=activity_key,
             criteria=criteria,
+            definitive_prorrata_pending=definitive_prorrata_pending,
         )
         if isinstance(outcome, RentaLedgerAggregationIssue):
             issues.append(outcome)
@@ -882,6 +965,7 @@ def _classify_renta_transaction(
     context: RentaDeductibilityContext,
     activity_key: str,
     criteria: ImputationCriteria | None = None,
+    definitive_prorrata_pending: bool = False,
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
     """Filter + classify one ledger transaction against the Renta-expense pipeline.
 
@@ -948,6 +1032,7 @@ def _classify_renta_transaction(
             kind=InvoiceKind.RECEIVED,
             criteria=criteria,
         ),
+        definitive_prorrata_pending=definitive_prorrata_pending,
     )
 
 
@@ -1052,6 +1137,7 @@ def _renta_observation_or_issue(
     context: RentaDeductibilityContext,
     period: Period,
     imputed: date | ImputationUnresolved | None = None,
+    definitive_prorrata_pending: bool = False,
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
     """Apply filing-period and deductibility gates to one validated fact."""
     if isinstance(imputed, ImputationUnresolved):
@@ -1072,6 +1158,13 @@ def _renta_observation_or_issue(
             transaction,
             RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
             f"filing date {anchor.isoformat()} is outside {period}",
+        )
+    if definitive_prorrata_pending and fact.taxable_base is not None and fact.iva_amount:
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.DEFINITIVE_PRORRATA_PENDING,
+            f"the definitive IVA prorrata of {period.filing_year} is not registered, "
+            "so the part of this row's IVA that joins the expense is not known",
         )
     result = evaluate_renta_deductibility(fact, profile, context)
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:

@@ -149,14 +149,13 @@ class RentaDeductibilityContext(_RentaStrictFrozenModel):
     especial) makes ``1 - iva_deduction_ratio`` of ``iva_amount`` join the
     deductible base. See :func:`evaluate_renta_deductibility`.
 
-    Populated by :func:`~application.aggregation.renta_ledger.resolve_category_deduction_rules`
-    for the M100 annual first slice and the M130 quarterly pagos fraccionados
-    gasto path alike, from
-    ``application.aggregation.renta_ledger.resolve_iva_deduction_ratio``: a
-    wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
+    Populated by :func:`~application.aggregation.renta_ledger.resolve_category_deduction_rules`:
+    a wholly ``EXENTO`` ``iva.regime`` profile fact resolves to ``0`` outright;
     otherwise the bucket's ``domain.prorrata_register.ProrrataRegister``
-    whole-entity entry for the ejercicio contributes its in-force provisional
-    percentage under ``GENERAL`` or ``ESPECIAL``.
+    whole-entity entry for the ejercicio contributes, under ``GENERAL`` or
+    ``ESPECIAL``, its definitive percentage for the M100 annual return
+    (``resolve_annual_iva_deduction``) and its in-force provisional percentage for
+    the M130 quarterly path (``resolve_iva_deduction_ratio``).
     """
     residence_ccaa: CCAA | None = None
     """Optional residence axis consumed by the governed territorial policy."""
