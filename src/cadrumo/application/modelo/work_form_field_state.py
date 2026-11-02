@@ -58,7 +58,11 @@ def summarize_bindings(row: ModeloWorkReviewCasilla) -> tuple[ModeloFormBinding,
 
 
 def casilla_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext, *, required: bool) -> ModeloFormOrigin:
-    """Classify where one casilla's value stands; first match wins."""
+    """Classify where one casilla's value stands; first match wins.
+
+    ``required`` says the box must be answered, either because verification
+    requires it or because the calculation refuses to run without it.
+    """
     if row.absent_by_design:
         return ModeloFormOrigin.NOT_APPLICABLE
     for classify in (_source_override_origin, _computed_origin, _declared_origin):
@@ -95,11 +99,12 @@ def _declared_origin(row: ModeloWorkReviewCasilla, context: WorkFormContext) -> 
     if kind in {InputKind.INFORMATIONAL, InputKind.PROJECTION_ONLY}:
         return ModeloFormOrigin.INFORMATIONAL
     if kind is InputKind.BOUND:
-        return (
-            ModeloFormOrigin.NOT_IMPORTED_YET
-            if row.realised_kind is ModeloValueKind.EMPTY
-            else ModeloFormOrigin.IMPORTED
-        )
+        if row.realised_kind is not ModeloValueKind.EMPTY:
+            return ModeloFormOrigin.IMPORTED
+        # A carry the calculation refuses to start without is not waiting on an import: it needs the filer.
+        if row.casilla_id in context.calculation_required.casilla_ids:
+            return ModeloFormOrigin.NEEDS_INPUT
+        return ModeloFormOrigin.NOT_IMPORTED_YET
     return None
 
 

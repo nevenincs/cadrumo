@@ -1,3 +1,4 @@
+import settings from "virtual:operational-settings";
 import { useEffect, useMemo, useState, type ReactNode, type Ref } from "react";
 import { EmptyState } from "@/components/ui/empty";
 import { Toast } from "@/components/ui/toast";
@@ -13,8 +14,6 @@ import { RightPanel, type RightPanelMode } from "./RightPanel";
 import { SelectionInspector } from "./SelectionInspector";
 import { SplitDialog } from "./SplitDialog";
 
-/** How long a confirmation stays on screen. */
-const TOAST_MS = 4000;
 
 /**
  * The panel beside the Movements grid: the To match pair queue, or the
@@ -98,7 +97,10 @@ export function LedgerInspector({
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    const timer = window.setTimeout(
+      () => setToast(null),
+      settings.ledger_toast_ms,
+    );
     return () => window.clearTimeout(timer);
   }, [toast]);
   const show = (id: string) => {
@@ -208,6 +210,7 @@ export function LedgerInspector({
       )}
       {splitting && (
         <SplitDialog
+          port={port}
           row={splitting}
           locale={locale}
           onStage={onStage}

@@ -472,6 +472,10 @@ application:
           rebut d'exportació.
         rendered_payload_empty: El disseny d'exportació ha produït un contingut de
           declaració buit.
+        shared_casilla_cells_unadjudicated: 'No s''ha generat el fitxer de la declaració:
+          les caselles %{casilla_ids} tenen un valor que el disseny oficial escriuria
+          en diverses cel·les, i encara no s''ha confirmat que aquestes cel·les signifiquin
+          el mateix. Escriure''l portaria aquestes xifres a conceptes que no els corresponen.'
         verify_draft_snapshot_stale: La comprovació requereix un esborrany construït
           amb les definicions del model en ús.
         xml_schema_unreadable: No s'ha pogut aplicar l'esquema oficial d'aquest exercici
@@ -486,6 +490,8 @@ application:
           l'esquema oficial.
         xml_value_not_listed: La casella %{box} conté un valor fora de les opcions
           que enumera l'esquema oficial.
+        xml_value_required_missing: L'esquema oficial exigeix la casella %{box} i
+          no té valor. Indica-la abans d'exportar; no s'ha escrit res.
         xml_value_too_long: La casella %{box} té %{observed} caràcters; l'esquema
           oficial n'admet com a màxim %{limit}.
         xml_value_too_many_decimals: La casella %{box} té %{observed} decimals; l'esquema
@@ -1007,6 +1013,59 @@ application:
           tu.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Coincideixen
+          differ: Difereixen
+          not_comparable: No es poden comparar
+          only_in_borrador: Només a l’esborrany de l’AEAT
+          only_in_calculation: Només al teu càlcul
+        evidence:
+          borrador: L’AEAT el va imprimir al seu esborrany i el vas importar aquí.
+            És una observació, no una declaració autenticada.
+          calculation: Calculat en aquest equip a partir dels teus registres. És local,
+            no una presentació davant l’AEAT.
+        reason:
+          borrador_does_not_read_box: La importació de l’esborrany no llegeix aquesta
+            casella, així que la manca d’un valor de l’esborrany no en diu res.
+          borrador_printed_no_value: El teu càlcul té un valor, però l’esborrany de
+            l’AEAT no n’imprimeix cap en aquesta casella.
+          borrador_value_ambiguous: L’esborrany de l’AEAT té més d’un valor per a
+            aquesta casella, així que no es pot comparar.
+          borrador_value_not_kept: L’esborrany de l’AEAT imprimeix aquesta casella,
+            però la importació no en desa el valor, així que no es pot comparar.
+          calculation_blocked: El teu càlcul no va poder resoldre aquesta casella,
+            així que no es pot comparar.
+          calculation_has_no_value: L’esborrany de l’AEAT imprimeix un valor, però
+            el teu càlcul no en té cap en aquesta casella.
+          calculation_not_applicable: El teu càlcul mostra que aquesta casella no
+            et correspon, però l’esborrany de l’AEAT imprimeix un valor.
+          not_applicable_zero: L’esborrany de l’AEAT imprimeix zero i el teu càlcul
+            mostra que aquesta casella no et correspon.
+          same_value: L’esborrany de l’AEAT i el teu càlcul tenen el mateix valor.
+          taken_from_borrador: El teu càlcul va prendre aquest valor de l’esborrany
+            de l’AEAT, així que la coincidència no el confirma de manera independent.
+          value_kinds_differ: Un costat té un import i l’altre un text, així que no
+            es poden comparar.
+          values_differ: L’esborrany de l’AEAT i el teu càlcul tenen valors diferents.
+        stale:
+          calculation_outdated: Les regles van canviar després de desar el teu càlcul,
+            així que cal recalcular-lo.
+          calculation_used_other_capture: El teu càlcul es va fer a partir d’un esborrany
+            de l’AEAT diferent del que es compara aquí.
+          newer_capture_refused: Hi ha desat un esborrany que vas importar més tard,
+            però no es pot llegir, així que aquesta comparació en fa servir un d’anterior.
+        status:
+          capture_refused: Hi ha esborranys de l’AEAT desats per a aquest any, però
+            cap no es pot llegir amb les regles actuals; torna a importar l’esborrany.
+          compared: S’han comparat casella per casella l’esborrany de l’AEAT que vas
+            importar i el teu càlcul desat.
+          no_calculation: Aquesta declaració encara no té cap càlcul desat, així que
+            l’esborrany no es pot comparar; calcula-la primer.
+          no_capture: No has importat cap esborrany de l’AEAT per a aquest any, així
+            que no hi ha res a comparar.
+          stale: S’han llegit tots dos, però ja no es corresponen; recalcula o torna
+            a importar l’esborrany abans de refiar-te d’aquesta comparació.
       errors:
         binding_keys_not_admitted: 'Aquest esborrany desat té valors amb claus que
           les definicions del model no admeten, així que no es pot fer servir; torna
@@ -1821,6 +1880,9 @@ application:
       amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind}
         no està legalment disponible per al model {modelo}, exercici {filing_year},
         període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
+      amendment_later_period_only: El model {modelo} de l'exercici {filing_year} i
+        període {period} no admet corregir una autoliquidació ja presentada. Practica
+        l'ajust en l'autoliquidació d'un període posterior.
       amendment_registry_root_missing: La generació publicada de l'autoritat %{missing_path}
         no existeix; no es poden validar les sobreescriptures de la rectificació.
       amendment_registry_snapshot_unresolved: No s'han pogut resoldre les definicions
@@ -2369,6 +2431,9 @@ application:
         de zero en aquest camp.
       selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit
         en aquest camp.
+      shared_casilla_cells_unadjudicated: 'La casella %{casilla_id} té un valor que
+        l''exportació escriuria també en cel·les que encara no s''ha confirmat que
+        signifiquin el mateix: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració recull
         rendiments del capital mobiliari de l'estalvi, però no hi consta cap retenció
         suportada. Introdueix l'import del certificat de retencions i ingressos a
@@ -2498,10 +2563,34 @@ application:
           canal decimal %{binding_id} té un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per a l'origen de valor %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides.
+    projection_words:
+      binding_unresolved: No s'ha pogut treure cap valor per a aquesta xifra a partir
+        dels teus registres, així que queda sense resoldre en lloc de comptar com
+        a zero. Registra l'evidència que falta i torna a projectar.
+      casilla_reason:
+        m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
+          general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
+          així que no té valor.
+        m210_convenio_rate_missing: Aquesta casella necessita el tipus del conveni
+          per evitar la doble imposició segons el país i la classe de renda, que no
+          està disponible, així que no té valor.
+        other: Aquesta casella no s'ha pogut calcular, així que no té valor. Mai es
+          mostra com a zero.
+        unresolved_operand: Aquesta casella suma o llegeix una xifra que encara no
+          té valor, així que ella tampoc no en té. Mai es mostra com a zero.
     quickfile:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha
         rebutjat amb %{error_code}.'
+    taxation_comparison_words:
+      below_materiality: Els dos resultats difereixen en {difference}, menys de {threshold},
+        així que tant se val quina de les dues modalitats triïs.
+      conjunta_lower_result: 'La tributació conjunta surt més barata: el teu resultat
+        és {conjunta} en conjunta i {individual} en individual, una diferència de
+        {difference}.'
+      individual_lower_result: 'La tributació individual surt més barata: el teu resultat
+        és {individual} en individual i {conjunta} en conjunta, una diferència de
+        {difference}.'
     value_date:
       month_01: de gen.
       month_02: de febr.
@@ -2567,6 +2656,9 @@ application:
           exemptes o per sota del llindar de retenció.
         settle_earlier_declaration: Resol primer la declaració del període anterior
           i torna a calcular.
+        shared_box_awaits_review: 'Cadrumo encara no pot exportar aquesta casella.
+          No la buidis per continuar: presenta aquesta declaració amb una altra eina
+          o espera que se''n revisin les cel·les.'
       inspection_heading: Totes les caselles, per número de casella
       unnamed_box: Casella sense nom
   operations:

@@ -11,6 +11,7 @@ import type {
   InvoiceKind,
 } from "../../shell/ledger";
 import type { PaymentStatus } from "../../shell/ledgerContract";
+import { settlementOf } from "../ledgerSettlement";
 
 type Example = {
   kind: InvoiceKind;
@@ -227,6 +228,10 @@ export function exampleInvoices(
       iva_total_eur: null,
       grand_total_eur: null,
       referencia_catastral: example.referencia ?? null,
+      settlement_amount: settlementOf(
+        sum([base, iva]),
+        example.retention ? example.retention[1] : null,
+      ),
     };
   });
 }

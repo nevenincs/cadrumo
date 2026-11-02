@@ -35,6 +35,11 @@ Grounded verbatim from the bundled official diseños
   N (Negativa/Sin actividad/Resultado cero)".
 - M210: casilla 31 "Resultado de la autoliquidación"; positive is ingreso,
   zero is cuota cero, and negative is solicitud de devolución.
+- M100: the XSD's ``tipo_TIA`` for ``DatosIngresoDevolucion/TIPODECLARACION``:
+  "I (Ingreso), U (Domiciliación), N (Negativa/Resultado cero), D (Solicitud de
+  devolución), R (Renuncia a la devolución), X (Devolución en cuenta
+  extranjera)"; the remaining letters are "Reservados para la AEAT". Casilla
+  0670 "Resultado de la declaración" is the result it reads.
 
 The quarter decides a negative instalment result, per the bundled official
 instructions (``_data/corpus/aeat_official/instructions/modelo_130`` and
@@ -183,6 +188,16 @@ _M210_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
         ResultDisposition.NEGATIVA,
     },
 )
+_M100_DECLARED: Final[frozenset[ResultDisposition]] = frozenset(
+    {
+        ResultDisposition.DEVOLUCION,
+        ResultDisposition.INGRESO,
+        ResultDisposition.NEGATIVA,
+        ResultDisposition.RENUNCIA_DEVOLUCION,
+        ResultDisposition.DOMICILIACION,
+        ResultDisposition.DEVOLUCION_TRANSFERENCIA_EXTRANJERO,
+    },
+)
 
 
 #: Per-modelo disposition spec, grounded in each bundled diseño's "Tipo de
@@ -251,6 +266,14 @@ _DISPOSITION_SPEC: dict[str, _DispositionSpec] = {
         negative=ResultDisposition.DEVOLUCION,
         zero=ResultDisposition.NEGATIVA,
         declared=_M210_DECLARED,
+    ),
+    # IRPF annual: casilla 0670 is signed; a negative result requests devolución
+    # (D) and zero is "Negativa/Resultado cero" (N). Renuncia R and the foreign
+    # account X are elections or settlement channels, not derived from the sign.
+    Modelo("100"): _DispositionSpec(
+        negative=ResultDisposition.DEVOLUCION,
+        zero=ResultDisposition.NEGATIVA,
+        declared=_M100_DECLARED,
     ),
 }
 

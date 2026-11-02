@@ -15,6 +15,7 @@ from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ....adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
 from ....adapters.persistence.profile.justificante import JustificanteRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -97,7 +98,7 @@ from ....domain.user_profile.values import (
     create_user_profile_record,
 )
 from ....tests.aeat_literal_fixtures import SEDE_ROOT_URL_FIXTURE
-from ...adapter_composition_ports import build_modelo_export_ports
+from ...adapter_composition_ports import build_invoice_lifecycle_ports, build_modelo_export_ports
 from ...adapter_composition_work_ports import build_amendment_action_ports
 from ...calculation_revision_composition import bind_calculation_revision_persistence_from_profile
 from ...ledger_action_composition import compose_ledger_action_ports
@@ -532,6 +533,49 @@ def test_ledger_action_composition_revalidates_persisted_identity_from_profile(
             mismatched_ports = compose_ledger_action_ports(bucket_id=_BUCKET_ID, operation=operation)
             with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid"):
                 mismatched_ports.calculation_repository.load(operation=operation)
+
+
+def test_invoice_lifecycle_scan_reads_a_sealed_rectificativa_only_with_the_profile_tax_id(
+    tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The invoice guard scans every stored revision, and a rectificativa decodes only against its taxpayer."""
+    work_unit, baseline_revision, target, receipt, context, revision = _authorities(operation=operation)
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as runtime:
+        seed_test_profile_record(_taxpayer_profile_record(operation=operation, tax_id=_TAX_ID))
+        WorkUnitCatalogueRepository(objects=runtime.repository).save(build_work_unit_catalogue((work_unit,)))
+        ModeloRecordCatalogueRepository(objects=runtime.repository).save(
+            ModeloRecordCatalogue(records={target.filing_record_id: target})
+        )
+        JustificanteRepository(objects=runtime.repository).save(receipt)
+        CalculationRevisionCatalogueRepository(
+            objects=runtime.repository, m303_rectificativa_taxpayer_tax_id=_TAX_ID
+        ).save(
+            CalculationRevisionCatalogue.model_validate(
+                {
+                    "revisions": {
+                        baseline_revision.calculation_revision_id: baseline_revision,
+                        revision.calculation_revision_id: revision,
+                    }
+                },
+                context={CALCULATION_REVISION_AGGREGATE_CONTEXT_KEY: context},
+            )
+        )
+
+        with open_test_profile_session(_BUCKET_ID):
+            without_identity = build_catalogue_lifecycle_ports(bucket_id=_BUCKET_ID)
+            with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid"):
+                without_identity.sealed_revisions.sealed_revisions()
+
+            # Both stored revisions are drafts, so none is cited: what is proven is that the scan
+            # decodes the catalogue holding the rectificativa instead of refusing it.
+            assert build_invoice_lifecycle_ports(bucket_id=_BUCKET_ID).sealed_revisions.sealed_revisions() == ()
+
+        seed_test_profile_record(_taxpayer_profile_record(operation=operation, tax_id="12345678Z"))
+        with open_test_profile_session(_BUCKET_ID):
+            mismatched = build_invoice_lifecycle_ports(bucket_id=_BUCKET_ID)
+            with pytest.raises(CalculationRevisionPersistenceError, match="payload is invalid"):
+                mismatched.sealed_revisions.sealed_revisions()
 
 
 def test_calculation_binding_refuses_profile_record_from_another_bucket(

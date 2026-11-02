@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { failureCode } from "../errors";
 import type { NotificationsSummary, ProfileViews } from "./views";
 
@@ -27,14 +34,18 @@ export function useMessages(
   onRefused: () => void,
   locale = "",
 ): MessagesState {
-  const [state, setState] = useState<MessagesState>({ kind: "unknown" });
+  const identity = useMemo(() => ({ reader, views }), [reader, views]);
+  const [stored, setStored] = useState<{
+    identity: typeof identity;
+    state: MessagesState;
+  }>({ identity, state: { kind: "unknown" } });
   const request = useRef(0);
   const readAt = useRef(0);
   const refused = useRef(onRefused);
   refused.current = onRefused;
 
   const read = useCallback(() => {
-    if (!views) return;
+    if (!views || reader === null) return;
     const mine = ++request.current;
     readAt.current = Date.now();
     views
@@ -49,22 +60,34 @@ export function useMessages(
       .then((next) => {
         // An answer to a question no longer being asked is not shown.
         if (mine !== request.current) return;
-        setState(next);
+        setStored({ identity, state: next });
         if (next.kind === "failed") refused.current();
       });
-  }, [views]);
+  }, [views, reader, identity]);
+
+  // Invalidate before the new profile is painted, including refusal callbacks.
+  useLayoutEffect(() => {
+    request.current += 1;
+    return () => {
+      request.current += 1;
+    };
+  }, [identity]);
 
   useEffect(() => {
     ++request.current;
-    setState({ kind: "unknown" });
+    setStored({ identity, state: { kind: "unknown" } });
     if (reader === null) return;
     read();
     const focus = () => {
       if (Date.now() - readAt.current >= REREAD_MS) read();
     };
     window.addEventListener("focus", focus);
-    return () => window.removeEventListener("focus", focus);
-  }, [reader, read, locale]);
+    return () => {
+      window.removeEventListener("focus", focus);
+    };
+  }, [reader, read, locale, identity]);
 
-  return state;
+  return reader !== null && stored.identity === identity
+    ? stored.state
+    : { kind: "unknown" };
 }

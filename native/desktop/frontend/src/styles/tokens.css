@@ -165,6 +165,9 @@
   /* ── Layers, lowest first. Overlays are portalled to the document body,
      so only these few need an order. ─────────────────────────────── */
   --layer-separator: 5;
+  --layer-dock-controls: 3;
+  --layer-dock-floating: 12;
+  --layer-dock-floating-controls: 13;
   /* A row of controls that stays while its page scrolls under it. */
   --layer-pinned: 10;
   --layer-modal: 50;

@@ -16,6 +16,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
 from ....core.config import override_settings
+from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -30,6 +31,7 @@ from ..taxation_comparison import (
     TaxationComparisonError,
     TaxationComparisonResult,
     TaxationRecommendation,
+    TaxationRecommendationReason,
     compare_taxation_for_work_unit,
 )
 from ..taxation_comparison_operation import (
@@ -141,7 +143,7 @@ def _comparison(*, revision: str = _REVISION) -> TaxationComparisonResult:
         individual_resultado=Decimal("1450.00"),
         delta_resultado=Decimal("550.00"),
         recommendation=TaxationRecommendation.CONJUNTA,
-        recommendation_reason="conjunta saves 550.00 €",
+        recommendation_reason=TaxationRecommendationReason.CONJUNTA_LOWER_RESULT,
     )
 
 
@@ -313,7 +315,7 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
         phases=phases,
     )
 
-    with override_settings(cadrumo_active_profile=str(_PROFILE)):
+    with override_settings(cadrumo_active_profile=str(_PROFILE), cadrumo_output_language="en"):
         reference = asyncio.run(definition.executor_factory.create().execute(request, context))
 
     assert reference == "f" * 64
@@ -330,6 +332,14 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
     assert projection.revision == unit.revision_id
     assert projection.delta_resultado == "550.00"
     assert projection.individual_branch_single_earner_only is True
+    assert projection.result_version == 2
+    assert projection.recommendation_reason is TaxationRecommendationReason.CONJUNTA_LOWER_RESULT
+    assert projection.words_language is OutputLanguage.EN
+    euro = chr(0xA0) + "€"
+    assert projection.recommendation_reason_words == (
+        f"Joint filing comes out lower: your result is 900.00{euro} jointly and 1,450.00{euro} individually, "
+        f"a difference of 550.00{euro}."
+    )
     assert "two-earner" in projection.individual_branch_caveat
     assert set(ModeloTaxationComparisonProjection.model_fields) == {
         "result_version",
@@ -345,6 +355,8 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
         "delta_resultado",
         "recommendation",
         "recommendation_reason",
+        "recommendation_reason_words",
+        "words_language",
         "individual_branch_single_earner_only",
         "individual_branch_caveat",
     }
@@ -479,6 +491,14 @@ def test_projection_rejects_non_finite_amount_and_unmodeled_scope() -> None:
                 _comparison(), profile_id=_PROFILE, work_unit_id=_unit().work_unit_id
             ).model_dump()
             | {"delta_resultado": "NaN"}
+        )
+
+    with pytest.raises(ValidationError, match="does not belong to its recommendation"):
+        ModeloTaxationComparisonProjection.model_validate(
+            ModeloTaxationComparisonProjection.from_comparison(
+                _comparison(), profile_id=_PROFILE, work_unit_id=_unit().work_unit_id
+            ).model_dump()
+            | {"recommendation_reason": TaxationRecommendationReason.INDIVIDUAL_LOWER_RESULT}
         )
 
     unsupported = _comparison().model_copy(update={"modelo": "303"})

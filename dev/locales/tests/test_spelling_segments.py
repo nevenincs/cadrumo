@@ -245,6 +245,11 @@ def test_standard_name_mutations_and_unpaired_product_words_stay_local(locale: s
         ("Diseño de registro", "Diseño"),
         ("diseño de registros", "diseño"),
         ("**Mis notificaciones**", "notificaciones"),
+        ("Código de Comercio", "Comercio"),
+        ("cobros y pagos", "cobros"),
+        ("devengo", "devengo"),
+        ("ingreso a cuenta", "cuenta"),
+        ("ingresos a cuenta", "ingresos"),
     ],
 )
 def test_official_spanish_names_are_checked_as_complete_phrases(locale: str, name: str, part: str) -> None:
@@ -253,6 +258,13 @@ def test_official_spanish_names_are_checked_as_complete_phrases(locale: str, nam
     assert "misspellledd" in result[locale]
     assert part + "x" in words_by_language(name.replace(part, part + "x"), locale)[locale]
     assert "es" not in words_by_language('<span lang="ca">' + name + "</span>", "hu")
+
+
+@pytest.mark.parametrize("locale", ["ca", "en", "hu"])
+def test_imputation_terms_stay_whole_and_inflected_forms_remain_checked(locale: str) -> None:
+    assert "devengos" in words_by_language("devengos", locale)[locale]
+    assert "cuentát" in words_by_language("ingreso a cuentát", locale)[locale]
+    assert "es" not in words_by_language("Comercio", locale)
 
 
 def test_plain_notifications_are_not_assumed_to_be_the_official_label() -> None:

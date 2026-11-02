@@ -710,6 +710,13 @@ class ModeloFormCounts(ModeloFormBase):
     ``needs_input`` and ``default_to_confirm`` count what is still to do, so a
     declaration recorded as filed counts none of either: nothing on it can be
     entered or confirmed any more, and changing it starts a correction.
+
+    ``needs_you`` and ``could_not_calculate`` are the attention a navigator
+    shows. ``needs_you`` counts every box whose standing asks the filer to act
+    (a value to give or confirm, a box the calculation could not work out, a
+    blocker), so it is what a section still asks of the filer.
+    ``could_not_calculate`` counts the boxes among them the last calculation
+    could not produce. A box can count in both.
     """
 
     total: int = Field(ge=0)
@@ -721,6 +728,8 @@ class ModeloFormCounts(ModeloFormBase):
     default_to_confirm: int = Field(ge=0)
     not_applicable: int = Field(ge=0)
     blocked: int = Field(ge=0)
+    needs_you: int = Field(ge=0)
+    could_not_calculate: int = Field(ge=0)
 
 
 class ModeloFormFieldBlock(ModeloFormBase):
@@ -829,13 +838,15 @@ type ModeloFormBlock = Annotated[
 
 
 class ModeloFormSection(ModeloFormBase):
-    """One apartado with its heading, ordered blocks and counts."""
+    """One apartado with its heading, ordered blocks, counts and whether it applies."""
 
     id: str
     heading: ModeloFormText
     official_heading: str | None
     blocks: tuple[ModeloFormBlock, ...]
     counts: ModeloFormCounts
+    #: ``False`` when its page does not apply or every box on it is proven not to apply; otherwise its page's answer.
+    applies: bool | None
 
 
 class ModeloFormPage(ModeloFormBase):
@@ -852,6 +863,22 @@ class ModeloFormPage(ModeloFormBase):
     #: That the page does not apply this period, said as the filer counts the period; ``None`` on a page that
     #: applies or may.
     applicability_words: str | None = None
+
+
+class ModeloFormOutlineGroup(ModeloFormBase):
+    """One group of the form's navigation outline: a heading and the sections it gathers, in order.
+
+    ``section_ids`` are :attr:`ModeloFormSection.id` values, every section of the
+    form's pages in exactly one group. ``counts`` roll up the boxes of those
+    sections; ``applies`` is ``True`` when any of them applies, ``False`` when
+    none does, and ``None`` otherwise.
+    """
+
+    id: str
+    heading: ModeloFormText
+    section_ids: tuple[str, ...]
+    counts: ModeloFormCounts
+    applies: bool | None
 
 
 class ModeloFormUnplacedField(ModeloFormBase):
@@ -931,6 +958,8 @@ class ModeloWorkForm(ModeloFormBase):
     inspection_reason: ModeloFormInspectionReason | None = None
     seed_source: FormLayoutSeedSource | None = None
     pages: tuple[ModeloFormPage, ...]
+    #: The navigation outline over :attr:`pages`: the layout's declared groups, or one group per page.
+    outline: tuple[ModeloFormOutlineGroup, ...]
     working_figures: tuple[ModeloFormField, ...] = ()
     unplaced: tuple[ModeloFormUnplacedField, ...] = ()
     result_addresses: tuple[CasillaId, ...] = ()
@@ -975,6 +1004,9 @@ class ModeloWorkForm(ModeloFormBase):
             raise ValueError("an inspection reason belongs to, and only to, an inspection-only form")
         if self.edit_closure is not None and self.edit_admitted:
             raise ValueError("a form closed to editing admits no edit")
+        outlined = [section_id for group in self.outline for section_id in group.section_ids]
+        if sorted(outlined) != sorted(section.id for page in self.pages for section in page.sections):
+            raise ValueError("the outline must name every section of the form exactly once")
         return self
 
     @property
@@ -1100,6 +1132,7 @@ __all__ = [
     "ModeloFormInspectionReason",
     "ModeloFormLayoutProvenance",
     "ModeloFormOrigin",
+    "ModeloFormOutlineGroup",
     "ModeloFormPage",
     "ModeloFormPrintedRate",
     "ModeloFormRate",

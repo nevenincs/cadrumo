@@ -31,11 +31,13 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import date, datetime
 from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
+from ...core.aggregation import BindingSourceKind
 from ...core.external_constants import OutputLanguage
 from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -43,6 +45,8 @@ from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.buckets.event import BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.modelos.calculation_revision import (
     FILED_REVISION_STATES,
     SEALED_REVISION_STATES,
@@ -61,6 +65,7 @@ from .calculation_notes import CALCULATION_NOTES, read_element_names
 from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .effective_deadline import resolve_effective_filing_deadline
+from .profile_binding import resolve_profile_sourced_bindings
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport
@@ -186,6 +191,24 @@ def modelo_form_deadline(
     )
 
 
+def _known_profile_truths(
+    snapshot: RegistrySnapshot, bucket_id: BucketId, *, operation: PinnedAuthorityOperation
+) -> Mapping[BindingId, bool]:
+    """The yes-or-no facts the filer's stored profile states, which decide the guards a calculation branches on.
+
+    Only a revision with an input the filer types has a refusal to predict, so
+    any other revision reads nothing. A profile that cannot be read states no
+    fact: the form then claims no refusal that depends on one.
+    """
+    if not any(binding.source is BindingSourceKind.MANUAL_INPUT for binding in snapshot.revision.bindings):
+        return dict[BindingId, bool]()
+    try:
+        resolution = resolve_profile_sourced_bindings(snapshot, bucket_id=str(bucket_id), operation=operation)
+    except RegistryValidationError:
+        return dict[BindingId, bool]()
+    return dict(resolution.boolean_binding_values)
+
+
 def _aeat_data_imported_at(
     snapshot_id: str | None, borrador_snapshots: Borrador100SnapshotRepository | None
 ) -> datetime | None:
@@ -274,6 +297,7 @@ def load_modelo_work_form(
         aeat_data_imported_at=_aeat_data_imported_at(context.borrador_snapshot_id, borrador_snapshots),
         calculation_diagnostics=CALCULATION_NOTES.diagnostics_for(review.work_unit_id, review.calculation_revision_id),
         element_names=read_element_names(activity_assets),
+        known_truths=_known_profile_truths(snapshot, bucket_id, operation=operation),
         calculation_screen_outdated=head is not None
         and calculation_screen_outdated(
             head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation

@@ -8,6 +8,8 @@ import {
   type ReactNode,
 } from "react";
 import { CountryEditor } from "@/components/editors/CountryEditor";
+import { useInvoiceDuplicate } from "../../../shell/ledgerInvoiceDuplicate";
+import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
 import { NotesEditor } from "@/components/editors/NotesEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
@@ -73,9 +75,8 @@ import {
   partyTaxIdOptions,
 } from "../suggestions/ledgerSuggestions";
 import {
-  movementPicker,
-  PICK_WINDOW_DAYS,
-  reconcile,
+  remapMatches,
+  remapMovementChoices,
   stageLink,
   stagedLinks,
 } from "../matching/matchingModel";
@@ -85,7 +86,7 @@ import {
   DERIVED_FIELDS,
   confirmation,
   countryAdmitted,
-  duplicateOf,
+  duplicateQuestion,
   entrySpec,
   fieldWidth,
   provenanceOf,
@@ -622,10 +623,39 @@ export function DraftReview({
   const draft = view?.draft ?? null;
   const blockers = view?.blockers ?? [];
   const actions = stage.content.actions;
-  const duplicate = useMemo(
-    () => (draft ? duplicateOf(draft, kind, corrections, invoices) : null),
-    [draft, kind, corrections, invoices],
+  const duplicateAsked = useMemo(
+    () => (draft ? duplicateQuestion(draft, kind, corrections) : null),
+    [draft, kind, corrections],
   );
+  const duplicateCheck = useInvoiceDuplicate(port, duplicateAsked, invoices);
+  const duplicateId =
+    duplicateCheck.kind === "answer" ? duplicateCheck.result.invoice_id : null;
+  const duplicate =
+    invoices?.find((invoice) => invoice.invoice_id === duplicateId) ?? null;
+  // What the ledger would link the confirmed invoice to, asked once it has one
+  // that no movement is linked to.
+  const confirmedInvoice = confirmed?.confirmation.invoice ?? null;
+  const linkAsked = useMemo(
+    () =>
+      confirmedInvoice && confirmedInvoice.linked_transaction_ids.length === 0
+        ? {
+            staged: [...stagedLinks(actions).rows].map(
+              ([transaction_id, invoice_id]) => ({
+                transaction_id,
+                invoice_id,
+              }),
+            ),
+            invoice_id: confirmedInvoice.invoice_id,
+          }
+        : null,
+    [confirmedInvoice, actions],
+  );
+  const linkMatches = useInvoiceMatches(port, linkAsked, rows);
+  // The answer names an invoice the list has yet to bring, or has not come.
+  const duplicateUnread =
+    duplicateAsked !== null &&
+    (duplicateCheck.kind !== "answer" ||
+      (duplicateId !== null && duplicate === null));
 
   /** Reads the document again, here or off this computer, and binds the
    * confirmation to that reading. A reading that differs from the one
@@ -699,6 +729,7 @@ export function DraftReview({
           country,
           corrections,
           duplicate,
+          duplicateUnread,
           confirmAnyway: anyway,
         })
       : draft
@@ -712,6 +743,7 @@ export function DraftReview({
             country,
             corrections,
             duplicate,
+            duplicateUnread,
             confirmAnyway: anyway,
           })
         : null;
@@ -734,6 +766,7 @@ export function DraftReview({
       country,
       corrections,
       duplicate,
+      duplicateUnread,
       confirmAnyway: anyway,
     });
     if (ready.kind !== "ready") return;
@@ -809,15 +842,18 @@ export function DraftReview({
     const invoice = confirmed.confirmation.invoice;
     const staged = stagedLinks(actions);
     const offer =
-      rows && invoice.linked_transaction_ids.length === 0
-        ? (reconcile(rows, [invoice], actions).list[0] ?? null)
+      rows && linkMatches.kind === "answer"
+        ? (remapMatches(linkMatches.result, rows, [invoice]).list[0] ?? null)
         : null;
     const linkStaged = staged.invoices.get(invoice.invoice_id);
     // With no movement that settles it, the movements near its day are
     // offered instead, those that settle its amount first.
     const nearby =
-      rows && !offer && invoice.linked_transaction_ids.length === 0
-        ? movementPicker(invoice, rows, actions)
+      rows &&
+      !offer &&
+      linkMatches.kind === "answer" &&
+      linkMatches.result.movement_choices !== null
+        ? remapMovementChoices(linkMatches.result.movement_choices, rows)
         : null;
     return columns(
       "",
@@ -906,7 +942,10 @@ export function DraftReview({
                   group: option.settles
                     ? t("desktop.ledger.inspector.invoice.group_settles")
                     : t("desktop.ledger.documents.group_near", {
-                        days: PICK_WINDOW_DAYS,
+                        days:
+                          linkMatches.kind === "answer"
+                            ? linkMatches.result.window_days
+                            : 0,
                       }),
                 }))}
                 emptyLabel={t("desktop.ledger.inspector.no_match")}
@@ -1444,6 +1483,19 @@ export function DraftReview({
             </Field>
           )}
         </div>
+        {duplicateCheck.kind === "failed" && duplicateAsked && (
+          <Alert
+            tone="warning"
+            role="alert"
+            icon={<Icon name="unknown" />}
+            className="ledger-draft-duplicate-failed"
+          >
+            <span>{t("desktop.ledger.documents.duplicate_check_failed")}</span>{" "}
+            <Button variant="ghost" onClick={duplicateCheck.retry}>
+              {t("desktop.ledger.documents.duplicate_check_retry")}
+            </Button>
+          </Alert>
+        )}
         {duplicate && (
           <Alert
             tone="warning"

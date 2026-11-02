@@ -20,6 +20,7 @@ import {
 } from "../../../shell/ledger";
 import {
   INVOICE_UPDATE_FIELDS,
+  isCorrectionJudged,
   type InvoiceUpdateField,
   type PaymentStatus,
 } from "../../../shell/ledgerContract";
@@ -751,19 +752,6 @@ export function correctionPreview(
   };
 }
 
-/** The fields whose change the ledger's answer judges. Anything else goes
- * without waiting for it, so a note can be fixed while the ledger is away. */
-const JUDGED_FIELDS: ReadonlySet<InvoiceUpdateField> = new Set([
-  "counterparty_country",
-  "iva_category",
-  "operation_date",
-  "series",
-  "invoice_class",
-  "rectifies_invoice_number",
-  "retention_rate",
-  "retention_amount",
-]);
-
 export type CorrectionCheck = {
   /** The fields whose value differs from the stored one. */
   changed: InvoiceUpdateField[];
@@ -801,7 +789,10 @@ export function checkCorrection(
     changed.push(field);
     values[field] = value;
   };
-  const name = textField(draft.counterpartyName, 512);
+  const name = textField(
+    draft.counterpartyName,
+    textLimit("invoice_counterparty_name"),
+  );
   if (name.problem) problems.counterparty_name = name.problem;
   else if (name.value === null)
     problems.counterparty_name = { kind: "missing" };
@@ -865,7 +856,7 @@ export function checkCorrection(
     !sameNumber(retention.amount, invoice.retention_amount);
   if (rateChanged) set("retention_rate", retention.rate);
   if (amountChanged) set("retention_amount", retention.amount);
-  const judged = changed.some((field) => JUDGED_FIELDS.has(field));
+  const judged = changed.some(isCorrectionJudged);
   const findings: PlacedFindings =
     judged && current
       ? placeFindings(current, problems)

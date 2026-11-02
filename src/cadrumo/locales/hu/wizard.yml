@@ -335,11 +335,11 @@ wizard:
           módozatot írja elő; alatta mindkét módozat választható. Opcionális.
       irpf-activity-income-imputation-criterion:
         help: 'Az RIRPF 7. cikke szerinti elv a tevékenységi bevételekhez és kiadásokhoz
-          a --irpf-activity-income-imputation-year által megadott adóévben: devengo
-          (a szokásos) vagy cobros_y_pagos (három évig köt; Código de Comercio szerinti
+          a --irpf-activity-income-imputation-year által megadott adóévben: `devengo`
+          (a szokásos) vagy `cobros_y_pagos` (három évig köt; Código de Comercio szerinti
           könyvvitel mellett nem).'
       irpf-activity-income-imputation-year:
-        help: Négyjegyű adóév (ejercicio), amelyre az elszámolási elv és a Código
+        help: Négyjegyű adóév (`ejercicio`), amelyre az elszámolási elv és a Código
           de Comercio-válasz vonatkozik. Bármelyikhez kötelező; a többi adóév válasza
           megmarad.
       irpf-codigo-comercio-accounting:
@@ -584,8 +584,7 @@ wizard:
       irpf-activity-income-imputation-year:
         help: Az elvet adóévenként választod, ezért a válasz csak arra az adóévre
           kerül mentésre, a többi adóév válasza nem változik.
-        prompt: Melyik adóévre (ejercicio) vonatkozik ez a válasz? Négy számjegyet
-          írj.
+        prompt: Melyik adóévre vonatkozik ez a válasz? Négy számjegyet írj.
       irpf-codigo-comercio-accounting:
         prompt: Vezetsz ebben az adóévben a Código de Comercio szerinti könyvvitelt
           (kötelezően vagy önként)? Ha igen, a pénzforgalmi elv nem áll rendelkezésedre.

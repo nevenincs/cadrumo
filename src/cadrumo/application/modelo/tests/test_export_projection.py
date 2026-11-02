@@ -27,6 +27,7 @@ from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....core.result_disposition import ResultDisposition
 from ....domain.calculations.registry.tax_id_format import SubjectTaxId
+from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.schema import ModeloCasillaProvenance
 from ....domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ....domain.modelos.errors import ModeloExportError
@@ -73,6 +74,27 @@ def test_a_box_refusal_keeps_its_message_and_context_at_the_export_boundary(loca
     assert "3" in message
     assert "xml_value" not in message
     assert "cause" not in failure.context
+
+
+@pytest.mark.parametrize("locale", ["es", "ca", "en", "hu"])
+def test_a_shared_cell_refusal_reaches_the_operator_naming_its_boxes(locale: str) -> None:
+    context = {
+        "modelo": "fixture-modelo",
+        "casilla_ids": "fixture-box",
+        "target_cells": {"fixture-box": ["fixture-layout.sheet-a.f1", "fixture-layout.sheet-b.f2"]},
+    }
+    refusal = FilingExportValidationError(
+        translated_message="application.filing.export.errors.shared_casilla_cells_unadjudicated", context=context
+    )
+    command = ModeloExportCommand.model_construct(calculation_revision_id="revision-1")
+
+    failure = _export_write_failure(command, refusal)
+
+    assert failure.translated_message == refusal.translated_message
+    assert failure.context == {"calculation_revision_id": "revision-1", **context}
+    message = resolve_error_message(failure, locale=locale)
+    assert "fixture-box" in message
+    assert "shared_casilla_cells" not in message
 
 
 def test_another_export_failure_keeps_the_generic_message_and_its_cause() -> None:

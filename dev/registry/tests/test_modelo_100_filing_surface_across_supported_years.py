@@ -326,16 +326,19 @@ def test_profile_bindings_dispatch_through_the_single_profile_provider(
 
 
 @pytest.mark.parametrize("filing_year", SUPPORTED_YEARS)
-def test_family_rows_are_repeating_profile_collections(
+def test_family_rows_read_the_canonical_stored_row_objects(
     edition: Callable[[int], RegistrySnapshot], filing_year: int
 ) -> None:
     bindings = {binding.id: binding for binding in edition(filing_year).revision.bindings}
-    for binding_id, (collection, field) in FAMILY_ROW_BINDINGS.items():
+    for binding_id, (object_path, leaf, count_path) in FAMILY_ROW_BINDINGS.items():
         provider = bindings[binding_id].provider
         assert isinstance(provider, ProfileProvider)
-        assert provider.profile_model == "RentaFamilyProfile"
-        assert provider.collection == collection
-        assert provider.field == field
+        assert provider.rows is not None
+        assert (provider.rows.object_path, provider.rows.leaf, provider.rows.count_path) == (
+            object_path,
+            leaf,
+            count_path,
+        )
         assert provider.repeating is True
 
 

@@ -98,6 +98,9 @@ _AUTO_RESOLVED_SOURCES = frozenset(
         # record and `relation_prefill` folds from the store.
         "profile",
         "relation_prefill",
+        # The withholding credits are the payer records' to state: this profile
+        # declares no income class a payer withholds on, which proves their zero.
+        "retencion_soportada",
     },
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 
@@ -282,6 +285,9 @@ def test_sofia_m100_work_create_and_calculate_exposes_0186_and_0199(
     assert Decimal(values[_M100_SS_CASILLA]) == Decimal("340.00")
     assert Decimal(values[_M100_OTHER_EXPENSES_CASILLA]) == Decimal("5600.00")
     assert Decimal(values[_M100_SS_CASILLA]) + Decimal(values[_M100_OTHER_EXPENSES_CASILLA]) == Decimal("5940.00")
+    # No payer record, and a profile declaring only activity income: a proven zero, not a caller's.
+    for credit in ("0596", "0597", "0603"):
+        assert Decimal(values[validated_casilla_id(credit, surface="test casilla id")]) == Decimal("0")
     assert set(result.revision.source_transaction_ids) >= {transaction.transaction_id for transaction in transactions}
     assert not any(
         diagnostic.source_kind == "ledger_renta_gastos_estimacion_directa_aggregation"

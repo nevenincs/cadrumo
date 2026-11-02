@@ -528,20 +528,23 @@ def _resolve_ledger_income_families(
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     )
     from ..aggregation.renta_imputation import imputation_filing_history
+    from ..aggregation.source_resolution_operations import source_context_operation
 
     def imputation_filings(context: CalculationSourceContext) -> ImputationFilingHistory:
         def load_filed(modelo: str, period: Period) -> RegistryModeloObservation | None:
             envelope = ports.observation_repository.load_observation(modelo, period)
             return None if envelope is None else envelope.observation
 
-        return imputation_filing_history(
-            bucket_id=context.bucket_id,
-            year=context.filing_year,
-            annual_form=form_for_role("renta.annual"),
-            annual_period_code=StandardPeriodCode.ANNUAL.value,
-            load_observation=load_filed,
-            filing_records=ports.filing_repository.load(),
-        )
+        with source_context_operation(context) as authority:
+            return imputation_filing_history(
+                bucket_id=context.bucket_id,
+                year=context.filing_year,
+                annual_form=form_for_role("renta.annual"),
+                annual_period_code=StandardPeriodCode.ANNUAL.value,
+                load_observation=load_filed,
+                filing_records=ports.filing_repository.load(),
+                authority=authority,
+            )
 
     return (
         resolve_declared(

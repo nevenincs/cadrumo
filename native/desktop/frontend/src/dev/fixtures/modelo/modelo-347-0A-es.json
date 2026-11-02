@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "0A" },
       "registry_revision_id": "2025-y-siguientes",
       "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-      "calculation_revision_id": "1b0fe03b5aa2846e1a92b8e3479779a5c6325092e95f0579e3d5a2fbace610e4",
+      "calculation_revision_id": "5fbb308eacf803b57f1d30eb852bff20cd849b55532e470fd9aa04e14d7759f3",
       "language": "es",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -119,8 +119,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "m347-declarante.contacto",
@@ -258,8 +261,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "m347-declarante.declaracion",
@@ -463,8 +469,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "m347-declarante.resumen",
@@ -524,8 +533,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "m347-declarante.firma",
@@ -731,8 +743,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -744,7 +759,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -1021,8 +1038,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -1034,7 +1054,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -1140,8 +1162,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             }
           ],
           "counts": {
@@ -1153,9 +1178,82 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
+        }
+      ],
+      "outline": [
+        {
+          "id": "m347-declarante",
+          "heading": { "text": "Hoja resumen", "disclosure": "localized" },
+          "section_ids": [
+            "m347-declarante.identificacion",
+            "m347-declarante.contacto",
+            "m347-declarante.declaracion",
+            "m347-declarante.resumen",
+            "m347-declarante.firma"
+          ],
+          "counts": {
+            "total": 9,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "m347-declarado",
+          "heading": {
+            "text": "Relación de personas y entidades",
+            "disclosure": "localized"
+          },
+          "section_ids": ["m347-declarado.general"],
+          "counts": {
+            "total": 0,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "m347-inmueble",
+          "heading": {
+            "text": "Arrendamientos de locales de negocio",
+            "disclosure": "localized"
+          },
+          "section_ids": ["m347-inmueble.general"],
+          "counts": {
+            "total": 0,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": null
         }
       ],
       "working_figures": [
@@ -1220,7 +1318,9 @@
         "overridden": 0,
         "default_to_confirm": 0,
         "not_applicable": 0,
-        "blocked": 0
+        "blocked": 0,
+        "needs_you": 0,
+        "could_not_calculate": 0
       },
       "progress": {
         "state": "in_progress",
@@ -1302,7 +1402,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "8a5a449de28d62f8b6cf014dc64eceaea1267e419dad5f12c69c7bbedbf28681",
+      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1337,9 +1437,9 @@
     "period_filing_year": 2026,
     "period_code": "0A",
     "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-    "work_unit_record_digest": "26fec1caeeb2c349567a389c2c00b09cdf546cbffe19c3cfc71dbe7a3d331f4d",
-    "calculation_head_digest": "caa604d357238408cbe77053b00fd67d1b3d44763f1477f6ade3bd640ad72d70",
-    "current_calculation_revision_id": "1b0fe03b5aa2846e1a92b8e3479779a5c6325092e95f0579e3d5a2fbace610e4",
+    "work_unit_record_digest": "d45ccc90990d7c96f33ebb5604fde2dbd5fd8f757285fde33a8e9cd04b2b8bc1",
+    "calculation_head_digest": "4e97a5e14a45a1521c66ecfb32148c381f2ba49c4093c13ff4a71462ac8729cd",
+    "current_calculation_revision_id": "5fbb308eacf803b57f1d30eb852bff20cd849b55532e470fd9aa04e14d7759f3",
     "law_selected_revision_id": "2025-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-347-2025-y-siguientes",
@@ -2060,9 +2160,9 @@
     ],
     "permitted_surface_digest": "c258bc8ca1f53449315c27e6a6e73d340ff63f1c625609083c5d48dde37106ae",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:43:06.598969Z",
-    "expires_at": "2026-11-02T16:48:06.598969Z",
-    "baseline_id": "1752faad7cc9cfd93635fc45793815de1397b672992e4ebb6bf2c30c1d30c8d1"
+    "issued_at": "2026-11-02T16:23:01.468940Z",
+    "expires_at": "2026-11-02T16:28:01.468940Z",
+    "baseline_id": "5d47e0d29ec64128a9121ce4b20cf5f61ca87cc0ad43d9e1c342263807b6cb23"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2097,7 +2197,7 @@
     "words": "La declaración aún no se ha comprobado.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "1b0fe03b5aa2846e1a92b8e3479779a5c6325092e95f0579e3d5a2fbace610e4",
+  "calculation_revision_id": "5fbb308eacf803b57f1d30eb852bff20cd849b55532e470fd9aa04e14d7759f3",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

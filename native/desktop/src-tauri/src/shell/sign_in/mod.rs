@@ -62,8 +62,8 @@ impl NativeSignIn {
     /// Reads the runtime's answer to a sign-in it did not admit. Among the
     /// refusals that are not its own: the runtime does not admit this process
     /// as the desktop holder.
-    fn from_refusal(refusal: cadrumo_application::runtime_client::Refusal) -> Self {
-        use cadrumo_application::runtime_client::Refusal;
+    fn from_refusal(refusal: cadrumo_application::runtime_client::refusal::Refusal) -> Self {
+        use cadrumo_application::runtime_client::refusal::Refusal;
 
         match refusal {
             Refusal::Timeout => Self::Refused(wire::Refusal {
@@ -213,7 +213,7 @@ pub struct SignIn {
     lifecycle: std::sync::Mutex<()>,
     signing_in: std::sync::Mutex<Option<Arc<PendingSignIn>>>,
     openings: std::sync::Mutex<
-        Vec<std::sync::Weak<cadrumo_application::runtime_client::OpenCancellation>>,
+        Vec<std::sync::Weak<cadrumo_application::runtime_client::endpoint::OpenCancellation>>,
     >,
 }
 
@@ -325,7 +325,7 @@ impl SignIn {
     /// the window's person session. Named profiles are resolved by the runtime,
     /// even before this window has received its first status observation.
     fn sign_in(&self, label: Option<&str>, password: Zeroizing<Vec<u8>>) -> Result<SignInResult> {
-        use cadrumo_application::runtime_client::TimeoutWait;
+        use cadrumo_application::runtime_client::timeout::TimeoutWait;
 
         let waiting = TimeoutWait::new();
         if self.closed.load(std::sync::atomic::Ordering::Acquire) {
@@ -591,12 +591,14 @@ impl SignIn {
         &self,
     ) -> std::result::Result<
         (
-            cadrumo_application::runtime_client::Endpoint,
-            cadrumo_application::runtime_client::Cohort,
+            cadrumo_application::runtime_client::endpoint::Endpoint,
+            cadrumo_application::runtime_client::handshake::Cohort,
         ),
-        cadrumo_application::runtime_client::Refusal,
+        cadrumo_application::runtime_client::refusal::Refusal,
     > {
-        use cadrumo_application::runtime_client::{Cohort, Endpoint, Refusal};
+        use cadrumo_application::runtime_client::{
+            endpoint::Endpoint, handshake::Cohort, refusal::Refusal,
+        };
 
         let native = self.native.as_ref().map_err(|_| Refusal::Unavailable)?;
         let endpoint = Endpoint::of(&native.storage_root)?;
@@ -612,10 +614,12 @@ impl SignIn {
         &self,
         deadline: std::time::Instant,
     ) -> std::result::Result<
-        Arc<cadrumo_application::runtime_client::Connection>,
-        cadrumo_application::runtime_client::Refusal,
+        Arc<cadrumo_application::runtime_client::connection::Connection>,
+        cadrumo_application::runtime_client::refusal::Refusal,
     > {
-        use cadrumo_application::runtime_client::{Connection, OpenCancellation, Refusal};
+        use cadrumo_application::runtime_client::{
+            connection::Connection, endpoint::OpenCancellation, refusal::Refusal,
+        };
         let opening = Arc::new(OpenCancellation::new().map_err(Refusal::Io)?);
         {
             let mut owners = self.openings.lock().unwrap_or_else(|e| e.into_inner());
@@ -642,10 +646,10 @@ impl SignIn {
         &self,
         profile_id: &str,
         password: &[u8],
-        connection: Arc<cadrumo_application::runtime_client::Connection>,
+        connection: Arc<cadrumo_application::runtime_client::connection::Connection>,
         deadline: std::time::Instant,
     ) -> std::result::Result<crate::agent::person::Person, NativeSignIn> {
-        use cadrumo_application::runtime_client::Frontend;
+        use cadrumo_application::runtime_client::session::Frontend;
         let recovery = self.recovery().map_err(NativeSignIn::Unavailable)?;
         // Subscribed first: a push between the sign-in's reply and the
         // session's router still reaches it.
@@ -667,8 +671,8 @@ impl SignIn {
     /// Resumes the stored sign-in of `profile_id` on a fresh connection of the
     /// window's own, as the desktop frontend, and holds the session it admits.
     fn resume(&self, profile_id: &str) -> Result<crate::agent::person::Person> {
-        use cadrumo_application::runtime_client::Frontend;
-        let waiting = cadrumo_application::runtime_client::TimeoutWait::new();
+        use cadrumo_application::runtime_client::session::Frontend;
+        let waiting = cadrumo_application::runtime_client::timeout::TimeoutWait::new();
 
         let native = self.native.as_ref().map_err(Clone::clone)?;
         let recovery = self.recovery()?;

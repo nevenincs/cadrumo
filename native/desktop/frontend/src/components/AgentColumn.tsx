@@ -75,6 +75,8 @@ import type { OpenMenu } from "./ContextMenu";
 import { AgentHeader } from "./agent/AgentHeader";
 import { AgentWelcome } from "./agent/AgentWelcome";
 import { ApprovalPrompt } from "./agent/ApprovalPrompt";
+import { AttachmentGrants } from "./agent/AttachmentGrants";
+import { AttachmentReadPrompt } from "./agent/AttachmentReadPrompt";
 import { Composer, type ComposerReferences } from "./agent/Composer";
 import { documentSource } from "./agent/DocumentMentions";
 import { HistoryList } from "./agent/HistoryList";
@@ -328,7 +330,7 @@ export function AgentColumn({
     setView((held) => ({ ...held, ...next }));
 
   const readable = agent !== undefined && reader !== null && shown;
-  const status = useAgentStatus(session, readable);
+  const status = useAgentStatus(session, reader, readable);
   const ready = status?.state === "ready";
   // A signed-in profile can precede its agent service. Reopening this gate
   // also refreshes reads after the service has recovered.
@@ -341,10 +343,10 @@ export function AgentColumn({
   const wanted = historyOpen || conversationId !== null;
   const readConversations = useMemo(
     () =>
-      serviceReadable && agent && (historyOpen || wanted)
+      reader !== null && serviceReadable && agent && (historyOpen || wanted)
         ? () => agent.conversations()
         : null,
-    [serviceReadable, agent, historyOpen, wanted],
+    [reader, serviceReadable, agent, historyOpen, wanted],
   );
   // Asked again once a reply has finished, for a title the agent gave.
   const conversations = useAgentRead(readConversations, revision);
@@ -505,8 +507,10 @@ export function AgentColumn({
   const starting = status?.state === "starting";
   const readCatalog = useMemo(
     () =>
-      (ready || starting) && session ? () => session.providerCatalog() : null,
-    [ready, starting, session],
+      reader !== null && (ready || starting) && session
+        ? () => session.providerCatalog()
+        : null,
+    [reader, ready, starting, session],
   );
   // Setup and provider settings invalidate the catalog independently.
   const [catalogAgain, setCatalogAgain] = useState(0);
@@ -571,6 +575,7 @@ export function AgentColumn({
     readCatalog ? readingHost : null,
     rememberedRecord,
     catalogAgain + settings.changes + opened + listChanges,
+    reader,
   );
   const offer = useMemo(() => {
     if (catalog.kind !== "ready") return null;
@@ -1316,6 +1321,9 @@ export function AgentColumn({
                 selectedIds={staging
                   .namedFor(conversationId)
                   .map((document) => document.name)}
+                footer={
+                  session ? <AttachmentGrants session={session} /> : undefined
+                }
                 onClose={() => change({ panel: "none" })}
                 onAddFiles={attach ? () => void attach() : undefined}
                 onRefresh={documents.refresh}
@@ -1444,22 +1452,48 @@ export function AgentColumn({
                 {t("desktop.agent.aeat_setup_check")}
               </Button>
             )}
-          {live.approvals.map((approval) => (
-            <ApprovalPrompt
-              key={approval.request_id}
-              source={approval.source}
-              toolCall={approval.tool_call}
-              toolServer={approval.tool_server}
-              toolKind={approval.tool_kind}
-              description={approval.description}
-              options={approval.options}
-              onDecide={
-                answering
-                  ? (optionId) => void decide(approval, optionId)
-                  : undefined
-              }
-            />
-          ))}
+          {live.approvals.map((approval) => {
+            const prompt = (
+              <ApprovalPrompt
+                key={approval.request_id}
+                source={approval.source}
+                toolCall={approval.tool_call}
+                toolServer={approval.tool_server}
+                toolKind={approval.tool_kind}
+                description={approval.description}
+                options={approval.options}
+                onDecide={
+                  answering
+                    ? (optionId) => void decide(approval, optionId)
+                    : undefined
+                }
+              />
+            );
+            if (
+              !session ||
+              approval.tool_call !== "read_attachment" ||
+              approval.tool_server
+            )
+              return prompt;
+            const refuse = approval.options.find(
+              (option) => option.kind === "reject_once",
+            )?.option_id;
+            return (
+              <AttachmentReadPrompt
+                key={approval.request_id}
+                session={session}
+                approval={approval}
+                disabled={!answering}
+                onSettled={() => live.resolved(approval.request_id)}
+                onDecline={
+                  answering && refuse
+                    ? () => void decide(approval, refuse)
+                    : undefined
+                }
+                plain={prompt}
+              />
+            );
+          })}
           {questionnaire && (
             <QuestionsPrompt
               key={questionnaire.request_id}

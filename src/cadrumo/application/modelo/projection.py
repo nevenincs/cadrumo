@@ -63,7 +63,7 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos.calculation_revision_sources import CalculationNoteSentence
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
@@ -173,6 +173,8 @@ class ModeloProjectionUnresolvedBinding(BaseModel):
     ``reason`` is the source diagnostic's reason token and ``note`` its closed
     calculation-note sentence when the resolver named one (for a credit: no
     payer evidence, or evidence contradicted by an absence attestation).
+    ``fact`` is that sentence with the values it names, kept so the words of the
+    note can be served; it is not a public field.
     """
 
     model_config = _STRICT_FROZEN
@@ -182,6 +184,7 @@ class ModeloProjectionUnresolvedBinding(BaseModel):
     source_kind: str = Field(min_length=1)
     reason: str = Field(min_length=1)
     note: CalculationNoteSentence | None = None
+    fact: CalculationNoteFact | None = None
 
 
 UNRESOLVED_OPERAND_REASON = "unresolved_operand"
@@ -866,6 +869,7 @@ def _unresolved_bindings(
                 source_kind=diagnostic.source_kind,
                 reason=diagnostic.reason,
                 note=diagnostic.fact.sentence if diagnostic.fact is not None else None,
+                fact=diagnostic.fact,
             )
         )
     return tuple(rows)

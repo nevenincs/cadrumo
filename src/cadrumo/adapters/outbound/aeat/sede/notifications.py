@@ -51,6 +51,7 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._html import parse_html
 from .._playwright import PlaywrightError
+from ..browser.api_request_guard import GuardedApiRequests
 from ..browser.factory import default_browser_session_factory
 from ._adapter_utils import (
     assert_landed_url_readable,
@@ -647,7 +648,7 @@ async def fetch_notification_document(
         # Land the detail page first so AEAT sees the referring navigation.
         await page.goto(url, wait_until=PLAYWRIGHT_WAIT_DOMCONTENTLOADED)
         assert_notifications_read_landing(_notifications_landing_url(page, requested_url=url))
-        response = await context.request.post(
+        response = await GuardedApiRequests(context, (READ_GUARD_POLICY,)).post(
             url,
             form={
                 "accion": EXTERNAL.aeat.notifications_query.detail_view_action,

@@ -9,17 +9,20 @@ import { facts } from "@/shell/compose";
 import type {
   CatalogueInvoice,
   InvoiceListResult,
+  LedgerPort,
   LedgerRow,
   LedgerStagedRowAnswer,
 } from "../../../shell/ledger";
+import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
 import { seriesAndNumber } from "../invoices/invoiceModel";
 import { paymentLabel } from "../invoices/invoiceWords";
 import {
-  linkPicker,
-  reconcile,
+  remapInvoiceChoices,
+  remapMatches,
   stageLink,
+  stagedLinks,
   tiedInvoices,
   tiedMovements,
   type MatchPair,
@@ -37,6 +40,7 @@ import { formatDay } from "../../../shared/dateFormats";
  * takes its invoice from every other movement's suggestions.
  */
 export function InvoiceSection({
+  port,
   row,
   answer,
   rows,
@@ -49,6 +53,7 @@ export function InvoiceSection({
   onOpenInvoice,
   say,
 }: {
+  port: LedgerPort;
   row: LedgerRow;
   /** The ledger's answer about the movement; absent until it has answered. */
   answer: LedgerStagedRowAnswer | undefined;
@@ -72,9 +77,30 @@ export function InvoiceSection({
     () => (invoices?.kind === "ready" ? invoices.result.invoices : null),
     [invoices],
   );
+  // A movement already linked is asked nothing; the ledger answers the rest.
+  const question = useMemo(
+    () =>
+      tx.invoice_id === null
+        ? {
+            staged: [...stagedLinks(allActions).rows].map(
+              ([transaction_id, invoice_id]) => ({
+                transaction_id,
+                invoice_id,
+              }),
+            ),
+            transaction_id: id,
+          }
+        : null,
+    [tx.invoice_id, allActions, id],
+  );
+  const held = useMemo(() => ({ catalogue, rows }), [catalogue, rows]);
+  const matches = useInvoiceMatches(port, question, held);
   const found = useMemo(
-    () => (catalogue ? reconcile(rows, catalogue, allActions) : null),
-    [rows, catalogue, allActions],
+    () =>
+      catalogue && matches.kind === "answer"
+        ? remapMatches(matches.result, rows, catalogue)
+        : null,
+    [rows, catalogue, matches],
   );
   const [choice, setChoice] = useState<string | null>(null);
   const [others, setOthers] = useState(false);
@@ -213,7 +239,12 @@ export function InvoiceSection({
   const suggestion = found?.best.get(id) ?? null;
   const tied = suggestion ? tiedInvoices(suggestion) : [];
   const rivals = suggestion ? tiedMovements(suggestion) : [];
-  const picker = catalogue ? linkPicker(row, catalogue, allActions) : null;
+  const picker =
+    catalogue &&
+    matches.kind === "answer" &&
+    matches.result.invoice_choices !== null
+      ? remapInvoiceChoices(matches.result.invoice_choices, catalogue)
+      : null;
   // An invoice that settles this movement but is staged for another.
   const taken =
     !suggestion && !staged
@@ -289,7 +320,7 @@ export function InvoiceSection({
         </Alert>
       ) : found === null ? (
         <p role="status" className="text-sm text-muted-foreground">
-          {invoices?.kind === "failed"
+          {invoices?.kind === "failed" || matches.kind === "failed"
             ? t("desktop.ledger.inspector.unread")
             : t("desktop.ledger.loading")}
         </p>
@@ -402,7 +433,7 @@ export function InvoiceSection({
           {t("desktop.ledger.inspector.invoice.none")}
         </p>
       )}
-      {!staged && catalogue && (
+      {!staged && catalogue && picker && (
         <Combobox
           label={t("desktop.ledger.inspector.invoice.pick")}
           value={null}

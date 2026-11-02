@@ -530,7 +530,9 @@ export type WithholdingRemoveRequest = {
   expected_revision_id: string;
 };
 
-/** The person's attestation that no payer withheld on a class. */
+/** The person's attestation that no payer withheld on a class. A change's
+ * answer carries the attestation as stored; only the listing words its
+ * income class, in `income_class_label`, in the person's language. */
 export type WithholdingAbsence = {
   ejercicio: number;
   income_class: WithholdingIncomeClass;
@@ -539,6 +541,14 @@ export type WithholdingAbsence = {
   attested_at: string;
   withdrawn_at: string | null;
   revision_id: string;
+  income_class_label?: string | null;
+};
+/** Every attestation of an ejercicio, active and withdrawn. */
+export type WithholdingAbsenceListRequest = { ejercicio: number };
+export type WithholdingAbsenceListResult = {
+  profile_id: string;
+  ejercicio: number;
+  attestations: WithholdingAbsence[];
 };
 export type WithholdingAbsenceReason =
   | "ejercicio_unsupported"

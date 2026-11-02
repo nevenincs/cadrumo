@@ -27,12 +27,12 @@ def validate_export_field_policy_metadata(field: ExportFieldDefinition) -> None:
 
 def _validate_presence_marker(field: ExportFieldDefinition) -> None:
     if field.presence_marker is not None and (
-        field.producer_key is None
+        (field.producer_key is None and field.computed_key is None)
         or field.data_type != "text"
         or field.length != len(field.presence_marker)
         or not field.presence_marker.strip()
     ):
         raise RegistryValidationError(
             f"export field {field.id!r} declares a presence marker outside a text slot of the marker's width "
-            "fed by a producer fact",
+            "fed by a producer fact or a computed marker",
         )

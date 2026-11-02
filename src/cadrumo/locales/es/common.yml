@@ -166,24 +166,37 @@ aggregation:
       unsupported_period: Periodo de modelo no soportado para los totales de tus registros.
   oss_ioss:
     errors:
-      exterior_country_code_undeclared: El Estado miembro de consumo no tiene un código
-        de país declarado para el modelo 369, por lo que sus servicios no se pueden
+      consignment_exceeds_ceiling: 'Un envío supera el valor máximo de este régimen:
+        su valor intrínseco no puede exceder el límite de la ley. Revisa la factura
+        o decláralo fuera del régimen de importación.'
+      detail_consumption_state_excluded: Los servicios del régimen de la Unión no
+        se pueden declarar para el Estado miembro de identificación, porque el régimen
+        solo cubre los servicios prestados en un Estado miembro en el que no estés
+        establecido.
+      detail_country_code_undeclared: El Estado miembro de consumo no tiene un código
+        de país declarado para el modelo 369, por lo que sus operaciones no se pueden
         declarar en este modelo.
-      exterior_detail_not_representable: El diseño del régimen exterior no puede representar
-        todas las filas o todos sus campos. Revisa el detalle antes de continuar.
-      exterior_rate_kind_unsupported: El régimen exterior de la ventanilla única sólo
-        admite servicios al tipo general o reducido del Estado miembro de consumo.
-        La observación aportada declara otro tipo de gravamen, que no puede agregarse
-        en este régimen.
-      invoice_line_currency_unconverted: Una línea de factura OSS/IOSS está denominada
-        en moneda extranjera sin tipo de cambio a euros resuelto, por lo que no puede
-        declararse en este modelo.
+      detail_not_representable: El diseño del modelo 369 no puede representar todas
+        las filas o todos sus campos. Revisa el detalle antes de continuar.
+      detail_rate_kind_unsupported: Una fila del modelo 369 solo admite el tipo general
+        o reducido del Estado miembro de consumo. La observación aportada declara
+        otro tipo de gravamen, que no se puede escribir en una fila.
+      detail_rows_exceed_page: Este período necesita más filas de las que caben en
+        una página del modelo 369, y las páginas complementarias todavía no se pueden
+        preparar aquí. No se ha exportado nada, así que ninguna fila queda fuera.
+      invoice_line_currency_unconverted: Una línea de factura OSS/IOSS está en moneda
+        extranjera y no hay tipo de cambio del BCE publicado para el último día del
+        período ni para el día siguiente, así que no puede declararse en este modelo.
       invoice_line_rate_kind_unclassifiable: Una línea de factura OSS/IOSS tiene un
         tipo de IVA que no puede clasificarse en ningún tramo, por lo que su cuota
         no puede declararse en este modelo.
       iva_amount_mismatches_destination_rate: El importe de IVA persistido no concuerda
         con el tipo del Estado miembro de destino más allá de la tolerancia de un
         céntimo.
+      rate_change_devengo_undeclared: Una factura OSS/IOSS no tiene fecha de operación
+        y el tipo del Estado miembro de consumo cambió durante este período, por lo
+        que su fecha de emisión no permite saber qué tipo se aplica. Registra la fecha
+        de operación en la factura.
   per_modelo:
     errors:
       unsupported_modelo: Modelo no soportado para la agregación por modelo
@@ -1157,6 +1170,16 @@ desktop:
     as_of: Según los registros locales a {date}. Aquí no se ha consultado nada a la
       AEAT.
     close: Cerrar el calendario
+    coverage:
+      applicability_undetermined: 'No se ha podido determinar si debes presentar:
+        {modelos}. Comprueba tus obligaciones.'
+      applicable_window_missing: 'Estos modelos se aplican a tu perfil, pero Cadrumo
+        no dispone de un plazo de presentación: {modelos}. Consulta el calendario
+        oficial.'
+      no_dates: No hay fechas de presentación disponibles para este periodo.
+      registry_unmodeled: 'Cadrumo no dispone de reglas de aplicabilidad ni plazos
+        de presentación para: {modelos}. Consulta la información oficial para comprobar
+        tus obligaciones de presentación.'
     day_event: '{date}: {kind}. {summary}'
     earliest_close: No cierra antes del {date}
     empty: No hay obligaciones de presentación en este periodo.
@@ -1190,7 +1213,6 @@ desktop:
       unknown: Desconocido
     title: Calendario de presentaciones
     to_day: Ir al {date}
-    undetermined: 'No se ha podido determinar: {modelos}'
     view: Vista
     view_list: Lista
     view_months: Calendario
@@ -1219,6 +1241,23 @@ desktop:
     show:
       label: Mostrar
     signed_out: Inicia sesión para ver tus declaraciones.
+  dock:
+    arrange: Organizar panel
+    bottom: Dividir abajo
+    close: Cerrar panel
+    dock: Acoplar panel
+    exit_fullscreen: Salir de pantalla completa
+    expand: Ampliar en el espacio de trabajo
+    float: Panel flotante
+    fullscreen: Pantalla completa
+    left: Dividir a la izquierda
+    move: Mover panel flotante
+    resize: Redimensionar panel flotante
+    restore: Restaurar tamaño del panel
+    right: Dividir a la derecha
+    tab: Mover a pestañas
+    tabs: Pestañas del espacio de trabajo
+    top: Dividir arriba
   docs:
     frame_title: Documentación de Cadrumo
     hide: Ocultar la documentación
@@ -1405,6 +1444,7 @@ desktop:
         differ: Sé que difieren
         linked_elsewhere: 'Factura ya vinculada · movimientos: {count}'
         sure: Vincular estos · permanente
+        unjudged: El libro aún no ha comparado este vínculo
         unread: No se ha podido leer la factura
       mine: Conservar el mío
       mismatch:
@@ -2177,6 +2217,9 @@ desktop:
       currency_not_read: 'No figura en el documento: indica cuál'
       derived: Generado a partir de una lectura externa
       duplicate: 'Ya está en el catálogo: {number}'
+      duplicate_check_failed: El libro no ha dicho si esta lectura ya está en el catálogo,
+        así que aún no puedes confirmarla.
+      duplicate_check_retry: Volver a preguntar
       entered_by_you: Introducido por ti
       field:
         counterparty_name: Contraparte
@@ -2216,6 +2259,7 @@ desktop:
         country: Indica el país con dos letras
         currency: Indica la moneda
         duplicate: Puede que ya esté en el catálogo
+        duplicate_unread: Esperando a que el libro compruebe el catálogo
         findings: Responde antes a todas las preguntas
       in_review: En revisión
       keep: Conservarlo
@@ -3122,6 +3166,9 @@ desktop:
         add_part: Añadir una parte
         amount: La parte {part} necesita un importe mayor que cero.
         category_needed: Elige una categoría para la parte {part}.
+        check_failed: El libro no ha respondido sobre estas partes, así que aún no
+          puedes añadir la división.
+        check_retry: Volver a preguntar
         choose_category: Elige una categoría
         count: Una división tiene de 2 a {max} partes.
         description: Las partes suman {amount}. La última parte se queda con lo que
@@ -3129,8 +3176,9 @@ desktop:
         description_long: La parte {part} admite una descripción de {max} caracteres
           como máximo.
         description_needed: La parte {part} necesita una descripción.
-        duplicate: 'La parte {part} es igual que otra: cambia su importe o descripción.'
+        gone: Este movimiento ya no está en el libro.
         mixed_hint: ¿Lo usas en parte para trabajar? Usa Mixto con una parte.
+        not_active: Solo puedes dividir un movimiento activo.
         over: Las partes superan el movimiento en {amount}.
         part_amount: Importe de la parte {part}
         part_category: Categoría de la parte {part}
@@ -4132,8 +4180,7 @@ desktop:
       partial: Los grupos y los totales esperan a que se lea todo.
     withholding:
       absence:
-        not_listed: Las indicaciones anteriores aún no se pueden listar. Aquí se muestran
-          las que hagas o retires en esta ventana.
+        history: Indicaciones retiradas
         title: Sin retenciones
         what: Indica que ningún pagador retuvo en una clase de renta este año.
       action:
@@ -4580,37 +4627,6 @@ desktop:
     search: Buscar
     settings: Ajustes
     tui: Espacio de trabajo
-  renta:
-    proto:
-      election:
-        save: Guarda la respuesta
-        year: Ejercicio
-      excerpt: Este prototipo solo contiene algunos apartados de la declaración real.
-        Elige otro apartado para verlo aquí.
-      family:
-        boxes: Casillas que alimentan estos datos
-        edit: Cámbialo en tu perfil
-        empty: Sin indicar
-        profile: De tu perfil
-      gap:
-        body: El backend aún no sirve esto, así que la ventana no muestra nada en
-          su lugar.
-        operation: 'Necesita: {operation}'
-        title: Aún no se sirve
-      nav:
-        boxes: 'Casillas: {count}'
-        failed: 'No se pudo calcular: {count}'
-        needs_you: 'Te necesita: {count}'
-        only_attention: Solo lo que te necesita
-        proposed: Esquema propuesto
-        served: Tal como se sirve hoy
-        technical: 'Encabezado técnico: el diseño aún no tiene aquí un encabezado
-          revisado'
-        title: Apartados
-      result:
-        composed: Cifra redactada por el propio generador de cabecera del backend,
-          no calculada
-        example: Forma que ya se sirve para otra declaración
   session:
     enter_restarts: Intro lo reinicia
     exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
@@ -8669,6 +8685,18 @@ tui:
         calculation_review_xlsx: Revisión del cálculo guardado (XLSX)
         fichero_boe: Fichero BOE para presentar en la AEAT
         label: Documento a exportar
+      instalment_election:
+        conditions: Pagar en dos plazos no tiene intereses ni recargos. La declaración
+          debe presentarse dentro de plazo, y una autoliquidación rectificativa no
+          se puede pagar así. El 60 % se paga al presentar; si no se paga a tiempo,
+          se exige el importe total. Si también domicilias el primer plazo, el segundo
+          se carga en la misma cuenta.
+        label: 'Resultado a ingresar: de una vez o en dos plazos'
+        single: Pagarlo todo de una vez
+        two_instalments_second_debited: 'Dos plazos: el 60 % al presentar y el 40
+          % restante domiciliado'
+        two_instalments_second_paid: 'Dos plazos: el 60 % al presentar y el 40 % restante
+          lo pagas tú con el modelo 102'
       payment_election:
         cuenta_corriente: Cuenta corriente tributaria
         domiciliacion: Domiciliación bancaria
@@ -8767,6 +8795,47 @@ tui:
       stale_context: La declaración seleccionada cambió mientras el formulario estaba
         abierto. No se ha calculado nada; vuelve a elegir Calcular.
       title: Datos de la autoliquidación del modelo 303
+    m360_solicitud:
+      account_kind:
+        own_account: Una de mis cuentas (solicitante)
+        representante: La cuenta del representante
+      action:
+        declare: Declarar una solicitud
+        remove: Eliminar una solicitud
+      column:
+        account: Cuenta
+        cause: Causa
+        destination: Destino
+        holder: Titular
+        year: Ejercicio
+      detail: '%{year} · destino %{destination} · %{cause} · titular %{holder} · representante
+        %{representante} · cuenta %{account}'
+      done_declare: Solicitud declarada.
+      done_remove: Solicitud eliminada.
+      empty: Todavía no hay ninguna solicitud del Modelo 360 declarada.
+      field:
+        account_kind: Cuenta de devolución
+        action: Acción
+        bank_address: Dirección del banco (opcional)
+        bank_city: Ciudad del banco (opcional)
+        bank_country_code: Código de país del banco (opcional)
+        bank_name: Nombre del banco (opcional)
+        facts_path: Archivo de datos (JSON)
+        filing_year: Ejercicio
+        iban: IBAN del representante
+        own_account_id: Identificador de cuenta propia
+        swift_bic: SWIFT-BIC del representante
+      list: Solicitudes declaradas
+      prompt: Todas las solicitudes del Modelo 360 que has declarado, por ejercicio.
+        Elige declarar o eliminar una, revísala y confírmala. Los datos salen de un
+        archivo que indicas; la cuenta es una de tus cuentas o la de un representante.
+      source: 'Datos leídos de: %{path}'
+      source_invalid: 'El archivo %{path} no contiene datos de solicitud válidos:
+        se han encontrado %{count} problemas.'
+      source_unreadable: No se ha podido leer el archivo %{path}.
+      title: Solicitudes del Modelo 360
+      tool: Solicitudes del Modelo 360 (devolución de IVA)
+      unchanged: 'No ha cambiado nada: el registro ya lo contenía.'
     next_line: 'Siguiente: {action} [{key}]'
     search:
       prompt: Busca en todas las páginas por número de casilla o por palabras. Intro
@@ -9633,8 +9702,23 @@ workspace:
       save_next: Dejar y pasar a la siguiente
       unreadable: No se ha podido leer este valor.
     export:
+      account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma los valores supuestos antes de generar el fichero o
         registrar la presentación (por confirmar: {count}).'
+      election:
+        amendment: Una autoliquidación rectificativa no se puede pagar en dos plazos.
+        filing_window_unknown: No se conoce el plazo de presentación de esta declaración,
+          así que no se puede ofrecer el pago en dos plazos.
+        no_open_account: Ninguna de tus cuentas bancarias propias está abierta. Añade
+          una a tus cuentas propias para recibir la devolución.
+        no_spanish_account: Ninguna de tus cuentas propias abiertas es española, y
+          la domiciliación lo necesita. Añade una a tus cuentas propias.
+        nothing_to_pay: El resultado no es una cantidad a ingresar, así que esto no
+          se aplica.
+        nothing_to_refund: El resultado no es una devolución, así que esto no se aplica.
+        past_filing_window: El plazo de presentación ha terminado, y pagar en dos
+          plazos exige presentar la declaración dentro de él.
+        result_unknown: 'Calcula antes la declaración: su resultado lo decide.'
       file_format:
         fixed_width: Fichero de la AEAT con el diseño de registro BOE de ancho fijo
         xml_dictionary: Fichero XML de la AEAT
@@ -10279,27 +10363,3 @@ workspace:
       not_applicable: no aplica
       not_known_yet: Aún no se sabe
     was: 'antes: {value}'
-  renta:
-    election:
-      proposed: Respuesta propuesta
-      stated: Indicado para {year}
-      title: Criterio de imputación de tu actividad
-      undeclared: Aún no lo has indicado. Las casillas de actividad que dependen de
-        él siguen sin resolver hasta que lo indiques.
-    outline:
-      activities: Actividades económicas
-      annexes: Anexos e información adicional
-      bases: Bases imponibles y liquidables
-      capital_gains: Ganancias y pérdidas patrimoniales
-      credits: Retenciones y pagos a cuenta
-      employment: Rendimientos del trabajo
-      family: Unidad familiar
-      identification: Identificación y situación familiar
-      liability: Cuotas íntegras y deducciones
-      minimums: Mínimo personal y familiar
-      movable_capital: Rendimientos del capital mobiliario
-      other: Otros datos
-      real_estate: Rendimientos del capital inmobiliario e imputaciones de renta
-      result: Resultado de la declaración
-    result:
-      settlement: Cómo se paga o se devuelve

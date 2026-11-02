@@ -546,6 +546,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.shared_casilla_cells.adjudicated",
+        "modelo.work.verify.shared_casilla_cells.unadjudicated",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.m210.agrupacion.valid",
         "modelo.work.verify.m210.agrupacion.invalid",
     ),

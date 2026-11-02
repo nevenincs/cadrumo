@@ -105,11 +105,12 @@ def _question_item(
         required_when_visible=question.required,
         visibility=visibility,
         visible_when_any=conditions,
-        choices=_choices(question),
+        choices=profile_question_choices(question),
     )
 
 
-def _choices(question: WizardQuestion) -> tuple[ProfileQuestionChoice, ...]:
+def profile_question_choices(question: WizardQuestion) -> tuple[ProfileQuestionChoice, ...]:
+    """Return the accepted answers of ``question`` in the words setup asks them, in the active language."""
     if question.widget is WizardWidget.CONFIRM:
         return (
             ProfileQuestionChoice(value="true", label=tr("flows.confirm.yes")),

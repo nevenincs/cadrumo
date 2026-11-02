@@ -92,6 +92,15 @@ export function WithholdingPane({
     { ejercicio },
     `withholding:${ejercicio}`,
   );
+  // Every attestation of the ejercicio, active and withdrawn, as the
+  // backend lists them: the revisions the changes below are sent against.
+  const { read: absences, reload: reloadAbsences } = useSetupRead(
+    port,
+    reader,
+    "ledger.retencion_soportada.list_absences",
+    { ejercicio },
+    `withholding-absences:${ejercicio}`,
+  );
   const write = useSetupWrite(t("desktop.ledger.withholding.title"));
   const [action, setAction] = useState<Action | null>(null);
   const [incomeClass, setIncomeClass] = useState("");
@@ -103,9 +112,6 @@ export function WithholdingPane({
   const [note, setNote] = useState("");
   /** The row the person is asked to confirm removing. */
   const [removing, setRemoving] = useState<WithholdingRow | null>(null);
-  /** The attestations this window made or withdrew: the backend lists none,
-   * so only what its answers returned is known. */
-  const [attested, setAttested] = useState<WithholdingAbsence[]>([]);
   useSetupDraft(
     action !== null &&
       ([taxId, legalName, fingerprint, note].some(Boolean) ||
@@ -126,14 +132,25 @@ export function WithholdingPane({
     () => (read?.kind === "done" ? read.result.rows : []),
     [read],
   );
+  const listed = useMemo(
+    () => (absences?.kind === "done" ? absences.result.attestations : []),
+    [absences],
+  );
+  const active = listed.filter((found) => found.state === "active");
+  const withdrawn = listed.filter((found) => found.state === "withdrawn");
   const groups = WITHHOLDING_INCOME_CLASSES.map((value) => ({
     value,
     rows: rows.filter((row) => row.income_class === value),
   })).filter((group) => group.rows.length > 0);
-  /** A class in words: as the backend served it with a row, else its token. */
+  /** A class in words: as the backend served it with a payer's row or a
+   * listed attestation, else its token. */
   const classWords = (value: WithholdingIncomeClass): string =>
     rows.find((row) => row.income_class === value && row.income_class_label)
-      ?.income_class_label ?? value;
+      ?.income_class_label ??
+    listed.find(
+      (found) => found.income_class === value && found.income_class_label,
+    )?.income_class_label ??
+    value;
 
   const documentChoices = useMemo(() => {
     const seen = new Set<string>();
@@ -190,7 +207,7 @@ export function WithholdingPane({
         origin !== "" &&
         parsed.every((found) => found.parsed.kind === "value")
       : action === "attest"
-        ? note.trim() !== ""
+        ? note.trim() !== "" && absences?.kind === "done"
         : false);
 
   const classRows = (value: string) =>
@@ -259,11 +276,9 @@ export function WithholdingPane({
       reload();
       return;
     }
-    const prior = attested.find(
-      (found) => found.ejercicio === ejercicio && found.income_class === cls,
-    );
-    // Another request for the class is guarded by its revision, so a repeat
-    // is refused rather than doubled: no read is needed to resend it.
+    // A withdrawn statement is replaced against the revision it was left at;
+    // any other for the class is refused rather than doubled.
+    const prior = listed.find((found) => found.income_class === cls);
     const done = await write.run(
       () =>
         setupCall(
@@ -278,26 +293,29 @@ export function WithholdingPane({
           },
           true,
         ),
-      async () => "repeatable",
+      readLanding(
+        port,
+        "ledger.retencion_soportada.list_absences",
+        { ejercicio },
+        (result) =>
+          told(
+            result.attestations.some(
+              (found) =>
+                found.income_class === cls &&
+                found.state === "active" &&
+                found.revision_id !== prior?.revision_id,
+            ),
+          ),
+      ),
     );
-    if (done.kind === "done" && done.result.attestation)
-      remember(done.result.attestation);
     if (!sendAgain(done)) {
       clean();
       if (done.kind === "done") setAction(null);
     }
+    reloadAbsences();
   };
-  const remember = (next: WithholdingAbsence) =>
-    setAttested((held) => [
-      ...held.filter(
-        (found) =>
-          found.ejercicio !== next.ejercicio ||
-          found.income_class !== next.income_class,
-      ),
-      next,
-    ]);
   const withdraw = async (found: WithholdingAbsence) => {
-    const done = await write.run(
+    await write.run(
       () =>
         setupCall(
           port,
@@ -309,10 +327,21 @@ export function WithholdingPane({
           },
           true,
         ),
-      async () => "repeatable",
+      readLanding(
+        port,
+        "ledger.retencion_soportada.list_absences",
+        { ejercicio: found.ejercicio },
+        (result) =>
+          told(
+            result.attestations.some(
+              (other) =>
+                other.income_class === found.income_class &&
+                other.state === "withdrawn",
+            ),
+          ),
+      ),
     );
-    if (done.kind === "done" && done.result.attestation)
-      remember(done.result.attestation);
+    reloadAbsences();
   };
   /** Removes one stored record; it landed where the ejercicio, listed
    * again, no longer holds that payer under that class. */
@@ -449,10 +478,10 @@ export function WithholdingPane({
     },
   ];
 
-  const attestedHere = attested.filter(
-    (found) => found.ejercicio === ejercicio,
-  );
-  const attestedColumns: Column<WithholdingAbsence>[] = [
+  const absenceColumns = (
+    state: (found: WithholdingAbsence) => string,
+    withWithdraw: boolean,
+  ): Column<WithholdingAbsence>[] => [
     {
       key: "class",
       label: t("desktop.ledger.withholding.column.class"),
@@ -468,44 +497,50 @@ export function WithholdingPane({
       key: "state",
       label: t("desktop.ledger.withholding.column.state"),
       keepWords: true,
-      cell: (found) =>
-        found.state === "active"
-          ? t("desktop.ledger.withholding.attested_on", {
-              date: formatInstantDay(locale, found.attested_at),
-            })
-          : t("desktop.ledger.withholding.withdrawn_on", {
-              date: formatInstantDay(
-                locale,
-                found.withdrawn_at ?? found.attested_at,
-              ),
-            }),
+      cell: state,
     },
-    {
-      key: "actions",
-      label: t("desktop.ledger.form.actions"),
-      hidden: true,
-      resizable: false,
-      cell: (found) =>
-        found.state === "active" ? (
-          <WriteHold>
-            <Button
-              size="xs"
-              variant="outline"
-              className="ledger-withholding-withdraw"
-              aria-label={t("desktop.ledger.withholding.withdraw_of", {
-                class: classWords(found.income_class),
-              })}
-              aria-disabled={write.busy || undefined}
-              onClick={() => {
-                if (!write.busy) void withdraw(found);
-              }}
-            >
-              {t("desktop.ledger.withholding.withdraw")}
-            </Button>
-          </WriteHold>
-        ) : null,
-    },
+    ...(withWithdraw
+      ? [
+          {
+            key: "actions",
+            label: t("desktop.ledger.form.actions"),
+            hidden: true,
+            resizable: false,
+            cell: (found: WithholdingAbsence) => (
+              <WriteHold>
+                <Button
+                  size="xs"
+                  variant="outline"
+                  className="ledger-withholding-withdraw"
+                  aria-label={t("desktop.ledger.withholding.withdraw_of", {
+                    class: classWords(found.income_class),
+                  })}
+                  aria-disabled={write.busy || undefined}
+                  onClick={() => {
+                    if (!write.busy) void withdraw(found);
+                  }}
+                >
+                  {t("desktop.ledger.withholding.withdraw")}
+                </Button>
+              </WriteHold>
+            ),
+          },
+        ]
+      : []),
   ];
+  const attestedOn = (found: WithholdingAbsence) =>
+    t("desktop.ledger.withholding.attested_on", {
+      date: formatInstantDay(locale, found.attested_at),
+    });
+  const withdrawnOn = (found: WithholdingAbsence) =>
+    t("desktop.ledger.withholding.withdrawn_on", {
+      date: formatInstantDay(locale, found.withdrawn_at ?? found.attested_at),
+    });
+  const activeColumns = absenceColumns(attestedOn, true);
+  const historyColumns = absenceColumns(
+    (found) => facts(t, [attestedOn(found), withdrawnOn(found)]),
+    false,
+  );
 
   return (
     <Panel
@@ -591,17 +626,36 @@ export function WithholdingPane({
         <p className="text-sm text-muted-foreground">
           {t("desktop.ledger.withholding.absence.what")}
         </p>
-        <p className="ledger-withholding-listing-gap text-sm text-muted-foreground">
-          {t("desktop.ledger.withholding.absence.not_listed")}
-        </p>
-        {attestedHere.length > 0 && (
-          <SetupTable
-            label={t("desktop.ledger.withholding.absence.title")}
-            rows={attestedHere}
-            rowKey={(found) => `${found.ejercicio}:${found.income_class}`}
-            columns={attestedColumns}
-            className="ledger-withholding-attested"
-          />
+        {absences === null ? (
+          <Reading label={t("desktop.ledger.form.reading")} />
+        ) : absences.kind !== "done" ? (
+          <CallLine call={absences} />
+        ) : (
+          <>
+            {active.length > 0 && (
+              <SetupTable
+                label={t("desktop.ledger.withholding.absence.title")}
+                rows={active}
+                rowKey={(found) => `${found.ejercicio}:${found.income_class}`}
+                columns={activeColumns}
+                className="ledger-withholding-attested"
+              />
+            )}
+            {withdrawn.length > 0 && (
+              <section className="ledger-withholding-history flex flex-col gap-2">
+                <h5 className="text-sm font-medium text-muted-foreground">
+                  {t("desktop.ledger.withholding.absence.history")}
+                </h5>
+                <SetupTable
+                  label={t("desktop.ledger.withholding.absence.history")}
+                  rows={withdrawn}
+                  rowKey={(found) => `${found.ejercicio}:${found.income_class}`}
+                  columns={historyColumns}
+                  className="ledger-withholding-withdrawn"
+                />
+              </section>
+            )}
+          </>
         )}
       </div>
       <div

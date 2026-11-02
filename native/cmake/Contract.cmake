@@ -64,6 +64,7 @@ cadrumo_cached_command(contract_command native_contract SHARED DISCOVER
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/storage_vectors.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/transport_contract.py"
+    "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/operational_settings.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/identity.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/runtime_exit_reasons.py"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/runtime_wheelhouse_contract.py"
@@ -77,7 +78,7 @@ cadrumo_cached_command(contract_command native_contract SHARED DISCOVER
     "${CADRUMO_BUILD_HELPER}"
     "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/cargo_command.py"
   OUTPUTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
-    "${CONTRACT_DIR}/contract_vectors.rs")
+    "${CONTRACT_DIR}/contract_vectors.rs" "${CONTRACT_DIR}/operational-settings.ts")
 cadrumo_build_step(contract_comment native_contract GROUP contract
   SUMMARY "generate the native package contract for Rust, C and the assembler"
   OUTPUTS "${CONTRACT_DIR}/contract.json" "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h")
@@ -86,7 +87,7 @@ add_custom_target(native_contract
     -m dev.packaging.native.generate "${CONTRACT_DIR}"
     --channel "${CADRUMO_ID_CHANNEL}" --target "${CADRUMO_TARGET}" --manager-strings "${CONTRACT_DIR}/manager-chrome.json"
   BYPRODUCTS "${CONTRACT_DIR}/contract.rs" "${CONTRACT_DIR}/contract.h" "${CONTRACT_DIR}/contract.json"
-    "${CONTRACT_DIR}/contract_vectors.rs"
+    "${CONTRACT_DIR}/contract_vectors.rs" "${CONTRACT_DIR}/operational-settings.ts"
   WORKING_DIRECTORY "${CADRUMO_SOURCE_ROOT}" COMMENT "${contract_comment}" VERBATIM)
 add_dependencies(native_contract native_manager_strings)
 # Each native component resolves its own build identity just before it compiles

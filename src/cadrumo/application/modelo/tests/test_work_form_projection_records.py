@@ -409,7 +409,10 @@ def test_each_sale_shows_as_its_own_row_beside_the_boxes_that_hold_the_totals(
     assert (second["1633"], second["1654"], second["1639"]) == (Decimal("10000.00"), None, Decimal("1702.47"))
 
 
-def test_a_box_total_saved_without_rows_leaves_the_sales_unknown(operation: PinnedAuthorityOperation) -> None:
+def test_a_revision_without_rows_or_a_source_trace_leaves_the_sales_unknown(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Neither a box total nor an empty revision proves there were no sales; only a source trace can."""
     snapshot = operation.snapshot("100", filing_year=2025, period="0A")
     block = _disposal_rows_block(operation)
     columns = tuple(column.casilla_id for column in block.columns)
@@ -417,4 +420,4 @@ def test_a_box_total_saved_without_rows_leaves_the_sales_unknown(operation: Pinn
     older = empty.model_copy(update={"casilla_values": {"1654": Decimal("297.53")}})
 
     assert saved_form_records(snapshot=snapshot, revision=older, block=block, column_casillas=columns) == (False, ())
-    assert saved_form_records(snapshot=snapshot, revision=empty, block=block, column_casillas=columns) == (True, ())
+    assert saved_form_records(snapshot=snapshot, revision=empty, block=block, column_casillas=columns) == (False, ())

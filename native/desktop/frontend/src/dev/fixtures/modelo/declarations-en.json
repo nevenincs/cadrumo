@@ -2495,19 +2495,19 @@
     {
       "zone": "declarations",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:17.068694Z",
+      "observed_at": "2026-11-02T16:23:12.869216Z",
       "words": "Available"
     },
     {
       "zone": "calculation_revisions",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:17.068694Z",
+      "observed_at": "2026-11-02T16:23:12.869216Z",
       "words": "Available"
     },
     {
       "zone": "filing_history",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:17.068694Z",
+      "observed_at": "2026-11-02T16:23:12.869216Z",
       "words": "Available"
     }
   ],
@@ -2515,14 +2515,14 @@
     {
       "source": "schedule",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:17.068694Z",
-      "words": "Legal schedule: Available · Observed: Nov 2, 2026 16:43 UTC"
+      "observed_at": "2026-11-02T16:23:12.869216Z",
+      "words": "Legal schedule: Available · Observed: Nov 2, 2026 16:23 UTC"
     },
     {
       "source": "local.filing",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:17.068694Z",
-      "words": "Local filing: Available · Observed: Nov 2, 2026 16:43 UTC"
+      "observed_at": "2026-11-02T16:23:12.869216Z",
+      "words": "Local filing: Available · Observed: Nov 2, 2026 16:23 UTC"
     },
     {
       "source": "aeat.evidence",
@@ -2532,7 +2532,7 @@
     }
   ],
   "notices": ["AEAT status: Available · Observed: Jul 15, 2026 09:00 UTC"],
-  "deadline_note_words": null,
+  "deadline_note_words": "national holidays only; regional and local holidays not checked",
   "creation_targets": [
     {
       "modelo": "038",

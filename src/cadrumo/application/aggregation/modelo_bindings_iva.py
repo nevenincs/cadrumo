@@ -117,7 +117,8 @@ _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
 # a registry field and token, never a taxpayer figure, and without it the marker
 # could not say which stored value to correct.
 _DATED_ROW_SAMPLE_LIMIT = 3
-_DATED_ROW_PREFIX_LENGTH = 12
+# Hex characters of a ledger id named in a message; the ledger commands accept any prefix of it.
+_SAMPLED_LEDGER_ID_PREFIX_LENGTH = 12
 
 _IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
     {
@@ -175,7 +176,7 @@ def _selected_scope_iva_evidence_diagnostics(
 def _ledger_row_sample(ledger_ids: Sequence[str]) -> str:
     """Name a few rows by the id prefix the ledger commands accept."""
     ordered = sorted(ledger_ids)
-    sample = ", ".join(ledger_id[:_DATED_ROW_PREFIX_LENGTH] for ledger_id in ordered[:_DATED_ROW_SAMPLE_LIMIT])
+    sample = ", ".join(ledger_id[:_SAMPLED_LEDGER_ID_PREFIX_LENGTH] for ledger_id in ordered[:_DATED_ROW_SAMPLE_LIMIT])
     elided = len(ordered) - _DATED_ROW_SAMPLE_LIMIT
     return f"{sample} and {elided} more" if elided > 0 else sample
 

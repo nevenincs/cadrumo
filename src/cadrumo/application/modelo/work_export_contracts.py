@@ -11,6 +11,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection
+from ...core.payment_instalment_election import PaymentInstalmentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...domain.transactions.own_accounts import OwnAccountId
@@ -28,9 +29,11 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     location rather than content. The exported bytes never enter the request
     or the result.
 
-    The three elections are the declaration-shaping choices the command line
-    also accepts, with the same neutral defaults, so one revision exports as
-    the same declaration type from either surface.
+    The refund, payment and prior-domiciliation elections are the
+    declaration-shaping choices the command line also accepts, with the same
+    neutral defaults, so one revision exports as the same declaration type
+    from either surface. The instalment election defaults to paying at once,
+    as the command line exports.
 
     ``actor`` is recorded as sent for a person's session. An automation's session is
     recorded under its own session label, whatever the request carries.
@@ -45,6 +48,9 @@ class ModeloExportRequest(CredentialFreeOperationRequest):
     output_path: Annotated[str, Field(min_length=1, max_length=4096, pattern=r"\S")]
     refund_election: RefundElection = RefundElection.COMPENSAR
     payment_election: PaymentElection = PaymentElection.INGRESO
+    #: Whether a positive result is paid at once or in two instalments; only a
+    #: modelo that declares the split admits anything but ``single``.
+    instalment_election: PaymentInstalmentElection = PaymentInstalmentElection.SINGLE
     prior_domiciliation_election: PriorDomiciliationElection = PriorDomiciliationElection.KEEP
     #: Per-filing own-account choices by opaque register id; ``None`` resolves
     #: the register's designations. Account material never enters the request.

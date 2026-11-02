@@ -2,10 +2,10 @@
 
 A profile binding names a field of the taxpayer profile substrate (declarante,
 conyuge, hijos, ascendientes, ...) rather than a filed value or a ledger fold.
-The three shapes it admits -- a scalar key, a composite projection of several
-keys through a format renderer, and a field of a typed profile model -- are
-mutually exclusive by validation, because a declaration that named two of them
-would leave the value's origin ambiguous.
+The four shapes it admits -- a scalar key, a composite projection of several
+keys through a format renderer, a field of a typed profile model, and one leaf
+of a stored row object -- are mutually exclusive by validation, because a
+declaration that named two of them would leave the value's origin ambiguous.
 """
 
 from __future__ import annotations
@@ -23,7 +23,28 @@ from .errors import RegistryValidationError
 if TYPE_CHECKING:
     from .schema import BindingDefinition
 
-__all__ = ["ProfileProvider", "validate_profile_binding"]
+__all__ = ["ProfileProvider", "ProfileRowsSelector", "validate_profile_binding"]
+
+_FACT_PATH_PATTERN = r"^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*)+$"
+
+
+class ProfileRowsSelector(BaseModel):
+    """One leaf of a stored row object: ``{object_path}.{n}.{leaf}`` for each row ``n``.
+
+    ``count_path`` names the profile fact that states how many rows the object
+    holds. A stated count is the positive fact that lets a reader tell a filer
+    who declared no rows from one who has not answered.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    object_path: str = Field(min_length=3, max_length=128, pattern=_FACT_PATH_PATTERN)
+    leaf: str = Field(min_length=1, max_length=64, pattern=r"^[a-z][a-z0-9_]*$")
+    count_path: str = Field(min_length=3, max_length=128, pattern=_FACT_PATH_PATTERN)
+
+    def row_path(self, index: int) -> str:
+        """Return the stored fact path of this leaf on row ``index``."""
+        return f"{self.object_path}.{index}.{self.leaf}"
 
 
 class ProfileProvider(BaseModel):
@@ -58,6 +79,8 @@ class ProfileProvider(BaseModel):
     collection: str | None = Field(default=None, min_length=1, max_length=64)
     field: str | None = Field(default=None, min_length=1, max_length=128)
     repeating: bool = False
+    # Stored row-object shape
+    rows: ProfileRowsSelector | None = None
     # On-wire addressing
     xsd_path: str | None = Field(default=None, min_length=1, max_length=512)
     xsd_attribute: str | None = Field(default=None, min_length=1, max_length=128)
@@ -75,8 +98,10 @@ class ProfileProvider(BaseModel):
         _require_single_shape(self, has_collection=has_collection)
         if bool(self.profile_keys) and self.format is None:
             raise RegistryValidationError("profile composite selector (profile_keys) requires a format renderer")
-        if self.repeating and not has_collection:
-            raise RegistryValidationError("profile selector with repeating=true must declare profile_model")
+        if self.rows is not None and not self.repeating:
+            raise RegistryValidationError("profile row-object selector (rows) requires repeating=true")
+        if self.repeating and not has_collection and self.rows is None:
+            raise RegistryValidationError("profile selector with repeating=true must declare profile_model or rows")
         if has_collection:
             _require_collection_fields(self)
         _require_paired_required_when(self)
@@ -84,11 +109,13 @@ class ProfileProvider(BaseModel):
 
 
 def _require_single_shape(provider: ProfileProvider, *, has_collection: bool) -> None:
-    shape_count = sum((provider.profile_key is not None, bool(provider.profile_keys), has_collection))
+    shape_count = sum(
+        (provider.profile_key is not None, bool(provider.profile_keys), has_collection, provider.rows is not None)
+    )
     if shape_count != 1:
         raise RegistryValidationError(
             "profile selector must declare exactly one of profile_key (scalar), "
-            "profile_keys (composite), or profile_model (collection)",
+            "profile_keys (composite), profile_model (collection), or rows (row object)",
         )
 
 

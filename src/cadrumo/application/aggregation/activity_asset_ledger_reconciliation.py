@@ -40,6 +40,7 @@ from ..invoices.catalogue_reads_ports import (
     TransactionCatalogueReader,
 )
 from ._modelo_bindings_support import STORAGE_DEGRADATION_ERRORS
+from .currency_predicates import effective_eur_amount
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import CalculationSourceDiagnostic
 
@@ -424,7 +425,7 @@ def _durable_findings(
                         CalculationNoteSentence.POSSIBLY_DURABLE_EXPENSE,
                         rows=(row.transaction_id,),
                         row_date=row.raw.booked_date.isoformat(),
-                        row_amount=abs(row.raw.amount),
+                        row_amount=abs(effective_eur_amount(row)),
                     ),
                 ),
             )

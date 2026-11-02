@@ -2495,19 +2495,19 @@
     {
       "zone": "declarations",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:24.444271Z",
+      "observed_at": "2026-11-02T16:23:20.506763Z",
       "words": "Disponible"
     },
     {
       "zone": "calculation_revisions",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:24.444271Z",
+      "observed_at": "2026-11-02T16:23:20.506763Z",
       "words": "Disponible"
     },
     {
       "zone": "filing_history",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:24.444271Z",
+      "observed_at": "2026-11-02T16:23:20.506763Z",
       "words": "Disponible"
     }
   ],
@@ -2515,14 +2515,14 @@
     {
       "source": "schedule",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:24.444271Z",
-      "words": "Calendari legal: Disponible · Observat: 2 de nov. 2026 16:43 UTC"
+      "observed_at": "2026-11-02T16:23:20.506763Z",
+      "words": "Calendari legal: Disponible · Observat: 2 de nov. 2026 16:23 UTC"
     },
     {
       "source": "local.filing",
       "availability": "available",
-      "observed_at": "2026-11-02T16:43:24.444271Z",
-      "words": "Presentació local: Disponible · Observat: 2 de nov. 2026 16:43 UTC"
+      "observed_at": "2026-11-02T16:23:20.506763Z",
+      "words": "Presentació local: Disponible · Observat: 2 de nov. 2026 16:23 UTC"
     },
     {
       "source": "aeat.evidence",
@@ -2534,7 +2534,7 @@
   "notices": [
     "Estat a l'AEAT: Disponible · Observat: 15 de jul. 2026 09:00 UTC"
   ],
-  "deadline_note_words": null,
+  "deadline_note_words": "només festius nacionals; festius autonòmics i locals sense comprovar",
   "creation_targets": [
     {
       "modelo": "038",

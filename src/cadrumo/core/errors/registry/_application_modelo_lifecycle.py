@@ -378,6 +378,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.modelo.action_errors.ModeloInstalmentElectionRefusedError",
+        ErrorCode(
+            code="REFUSED_MODELO_INSTALMENT_ELECTION",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_modelo_instalment_election",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.modelo.action_errors.ModeloPaymentElectionCapabilityRefusedError",
         ErrorCode(
             code="REFUSED_MODELO_PAYMENT_ELECTION_CAPABILITY",

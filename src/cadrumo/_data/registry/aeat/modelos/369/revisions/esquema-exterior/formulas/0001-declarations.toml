@@ -2,7 +2,33 @@
 id = "modelo-369-exterior-cuota-total"
 target_casilla_id = "iva.exterior.cuota-total"
 expression = { op = "add", args = [
-    { casilla_id = "iva.exterior.de.services-cuota" },
+    { casilla_id = "iva.exterior.resultado.at.servicios" },
+    { casilla_id = "iva.exterior.resultado.be.servicios" },
+    { casilla_id = "iva.exterior.resultado.bg.servicios" },
+    { casilla_id = "iva.exterior.resultado.cy.servicios" },
+    { casilla_id = "iva.exterior.resultado.cz.servicios" },
+    { casilla_id = "iva.exterior.resultado.de.servicios" },
+    { casilla_id = "iva.exterior.resultado.dk.servicios" },
+    { casilla_id = "iva.exterior.resultado.ee.servicios" },
+    { casilla_id = "iva.exterior.resultado.es.servicios" },
+    { casilla_id = "iva.exterior.resultado.fi.servicios" },
+    { casilla_id = "iva.exterior.resultado.fr.servicios" },
+    { casilla_id = "iva.exterior.resultado.gr.servicios" },
+    { casilla_id = "iva.exterior.resultado.hr.servicios" },
+    { casilla_id = "iva.exterior.resultado.hu.servicios" },
+    { casilla_id = "iva.exterior.resultado.ie.servicios" },
+    { casilla_id = "iva.exterior.resultado.it.servicios" },
+    { casilla_id = "iva.exterior.resultado.lt.servicios" },
+    { casilla_id = "iva.exterior.resultado.lu.servicios" },
+    { casilla_id = "iva.exterior.resultado.lv.servicios" },
+    { casilla_id = "iva.exterior.resultado.mt.servicios" },
+    { casilla_id = "iva.exterior.resultado.nl.servicios" },
+    { casilla_id = "iva.exterior.resultado.pl.servicios" },
+    { casilla_id = "iva.exterior.resultado.pt.servicios" },
+    { casilla_id = "iva.exterior.resultado.ro.servicios" },
+    { casilla_id = "iva.exterior.resultado.se.servicios" },
+    { casilla_id = "iva.exterior.resultado.si.servicios" },
+    { casilla_id = "iva.exterior.resultado.sk.servicios" },
 ] }
 rounding = "money-2"
 legal_refs = [

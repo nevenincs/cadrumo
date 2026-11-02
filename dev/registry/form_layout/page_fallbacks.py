@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 from .generation_constants import _GENERAL_SECTION
 from .generation_models import _Build
 from .official_text import node_slug
-from .page_sections import _heading_key, _unique
+from .page_sections import _unique, form_heading_key
 from .position_anchoring import _casilla_box
 
 
@@ -44,7 +44,7 @@ def _numbered_page(build: _Build, page_id: str, casilla_ids: Sequence[str]) -> F
     sections = tuple(
         FormSectionDefinition(
             id=section_id,
-            heading_key=_heading_key(build.modelo_id, "section", section_id),
+            heading_key=form_heading_key(build.modelo_id, "section", section_id),
             blocks=tuple(
                 FormFieldBlock(id=f"field-{index + 1}", casilla_id=casilla_id)
                 for index, casilla_id in enumerate(members)
@@ -52,7 +52,9 @@ def _numbered_page(build: _Build, page_id: str, casilla_ids: Sequence[str]) -> F
         )
         for section_id, members in groups.items()
     )
-    return FormPageDefinition(id=page_id, heading_key=_heading_key(build.modelo_id, "page", page_id), sections=sections)
+    return FormPageDefinition(
+        id=page_id, heading_key=form_heading_key(build.modelo_id, "page", page_id), sections=sections
+    )
 
 
 def _inputs_page(
@@ -81,8 +83,8 @@ def _inputs_page(
     if not blocks:
         return None
     section = FormSectionDefinition(
-        id="inputs", heading_key=_heading_key(build.modelo_id, "section", "inputs"), blocks=tuple(blocks)
+        id="inputs", heading_key=form_heading_key(build.modelo_id, "section", "inputs"), blocks=tuple(blocks)
     )
     return FormPageDefinition(
-        id=page_id, heading_key=_heading_key(build.modelo_id, "page", page_id), sections=(section,)
+        id=page_id, heading_key=form_heading_key(build.modelo_id, "page", page_id), sections=(section,)
     )

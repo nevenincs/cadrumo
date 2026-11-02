@@ -17,7 +17,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     AutomationScopeProjection,
 )
 from cadrumo_client.commands.access_management_payloads import ConfigProfileAutomationListResult
-from cadrumo_client.contracts.access_vocabulary import AuthorityState, disclosure_digest
+from cadrumo_client.contracts.access_vocabulary import AuthorityState, GrantUse, disclosure_digest
 from cadrumo_client.transport.automation_inventory import (
     AutomationInventoryCompletion,
     AutomationInventoryReadError,
@@ -62,6 +62,8 @@ def test_list_uses_bound_profile_and_emits_only_public_projection(monkeypatch: p
                 expires_at=instant + timedelta(days=1),
                 unattended=False,
                 allow_os_lock=False,
+                label="Claude on the laptop",
+                use=GrantUse.AGENT,
             ),
         ),
         keys=(
@@ -105,7 +107,8 @@ def test_list_uses_bound_profile_and_emits_only_public_projection(monkeypatch: p
     assert "secret" not in document and "verifier" not in document and "dek" not in document
     lines = envelope["lines"]
     assert isinstance(lines, tuple)
-    assert any(line.startswith("grant\t") for line in lines)
+    (grant_line,) = (line for line in lines if line.startswith("grant\t"))
+    assert grant_line.split("\t")[-2:] == ["agent", "Claude on the laptop"]
     assert any(line.startswith("key\t") for line in lines)
 
 

@@ -42,9 +42,17 @@ from ...invoices.catalogue_update_operation import (
     InvoiceUpdateRequest,
     resolve_invoice_update_access,
 )
+from ...invoices.duplicate_check_operation import (
+    LedgerInvoiceDuplicateRequest,
+    resolve_ledger_invoice_duplicate_access,
+)
 from ...invoices.figures_preview_contracts import InvoiceFiguresPreviewRequest
 from ...invoices.figures_preview_operation import (
     resolve_invoice_figures_preview_access,
+)
+from ...invoices.payment_match_operation import (
+    LedgerInvoiceMatchRequest,
+    resolve_ledger_invoice_match_access,
 )
 from ...modelo.invoice_withholding_capture_contracts import ModeloInvoiceWithholdingCaptureRequest
 from ...modelo.invoice_withholding_capture_operation import (
@@ -161,6 +169,7 @@ from ..rule_trial_operation import (
     LedgerRuleTrialRequest,
     resolve_ledger_rule_trial_access,
 )
+from ..split_check_operation import LedgerSplitCheckRequest, resolve_ledger_split_check_access
 from ..split_operation import (
     LedgerSplitRequest,
     resolve_ledger_split_access,
@@ -263,6 +272,20 @@ _RESOLVERS = [
         resolve_invoice_update_access, "ledger.invoice.update", InvoiceUpdateRequest, True, id="ledger.invoice.update"
     ),
     pytest.param(
+        resolve_ledger_invoice_duplicate_access,
+        "ledger.invoice.duplicate",
+        LedgerInvoiceDuplicateRequest,
+        False,
+        id="ledger.invoice.duplicate",
+    ),
+    pytest.param(
+        resolve_ledger_invoice_match_access,
+        "ledger.invoice.match",
+        LedgerInvoiceMatchRequest,
+        False,
+        id="ledger.invoice.match",
+    ),
+    pytest.param(
         resolve_invoice_figures_preview_access,
         "ledger.invoice.preview",
         InvoiceFiguresPreviewRequest,
@@ -331,6 +354,9 @@ _RESOLVERS = [
     ),
     pytest.param(
         resolve_ledger_rule_trial_access, "ledger.rule.trial", LedgerRuleTrialRequest, False, id="ledger.rule.trial"
+    ),
+    pytest.param(
+        resolve_ledger_split_check_access, "ledger.split.check", LedgerSplitCheckRequest, False, id="ledger.split.check"
     ),
     pytest.param(
         resolve_ledger_split_access, "ledger.split.manual", LedgerSplitRequest, True, id="ledger.split.manual"

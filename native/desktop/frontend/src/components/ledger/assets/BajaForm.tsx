@@ -3,13 +3,10 @@ import { Alert } from "@/components/ui/alert";
 import { Icon } from "@/components/ui/icon";
 import { useStrings } from "../../../shell/strings";
 import { Reading } from "../setup/SetupParts";
-import {
-  AssetForm,
-  useAssetRow,
-  type ActKind,
-  type ActProps,
-} from "./AssetForm";
+import { AssetForm, type ActProps } from "./AssetForm";
 import { DisposalFigures } from "./DisposalFigures";
+import type { ActKind } from "./assetFormActs";
+import { useAssetRow } from "./assetFormState";
 
 /** Lines that say how a send ended. */
 const OUTCOMES =

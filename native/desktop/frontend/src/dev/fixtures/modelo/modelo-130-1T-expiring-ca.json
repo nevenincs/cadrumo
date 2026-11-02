@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "19c6c6d5ec60fe8e9d69654ae44304f4a6ac22e580f0f8c29053f6a016ab87d3",
+      "calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -61,8 +61,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.devengo",
@@ -93,8 +96,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
@@ -575,8 +581,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 1,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
@@ -840,8 +849,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-iii-total-liquidacion",
@@ -1292,8 +1304,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 5,
+                "could_not_calculate": 5
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.ingreso",
@@ -1317,8 +1332,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.complementaria",
@@ -1358,8 +1376,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -1371,9 +1392,43 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 1,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 5,
+            "could_not_calculate": 5
           },
           "applicability_words": null
+        }
+      ],
+      "outline": [
+        {
+          "id": "dr-13001",
+          "heading": {
+            "text": "Pàgina 1 · Pagament fraccionat",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dr-13001.identificacion",
+            "dr-13001.devengo",
+            "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
+            "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
+            "dr-13001.liquidacion-3-iii-total-liquidacion",
+            "dr-13001.ingreso",
+            "dr-13001.complementaria"
+          ],
+          "counts": {
+            "total": 19,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 2,
+            "calculated": 6,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 1,
+            "blocked": 0,
+            "needs_you": 5,
+            "could_not_calculate": 5
+          },
+          "applies": true
         }
       ],
       "working_figures": [
@@ -1453,7 +1508,9 @@
         "overridden": 0,
         "default_to_confirm": 0,
         "not_applicable": 1,
-        "blocked": 0
+        "blocked": 0,
+        "needs_you": 6,
+        "could_not_calculate": 6
       },
       "progress": {
         "state": "in_progress",
@@ -1604,7 +1661,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "8a5a449de28d62f8b6cf014dc64eceaea1267e419dad5f12c69c7bbedbf28681",
+      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1639,9 +1696,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "904d486b2829b2492e9f84914318aae8875907a5e4751850b91d1064d0448b04",
-    "calculation_head_digest": "84e46bfe6dd71ee3d502d9574eb5e328f40ee5433b207e1f0421187cfcb4bd60",
-    "current_calculation_revision_id": "19c6c6d5ec60fe8e9d69654ae44304f4a6ac22e580f0f8c29053f6a016ab87d3",
+    "work_unit_record_digest": "175660436c34680f23e8c35ce5d6d7fc348daa01661ad3fd3eb1f9294022e143",
+    "calculation_head_digest": "9dabde1ddc315de8e98c2772537a252765e2d5614875a5e41c415546deac2aa3",
+    "current_calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1944,9 +2001,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:15:06.172371Z",
-    "expires_at": "2026-11-02T16:20:06.172371Z",
-    "baseline_id": "1c2a16cfc193d05f5ac37eaa50afbfab993f78747dbc9ae672e889a6ae7dbb32"
+    "issued_at": "2026-11-02T15:55:01.971890Z",
+    "expires_at": "2026-11-02T16:00:01.971890Z",
+    "baseline_id": "68834ffc9376706cad16493f915e3b42092667e6a114304b56cdd6a2bce92c86"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2039,7 +2096,7 @@
     "words": "La declaració encara no s'ha comprovat.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "19c6c6d5ec60fe8e9d69654ae44304f4a6ac22e580f0f8c29053f6a016ab87d3",
+  "calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

@@ -20,6 +20,23 @@ desktop:
     archived_empty: Nothing archived
     archived_toggle: Archived ({count})
     attach_filter: Documents
+    attachment_grant_document: '{name} to {model}'
+    attachment_grant_images: Page images to {model}
+    attachment_grant_revoke: Revoke
+    attachment_grants_title: Remembered permissions
+    attachment_refusal:
+      acknowledgement_missing: You haven't allowed this read.
+      cloud_upload_not_permitted: This installation doesn't allow documents to leave
+        this computer.
+      document_removed: The file has been removed.
+      file_changed_during_read: The file changed. Add it again to read the new version.
+      gestor_mode: Gestor mode never sends documents off this computer.
+      grant_revoked: That permission has already been revoked.
+      not_signed_in: Sign in to answer this.
+      profile_not_eligible: This profile can't send documents off this computer.
+      reference_unknown: The agent isn't waiting on this file any more.
+      service_failed: The permission couldn't be recorded, so nothing was sent.
+    attachment_refused: This file wasn't sent. {reason}
     attachments: Files for the next message
     attachments_refused: 'Not accepted: {count}'
     attachments_uploading: 'Uploading: {count}'
@@ -43,12 +60,19 @@ desktop:
     condition_usage_exhausted: Provider usage limit reached. Check your provider account
       or choose another provider.
     consent_allow: Send to {provider}
+    consent_allow_remember: Allow and remember
+    consent_allow_session: Allow for this session
     consent_decline: Don't send
+    consent_document_text: The text read from {name}
     consent_items: What would be sent
     consent_lead: To answer, {model} needs the content below. Sending it takes it
       off this computer to {provider}.
     consent_note: Nothing is sent until you choose. If you don't send it, it stays
       on this computer.
+    consent_page_images: Images of the pages of {name}
+    consent_page_images_warning: Page images show everything on the page and leave
+      this computer. Allowing them for later covers any document read by this model.
+    consent_recall: What has already been sent can't be recalled.
     consent_title: Send this to {provider}?
     conversation_deleting: This conversation is being deleted, so it takes no files.
     conversation_id_taken: This conversation can't hold files. Start a new conversation

@@ -53,6 +53,7 @@ if TYPE_CHECKING:
     from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
     from ..live.borrador_100 import Borrador100SnapshotRepository
     from ..operations.registry import OperationPublicContractSetV1
+    from .export_ports import OwnAccountRegisterReaderProtocol
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,7 +65,8 @@ class ModeloWorkbenchReadPorts:
     the profile's event history, read to say when the latest file for the AEAT
     was created and whether it still matches; ``filings`` is the profile's
     filing records, read to say whether a recorded filing's AEAT receipt is
-    verified.
+    verified; ``own_accounts`` is the taxpayer's own-account register, read to
+    offer the accounts AEAT debits and pays a refund into.
     """
 
     work_units: WorkUnitCatalogueRepositoryProtocol
@@ -74,6 +76,7 @@ class ModeloWorkbenchReadPorts:
     borrador_snapshots: Borrador100SnapshotRepository | None = None
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None
     filings: ModeloRecordCatalogueRepositoryProtocol | None = None
+    own_accounts: OwnAccountRegisterReaderProtocol | None = None
 
 
 type ModeloWorkbenchReadPortsFactory = Callable[[str, PinnedAuthorityOperation], ModeloWorkbenchReadPorts]
@@ -228,6 +231,8 @@ def read_modelo_workbench_form(
             form=form,
             verified=loaded.verified,
             filed=loaded.filed,
+            own_accounts=None if ports.own_accounts is None else ports.own_accounts.load(),
+            amended=head is not None and head.amendment_identity is not None,
         ),
         receipt=_receipt(unit, loaded, ports=ports, language=language),
     )

@@ -203,8 +203,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dp30301.devengo",
@@ -336,8 +339,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dp30301.liquidacion-3-regimen-general-iva-devengado",
@@ -3178,8 +3184,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dp30301.liquidacion-3-regimen-general",
@@ -3252,8 +3261,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dp30301.liquidacion-3-regimen-general-iva-deducible",
@@ -4629,8 +4641,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -4642,7 +4657,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -4760,8 +4777,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30302.actividad-a2",
@@ -4867,8 +4887,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30302.actividad-b1",
@@ -5145,8 +5168,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30302.actividad-b2",
@@ -5423,8 +5449,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30302.rs-anticipos",
@@ -5497,8 +5526,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30302.rs-anual",
@@ -5677,8 +5709,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30302.rs-devengado",
@@ -5907,8 +5942,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30302.rs-deducible",
@@ -6084,8 +6122,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30302.rs-resultado",
@@ -6158,8 +6199,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             }
           ],
           "counts": {
@@ -6171,7 +6215,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -6903,8 +6949,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dp30303.resultado",
@@ -7773,8 +7822,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dp30303.rectificativa",
@@ -7834,8 +7886,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -7847,7 +7902,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -7896,8 +7953,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             },
             {
               "id": "dp30304.annual-activity-2",
@@ -7937,8 +7997,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             },
             {
               "id": "dp30304.annual-activity-3",
@@ -7978,8 +8041,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             },
             {
               "id": "dp30304.annual-activity-4",
@@ -8019,8 +8085,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             },
             {
               "id": "dp30304.annual-activity-5",
@@ -8060,8 +8129,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             },
             {
               "id": "dp30304.annual-activity-6",
@@ -8101,8 +8173,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             },
             {
               "id": "dp30304.annual-third-parties",
@@ -8132,8 +8207,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             },
             {
               "id": "dp30304.territorio",
@@ -8468,8 +8546,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             },
             {
               "id": "dp30304.operaciones-anuales",
@@ -9641,8 +9722,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": false
             }
           ],
           "counts": {
@@ -9654,7 +9738,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": "Ebben a negyedévben nem alkalmazandó"
         },
@@ -11526,8 +11612,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30305.grupo-1",
@@ -12837,8 +12926,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             },
             {
               "id": "dp30305.grupo-2",
@@ -14148,8 +14240,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             }
           ],
           "counts": {
@@ -14161,7 +14256,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -14246,8 +14343,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pago-devolucion.cuenta-bancaria",
@@ -14312,8 +14412,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -14325,9 +14428,182 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
+        }
+      ],
+      "outline": [
+        {
+          "id": "dp30301",
+          "heading": {
+            "text": "Azonosítás és általános rendszer",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dp30301.identificacion",
+            "dp30301.devengo",
+            "dp30301.liquidacion-3-regimen-general-iva-devengado",
+            "dp30301.liquidacion-3-regimen-general",
+            "dp30301.liquidacion-3-regimen-general-iva-deducible"
+          ],
+          "counts": {
+            "total": 63,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "dp30302",
+          "heading": {
+            "text": "Egyszerűsített rendszer",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dp30302.actividad-a1",
+            "dp30302.actividad-a2",
+            "dp30302.actividad-b1",
+            "dp30302.actividad-b2",
+            "dp30302.rs-anticipos",
+            "dp30302.rs-anual",
+            "dp30302.rs-devengado",
+            "dp30302.rs-deducible",
+            "dp30302.rs-resultado"
+          ],
+          "counts": {
+            "total": 12,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": null
+        },
+        {
+          "id": "dp30303",
+          "heading": {
+            "text": "Kiegészítő adatok és eredmény",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dp30303.informacion-adicional",
+            "dp30303.resultado",
+            "dp30303.rectificativa"
+          ],
+          "counts": {
+            "total": 24,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "dp30304",
+          "heading": {
+            "text": "Éves adatok a 390-es bevallás alól menteseknek",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dp30304.annual-activity-1",
+            "dp30304.annual-activity-2",
+            "dp30304.annual-activity-3",
+            "dp30304.annual-activity-4",
+            "dp30304.annual-activity-5",
+            "dp30304.annual-activity-6",
+            "dp30304.annual-third-parties",
+            "dp30304.territorio",
+            "dp30304.operaciones-anuales"
+          ],
+          "counts": {
+            "total": 23,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": false
+        },
+        {
+          "id": "dp30305",
+          "heading": {
+            "text": "Levonási hányad és elkülönített levonások",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dp30305.prorratas",
+            "dp30305.grupo-1",
+            "dp30305.grupo-2"
+          ],
+          "counts": {
+            "total": 61,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": null
+        },
+        {
+          "id": "pago-devolucion",
+          "heading": {
+            "text": "Befizetés, visszatérítés és bankszámla",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "pago-devolucion.rectificacion-devolucion",
+            "pago-devolucion.cuenta-bancaria"
+          ],
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
         }
       ],
       "working_figures": [
@@ -17379,7 +17655,9 @@
         "overridden": 0,
         "default_to_confirm": 0,
         "not_applicable": 0,
-        "blocked": 0
+        "blocked": 0,
+        "needs_you": 0,
+        "could_not_calculate": 0
       },
       "progress": {
         "state": "in_progress",
@@ -18022,7 +18300,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "8a5a449de28d62f8b6cf014dc64eceaea1267e419dad5f12c69c7bbedbf28681",
+      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -21138,9 +21416,9 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:42:59.377179Z",
-    "expires_at": "2026-11-02T16:47:59.377179Z",
-    "baseline_id": "584dc0647d22bd68c5284724b00b922fa1b6a2f3e0b4ad43e3ced18ee1b0eec6"
+    "issued_at": "2026-11-02T16:22:55.671109Z",
+    "expires_at": "2026-11-02T16:27:55.671109Z",
+    "baseline_id": "b38c49b1184ef5da333cbc70e76df32614db79efd53073d21471f69978703737"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -21631,7 +21909,12 @@
     "elections": [
       {
         "election": "refund",
+        "request_field": "refund_election",
         "words": "Negatív eredmény: továbbvitel vagy visszatérítés kérése",
+        "state": "available",
+        "reason": null,
+        "state_words": null,
+        "help": null,
         "default": "compensar",
         "choices": [
           {
@@ -21643,20 +21926,23 @@
       },
       {
         "election": "payment",
+        "request_field": "payment_election",
         "words": "Befizetendő eredmény: a fizetés módja",
-        "default": "ingreso",
-        "choices": [
-          { "value": "ingreso", "words": "Befizetés (ingreso)" },
-          { "value": "domiciliacion", "words": "Csoportos beszedés" },
-          {
-            "value": "cuenta_corriente",
-            "words": "Adófolyószámla (cuenta corriente tributaria)"
-          }
-        ]
+        "state": "unavailable",
+        "reason": "result_unknown",
+        "state_words": "Előbb számold ki a bevallást: az eredménye dönt erről.",
+        "help": null,
+        "default": null,
+        "choices": []
       },
       {
         "election": "prior_domiciliation",
+        "request_field": "prior_domiciliation_election",
         "words": "Korábbi csoportos beszedés (csak helyesbítő önbevallásnál)",
+        "state": "available",
+        "reason": null,
+        "state_words": null,
+        "help": null,
         "default": "keep",
         "choices": [
           { "value": "keep", "words": "Megtartás" },

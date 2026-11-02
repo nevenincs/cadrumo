@@ -65,6 +65,11 @@ class _AdminRecorder:
         attempt_id: str | None = None,
         model: str | None = None,
         secret: bytearray | None = None,
+        run_id: str | None = None,
+        permission_request_id: str | None = None,
+        scope: Literal["once", "session", "remember"] | None = None,
+        grant_id: str | None = None,
+        conversation_id: str | None = None,
     ) -> dict[str, JsonValue]:
         values: dict[str, str | bytearray | None] = {
             "provider": provider,

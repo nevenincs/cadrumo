@@ -1,18 +1,21 @@
 import { useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
+import { DataGrid } from "@/components/ui/data-grid";
 import {
-  DataGrid,
-  DataGridRowCheckbox,
-  DataGridSelectAll,
   DataGridText,
   DataGridTextEditor,
-  DataTable,
+} from "@/components/ui/data-grid-text";
+import {
+  DataGridRowCheckbox,
+  DataGridSelectAll,
+} from "@/components/ui/data-grid-selection";
+import { DataTable, type TableRow } from "@/components/ui/data-table";
+import {
   type DataGridHandle,
   type GridColumn,
   type GridRow,
-  type TableRow,
-} from "@/components/ui/data-grid";
+} from "@/components/ui/dataGridTypes";
 import type { CellRange } from "@/components/ui/dataGridModel";
 import { EmptyState } from "@/components/ui/empty";
 import { formatDay } from "@/shared/dateFormats";

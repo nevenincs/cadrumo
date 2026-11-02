@@ -18,20 +18,21 @@ land on inconsistent ledger facts.
 The :class:`OssIossLedgerSourceResolver` returns a
 :class:`~.source_mesh.CalculationSourceResolution` with resolved binding values,
 transaction provenance, and non-blocking diagnostics for empty live catalogues or
-declarable OSS observations that no ``ledger_oss_aggregation`` binding consumes.
+declarable OSS observations that no detail table of the revision can take.
 """
 
 from __future__ import annotations
 
-from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, ClassVar
+from itertools import pairwise
+from typing import Annotated, ClassVar, NamedTuple
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole, InvoiceDevengoRank
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.bucket import BucketId
@@ -39,7 +40,6 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
-from ...core.time.clock import today_madrid
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -48,19 +48,21 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_oss_bindings import (
     OssIossLedgerObservation,
     resolve_ledger_oss_aggregation_binding_values,
-    unsupported_ledger_oss_observations,
 )
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
-from ...domain.calculations.registry.schema import BindingDefinition, ModeloRevision
-from ...domain.calculations.registry.schema_base import DateAxis
-from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
+from ...domain.calculations.registry.schema import ModeloRevision
+from ...domain.calculations.registry.schema_base import CasillaDataType, DateAxis
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.currency.errors import ExchangeRateProviderError
+from ...domain.currency.models import EurRateLookupStatus
+from ...domain.currency.service import published_eur_rate_on_day_or_next
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
-from ...domain.iva.classification import TransactionKind, require_transaction_kind, resolve_transaction_kind_catalogue
-from ...domain.iva.lookup import lookup_rate
+from ...domain.iva.classification import TransactionKind, require_transaction_kind
+from ...domain.iva.lookup import lookup_rate, tier_rates_within
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
+from ..exchange_rate_provider import exchange_rate_provider
 from ..invoices.catalogue_reads_ports import (
     BucketBoundCatalogueReader,
     InvoiceCatalogueReadPersistenceError,
@@ -240,6 +242,40 @@ def validate_oss_ioss_observation(
     )
 
 
+def _refuse_consignments_over_ceiling(
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a consignment whose value is above its regime's published intrinsic-value ceiling.
+
+    One invoice is read as one consignment, the unit the law limits, so its lines
+    are summed; the line identifier carries the invoice as its leading segment.
+    The base includes any shipping the invoice charged in its lines, which can
+    refuse a consignment the law admits but never admits one it excludes.
+    """
+    consignments: dict[tuple[str, str], Decimal] = {}
+    dated: dict[tuple[str, str], date] = {}
+    for observation in observations:
+        key = (observation.regime, observation.ledger_id.split(":", 1)[0])
+        consignments[key] = consignments.get(key, Decimal("0")) + observation.base_amount
+        dated[key] = observation.transaction_date
+    for key, value in consignments.items():
+        regime, invoice_id = key
+        catalogue = resolve_oss_ioss_regime_catalogue(effective_date=dated[key], authority=operation)
+        ceiling = catalogue.definition(regime).intrinsic_value_ceiling_eur
+        if ceiling is not None and value > Decimal(ceiling):
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.consignment_exceeds_ceiling"),
+                context={
+                    "invoice_id": invoice_id,
+                    "regime": regime,
+                    "consignment_value_eur": str(value),
+                    "intrinsic_value_ceiling_eur": ceiling,
+                },
+            )
+
+
 def validate_oss_ioss_observations(
     candidates: Iterable[OssIossLedgerCandidate],
     *,
@@ -259,7 +295,9 @@ def validate_oss_ioss_observations(
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return validate_oss_ioss_observations(candidates, operation=indexed_operation)
-    return tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
+    observations = tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
+    _refuse_consignments_over_ceiling(observations, operation=operation)
+    return observations
 
 
 def aggregate_oss_ioss_bindings(
@@ -298,45 +336,74 @@ def aggregate_oss_ioss_bindings(
     return resolve_ledger_oss_aggregation_binding_values(revision, observations)
 
 
-def _exterior_detail_binding_values(
+def _detail_binding_values(
     revision: ModeloRevision,
     observations: Sequence[OssIossLedgerObservation],
     *,
     operation: PinnedAuthorityOperation,
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Project Exterior service rows from validated invoice observations.
+    """Project the rows of the revision's detail tables from validated observations.
 
-    The record-design bindings are generated from AEAT's positional workbook,
-    so discover their semantic field names from the revision instead of
-    duplicating generated binding ids here.  One row represents one
-    destination/rate tier; repeated invoice lines in that tier are summed.
+    Which table takes an observation is a dated declaration keyed by its
+    transaction kind, and the table's slots come from the revision's own wire
+    geometry, so every regime goes through this one path. One row is one
+    destination and applied rate; repeated lines at that rate are summed.
     """
-    if revision.id != "esquema-exterior":
-        return {}, {}
-    grouped = _group_exterior_service_observations(observations, operation=operation)
-    if not grouped:
-        return {}, {}
-    declarations = _exterior_projection_declarations(observations[0].transaction_date, operation=operation)
-    return _bind_exterior_detail_values(revision, grouped, declarations, operation=operation)
+    decimal_values: dict[BindingId, Decimal] = {}
+    enum_values: dict[BindingId, str] = {}
+    for record_id, grouped in _group_detail_observations(revision, observations, operation=operation).items():
+        slots = _record_row_slots(revision, record_id)
+        if len(grouped) > len(slots):
+            # The design's continuation page has no slots here: the settlement
+            # formulas read these slots alone. Refuse rather than export a prefix.
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.detail_rows_exceed_page"),
+                context={"record": record_id, "rows": str(len(grouped)), "capacity": str(len(slots))},
+            )
+        for slot, (key, rows) in zip(slots, sorted(grouped.items(), key=lambda item: item[0]), strict=False):
+            _assign_detail_row(slot, key, rows, decimal_values, enum_values)
+    return decimal_values, enum_values
 
 
-_MODELO_369_EXTERIOR_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
-_EXTERIOR_DETAIL_RECORD = "modelo-369-exterior-t36901"
-_EXTERIOR_DETAIL_PREFIX = "3-prestaciones-de-servicios-"
-_EXTERIOR_DETAIL_COLUMNS = frozenset(
-    {"codigo-de-pais-em-de-consumo", "tipo-iva", "tipo-de-iva", "base-imponible", "cuota-iva"}
+_MODELO_369_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
+_ROW_SHAPES: tuple[tuple[CasillaDataType, ...], ...] = (
+    (
+        CasillaDataType.TEXT,
+        CasillaDataType.DECIMAL,
+        CasillaDataType.TEXT,
+        CasillaDataType.MONEY,
+        CasillaDataType.MONEY,
+    ),
+    (
+        CasillaDataType.TEXT,
+        CasillaDataType.TEXT,
+        CasillaDataType.TEXT,
+        CasillaDataType.DECIMAL,
+        CasillaDataType.TEXT,
+        CasillaDataType.MONEY,
+        CasillaDataType.MONEY,
+    ),
 )
+"""The two line layouts of DR369's lists: destination first, or establishment first.
+
+Columns are told apart by data type and contiguity alone; each column's width is
+whatever the revision's own wire geometry declares.
+
+Only the first can be projected; the second names a permanent establishment or a
+dispatch state the invoice does not record, and is enumerated solely to close it.
+"""
+_PROJECTED_ROW_COLUMNS = len(_ROW_SHAPES[0])
 
 
-def _exterior_projection_declarations(
+def _projection_declarations(
     effective_date: date,
     *,
     operation: PinnedAuthorityOperation,
 ) -> dict[str, str]:
-    """Resolve the dated Modelo 369 Exterior rate-code catalogue."""
+    """Resolve the dated Modelo 369 rate-code, country-code and section catalogue."""
     resolved = operation.resolve_governed_fact(
         MappingFactQuery(
-            fact_id=_MODELO_369_EXTERIOR_PROJECTION_FACT_ID,
+            fact_id=_MODELO_369_PROJECTION_FACT_ID,
             date_axis=DateAxis.TRANSACTION_DATE,
             effective_date=effective_date,
         ),
@@ -350,7 +417,7 @@ def _exterior_projection_declarations(
         for entry in resolved.payload.entries
         if isinstance(entry.key, str) and isinstance(entry.value, str)
     }
-    required = {"rate_code.general", "rate_code.reduced"}
+    required = {"rate_code.general", "rate_code.reduced", "detail_row.capacity"}
     missing = sorted(required - declarations.keys())
     if missing:
         raise AggregationValidationError(
@@ -360,250 +427,266 @@ def _exterior_projection_declarations(
     return declarations
 
 
-def _group_exterior_service_observations(
-    observations: Sequence[OssIossLedgerObservation],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]]:
-    """Group Exterior service observations by destination and supported rate."""
-    grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
-    effective_date = observations[0].transaction_date if observations else today_madrid()
-    transaction_catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
-    external_kinds = transaction_catalogue.kinds_for_oss_regime("external_scheme")
-    external_regime = resolve_oss_ioss_regime_catalogue(
-        effective_date=effective_date,
-        authority=operation,
-    ).regime_for_transaction_kind(next(iter(external_kinds)).value)
-    for observation in observations:
-        if observation.regime != external_regime:
-            continue
-        if observation.transaction_kind not in external_kinds:
-            continue
-        _validate_exterior_rate_kind(observation, operation=operation)
-        grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
-    return grouped
+class _DetailRowKey(NamedTuple):
+    """What makes two lines of one detail table one row of the return.
+
+    The percentage is part of the key because LIVA art. 90.Dos takes each
+    operation's rate at its own devengo and arts. 163 noniesdecies.Uno.c),
+    duovicies.Uno.c) and septvicies.c) require the tax per Member State
+    "desglosado por tipos impositivos". The rate tier alone cannot do this: a
+    Member State can change a tier's percentage inside a period. The wire codes
+    are dated declarations, so they are part of it too.
+    """
+
+    member_state: EUMemberState
+    rate_kind: IvaRateKind
+    rate: Decimal
+    country_code: str
+    rate_code: str
 
 
-def _validate_exterior_rate_kind(
-    observation: OssIossLedgerObservation,
-    *,
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Refuse Exterior rate tiers that have no official positional code."""
-    declarations = _exterior_projection_declarations(observation.transaction_date, operation=operation)
-    if f"rate_code.{observation.rate_kind.value}" in declarations:
-        return
-    raise AggregationValidationError(
-        tr("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
-        context={
-            "ledger_id": observation.ledger_id,
-            "rate_kind": observation.rate_kind.value,
-        },
+def _revision_records(revision: ModeloRevision) -> frozenset[str]:
+    return frozenset(
+        binding.provider.record
+        for binding in revision.bindings
+        if isinstance(binding.provider, ManualInputProvider) and binding.provider.record is not None
     )
 
 
-def _exterior_detail_row_fields(
-    row: int,
-    country: EUMemberState,
-    rate_kind: IvaRateKind,
-    observations: Sequence[OssIossLedgerObservation],
-    declarations: dict[str, str],
+def _detail_record_for(
+    observation: OssIossLedgerObservation,
+    revision: ModeloRevision,
     *,
     operation: PinnedAuthorityOperation,
-) -> tuple[dict[str, str], dict[str, Decimal]]:
-    """Build the workbook field values for one destination/rate row."""
-    rate = lookup_rate(
-        country,
-        rate_kind,
-        observations[0].transaction_date,
-        operation=operation,
-    ).pct
+) -> str | None:
+    """Return this revision's table for the observation, or ``None`` when it has none.
+
+    A kind no section declares is one this module cannot place: Union goods go to
+    T36905 or T36907 by the state of dispatch, which an invoice does not record.
+    """
+    declarations = _projection_declarations(observation.transaction_date, operation=operation)
+    record_id = declarations.get(f"section.{observation.transaction_kind.value}.record")
+    return record_id if record_id in _revision_records(revision) else None
+
+
+def _detail_row_key(
+    observation: OssIossLedgerObservation,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> _DetailRowKey:
+    """Resolve an observation's row from the rate and wire codes on its own date."""
+    declarations = _projection_declarations(observation.transaction_date, operation=operation)
+    rate_code = declarations.get(f"rate_code.{observation.rate_kind.value}")
+    if rate_code is None:
+        # DR369 lets a row say only "R" or "S", and neither names this tier.
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.detail_rate_kind_unsupported"),
+            context={
+                "ledger_id": observation.ledger_id,
+                "rate_kind": observation.rate_kind.value,
+            },
+        )
+    member_state = observation.destination_member_state
+    excluded = declarations.get(f"section.{observation.transaction_kind.value}.excluded_consumption_states", "")
+    if member_state.value in excluded.split(","):
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.detail_consumption_state_excluded"),
+            context={
+                "ledger_id": observation.ledger_id,
+                "destination_member_state": member_state.value,
+                "transaction_kind": observation.transaction_kind.value,
+            },
+        )
     # The design writes ISO-3166 alpha-2 codes with its own exceptions ("EL" for
     # Greece, "XI" for Northern Ireland), so the wire code is the dated
     # declaration's, never the member-state token itself.
-    country_code = declarations.get(f"country_code.{country.value}")
+    country_code = declarations.get(f"country_code.{member_state.value}")
     if country_code is None:
         raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.exterior_country_code_undeclared"),
-            context={"member_state": country.value},
+            tr("aggregation.oss_ioss.errors.detail_country_code_undeclared"),
+            context={"member_state": member_state.value},
         )
-    fields = {
-        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country_code,
-        f"3-prestaciones-de-servicios-tipo-iva-{row}": declarations[f"rate_code.{rate_kind.value}"],
-    }
-    decimals = {
-        f"3-prestaciones-de-servicios-tipo-de-iva-{row}": rate,
-        f"3-prestaciones-de-servicios-base-imponible-{row}": sum(
-            (item.base_amount for item in observations),
-            Decimal("0"),
-        ),
-        f"3-prestaciones-de-servicios-cuota-iva-{row}": sum(
-            (item.iva_amount for item in observations),
-            Decimal("0"),
-        ),
-    }
-    return fields, decimals
+    rate = lookup_rate(
+        member_state,
+        observation.rate_kind,
+        observation.transaction_date,
+        operation=operation,
+    ).pct
+    return _DetailRowKey(member_state, observation.rate_kind, rate, country_code, rate_code)
 
 
-def _bind_exterior_detail_values(
+def _group_detail_observations(
     revision: ModeloRevision,
-    grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]],
-    declarations: dict[str, str],
+    observations: Sequence[OssIossLedgerObservation],
     *,
     operation: PinnedAuthorityOperation,
-) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
-    """Resolve generated revision selectors against Exterior row fields."""
-    decimal_values: dict[BindingId, Decimal] = {}
-    enum_values: dict[BindingId, str] = {}
-    for row, ((country, rate_kind), rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
-        fields, decimals = _exterior_detail_row_fields(
-            row,
-            country,
-            rate_kind,
-            rows,
-            declarations,
+) -> dict[str, dict[_DetailRowKey, list[OssIossLedgerObservation]]]:
+    """Group the observations this revision can place, by table and then by row."""
+    grouped: dict[str, dict[_DetailRowKey, list[OssIossLedgerObservation]]] = {}
+    for observation in observations:
+        record_id = _detail_record_for(observation, revision, operation=operation)
+        if record_id is not None:
+            rows = grouped.setdefault(record_id, {})
+            rows.setdefault(_detail_row_key(observation, operation=operation), []).append(observation)
+    return grouped
+
+
+def _observations_without_detail_row(
+    revision: ModeloRevision,
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[OssIossLedgerObservation, ...]:
+    """Return declarable observations no table of this revision can take."""
+    return tuple(
+        observation
+        for observation in observations
+        if (observation.base_amount != Decimal("0") or observation.iva_amount != Decimal("0"))
+        and _detail_record_for(observation, revision, operation=operation) is None
+    )
+
+
+def _assign_detail_row(
+    slot: tuple[BindingId, ...],
+    key: _DetailRowKey,
+    rows: Sequence[OssIossLedgerObservation],
+    decimal_values: dict[BindingId, Decimal],
+    enum_values: dict[BindingId, str],
+) -> None:
+    """Write one row into its slot, whose columns follow the design's line order."""
+    if len(slot) != _PROJECTED_ROW_COLUMNS:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    country_code, rate, rate_code, base, cuota = slot
+    enum_values[country_code] = key.country_code
+    enum_values[rate_code] = key.rate_code
+    decimal_values[rate] = key.rate
+    decimal_values[base] = sum((item.base_amount for item in rows), Decimal("0"))
+    decimal_values[cuota] = sum((item.iva_amount for item in rows), Decimal("0"))
+
+
+def _refuse_rate_chosen_by_issue_date(
+    context: CalculationSourceContext,
+    projection: OssIossInvoiceProjection,
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a row whose rate would rest on an issue date standing in for the devengo.
+
+    Elsewhere that substitution stays advisory because it only risks the period.
+    Here it would also choose the percentage written on the row, so where the
+    period has more than one rate for the tier the record cannot answer art.
+    90.Dos. A period with one rate gives the same percentage on any of its days.
+    """
+    undated = {
+        invoice.invoice_id: invoice
+        for invoice in projection.contributing_invoices
+        if resolve_invoice_devengo(invoice).rank is InvoiceDevengoRank.ISSUE_DATE_PROXY
+    }
+    if not undated:
+        return
+    span = _projection_period(context.period)
+    for observation in observations:
+        invoice = undated.get(observation.ledger_id.split(":", 1)[0])
+        if invoice is None or _detail_record_for(observation, context.revision, operation=operation) is None:
+            continue
+        rates = tier_rates_within(
+            observation.destination_member_state,
+            observation.rate_kind,
+            span.start_date,
+            span.end_date,
             operation=operation,
         )
-        _assign_exterior_detail_bindings(revision, fields, decimals, decimal_values, enum_values)
-    return decimal_values, enum_values
+        if len(rates) > 1:
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.rate_change_devengo_undeclared"),
+                context={
+                    "invoice_id": invoice.invoice_id,
+                    "invoice_number": invoice.invoice_number,
+                    "destination_member_state": observation.destination_member_state.value,
+                    "rate_kind": observation.rate_kind.value,
+                    "period": context.period.registry_token,
+                    "rates": ",".join(str(rate) for rate in rates),
+                },
+            )
 
 
-def _assign_exterior_detail_bindings(
-    revision: ModeloRevision,
-    fields: dict[str, str],
-    decimals: dict[str, Decimal],
-    decimal_values: dict[BindingId, Decimal],
-    enum_values: dict[BindingId, str],
-) -> None:
-    """Require lossless row coverage before copying generated selector values."""
-    targets: dict[str, BindingId] = {}
-    required = fields.keys() | decimals.keys()
-    for binding in revision.bindings:
-        provider = binding.provider
-        if not isinstance(provider, ManualInputProvider) or provider.record != _EXTERIOR_DETAIL_RECORD:
-            continue
-        field = provider.field
-        if field is None or field not in required:
-            continue
-        if field in targets:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-        targets[field] = binding.id
-    # An overflowing row has no declared destinations. Refuse the whole
-    # projection instead of silently exporting only its representable prefix.
-    if targets.keys() != required:
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    _copy_exterior_values(targets, fields, decimals, decimal_values, enum_values)
+def _record_row_slots(revision: ModeloRevision, record_id: str) -> tuple[tuple[BindingId, ...], ...]:
+    """Read a record's list of rows from its bound wire geometry.
 
-
-def _copy_exterior_values(
-    targets: dict[str, BindingId],
-    fields: dict[str, str],
-    decimals: dict[str, Decimal],
-    decimal_values: dict[BindingId, Decimal],
-    enum_values: dict[BindingId, str],
-) -> None:
-    for field, binding_id in targets.items():
-        if field in fields:
-            enum_values[binding_id] = fields[field]
-        elif field in decimals:
-            decimal_values[binding_id] = decimals[field]
-
-
-def _exterior_record_slots(revision: ModeloRevision) -> tuple[tuple[BindingId, ...], ...]:
-    """Admit all fixed service slots against the revision's actual wire fields.
-
-    The existing Exterior projection owns these five semantic columns. Row
-    capacity and exact bindings come from the pinned export record, not from
-    the number of observations or the populated prefix of the form.
+    Bindings are generated from AEAT's positional workbook and their names are
+    truncated differently per page, so a slot is located by offset and shape.
+    Anything short of one unbroken run of rows is refused: a hole would otherwise
+    pass for a row that does not exist.
     """
-    records = [
-        record
-        for layout in revision.export_layouts
-        for record in layout.records
-        if record.id == _EXTERIOR_DETAIL_RECORD
-    ]
-    bindings = {binding.id: binding for binding in revision.bindings}
-    rows: dict[int, dict[str, BindingId]] = {}
-    seen: set[BindingId] = set()
-    if len(records) != 1 or len(bindings) != len(revision.bindings):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    for field in records[0].fields:
-        _collect_exterior_slot(field, bindings, rows, seen)
-    _require_complete_exterior_slots(revision, rows, seen)
-    return tuple(tuple(sorted(rows[index].values())) for index in sorted(rows))
+    fields = sorted(
+        (
+            (binding.provider.offset, binding.provider.length, binding.provider.data_type, binding.id)
+            for binding in revision.bindings
+            if isinstance(binding.provider, ManualInputProvider)
+            and binding.provider.record == record_id
+            and binding.provider.offset is not None
+            and binding.provider.length is not None
+        ),
+        key=lambda field: field[0],
+    )
+    if len({field[0] for field in fields}) != len(fields):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    rows: list[tuple[int, int, tuple[BindingId, ...]]] = []
+    index = 0
+    while index < len(fields):
+        width = next((len(shape) for shape in _ROW_SHAPES if _fields_match_shape(fields[index:], shape)), 0)
+        if width:
+            run = fields[index : index + width]
+            rows.append((run[0][0], run[-1][0] + run[-1][1], tuple(field[3] for field in run)))
+        index += width or 1
+    return _unbroken_rows(rows)
 
 
-def _declared_exterior_bindings(revision: ModeloRevision) -> set[BindingId]:
-    return {
-        binding.id
-        for binding in revision.bindings
-        if isinstance(binding.provider, ManualInputProvider)
-        and binding.provider.record == _EXTERIOR_DETAIL_RECORD
-        and binding.provider.field is not None
-        and binding.provider.field.startswith(_EXTERIOR_DETAIL_PREFIX)
-    }
+def _fields_match_shape(
+    fields: Sequence[tuple[int, int, CasillaDataType, BindingId]],
+    shape: tuple[CasillaDataType, ...],
+) -> bool:
+    """Say whether the leading fields are one contiguous line of this shape."""
+    if len(fields) < len(shape):
+        return False
+    offset = fields[0][0]
+    for (field_offset, length, data_type, _), expected in zip(fields, shape, strict=False):
+        if field_offset != offset or data_type is not expected:
+            return False
+        offset += length
+    return True
 
 
-def _require_complete_exterior_slots(
-    revision: ModeloRevision, rows: dict[int, dict[str, BindingId]], seen: set[BindingId]
-) -> None:
-    declared = _declared_exterior_bindings(revision)
-    if (
-        not rows
-        or sorted(rows) != list(range(1, len(rows) + 1))
-        or seen != declared
-        or any(row.keys() != _EXTERIOR_DETAIL_COLUMNS for row in rows.values())
-    ):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+def _unbroken_rows(rows: Sequence[tuple[int, int, tuple[BindingId, ...]]]) -> tuple[tuple[BindingId, ...], ...]:
+    if not rows or any(previous[1] != following[0] for previous, following in pairwise(rows)):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    return tuple(row[2] for row in rows)
 
 
-def _collect_exterior_slot(
-    field: ExportFieldDefinition,
-    bindings: dict[BindingId, BindingDefinition],
-    rows: dict[int, dict[str, BindingId]],
-    seen: set[BindingId],
-) -> None:
-    if field.binding is None:
-        return
-    binding = bindings.get(field.binding)
-    if binding is None:
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    provider = binding.provider
-    if not isinstance(provider, ManualInputProvider) or provider.field is None:
-        return
-    if not provider.field.startswith(_EXTERIOR_DETAIL_PREFIX):
-        return
-    column, _, coordinate = provider.field.removeprefix(_EXTERIOR_DETAIL_PREFIX).rpartition("-")
-    _require_exterior_slot_geometry(provider, field, column, coordinate, seen)
-    row = rows.setdefault(int(coordinate), {})
-    if column in row:
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    row[column] = field.binding
-    seen.add(field.binding)
+def _closable_records(
+    revision: ModeloRevision,
+    effective_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, ...]:
+    """Return every detail table a complete read of this revision's invoices settles."""
+    declarations = _projection_declarations(effective_date, operation=operation)
+    records = _revision_records(revision)
+    return tuple(
+        record_id
+        for key, value in declarations.items()
+        if key.startswith("detail_records.")
+        for record_id in value.split(",")
+        if record_id in records
+    )
 
 
-def _require_exterior_slot_geometry(
-    provider: ManualInputProvider, field: ExportFieldDefinition, column: str, coordinate: str, seen: set[BindingId]
-) -> None:
-    if (
-        provider.record != _EXTERIOR_DETAIL_RECORD
-        or provider.offset != field.offset
-        or provider.length != field.length
-        or column not in _EXTERIOR_DETAIL_COLUMNS
-        or not coordinate.isascii()
-        or not coordinate.isdecimal()
-        or coordinate.startswith("0")
-        or field.binding in seen
-    ):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-
-
-def _can_close_exterior_rows(
+def _can_close_detail_rows(
     context: CalculationSourceContext, projection: OssIossInvoiceProjection, supplied_binding_ids: frozenset[BindingId]
 ) -> bool:
     return not (
-        context.revision.id != "esquema-exterior"
-        or context.work_unit_id is None
+        context.work_unit_id is None
         or projection.source_bucket_id != context.bucket_id
         or projection.catalogue_fingerprint is None
         or not projection.candidates
@@ -611,25 +694,48 @@ def _can_close_exterior_rows(
     )
 
 
+def _require_wire_geometry(revision: ModeloRevision, record_id: str, slots: tuple[tuple[BindingId, ...], ...]) -> None:
+    """Require each slot to be the export field of the pinned record at the same position."""
+    records = [record for layout in revision.export_layouts for record in layout.records if record.id == record_id]
+    bindings = {binding.id: binding for binding in revision.bindings}
+    if len(records) != 1 or len(bindings) != len(revision.bindings):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    fields = {field.binding: field for field in records[0].fields if field.binding is not None}
+    for binding_id in (binding for row in slots for binding in row):
+        field = fields.get(binding_id)
+        provider = bindings[binding_id].provider
+        if (
+            field is None
+            or not isinstance(provider, ManualInputProvider)
+            or provider.offset != field.offset
+            or provider.length != field.length
+        ):
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+
+
 def _require_slot_coverage(
     slots: tuple[tuple[BindingId, ...], ...], supplied_binding_ids: frozenset[BindingId]
 ) -> None:
-    covered = frozenset(binding for row in slots for binding in row)
-    if not supplied_binding_ids.issubset(covered) or any(
+    if any(
         bool(supplied_binding_ids.intersection(row)) and not set(row).issubset(supplied_binding_ids) for row in slots
     ):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
 
 
-def _closed_exterior_record_rows(
+def _closed_detail_record_rows(
     context: CalculationSourceContext,
     projection: OssIossInvoiceProjection,
     *,
     supplied_binding_ids: frozenset[BindingId],
     operation: PinnedAuthorityOperation,
 ) -> tuple[ClosedRecordRowSet, ...]:
-    """Close only this source's services table after a complete bound read."""
-    if not _can_close_exterior_rows(context, projection, supplied_binding_ids):
+    """Close this source's tables after a complete bound read placed every line.
+
+    A Union table that takes goods or a foreign establishment closes empty here on
+    the same read: any goods line stops the closure at its caller, and no invoice
+    names an establishment other than the taxpayer's own.
+    """
+    if not _can_close_detail_rows(context, projection, supplied_binding_ids):
         return ()
     if context.work_unit_id is None or projection.catalogue_fingerprint is None:
         return ()
@@ -644,36 +750,48 @@ def _closed_exterior_record_rows(
             period=context.period.registry_token,
         ).revision
         if revision.id != context.revision.id or revision.bindings != context.revision.bindings:
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.exterior_detail_not_representable"))
-    slots = _exterior_record_slots(revision)
-    _require_slot_coverage(slots, supplied_binding_ids)
-    return (
-        ClosedRecordRowSet(
-            record_id=_EXTERIOR_DETAIL_RECORD,
-            bucket_id=context.bucket_id,
-            work_unit_id=context.work_unit_id,
-            registry_snapshot_ref=RegistrySnapshotRef(
-                modelo=context.modelo,
-                revision_id=context.revision.id,
-                modelo_year=context.filing_year,
-                period=context.period.registry_token,
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    effective_date = _projection_period(context.period).end_date
+    capacity = int(_projection_declarations(effective_date, operation=operation)["detail_row.capacity"])
+    closed: list[ClosedRecordRowSet] = []
+    covered: set[BindingId] = set()
+    for record_id in _closable_records(revision, effective_date, operation=operation):
+        slots = _record_row_slots(revision, record_id)
+        if len(slots) != capacity:
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+        _require_wire_geometry(revision, record_id, slots)
+        _require_slot_coverage(slots, supplied_binding_ids)
+        covered.update(binding for row in slots for binding in row)
+        closed.append(
+            ClosedRecordRowSet(
+                record_id=record_id,
+                bucket_id=context.bucket_id,
+                work_unit_id=context.work_unit_id,
+                registry_snapshot_ref=RegistrySnapshotRef(
+                    modelo=context.modelo,
+                    revision_id=context.revision.id,
+                    modelo_year=context.filing_year,
+                    period=context.period.registry_token,
+                ),
+                authority_generation=operation.pin().logical_generation,
+                source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
+                # The actual profile-local singleton catalogue, not a synthesized
+                # aggregate pretending to be an independently persisted source.
+                source_ref="invoice_catalogue:catalogue",
+                source_fingerprint=projection.catalogue_fingerprint,
+                rows=tuple(
+                    RecordRowMembership(
+                        row_index=index,
+                        binding_ids=row,
+                        occupied=bool(supplied_binding_ids.intersection(row)),
+                    )
+                    for index, row in enumerate(slots, start=1)
+                ),
             ),
-            authority_generation=operation.pin().logical_generation,
-            source_kind=BindingSourceKind.LEDGER_OSS_AGGREGATION,
-            # The actual profile-local singleton catalogue, not a synthesized
-            # aggregate pretending to be an independently persisted source.
-            source_ref="invoice_catalogue:catalogue",
-            source_fingerprint=projection.catalogue_fingerprint,
-            rows=tuple(
-                RecordRowMembership(
-                    row_index=index,
-                    binding_ids=row,
-                    occupied=bool(supplied_binding_ids.intersection(row)),
-                )
-                for index, row in enumerate(slots, start=1)
-            ),
-        ),
-    )
+        )
+    if not supplied_binding_ids.issubset(covered):
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    return tuple(closed)
 
 
 def _candidate_for_invoice_line(
@@ -682,13 +800,14 @@ def _candidate_for_invoice_line(
     *,
     line_index: int,
     devengo_date: date,
+    period_last_day: date,
 ) -> OssIossLedgerCandidate | None:
     """Project one invoice line into an OSS/IOSS candidate, or ``None`` when not applicable.
 
     The regime / destination checks mean the line is not an OSS/IOSS
     operation at all -- correctly silent, nothing to declare. A line that
     passes both IS a real, declarable OSS/IOSS operation, so a missing
-    rate_kind or a missing euro conversion from that point on REFUSES rather
+    rate_kind or a missing period-close rate from that point on REFUSES rather
     than silently drops it. A would-be-silently-dropped declarable line is a
     hard stop, not an advisory beside a smaller-but-green figure.
     """
@@ -708,26 +827,11 @@ def _candidate_for_invoice_line(
                 "iva_rate": line.iva_rate.value,
             },
         )
-    # OSS/IOSS is cross-border EU B2C by definition, where invoicing in the
-    # destination Member State's own currency (PLN, SEK, DKK, HUF, CZK, RON,
-    # BGN...) is the ORDINARY case, not an edge case. line.subtotal /
-    # line.iva_amount are native to invoice.currency (InvoiceLine carries no
-    # currency of its own); base_amount/iva_amount on the candidate are
-    # documented as EUR, so this converts through the same fx_rate resolution
-    # the invoice-level totals already use (line_amount_eur) rather than the
-    # invoice-line's raw native fields.
-    base_amount_eur = invoice.line_amount_eur(line.subtotal)
-    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
-    if base_amount_eur is None or iva_amount_eur is None:
-        raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"),
-            context={
-                "invoice_id": invoice.invoice_id,
-                "invoice_number": invoice.invoice_number,
-                "currency": invoice.currency,
-                "line_index": str(line_index),
-            },
-        )
+    # OSS/IOSS is cross-border B2C, where invoicing in the destination's own
+    # currency is the ordinary case. Art. 163 noniesdecies, duovicies and
+    # septvicies fix one rate for the whole return, the period's last day, so the
+    # rate stamped on the invoice at its operation date does not apply here.
+    rate = _period_close_rate(invoice, line_index=line_index, last_day=period_last_day)
     return OssIossLedgerCandidate(
         ledger_id=f"{invoice.invoice_id}:{line_index}",
         transaction_date=devengo_date,
@@ -736,9 +840,34 @@ def _candidate_for_invoice_line(
         rate_kind=rate_kind,
         invoice_direction=invoice.kind,
         transaction_kind=invoice.oss_transaction_kind,
-        base_amount=base_amount_eur,
-        iva_amount=iva_amount_eur,
+        base_amount=line.subtotal if rate is None else round_to_cents(line.subtotal * rate),
+        iva_amount=line.iva_amount if rate is None else round_to_cents(line.iva_amount * rate),
     )
+
+
+def _period_close_rate(invoice: Invoice, *, line_index: int, last_day: date) -> Decimal | None:
+    """Return the ECB rate the return converts this invoice at, or ``None`` for a euro invoice."""
+    if invoice.currency == DEFAULT_CURRENCY:
+        return None
+    context = {
+        "invoice_id": invoice.invoice_id,
+        "invoice_number": invoice.invoice_number,
+        "currency": invoice.currency,
+        "line_index": str(line_index),
+        "rate_date": last_day.isoformat(),
+    }
+    try:
+        lookup = published_eur_rate_on_day_or_next(invoice.currency, last_day, rate_provider=exchange_rate_provider())
+    except ExchangeRateProviderError as exc:
+        # An unreachable authority answers nothing about the rate: the same refusal, never a default.
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"), context=context
+        ) from exc
+    if lookup.status is not EurRateLookupStatus.FOUND or lookup.rate is None:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"), context=context
+        )
+    return lookup.rate
 
 
 class OssIossInvoiceProjection(BaseModel):
@@ -771,9 +900,27 @@ def _project_oss_invoice(invoice: Invoice, projection_period: Period) -> list[Os
     return [
         candidate
         for index, line in enumerate(invoice.lines, start=1)
-        if (candidate := _candidate_for_invoice_line(invoice, line, line_index=index, devengo_date=devengo_date))
+        if (
+            candidate := _candidate_for_invoice_line(
+                invoice,
+                line,
+                line_index=index,
+                devengo_date=devengo_date,
+                period_last_day=projection_period.end_date,
+            )
+        )
         is not None
     ]
+
+
+def _projection_period(period: Period) -> Period:
+    """Return the calendar period an Exterior token such as ``EXT-3T`` files."""
+    if period.registry_token.startswith("EXT-"):
+        return Period.from_year_and_code(
+            period.filing_year,
+            period.registry_token.removeprefix("EXT-"),
+        )
+    return period
 
 
 def project_oss_ioss_invoices_from_repositories(
@@ -798,12 +945,7 @@ def project_oss_ioss_invoices_from_repositories(
         The candidates for the period beside the invoices they were projected
         from.
     """
-    projection_period = period
-    if period.registry_token.startswith("EXT-"):
-        projection_period = Period.from_year_and_code(
-            period.filing_year,
-            period.registry_token.removeprefix("EXT-"),
-        )
+    projection_period = _projection_period(period)
     if not projection_period.has_date_span():
         return OssIossInvoiceProjection()
     candidates: list[OssIossLedgerCandidate] = []
@@ -960,17 +1102,27 @@ class OssIossLedgerSourceResolver:
                 )
                 candidates = projection.candidates
                 observations = validate_oss_ioss_observations(candidates, operation=indexed_operation)
-                exterior_values, exterior_enum_values = _exterior_detail_binding_values(
+                _refuse_rate_chosen_by_issue_date(
+                    context,
+                    projection,
+                    observations,
+                    operation=indexed_operation,
+                )
+                detail_values, detail_enum_values = _detail_binding_values(
                     context.revision,
                     observations,
                     operation=indexed_operation,
                 )
-                unrouted = unsupported_ledger_oss_observations(context.revision, observations)
+                unrouted = _observations_without_detail_row(
+                    context.revision,
+                    observations,
+                    operation=indexed_operation,
+                )
                 closed_rows = (
-                    _closed_exterior_record_rows(
+                    _closed_detail_record_rows(
                         context,
                         projection,
-                        supplied_binding_ids=frozenset(exterior_values) | frozenset(exterior_enum_values),
+                        supplied_binding_ids=frozenset(detail_values) | frozenset(detail_enum_values),
                         operation=indexed_operation,
                     )
                     if not unrouted
@@ -990,16 +1142,16 @@ class OssIossLedgerSourceResolver:
                 diagnostics=self._no_live_source_diagnostics(context),
             )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
-        # OSS line whose classification tuple matches no ledger_oss_aggregation
-        # binding would otherwise be silently dropped (no-silent-under-declaration).
+        # OSS line that no detail table can take would otherwise be silently
+        # dropped (no-silent-under-declaration).
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values={
                 **resolve_ledger_oss_aggregation_binding_values(context.revision, observations),
-                **exterior_values,
+                **detail_values,
             },
-            enum_binding_values=exterior_enum_values,
+            enum_binding_values=detail_enum_values,
             closed_record_row_sets=closed_rows,
             source_transaction_ids=tuple(
                 sorted({observation.ledger_id.split(":", 1)[0] for observation in observations}),
@@ -1021,9 +1173,10 @@ class OssIossLedgerSourceResolver:
                         f"destination={observation.destination_member_state.value!r}, "
                         f"rate_kind={observation.rate_kind.value!r}, "
                         f"invoice_direction={observation.invoice_direction.value!r}, "
-                        f"transaction_kind={observation.transaction_kind.value!r}) is not consumed by any "
-                        f"ledger_oss_aggregation binding on revision {context.revision.id!r}; "
-                        "its base/cuota is not declared on this calculation"
+                        f"transaction_kind={observation.transaction_kind.value!r}) has no detail table "
+                        f"on revision {context.revision.id!r}: a Union goods line needs its state of "
+                        "dispatch, which the invoice does not record, and a line of another regime "
+                        "belongs to that regime's revision; its base/cuota is not declared on this calculation"
                     ),
                 )
                 for observation in unrouted

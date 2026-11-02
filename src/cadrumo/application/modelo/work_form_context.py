@@ -19,6 +19,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import BindingDefinition, RegistrySnapshot
 from ...domain.calculations.registry.schema_surfaces import CasillaDefinition
 from ...domain.modelos.calculation_revision import FILED_REVISION_STATES, CalculationRevision
+from .calculation_required_inputs import calculation_required_inputs
 from .caller_context import caller_context_of
 from .edit_models import (
     ModeloEditNonWritableBindingOverrideSurfaceEntryV1,
@@ -125,6 +126,7 @@ class WorkFormContext:
         language: OutputLanguage,
         unworked_casilla_ids: frozenset[str] = frozenset(),
         element_names: Mapping[str, str] | None = None,
+        known_truths: Mapping[BindingId, bool] | None = None,
     ) -> None:
         """Index one work review and its pinned revision for repeated form lookups."""
         self.review = review
@@ -138,6 +140,9 @@ class WorkFormContext:
         self._export_decimals: dict[str, int] | None = None
         self._box_locators: tuple[re.Pattern[str], ...] | None = None
         self.required: frozenset[str] = filer_required_casilla_ids(snapshot.revision)
+        self.calculation_required = calculation_required_inputs(
+            snapshot.revision, registry_period=review.period.registry_token, known_truths=known_truths
+        )
         self.filed = review.lifecycle_state in FILED_REVISION_STATES
         self.surface = _surface_index(permitted_surface, filed=self.filed)
         self.aeat_data_bindings = _aeat_data_binding_ids(revision)

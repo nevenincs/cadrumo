@@ -276,3 +276,27 @@ source_refs = ["boe-lirpf-statutory-facts", "boe-ley-19-1994-art-75-statutory-fa
 [[revisions."2025".formulas.source_citations]]
 source_ref = "aeat-renta-2025-manual-parte1"
 required_text = ["límite máximo de 60.100 euros anuales", "Está exenta el 50 por 100 de los ingresos íntegros procedentes del trabajo personal"]
+
+[[revisions."2025".formulas]]
+id = "renta-resultado-ingresar-o-devolver"
+target_casilla_id = "0700"
+# RESINGDEV (0700) is "Resultado a ingresar o a devolver (casilla [0670] o casilla [0695])".
+# It is the result of the return (0670) unless the spouse compensation of art. 97 LIRPF
+# suspends part of an amount payable (0693), in which case it is the remainder payable (0695).
+# The dictionary also gives 0695 a negative remainder when a refund is waived (0694), which
+# the registry has no formula for, so a declared waiver refuses instead of being guessed.
+expression = { op = "require_condition", args = [
+    { op = "equal", args = [{ casilla_id = "0694" }, { literal = "0" }] },
+    { op = "if_then_else", args = [
+        { op = "greater_than", args = [{ casilla_id = "0693" }, { literal = "0" }] },
+        { casilla_id = "0695" },
+        { casilla_id = "0670" },
+    ] },
+] }
+rounding = "money-2"
+legal_refs = ["ley-35-2006:art-97", "orden-hac-277-2026:art-3"]
+source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1"]
+
+[[revisions."2025".formulas.source_citations]]
+source_ref = "aeat-renta-2025-manual-parte1"
+required_text = ["renunciar al cobro de la devolución", "cuya suspensión se solicita"]
