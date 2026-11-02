@@ -76,6 +76,10 @@ aggregation:
         the declared deduction kind, the IVA category, or the linked evidence.'
       investment_observations_missing_bienes_inversion_authority: Investment IVA observations
         require the explicit bienes de inversión register and a matching profile authority.
+      iva_rate_date_outside_table_coverage_on_movement_date: No IVA rate is on record
+        for %{date}. That is the bank movement date, used as the devengo date because
+        this entry records no operation date. Record the date the delivery or service
+        took place; that may resolve it.
       missing_counterparty_establishment_on_export: An export is exempt because the
         operation leaves the Union, so it turns on where the counterparty is ESTABLISHED.
         Record the counterparty's country; an absent or unassigned code establishes
@@ -100,6 +104,10 @@ aggregation:
       unaccepted_registry_value: '%{field} is recorded as %{value}, which the pinned
         tax registry authority does not accept for %{effective_date}, so the row cannot
         feed the IVA calculation. Correct that value on the ledger entry.'
+      unsupported_iva_rate_on_movement_date: IVA rate %{rate} is not a valid rate
+        on %{date}. That is the bank movement date, used as the devengo date because
+        this entry records no operation date. Record the date the delivery or service
+        took place; that may resolve it.
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: The prorrata register records
@@ -135,6 +143,11 @@ aggregation:
         dated outside the requested filing period.
   modelo_bindings:
     errors:
+      invoice_advance_payment_partially_collected: An invoice records an advance payment
+        on a price that is only partly collected. An advance is taxed only on the
+        amount collected, so the invoice cannot be placed in a filing period as recorded.
+        Record the advance as its own invoice, or mark this one paid if the advance
+        covers the whole price.
       invoice_line_currency_unconverted: An invoice line is denominated in a foreign
         currency with no resolved euro rate, so it cannot be declared on this modelo.
       unsupported_period: Unsupported modelo period for totals from your records.

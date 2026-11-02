@@ -54,6 +54,7 @@ from .iva_ledger import (
     IvaLedgerAggregation,
     IvaLedgerAggregationIssue,
     IvaLedgerAggregationIssueReason,
+    IvaLedgerRowDateSource,
     IvaLedgerProrrataApportionment,
     IvaLedgerSettlementApportionment,
     aggregate_iva_ledger_observations_from_repositories,
@@ -122,7 +123,10 @@ _IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
 
 def _selected_scope_iva_evidence_message(issue: IvaLedgerAggregationIssue) -> str:
     marker = f"selected-scope IVA evidence failure: {issue.reason.value}"
-    if issue.reason in _IVA_SELECTED_SCOPE_DETAILED_REASONS:
+    # A row dated by its bank movement carries the sentence too: without it the
+    # marker blames the rate when the missing fact may be the operation date.
+    movement_dated = issue.operation_date_source not in (None, IvaLedgerRowDateSource.OPERATION_DATE)
+    if issue.reason in _IVA_SELECTED_SCOPE_DETAILED_REASONS or movement_dated:
         return f"{marker}: {issue.detail}"
     return marker
 

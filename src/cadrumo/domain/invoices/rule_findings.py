@@ -35,6 +35,7 @@ class InvoiceRuleFindingCode(StrEnum):
     INTRA_COMMUNITY_SPANISH_IDENTIFICATION = "intra_community_spanish_identification"
     OPERATION_TYPE_REQUIRED = "operation_type_required"
     OPERATION_DATE_ROLE_MISMATCH = "operation_date_role_mismatch"
+    ADVANCE_PAYMENT_NOT_FULLY_COLLECTED = "advance_payment_not_fully_collected"
     LEASE_ONLY_ON_ISSUED = "lease_only_on_issued"
     LEASE_SITUATION_UNDECLARED = "lease_situation_undeclared"
     LEASE_REFERENCE_NOT_ALLOWED = "lease_reference_not_allowed"
@@ -186,6 +187,25 @@ def operation_date_role_finding(*, date_stated: bool, role_stated: bool) -> Invo
             InvoiceRuleFindingCode.OPERATION_DATE_ROLE_MISMATCH,
             "operation_date and operation_date_role must be set together",
             ("operation_date",),
+        )
+    return None
+
+
+def advance_payment_collection_finding(*, advance_role: bool, fully_collected: bool) -> InvoiceRuleFinding | None:
+    """A pago anticipado invoice states one collected amount, so it must be collected in full.
+
+    LIVA art. 75.Dos devengues an advance "por los importes efectivamente
+    percibidos". One invoice carries one devengo date, so an advance role on an
+    invoice whose price is only partly collected would place the whole base in
+    the advance's period at the rate then in force (art. 90.Dos), while the
+    remainder devengues at the later entrega or prestación (art. 75.Uno).
+    """
+    if advance_role and not fully_collected:
+        return InvoiceRuleFinding(
+            InvoiceRuleFindingCode.ADVANCE_PAYMENT_NOT_FULLY_COLLECTED,
+            "a pago anticipado devengues only for the amount collected (LIVA art. 75.Dos); record the "
+            "advance as its own invoice, or mark this one PAID if the advance covers the whole price",
+            ("operation_date_role", "payment_status"),
         )
     return None
 

@@ -60,7 +60,7 @@ from ...domain.invoices.figures import (
     computed_line_iva,
     rounded_line_totals,
 )
-from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceLine
 from ...domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
@@ -623,7 +623,7 @@ def _build_pinned_catalogue_invoice(
             issued_at=issued_at,
             rate_provider=rate_provider,
         )
-        return Invoice.model_validate(invoice_payload)
+        return Invoice.model_validate(invoice_payload, context=INVOICE_WRITE_ADMISSION)
 
 
 def create_catalogue_invoice(

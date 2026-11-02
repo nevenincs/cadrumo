@@ -823,6 +823,10 @@ application:
         rate_5: IVA 5 %
         rate_7_5: IVA 7,5 %
       rule_finding:
+        advance_payment_not_fully_collected: Un pagament anticipat només merita IVA
+          per l'import cobrat, així que una factura només pot portar la data de la
+          bestreta si has cobrat tot el preu. Registra la bestreta com una factura
+          pròpia, o marca aquesta com a pagada si la bestreta cobreix tot el preu.
         counterparty_country_invalid: No és un codi de país de dues lletres que el
           llibre reconegui.
         counterparty_name_blank: El nom de la contrapart no pot quedar en blanc.

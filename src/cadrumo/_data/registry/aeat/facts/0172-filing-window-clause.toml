@@ -22,9 +22,9 @@
 # (in force 1 July 2017), and RD 1624/1992 art. 71.4. Monthly filers are the
 # art. 71.3 population, SII-obliged under art. 62.6, so the monthly clause is the
 # thirty-day SII plazo; the twenty-day non-SII monthly plazo of art. 7 is not
-# declared. Modelo 390: Orden EHA/3111/2009 art. 8. Every variant reaches the
-# support floor and stays open until a later change is authored as a dated
-# variant.
+# declared. Modelo 390: Orden EHA/3111/2009 art. 8. Modelos 111, 115, 117,
+# 123, 126, 128, 130 and 131 follow below. Every variant reaches the support
+# floor and stays open until a later change is authored as a dated variant.
 
 [fact]
 fact_id = "deadlines.filing-window-clause"
@@ -123,6 +123,331 @@ ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "boe-modelo-390-2009-form"
 required_text = ["deberá presentarse en los treinta primeros días naturales del mes de enero siguiente al año al que se refiere la declaración"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 30 },
+]
+
+# Modelos 111, 115, 117, 123, 126 and 128: RD 439/2007 art. 108.1, the twenty
+# first natural days of the month after the quarter or, for the monthly
+# population, after the month. The same plazo governs the IS and IRNR withholding
+# these modelos also carry. Modelos 130 and 131: RD 439/2007 art. 111.1.
+
+[[fact.variants]]
+variant_id = "filing-window-clause:111:quarterly"
+selectors = [{ name = "modelo", value = "111" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["en los primeros veinte días naturales de los meses de abril, julio, octubre y enero"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:111:monthly"
+selectors = [{ name = "modelo", value = "111" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta que correspondan por el mes inmediato anterior"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:115:quarterly"
+selectors = [{ name = "modelo", value = "115" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["en los primeros veinte días naturales de los meses de abril, julio, octubre y enero"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:115:monthly"
+selectors = [{ name = "modelo", value = "115" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta que correspondan por el mes inmediato anterior"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:117:quarterly"
+selectors = [{ name = "modelo", value = "117" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["en los primeros veinte días naturales de los meses de abril, julio, octubre y enero"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:117:monthly"
+selectors = [{ name = "modelo", value = "117" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta que correspondan por el mes inmediato anterior"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:123:quarterly"
+selectors = [{ name = "modelo", value = "123" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["en los primeros veinte días naturales de los meses de abril, julio, octubre y enero"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:123:monthly"
+selectors = [{ name = "modelo", value = "123" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta que correspondan por el mes inmediato anterior"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:126:quarterly"
+selectors = [{ name = "modelo", value = "126" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["en los primeros veinte días naturales de los meses de abril, julio, octubre y enero"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:126:monthly"
+selectors = [{ name = "modelo", value = "126" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta que correspondan por el mes inmediato anterior"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:128:quarterly"
+selectors = [{ name = "modelo", value = "128" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["1T", "2T", "3T", "4T"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["en los primeros veinte días naturales de los meses de abril, julio, octubre y enero"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:128:monthly"
+selectors = [{ name = "modelo", value = "128" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"] }
+legal_refs = ["rd-439-2007:art-108"]
+source_refs = ["boe-rirpf-art-108-retencion-deadline"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-art-108-retencion-deadline"
+required_text = ["se efectuará en los veinte primeros días naturales de cada mes, en relación con las cantidades retenidas y los ingresos a cuenta que correspondan por el mes inmediato anterior"]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:130:quarterly:1t-3t"
+selectors = [{ name = "modelo", value = "130" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["1T", "2T", "3T"] }
+legal_refs = ["rd-439-2007:art-111"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = ["a) Los tres primeros trimestres, entre el día 1 y el 20 de los meses de abril, julio y octubre."]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:130:quarterly:4t"
+selectors = [{ name = "modelo", value = "130" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["4T"] }
+legal_refs = ["rd-439-2007:art-111"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = ["b) Cuarto trimestre, entre el día 1 y el 30 del mes de enero."]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 30 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:131:quarterly:1t-3t"
+selectors = [{ name = "modelo", value = "131" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["1T", "2T", "3T"] }
+legal_refs = ["rd-439-2007:art-111"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = ["a) Los tres primeros trimestres, entre el día 1 y el 20 de los meses de abril, julio y octubre."]
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "opens", value = "day_after_period_end" },
+  { key = "deadline_month_offset", value = 1 },
+  { key = "filing_last_day", value = 20 },
+]
+
+[[fact.variants]]
+variant_id = "filing-window-clause:131:quarterly:4t"
+selectors = [{ name = "modelo", value = "131" }]
+date_axis = "filing_period"
+period_selector = { year_from = 2018, periods = ["4T"] }
+legal_refs = ["rd-439-2007:art-111"]
+source_refs = ["boe-rirpf-category-profile-authority"]
+review_status = "agent_reviewed"
+ownership = "authored"
+[[fact.variants.source_citations]]
+source_ref = "boe-rirpf-category-profile-authority"
+required_text = ["b) Cuarto trimestre, entre el día 1 y el 30 del mes de enero."]
 [fact.variants.payload]
 kind = "mapping"
 entries = [

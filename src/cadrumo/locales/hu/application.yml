@@ -811,6 +811,10 @@ application:
         rate_5: ÁFA 5%
         rate_7_5: ÁFA 7,5%
       rule_finding:
+        advance_payment_not_fully_collected: Az előleg után csak a ténylegesen befolyt
+          összegre keletkezik IVA, ezért a számla csak akkor viselheti az előleg dátumát,
+          ha a teljes árat megkaptad. Rögzítsd az előleget külön számlaként, vagy
+          jelöld ezt fizetettnek, ha az előleg a teljes árat fedezi.
         counterparty_country_invalid: Ez nem olyan kétbetűs országkód, amelyet a főkönyv
           felismer.
         counterparty_name_blank: A partner neve nem maradhat üresen.

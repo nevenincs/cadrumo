@@ -773,6 +773,10 @@ application:
         rate_5: IVA 5 %
         rate_7_5: IVA 7.5 %
       rule_finding:
+        advance_payment_not_fully_collected: An advance payment is taxed only on the
+          amount collected, so an invoice can carry the advance's date only when its
+          whole price is collected. Record the advance as its own invoice, or mark
+          this one paid if the advance covers the whole price.
         counterparty_country_invalid: This is not a two-letter country code the ledger
           recognises.
         counterparty_name_blank: The counterparty's name cannot be blank.

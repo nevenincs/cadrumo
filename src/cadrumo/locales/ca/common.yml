@@ -82,6 +82,11 @@ aggregation:
       investment_observations_missing_bienes_inversion_authority: Les observacions
         d'IVA d'inversió requereixen el registre explícit de béns d'inversió i una
         autoritat de perfil coincident.
+      iva_rate_date_outside_table_coverage_on_movement_date: No hi ha cap tipus d'IVA
+        registrat per al %{date}. Aquesta és la data del moviment bancari, usada com
+        a data de meritació perquè aquest apunt no té data d'operació. Registra la
+        data en què es va fer el lliurament o es va prestar el servei; potser així
+        es resol.
       missing_counterparty_establishment_on_export: Una exportació està exempta perquè
         l'operació surt de la Unió, de manera que depèn d'on estigui ESTABLERTA la
         contrapart. Registra el país de la contrapart; un codi absent o no assignat
@@ -106,6 +111,10 @@ aggregation:
       unaccepted_registry_value: '%{field} consta com a %{value}, un valor que l''autoritat
         fixada del registre tributari no admet per a %{effective_date}, així que l''apunt
         no pot alimentar el càlcul de l''IVA. Corregeix aquest valor a l''apunt.'
+      unsupported_iva_rate_on_movement_date: El tipus d'IVA %{rate} no és vàlid el
+        %{date}. Aquesta és la data del moviment bancari, usada com a data de meritació
+        perquè aquest apunt no té data d'operació. Registra la data en què es va fer
+        el lliurament o es va prestar el servei; potser així es resol.
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: El registre de prorrata
@@ -142,6 +151,11 @@ aggregation:
         datades fora del període de declaració sol·licitat.
   modelo_bindings:
     errors:
+      invoice_advance_payment_partially_collected: Una factura registra un pagament
+        anticipat sobre un preu cobrat només en part. Una bestreta només merita IVA
+        per l'import cobrat, així que la factura no es pot assignar a un període de
+        declaració tal com està. Registra la bestreta com una factura pròpia, o marca
+        aquesta com a pagada si la bestreta cobreix tot el preu.
       invoice_line_currency_unconverted: Una línia de factura està denominada en moneda
         estrangera sense tipus de canvi a euros resolt, per la qual cosa no es pot
         declarar en aquest model.

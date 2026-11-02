@@ -77,6 +77,11 @@ aggregation:
         bizonyítékot.'
       investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
         kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
+      iva_rate_date_outside_table_coverage_on_movement_date: 'Erre a napra nincs nyilvántartott
+        IVA-kulcs: %{date}. Ez a banki mozgás dátuma, amely az adófizetési kötelezettség
+        keletkezésének dátumaként szolgált, mert a tételen nincs teljesítési dátum.
+        Rögzítsd az értékesítés vagy a szolgáltatás teljesítésének dátumát; ez megoldhatja
+        a problémát.'
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az
         ügylet elhagyja az Uniót, ezért az számít, hol van az ügyfél LETELEPEDVE.
         Rögzítsd az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
@@ -102,6 +107,11 @@ aggregation:
         adónyilvántartási jogosultság %{effective_date} dátumra nem fogad el, ezért
         a tétel nem kerülhet be az IVA-számításba. Javítsd ezt az értéket a főkönyvi
         tételen.
+      unsupported_iva_rate_on_movement_date: 'A(z) %{rate} IVA-kulcs nem érvényes
+        ezen a napon: %{date}. Ez a banki mozgás dátuma, amely az adófizetési kötelezettség
+        keletkezésének dátumaként szolgált, mert a tételen nincs teljesítési dátum.
+        Rögzítsd az értékesítés vagy a szolgáltatás teljesítésének dátumát; ez megoldhatja
+        a problémát.'
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: Az arányosítási nyilvántartás
@@ -138,6 +148,11 @@ aggregation:
         időszakon kívüli keltezésű megfigyeléseket tartalmaz.
   modelo_bindings:
     errors:
+      invoice_advance_payment_partially_collected: Egy számla előleget rögzít olyan
+        árra, amelyből csak egy rész folyt be. Az előleg után csak a befolyt összegre
+        keletkezik IVA, ezért a számla így nem sorolható bevallási időszakhoz. Rögzítsd
+        az előleget külön számlaként, vagy jelöld ezt fizetettnek, ha az előleg a
+        teljes árat fedezi.
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
         és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen a nyomtatványon.
       unsupported_period: Nem támogatott nyomtatvány-időszak a nyilvántartásaidból

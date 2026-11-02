@@ -153,6 +153,34 @@ def test_every_authored_303_and_390_window_agrees_with_the_rule(operation: Pinne
     assert disagreements == set()
 
 
+# RD 439/2007 art. 108.1 (withholding: the 20th of the month after the quarter or
+# month) and art. 111.1 (pagos fraccionados: the 20th, and 30 January for the
+# fourth quarter). Only modelos with a filing schedule are projected.
+_RIRPF_SCHEDULED_MODELOS = ("111", "115", "123", "130", "131")
+
+
+def test_every_authored_rirpf_window_agrees_with_the_rule(operation: PinnedAuthorityOperation) -> None:
+    support = operation.supported_filing_years()
+    checked: set[str] = set()
+    disagreements: set[tuple[str, int, str]] = set()
+    for year in range(support.floor, support.horizon + 1):
+        index = indexed_deadline_window_year(operation, year)
+        for modelo, _revision, window in index.dated:
+            if modelo not in _RIRPF_SCHEDULED_MODELOS or window.id in index.projected:
+                continue
+            projected = project_filing_window(
+                operation, modelo=modelo, period=window.period, calendars=_SUPPLIED_CALENDARS
+            )
+            assert isinstance(projected, ProjectedFilingWindow), (modelo, window.period, projected)
+            assert projected.opens_on == window.opens_on, (modelo, window.period)
+            checked.add(modelo)
+            if projected.closes_on != window.closes_on:
+                disagreements.add((modelo, window.period.filing_year, window.period.registry_token))
+
+    assert checked == set(_RIRPF_SCHEDULED_MODELOS)
+    assert disagreements == set(), sorted(disagreements)
+
+
 def test_the_390_2026_authored_close_is_the_weekend_shifted_monday(operation: PinnedAuthorityOperation) -> None:
     period = Period.from_year_and_code(2026, "0A")
     authored = resolve_filing_window("390", 2026, period, authority=operation)
