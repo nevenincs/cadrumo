@@ -367,7 +367,7 @@ def _official_repeat_columns(
                 FormRepeatingColumn(
                     key=key,
                     heading_key=column_form_heading_key(build.modelo_id, key),
-                    official_heading=clean_official_text(position.description or "") or None,
+                    official_heading=None,
                     casilla_id=casilla_id,
                     binding_id=row_set[casilla_id],
                 )
@@ -420,7 +420,7 @@ def _row_column_limit(build: _Build, columns: Sequence[tuple[str, str]]) -> int 
     elements = {
         _repeating_element(build, build.positions[anchors[0]])
         for _binding_id, casilla_id in columns
-        if (anchors := build.anchors.get(casilla_id))
+        if (anchors := build.anchors.get(casilla_id, []))
     }
     if len(elements) != 1:
         return None

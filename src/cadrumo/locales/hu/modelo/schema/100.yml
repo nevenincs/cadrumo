@@ -18176,6 +18176,18 @@ modelo:
                 heading: A bevallás összesítése és számítása
               datoseconomicos-tomadatosampliada:
                 heading: Jövedelmek és kedvezmények részletes adatai
+              datosidentificativos:
+                heading: Azonosító adatok
+              datosidentificativos-ascendientes:
+                heading: Felmenők
+              datosidentificativos-conyuge:
+                heading: Házastárs
+              datosidentificativos-declarante:
+                heading: Bevalló
+              datosidentificativos-hijos:
+                heading: Gyermekek és más leszármazottak
+              declaracion:
+                heading: Bevallás
               other-inputs:
                 heading: A számításhoz szükséges egyéb adatok
             section:
@@ -18210,6 +18222,8 @@ modelo:
                   Unióban illetőségű adózók kedvezménye (A melléklet)
               anexocres:
                 heading: Áthozott tételek és egyéb információk (C melléklet)
+              ascendiente:
+                heading: Az egyes felmenők adatai
               baseimponibleres:
                 heading: Az ingó tőkéből származó jövedelem pozitív nettó egyenlege
                   a megtakarítási adóalapban
@@ -18305,6 +18319,8 @@ modelo:
               gpreinversionres:
                 heading: Újrabefektetés miatt halasztott, 2025-re betudható nyereségek
                   összesítése
+              hijo:
+                heading: Az egyes leszármazottak adatai
               ingresodevolucionres:
                 heading: Befizetendő vagy visszajáró összeg
               inmueblesres:

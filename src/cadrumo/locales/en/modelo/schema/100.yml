@@ -17715,6 +17715,18 @@ modelo:
                 heading: Return summary and calculation
               datoseconomicos-tomadatosampliada:
                 heading: Detailed income and deduction data
+              datosidentificativos:
+                heading: Identification
+              datosidentificativos-ascendientes:
+                heading: Ascendants
+              datosidentificativos-conyuge:
+                heading: Spouse
+              datosidentificativos-declarante:
+                heading: Declarant
+              datosidentificativos-hijos:
+                heading: Children and other descendants
+              declaracion:
+                heading: Declaration
               other-inputs:
                 heading: Other data the calculation needs
             section:
@@ -17749,6 +17761,8 @@ modelo:
                   deduction for residents of the European Union (annex A)
               anexocres:
                 heading: Amounts carried forward and other information (annex C)
+              ascendiente:
+                heading: Details of each ascendant
               baseimponibleres:
                 heading: Positive net balance of movable capital income in the savings
                   tax base
@@ -17840,6 +17854,8 @@ modelo:
                 heading: Gains deferred for reinvestment allocable to 2025
               gpreinversionres:
                 heading: 'Gains deferred for reinvestment allocable to 2025: summary'
+              hijo:
+                heading: Details of each descendant
               ingresodevolucionres:
                 heading: Amount to pay or to refund
               inmueblesres:
