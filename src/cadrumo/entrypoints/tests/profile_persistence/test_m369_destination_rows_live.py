@@ -28,11 +28,11 @@ from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObject
 from cadrumo.application.aggregation.errors import AggregationValidationError
 from cadrumo.application.aggregation.tests.oss_rate_change_support import variant_pct
 from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
+from cadrumo.application.modelo.action_errors import AmendmentKindNotPermittedError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.action_errors import AmendmentKindNotPermittedError
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
@@ -513,6 +513,7 @@ def test_a_missing_period_close_rate_refuses_and_the_stamp_does_not_stand_in(
     with bind_exchange_rate_provider_factory(lambda: provider), pytest.raises(AggregationValidationError) as refused:
         _calculate(objects, scenario, (_zloty_invoice(scenario),), operation)
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_currency_unconverted"
+    assert refused.value.context is not None
     assert refused.value.context["rate_date"] == _CLOSE.isoformat()
 
 
@@ -536,6 +537,7 @@ def test_a_consignment_a_cent_over_the_ceiling_refuses_before_any_figure(
     with pytest.raises(AggregationValidationError) as refused:
         _calculate(objects, _IMPORT, (_invoice(_IMPORT, "IOSS-OVER", "FR", "general", "150.01", "30.00"),), operation)
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.consignment_exceeds_ceiling"
+    assert refused.value.context is not None
     assert refused.value.context["consignment_value_eur"] == "150.01"
 
 
@@ -558,7 +560,9 @@ def test_an_amended_return_refuses_export_because_the_design_cannot_declare_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Orden HAC/610/2021 art. 7.5: a filed return is never modified, whichever amendment kind is asked for."""
-    result, work_unit = _calculate(objects, scenario, (_invoice(scenario, "OSS-A", "FR", "general", "100.00", "20.00"),), operation)
+    result, work_unit = _calculate(
+        objects, scenario, (_invoice(scenario, "OSS-A", "FR", "general", "100.00", "20.00"),), operation
+    )
     ports = modelo_export_ports_for_test(
         bucket_id=_BUCKET,
         secure_objects=objects,
@@ -599,7 +603,9 @@ def test_an_ordinary_single_page_return_leaves_every_page_indicator_blank(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    result, _ = _calculate(objects, scenario, (_invoice(scenario, "OSS-A", "FR", "general", "100.00", "20.00"),), operation)
+    result, _ = _calculate(
+        objects, scenario, (_invoice(scenario, "OSS-A", "FR", "general", "100.00", "20.00"),), operation
+    )
     assert _verify(result).granted_verificado_completo is True
     wire = _export(objects, tmp_path, scenario, result)
     revision = (

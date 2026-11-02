@@ -176,7 +176,7 @@ def test_oss_ioss_refuses_on_an_unconverted_line() -> None:
     """
     invoice, line = _unconverted_pln_oss_line()
     with pytest.raises(AggregationValidationError) as exc_info:
-        _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO)
+        _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_DEVENGO)
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_currency_unconverted"
     context = exc_info.value.context
     assert context is not None, "the refusal must carry its context, not just a message"
@@ -217,7 +217,9 @@ def test_oss_ioss_does_not_refuse_a_converted_invoice() -> None:
             "fx_rate_source": "ecb_reference",
         },
     )
-    candidate = _candidate_for_invoice_line(resolved, line, line_index=1, devengo_date=_DEVENGO)
+    candidate = _candidate_for_invoice_line(
+        resolved, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_DEVENGO
+    )
     assert candidate is not None
     assert candidate.base_amount == Decimal("1000.00") * Decimal("0.23")
 
@@ -261,7 +263,7 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
         },
     )
     with pytest.raises(AggregationValidationError) as exc_info:
-        _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO)
+        _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_DEVENGO)
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"
     context = exc_info.value.context
     assert context is not None
@@ -300,5 +302,7 @@ def test_oss_ioss_does_not_refuse_an_invoice_never_tagged_as_oss() -> None:
             "payment_status": PaymentStatus.PAID,
         },
     )
-    candidate = _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO)
+    candidate = _candidate_for_invoice_line(
+        invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_DEVENGO
+    )
     assert candidate is None
