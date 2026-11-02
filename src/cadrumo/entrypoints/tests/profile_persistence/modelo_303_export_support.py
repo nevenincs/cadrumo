@@ -33,7 +33,9 @@ from ....adapters.persistence.storage.runtime import inspect_bucket_storage_runt
 from ....adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
 from ....application.calculations.cross_period_clean_state import cross_period_dependency_requirements
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -71,6 +73,7 @@ from ....domain.modelos.repository import upsert_work_unit
 from ....domain.modelos.verification_report import VerificationReport
 from ....tests.env_scope import ready_clave_settings
 from .file_flow_test_support import calculation_ports_for_test
+from .m303_annual_ledger_support import M303_LEDGER_CUOTA, seed_m303_period_cuotas
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -218,14 +221,8 @@ def _wallet_only_decision(*, taxpayer_nif: str, period: str = "2T") -> IvaCompen
 
 
 def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
-    return {
-        "modelo-303-iva-repercutido-general-cuota": Decimal("1000.00"),
-        "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-        "modelo-303-iva-soportado-interiores-cuota": Decimal("0.00"),
-        "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-        "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-    }
+    """The operator-owned binding a Modelo 303 calculation takes; the cuotas come from the ledger."""
+    return {"modelo-303-profile-state-attribution-ratio": Decimal("100")}
 
 
 #: Manual, formula-operand "resultado" casillas the fichero-BOE completeness
@@ -480,13 +477,14 @@ def calculate_and_verify_modelo_303_revision(
         operation=operation,
     )
     binding_values = _modelo_303_engine_inputs()
-    if positive_result:
-        # The wallet-only decision applies EUR 1,200 of prior compensation.
-        # This deliberately exceeds that carry so public payment-election
-        # paths exercise a genuinely positive M303 result.
-        binding_values["modelo-303-iva-repercutido-general-cuota"] = Decimal("2400.00")
-    if negative_result:
-        binding_values["modelo-303-iva-soportado-interiores-cuota"] = Decimal("2000.00")
+    # The quarter's cuotas are ledger rows. The wallet-only decision applies
+    # EUR 1,200 of prior compensation; a positive result deliberately exceeds
+    # that carry so public payment-election paths see a genuinely positive M303.
+    seed_m303_period_cuotas(
+        work_unit.work_unit_id,
+        repercutido=Decimal("2400.00") if positive_result else M303_LEDGER_CUOTA,
+        soportado=Decimal("2000.00") if negative_result else Decimal("0.00"),
+    )
     if autoconsumo_promotor_base is not None:
         binding_values["modelo-303-autoconsumo-promotor-base"] = autoconsumo_promotor_base
 
@@ -503,7 +501,7 @@ def calculate_and_verify_modelo_303_revision(
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
     ) as _calculation_ports_481:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs=casilla_inputs,
@@ -517,7 +515,7 @@ def calculate_and_verify_modelo_303_revision(
             filing_period_date=date(2026, 6, 30),
             ports=_calculation_ports_481,
             clock=datetime(2026, 5, 21, 12, 1, tzinfo=UTC),
-        )
+        ).revision
     _seed_modelo_303_1t_clean_state(
         bucket_id=bucket_id,
         taxpayer_tax_id=taxpayer_nif,

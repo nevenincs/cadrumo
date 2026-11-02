@@ -14,6 +14,7 @@ from typing import Literal
 
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
+from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
@@ -338,3 +339,81 @@ def persist_year_of_invoices(
     tx_repo.save(TransactionCatalogue.from_transactions(tuple(transactions)))
     InvoiceCatalogueRepository(objects=secure_objects).save(build_invoice_catalogue(tuple(purchase_invoices)))
     return stored
+
+
+#: A round cuota scenarios book; its 21 % base 4761.90 rounds back to it (4761.90 x 0.21 = 999.999).
+M303_LEDGER_CUOTA = Decimal("1000.00")
+_M303_PERIOD_CUOTA_RATE = Decimal("0.21")
+
+
+def _m303_period_cuota_base(cuota: Decimal) -> Decimal:
+    """The 21 % base, to the cent, whose cuota rounds to ``cuota``."""
+    return (cuota / _M303_PERIOD_CUOTA_RATE).quantize(Decimal("0.01"))
+
+
+def seed_m303_period_cuotas(
+    work_unit_id: str,
+    *,
+    repercutido: Decimal = Decimal("0.00"),
+    soportado: Decimal = Decimal("0.00"),
+) -> None:
+    """Record one domestic 21 % sale and/or purchase in the work unit's quarter.
+
+    ``repercutido`` and ``soportado`` are 21 % cuotas, zero for no row; the purchase carries its supplier invoice, the evidence a
+    deduction needs (LIVA art. 97.Uno.1). A quarter already holding its row is
+    left as it is, so a recalculation reads the same ledger.
+    """
+    work_unit = WorkUnitCatalogueRepository().load().work_units[work_unit_id]
+    quarter = work_unit.period.registry_token
+    year = work_unit.filing_year
+    ledger = TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
+    stored = tuple(ledger.load().transactions.values())
+    present = {transaction.raw.provider_transaction_id for transaction in stored}
+    transactions = []
+    if repercutido and f"wallet-sale-{year}-{quarter}" not in present:
+        transactions.append(
+            iva_transaction(
+                f"wallet-sale-{year}-{quarter}",
+                direction=TransactionDirection.INCOMING,
+                taxable_base=_m303_period_cuota_base(repercutido),
+                iva_amount=repercutido,
+                period=quarter,
+                filing_year=year,
+            )
+        )
+    if soportado and f"wallet-purchase-{year}-{quarter}" not in present:
+        catalogue_ports = build_catalogue_creation_ports(bucket_id=work_unit.bucket_id)
+        purchase_invoice = build_catalogue_invoice(
+            bucket_id=work_unit.bucket_id,
+            kind=InvoiceKind.RECEIVED,
+            counterparty_name="Proveedor Taller SL",
+            counterparty_tax_id="A58818501",
+            counterparty_country="ES",
+            invoice_number=f"WALLET-REC-{year}-{quarter}",
+            issued_at=transaction_booked_date(quarter, filing_year=year),
+            taxable_base=_m303_period_cuota_base(soportado),
+            iva_rate=Decimal("21"),
+            currency="EUR",
+            rate_provider=catalogue_ports.rate_provider,
+        )
+        invoices = InvoiceCatalogueRepository()
+        invoices.save(build_invoice_catalogue((*invoices.load().invoices.values(), purchase_invoice)))
+        transactions.append(
+            iva_transaction(
+                f"wallet-purchase-{year}-{quarter}",
+                direction=TransactionDirection.OUTGOING,
+                taxable_base=_m303_period_cuota_base(soportado),
+                iva_amount=soportado,
+                period=quarter,
+                filing_year=year,
+                purchase_invoice_evidence_id=purchase_invoice.invoice_id,
+                deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
+                deduction_provenance=IvaDeductionClassificationProvenance(
+                    authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
+                    source_locator=f"invoice:{purchase_invoice.invoice_id}",
+                    evidence_digest="a" * 64,
+                ),
+            )
+        )
+    if transactions:
+        ledger.save(TransactionCatalogue.from_transactions((*stored, *transactions)))

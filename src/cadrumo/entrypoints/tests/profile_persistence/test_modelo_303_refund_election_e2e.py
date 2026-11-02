@@ -45,9 +45,9 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 )
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
-    _M303_LEDGER_CUOTA,
-    _seed_modelo_303_ledger_iva_for,
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    M303_LEDGER_CUOTA,
+    seed_m303_period_cuotas,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -326,7 +326,7 @@ def _calculate_negative_period(
         repository=work_repo,
         clock=decided_at,
     )
-    _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, soportado=_M303_LEDGER_CUOTA)
+    seed_m303_period_cuotas(work_unit.work_unit_id, soportado=M303_LEDGER_CUOTA)
     revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator",

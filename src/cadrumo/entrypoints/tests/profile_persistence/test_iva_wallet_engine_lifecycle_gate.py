@@ -37,13 +37,11 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-    _M303_LEDGER_CUOTA,
     _M303_POSTERIOR_CASILLA,
     _M303_RESULTADO_CASILLA,
     _TAXPAYER_NIF,
     _save_wallet_gate_decision,
     _secure_backend,
-    _seed_modelo_303_ledger_iva_for,
     _snapshot_303,
     _store_operator_profile,
     _store_operator_profile_with_tax_id,
@@ -51,6 +49,10 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _work_unit_and_revision_for_wallet_gate,
     _work_unit_repositories_with_modelo_303_work_unit,
     workflow_profile,
+)
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    M303_LEDGER_CUOTA,
+    seed_m303_period_cuotas,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
@@ -133,7 +135,7 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
             snapshot, operation=operation
         )
-        _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+        seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
         revision = _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
@@ -243,7 +245,7 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
             snapshot, operation=operation
         )
-        _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+        seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
         revision = _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
@@ -336,7 +338,7 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
                 local_recurrence=None,
                 prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
             )
-            _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+            seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
             revision = _calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -383,7 +385,7 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
 
         with pytest.raises(ModeloLifecycleClockPrecedesError) as exc_info:
             if action == "calculate":
-                _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+                seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
                 _calculate_modelo_revision(
                     work_unit.work_unit_id,
                     actor="operator",

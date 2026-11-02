@@ -48,7 +48,6 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
-    _M303_LEDGER_CUOTA,
     _M303_RESULTADO_CASILLA,
     _TARGET_PERIOD,
     _TARGET_PERIOD_VALUE,
@@ -57,7 +56,6 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _filing_instance_evidence,
     _save_wallet_gate_decision,
     _secure_backend,
-    _seed_modelo_303_ledger_iva_for,
     _snapshot_303,
     _store_operator_profile,
     _store_prior_303_compensation,
@@ -65,6 +63,10 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _work_unit_repositories_with_modelo_303_work_unit,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    M303_LEDGER_CUOTA,
+    seed_m303_period_cuotas,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -162,7 +164,7 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_136:
-            _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+            seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
             revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -200,7 +202,7 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_171:
-                _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+                seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
                 return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                     work_unit.work_unit_id,
                     actor="operator",

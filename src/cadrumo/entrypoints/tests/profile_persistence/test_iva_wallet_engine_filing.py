@@ -44,7 +44,6 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _BUCKET_ID,
     _DECIDED_AT,
     _M303_DISPONIBLE_CASILLA,
-    _M303_LEDGER_CUOTA,
     _M303_RESULTADO_CASILLA,
     _TARGET_PERIOD,
     _TARGET_YEAR,
@@ -52,7 +51,6 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _modelo_303_engine_inputs,
     _period,
     _secure_backend,
-    _seed_modelo_303_ledger_iva_for,
     _snapshot_303,
     _store_operator_profile_with_tax_id,
     _store_prior_303_compensation,
@@ -62,6 +60,10 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     workflow_profile,
 )
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    M303_LEDGER_CUOTA,
+    seed_m303_period_cuotas,
+)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -109,7 +111,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_97:
-            _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+            seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
             revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
@@ -226,7 +228,7 @@ def _calculate_verify_and_file_303_with_wallet_credit(
         calculation_repository=calc_repo,
         bucket_event_repository=event_repo,
     ) as calculation_ports:
-        _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+        seed_m303_period_cuotas(work_unit.work_unit_id, repercutido=M303_LEDGER_CUOTA)
         revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator",
@@ -437,7 +439,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_210:
-            _seed_modelo_303_ledger_iva_for(work_unit_1t.work_unit_id, soportado=_M303_LEDGER_CUOTA)
+            seed_m303_period_cuotas(work_unit_1t.work_unit_id, soportado=M303_LEDGER_CUOTA)
             revision_1t = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit_1t.work_unit_id,
                 actor="operator",
@@ -523,7 +525,7 @@ def test_local_filed_303_compensation_updates_wallet_balance_but_next_period_sti
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_279,
         ):
-            _seed_modelo_303_ledger_iva_for(work_unit_2t.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+            seed_m303_period_cuotas(work_unit_2t.work_unit_id, repercutido=M303_LEDGER_CUOTA)
             calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit_2t.work_unit_id,
                 actor="operator",

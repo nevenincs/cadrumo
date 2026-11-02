@@ -9,25 +9,11 @@ from decimal import Decimal
 from functools import cache
 from pathlib import Path
 
-from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
-from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
-from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.application.modelo.iva_wallet_gate import resolve_iva_compensation_decision_for_calculation
 from cadrumo.application.user_profile.projections import profile_path_values_for_bucket
-from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
-from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva.schema import InvoiceKind
-from cadrumo.domain.transactions.enums import TransactionDirection
-from cadrumo.domain.transactions.models import TransactionCatalogue
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
-    iva_transaction,
-    transaction_booked_date,
 )
 
 from ....adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import parse_iva_compensation_wallet_html
@@ -322,87 +308,9 @@ def workflow_profile(tax_id: str = _TAXPAYER_NIF) -> TaxpayerProfile:
     )
 
 
-#: The cuota the wallet scenarios book; its 21 % base 4761.90 rounds back to it (4761.90 x 0.21 = 999.999).
-_M303_LEDGER_CUOTA = Decimal("1000.00")
-_M303_LEDGER_RATE = Decimal("0.21")
-
-
-def _m303_ledger_base(cuota: Decimal) -> Decimal:
-    """The 21 % base, to the cent, whose cuota rounds to ``cuota``."""
-    return (cuota / _M303_LEDGER_RATE).quantize(Decimal("0.01"))
-
-
 def _modelo_303_engine_inputs() -> dict[BindingId, Decimal]:
     """The operator-owned binding a Modelo 303 calculation takes; the cuotas come from the ledger."""
     return {"modelo-303-profile-state-attribution-ratio": Decimal("100")}
-
-
-def _seed_modelo_303_ledger_iva_for(
-    work_unit_id: str,
-    *,
-    repercutido: Decimal = Decimal("0.00"),
-    soportado: Decimal = Decimal("0.00"),
-) -> None:
-    """Record one domestic 21 % sale and/or purchase in the work unit's quarter.
-
-    ``repercutido`` and ``soportado`` are 21 % cuotas, zero for no row; the purchase carries its supplier invoice, the evidence a
-    deduction needs (LIVA art. 97.Uno.1). A quarter already holding its row is
-    left as it is, so a recalculation reads the same ledger.
-    """
-    work_unit = WorkUnitCatalogueRepository().load().work_units[work_unit_id]
-    quarter = work_unit.period.registry_token
-    year = work_unit.filing_year
-    ledger = TransactionCatalogueRepository(bucket_id=work_unit.bucket_id)
-    stored = tuple(ledger.load().transactions.values())
-    present = {transaction.raw.provider_transaction_id for transaction in stored}
-    transactions = []
-    if repercutido and f"wallet-sale-{year}-{quarter}" not in present:
-        transactions.append(
-            iva_transaction(
-                f"wallet-sale-{year}-{quarter}",
-                direction=TransactionDirection.INCOMING,
-                taxable_base=_m303_ledger_base(repercutido),
-                iva_amount=repercutido,
-                period=quarter,
-                filing_year=year,
-            )
-        )
-    if soportado and f"wallet-purchase-{year}-{quarter}" not in present:
-        catalogue_ports = build_catalogue_creation_ports(bucket_id=work_unit.bucket_id)
-        purchase_invoice = build_catalogue_invoice(
-            bucket_id=work_unit.bucket_id,
-            kind=InvoiceKind.RECEIVED,
-            counterparty_name="Proveedor Taller SL",
-            counterparty_tax_id="A58818501",
-            counterparty_country="ES",
-            invoice_number=f"WALLET-REC-{year}-{quarter}",
-            issued_at=transaction_booked_date(quarter, filing_year=year),
-            taxable_base=_m303_ledger_base(soportado),
-            iva_rate=Decimal("21"),
-            currency="EUR",
-            rate_provider=catalogue_ports.rate_provider,
-        )
-        invoices = InvoiceCatalogueRepository()
-        invoices.save(build_invoice_catalogue((*invoices.load().invoices.values(), purchase_invoice)))
-        transactions.append(
-            iva_transaction(
-                f"wallet-purchase-{year}-{quarter}",
-                direction=TransactionDirection.OUTGOING,
-                taxable_base=_m303_ledger_base(soportado),
-                iva_amount=soportado,
-                period=quarter,
-                filing_year=year,
-                purchase_invoice_evidence_id=purchase_invoice.invoice_id,
-                deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-                deduction_provenance=IvaDeductionClassificationProvenance(
-                    authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
-                    source_locator=f"invoice:{purchase_invoice.invoice_id}",
-                    evidence_digest="a" * 64,
-                ),
-            )
-        )
-    if transactions:
-        ledger.save(TransactionCatalogue.from_transactions((*stored, *transactions)))
 
 
 def _work_unit_and_revision_for_wallet_gate(
