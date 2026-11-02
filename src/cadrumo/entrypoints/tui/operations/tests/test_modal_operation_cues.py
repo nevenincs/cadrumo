@@ -103,14 +103,8 @@ class _Waiter:
         self.closed = True
 
 
-class _Controller:
-    """A runtime binding whose observations are scripted; with ``cue``, each read is a committed change."""
-
-    def __init__(self, *observations: OperationObservationSuccessV1, cue: bool) -> None:
-        self.observations = list(observations)
-        self.waiter = _Waiter()
-        self.cue = cue
-        self.observe_calls = 0
+class _ReviewlessOperation:
+    """The parts of a runtime binding every scripted operation shares: one fixed operation that never reviews."""
 
     @property
     def operation_id(self) -> str:
@@ -120,17 +114,8 @@ class _Controller:
     def actor_ref(self) -> str:
         return "operator:cues"
 
-    def operation_changes(self) -> _Waiter:
-        return self.waiter
-
     async def start(self) -> str:
         return _OPERATION_ID
-
-    async def observe(self, after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
-        self.observe_calls += 1
-        if self.cue and self.waiter.armed:
-            self.waiter.changed.set()
-        return self.observations.pop(0)
 
     async def resolve_review[ReviewT: BaseModel](
         self, reference: OperationReviewProjectionReferenceV1, projection_type: type[ReviewT]
@@ -145,6 +130,25 @@ class _Controller:
 
     async def detach(self, *, expected_revision: int) -> OperationDetachResultV1:
         raise AssertionError("not detached")
+
+
+class _Controller(_ReviewlessOperation):
+    """A runtime binding whose observations are scripted; with ``cue``, each read is a committed change."""
+
+    def __init__(self, *observations: OperationObservationSuccessV1, cue: bool) -> None:
+        self.observations = list(observations)
+        self.waiter = _Waiter()
+        self.cue = cue
+        self.observe_calls = 0
+
+    def operation_changes(self) -> _Waiter:
+        return self.waiter
+
+    async def observe(self, after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
+        self.observe_calls += 1
+        if self.cue and self.waiter.armed:
+            self.waiter.changed.set()
+        return self.observations.pop(0)
 
 
 class _Host(App[None]):
@@ -195,43 +199,18 @@ async def test_without_a_cue_a_running_operation_is_not_read_again() -> None:
         assert controller.observe_calls == 2
 
 
-class _Uncued:
+class _Uncued(_ReviewlessOperation):
     """A runtime binding that offers no change cue at all."""
 
     def __init__(self, *observations: OperationObservationSuccessV1) -> None:
         self._scripted = _Controller(*observations, cue=False)
 
     @property
-    def operation_id(self) -> str:
-        return _OPERATION_ID
-
-    @property
-    def actor_ref(self) -> str:
-        return self._scripted.actor_ref
-
-    @property
     def observe_calls(self) -> int:
         return self._scripted.observe_calls
 
-    async def start(self) -> str:
-        return _OPERATION_ID
-
     async def observe(self, after_cursor: int, *, page_limit: int = 256) -> OperationObservationSuccessV1:
         return await self._scripted.observe(after_cursor, page_limit=page_limit)
-
-    async def resolve_review[ReviewT: BaseModel](
-        self, reference: OperationReviewProjectionReferenceV1, projection_type: type[ReviewT]
-    ) -> OperationReviewProjectionResultV1[ReviewT]:
-        raise AssertionError("no review is pending")
-
-    async def response_control(self, *, interaction_id: str, revision: int) -> OperationResponseControlPort:
-        raise AssertionError("no review is pending")
-
-    async def cancel(self, *, expected_revision: int) -> OperationCancellationResultV1:
-        raise AssertionError("not cancelled")
-
-    async def detach(self, *, expected_revision: int) -> OperationDetachResultV1:
-        raise AssertionError("not detached")
 
 
 @pytest.mark.asyncio
