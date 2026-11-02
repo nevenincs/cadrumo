@@ -18,6 +18,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
 from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from cadrumo.domain.iva.schema import EUMemberState, InvoiceKind, IvaCategory, require_eu_member_state
@@ -77,6 +78,68 @@ _LAURA_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
         "reverse_charge_iva": Decimal("0.00"),
     },
 }
+
+
+LAURA_ANNUAL_EXPECTED = {
+    "devengada": Decimal("9828.00"),
+    "deducible": Decimal("2163.00"),
+    "resultado": Decimal("7665.00"),
+}
+IRENE_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
+    period: {
+        "issued_base": Decimal("10000.00"),
+        "issued_iva": Decimal("2100.00"),
+        "received_base": Decimal("3000.00"),
+        "received_iva": Decimal("630.00"),
+        "eu_supply_base": Decimal("0.00"),
+        "reverse_charge_base": Decimal("0.00"),
+        "reverse_charge_iva": Decimal("0.00"),
+    }
+    for period in _QUARTER_MONTH
+}
+IRENE_ANNUAL_EXPECTED = {
+    "devengada": Decimal("8400.00"),
+    "deducible": Decimal("2520.00"),
+    "resultado": Decimal("5880.00"),
+}
+# AEAT Manual practico IVA 2025, Capitulo 5, prorrata general example
+# (`corpus/manuals/iva/2025/source.pdf#Pag.137-138`). The provisional percentage
+# carried from the previous year is 73 %; the year's operations (locales
+# 25.000 EUR con derecho, viviendas 20.000 EUR exentas) give a definitive
+# 25.000 / 45.000 = 56 %. Quarterly cuotas soportadas 400 / 420 / 460 / 160 EUR
+# arise from received invoices at 10 %. The issued 21 % sales split the year's
+# con-derecho volume across the quarters.
+PRORRATA_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
+    period: {
+        "issued_base": issued_base,
+        "issued_iva": issued_base * Decimal("0.21"),
+        "received_base": received_iva * 10,
+        "received_iva": received_iva,
+        "eu_supply_base": Decimal("0.00"),
+        "reverse_charge_base": Decimal("0.00"),
+        "reverse_charge_iva": Decimal("0.00"),
+    }
+    for period, issued_base, received_iva in (
+        ("1T", Decimal("6000.00"), Decimal("400.00")),
+        ("2T", Decimal("6000.00"), Decimal("420.00")),
+        ("3T", Decimal("6000.00"), Decimal("460.00")),
+        ("4T", Decimal("7000.00"), Decimal("160.00")),
+    )
+}
+
+
+def product_software_identity() -> AeatProductSoftwareIdentity:
+    """Test product identity supplied to every export in the M303-to-M390 vertical."""
+    return AeatProductSoftwareIdentity(
+        program_identifier="C303",
+        developer_tax_id="Y0000001S",
+        evidence=(
+            AeatProductSoftwareEvidence(
+                reference="aeat-software-registration:e2e-ledger-m303-m390",
+                digest="a" * 64,
+            ),
+        ),
+    )
 
 
 def iva_transaction(

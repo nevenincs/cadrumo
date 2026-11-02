@@ -100,7 +100,6 @@ from cadrumo.domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
@@ -125,7 +124,12 @@ from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support im
     _BUCKET_ID,
     _T0,
     _YEAR,
+    IRENE_ANNUAL_EXPECTED,
+    IRENE_QUARTER_FACTS,
+    LAURA_ANNUAL_EXPECTED,
+    PRORRATA_QUARTER_FACTS,
     persist_year_of_invoices,
+    product_software_identity,
 )
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
     _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
@@ -139,20 +143,6 @@ from ....adapters.persistence.profile.tests.published_authority_support import p
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
-
-
-def _product_software_identity() -> AeatProductSoftwareIdentity:
-    """Test product identity supplied to every export in this module."""
-    return AeatProductSoftwareIdentity(
-        program_identifier="C303",
-        developer_tax_id="Y0000001S",
-        evidence=(
-            AeatProductSoftwareEvidence(
-                reference="aeat-software-registration:e2e-ledger-m303-m390",
-                digest="a" * 64,
-            ),
-        ),
-    )
 
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -189,29 +179,6 @@ _CASILLA_59: CasillaId = validated_casilla_id("59")
 _M390_DEVENGADA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
 _M390_DEDUCIBLE: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
 _M390_RESULTADO: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
-
-_LAURA_ANNUAL_EXPECTED = {
-    "devengada": Decimal("9828.00"),
-    "deducible": Decimal("2163.00"),
-    "resultado": Decimal("7665.00"),
-}
-_IRENE_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
-    period: {
-        "issued_base": Decimal("10000.00"),
-        "issued_iva": Decimal("2100.00"),
-        "received_base": Decimal("3000.00"),
-        "received_iva": Decimal("630.00"),
-        "eu_supply_base": Decimal("0.00"),
-        "reverse_charge_base": Decimal("0.00"),
-        "reverse_charge_iva": Decimal("0.00"),
-    }
-    for period in _QUARTER_ORDER
-}
-_IRENE_ANNUAL_EXPECTED = {
-    "devengada": Decimal("8400.00"),
-    "deducible": Decimal("2520.00"),
-    "resultado": Decimal("5880.00"),
-}
 
 
 def _verification_ports(
@@ -556,7 +523,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
             ),
             workflow_profile=workflow_profile(),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_TAX_ID,
                 secure_objects=secure_objects,
@@ -632,7 +599,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
     stored = persist_year_of_invoices(
         secure_objects,
         filing_year=_IRENE_YEAR,
-        facts_by_period=_IRENE_QUARTER_FACTS,
+        facts_by_period=IRENE_QUARTER_FACTS,
     )
     workflow_profile = _ireneworkflow_profile()
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -720,9 +687,9 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
     ):
         expected = sum((computed[p][m303_output] for p in _QUARTER_ORDER), Decimal("0"))
         assert Decimal(annual.casilla_values[m390_casilla]) == expected
-    assert Decimal(annual.casilla_values[_M390_DEVENGADA]) == _IRENE_ANNUAL_EXPECTED["devengada"]
-    assert Decimal(annual.casilla_values[_M390_DEDUCIBLE]) == _IRENE_ANNUAL_EXPECTED["deducible"]
-    assert Decimal(annual.casilla_values[_M390_RESULTADO]) == _IRENE_ANNUAL_EXPECTED["resultado"]
+    assert Decimal(annual.casilla_values[_M390_DEVENGADA]) == IRENE_ANNUAL_EXPECTED["devengada"]
+    assert Decimal(annual.casilla_values[_M390_DEDUCIBLE]) == IRENE_ANNUAL_EXPECTED["deducible"]
+    assert Decimal(annual.casilla_values[_M390_RESULTADO]) == IRENE_ANNUAL_EXPECTED["resultado"]
 
     with bundled_indexed_authority().operation() as operation:
         annual_report = verify_modelo_revision_with_preconditions(
@@ -758,7 +725,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
             ),
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_IRENE_TAX_ID,
                 secure_objects=secure_objects,
@@ -833,9 +800,9 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
         assert Decimal(casillas[m390_casilla]) == expected, (
             f"M390 {m390_casilla} must fold sum(1T-4T {m303_output})={expected}; got {casillas.get(m390_casilla)}"
         )
-    assert Decimal(casillas[_M390_DEVENGADA]) == _LAURA_ANNUAL_EXPECTED["devengada"]
-    assert Decimal(casillas[_M390_DEDUCIBLE]) == _LAURA_ANNUAL_EXPECTED["deducible"]
-    assert Decimal(casillas[_M390_RESULTADO]) == _LAURA_ANNUAL_EXPECTED["resultado"]
+    assert Decimal(casillas[_M390_DEVENGADA]) == LAURA_ANNUAL_EXPECTED["devengada"]
+    assert Decimal(casillas[_M390_DEDUCIBLE]) == LAURA_ANNUAL_EXPECTED["deducible"]
+    assert Decimal(casillas[_M390_RESULTADO]) == LAURA_ANNUAL_EXPECTED["resultado"]
 
 
 def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_missing(
@@ -876,30 +843,7 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
     assert context["zero_reconciliation_casillas_at_risk"] == (_M390_DEVENGADA,)
 
 
-# AEAT Manual practico IVA 2025, Capitulo 5, prorrata general example
-# (`corpus/manuals/iva/2025/source.pdf#Pag.137-138`). The provisional percentage
-# carried from the previous year is 73 %; the year's operations (locales
-# 25.000 EUR con derecho, viviendas 20.000 EUR exentas) give a definitive
-# 25.000 / 45.000 = 56 %. Quarterly cuotas soportadas 400 / 420 / 460 / 160 EUR
-# arise from received invoices at 10 %. The issued 21 % sales split the year's
-# con-derecho volume across the quarters.
-_PRORRATA_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
-    period: {
-        "issued_base": issued_base,
-        "issued_iva": issued_base * Decimal("0.21"),
-        "received_base": received_iva * 10,
-        "received_iva": received_iva,
-        "eu_supply_base": Decimal("0.00"),
-        "reverse_charge_base": Decimal("0.00"),
-        "reverse_charge_iva": Decimal("0.00"),
-    }
-    for period, issued_base, received_iva in (
-        ("1T", Decimal("6000.00"), Decimal("400.00")),
-        ("2T", Decimal("6000.00"), Decimal("420.00")),
-        ("3T", Decimal("6000.00"), Decimal("460.00")),
-        ("4T", Decimal("7000.00"), Decimal("160.00")),
-    )
-}
+# The seeded year is the AEAT prorrata general example (see PRORRATA_QUARTER_FACTS).
 _PRORRATA_PROVISIONAL_PERCENTAGE = Decimal("73")
 _PRORRATA_VOLUMEN_CON_DERECHO: CasillaId = validated_casilla_id("iva.prorrata-volumen-con-derecho")
 _PRORRATA_VOLUMEN_TOTAL: CasillaId = validated_casilla_id("iva.prorrata-volumen-total")
@@ -957,7 +901,7 @@ def test_general_prorrata_settles_in_the_fourth_quarter_and_folds_into_m390(
     _save_general_prorrata_register(secure_objects)
     persist_year_of_invoices(
         secure_objects,
-        facts_by_period=_PRORRATA_QUARTER_FACTS,
+        facts_by_period=PRORRATA_QUARTER_FACTS,
         received_rate_percent=Decimal("10"),
     )
 
@@ -1005,7 +949,7 @@ def test_settlement_quarter_without_filed_earlier_quarter_leaves_casilla_44_unre
     _save_general_prorrata_register(secure_objects)
     persist_year_of_invoices(
         secure_objects,
-        facts_by_period=_PRORRATA_QUARTER_FACTS,
+        facts_by_period=PRORRATA_QUARTER_FACTS,
         received_rate_percent=Decimal("10"),
     )
     for period in ("2T", "3T"):
@@ -1055,9 +999,9 @@ def test_a_revision_saved_with_the_unresolved_44_as_zero_still_loads_unchanged(
     """
     _store_profile(secure_objects)
     _save_general_prorrata_register(secure_objects)
-    _persist_year_of_invoices(
+    persist_year_of_invoices(
         secure_objects,
-        facts_by_period=_PRORRATA_QUARTER_FACTS,
+        facts_by_period=PRORRATA_QUARTER_FACTS,
         received_rate_percent=Decimal("10"),
     )
     for period in ("2T", "3T"):
@@ -1219,7 +1163,7 @@ def _assert_verify_export_and_file_refused(
             ),
             workflow_profile=workflow_profile(),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_TAX_ID,
                 secure_objects=secure_objects,
