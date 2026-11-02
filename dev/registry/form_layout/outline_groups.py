@@ -23,7 +23,7 @@ from typing import Final
 from cadrumo.core.toml import load_toml
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormOutlineGroup, FormOutlineSection
 
-from .page_sections import _heading_key
+from .page_sections import form_heading_key
 
 __all__ = [
     "OUTLINE_GROUPS",
@@ -66,7 +66,7 @@ def _group(modelo: str, revision: str, entry: object) -> FormOutlineGroup:
         raise OutlineGroupRefusedError(f"{modelo} {revision}: outline group {entry!r} needs an id and sections")
     return FormOutlineGroup(
         id=group_id,
-        heading_key=_heading_key(modelo, "outline", group_id),
+        heading_key=form_heading_key(modelo, "outline", group_id),
         sections=tuple(_section(modelo, revision, item) for item in sections),
     )
 
