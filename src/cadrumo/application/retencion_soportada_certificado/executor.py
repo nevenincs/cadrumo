@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+from dataclasses import dataclass
 from decimal import Decimal
 from typing import Final
 from uuid import UUID
@@ -65,12 +66,11 @@ _OPERATION_IDS: Final[dict[str, RetencionSoportadaOperationId]] = {
 }
 
 
-class _CertificateRefusalError(Exception):
+@dataclass(frozen=True, slots=True)
+class _CertificateRefusal:
     """A request the operation refuses with a typed reason before anything is stored."""
 
-    def __init__(self, reason: RetencionSoportadaCertificadoRefusalReason) -> None:
-        self.reason: RetencionSoportadaCertificadoRefusalReason = reason
-        super().__init__(reason)
+    reason: RetencionSoportadaCertificadoRefusalReason
 
 
 def _refusal_code(reason: RetencionSoportadaCertificadoRefusalReason) -> str:
@@ -82,8 +82,8 @@ def _refusal_code(reason: RetencionSoportadaCertificadoRefusalReason) -> str:
 def _build_record(
     request: RetencionSoportadaRecordRequest,
     ports: RetencionSoportadaCertificadoPorts,
-) -> RetencionSoportadaRecord:
-    """Build the record the write path will judge, refusing the shapes it cannot represent."""
+) -> RetencionSoportadaRecord | _CertificateRefusal:
+    """Build the record the write path will judge, or name why its shape cannot be represented."""
     amounts = {
         "importe_integro_dinerario": Decimal(request.importe_integro_dinerario.decimal),
         "valoracion_especie": Decimal(request.valoracion_especie.decimal),
@@ -92,11 +92,11 @@ def _build_record(
         "ingreso_a_cuenta_repercutido": Decimal(request.ingreso_a_cuenta_repercutido.decimal),
     }
     if amounts["ingreso_a_cuenta_repercutido"] > amounts["ingreso_a_cuenta"]:
-        raise _CertificateRefusalError("repercutido_exceeds_ingreso_a_cuenta")
+        return _CertificateRefusal("repercutido_exceeds_ingreso_a_cuenta")
     if request.origin is RetencionSoportadaOrigen.PAYER_CERTIFICATE and request.evidence_fingerprint is None:
-        raise _CertificateRefusalError("certificate_fingerprint_required")
+        return _CertificateRefusal("certificate_fingerprint_required")
     if not tax_id_identity_token(request.payer_tax_id):
-        raise _CertificateRefusalError("validation")
+        return _CertificateRefusal("validation")
     payer_ref = ports.repository.payer_reference(request.payer_tax_id)
     identity: RetencionSoportadaIdentity = (request.ejercicio, request.income_class, payer_ref)
     stored, _revision = ports.repository.load_revisioned(identity)
@@ -114,17 +114,19 @@ def _build_record(
             **amounts,
         )
     except ValidationError:
-        raise _CertificateRefusalError("validation") from None
+        return _CertificateRefusal("validation")
 
 
 def _record_certificate(
     request: RetencionSoportadaRecordRequest,
     ports: RetencionSoportadaCertificadoPorts,
-) -> tuple[RetencionSoportadaRowProjection, int]:
+) -> tuple[RetencionSoportadaRowProjection, int] | _CertificateRefusal:
     taxpayer_tax_id = ports.taxpayer_tax_id()
     if taxpayer_tax_id is None or not tax_id_identity_token(taxpayer_tax_id):
-        raise _CertificateRefusalError("taxpayer_tax_id_unknown")
+        return _CertificateRefusal("taxpayer_tax_id_unknown")
     record = _build_record(request, ports)
+    if isinstance(record, _CertificateRefusal):
+        return record
     try:
         record_retencion_soportada(
             record,
@@ -134,9 +136,9 @@ def _record_certificate(
             expected_revision_id=request.expected_revision_id or ABSENT_SECURE_OBJECT_REVISION_ID,
         )
     except RetencionSoportadaWriteRefusedError as exc:
-        raise _CertificateRefusalError(exc.reason) from None
+        return _CertificateRefusal(exc.reason)
     except RetencionSoportadaRevisionConflictError:
-        raise _CertificateRefusalError("stale_revision") from None
+        return _CertificateRefusal("stale_revision")
     stored, revision_id = ports.repository.load_revisioned(record.identity)
     if stored is None:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
@@ -149,17 +151,17 @@ def _record_certificate(
 def _remove_certificate(
     request: RetencionSoportadaRemoveRequest,
     ports: RetencionSoportadaCertificadoPorts,
-) -> int:
+) -> int | _CertificateRefusal:
     identity: RetencionSoportadaIdentity = (request.ejercicio, request.income_class, request.payer_ref)
     stored, revision_id = ports.repository.load_revisioned(identity)
     if stored is None:
-        raise _CertificateRefusalError("not_found")
+        return _CertificateRefusal("not_found")
     if revision_id != request.expected_revision_id:
-        raise _CertificateRefusalError("stale_revision")
+        return _CertificateRefusal("stale_revision")
     try:
         ports.repository.delete_revisioned(identity, expected_revision_id=request.expected_revision_id)
     except RetencionSoportadaRevisionConflictError:
-        raise _CertificateRefusalError("stale_revision") from None
+        return _CertificateRefusal("stale_revision")
     return len(ports.repository.list_revisioned(request.ejercicio))
 
 
@@ -239,17 +241,19 @@ class RetencionSoportadaCertificadoExecutor:
             async with context.cancellation.irreversible_section():
                 await context.events.effect(OperationEffect.UNKNOWN)
 
-                def work() -> tuple[RetencionSoportadaRowProjection | None, int]:
+                def work() -> tuple[RetencionSoportadaRowProjection | None, int] | _CertificateRefusal:
                     ports = self._ports(context, request.profile_id)
                     if isinstance(request, RetencionSoportadaRecordRequest):
-                        row, count = _record_certificate(request, ports)
-                        return row, count
-                    return None, _remove_certificate(request, ports)
+                        return _record_certificate(request, ports)
+                    removed = _remove_certificate(request, ports)
+                    if isinstance(removed, _CertificateRefusal):
+                        return removed
+                    return None, removed
 
-                try:
-                    row, count = await asyncio.to_thread(work)
-                except _CertificateRefusalError as refused:
-                    return await self._persist_refusal(context, request, operation_id, refused.reason)
+                outcome = await asyncio.to_thread(work)
+                if isinstance(outcome, _CertificateRefusal):
+                    return await self._persist_refusal(context, request, operation_id, outcome.reason)
+                row, count = outcome
                 result = RetencionSoportadaOperationExecutionResult(
                     operation_id=operation_id,
                     outcome="success",
