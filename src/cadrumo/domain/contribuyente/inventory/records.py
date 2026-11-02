@@ -17,13 +17,14 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, NamedTuple
+from typing import NamedTuple
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core.decimal.constants import HUNDRED, MONEY_ZERO, ONE
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.filing_year import FourDigitYear
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -88,6 +89,11 @@ class MovementKind(StrEnum):
     PURCHASE = "purchase"
     COGS = "cogs"
     COUNT = "count"
+
+    @property
+    def adds_costed_stock(self) -> bool:
+        """Whether the movement brings stock in at an acquisition cost, as opening stock or a purchase."""
+        return self in {MovementKind.OPENING, MovementKind.PURCHASE}
 
 
 class InventoryAcquisitionEvidenceKind(StrEnum):
@@ -537,8 +543,7 @@ class MovementRecord(BaseModel):
 
 
 def _require_movement_cost(movement: MovementRecord) -> None:
-    needs_cost = movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}
-    if needs_cost and movement.unit_cost is None and movement.taxable_base is None:
+    if movement.kind.adds_costed_stock and movement.unit_cost is None and movement.taxable_base is None:
         raise InventoryValidationError("opening and purchase movements require unit_cost or taxable_base")
 
 
@@ -701,14 +706,6 @@ class InventoryLedgerHistoryEntry(BaseModel):
         return self
 
 
-InventoryYear = Annotated[int, Field(ge=1900, le=9999)]
-"""The calendar year an inventory ledger or movement covers.
-
-Deliberately NOT the filing-year window. An inventory record may reach back
-further than the registry has authored revisions for, so it carries its own
-floor and no ceiling.
-"""
-
 
 class InventoryLedger(BaseModel):
     """Per-activity inventory ledger for one tax year.
@@ -734,7 +731,7 @@ class InventoryLedger(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     actividad_id: str = Field(min_length=1)
-    year: InventoryYear
+    year: FourDigitYear
     valuation_method: ValuationMethod
     opening_stock: Decimal = Field(ge=Decimal("0"))
     opening_layers: tuple[StockLayer, ...] = ()

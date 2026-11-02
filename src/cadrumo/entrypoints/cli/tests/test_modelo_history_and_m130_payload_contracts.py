@@ -126,7 +126,7 @@ def test_history_event_preserves_actor_at_persisted_boundary() -> None:
     [
         {"modelo": ""},
         {"year": -1},
-        {"year": 1900},
+        {"year": 999},
         {"count": -1},
         {"period": ""},
     ],

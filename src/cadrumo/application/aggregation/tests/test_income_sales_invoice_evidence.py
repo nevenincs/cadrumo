@@ -38,7 +38,7 @@ from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import statutory_activity_retencion_rates
 from ....domain.transactions.service import link_invoice
-from .._renta_income_evidence import (
+from ..renta_income_evidence import (
     SalesInvoiceEvidenceRefusal,
     income_withheld_amount,
     sales_invoice_evidence_payload,

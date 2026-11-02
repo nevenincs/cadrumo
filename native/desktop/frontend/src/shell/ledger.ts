@@ -275,7 +275,20 @@ export type LedgerErrorDetail = {
   context: { key: string; value: JsonValue }[];
   context_entries_omitted: number;
   precondition_verdict_json: string | null;
+  /** The finished sentence the backend served for this stop, and its
+   * language. Absent on a detail recorded before sentences were served. */
+  refusal_words?: string | null;
+  refusal_words_language?: string | null;
 };
+
+/** The sentence the backend served for a refusal, read from whichever
+ * detail it settled with; null when it served none. The window shows it as
+ * served and never words a refusal from its code. */
+export function servedRefusalWords(detail: unknown): string | null {
+  if (typeof detail !== "object" || detail === null) return null;
+  const words = (detail as { refusal_words?: unknown }).refusal_words;
+  return typeof words === "string" && words.trim() !== "" ? words : null;
+}
 
 /** Where an operation the page submitted stands. */
 export type LedgerOutcome<Result = JsonObject> =
@@ -372,6 +385,7 @@ export type LedgerTransaction = {
   date: string;
   booked_date: string;
   value_date: string | null;
+  operation_date: string | null;
   amount: string;
   currency: string;
   direction: string;
@@ -594,6 +608,7 @@ export type LedgerAddRequest = {
   direction: string;
   description: string;
   value_date?: string | null;
+  operation_date?: string | null;
   currency?: string;
   counterparty?: string | null;
   business_classification?: string;
@@ -753,6 +768,9 @@ export type InvoiceAddResult = {
   euro_value_pending: boolean;
   simplificada_tax_id_advisory_required: boolean;
   validation_code: InvoiceAddValidation | null;
+  /** Why a refused one was refused, as the backend served it. */
+  refusal_words?: string | null;
+  refusal_words_language?: string | null;
 };
 
 /** One line of a draft invoice. A figure the draft does not state yet is
@@ -842,7 +860,7 @@ export type LedgerStagedRowAnswer = {
   takes_invoice: boolean;
   evidence_advised: boolean;
   lifecycle_actions: ("archive" | "stash" | "restore" | "exclude")[];
-  tax_set_skip: "transfer" | "personal" | "unclassified" | null;
+  tax_set_skip: "transfer" | "personal" | null;
   transfer_locked_fields: string[];
   classifying_fields: string[];
   identity_fields: string[];
@@ -1896,6 +1914,13 @@ export type EvidenceConfirmResult = {
       recorded_total: PublicDecimal;
       difference: PublicDecimal;
     } | null;
+    /** A withheld figure the document reads that the record does not hold. */
+    retention_discrepancy?: {
+      read_rate?: PublicDecimal | null;
+      read_amount: PublicDecimal;
+      recorded_rate?: PublicDecimal | null;
+      recorded_amount?: PublicDecimal | null;
+    } | null;
     confirmation_id?: string | null;
     confirmed_provenance?: FieldProvenance[];
     establishment?: JsonObject | null;
@@ -1995,7 +2020,11 @@ export type LedgerLinkResult = {
     review_status: LedgerReviewStatus;
     transaction: LedgerTransaction;
   } | null;
-  reason?: "missing_invoice" | "cross_bucket_invoice" | null;
+  reason?:
+    | "missing_invoice"
+    | "cross_bucket_invoice"
+    | "transaction_takes_no_invoice"
+    | null;
 };
 /** Attaches evidence and attachments to one movement. */
 export type LedgerAttachRequest = {

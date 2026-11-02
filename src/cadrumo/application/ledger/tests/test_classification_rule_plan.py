@@ -25,6 +25,7 @@ import pytest
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.errors import ClassificationRuleError
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.usage_ratios.model import UsageRatioProfile
@@ -64,6 +65,10 @@ class _InMemoryRuleRepository(LedgerClassificationRuleRepositoryProtocol):
     @override
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return tuple(sorted(self._rules.values(), key=lambda rule: (rule.priority, rule.rule_id)))
+
+    @override
+    def delete(self, identifier: str) -> bool:
+        return self._rules.pop(identifier, None) is not None
 
 
 class _ClassificationScenario:
@@ -293,3 +298,33 @@ def test_a_plan_over_no_rules_matches_nothing_but_still_reports_the_scan() -> No
         assert plan.rules_evaluated == 0
         assert plan.transactions_scanned == 1
         assert plan.no_match == 1
+
+
+@pytest.mark.parametrize(
+    ("classification", "category_id"),
+    [
+        (BusinessClassification.MIXED, None),
+        (BusinessClassification.REVIEWED_EXCLUDED, None),
+        (BusinessClassification.PERSONAL, "office_supplies"),
+        (BusinessClassification.SKIPPED_BY_RULE, "office_supplies"),
+    ],
+)
+def test_the_rule_writer_stores_nothing_a_classification_write_could_not_carry_out(
+    classification: BusinessClassification, category_id: str | None
+) -> None:
+    with _stored(_transaction(provider_id="a", description="OFFICE")) as scenario:
+        with pytest.raises(ClassificationRuleError):
+            add_classification_rule(
+                bucket_id=_BUCKET,
+                description_pattern="OFFICE",
+                classification=classification,
+                category_id=category_id,
+                actor="operator",
+                rule_repository=scenario.rule_repository,
+            )
+        plan = plan_classification_rules(
+            bucket_id=_BUCKET,
+            ports=scenario.ports,
+            rule_repository=scenario.rule_repository,
+        )
+        assert plan.rules_evaluated == 0

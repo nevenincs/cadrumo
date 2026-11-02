@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import contextvars
 from collections.abc import Iterator
 
 import pytest
@@ -9,6 +10,7 @@ from pydantic import BaseModel, ValidationError
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ....domain.calculations.registry.form_codes import resolve_form_codes
+from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ..invoice_withholding_capture_public import PublicAnnualRecipientDetail
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -55,3 +57,23 @@ def test_an_order_number_above_the_declared_ceiling_is_refused() -> None:
     assert not _refused(PublicAnnualRecipientDetail, "numero_orden", ceiling)
     assert _refused(PublicAnnualRecipientDetail, "numero_orden", ceiling + 1)
     assert _refused(PublicAnnualRecipientDetail, "numero_orden", 0)
+
+
+def _declared_max_lengths(model: type[BaseModel]) -> dict[str, int | None]:
+    return {
+        name: next((item.max_length for item in field.metadata if hasattr(item, "max_length")), None)
+        for name, field in model.model_fields.items()
+    }
+
+
+def test_the_public_recipient_detail_declares_the_canonical_observation_fields_and_lengths() -> None:
+    assert _declared_max_lengths(PublicAnnualRecipientDetail) == _declared_max_lengths(WithholdingObservation)
+
+
+@pytest.mark.parametrize("field", ["representative_tax_id", "spouse_or_unit_titular_tax_id", "nif_pagador_anterior"])
+def test_a_party_identifier_at_the_canonical_capacity_is_accepted_by_the_public_model(field: str) -> None:
+    capacity = _declared_max_lengths(WithholdingObservation)[field]
+    assert capacity == 64
+    outside = contextvars.Context()
+    assert not outside.run(_refused, PublicAnnualRecipientDetail, field, "1" * 64)
+    assert outside.run(_refused, PublicAnnualRecipientDetail, field, "1" * 65)

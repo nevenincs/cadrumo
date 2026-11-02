@@ -24,6 +24,18 @@ JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS: Final = 9
 JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE: Final = 0x00002000
 """Terminate every process in the job when its last handle closes."""
 
+JOB_OBJECT_LIMIT_PROCESS_TIME: Final = 0x00000002
+"""Apply ``PerProcessUserTimeLimit`` to each process in the job."""
+
+JOB_OBJECT_LIMIT_ACTIVE_PROCESS: Final = 0x00000008
+"""Apply ``ActiveProcessLimit`` to the job."""
+
+JOB_OBJECT_LIMIT_PROCESS_MEMORY: Final = 0x00000100
+"""Apply ``ProcessMemoryLimit`` to each process in the job."""
+
+JOB_OBJECT_TIME_UNITS_PER_SECOND: Final = 10_000_000
+"""The job time limits count hundred-nanosecond units."""
+
 if sys.platform == "win32":
     from ctypes import wintypes
 

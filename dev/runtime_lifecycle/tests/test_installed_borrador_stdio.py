@@ -86,7 +86,7 @@ def _fixture_year() -> int:
 _FILING_YEAR = _fixture_year()
 # A stored borrador is keyed by the bindings its revision admits; the work
 # certificate binding is the one such binding in the fixture revision.
-_SEEDED_BINDINGS = {"renta-certificado-trabajo-retenciones": Decimal("1834.27")}
+_SEEDED_BINDINGS = {"renta-retencion-soportada-trabajo": Decimal("1834.27")}
 
 
 @dataclass(frozen=True, slots=True)

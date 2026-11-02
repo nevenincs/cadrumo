@@ -15,7 +15,8 @@ from .....domain.calculations.registry.schema_extraction import ExtractionProfil
 from .....domain.calculations.registry.schema_references import TemporalSupportEnvelope
 from .....tests.log_records import delivered_records
 from ...pdf.source_provenance import source_pdf_reference_path
-from ..errors import BorradorParseError
+from .._extractors.modelo_100_summary import Modelo100ObservedExtractor
+from ..errors import BorradorParseError, BorradorRefusalReason
 from ..parser import parse_borrador as _parse_borrador
 from ..schema import ArtefactKind, BorradorParseMode, InboundBorradorObservation
 
@@ -447,3 +448,64 @@ class TestBorradorParseErrorAttributes:
         assert err.malformed == (_PAGOS_FRACCIONADOS_CASILLA,)
         assert err.ambiguous == (_CUOTA_INTEGRA_TOTAL_CASILLA,)
         assert err.coverage == Decimal("0.5")
+
+
+_DIGEST = "a" * 64
+
+
+def _extract_text(*lines: str) -> InboundBorradorObservation:
+    return Modelo100ObservedExtractor().extract_pages(
+        ("\n".join(lines),),
+        ArtefactKind.BORRADOR,
+        source_pdf_sha256=_DIGEST,
+    )
+
+
+_HEADER = ("Ejercicio: 2025", "NIF: 00000000T", "BORRADOR")
+
+
+class TestSecondDeclarantAndConflictingRows:
+    """A borrador is refused when its figures cannot be one taxpayer's single reading."""
+
+    @pytest.mark.parametrize(
+        "marker",
+        [
+            "NIF cónyuge: 11111111H",
+            "NIF del cónyuge 11111111H",
+            "Cónyuge NIF: 11111111H",
+            "Segundo declarante - NIF 11111111H",
+            "Tributación conjunta: Sí",
+            "Declaración conjunta",
+        ],
+    )
+    def test_a_joint_marker_is_refused_with_a_typed_reason(self, marker: str) -> None:
+        with pytest.raises(BorradorParseError) as refused:
+            _extract_text(*_HEADER, marker, "0596 Retenciones del trabajo 7.000,00")
+
+        assert refused.value.reason is BorradorRefusalReason.JOINT_DECLARATION
+
+    def test_an_individual_borrador_that_declines_joint_filing_is_not_refused(self) -> None:
+        observation = _extract_text(*_HEADER, "Tributación conjunta: No", "0596 Retenciones del trabajo 3.500,00")
+
+        assert {value.casilla_id: value.printed_value for value in observation.values} == {"0596": Decimal("3500.00")}
+
+    def test_a_casilla_printed_twice_with_different_values_is_refused(self) -> None:
+        with pytest.raises(BorradorParseError) as refused:
+            _extract_text(
+                *_HEADER,
+                "0596 Retenciones del trabajo 3.500,00",
+                "0596 Retenciones del trabajo 3.500,01",
+            )
+
+        assert refused.value.reason is BorradorRefusalReason.CONFLICTING_DUPLICATE_ROW
+        assert refused.value.ambiguous == ("0596",)
+
+    def test_a_casilla_printed_twice_with_the_same_value_keeps_the_advisory_warning(self) -> None:
+        observation = _extract_text(
+            *_HEADER,
+            "0596 Retenciones del trabajo 3.500,00",
+            "0596 Retenciones del trabajo 3.500,00",
+        )
+
+        assert [value.printed_value for value in observation.values] == [Decimal("3500.00")]
+        assert observation.warnings == ("casilla 0596: duplicate printed value ignored",)

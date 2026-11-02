@@ -7,8 +7,6 @@ the inward application aggregation tests.
 
 from __future__ import annotations
 
-from decimal import Decimal
-
 import pytest
 
 from cadrumo.application.aggregation.tests.ledger_filing_evidence_support import (
@@ -24,12 +22,9 @@ from .....application.calculations.tests.filing_evidence import general_m303_fil
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
 )
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, ManualFactBasisEntry
@@ -39,6 +34,7 @@ from ...storage.sql.secure_objects import SecureObjectRepository
 from ..modelos_calculation import CalculationRevisionCatalogueRepository
 from ..modelos_work_units import WorkUnitCatalogueRepository
 from .published_authority_support import published_authority_operation
+from .verified_ledger_revision_support import verified_303_ledger_revision
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -88,37 +84,14 @@ def _revision_with_evidence(
     filing_instance_evidence = general_m303_filing_evidence(
         period, reference="test:ledger-filing-evidence", operation=operation
     )
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
-        binding_overrides={},
-        casilla_values={_REVISION_CASILLA: Decimal("1")},
-        source_transaction_ids=(tx_id,),
-        filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
-    )
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
+    return verified_303_ledger_revision(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=registry_snapshot_ref,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
-        binding_overrides={},
-        source_transaction_ids=(tx_id,),
-        casilla_values={_REVISION_CASILLA: Decimal("1")},
-        observations=registry_grounded_observations(
-            modelo="303",
-            filing_year=2025,
-            period=period.registry_token,
-            casilla_values={_REVISION_CASILLA: Decimal("1")},
-        ),
-        created_at=FILING_EVIDENCE_NOW,
-        updated_at=FILING_EVIDENCE_NOW,
-        verified_at=FILING_EVIDENCE_NOW,
-        verified_by="operator",
-        ledger_filing_evidence=evidence,
         filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
+        tx_id=tx_id,
+        period=period,
+        at=FILING_EVIDENCE_NOW,
+        ledger_filing_evidence=evidence,
     )
 
 

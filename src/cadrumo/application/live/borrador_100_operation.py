@@ -169,6 +169,7 @@ class Borrador100ReadExecutor:
                         snapshot=detail,
                         filing_year=payload.filing_year,
                         refused_snapshots=refused,
+                        outdated_stored_snapshots=reading.outdated_stored_snapshots,
                     )
                 )
             human_detail = (
@@ -189,6 +190,7 @@ class Borrador100ReadExecutor:
                     snapshot=human_detail,
                     filing_year=payload.filing_year,
                     refused_snapshots=refused,
+                    outdated_stored_snapshots=reading.outdated_stored_snapshots,
                 )
             )
 
@@ -216,6 +218,9 @@ class _TrackedBorradorRepository:
 
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return self._repository.list_snapshots()
+
+    def list_snapshots_with_outdated_count(self) -> tuple[tuple[Borrador100Snapshot, ...], int]:
+        return self._repository.list_snapshots_with_outdated_count()
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         return self._repository.resolve(snapshot_id)
@@ -271,14 +276,7 @@ class Borrador100ImportExecutor:
                     task_name=BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
                 )
             except BaseException:
-                effect = (
-                    OperationEffect.UNKNOWN
-                    if tracker.has_uncertain_write
-                    else OperationEffect.PARTIAL
-                    if tracker.confirmed_write
-                    else OperationEffect.NONE
-                )
-                await context.events.effect(effect)
+                await context.events.effect(tracker.effect(incomplete=True))
                 raise
             if captured.snapshot.bucket_id != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)

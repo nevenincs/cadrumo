@@ -112,6 +112,9 @@ class LedgerLinkProjection(BaseModel):
         return self
 
 
+LedgerLinkRefusalReason = Literal["missing_invoice", "cross_bucket_invoice", "transaction_takes_no_invoice"]
+
+
 class LedgerLinkOperationResult(BaseModel):
     """Complete mutation result or closed canonical refusal without invoice values."""
 
@@ -121,7 +124,7 @@ class LedgerLinkOperationResult(BaseModel):
     invoice_id: _Identifier
     outcome: Literal["linked", "refused"]
     projection: LedgerLinkProjection | None = None
-    reason: Literal["missing_invoice", "cross_bucket_invoice"] | None = None
+    reason: LedgerLinkRefusalReason | None = None
 
     @model_validator(mode="after")
     def _complete_outcome(self) -> Self:
@@ -185,11 +188,11 @@ class LedgerLinkExecutor:
         except InvoiceLinkError as error:
             reason = _invoice_link_refusal_reason(error, payload)
             if tracker.attempt_count or tracker.has_possible_write or reason is None:
-                await settle_export_link_failure(tracker, context, confirmed_effect=OperationEffect.UPDATED)
+                await settle_export_link_failure(tracker, context, incomplete=False)
                 raise
             return await _publish_link_refusal(request, payload, context, reason)
         except BaseException:
-            await settle_export_link_failure(tracker, context, confirmed_effect=OperationEffect.UPDATED)
+            await settle_export_link_failure(tracker, context, incomplete=False)
             raise
         if _link_result_requires_refusal(projection, tracker):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
@@ -255,10 +258,12 @@ def _supplied_link_actor(actor: str | None) -> str:
 def _invoice_link_refusal_reason(
     error: InvoiceLinkError,
     payload: LedgerLinkRequest,
-) -> Literal["missing_invoice", "cross_bucket_invoice"] | None:
+) -> LedgerLinkRefusalReason | None:
     facts = error.context
     if facts is None or facts.get("invoice_id") != payload.invoice_id:
         return None
+    if facts.get("transaction_bucket_id") == str(payload.profile_id):
+        return "transaction_takes_no_invoice"
     if facts.get("command_bucket_id") == str(payload.profile_id) and "invoice_bucket_id" in facts:
         return "cross_bucket_invoice"
     if facts.get("bucket_id") == str(payload.profile_id):
@@ -270,7 +275,7 @@ async def _publish_link_refusal(
     request: OperationRequest[BaseModel],
     payload: LedgerLinkRequest,
     context: OperationExecutorContext,
-    reason: Literal["missing_invoice", "cross_bucket_invoice"],
+    reason: LedgerLinkRefusalReason,
 ) -> OperationRefusalEvidence:
     result = LedgerLinkOperationResult(
         profile_id=payload.profile_id,

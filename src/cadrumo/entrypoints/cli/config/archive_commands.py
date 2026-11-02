@@ -27,8 +27,9 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+
 from ....core.external_constants import OutputLanguage
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 
 if TYPE_CHECKING:

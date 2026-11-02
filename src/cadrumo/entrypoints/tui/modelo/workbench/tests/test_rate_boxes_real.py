@@ -23,7 +23,6 @@ from typing import override
 import pytest
 from textual.app import App, ComposeResult
 
-from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
@@ -32,22 +31,15 @@ from ......application.modelo.work_form_models import (
     ModeloWorkForm,
     address_key,
 )
-from ......application.modelo.work_form_service import modelo_form_snapshot
 from ......application.modelo.work_form_wording import origin_words
-from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
-)
+from ......application.modelo.work_review import ModeloWorkReviewCasilla
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
-from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.filing.schema import ModeloValueKind
 from ......domain.modelos.calculation_revision import CalculationRevisionState
-from ......domain.modelos.codes import ModeloCode
 from ....components.theme import install_cadrumo_themes
 from ....tests.settling import settle
 from ..casilla_list import (
@@ -67,6 +59,7 @@ from ..casilla_list_values import (
 from ..navigator import NavigatorState, navigator_rows
 from ..page_items import WorkbenchFilter, page_items, workbench_pages
 from ..vocabulary import DONE_MARK, NOT_IMPORTED_MARK
+from .workbench_fixture import registry_form_of
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -86,40 +79,27 @@ def _form(
     held: dict[str, Decimal] | None = None,
     lifecycle: CalculationRevisionState | None = None,
 ) -> ModeloWorkForm:
-    period = Period.from_year_and_code(2026, "1T")
-    revision_id = str(operation.revision_for_context("303", filing_year=2026, period="1T").id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode("303"), 2026, period, revision_id)
     values = held or {}
-    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000455",
-        modelo="303",
-        filing_year=2026,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="e" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=lifecycle,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=tuple(
+
+    def hold_values(
+        _snapshot: RegistrySnapshot, rows: tuple[ModeloWorkReviewCasilla, ...]
+    ) -> tuple[ModeloWorkReviewCasilla, ...]:
+        return tuple(
             row.model_copy(update={"value": values[str(row.casilla_id)], "realised_kind": ModeloValueKind.LITERAL})
             if str(row.casilla_id) in values
             else row
             for row in rows
-        ),
-        findings=(),
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout("303", snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
+        )
+
+    return registry_form_of(
+        operation,
+        modelo="303",
+        year=2026,
+        code="1T",
+        bucket_id="13000000-0000-4000-8000-000000000455",
+        work_unit_id="e" * 64,
+        lifecycle_state=lifecycle,
+        hold=hold_values,
     )
 
 

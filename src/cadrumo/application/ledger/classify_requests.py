@@ -32,6 +32,7 @@ LedgerClassifyPatchField = Literal[
     "iva_category",
     "deduction_fact_kind",
     "investment_asset_id",
+    "iva_vehicle_use",
     "counterparty_country",
     "counterparty_identification_state",
     "notes",
@@ -50,6 +51,7 @@ CLASSIFY_FIELD_NAMES = frozenset(
         "iva_category",
         "deduction_fact_kind",
         "investment_asset_id",
+        "iva_vehicle_use",
         "counterparty_country",
         "counterparty_identification_state",
         "notes",
@@ -93,6 +95,7 @@ class LedgerClassifyPatch(BaseModel):
     iva_category: LedgerClassifyShortText | None = None
     deduction_fact_kind: LedgerClassifyShortText | None = None
     investment_asset_id: LedgerClassifyShortText | None = None
+    iva_vehicle_use: LedgerClassifyShortText | None = None
     counterparty_country: CountryCodeAlpha2 | None = None
     counterparty_identification_state: CountryCodeAlpha2 | None = None
     notes: LedgerClassifyLongText | None = None

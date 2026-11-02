@@ -36,7 +36,6 @@ from typing import TYPE_CHECKING, Annotated, Final, Literal
 
 from pydantic import BaseModel, Field
 
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period, PeriodError
 from ..calculations.registry.errors import (
@@ -266,9 +265,12 @@ def resolve_filing_window_clause(
 
     The coordinate is the end of the period on the filing-period axis, the same
     coordinate every period-keyed deadline clause is selected by. A filing year
-    outside the application's filing-year window addresses no clause.
+    the support envelope gates addresses no clause, and neither does a period
+    whose window would run past the last date the calendar can write.
     """
-    if not period.has_date_span() or not FILING_YEAR_MIN <= period.filing_year <= FILING_YEAR_MAX:
+    if not period.has_date_span() or not operation.supported_filing_years().admits_coordinate(period.filing_year):
+        return None
+    if period.end_date.year >= date.max.year:
         return None
     resolved = resolve_mapping_fact(
         operation,

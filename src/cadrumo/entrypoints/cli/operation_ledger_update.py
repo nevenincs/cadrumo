@@ -178,6 +178,7 @@ def ledger_update_field_matches(
     if field in {
         "booked_date",
         "value_date",
+        "operation_date",
         "amount",
         "direction",
         "description",

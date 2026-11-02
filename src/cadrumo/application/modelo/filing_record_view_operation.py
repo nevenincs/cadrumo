@@ -9,7 +9,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.casilla_id import validated_casilla_id
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -56,7 +56,6 @@ from .verification_repository_ports import VerificationRepositoryBundle, Verific
 MODELO_FILING_RECORD_VIEW_OPERATION_DEFINITION_ID = "modelo.filing_record.view"
 MODELO_FILING_RECORD_VIEW_RESULT_VERSION = 2
 MAX_FILING_RECORD_VIEW_CASILLA_VALUES = 4_096
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _ObservationCasillaValues = Annotated[
     tuple[tuple[Annotated[str, Field(min_length=1, max_length=32)], Annotated[str, Field(max_length=128)]], ...],
@@ -258,7 +257,7 @@ def _capture(
         observation_layers=ModeloFilingObservationLayersProjection.from_layers(layers),
         historical_content=project_historical_filing_content(record, revision),
     )
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
+    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return projection
 

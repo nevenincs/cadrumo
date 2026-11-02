@@ -4,15 +4,12 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
+
 from ...application.modelo.work_lifecycle import lifecycle_continuation_for_work_list
 from ...core.external_constants import OutputLanguage
 from ._modelo_rendering import work_unit_list_lines, work_unit_payload
-from .common import (
-    activate_subcommand_output_language,
-    active_profile_label,
-    emit_envelope,
-    resolve_lifecycle_continuation_notice,
-)
+from .common import active_profile_label, emit_envelope, resolve_lifecycle_continuation_notice
 from .modelo_results import WorkSelectResult
 from .operation_modelo_work_inventory import read_modelo_work_inventory
 

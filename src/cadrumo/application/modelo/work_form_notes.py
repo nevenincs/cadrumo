@@ -21,6 +21,7 @@ from .calculation_note_gate import gate_refuses
 from .calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
     CHECK_REFUSED_REASONS,
+    FILED_BEFORE_GRADE_CAP_REASON,
     durable_binding_source,
     note_attention,
 )
@@ -83,44 +84,65 @@ the outcome its resolver stated for a capped value, and the message its resolver
 with the language it is worded in."""
 
 
+def _derived_leading_sources(
+    revision: CalculationRevision | None, screen_outdated: bool, filed_before_grade_cap: CasillaId | None
+) -> tuple[NoteSource, ...]:
+    """The reasons derived from the revision's standing, not from a note: they lead every other source."""
+    outdated: tuple[NoteSource, ...] = (
+        ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None),)
+        if screen_outdated and revision is not None
+        else ()
+    )
+    capped: tuple[NoteSource, ...] = (
+        ((FILED_BEFORE_GRADE_CAP_REASON, filed_before_grade_cap, None, None, None, None),)
+        if filed_before_grade_cap is not None and revision is not None
+        else ()
+    )
+    return outdated + capped
+
+
+def _diagnostic_source(diagnostic: CalculationSourceDiagnostic) -> NoteSource:
+    """One held diagnostic as a note source, carrying its message only when it is worded in a language."""
+    worded = (
+        None
+        if diagnostic.message_language is None or not diagnostic.message
+        else (diagnostic.message, diagnostic.message_language)
+    )
+    return (
+        diagnostic.reason,
+        diagnostic.casilla_id,
+        durable_binding_source(diagnostic),
+        diagnostic.fact,
+        diagnostic.value_outcome,
+        worded,
+    )
+
+
 def collect_note_sources(
     revision: CalculationRevision | None,
     diagnostics: tuple[CalculationSourceDiagnostic, ...] | None,
     *,
     screen_outdated: bool = False,
+    filed_before_grade_cap: CasillaId | None = None,
 ) -> tuple[NoteSource, ...]:
     """Each latest-calculation reason with the box it names: every diagnostic when held, else the durable ones.
 
     ``screen_outdated`` says the gate refuses ``revision`` as stale before it
-    reads any note, so the derived reason leads them.
+    reads any note, so the derived reason leads them. ``filed_before_grade_cap``
+    is the capped box whose figure keeps a revision filed before screens existed
+    from being exported, which leads them the same way.
 
     Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
-    stale: tuple[NoteSource, ...] = (
-        ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None),)
-        if screen_outdated and revision is not None
-        else ()
-    )
+    stale = _derived_leading_sources(revision, screen_outdated, filed_before_grade_cap)
     if diagnostics is not None:
-        return stale + tuple(
-            (
-                diagnostic.reason,
-                diagnostic.casilla_id,
-                durable_binding_source(diagnostic),
-                diagnostic.fact,
-                diagnostic.value_outcome,
-                None
-                if diagnostic.message_language is None or not diagnostic.message
-                else (diagnostic.message, diagnostic.message_language),
-            )
-            for diagnostic in diagnostics
-        )
+        return stale + tuple(_diagnostic_source(diagnostic) for diagnostic in diagnostics)
     if revision is None:
         return ()
-    # A persisted note is never a proven zero: those are held, not stored. Its stored message is a
-    # technical account in no language of the filer's, so the note is worded by its reason alone.
+    # A persisted note keeps the outcome its resolver stated, so a proven zero still reads as one. Its stored
+    # message is a technical account in no language of the filer's, so the note is worded by its reason alone.
     return stale + tuple(
-        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, None, None)
+        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, issue.value_outcome, None)
         for issue in revision.source_issues
     )
 

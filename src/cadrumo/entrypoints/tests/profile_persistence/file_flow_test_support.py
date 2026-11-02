@@ -39,6 +39,10 @@ from cadrumo.adapters.persistence.profile.percepciones_observations import Perce
 from cadrumo.adapters.persistence.profile.profile_path_values import ProfilePathValuesPersistenceAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.retencion_soportada_records import (
+    RetencionSoportadaAbsenceRepositoryAdapter,
+    RetencionSoportadaRecordRepositoryAdapter,
+)
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
     SEED_CLOCK,
     seed_clean_cross_period_sources,
@@ -51,10 +55,12 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
+from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.live.borrador_100 import Borrador100SnapshotRepository
 from cadrumo.application.modelo.calculation_action_ports import CalculationActionPorts
+from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.filing_actions import (
     file_modelo_revision,
 )
@@ -76,7 +82,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ModeloRecord
 from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
@@ -88,7 +94,7 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition_ports import build_borrador_100_snapshot_repository
-from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
+from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -100,6 +106,7 @@ from .secure_store_baseline import (
     provision_seeded_profile,
     reopened_seeded_profile,
 )
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -236,6 +243,10 @@ def calculation_ports_for_test(
             ),
             retencion_observation_ports=RetencionObservationPorts(
                 repository=RetencionObservationRepositoryAdapter(objects=objects),
+            ),
+            retencion_soportada_ports=RetencionSoportadaPorts(
+                repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
+                absences=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
             ),
             relation_override_migration=_RelationOverrideMigration(),
         )
@@ -495,15 +506,7 @@ _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        activity_start_date=date(2000, 1, 1),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
+    return plain_workflow_profile(activity_start_date=date(2000, 1, 1))
 
 
 def _target_filing_records(
@@ -657,6 +660,18 @@ def _verify_revision(
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=operation,
         ).report
+
+
+def calculate_baseline_130_revision(work_unit: WorkUnit) -> CalculationRevision:
+    """Calculate the work unit's Modelo 130 revision from the default baseline inputs and bindings at T1."""
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            casilla_inputs=_DEFAULT_130_BASELINE_INPUTS,
+            binding_values=_DEFAULT_130_BINDING_VALUES,
+            clock=_T1,
+        )
 
 
 def _seed_modelo_180_work_unit(wu_repo: WorkUnitCatalogueRepository) -> WorkUnit:

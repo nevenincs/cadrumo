@@ -27,6 +27,7 @@ from .action_ports import LedgerActionPortsFactory
 from .manual_read import require_summary_period_span, summarize_manual_transactions
 from .models import LedgerStatusReport
 from .preflight import preflight_ledger_tax_readiness
+from .read_access import resolve_ledger_request_read_access
 from .readiness_query import LedgerReadinessIssueV1, ledger_readiness_issues
 from .stale_filing_query import LedgerStaleFilingV1, read_stale_ledger_filings
 
@@ -246,12 +247,9 @@ def resolve_ledger_status_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require all-period permission even when money totals select one period."""
-    from .read_access import resolve_ledger_read_access
-
-    payload = request.payload
-    if request.definition_id != LEDGER_STATUS_OPERATION_DEFINITION_ID or not isinstance(payload, LedgerStatusRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_STATUS_OPERATION_DEFINITION_ID, request_type=LedgerStatusRequest
+    )
 
 
 def build_ledger_status_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

@@ -26,7 +26,7 @@ from ...core.operations import (
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionState
-from ..ledger.read_access import resolve_ledger_commit_access
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..modelo.export_sink import LocalFileExportReceipt, LocalFileExportSink
 from ..modelo.local_file_export_publication import LOCAL_FILE_EXPORT_CAPABILITIES, publish_local_file_export
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -198,12 +198,12 @@ def build_calculation_review_xlsx_definition(factory: CalculationReviewXlsxPorts
 def _resolve_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    payload = require_access_request_payload(
+    return resolve_ledger_request_commit_access(
         request,
+        context,
         definition_id=CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,
-        payload_type=CalculationReviewXlsxRequest,
+        request_type=CalculationReviewXlsxRequest,
     )
-    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def _project_result(value: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:

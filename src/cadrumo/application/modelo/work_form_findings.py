@@ -192,6 +192,12 @@ FINDING_MESSAGE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         "application.modelo.findings.suffered_retencion_capital_mobiliario_uncredited": (
             "application.modelo.work_form.finding_action.enter_withholding_certificate"
         ),
+        "application.modelo.findings.withholding_count_exceeds_summary_perceptors": (
+            "application.modelo.work_form.finding_action.enter_payee_payments"
+        ),
+        "application.modelo.findings.withholding_count_not_cross_checked": (
+            "application.modelo.work_form.finding_action.settle_earlier_declaration"
+        ),
         "application.modelo.findings.withholding_detail_absent_against_ledger_evidence": (
             "application.modelo.work_form.finding_action.enter_payee_payments"
         ),

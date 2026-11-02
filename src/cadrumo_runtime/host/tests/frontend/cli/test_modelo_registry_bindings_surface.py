@@ -704,8 +704,8 @@ def test_bindings_list_payload_is_typed_and_carries_provenance() -> None:
         assert row["source_refs"], f"binding {row['binding_id']!r} must carry registry source_refs"
 
 
-def test_bindings_list_exposes_m100_salary_certificate_withholding_input() -> None:
-    """An operator's suffered salary withholding is discoverable as a public binding."""
+def test_bindings_list_exposes_m100_suffered_work_withholding_as_a_payer_record_source() -> None:
+    """The suffered salary withholding is discoverable as a public binding the payer records supply."""
     result = invoke_cached_cli(
         [
             "--format",
@@ -724,11 +724,12 @@ def test_bindings_list_exposes_m100_salary_certificate_withholding_input() -> No
     )
     assert result.exit_code == 0, result.output
     rows = {row["binding_id"]: row for row in _payload(result.output)["bindings"]}
-    row = rows["renta-certificado-trabajo-retenciones"]
-    assert row["source"] == "manual_input"
+    row = rows["renta-retencion-soportada-trabajo"]
+    assert row["source"] == "retencion_soportada"
     assert row["input_channel"] == "decimal"
-    assert "ley-35-2006:art-101" in row["legal_refs"]
-    assert "aeat-dr-100-2024-dictionary" in row["source_refs"]
+    assert {"ley-35-2006:art-99", "rd-439-2007:art-108"} <= set(row["legal_refs"])
+    assert "boe-rirpf-art-108-3-certificado-retenciones" in row["source_refs"]
+    assert "renta-certificado-trabajo-retenciones" not in rows
 
 
 def test_bindings_list_typed_payload_carries_relation_inputs_before_calculate() -> None:

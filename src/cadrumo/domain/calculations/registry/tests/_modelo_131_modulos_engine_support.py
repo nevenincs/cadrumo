@@ -414,6 +414,29 @@ def _module_1_coefficient(epigrafe: str) -> Decimal:
     return _MODULO_1_COEFICIENTE_BY_EPIGRAFE[epigrafe]
 
 
+def progressive_bracket_coefficient(
+    base: Decimal, tramos: tuple[tuple[Decimal, Decimal | None, Decimal], ...]
+) -> Decimal:
+    """Apply a cumulative progressive-bracket table of ``(lower, upper, marginal_rate)`` rows to ``base``."""
+    if base <= Decimal("0"):
+        return Decimal("0")
+    for lower, upper, rate in tramos:
+        if upper is None or base <= upper:
+            cumulative = Decimal("0")
+            for prior_lower, prior_upper, prior_rate in tramos:
+                if prior_upper is not None and prior_upper <= lower:
+                    cumulative += prior_rate * (prior_upper - prior_lower)
+            return cumulative + rate * (base - lower)
+    raise AssertionError("unreachable: open-ended top tramo always matches")
+
+
+def excess_adjusted_modulos(minorado: Decimal, *, cuantia: Decimal | None, indice: Decimal) -> Decimal:
+    """Apply the índice corrector de exceso to the part of ``minorado`` above the tabled ``cuantia``."""
+    if cuantia is None or minorado <= cuantia:
+        return minorado
+    return round_to_cents(cuantia + indice * (minorado - cuantia))
+
+
 def _coeficiente_tramos(base: Decimal) -> Decimal:
     """Reproduce the coeficiente-por-tramos progressive-bracket lookup.
 
@@ -422,16 +445,7 @@ def _coeficiente_tramos(base: Decimal) -> Decimal:
     independently transcribed here rather than re-derived from the formula
     under test.
     """
-    if base <= Decimal("0"):
-        return Decimal("0")
-    for lower, upper, rate in _TRAMOS_ASALARIADOS:
-        if upper is None or base <= upper:
-            cumulative = Decimal("0")
-            for prior_lower, prior_upper, prior_rate in _TRAMOS_ASALARIADOS:
-                if prior_upper is not None and prior_upper <= lower:
-                    cumulative += prior_rate * (prior_upper - prior_lower)
-            return cumulative + rate * (base - lower)
-    raise AssertionError("unreachable: open-ended top tramo always matches")
+    return progressive_bracket_coefficient(base, _TRAMOS_ASALARIADOS)
 
 
 def _expected_minorado(
@@ -458,10 +472,7 @@ def _expected_minorado(
 
 def _expected_modulos(minorado: Decimal, *, epigrafe: str) -> Decimal:
     """Reproduce Fase 3ª (índice corrector de exceso only)."""
-    cuantia = _CUANTIA_EXCESO.get(epigrafe)
-    if cuantia is None or minorado <= cuantia:
-        return minorado
-    return round_to_cents(cuantia + _INDICE_EXCESO * (minorado - cuantia))
+    return excess_adjusted_modulos(minorado, cuantia=_CUANTIA_EXCESO.get(epigrafe), indice=_INDICE_EXCESO)
 
 
 #: Epígrafes carrying a documented índice corrector especial (Orden

@@ -21,13 +21,12 @@ if TYPE_CHECKING:
 
 from ...domain.buckets.event import BucketEvent, BucketEventObjectType, BucketEventType
 from ...domain.currency.service import CurrencyNormalizationService
-from ...domain.transactions.classification_effects import fields_cleared_by_classification
+from ...domain.transactions.classification_effects import fields_cleared_by_classification, takes_changes
 from ...domain.transactions.classification_origin import (
     CLASSIFICATION_DECISION_FIELDS,
     resolved_classification_origin,
     with_classification_origin,
 )
-from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
@@ -328,7 +327,7 @@ def _manual_update_preconditions(
     transaction_id: str,
     evidence_authority: bool,
 ) -> tuple[tuple[LedgerRemovalBlocker, ...], bool]:
-    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(current.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
             context={
@@ -761,6 +760,7 @@ def command_from_patch(
         "investment_asset_id",
         current.investment_asset_id,
     )
+    iva_vehicle_use = optional_patched(patch, patch_fields, "iva_vehicle_use", current.iva_vehicle_use)
     counterparty_country = optional_patched(
         patch,
         patch_fields,
@@ -798,6 +798,7 @@ def command_from_patch(
         bucket_id=bucket_id,
         booked_date=booked_date,
         value_date=patch.value_date if "value_date" in patch_fields else raw.value_date,
+        operation_date=patch.operation_date if "operation_date" in patch_fields else current.operation_date,
         amount=amount,
         currency=currency,
         direction=direction,
@@ -824,6 +825,7 @@ def command_from_patch(
         iva_category=iva_category,
         deduction_fact_kind=deduction_fact_kind,
         investment_asset_id=investment_asset_id,
+        iva_vehicle_use=iva_vehicle_use,
         counterparty_country=counterparty_country,
         counterparty_identification_state=counterparty_identification_state,
         source_jurisdiction=(

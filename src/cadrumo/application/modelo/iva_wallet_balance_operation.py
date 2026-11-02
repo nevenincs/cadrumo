@@ -13,13 +13,13 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.iva_compensation.balance import CompensationExpiryYear, IvaWalletBalanceReport
+from ...domain.iva_compensation.balance import IvaWalletBalanceReport
 from ..calculations.iva_wallet_balance import query_iva_wallet_balance
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -69,7 +69,7 @@ class ModeloIvaWalletBalanceProjection(BaseModel):
     active_balance: _BalanceAmount
     expired_balance: _BalanceAmount
     lot_count: NonNegativeInt
-    next_expiry_year: CompensationExpiryYear | None = None
+    next_expiry_year: FourDigitYear | None = None
     unallocated_applied_amount: _BalanceAmount
 
     @field_validator("total_balance", "active_balance", "expired_balance", "unallocated_applied_amount")

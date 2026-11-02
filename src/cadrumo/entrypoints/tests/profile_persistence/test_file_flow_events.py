@@ -34,6 +34,7 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     T4,
     T5,
     Repos,
+    calculate_baseline_130_revision,
     file_revision,
     registry_required_manual_casillas,
     seed_modelo_193_work_unit,
@@ -55,14 +56,7 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
     """The filing decision boundary cannot consume values under a drifted schema."""
     wu_repo, cr_repo, _filing_repo, _vr_repo, _bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            clock=T1,
-        )
+    revision = calculate_baseline_130_revision(work_unit)
     stale = revision.model_copy(
         update={
             "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(

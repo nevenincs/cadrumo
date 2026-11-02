@@ -463,4 +463,3 @@ What changed:
 - **Next launch.** When the close ended changes before they reported, the window appends a payload-free record naming each change by its closed command identity to `cadrumo-close-outcomes.jsonl` in the root's log directory. The next window on that root asks once (`previous_close`) and says that the outcome of the change is unknown and should be checked before it is repeated. It then marks the record reported. A settled close writes nothing. The runtime journal stays the authority on each change's outcome; the record only remembers that the person was not told.
 
 Unchanged: admitted work is owned by the runtime and survives the client disconnecting. The window holds no journal of its own and never infers an outcome from a timeout.
-

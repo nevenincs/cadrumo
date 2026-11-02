@@ -339,7 +339,10 @@ def _binding_field_value(
 ) -> object:
     if field.binding is None:
         raise FilingExportValidationError(f"export field {field.id!r} must declare binding")
-    return binding_values.get((field.binding, row_index))
+    value = binding_values.get((field.binding, row_index))
+    if isinstance(value, bool) and field.data_type == "text":
+        return _text_presence_marker(field, value)
+    return value
 
 
 def projection_field_value(

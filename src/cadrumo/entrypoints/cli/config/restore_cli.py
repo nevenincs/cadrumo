@@ -35,11 +35,11 @@ from typing import TYPE_CHECKING
 import typer
 from pydantic import SecretStr
 
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
 from cadrumo_client.commands.secure_input import MachineSecretPayload, MachineSecretSelection
 
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 
 if TYPE_CHECKING:

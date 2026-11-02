@@ -39,11 +39,12 @@ import calendar
 import re
 from datetime import date
 from enum import StrEnum
-from typing import Annotated, Final, override
+from typing import Annotated, override
 
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, BeforeValidator
 
 from .errors.hierarchy import CadrumoError
+from .filing_year import FourDigitYear
 from .models import STRICT_FROZEN_CONFIG
 
 
@@ -81,12 +82,8 @@ class StandardPeriodCode(StrEnum):
     DEC = "12"
 
 
-WELL_FORMED_YEAR_FIRST: Final[int] = 1000
-"""The first year written with four digits. It says the text is a year, not that any rule covers it."""
-WELL_FORMED_YEAR_LAST: Final[int] = 9999
-"""The last year written with four digits. Which years are covered is the registry's to say."""
 _STANDARD_PERIOD_SET: frozenset[str] = frozenset(member.value for member in StandardPeriodCode)
-_INSTALMENT_PERIOD_SET: frozenset[str] = frozenset(
+INSTALMENT_PERIOD_CODES: frozenset[StandardPeriodCode] = frozenset(
     (StandardPeriodCode.P1, StandardPeriodCode.P2, StandardPeriodCode.P3, StandardPeriodCode.P4),
 )
 #: The registry token of a period qualified by its special-regime scheme.
@@ -318,7 +315,7 @@ def _period_kind_for_code(code: str) -> PeriodKind:
         return PeriodKind.ANNUAL
     if len(code) == 2 and code.isdigit():
         return PeriodKind.MONTHLY
-    if code in _INSTALMENT_PERIOD_SET:
+    if code in INSTALMENT_PERIOD_CODES:
         return PeriodKind.INSTALMENT
     return PeriodKind.EXTENDED
 
@@ -378,7 +375,7 @@ class Period(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    filing_year: int = Field(ge=WELL_FORMED_YEAR_FIRST, le=WELL_FORMED_YEAR_LAST)
+    filing_year: FourDigitYear
     """Any year written with four digits; the registry decides which ones it covers.
 
     A period is a calendar span, not a claim that a revision exists for it. It

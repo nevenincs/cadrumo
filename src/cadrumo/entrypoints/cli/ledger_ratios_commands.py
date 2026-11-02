@@ -8,11 +8,12 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ._decimal_parsing import parse_decimal_amount
 from ._ledger_support import ledger_cli_no_recovery
-from .common import activate_subcommand_output_language as _activate_subcommand_output_language
 from .common import bad, emit_envelope
 from .operation_ledger_ratios import list_eligible_ratios, list_ratios, set_ratio, unset_ratio, validate_ratios
 

@@ -14,7 +14,6 @@ _M193_CONTEXT_FIELD_IDS = (_M193_FILING_YEAR_ID, _M193_CLAVE_ID, _M193_PENDIENTE
 # Positions 117 and 118-121 are printed "Solo para claves de percepción A, B o D".
 _M193_DEVENGO_CLAVES = frozenset("ABD")
 _M193_PENDING_MARK = "X"
-_M193_PENDING_DEVENGO = "0000"
 _M193_CHANGED = "modelo 193 perceptor pending and devengo declaration is incomplete or changed"
 
 
@@ -25,7 +24,7 @@ def _field_wire(wire: str, field: ExportFieldDefinition) -> str:
 
 
 def _is_year(value: str) -> bool:
-    return len(value) == 4 and value.isascii() and value.isdigit()
+    return value.isascii() and value.isdigit()
 
 
 def _context_wires(record: ExportRecordDefinition, wire: str) -> tuple[str, str, str, str]:
@@ -54,7 +53,7 @@ def require_m193_perceptor_devengo_context(record: ExportRecordDefinition, wire:
     if pendiente not in {" ", _M193_PENDING_MARK}:
         raise FilingExportValidationError("modelo 193 pending mark must be blank or X")
     pending = pendiente == _M193_PENDING_MARK
-    devengo_filled = devengo != _M193_PENDING_DEVENGO
+    devengo_filled = devengo != "0" * len(devengo)
     if (pending or devengo_filled) and clave not in _M193_DEVENGO_CLAVES:
         raise FilingExportValidationError("modelo 193 pending mark and devengo year apply only to keys A, B and D")
     if pending and devengo_filled:

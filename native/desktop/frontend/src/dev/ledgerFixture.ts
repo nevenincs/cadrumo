@@ -915,7 +915,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     if (
       !Array.isArray(fields) ||
       fields.length < 1 ||
-      fields.length > 14 ||
+      fields.length > LEDGER_UPDATE_FIELDS.length ||
       new Set(fields).size !== fields.length ||
       typeof patch !== "object" ||
       patch === null ||
@@ -959,7 +959,11 @@ export function ledgerFixture(options: Options): LedgerPort {
         if (!value || !AMOUNT.test(value) || !shortest(value))
           return refused("The amount is not a canonical decimal.");
         next.amount = money(cents(value));
-      } else if (field === "booked_date" || field === "value_date") {
+      } else if (
+        field === "booked_date" ||
+        field === "value_date" ||
+        field === "operation_date"
+      ) {
         if (value !== null && !DATE.test(value))
           return refused("The date is not a calendar day.");
         next[field] = value as string;
@@ -1230,6 +1234,7 @@ export function ledgerFixture(options: Options): LedgerPort {
       date,
       booked_date: booked,
       value_date: text(request.value_date),
+      operation_date: text(request.operation_date),
       amount: money(cents(amount)),
       currency: text(request.currency) ?? "EUR",
       direction,
@@ -2563,6 +2568,7 @@ function fixtureTemplate(): LedgerTransaction {
     date: "",
     booked_date: "",
     value_date: null,
+    operation_date: null,
     amount: "0.00",
     currency: "EUR",
     direction: "OUTGOING",

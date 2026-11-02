@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.operations.secure_references import (
 )
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.authorization import OperationExecutionAuthority
 from cadrumo.application.operations.frontend_contracts import OperationResultProjectionResultV1
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRequestV1
 from cadrumo.application.operations.models import OperationRequest
@@ -35,7 +36,7 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 
 class SupervisedOperation(NamedTuple):
@@ -55,6 +56,7 @@ def build_supervised_operation(
     authority: PinnedAuthorityOperation,
     registry: OperationRegistry,
     now: datetime,
+    execution_authority: OperationExecutionAuthority | None = None,
 ) -> SupervisedOperation:
     """Return a supervisor with fixed owner and lease token, journalled under ``tmp_path``."""
     durable_root = tmp_path / "operations"
@@ -72,6 +74,7 @@ def build_supervised_operation(
         lease_token_factory=lambda: "2" * 64,
         clock=lambda: now,
         lease_duration=timedelta(minutes=5),
+        execution_authority=execution_authority,
     )
     result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
     return SupervisedOperation(journal, leases, operands, supervisor, result_service)
@@ -125,6 +128,29 @@ async def settle_and_project[Result: BaseModel](
     return terminal, projected
 
 
+def operation_access_context(
+    contract: OperationPublicDefinitionContractV1,
+    *,
+    profile_id: UUID,
+    action: AccessAction = AccessAction.SUBMIT,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+    destination_id: UUID | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
+    admitted_request: OperationAccessRequest | None = None,
+) -> OperationAccessContext:
+    """Return the access context of ``action`` against published authority, for a random destination unless given."""
+    return OperationAccessContext(
+        profile_id=profile_id,
+        destination_id=uuid4() if destination_id is None else destination_id,
+        action=action,
+        frontend=frontend,
+        contract=contract,
+        published_authority=Availability.AVAILABLE,
+        admitted_request=admitted_request,
+        authority_operation=authority_operation,
+    )
+
+
 def cli_submit_context(
     *,
     profile_id: UUID,
@@ -132,15 +158,7 @@ def cli_submit_context(
     authority_operation: PinnedAuthorityOperation | None = None,
 ) -> OperationAccessContext:
     """Return the access context of a CLI submission against published authority for a random destination."""
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=contract,
-        published_authority=Availability.AVAILABLE,
-        authority_operation=authority_operation,
-    )
+    return operation_access_context(contract, profile_id=profile_id, authority_operation=authority_operation)
 
 
 class ProcessResourceScope:

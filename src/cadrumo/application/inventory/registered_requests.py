@@ -7,9 +7,10 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator
 
-from ...core.filing_year import FilingYear
+from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import validate_utc_aware
@@ -117,7 +118,7 @@ class InventoryCreateRequest(_InventoryRequest):
     """Create one inventory ledger for the exact profile and activity."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     valuation_method: str = Field(min_length=1)
     opening_stock: PublicDecimal = Field(default_factory=lambda: PublicDecimal(decimal="0"))
 
@@ -239,7 +240,7 @@ class InventoryMovementAddRequest(_InventoryRequest):
     """Append one typed movement without putting source evidence on argv."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     movement_id: str = Field(min_length=1, max_length=64)
     movement_date: date
     kind: MovementKind
@@ -253,21 +254,21 @@ class InventoryValuationPreviewRequest(_InventoryRequest):
     """Run and audit a valuation preview for one exact activity ledger."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
 
 
 class InventoryInspectRequest(_InventoryRequest):
     """Read one exact activity ledger with its movements and retained history."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
 
 
 class InventoryLedgerChangeRequest(_InventoryRequest):
     """One change to an exact ledger; repeating ``correction_id`` with the same request is a replay."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     correction_id: str = Field(min_length=1, max_length=64)
 
 
@@ -371,7 +372,7 @@ class InventoryClosingValueRecordRequest(_InventoryRequest):
     """Record one book's closing value from plain facts."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     facts: InventoryClosingValueFactsInput
 
 
@@ -396,10 +397,9 @@ class InventoryClosingAuthorityDecisionRequest(BaseModel):
     decided_at: datetime
     evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)
 
-    @model_validator(mode="after")
-    def _decision_timestamp_is_utc(self) -> InventoryClosingAuthorityDecisionRequest:
-        validate_utc_aware(self.decided_at)
-        return self
+    _decision_timestamp_is_utc = field_validator("decided_at", mode="after")(
+        pydantic_validation_boundary(validate_utc_aware)
+    )
 
 
 class InventoryPriorClosingLinkRequest(BaseModel):
@@ -511,7 +511,7 @@ class InventoryClosingAuthorityRecordInput(BaseModel):
             reason=self.decision.reason,
             actor=self.decision.actor if actor is None else actor,
             source_command=self.decision.source_command,
-            decided_at=validate_utc_aware(self.decision.decided_at),
+            decided_at=self.decision.decided_at,
             evidence=self.decision.evidence,
         )
         physical = self.physical_observation
@@ -551,7 +551,7 @@ class InventoryClosingAuthorityRecordRequest(_InventoryRequest):
     """Record one complete typed closing-authority source in the profile."""
 
     actividad_id: str = Field(min_length=1)
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     authority_record: InventoryClosingAuthorityRecordInput
 
 

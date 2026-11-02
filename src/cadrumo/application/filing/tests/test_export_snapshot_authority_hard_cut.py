@@ -11,8 +11,8 @@ from ....domain.filing.software_identity import development_mock_software_identi
 from ..export import export_draft
 from .export_support import (
     _approved_modelo_131_historical_registry_draft,
-    _schema_provider,
     _typed_modelo_131_producer_snapshot,
+    export_schema_provider,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -36,7 +36,7 @@ def test_export_uses_the_selected_snapshot_owned_layout(tmp_path) -> None:
         producer_snapshot=_typed_modelo_131_producer_snapshot(),
         product_software_identity=development_mock_software_identity(),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        schema_provider=_schema_provider(filing_year=2023, period="4T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2023, period="4T", modelos=("131",)),
     )
 
     assert result.output_path == output_path

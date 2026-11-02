@@ -34,7 +34,13 @@ scaling the row's amounts by it as well would apply the ratio twice
 from __future__ import annotations
 
 from decimal import Decimal
+from enum import StrEnum
 
+from pydantic import BaseModel
+
+from ...core.identity.transaction_ids import TransactionId
+from ...core.models import STRICT_FROZEN_CONFIG
+from ...core.prose_elision import IssueDetail
 from ...domain.categories.proportionality import ProportionalityRule
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
@@ -42,13 +48,32 @@ from ...domain.transactions.models import Transaction
 from .business_proportion import business_proportion
 
 __all__ = [
+    "RentaExpenseAdvisory",
+    "RentaExpenseAdvisoryReason",
     "exclusive_business_use",
     "relies_on_activity_marker",
+    "renta_expense_advisory",
     "renta_expense_business_proportion",
     "row_scaling_proportion",
 ]
 
 _FULL_BUSINESS_PROPORTION = Decimal("1")
+
+
+class RentaExpenseAdvisoryReason(StrEnum):
+    """Why a Renta expense row kept its figure under a reading the operator should review."""
+
+    MIXED_SHARE_OUTSIDE_USAGE_RATIO = "mixed_share_outside_usage_ratio"
+
+
+class RentaExpenseAdvisory(BaseModel):
+    """A row whose figure stands, with the question of law it rests on."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    transaction_id: TransactionId
+    reason: RentaExpenseAdvisoryReason
+    detail: IssueDetail
 
 
 def relies_on_activity_marker(transaction: Transaction) -> bool:
@@ -131,6 +156,37 @@ def row_scaling_proportion(
     if transaction.business_classification is BusinessClassification.MIXED and rule.kind.is_usage_ratio:
         return _FULL_BUSINESS_PROPORTION
     return proportion
+
+
+def renta_expense_advisory(
+    transaction: Transaction,
+    rule: ProportionalityRule,
+) -> RentaExpenseAdvisory | None:
+    """Return the advisory an accepted expense row carries, or ``None``.
+
+    LIRPF art. 29.2 and RIRPF art. 22.3 limit the partial affectation of an
+    ELEMENTO PATRIMONIAL to a separately usable part, and refuse it for an
+    indivisible one, which the exclusive-use categories already model. Neither
+    says whether a consumed good or service is such an element, so a share of one
+    outside a usage-ratio category is kept and reported.
+
+    Args:
+        transaction: A row that produced an observation.
+        rule: The proportionality rule of its category.
+
+    Returns:
+        The advisory for the row, or ``None`` when its figure rests on no open reading.
+    """
+    if transaction.business_classification is BusinessClassification.MIXED and not rule.kind.is_usage_ratio:
+        return RentaExpenseAdvisory(
+            transaction_id=transaction.transaction_id,
+            reason=RentaExpenseAdvisoryReason.MIXED_SHARE_OUTSIDE_USAGE_RATIO,
+            detail=(
+                "a mixed-use expense was counted at its stated share; LIRPF art. 29.2 and RIRPF art. 22.3 admit "
+                "partial affectation only for a separately usable part, so review that this share qualifies"
+            ),
+        )
+    return None
 
 
 def exclusive_business_use(transaction: Transaction) -> bool:

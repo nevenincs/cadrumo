@@ -86,7 +86,7 @@ from pydantic import (
 from pydantic_core import core_schema
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST, FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import round_to_cents as _round_to_cents
 from ...core.percentage import Percentage
@@ -234,7 +234,7 @@ class ProrrataResult(_ProrrataStrictFrozen):
     )
     inputs: ProrrataInputs
     sector_id: SectorId | None = None
-    year: Annotated[int, Field(ge=1900, le=9999)]
+    year: FourDigitYear
     period: Annotated[
         str | None,
         StringConstraints(strip_whitespace=True, pattern=r"^(Q[1-4]|M(0[1-9]|1[0-2])|annual)$"),
@@ -275,7 +275,7 @@ class ProrrataReference(_ProrrataStrictFrozen):
     """
 
     reference_id: str = Field(min_length=1, max_length=PRORRATA_REFERENCE_MAX_LENGTH)
-    year: Annotated[int, Field(ge=1900, le=9999)]
+    year: FourDigitYear
     kind: ProrrataKind
     regime: ProrrataRegime
     sector_id: SectorId | None = None
@@ -323,7 +323,7 @@ class EspecialMandatoryRule(_ProrrataStrictFrozen):
             especial regime mandatory.
     """
 
-    year: Annotated[int, Field(ge=1900, le=9999)]
+    year: FourDigitYear
     multiple: Decimal = Field(..., gt=Decimal("1"))
     margin_percentage: Decimal = Field(..., gt=Decimal("0"))
     inclusive: bool
@@ -343,8 +343,8 @@ def _validate_year(year: int) -> int:
     it. Nothing detected it, because a restated bound has nothing to disagree
     with until someone reads both.
     """
-    if year < FILING_YEAR_MIN or year > FILING_YEAR_MAX:
-        raise ProrrataInputError(f"year out of supported range {FILING_YEAR_MIN}..{FILING_YEAR_MAX}: {year}")
+    if year < FOUR_DIGIT_YEAR_FIRST or year > FOUR_DIGIT_YEAR_LAST:
+        raise ProrrataInputError(f"year is not written with four digits: {year}")
     return year
 
 

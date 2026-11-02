@@ -390,6 +390,13 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 issues,
                 source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 resolver_id=self.resolver_id,
+                held_back_reasons=frozenset(
+                    {
+                        RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
+                        RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
+                    }
+                ),
+                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
                 suppressed_reasons=frozenset({RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
             )
             + _expense_imputation_diagnostics(
@@ -409,6 +416,11 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 invoices=self._ports.invoice_reader.load(),
                 transactions=self._ports.transaction_reader.load(),
                 filings=self._imputation_filings(context) if self._imputation_filings is not None else None,
+            )
+            + source_issue_diagnostics(
+                aggregation.advisories,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
             )
             + register_owned_acquisition_diagnostics(
                 register_owned,
@@ -784,6 +796,8 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     {
                         RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
                         RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+                        RentaGastoLedgerAggregationIssueReason.MISSING_CATEGORY,
+                        RentaGastoLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
                     }
                 ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",
@@ -806,6 +820,11 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 invoices=invoices,
                 transactions=self._transaction_repository.load(),
                 filings=self._imputation_filings(context) if self._imputation_filings is not None else None,
+            )
+            + source_issue_diagnostics(
+                aggregation.advisories,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
             )
             + register_owned_acquisition_diagnostics(
                 register_owned,

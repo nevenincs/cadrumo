@@ -796,6 +796,10 @@ application:
           el recàrrec ha de ser zero.
         printed_total_differs: El total imprès, %{printed}, difereix del total calculat,
           %{computed}.
+        rate_date_projected: 'Els tipus d''IVA del %{on_date} es llegeixen de les
+          declaracions més properes, des del %{nearest}: aquesta data és anterior
+          als exercicis que cobreix Cadrumo, així que són una projecció i no serveixen
+          de base per presentar.'
         rate_date_unresolved: El registre no declara tipus d'IVA per al %{on_date},
           així que no es pot calcular l'IVA.
         recargo_above_iva_total: El recàrrec, %{stated}, no pot superar l'IVA total,
@@ -881,6 +885,12 @@ application:
           continuï vinculada a transaccions: %{linked_transaction_ids}. No hi ha cap
           ordre de desvinculació: elimina aquestes transaccions amb `aeat app ledger
           remove`, cosa que allibera el vincle, i elimina després la factura.'
+        sealed_invoice_refused: La factura %{invoice_id} la va llegir el Model %{modelo}
+          de %{filing_year} %{period} (%{revision_state}, revisió %{calculation_revision_id}),
+          així que es rebutja aquest canvi perquè aquestes xifres continuïn sent certes.
+          Si no s'ha presentat, descarta aquest treball amb `aeat app modelo work
+          discard` i torna a calcular. Si s'ha presentat, emet una factura rectificativa
+          i presenta una complementària o substitutiva.
     linking:
       errors:
         linked_invoice_not_found: No s'ha trobat la factura %{invoice_id} després
@@ -1270,6 +1280,12 @@ application:
           no en les teves dades.
         what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
           de les xifres.
+      filed_before_grade_cap:
+        what: Vas registrar aquesta declaració abans de les comprovacions actuals
+          de les seves xifres, i una de les seves caselles té una xifra que aquestes
+          comprovacions retenen, així que no pots exportar-la tal com està.
+        what_to_do: Torna a calcular la declaració, comprova-la i registra-la una
+          altra vegada; el nou registre substitueix aquest.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció
@@ -1310,6 +1326,18 @@ application:
           justificant.
         what_to_do: Revisa els registres d'IVA de tot l'any, afegeix el justificant
           que falti i torna a calcular.
+      iva_operation_date_after_movement:
+        what: Algunes files del llibre tenen una data de l'operació posterior a la
+          bancària. Si aquests diners eren una bestreta, el seu IVA es va meritar
+          en cobrar-la.
+        what_to_do: En una bestreta, posa com a data de l'operació la del cobrament,
+          registra la resta en una fila pròpia i torna a calcular.
+      iva_row_placed_on_movement_date:
+        what: Algunes files del llibre no tenen la data de l'operació, així que la
+          seva data bancària ha triat el període de l'IVA. L'IVA es merita quan es
+          fa l'operació, no quan es mou el diner.
+        what_to_do: Afegeix la data de l'operació a les files de final de període
+          i torna a calcular.
       iva_selected_scope_evidence_failure:
         what: Els registres que sustenten l'IVA d'aquesta declaració no tenen justificant
           o no quadren.
@@ -1596,6 +1624,13 @@ application:
       residence_period_unknown: No hi ha residència fiscal registrada per al {date},
         de manera que els teus elements es compten com si s'apliquessin els Models
         100 i 130.
+      retencion_soportada_absence_contradicted: 'Classe de renda {income_class}: hi
+        ha registres de pagadors i també la teva declaració que cap pagador no va
+        practicar retenció. Elimina els registres o retira la declaració.'
+      retencion_soportada_evidence_required: 'Classe de renda {income_class}: no hi
+        ha cap registre de pagador ni declaració d''absència, i el teu perfil no declara
+        absent aquesta renda. Registra el certificat de cada pagador o declara que
+        cap pagador no va practicar retenció.'
       row_unregistered: El moviment del {row_date} per {row_amount} registra un element
         que no és al teu registre.
       row_unregistered_undated: Un moviment registra un element que no consta al teu
@@ -2208,6 +2243,18 @@ application:
       inventory_register_drift: L'inventari d'aquest càlcul del model %{modelo} ha
         canviat des que es va calcular (%{rows_recorded} files registrades, %{rows_current}
         ara, %{rows_changed} canviades). Torna a calcular abans de fer-lo servir.
+      invoice_fingerprint_absent: Aquest càlcul del model %{modelo} %{filing_year},
+        %{period} és anterior al seguiment de factures, així que Cadrumo no pot saber
+        si les teves factures han canviat des d'aleshores. Torna a calcular-lo per
+        començar a seguir-les.
+      invoice_fingerprint_drift: Les teves factures han canviat després de calcular
+        el model %{modelo} %{filing_year}, %{period} (%{changed_count} modificades,
+        %{removed_count} eliminades, %{added_count} afegides). Torna a calcular-lo
+        abans de verificar-lo.
+      invoice_fingerprint_unavailable: Cadrumo no ha pogut llegir les teves factures
+        per comparar-les amb el model %{modelo} %{filing_year}, %{period}, així que
+        no es pot confirmar que aquest càlcul estigui al dia. Torna-ho a provar quan
+        es puguin llegir.
       iva_compensation_annual_source_evidence_failure: El model 390 necessita les
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració
@@ -2315,6 +2362,20 @@ application:
         ni justificant adjunt. Adjunta'l a l'apunt dels teus registres.
       transaction_evidence_missing_output: Una factura emesa amb IVA repercutit no
         té justificant. Adjunta'l a l'apunt dels teus registres.
+      undetermined_mixed_use_contributor: El càlcul desat del model %{modelo} de %{filing_year},
+        període %{period}, va comptar %{rows} despesa(es) d'ús mixt sense categoria
+        de despesa per la part indicada. Si calcules ara, quedaran retingudes fins
+        que els assignis la categoria. Els valors desats no han canviat.
+      withholding_count_exceeds_summary_perceptors: El model %{source_modelo} del
+        %{period} de %{filing_year} compta %{declared_perceptors} perceptor(s) a la
+        casella %{casilla_id}, però el model %{modelo} només recull %{summary_perceptors}
+        perceptor(s) diferent(s) en tot l'any. Tota persona comptada en aquesta casella
+        ha de figurar al resum anual. Afegeix els perceptors que falten al detall
+        d'aquest model o corregeix el recompte del model %{source_modelo}.
+      withholding_count_not_cross_checked: 'No s''ha pogut comparar el model %{modelo}
+        de %{filing_year} amb el model %{source_modelo} a %{unchecked_periods}, perquè
+        no consta cap declaració d''aquests períodes. Períodes comparats: %{checked_periods}.
+        Això no vol dir que no paguessis ningú en aquests períodes.'
       withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} de %{filing_year}
         no declara cap percepció per a cap perceptor, però els teus registres recullen
         rendes sotmeses a retenció pagades aquell any: %{contradicting_invoice_count}
@@ -2487,6 +2548,12 @@ application:
           i torna a calcular.
       inspection_heading: Totes les caselles, per número de casella
       unnamed_box: Casella sense nom
+  operations:
+    error_detail:
+      record_fault: Un registre que ha creat Cadrumo no ha superat la seva pròpia
+        comprovació, així que no s'ha pogut fer.
+      unworded: No s'ha pogut fer. El seu motiu encara no té cap frase; el seu codi
+        és {error_code}.
   overview:
     calendar:
       event:

@@ -151,7 +151,7 @@ def _require_ledger_link_refusal(
         completed.terminal_condition is not OperationTerminalCondition.REFUSED
         or completed.effect is not OperationEffect.NONE
         or completed.refusal_code != LEDGER_LINK_VALIDATION_REFUSAL_CODE
-        or (result.reason not in {"missing_invoice", "cross_bucket_invoice"})
+        or (result.reason not in {"missing_invoice", "cross_bucket_invoice", "transaction_takes_no_invoice"})
         or (result.projection is not None)
     ):
         raise invalid_completion_error(completed)

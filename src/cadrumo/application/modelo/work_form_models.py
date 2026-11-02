@@ -67,7 +67,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
-from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
+from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON
 from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
@@ -192,6 +192,20 @@ NEEDS_ATTENTION: Final[frozenset[ModeloFormOrigin]] = frozenset(
 #: Origins that ask the filer for a value, which neither a filed declaration nor a page that does not apply does.
 ASKS_FOR_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
+)
+#: Origins whose words say there is no value, whatever the field still holds.
+ORIGINS_WITHOUT_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {
+        ModeloFormOrigin.NOT_APPLICABLE,
+        ModeloFormOrigin.NOT_CALCULATED_YET,
+        ModeloFormOrigin.CALCULATION_FAILED,
+        ModeloFormOrigin.NOT_IMPORTED_YET,
+        ModeloFormOrigin.CLEARED,
+    }
+)
+#: Origins of a box a source feeds, whether the source has filled it yet or not.
+FED_BY_A_SOURCE: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
 )
 
 
@@ -983,6 +997,12 @@ class ModeloFormResultDirection(StrEnum):
     UNKNOWN = "unknown"
 
 
+AMOUNTLESS_RESULT_DIRECTIONS: frozenset[ModeloFormResultDirection] = frozenset(
+    {ModeloFormResultDirection.NEGATIVE, ModeloFormResultDirection.NIL}
+)
+"""The directions of a result that settles nothing, so no amount is shown beside them."""
+
+
 class ModeloFormResult(_FormModel):
     """The box that settles the declaration, its value and its direction.
 
@@ -1110,6 +1130,15 @@ class ModeloWorkForm(_FormModel):
         ) or any(note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in self.calculation_notes)
 
     @property
+    def filed_before_grade_cap(self) -> bool:
+        """Whether the declaration was recorded before screens existed with a figure in a capped box.
+
+        Its export is refused until it is calculated again, checked and recorded
+        anew, so the form offers that recalculation in place of the recorded state.
+        """
+        return any(note.reason == FILED_BEFORE_GRADE_CAP_REASON for note in self.calculation_notes)
+
+    @property
     def blocking_calculation_notes(self) -> tuple[ModeloFormCalculationNote, ...]:
         """The latest calculation's notes that withhold filing, as blocking findings do: at that level or gated."""
         return tuple(
@@ -1186,8 +1215,11 @@ def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
 
 __all__ = [
     "ABSENT_FROM_ADMISSION",
+    "AMOUNTLESS_RESULT_DIRECTIONS",
     "ASKS_FOR_A_VALUE",
+    "FED_BY_A_SOURCE",
     "NEEDS_ATTENTION",
+    "ORIGINS_WITHOUT_A_VALUE",
     "ORIGIN_STANDINGS",
     "ModeloFormAddressV1",
     "ModeloFormAeatData",

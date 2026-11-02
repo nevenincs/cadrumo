@@ -6,10 +6,11 @@ After the source mesh is merged this step reads the pinned revision's capped
 bindings, finds each one that produced a value in any channel, and emits one
 ``advisory_binding_value`` diagnostic per box the value reaches. The diagnostic
 carries the binding, the box, the cap's reason and provisions, the amount and
-the resolver's stated outcome. A proven zero withholds nothing and is held with
-the calculation's other notes rather than persisted; every other value,
-including one whose resolver stated no outcome, persists with the revision and
-withholds verify, export and local filing through the calculation-note gate.
+the resolver's stated outcome. Every such value persists with the revision and
+its stated outcome. A proven zero withholds nothing, and the reopened form still
+says the zero was proven; every other value, including one whose resolver
+stated no outcome, withholds verify, export and local filing through the
+calculation-note gate.
 """
 
 from __future__ import annotations

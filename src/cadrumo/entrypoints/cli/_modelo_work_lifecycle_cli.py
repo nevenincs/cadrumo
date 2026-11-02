@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -19,7 +20,7 @@ from ...application.modelo.work_lifecycle import (
     lifecycle_continuation_for_work_status,
 )
 from ...core.external_constants import OutputLanguage
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...core.period import Period
@@ -35,12 +36,7 @@ from ._modelo_cli_support import (
     resolve_default_actor,
 )
 from ._modelo_rendering import advisory_notice, work_unit_lines, work_unit_list_lines, work_unit_payload
-from .common import (
-    activate_subcommand_output_language,
-    active_profile_label,
-    emit_envelope,
-    resolve_lifecycle_continuation_notice,
-)
+from .common import active_profile_label, emit_envelope, resolve_lifecycle_continuation_notice
 from .modelo_results import WorkCreateResult, WorkDiscardResult, WorkListResult, WorkRenameResult, WorkStatusResult
 from .operation_modelo_metadata import discard_modelo_work, read_modelo_work_unit, rename_modelo_work
 from .operation_modelo_work_create import create_modelo_work
@@ -49,9 +45,14 @@ from .state_projection_support import authority_operation
 
 
 def _validate_filing_year(year: int) -> None:
-    if not FILING_YEAR_MIN <= year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= year <= FOUR_DIGIT_YEAR_LAST:
         raise typer.BadParameter(
-            tr("cli.app.modelo.work.year_out_of_range", year=year, minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX)
+            tr(
+                "cli.app.modelo.work.year_out_of_range",
+                year=year,
+                minimum=FOUR_DIGIT_YEAR_FIRST,
+                maximum=FOUR_DIGIT_YEAR_LAST,
+            )
         )
 
 

@@ -52,6 +52,7 @@ __all__ = [
     "cash_received_total",
     "casilla_target_matcher",
     "deductible_amount_aggregate",
+    "income_amount_is_declarable",
     "ingresos_integros_total",
     "resolve_ledger_family_binding_values",
     "unrouted_ledger_family_quantities",
@@ -352,6 +353,14 @@ def ingresos_integros_total(matched: Sequence[IncomeAmountObservation]) -> Decim
         ),
         Decimal("0"),
     )
+
+
+def income_amount_is_declarable(observation: IncomeAmountObservation) -> bool:
+    """Whether the row contributes anything: the larger of its gross amount and declared taxable base is nonzero."""
+    declarable = observation.gross_amount
+    if observation.taxable_base_amount is not None:
+        declarable = max(declarable, observation.taxable_base_amount)
+    return declarable != Decimal("0")
 
 
 def cash_received_total(matched: Sequence[IncomeAmountObservation]) -> Decimal:

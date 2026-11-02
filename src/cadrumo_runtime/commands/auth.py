@@ -12,18 +12,13 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import strict_round_trip
 from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+from cadrumo_client.commands.output import precondition_action_lines
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
 
-from .presentation import (
-    activate_subcommand_output_language as _activate_subcommand_output_language,
-)
-from .presentation import (
-    emit_envelope,
-    precondition_action_lines,
-    resolve_cli_precondition_action,
-)
+from .presentation import emit_envelope, resolve_cli_precondition_action
 from .runtime_auth_teardown import run_auth_teardown
 
 if TYPE_CHECKING:

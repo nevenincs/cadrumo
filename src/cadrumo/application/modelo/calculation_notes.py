@@ -102,6 +102,18 @@ CALCULATION_SCREEN_OUTDATED_REASON: Final[str] = "calculation_screen_outdated"
 It is never persisted and no resolver raises it, so it is not among the
 diagnostic reasons; its remedy is to calculate again.
 """
+FILED_BEFORE_GRADE_CAP_REASON: Final[str] = "filed_before_grade_cap"
+"""The derived reason a revision recorded as filed before screen stamps existed is refused its export with.
+
+It applies only where the revision carries no stamp, its registry revision caps
+a binding, and the box that binding reaches holds a nonzero or absent value. Like
+:data:`CALCULATION_SCREEN_OUTDATED_REASON` it is never persisted; its remedy is
+to calculate the declaration again and record the new calculation.
+"""
+DERIVED_GATE_REASONS: Final[frozenset[str]] = frozenset(
+    {CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON}
+)
+"""The reasons the gate derives from a revision and its pinned registry rather than reading them from a note."""
 
 CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingProxyType(
     {
@@ -139,6 +151,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "activity_asset_disposal_finding": _C,
         "orphaned_override": _C,
         "devengo_date_proxy_attribution": _C,
+        "iva_row_placed_on_movement_date": _C,
+        "iva_operation_date_after_movement": _C,
         "m349_clave_inferred_from_category": _C,
         "unsettled_legal_reading": _C,
         "inferred_retencion_rate_unmatched": _C,
@@ -197,6 +211,8 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
         "iva_compensation_annual_source_evidence_failure",
         "missing_transaction_evidence",
         "devengo_date_proxy_attribution",
+        "iva_row_placed_on_movement_date",
+        "iva_operation_date_after_movement",
         "m349_clave_inferred_from_category",
         "inferred_retencion_rate_unmatched",
         "inferred_retencion_sectoral_rate_unconfirmed",
@@ -247,7 +263,7 @@ def note_attention(reason: str, *, box: str | None, outcome: BindingValueOutcome
     stated outcome for a capped value: a proven zero is for the filer's
     information.
     """
-    if reason == CALCULATION_SCREEN_OUTDATED_REASON:
+    if reason in DERIVED_GATE_REASONS:
         return _B
     if reason in PRINTED_BOX_REASONS and box is None:
         return _C
@@ -331,12 +347,18 @@ def read_element_names(repository: ActivityAssetHistoryRepository | None) -> dic
 def read_recorded_notes(
     issues: Iterable[CalculationSourceIssue], repository: ActivityAssetHistoryRepository | None
 ) -> tuple[RecordedCalculationNote, ...]:
-    """The notes a calculation kept, in words and under the names their elements go by now."""
+    """The notes a calculation kept, in words and under the names their elements go by now.
+
+    A proven zero's fact says all there is to say: its reason's sentence speaks
+    of a figure that is held back, which a proven zero is not, so it has no detail.
+    """
     return tuple(
         note.model_copy(
             update={
                 "message": note_fact_text(note.fact, element_names=note.element_names),
-                "detail": tr(what_locale_key(note.reason), box=tr(_UNNUMBERED_BOX_LOCALE_KEY)),
+                "detail": ""
+                if note.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
+                else tr(what_locale_key(note.reason), box=tr(_UNNUMBERED_BOX_LOCALE_KEY)),
             }
         )
         for note in recorded_calculation_notes(issues, names=read_element_names(repository))
@@ -416,6 +438,8 @@ def _require_total_levels() -> None:
         raise ValueError("only an assumed box is confirmed; no calculation note waits for a confirmation")
     if not PRINTED_BOX_REASONS <= GATE_REFUSED_REASONS:
         raise ValueError("a reason that blocks only on a printed box must be one the gate refuses")
+    if DERIVED_GATE_REASONS & (reasons | set(CALCULATION_NOTE_ATTENTION) | BLOCKING_REASONS):
+        raise ValueError("a derived gate reason is never a diagnostic reason, a placed note or a persisted one")
 
 
 _require_total_levels()
@@ -427,7 +451,9 @@ __all__ = [
     "CALCULATION_NOTE_ATTENTION",
     "CALCULATION_SCREEN_OUTDATED_REASON",
     "CHECK_REFUSED_REASONS",
+    "DERIVED_GATE_REASONS",
     "EXPORT_REFUSED_REASONS",
+    "FILED_BEFORE_GRADE_CAP_REASON",
     "GATE_REFUSED_REASONS",
     "PRINTED_BOX_REASONS",
     "RECORDS_REASONS",

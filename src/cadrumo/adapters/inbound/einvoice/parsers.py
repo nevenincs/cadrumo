@@ -26,24 +26,51 @@ to the nearest slot and mint an invoice whose cuota disagrees with its face.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
 from enum import StrEnum
 from typing import Final
 from xml.etree.ElementTree import Element
 
-from ....core.decimal.coercion import coerce_decimal
 from ....core.document_shape import DocumentShape
-from ....domain.calculations.registry.iva_category_catalogue import resolve_iva_category_catalogue
+from .element_readers import (
+    _category_for,
+    _cii_country_code,
+    _cii_postal_code,
+    _decimal,
+    _direct_child_text,
+    _facturae_country_code,
+    _facturae_party_name,
+    _facturae_postal_code,
+    _find_all,
+    _first_text,
+    _record_text,
+    _ubl_country_code,
+    _ubl_party_name,
+    _ubl_postal_code,
+)
 from .shape import iter_pdf_embedded_files, probe_document_shape
 from .xml import EInvoiceXmlParseError, parse_hardened_xml
 from .xml import local_tag_name as _local
 
-__all__ = ["FacturaeInvoiceClass", "ParsedEInvoice", "ParsedEInvoiceLine", "parse_einvoice_document"]
+__all__ = [
+    "FacturaeInvoiceClass",
+    "ParsedEInvoice",
+    "ParsedEInvoiceLine",
+    "ParsedWithheldTax",
+    "parse_einvoice_document",
+]
 
 # Tax-scheme identifiers that mark an element as carrying an IVA number rather
 # than some other national registration. EN16931 uses schemeID="VA"; Facturae
 # names the person-type/residence explicitly.
 _IVA_SCHEME_TOKENS = frozenset({"va", "vat", "vatid"})
+
+#: Facturae `TaxTypeCodeType` member 04, `IRPF: Impuesto sobre la Renta de las personas fisicas`.
+_FACTURAE_IRPF_TAX_TYPE_CODE: Final = "04"
+
+#: How a tax-scheme element names IRPF. UBL and CII publish no code for it.
+_IRPF_SCHEME_NAME: Final = "IRPF"
 
 
 class FacturaeInvoiceClass(StrEnum):
@@ -81,6 +108,17 @@ class ParsedEInvoiceLine:
         self.iva_amount = iva_amount
 
 
+@dataclass(frozen=True, slots=True)
+class ParsedWithheldTax:
+    """One withholding a record states, and whether its format names it as IRPF."""
+
+    stated_type: str | None
+    is_irpf: bool
+    rate: Decimal | None
+    base: Decimal | None
+    amount: Decimal | None
+
+
 class ParsedEInvoice:
     """A structured invoice read exactly from its own machine-readable record."""
 
@@ -105,6 +143,7 @@ class ParsedEInvoice:
         "rectifies_invoice_number",
         "regime_legend",
         "retencion_amount",
+        "retencion_rate",
         "shape",
         "suplidos_amount",
         "supplier_country_code",
@@ -112,6 +151,8 @@ class ParsedEInvoice:
         "supplier_postal_code",
         "supplier_tax_id",
         "taxable_base",
+        "withheld_taxes",
+        "withheld_total",
     )
 
     def __init__(self, *, shape: DocumentShape) -> None:
@@ -156,6 +197,12 @@ class ParsedEInvoice:
         # document says the operation cost -- see the totals walk below for why
         # that is not merely a missing field but a wrong total.
         self.retencion_amount: Decimal | None = None
+        self.retencion_rate: Decimal | None = None
+        # Everything the document states as withheld, before any of it is taken
+        # for a retencion. Kept so a withheld figure the format does not name as
+        # IRPF stays visible instead of disappearing with the read.
+        self.withheld_taxes: list[ParsedWithheldTax] = []
+        self.withheld_total: Decimal | None = None
         self.suplidos_amount: Decimal | None = None
         self.iva_category: str | None = None
         # The statutory mention the document itself prints, copied verbatim.
@@ -182,251 +229,6 @@ class ParsedEInvoice:
         self.element_paths: dict[str, str] = {}
         self.lines: list[ParsedEInvoiceLine] = []
         self.iva_breakdown: list[tuple[Decimal | None, Decimal | None, Decimal | None]] = []
-
-
-#: Separator between adjacent text nodes in a record's extracted text.
-#:
-#: A NUL rather than a newline, and that is load-bearing rather than exotic. The
-#: anchor search normalises whitespace runs to single spaces before matching, so
-#: joining on ANY whitespace makes two adjacent element values contiguous: a
-#: Facturae party name split across ``Name``, ``FirstSurname`` and
-#: ``SecondSurname`` reassembles into exactly the string the parser composes from
-#: them, and an ASSEMBLED value then anchors as though the document printed it
-#: verbatim. It does not -- the document prints three separate values -- and
-#: refusing that is a property the raw-file haystack had and a naive text-node
-#: haystack silently dropped. A NUL survives normalisation, so the boundary
-#: between two nodes stays a boundary.
-_TEXT_NODE_SEPARATOR = "\x00"
-
-
-def _record_text(root: Element) -> str:
-    """Return every text node in *root*, separated so no two of them merge.
-
-    The haystack the anchor check searches. Markup is excluded because a tag name
-    is not something the document states -- a two-character value would otherwise
-    match one, and a record carrying no such element at all would ground a value.
-    Adjacent nodes are kept apart by :data:`_TEXT_NODE_SEPARATOR`, because an
-    anchor spanning two of them is an assembled value rather than a printed one.
-    """
-    fragments: list[str] = []
-    for node in root.iter():
-        for raw in (node.text, node.tail):
-            if (raw is not None and raw) and raw.strip():
-                fragments.append(raw.strip())
-    return _TEXT_NODE_SEPARATOR.join(fragments)
-
-
-def _find_all(root: Element, name: str) -> list[Element]:
-    """Return every descendant whose LOCAL name matches, namespace-agnostically."""
-    return [node for node in root.iter() if _local(node.tag) == name]
-
-
-def _first_text(parent: Element, name: str) -> str | None:
-    for node in parent.iter():
-        if _local(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
-            return node.text.strip()
-    return None
-
-
-def _direct_child_text(parent: Element, name: str) -> str | None:
-    """Return the text of *parent*'s own child, never a deeper descendant.
-
-    The descendant walk :func:`_first_text` performs is right for a leaf stated
-    once in a subtree, and wrong wherever the same local name is restated at a
-    deeper level with a different meaning. A Facturae ``InvoiceHeader`` on a
-    rectificativa carries the corrected invoice's identifier as
-    ``Corrective/InvoiceNumber`` alongside its own ``InvoiceNumber``, so a
-    descendant walk has two candidates and picks correctly only because the
-    schema happens to fix their order.
-    """
-    for node in parent:
-        if _local(node.tag) == name and (node.text is not None and node.text) and node.text.strip():
-            return node.text.strip()
-    return None
-
-
-def _ubl_party_name(party: Element) -> str | None:
-    """Return a UBL party's name, preferring its registered legal name.
-
-    EN16931 maps the party's legal name to ``PartyLegalEntity/RegistrationName``
-    (BT-27 / BT-44) and its trading name to ``PartyName/Name`` (BT-28 / BT-45).
-    The legal name is the one a filing reconciles against, so it wins; the
-    trading name is the fallback for a document that states only that.
-    """
-    registration = _first_text(party, "RegistrationName")
-    if registration is not None and registration:
-        return registration
-    for named in _find_all(party, "PartyName"):
-        found = _direct_child_text(named, "Name")
-        if found is not None and found:
-            return found
-    return None
-
-
-def _facturae_party_name(party: Element) -> str | None:
-    """Return a Facturae party's stated name, legal entity or natural person.
-
-    Facturae states the name in one of two mutually exclusive blocks selected by
-    ``PersonTypeCode``: ``LegalEntity/CorporateName`` for a company, or
-    ``Individual`` split across ``Name``, ``FirstSurname`` and ``SecondSurname``
-    for a natural person. The two surnames are joined back into the single
-    display name the document means, because Spanish naming carries both and a
-    counterparty recorded under the given name alone is not identifiable.
-    """
-    corporate = _first_text(party, "CorporateName")
-    if corporate is not None and corporate:
-        return corporate
-    for individual in _find_all(party, "Individual"):
-        parts = [_direct_child_text(individual, part) for part in ("Name", "FirstSurname", "SecondSurname")]
-        joined = " ".join(part for part in parts if (part is not None and part))
-        if joined:
-            return joined
-    return None
-
-
-#: Facturae's two mutually exclusive party address blocks.
-#:
-#: A party states its address in exactly one of them: ``AddressInSpain`` when it
-#: is established here, ``OverseasAddress`` when it is established abroad. Both
-#: carry a ``CountryCode``, so a reader that opens only the first recovers no
-#: country at all from precisely the documents whose country decides the
-#: treatment.
-_FACTURAE_ADDRESS_BLOCKS: Final = ("AddressInSpain", "OverseasAddress")
-
-
-def _facturae_postal_code(party: Element) -> str | None:
-    """Return a Facturae party's Spanish postal code, or nothing.
-
-    Scoped to ``AddressInSpain/PostCode``, the element Facturae dedicates to the
-    code. ``OverseasAddress`` has no counterpart element: it states the code
-    jointly with the town as ``PostCodeAndTown``, and separating them would be an
-    inference about an unspecified format rather than a read. So a party
-    established abroad yields no postal code here, which is the honest result --
-    and costs nothing downstream, because the postal rung is consulted only where
-    the country evidence positively named Spain.
-    """
-    for address in _find_all(party, "AddressInSpain"):
-        found = _direct_child_text(address, "PostCode")
-        if found is not None and found:
-            return found
-    return None
-
-
-def _facturae_country_code(party: Element) -> tuple[str, str] | None:
-    """Return ``(address block name, stated country code)``, or nothing.
-
-    The country half of the establishment question the postal code answers only
-    the sub-national half of, read from whichever of
-    :data:`_FACTURAE_ADDRESS_BLOCKS` the party states. Both blocks name the
-    country through the same ``CountryCode`` element, and the foreign one is the
-    case that most needs reading: a party in the overseas block has no Spanish
-    postal code to fall back on, so its stated country is the only establishment
-    evidence the document carries.
-
-    **The value is carried exactly as stated, in the code system Facturae uses.**
-    That system is ISO 3166-1 alpha-3 -- ``ESP``, not ``ES`` -- and translating it
-    here would put a country authority inside a syntax parser. The
-    correspondence is registry data and the lookup belongs downstream; this is a
-    read.
-
-    The block name is returned with the value because the two blocks are
-    different places in the document. Provenance that named the Spanish block for
-    a value read from the overseas one would point an operator at an element the
-    record does not contain.
-    """
-    for block in _FACTURAE_ADDRESS_BLOCKS:
-        for address in _find_all(party, block):
-            found = _direct_child_text(address, "CountryCode")
-            if found is not None and found:
-                return block, found
-    return None
-
-
-def _ubl_country_code(party: Element) -> str | None:
-    """Return a UBL party's stated country code (EN16931 BT-40 / BT-55).
-
-    UBL carries it in ``cac:PostalAddress/cac:Country/cbc:IdentificationCode``,
-    beside the ``PostalZone`` :func:`_ubl_postal_code` already reads, and states
-    it in ISO 3166-1 alpha-2. Carried verbatim for the same reason the Facturae
-    code is: what a document states is a read, what a code MEANS is not the
-    parser's question.
-
-    Scoped to the ``Country`` element rather than taken from the first
-    ``IdentificationCode`` in the address subtree: UBL uses that local name for
-    other coded values, and a descendant walk would pick whichever the schema
-    happened to order first.
-    """
-    for address in _find_all(party, "PostalAddress"):
-        for country in _find_all(address, "Country"):
-            found = _direct_child_text(country, "IdentificationCode")
-            if found is not None and found:
-                return found
-    return None
-
-
-def _ubl_postal_code(party: Element) -> str | None:
-    """Return a UBL party's post code (EN16931 BT-38 / BT-53).
-
-    UBL carries it in ``cac:PostalAddress/cbc:PostalZone``, its own element, so
-    this is a lookup rather than a parse of the address's free-text lines.
-    """
-    for address in _find_all(party, "PostalAddress"):
-        found = _direct_child_text(address, "PostalZone")
-        if found is not None and found:
-            return found
-    return None
-
-
-def _cii_postal_code(party: Element) -> str | None:
-    """Return a CII party's post code (EN16931 BT-38 / BT-53).
-
-    CII carries it in ``ram:PostalTradeAddress/ram:PostcodeCode``, again its own
-    element beside the free-text address lines rather than inside them.
-    """
-    for address in _find_all(party, "PostalTradeAddress"):
-        found = _direct_child_text(address, "PostcodeCode")
-        if found is not None and found:
-            return found
-    return None
-
-
-def _cii_country_code(party: Element) -> str | None:
-    """Return a CII party's stated country code (EN16931 BT-40 / BT-55).
-
-    CII carries it in ``ram:PostalTradeAddress/ram:CountryID``, its own element
-    beside the ``PostcodeCode`` :func:`_cii_postal_code` already reads, and
-    states it in ISO 3166-1 alpha-2 -- the system UBL uses, not Facturae's
-    alpha-3. Carried verbatim regardless: resolving what a code MEANS belongs to
-    the country authority, and doing it here would make this module a second one.
-
-    Scoped to the address element rather than searched across the party subtree.
-    A CII party also carries ``ram:SpecifiedTaxRegistration``, whose id opens
-    with the two letters of a country for every EU IVA number, so a descendant
-    walk for a two-letter code would read a tax-scheme prefix as the party's
-    place of establishment -- a value that is usually right and silently wrong
-    exactly where a party is registered somewhere it is not established.
-    """
-    for address in _find_all(party, "PostalTradeAddress"):
-        found = _direct_child_text(address, "CountryID")
-        if found is not None and found:
-            return found
-    return None
-
-
-def _decimal(raw: str | None) -> Decimal | None:
-    """Parse a fixed-point amount from machine-produced e-invoice XML text.
-
-    Routes through the canonical machine-produced-text coercer rather than a
-    bare ``Decimal(...)`` construction: the source is structured e-invoice
-    XML (UBL/Facturae), not operator-typed text, so ``coerce_decimal``'s
-    silent-``None``-on-failure contract is the correct one, not
-    ``try_parse_canonical_decimal``'s operator-grammar validation.
-    """
-    # DECIMAL-TEXT-RATIONALE-EINVOICE-XML: the separator convention is fixed by
-    # the format, not chosen by a writer. UBL and Facturae both specify a
-    # dot-decimal xsd:decimal amount with no thousands grouping, so the
-    # ``1.000`` that is ambiguous in operator text is unambiguously one here.
-    return coerce_decimal(raw)
 
 
 def _iva_id_candidate_values(party: Element) -> tuple[str | None, tuple[str, ...]]:
@@ -473,17 +275,6 @@ def _iva_id(party: Element) -> str | None:
     return None
 
 
-def _category_for(code: str | None) -> str | None:
-    """Map a stated UNTDID 5305 tax-category code onto an IvaCategory value.
-
-    Returns ``None`` when the document states no code, or states one that maps
-    to no special category. Never guesses.
-    """
-    if not (code is not None and code):
-        return None
-    return resolve_iva_category_catalogue().category_for_untdid_code(code.strip().upper())
-
-
 def _apply_cii_document_header(root: Element, parsed: ParsedEInvoice) -> None:
     """Read the number, date and statutory mention off the ExchangedDocument."""
     docs = _find_all(root, "ExchangedDocument")
@@ -516,8 +307,30 @@ def _apply_cii_parties(root: Element, parsed: ParsedEInvoice) -> None:
         setattr(parsed, f"{target}_country_code", _cii_country_code(found[0]))
 
 
+def _names_irpf(stated: str | None) -> bool:
+    """Return whether a tax-scheme token names IRPF, the only retencion this models."""
+    return stated is not None and stated.strip().upper() == _IRPF_SCHEME_NAME
+
+
 def _apply_cii_trade_tax(tax: Element, parsed: ParsedEInvoice) -> None:
-    """Append one ApplicableTradeTax tier, keeping the first stated category."""
+    """Append one ApplicableTradeTax tier, keeping the first stated category.
+
+    EN 16931 models no withholding and its CII binding has no element for one, so
+    a tier naming IRPF is outside the format's meaning. It is recorded as a withheld
+    figure that was not read, never taken for an IVA tier.
+    """
+    stated_type = _direct_child_text(tax, "TypeCode")
+    if _names_irpf(stated_type):
+        parsed.withheld_taxes.append(
+            ParsedWithheldTax(
+                stated_type=stated_type,
+                is_irpf=False,
+                rate=_decimal(_first_text(tax, "RateApplicablePercent")),
+                base=_decimal(_first_text(tax, "BasisAmount")),
+                amount=_decimal(_first_text(tax, "CalculatedAmount")),
+            ),
+        )
+        return
     parsed.iva_breakdown.append(
         (
             _decimal(_first_text(tax, "RateApplicablePercent")),
@@ -549,7 +362,8 @@ def _cii_lines(root: Element) -> list[ParsedEInvoiceLine]:
     for item in _find_all(root, "IncludedSupplyChainTradeLineItem"):
         rate = None
         for tax in _find_all(item, "ApplicableTradeTax"):
-            rate = _decimal(_first_text(tax, "RateApplicablePercent"))
+            if not _names_irpf(_direct_child_text(tax, "TypeCode")):
+                rate = _decimal(_first_text(tax, "RateApplicablePercent"))
         lines.append(
             ParsedEInvoiceLine(
                 description=_first_text(item, "Name"),
@@ -667,22 +481,84 @@ def _ubl_subtotal_category(subtotal: Element) -> str | None:
     return None
 
 
+def _ubl_subtotal_scheme_tokens(subtotal: Element) -> tuple[str, ...]:
+    """Return what a subtotal's ``cac:TaxScheme`` states, by identifier and by name."""
+    tokens: list[str] = []
+    for scheme in _find_all(subtotal, "TaxScheme"):
+        for name in ("ID", "Name"):
+            stated = _direct_child_text(scheme, name)
+            if stated is not None:
+                tokens.append(stated)
+    return tuple(tokens)
+
+
+def _ubl_withheld_tax(subtotal: Element, *, is_irpf: bool) -> ParsedWithheldTax:
+    tokens = _ubl_subtotal_scheme_tokens(subtotal)
+    return ParsedWithheldTax(
+        stated_type=tokens[0] if tokens else None,
+        is_irpf=is_irpf,
+        rate=_decimal(_first_text(subtotal, "Percent")),
+        base=_decimal(_first_text(subtotal, "TaxableAmount")),
+        amount=_decimal(_first_text(subtotal, "TaxAmount")),
+    )
+
+
+def _ubl_last_tax_amount_text(tax_total: Element) -> str | None:
+    """Return the text of the last non-empty ``cbc:TaxAmount`` child of a tax total."""
+    stated: str | None = None
+    for child in tax_total:
+        if _local(child.tag) == "TaxAmount" and (child.text is not None and child.text):
+            stated = child.text
+    return stated
+
+
+def _append_ubl_iva_subtotal(subtotal: Element, parsed: ParsedEInvoice) -> None:
+    """Record one IVA subtotal's rate, base and cuota, and the first category named."""
+    parsed.iva_breakdown.append(
+        (
+            _decimal(_first_text(subtotal, "Percent")),
+            _decimal(_first_text(subtotal, "TaxableAmount")),
+            _decimal(_first_text(subtotal, "TaxAmount")),
+        ),
+    )
+    if parsed.iva_category is None:
+        parsed.iva_category = _ubl_subtotal_category(subtotal)
+
+
+def _ubl_irpf_subtotals(subtotals: list[Element]) -> list[Element]:
+    """Return the subtotals whose tax scheme names IRPF."""
+    return [row for row in subtotals if any(_names_irpf(token) for token in _ubl_subtotal_scheme_tokens(row))]
+
+
+def _apply_ubl_tax_total(tax_total: Element, parsed: ParsedEInvoice) -> None:
+    """Read one ``cac:TaxTotal``: its IRPF subtotals as withheld, the rest as IVA."""
+    subtotals = _find_all(tax_total, "TaxSubtotal")
+    irpf = _ubl_irpf_subtotals(subtotals)
+    parsed.withheld_taxes.extend(_ubl_withheld_tax(row, is_irpf=False) for row in irpf)
+    if subtotals and len(irpf) == len(subtotals):
+        return
+    stated_amount = _ubl_last_tax_amount_text(tax_total)
+    if stated_amount is not None:
+        parsed.iva_amount = _decimal(stated_amount)
+    for subtotal in subtotals:
+        if any(subtotal is row for row in irpf):
+            continue
+        _append_ubl_iva_subtotal(subtotal, parsed)
+
+
 def _apply_ubl_tax_totals(root: Element, parsed: ParsedEInvoice) -> None:
-    """Read the cuota, the per-rate breakdown, and the first stated category."""
-    for tax_total in _find_all(root, "TaxTotal"):
-        for child in tax_total:
-            if _local(child.tag) == "TaxAmount" and (child.text is not None and child.text):
-                parsed.iva_amount = _decimal(child.text)
-        for subtotal in _find_all(tax_total, "TaxSubtotal"):
-            parsed.iva_breakdown.append(
-                (
-                    _decimal(_first_text(subtotal, "Percent")),
-                    _decimal(_first_text(subtotal, "TaxableAmount")),
-                    _decimal(_first_text(subtotal, "TaxAmount")),
-                ),
-            )
-            if parsed.iva_category is None:
-                parsed.iva_category = _ubl_subtotal_category(subtotal)
+    """Read the cuota, the per-rate breakdown, and the first stated category.
+
+    A subtotal naming IRPF inside ``cac:TaxTotal`` is not IVA whatever element
+    carries it. UBL's own place for a withholding is ``cac:WithholdingTaxTotal``, so
+    this one is recorded as a withheld figure that was not read.
+
+    Only the document's own ``cac:TaxTotal`` children are read: UBL 2.1 lets an
+    invoice line carry one too, and counting it beside the document's would
+    state the same tax twice.
+    """
+    for tax_total in (child for child in root if _local(child.tag) == "TaxTotal"):
+        _apply_ubl_tax_total(tax_total, parsed)
 
 
 def _ubl_lines(root: Element) -> list[ParsedEInvoiceLine]:
@@ -705,6 +581,43 @@ def _ubl_lines(root: Element) -> list[ParsedEInvoiceLine]:
     return lines
 
 
+def _ubl_withholding_blocks(root: Element) -> list[Element]:
+    """Return the document's ``cac:WithholdingTaxTotal`` blocks, the header's if it states any.
+
+    UBL 2.1 allows the block on the document and on each line, and the two restate
+    one withholding, so lines are consulted only when the document has none.
+    """
+    header = [child for child in root if _local(child.tag) == "WithholdingTaxTotal"]
+    if header:
+        return header
+    return [
+        block
+        for line in _find_all(root, "InvoiceLine") + _find_all(root, "CreditNoteLine")
+        for block in line
+        if _local(block.tag) == "WithholdingTaxTotal"
+    ]
+
+
+def _apply_ubl_withholding(root: Element, parsed: ParsedEInvoice) -> None:
+    """Read ``cac:WithholdingTaxTotal``, a UBL 2.1 element EN 16931 leaves out.
+
+    The element says a tax was withheld and ``cac:TaxScheme`` says which one, so
+    only a scheme naming IRPF is a retencion. Without that the figure stays unread:
+    other jurisdictions use this element for other taxes.
+    """
+    totals: list[Decimal] = []
+    for block in _ubl_withholding_blocks(root):
+        stated = _decimal(_direct_child_text(block, "TaxAmount"))
+        if stated is not None:
+            totals.append(stated)
+        for subtotal in _find_all(block, "TaxSubtotal"):
+            tokens = _ubl_subtotal_scheme_tokens(subtotal)
+            parsed.withheld_taxes.append(_ubl_withheld_tax(subtotal, is_irpf=any(_names_irpf(t) for t in tokens)))
+    if totals:
+        parsed.withheld_total = sum(totals, Decimal("0"))
+    _read_retention_from_withheld(parsed)
+
+
 def _parse_ubl(root: Element) -> ParsedEInvoice:
     """Parse an OASIS UBL invoice or credit note."""
     parsed = ParsedEInvoice(shape=DocumentShape.XML_UBL)
@@ -715,8 +628,79 @@ def _parse_ubl(root: Element) -> ParsedEInvoice:
         parsed.taxable_base = _decimal(_first_text(total, "TaxExclusiveAmount"))
         parsed.grand_total = _decimal(_first_text(total, "TaxInclusiveAmount"))
     _apply_ubl_tax_totals(root, parsed)
+    _apply_ubl_withholding(root, parsed)
     parsed.lines.extend(_ubl_lines(root))
     return parsed
+
+
+def _retention_applies_to_the_whole_base(irpf: list[ParsedWithheldTax], taxable_base: Decimal | None) -> bool:
+    """Return whether one flat rate on the invoice's base describes these withholdings."""
+    if len({row.rate for row in irpf}) != 1:
+        return False
+    if taxable_base is None or any(row.base is None for row in irpf):
+        return len(irpf) == 1
+    return abs(sum((row.base or Decimal("0") for row in irpf), Decimal("0")) - taxable_base) <= Decimal("0.01")
+
+
+def _assign_irpf_retention_amount(parsed: ParsedEInvoice, irpf: list[ParsedWithheldTax]) -> None:
+    """Set the retencion from the IRPF rows' own amounts, else from a stated total when all rows are IRPF."""
+    amounts = [row.amount for row in irpf if row.amount is not None]
+    if len(amounts) == len(irpf):
+        parsed.retencion_amount = sum(amounts, Decimal("0"))
+    elif len(irpf) == len(parsed.withheld_taxes):
+        parsed.retencion_amount = parsed.withheld_total
+
+
+def _read_retention_from_withheld(parsed: ParsedEInvoice) -> None:
+    """Take the IRPF withholdings a record states as its retencion, and nothing else.
+
+    A stated total with no tax block identifies no tax, so only its zero is usable:
+    a format requiring the element states zero when nothing was withheld. A rate is
+    kept only where one flat rate on the invoice's own base describes the withholding,
+    because the invoice holds a single rate and checks it against that base.
+    """
+    stated_total = parsed.withheld_total
+    if not parsed.withheld_taxes:
+        parsed.retencion_amount = stated_total if stated_total is not None and stated_total == 0 else None
+        return
+    irpf = [row for row in parsed.withheld_taxes if row.is_irpf]
+    if not irpf:
+        return
+    _assign_irpf_retention_amount(parsed, irpf)
+    if parsed.retencion_amount is not None and _retention_applies_to_the_whole_base(irpf, parsed.taxable_base):
+        parsed.retencion_rate = irpf[0].rate
+
+
+def _facturae_withheld_tax_nodes(invoice: Element) -> list[Element]:
+    """Return the ``TaxesWithheld/Tax`` rows of the invoice, or of its lines if it has none.
+
+    The schema allows the block at both levels and calls the line-level one
+    informative, so reading both would count one withholding twice.
+    """
+
+    def rows(owner: Element) -> list[Element]:
+        return [
+            tax for block in owner if _local(block.tag) == "TaxesWithheld" for tax in block if _local(tax.tag) == "Tax"
+        ]
+
+    return rows(invoice) or [tax for line in _find_all(invoice, "InvoiceLine") for tax in rows(line)]
+
+
+def _apply_facturae_withholding(invoice: Element, parsed: ParsedEInvoice) -> None:
+    """Read the withheld taxes, of which only ``TaxTypeCode`` 04 is IRPF."""
+    for tax in _facturae_withheld_tax_nodes(invoice):
+        rate, base, amount, _surcharges = _facturae_tax_band(tax)
+        stated_type = _direct_child_text(tax, "TaxTypeCode")
+        parsed.withheld_taxes.append(
+            ParsedWithheldTax(
+                stated_type=stated_type,
+                is_irpf=stated_type == _FACTURAE_IRPF_TAX_TYPE_CODE,
+                rate=rate,
+                base=base,
+                amount=amount,
+            ),
+        )
+    _read_retention_from_withheld(parsed)
 
 
 def _facturae_suplidos(totals: Element) -> Decimal | None:
@@ -821,10 +805,10 @@ def _apply_facturae_totals(invoice: Element, parsed: ParsedEInvoice) -> Decimal 
     for totals in _find_all(invoice, "InvoiceTotals"):
         parsed.taxable_base = _decimal(_first_text(totals, "TotalGrossAmountBeforeTaxes"))
         total_output_tax = _decimal(_first_text(totals, "TotalTaxOutputs"))
-        # `Total impuestos retenidos` -- the schema's own words. Read because the
-        # total below is stated NET of it, so a reader that skips it cannot tell
-        # a withheld invoice from one whose components do not add up.
-        parsed.retencion_amount = _decimal(_first_text(totals, "TotalTaxesWithheld"))
+        # `Total impuestos retenidos` -- the schema's own words, and a required
+        # element, so a document withholding nothing states zero here. It names no
+        # tax: which tax was withheld is said by the `TaxesWithheld` rows.
+        parsed.withheld_total = _decimal(_first_text(totals, "TotalTaxesWithheld"))
         # `Total de suplidos`, with the block `Suplidos incorporados en la
         # factura` as the fallback: both are optional and a document may state
         # the itemised block without the aggregate, so the aggregate is
@@ -928,8 +912,12 @@ def _facturae_lines(invoice: Element) -> list[ParsedEInvoiceLine]:
     lines: list[ParsedEInvoiceLine] = []
     for line in _find_all(invoice, "InvoiceLine"):
         rate = None
-        for tax in _find_all(line, "Tax"):
-            rate = _decimal(_first_text(tax, "TaxRate"))
+        # Scoped to the outputs: a line's `TaxesWithheld` holds `Tax` rows too, and
+        # their rate is the retencion's, never this line's IVA.
+        for block in line:
+            if _local(block.tag) == "TaxesOutputs":
+                for tax in _find_all(block, "Tax"):
+                    rate = _decimal(_first_text(tax, "TaxRate"))
         lines.append(
             ParsedEInvoiceLine(
                 description=_first_text(line, "ItemDescription"),
@@ -953,6 +941,7 @@ def _parse_facturae(root: Element) -> ParsedEInvoice:
     _apply_facturae_identification(invoice, parsed)
     total_output_tax = _apply_facturae_totals(invoice, parsed)
     _apply_facturae_tax_bands(invoice, parsed, total_output_tax=total_output_tax)
+    _apply_facturae_withholding(invoice, parsed)
     parsed.lines.extend(_facturae_lines(invoice))
     return parsed
 

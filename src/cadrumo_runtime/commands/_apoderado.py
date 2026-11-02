@@ -7,9 +7,9 @@ import typer
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import bound_profile_client
 
-from .presentation import activate_subcommand_output_language as _activate_subcommand_output_language
 from .presentation import emit_envelope
 from .runtime_auth_apoderado import (
     apoderado_catalogue,

@@ -11,8 +11,10 @@ import typer
 from cadrumo.core.config import override_settings
 from cadrumo.core.i18n.render import tr
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.shared_contracts import DefaultKind
 
 from .. import modelo_projection_commands
+from .._modelo_projection_command_specs import MODELO_PROJECTION_COMMAND_SPECS
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -107,3 +109,10 @@ def test_compare_recovery_catalogue_is_complete_in_each_language(language: str, 
     assert message != key
     assert "130" in message and "2025" in message and "2026" in message
     assert "{" not in message and "}" not in message
+
+
+def test_compare_requires_the_modelo_instead_of_assuming_one() -> None:
+    compare = next(spec for spec in MODELO_PROJECTION_COMMAND_SPECS if spec.key == "app_modelo_compare")
+    modelo = next(parameter for parameter in compare.parameters if parameter.name == "modelo")
+
+    assert modelo.default.kind is DefaultKind.REQUIRED

@@ -12,6 +12,7 @@ from pydantic import BaseModel, Field, model_validator
 from ...core.aggregation import IntracomOperationType
 from ...core.country_code import CountryCodeAlpha2
 from ...core.errors.hierarchy import CadrumoError
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.iva_rate_kind_catalogue import IvaRateKindCatalogue
@@ -23,6 +24,7 @@ from ...domain.invoices.enums import IvaRate
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import InvoiceLine
 from ...domain.iva.schema import InvoiceKind, IvaRateKind
+from ..operations.error_detail import MAX_OPERATION_ERROR_WORDS_LENGTH
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.public_scalar import PublicDecimal
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
@@ -217,6 +219,10 @@ class InvoiceAddResult(BaseModel):
     euro_value_pending: bool = False
     simplificada_tax_id_advisory_required: bool = False
     validation_code: Literal["invalid_invoice", "duplicate_invoice"] | None = None
+    #: The finished sentence a frontend shows for a refusal, worded by the
+    #: operation error detail's rules, and the language it is in.
+    refusal_words: str | None = Field(default=None, min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)
+    refusal_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     def _complete_outcome(self) -> InvoiceAddResult:
@@ -233,13 +239,16 @@ class InvoiceAddResult(BaseModel):
         *,
         code: Literal["invalid_invoice", "duplicate_invoice"],
         invoice_id: str | None = None,
+        words: tuple[str, OutputLanguage] | None = None,
     ) -> InvoiceAddResult:
-        """Build a safe detail for a deterministic refusal before invoice creation."""
+        """Build a safe detail for a deterministic refusal before invoice creation, with its served sentence."""
         return cls(
             outcome="validation_error",
             profile_id=profile_id,
             invoice_id=invoice_id,
             validation_code=code,
+            refusal_words=None if words is None else words[0],
+            refusal_words_language=None if words is None else words[1],
         )
 
     @classmethod
@@ -297,6 +306,8 @@ def _require_created_invoice_result(result: InvoiceAddResult) -> None:
         or len(result.bucket_event_ids) != 1
         or result.invoice_id is not None
         or result.validation_code is not None
+        or result.refusal_words is not None
+        or result.refusal_words_language is not None
     ):
         raise ValueError("created invoice result is incomplete or belongs to another profile")
 
@@ -309,6 +320,7 @@ def _require_invoice_validation_refusal(result: InvoiceAddResult) -> None:
         or result.simplificada_tax_id_advisory_required
         or result.validation_code is None
         or (result.validation_code == "duplicate_invoice") != (result.invoice_id is not None)
+        or (result.refusal_words is None) != (result.refusal_words_language is None)
     ):
         raise ValueError("invoice validation refusal detail is incomplete")
 

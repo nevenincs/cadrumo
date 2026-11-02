@@ -4,12 +4,11 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ..ledger.read_access import resolve_ledger_commit_access
+from ..live.live_operation_registration import resolve_whole_profile_capture_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
-from ..operations.profile_guard import require_access_request_profile_payload
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -61,13 +60,12 @@ def resolve_modelo_invoice_withholding_capture_access(
     /,
 ) -> ResolvedOperationAccess:
     """Bind exact profile and all-period invoice-catalogue rights, including fresh COMMIT."""
-    payload = require_access_request_profile_payload(
+    return resolve_whole_profile_capture_access(
         request,
+        context,
         definition_id=MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
         payload_type=ModeloInvoiceWithholdingCaptureRequest,
-        access_profile_id=context.profile_id,
     )
-    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_modelo_invoice_withholding_capture_registration(

@@ -285,6 +285,14 @@ class BindingSourceKind(StrEnum):
     # the validated distinct-NIF primitive (aggregate_retenciones_180.
     # total_perceptors) — replacing the wrong sum-of-quarterly-M115-counts relation.
     RETENCIONES_AGGREGATION = "retenciones_aggregation"
+    # Withholding the taxpayer SUFFERED: one encrypted record per payer, income
+    # class and ejercicio, from a payer certificate or the operator's declaration.
+    # The perceptor's side, credited in the annual Renta. Deliberately distinct
+    # from RETENCIONES_AGGREGATION and WITHHOLDING, which hold withholding the
+    # taxpayer PRACTISED as a withholding agent; a shared kind would let a credit
+    # casilla claim tax withheld from someone else. Not a ledger kind and not a
+    # counterpart kind.
+    RETENCION_SOPORTADA = "retencion_soportada"
     # Modelo 390 year-end IVA compensation carry partition: reads filed Modelo
     # 303 compensation states and materialises AEAT boxes 97 / 662 together from
     # the FIFO carry projection. This is a registry-declared source because the

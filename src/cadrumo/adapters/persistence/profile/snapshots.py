@@ -51,17 +51,17 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....core.time.clock import now
 from ..storage.crypto.encrypted_columns import HashedLookup
 from ..storage.envelope.contract import Envelope
-from ..storage.errors import ClassificationError, EnvelopeVersionError
+from ..storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectUnreadableError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
+from ..storage.sql.secure_object_records import SecureObjectRecord, SecureObjectUnreadableKind
 from ..storage.sql.secure_objects import SecureObjectRepository
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
+    from collections.abc import Callable, Iterable
 
     from ....core.classification.policies import SensitivityClass
     from ..storage.secure_object_namespaces import SecureObjectNamespaceDefinition
-    from ..storage.sql.secure_object_records import SecureObjectRecord
 
 __all__ = ["SecureSnapshotRepository"]
 
@@ -195,12 +195,48 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
                 payload bucket differs from the repository's bucket, or when
                 its snapshot id does not agree with the key it is stored under.
         """
-        snapshots: list[TPayload] = []
-        for record in self._objects.list_records(
+        return self._checked_snapshots(
+            self._objects.list_records(
+                self._namespace_definition.namespace,
+                expected_class=self._namespace_definition.sensitivity,
+                max_supported_version=self._namespace_definition.schema_version,
+            ),
+        )
+
+    def list_snapshots_with_outdated_count(self) -> tuple[tuple[TPayload, ...], int]:
+        """Return the current-schema snapshots and how many older-schema rows were skipped.
+
+        A row stored under an older schema version has no reader, so it cannot
+        be named; it is counted, from the same single pass that reads the others.
+        The count covers the whole snapshot namespace: an unreadable row's year
+        and period live only in its encrypted payload, so no narrower scope is
+        knowable. Every other unreadable row, including one stored under a newer
+        schema or refused for its classification, still raises exactly as
+        ``list_snapshots`` does.
+
+        Raises:
+            SecureObjectUnreadableError: A row is unreadable for any reason
+                other than an older storage schema.
+        """
+        current_version = self._namespace_definition.schema_version
+        outdated = 0
+        records: list[SecureObjectRecord] = []
+        for item in self._objects.iter_records_with_failures(
             self._namespace_definition.namespace,
             expected_class=self._namespace_definition.sensitivity,
-            max_supported_version=self._namespace_definition.schema_version,
+            max_supported_version=current_version,
         ):
+            if isinstance(item, SecureObjectRecord):
+                records.append(item)
+            elif item.kind is SecureObjectUnreadableKind.OUTDATED_SCHEMA:
+                outdated += 1
+            else:
+                raise SecureObjectUnreadableError(self._namespace_definition.namespace, item.row_id)
+        return self._checked_snapshots(records), outdated
+
+    def _checked_snapshots(self, records: Iterable[SecureObjectRecord]) -> tuple[TPayload, ...]:
+        snapshots: list[TPayload] = []
+        for record in records:
             snapshot = self._snapshot_from_record(record)
             snapshot_bucket = self._bucket_id_of(snapshot)
             if snapshot_bucket != self._bucket_id:

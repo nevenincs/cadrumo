@@ -35,6 +35,7 @@ from ...domain.calculations.registry.iva_deduction_catalogue import invoice_evid
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
+from ...domain.transactions.classification_effects import takes_changes, takes_invoice
 from ...domain.transactions.classification_origin import (
     ClassificationOrigin,
     with_classification_origin,
@@ -97,7 +98,9 @@ _MANUAL_PROVIDER_NAME = "manual-ledger"
 #: re-addressing ordinary movements whose content had not changed. Each field
 #: listed here must default to ``None``, so omitting it when absent loses nothing
 #: a present value would say.
-_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "own_account_id"})
+_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset(
+    {"investment_asset_id", "iva_vehicle_use", "operation_date", "own_account_id"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -240,8 +243,10 @@ def link_manual_transaction_invoice(
 ) -> InvoiceTransactionLinkResult:
     """Establish an atomic invoice-only relationship for one ledger transaction.
 
-    This is the sole invoice-linkage writer. It resolves the transaction,
-    enforces the invoice's missing and cross-bucket policy up front, then
+    This is the sole invoice-linkage writer. It resolves the transaction, refuses
+    a transfer or a row that takes no change, since a second link turns a live
+    row's invoice into partial evidence, enforces the invoice's missing and
+    cross-bucket policy up front, then
     delegates the bidirectional catalogue mutation and persistence to
     :func:`~cadrumo.application.invoices.transaction_linking.link_invoice_transaction_repositories`.
     It never touches purchase evidence or attachments: evidence mutation is
@@ -263,6 +268,16 @@ def link_manual_transaction_invoice(
     trimmed_source_command = require_source_command(source_command, operation="ledger invoice linkage")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     current = require_transaction(repository.load(), transaction_id)
+    if not takes_changes(current.lifecycle_state) or not takes_invoice(current.direction):
+        raise InvoiceLinkError(
+            "only an active movement of money in or out can have an invoice linked",
+            context={
+                "invoice_id": invoice_id,
+                "transaction_bucket_id": bucket_id,
+                "lifecycle_state": current.lifecycle_state.value,
+                "direction": current.direction.value,
+            },
+        )
     invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=ports.invoice_repository)
     invoice_record = invoices_repo.load().get(invoice_id)
     if invoice_record is None:
@@ -465,6 +480,7 @@ def transaction_from_command(
     payload: dict[str, object] = {
         "raw": raw,
         "direction": command.direction,
+        "operation_date": command.operation_date,
         "business_classification": command.business_classification,
         "business_pct": command.business_pct,
         "category_id": command.category_id,
@@ -510,6 +526,7 @@ def transaction_from_command(
         "deduction_fact_kind": command.deduction_fact_kind,
         "deduction_provenance": _invoice_evidence_provenance(command, evidence_records=evidence_records),
         "investment_asset_id": command.investment_asset_id,
+        "iva_vehicle_use": command.iva_vehicle_use,
         "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,

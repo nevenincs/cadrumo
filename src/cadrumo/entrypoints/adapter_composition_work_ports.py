@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
     from ..application.state_projection_ports import StateProjectionReadPorts
     from ..core.config import Settings
+    from ..core.secure_object_write import SecureObjectWrite
     from ..core.tabular import NormalizedTable
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.calculations.registry.tax_id_format import SubjectTaxId
@@ -148,10 +149,15 @@ def build_calculation_action_ports(
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
+    from ..adapters.persistence.profile.retencion_soportada_records import (
+        RetencionSoportadaAbsenceRepositoryAdapter,
+        RetencionSoportadaRecordRepositoryAdapter,
+    )
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
     from ..application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
+    from ..application.aggregation.retencion_soportada_repository import RetencionSoportadaPorts
     from ..application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
     from ..application.modelo.calculation_action_ports import CalculationActionPorts
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -243,6 +249,10 @@ def build_calculation_action_ports(
             bucket_id=normalized_bucket_id, objects=objects
         ),
         retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
+        retencion_soportada_ports=RetencionSoportadaPorts(
+            repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
+            absences=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
+        ),
         relation_override_migration=RelationOverrideMigration(),
     )
 
@@ -546,9 +556,11 @@ def build_verification_repository_bundle(
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+    from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
     from ..application.modelo.verification_repository_ports import VerificationRepositoryBundle
     from ..application.workflow.persistence import WorkflowRunRepository
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
@@ -579,6 +591,9 @@ def build_verification_repository_bundle(
         ),
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id, objects=objects),
         retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
+        percepcion_observation_ports=PercepcionObservationPorts(
+            repository=PercepcionObservationRepositoryAdapter(objects=objects),
+        ),
         ledger_membership_ports=build_ledger_membership_ports(
             bucket_id=normalized_bucket_id, transaction_repository=transaction_repository, objects=objects
         ),
@@ -604,6 +619,18 @@ def save_usage_ratios(profile: UsageRatioProfile, *, bucket_id: str) -> None:
     from ..adapters.persistence.profile.usage_ratios import save_usage_ratios
 
     save_usage_ratios(profile, bucket_id=bucket_id)
+
+
+def save_usage_ratios_with_secure_object_writes(
+    profile: UsageRatioProfile,
+    extra_writes: tuple[SecureObjectWrite, ...],
+    *,
+    bucket_id: str,
+) -> None:
+    """Compose the usage-ratio save that commits with other secure-object writes."""
+    from ..adapters.persistence.profile.usage_ratios import save_usage_ratios_with_secure_object_writes
+
+    save_usage_ratios_with_secure_object_writes(profile, extra_writes, bucket_id=bucket_id)
 
 
 def load_usage_ratios_with_censo_guard(

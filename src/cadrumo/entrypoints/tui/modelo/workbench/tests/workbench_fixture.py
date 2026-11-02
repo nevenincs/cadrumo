@@ -10,6 +10,7 @@ test can prove the screen read off the event loop exactly as often as it should.
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
@@ -42,6 +43,7 @@ from ......application.modelo.work_form_service import ModeloWorkFormLoadV1, mod
 from ......application.modelo.work_review import (
     ModeloWorkProgress,
     ModeloWorkReview,
+    ModeloWorkReviewCasilla,
     build_modelo_work_review_casillas,
 )
 from ......core.aggregation import BindingSourceKind
@@ -52,7 +54,9 @@ from ......core.modelo_export_artefact import ModeloExportArtefact
 from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind, FormPageCondition
+from ......domain.modelos.calculation_revision import CalculationRevisionState
 from ......domain.modelos.codes import ModeloCode
 from ......domain.modelos.verification_report import ModeloVerificationFinding
 from ...m303_evidence import OrdinaryM303FilingEvidenceSubmission
@@ -134,30 +138,39 @@ def form_section(section_id: str, heading: str, fields: list[ModeloFormField]) -
     )
 
 
-def registry_form(
+def registry_form_of(
     operation: PinnedAuthorityOperation,
     *,
     modelo: str,
     year: int,
     code: str,
-    findings: tuple[ModeloVerificationFinding, ...],
+    bucket_id: str,
+    work_unit_id: str,
+    findings: tuple[ModeloVerificationFinding, ...] = (),
+    lifecycle_state: CalculationRevisionState | None = None,
+    hold: Callable[[RegistrySnapshot, tuple[ModeloWorkReviewCasilla, ...]], tuple[ModeloWorkReviewCasilla, ...]]
+    | None = None,
 ) -> ModeloWorkForm:
-    """Build the form of one real published registry revision, carrying ``findings`` and no work yet."""
+    """Build the form of one real published registry revision with no work calculated yet.
+
+    ``hold`` may rewrite the review rows from the snapshot, so a caller can make chosen casillas hold a figure.
+    """
     period = Period.from_year_and_code(year, code)
     revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
     snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
+    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
     review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000349",
+        bucket_id=bucket_id,
         modelo=modelo,
         filing_year=year,
         period=period,
         registry_revision_id=snapshot.revision.id,
-        work_unit_id="e" * 64,
+        work_unit_id=work_unit_id,
         calculation_revision_id=None,
-        lifecycle_state=None,
+        lifecycle_state=lifecycle_state,
         verification_outcome=None,
         progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
+        casillas=rows if hold is None else hold(snapshot, rows),
         findings=findings,
         blockers=(),
     )
@@ -170,6 +183,26 @@ def registry_form(
         entered_casilla_ids=None,
         overridden_binding_ids=None,
         language=OutputLanguage.EN,
+    )
+
+
+def registry_form(
+    operation: PinnedAuthorityOperation,
+    *,
+    modelo: str,
+    year: int,
+    code: str,
+    findings: tuple[ModeloVerificationFinding, ...],
+) -> ModeloWorkForm:
+    """Build the form of one real published registry revision, carrying ``findings`` and no work yet."""
+    return registry_form_of(
+        operation,
+        modelo=modelo,
+        year=year,
+        code=code,
+        bucket_id="13000000-0000-4000-8000-000000000349",
+        work_unit_id="e" * 64,
+        findings=findings,
     )
 
 

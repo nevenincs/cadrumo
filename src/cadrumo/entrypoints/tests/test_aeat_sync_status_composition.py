@@ -21,7 +21,11 @@ from ...adapters.persistence.storage.errors import (
     SecureObjectRowIdentityError,
     SessionExpiredError,
 )
-from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from ...adapters.persistence.storage.secure_object_namespaces import LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE
+from ...adapters.persistence.storage.tests.secure_sql import (
+    isolated_runtime_profile,
+    restamp_secure_object_schema_version,
+)
 from ...application.aeat_sync.status_operation import load_aeat_sync_status
 from ...application.aeat_sync.workspace import (
     AeatSyncAreaState,
@@ -122,7 +126,7 @@ def _store_borrador_below_support_floor(operation: PinnedAuthorityOperation, buc
         operation.modelo_directory("100"), filing_year=filing_year, period="0A"
     ).id
     ref = RegistrySnapshotRef(modelo="100", revision_id=revision_id, modelo_year=filing_year, period="0A")
-    values = {"renta-certificado-trabajo-retenciones": Decimal("15.25")}
+    values = {"renta-retencion-soportada-trabajo": Decimal("15.25")}
     source = "file-import:sha256:" + "3" * 64
     snapshot = Borrador100Snapshot(
         snapshot_id=derive_borrador_100_snapshot_id(
@@ -152,7 +156,7 @@ def _capture_borrador(operation: PinnedAuthorityOperation, bucket_id: str, *, ca
         period=Period.from_year_and_code(2025, "0A"),
         captured_at=captured_at,
         source_url="file-import:sha256:" + "2" * 64,
-        binding_values={"renta-certificado-trabajo-retenciones": Decimal("100.00")},
+        binding_values={"renta-retencion-soportada-trabajo": Decimal("100.00")},
         operation=operation,
     ).snapshot_id
 
@@ -206,6 +210,78 @@ def test_a_profile_holding_only_a_legacy_borrador_reads_it_as_unavailable_not_ne
     )
     assert [item.snapshot_id for item in borrador.refused_snapshots] == [legacy.snapshot_id]
     assert _area(result, AeatSyncStatusArea.NOTIFICATIONS).state is AeatSyncAreaState.NEVER_BROUGHT
+
+
+def _restamp_stored_borrador_as_earlier_schema(runtime, snapshot_id: str) -> None:
+    """Turn one stored borrador row into an earlier-schema row, whose values were plain strings."""
+    from sqlalchemy import select
+
+    from ...adapters.persistence.storage.sql.orm import SecureObjectRow
+    from ...application.live.borrador_100 import borrador_100_snapshot_object_key
+
+    def to_earlier_shape(document) -> None:
+        document["schema_version"] = 1
+        payload = document["payload"]
+        payload["binding_values"] = {key: value["value"] for key, value in payload["binding_values"].items()}
+
+    restamp_secure_object_schema_version(
+        runtime.repository._engine,
+        row_statement=select(SecureObjectRow).where(
+            SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+            SecureObjectRow.object_key == borrador_100_snapshot_object_key(runtime.bucket_id, snapshot_id),
+        ),
+        schema_version=1,
+        mutate=to_earlier_shape,
+    )
+
+
+def test_a_profile_holding_only_an_earlier_schema_borrador_reads_it_as_unavailable_and_counted(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        stored = _capture_borrador(operation, runtime.bucket_id, captured_at=_CAPTURED_AT)
+        _restamp_stored_borrador_as_earlier_schema(runtime, stored)
+        _store_filed(operation, modelo="303")
+        result = _status(operation, runtime.bucket_id, days_later=1)
+
+    borrador = _area(result, AeatSyncStatusArea.BORRADOR_100)
+    assert (borrador.state, borrador.last_brought_at, borrador.refusal, borrador.outdated_stored_snapshots) == (
+        AeatSyncAreaState.UNAVAILABLE,
+        None,
+        "aeat_sync.status.snapshot_schema_outdated",
+        1,
+    )
+    assert borrador.refused_snapshots == ()
+    assert _area(result, AeatSyncStatusArea.IVA_WALLET).state is AeatSyncAreaState.CURRENT
+
+
+def test_an_earlier_schema_borrador_beside_a_current_one_is_counted_and_the_area_stays_current(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    valid_at = _CAPTURED_AT + timedelta(days=2)
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        stored = _capture_borrador(operation, runtime.bucket_id, captured_at=_CAPTURED_AT)
+        _restamp_stored_borrador_as_earlier_schema(runtime, stored)
+        service = Borrador100SnapshotService(
+            bucket_id=runtime.bucket_id, repository=build_borrador_100_snapshot_repository(bucket_id=runtime.bucket_id)
+        )
+        service.capture(
+            filing_year=2025,
+            period=Period.from_year_and_code(2025, "0A"),
+            captured_at=valid_at,
+            source_url="file-import:sha256:" + "8" * 64,
+            binding_values={"renta-retencion-soportada-trabajo": Decimal("100.00")},
+            operation=operation,
+        )
+        result = _status(operation, runtime.bucket_id, days_later=3)
+
+    borrador = _area(result, AeatSyncStatusArea.BORRADOR_100)
+    assert (borrador.state, borrador.last_brought_at, borrador.refusal, borrador.outdated_stored_snapshots) == (
+        AeatSyncAreaState.CURRENT,
+        valid_at,
+        None,
+        1,
+    )
 
 
 def test_a_borrador_outside_the_support_envelope_is_named_as_refused_without_failing_the_status(

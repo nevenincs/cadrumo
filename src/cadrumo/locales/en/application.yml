@@ -745,6 +745,9 @@ application:
           recargo de equivalencia must be zero.
         printed_total_differs: The printed total, %{printed}, differs from the calculated
           total, %{computed}.
+        rate_date_projected: 'The IVA rates for %{on_date} are read from the nearest
+          declarations, from %{nearest}: this date is older than the filing years
+          Cadrumo covers, so they are a projection, not grounded for filing.'
         rate_date_unresolved: The registry declares no IVA rates for %{on_date}, so
           no IVA can be worked out.
         recargo_above_iva_total: The recargo de equivalencia, %{stated}, cannot exceed
@@ -828,6 +831,11 @@ application:
           linked to transactions: %{linked_transaction_ids}. There is no unlink command:
           remove those transactions with `aeat app ledger remove`, which releases
           the link, then remove the invoice.'
+        sealed_invoice_refused: Invoice %{invoice_id} was read by the Modelo %{modelo}
+          of %{filing_year} %{period} (%{revision_state}, revision %{calculation_revision_id}),
+          so this change is refused to keep those figures true. If it has not been
+          filed, discard that work with `aeat app modelo work discard` and calculate
+          again. If it has, issue a corrective invoice and file an amendment.
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -1194,6 +1202,12 @@ application:
           data.
         what_to_do: Nothing to change in your records. Report it before you rely on
           the figures.
+      filed_before_grade_cap:
+        what: This declaration was recorded before the current checks on its figures,
+          and one of its boxes holds a figure those checks hold back, so you cannot
+          export it as it stands.
+        what_to_do: Calculate the declaration again, check it and record it again;
+          the new record replaces this one.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
@@ -1234,6 +1248,17 @@ application:
           missing proof.
         what_to_do: Check the VAT records of the whole year, add the missing proof,
           then calculate again.
+      iva_operation_date_after_movement:
+        what: Some ledger rows have an operation date after their bank date. If that
+          money was an advance, its IVA fell due when it was collected.
+        what_to_do: For an advance, set the operation date to the collection date
+          and record the balance as its own row, then calculate again.
+      iva_row_placed_on_movement_date:
+        what: Some ledger rows have no operation date, so their bank date chose the
+          IVA period. IVA falls due when the operation takes place, not when the money
+          moves.
+        what_to_do: Add the operation date to rows near the end of a period, then
+          calculate again.
       iva_selected_scope_evidence_failure:
         what: The records behind the VAT in this declaration are missing proof or
           do not add up.
@@ -1509,6 +1534,13 @@ application:
         that no longer exist.'
       residence_period_unknown: No tax residence is recorded for {date}, so your assets
         count as if Modelos 100 and 130 apply.
+      retencion_soportada_absence_contradicted: 'Income class {income_class}: there
+        are payer records and also your attestation that no payer withheld. Remove
+        the records or withdraw the attestation.'
+      retencion_soportada_evidence_required: 'Income class {income_class}: there is
+        no payer record and no absence attestation, and your profile does not declare
+        this income absent. Record each payer''s certificate, or attest that no payer
+        withheld.'
       row_unregistered: The ledger entry of {row_date} for {row_amount} records an
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does
@@ -2080,6 +2112,15 @@ application:
       inventory_register_drift: The inventory behind this %{modelo} calculation changed
         since it was calculated (%{rows_recorded} rows recorded, %{rows_current} now,
         %{rows_changed} changed). Recalculate before relying on it.
+      invoice_fingerprint_absent: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates invoice tracking, so Cadrumo cannot say whether your
+        invoices have changed since. Calculate it again to start tracking them.
+      invoice_fingerprint_drift: Your invoices changed after modelo %{modelo} %{filing_year},
+        %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
+        %{added_count} added). Calculate it again before verifying.
+      invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
+        them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
+        cannot be shown to be current. Try again once they can be read.
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.
@@ -2181,6 +2222,20 @@ application:
         or receipt attached. Attach it to the entry in your records.
       transaction_evidence_missing_output: An issued invoice on which you charge VAT
         has no supporting document. Attach it to the entry in your records.
+      undetermined_mixed_use_contributor: The stored %{modelo} calculation for %{filing_year},
+        period %{period}, counted %{rows} mixed-use expense(s) with no spending category
+        at their stated share. Calculating now would hold them back until you assign
+        the category. The stored values have not changed.
+      withholding_count_exceeds_summary_perceptors: Modelo %{source_modelo} %{period}
+        %{filing_year} counts %{declared_perceptors} payee(s) in box %{casilla_id},
+        but modelo %{modelo} names only %{summary_perceptors} different payee(s) for
+        the whole year. Everyone counted in that box must appear on the annual summary.
+        Add the missing payees to this modelo's detail, or correct the count on modelo
+        %{source_modelo}.
+      withholding_count_not_cross_checked: 'Modelo %{modelo} %{filing_year} could
+        not be compared with modelo %{source_modelo} for %{unchecked_periods}, because
+        no declaration is recorded for those periods. Compared periods: %{checked_periods}.
+        This does not mean nobody was paid in them.'
       withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
         declares no payments to anyone, but your records show payments subject to
         withholding made that year: %{contradicting_invoice_count} received invoice(s)
@@ -2352,6 +2407,12 @@ application:
           then calculate again.
       inspection_heading: All boxes, in box-number order
       unnamed_box: Unnamed box
+  operations:
+    error_detail:
+      record_fault: A record Cadrumo built did not pass its own check, so this could
+        not be done.
+      unworded: This could not be done. Its reason has no sentence yet; its code is
+        {error_code}.
   overview:
     calendar:
       event:

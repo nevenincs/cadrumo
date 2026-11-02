@@ -26,6 +26,7 @@ from ...domain.calculations.registry.prorrata_vocabulary import require_input_cl
 from ...domain.categories.spending_category_catalogue import require_spending_category
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.iva.vehicle_use import require_iva_vehicle_use
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import require_ledger_irpf_category
@@ -82,6 +83,7 @@ def prepare_ledger_add_command(
         bucket_id=str(payload.profile_id),
         booked_date=booked_date,
         value_date=value_date,
+        operation_date=(require_iso8601_date(payload.operation_date) if payload.operation_date is not None else None),
         amount=amount,
         currency=payload.currency,
         direction=direction,
@@ -96,6 +98,9 @@ def prepare_ledger_add_command(
         iva_category=registry_facts.iva_category,
         deduction_fact_kind=registry_facts.deduction_kind,
         investment_asset_id=payload.investment_asset_id,
+        iva_vehicle_use=(
+            require_iva_vehicle_use(payload.iva_vehicle_use) if payload.iva_vehicle_use is not None else None
+        ),
         counterparty_country=payload.counterparty_country,
         counterparty_identification_state=registry_facts.identification_state,
         recargo_amount=parse_ledger_add_decimal(payload.recargo_amount, label="recargo-amount"),

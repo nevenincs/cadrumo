@@ -514,6 +514,12 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify.withholding_detail.proven",
         "modelo.work.verify.withholding_detail.contradicted",
     ),
+    # A periodic box counting more persons than the annual summary names at all.
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.withholding_count.reconciled",
+        "modelo.work.verify.withholding_count.exceeded",
+    ),
     _profile(
         "modelo.work.verify",
         "modelo.work.verify.ledger_snapshot.current",
@@ -523,6 +529,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.ledger_snapshot.current",
         "modelo.work.verify.ledger_snapshot.membership_unavailable",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.invoice_fingerprint.current",
+        "modelo.work.verify.invoice_fingerprint.drift_detected",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.invoice_fingerprint.current",
+        "modelo.work.verify.invoice_fingerprint.catalogue_unavailable",
     ),
     _profile(
         "modelo.work.verify",

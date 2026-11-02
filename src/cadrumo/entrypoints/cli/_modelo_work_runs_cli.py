@@ -24,6 +24,7 @@ from typing import NamedTuple
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -50,7 +51,7 @@ from ._modelo_cli_support import (
     validate_calculation_revision_id,
     validate_work_unit_id,
 )
-from .common import activate_subcommand_output_language, emit_envelope, resolve_cli_precondition_action
+from .common import emit_envelope, resolve_cli_precondition_action
 from .modelo_aux_payloads import (
     WorkflowRunPayload,
     WorkflowRunSummaryPayload,

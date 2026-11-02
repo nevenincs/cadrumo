@@ -49,7 +49,7 @@ from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from . import _renta_income_evidence, _shared_issue_reasons
+from . import _shared_issue_reasons, renta_income_evidence
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .business_proportion import business_proportion
@@ -177,7 +177,7 @@ class RentaIncomeObservation(BaseModel):
     filing_date: date
     source_jurisdiction: str | None = None
     grounding: LedgerIncomeGrounding
-    sales_invoice_refusal: _renta_income_evidence.SalesInvoiceEvidenceRefusal | None = None
+    sales_invoice_refusal: renta_income_evidence.SalesInvoiceEvidenceRefusal | None = None
 
     @model_validator(mode="after")
     def _grounding_matches_declared_base(self) -> Self:
@@ -374,7 +374,7 @@ def _accrued_unpaid_income(
         ):
             continue
         receipts = [active[row] for row in invoice.linked_transaction_ids if row in active]
-        shares = [_renta_income_evidence.part_payment_share(invoice, receipt) for receipt in receipts]
+        shares = [renta_income_evidence.part_payment_share(invoice, receipt) for receipt in receipts]
         if None in shares:
             continue
         retencion = invoice.retention_amount or Decimal("0")
@@ -410,14 +410,16 @@ def _overpaid_invoice_issues(
         if invoice is None or invoice.kind is not InvoiceKind.ISSUED or invoice.bucket_id != bucket_id:
             continue
         if len(receipts) < 2 or sum((abs(row.raw.amount) for row in receipts), Decimal("0")) <= (
-            _renta_income_evidence.invoice_net_cash(invoice)
+            renta_income_evidence.invoice_net_cash(invoice)
         ):
             continue
         issues.extend(
             RentaIncomeLedgerAggregationIssue(
                 transaction_id=row.transaction_id,
                 reason=RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
-                detail=f"{ImputationUnresolved.OVERPAID_INVOICE.value}: receipts exceed invoice {invoice.invoice_number}",
+                detail=(
+                    f"{ImputationUnresolved.OVERPAID_INVOICE.value}: receipts exceed invoice {invoice.invoice_number}"
+                ),
             )
             for row in receipts
         )
@@ -500,7 +502,7 @@ def rectification_diagnostics(
         filed_on = criteria.filings.filed_on.get(accrual.year)
         if filed_on is None or cash <= filed_on or year not in {accrual.year, cash.year}:
             continue
-        share = _renta_income_evidence.part_payment_share(invoice, transaction)
+        share = renta_income_evidence.part_payment_share(invoice, transaction)
         amount = invoice.retention_amount if share is None else round_to_cents(invoice.retention_amount * share)
         findings.append(
             CalculationSourceDiagnostic(
@@ -1259,10 +1261,8 @@ def _income_business_proportion_or_issue(
     )
     if proportion is not None:
         return proportion
-    reason = (
-        RentaIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-        if transaction.business_classification is BusinessClassification.PERSONAL
-        else RentaIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    reason = RentaIncomeLedgerAggregationIssueReason(
+        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return RentaIncomeLedgerAggregationIssue(
         transaction_id=transaction.transaction_id,
@@ -1314,7 +1314,7 @@ def _imputed_income_date_or_issue(
         and accrual is not None
         and len(invoice.linked_transaction_ids) != 1
         and criteria.usable(accrual.year) is ActivityImputationCriterion.DEVENGO
-        and _renta_income_evidence.part_payment_share(invoice, transaction) is None
+        and renta_income_evidence.part_payment_share(invoice, transaction) is None
     ):
         imputed = ImputationUnresolved.ACCRUAL_UNKNOWN
     if isinstance(imputed, ImputationUnresolved):
@@ -1344,7 +1344,7 @@ def _income_observation(
 
     # taxable_base carries the IVA-exclusive base imponible when set; it
     # feeds the taxable_base_sum fact path for the rendimiento-neto binding.
-    evidence, evidence_refusal = _renta_income_evidence.sales_invoice_evidence_payload(
+    evidence, evidence_refusal = renta_income_evidence.sales_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,
         transaction=transaction,
@@ -1369,7 +1369,7 @@ def _income_observation(
     # retención derived from the undivided base stayed whole.
     taxable_base_amount: Decimal | None = None if declared_base is None else declared_base * proportion
 
-    withheld = _renta_income_evidence.income_withheld_amount(transaction, evidence=evidence)
+    withheld = renta_income_evidence.income_withheld_amount(transaction, evidence=evidence)
 
     return RentaIncomeObservation(
         transaction_id=transaction_id,
@@ -1410,7 +1410,7 @@ def unusable_sales_invoice_diagnostics(
     degrades to a count instead of raising out of the diagnostic and taking the
     calculation down with it.
     """
-    by_reason: dict[_renta_income_evidence.SalesInvoiceEvidenceRefusal, list[RentaIncomeObservation]] = {}
+    by_reason: dict[renta_income_evidence.SalesInvoiceEvidenceRefusal, list[RentaIncomeObservation]] = {}
     for observation in observations:
         if observation.sales_invoice_refusal is not None:
             by_reason.setdefault(observation.sales_invoice_refusal, []).append(observation)

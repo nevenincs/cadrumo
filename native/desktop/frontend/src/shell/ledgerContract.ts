@@ -116,6 +116,15 @@ export const splitPartNeedsCategory = (id: string): boolean =>
     id,
   );
 
+/** The classifications no person or rule decided, so classifying over one overwrites nothing. */
+export const UNDECIDED_CLASSIFICATIONS = [
+  "NOT_YET_PROCESSED",
+  "PROCESSED_UNCLASSIFIED",
+  "FAILED_VALIDATION",
+] as const;
+export const isUndecided = (id: string): boolean =>
+  (UNDECIDED_CLASSIFICATIONS as readonly string[]).includes(id);
+
 /** The lifecycle states in which a movement takes a change to its facts. */
 export const CHANGEABLE_LIFECYCLE_STATES = ["ACTIVE"] as const;
 export const takesChanges = (id: string): boolean =>
@@ -156,15 +165,17 @@ export const FIELDS_LOCKED_BY_DIRECTION: Readonly<
   Record<string, readonly string[]>
 > = {
   INTERNAL_TRANSFER: [
+    "business_pct",
     "category_id",
-    "counterparty_identification_state",
     "deduction_fact_kind",
     "investment_asset_id",
     "irpf_category",
     "iva_amount",
     "iva_category",
     "iva_rate",
+    "operation_date",
     "taxable_base",
+    "usage_ratio_id",
   ],
 };
 
@@ -197,9 +208,24 @@ export const awaitsInvoice = (
 export const SEALING_REVISION_STATES = [
   "verificado_completo",
   "presentado",
+  "presentado_supersedido",
 ] as const;
 export const sealsMovements = (id: string): boolean =>
   (SEALING_REVISION_STATES as readonly string[]).includes(id);
+
+/** What a classification write of Personal drops from a movement. */
+export const FIELDS_DROPPED_BY_PERSONAL = [
+  "business_pct",
+  "category_id",
+  "irpf_category",
+  "iva_amount",
+  "iva_rate",
+  "m210_income_classification",
+  "prorrata_reference",
+  "recargo_amount",
+  "taxable_base",
+  "usage_ratio_id",
+] as const;
 
 /** The fields a write can replace but never blank, having no empty value. */
 export const UNCLEARABLE_FIELDS = ["business_classification", "notes"] as const;
@@ -267,6 +293,7 @@ export const MONTH_CODES = [
 export const LEDGER_UPDATE_FIELDS = [
   "booked_date",
   "value_date",
+  "operation_date",
   "amount",
   "direction",
   "currency",

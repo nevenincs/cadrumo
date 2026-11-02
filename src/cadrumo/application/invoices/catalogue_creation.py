@@ -64,7 +64,7 @@ from ...domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceL
 from ...domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
-from ..aggregation.counterpart import counterpart_operation_catalogue_entries
+from ..aggregation.counterpart import counterpart_catalogue_entry, counterpart_operation_catalogue_entries
 from .catalogue_creation_ports import (
     CatalogueCreationPorts,
     CatalogueInvoiceRateProviderPort,
@@ -158,22 +158,18 @@ def _registry_m349_operation_type_requirement(
         raise ValueError(f"Modelo 349 has no registry revision for {effective_date.isoformat()}")
     entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
 
-    def required(key: str) -> str:
-        value = entries.get(key)
-        if value is None or not value.strip():
-            raise ValueError(f"counterpart registry mapping is missing {key!r}")
-        return value.strip()
-
     try:
         category = require_iva_category(
-            required("modelo.349.operation_type_required_category"),
+            counterpart_catalogue_entry(entries, "modelo.349.operation_type_required_category"),
             effective_date=effective_date,
             authority=operation,
         )
     except (RegistryValidationError, ValueError) as exc:
         raise ValueError("counterpart registry declares an unknown operation-type category") from exc
     tokens = tuple(
-        token.strip() for token in required("modelo.349.operation_type_candidates").split(",") if token.strip()
+        token.strip()
+        for token in counterpart_catalogue_entry(entries, "modelo.349.operation_type_candidates").split(",")
+        if token.strip()
     )
     if not tokens or len(set(tokens)) != len(tokens):
         raise ValueError("counterpart registry declares an empty or duplicate operation-type candidate set")
@@ -213,6 +209,9 @@ def _require_operation_type_where_the_category_cannot_settle_it(
             the refusal tells the operator what to state rather than only that
             something is missing.
     """
+    if effective_date < operation.supported_filing_years().date_envelope().floor:
+        # No Modelo 349 is filed for a date older than the filing years, so no clave is owed to one.
+        return
     required_category, candidates = _registry_m349_operation_type_requirement(
         effective_date,
         operation=operation,
@@ -318,6 +317,7 @@ def _apply_operator_asserted_invoice_facts(
     series: str | None,
     rectifies_invoice_number: str | None,
     recargo_amount: Decimal | None,
+    suplido_amount: Decimal | None,
     iva_category: IvaCategory | None,
     operation_type: IntracomOperationType | None,
     operation_date: date | None,
@@ -332,6 +332,8 @@ def _apply_operator_asserted_invoice_facts(
         invoice_payload["rectifies_invoice_number"] = rectifies_invoice_number
     if recargo_amount is not None:
         invoice_payload["recargo_amount"] = format(recargo_amount, "f")
+    if suplido_amount is not None:
+        invoice_payload["suplido_amount"] = format(suplido_amount, "f")
     if iva_category is not None:
         invoice_payload["iva_category"] = iva_category.value
     _require_operation_type_where_the_category_cannot_settle_it(
@@ -398,6 +400,7 @@ def build_catalogue_invoice(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo_amount: Decimal | None = None,
+    suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
@@ -442,8 +445,9 @@ def build_catalogue_invoice(
     vocabulary the writer could not speak.
 
     The recargo rides INSIDE ``grand_total`` (LIVA art. 161) while a retención
-    is settled outside it, which is why only the recargo enters the totals
-    identity. The model re-checks that identity exactly, so a stated recargo
+    is settled outside it, which is why only the recargo and the suplido enter
+    the totals identity. A suplido (LIVA art. 78.Tres.3.º) is carried in the
+    total but is no part of the base or the cuota. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
 
     ``business_premises_lease`` states that an issued invoice documents the
@@ -475,6 +479,7 @@ def build_catalogue_invoice(
                 series=series,
                 rectifies_invoice_number=rectifies_invoice_number,
                 recargo_amount=recargo_amount,
+                suplido_amount=suplido_amount,
                 business_premises_lease=business_premises_lease,
                 lines=lines,
                 rate_provider=rate_provider,
@@ -503,6 +508,7 @@ def build_catalogue_invoice(
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
         recargo_amount=recargo_amount,
+        suplido_amount=suplido_amount,
         business_premises_lease=business_premises_lease,
         lines=lines,
         rate_provider=rate_provider,
@@ -533,6 +539,7 @@ def _build_pinned_catalogue_invoice(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo_amount: Decimal | None = None,
+    suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
@@ -580,7 +587,7 @@ def _build_pinned_catalogue_invoice(
         # while a retencion is settled outside it, which is why only the recargo
         # appears here. The model re-checks this identity exactly, so a caller that
         # states a recargo the lines do not support is refused rather than balanced.
-        grand_total = computed_grand_total(base_total, iva_total, recargo_amount)
+        grand_total = computed_grand_total(base_total, iva_total, recargo_amount) + (suplido_amount or Decimal(0))
         invoice_payload: dict[str, object] = {
             "bucket_id": bucket_id,
             "kind": kind.value,
@@ -603,6 +610,7 @@ def _build_pinned_catalogue_invoice(
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
             recargo_amount=recargo_amount,
+            suplido_amount=suplido_amount,
             iva_category=iva_category,
             operation_type=operation_type,
             operation_date=operation_date,

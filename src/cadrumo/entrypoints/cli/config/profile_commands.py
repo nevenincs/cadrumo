@@ -30,7 +30,8 @@ from typing import TYPE_CHECKING, cast
 import typer
 from typer._click.core import Context as _TyperClickContext
 
-from ..common import activate_subcommand_output_language
+from cadrumo_client.commands.output import activate_subcommand_output_language
+
 from ..errors import command_error_boundary as _command_error_boundary
 
 if TYPE_CHECKING:

@@ -258,6 +258,8 @@ def evaluate_import_rows(
                 "raw": raw,
                 "own_account_id": parsed.own_account_id,
                 "direction": parsed.direction,
+                # Only a column that states the devengo itself; never a bank date.
+                "operation_date": parsed.operation_date,
                 "import_fingerprint": fingerprint,
                 "fx_rate": fx_rate,
                 "value_in_eur": value_in_eur,
@@ -359,7 +361,14 @@ def _bind_own_accounts(
                 account for account in own_accounts.accounts if identifier and _account_matches(account, identifier)
             ]
             account_id = matches[0].own_account_id if len(matches) == 1 else None
-        bound.append(LedgerParsedRow(raw=parsed.raw, direction=parsed.direction, own_account_id=account_id))
+        bound.append(
+            LedgerParsedRow(
+                raw=parsed.raw,
+                direction=parsed.direction,
+                own_account_id=account_id,
+                operation_date=parsed.operation_date,
+            )
+        )
     return tuple(bound)
 
 

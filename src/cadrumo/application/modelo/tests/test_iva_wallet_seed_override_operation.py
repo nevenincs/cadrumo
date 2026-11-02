@@ -8,7 +8,7 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -18,7 +18,7 @@ from cadrumo.core.operations import OperationEffect, OperationTerminalCondition,
 from cadrumo.domain.iva_compensation.errors import IvaCompensationSeedConflictError
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....domain.calculations.registry.authority import bundled_indexed_authority
 from ...operations.access_resolution import OperationAccessContext
@@ -26,7 +26,7 @@ from ...operations.capabilities import OperationRequestStoragePolicy, OperationS
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.owner import OperationExecutorContext
 from ...operations.public_period import PublicPeriod
-from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
+from ...operations.registry import OperationPublicDefinitionRegistrationV1
 from ...tests.operation_host_fakes import IrreversibleSectionGrant, RecordingEvents
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..iva_wallet_override_operation import (
@@ -52,6 +52,7 @@ from ..iva_wallet_seed_operation import (
     resolve_modelo_iva_wallet_seed_access,
 )
 from ..iva_wallet_seed_ports import ModeloIvaWalletSeedPorts, ModeloIvaWalletSeedPortsFactory
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -172,14 +173,7 @@ def _executor_context(
 def _access_context(
     registration: OperationPublicDefinitionRegistrationV1, *, profile_id: UUID = _PROFILE
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.SUBMIT)
 
 
 def _seed_state(*, amount: Decimal = Decimal("1200.50")) -> object:

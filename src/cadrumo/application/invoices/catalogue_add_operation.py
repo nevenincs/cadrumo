@@ -18,6 +18,7 @@ from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.facts.resolution import reading_dated_facts_below_support
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.invoice_legal_classification import (
     InvoiceLegalClassificationCatalogue,
@@ -36,9 +37,10 @@ from ...domain.invoices.enums import InvoiceClass, IvaRate, iva_rate_slots_on
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import IvaCategory
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..ledger.read_access import resolve_ledger_request_commit_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.error_detail import operation_refusal_words
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -111,21 +113,21 @@ class InvoiceAddExecutor:
                 profile=profile,
                 authority_operation=authority_operation,
             )
-        except (InvoiceValidationError, ValidationError):
+        except (InvoiceValidationError, ValidationError) as error:
             async with context.cancellation.irreversible_section():
-                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
-        except RegistryValidationError:
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice", refused_by=error)
+        except RegistryValidationError as error:
             if not invoice_date_outside_registry_support(
                 payload.operation_date or payload.issued_at,
                 authority_operation,
             ):
                 raise
             async with context.cancellation.irreversible_section():
-                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
-        except (CoreValidationError, DecimalException):
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice", refused_by=error)
+        except (CoreValidationError, DecimalException) as error:
             # After the registry clause: RegistryValidationError is a CoreValidationError too.
             async with context.cancellation.irreversible_section():
-                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice", refused_by=error)
         return await await_cancellation_complete(
             _commit_invoice_add(
                 context=context,
@@ -147,9 +149,12 @@ async def _record_invoice_add_refusal(
     code: Literal["invalid_invoice", "duplicate_invoice"],
     *,
     invoice_id: str | None = None,
+    refused_by: BaseException,
 ) -> OperationRefusalEvidence:
     detail = InvoiceAddExecutionResult(
-        result=InvoiceAddResult.validation_refusal(payload.profile_id, code=code, invoice_id=invoice_id)
+        result=InvoiceAddResult.validation_refusal(
+            payload.profile_id, code=code, invoice_id=invoice_id, words=operation_refusal_words(refused_by)
+        )
     )
     detail_ref = await context.operands.put(detail, written_at=now())
     return OperationRefusalEvidence(refusal_code=INVOICE_ADD_VALIDATION_REFUSAL_CODE, detail_ref=detail_ref)
@@ -198,6 +203,7 @@ async def _commit_invoice_add(
                 payload,
                 "duplicate_invoice",
                 invoice_id=invoice.invoice_id,
+                refused_by=error,
             )
         if (
             created.invoice.invoice_id != invoice.invoice_id
@@ -402,13 +408,16 @@ def _prepare_invoice_add(
     # The transport carries plain text; re-enter the domain owner before port creation.
     business_premises_lease = invoice_add_lease(payload, authority_operation=authority_operation)
     ports = factory(bucket_id=profile)
-    invoice, advisory_required = build_invoice_from_add_request(
-        payload=payload,
-        business_premises_lease=business_premises_lease,
-        profile=profile,
-        authority_operation=authority_operation,
-        rate_provider=ports.rate_provider,
-    )
+    # An invoice older than the filing years is still a dated record: its facts
+    # are read as a projection, and filing never reaches this scope.
+    with reading_dated_facts_below_support():
+        invoice, advisory_required = build_invoice_from_add_request(
+            payload=payload,
+            business_premises_lease=business_premises_lease,
+            profile=profile,
+            authority_operation=authority_operation,
+            rate_provider=ports.rate_provider,
+        )
     return ports, invoice, advisory_required
 
 
@@ -444,12 +453,9 @@ def resolve_invoice_add_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile ledger rights and a fresh COMMIT grant."""
-    if request.definition_id != INVOICE_ADD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InvoiceAddRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    return with_commit_action(resolved)
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID, request_type=InvoiceAddRequest
+    )
 
 
 def build_invoice_add_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

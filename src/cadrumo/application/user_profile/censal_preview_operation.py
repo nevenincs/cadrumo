@@ -15,7 +15,7 @@ from pydantic import AnyHttpUrl, BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.hashing import canonical_json_bytes
@@ -92,7 +92,6 @@ _CENSAL_PREVIEW_PHASES = (
     CENSAL_PREVIEW_PHASE_SETTLEMENT,
 )
 _CENSAL_PREVIEW_MAX_VALUE_LENGTH = 4_096
-_CENSAL_PREVIEW_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _CensalPath = Annotated[str, Field(min_length=1, max_length=256)]
 _CensalValue = Annotated[str, Field(max_length=_CENSAL_PREVIEW_MAX_VALUE_LENGTH)]
@@ -359,7 +358,7 @@ class CensalPreviewOperationExecutor:
             profile_decode_context=decode_context,
         )
         result = _build_preview_result(profile_id=UUID(profile_id), record=current, observation=observation)
-        if len(canonical_json_bytes(result.model_dump(mode="json"))) > _CENSAL_PREVIEW_RESULT_MAX_BYTES:
+        if len(canonical_json_bytes(result.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
 
         await context.events.phase(CENSAL_PREVIEW_PHASE_RESULT)

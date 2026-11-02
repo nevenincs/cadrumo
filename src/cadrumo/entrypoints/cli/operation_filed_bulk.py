@@ -15,6 +15,7 @@ from ...application.live.filed_bulk_capture_operation import (
     FILED_BULK_CAPTURE_DEFINITION_ID,
     FiledBulkCapturePublicResultV1,
     FiledBulkCaptureRequest,
+    bulk_capture_effect,
 )
 from ...application.live.filed_single_capture_operation import FiledReconciliationV1
 from ...application.live.remote_state_models import (
@@ -24,7 +25,6 @@ from ...application.live.remote_state_models import (
 )
 from ...application.modelo.filing_chain_reconciliation import FilingReconciliationResult
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.operations import OperationEffect
 from ...core.period import Period
 from .operation_filed_projection import (
     capture_notice,
@@ -104,10 +104,6 @@ def _presentation_report(
     return report
 
 
-def _bulk_capture_effect(report: BulkFiledDataCaptureReport) -> OperationEffect:
-    return OperationEffect.UPDATED if report.sync_run_ref is not None else OperationEffect.NONE
-
-
 def read_filed_bulk_capture_for_cli(
     ctx: typer.Context,
     *,
@@ -141,7 +137,7 @@ def read_filed_bulk_capture_for_cli(
         completed,
         FiledBulkCapturePublicResultV1,
         lambda projection: _presentation_report(projection, profile_id=profile_id, request=request),
-        _bulk_capture_effect,
+        bulk_capture_effect,
     )
     return FiledBulkCaptureRead(completion=completed, report=report)
 

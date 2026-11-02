@@ -306,7 +306,7 @@ def _unanchored_verified_identity_resolution(
                 field=field,
                 origin=origin,
                 grounding=FieldGroundingOutcome.UNANCHORED,
-                anchor=candidate.printed_anchor,
+                anchor=candidate.anchor,
                 note=(
                     "one identifier verified but nothing on the document establishes it as the "
                     "counterparty's; a lone survivor is not evidence of a role"

@@ -26,15 +26,15 @@ from ..producer_snapshot import FilingProducerSnapshot, GeneralFilingProfileFact
 from ..runtime import RegistrySchemaAccessor
 from .export_support import (
     _approved_modelo_131_historical_registry_draft,
-    _schema_provider,
-    _typed_producer_snapshot,
+    export_schema_provider,
+    typed_producer_snapshot,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def _modelo_131_snapshot() -> FilingProducerSnapshot:
-    base = _typed_producer_snapshot()
+    base = typed_producer_snapshot()
     return build_filing_producer_snapshot(
         modelo=Modelo("131"),
         taxpayer_tax_id=base.taxpayer_tax_id,
@@ -50,7 +50,7 @@ def _modelo_131_snapshot() -> FilingProducerSnapshot:
 
 
 def _export_modelo_131(output_path: Path) -> tuple[DeclaracionExportResult, RegistrySchemaAccessor]:
-    provider = _schema_provider(filing_year=2023, period="4T", modelos=("131",))
+    provider = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
     receipt = export_draft(
         _approved_modelo_131_historical_registry_draft(),
         output_path=output_path,
@@ -159,7 +159,7 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
     refuses the trailing bytes, and the post-write tripwire must prevent a
     receipt from escaping.
     """
-    base = _schema_provider(filing_year=2023, period="4T", modelos=("131",))
+    base = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
     subview = base.get_subview("131")
     original_layout = subview.export_layouts[0]
     casilla_field = next(
@@ -223,7 +223,7 @@ def test_export_draft_itself_refuses_a_real_renderer_parser_disagreement(tmp_pat
 
 
 def test_post_write_tripwire_types_an_unreadable_existing_path_as_missing(tmp_path: Path) -> None:
-    provider = _schema_provider(filing_year=2023, period="4T", modelos=("131",))
+    provider = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
     draft = _approved_modelo_131_historical_registry_draft()
     incompatible_path = tmp_path / "directory-not-a-declaration"
     incompatible_path.mkdir()

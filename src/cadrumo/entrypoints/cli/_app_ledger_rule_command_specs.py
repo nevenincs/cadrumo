@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import OptionSpec
+from cadrumo_client.commands.secret_contracts import (
+    MachineSecretFieldSpec,
+    MachineSecretSpec,
+    MachineSecretVariantSpec,
+)
+from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -179,20 +185,20 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         ),
     ),
     CommandSpec(
-        "app_ledger_rule_trial",
+        "app_ledger_rule_remove",
         "app_ledger_rule",
-        "trial",
+        "remove",
         kind=CommandNodeKind.LEAF,
-        help_key=TranslationKey("cli.app.ledger.rule.trial_help"),
+        help_key=TranslationKey("cli.app.ledger.rule.remove_help"),
         short_help_key=None,
         invocation=_LEDGER_RULE_RATIO_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
-                name="description_pattern",
-                declarations=("--description-pattern",),
+                name="rule_id",
+                declarations=("--rule-id",),
                 value=ValueContract(DeferredTarget("builtins", "str")),
                 default=ParameterDefault.required(),
-                help_key=TranslationKey("cli.app.ledger.rule.description_pattern_help"),
+                help_key=TranslationKey("cli.app.ledger.rule.remove_rule_id_help"),
                 metavar=None,
                 is_flag=False,
                 flag_value=None,
@@ -203,6 +209,40 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
+            OptionSpec(
+                name="created_at",
+                declarations=("--created-at",),
+                value=ValueContract(DeferredTarget("builtins", "str")),
+                default=ParameterDefault.required(),
+                help_key=TranslationKey("cli.app.ledger.rule.remove_created_at_help"),
+                metavar=None,
+                is_flag=False,
+                flag_value=None,
+                multiple=False,
+                count=False,
+                eager=False,
+                constraint=ParameterConstraint(),
+                show_default=True,
+                hidden=False,
+            ),
+        ),
+        policy=_POLICY_4,
+        handler=LazyBinding.available(DeferredTarget(".ledger_rules_commands", "rule_remove", __package__)),
+        result_schema=ResultSchemaSpec(
+            SchemaState.TARGET,
+            target=DeferredTarget(".ledger_rule_results", "RuleRemoveResult", __package__),
+            identity="ledger.rule.remove",
+        ),
+    ),
+    CommandSpec(
+        "app_ledger_rule_trial",
+        "app_ledger_rule",
+        "trial",
+        kind=CommandNodeKind.LEAF,
+        help_key=TranslationKey("cli.app.ledger.rule.trial_help"),
+        short_help_key=None,
+        invocation=_LEDGER_RULE_RATIO_LEAF_INVOCATION,
+        parameters=(
             OptionSpec(
                 name="transaction_id",
                 declarations=("--transaction-id",),
@@ -219,6 +259,8 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
         ),
         policy=_POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".rule_trial_commands", "rule_trial", __package__)),
@@ -226,6 +268,15 @@ LEDGER_RULE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_results", "LedgerRuleTrialEnvelope", __package__),
             identity="ledger.rule.trial",
+        ),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "pattern",
+                    (MachineSecretFieldSpec("description_pattern"),),
+                    DeferredTarget(".rule_trial_commands", "RuleTrialSecrets", __package__),
+                ),
+            ),
         ),
     ),
 )

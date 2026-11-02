@@ -19,7 +19,12 @@ from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ..calculations.registry.binding_grade_cap_reach import register_binding_output_redirect
-from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
+from ..calculations.registry.errors import GovernedFactNotApplicableError
+from ..calculations.registry.facts.resolution import (
+    MappingFactQuery,
+    ResolvedMappingFact,
+    reading_dated_facts_below_support,
+)
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema_base import DateAxis
@@ -99,8 +104,15 @@ def check_m130_retenciones_output_casilla(
     """Assert a selected route output endpoint exists when its binding is declared.
 
     The route is read as in force at the close of ``filing_year``, the ejercicio the snapshot selects.
+    A historical ejercicio below the supported years is inspected too, so the route is read from the
+    nearest declaration rather than refused; no filing-grade calculation rests on that reading.
     """
-    route = _registry_m130_retenciones_route(effective_date=date(filing_year, 12, 31))
+    try:
+        with reading_dated_facts_below_support():
+            route = _registry_m130_retenciones_route(effective_date=date(filing_year, 12, 31))
+    except GovernedFactNotApplicableError:
+        # No route is declared for that ejercicio, so there is no output endpoint to assert.
+        return []
     if modelo_id != route.modelo_id:
         return []
     if route.binding_id not in revision_binding_ids:

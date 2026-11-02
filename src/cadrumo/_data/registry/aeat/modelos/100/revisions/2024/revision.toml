@@ -8797,11 +8797,6 @@ sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-
 sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
 [[revisions."2024".family_overrides]]
 family = "bindings"
-selector = {revision = "2023", id = "renta-certificado-trabajo-retenciones"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2024"]}], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-input-dictionary", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
-[[revisions."2024".family_overrides]]
-family = "bindings"
 selector = {revision = "2023", id = "renta-family-ascendant-birth-date"}
 sequence_additions = {legal_refs = ["orden-hac-242-2025:art-3"], source_citations = [{source_ref = "aeat-renta-2024-manual-parte1", required_text = ["Modelo 100", "ejercicio 2024"]}], source_refs = ["aeat-dr-100-2024-dictionary", "aeat-dr-100-2024-xsd", "aeat-renta-2024-manual-parte1", "boe-modelo-100-2024-form"]}
 sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0, 1, 2, 3]}
@@ -9555,11 +9550,6 @@ position = 18
 family = "bindings"
 id = "renta-ledger-expense-0203-deductible"
 position = 19
-
-[[revisions."2024".family_positions]]
-family = "bindings"
-id = "renta-certificado-trabajo-retenciones"
-position = 20
 
 [[revisions."2024".family_positions]]
 family = "bindings"

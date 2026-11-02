@@ -19,7 +19,7 @@ from pydantic import BaseModel
 
 from ...core.decimal.grammar import AMBIGUOUS_THOUSANDS_PATTERN, CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGTH
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.percentage import PERCENTAGE_BARE_FRACTION_CEILING, PERCENTAGE_ENTRY_DECIMALS, PERCENTAGE_MAX
+from ...core.percentage import PERCENTAGE_BARE_FRACTION_CEILING, PERCENTAGE_ENTRY_FRACTION_DIGITS, PERCENTAGE_MAX
 from ...core.unit_proportion import UNIT_PROPORTION_MAX
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 from ...domain.identifiers import canonical_decimal_string
@@ -97,7 +97,7 @@ class LedgerEntryLimitsProjection(BaseModel):
     text_limits: tuple[LedgerEntryTextLimit, ...]
 
 
-_INVOICE_LINE_ENTRY_DECIMALS: Final = 6
+_INVOICE_LINE_ENTRY_FRACTION_DIGITS: Final = 6
 """The fraction digits an invoice line's quantity or unit price is typed with; the line's own model has no cap."""
 
 _DECIMAL_RULES: Final[tuple[LedgerEntryDecimalRule, ...]] = (
@@ -105,8 +105,8 @@ _DECIMAL_RULES: Final[tuple[LedgerEntryDecimalRule, ...]] = (
     LedgerEntryDecimalRule(rule="amount", decimals=CENT_FRACTION_DIGITS, zero=False),
     LedgerEntryDecimalRule(rule="tax_amount", decimals=CENT_FRACTION_DIGITS, zero=True),
     # An invoice line refuses a zero quantity and takes a unit price of zero.
-    LedgerEntryDecimalRule(rule="quantity", decimals=_INVOICE_LINE_ENTRY_DECIMALS, zero=False),
-    LedgerEntryDecimalRule(rule="unit_price", decimals=_INVOICE_LINE_ENTRY_DECIMALS, zero=True),
+    LedgerEntryDecimalRule(rule="quantity", decimals=_INVOICE_LINE_ENTRY_FRACTION_DIGITS, zero=False),
+    LedgerEntryDecimalRule(rule="unit_price", decimals=_INVOICE_LINE_ENTRY_FRACTION_DIGITS, zero=True),
 )
 
 # The scale a document's rate is read and corrected on: a reading and an evidence record keep points.
@@ -140,7 +140,7 @@ def ledger_entry_limits() -> LedgerEntryLimitsProjection:
         decimal_text_max=DECIMAL_TEXT_MAX_LENGTH,
         two_way_decimal=AMBIGUOUS_THOUSANDS_PATTERN,
         decimal_rules=_DECIMAL_RULES,
-        percent_decimals=PERCENTAGE_ENTRY_DECIMALS,
+        percent_decimals=PERCENTAGE_ENTRY_FRACTION_DIGITS,
         percent_points_max=canonical_decimal_string(PERCENTAGE_MAX),
         percent_fraction_max=canonical_decimal_string(UNIT_PROPORTION_MAX),
         percent_bare_fraction_ceiling=canonical_decimal_string(PERCENTAGE_BARE_FRACTION_CEILING),

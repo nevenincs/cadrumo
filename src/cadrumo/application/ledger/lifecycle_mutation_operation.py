@@ -72,7 +72,7 @@ from .lifecycle_projections import (
 )
 from .models import ManualLedgerTransactionResult
 from .protocols import TransactionCatalogueCoCommitWriterProtocol
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 
 class LedgerLifecycleValidationRefusedError(CadrumoError):
@@ -482,9 +482,9 @@ def _resolve_lifecycle_access(
     *,
     operation_id: LedgerLifecycleOperationId,
 ) -> ResolvedOperationAccess:
-    if request.definition_id != operation_id or not isinstance(request.payload, LedgerLifecycleMutationRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=operation_id, request_type=LedgerLifecycleMutationRequest
+    )
 
 
 def resolve_ledger_archive_access(

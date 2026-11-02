@@ -25,7 +25,11 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.categories.spending_category_catalogue import require_spending_category, spending_category_tokens
-from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH, LedgerClassificationRule
+from ...domain.transactions.classification_rule import (
+    RULE_PATTERN_ENTRY_MAX_LENGTH,
+    LedgerClassificationRule,
+    require_new_rule_decision,
+)
 from ...domain.transactions.errors import ClassificationRuleError, TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
@@ -87,6 +91,7 @@ from .rule_results import (
     project_ledger_rule_apply_result,
     publish_rule_apply_refusal,
 )
+from .rule_trial_operation import rule_pattern_overruns_ledger
 
 LEDGER_RULE_ADD_OPERATION_DEFINITION_ID = "ledger.rule.add"
 LEDGER_RULE_LIST_OPERATION_DEFINITION_ID = "ledger.rule.list"
@@ -109,6 +114,9 @@ class _TrackedRuleRepository:
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return self._repository.list_rules()
+
+    def delete(self, identifier: str) -> bool:
+        return self._repository.delete(identifier)
 
 
 async def _prepare_rule_add(
@@ -149,6 +157,12 @@ async def _prepare_rule_add(
         return await _publish_add_refusal(context, projection)
 
     try:
+        require_new_rule_decision(payload.classification, category_id)
+    except ClassificationRuleError as error:
+        projection = _add_validation_projection(payload.profile_id, code="invalid_command", error=error)
+        return await _publish_add_refusal(context, projection)
+
+    try:
         candidate = LedgerClassificationRule.create(
             description_pattern=payload.description_pattern,
             classification=payload.classification,
@@ -159,6 +173,13 @@ async def _prepare_rule_add(
         LedgerRuleRowProjection.from_rule(candidate)
     except (ClassificationRuleError, ValidationError, ValueError) as error:
         projection = _add_validation_projection(payload.profile_id, code="invalid_pattern", error=error)
+        return await _publish_add_refusal(context, projection)
+    if await asyncio.to_thread(rule_pattern_overruns_ledger, bucket_id, payload.description_pattern):
+        projection = _add_validation_projection(
+            payload.profile_id,
+            code="pattern_overrun",
+            error=ValueError("the pattern did not finish searching this profile's descriptions within its bound"),
+        )
         return await _publish_add_refusal(context, projection)
     return candidate, category_id
 

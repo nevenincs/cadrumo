@@ -11,11 +11,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from decimal import Decimal
-from typing import Annotated
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from .carry_forward import (
@@ -24,18 +23,6 @@ from .carry_forward import (
     IvaCompensationExpiryReviewState,
 )
 from .carry_window import resolve_iva_compensation_carry_window_years
-
-CompensationExpiryYear = Annotated[int, Field(ge=1900, le=9999)]
-"""A coarse year-level carry-window review boundary for a compensation lot.
-
-Deliberately wider than FilingYear. This derived review year may fall beyond
-the last year a return can be filed for. It is not an exact statutory filing
-deadline.
-
-Declared once because the CLI wallet payload projects the same field. The bound
-was written out at both sites identically, which is the shape that drifts: the
-payload can loosen or tighten without the model noticing.
-"""
 
 
 class IvaWalletBalanceReport(BaseModel):
@@ -48,7 +35,7 @@ class IvaWalletBalanceReport(BaseModel):
     active_balance: Decimal = Field(ge=Decimal("0"))
     expired_balance: Decimal = Field(ge=Decimal("0"))
     lot_count: NonNegativeInt
-    next_expiry_year: CompensationExpiryYear | None = None
+    next_expiry_year: FourDigitYear | None = None
     unallocated_applied_amount: Decimal = Field(ge=Decimal("0"))
 
 

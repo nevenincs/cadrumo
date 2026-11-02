@@ -26,7 +26,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -35,39 +34,18 @@ from ....core.period import Period
 from ....domain.iva.schema import IvaCategory
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import maximum_supported_activity_retencion_rate
-from .._renta_income_evidence import income_withheld_amount as income_withheld_amount
+from ..renta_income_evidence import income_withheld_amount as income_withheld_amount
 from ..renta_income_ledger import RentaIncomeObservation, aggregate_renta_income_ledger
 from .renta_income_aggregation_support import (
     M130_INGRESOS_CASILLA,
     M130_MODELO,
+    csv_income_raw,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
-
-
-def _raw(provider_id: str, *, amount: Decimal, value_date: date) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=value_date,
-        value_date=value_date,
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente SA",
-        description=f"income row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="b" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": provider_id},
-    )
 
 
 def _income_row(
@@ -83,7 +61,7 @@ def _income_row(
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw(provider_id, amount=Decimal(cash), value_date=value_date),
+            "raw": csv_income_raw(provider_id, amount=Decimal(cash), value_date=value_date),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",

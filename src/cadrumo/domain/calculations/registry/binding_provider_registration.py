@@ -109,6 +109,7 @@ from .profile_bindings import ProfileProvider, validate_profile_binding
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider, validate_prorrata_regularizacion_binding
 from .relation_prefill_bindings import RelationPrefillProvider, validate_relation_prefill_binding
 from .relations import validate_relation_prefill_fold_arity
+from .retencion_soportada_bindings import RetencionSoportadaProvider, validate_retencion_soportada_binding
 from .retenciones_bindings import RetencionesAggregationProvider, validate_retenciones_aggregation_binding
 from .withholding296_bindings import Withholding296Provider, validate_withholding296_binding_selector_shape
 from .withholding_bindings import WithholdingProvider, validate_withholding_binding_selector_shape
@@ -612,6 +613,28 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         stage="mesh",
     ),
     _filing_grade(
+        BindingSourceKind.RETENCION_SOPORTADA,
+        RetencionSoportadaProvider,
+        validate_retencion_soportada_binding,
+        # Withholding the taxpayer suffered, one record per payer: a payer
+        # certificate, or the operator's declaration where no certificate is
+        # held. A proven zero rests on the operator's absence attestation or on
+        # the profile's declaration that the class's income is absent. Never
+        # PERCEPTOR_OBSERVATION, which is the withholding-agent side.
+        channels=_MONEY_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}),
+        origins=frozenset(
+            {
+                TerminalOriginClass.PAYER_CERTIFICATE,
+                TerminalOriginClass.OPERATOR_INPUT,
+                TerminalOriginClass.PROFILE_FIELD,
+            },
+        ),
+        output="scalar",
+        resolver_id="retencion_soportada",
+        stage="mesh",
+    ),
+    _filing_grade(
         BindingSourceKind.WITHHOLDING,
         WithholdingProvider,
         validate_withholding_binding_selector_shape,
@@ -1060,10 +1083,14 @@ def _append_aeat_prefill_diagnostic(
     registration: BindingProviderRegistration,
     diagnostics: list[str],
 ) -> None:
-    if binding.aeat_prefilled and not registration.admits_aeat_prefill:
+    # Snapshot admission alone replaces nothing: a cross_check_only binding is
+    # compared with the borrador, so only a value the borrador may supply needs
+    # a kind whose value is operator- or profile-entered.
+    if binding.borrador_supplies_value and not registration.admits_aeat_prefill:
         diagnostics.append(
             f"binding {binding.id!r}: provider {registration.kind.value!r} computes a governed value and "
-            f"cannot be marked aeat_prefilled; an AEAT borrador value must not replace it",
+            f"cannot be marked aeat_prefilled with borrador precedence; an AEAT borrador value must not "
+            f"replace it, so declare borrador_participation = 'cross_check_only'",
         )
 
 

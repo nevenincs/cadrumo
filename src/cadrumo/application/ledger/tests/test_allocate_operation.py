@@ -8,12 +8,12 @@ from datetime import date
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast, override
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -28,7 +28,6 @@ from ...operations.access_resolution import OperationAccessContext, resolve_oper
 from ...operations.models import OperationRequest
 from ...operations.owner import OperationExecutorContext
 from ...operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -37,6 +36,8 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import allocate_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..transaction_projection import LedgerTransactionProjection
+from .recording_executor_context_support import RecordingEvents, RecordingOperands
+from .registration_access_context_support import registration_access_context
 from .transaction_projection_support import ledger_transaction_projection
 from .unused_repository_ports import ProfileOnlyCatalogueRepository, UnusedAttachmentStore, UnusedBucketEventRepository
 
@@ -74,14 +75,7 @@ def _access_context(
     *,
     profile_id: UUID = _PROFILE,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.SUBMIT)
 
 
 def _transaction_projection(transaction_id: str = _CURRENT_TRANSACTION_ID) -> LedgerTransactionProjection:
@@ -193,25 +187,8 @@ async def test_executor_loads_and_resolves_the_current_catalogue_inside_commit(
             finally:
                 in_commit = False
 
-    class Events:
-        def __init__(self) -> None:
-            self.effects: list[OperationEffect] = []
-
-        async def phase(self, _phase: str) -> None:
-            return None
-
-        async def effect(self, effect: OperationEffect) -> None:
-            self.effects.append(effect)
-
-    class Operands:
-        value: BaseModel | None = None
-
-        async def put(self, operand: BaseModel, *, written_at: object) -> str:
-            self.value = operand
-            return "d" * 64
-
-    events = Events()
-    operands = Operands()
+    events = RecordingEvents()
+    operands = RecordingOperands()
     context = SimpleNamespace(
         identity=SimpleNamespace(
             definition_id=operation.LEDGER_ALLOCATE_OPERATION_DEFINITION_ID,

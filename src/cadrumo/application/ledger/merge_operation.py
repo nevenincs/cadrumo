@@ -37,7 +37,7 @@ from .actions_split_merge import merge_transactions
 from .id_resolution import resolve_transaction_id
 from .models import MergeTransactionsResult
 from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_MERGE_OPERATION_DEFINITION_ID = "ledger.merge"
 LEDGER_MERGE_PHASE = "ledger.merge"
@@ -338,12 +338,9 @@ def resolve_ledger_merge_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-ledger consent and COMMIT for manual merge."""
-    if request.definition_id != LEDGER_MERGE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        LedgerMergeRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_MERGE_OPERATION_DEFINITION_ID, request_type=LedgerMergeRequest
+    )
 
 
 def build_ledger_merge_registration(

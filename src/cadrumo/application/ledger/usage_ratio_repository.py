@@ -11,6 +11,7 @@ from typing import TYPE_CHECKING, Protocol
 from ...core.errors.hierarchy import InternalInvariantError
 
 if TYPE_CHECKING:
+    from ...core.secure_object_write import SecureObjectWrite
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.usage_ratios.model import UsageRatioProfile
 
@@ -46,10 +47,26 @@ class UsageRatioProfileSaver(Protocol):
         ...
 
 
+class UsageRatioProfileCoSaver(Protocol):
+    """Persist one profile's usage ratios in the same unit of work as other secure objects."""
+
+    def __call__(
+        self,
+        profile: UsageRatioProfile,
+        extra_writes: tuple[SecureObjectWrite, ...],
+        *,
+        bucket_id: str,
+    ) -> None:
+        """Atomically persist ``profile`` and ``extra_writes`` for ``bucket_id``."""
+        ...
+
+
 _BOUND_USAGE_RATIO_CENSO_GUARD_LOADER: ContextVar[UsageRatioCensoGuardLoader] = ContextVar(
     "cadrumo_usage_ratio_censo_guard_loader"
 )
-_BOUND_USAGE_RATIO_PROFILE_PERSISTENCE: ContextVar[tuple[UsageRatioProfileLoader, UsageRatioProfileSaver]] = ContextVar(
+type _UsageRatioPersistence = tuple[UsageRatioProfileLoader, UsageRatioProfileSaver, UsageRatioProfileCoSaver]
+
+_BOUND_USAGE_RATIO_PROFILE_PERSISTENCE: ContextVar[_UsageRatioPersistence] = ContextVar(
     "cadrumo_usage_ratio_profile_persistence"
 )
 
@@ -59,9 +76,10 @@ def bind_usage_ratio_profile_persistence(
     *,
     loader: UsageRatioProfileLoader,
     saver: UsageRatioProfileSaver,
+    co_saver: UsageRatioProfileCoSaver,
 ) -> Generator[None]:
-    """Bind the load/save pair as one atomic usage-ratio persistence lifetime."""
-    token = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.set((loader, saver))
+    """Bind the load/save/co-save triple as one usage-ratio persistence lifetime."""
+    token = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.set((loader, saver, co_saver))
     try:
         yield
     finally:
@@ -103,7 +121,7 @@ def usage_ratio_profile_with_censo_guard(
 def load_usage_ratio_profile(*, bucket_id: str, operation: PinnedAuthorityOperation) -> UsageRatioProfile:
     """Load the usage-ratio profile through the explicitly composed authority."""
     try:
-        loader, _saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
+        loader, _saver, _co_saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
     except LookupError as error:
         raise InternalInvariantError("usage-ratio persistence has not been composed") from error
     return loader(bucket_id=bucket_id, operation=operation)
@@ -112,19 +130,35 @@ def load_usage_ratio_profile(*, bucket_id: str, operation: PinnedAuthorityOperat
 def save_usage_ratio_profile(profile: UsageRatioProfile, *, bucket_id: str) -> None:
     """Persist the usage-ratio profile through the explicitly composed authority."""
     try:
-        _loader, saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
+        _loader, saver, _co_saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
     except LookupError as error:
         raise InternalInvariantError("usage-ratio persistence has not been composed") from error
     saver(profile, bucket_id=bucket_id)
 
 
+def save_usage_ratio_profile_with_writes(
+    profile: UsageRatioProfile,
+    extra_writes: tuple[SecureObjectWrite, ...],
+    *,
+    bucket_id: str,
+) -> None:
+    """Persist the profile and ``extra_writes`` in one unit of work through the composed authority."""
+    try:
+        _loader, _saver, co_saver = _BOUND_USAGE_RATIO_PROFILE_PERSISTENCE.get()
+    except LookupError as error:
+        raise InternalInvariantError("usage-ratio persistence has not been composed") from error
+    co_saver(profile, extra_writes, bucket_id=bucket_id)
+
+
 __all__ = [
     "UsageRatioCensoGuardLoader",
+    "UsageRatioProfileCoSaver",
     "UsageRatioProfileLoader",
     "UsageRatioProfileSaver",
     "bind_usage_ratio_censo_guard_loader",
     "bind_usage_ratio_profile_persistence",
     "load_usage_ratio_profile",
     "save_usage_ratio_profile",
+    "save_usage_ratio_profile_with_writes",
     "usage_ratio_profile_with_censo_guard",
 ]

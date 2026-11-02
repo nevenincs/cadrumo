@@ -26,7 +26,7 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, operation_disclosures
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -35,7 +35,6 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.registry import (
@@ -261,25 +260,12 @@ def _require_certificate_source_action(context: OperationAccessContext, *, mutat
 def _certificate_source_disclosures(
     request: OperationRequest[BaseModel], context: OperationAccessContext
 ) -> frozenset[DisclosurePermission]:
-    disclosures = frozenset[DisclosurePermission]()
-    if context.action is AccessAction.OBSERVE:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-        disclosures = frozenset((disclosure,))
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None or schema.schema_id != request.definition_id + ".result":
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=DisclosureCategory.PROFILE_VALUES,
-        )
-        disclosures = frozenset((disclosure,))
-    return disclosures
+    return operation_disclosures(
+        context,
+        observed_by=frozenset({AccessAction.OBSERVE}),
+        result_categories=frozenset({DisclosureCategory.PROFILE_VALUES}),
+        result_schema_id=request.definition_id + ".result",
+    )
 
 
 def _profile_from_receipt(receipt: OperationTerminalReceipt, *, definition_id: str) -> UUID:

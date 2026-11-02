@@ -24,6 +24,19 @@ applies_from = 1993-01-01
 source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a108"
 review_status = "agent_reviewed"
 
+[sources."boe-liva-art-95-statutory-facts"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/ley-37-1992-art-95.html"
+sha256 = "4311e8c508c5fed1ed2ba150faaad0be7fe1014d756f6d3faf0580e1d608a026"
+bytes = 6191
+retrieved_at = 2026-11-02
+published_at = 1997-12-31
+applies_from = 1998-01-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28740#a95"
+review_status = "agent_reviewed"
+
 [sources."boe-liva-art-99-statutory-facts"]
 evidence_tier = "legal_authority"
 authority = "boe"

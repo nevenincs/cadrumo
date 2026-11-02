@@ -24,6 +24,12 @@ class AuthProviderKind(StrEnum):
     CLAVE_PERMANENTE = "clave_permanente"
 
 
+PASSWORD_CREDENTIAL_PROVIDERS: frozenset[AuthProviderKind] = frozenset(
+    {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}
+)
+"""The providers whose credential is a stored password; Cl@ve Movil keeps none."""
+
+
 class ClaveMovilRoute(StrEnum):
     """Operator-selectable Cl@ve Movil interaction route."""
 

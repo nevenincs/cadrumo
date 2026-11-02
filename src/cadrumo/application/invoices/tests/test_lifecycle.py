@@ -60,6 +60,13 @@ def _build(invoice_number: str) -> Invoice:
     )
 
 
+class _NoSealedRevisions:
+    """A profile no revision has been sealed in."""
+
+    def sealed_revisions(self) -> tuple[()]:
+        return ()
+
+
 def test_resolve_catalogue_invoice_by_full_id_and_unambiguous_prefix() -> None:
     """An exact id wins, and a prefix matching exactly one invoice resolves."""
     invoice = _build("2026-0142")
@@ -168,6 +175,7 @@ def test_unrelated_invoice_update_preserves_the_nested_lease_and_stable_identity
         invoice_repository=creation_ports.invoice_repository,
         event_repository=creation_ports.event_repository,
         audit_commit=creation_ports.audit_commit,
+        sealed_revisions=_NoSealedRevisions(),
     )
 
     updated = update_catalogue_invoice(
@@ -192,6 +200,7 @@ def test_stale_invoice_baseline_refuses_before_catalogue_and_audit_mutation() ->
         invoice_repository=creation_ports.invoice_repository,
         event_repository=creation_ports.event_repository,
         audit_commit=creation_ports.audit_commit,
+        sealed_revisions=_NoSealedRevisions(),
     )
     first = update_catalogue_invoice(
         bucket_id=_BUCKET_ID,

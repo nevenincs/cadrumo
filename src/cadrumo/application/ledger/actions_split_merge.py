@@ -20,6 +20,7 @@ from ...core.money.rounding import round_to_cents
 from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
+from ...domain.transactions.classification_effects import takes_changes
 from ...domain.transactions.enums import BusinessClassification, SplitRole, TransactionLifecycleState
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -46,6 +47,7 @@ from .actions_common import (
     save_transaction_catalogue_and_events,
     transaction_modelo_source_ids,
 )
+from .fx_value_consistency import require_consistent_fx_value
 from .manual_update import command_from_patch, prepare_manual_transaction_update
 from .models import (
     ManualLedgerTransactionPatch,
@@ -349,6 +351,7 @@ def _build_split_state(
         child_eur_values=child_eur_values,
     )
     _require_split_preserves_eur_total(parent=parent, children=final_children)
+    _require_split_children_valid(final_children)
     event = _build_split_event(
         bucket_id=bucket_id,
         parent=parent,
@@ -515,7 +518,7 @@ def _resolve_active_split_parent(
     operator can diagnose why the split is blocked.
     """
     parent = require_transaction(catalogue, transaction_id)
-    if parent.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(parent.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be split",
             context={
@@ -646,6 +649,27 @@ def _require_split_preserves_eur_total(
         )
 
 
+def _require_split_children_valid(children: tuple[Transaction, ...]) -> None:
+    """Refuse a split child whose inherited conversion fails the checks a new row meets.
+
+    Attaching lineage and the inherited rate through ``model_copy`` bypasses the
+    model's own validators and the write-boundary rate check, so a residual that
+    the last child absorbs could land negative or far from ``amount * fx_rate``
+    and be stored as a valid row. The total is preserved by construction, so the
+    refusal is the only honest outcome: the cent distribution cannot be repaired
+    here without changing the rounding every valid split relies on.
+    """
+    for index, child in enumerate(children):
+        if child.value_in_eur is not None and child.value_in_eur < Decimal("0"):
+            raise TransactionValidationError(
+                "ledger split would leave a child with a negative EUR value; "
+                "the parent's converted total cannot be distributed across these amounts",
+                context={"child_index": index, "child_value_in_eur": str(child.value_in_eur)},
+            )
+        require_consistent_fx_value(child)
+        Transaction.model_validate(child.model_dump())
+
+
 def _validate_split_child_amounts(
     *,
     parent_amount: Decimal,
@@ -723,6 +747,7 @@ def _build_split_child_transaction(
         {
             "raw": raw_child,
             "direction": parent.direction,
+            "operation_date": parent.operation_date,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": parent.source_jurisdiction,
             "group_label": parent.group_label,
@@ -953,6 +978,7 @@ def _build_merged_transaction(
         {
             "raw": merged_raw,
             "direction": parent.direction,
+            "operation_date": parent.operation_date,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": parent.source_jurisdiction,
             "group_label": parent.group_label,
@@ -1099,7 +1125,7 @@ def _resolve_merge_split_group(
 
 
 def _require_child_active_and_role(child: Transaction) -> None:
-    if child.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(child.lifecycle_state):
         raise TransactionValidationError(
             "ledger merge children must all be active",
             context={

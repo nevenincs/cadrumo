@@ -98,7 +98,7 @@ def test_xlsx_extracts_field_position_table() -> None:
 
 
 def test_xls_extracts_via_xlrd() -> None:
-    """The legacy .xls path (xlrd) yields a valid, populated record.
+    """The .xls path (xlrd) yields a valid, populated record.
 
     openpyxl cannot open the binary BIFF .xls; this proves the xlrd reader
     path covers the 28 legacy designs and normalises numeric cells (xlrd

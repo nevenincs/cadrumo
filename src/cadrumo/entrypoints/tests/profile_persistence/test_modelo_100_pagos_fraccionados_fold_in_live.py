@@ -75,7 +75,7 @@ from ....domain.user_profile.values import create_user_profile_record as _create
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
-from .proven_zero_withholding_support import assert_only_proven_zero_withholding_diagnostic
+from .proven_zero_withholding_support import assert_only_proven_zero_capped_diagnostics
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -118,9 +118,6 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
     surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
-_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
-    {"renta-certificado-trabajo-retenciones"},
-)
 _M130_PAGOS_BINDING_ID: BindingId = "renta-modelo-130-pagos-fraccionados"
 _M130_PAGOS_RELATION_ID = "renta-modelo-130-pagos-fraccionados"
 _M131_PAGOS_RELATION_ID = "renta-modelo-131-pagos-fraccionados"
@@ -242,7 +239,6 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
         if binding.source
         not in (
             "profile",
@@ -253,6 +249,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
             "ledger_oss_aggregation",
             "collectible_invoice",
             "payable_invoice",
+            "retencion_soportada",
         )
     }
 
@@ -344,8 +341,8 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(
         diag.reason == "unhandled_binding_source" and diag.source_kind == _RELATION_PREFILL_SOURCE
         for diag in result.source_diagnostics
     )
-    # The only diagnostic is the proven zero of the withholding box: the gate lets it through.
-    assert_only_proven_zero_withholding_diagnostic(result.source_diagnostics)
+    # The only diagnostics are the capped boxes' proven zeros: the gate lets them through.
+    assert_only_proven_zero_capped_diagnostics(result.source_diagnostics)
 
 
 def test_m100_explicit_m130_binding_resolves_relation_formula_without_m131_filing(

@@ -784,6 +784,10 @@ application:
           az egyenértékűségi pótdíj nulla kell legyen.
         printed_total_differs: A számlán nyomtatott végösszeg (%{printed}) eltér a
           kiszámított végösszegtől (%{computed}).
+        rate_date_projected: 'A(z) %{on_date} napi áfakulcsok a legközelebbi, %{nearest}
+          napjától érvényes bejegyzésekből származnak: ez a dátum régebbi a Cadrumo
+          által lefedett adóéveknél, ezért vetítésről van szó, amely nem szolgál benyújtás
+          alapjául.'
         rate_date_unresolved: A nyilvántartás nem ad meg áfakulcsot %{on_date} napjára,
           ezért az áfa nem számolható ki.
         recargo_above_iva_total: Az egyenértékűségi pótdíj (%{stated}) nem haladhatja
@@ -865,6 +869,12 @@ application:
           kapcsolódik: %{linked_transaction_ids}. Nincs kapcsolatbontó parancs: töröld
           ezeket a tranzakciókat az `aeat app ledger remove` paranccsal, ami feloldja
           a kapcsolatot, majd töröld a számlát.'
+        sealed_invoice_refused: A(z) %{invoice_id} számlát beolvasta a(z) %{modelo}
+          modell (%{filing_year} %{period}, %{revision_state}, %{calculation_revision_id}
+          változat), ezért ezt a módosítást elutasítottuk, hogy azok a számok igazak
+          maradjanak. Ha még nincs benyújtva, vesd el ezt a munkát az `aeat app modelo
+          work discard` paranccsal, és számolj újra. Ha már benyújtottad, állíts ki
+          helyesbítő számlát, és nyújts be önellenőrzést.
     linking:
       errors:
         linked_invoice_not_found: A(z) %{invoice_id} számla nem található a kapcsolás
@@ -1233,6 +1243,12 @@ application:
         what: A Cadrumo hibát talált a nyilatkozat felépítésében, nem az adataidban.
         what_to_do: A nyilvántartásaidban nincs mit változtatnod. Jelezd a hibát,
           mielőtt a számokra támaszkodnál.
+      filed_before_grade_cap:
+        what: Ezt a bevallást a számadatok jelenlegi ellenőrzései előtt rögzítetted,
+          és az egyik mezője olyan összeget tartalmaz, amelyet ezek az ellenőrzések
+          visszatartanak, ezért ebben a formában nem exportálhatod.
+        what_to_do: Számold újra a bevallást, ellenőrizd, majd rögzítsd újra; az új
+          rögzítés felváltja ezt.
       inferred_retencion_excluded_from_credit:
         what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
           összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél
@@ -1272,6 +1288,16 @@ application:
           épül, amelyekből hiányzik az igazolás.
         what_to_do: Nézd át az egész év áfa-nyilvántartását, pótold a hiányzó igazolást,
           majd számolj újra.
+      iva_operation_date_after_movement:
+        what: Néhány főkönyvi sor ügyleti dátuma későbbi a banki dátumánál. Ha ez
+          a pénz előleg volt, az áfája a beérkezéskor vált esedékessé.
+        what_to_do: Előlegnél add meg ügyleti dátumként a beérkezés napját, a fennmaradó
+          részt rögzítsd külön sorban, majd számolj újra.
+      iva_row_placed_on_movement_date:
+        what: Néhány főkönyvi sornak nincs ügyleti dátuma, ezért a banki dátuma választotta
+          ki az áfaidőszakot. Az áfa az ügylet teljesítésekor esedékes, nem a pénzmozgáskor.
+        what_to_do: Add meg az ügylet dátumát az időszak végén lévő soroknál, majd
+          számolj újra.
       iva_selected_scope_evidence_failure:
         what: Az ebben a nyilatkozatban szereplő áfa alapjául szolgáló nyilvántartásokból
           hiányzik az igazolás, vagy nem egyeznek.
@@ -1558,6 +1584,13 @@ application:
         meg, amely már nem létezik.'
       residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
         az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
+      retencion_soportada_absence_contradicted: '{income_class} jövedelemosztály:
+        vannak kifizetői rekordok, és a nyilatkozatod is, hogy egyetlen kifizető sem
+        vont le. Töröld a rekordokat, vagy vond vissza a nyilatkozatot.'
+      retencion_soportada_evidence_required: '{income_class} jövedelemosztály: nincs
+        kifizetői rekord és hiánynyilatkozat sem, a profilod pedig nem jelöli hiányzónak
+        ezt a jövedelmet. Rögzítsd minden kifizető igazolását, vagy jelentsd ki, hogy
+        egyetlen kifizető sem vont le.'
       row_unregistered: A(z) {row_date} napi, {row_amount} összegű tétel olyan eszközt
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
@@ -2165,6 +2198,15 @@ application:
       inventory_register_drift: A(z) %{modelo} számítás alapjául szolgáló készlet
         a számítás óta megváltozott (%{rows_recorded} rögzített sor, most %{rows_current},
         %{rows_changed} módosult). Használat előtt számold újra.
+      invoice_fingerprint_absent: Ez a(z) %{modelo} %{filing_year}, %{period} számítás
+        a számlakövetés előtt készült, ezért a Cadrumo nem tudja megmondani, változtak-e
+        azóta a számláid. Számítsd ki újra a követés elindításához.
+      invoice_fingerprint_drift: A számláid megváltoztak a(z) %{modelo} %{filing_year},
+        %{period} kiszámítása után (%{changed_count} módosult, %{removed_count} törölve,
+        %{added_count} új). Számítsd ki újra az ellenőrzés előtt.
+      invoice_fingerprint_unavailable: A Cadrumo nem tudta beolvasni a számláidat,
+        hogy összevesse őket a(z) %{modelo} %{filing_year}, %{period} modellel, ezért
+        nem igazolható, hogy a számítás naprakész. Próbáld újra, ha már olvashatók.
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.
@@ -2271,6 +2313,21 @@ application:
       transaction_evidence_missing_output: Egy felszámított IVA-t tartalmazó kiállított
         számlához nincs alátámasztó bizonylat. Csatold a nyilvántartásaid megfelelő
         tételéhez.
+      undetermined_mixed_use_contributor: A(z) %{modelo} modell %{filing_year}. évi,
+        %{period} időszakra mentett számítása %{rows} vegyes használatú kiadást a
+        megadott arányban vett figyelembe költségkategória nélkül. Ha most számolsz,
+        ezek visszatartásra kerülnek, amíg meg nem adod a kategóriát. A mentett értékek
+        nem változtak.
+      withholding_count_exceeds_summary_perceptors: A Modelo %{source_modelo} (%{filing_year},
+        %{period}) a(z) %{casilla_id} mezőben %{declared_perceptors} kedvezményezettet
+        számol, de a Modelo %{modelo} az egész évre csak %{summary_perceptors} különböző
+        kedvezményezettet tartalmaz. Az éves összesítőben szerepelnie kell mindenkinek,
+        akit ez a mező számol. Vedd fel a hiányzó kedvezményezetteket ennek a modelónak
+        a részletezőjébe, vagy javítsd a számot a Modelo %{source_modelo} bevallásban.
+      withholding_count_not_cross_checked: 'A Modelo %{modelo} (%{filing_year}) nem
+        volt összevethető a Modelo %{source_modelo} bevallással a következő időszakokra:
+        %{unchecked_periods}, mert ezekről nincs rögzített bevallás. Összevetett időszakok:
+        %{checked_periods}. Ez nem jelenti azt, hogy ezekben senkinek sem fizettél.'
       withholding_detail_absent_against_ledger_evidence: 'A Modelo %{modelo} (%{filing_year})
         egyetlen kedvezményezettnek sem jelent be kifizetést, de a nyilvántartásaid
         szerint abban az évben adólevonás alá eső kifizetések történtek: %{contradicting_invoice_count}
@@ -2449,6 +2506,12 @@ application:
           számolj újra.
       inspection_heading: Minden rovat, rovatszám szerint
       unnamed_box: Név nélküli rovat
+  operations:
+    error_detail:
+      record_fault: Egy rekord, amelyet a Cadrumo hozott létre, nem felelt meg a saját
+        ellenőrzésének, ezért ezt nem sikerült elvégezni.
+      unworded: 'Ezt nem sikerült elvégezni. Az okához még nincs mondat; a kódja:
+        {error_code}.'
   overview:
     calendar:
       event:

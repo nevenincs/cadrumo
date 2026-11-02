@@ -14,7 +14,7 @@ from __future__ import annotations
 import asyncio
 from dataclasses import replace
 from pathlib import Path
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -63,7 +63,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.modelo_operation_test_support import seeded_modelo_calculation_revision
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from .conformance_family_contract import ConformanceFamily
 from .conformance_maritime_preview_support import MARITIME_QUICKFILE_MATERIAL_CONFORMANCE_FAMILY
@@ -76,6 +76,7 @@ from .registered_executor_case_support import (
     family_environment_for_operation,
     seeded_conformance_operation_submission,
 )
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -96,13 +97,11 @@ def _context(
     operation: PinnedAuthorityOperation,
     action: AccessAction = AccessAction.SUBMIT,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return operation_access_context(
+        registry.lookup_public_contract(request.definition_id),
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=action,
         frontend=frontend,
-        contract=registry.lookup_public_contract(request.definition_id),
-        published_authority=Availability.AVAILABLE,
         authority_operation=operation,
     )
 

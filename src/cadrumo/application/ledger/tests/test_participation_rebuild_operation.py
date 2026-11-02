@@ -13,7 +13,6 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     DisclosurePermission,
     OperationAccessPolicy,
@@ -49,6 +48,7 @@ from ..participation_rebuild_operation import (
     build_ledger_participation_rebuild_definition,
     build_ledger_participation_rebuild_registration,
 )
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -139,13 +139,12 @@ def _access_context(
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
     """Build trusted host facts for one registered access action."""
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=UUID("7cc00000-0000-4000-8000-0000000000cc"),
         action=action,
         frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+        destination_id=UUID("7cc00000-0000-4000-8000-0000000000cc"),
     )
 
 

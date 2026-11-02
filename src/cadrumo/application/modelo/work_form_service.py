@@ -57,7 +57,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
-from .calculation_note_gate import calculation_screen_outdated
+from .calculation_note_gate import calculation_filed_before_grade_cap, calculation_screen_outdated
 from .calculation_notes import CALCULATION_NOTES, read_element_names
 from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
@@ -286,6 +286,11 @@ def load_modelo_work_form(
         element_names=read_element_names(activity_assets),
         calculation_screen_outdated=head is not None
         and calculation_screen_outdated(
+            head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
+        ),
+        calculation_filed_before_grade_cap=None
+        if head is None
+        else calculation_filed_before_grade_cap(
             head, modelo=str(modelo), filing_year=filing_year, period=period, operation=operation
         ),
     )

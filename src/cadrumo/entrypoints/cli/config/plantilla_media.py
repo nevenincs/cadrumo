@@ -14,6 +14,7 @@ from uuid import UUID
 import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -32,7 +33,6 @@ from ....core.external_constants import OutputLanguage
 from ....domain.user_profile.errors import UserProfileValidationError
 from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear, plantilla_media_years
 from .._config_plantilla_media_payloads import ConfigProfilePlantillaMediaResult, ProfilePlantillaMediaYearPayload
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 from ._profile_mutation import execute_profile_mutation, mutation_deadline, read_mutation_baseline
 from ._profile_support import require_active_profile_pointer as _active_profile_pointer

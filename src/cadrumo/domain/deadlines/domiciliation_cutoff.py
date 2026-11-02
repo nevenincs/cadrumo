@@ -34,7 +34,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date, timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field
 
@@ -44,10 +44,14 @@ from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.facts.variants import FactSelector
 from ..calculations.registry.schema_base import DateAxis
-from ..calculations.registry.schema_references import TemporalProjectionDirection
 from .errors import DeadlineValidationError
 from .festivos import CalendarCCAA, HolidayCalendar, is_business_day, load_holiday_calendar
-from .filing_window_projection import FilingWindowClause, resolve_filing_window_clause, resolve_mapping_fact
+from .filing_window_projection import (
+    FilingWindowClause,
+    FilingWindowRuleEvidence,
+    resolve_filing_window_clause,
+    resolve_mapping_fact,
+)
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -392,33 +396,6 @@ def derive_domiciliation_cutoff(
 # ---------------------------------------------------------------------------
 
 
-class DomiciliationRuleEvidence(BaseModel):
-    """The governed-fact variant one part of a derivation resolved to."""
-
-    model_config = STRICT_FROZEN_CONFIG
-
-    fact_id: str = Field(min_length=1)
-    variant_id: str = Field(min_length=1)
-    legal_refs: tuple[str, ...] = ()
-    source_refs: tuple[str, ...] = ()
-    review_status: str = Field(min_length=1)
-    projection_direction: TemporalProjectionDirection
-    projected_from_date: date | None = None
-
-    @classmethod
-    def from_fact(cls, resolved: ResolvedMappingFact) -> DomiciliationRuleEvidence:
-        """Retain the identity, evidence and projection of one resolved fact."""
-        return cls(
-            fact_id=resolved.fact_id,
-            variant_id=resolved.variant_id,
-            legal_refs=tuple(resolved.legal_refs),
-            source_refs=tuple(resolved.source_refs),
-            review_status=resolved.review_status.value,
-            projection_direction=resolved.projection_direction,
-            projected_from_date=resolved.projected_from_date,
-        )
-
-
 class AuthoredPaymentCutoff(BaseModel):
     """A cutoff the window authors; it wins over the rule."""
 
@@ -443,8 +420,8 @@ class DerivedPaymentCutoff(BaseModel):
     base_on: date
     extension_days: int = Field(ge=0)
     margin_cap_on: date | None = None
-    clause: DomiciliationRuleEvidence
-    procedure: DomiciliationRuleEvidence
+    clause: FilingWindowRuleEvidence
+    procedure: FilingWindowRuleEvidence
     inhabil_base_authority: InhabilBaseAuthority
     holiday_coverage: DomiciliationHolidayCoverage
 
@@ -467,19 +444,13 @@ class UnavailablePaymentCutoff(BaseModel):
     source: Literal[PaymentCutoffSource.UNAVAILABLE] = PaymentCutoffSource.UNAVAILABLE
     window_id: str = Field(min_length=1)
     reason: PaymentCutoffUnavailableReason
-    clause: DomiciliationRuleEvidence | None = None
-    procedure: DomiciliationRuleEvidence | None = None
+    clause: FilingWindowRuleEvidence | None = None
+    procedure: FilingWindowRuleEvidence | None = None
 
     @property
     def cutoff_on(self) -> None:
         """An unavailable cutoff has no date."""
         return None
-
-
-PaymentCutoffResolution = Annotated[
-    AuthoredPaymentCutoff | DerivedPaymentCutoff | UnavailablePaymentCutoff,
-    Field(discriminator="source"),
-]
 
 
 class _CalendarGapError(Exception):
@@ -567,7 +538,7 @@ def derive_payment_cutoff(
     if clause_fact is None:
         return UnavailablePaymentCutoff(window_id=window.id, reason=PaymentCutoffUnavailableReason.NO_CLAUSE)
     clause = domiciliation_clause_from_fact(clause_fact, window_clause=window_clause[0])
-    clause_evidence = DomiciliationRuleEvidence.from_fact(clause_fact)
+    clause_evidence = FilingWindowRuleEvidence.from_fact(clause_fact)
     anexo_on = clause.anexo_day(period_end)
     procedure_fact = resolve_mapping_fact(
         operation,
@@ -584,7 +555,7 @@ def derive_payment_cutoff(
             clause=clause_evidence,
         )
     procedure = domiciliation_procedure_from_fact(procedure_fact)
-    procedure_evidence = DomiciliationRuleEvidence.from_fact(procedure_fact)
+    procedure_evidence = FilingWindowRuleEvidence.from_fact(procedure_fact)
     business_day: Callable[[date], bool] = _calendar_not_consulted
     coverage = DomiciliationHolidayCoverage.NOT_CONSULTED
     if procedure.margin is not None:
@@ -657,10 +628,8 @@ __all__ = (
     "DomiciliationHolidayCoverage",
     "DomiciliationMargin",
     "DomiciliationProcedure",
-    "DomiciliationRuleEvidence",
     "InhabilBaseAuthority",
     "InhabilBasePolicy",
-    "PaymentCutoffResolution",
     "PaymentCutoffSource",
     "PaymentCutoffUnavailableReason",
     "UnavailablePaymentCutoff",

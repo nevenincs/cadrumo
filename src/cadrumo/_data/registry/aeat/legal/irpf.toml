@@ -7658,3 +7658,135 @@ required_text = [
     "Cualesquiera otros elementos patrimoniales que sean necesarios para la obtención de los respectivos rendimientos",
     "los destinados al uso particular del titular de la actividad",
 ]
+
+[legal."rd-439-2007:art-96"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a96"
+document_id = "BOE-A-2007-6820"
+article = "96"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a96"
+published_at = 2007-03-31
+effective_from = 2010-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-prepared-pending-operator"
+notes = """\
+RIRPF art 96: retención on the ganancias patrimoniales from transmisiones or reembolsos of \
+acciones and participaciones of instituciones de inversión colectiva, at 19 per cent of the \
+base de retención. Read from the bundled consolidated RD 439/2007 text, whose wording is the \
+one set by RD 2004/2009; effective_from is the start of the first year that wording governs. \
+Grounds the class of capital gains withheld at source whose credit Modelo 100 takes in its \
+ganancias patrimoniales y premios casilla."""
+required_text = [
+    "Importe de las retenciones sobre ganancias patrimoniales derivadas de las transmisiones o reembolsos de acciones y participaciones de instituciones de inversión colectiva",
+    "el porcentaje del 19 por ciento",
+]
+
+[legal."rd-439-2007:art-99"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a99"
+document_id = "BOE-A-2007-6820"
+article = "99"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a99"
+published_at = 2007-03-31
+effective_from = 2018-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-prepared-pending-operator"
+notes = """\
+RIRPF art 99: retención on other ganancias patrimoniales: premios en metálico, aprovechamientos \
+forestales de los vecinos en montes públicos and, since RD 1074/2017 added apartado 3, the \
+transmisión de derechos de suscripción, each at 19 per cent. Read from the bundled consolidated \
+RD 439/2007 text; effective_from is the start of the first year its last apartado governs. \
+Grounds the premios part of the Modelo 100 ganancias patrimoniales y premios credit."""
+required_text = [
+    "Importe de las retenciones sobre otras ganancias patrimoniales",
+    "La retención a practicar sobre los premios en metálico será del 19 por ciento de su importe",
+]
+
+[legal."rd-439-2007:art-102"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a102"
+document_id = "BOE-A-2007-6820"
+article = "102"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a102"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-prepared-pending-operator"
+notes = """\
+RIRPF art 102: the ingreso a cuenta on work income paid in kind is the art 80 rate applied to \
+the value fixed by LIRPF art 43.1. Read from the bundled consolidated RD 439/2007 text. Grounds \
+the ingreso a cuenta half of the work-income credit a payer certificate states, which the \
+Modelo 100 work-income credit takes in full."""
+required_text = [
+    "Ingresos a cuenta sobre retribuciones en especie del trabajo",
+    "determinado conforme a las reglas del artículo 43.1 de la Ley del Impuesto",
+]
+
+[legal."rd-439-2007:art-103"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a103"
+document_id = "BOE-A-2007-6820"
+article = "103"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a103"
+published_at = 2007-03-31
+effective_from = 2015-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-prepared-pending-operator"
+notes = """\
+RIRPF art 103: the ingreso a cuenta on capital mobiliario income paid in kind is the section 2 \
+rate applied to the acquisition value or payer cost increased by 20 per cent. Read from the \
+bundled consolidated RD 439/2007 text, whose apartado 2 was last set by RD 1003/2014; \
+effective_from is the start of the first year that wording governs. Grounds the ingreso a \
+cuenta half of the capital mobiliario credit."""
+required_text = [
+    "Ingresos a cuenta sobre retribuciones en especie del capital mobiliario",
+    "al resultado de incrementar en un 20 por ciento el valor de adquisición o el coste para el pagador",
+]
+
+[legal."rd-439-2007:art-105"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a105"
+document_id = "BOE-A-2007-6820"
+article = "105"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a105"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-prepared-pending-operator"
+notes = """\
+RIRPF art 105: the ingreso a cuenta on premios paid in kind that are ganancias patrimoniales is \
+the art 99.1 rate applied to the acquisition value or payer cost increased by 20 per cent. Read \
+from the bundled consolidated RD 439/2007 text. Grounds the ingreso a cuenta half of the \
+ganancias patrimoniales y premios credit."""
+required_text = [
+    "Ingresos a cuenta sobre determinadas ganancias patrimoniales",
+    "por los premios satisfechos en especie, que constituyan ganancias patrimoniales",
+]
+
+[sources."boe-rirpf-art-108-3-certificado-retenciones"]
+evidence_tier = "official_source_guidance"
+authority = "boe"
+kind = "instructions"
+corpus_path = "corpus/normatives/html/rd-439-2007.html"
+sha256 = "77202496e59f975928e84c8e40029ba530c61b619ac3755c8e14ac4ecac96ee7"
+bytes = 971212
+retrieved_at = 2026-09-09
+published_at = 2007-03-31
+applies_from = 2007-04-01
+source_url = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a108"
+review_status = "agent_reviewed"

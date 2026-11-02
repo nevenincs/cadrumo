@@ -77,9 +77,9 @@ FILED_130_ANSWERS: tuple[tuple[str, str], ...] = (
     ("modelo-130-resultados-negativos-anteriores", "0"),
     ("modelo-130-pagos-fraccionados-anteriores", "0"),
 )
-#: The boxes whose help card the envelopes carry, by modelo.
-#: The quarter's activity income booked for the filled 130s.
+#: The quarter's activity income booked for the calculated-only 130.
 INCOME_130 = Decimal("12000.00")
+#: The boxes whose help card the envelopes carry, by modelo.
 #: When the synthetic AEAT receipt of the filed 130 is imported.
 RECEIPT_AT = datetime(2026, 4, 21, 9, 30, tzinfo=UTC)
 #: The quarter the AEAT holds a Modelo 130 for that the profile has no declaration of, and when it was filed and seen.
@@ -606,7 +606,9 @@ def _check_clean(work: Any) -> Any:
 
     A clean check needs the operator's answers to the earlier-filing figures
     and the earlier Renta the 130 reads present as filed AEAT evidence under
-    the profile's own tax id.
+    the profile's own tax id. The profile books no activity in its ledger:
+    the bank-dated income, expense and retención boxes are capped below
+    filing grade, so only their proven zero lets the check pass.
     """
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
     from cadrumo.application.modelo.edit_models import (
@@ -645,7 +647,11 @@ def _check_clean(work: Any) -> Any:
 
 
 def _seed_income(work: Any) -> None:
-    """Book the quarter's activity income in the profile's ledger, so the 130's boxes carry figures."""
+    """Book the quarter's activity income in the profile's ledger, so the 130's boxes carry figures.
+
+    The boxes it feeds are capped below filing grade: only a profile that is
+    calculated and never checked, exported or filed may hold it.
+    """
     from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
 
     seed_m130_income_transaction(amount=INCOME_130, filing_year=work.work_unit.filing_year, source_key="desktop")
@@ -1500,6 +1506,60 @@ def _form_fields(envelope: Mapping[str, Any]) -> list[dict[str, Any]]:
     return found
 
 
+def _refusals() -> tuple[tuple[str, BaseException], ...]:
+    """The refusals the scenarios settle, each as its executor raises it."""
+    from cadrumo.application.modelo.action_errors import ModeloDomiciliationPastCutoffError
+    from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+    from cadrumo.application.modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
+    from cadrumo.application.modelo.calculation_screen import calculation_screen_outdated_message_key
+
+    return (
+        (
+            "report-outdated",
+            ModeloCalculationBlockedError(
+                translated_message=calculation_screen_outdated_message_key(),
+                context={
+                    "action": "report",
+                    "calculation_revision_id": "c" * 64,
+                    "reason": CALCULATION_SCREEN_OUTDATED_REASON,
+                    "reasons": CALCULATION_SCREEN_OUTDATED_REASON,
+                },
+            ),
+        ),
+        (
+            "domiciliation-past-cutoff",
+            ModeloDomiciliationPastCutoffError(
+                translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff",
+                context={
+                    "calculation_revision_id": "c" * 64,
+                    "modelo": "130",
+                    "filing_year": "2026",
+                    "period": "1T",
+                    "payment_cutoff_on": "2026-04-15",
+                    "payment_cutoff_source": "filing_window",
+                    "payment_cutoff_legal_refs": "Orden HAC/3625/2003, art. 3",
+                    "export_on": "2026-04-16",
+                },
+            ),
+        ),
+    )
+
+
+def write_refusals(directory: Path) -> None:
+    """Record each scenario refusal's detail as a stopped executor's detail is recorded, in every language."""
+    from cadrumo.application.operations.error_detail import build_operation_error_detail
+    from cadrumo.core.config import override_settings
+
+    directory.mkdir(parents=True, exist_ok=True)
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            for name, error in _refusals():
+                detail = build_operation_error_detail(error)
+                if detail is None:
+                    raise SystemExit(f"{name} records no error detail")
+                _write(directory, f"refusal-{name}-{language}.json", detail)
+
+
 def write_envelopes(directory: Path) -> None:
     """Read every envelope the scenario host answers through the application's read path."""
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
@@ -1507,6 +1567,7 @@ def write_envelopes(directory: Path) -> None:
     from cadrumo.domain.user_profile.values import UserProfileFact
 
     directory.mkdir(parents=True, exist_ok=True)
+    write_refusals(directory)
     income = (_income_categories_fact(),)
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
@@ -1535,7 +1596,6 @@ def write_envelopes(directory: Path) -> None:
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _seeded(Path(tmp), facts=facts) as filed,
     ):
-        _seed_income(filed)
         _write(directory, "file-130.json", _record_filed(filed))
         _write_form(directory, filed, "modelo-130-1T-filed")
         _write_receipt_import(directory, filed)
@@ -1545,6 +1605,14 @@ def write_envelopes(directory: Path) -> None:
         _write_form(directory, filed, "modelo-130-1T-receipt")
         unit = _write_filing_reads(directory, filed, "130-receipt")
         _write_correction(directory, filed, unit.current_filing_record_id)
+    # Its own profile: the quarter's income is booked and the declaration is calculated, never checked or filed.
+    with (
+        tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
+        _seeded(Path(tmp), facts=income) as booked,
+    ):
+        _seed_income(booked)
+        booked.recalculate()
+        _write_form(directory, booked, "modelo-130-1T-income")
     # Its own profile, on a frozen timeline: a review half an hour after the form was read, and its renewal.
     started = now()
     with (
@@ -1559,7 +1627,6 @@ def write_envelopes(directory: Path) -> None:
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _seeded(Path(tmp), facts=facts) as stale,
     ):
-        _seed_income(stale)
         _check_clean(stale)
         _write(directory, "export-130.json", _export_file(stale, Path(tmp) / "modelo-130.txt"))
         # Checked, its file made and current: what recording the filing starts from.
@@ -1581,8 +1648,10 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
         ModeloEditRenewalProjectionV1,
     )
     from cadrumo.application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
+    from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 
     return [
+        ("refusal-*.json", OperationErrorDetailV1),
         ("modelo-*.json", ModeloWorkbenchFormProjectionV1),
         ("help-*.json", ModeloCasillaHelpProjectionV1),
         ("declarations-*.json", ModeloDeclarationsListProjectionV1),

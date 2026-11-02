@@ -33,8 +33,8 @@ if TYPE_CHECKING:
 
 __all__ = [
     "LegacyCell",
-    "LegacyWorksheet",
-    "read_legacy_workbook",
+    "XlsWorksheet",
+    "read_xls_workbook",
 ]
 
 _OLE2_SIGNATURE: Final[bytes] = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
@@ -68,8 +68,8 @@ class LegacyCell:
 
 
 @dataclass(frozen=True, slots=True)
-class LegacyWorksheet:
-    """One worksheet of a legacy workbook, in row order.
+class XlsWorksheet:
+    """One worksheet of an XLS workbook, in row order.
 
     Attributes:
         name: The worksheet's tab name.
@@ -81,7 +81,7 @@ class LegacyWorksheet:
     rows: tuple[tuple[LegacyCell, ...], ...]
 
 
-def read_legacy_workbook(source_bytes: bytes) -> tuple[LegacyWorksheet, ...]:
+def read_xls_workbook(source_bytes: bytes) -> tuple[XlsWorksheet, ...]:
     """Read every worksheet of a BIFF8 workbook with formula cells marked.
 
     Args:
@@ -100,19 +100,19 @@ def read_legacy_workbook(source_bytes: bytes) -> tuple[LegacyWorksheet, ...]:
     from xlrd.compdoc import CompDoc, CompDocError
 
     if not source_bytes.startswith(_OLE2_SIGNATURE):
-        raise TabularSourceError("legacy workbook is not an OLE2 compound document")
+        raise TabularSourceError("XLS workbook is not an OLE2 compound document")
     try:
         # xlrd reports structural warnings by printing them; a CLI whose stdout
         # carries a JSON envelope must never receive them.
         book = xlrd.open_workbook(file_contents=source_bytes, on_demand=False, logfile=io.StringIO())
         stream = CompDoc(source_bytes).get_named_stream("Workbook")
     except (XLRDError, CompDocError, struct.error, ValueError, IndexError, KeyError) as exc:
-        raise TabularSourceError(f"legacy workbook could not be read: {type(exc).__name__}") from exc
+        raise TabularSourceError(f"XLS workbook could not be read: {type(exc).__name__}") from exc
     if book.biff_version != _BIFF8_VERSION or stream is None:
-        raise TabularSourceError("only Excel 97-2003 (BIFF8) legacy workbooks are read")
+        raise TabularSourceError("only Excel 97-2003 (BIFF8) XLS workbooks are read")
     formula_cells = _formula_cells_by_worksheet(stream)
     if len(formula_cells) != book.nsheets:
-        raise TabularSourceError("legacy workbook record stream does not match its worksheets")
+        raise TabularSourceError("XLS workbook record stream does not match its worksheets")
     return tuple(_worksheet(book, book.sheet_by_index(index), formula_cells[index]) for index in range(book.nsheets))
 
 
@@ -123,13 +123,13 @@ def _records(stream: bytes, offset: int) -> list[tuple[int, int, bytes]]:
     position = offset
     while True:
         if position + _RECORD_HEADER.size > len(stream):
-            raise TabularSourceError("legacy workbook record stream ends inside a substream")
+            raise TabularSourceError("XLS workbook record stream ends inside a substream")
         code, length = _RECORD_HEADER.unpack_from(stream, position)
         payload_start = position + _RECORD_HEADER.size
         if payload_start + length > len(stream):
-            raise TabularSourceError("legacy workbook record overruns its stream")
+            raise TabularSourceError("XLS workbook record overruns its stream")
         if position == offset and code != _RECORD_BOF:
-            raise TabularSourceError("legacy workbook substream does not start with BOF")
+            raise TabularSourceError("XLS workbook substream does not start with BOF")
         records.append((code, position, stream[payload_start : payload_start + length]))
         position = payload_start + length
         if code == _RECORD_BOF:
@@ -177,14 +177,14 @@ def _formula_cells_in_worksheet(stream: bytes, offset: int) -> frozenset[tuple[i
             depth -= 1
         elif code == _RECORD_FORMULA and depth == 1:
             if len(payload) < _FORMULA_CELL.size:
-                raise TabularSourceError("legacy workbook FORMULA record is truncated")
+                raise TabularSourceError("XLS workbook FORMULA record is truncated")
             row, column = _FORMULA_CELL.unpack_from(payload, 0)
             cells.add((row, column))
     return frozenset(cells)
 
 
-def _worksheet(book: Book, sheet: Sheet, formula_cells: frozenset[tuple[int, int]]) -> LegacyWorksheet:
-    return LegacyWorksheet(
+def _worksheet(book: Book, sheet: Sheet, formula_cells: frozenset[tuple[int, int]]) -> XlsWorksheet:
+    return XlsWorksheet(
         name=sheet.name,
         rows=tuple(
             tuple(_cell(book, sheet, row, column, formula_cells) for column in range(sheet.ncols))
@@ -208,7 +208,7 @@ def _cell(book: Book, sheet: Sheet, row: int, column: int, formula_cells: frozen
             value = xldate_as_datetime(float(sheet.cell_value(row, column)), book.datemode)
         except XLDateError as exc:
             raise TabularSourceError(
-                f"legacy workbook date cell at row {row + 1}, column {column + 1} is out of range"
+                f"XLS workbook date cell at row {row + 1}, column {column + 1} is out of range"
             ) from exc
         data_type = "n"
     elif cell_type == xlrd.XL_CELL_BOOLEAN:

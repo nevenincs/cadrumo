@@ -24,6 +24,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_provider_registration import registration_for
+from cadrumo.domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from cadrumo.domain.calculations.registry.export_xml_dictionary import decode_dictionary_text
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
@@ -90,7 +91,7 @@ _SETTLEMENT_FORMULAS: Mapping[str, str] = {
 # withholds the resultado formula until that contradiction is ruled on.
 _CONTESTED_RESULTADO_CARRY_INS = frozenset({"1912", "1913", "1915", "1916"})
 
-_WORK_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+_WORK_CERTIFICATE = "renta-retencion-soportada-trabajo"
 _WORK_RETENCIONES_CASILLA = "0596"
 _TOTAL_PAGOS_A_CUENTA = "0609"
 _CUOTA_RESULTANTE = "0595"
@@ -166,12 +167,12 @@ def test_ledger_targets_are_bound_wherever_the_edition_declares_them(
 def test_work_certificate_is_the_only_source_of_suffered_work_retenciones(
     edition: Callable[[int], RegistrySnapshot], filing_year: int
 ) -> None:
-    """Casilla 0596 is filled from the certificate the payer issued, and from nothing else.
+    """Casilla 0596 is filled from the certificates the payers issued, and from nothing else.
 
     The retencion credited here is the one the declarant SUFFERED on its salary.
-    Only the payer's certificate evidences that figure for this taxpayer, so the
-    casilla names it as its single source: an alternate would let a second,
-    weaker source fill the same credit.
+    Only the payers' certificates evidence that figure for this taxpayer, so the
+    casilla names their payer-record family as its single source: an alternate
+    would let a second, weaker source fill the same credit.
     """
     snapshot = edition(filing_year)
     casilla = next(item for item in snapshot.revision.casillas if item.id == _WORK_RETENCIONES_CASILLA)
@@ -251,9 +252,8 @@ def _binding_inputs(
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, bool], dict[BindingId, date], dict[BindingId, str]]:
     """Neutral inputs for every scalar binding the edition declares.
 
-    The work certificate is excluded: its binding is operator-keyed, so the
-    figure enters at the casilla it names rather than on the binding channel,
-    and supplying both would assert one value through two channels.
+    The work certificates' family is excluded here and supplied by the caller,
+    so the figure under test is the only one on that binding.
     """
     decimals, booleans, dates, enums = neutral_binding_values(
         binding for binding in snapshot.revision.bindings if binding.id != _WORK_CERTIFICATE
@@ -264,6 +264,8 @@ def _binding_inputs(
 
 def _settle(snapshot: RegistrySnapshot, filing_year: int, *, work_certificate: Decimal) -> Mapping[str, Decimal | None]:
     decimals, booleans, dates, enums = _binding_inputs(snapshot)
+    # The value the calculation's source mesh resolves from the payer records reaches the engine on the binding.
+    decimals[_WORK_CERTIFICATE] = work_certificate
     relations: dict[RelationId, Decimal] = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
@@ -271,7 +273,10 @@ def _settle(snapshot: RegistrySnapshot, filing_year: int, *, work_certificate: D
     }
     result = calculate_registry_snapshot(
         snapshot,
-        inputs={"0003": Decimal("30000.00"), _WORK_RETENCIONES_CASILLA: work_certificate},
+        inputs={
+            "0003": Decimal("30000.00"),
+            **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, {_WORK_CERTIFICATE: work_certificate}),
+        },
         date_context={"filing_period": date(filing_year, 12, 31)},
         binding_values=decimals,
         enum_binding_values=enums,

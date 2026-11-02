@@ -522,10 +522,8 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
         # Ctx-scoped (entered and unwound inside the command callback's
         # settings scope - safe by construction):
         ("entrypoints/cli/root_commands.py", "root_command"),
-        ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
+        ("client/commands/output.py", "activate_subcommand_output_language"),
         ("client/commands/custody.py", "_pin_render_language_to_target_bucket"),
-        ("client/commands/custody.py", "_activate_subcommand_output_language"),
-        ("runtime/commands/presentation.py", "activate_subcommand_output_language"),
         ("runtime/commands/profile_admission.py", "bind_runtime_root_context"),
         # Registered reads materialize translated projections within a with-block
         # using the exact request language. ContextVar settings are restored before
@@ -561,10 +559,8 @@ _SANCTIONED_LANGUAGE_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
 _CTX_SCOPED_OVERRIDE_SITES: frozenset[tuple[str, str]] = frozenset(
     {
         ("entrypoints/cli/root_commands.py", "root_command"),
-        ("entrypoints/cli/common.py", "activate_subcommand_output_language"),
+        ("client/commands/output.py", "activate_subcommand_output_language"),
         ("client/commands/custody.py", "_pin_render_language_to_target_bucket"),
-        ("client/commands/custody.py", "_activate_subcommand_output_language"),
-        ("runtime/commands/presentation.py", "activate_subcommand_output_language"),
         ("runtime/commands/profile_admission.py", "bind_runtime_root_context"),
     },
 )

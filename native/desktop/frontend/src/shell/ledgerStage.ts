@@ -17,6 +17,7 @@ import { sameDecimal } from "./ledgerGrammar";
 export const STAGE_FIELDS = [
   "booked_date",
   "value_date",
+  "operation_date",
   "amount",
   "direction",
   "currency",

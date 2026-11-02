@@ -35,6 +35,7 @@ from ...application.ledger.invoice_draft_payloads import (
 from ...core.decimal.constants import ZERO
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
@@ -46,7 +47,6 @@ from ...core.text_bounds import NonEmptyStr, PositiveCount
 from ...core.unit_proportion import UNIT_PROPORTION_MAX, UNIT_PROPORTION_MIN
 from ...domain.contribuyente.inventory.records import (
     INVENTORY_SCHEMA_VERSION,
-    InventoryYear,
     MovementKind,
     ValuationMethod,
 )
@@ -204,7 +204,7 @@ class InventoryLedgerPayload(OutputSchema):
     """
 
     actividad_id: NonEmptyStr
-    year: InventoryYear
+    year: FourDigitYear
     valuation_method: _ValuationMethodText
     opening_stock: _NonNegativeAmount
     opening_layers: list[InventoryStockLayerPayload] = []

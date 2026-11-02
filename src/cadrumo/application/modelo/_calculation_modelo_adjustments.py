@@ -417,17 +417,42 @@ def _required_relation_periods(snapshot: RegistrySnapshot, relation_ids: frozens
     return tuple(sorted(periods))
 
 
+def _general_regime_figure_present(
+    targets: tuple[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId], ...],
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+) -> bool:
+    """Whether a reconciled annual box or its resolved 303 fold holds a non-zero figure."""
+    for _relation_id, binding_id, _targets, _source_casilla, annual_casilla in targets:
+        for value in (casilla_values.get(annual_casilla), resolved_binding_values.get(binding_id)):
+            if value is not None and _calculated_decimal(value) != ZERO:
+                return True
+    return False
+
+
 def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     *,
     work_unit: WorkUnit,
     snapshot: RegistrySnapshot,
     casilla_values: Mapping[CasillaId, Decimal],
     resolved_binding_values: Mapping[BindingId, Decimal],
+    general_regime_claimed: bool,
 ) -> None:
-    """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence."""
+    """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence.
+
+    A calculated zero proves a slot has nothing to reconcile, and an absent
+    annual box is unknown, so it refuses. The exception is a filer claiming no
+    general regime with no figure on any general-regime box: those boxes do not
+    apply to them. One non-zero figure contradicts that, and every absent box
+    is unknown again.
+    """
     targets = reconciliation_relation_targets(snapshot)
     if not targets:
         return
+    general_regime_not_applicable = not general_regime_claimed and not _general_regime_figure_present(
+        targets, casilla_values=casilla_values, resolved_binding_values=resolved_binding_values
+    )
 
     # Several bindings may feed one casilla as alternative sources (M100 0596
     # from Modelo 111, Modelo 190, or a salary certificate); any resolved source
@@ -445,7 +470,11 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
         if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
             continue
-        if _calculated_decimal(casilla_values.get(annual_casilla)) == ZERO:
+        annual_value = casilla_values.get(annual_casilla)
+        if annual_value is None:
+            if general_regime_not_applicable:
+                continue
+        elif _calculated_decimal(annual_value) == ZERO:
             continue
         missing_relations.append(relation_id)
         missing_bindings.append(binding_id)
@@ -467,7 +496,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
             "missing_303_periods": missing_periods,
             "missing_303_reconciliation_bindings": tuple(missing_bindings),
             "zero_reconciliation_casillas_at_risk": tuple(missing_targets),
-            "nonzero_annual_casillas": tuple(missing_annuals),
+            "annual_casillas_not_proven_zero": tuple(missing_annuals),
         },
         precondition_failure=build_modelo_precondition_failure(
             subject_leaf_key="modelo.work.calculate",

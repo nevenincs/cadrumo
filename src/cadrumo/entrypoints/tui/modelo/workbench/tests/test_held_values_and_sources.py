@@ -27,7 +27,6 @@ from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
 from ......application.modelo.value_presentation import absent_value_text
-from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
     ModeloFormAeatData,
     ModeloFormEarlierFiling,
@@ -42,7 +41,6 @@ from ......application.modelo.work_form_models import (
     address_key,
     revised_field,
 )
-from ......application.modelo.work_form_service import modelo_form_snapshot
 from ......application.modelo.work_form_source_groups import reading_text, source_group_kind, source_groups
 from ......application.modelo.work_form_wording import (
     aeat_imported_on,
@@ -52,19 +50,16 @@ from ......application.modelo.work_form_wording import (
     origin_words,
 )
 from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
+    ModeloWorkReviewCasilla,
 )
 from ......core.aggregation import BindingSourceKind
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation, tr
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
 from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
+from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.filing.schema import ModeloValueKind
-from ......domain.modelos.codes import ModeloCode
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -94,7 +89,7 @@ from ..screen import ModeloWorkbenchScreen
 from ..search import search_entries
 from ..sources import SOURCE_GROUP_MARKS, group_prompt, group_words
 from ..vocabulary import FORM_SET_MARK, ORIGIN_MARKS, origin_glyph, origin_text
-from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, fed_by, form_field, registry_form_of, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -514,42 +509,29 @@ def _real_form(
     findings: tuple[ModeloVerificationFinding, ...] = (),
 ) -> ModeloWorkForm:
     """A real form built from the published authority, every rate casilla holding ``figure`` when one is given."""
-    period = Period.from_year_and_code(year, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    rates = {str(casilla.id) for casilla in snapshot.revision.casillas if str(casilla.data_type) == "ratio"}
-    rows = build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation)
-    if figure is not None:
-        rows = tuple(
+
+    def hold_rates(
+        snapshot: RegistrySnapshot, rows: tuple[ModeloWorkReviewCasilla, ...]
+    ) -> tuple[ModeloWorkReviewCasilla, ...]:
+        if figure is None:
+            return rows
+        rates = {str(casilla.id) for casilla in snapshot.revision.casillas if str(casilla.data_type) == "ratio"}
+        return tuple(
             row.model_copy(update={"value": figure, "realised_kind": ModeloValueKind.LITERAL})
             if str(row.casilla_id) in rates
             else row
             for row in rows
         )
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000458",
+
+    return registry_form_of(
+        operation,
         modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
+        year=year,
+        code=code,
+        bucket_id="13000000-0000-4000-8000-000000000458",
         work_unit_id="d" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=rows,
         findings=findings,
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
+        hold=hold_rates,
     )
 
 

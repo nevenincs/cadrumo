@@ -78,10 +78,9 @@ _SOURCED_ELSEWHERE = frozenset(
         "ledger_oss_aggregation",
         "collectible_invoice",
         "payable_invoice",
+        "retencion_soportada",
     },
 )
-_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset({"renta-certificado-trabajo-retenciones"})
-
 __all__ = ["secure_objects"]
 
 
@@ -179,9 +178,7 @@ def _calculate_m100(secure_objects: SecureObjectRepository) -> BucketAggregation
             _seed_filed(secure_objects, modelo=source, filing_year=_M100_YEAR, period=quarter, casilla_id=casilla_id)
     snapshot = published_authority_operation().snapshot("100", filing_year=_M100_YEAR, period=_ANNUAL)
     zero_bindings = {
-        binding.id: Decimal("0")
-        for binding in snapshot.revision.bindings
-        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS and binding.source not in _SOURCED_ELSEWHERE
+        binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in _SOURCED_ELSEWHERE
     }
     return _calculate(secure_objects, modelo="100", filing_year=_M100_YEAR, binding_values=zero_bindings)
 

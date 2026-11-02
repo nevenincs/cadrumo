@@ -66,6 +66,11 @@ from ..profile.justificante import JustificanteRepository
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ..profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..profile.retencion_observations import RetencionObservationRepositoryAdapter
+from ..profile.retencion_soportada_records import (
+    RetencionSoportadaAbsenceRepositoryAdapter,
+    RetencionSoportadaRecordRepositoryAdapter,
+    is_retencion_soportada_absence_row,
+)
 from ..profile.submission import SubmissionRepository
 from .attachment import unwrap_blob_payload
 from .envelope.contract import Envelope
@@ -234,6 +239,23 @@ def _natural_key_resolvers(
         return PercepcionObservationRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
 
     resolvers["cadrumo.withholding.observations"] = _bound_resolver(_percepciones_repo)
+
+    def _retencion_soportada_repo() -> RetencionSoportadaRecordRepositoryAdapter:
+        return RetencionSoportadaRecordRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
+
+    def _retencion_soportada_absence_repo() -> RetencionSoportadaAbsenceRepositoryAdapter:
+        return RetencionSoportadaAbsenceRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
+
+    record_resolver = _bound_resolver(_retencion_soportada_repo)
+    absence_resolver = _bound_resolver(_retencion_soportada_absence_repo)
+
+    def _retencion_soportada_row(record: SecureObjectRecord, row_bucket_id: str) -> str:
+        # One namespace holds payer records and absence attestations; each row names its own kind.
+        if is_retencion_soportada_absence_row(record.payload):
+            return absence_resolver(record, row_bucket_id)
+        return record_resolver(record, row_bucket_id)
+
+    resolvers["cadrumo.renta.retencion_soportada.records"] = _retencion_soportada_row
 
     def _filing_history_repo() -> ModeloHistoryRepository:
         return ModeloHistoryRepository(

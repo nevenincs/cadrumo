@@ -20,17 +20,20 @@ from pydantic import ValidationError
 
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ...adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
+from ...application.ledger.confirmation_gate import confirmation_blockers
 from ...application.ledger.evidence import PurchaseInvoiceEvidenceService
 from ...application.ledger.filer_establishment import FILER_POSTCODE_FACT_PATH
 from ...application.ledger.invoice_confirmation import invoice_draft_review_sha256
 from ...application.ledger.invoice_draft_extraction import extract_invoice_draft_from_evidence
 from ...application.ledger.invoice_evidence_confirm_operation import (
     LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
+    FindingResolutionInputV1,
     LedgerEvidenceConfirmProjection,
     LedgerEvidenceConfirmRequest,
 )
 from ...application.ledger.invoice_extraction_authority import default_invoice_extraction_period
 from ...application.operations.error_detail import OperationErrorDetailV1
+from ...core.confirmation_gate import FindingResolutionAction
 from ...core.operations import OperationTerminalCondition
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
@@ -77,10 +80,18 @@ def runtime(tmp_path: Path, operation: PinnedAuthorityOperation) -> Iterator[Ope
         yield enrolled
 
 
-def _confirm(runtime: OperationRuntime, operation: PinnedAuthorityOperation, **statement: Any) -> SettledOperation:
+def _confirm(
+    runtime: OperationRuntime,
+    operation: PinnedAuthorityOperation,
+    *,
+    source: Path = _SOURCE,
+    expected_reading: Decimal | None = Decimal("150.00"),
+    answer_findings: bool = False,
+    **statement: Any,
+) -> SettledOperation:
     bucket_id = str(runtime.profile_id)
     ports = build_invoice_evidence_operation_ports(bucket_id=bucket_id)
-    evidence = PurchaseInvoiceEvidenceService(ports=ports.evidence_ports).add(bucket_id=bucket_id, source_path=_SOURCE)
+    evidence = PurchaseInvoiceEvidenceService(ports=ports.evidence_ports).add(bucket_id=bucket_id, source_path=source)
     with validating_governed_facts(operation):
         draft = extract_invoice_draft_from_evidence(
             bucket_id=bucket_id,
@@ -92,7 +103,16 @@ def _confirm(runtime: OperationRuntime, operation: PinnedAuthorityOperation, **s
                 operation=operation, effective_date=default_invoice_extraction_period().end_date
             ),
         )
-    assert draft.retencion_amount == Decimal("150.00"), "the specimen no longer reads its retención"
+    assert draft.retencion_amount == expected_reading, "the specimen no longer reads its retención as this test says"
+    if answer_findings:
+        statement["resolutions"] = tuple(
+            FindingResolutionInputV1(
+                blocker_id=blocker.blocker_id,
+                action=FindingResolutionAction.ATTEST,
+                note="Revisado contra el documento",
+            )
+            for blocker in confirmation_blockers(draft)
+        )
     return runtime.settle(
         LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
         LedgerEvidenceConfirmRequest(
@@ -118,14 +138,122 @@ def _stored_retention(runtime: OperationRuntime) -> tuple[Decimal | None, Decima
     )
 
 
-def test_a_reading_left_alone_does_not_reach_the_invoice(
+def _variant(tmp_path: Path, *replacements: tuple[str, str]) -> Path:
+    """Write the specimen with figures changed, so each case states its own document."""
+    text = _SOURCE.read_text(encoding="utf-8")
+    for old, new in replacements:
+        assert old in text
+        text = text.replace(old, new)
+    path = tmp_path / "variant.xml"
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+_WITHHELD_BLOCK = (
+    "      <TaxesWithheld>\n        <Tax>\n          <TaxTypeCode>04</TaxTypeCode>\n"
+    "          <TaxRate>15.00</TaxRate>\n          <TaxableBase>\n"
+    "            <TotalAmount>1000.00</TotalAmount>\n          </TaxableBase>\n          <TaxAmount>\n"
+    "            <TotalAmount>150.00</TotalAmount>\n          </TaxAmount>\n        </Tax>\n"
+    "      </TaxesWithheld>\n"
+)
+
+
+def test_a_reading_left_alone_reaches_the_invoice(
     runtime: OperationRuntime, operation: PinnedAuthorityOperation
 ) -> None:
-    """Retención reaches an invoice only as the person's statement, so the cash stays the whole total."""
+    """The document's 15 % of 1000.00 is kept, so the cash due is 1210.00 - 150.00."""
+    settled = _confirm(runtime, operation)
+
+    assert settled.condition is OperationTerminalCondition.SUCCEEDED
+    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1060.00"))
+
+
+def test_a_person_overrides_the_reading(runtime: OperationRuntime, operation: PinnedAuthorityOperation) -> None:
+    # 7 % of 1000.00 is 70.00, so the cash due is 1210.00 - 70.00.
+    settled = _confirm(runtime, operation, retention_points="7", retention_amount="70.00")
+
+    assert settled.condition is OperationTerminalCondition.SUCCEEDED
+    assert _stored_retention(runtime) == (Decimal("0.07"), Decimal("70.00"), Decimal("1140.00"))
+
+
+def test_a_document_with_no_retention_keeps_none_rather_than_zero(
+    runtime: OperationRuntime, operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    source = _variant(
+        tmp_path,
+        (_WITHHELD_BLOCK, ""),
+        ("        <TotalTaxesWithheld>150.00</TotalTaxesWithheld>\n", ""),
+    )
+
+    settled = _confirm(runtime, operation, source=source, expected_reading=None)
+
+    assert settled.condition is OperationTerminalCondition.SUCCEEDED
+    assert _stored_retention(runtime) == (None, None, Decimal("1210.00"))
+
+
+def test_a_disagreeing_reading_blocks_until_answered_and_then_keeps_only_the_amount(
+    runtime: OperationRuntime, operation: PinnedAuthorityOperation, tmp_path: Path
+) -> None:
+    # The document says 140.00 withheld and 15 %, but 15 % of 1000.00 is 150.00.
+    source = _variant(
+        tmp_path,
+        ("<TotalAmount>150.00</TotalAmount>", "<TotalAmount>140.00</TotalAmount>"),
+        ("<TotalTaxesWithheld>150.00<", "<TotalTaxesWithheld>140.00<"),
+    )
+
+    blocked = _confirm(runtime, operation, source=source, expected_reading=Decimal("140.00"))
+    assert blocked.condition is OperationTerminalCondition.REFUSED
+    assert not InvoiceCatalogueRepository(bucket_id=str(runtime.profile_id)).load().invoices
+
+    answered = _confirm(runtime, operation, source=source, expected_reading=Decimal("140.00"), answer_findings=True)
+    assert answered.condition is OperationTerminalCondition.SUCCEEDED
+    assert _stored_retention(runtime) == (None, Decimal("140.00"), Decimal("1070.00"))
+
+
+def test_reconfirming_an_invoice_that_predates_the_reading_changes_nothing_and_says_so(
+    runtime: OperationRuntime, operation: PinnedAuthorityOperation
+) -> None:
+    repository = InvoiceCatalogueRepository(bucket_id=str(runtime.profile_id))
+    assert _confirm(runtime, operation).condition is OperationTerminalCondition.SUCCEEDED
+    # An invoice as a confirmation used to leave it: no retention, whatever the page said.
+    catalogue = repository.load()
+    invoice = next(iter(catalogue.invoices.values()))
+    older = invoice.model_copy(update={"retention_rate": None, "retention_amount": None})
+    repository.save(catalogue.model_copy(update={"invoices": {invoice.invoice_id: older}}))
+
     settled = _confirm(runtime, operation)
 
     assert settled.condition is OperationTerminalCondition.SUCCEEDED
     assert _stored_retention(runtime) == (None, None, Decimal("1210.00"))
+    assert isinstance(settled.published, LedgerEvidenceConfirmProjection)
+    report = settled.published.confirmation.retention_discrepancy
+    assert report is not None
+    assert Decimal(report.read_amount.decimal) == Decimal("150.00")
+    assert report.recorded_amount is None
+
+
+def test_reconfirming_with_a_stated_retention_still_refuses(
+    runtime: OperationRuntime, operation: PinnedAuthorityOperation
+) -> None:
+    assert _confirm(runtime, operation).condition is OperationTerminalCondition.SUCCEEDED
+
+    settled = _confirm(runtime, operation, retention_points="7", retention_amount="70.00")
+
+    assert settled.condition is OperationTerminalCondition.FAILED
+    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1060.00"))
+
+
+def test_reconfirming_unchanged_is_a_no_op_with_nothing_to_report(
+    runtime: OperationRuntime, operation: PinnedAuthorityOperation
+) -> None:
+    assert _confirm(runtime, operation).condition is OperationTerminalCondition.SUCCEEDED
+
+    settled = _confirm(runtime, operation)
+
+    assert settled.condition is OperationTerminalCondition.SUCCEEDED
+    assert isinstance(settled.published, LedgerEvidenceConfirmProjection)
+    assert settled.published.confirmation.retention_discrepancy is None
+    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1060.00"))
 
 
 @pytest.mark.parametrize(
@@ -141,7 +269,7 @@ def test_a_reading_left_alone_does_not_reach_the_invoice(
     ids=["points", "fraction", "one_cent_above", "one_point"],
 )
 def test_a_stated_retention_is_kept_on_either_scale(
-    runtime: OperationRuntime, operation: PinnedAuthorityOperation, statement: dict[str, str], rate: Decimal
+    runtime: OperationRuntime, operation: PinnedAuthorityOperation, statement: dict[str, Any], rate: Decimal
 ) -> None:
     settled = _confirm(runtime, operation, **statement)
 
@@ -161,20 +289,21 @@ def test_a_stated_retention_is_kept_on_either_scale(
         {"retention_points": "16", "retention_amount": "150.00"},
         # Above the whole.
         {"retention_points": "101", "retention_amount": "150.00"},
-        # A rate alone declares no withheld figure.
-        {"retention_points": "15"},
+        # Alone, a rate meets the amount the document read: 16 % of 1000.00 is not 150.00.
+        {"retention_points": "16"},
     ],
-    ids=["two_cents_above", "one_point_on_the_whole_base", "another_rate", "above_the_whole", "rate_alone"],
+    ids=["two_cents_above", "one_point_on_the_whole_base", "another_rate", "above_the_whole", "rate_against_reading"],
 )
 def test_a_retention_that_disagrees_is_refused(
-    runtime: OperationRuntime, operation: PinnedAuthorityOperation, statement: dict[str, str]
+    runtime: OperationRuntime, operation: PinnedAuthorityOperation, statement: dict[str, Any]
 ) -> None:
     settled = _confirm(runtime, operation, **statement)
 
-    # The invoice's own figure check stops it before anything is written.
-    assert settled.condition is OperationTerminalCondition.FAILED
+    # The invoice's own figure check stops it before anything is written, as a typed refusal.
+    assert settled.condition is OperationTerminalCondition.REFUSED
     assert isinstance(settled.published, OperationErrorDetailV1)
-    assert "value_error" in settled.published.model_dump_json()
+    assert settled.published.error_code == "REFUSED_INVOICE_RETENTION_FIGURES"
+    assert "value_error" not in settled.published.model_dump_json()
     assert not InvoiceCatalogueRepository(bucket_id=str(runtime.profile_id)).load().invoices
 
 

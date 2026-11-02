@@ -45,7 +45,7 @@ from .models import (
     ManualLedgerTransactionResult,
 )
 from .own_account_ports import OwnAccountRepositoryFactory
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 from .transaction_projection import LedgerTransactionProjection
 from .update_contracts import (
     LEDGER_UPDATE_MAX_VALIDATION_MESSAGES,
@@ -138,7 +138,7 @@ def _normalise_update_irpf_category(patch_values: dict[str, object], *, operatio
 
 
 def _normalise_update_dates(patch_values: dict[str, object]) -> None:
-    for field_name in ("booked_date", "value_date"):
+    for field_name in ("booked_date", "value_date", "operation_date"):
         raw_date = patch_values.get(field_name)
         if isinstance(raw_date, str):
             parsed_date = parse_iso8601_date(raw_date)
@@ -383,11 +383,9 @@ def resolve_ledger_update_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile disclosure and COMMIT for every transaction update."""
-    if request.definition_id != LEDGER_UPDATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerUpdateRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_UPDATE_OPERATION_DEFINITION_ID, request_type=LedgerUpdateRequest
+    )
 
 
 def build_ledger_update_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

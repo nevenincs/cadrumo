@@ -56,7 +56,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .entry_limits import LedgerEntryLimitsProjection, ledger_entry_limits
 from .invoice_label_vocabulary import CURRENCY_CODES
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 
 LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID: Final = "ledger.entry-options"
 
@@ -309,11 +309,12 @@ def resolve_ledger_entry_options_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind the read to the exact profile, as every ledger read is."""
-    if request.definition_id != LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEntryOptionsRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request,
+        context,
+        definition_id=LEDGER_ENTRY_OPTIONS_OPERATION_DEFINITION_ID,
+        request_type=LedgerEntryOptionsRequest,
+    )
 
 
 def build_ledger_entry_options_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

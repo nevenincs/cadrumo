@@ -9,6 +9,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
+from ...core.filing_year import FourDigitYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period, PeriodError
 from ...domain.buckets.event import bucket_event_order_key
@@ -42,7 +43,7 @@ class ModeloHistoryOperationRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     modelo: str = Field(min_length=1, max_length=16)
-    year: int | None = Field(default=None, ge=1900, le=9999)
+    year: FourDigitYear | None = None
     period: str | None = Field(default=None, min_length=1, max_length=32)
 
 
@@ -54,7 +55,7 @@ class ModeloHistoryOperationProjection(BaseModel):
     result_version: Literal[1] = 1
     profile_id: UUID
     modelo: str = Field(min_length=1, max_length=16)
-    year: int | None = Field(default=None, ge=1900, le=9999)
+    year: FourDigitYear | None = None
     period: str | None = Field(default=None, min_length=1, max_length=32)
     count: int = Field(ge=0)
     events: tuple[BucketEventProjection, ...]

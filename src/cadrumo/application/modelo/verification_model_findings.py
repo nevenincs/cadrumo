@@ -32,6 +32,7 @@ from .verification_preconditions import (
     build_verification_precondition_failure,
 )
 from .verification_repository_ports import VerificationRepositoryBundle
+from .withholding_count_reconciliation import append_withholding_count_reconciliation_findings
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -121,6 +122,21 @@ def append_readable_model_findings(
         failure.scenario_id in REGISTRY_SNAPSHOT_REFUSAL_SCENARIOS for failure in failures_by_finding_id.values()
     )
     if not registry_snapshot_refused:
+        append_withholding_count_reconciliation_findings(
+            work_unit=work_unit,
+            target_calculation_revision_id=target.calculation_revision_id,
+            target_work_unit_id=target.work_unit_id,
+            snapshot=operation.snapshot(
+                work_unit.modelo,
+                filing_year=work_unit.filing_year,
+                period=work_unit.period.registry_token,
+            ),
+            observation_repository=repos.observation,
+            percepcion_repository=repos.percepcion_observation_ports.repository,
+            operation=operation,
+            findings=findings,
+            failures_by_finding_id=failures_by_finding_id,
+        )
         append_model_specific_findings(
             findings,
             failures_by_finding_id=failures_by_finding_id,

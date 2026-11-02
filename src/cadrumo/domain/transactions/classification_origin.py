@@ -25,6 +25,7 @@ _MOVEMENT_FIELDS: Final = frozenset({"booked_date", "value_date", "amount", "cur
 
 CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "direction",
+    "operation_date",
     "source_jurisdiction",
     "business_classification",
     "business_pct",
@@ -40,6 +41,7 @@ CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "m210_income_classification",
     "deduction_fact_kind",
     "investment_asset_id",
+    "iva_vehicle_use",
     "counterparty_country",
     "counterparty_identification_state",
     "art_104_tres_exclusion",

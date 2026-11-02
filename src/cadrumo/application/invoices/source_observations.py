@@ -33,6 +33,7 @@ from ...domain.calculations.registry.iva_category_catalogue import (
     resolve_iva_category_catalogue,
 )
 from ...domain.calculations.registry.m347_operation_scope import resolve_m347_estimacion_objetiva_scope
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.third_party_declaration_roles import (
     resolve_third_party_declaration_role_catalogue,
 )
@@ -134,10 +135,13 @@ def invoice_direction_to_source_kind(kind: InvoiceKind) -> BindingSourceKind:
 
 
 def invoice_sources_for_revision(context: CalculationSourceContext) -> frozenset[BindingSourceKind]:
-    """Return invoice source families declared by the revision."""
-    declared_sources = frozenset(
-        binding.source for binding in context.revision.bindings if binding.source in OWNED_SOURCES
-    )
+    """Return invoice source families declared by the context's revision."""
+    return invoice_sources_declared(context.revision)
+
+
+def invoice_sources_declared(revision: ModeloRevision) -> frozenset[BindingSourceKind]:
+    """Return invoice source families a registry revision declares."""
+    declared_sources = frozenset(binding.source for binding in revision.bindings if binding.source in OWNED_SOURCES)
     if declared_sources & COMBINED_DIRECTION_SOURCES:
         # A combined-direction binding reads both invoice directions, so both feed it.
         return frozenset(OWNED_SOURCES)
@@ -164,9 +168,14 @@ def invoice_in_context(invoice: Invoice, context: CalculationSourceContext) -> b
     normal, and a disagreement about that between the store and the projection
     is resolved in favour of declaring.
     """
-    if invoice.bucket_id is not None and invoice.bucket_id != context.bucket_id:
+    return invoice_in_bucket_and_period(invoice, bucket_id=context.bucket_id, period=context.period)
+
+
+def invoice_in_bucket_and_period(invoice: Invoice, *, bucket_id: str, period: Period) -> bool:
+    """Apply :func:`invoice_in_context`'s rule to bare coordinates."""
+    if invoice.bucket_id is not None and invoice.bucket_id != bucket_id:
         return False
-    return _date_in_period(invoice.issued_at, period=context.period)
+    return _date_in_period(invoice.issued_at, period=period)
 
 
 def _date_in_period(value: date, *, period: Period) -> bool:

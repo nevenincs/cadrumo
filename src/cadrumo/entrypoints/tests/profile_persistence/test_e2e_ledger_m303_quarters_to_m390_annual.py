@@ -838,9 +838,13 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
     assert context["reason"] == "missing_clean_cross_period_303_filings_or_observations"
     assert context["missing_303_periods"] == ("1T", "2T", "3T", "4T")
     # Without a filed fourth quarter the annual prorrata regularisation is
-    # unresolved, so the annual deduction total and result that sum it hold no
-    # figure to set a zero slot against; the output-IVA total does, and refuses.
-    assert context["zero_reconciliation_casillas_at_risk"] == (_M390_DEVENGADA,)
+    # unresolved, so the annual deduction total and result that sum it are
+    # unknown, which proves no zero slot; the output-IVA total refuses as well.
+    assert context["zero_reconciliation_casillas_at_risk"] == (
+        _M390_DEVENGADA,
+        _M390_DEDUCIBLE,
+        _M390_RESULTADO,
+    )
 
 
 # The seeded year is the AEAT prorrata general example (see PRORRATA_QUARTER_FACTS).

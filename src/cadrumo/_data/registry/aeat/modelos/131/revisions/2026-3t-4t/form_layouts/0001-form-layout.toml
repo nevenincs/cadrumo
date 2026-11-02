@@ -7,7 +7,7 @@ revision_id = "2026-3t-4t"
 seed_source = "authored"
 review = { state = "generated", notes = "Printed sections follow BOE-A-2015-1656 Annex II page 8. Revision-specific fields and DPA/DID records are retained; the early/late 2026 source pins remain distinct. Negative/deferred-payment marks, signature and full printed-form fidelity remain unreviewed." }
 generator_version = 1
-source_state_digest = "904274b5117c99c5d04104dc81a037b2ad478e95bd2afc4093c57d618228778b"
+source_state_digest = "a272cbf735f7b4d8ee95a73a67ef9cdae5d3103e69f910b65d97e665a819d0d9"
 design_sources = [
     { source_ref = "aeat-dr-131-2026-late", sha256 = "4719e884d13df26258f8892160fb342ce676f1028541b351da85bd7840dfc378" },
     { source_ref = "boe-2015-1656-modelos-130-131-form", sha256 = "f62a61854eac561e96f689ebf11b8b2c75d418a6146a7f972e6e6a404a8063a0" },
@@ -138,7 +138,7 @@ id = "complementaria-7"
 heading_key = "modelo.schema.131.form.section.complementaria-7.heading"
 official_heading = "Complementaria (7)"
 blocks = [
-    { kind = "field", id = "field", binding_id = "modelo-131.page1.declaracion-complementaria" },
+    { kind = "context_field", id = "declaracion-complementaria", export_layout_id = "modelo-131-fichero-boe", export_record_id = "modelo-131-page-01", export_field_id = "modelo-131-page-01.modelo-131.page1.declaracion-complementaria", heading_key = "modelo.schema.131.form.context.declaracion-complementaria", official_heading = "Autoliquidación complementaria" },
     { kind = "field", id = "field-2", binding_id = "modelo-131.page1.justificante-anterior" },
 ]
 

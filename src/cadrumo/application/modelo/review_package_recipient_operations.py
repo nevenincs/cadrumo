@@ -11,13 +11,12 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.access_vocabulary import Availability, DisclosureCategory
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
-from ...core.hashing import canonical_json_bytes
 from ...core.hex import HEX_PATTERN_64
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
@@ -34,7 +33,9 @@ from ...core.time.utc import validate_utc_aware
 from ..bucket_event_repository import BucketEventHistoryRepositoryFactory
 from ..operations.access_port import OperationAccessResolver
 from ..operations.access_resolution import (
+    COMMITTING_OPERATION_LIFECYCLE_ACTIONS,
     OBSERVATION_DISCLOSING_ACTIONS,
+    OPERATION_LIFECYCLE_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access,
@@ -56,6 +57,7 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationResultProjector,
 )
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .review_package_collab_audit import (
@@ -77,7 +79,6 @@ REVIEW_PACKAGE_RECIPIENT_ADD_OPERATION_DEFINITION_ID = "config.collab.recipient.
 REVIEW_PACKAGE_RECIPIENT_LIST_OPERATION_DEFINITION_ID = "config.collab.recipient.list"
 REVIEW_PACKAGE_RECIPIENT_REMOVE_OPERATION_DEFINITION_ID = "config.collab.recipient.remove"
 MAX_REVIEW_PACKAGE_RECIPIENT_ROWS = 4_096
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 
 class ReviewPackageRecipientAddRequest(BaseModel):
@@ -415,8 +416,7 @@ class ReviewPackageRecipientRemoveExecutor:
 
 
 def _check_projection_size(projection: BaseModel) -> None:
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(projection, PROJECTION_RESULT_MAX_BYTES)
 
 
 def _require_success_receipt(
@@ -603,17 +603,7 @@ def _resolve_access(
         payload_type=request_type,
         access_profile_id=context.profile_id,
     ).profile_id
-    actions = {
-        AccessAction.SUBMIT,
-        AccessAction.START,
-        AccessAction.RESUME,
-        AccessAction.OBSERVE,
-        AccessAction.RESULT,
-        AccessAction.CANCEL,
-        AccessAction.DETACH,
-    }
-    if mutation:
-        actions.add(AccessAction.COMMIT)
+    actions = COMMITTING_OPERATION_LIFECYCLE_ACTIONS if mutation else OPERATION_LIFECYCLE_ACTIONS
     disclosures = operation_disclosures(
         context,
         observed_by=OBSERVATION_DISCLOSING_ACTIONS,
@@ -624,7 +614,7 @@ def _resolve_access(
         context,
         profile_id=profile_id,
         definition_id=definition_id,
-        actions=frozenset(actions),
+        actions=actions,
         disclosures=disclosures,
         periods=frozenset(),
         period_independent=True,

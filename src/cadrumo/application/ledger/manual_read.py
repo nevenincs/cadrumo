@@ -21,7 +21,7 @@ if TYPE_CHECKING:
 from ...core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ...core.period import Period
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import (
     BucketTransactionRef,
     Transaction,
@@ -187,6 +187,7 @@ def ledger_transaction_payload(transaction: Transaction) -> LedgerTransactionPay
         date=(raw.value_date or raw.booked_date).isoformat(),
         booked_date=raw.booked_date.isoformat(),
         value_date=_optional_iso_date(raw.value_date),
+        operation_date=_optional_iso_date(transaction.operation_date),
         amount=display_decimal(raw.amount),
         currency=raw.currency,
         direction=transaction.direction.value,
@@ -336,10 +337,7 @@ def _business_money_contribution(
     """Return income, expense, and unconverted counts for one eligible row."""
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return Decimal("0"), Decimal("0"), 0
-    if transaction.business_classification not in {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.MIXED,
-    }:
+    if transaction.business_classification not in BUSINESS_BEARING_STATES:
         return Decimal("0"), Decimal("0"), 0
     if period is not None and not period.contains(transaction.raw.value_date or transaction.raw.booked_date):
         return Decimal("0"), Decimal("0"), 0

@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -29,7 +30,7 @@ from ...core.json_contract import Notice, NoticeSeverity
 from ...core.payment_election import PaymentElection
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
-from ...domain.modelos.calculation_revision import CalculationRevisionState
+from ...domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES
 from ._modelo_behavior_support import resolve_optional_cli_period
 from ._modelo_cli_support import (
     parse_revision_selector,
@@ -45,7 +46,7 @@ from ._modelo_rendering import (
     verification_report_notices,
     verification_report_payload,
 )
-from .common import activate_subcommand_output_language, emit_envelope
+from .common import emit_envelope
 from .modelo_results import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,
@@ -327,10 +328,7 @@ def work_file(
         selector=parse_revision_selector(select),
         default_for="file",
     )
-    if selected.calculation_state not in {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-    }:
+    if selected.calculation_state not in CURRENT_SEALED_REVISION_STATES:
         raise CalculationRevisionStateError(
             translated_message="errors.error.error_modelo_calculation_revision_state",
             context={

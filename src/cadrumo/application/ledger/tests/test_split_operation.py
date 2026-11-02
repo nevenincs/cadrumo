@@ -3,23 +3,22 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.transactions.enums import (
     BusinessClassification,
     SplitRole,
-    TransactionDirection,
     TransactionLifecycleState,
 )
 from ....domain.transactions.errors import TransactionValidationError
@@ -38,6 +37,8 @@ from .. import split_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..models import SplitChildCommand, SplitTransactionResult
 from .full_catalogue_commit_harness import FullCatalogueCommitHarness
+from .personal_manual_row_support import personal_outgoing_manual_row
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -80,13 +81,8 @@ def _access_context(
     profile_id: UUID = _PROFILE,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+    return registration_access_context(
+        registration, profile_id=profile_id, action=AccessAction.SUBMIT, frontend=frontend
     )
 
 
@@ -104,33 +100,7 @@ def _result(*, child_transaction_ids: tuple[str, ...] = ("c" * 64, "d" * 64)) ->
 
 
 def _parent_transaction() -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id="split-operation-parent",
-        booked_date=date(2026, 5, 2),
-        value_date=None,
-        amount=Decimal("100.00"),
-        currency="EUR",
-        counterparty="Vendor SL",
-        description="materials",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-            provider_name="test",
-        ),
-        raw_fields={"source": "test"},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.PERSONAL,
-            "source_jurisdiction": "ES",
-            "group_label": None,
-        },
-    )
+    return personal_outgoing_manual_row("split-operation-parent", amount=Decimal("100.00"), description="materials")
 
 
 def _child_transaction(parent: Transaction, child: SplitChildCommand, *, index: int) -> Transaction:

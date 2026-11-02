@@ -9,7 +9,7 @@ from typing import Final, Literal, Self
 
 from pydantic import BaseModel, Field, model_validator
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome, CalculationSourceLineageRole
 from ...core.authority_grade import BindingGradeCapReason
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
@@ -166,6 +166,10 @@ class CalculationNoteSentence(StrEnum):
     DISPOSAL_EXEMPTION_NOT_COMPUTED = "disposal_exemption_not_computed"
     ADVISORY_IMPUTATION_PERIOD_UNGROUNDED = "advisory_imputation_period_ungrounded"
     ADVISORY_VALUE_PROVEN_ZERO = "advisory_value_proven_zero"
+    RETENCION_SOPORTADA_EVIDENCE_REQUIRED = "retencion_soportada_evidence_required"
+    """A suffered-withholding class that may have income has neither a payer record nor an absence attestation."""
+    RETENCION_SOPORTADA_ABSENCE_CONTRADICTED = "retencion_soportada_absence_contradicted"
+    """A suffered-withholding class holds payer records and an operator's attestation that it has none."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(
@@ -289,10 +293,13 @@ class CalculationSourceIssue(BaseModel):
     None of them withholds anything. ``advisory_binding_value`` is a value a
     binding produced whose declared grade cap stops it at calculation: it names
     the box the value reaches and the binding, and withholds filing until a
-    recalculation under an uncapped binding clears it; a capped value its
-    resolver proved to be zero withholds nothing and is not persisted. ``fact`` states such a note's own row, element,
-    interval and amount. ``binding_source`` is ``None`` only where the condition
-    names no binding source kind.
+    recalculation under an uncapped binding clears it. ``value_outcome`` is
+    what the resolver stated beside that value: a proven zero persists too, so a
+    reopened declaration still shows the zero was proven, and withholds nothing;
+    a capped note without a stated outcome withholds. Only that reason carries an
+    outcome. ``fact`` states such a note's own row, element, interval and
+    amount. ``binding_source`` is ``None`` only where the condition names no
+    binding source kind.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -330,6 +337,14 @@ class CalculationSourceIssue(BaseModel):
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)
     casilla_id: CasillaId | None = None
     fact: CalculationNoteFact | None = None
+    value_outcome: BindingValueOutcome | None = None
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_outcome_on_capped_value_only(self) -> Self:
+        if self.value_outcome is not None and self.reason != "advisory_binding_value":
+            raise ModeloValidationError("only a capped binding value carries a resolver-stated value outcome")
+        return self
 
 
 ACTIVITY_ASSET_CLAIM_REF_PREFIX: Final = "activity-asset-claim:"

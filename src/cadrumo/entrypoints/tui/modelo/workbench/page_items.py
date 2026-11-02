@@ -29,6 +29,8 @@ from typing import Final
 from .....application.modelo.source_policy import SourceFamily
 from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import (
+    FED_BY_A_SOURCE,
+    ORIGINS_WITHOUT_A_VALUE,
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
     ModeloFormContextFieldBlock,
@@ -99,30 +101,17 @@ class WorkbenchFilter(StrEnum):
 
 
 _RECORD_FAMILIES: Final[frozenset[SourceFamily]] = frozenset({SourceFamily.RECORDS, SourceFamily.REGISTERS})
-_FROM_SOURCE_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
-)
-_NO_AMOUNT_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {
-        ModeloFormOrigin.NOT_APPLICABLE,
-        ModeloFormOrigin.NOT_CALCULATED_YET,
-        ModeloFormOrigin.CALCULATION_FAILED,
-        ModeloFormOrigin.NOT_IMPORTED_YET,
-        ModeloFormOrigin.CLEARED,
-    }
-)
-"""Origins whose value is not there, whatever the field still holds, so it is no amount the filer declares."""
 
 
 def _from_records(field: ModeloFormField) -> bool:
     source = field.source
-    return field.origin in _FROM_SOURCE_ORIGINS and source is not None and source.family in _RECORD_FAMILIES
+    return field.origin in FED_BY_A_SOURCE and source is not None and source.family in _RECORD_FAMILIES
 
 
 def _holds_amount(field: ModeloFormField) -> bool:
     """Whether a box holds an amount other than zero: a figure, never nothing, a held zero or a yes-or-no."""
     value = field.value
-    if field.origin in _NO_AMOUNT_ORIGINS or holds_nothing(value) or holds_zero(value) or isinstance(value, bool):
+    if field.origin in ORIGINS_WITHOUT_A_VALUE or holds_nothing(value) or holds_zero(value) or isinstance(value, bool):
         return False
     return isinstance(value, Decimal | int)
 

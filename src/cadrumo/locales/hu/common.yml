@@ -190,6 +190,41 @@ aggregation:
         szükséges (például --year 2024 --period 1T).
       unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
         (pl. 2024-0A).
+  retencion_soportada:
+    errors:
+      certificate_needs_fingerprint: A kifizetői igazoláshoz meg kell adnod az igazolás
+        fájljának SHA-256 ujjlenyomatát (--evidence-sha256). Ha nincs igazolásod,
+        használd az operator_declaration eredetet.
+      ejercicio_unsupported: A rekord ejercicio-ja kívül esik a Cadrumo által támogatott
+        bevallási éveken.
+      family_not_declared: Az ejercicio Modelo 100 változata nem olvas elszenvedett
+        levonást, így a rekord soha nem jutna el egy számításhoz.
+      identity_mismatch: A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemtípussal
+        vagy igazolással.
+      not_found: Ehhez az ejercicióhoz, jövedelemosztályhoz és kifizetői hivatkozáshoz
+        nincs levonási rekord.
+      own_tax_id: A kifizető adóazonosítója (NIF) a sajátod; az általad végzett levonás
+        nem a javadra szóló előleg.
+      repercutido_exceeds_ingreso: A rád áthárított ingreso a cuenta nem lehet nagyobb,
+        mint amennyit a kifizető megfizetett.
+      stale_revision: Ez a levonási rekord megváltozott, amióta elolvastad; olvasd
+        be újra mentés előtt.
+      taxpayer_tax_id_unknown: A profilod nem tartalmaz adóazonosítót (NIF), ezért
+        nem zárható ki, hogy a kifizető te vagy. Előbb add meg a NIF-ed a profilban.
+      validation: 'A levonási rekord nem lett mentve: ellenőrizd a kifizető NIF-jét,
+        az összegeket (legfeljebb két tizedesjegy) és az igazolás ujjlenyomatát.'
+  retencion_soportada_absence:
+    errors:
+      already_attested: Erre a jövedelemosztályra és adóévre már van aktív hiánynyilatkozat.
+      ejercicio_unsupported: A nyilatkozat adóéve kívül esik a Cadrumo által támogatott
+        bevallási éveken.
+      family_not_declared: Az adóév Modelo 100 változata nem olvas elszenvedett levonást,
+        így a nyilatkozat soha nem jutna el egy számításig.
+      not_attested: Erre a jövedelemosztályra és adóévre nincs aktív hiánynyilatkozat.
+      records_present: Erre a jövedelemosztályra és adóévre már vannak kifizetői rekordok.
+        Töröld őket, mielőtt kijelented, hogy egyetlen kifizető sem vont le.
+      stale_revision: Ez a nyilatkozat megváltozott, mióta beolvastad. Használd azt
+        a változatot, amellyel most mentve van.
   retenciones:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}
@@ -1129,6 +1164,8 @@ desktop:
     close: Bevallások bezárása
     loading: A bevallásaid beolvasása…
     maximize: Bevallások teljes méretben
+    notes:
+      label: Amit a legutóbbi számítás feljegyzett
     position: '{row}/{count}. bevallás'
     read_failed: A Cadrumo nem tudta beolvasni a bevallásaidat.
     retry: Próbáld újra
@@ -2235,6 +2272,10 @@ desktop:
       remove_attached: Előbb válaszd le a tételéről
       remove_note: A bejegyzés és tárolt másolata törlődik a nyilvántartásból.
       remove_title: Törlöd ezt a bejegyzést?
+      retention_differs: A dokumentum {read} levont összeget jelez; a számla {recorded}
+        összeget rögzít.
+      retention_unrecorded: A dokumentum {read} levont összeget jelez; a számla nem
+        rögzít levonást.
       save: Mentés
       say_direction: Add meg, hogy kaptad vagy kiállítottad őket
       source:
@@ -2452,15 +2493,22 @@ desktop:
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:
+      art_104_tres_exclusion: 104.Tres. cikk szerinti kizárás
+      attachment_ids: Mellékletek
       booked_date: Könyvelési dátum
       business_pct: Üzleti arány
       counterparty_country: Partner országa
       counterparty_identification_state: Közösségi adószám
       currency: Pénznem
       deduction_fact_kind: Levonási tény
+      input_classification: Beszerzés felhasználása
       investment_asset_id: Beruházási javak
       m210_income_classification: 210-es modell jövedelme
+      operation_date: Ügylet dátuma
       own_account_id: Számla
+      prorrata_reference: Arányosítási hivatkozás
+      prorrata_sector_id: Arányosítási ágazat
+      purchase_invoice_evidence_id: Beszerzési bizonylat
       recargo_amount: Egyenértékűségi pótdíj
       usage_ratio_id: Használati arány
       value_date: Értéknap
@@ -3032,7 +3080,6 @@ desktop:
         sealed: zárolt
         sealed_unread: nem tudni, zárolt-e
         transfer: átvezetés
-        unclassified: még nincs besorolva
       source_jurisdiction: Forrás szerinti joghatóság
       split:
         add_part: Rész hozzáadása
@@ -3469,6 +3516,7 @@ desktop:
     prorrata:
       accepted: 'Elfogadott: {provenances}.'
       action:
+        declare_gross: Bruttó levonható adó bejelentése
         declare_sector: Ágazat bejelentése
         elect_especial: Különleges választása
         elect_general: Általános választása
@@ -3493,6 +3541,8 @@ desktop:
       evidence: Bizonyíték hivatkozása
       evidence_hint: A választás vagy a visszavonás dokumentuma
       form:
+        declare_gross: 'Korábbi elszámolás bruttó levonható adójának bejelentése:
+          {ejercicio}'
         declare_sector: Elkülönült ágazat bejelentése
         elect_especial: 'Különleges prorrata választása: {ejercicio}'
         elect_general: 'Általános prorrata választása: {ejercicio}'
@@ -3500,6 +3550,27 @@ desktop:
         seed: '{ejercicio} átvétele az előző évből'
         seed_sector: 'Ágazat ideiglenes prorratájának átvétele: {ejercicio}'
         settle_sector: 'Ágazat végleges prorratájának elszámolása: {ejercicio}'
+      gross:
+        column:
+          evidence: Dokumentum
+          gross_cuota: Bruttó adó
+          period: Időszak
+        empty: Egyetlen elszámolási időszakra sincs bruttó összeg bejelentve.
+        evidence: Igazoló dokumentum
+        evidence_hint: Hivatkozás a saját dokumentumodra, amely alátámasztja az összeget.
+        gross_cuota: Bruttó levonható adó
+        gross_cuota_hint: A prorrata előtt, euróban, legfeljebb két tizedesjeggyel.
+        period: Elszámolási időszak
+        remove: Törlés
+        remove_confirm: A bejelentés törlése
+        remove_of: A(z) {liquidation} időszakra bejelentett bruttó összeg törlése
+        remove_what: Törlöd a(z) {liquidation} időszakra bejelentett bruttó összeget?
+        replace: Az ugyanerre az időszakra és ágazatra már bejelentett bruttó összeg
+          cseréje
+        title: Korábbi elszámolások bruttó levonható adója
+        what: Egy korábbi, kézzel felvitt elszámolás bruttó levonható adója a prorrata
+          előtt, olyan időszakra, amelyhez a főkönyv nem tartalmaz előzetesen felszámított
+          adót.
       kind:
         definitiva: Végleges
         provisional: Ideiglenes
@@ -4068,6 +4139,8 @@ desktop:
     none_unread: A legutóbbi szinkronizáláskor nem volt olvasatlan
     unread: '{count} olvasatlan'
   modelo:
+    box_notes:
+      label: Amit a számítás erről a rovatról feljegyzett
     correction:
       kind_label: A helyesbítés fajtája
       motive_label: A helyesbítés oka
@@ -7133,6 +7206,7 @@ tui:
           iva_category: IVA-kategória
           iva_rate: IVA-kulcs (például 0.21)
           notes: Megjegyzések
+          operation_date: Ügylet dátuma (ÉÉÉÉ-HH-NN)
           own_account_id: Saját számla (acc-01)
           prorrata_reference: Prorrata hivatkozás
           prorrata_sector: Prorrata ágazat
@@ -7951,6 +8025,8 @@ tui:
           össze.
         missing_invoice: A számla már nincs a katalógusban, ezért nem kapcsolható
           össze.
+        transaction_takes_no_invoice: 'Ehhez a tételhez nem kapcsolható számla: csak
+          aktív, pénzbevételi vagy pénzkiadási tételhez lehet.'
     overview:
       affected_declarations: Érintett bevallások
       areas: A Nyilvántartás területei
@@ -8129,6 +8205,7 @@ tui:
         iva_amount: IVA összege (nem kötelező)
         iva_rate: IVA-kulcs (nem kötelező)
         notes: Megjegyzések
+        operation_date: Ügylet dátuma (ÉÉÉÉ-HH-NN, nem kötelező)
         taxable_base: Adóalap (nem kötelező)
         value_date: Értéknap (ÉÉÉÉ-HH-NN, nem kötelező)
       update_refused: 'A módosítást elutasította: {detail}'

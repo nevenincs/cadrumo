@@ -15,7 +15,6 @@ from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
-    AccessAction,
     Availability,
     DisclosureCategory,
     DisclosurePermission,
@@ -41,8 +40,11 @@ from ...domain.calculations.registry.query_reports import ModeloBindingsReport
 from ...domain.user_profile.errors import ProfileNotFoundError
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OPERATION_LIFECYCLE_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
+    operation_disclosures,
     require_admitted_submission,
 )
 from ..operations.capabilities import (
@@ -53,7 +55,6 @@ from ..operations.capabilities import (
     OperationRequestStoragePolicy,
     OperationSensitiveInputPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -565,28 +566,6 @@ def _authorized_query_scope(
     return periods, period_independent, requires_all_periods
 
 
-def _query_disclosure(
-    context: OperationAccessContext, result_category: DisclosureCategory
-) -> DisclosurePermission | None:
-    disclosure = None
-    if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-            category=DisclosureCategory.OPERATION_METADATA,
-        )
-    elif context.action is AccessAction.RESULT:
-        schema = context.contract.result_schema
-        if schema is None:
-            raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-        disclosure = DisclosurePermission(
-            destination_id=context.destination_id,
-            projection_id=schema.schema_id,
-            category=result_category,
-        )
-    return disclosure
-
-
 def _query_access_request(
     context: OperationAccessContext,
     definition_id: str,
@@ -610,23 +589,13 @@ def _query_access_policy(
     periods: frozenset[Period],
     period_independent: bool,
     requires_all_periods: bool,
-    disclosure: DisclosurePermission | None,
+    disclosures: frozenset[DisclosurePermission],
 ) -> OperationAccessPolicy:
     return OperationAccessPolicy(
         definition_id=definition_id,
         definition_contract_digest=context.contract.definition_contract_digest,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-            }
-        ),
-        disclosures=frozenset((disclosure,)) if disclosure is not None else frozenset(),
+        actions=OPERATION_LIFECYCLE_ACTIONS,
+        disclosures=disclosures,
         periods=periods,
         allow_period_independent=period_independent,
         requires_all_periods=requires_all_periods,
@@ -648,7 +617,12 @@ def resolve_modelo_query_read_access(
     """Resolve an exact modelo query scope and public result category."""
     payload = _validated_access_payload(request, context, definition_id=definition_id, payload_type=payload_type)
     periods, period_independent, requires_all_periods = _authorized_query_scope(payload, context, definition_id)
-    disclosure = _query_disclosure(context, result_category)
+    disclosures = operation_disclosures(
+        context,
+        observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+        result_categories=frozenset({result_category}),
+        result_schema_id=None,
+    )
     return ResolvedOperationAccess(
         request=_query_access_request(context, definition_id, periods, period_independent),
         policy=_query_access_policy(
@@ -657,7 +631,7 @@ def resolve_modelo_query_read_access(
             periods,
             period_independent,
             requires_all_periods,
-            disclosure,
+            disclosures,
         ),
     )
 

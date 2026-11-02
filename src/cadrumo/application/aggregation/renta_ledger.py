@@ -35,6 +35,7 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.iva_regime_vocabulary import (
     iva_regime_exento_token,
@@ -80,8 +81,10 @@ from ..user_profile.projections import fact_value, profile_fact_index, record_to
 from . import _shared_issue_reasons
 from ._models import CasillaAggregation, CasillaProvenance
 from ._renta_business_eligibility import (
+    RentaExpenseAdvisory,
     exclusive_business_use,
     relies_on_activity_marker,
+    renta_expense_advisory,
     renta_expense_business_proportion,
     row_scaling_proportion,
 )
@@ -521,8 +524,26 @@ class CategoryRuleRefusal:
     detail: str
 
 
+def accepted_row_advisory(
+    transaction: Transaction,
+    *,
+    rules: RentaCategoryDeductionRules,
+) -> RentaExpenseAdvisory | None:
+    """Return the advisory a row that produced an expense observation carries, or ``None``."""
+    resolved = resolve_category_rule(
+        transaction.category_id,
+        profiles=rules.profiles,
+        region_overrides=rules.region_overrides,
+        context=rules.context,
+        profile_year=rules.profile_year,
+    )
+    if isinstance(resolved, CategoryRuleRefusal):
+        return None
+    return renta_expense_advisory(transaction, resolved[1].proportionality)
+
+
 def resolve_category_rule(
-    category_id: str,
+    category_id: str | None,
     *,
     profiles: Mapping[SpendingCategory, CategoryProfile],
     region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
@@ -531,13 +552,24 @@ def resolve_category_rule(
 ) -> tuple[SpendingCategory, CategoryProfile] | CategoryRuleRefusal:
     """Resolve a ledger category and the profile selected for the taxpayer's residence.
 
+    The one owner of whether a row's category can answer for its expense, for the
+    annual declaration and the pago fraccionado alike. RIRPF art. 110.1.a) computes
+    the payment on the rendimiento neto, with no deduction rule of its own, so a
+    row the annual declaration cannot evaluate is not evaluable for the payment.
+
     Returns:
         The category with its selected profile, or the refusal naming why the
-        taxonomy, the year's profiles or the residence comunidad cannot supply one.
+        row, the taxonomy, the year's profiles or the residence comunidad cannot
+        supply one.
     """
+    if category_id is None or not category_id.strip():
+        return CategoryRuleRefusal(
+            _shared_issue_reasons.MISSING_CATEGORY,
+            "business expense has no spending category; assign it so its deduction rule can run",
+        )
     try:
         category = normalize_spending_category(category_id)
-    except ValueError:
+    except RegistryValidationError:
         return CategoryRuleRefusal(
             _shared_issue_reasons.UNKNOWN_CATEGORY,
             f"ledger category {category_id!r} is not in the spending taxonomy",
@@ -784,6 +816,7 @@ def aggregate_renta_ledger_expenses(
     )
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
+    advisories: list[RentaExpenseAdvisory] = []
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
@@ -808,6 +841,9 @@ def aggregate_renta_ledger_expenses(
             issues.append(outcome)
         else:
             observations.append(outcome)
+            advisory = accepted_row_advisory(transaction, rules=rules)
+            if advisory is not None:
+                advisories.append(advisory)
 
     observations = _apply_statutory_cap_trims(observations, rules=rules)
     casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
@@ -818,6 +854,7 @@ def aggregate_renta_ledger_expenses(
         observations=tuple(observations),
         issues=tuple(issues),
         casilla_aggregation=casilla_aggregation,
+        advisories=tuple(advisories),
     )
 
 
@@ -918,10 +955,8 @@ def _renta_business_proportion_or_issue(
             RentaLedgerAggregationIssueReason.ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW,
             "actividad-marked expense needs business-classification review before the annual declaration",
         )
-    reason = (
-        RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-        if transaction.business_classification is BusinessClassification.PERSONAL
-        else RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    reason = RentaLedgerAggregationIssueReason(
+        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return _renta_transaction_issue(
         transaction,
@@ -939,15 +974,8 @@ def _renta_category_profile_or_issue(
     profile_year: int,
 ) -> tuple[SpendingCategory, CategoryProfile] | RentaLedgerAggregationIssue:
     """Resolve the first-slice category and the profile selected for residence."""
-    category_id = transaction.category_id
-    if category_id is None:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
-            "classified expense transaction has no ledger category",
-        )
     resolved = resolve_category_rule(
-        category_id,
+        transaction.category_id,
         profiles=profiles,
         region_overrides=region_overrides,
         context=context,

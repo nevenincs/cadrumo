@@ -28,10 +28,12 @@ from ....application.user_profile.overview import ProfileOverview, build_profile
 from ....application.user_profile.registration import register_profile_with_credentials
 from ....core.bucket_pointer import require_active_bucket_id
 from ....domain.calculations.registry.authority import bundled_indexed_authority
+from ..profile.overview import ProfileFieldPersist
 
 __all__ = [
     "manager_subject_logged_in",
     "manager_subject_overview",
+    "manager_subject_persist",
     "manager_subject_stored_facts",
     "manager_subject_world",
     "publish_manager_subject_session",
@@ -116,6 +118,22 @@ def write_manager_subject_field(
             profile_decode_context=profile_authority_contexts()[1],
         )
         return build_profile_overview(record, label=label, schema=profile_authority_contexts()[1].schema)
+
+
+def manager_subject_persist(*, label: str, passphrase: str) -> ProfileFieldPersist:
+    """Return the screen's one-field write door bound to the subject, so a signature change fails type-checking."""
+
+    def persist(path: str, value: str, expected_revision: int, expected_content_digest: str) -> ProfileOverview:
+        return write_manager_subject_field(
+            label=label,
+            passphrase=passphrase,
+            path=path,
+            value=value,
+            expected_revision=expected_revision,
+            expected_content_digest=expected_content_digest,
+        )
+
+    return persist
 
 
 def manager_subject_stored_facts(*, label: str, passphrase: str) -> dict[str, object | None]:

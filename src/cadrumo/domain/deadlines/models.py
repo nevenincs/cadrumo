@@ -30,7 +30,7 @@ from cadrumo.domain.calculations.registry.tax_id_format import SubjectTaxId
 
 from ...core.aggregation import ThirdPartyDeclarationRole
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -1013,7 +1013,7 @@ class Schedule(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile: TaxpayerProfile
-    year: int = Field(ge=1900, le=9999)
+    year: FourDigitYear
     obligations: tuple[ModeloDeadline, ...]
     close_unknown_obligations: tuple[CloseUnknownModeloDeadline, ...] = ()
     generated_at: UtcInstant
