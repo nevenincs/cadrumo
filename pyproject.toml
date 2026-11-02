@@ -1000,6 +1000,9 @@ convention = "google"
 # Nothing user-, environment-, or file-supplied reaches it; Ruff cannot infer
 # that the argv is literal.
 "src/cadrumo/adapters/persistence/storage/custody/_kdf_process.py" = ["S603"]
+# The pattern search child's argv is the interpreter prefix and this package's own
+# worker module; the patterns and texts travel on its stdin, never its command line.
+"src/cadrumo/core/pattern_search.py" = ["S603"]
 "src/cadrumo/domain/auth/apoderamientos/catalogue.py" = ["S105"]
 "dev/registry/_workbook_parity.py" = ["S603"]
 "src/cadrumo/domain/deadlines/festivos.py" = ["S105"]

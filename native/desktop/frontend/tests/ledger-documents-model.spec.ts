@@ -1,4 +1,5 @@
-import "./support/servedLimits";
+import { servedLimits } from "./support/servedLimits";
+import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
 import type {
   CatalogueInvoice,
@@ -326,6 +327,30 @@ test("a record's correction sends only what changed and clears with a blank", ()
     kind: "refused",
     fields: ["invoice_date"],
   });
+  // A record's label and note are held to what the ledger serves, and to
+  // nothing while it serves nothing.
+  const served = (name: string) =>
+    servedLimits.text_limits.find((found) => found.name === name)!.max;
+  expect(
+    recordUpdate(record, {
+      supplier: "x".repeat(served("evidence_label") + 1),
+    }),
+  ).toEqual({ kind: "refused", fields: ["supplier"] });
+  expect(
+    recordUpdate(record, { notes: "x".repeat(served("evidence_note") + 1) }),
+  ).toEqual({ kind: "refused", fields: ["notes"] });
+  expect(
+    recordUpdate(record, { notes: "x".repeat(served("evidence_note")) }).kind,
+  ).toBe("update");
+  holdLedgerLimits(null);
+  try {
+    expect(recordUpdate(record, { notes: "una nota" })).toEqual({
+      kind: "refused",
+      fields: ["notes"],
+    });
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
   if (update.kind !== "update") throw new Error("no update");
   expect(holdsUpdate(record, update.request)).toBe(false);
   expect(

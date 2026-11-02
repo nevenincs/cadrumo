@@ -75,6 +75,11 @@ from .evidence_ports import (
 from .persistence_ports import LedgerPersistenceConflictError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
 
+LEDGER_EVIDENCE_LABEL_MAX = 1_024
+"""The longest supplier or invoice number an evidence record takes."""
+LEDGER_EVIDENCE_TEXT_MAX = 16_384
+"""The longest note an evidence record takes."""
+
 _PDF_EXTENSIONS = frozenset({PDF_EXTENSION})
 _IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
 # Structured e-invoice documents (EN16931 CII/UBL, Facturae 3.2.x). Admitted
@@ -1091,6 +1096,8 @@ class PurchaseInvoiceEvidenceService:
 emit_evidence_event = _emit_evidence_event
 
 __all__ = [
+    "LEDGER_EVIDENCE_LABEL_MAX",
+    "LEDGER_EVIDENCE_TEXT_MAX",
     "PurchaseInvoiceEvidence",
     "PurchaseInvoiceEvidenceDocument",
     "PurchaseInvoiceEvidencePatch",

@@ -15,6 +15,7 @@ import {
   takesBusinessShare,
   takesChanges,
 } from "../../../shell/ledgerContract";
+import { textLimit } from "../../../shell/ledgerLimits";
 import type { StagedCheck } from "../../../shell/ledgerStagedCheck";
 import {
   parseDecimal,
@@ -321,15 +322,15 @@ export function splitRemainder(
 
 export type SplitProblem =
   | { kind: "count" }
+  | { kind: "limits_unavailable" }
   | { kind: "amount"; index: number }
   | { kind: "description"; index: number }
+  | { kind: "description_long"; index: number; max: number }
   | { kind: "duplicate"; index: number }
   | { kind: "sum"; difference: string; over: boolean };
 
-/** The most parts one split makes. */
-export const SPLIT_PARTS_MAX = 128;
-
-/** Whether the parts make a split the ledger takes: two or more, each a
+/** Whether the parts make a split the ledger takes: two or more and no
+ * more than the ledger serves, each a
  * positive amount with a description, no two alike, adding up to the
  * movement's amount exactly. The amounts come back in shortest form. */
 export function checkSplit(
@@ -338,7 +339,11 @@ export function checkSplit(
 ):
   | { ok: true; children: { amount: string; description: string }[] }
   | { ok: false; problem: SplitProblem } {
-  if (parts.length < 2 || parts.length > SPLIT_PARTS_MAX)
+  const most = textLimit("split_parts");
+  const longest = textLimit("split_part_description");
+  if (most === null || longest === null)
+    return { ok: false, problem: { kind: "limits_unavailable" } };
+  if (parts.length < 2 || parts.length > most)
     return { ok: false, problem: { kind: "count" } };
   const whole = centsOf(total);
   let sum = 0n;
@@ -351,6 +356,11 @@ export function checkSplit(
     const description = part.description.trim();
     if (description === "")
       return { ok: false, problem: { kind: "description", index } };
+    if ([...description].length > longest)
+      return {
+        ok: false,
+        problem: { kind: "description_long", index, max: longest },
+      };
     const key = `${amount}␟${description}`;
     if (seen.has(key))
       return { ok: false, problem: { kind: "duplicate", index } };

@@ -20,11 +20,11 @@ from ...domain.calculations.registry.observation_fold import (
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-    from .observations_repository import ObservationEnvelopePayload
+    from .cross_period_models import ObservationPayload
 
 
 def source_filing_kind_evidence(
-    payload: ObservationEnvelopePayload,
+    payload: ObservationPayload,
     *,
     operation: PinnedAuthorityOperation,
 ) -> SourceFilingKindEvidence:

@@ -4,7 +4,7 @@
 // nothing served a draft stays as typed and is not taken.
 
 import { useSyncExternalStore } from "react";
-import type { LedgerEntryLimits } from "./ledgerSetup";
+import type { LedgerEntryLimits, TextLimitName } from "./ledgerSetup";
 
 let held: LedgerEntryLimits | null = null;
 const listeners = new Set<() => void>();
@@ -27,3 +27,14 @@ function subscribe(listener: () => void): () => void {
 /** The limits served, drawing again when they arrive or go. */
 export const useLedgerLimits = (): LedgerEntryLimits | null =>
   useSyncExternalStore(subscribe, ledgerLimits);
+
+/** A served text limit, or null where it is not served: the Ledger page is
+ * closed, or the backend has not answered. Nothing stands in for it. */
+export const textLimit = (name: TextLimitName): number | null =>
+  held?.text_limits.find((found) => found.name === name)?.max ?? null;
+
+/** A served text limit, drawing again when it arrives or goes. */
+export const useTextLimit = (name: TextLimitName): number | null => {
+  useLedgerLimits();
+  return textLimit(name);
+};

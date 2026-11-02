@@ -21,6 +21,11 @@ from ...domain.calculations.registry.relations import (
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.justificante.protocols import JustificanteRepositoryProtocol
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue, CalculationRevisionState
+from ...domain.modelos.filing_kind_evidence import (
+    ComplementariaOnlySourceOutcome,
+    FilingKindUnknownReason,
+    complementaria_only_source_outcome,
+)
 from ...domain.modelos.filing_record import (
     ExternalEvidenceKind,
     ModeloRecord,
@@ -42,6 +47,7 @@ from .observations_repository import (
     is_official_aeat_observation_source,
 )
 from .revision_carry_gate import revision_carry_outcome
+from .source_filing_kind import source_filing_kind_evidence
 
 
 class _CrossPeriodSource(NamedTuple):
@@ -300,51 +306,85 @@ def _resolve_observation_values(
     requirement: CrossPeriodDependencyRequirement,
     value_member_payloads: tuple[ObservationPayload, ...],
     payload: ObservationPayload | None,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ObservationSourceKind | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
     if requirement.requires_member_fan_in and value_member_payloads:
-        return _member_observation_values(requirement, value_member_payloads)
+        return _member_observation_values(requirement, value_member_payloads, operation=operation)
     if payload is None:
         return None, {}, [CrossPeriodCleanStateBlocker.MISSING_OBSERVATION]
-    return _single_observation_values(requirement, payload)
+    return _single_observation_values(requirement, payload, operation=operation)
 
 
-def _is_missing_declared_source(
+def _declared_source_blockers(
     requirement: CrossPeriodDependencyRequirement,
-    values: Mapping[CasillaId, object],
-) -> bool:
+    payload: ObservationPayload,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> list[CrossPeriodCleanStateBlocker]:
+    """Return the presence and filing-kind blockers of one source observation.
+
+    A declared source casilla counts as present when it was observed or when the
+    shared complementaria-only predicate proves it zero for an admitted original.
+    A proven zero satisfies presence only; every other clean-state requirement
+    still applies to the source filing.
+    """
+    values = payload.observation.casilla_values
+    evidence = source_filing_kind_evidence(payload, operation=operation)
+    present: set[CasillaId] = set(values)
+    contradicted = False
+    for casilla_id in requirement.source_casilla_ids:
+        outcome = complementaria_only_source_outcome(
+            casilla_id,
+            observed_value=values.get(casilla_id),
+            filing_kind=evidence.filing_kind,
+            complementaria_only_casilla_ids=evidence.complementaria_only_casilla_ids,
+        )
+        if outcome is ComplementariaOnlySourceOutcome.PROVEN_ZERO:
+            present.add(casilla_id)
+        contradicted = contradicted or outcome is ComplementariaOnlySourceOutcome.CONTRADICTED
+    reads_complementaria_only = bool(set(requirement.source_casilla_ids) & evidence.complementaria_only_casilla_ids)
+    disagreement = evidence.filing_kind.unknown_reason is FilingKindUnknownReason.DISAGREEMENT
+    blockers: list[CrossPeriodCleanStateBlocker] = []
     missing_required, missing_groups = source_presence_gaps(
         required_source_casilla_ids=requirement.enforced_source_casilla_ids,
         source_presence_groups=requirement.source_presence_groups,
-        observed_source_casilla_ids=values,
+        observed_source_casilla_ids=present,
     )
-    return bool(missing_required or missing_groups)
+    if missing_required or missing_groups:
+        blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
+    if contradicted or (disagreement and reads_complementaria_only):
+        blockers.append(CrossPeriodCleanStateBlocker.FILING_KIND_DISAGREEMENT)
+    return blockers
 
 
 def _member_observation_values(
     requirement: CrossPeriodDependencyRequirement,
     value_member_payloads: tuple[ObservationPayload, ...],
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ObservationSourceKind | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
     observation_source_kind = _combined_source_kind(item.source_kind for item in value_member_payloads)
     blockers: list[CrossPeriodCleanStateBlocker] = []
     if any(item.source_kind is ObservationSourceKind.OPERATOR_MANUAL for item in value_member_payloads):
         blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
     for item in value_member_payloads:
-        if _is_missing_declared_source(requirement, item.observation.casilla_values):
-            blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
+        blockers.extend(_declared_source_blockers(requirement, item, operation=operation))
     return observation_source_kind, {}, blockers
 
 
 def _single_observation_values(
     requirement: CrossPeriodDependencyRequirement,
     payload: ObservationPayload,
+    *,
+    operation: PinnedAuthorityOperation,
 ) -> tuple[ObservationSourceKind | None, dict[CasillaId, object], list[CrossPeriodCleanStateBlocker]]:
     observation_source_kind = payload.source_kind
     observation_values: dict[CasillaId, object] = dict(payload.observation.casilla_values)
     blockers: list[CrossPeriodCleanStateBlocker] = []
     if payload.source_kind is ObservationSourceKind.OPERATOR_MANUAL:
         blockers.append(CrossPeriodCleanStateBlocker.OPERATOR_MANUAL_SOURCE)
-    if _is_missing_declared_source(requirement, observation_values):
-        blockers.append(CrossPeriodCleanStateBlocker.MISSING_OBSERVED_CASILLA)
+    blockers.extend(_declared_source_blockers(requirement, payload, operation=operation))
     return observation_source_kind, observation_values, blockers
 
 
@@ -409,6 +449,7 @@ def evaluate_requirement(
         requirement,
         source.value_member_payloads,
         source.payload,
+        operation=operation,
     )
     blockers: list[CrossPeriodCleanStateBlocker] = [*source.blockers, *value_blockers]
 

@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Any, Final, cast
 
 from .....core.child_console import child_console_creation_flags
-from .....core.package_interpreter import interpreter_command
+from .....core.package_interpreter import isolated_interpreter_command
 from .....core.storage_environment import ChildEnvironmentProfile, child_environment
 from ._kdf_refusals import supervision_refusal as _supervision_refusal
 from ._kdf_windows_job import _WindowsJob
@@ -65,7 +65,7 @@ def launch_lease_worker(*, neutral_root: Path, lease_fd: int, owner_fd: int, res
     if len({lease_fd, owner_fd, result_fd}) != 3 or min(lease_fd, owner_fd, result_fd) < 3:
         raise _supervision_refusal()
     command = [
-        *worker_interpreter(),
+        *isolated_interpreter_command(),
         "-m",
         "cadrumo.adapters.persistence.storage.custody._kdf_lease_worker",
         "--lease-fd",
@@ -129,7 +129,7 @@ def worker_command(
     result_write: int,
 ) -> tuple[list[str], dict[str, object]]:
     neutral_cwd = str(neutral_root.resolve())
-    command = [*worker_interpreter(), "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker"]
+    command = [*isolated_interpreter_command(), "-m", "cadrumo.adapters.persistence.storage.custody._kdf_worker"]
     environment = worker_environment(neutral_root=neutral_root)
     common: dict[str, object] = {
         "close_fds": True,
@@ -174,28 +174,6 @@ def worker_command(
             )
         )
     return command, common
-
-
-def worker_interpreter() -> tuple[str, ...]:
-    """Return the interpreter argv prefix that starts the worker.
-
-    On Windows the child receives its import roots through PYTHONPATH (see
-    :func:`worker_environment`), so it runs the base CPython directly and
-    without ``site``: a virtual environment's ``python.exe`` is a launcher
-    that starts the base interpreter as a second process, and the
-    site-packages ``.pth`` hooks import modules the child never uses. Both are
-    pure start-up cost on every wrap and unwrap. Elsewhere the interpreter
-    itself resolves the environment, so it is kept as is. A process the Cadrumo
-    binary hosts starts the binary's interpreter role, also without ``site``.
-    """
-    command = interpreter_command()
-    if len(command) > 1:
-        return (*command, "-S")
-    if sys.platform != "win32":
-        return command
-    base = getattr(sys, "_base_executable", None)
-    executable = base if isinstance(base, str) and base and Path(base).is_file() else sys.executable
-    return (executable, "-S")
 
 
 def worker_environment(*, neutral_root: Path) -> dict[str, str]:
@@ -260,5 +238,4 @@ __all__ = [
     "terminate_process_tree",
     "worker_command",
     "worker_environment",
-    "worker_interpreter",
 ]

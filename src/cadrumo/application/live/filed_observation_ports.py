@@ -30,7 +30,7 @@ if TYPE_CHECKING:
     from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ...domain.justificante.protocols import JustificanteRepositoryProtocol
     from ...domain.justificante.schema import Justificante
-    from ...domain.modelos.filing_kind_evidence import ObservedFilingKind
+    from ...domain.modelos.filing_kind_evidence import ObservedFilingKind, SubmittedFileFilingKindMarker
     from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
     from ..calculations.observations_repository import ObservationEnvelopePayload, ObservationSourceKind
     from ..modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationResult
@@ -140,6 +140,11 @@ class FiledObservationProtocol(Protocol):
     @property
     def headers(self) -> tuple[ObservedHeaderFact, ...]:
         """Return typed submitted-file header facts."""
+        ...
+
+    @property
+    def filing_kind_marker(self) -> SubmittedFileFilingKindMarker | None:
+        """Return the submitted file's filing-kind readings, ``None`` when not read."""
         ...
 
     @property

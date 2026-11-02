@@ -254,6 +254,7 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.inspector.split.choose_category",
         "desktop.ledger.inspector.split.count",
         "desktop.ledger.inspector.split.description",
+        "desktop.ledger.inspector.split.description_long",
         "desktop.ledger.inspector.split.description_needed",
         "desktop.ledger.inspector.split.duplicate",
         "desktop.ledger.inspector.split.mixed_hint",

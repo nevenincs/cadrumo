@@ -38,6 +38,11 @@ from ...core.period import Period, PeriodKind
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.iva_compensation.carry_forward import iva_compensation_period_sort_key
 from ...domain.justificante.schema import Justificante
+from ...domain.modelos.filing_kind_evidence import (
+    ObservedFilingKind,
+    observed_filing_kind_from_capture,
+    register_tipo_solicitud_reading,
+)
 from ...domain.modelos.filing_record import (
     AeatRegisterRef,
     ExternalEvidenceKind,
@@ -164,6 +169,7 @@ def persist_filed_calculation_observation(
         # the metadata projection is built from a fixed key set, so a header
         # fact routed through it would be dropped here exactly as it was before.
         source_headers=observation.headers,
+        filing_kind=filed_observation_filing_kind(observation),
         # Canonical ingress: official evidence must recover its one typed
         # disposition from the submitted-file header before it can participate
         # in M303 carry. No compensación default is admitted here.
@@ -640,6 +646,23 @@ def _is_active_filed_observation(observation: FiledObservationProtocol) -> bool:
 
 def _filed_observation_rank(observation: FiledObservationProtocol) -> tuple[bool, datetime, str]:
     return (_is_active_filed_observation(observation), observation.presented_at, observation.expediente_id)
+
+
+def filed_observation_filing_kind(observation: FiledObservationProtocol) -> ObservedFilingKind:
+    """Derive the filing kind of one captured AEAT declaration.
+
+    Only the submitted file's declaration marker admits a kind. The register's
+    request type is kept as a reading when it names one correction kind, and a
+    disagreement between the two makes the kind unknown. A capture without the
+    marker -- a declaration-PDF fallback or a register-only row -- is unknown.
+    """
+    return observed_filing_kind_from_capture(
+        observation.filing_kind_marker,
+        register_reading=register_tipo_solicitud_reading(
+            observation.metadata.get("tipo_solicitud"),
+            source_locator=f"aeat-register:{observation.expediente_id}:tipo_solicitud",
+        ),
+    )
 
 
 def filed_observation_source_metadata(

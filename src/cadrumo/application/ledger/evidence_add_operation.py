@@ -40,6 +40,8 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .evidence import (
+    LEDGER_EVIDENCE_LABEL_MAX,
+    LEDGER_EVIDENCE_TEXT_MAX,
     MediaKind,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidenceResult,
@@ -57,9 +59,9 @@ LEDGER_EVIDENCE_ADD_PHASE = LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
 _MAX_RESULT_BYTES = 60 * 1024
 _PERSON_FRONTEND_ACTOR = "cli"
 """The audit label of evidence a person's frontend adds; an automation's is derived from its session."""
-_EvidenceText = Annotated[str, Field(max_length=16_384)]
+_EvidenceText = Annotated[str, Field(max_length=LEDGER_EVIDENCE_TEXT_MAX)]
 _EvidencePath = Annotated[str, Field(min_length=1, max_length=4_096)]
-_EvidenceLabel = Annotated[str, Field(max_length=1_024)]
+_EvidenceLabel = Annotated[str, Field(max_length=LEDGER_EVIDENCE_LABEL_MAX)]
 _InvoiceDate = Annotated[str, Field(min_length=1, max_length=16)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _IdempotencyKey = Annotated[str, Field(max_length=256)]

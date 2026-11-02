@@ -941,6 +941,9 @@ application:
   live:
     borrador:
       errors:
+        binding_keys_not_admitted: 'This stored borrador holds values under keys the
+          modelo definitions do not admit, so it cannot be used; import the document
+          again: %{bindings}.'
         binding_value_key_blank: The keys of borrador values must not be blank.
         bucket_id_blank: Borrador bucket id must not be blank.
         snapshot_id_blank: Borrador snapshot id must not be blank.

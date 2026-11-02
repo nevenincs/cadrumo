@@ -3030,6 +3030,7 @@ desktop:
         choose_category: Válassz kategóriát
         count: Egy felosztás 2–{max} részből áll.
         description: A részek összege {amount}. Az utolsó rész kapja a maradékot.
+        description_long: A(z) {part}. rész leírása legfeljebb {max} karakter lehet.
         description_needed: A(z) {part}. résznek leírás kell.
         duplicate: 'A(z) {part}. rész megegyezik egy másikkal: módosítsd az összegét
           vagy a leírását.'
@@ -3680,6 +3681,9 @@ desktop:
       empty: Még nincs szabály.
       expression: Kifejezés
       expression_hint: A leírás bármely részén, kis- és nagybetűtől függetlenül.
+      expression_overrun: Ennek a kifejezésnek a kipróbálása túl sokáig tart a tételeiden.
+        Egyszerűsítsd.
+      expression_too_long: Ez a kifejezés túl hosszú. Legfeljebb {max} karakter lehet.
       expression_unread: Ez az ablak nem tudja értelmezni a kifejezést.
       from_selection: Szabály a kijelölésből
       matches_split: 'Egyezés: {count} · besorolandó: {pending}'
@@ -3702,6 +3706,9 @@ desktop:
         empty_pattern: Írd be a keresendő szavakat.
         invalid_command: A napló nem fogadta el a szabályt.
         invalid_pattern: A napló nem tudja értelmezni a kifejezést.
+        pattern_overrun: Egy mentett szabály kipróbálása túl sokáig tart a tételeiden,
+          ezért semmi sem futott le.
+        pattern_too_long: A kifejezés túl hosszú.
       run_note: Az előnézet nem változtat semmit. A futtatás a többi változtatáshoz
         hasonlóan a változtatásaid közé kerül.
       run_staged: 'Szabályok hozzáadva a változtatásaidhoz · Tételek: {count} · még
@@ -3711,6 +3718,8 @@ desktop:
       saved_toast: 'Szabály mentve · sorrend: {place}'
       stage_run: Futtatás hozzáadása a változtatásaidhoz
       title: Besorolási szabályok
+      trial_failed: Nem érkezett válasz erről a kifejezésről. Amit írtál, megmarad.
+      trial_retry: Próbáld újra
       what: Szavakat keres a tétel leírásában, és eldönti a besorolását.
       words: A leírás tartalmazza
       words_hint: Szavak ebben a sorrendben; a kis- és nagybetű mindegy.

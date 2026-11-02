@@ -26,6 +26,7 @@ import type {
   OwnAccountDesignation,
   OwnAccountRole,
 } from "../../../shell/ledgerSetup";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold, type Landing } from "../WritePause";
 import { formatDay } from "../../../shared/dateFormats";
@@ -111,6 +112,8 @@ async function sendChange(
  */
 export function AccountsPane({ port, reader, locale }: SetupProps) {
   const t = useStrings();
+  const ibanLimit = useTextLimit("own_account_iban");
+  const bicLimit = useTextLimit("own_account_swift_bic");
   const { read, reload } = useSetupRead(
     port,
     reader,
@@ -536,7 +539,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
             invalid={control.invalid}
             describedBy={control.describedBy}
             required={form?.kind === "add"}
-            maxLength={64}
+            maxLength={ibanLimit ?? undefined}
             autoComplete="new-password"
             secret
           />
@@ -550,7 +553,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
             onChange={secret("swift_bic")}
             invalid={control.invalid}
             describedBy={control.describedBy}
-            maxLength={16}
+            maxLength={bicLimit ?? undefined}
             autoComplete="new-password"
             secret
           />

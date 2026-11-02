@@ -29,6 +29,7 @@ import type {
   SplitPartClassification,
   StageEvent,
 } from "../../../shell/ledgerStage";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { refusalText } from "../editing/editingWords";
 import {
@@ -37,7 +38,6 @@ import {
   vocabularyEmpty,
 } from "../movements/movementWords";
 import {
-  SPLIT_PARTS_MAX,
   checkSplit,
   splitRemainder,
   type SplitProblem,
@@ -84,6 +84,9 @@ export function SplitDialog({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const mostParts = useTextLimit("split_parts");
+  const longestDescription = useTextLimit("split_part_description");
+  const reasonLimit = useTextLimit("event_payload_value");
   const reasonId = useId();
   const partId = useId();
   const tx = row.transaction;
@@ -122,9 +125,11 @@ export function SplitDialog({
   };
   const problemText = (found: SplitProblem): string => {
     switch (found.kind) {
+      case "limits_unavailable":
+        return refusalText(t, { key: "limits_unavailable", raw: "" });
       case "count":
         return t("desktop.ledger.inspector.split.count", {
-          max: SPLIT_PARTS_MAX,
+          max: mostParts ?? "",
         });
       case "amount":
         return t("desktop.ledger.inspector.split.amount", {
@@ -133,6 +138,11 @@ export function SplitDialog({
       case "description":
         return t("desktop.ledger.inspector.split.description_needed", {
           part: found.index + 1,
+        });
+      case "description_long":
+        return t("desktop.ledger.inspector.split.description_long", {
+          part: found.index + 1,
+          max: found.max,
         });
       case "duplicate":
         return t("desktop.ledger.inspector.split.duplicate", {
@@ -287,7 +297,7 @@ export function SplitDialog({
                       id={`${partId}-${at}-description`}
                       controlSize="sm"
                       className="ledger-split-description"
-                      maxLength={4096}
+                      maxLength={longestDescription ?? undefined}
                       value={part.description}
                       onChange={(description) => update(at, { description })}
                       suggestions={partWords}
@@ -388,7 +398,7 @@ export function SplitDialog({
             variant="outline"
             size="sm"
             className="w-fit"
-            disabled={parts.length >= SPLIT_PARTS_MAX}
+            disabled={mostParts === null || parts.length >= mostParts}
             onClick={() => {
               setProblem(null);
               setParts((held) => [
@@ -407,7 +417,7 @@ export function SplitDialog({
             </label>
             <TextEditor
               id={reasonId}
-              maxLength={500}
+              maxLength={reasonLimit ?? undefined}
               value={reason}
               onChange={setReason}
             />

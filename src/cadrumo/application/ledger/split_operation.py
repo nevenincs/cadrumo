@@ -46,11 +46,14 @@ LEDGER_SPLIT_OPERATION_DEFINITION_ID = "ledger.split.manual"
 LEDGER_SPLIT_PHASE = "ledger.split.manual"
 LedgerSplitRemergeOperationId = Literal["ledger.merge"]
 _SPLIT_REMERGED_BY: tuple[LedgerSplitRemergeOperationId, ...] = ("ledger.merge",)
-_MAX_SPLIT_CHILDREN = 128
+LEDGER_SPLIT_CHILDREN_MAX = 128
+"""The most parts one manual split makes."""
 _MAX_SPLIT_RESULT_JSON_BYTES = 16_384
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
-_Description = Annotated[str, Field(min_length=1, max_length=1024)]
+LEDGER_SPLIT_PART_DESCRIPTION_MAX = 1024
+"""The most characters the description of one split part takes."""
+_Description = Annotated[str, Field(min_length=1, max_length=LEDGER_SPLIT_PART_DESCRIPTION_MAX)]
 _Reason = Annotated[str, Field(max_length=512)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]
 
@@ -82,7 +85,7 @@ class LedgerSplitChildRequest(BaseModel):
         return trimmed
 
 
-_Children = Annotated[tuple[LedgerSplitChildRequest, ...], Field(min_length=2, max_length=_MAX_SPLIT_CHILDREN)]
+_Children = Annotated[tuple[LedgerSplitChildRequest, ...], Field(min_length=2, max_length=LEDGER_SPLIT_CHILDREN_MAX)]
 
 
 class LedgerSplitRequest(BaseModel):
@@ -143,7 +146,7 @@ class LedgerSplitOperationResult(BaseModel):
     split_group_id: Hex64Str
     child_transaction_ids: Annotated[
         tuple[TransactionId, ...],
-        Field(min_length=2, max_length=_MAX_SPLIT_CHILDREN),
+        Field(min_length=2, max_length=LEDGER_SPLIT_CHILDREN_MAX),
     ]
     bucket_event_id: Hex64Str
     parent_business_classification: BusinessClassification

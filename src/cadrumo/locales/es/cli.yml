@@ -196,7 +196,8 @@ cli:
           Para `choose`, indica la lectura por su valor o por el resumen que mostró
           `review`. Repite una vez por incidencia; no hay opción masiva.'
         confirm_retention_amount_help: Importe de retención de IRPF de la factura.
-        confirm_retention_rate_help: Porcentaje de retención de IRPF de la factura.
+        confirm_retention_rate_help: 'Retención de IRPF de la factura como fracción:
+          0.15 para el 15 %.'
         confirm_review_contradicted_regime_message: Este documento se contradice a
           sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba
           con qué.
@@ -654,6 +655,9 @@ cli:
       borrador:
         app_help: Snapshots de borrador del modelo 100
         filing_year_help: Ejercicio fiscal (p. ej. 2024)
+        import_casilla_owner_ambiguous: 'Más de un enlace de las definiciones del
+          modelo podría recoger estas casillas impresas, así que no se importó nada:
+          %{casillas}.'
         import_coverage_absent: El analizador no devolvió cobertura de extracción
           para el perfil de las definiciones del modelo; no se importó nada.
         import_ejercicio_mismatch: El ejercicio impreso en el PDF no coincide con

@@ -69,8 +69,9 @@ class CalculationRevisionAmendmentIdentity(BaseModel):
 def declaration_kind_for_amendment_kind(kind: CalculationRevisionAmendmentKind) -> FilingDeclarationKind:
     """Return the declaration kind an amendment of ``kind`` is filed as.
 
-    Spelled out member by member, so a new amendment kind is a type error here
-    rather than reaching a filing record through a string-value cast.
+    Spelled out member by member, so a new amendment kind makes this match
+    non-exhaustive -- a type error -- rather than reaching a filing record
+    through a string-value cast.
     """
     match kind:
         case CalculationRevisionAmendmentKind.COMPLEMENTARIA:

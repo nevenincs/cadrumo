@@ -192,7 +192,8 @@ cli:
           A `choose` esetén az olvasatot az értékével vagy a `review` által mutatott
           kivonattal nevezd meg. Problémánként egyszer ismételd; nincs tömeges kapcsoló.'
         confirm_retention_amount_help: A számlán szereplő jövedelemadó-levonás összege.
-        confirm_retention_rate_help: A számlán szereplő jövedelemadó-levonás százaléka.
+        confirm_retention_rate_help: 'A számlán szereplő jövedelemadó-levonás törtként:
+          0.15 a 15%-hoz.'
         confirm_review_contradicted_regime_message: Ez a dokumentum ellentmond önmagának
           abban, hogyan adózik. Az alábbi részlet megnevezi, mi mivel volt ellentmondásban.
         confirm_review_undetermined_establishment_message: A dokumentum a beolvasott
@@ -647,6 +648,8 @@ cli:
       borrador:
         app_help: Modelo 100 borrador pillanatképek.
         filing_year_help: Benyújtási év (pl. 2024).
+        import_casilla_owner_ambiguous: 'A nyomtatványdefiníciók több kötése is tartalmazhatná
+          ezeket a nyomtatott mezőket, ezért semmi sem lett importálva: %{casillas}.'
         import_coverage_absent: Az elemző nem adott vissza kinyerési lefedettséget
           a nyomtatványdefiníciók profiljához; semmi sem lett importálva.
         import_ejercicio_mismatch: A PDF-en szereplő adóév nem egyezik a kért benyújtási

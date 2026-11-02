@@ -183,7 +183,8 @@ cli:
           For choose, name the reading by its value or by the digest review showed.
           Repeat once per issue; there is no bulk flag.'
         confirm_retention_amount_help: Income-tax withholding amount from the invoice.
-        confirm_retention_rate_help: Income-tax withholding rate from the invoice.
+        confirm_retention_rate_help: 'Income-tax withholding rate from the invoice,
+          as a fraction: 0.15 for 15%.'
         confirm_review_contradicted_regime_message: This document contradicts itself
           about how it is taxed. The detail below names what disagreed with what.
         confirm_review_undetermined_establishment_message: Where a party to this invoice
@@ -612,6 +613,8 @@ cli:
       borrador:
         app_help: Modelo 100 borrador snapshots
         filing_year_help: Filing year (e.g. 2024)
+        import_casilla_owner_ambiguous: 'More than one binding of the modelo definitions
+          could hold these printed casillas, so nothing was imported: %{casillas}.'
         import_coverage_absent: The parser returned no extraction coverage for the
           modelo definitions' profile; nothing was imported.
         import_ejercicio_mismatch: The tax year printed on the PDF does not match

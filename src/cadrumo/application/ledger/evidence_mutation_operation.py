@@ -40,6 +40,8 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .evidence import (
+    LEDGER_EVIDENCE_LABEL_MAX,
+    LEDGER_EVIDENCE_TEXT_MAX,
     PurchaseInvoiceEvidence,
     PurchaseInvoiceEvidencePatch,
     PurchaseInvoiceEvidenceResult,
@@ -58,7 +60,8 @@ LEDGER_EVIDENCE_REMOVE_PHASE = LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID
 
 _MAX_RESULT_BYTES = 60 * 1024
 _EvidenceIdentity = Annotated[str, Field(min_length=1, max_length=64)]
-_EvidenceText = Annotated[str, Field(max_length=16_384)]
+_EvidenceText = Annotated[str, Field(max_length=LEDGER_EVIDENCE_TEXT_MAX)]
+_EvidenceLabel = Annotated[str, Field(max_length=LEDGER_EVIDENCE_LABEL_MAX)]
 _InvoiceDate = Annotated[str, Field(max_length=64)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _EvidenceEventId = Annotated[str, Field(min_length=1, max_length=64)]
@@ -88,8 +91,8 @@ class LedgerEvidenceUpdatePatch(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    supplier: Annotated[str, Field(max_length=1_024)] | None = None
-    invoice_number: Annotated[str, Field(max_length=1_024)] | None = None
+    supplier: _EvidenceLabel | None = None
+    invoice_number: _EvidenceLabel | None = None
     invoice_date: _InvoiceDate | None = None
     taxable_base: _DecimalText | None = None
     iva_rate: _DecimalText | None = None

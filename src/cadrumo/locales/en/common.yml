@@ -3004,6 +3004,7 @@ desktop:
         choose_category: Choose a category
         count: A split has 2 to {max} parts.
         description: The parts add up to {amount}. The last part takes what is left.
+        description_long: Part {part} takes a description of at most {max} characters.
         description_needed: Part {part} needs a description.
         duplicate: 'Part {part} is the same as another: change its amount or description.'
         mixed_hint: Partly used for work? Use Mixed with a share instead.
@@ -3651,6 +3652,9 @@ desktop:
       empty: No rules yet.
       expression: Expression
       expression_hint: Matched anywhere in the description, ignoring case.
+      expression_overrun: This expression takes too long to try on your movements.
+        Simplify it.
+      expression_too_long: This expression is too long. It can have up to {max} characters.
       expression_unread: This window can't read that expression.
       from_selection: Make a rule from the selection
       matches_split: Matches {count} · {pending} to classify
@@ -3674,6 +3678,9 @@ desktop:
         empty_pattern: Write the words to match.
         invalid_command: The ledger didn't accept the rule.
         invalid_pattern: The ledger can't read that expression.
+        pattern_overrun: A stored rule takes too long to try on your movements, so
+          nothing was run.
+        pattern_too_long: The expression is too long.
       run_note: A preview changes nothing. Running them is added to your changes,
         like any other change.
       run_staged: 'Rules added to your changes · Movements: {count} · not saved yet'
@@ -3682,6 +3689,9 @@ desktop:
       saved_toast: Rule saved · order {place}
       stage_run: Add the run to your changes
       title: Classification rules
+      trial_failed: The ledger didn't answer about this expression. What you wrote
+        is kept.
+      trial_retry: Try again
       what: Matches words in a movement's description and decides its classification.
       words: Description contains
       words_hint: Words in this order; capitals don't matter.

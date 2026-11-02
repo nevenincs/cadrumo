@@ -21,6 +21,7 @@ from ....core.period import Period
 from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ....domain.modelos.filing_kind_evidence import SubmittedFileFilingKindMarker
 from ...storage.sync_runs.records import SyncRunRecord
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..errors import (
@@ -678,6 +679,7 @@ class _AccountingObservation:
     casillas: tuple[FiledObservedCasillaProtocol, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()
     metadata: Mapping[str, str] = field(default_factory=dict)
+    filing_kind_marker: SubmittedFileFilingKindMarker | None = None
 
     @property
     def registry_snapshot_ref(self) -> RegistrySnapshotRef:

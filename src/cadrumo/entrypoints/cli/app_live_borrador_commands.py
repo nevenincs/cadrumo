@@ -61,6 +61,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
         artefact_kind=projection.artefact_kind,
         source_pdf_sha256=str(projection.source_pdf_sha256),
         blank_casillas=sorted(projection.blank_casillas),
+        unowned_casillas=sorted(projection.unowned_casillas),
         warnings=list(projection.warnings),
     )
     lines = [
@@ -73,6 +74,7 @@ def borrador_100_import(ctx: typer.Context, file: Path, filing_year: int, period
         f"artefact_kind\t{projection.artefact_kind}",
         f"binding_count\t{snapshot.binding_count}",
         f"blank_casillas\t{len(projection.blank_casillas)}",
+        f"unowned_casillas\t{len(projection.unowned_casillas)}",
     ]
     emit_envelope(ctx, command="app.live.borrador.100.import", result=result, lines=lines)
 

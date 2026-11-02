@@ -25,6 +25,7 @@ import {
   useStagedCheck,
 } from "../../../shell/ledgerStagedCheck";
 import { readAnswer } from "../../../shell/ledgerWindow";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import {
   lifecycleAction,
@@ -78,6 +79,7 @@ export function ActionDialog({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const reasonLimit = useTextLimit("event_payload_value");
   const reasonId = useId();
   const [reason, setReason] = useState(
     "reason" in request ? (request.reason ?? "") : "",
@@ -316,7 +318,7 @@ export function ActionDialog({
             <TextEditor
               id={reasonId}
               autoFocus
-              maxLength={500}
+              maxLength={reasonLimit ?? undefined}
               value={reason}
               onChange={setReason}
             />

@@ -281,6 +281,7 @@ class Borrador100ImportExecutor:
                 artefact_kind=prepared.artefact_kind,
                 source_pdf_sha256=prepared.source_pdf_sha256,
                 blank_casillas=prepared.blank_casillas,
+                unowned_casillas=prepared.unowned_casillas,
                 warnings=prepared.warnings,
             )
             return await context.operands.put(Borrador100ImportExecutionResult(projection=projection), written_at=now())

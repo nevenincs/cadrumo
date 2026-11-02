@@ -72,6 +72,8 @@ from ....domain.calculations.registry.tests.authored_editions import newest_auth
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
+from ....domain.modelos.filing_kind_evidence import ObservedFilingKind, observed_filing_kind_for_local_revision
+from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -193,6 +195,7 @@ def _seed_filing(
     period: str,
     casilla_id: CasillaId,
     value: Decimal,
+    filing_kind: ObservedFilingKind | None = None,
 ) -> None:
     """Persist one filed source-modelo period carrying a single source casilla id.
 
@@ -214,7 +217,25 @@ def _seed_filing(
             ),
         )
 
-    save_stamped_observation(obs_repo, observation(), source_kind=APP_FILING_SOURCE_KIND, captured_at=_T0)
+    save_stamped_observation(
+        obs_repo,
+        observation(),
+        source_kind=APP_FILING_SOURCE_KIND,
+        captured_at=_T0,
+        filing_kind=filing_kind,
+    )
+
+
+def _local_original_kind(source_modelo: str, period: str) -> ObservedFilingKind:
+    """The admitted kind a locally filed original quarter carries, as the local-filing producer stamps it.
+
+    Casilla 18 is absent from these quarters; it folds as a proven zero only
+    because each quarter is an admitted original.
+    """
+    return observed_filing_kind_for_local_revision(
+        FilingDeclarationKind.ORIGINAL,
+        source_locator=f"local-filing:{source_modelo}:{_YEAR}:{period}",
+    )
 
 
 def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
@@ -226,6 +247,7 @@ def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
             period=period,
             casilla_id=_M130_PAGOS_OUTPUT,
             value=_M130_C19_BY_PERIOD[period],
+            filing_kind=_local_original_kind("130", period),
         )
         _seed_filing(
             obs_repo=obs_repo,
@@ -233,6 +255,7 @@ def _seed_pagos_quarters(*, obs_repo: CalculationObservationRepository) -> None:
             period=period,
             casilla_id=_M131_PAGOS_OUTPUT,
             value=Decimal("0"),
+            filing_kind=_local_original_kind("131", period),
         )
 
 

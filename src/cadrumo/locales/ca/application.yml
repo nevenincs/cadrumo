@@ -997,6 +997,9 @@ application:
   live:
     borrador:
       errors:
+        binding_keys_not_admitted: 'Aquest esborrany desat té valors amb claus que
+          les definicions del model no admeten, així que no es pot fer servir; torna
+          a importar el document: %{bindings}.'
         binding_value_key_blank: Les claus dels valors de l'esborrany no poden estar
           buides.
         bucket_id_blank: L'identificador del bucket de l'esborrany no pot estar buit.

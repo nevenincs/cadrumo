@@ -42,7 +42,12 @@ export type LedgerRuleAddRequest = {
   actor?: string | null;
 };
 export type LedgerRuleValidation =
-  "empty_pattern" | "invalid_pattern" | "category" | "invalid_command";
+  | "empty_pattern"
+  | "invalid_pattern"
+  | "pattern_too_long"
+  | "pattern_overrun"
+  | "category"
+  | "invalid_command";
 export type LedgerRuleAddResult = {
   profile_id: string;
   outcome: "added" | "validation_error";
@@ -87,6 +92,7 @@ export type LedgerRuleApplyResult = {
   bucket_event_count: number;
   validation_code: LedgerRuleValidation | null;
   validation_messages: string[];
+  refused_rule_id: string | null;
 };
 
 // ---- Business-use ratios -------------------------------------------------
@@ -805,7 +811,25 @@ export type LedgerEntryLimits = {
     field: string;
     unit: "points" | "fraction";
   }[];
+  rule_pattern_max: number;
+  text_limits: { name: TextLimitName; max: number }[];
 };
+/** What a served text limit bounds: the characters one entry takes, or, for
+ * `split_parts`, the most parts one split makes. */
+export type TextLimitName =
+  | "split_parts"
+  | "split_part_description"
+  | "entry_text"
+  | "group_label"
+  | "classify_token"
+  | "usage_ratio_id"
+  | "event_payload_value"
+  | "evidence_label"
+  | "evidence_note"
+  | "own_account_iban"
+  | "own_account_swift_bic"
+  | "counterparty_tax_id"
+  | "counterparty_note";
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */
 export type InventoryEvidenceAddRequest = { source_path: FileToken };

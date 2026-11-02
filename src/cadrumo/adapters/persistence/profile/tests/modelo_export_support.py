@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 )
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_profile_storage_root
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from cadrumo.application.modelo.calculation_screen import calculation_screen_stamp
 from cadrumo.application.workflow.persistence import workflow_state_repository
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
@@ -175,12 +176,16 @@ def seed_revision(
     binding_overrides = dict(binding_overrides or dict[BindingId, str]())
     casilla_values = dict(casilla_values or {})
     typed_period = Period.from_year_and_code(filing_year, period)
-    snapshot = published_authority_operation().snapshot(
+    operation = published_authority_operation()
+    snapshot = operation.snapshot(
         modelo,
         filing_year=filing_year,
         period=typed_period.registry_token,
     )
     revision_id = snapshot.revision.id
+    # A seeded revision stands in for a calculation of this snapshot, so it
+    # carries the screen stamp that calculation persists.
+    screen_stamp = calculation_screen_stamp(snapshot, operation=operation)
     work_unit_id = derive_work_unit_id(
         bucket_id=bucket_id,
         modelo=modelo,
@@ -209,6 +214,7 @@ def seed_revision(
         casilla_values=casilla_values,
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -236,6 +242,7 @@ def seed_revision(
         verified_at=_SEEDED_REVISION_AT if state is not CalculationRevisionState.BORRADOR else None,
         verified_by="operator" if state is not CalculationRevisionState.BORRADOR else None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))

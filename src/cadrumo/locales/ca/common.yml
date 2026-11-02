@@ -3046,6 +3046,8 @@ desktop:
         choose_category: Tria una categoria
         count: Una divisió té de 2 a {max} parts.
         description: Les parts sumen {amount}. L'última part es queda el que falta.
+        description_long: La part {part} admet una descripció de {max} caràcters com
+          a màxim.
         description_needed: La part {part} necessita una descripció.
         duplicate: 'La part {part} és igual que una altra: canvia''n l''import o la
           descripció.'
@@ -3704,6 +3706,10 @@ desktop:
       expression: Expressió
       expression_hint: Es cerca a qualsevol part de la descripció, sense distingir
         majúscules.
+      expression_overrun: Aquesta expressió triga massa a provar-se amb els teus moviments.
+        Simplifica-la.
+      expression_too_long: Aquesta expressió és massa llarga. Pot tenir fins a {max}
+        caràcters.
       expression_unread: Aquesta finestra no pot llegir aquesta expressió.
       from_selection: Crea una regla a partir de la selecció
       matches_split: Coincideix amb {count} · {pending} per classificar
@@ -3727,6 +3733,9 @@ desktop:
         empty_pattern: Escriu les paraules que cal cercar.
         invalid_command: El llibre no ha acceptat la regla.
         invalid_pattern: El llibre no pot llegir aquesta expressió.
+        pattern_overrun: Una regla desada triga massa a provar-se amb els teus moviments,
+          així que no s'ha executat res.
+        pattern_too_long: L'expressió és massa llarga.
       run_note: La previsualització no canvia res. Aplicar-les s'afegeix als teus
         canvis, com qualsevol altre.
       run_staged: 'Regles afegides als teus canvis · Moviments: {count} · encara sense
@@ -3736,6 +3745,9 @@ desktop:
       saved_toast: Regla desada · ordre {place}
       stage_run: Afegeix l'aplicació als teus canvis
       title: Regles de classificació
+      trial_failed: No hi ha resposta sobre aquesta expressió. El que has escrit es
+        conserva.
+      trial_retry: Torna-ho a provar
       what: Cerca paraules a la descripció del moviment i decideix la seva classificació.
       words: La descripció conté
       words_hint: Paraules en aquest ordre; tant és majúscules o minúscules.

@@ -267,6 +267,16 @@
       "description_pattern": "[unclosed",
       "outcome": "invalid_pattern",
       "matches": []
+    },
+    {
+      "description_pattern": "a{99999999999}",
+      "outcome": "invalid_pattern",
+      "matches": []
+    },
+    {
+      "description_pattern": "(.+)+#",
+      "outcome": "overrun",
+      "matches": []
     }
   ]
 }

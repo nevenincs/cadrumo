@@ -43,6 +43,7 @@ from ....application.calculations.cross_period_models import (
     CrossPeriodDependencyRequirement,
 )
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
+from ....application.modelo.calculation_screen import calculation_screen_stamp
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.verification_cross_period import cross_period_clean_state_findings
@@ -157,6 +158,10 @@ def _persist_390_draft(
     )
     work_unit_repository.save(upsert_work_unit(work_unit_repository.load(), work_unit))
     casilla_values: dict[CasillaId, Decimal] = {}
+    operation = published_authority_operation()
+    screen_stamp = calculation_screen_stamp(
+        operation.snapshot("390", filing_year=2025, period=work_unit.period.registry_token), operation=operation
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -164,6 +169,7 @@ def _persist_390_draft(
         casilla_values=casilla_values,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=revision_id,
@@ -180,6 +186,7 @@ def _persist_390_draft(
         updated_at=_CLOCK,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     calculation_repository.save(upsert_calculation_revision(calculation_repository.load(), revision))
     return revision_id

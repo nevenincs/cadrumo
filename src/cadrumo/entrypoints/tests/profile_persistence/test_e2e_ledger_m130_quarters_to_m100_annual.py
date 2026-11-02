@@ -68,6 +68,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.aggregation.source_precedence import CallerOverrideDisposition, precedence_ladder_sources
+from cadrumo.application.calculations.observations_repository import observation_key
 from cadrumo.application.modelo.action_errors import ModeloAggregationBindingError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
@@ -94,7 +95,8 @@ from cadrumo.domain.contribuyente.entity_type import EntityType
 from cadrumo.domain.deadlines.models import IrpfEstimationRegime, IrpfIncomeCategory, IVARegime, TaxpayerProfile
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
-from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind
+from cadrumo.domain.modelos.filing_kind_evidence import FilingKindEvidenceBasis
+from cadrumo.domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -696,6 +698,28 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     # which is also 20 per cent of the 9600.00 annual net income.
     casilla_0604 = Decimal(annual.casilla_values[_M100_PAGOS_CASILLA])
     assert casilla_0604 == Decimal("1920.00"), casilla_0604
+
+
+def test_a_locally_filed_quarter_records_the_kind_its_revision_states(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    """A revision with no amendment identity is an original, stated by the local filing itself."""
+    _seed_taxpayer_profile()
+    _persist_autonoma_style_ledger(secure_objects)
+    _seed_prior_year_m100(secure_objects)
+    revision = _calculate_and_file_m130_quarter(secure_objects, period="1T")
+    assert revision.amendment_identity is None
+
+    stored = CalculationObservationRepository(objects=secure_objects).load(
+        observation_key("130", Period.from_year_and_code(_YEAR, "1T"))
+    )
+
+    assert stored is not None
+    assert stored.filing_kind is not None
+    assert stored.filing_kind.basis is FilingKindEvidenceBasis.LOCAL_REVISION
+    assert stored.filing_kind.admitted_kind is FilingDeclarationKind.ORIGINAL
+    assert stored.filing_kind.source_locator is not None
+    assert stored.filing_kind.source_locator.startswith("local-filing:")
 
 
 def test_verify_accepts_autonoma_m100_with_official_m130_observations(

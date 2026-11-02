@@ -6,18 +6,26 @@ Core types:
 
 from __future__ import annotations
 
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from .....application.live.expedientes_ports import ExpedientesDeclaration
+from .....application.live.filed_observation_persistence import filed_observation_filing_kind
 from .....core.casilla_id import CasillaId
 from .....core.config import Settings
 from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
-from .....domain.calculations.registry.errors import RegistryValidationError
+from .....domain.calculations.registry.errors import RegistrySnapshotError, RegistryValidationError
+from .....domain.calculations.registry.observation_fold import complementaria_only_casilla_ids
 from .....domain.calculations.registry.relations import relation_source_requirements, source_presence_gaps
 from .....domain.calculations.registry.remote_state_guard import RemoteStateGuardPolicy
 from .....domain.calculations.registry.schema import RegistrySnapshot
+from .....domain.modelos.filing_kind_evidence import (
+    ComplementariaOnlySourceOutcome,
+    SubmittedFileFilingKindMarker,
+    complementaria_only_source_outcome,
+)
 from .._playwright import BrowserContext, Locator, Page, Playwright
 from ._declarations_fetch import (
     capture_row_pdf_artefact,
@@ -37,9 +45,10 @@ from .declarations_observations import (
     _submitted_file_layout_refusal,
     _with_derived_303_compensation_available_observation,
     observed_casillas_from_submitted_file,
+    observed_filing_kind_marker_from_submitted_file,
     observed_header_facts_from_submitted_file,
 )
-from .errors import JustificanteFetchError, SedeNavigationError, SedeParseError
+from .errors import JustificanteFetchError, SedeNavigationError, SedeParseError, SedeValidationError
 from .schema import FiledDeclaracionArtefact, FiledDeclaracionObservation, ObservedCasillaValue
 
 if TYPE_CHECKING:
@@ -104,12 +113,14 @@ async def _capture_submitted_file_if_available(
     tuple[FiledDeclaracionArtefact, ...],
     tuple[ObservedCasillaValue, ...],
     tuple[ObservedHeaderFact, ...],
+    SubmittedFileFilingKindMarker | None,
     dict[str, float],
 ]:
     """Capture and interpret the optional submitted file, recording soft refusals."""
     artefacts: tuple[FiledDeclaracionArtefact, ...] = ()
     casillas: tuple[ObservedCasillaValue, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()
+    filing_kind_marker: SubmittedFileFilingKindMarker | None = None
     extraction_coverage: dict[str, float] = {}
     if (
         declaration.archive_link_text is not None and declaration.archive_link_text
@@ -160,9 +171,14 @@ async def _capture_submitted_file_if_available(
                     body=submitted_body,
                     operation=operation,
                 )
+                filing_kind_marker = observed_filing_kind_marker_from_submitted_file(
+                    snapshot=snapshot,
+                    body=submitted_body,
+                    operation=operation,
+                )
             except (RegistryValidationError, SedeParseError) as exc:
                 _record_submitted_file_extraction_error(metadata, exc)
-    return artefacts, casillas, headers, extraction_coverage
+    return artefacts, casillas, headers, filing_kind_marker, extraction_coverage
 
 
 def _resolve_captured_casillas(
@@ -250,7 +266,13 @@ async def capture_filed_declaration_observation_from_row(
         artefact_sink=artefact_sink,
     )
     artefacts.extend(declaration_copy_artefacts)
-    submitted_artefacts, casillas, headers, extraction_coverage = await _capture_submitted_file_if_available(
+    (
+        submitted_artefacts,
+        casillas,
+        headers,
+        filing_kind_marker,
+        extraction_coverage,
+    ) = await _capture_submitted_file_if_available(
         context=context,
         page=page,
         row_locator=row_locator,
@@ -283,6 +305,7 @@ async def capture_filed_declaration_observation_from_row(
         artefacts=tuple(artefacts),
         casillas=casillas,
         headers=headers,
+        filing_kind_marker=filing_kind_marker,
         metadata=metadata,
         extraction_coverage=extraction_coverage,
         registry_snapshot_ref=snapshot.snapshot_ref,
@@ -403,8 +426,16 @@ async def capture_relation_source_observations(
                 await register.capture_observation(declaration, artefact_sink=artefact_sink),
                 operation=operation,
             )
-            observed_casillas: set[CasillaId] = {casilla.casilla_id for casilla in observation.casillas}
-            missing = sorted(source_casilla_ids.difference(observed_casillas))
+            missing, contradicted = _relation_source_gaps(
+                observation,
+                source_casilla_ids,
+                operation=operation,
+            )
+            if contradicted:
+                raise SedeParseError(
+                    f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
+                    f"is an original declaration carrying nonzero complementaria-only casillas {contradicted!r}",
+                )
             if missing:
                 raise SedeParseError(
                     f"relation source requirement {modelo!r}/{source_year}/{source_period!r} "
@@ -412,6 +443,52 @@ async def capture_relation_source_observations(
                 )
             observations.append(observation)
     return tuple(observations)
+
+
+def _relation_source_gaps(
+    observation: FiledDeclaracionObservation,
+    source_casilla_ids: set[CasillaId],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[list[CasillaId], list[CasillaId]]:
+    """Return the missing and the contradicted source casillas of one captured filing.
+
+    A casilla the captured filing does not carry counts as present when the
+    shared complementaria-only predicate proves it zero: the filing's
+    submitted-file marker says original and the filing's own revision declares
+    the casilla complementaria-only. A non-numeric or unreadable value takes no
+    part in that proof and is left as observed.
+    """
+    values: dict[CasillaId, Decimal | None] = {}
+    for casilla in observation.casillas:
+        try:
+            values[casilla.casilla_id] = casilla.decimal_value()
+        except (InvalidOperation, SedeValidationError):
+            values[casilla.casilla_id] = None
+    complementaria_only: frozenset[CasillaId]
+    try:
+        revision = operation.revision(observation.modelo, observation.registry_snapshot_ref.revision_id)
+    except RegistrySnapshotError:
+        complementaria_only = frozenset[CasillaId]()
+    else:
+        complementaria_only = complementaria_only_casilla_ids(revision)
+    filing_kind = filed_observation_filing_kind(observation)
+    missing: list[CasillaId] = []
+    contradicted: list[CasillaId] = []
+    for casilla_id in sorted(source_casilla_ids):
+        if casilla_id in values and values[casilla_id] is None:
+            continue
+        outcome = complementaria_only_source_outcome(
+            casilla_id,
+            observed_value=values.get(casilla_id),
+            filing_kind=filing_kind,
+            complementaria_only_casilla_ids=complementaria_only,
+        )
+        if outcome is ComplementariaOnlySourceOutcome.UNRESOLVED:
+            missing.append(casilla_id)
+        elif outcome is ComplementariaOnlySourceOutcome.CONTRADICTED:
+            contradicted.append(casilla_id)
+    return missing, contradicted
 
 
 def _select_authoritative_declaration(

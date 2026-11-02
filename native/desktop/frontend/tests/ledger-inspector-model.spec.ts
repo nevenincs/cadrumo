@@ -1,4 +1,5 @@
-import "./support/servedLimits";
+import { servedLimits } from "./support/servedLimits";
+import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
 import type {
   LedgerLlmSuggestion,
@@ -301,6 +302,68 @@ test("a split's last part takes what the others leave, in its shortest form", ()
   expect(splitRemainder("10", ["11"])).toBeNull();
   expect(splitRemainder("10", ["1.000"])).toBeNull();
   expect(splitRemainder("10", [""])).toBeNull();
+});
+
+test("a split part's description is refused over the length the ledger serves, and while it serves none", () => {
+  const parts = (description: string) => [
+    { amount: "1", description },
+    { amount: "2", description: "otra" },
+  ];
+  holdLedgerLimits({
+    ...servedLimits,
+    text_limits: [
+      { name: "split_parts", max: 3 },
+      { name: "split_part_description", max: 5 },
+    ],
+  });
+  try {
+    expect(checkSplit("3", parts("12345"))).toMatchObject({ ok: true });
+    expect(checkSplit("3", parts("áéíóú"))).toMatchObject({ ok: true });
+    expect(checkSplit("3", parts("  12345  "))).toMatchObject({ ok: true });
+    expect(checkSplit("3", parts("123456"))).toEqual({
+      ok: false,
+      problem: { kind: "description_long", index: 0, max: 5 },
+    });
+    holdLedgerLimits({
+      ...servedLimits,
+      text_limits: [{ name: "split_parts", max: 3 }],
+    });
+    expect(checkSplit("3", parts("a"))).toEqual({
+      ok: false,
+      problem: { kind: "limits_unavailable" },
+    });
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
+});
+
+test("a split takes no more parts than the ledger serves, and none while it serves nothing", () => {
+  const parts = (count: number) =>
+    Array.from({ length: count }, (_, at) => ({
+      amount: "1",
+      description: `parte ${at}`,
+    }));
+  holdLedgerLimits({
+    ...servedLimits,
+    text_limits: [
+      { name: "split_parts", max: 3 },
+      { name: "split_part_description", max: 64 },
+    ],
+  });
+  try {
+    expect(checkSplit("3", parts(3))).toMatchObject({ ok: true });
+    expect(checkSplit("4", parts(4))).toEqual({
+      ok: false,
+      problem: { kind: "count" },
+    });
+    holdLedgerLimits(null);
+    expect(checkSplit("3", parts(3))).toEqual({
+      ok: false,
+      problem: { kind: "limits_unavailable" },
+    });
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
 });
 
 test("a split is refused unless its parts add up exactly and differ", () => {

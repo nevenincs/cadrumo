@@ -234,6 +234,7 @@ def _verify_and_export(shape: _Revision, expense: Transaction, tmp_path: Path) -
             source_transaction_ids=contributors,
             filing_instance_evidence=seeded.filing_instance_evidence,
             source_provenance=(),
+            screen_stamp=seeded.screen_stamp,
         )
         sealed = seeded.model_copy(
             update={

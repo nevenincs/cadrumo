@@ -368,12 +368,16 @@ export function parseIsoDate(raw: string): Parsed<string> {
 // ---- Single-line text -------------------------------------------------------
 
 /** A one-line text such as a description or a counterparty. Tabs and line
- * breaks are refused rather than flattened. */
-export function parseLine(raw: string, max = Infinity): Parsed<string> {
+ * breaks are refused rather than flattened. `max` is a limit the backend
+ * served, or null where it has served none, which refuses what is typed as
+ * not yet checkable; leave it out for a text with no bound. */
+export function parseLine(raw: string, max?: number | null): Parsed<string> {
   if (/[\t\r\n]/.test(raw)) return refuse("line_break", raw);
   const text = raw.trim();
   if (text === "") return { kind: "empty" };
-  if (text.length > max) return refuse("too_long", raw, { limit: max });
+  if (max === null) return refuse("limits_unavailable", raw);
+  if (max !== undefined && text.length > max)
+    return refuse("too_long", raw, { limit: max });
   return value(text);
 }
 

@@ -1,5 +1,5 @@
 import { servedLimits } from "./support/servedLimits";
-import { holdLedgerLimits } from "../src/shell/ledgerLimits";
+import { holdLedgerLimits, textLimit } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
 import {
   AMOUNT_RULE,
@@ -218,6 +218,33 @@ test("one-line text refuses tabs and line breaks rather than flattening them", (
   expect(verdict(parseLine("a\nb", 64))).toBe("line_break");
   expect(verdict(parseLine("x".repeat(65), 64))).toBe("too_long");
   expect(verdict(parseLine("   ", 64))).toBe(null);
+});
+
+test("one-line text is held to the limit it is handed, and refused while none is served", () => {
+  expect(verdict(parseLine("x".repeat(65), null))).toBe("limits_unavailable");
+  expect(verdict(parseLine("  ", null))).toBe(null);
+  // Left out, the text has no bound of its own.
+  expect(verdict(parseLine("x".repeat(5000)))).toBe("x".repeat(5000));
+});
+
+test("a text limit is the one served, and none is assumed", () => {
+  const served = (name: string) =>
+    servedLimits.text_limits.find((found) => found.name === name)?.max;
+  expect(textLimit("split_parts")).toBe(served("split_parts"));
+  expect(textLimit("evidence_note")).toBe(served("evidence_note"));
+  holdLedgerLimits({
+    ...servedLimits,
+    text_limits: [{ name: "split_parts", max: 3 }],
+  });
+  try {
+    expect(textLimit("split_parts")).toBe(3);
+    // A limit the backend did not serve is not assumed.
+    expect(textLimit("entry_text")).toBeNull();
+  } finally {
+    holdLedgerLimits(null);
+    expect(textLimit("split_parts")).toBeNull();
+    holdLedgerLimits(servedLimits);
+  }
 });
 
 test("a year is four digits, whichever it is, and period tokens are the product's", () => {

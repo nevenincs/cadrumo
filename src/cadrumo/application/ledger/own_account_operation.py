@@ -55,6 +55,10 @@ from .read_access import resolve_ledger_commit_access, resolve_ledger_read_acces
 from .transaction_repository import transaction_catalogue_repository
 
 LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID = "ledger.own_account"
+LEDGER_OWN_ACCOUNT_IBAN_MAX = 64
+"""The longest account number an own account takes."""
+LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX = 16
+"""The longest SWIFT/BIC an own account takes."""
 
 OwnAccountAction = Literal["add", "list", "show", "update", "close", "remove", "designate", "undesignate"]
 
@@ -90,8 +94,8 @@ class LedgerOwnAccountRequest(BaseModel):
     own_account_id: OwnAccountId | None = None
     label: str | None = Field(default=None, min_length=1, max_length=128)
     holding: OwnAccountHolding | None = None
-    iban: str | None = Field(default=None, max_length=64)
-    swift_bic: str | None = Field(default=None, max_length=16)
+    iban: str | None = Field(default=None, max_length=LEDGER_OWN_ACCOUNT_IBAN_MAX)
+    swift_bic: str | None = Field(default=None, max_length=LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX)
     bank_name: str | None = Field(default=None, max_length=128)
     bank_address: str | None = Field(default=None, max_length=64)
     bank_city: str | None = Field(default=None, max_length=32)
