@@ -80,7 +80,7 @@ from ..calculations.m303_regimen_simplificado_annual_summary import (
 from ..calculations.observations_repository import (
     PriorDomiciliationElectionProjection,
 )
-from ..filing.export import export_draft
+from ..filing.export import export_draft, refuse_incomplete_xml_export
 from ..filing.export_verification import (
     DeclaracionExportResult,
     FilingExportConsumedResult,
@@ -284,6 +284,7 @@ def _persist_exported_draft(
                 staged=staged,
                 command=command,
                 approved=approved,
+                export_layout=export_layout,
                 producer_snapshot=producer_snapshot,
                 dictionary_values=dictionary_values,
                 prior_domiciliation_election=prior_domiciliation_election.election,
@@ -427,6 +428,7 @@ def _write_export_staging(
     staged: StagedPublication,
     command: ModeloExportCommand,
     approved: ModeloDraft,
+    export_layout: ExportLayoutDefinition | None,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: Mapping[str, object] | None,
     prior_domiciliation_election: PriorDomiciliationElection,
@@ -435,7 +437,7 @@ def _write_export_staging(
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
 ) -> DeclaracionExportResult:
     try:
-        return export_draft(
+        receipt = export_draft(
             approved,
             output_path=staged.path,
             producer_snapshot=producer_snapshot,
@@ -445,6 +447,10 @@ def _write_export_staging(
             schema_provider=schema_provider,
             mutation_writer=mutation_writer,
         )
+        refuse_incomplete_xml_export(
+            export_layout, draft=approved, payload=staged.path.read_bytes(), schema_provider=schema_provider
+        )
+        return receipt
     except FilingExportError as exc:
         # Surface the underlying FilingExportError cause in the typed context
         # (aeat-cli-contract: structured provenance
