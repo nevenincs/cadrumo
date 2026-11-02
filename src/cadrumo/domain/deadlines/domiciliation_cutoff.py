@@ -34,7 +34,7 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from datetime import date, timedelta
 from enum import StrEnum
-from typing import TYPE_CHECKING, Annotated, Final, Literal
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field
 
@@ -453,12 +453,6 @@ class UnavailablePaymentCutoff(BaseModel):
         return None
 
 
-PaymentCutoffResolution = Annotated[
-    AuthoredPaymentCutoff | DerivedPaymentCutoff | UnavailablePaymentCutoff,
-    Field(discriminator="source"),
-]
-
-
 class _CalendarGapError(Exception):
     """A year the derivation walks cannot classify its days."""
 
@@ -636,7 +630,6 @@ __all__ = (
     "DomiciliationProcedure",
     "InhabilBaseAuthority",
     "InhabilBasePolicy",
-    "PaymentCutoffResolution",
     "PaymentCutoffSource",
     "PaymentCutoffUnavailableReason",
     "UnavailablePaymentCutoff",

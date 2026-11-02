@@ -38,6 +38,7 @@ import type {
   InvoiceUpdateRequest,
   LedgerPort,
 } from "../../../shell/ledger";
+import { servedRefusalWords } from "../../../shell/ledger";
 import {
   OPERATION_TYPES,
   PAYMENT_STATUSES,
@@ -386,7 +387,10 @@ export function InvoiceEditor({
     });
   };
 
-  const refusedText = () => t("desktop.ledger.invoices.refused");
+  /** Why a write was refused: the sentence the backend served, else the
+   * page's own generic notice. */
+  const refusedText = (detail: unknown = null) =>
+    servedRefusalWords(detail) ?? t("desktop.ledger.invoices.refused");
 
   const add = async (request: InvoiceAddRequest, invoiceId: string | null) => {
     setSending(true);
@@ -415,7 +419,7 @@ export function InvoiceEditor({
       const detail = answer.detail as Partial<InvoiceAddResult> | null;
       if (detail && detail.outcome === "validation_error")
         refuseAdd(detail as InvoiceAddResult);
-      else setOutcome({ kind: "refused", text: refusedText() });
+      else setOutcome({ kind: "refused", text: refusedText(answer.detail) });
       backToEdit();
       return;
     }
@@ -424,7 +428,10 @@ export function InvoiceEditor({
     else setOutcome({ kind: "failed", code: answer.code });
   };
   const refuseAdd = (
-    result: Pick<InvoiceAddResult, "validation_code" | "invoice_id">,
+    result: Pick<
+      InvoiceAddResult,
+      "validation_code" | "invoice_id" | "refusal_words"
+    >,
   ) => {
     backToEdit();
     if (result.validation_code === "duplicate_invoice") {
@@ -433,7 +440,8 @@ export function InvoiceEditor({
     } else
       setOutcome({
         kind: "refused",
-        text: t("desktop.ledger.invoices.invalid"),
+        text:
+          servedRefusalWords(result) ?? t("desktop.ledger.invoices.invalid"),
       });
   };
 
@@ -450,7 +458,7 @@ export function InvoiceEditor({
       onWritten(answer.result.invoice);
       onClose();
     } else if (answer.kind === "refused") {
-      setOutcome({ kind: "refused", text: refusedText() });
+      setOutcome({ kind: "refused", text: refusedText(answer.detail) });
       backToEdit();
     } else if (answer.kind === "unknown")
       undetermined({ what: "update", request }, answer.saved);
@@ -468,7 +476,7 @@ export function InvoiceEditor({
       onWritten(null, invoiceId);
       onClose();
     } else if (answer.kind === "refused") {
-      setOutcome({ kind: "refused", text: refusedText() });
+      setOutcome({ kind: "refused", text: refusedText(answer.detail) });
       backToEdit();
     } else if (answer.kind === "unknown")
       undetermined({ what: "remove", invoiceId }, answer.saved);

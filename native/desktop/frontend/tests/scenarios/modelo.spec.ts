@@ -972,6 +972,63 @@ test("an export whose result says no direct-debit cutoff was checked says so bes
   ).toHaveCount(0);
 });
 
+/** The error detail the backend recorded for a scenario refusal, with the
+ * sentence it served for it. */
+const refusal = (name: string, language: Language = "en") =>
+  envelope<{ error_code: string; refusal_words: string | null }>(
+    `refusal-${name}-${language}`,
+  );
+
+for (const language of ["en", "es"] as const)
+  test(`a refused export says why in the sentence the backend served, in ${language}`, async ({
+    page: target,
+  }) => {
+    const served = refusal("domiciliation-past-cutoff", language);
+    if (!served.refusal_words) throw new Error("the refusal serves no words");
+    await openDeclaration(target, "130", {
+      shape: "export-past-cutoff",
+      language,
+    });
+    await tab(target, "workspace.modelo.filing.title", language).click();
+    await target
+      .getByRole("button", {
+        name: label("workspace.modelo.filing.export_again", {}, language),
+      })
+      .click();
+    const notice = target
+      .getByText(served.refusal_words, { exact: true })
+      .first();
+    await expect(notice).toBeVisible();
+    // The served sentence carries the cutoff and its legal references; the
+    // window shows it as served and names neither code nor generic notice.
+    await expect(notice).toContainText("Orden HAC/3625/2003, art. 3");
+    await expect(
+      target.getByText(
+        label("workspace.modelo.outcome.not_done", {}, language),
+      ),
+    ).toHaveCount(0);
+    await expect(target.getByText(served.error_code)).toHaveCount(0);
+  });
+
+test("a refused report of an outdated calculation says why in the sentence the backend served", async ({
+  page: target,
+}) => {
+  const served = refusal("report-outdated");
+  if (!served.refusal_words) throw new Error("the refusal serves no words");
+  await filing(target, "report-outdated");
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.copy.calculation_report_pdf.action"),
+    })
+    .click();
+  await expect(
+    target.getByText(served.refusal_words, { exact: true }).first(),
+  ).toBeVisible();
+  await expect(
+    target.getByText(label("workspace.modelo.outcome.not_done")),
+  ).toHaveCount(0);
+});
+
 test("an export whose settlement was not seen is unknown and holds", async ({
   page: target,
 }) => {
