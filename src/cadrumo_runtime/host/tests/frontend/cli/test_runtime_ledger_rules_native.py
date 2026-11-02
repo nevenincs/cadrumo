@@ -16,6 +16,7 @@ from pydantic import BaseModel
 from cadrumo.adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
+from cadrumo.application.ledger.actions_classification import add_classification_rule
 from cadrumo.application.ledger.rule_contracts import LedgerRuleRowProjection
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
 from cadrumo.core.decimal.formatting import format_decimal
@@ -43,6 +44,7 @@ from cadrumo.tests.cli_envelope import unwrap_cli_result
 from ...native_commands.runtime_profile_cli_fixture import NativeCliProfileFixture, native_cli_profile_scope
 from ...native_profile_facts import native_general_iva_facts
 from ._profile_cli_support import invoke_native_profile_revealing
+from .machine_secret_pipe import machine_secret_descriptor_option
 
 pytestmark = [
     pytest.mark.integration,
@@ -365,18 +367,49 @@ def test_native_catastrophic_pattern_is_answered_typed_by_the_real_worker_on_tri
             "ledger",
             "rule",
             "trial",
-            "--description-pattern",
-            catastrophic,
             "--transaction-id",
             transaction_id,
+            *machine_secret_descriptor_option({"description_pattern": catastrophic}),
         )
         trial_seconds = time.monotonic() - started
         assert trial.exit_code == 0, trial.output
         assert unwrap_cli_result(trial) == {"outcome": "overrun", "hits": [], "pending": []}
         assert trial_seconds < 15
 
-        stored_rule, rules_after_add = _add_rule_and_read_back(profile, catastrophic, authority_operation)
-        _, ports, _ = _canonical_ports(profile, operation=authority_operation)
+        refused_add = invoke_native_profile_revealing(
+            profile,
+            "app",
+            "ledger",
+            "rule",
+            "add",
+            "--description-pattern",
+            catastrophic,
+            "--classification",
+            "BUSINESS",
+            "--category-id",
+            _CATEGORY,
+            "--priority",
+            "7",
+            "--actor",
+            _ACTOR,
+        )
+        assert refused_add.exit_code != 0, refused_add.output
+        assert "REFUSED_CLI_VALIDATION_BOUNDARY" in refused_add.output
+        _, ports, rule_repository = _canonical_ports(profile, operation=authority_operation)
+        assert rule_repository.list_rules() == ()
+
+        # A rule stored before the add door bounded its pattern still meets apply, which must answer it typed.
+        stored_rule = add_classification_rule(
+            bucket_id=bucket_id,
+            description_pattern=catastrophic,
+            classification=BusinessClassification.BUSINESS,
+            category_id=_CATEGORY,
+            priority=7,
+            actor=_ACTOR,
+            rule_repository=rule_repository,
+        )
+        rules_after_add = rule_repository.list_rules()
+        assert rules_after_add == (stored_rule,)
         transaction_before = ports.transaction_repository.load().get(transaction_id)
         history_before = ports.bucket_event_repository.load()
 
