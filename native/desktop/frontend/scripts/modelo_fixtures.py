@@ -1891,8 +1891,7 @@ def pack_envelopes(directory: Path) -> None:
             if _compact(_patched(whole[base], changes)) != _compact(value):
                 raise SystemExit(f"{name} is not what its patch of {base} makes")
             text = _compact({PATCH_OF: base, PATCH_CHANGES: changes})
-        (directory / f"{name}.json").write_text(text, "utf-8", newline="
-")
+        (directory / f"{name}.json").write_text(text, "utf-8", newline="\n")
 
 
 # -- check --------------------------------------------------------------------

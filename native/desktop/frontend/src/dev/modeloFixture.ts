@@ -44,6 +44,7 @@ import {
 } from "../shell/modeloContract";
 import type { Translate } from "../shell/strings";
 import { ASSET_NOTES } from "./modeloAssetNotes";
+import { wholeEnvelopes } from "./modeloEnvelopePatch";
 import { hex64 } from "./fixtures/ledger";
 
 /** How the scenario's modelo family answers. `checked`, `filed`, `receipt`
@@ -344,7 +345,7 @@ declare global {
 
 export function modeloFixture(options: Options): ModeloPort {
   const { say, signedIn, shape } = options;
-  const catalogue = options.envelopes ?? servedEnvelopes();
+  const catalogue = wholeEnvelopes(options.envelopes ?? servedEnvelopes());
   /** The envelope stored under `name`, or null where none was read. */
   async function envelope<Envelope>(name: string): Promise<Envelope | null> {
     const load = catalogue[name];
