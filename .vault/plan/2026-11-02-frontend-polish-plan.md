@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:077b18e07753683b3d2ab5686d05fd3e180c3ee274ad8f529dc47bbe00f34b64'
+body_hash: 'sha256:96af93f6cac1c5640fcd3cbf8821000281f476949fc62d5b20ae8f7c4bfeec68'
 ---
 
 # `frontend-polish` plan
@@ -65,7 +65,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [ ] `S16` - Measure cross-surface read, rendering, subscription and retained-state costs and implement justified improvements; `native/desktop/frontend/src/shell/, native/desktop/frontend/scripts/benchmark.mjs, native/desktop/frontend/tests/`.
 - [ ] `S17` - Verify integrated workflows and close the complete surface coverage audit; `native/desktop/frontend/tests/, native/desktop/tests/, .vault/audit/`.
 - [x] `S26` - Make every sent attachment name and skill path readable by keyboard and touch; `native/desktop/frontend/src/components/agent/Transcript.tsx, native/desktop/frontend/src/components/agent/SkillDialog.tsx, native/desktop/frontend/tests/scenarios/agent*.spec.ts`.
-- [ ] `S27` - Preserve import and export file tokens across pending picker and export outcomes; `native/desktop/frontend/src/components/ledger/transfer/, native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts, native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`.
+- [x] `S27` - Preserve import and export file tokens across pending picker and export outcomes; `native/desktop/frontend/src/components/ledger/transfer/, native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts, native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`.
 - [x] `S28` - Bind counterparty decisions to exact lookup identity and expose real confirmation, conflict and unresolved outcomes; `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx, native/desktop/frontend/src/shell/ledgerSetup.ts, native/desktop/frontend/src/dev/, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts, src/cadrumo/application/ledger/entry_limits.py, src/cadrumo/application/ledger/counterparty_operation.py, src/cadrumo/application/ledger/tests/test_entry_limits.py, dev/locales/, src/cadrumo/locales/`.
 - [ ] `S29` - Distinguish pending and failed Local AI discovery from no lanes and offer model-list read recovery; `native/desktop/frontend/src/shell/localAiLanes.ts, native/desktop/frontend/src/components/setup/LocalAi.tsx, native/desktop/frontend/src/components/settings/LocalModels.tsx, native/desktop/frontend/tests/scenarios/local-models.spec.ts`.
 - [ ] `S30` - Render palette search results only for their query and distinguish unavailable search; `native/desktop/frontend/src/components/CommandPalette.tsx, native/desktop/frontend/tests/scenarios/palette.spec.ts, dev/locales/`.

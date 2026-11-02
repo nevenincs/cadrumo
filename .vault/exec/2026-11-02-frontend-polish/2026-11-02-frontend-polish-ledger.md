@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a386d22ac6410f1899bca9c31aba4a0a07209b0c06a2e6caf254b5806bef606'
+body_hash: 'sha256:1aa69b9ddbfee8388ca6b873e35c7040e939538b01e479de4412593e206bc3dd'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -119,6 +119,11 @@ related:
 - `S28` `verify:` `Counterparty focused browser cases and failed refresh attribution` -> `pass`
 - `S28` `verify:` `TypeScript scoped ESLint formatting and canonical chrome generation` -> `pass`
 - `S28` `verify:` `Scoped Ruff checks and backend entry limits tests 47` -> `pass`
+- `S27` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S27` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S27` `M` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
+- `S27` `verify:` `Transfer and write-pause scenarios plus four focused picker/export regressions` -> `pass`
+- `S27` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
 
 ## Notes
 
