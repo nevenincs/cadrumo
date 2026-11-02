@@ -83,7 +83,9 @@ def is_supplier_refund(transaction: Transaction) -> bool:
     It undoes an acquisition, so the expense pipelines own it and it is never income
     (LIRPF art. 28.1; Manual Renta, ch. 7, "Partidas negativas", lists only sales-side reductions).
     """
-    return transaction.direction is TransactionDirection.INCOMING and transaction.purchase_invoice_evidence_id is not None
+    return (
+        transaction.direction is TransactionDirection.INCOMING and transaction.purchase_invoice_evidence_id is not None
+    )
 
 
 def relies_on_activity_marker(transaction: Transaction) -> bool:

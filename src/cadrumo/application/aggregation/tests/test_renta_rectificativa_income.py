@@ -347,7 +347,9 @@ def test_a_cash_year_without_the_refund_is_not_blocked_by_it(operation: PinnedAu
 
 
 @pytest.mark.parametrize("base", [Decimal("1000.00"), Decimal("200.00")], ids=["whole", "part"])
-def test_a_correction_of_an_invoice_with_a_retencion_refuses(operation: PinnedAuthorityOperation, base: Decimal) -> None:
+def test_a_correction_of_an_invoice_with_a_retencion_refuses(
+    operation: PinnedAuthorityOperation, base: Decimal
+) -> None:
     """F-1 credits 150,00; no bundled source says what is left of it once the income falls, so no credit is chosen."""
     row, first = _paid_invoice(_F1_DATE, _F1_DATE)
     resolution = _resolve(operation, _ACCRUAL_YEAR, rows=(row,), invoices=(first, _rectificativa(_R1_DATE, base=base)))

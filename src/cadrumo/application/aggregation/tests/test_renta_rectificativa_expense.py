@@ -219,7 +219,9 @@ def _same_number_in_series_b() -> Invoice:
 
 
 @pytest.mark.parametrize("second_first", [False, True], ids=["unseried_first", "series_b_first"])
-def test_a_correction_two_invoices_could_answer_refuses(operation: PinnedAuthorityOperation, second_first: bool) -> None:
+def test_a_correction_two_invoices_could_answer_refuses(
+    operation: PinnedAuthorityOperation, second_first: bool
+) -> None:
     """A correction records only the number it names, so two R-1 leave the 20,00 with nowhere to go, in any order."""
     unlinked = _expense_row(_F_ON, evidence_id=None)
     invoice = _received(_F_ON, linked=(unlinked.transaction_id,))

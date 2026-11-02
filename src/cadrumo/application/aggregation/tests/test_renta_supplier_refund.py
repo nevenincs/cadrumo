@@ -202,12 +202,16 @@ def _premium(on: date, *, direction: TransactionDirection, evidence_id: str | No
 
 
 def _premium_invoice(number: str, on: date, linked: str) -> Invoice:
-    line = _received(on, linked=(linked,)).lines[0].model_copy(
-        update={
-            "unit_price": _PREMIUM,
-            "subtotal": _PREMIUM,
-            "iva_amount": _PREMIUM_IVA,
-        }
+    line = (
+        _received(on, linked=(linked,))
+        .lines[0]
+        .model_copy(
+            update={
+                "unit_price": _PREMIUM,
+                "subtotal": _PREMIUM,
+                "iva_amount": _PREMIUM_IVA,
+            }
+        )
     )
     return _received(on, linked=(linked,)).model_copy(
         update={

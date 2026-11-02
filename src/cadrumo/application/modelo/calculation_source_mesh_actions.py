@@ -52,11 +52,11 @@ from .calculation_action_ports import (
 )
 from .calculation_route import CalculationRouteStage as _CalculationRouteStage
 from .calculation_route import require_calculation_route_resolver as _require_calculation_route_resolver
+from .imputation_filings import imputation_filings_from_repositories
 from .m303_regimen_simplificado_scope import (
     m303_regimen_simplificado_annual_summary_applies_to_profile,
     taxpayer_profile_for_work,
 )
-from .imputation_filings import imputation_filings_from_repositories
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:

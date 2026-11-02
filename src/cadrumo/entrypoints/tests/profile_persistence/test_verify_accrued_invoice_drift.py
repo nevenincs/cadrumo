@@ -447,10 +447,11 @@ def test_a_filed_return_contradicting_the_election_leaves_no_accrual_scope_to_mi
 
 def test_an_oss_draft_of_an_older_version_is_narrower_under_any_criterion(tmp_path: Path) -> None:
     """A version 1 OSS digest does not hold the number a correction names, so it never saw a correction move."""
-    cash = {"criterion": "cobros_y_pagos", "regime": "directa_simplificada"}
-    for drafted in _open_draft(tmp_path, modelo="369", period="EXT-1T", **cash):
-        assert _narrower(drafted, 1, **cash) is True
-        assert _narrower(drafted, CURRENT_INVOICE_FIELD_SET_VERSION, **cash) is False
+    criterion, regime = "cobros_y_pagos", "directa_simplificada"
+    for drafted in _open_draft(tmp_path, modelo="369", period="EXT-1T", criterion=criterion, regime=regime):
+        assert _narrower(drafted, 1, criterion=criterion, regime=regime) is True
+        current = CURRENT_INVOICE_FIELD_SET_VERSION
+        assert _narrower(drafted, current, criterion=criterion, regime=regime) is False
 
 
 def test_recalculating_a_version_one_draft_moves_it_to_the_wider_scope(draft: _Draft) -> None:

@@ -297,9 +297,9 @@ class _Quote:
 
 
 def _dutch(number: int, *, currency: str, base: str, cuota: str) -> Invoice:
-    return _invoice(
-        _UNION, f"N-{number}", country="NL", tier="general", base=base, cuota=cuota
-    ).model_copy(update={"currency": currency})
+    return _invoice(_UNION, f"N-{number}", country="NL", tier="general", base=base, cuota=cuota).model_copy(
+        update={"currency": currency}
+    )
 
 
 def test_a_foreign_currency_row_converts_at_the_level_of_the_row(operation: PinnedAuthorityOperation) -> None:
