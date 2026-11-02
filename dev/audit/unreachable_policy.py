@@ -69,7 +69,13 @@ DEV_LABEL = "dev"
 
 # Distribution build hooks are maintained consumers with their own ownership.
 PACKAGING_LABEL = "packaging"
-TRUSTED_OUTSIDE_LABELS: Final[frozenset[str]] = frozenset({DEV_LABEL, PACKAGING_LABEL})
+
+# A production build step that reads Python enums and constants to emit a desktop
+# frontend artifact consumes them, though it lives outside every source package.
+# Each entry names one script; a directory or a symbol list would widen the claim.
+BUILD_GENERATOR_LABEL = "build-generator"
+BUILD_GENERATOR_SCRIPTS: Final[tuple[str, ...]] = ("native/desktop/frontend/scripts/ledger_contract.py",)
+TRUSTED_OUTSIDE_LABELS: Final[frozenset[str]] = frozenset({DEV_LABEL, PACKAGING_LABEL, BUILD_GENERATOR_LABEL})
 
 
 _MODULE_EXEC_FLAG: Final[str] = "-m"
