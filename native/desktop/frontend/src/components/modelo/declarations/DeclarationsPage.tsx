@@ -1,4 +1,11 @@
-import { useMemo, useState, type ReactNode, type RefObject } from "react";
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -326,6 +333,17 @@ export function DeclarationsPage({
     shown,
     memory,
   );
+  const ownedMemory = memory.current;
+  const activeOwner = useRef<{
+    reader: string | null;
+    memory: DeclarationsMemory;
+  } | null>(null);
+  useLayoutEffect(() => {
+    activeOwner.current = { reader, memory: ownedMemory };
+    return () => {
+      activeOwner.current = null;
+    };
+  }, [reader, ownedMemory]);
   const [view, setView] = useKept(memory, "view", "todo" as View);
   const [sort, setSort] = useKept(memory, "sort", {
     key: "work_order",
@@ -644,8 +662,12 @@ export function DeclarationsPage({
           onWritten={() => {
             // Stale even if the page goes before the read: the next one
             // reads again.
-            memory.current.stale = true;
-            reread();
+            ownedMemory.stale = true;
+            if (
+              activeOwner.current?.reader === reader &&
+              activeOwner.current.memory === ownedMemory
+            )
+              reread();
           }}
         />
       )}

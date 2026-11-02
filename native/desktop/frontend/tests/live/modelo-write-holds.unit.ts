@@ -1,8 +1,17 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { createModeloWriteHolds, creationWriteKey, declarationWriteKey, isCreationWriteKey } from "../../src/shell/modeloWriteHolds.ts";
+import {
+  createModeloWriteHolds,
+  creationWriteKey,
+  declarationWriteKey,
+  isCreationWriteKey,
+} from "../../src/shell/modeloWriteHolds.ts";
 
-const target = creationWriteKey({ modelo: "130", filing_year: 2026, period_code: "2T" });
+const target = creationWriteKey({
+  modelo: "130",
+  filing_year: 2026,
+  period_code: "2T",
+});
 
 test("an operation holds admission synchronously and a retired lease cannot unlock its replacement", () => {
   const holds = createModeloWriteHolds();
@@ -32,7 +41,9 @@ test("a stale response cannot release a changed refresh hold or a work-unit hold
   const work = holds.begin(declarationWriteKey("unit"))!;
   holds.needsRead(creation);
   holds.needsRead(work);
-  const captured = holds.snapshot().filter((hold) => isCreationWriteKey(hold.key));
+  const captured = holds
+    .snapshot()
+    .filter((hold) => isCreationWriteKey(hold.key));
   holds.needsRead(creation, true);
   captured.forEach(holds.readCompleted);
   assert.equal(holds.get(target)?.phase, "refresh");
