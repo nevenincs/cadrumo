@@ -475,7 +475,13 @@ def _persist_full_flow_answers(
     from ..user_profile.projections import record_to_path_values
     from .persistence import project_answers, serialise_answers
 
-    stated = election_answers(answers)
+    profile_decode_context = operation.profile_decode_context()
+    record = ProfileRecordRepository.for_current_session(
+        profile_id,
+        profile_decode_context=profile_decode_context,
+    ).load(profile_id)
+    values = record_to_path_values(record)
+    stated = election_answers(answers, stored=values)
     election = election_changes(flow, stated)
     profile_values = serialise_answers(flow, answers)
     election_values: dict[str, str] = {}
@@ -485,12 +491,6 @@ def _persist_full_flow_answers(
             profile_values.pop(question.profile_key, None)
             if question.id in stated:
                 election_values[question.profile_key] = stated[question.id]
-    profile_decode_context = operation.profile_decode_context()
-    record = ProfileRecordRepository.for_current_session(
-        profile_id,
-        profile_decode_context=profile_decode_context,
-    ).load(profile_id)
-    values = record_to_path_values(record)
     values.update({path: value for path, value in profile_values.items() if value})
     values.update(election_values)
     require_filing_baseline(flow, project_answers(flow, values))

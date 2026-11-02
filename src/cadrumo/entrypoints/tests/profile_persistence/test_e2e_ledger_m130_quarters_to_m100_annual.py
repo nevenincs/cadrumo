@@ -45,6 +45,7 @@ the *wiring*, leaving the rate's legal currency to the registry grounding gate.
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -458,8 +459,13 @@ def _import_official_m130_result_observation(
     *,
     period: str,
     c19_value: Decimal,
+    observed_also: Mapping[CasillaId, Decimal] | None = None,
 ) -> None:
-    """Persist the autonoma's filed M130 result as AEAT-attested local evidence."""
+    """Persist the autonoma's filed M130 result as AEAT-attested local evidence.
+
+    ``observed_also`` are further figures of the same return, for a caller whose next
+    quarter reads them.
+    """
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
@@ -481,7 +487,11 @@ def _import_official_m130_result_observation(
             clock=_FILE_AT,
         )
     # An original autoliquidación: no earlier filing of the quarter, so casilla 18 is zero.
-    casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value, _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0")}
+    casilla_values = {
+        _M130_RESULTADO_FINAL_CASILLA: c19_value,
+        _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+        **(observed_also or {}),
+    }
     # The reference id IS the justificante CSV, and a codigo seguro de
     # verificacion is uppercase alphanumeric: the model pins
     # ``^[A-Z0-9]{8,32}$``. The readable hyphenated spelling this replaced

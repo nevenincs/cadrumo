@@ -97,6 +97,7 @@ class LedgerExportRowPayload(OutputSchema):
     booked_date: IsoDateText
     value_date: str = ""
     operation_date: str = ""
+    accrual_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
     currency: IsoCurrencyCode
@@ -143,7 +144,7 @@ class LedgerExportRowPayload(OutputSchema):
             raise ValueError("must be an ISO-8601 date")
         return value
 
-    @field_validator("value_date", "operation_date")
+    @field_validator("value_date", "operation_date", "accrual_date")
     @classmethod
     @pydantic_validation_boundary
     def _validate_optional_iso_date(cls, value: str) -> str:

@@ -133,7 +133,7 @@ def test_the_undated_projections_never_carry_the_election(registry_setup_flow: W
 
 def test_a_completed_answers_model_states_only_what_was_answered() -> None:
     blank = SetupAnswers.model_validate({"tax_id": "x"})
-    assert election_answers(blank) == {}
+    assert election_answers(blank, stored={}) == {}
 
     stated = SetupAnswers.model_validate(
         {
@@ -143,7 +143,7 @@ def test_a_completed_answers_model_states_only_what_was_answered() -> None:
             "irpf_codigo_comercio_accounting": False,
         }
     )
-    assert election_answers(stated) == {
+    assert election_answers(stated, stored={}) == {
         CRITERION_QUESTION_ID: "cobros_y_pagos",
         YEAR_QUESTION_ID: str(_YEAR),
         ACCOUNTING_QUESTION_ID: "false",

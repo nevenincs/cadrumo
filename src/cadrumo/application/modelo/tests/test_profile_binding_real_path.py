@@ -229,6 +229,8 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
       the calculate-path maternity injector, which this manual-injection pin does
       not run; its resolution is covered by test_maternidad_alta_posterior_resolution
       and test_maternidad_cotizaciones_ceiling.
+    - The cash election binding (casilla 0169): its fact is derived per ejercicio by
+      the calculate path; test_e2e_imputation_calculate_to_export covers it.
     """
     schema = published_profile_schema()
     record = _full_m100_profile()
@@ -247,7 +249,11 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     inject_derived_minimo_descendientes_facts(fact_index, snapshot, operation=authority_operation)
 
     # Deliberately absent or calculate-path-derived bindings — tested separately.
-    absent = {"renta-profile-taxpayer-death-date", "renta-profile-deduccion-maternidad"}
+    absent = {
+        "renta-profile-taxpayer-death-date",
+        "renta-profile-deduccion-maternidad",
+        "renta-profile-activity-cash-criterion-0169",
+    }
 
     profile_bindings = _profile_bindings()
     for binding in profile_bindings:

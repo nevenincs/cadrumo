@@ -246,6 +246,23 @@ export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
             ? "••••"
             : edit.value
           : null;
+      } else if (edit.kind === "ejercicio_answer") {
+        const [stated, year] = edit.values;
+        const target = data.sections
+          .flatMap((section) => section.fields)
+          .find(
+            (field) =>
+              field.ejercicio_answer?.question_id === stated?.question_id,
+          );
+        if (!target?.ejercicio_answer || !stated || !year)
+          throw { code: "refused" };
+        const ejercicio = Number(year.value);
+        target.ejercicio_answer.statements = [
+          ...target.ejercicio_answer.statements.filter(
+            (item) => item.ejercicio !== ejercicio,
+          ),
+          { ejercicio, value: stated.value },
+        ].sort((a, b) => a.ejercicio - b.ejercicio);
       } else if (edit.kind === "auth_method") {
         const provider = fieldOf("auth.provider")!;
         if (

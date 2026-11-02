@@ -17,12 +17,39 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from pydantic import BaseModel
+
 from ...core.i18n.render import tr
+from ...core.models import STRICT_FROZEN_CONFIG
 
 if TYPE_CHECKING:
-    from collections.abc import Mapping
+    from collections.abc import Iterable, Mapping
 
+    from ...domain.user_profile.values import UserProfileFact
     from ..wizard.models import WizardFlow, WizardQuestion
+
+
+class ProfileFieldEjercicioStatement(BaseModel):
+    """What one stored fact states for the ejercicio its window starts in."""
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    ejercicio: int
+    value: str
+
+
+class ProfileFieldEjercicioAnswer(BaseModel):
+    """The wizard questions a field stated per ejercicio is answered through, and what it states so far.
+
+    A surface submits these two questions in one profile patch, so a dated
+    answer takes the route every other wizard answer takes.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    question_id: str
+    year_question_id: str
+    statements: tuple[ProfileFieldEjercicioStatement, ...] = ()
 
 
 def profile_field_help(flow: WizardFlow, *, locale: str | None = None) -> Mapping[str, tuple[str, ...]]:
@@ -44,6 +71,38 @@ def profile_field_help(flow: WizardFlow, *, locale: str | None = None) -> Mappin
         for question in section.questions
         if question.profile_key is not None
     }
+
+
+def profile_field_ejercicio_answers(
+    flow: WizardFlow, facts: Iterable[UserProfileFact]
+) -> Mapping[str, ProfileFieldEjercicioAnswer]:
+    """Return, per path the setup flow states per ejercicio, its questions and its stored statements."""
+    from ...domain.user_profile.setup_answers import EJERCICIO_STATED_PROFILE_PATHS
+    from ..wizard.imputation_election import YEAR_QUESTION_ID
+
+    stored = tuple(facts)
+    return {
+        question.profile_key: ProfileFieldEjercicioAnswer(
+            question_id=question.id,
+            year_question_id=YEAR_QUESTION_ID,
+            statements=_ejercicio_statements(question.profile_key, stored),
+        )
+        for section in flow.sections
+        for question in section.questions
+        if question.profile_key in EJERCICIO_STATED_PROFILE_PATHS
+    }
+
+
+def _ejercicio_statements(path: str, facts: tuple[UserProfileFact, ...]) -> tuple[ProfileFieldEjercicioStatement, ...]:
+    statements: list[ProfileFieldEjercicioStatement] = []
+    for fact in facts:
+        if fact.path == path and fact.valid_from is not None and fact.value is not None:
+            statements.append(ProfileFieldEjercicioStatement(ejercicio=fact.valid_from.year, value=_token(fact.value)))
+    return tuple(sorted(statements, key=lambda statement: statement.ejercicio))
+
+
+def _token(value: object) -> str:
+    return ("true" if value else "false") if isinstance(value, bool) else str(value)
 
 
 def _question_help(question: WizardQuestion, *, locale: str | None) -> tuple[str, ...]:

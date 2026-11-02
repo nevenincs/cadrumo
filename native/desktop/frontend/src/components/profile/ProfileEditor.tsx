@@ -1,6 +1,7 @@
 import { useId, useState } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { NativeSelect } from "@/components/ui/native-select";
 import {
   Field,
@@ -73,15 +74,20 @@ export function ProfileEditor({
   // Dates whose unreadable text is told: after the person leaves the field,
   // or tries to save with it.
   const [told, setTold] = useState<ReadonlySet<string>>(new Set());
+  const [ejercicio, setEjercicio] = useState("");
   const { fields, section, kind } = draft;
   const unread = (field: ProfileField) =>
     kind === "remove_row" ? null : unreadDate(field, values[field.path] ?? "");
   // A draft that differs from what is stored is asked about before a
   // navigation takes the page down; the editor does not otherwise hold the
   // window as a dialog does. The page itself weighs a save in flight.
+  const answer = kind === "field" ? fields[0]!.ejercicio_answer : null;
   const drafted =
-    kind !== "remove_row" &&
-    fields.some((field) => (values[field.path] ?? "") !== startOf(field, kind));
+    (kind !== "remove_row" &&
+      fields.some(
+        (field) => (values[field.path] ?? "") !== startOf(field, kind),
+      )) ||
+    ejercicio !== "";
   useNavigationGuard("profile", drafted ? "dirty" : "clean", {
     discard: onClose,
   });
@@ -94,7 +100,10 @@ export function ProfileEditor({
   const title = kind === "field" ? fields[0]!.label : section.title;
   // An empty masked input keeps the saved value: there is nothing to save,
   // and clearing it is the page's own action.
-  const nothing = kind === "field" && fields[0]!.masked && !drafted;
+  const nothing =
+    (kind === "field" && fields[0]!.masked && !drafted) ||
+    (Boolean(answer) &&
+      (!/^\d{4}$/.test(ejercicio.trim()) || !values[fields[0]!.path]));
   const submit = async () => {
     if (busy || changed || blocked || nothing) return;
     const refused = fields.filter((field) => unread(field) !== null);
@@ -103,7 +112,18 @@ export function ProfileEditor({
       return;
     }
     let edit: ProfileEdit;
-    if (kind === "field")
+    if (answer)
+      edit = {
+        kind: "ejercicio_answer",
+        values: [
+          {
+            question_id: answer.question_id,
+            value: savedValue(fields[0]!, values[fields[0]!.path] ?? ""),
+          },
+          { question_id: answer.year_question_id, value: ejercicio.trim() },
+        ],
+      };
+    else if (kind === "field")
       edit = {
         kind,
         path: fields[0]!.path,
@@ -260,6 +280,36 @@ export function ProfileEditor({
                 </Field>
               );
             })}
+          {answer && (
+            <Field>
+              <FieldLabel htmlFor={`${id}-ejercicio`}>
+                {t("desktop.profile.ejercicio")}
+                <span aria-hidden="true"> *</span>
+              </FieldLabel>
+              <Input
+                id={`${id}-ejercicio`}
+                inputMode="numeric"
+                aria-required
+                value={ejercicio}
+                disabled={busy}
+                onChange={(event) => setEjercicio(event.target.value)}
+              />
+              <FieldDescription>
+                {t("desktop.profile.ejercicio_help")}
+              </FieldDescription>
+              {answer.statements.map((statement) => (
+                <FieldDescription key={statement.ejercicio}>
+                  {t("desktop.profile.ejercicio_stated", {
+                    ejercicio: String(statement.ejercicio),
+                    value:
+                      fields[0]!.choices.find(
+                        (choice) => choice.value === statement.value,
+                      )?.label ?? statement.value,
+                  })}
+                </FieldDescription>
+              ))}
+            </Field>
+          )}
           {changed && (
             <Alert tone="warning">{t("desktop.profile.conflict")}</Alert>
           )}

@@ -34,6 +34,10 @@ CRITERION_PROFILE_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
 ACCOUNTING_PROFILE_PATH: Final[str] = "irpf.codigo_comercio_accounting"
 
 _STATED_QUESTION_IDS: Final[tuple[str, ...]] = (CRITERION_QUESTION_ID, ACCOUNTING_QUESTION_ID)
+_QUESTION_PATHS: Final[Mapping[str, str]] = {
+    CRITERION_QUESTION_ID: CRITERION_PROFILE_PATH,
+    ACCOUNTING_QUESTION_ID: ACCOUNTING_PROFILE_PATH,
+}
 
 
 def election_changes(flow: WizardFlow, supplied: Mapping[str, str]) -> tuple[UserProfileFact, ...]:
@@ -72,11 +76,13 @@ def election_changes(flow: WizardFlow, supplied: Mapping[str, str]) -> tuple[Use
     return tuple(changes)
 
 
-def election_answers(answers: BaseModel) -> dict[str, str]:
+def election_answers(answers: BaseModel, *, stored: Mapping[str, str]) -> dict[str, str]:
     """Return the election answers a completed answers model states, as canonical tokens.
 
     A blank answer is unanswered here, not a clear: a full setup run leaves what
-    it did not ask about as stored.
+    it did not ask about as stored. So is an answer with no ejercicio that repeats
+    the value ``stored`` holds at its path, which is what a run seeded from the
+    profile carries for a question nobody changed.
     """
     stated: dict[str, str] = {}
     for question_id in sorted(ELECTION_QUESTION_IDS):
@@ -84,6 +90,10 @@ def election_answers(answers: BaseModel) -> dict[str, str]:
         if value == "":
             continue
         stated[question_id] = ("true" if value else "false") if isinstance(value, bool) else str(value)
+    if YEAR_QUESTION_ID not in stated:
+        for question_id, path in _QUESTION_PATHS.items():
+            if question_id in stated and stored.get(path) == stated[question_id]:
+                del stated[question_id]
     return stated
 
 
