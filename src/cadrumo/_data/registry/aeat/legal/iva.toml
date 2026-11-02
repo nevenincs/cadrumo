@@ -3182,6 +3182,45 @@ required_text = [
     "Se aplicará el tipo del 10 por ciento",
 ]
 
+[legal."ley-26-2009:art-79-uno"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/xml/ley-26-2009-art-79.xml#uno"
+document_id = "BOE-A-2009-20765"
+article = "79.Uno"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-20765"
+published_at = 2009-12-24
+effective_from = 2010-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Ley 26/2009, de 23 de diciembre, de Presupuestos Generales del Estado para 2010, art. 79, apartado Uno: da nueva redacción al art. 90 Uno LIVA y fija el tipo general en el 18 por ciento. EFECTOS: el encabezado del artículo dice 'Con efectos desde el 1 de julio de 2010 y vigencia indefinida', de modo que el 16 por 100 rige hasta el 30 de junio de 2010. El atributo fecha_vigencia del endpoint marca 20100101, la entrada en vigor de la ley; tomarlo como effective_from sería erróneo. El tipo aplicable es el vigente en el devengo (art. 90 Dos LIVA, sin cambio). Documento adquirido con la herramienta del corpus consolidado oficial (modo artículo), sha256 c44765599553041d5d9ca60e4edf2f7a3417539ac33c5df35a0321f6cb9f74f4, 3015 bytes. Entrada preparada por agente sobre el texto oficial del BOE leído directamente; no la ha revisado un operador humano."
+required_text = [
+    "Con efectos desde el 1 de julio de 2010",
+    "se exigirá al tipo del 18 por ciento",
+]
+
+[legal."ley-26-2009:art-79-dos"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/xml/ley-26-2009-art-79.xml#dos"
+document_id = "BOE-A-2009-20765"
+article = "79.Dos"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2009-20765"
+published_at = 2009-12-24
+effective_from = 2010-07-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-prepared-pending-operator"
+notes = "Ley 26/2009 art. 79, apartado Dos: modifica solo el encabezado del art. 91 Uno LIVA y fija el tipo reducido en el 8 por ciento, con efectos desde el 1 de julio de 2010. Añade 'El resto del apartado y artículo quedan con el mismo contenido', de modo que el art. 91 Dos y su 4 por 100 super-reducido no cambian. El apartado Tres modifica el art. 130 Cinco (compensación del REAGP: 10 y 8,5 por 100), que no es un tipo impositivo. Documento adquirido con la herramienta del corpus consolidado oficial (modo artículo), sha256 c44765599553041d5d9ca60e4edf2f7a3417539ac33c5df35a0321f6cb9f74f4, 3015 bytes. Entrada preparada por agente sobre el texto oficial del BOE leído directamente; no la ha revisado un operador humano."
+required_text = [
+    "Con efectos desde el 1 de julio de 2010",
+    "Se aplicará el tipo del 8 por ciento",
+    "El resto del apartado y artículo quedan con el mismo contenido",
+]
+
 [legal."ley-41-1994:art-78-primero"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -3195,7 +3234,7 @@ effective_from = 1995-01-01
 review_status = "agent_reviewed"
 reviewed_at = 2026-11-02
 reviewed_by = "agent-prepared-pending-operator"
-notes = "Ley 41/1994 art. 78, apartado Primero: da nueva redacción al art. 90 Uno LIVA y fija el tipo general en el 16 por 100, con efectos desde el 1 de enero de 1995. El apartado Segundo fija el 7 por 100 reducido y el 4 por 100 super-reducido. El art. 90 consolidado no registra ninguna modificación del apartado 1 entre esta norma y la Ley 26/2009, de 23 de diciembre, de modo que el 16 por 100 alcanza al menos hasta esa fecha; el texto de esa ley y la fecha de efectos de su art. 79 no están en el corpus empaquetado. Entrada preparada por agente, no revisada por un operador humano."
+notes = "Ley 41/1994 art. 78, apartado Primero: da nueva redacción al art. 90 Uno LIVA y fija el tipo general en el 16 por 100, con efectos desde el 1 de enero de 1995. El apartado Segundo fija el 7 por 100 reducido y el 4 por 100 super-reducido. El art. 90 consolidado no registra ninguna modificación del apartado 1 entre esta norma y la Ley 26/2009, de 23 de diciembre, de modo que el 16 por 100 alcanza hasta el 30 de junio de 2010; el art. 79 de esa ley lo eleva al 18 por ciento con efectos desde el 1 de julio de 2010. Entrada preparada por agente, no revisada por un operador humano."
 required_text = [
     "se exigirá al tipo del 16 por 100",
 ]
