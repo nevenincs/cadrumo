@@ -1299,8 +1299,13 @@ errors:
     refused_modelo_charge_account_missing: S’ha triat la domiciliació, però no hi
       ha cap compte de càrrec registrat.
     refused_modelo_domiciliation_past_cutoff: La domiciliació d'aquesta declaració
-      es va tancar el {payment_cutoff_on}; el {export_on} només pots pagar el resultat
-      d'una altra manera.
+      es va tancar el {payment_cutoff_on}, data que fixa la mateixa finestra de presentació
+      ({payment_cutoff_legal_refs}); el {export_on} només pots pagar el resultat d'una
+      altra manera.
+    refused_modelo_domiciliation_past_cutoff_derived: La domiciliació d'aquesta declaració
+      es va tancar el {payment_cutoff_on}, data calculada amb la regla de domiciliació
+      ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) perquè la finestra de presentació
+      no en fixa cap; el {export_on} només pots pagar el resultat d'una altra manera.
     refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
     refused_modelo_export_prior_domiciliation_election_required: Una autoliquidació
       rectificativa del model 303 amb la casella 111 necessita una elecció sobre la

@@ -7,7 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core.errors.error_codes import get_registered_error_code
+from ....core.errors.error_codes import (
+    build_error_envelope,
+    get_registered_error_code,
+    resolve_error_message,
+)
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
@@ -105,6 +109,7 @@ def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
             expected_context |= {
                 "payment_cutoff_on": "2026-02-25",
                 "payment_cutoff_source": "authored",
+                "payment_cutoff_legal_refs": "rd-1624-1992:art-71",
                 "export_on": "2026-02-26",
             }
         else:
@@ -121,5 +126,17 @@ def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
                 ),
             }
         assert refused.value.context == expected_context
+        envelope = build_error_envelope(refused.value)
+        assert envelope.context is not None
+        assert dict(envelope.context) == expected_context
+        message = resolve_error_message(refused.value, locale="en")
+        assert f"closed on {expected_context['payment_cutoff_on']}" in message
+        assert str(expected_context["payment_cutoff_legal_refs"]) in message
+        if period_code == "01":
+            assert "the filing window itself sets" in message
+            assert "derived" not in message
+        else:
+            assert "derived from the direct-debit rule" in message
+            assert str(expected_context["payment_cutoff_rule"]) in message
     else:
         assert gate(ResultDisposition.DOMICILIACION) is (expected == "advisory")

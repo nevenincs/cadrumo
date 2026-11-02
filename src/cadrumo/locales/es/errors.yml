@@ -1291,8 +1291,13 @@ errors:
     refused_modelo_charge_account_missing: Se ha elegido una domiciliación pero no
       hay una cuenta de cargo registrada.
     refused_modelo_domiciliation_past_cutoff: La domiciliación de esta declaración
-      se cerró el {payment_cutoff_on}; el {export_on} solo puedes pagar el resultado
+      se cerró el {payment_cutoff_on}, fecha que fija la propia ventana de presentación
+      ({payment_cutoff_legal_refs}); el {export_on} solo puedes pagar el resultado
       de otra forma.
+    refused_modelo_domiciliation_past_cutoff_derived: La domiciliación de esta declaración
+      se cerró el {payment_cutoff_on}, fecha calculada con la regla de domiciliación
+      ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) porque la ventana de presentación
+      no fija ninguna; el {export_on} solo puedes pagar el resultado de otra forma.
     refused_modelo_edit_parse: No se ha podido leer este dato.
     refused_modelo_export_prior_domiciliation_election_required: Una autoliquidación
       rectificativa del modelo 303 con la casilla 111 necesita una elección sobre
