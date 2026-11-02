@@ -132,6 +132,10 @@ _UNSWEPT_MODULE_RATIONALES: dict[str, str] = {
         "Modelo 193 pending and devengo context invariants are consumed by record_field_renderer.py, "
         "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
     ),
+    "m347_declarado_row_scope.py": (
+        "Modelo 347 single-valued casilla attribution is checked by record_renderer.py before any declarado row "
+        "is written, so it reaches the operator only through export.py at the artifact boundary."
+    ),
     "m280_context_validation.py": (
         "Modelo 280 negative-imputation context invariants are consumed by record_field_renderer.py, "
         "so they reach the operator only through record_renderer.py/export.py at the artifact boundary."
