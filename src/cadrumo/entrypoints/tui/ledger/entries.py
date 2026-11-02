@@ -32,9 +32,13 @@ def _selected_row_key(table: DataTable[str]) -> str | None:
     return table.ordered_rows[table.cursor_row].key.value
 
 
-def _add_entry_columns(table: ContentDataTable[str], columns: tuple[tuple[str, str, int], ...]) -> None:
-    """Recreate the visible columns with the same translated header floors."""
+def _add_entry_columns(
+    table: ContentDataTable[str], columns: tuple[tuple[str, str, int], ...], visible: frozenset[str]
+) -> None:
+    """Recreate the visible columns of the screen's table with the same translated header floors."""
     for name, key, size in columns:
+        if name not in visible:
+            continue
         header = tr(key)
         table.add_column(header, key=name, width=max(size, len(header)))
 
@@ -183,7 +187,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
         selected = _selected_row_key(table)
         table.clear(columns=True)
         columns = self._visible_columns(width)
-        _add_entry_columns(table, columns)
+        _add_entry_columns(table, self._COLUMNS, frozenset(name for name, _, _ in columns))
         _add_entry_rows(table, columns, self.controller.entry_rows())
         table.absorb_surplus_width()
         _restore_entry_selection(table, selected)

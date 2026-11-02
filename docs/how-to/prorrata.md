@@ -149,7 +149,7 @@ filer. In that Modelo 303 the two percentages split the work in two:
 - The settlement period's own input VAT deducts at the **definitive**
   percentage, through the ledger, like any other period's input VAT at its
   percentage.
-- Casilla 44 (*Regularización prorrata por porcentaje definitivo*, LIVA
+- Casilla 44 (`Regularización prorrata por porcentaje definitivo`, LIVA
   art. 105.Cuatro) regularises only the **earlier** periods of the year. For
   each of them the tool takes the gross deductible input VAT, applies the
   definitive percentage, and subtracts the deduction that period actually

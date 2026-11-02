@@ -2493,7 +2493,7 @@ desktop:
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:
-      art_104_tres_exclusion: 104.Tres. cikk szerinti kizárás
+      art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
       attachment_ids: Mellékletek
       booked_date: Könyvelési dátum
       business_pct: Üzleti arány

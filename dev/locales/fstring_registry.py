@@ -283,6 +283,7 @@ def _runtime_registrations(
     descendant_disability_grades: tuple[str, ...],
 ) -> tuple[FStringKeyRegistration, ...]:
     """Enumerate runtime refusal, action and terminal-condition copy."""
+    from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaRefusalReason
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
@@ -390,6 +391,13 @@ def _runtime_registrations(
             for prefix in ("tui.root.account", "tui.root.account_key", "tui.root.account_help")
         ),
         m303_carry_error_registration(),
+        FStringKeyRegistration(
+            # Bounded enumeration: the write refusal derives its message key from the
+            # closed reason the repository raises it with.
+            description="aggregation.retencion_soportada.errors.* (RetencionSoportadaRefusalReason)",
+            key_factory=lambda v: f"aggregation.retencion_soportada.errors.{v}",
+            values=get_args(RetencionSoportadaRefusalReason.__value__),
+        ),
         *_diagnostics_command_spec_registrations(),
         *inventory_dynamic_registrations(),
         FStringKeyRegistration(
