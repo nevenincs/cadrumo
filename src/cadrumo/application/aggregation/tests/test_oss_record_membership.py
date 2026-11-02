@@ -151,9 +151,15 @@ def test_fingerprint_covers_membership_and_amounts_but_not_catalogue_order(opera
     assert original != fingerprint((first, changed_supply_date))
 
 
-@pytest.mark.parametrize(
-    "scenario", ["empty", "unbound", "degraded", "unrouted", "no-work-unit", "explicit-candidates"]
-)
+def test_a_complete_read_of_an_empty_period_closes_its_tables(operation: PinnedAuthorityOperation) -> None:
+    """The closure only says every row is blank; declaring the period nil stays the operator's answer."""
+    resolution = _resolver(_InvoiceReader(())).resolve(_context(operation))
+    assert resolution.closed_record_row_sets
+    assert not any(row.occupied for row_set in resolution.closed_record_row_sets for row in row_set.rows)
+    assert not resolution.provenance
+
+
+@pytest.mark.parametrize("scenario", ["unbound", "degraded", "unrouted", "no-work-unit", "explicit-candidates"])
 def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAuthorityOperation, scenario: str) -> None:
     # A Union goods line has no table on this revision, and on its own none either.
     invoice = (
@@ -162,7 +168,7 @@ def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAut
         else _invoice()
     )
     reader = _InvoiceReader(
-        () if scenario == "empty" else (invoice,),
+        (invoice,),
         bucket_id=None if scenario == "unbound" else _BUCKET,
         degraded=scenario == "degraded",
     )
@@ -176,6 +182,18 @@ def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAut
         resolver = oss_ioss.OssIossLedgerSourceResolver(ports=ports, candidates=projection.candidates)
     resolution = resolver.resolve(context)
     assert resolution.closed_record_row_sets == ()
+
+
+@pytest.mark.parametrize("scenario", ["unbound", "degraded", "no-work-unit"])
+def test_an_empty_period_read_from_an_incomplete_source_closes_nothing(
+    operation: PinnedAuthorityOperation, scenario: str
+) -> None:
+    """No lines from a source that cannot answer says nothing about the period, so its tables stay open."""
+    reader = _InvoiceReader((), bucket_id=None if scenario == "unbound" else _BUCKET, degraded=scenario == "degraded")
+    context = _context(operation)
+    if scenario == "no-work-unit":
+        context = context.model_copy(update={"work_unit_id": None})
+    assert _resolver(reader).resolve(context).closed_record_row_sets == ()
 
 
 def test_wrong_profile_is_refused_before_read(operation: PinnedAuthorityOperation) -> None:

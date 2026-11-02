@@ -126,7 +126,7 @@ CURRENT_INVOICE_FIELD_SET_VERSION: Final = 3
 
 #: The first version whose scope holds the invoices renta income reads with no row.
 #: An older snapshot keeps its narrower scope, or its every draft would read as drifted.
-_ACCRUED_INCOME_SCOPE_VERSION: Final = 2
+_ACCRUED_INVOICE_SCOPE_VERSION: Final = 2
 
 #: The first version whose scope holds the invoices renta expense reads with no row.
 _ACCRUED_EXPENSE_SCOPE_VERSION: Final = 3
@@ -195,7 +195,7 @@ def fingerprint_scope_is_narrower(
     """Whether this stored fingerprint leaves out invoices the draft's accrued income or expense may rest on."""
     selection = _read_selection(revision, work_unit=work_unit)
     return criteria.usable(work_unit.filing_year) is ActivityImputationCriterion.DEVENGO and (
-        (snapshot.field_set_version < _ACCRUED_INCOME_SCOPE_VERSION and selection.accrued_income)
+        (snapshot.field_set_version < _ACCRUED_INVOICE_SCOPE_VERSION and selection.accrued_income)
         or (snapshot.field_set_version < _ACCRUED_EXPENSE_SCOPE_VERSION and selection.accrued_expense)
     )
 
@@ -397,7 +397,7 @@ def _linked_invoice_ids(ports: InvoiceCatalogueReadPorts, contributors: frozense
 def _accrued_kinds(selection: _InvoiceReadSelection, *, field_set_version: int) -> frozenset[InvoiceKind]:
     """Return the kinds whose window-entering invoices this version's scope holds."""
     kinds: set[InvoiceKind] = set()
-    if selection.accrued_income and field_set_version >= _ACCRUED_INCOME_SCOPE_VERSION:
+    if selection.accrued_income and field_set_version >= _ACCRUED_INVOICE_SCOPE_VERSION:
         kinds.add(InvoiceKind.ISSUED)
     if selection.accrued_expense and field_set_version >= _ACCRUED_EXPENSE_SCOPE_VERSION:
         kinds.add(InvoiceKind.RECEIVED)

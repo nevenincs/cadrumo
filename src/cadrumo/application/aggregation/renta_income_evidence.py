@@ -332,6 +332,10 @@ def _whole_invoice_refusal(invoice: Invoice, transaction: Transaction) -> SalesI
         return SalesInvoiceEvidenceRefusal.NO_EUR_VALUE
     if not comparison.settled:
         return SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
+    # Asked before the decomposition, which also fails an unrated invoice: the repair
+    # here is stamping a rate, and that reason is the one that says so.
+    if invoice.base_total_eur is None or invoice.iva_total_eur is None:
+        return SalesInvoiceEvidenceRefusal.NO_EUR_VALUE
     # Linkage is established by this point; coherence is a separate question and
     # the guards above cannot answer it. Delegated rather than re-derived: the
     # decomposition contract is the single authority on whether an invoice's own

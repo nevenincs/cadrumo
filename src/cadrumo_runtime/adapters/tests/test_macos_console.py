@@ -185,11 +185,11 @@ def test_registry_snapshot_releases_error_document_and_root_on_encode_failure(mo
             self.calls.append(args)
             return self.result(*args) if callable(self.result) else self.result
 
-    def properties(_root: int, document: object, _allocator: object, _options: int) -> int:
+    def properties(_root: int, document: ctypes.c_void_p, _allocator: object, _options: int) -> int:
         ctypes.cast(document, ctypes.POINTER(ctypes.c_void_p))[0] = ctypes.c_void_p(11)
         return 0
 
-    def encode(_allocator: object, _document: object, _format: int, _options: int, error: object) -> None:
+    def encode(_allocator: object, _document: object, _format: int, _options: int, error: ctypes.c_void_p) -> None:
         ctypes.cast(error, ctypes.POINTER(ctypes.c_void_p))[0] = ctypes.c_void_p(22)
         return None
 

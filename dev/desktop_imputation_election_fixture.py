@@ -19,6 +19,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from pydantic import TypeAdapter
+
 from dev.temporary_output import prepare_temp_root
 
 if TYPE_CHECKING:
@@ -48,6 +50,10 @@ STATES: dict[str, tuple[tuple[str, int, str], ...]] = {
     # Two statements for 2025 that disagree.
     "contradictory": ((_CRITERION, 2025, "devengo"), (_CRITERION, 2025, "cobros_y_pagos")),
 }
+
+
+def _json_object(text: str) -> dict[str, object]:
+    return TypeAdapter(dict[str, object]).validate_json(text)
 
 
 def _facts(statements: tuple[tuple[str, int, str], ...]) -> tuple[UserProfileFact, ...]:
@@ -99,7 +105,7 @@ def _read(operation: PinnedAuthorityOperation, language: str) -> dict[str, objec
     )
     result = read_imputation_election(request, authority_operation=operation)
     projection = ProfileImputationElectionReadProjection.model_validate(result.model_dump(mode="python"))
-    return json.loads(projection.model_dump_json())
+    return _json_object(projection.model_dump_json())
 
 
 def _normalised(read: dict[str, object], state: str) -> dict[str, object]:
@@ -137,7 +143,7 @@ def _refusal(operation: PinnedAuthorityOperation, language: str, name: str) -> d
             detail = build_operation_error_detail(error)
         if detail is None:
             raise SystemExit(f"{name} records no error detail") from error
-        return json.loads(detail.model_dump_json())
+        return _json_object(detail.model_dump_json())
     raise SystemExit(f"{name} was not refused")
 
 
@@ -168,7 +174,7 @@ def render_fixture(root: Path) -> str:
 
 
 def _comparable(text: str) -> Mapping[str, object]:
-    return json.loads(text)
+    return _json_object(text)
 
 
 def main() -> None:
