@@ -2292,6 +2292,8 @@ export type WindowPresentation = {
 export type WindowAction =
   | "minimize"
   | "toggle_maximize"
+  | "toggle_fullscreen"
+  | "leave_fullscreen"
   | "close"
   | "drag"
   | "focus"

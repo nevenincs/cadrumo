@@ -108,11 +108,41 @@ declare global {
      * addresses to import them from, so the entry hands them over. */
     __scenarioModules?: {
       tauriHost(): Promise<typeof import("../shell/tauriHost")>;
+      profileViews(): Promise<{
+        react: typeof import("react");
+        dom: typeof import("react-dom");
+        client: typeof import("react-dom/client");
+        calendar: typeof import("../shell/calendar");
+        messages: typeof import("../shell/messages");
+      }>;
+      ledgerReads(): Promise<{
+        react: typeof import("react");
+        dom: typeof import("react-dom");
+        client: typeof import("react-dom/client");
+        documents: typeof import("../components/ledger/documents/useLedgerRead");
+        setup: typeof import("../components/ledger/setup/SetupParts");
+      }>;
     };
   }
 }
 
-window.__scenarioModules = { tauriHost: () => import("../shell/tauriHost") };
+window.__scenarioModules = {
+  tauriHost: () => import("../shell/tauriHost"),
+  profileViews: async () => ({
+    react: await import("react"),
+    dom: await import("react-dom"),
+    client: await import("react-dom/client"),
+    calendar: await import("../shell/calendar"),
+    messages: await import("../shell/messages"),
+  }),
+  ledgerReads: async () => ({
+    react: await import("react"),
+    dom: await import("react-dom"),
+    client: await import("react-dom/client"),
+    documents: await import("../components/ledger/documents/useLedgerRead"),
+    setup: await import("../components/ledger/setup/SetupParts"),
+  }),
+};
 
 /** One mounted shell: a new run remounts it on a fresh host. */
 type Run = { id: number; scenario: Scenario; language: string };

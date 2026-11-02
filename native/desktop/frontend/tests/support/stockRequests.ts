@@ -6,31 +6,35 @@
 // window mints them, and a file kept by the backend is named as it names it.
 
 import {
-  blankExtra,
-  blankMovement,
   bookRequest,
   closingRequest,
   correctRequest,
   describeRequest,
-  draftOfMovement,
   evidenceRequest,
   movementCorrectionRequest,
   movementRequest,
-  offersOf,
   proofFromKept,
   restoreRequest,
   retireRequest,
-  vocabularyOf,
   reverseRequest,
+} from "../../src/components/ledger/assets/stockModel";
+import {
+  blankExtra,
+  blankMovement,
+  draftOfMovement,
   type BookDraft,
   type ClosingDraft,
   type CorrectDraft,
   type DescribeDraft,
   type MovementDraft,
   type ProofDraft,
-  type ProofSlotKey,
+} from "../../src/components/ledger/assets/stockDraft";
+import { type ProofSlotKey } from "../../src/components/ledger/assets/stockVocabulary";
+import {
+  offersOf,
+  vocabularyOf,
   type Vocabulary,
-} from "../../src/components/ledger/assets/stockModel";
+} from "../../src/components/ledger/assets/stockVocabulary";
 import type { FileToken } from "../../src/shell/ledger";
 import type {
   InventoryEvidenceAddResult,

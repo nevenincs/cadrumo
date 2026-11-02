@@ -80,8 +80,8 @@ struct Inner {
     snapshot: watch::Sender<Snapshot>,
     fence: Mutex<Fence>,
     wakes: Mutex<Option<mpsc::Sender<Wake>>>,
-    connection: Mutex<Option<Arc<cadrumo_application::runtime_client::Connection>>>,
-    opening: Mutex<Option<Arc<cadrumo_application::runtime_client::OpenCancellation>>>,
+    connection: Mutex<Option<Arc<cadrumo_application::runtime_client::connection::Connection>>>,
+    opening: Mutex<Option<Arc<cadrumo_application::runtime_client::endpoint::OpenCancellation>>>,
     started: AtomicBool,
     closed: AtomicBool,
     stopping: Mutex<Option<mpsc::Sender<()>>>,
@@ -310,7 +310,7 @@ fn supervise(inner: &Arc<Inner>, stopping: &mpsc::Receiver<()>) {
 /// served stretch starts its pauses over.
 fn run(inner: &Inner) -> Result<bool> {
     use cadrumo_application::runtime_client::{
-        Cohort, Connection, Endpoint, Event, OpenCancellation, TimeoutWait,
+        handshake::Cohort, connection::Connection, endpoint::Endpoint, events::Event, endpoint::OpenCancellation, timeout::TimeoutWait,
     };
     let waiting = TimeoutWait::new();
 
@@ -382,8 +382,8 @@ fn run(inner: &Inner) -> Result<bool> {
     result.map(|()| true)
 }
 
-fn unavailable_code(refusal: &cadrumo_application::runtime_client::Refusal) -> String {
-    use cadrumo_application::runtime_client::Refusal;
+fn unavailable_code(refusal: &cadrumo_application::runtime_client::refusal::Refusal) -> String {
+    use cadrumo_application::runtime_client::refusal::Refusal;
     match refusal {
         // Not serving the root yet, gone, or unreachable: the runtime is unavailable.
         Refusal::EndpointNotReady
@@ -398,7 +398,7 @@ fn unavailable_code(refusal: &cadrumo_application::runtime_client::Refusal) -> S
 /// ends or the window closes.
 fn follow(
     inner: &Inner,
-    connection: &cadrumo_application::runtime_client::Connection,
+    connection: &cadrumo_application::runtime_client::connection::Connection,
     wakes: &mpsc::Receiver<Wake>,
 ) -> Result<()> {
     loop {
@@ -426,9 +426,9 @@ fn follow(
 /// The selected profile, its label and its stored sign-in, each asked of the
 /// runtime, which also cues this connection on every later change.
 fn observe(
-    connection: &cadrumo_application::runtime_client::Connection,
-) -> std::result::Result<Observed, cadrumo_application::runtime_client::Refusal> {
-    let deadline = cadrumo_application::runtime_client::TimeoutWait::new().deadline();
+    connection: &cadrumo_application::runtime_client::connection::Connection,
+) -> std::result::Result<Observed, cadrumo_application::runtime_client::refusal::Refusal> {
+    let deadline = cadrumo_application::runtime_client::timeout::TimeoutWait::new().deadline();
     let active = connection.active_profile(true, deadline)?;
     let Some(profile_id) = active.selected_profile_id else {
         return Ok(Observed {
@@ -489,7 +489,7 @@ mod tests {
 
     #[test]
     fn transport_refusals_read_as_an_unavailable_runtime_and_others_keep_their_code() {
-        use cadrumo_application::runtime_client::Refusal;
+        use cadrumo_application::runtime_client::refusal::Refusal;
         for refusal in [
             Refusal::EndpointNotReady,
             Refusal::ConnectionClosed,

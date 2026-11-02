@@ -20,10 +20,10 @@ impl StalledHello {
     fn new() -> Self {
         let root = std::env::temp_dir().join(format!(
             "cadrumo-open-{}",
-            cadrumo_application::runtime_client::request_id()
+            cadrumo_application::runtime_client::framing::request_id()
         ));
         std::fs::create_dir_all(&root).unwrap();
-        let endpoint = cadrumo_application::runtime_client::Endpoint::of(&root).unwrap();
+        let endpoint = cadrumo_application::runtime_client::endpoint::Endpoint::of(&root).unwrap();
         let name = endpoint.pipe_name.strip_prefix(r"\\.\pipe\").unwrap();
         let script = format!(
             r#"
@@ -180,7 +180,7 @@ async fn window_stop_cancels_a_person_preparation_open_before_supervisor_join() 
     let window = window(server.native());
     let preparing = window.clone();
     let prepare = tokio::task::spawn_blocking(move || {
-        preparing.connect(cadrumo_application::runtime_client::TimeoutWait::new().deadline())
+        preparing.connect(cadrumo_application::runtime_client::timeout::TimeoutWait::new().deadline())
     });
     tokio::task::block_in_place(|| server.reached());
     window.request_stop();

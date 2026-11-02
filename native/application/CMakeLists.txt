@@ -46,7 +46,9 @@ if(BUILD_TESTING)
     CACHE STRING "Package root for Rust compatibility acceptance; defaults to the staged configuration")
   set(CADRUMO_APPLICATION_TEST_FILTER "" CACHE STRING "Optional Rust test-name filter for application tests")
   option(CADRUMO_APPLICATION_TEST_LIBRARY_ONLY "Limit application Rust tests to the library test harness" OFF)
-  set(application_test_arguments)
+  # Keep source-owned verification separate from production outputs and other isolated crates.
+  set(application_test_target_dir "${CADRUMO_PATH_CARGO}/application-tests")
+  set(application_test_arguments --target-dir "${application_test_target_dir}")
   if(CADRUMO_APPLICATION_TEST_LIBRARY_ONLY)
     list(APPEND application_test_arguments --lib)
   endif()
@@ -83,7 +85,8 @@ if(BUILD_TESTING)
   endif()
   # The second lint enables every feature, so the platform and live-test code is linted as well.
   cadrumo_rust_quality(application MANIFEST "${application_manifest}"
-    CLIPPY_CARGO application_cargo CLIPPY_ARGS --profile "${application_profile}")
+    CLIPPY_CARGO application_cargo
+    CLIPPY_ARGS --profile "${application_profile}" --target-dir "${application_test_target_dir}")
   cadrumo_rust_clippy(application.features MANIFEST "${application_manifest}" CARGO application_cargo
-    ARGS --profile "${application_profile}" --all-features)
+    ARGS --profile "${application_profile}" --target-dir "${application_test_target_dir}" --all-features)
 endif()

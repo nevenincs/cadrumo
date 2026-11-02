@@ -202,6 +202,17 @@ set(desktop_chrome_output chrome-strings.json)
 set(desktop_palette_output palette.css)
 set(desktop_icons_output provider-icons.json)
 set(desktop_navigation_output navigation.json)
+file(GLOB desktop_settings_inputs CONFIGURE_DEPENDS "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/environment_*.py")
+list(APPEND desktop_settings_inputs
+  "${CADRUMO_SOURCE_ROOT}/native/application-environment.toml"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/application_environment.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/operational_settings.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/desktop_settings.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/packaging/native/stable_output.py"
+  "${CADRUMO_SOURCE_ROOT}/dev/_paths.py")
+set(desktop_settings_output operational-settings.ts)
+set(desktop_settings_module dev.packaging.native.desktop_settings)
+set(desktop_settings_description "operational settings from the environment declaration")
 set(desktop_chrome_module dev.locales.desktop_chrome)
 set(desktop_palette_module dev.docs.desktop_palette)
 set(desktop_icons_module dev.packaging.native.provider_icon_assets)
@@ -213,7 +224,7 @@ set(desktop_navigation_description "navigation register projection")
 set(desktop_chrome_arguments --shell-source "${CMAKE_CURRENT_SOURCE_DIR}/frontend/src")
 set(desktop_icons_arguments --build "${PROJECT_BINARY_DIR}")
 set(desktop_icons_dependencies agent_project)
-foreach(generator IN ITEMS chrome palette icons navigation)
+foreach(generator IN ITEMS chrome palette icons navigation settings)
   set(generator_input_json "[]")
   set(generator_inputs ${desktop_${generator}_inputs}
     "${CADRUMO_DEV_PYTHON}" "${CADRUMO_SOURCE_ROOT}/uv.lock"
@@ -242,9 +253,9 @@ cadrumo_build_step(step_comment desktop-frontend-generated GROUP desktop
   SUMMARY "every generated shell input"
   OUTPUTS "${desktop_generated}")
 add_custom_target(desktop-frontend-generated
-  DEPENDS desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons desktop-frontend-navigation
+  DEPENDS desktop-frontend-settings desktop-frontend-chrome desktop-frontend-palette desktop-frontend-icons desktop-frontend-navigation
   COMMENT "${step_comment}")
-foreach(action IN ITEMS build test)
+foreach(action IN ITEMS build test check)
   add_dependencies(desktop-frontend-${action} desktop-frontend-generated)
 endforeach()
 cadrumo_build_step(step_comment desktop-frontend-dev GROUP desktop
@@ -464,7 +475,7 @@ add_custom_target(desktop-packaged-harness-test
 # caches unless the operator explicitly selects their own clean target.
 cadrumo_register_clean(TARGET desktop-frontend-build PATHS
   "${CADRUMO_PATH_DESKTOP_FRONTEND}" "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-build.json")
-foreach(generator IN ITEMS chrome palette icons navigation)
+foreach(generator IN ITEMS chrome palette icons navigation settings)
   cadrumo_register_clean(TARGET desktop-frontend-${generator} PATHS
     "${desktop_generated}/${desktop_${generator}_output}"
     "${CADRUMO_PATH_DESKTOP_CACHE}/frontend-${generator}-build.json")

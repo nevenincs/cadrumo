@@ -39,7 +39,11 @@ import {
 import { factsGap, listed } from "../shell/compose";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
-import type { CalendarEntry, CalendarEvent } from "../shell/views";
+import type {
+  CalendarCoverage,
+  CalendarEntry,
+  CalendarEvent,
+} from "../shell/views";
 import type { UserProfile } from "../shell/userProfile";
 import { CalendarMonths } from "./calendar/CalendarMonths";
 import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendar/calendarMarks";
@@ -777,15 +781,31 @@ export function FilingCalendarView({
         )}
       </div>
     );
+    const advice: Record<
+      CalendarCoverage["advised"][number]["reason"],
+      string[]
+    > = {
+      applicable_window_missing: [],
+      applicability_undetermined: [],
+      registry_unmodeled: [],
+    };
+    for (const { modelo, reason } of coverage.advised)
+      advice[reason].push(modelo);
     const note = coverage.advised.length > 0 && (
-      <p className="px-4 py-3 text-sm text-muted-foreground">
-        {t("desktop.calendar.undetermined", {
-          modelos: listed(
-            t,
-            coverage.advised.map((item) => item.modelo),
-          ),
-        })}
-      </p>
+      <ul
+        role="list"
+        className="grid gap-1 px-4 py-3 text-sm text-muted-foreground"
+      >
+        {Object.entries(advice).map(([reason, modelos]) =>
+          modelos.length > 0 ? (
+            <li key={reason}>
+              {t(`desktop.calendar.coverage.${reason}`, {
+                modelos: listed(t, modelos),
+              })}
+            </li>
+          ) : null,
+        )}
+      </ul>
     );
     body = (
       <div
@@ -923,7 +943,11 @@ export function FilingCalendarView({
             <EmptyState
               role="status"
               icon="calendar"
-              description={t("desktop.calendar.empty")}
+              description={t(
+                coverage.advised.length > 0
+                  ? "desktop.calendar.coverage.no_dates"
+                  : "desktop.calendar.empty",
+              )}
             />
           ) : wide || view === "months" ? (
             <CalendarMonths

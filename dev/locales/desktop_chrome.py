@@ -73,6 +73,7 @@ DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
 #: spelled out in :data:`DESKTOP_CHROME_KEYS`.
 DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]](
     {
+        "desktop.dock.": ("left", "right", "top", "bottom", "tab"),
         "desktop.aeat_sync.area.": (
             "census.about",
             "census.name",
@@ -203,6 +204,11 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.profile.view.status_": ("required", "unset", "filled"),
         "desktop.attendance.": ("network", "changes", "delegation", "period_independent"),
         "desktop.calendar.aeat.": ("accepted", "justificante_verified", "not_observed", "submitted_observed"),
+        "desktop.calendar.coverage.": (
+            "applicable_window_missing",
+            "applicability_undetermined",
+            "registry_unmodeled",
+        ),
         "desktop.calendar.event.": ("filing", "message"),
         "desktop.calendar.local.": ("external_baseline_imported", "not_ready_to_file", "ready_to_file"),
         "desktop.calendar.state.": ("due", "filed", "late", "unknown"),

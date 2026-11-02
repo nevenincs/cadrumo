@@ -1117,6 +1117,14 @@ desktop:
       submitted_observed: Submission seen
     as_of: From local records as of {date}. Nothing here was asked of the tax agency.
     close: Close the calendar
+    coverage:
+      applicability_undetermined: 'Whether you need to file is undetermined: {modelos}.
+        Check your obligations.'
+      applicable_window_missing: 'These modelos apply, but Cadrumo has no filing window:
+        {modelos}. Check the official calendar.'
+      no_dates: No filing dates are available for this period.
+      registry_unmodeled: 'Cadrumo has no applicability rules or filing windows for:
+        {modelos}. Consult official guidance to check your filing obligations.'
     day_event: '{date}: {kind}. {summary}'
     earliest_close: Closes no earlier than {date}
     empty: No filing obligations in this period.
@@ -1150,7 +1158,6 @@ desktop:
       unknown: Unknown
     title: Filing calendar
     to_day: Go to {date}
-    undetermined: 'Could not be determined: {modelos}'
     view: View
     view_list: List
     view_months: Calendar
@@ -1179,6 +1186,23 @@ desktop:
     show:
       label: Show
     signed_out: Sign in to see your declarations.
+  dock:
+    arrange: Arrange panel
+    bottom: Split below
+    close: Close panel
+    dock: Dock panel
+    exit_fullscreen: Exit full screen
+    expand: Expand in workspace
+    float: Float panel
+    fullscreen: Full screen
+    left: Split left
+    move: Move floating panel
+    resize: Resize floating panel
+    restore: Restore panel size
+    right: Split right
+    tab: Move to tabs
+    tabs: Workspace tabs
+    top: Split above
   docs:
     frame_title: Cadrumo documentation
     hide: Hide the docs

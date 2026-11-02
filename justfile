@@ -242,12 +242,18 @@ clean-apply *ARGS:
 
 # ── Static checks (Verify, Read-only) ────────────────────────────────────────
 
-# Run every deterministic code-quality primitive to completion and report one
-# blocking code verdict. Repository/control-plane checks, hooks, and the
-# networked vulnerability check are separate surfaces below.
-[doc('Run the blocking code-quality checks as one deterministic read-only subject aggregate.')]
+# Verify every implementation language. Native checks require the configured
+# toolchain and generated contract; cargo-deny also needs advisory network access.
+[doc('Run Python, TypeScript/TSX, CSS and Rust code-quality checks.')]
 [group('check')]
 check-code:
+    @just check-python
+    @just check-native-code
+
+# The portable deterministic Python subject aggregate remains available alone.
+[doc('Run deterministic Python code-quality checks without a native build.')]
+[group('check')]
+check-python:
     @uv run --no-sync python -m dev.quality.suite
 
 # Verify code style using ruff check. Silent on success; lists violations on failure.
@@ -714,6 +720,17 @@ test-native-release CONFIGURATION="Release": (_native-configure CONFIGURATION)
 check-rust CONFIGURATION="Debug": (_native-configure CONFIGURATION)
     cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target native_contract native_metadata
     ctest --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} -L rust_quality --no-tests=error
+
+[doc('Run the desktop frontend type, lint, design-system and formatting checks through CMake.')]
+[group('check')]
+check-frontend CONFIGURATION="Debug": (_native-configure CONFIGURATION)
+    cmake --build --preset {{native_build_preset_prefix}}{{lowercase(CONFIGURATION)}} --target desktop-frontend-check
+
+[doc('Run the existing frontend and Rust quality gates; requires the configured native toolchain and advisory network access.')]
+[group('check')]
+check-native-code CONFIGURATION="Debug":
+    just check-frontend {{CONFIGURATION}}
+    just check-rust {{CONFIGURATION}}
 
 # Drives only the package's own programs on a disposable root: profile, sign-in,
 # CLI and MCP reads, stdin-closed stop, and an unchanged installed default root.
@@ -1811,7 +1828,7 @@ release-runtime-matrix PHASE:
 #   pass; only this one proves the artifact a user receives can still be
 #   produced from it.
 
-# Run the portable local policy gate from subject-level public aggregates.
+# Run the local policy gate, including all implementation languages.
 [group('meta')]
 gate-local:
     @just check-code

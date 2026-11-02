@@ -15,12 +15,14 @@ use crate::agent::recovery::{
 use cadrumo_application::{
     error::application::{ApplicationError, ErrorCode, Operation, Result},
     person_operations::{
-        OperationRelay, PROJECTION_DOCUMENT_MAX_BYTES, ProfileLanguage, RELAY_ACTION_KEYS,
-        RelayFailure, read_profile_language, set_profile_language,
+        failure::RelayFailure,
+        profile_language::{ProfileLanguage, read_profile_language, set_profile_language},
+        protocol::PROJECTION_DOCUMENT_MAX_BYTES,
+        relay::{OperationRelay, RELAY_ACTION_KEYS},
     },
     runtime_client::{
-        Admitted, CUSTODY_RECOVERING, Event, Frontend, Pushed, Refusal, SessionExchange,
-        human_sign_out, rebind_password,
+        session::Admitted, refusal::CUSTODY_RECOVERING, events::Event, session::Frontend, events::Pushed, refusal::Refusal, connection::SessionExchange,
+        session::human_sign_out, session::rebind_password,
     },
     view_stream::attach::{ViewAttachGrant, view_attach},
 };
@@ -374,7 +376,7 @@ impl NativeSession {
         };
         let checked = self.request(
             "session_status",
-            &cadrumo_application::runtime_client::request_id(),
+            &cadrumo_application::runtime_client::framing::request_id(),
             json!({}),
         );
         let current = match self.ask(&checked, EXCHANGE) {
@@ -721,7 +723,7 @@ mod tests {
     use super::super::{Person, PersonEvent};
     use super::*;
     use crate::agent::recovery::{Custody, Reconnecting, is_recovering, rebind::Proof};
-    use cadrumo_application::runtime_client::ResumeRefusal;
+    use cadrumo_application::runtime_client::stored_proof::ResumeRefusal;
     use std::{collections::VecDeque, sync::Mutex};
     use tokio::sync::broadcast::{self, error::TryRecvError};
 

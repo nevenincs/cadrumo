@@ -1,3 +1,4 @@
+import settings from "virtual:operational-settings";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -28,7 +29,6 @@ import { reasonLabel } from "./documentWords";
 import { EvidenceRecords } from "./EvidenceRecords";
 import { useLedgerRead } from "./useLedgerRead";
 
-const TOAST_MS = 4000;
 /** The viewer's share of the review's width, in percent, at first. */
 const VIEWER_SHARE = 45;
 export const DOCUMENT_TABS = [
@@ -82,7 +82,10 @@ export function DocumentsSection({
   const [viewerShare, setViewerShare] = useState(VIEWER_SHARE);
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    const timer = window.setTimeout(
+      () => setToast(null),
+      settings.ledger_toast_ms,
+    );
     return () => window.clearTimeout(timer);
   }, [toast]);
 

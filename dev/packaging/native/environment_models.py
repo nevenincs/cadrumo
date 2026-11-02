@@ -97,5 +97,6 @@ class ApplicationEnvironment:
     root: Mapping[str, Any]
     vectors: tuple[Mapping[str, Any], ...]
     launch_vectors: tuple[Mapping[str, Any], ...]
+    settings: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
     package_fixed: tuple[FixedValue, ...] = ()
     package_values: Mapping[str, str] = field(default_factory=dict)

@@ -24,6 +24,7 @@ const docsStatic = fileURLToPath(
 // under. They are outputs of the build directory in use, so one build's are
 // never another's and nothing generated is written into the source tree.
 const GENERATED_INPUTS: Record<string, string> = {
+  "virtual:operational-settings": "operational-settings.ts",
   "virtual:desktop-strings": "chrome-strings.json",
   "virtual:desktop-palette.css": "palette.css",
   "virtual:desktop-provider-icons": "provider-icons.json",

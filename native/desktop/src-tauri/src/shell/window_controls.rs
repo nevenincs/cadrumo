@@ -51,6 +51,8 @@ impl Chrome {
 pub enum Action {
     Minimize,
     ToggleMaximize,
+    ToggleFullscreen,
+    LeaveFullscreen,
     Close,
     Drag,
     /// Restores and raises the window, as when something in it asks for the person.
@@ -158,6 +160,10 @@ fn perform_action<R: Runtime>(window: Window<R>, action: Action) -> Result<()> {
     main_window(&window)?;
     match action {
         Action::Minimize => window.minimize(),
+        Action::ToggleFullscreen => {
+            window.set_fullscreen(!window.is_fullscreen().map_err(failure)?)
+        }
+        Action::LeaveFullscreen => window.set_fullscreen(false),
         // close() raises CloseRequested, preserving cleanup and refusal.
         Action::Close => window.close(),
         Action::CloseNow => {
@@ -283,6 +289,25 @@ pub fn attach<R: Runtime>(window: &Window<R>) {
 mod tests {
     use super::*;
     use tauri::test::{mock_builder, mock_context, noop_assets};
+
+    #[tokio::test]
+    async fn fullscreen_actions_refuse_non_main_windows() {
+        let app = mock_builder().build(mock_context(noop_assets())).unwrap();
+        let secondary = tauri::WebviewWindowBuilder::new(&app, "secondary", Default::default())
+            .build()
+            .unwrap();
+        let window = secondary.as_ref().window().clone();
+        assert!(
+            shell_window_action(window.clone(), Action::ToggleFullscreen)
+                .await
+                .is_err()
+        );
+        assert!(
+            shell_window_action(window, Action::LeaveFullscreen)
+                .await
+                .is_err()
+        );
+    }
 
     #[tokio::test]
     async fn the_principal_window_accepts_close_now_off_the_ipc_callback() {

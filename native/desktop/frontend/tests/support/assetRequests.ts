@@ -6,13 +6,15 @@
 // serves and a form cannot state fails the test and not the window.
 
 import {
-  answer,
   fieldsFor,
   FURTHER_PURCHASE,
   initialOf,
   type FieldContext,
-  type FormDraft,
 } from "../../src/components/ledger/assets/assetFields";
+import {
+  answer,
+  type FormDraft,
+} from "../../src/components/ledger/assets/assetFormValues";
 import {
   forecastRequest,
   handoffRequest,

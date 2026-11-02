@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-titlebar'
 date: '2026-10-09'
-modified: '2026-10-25'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a401f09aaf522e4cd0b9bb1681b1467f0decacc07f41a44a0a932620f37894ab'
+body_hash: 'sha256:616dbeb7b035242d36b117fb5865f70ea7fbecd21322dc7c8300543e54a42d00'
 related:
   - "[[2026-10-09-desktop-titlebar-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"
@@ -69,3 +69,7 @@ Supported Tauri methods provide native window behavior without custom window-man
 ## Consequences
 
 The desktop IPC gains a bounded window-control interface. Browser controls remain unavailable outside a native host. Native acceptance needs platform execution; shared rendering does not prove Linux window-manager behavior. Reconsider if native macOS application admission is implemented or native snapping requirements exceed Tauri's supported behavior.
+
+## Amendment 2026-11-02: fullscreen actions
+
+Accepted under the user's true F11 fullscreen request. The closed main-window action set adds explicit toggle-fullscreen and leave-fullscreen operations through supported Tauri Rust calls. The frontend shares the existing single presentation subscription. Fullscreen does not overwrite docking or normal-window bounds. Invoking-main-window and per-launch token restrictions remain binding. Evidence: `2026-11-02-cadrumo-windowmanager-reference`.
