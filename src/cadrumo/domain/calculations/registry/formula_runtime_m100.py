@@ -323,13 +323,7 @@ def _m100_resolve_eo_agraria_indices_correctores_args(
         )
     indice_casilla_ids: list[CasillaId] = []
     for position, indice_arg in enumerate(expression.args[1:], start=1):
-        if indice_arg.casilla_id is None:
-            raise RegistryValidationError(
-                f"formula op {op!r} requires args[{position}] to be a casilla leaf",
-                translated_message="errors.calc.lookup_dispatch_arg_kind",
-                context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
-            )
-        indice_casilla_ids.append(indice_arg.casilla_id)
+        indice_casilla_ids.append(require_casilla_leaf(indice_arg, op=op, position=position))
     return _M100ResolveEoAgrariaIndicesCorrectoresArgs(
         minorado_casilla_id=minorado_arg.casilla_id,
         indice_casilla_ids=tuple(indice_casilla_ids),

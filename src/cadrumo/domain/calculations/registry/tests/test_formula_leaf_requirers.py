@@ -32,6 +32,8 @@ def test_a_non_casilla_argument_is_refused_with_its_position(argument: FormulaEx
         require_casilla_leaf(argument, op="m100_x", position=4)
 
     assert str(refused.value) == "formula op 'm100_x' requires args[4] to be a casilla leaf"
+    assert refused.value.translated_message == "errors.calc.lookup_dispatch_arg_kind"
+    assert refused.value.context == {"op": "m100_x", "position": "args[4]", "expected_kind": "casilla"}
 
 
 @pytest.mark.parametrize("argument", [_LITERAL, _SUM], ids=["literal-leaf", "operator-node"])
@@ -40,3 +42,5 @@ def test_a_non_parameter_argument_is_refused_with_its_position(argument: Formula
         require_parameter_leaf(argument, op="m100_x", position=9)
 
     assert str(refused.value) == "formula op 'm100_x' requires args[9] to be a parameter leaf"
+    assert refused.value.translated_message == "errors.calc.lookup_dispatch_arg_kind"
+    assert refused.value.context == {"op": "m100_x", "position": "args[9]", "expected_kind": "parameter"}

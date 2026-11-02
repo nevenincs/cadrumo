@@ -122,14 +122,22 @@ def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
 def require_casilla_leaf(expression: FormulaExpression, *, op: str, position: int) -> CasillaId:
     """Return the casilla id a dispatch argument must carry, refusing any other leaf kind."""
     if expression.casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[{position}] to be a casilla leaf")
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{position}] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
+        )
     return expression.casilla_id
 
 
 def require_parameter_leaf(expression: FormulaExpression, *, op: str, position: int) -> ParameterId:
     """Return the parameter id a dispatch argument must carry, refusing any other leaf kind."""
     if expression.parameter is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[{position}] to be a parameter leaf")
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{position}] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": f"args[{position}]", "expected_kind": "parameter"},
+        )
     return expression.parameter
 
 
