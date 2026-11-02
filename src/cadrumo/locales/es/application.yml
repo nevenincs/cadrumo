@@ -3042,6 +3042,17 @@ application:
         escribió nada.
       row_unknown_field: 'La sección ''%{section}'' no declara estos campos: %{unknown}.
         Campos disponibles: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Fecha de nacimiento
+        convivientes:
+          label: Número de descendientes con los que convive este ascendiente
+        fallecimiento:
+          help: Déjalo en blanco si este ascendiente no ha fallecido.
+          label: Fecha de fallecimiento
+        nif:
+          label: NIF/NIE del ascendiente (déjalo en blanco si no tiene)
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'

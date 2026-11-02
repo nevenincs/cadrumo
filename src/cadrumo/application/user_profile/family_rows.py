@@ -9,10 +9,16 @@ keeps none of its own.
 The schema also declares ``renta_family.descendants`` and
 ``renta_family.ascendants`` arrays, but nothing in production writes them, so
 they are not a source: reading them would serve an empty list to a filer whose
-children are stored in the object above. The canonical ascendant shape is the
-``renta_family.ascendiente`` object, but the schema declares no such object and
-nothing writes it yet, so it has no leaves or words to serve: its group is served
-as not served rather than as empty.
+household is stored in the objects above. Both groups are headed by the label of
+their canonical object, never by an array's label.
+
+Ascendants are stored as ``renta_family.ascendiente.{n}.{leaf}`` facts with
+``renta_family.ascendientes_count``. No wizard group or profile command writes
+them yet, and the schema names no leaves, so the leaves served are the ones the
+Modelo 100 household bindings read from that object and that a row can state.
+The two leaves those bindings read but nothing could store (the name and the
+official disability clave) are not offered. A filer with no stored ascendant
+therefore reads as unknown, never as an empty household.
 
 A group says what is known about its rows, never more. ``unknown`` means nothing
 was stated and no row is stored; ``none_declared`` means the profile states a
@@ -45,10 +51,17 @@ if TYPE_CHECKING:
 
 _SECTION_KEY: Final = "renta_family"
 _DESCENDANT_FIELD_KEY: Final = "descendiente"
-_DESCENDANT_LABEL_FIELD_KEY: Final = "descendants"
 _DESCENDANT_COUNT_PATH: Final = "renta_family.descendientes_count"
 _ASCENDANT_FIELD_KEY: Final = "ascendiente"
-_ASCENDANT_LABEL_FIELD_KEY: Final = "ascendants"
+_ASCENDANT_COUNT_PATH: Final = "renta_family.ascendientes_count"
+
+_ASCENDANT_NIF_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.nif.label"
+_ASCENDANT_BIRTH_DATE_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.birth_date.label"
+_ASCENDANT_FALLECIMIENTO_LABEL_LOCALE_KEY: Final = (
+    "application.user_profile.family_rows.ascendiente.fallecimiento.label"
+)
+_ASCENDANT_FALLECIMIENTO_HELP_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.fallecimiento.help"
+_ASCENDANT_CONVIVIENTES_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.convivientes.label"
 
 _WIDGET_FIELD_TYPES: Final[Mapping[FlowWidgetKind, ProfileFieldType]] = {
     FlowWidgetKind.DATE: ProfileFieldType.DATE,
@@ -161,18 +174,57 @@ def _stored_rows(values: Mapping[str, str], *, prefix: str, leaves: frozenset[st
     return rows
 
 
-def _descendant_items(
+def _ascendant_leaves() -> tuple[ProfileFamilyLeaf, ...]:
+    return (
+        ProfileFamilyLeaf(
+            leaf="nif",
+            label=tr(_ASCENDANT_NIF_LABEL_LOCALE_KEY),
+            help=None,
+            field_type=ProfileFieldType.STRING,
+            required=False,
+            choices=(),
+        ),
+        ProfileFamilyLeaf(
+            leaf="birth_date",
+            label=tr(_ASCENDANT_BIRTH_DATE_LABEL_LOCALE_KEY),
+            help=None,
+            field_type=ProfileFieldType.DATE,
+            required=True,
+            choices=(),
+        ),
+        ProfileFamilyLeaf(
+            leaf="fallecimiento",
+            label=tr(_ASCENDANT_FALLECIMIENTO_LABEL_LOCALE_KEY),
+            help=tr(_ASCENDANT_FALLECIMIENTO_HELP_LOCALE_KEY),
+            field_type=ProfileFieldType.DATE,
+            required=False,
+            choices=(),
+        ),
+        ProfileFamilyLeaf(
+            leaf="convivientes",
+            label=tr(_ASCENDANT_CONVIVIENTES_LABEL_LOCALE_KEY),
+            help=None,
+            field_type=ProfileFieldType.INTEGER,
+            required=False,
+            choices=(),
+        ),
+    )
+
+
+def _group_items(
     values: Mapping[str, str],
     schema: ProfileSchemaDefinition,
-    operation: PinnedAuthorityOperation,
+    *,
+    field_key: str,
+    count_path: str,
+    leaves: tuple[ProfileFamilyLeaf, ...],
 ) -> tuple[ProfileFamilyItem, ...]:
-    declared = _declared_field(schema, _DESCENDANT_FIELD_KEY)
+    declared = _declared_field(schema, field_key)
     if declared is None:
         return ()
-    leaves = tuple(_leaf(page) for page in build_descendant_group(operation).pages)
-    prefix = f"{_SECTION_KEY}.{_DESCENDANT_FIELD_KEY}."
+    prefix = f"{_SECTION_KEY}.{field_key}."
     stored = _stored_rows(values, prefix=prefix, leaves=frozenset(leaf.leaf for leaf in leaves))
-    stated = values.get(_DESCENDANT_COUNT_PATH)
+    stated = values.get(count_path)
     count = stated if profile_value_is_present(stated) else None
     if stored:
         state = ProfileFamilyGroupState.ROWS
@@ -181,8 +233,8 @@ def _descendant_items(
     else:
         state = ProfileFamilyGroupState.UNKNOWN
     group = ProfileViewFamilyGroupItem(
-        group_key=f"{_SECTION_KEY}.{_DESCENDANT_FIELD_KEY}",
-        label=tr(profile_field_label_key(_SECTION_KEY, _DESCENDANT_LABEL_FIELD_KEY)),
+        group_key=f"{_SECTION_KEY}.{field_key}",
+        label=tr(profile_field_label_key(_SECTION_KEY, field_key)),
         state=state,
         stated_count=count,
         row_count=len(stored),
@@ -211,17 +263,6 @@ def _descendant_items(
     return (group, *rows)
 
 
-def _ascendant_items() -> tuple[ProfileFamilyItem, ...]:
-    return (
-        ProfileViewFamilyGroupItem(
-            group_key=f"{_SECTION_KEY}.{_ASCENDANT_FIELD_KEY}",
-            label=tr(profile_field_label_key(_SECTION_KEY, _ASCENDANT_LABEL_FIELD_KEY)),
-            state=ProfileFamilyGroupState.NOT_SERVED,
-            row_count=0,
-        ),
-    )
-
-
 def family_row_items(
     values: Mapping[str, str],
     *,
@@ -229,4 +270,19 @@ def family_row_items(
     operation: PinnedAuthorityOperation,
 ) -> tuple[ProfileFamilyItem, ...]:
     """Return every household group, each followed by its stored rows, in a fixed order."""
-    return (*_descendant_items(values, schema, operation), *_ascendant_items())
+    return (
+        *_group_items(
+            values,
+            schema,
+            field_key=_DESCENDANT_FIELD_KEY,
+            count_path=_DESCENDANT_COUNT_PATH,
+            leaves=tuple(_leaf(page) for page in build_descendant_group(operation).pages),
+        ),
+        *_group_items(
+            values,
+            schema,
+            field_key=_ASCENDANT_FIELD_KEY,
+            count_path=_ASCENDANT_COUNT_PATH,
+            leaves=_ascendant_leaves(),
+        ),
+    )

@@ -2888,6 +2888,17 @@ application:
         was written.
       row_unknown_field: 'Section ''%{section}'' declares no such fields: %{unknown}.
         Available fields: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Date of birth
+        convivientes:
+          label: Number of descendants this ascendant lives with
+        fallecimiento:
+          help: Leave blank if this ascendant has not died.
+          label: Date of death
+        nif:
+          label: Ascendant's NIF/NIE (leave blank if none)
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'

@@ -2996,6 +2996,18 @@ application:
         történt írás.
       row_unknown_field: 'A(z) ''%{section}'' szakasz nem deklarálja ezeket a mezőket:
         %{unknown}. Elérhető mezők: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Születési dátum
+        convivientes:
+          label: Azoknak a leszármazottaknak a száma, akikkel ez a felmenő együtt
+            él
+        fallecimiento:
+          help: Hagyd üresen, ha ez a felmenő nem hunyt el.
+          label: A halálozás dátuma
+        nif:
+          label: A felmenő adószáma (NIF/NIE) (hagyd üresen, ha nincs)
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'

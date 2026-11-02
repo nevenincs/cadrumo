@@ -3047,6 +3047,17 @@ application:
         escrit res.
       row_unknown_field: 'La secció ''%{section}'' no declara aquests camps: %{unknown}.
         Camps disponibles: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Data de naixement
+        convivientes:
+          label: Nombre de descendents amb els quals conviu aquest ascendent
+        fallecimiento:
+          help: Deixa-ho en blanc si aquest ascendent no ha mort.
+          label: Data de defunció
+        nif:
+          label: NIF/NIE de l'ascendent (deixa'l en blanc si no en té)
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'
