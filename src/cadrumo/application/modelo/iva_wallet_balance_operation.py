@@ -21,7 +21,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.iva_compensation.balance import IvaWalletBalanceReport
 from ..calculations.iva_wallet_balance import query_iva_wallet_balance
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import (
@@ -32,7 +32,7 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -221,17 +221,11 @@ def resolve_modelo_iva_wallet_balance_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require exact-profile access to the complete history through one year."""
-    payload = require_access_request_profile_payload(
-        request,
-        definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
-        payload_type=ModeloIvaWalletBalanceRequest,
-        access_profile_id=context.profile_id,
-    )
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=payload.profile_id,
-        periods=frozenset(),
+        definition_id=MODELO_IVA_WALLET_BALANCE_OPERATION_DEFINITION_ID,
+        request_type=ModeloIvaWalletBalanceRequest,
     )
 
 

@@ -20,6 +20,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..calculations.observations_repository import ObservationSourceKind
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import (
@@ -40,7 +41,7 @@ from .justificante_ports import (
     JustificanteRegistrationPorts,
 )
 from .live_operation_execution import fenced_persistence_guard, own_provider_browser, publish_live_capture_report
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .session import LiveSessionWriteReceipt
 from .snapshot_base import SnapshotLifecycleState
 
@@ -231,8 +232,8 @@ def resolve_justificante_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile disclosure and a fresh COMMIT fence."""
-    return resolve_whole_profile_capture_access(
-        request, context, definition_id=JUSTIFICANTE_CAPTURE_DEFINITION_ID, payload_type=JustificanteCaptureRequest
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=JUSTIFICANTE_CAPTURE_DEFINITION_ID, request_type=JustificanteCaptureRequest
     )
 
 

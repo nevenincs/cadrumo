@@ -13,6 +13,7 @@ from ...core.filing_year import FilingYear
 from ...core.json_contract import Notice, NoticeSeverity
 from ...core.operations import OperationEffect
 from ...core.period import Period
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..modelo.filing_chain_reconciliation import FilingReconciliationResult
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
@@ -36,7 +37,7 @@ from .live_operation_execution import (
     require_exact_profile_worker,
     track_capture_session,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import FiledCaptureEvidenceTally, FiledDataCaptureReport
 
 FILED_SINGLE_CAPTURE_DEFINITION_ID = "live.filed-capture.single"
@@ -299,8 +300,8 @@ def resolve_filed_single_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile capture authority and a fresh COMMIT fence."""
-    return resolve_whole_profile_capture_access(
-        request, context, definition_id=FILED_SINGLE_CAPTURE_DEFINITION_ID, payload_type=FiledSingleCaptureRequest
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=FILED_SINGLE_CAPTURE_DEFINITION_ID, request_type=FiledSingleCaptureRequest
     )
 
 

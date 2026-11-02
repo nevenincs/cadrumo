@@ -6,7 +6,6 @@ from dataclasses import replace
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy
 
 from ...core.operations import (
@@ -20,7 +19,7 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_exact_request_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -40,7 +39,6 @@ from ..operations.registry import (
     OperationSchemaBindingV1,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .google_review_operation_contracts import (
     GOOGLE_REVIEW_OPERATION_DEFINITION_ID,
     GOOGLE_REVIEW_RESPONSE_SCHEMA_BINDING,
@@ -60,12 +58,9 @@ def resolve_google_review_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require a human, whole-profile authority and explicit financial disclosure."""
-    if (
-        request.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
-        or type(request.payload) is not GoogleReviewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    resolved = resolve_ledger_exact_request_access(
+        request, context, request_types={GOOGLE_REVIEW_OPERATION_DEFINITION_ID: GoogleReviewRequest}
+    )
     disclosures = profile_and_tax_value_projection_disclosures(context, resolved.policy.disclosures)
     return replace(
         resolved,

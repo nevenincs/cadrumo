@@ -6,6 +6,7 @@ import asyncio
 import csv
 from collections.abc import Callable
 from decimal import Decimal
+from typing import get_args
 
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.counterparty_establishment import build_counterparty_establishment_repository
@@ -49,7 +50,11 @@ from ...application.ledger.check_operation import LedgerCheckProjection, LedgerC
 from ...application.ledger.classify_requests import LedgerClassifyRequest
 from ...application.ledger.classify_result_contracts import LedgerClassifyOperationResult
 from ...application.ledger.counterparty_operation import LedgerCounterpartyRequest, LedgerCounterpartyResult
-from ...application.ledger.entry_options_operation import LedgerEntryOptionsProjection, LedgerEntryOptionsRequest
+from ...application.ledger.entry_options_operation import (
+    EntryOptionFamily,
+    LedgerEntryOptionsProjection,
+    LedgerEntryOptionsRequest,
+)
 from ...application.ledger.evidence_add_operation import LedgerEvidenceAddProjection, LedgerEvidenceAddRequest
 from ...application.ledger.evidence_mutation_operation import (
     LedgerEvidenceRemoveProjection,
@@ -617,13 +622,11 @@ def assert_ledger_entry_options_outcome(ctx: ExecutorOutcome) -> None:
     options = ctx.resolve(LedgerEntryOptionsProjection)
     assert isinstance(options, LedgerEntryOptionsProjection)
     assert options.profile_id == ctx.profile_id
-    assert {family.family for family in options.families} == {
-        "country",
-        "currency",
-        "deduction_fact_kind",
-        "m210_payer_mode",
-        "m210_tipo_renta",
-    }
+    # Every vocabulary the projection declares, once each: the declared family names are the oracle.
+    declared = set(get_args(EntryOptionFamily.__value__))
+    assert [family.family for family in options.families] != []
+    assert len({family.family for family in options.families}) == len(options.families)
+    assert {family.family for family in options.families} == declared
     assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 

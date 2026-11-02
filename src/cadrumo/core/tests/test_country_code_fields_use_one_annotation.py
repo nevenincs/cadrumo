@@ -70,6 +70,12 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "ACCUMULATES the failures, so a bad country must reach the wizard to "
         "be reported alongside a bad NIF rather than refused ahead of it"
     ),
+    "application/invoices/figures_preview_contracts.py::counterparty_country": (
+        "an invoice draft preview answers a malformed country as a closed rule "
+        "finding (would_refuse, with the offending field named) beside the other "
+        "findings; a length bound at the request boundary would refuse the whole "
+        "preview ahead of them and the window could not show which rules fail"
+    ),
 }
 
 

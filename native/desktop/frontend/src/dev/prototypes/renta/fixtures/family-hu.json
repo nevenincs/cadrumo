@@ -1,0 +1,604 @@
+{
+  "profile": {
+    "profile_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+    "record_revision": 1,
+    "sections": [
+      {
+        "key": "renta_filing",
+        "title": "Bevallási környezet (Renta)",
+        "summary": "Hogyan nyújtja be az éves személyi jövedelemadó-bevallását (Renta).",
+        "repeatable": false,
+        "fields": [
+          {
+            "path": "renta_filing.declaration_type",
+            "label": "Bevallás típusa",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "string",
+            "choices": [],
+            "help": [
+              "Adózási típus kódja",
+              "1 - egyéni: Akkor használd, ha kizárólag a saját egyéni bevallásodat nyújtod be",
+              "2 - közös: Csak a családi egység közös adózásához használd"
+            ],
+            "about": "Modelo 100 declaration type.",
+            "row_index": null
+          }
+        ]
+      },
+      {
+        "key": "renta_taxpayer",
+        "title": "Adózó (Renta)",
+        "summary": "Az adózó személyes körülményei, amelyeket az éves bevallás felhasznál.",
+        "repeatable": false,
+        "fields": [
+          {
+            "path": "renta_taxpayer.sex",
+            "label": "Nem",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "enum",
+            "choices": [
+              { "value": "H", "label": "Férfi" },
+              { "value": "M", "label": "Nő" }
+            ],
+            "help": ["Az első adózó neme"],
+            "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
+            "row_index": null
+          },
+          {
+            "path": "renta_taxpayer.marital_status",
+            "label": "Családi állapot",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "enum",
+            "choices": [
+              { "value": "1", "label": "1" },
+              { "value": "2", "label": "2" },
+              { "value": "3", "label": "3" },
+              { "value": "4", "label": "4" },
+              { "value": "5", "label": "5" }
+            ],
+            "help": ["Az első adózó családi állapota"],
+            "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
+            "row_index": null
+          },
+          {
+            "path": "renta_taxpayer.birth_date",
+            "label": "Születési dátum",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "date",
+            "choices": [],
+            "help": ["Az első adózó születési dátuma"],
+            "about": "Taxpayer birth date.",
+            "row_index": null
+          },
+          {
+            "path": "renta_taxpayer.disability_grade",
+            "label": "Fogyatékosság mértéke",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "string",
+            "choices": [],
+            "help": [
+              "Az első adózó fogyatékossági kódja",
+              "Fogyatékossági fokozat 33%-tól 64%-ig: Elismert 33–64%-os fogyatékosság - növeli a személyi minimumot.",
+              "Fogyatékossági fokozat 65% vagy magasabb: Elismert 65%-os vagy nagyobb fogyatékosság - nagyobb személyiminimum-növekedés.",
+              "Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű: Bíróság által megállapított cselekvőképtelenség - a tanúsított foktól függetlenül 65%+ként kezelendő.",
+              "Harmadik személy segítsége vagy korlátozott mozgásképesség: Igazolt harmadik személy segítségének szükségessége vagy csökkent mozgásképesség - asszisztencia-növekményt ad."
+            ],
+            "about": "Taxpayer disability grade code for Modelo 100.",
+            "row_index": null
+          },
+          {
+            "path": "renta_taxpayer.death_date",
+            "label": "Elhalálozás dátuma",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "date",
+            "choices": [],
+            "help": ["Az első adózó elhalálozásának dátuma"],
+            "about": "Taxpayer death date when Modelo 100 requires it.",
+            "row_index": null
+          },
+          {
+            "path": "renta_taxpayer.marriage_date",
+            "label": "Házasságkötés dátuma",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "date",
+            "choices": [],
+            "help": ["Házasságkötés dátuma (ÉÉÉÉ-HH-NN)"],
+            "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
+            "row_index": null
+          },
+          {
+            "path": "renta_taxpayer.marriage_month_start",
+            "label": "Házasság kezdő hónapja (számított)",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "integer",
+            "choices": [],
+            "help": null,
+            "about": "Primer mes del ejercicio en que el matrimonio estuvo vigente, calculado automáticamente a partir de la fecha de matrimonio.",
+            "row_index": null
+          },
+          {
+            "path": "renta_taxpayer.marriage_month_end",
+            "label": "Házasság záró hónapja (számított)",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "integer",
+            "choices": [],
+            "help": null,
+            "about": "Último mes completo del ejercicio en que el matrimonio estuvo vigente, calculado automáticamente a partir de la fecha de matrimonio.",
+            "row_index": null
+          },
+          {
+            "path": "renta_taxpayer.marriage_full_year",
+            "label": "Egész évben fennálló házasság (számított)",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "choices": [
+              { "value": "true", "label": "Igen" },
+              { "value": "false", "label": "Nem" }
+            ],
+            "help": null,
+            "about": "Indica si el matrimonio estuvo vigente durante todo el ejercicio, calculado automáticamente a partir de la fecha de matrimonio.",
+            "row_index": null
+          }
+        ]
+      },
+      {
+        "key": "renta_spouse",
+        "title": "Házastárs (Renta)",
+        "summary": "A házastársad adatai, amelyekre a közös bevalláshoz van szükség.",
+        "repeatable": false,
+        "fields": [
+          {
+            "path": "renta_spouse.tax_id",
+            "label": "Házastárs adóazonosítója (NIF/NIE)",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "string",
+            "choices": [],
+            "help": ["Házastárs NIF/NIE száma"],
+            "about": "Spouse NIF/NIE for joint filing.",
+            "row_index": null
+          },
+          {
+            "path": "renta_spouse.name",
+            "label": "Házastárs utóneve",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "string",
+            "choices": [],
+            "help": ["Házastárs keresztneve"],
+            "about": "Spouse given name.",
+            "row_index": null
+          },
+          {
+            "path": "renta_spouse.surnames",
+            "label": "Házastárs vezetéknevei",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "string",
+            "choices": [],
+            "help": ["Házastárs vezetéknevei"],
+            "about": "Spouse surnames.",
+            "row_index": null
+          },
+          {
+            "path": "renta_spouse.birth_date",
+            "label": "Házastárs születési dátuma",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "date",
+            "choices": [],
+            "help": ["Házastárs születési dátuma"],
+            "about": "Spouse birth date.",
+            "row_index": null
+          },
+          {
+            "path": "renta_spouse.sex",
+            "label": "Házastárs neme",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "enum",
+            "choices": [
+              { "value": "H", "label": "Férfi" },
+              { "value": "M", "label": "Nő" }
+            ],
+            "help": ["Házastárs neme"],
+            "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
+            "row_index": null
+          },
+          {
+            "path": "renta_spouse.disability_grade",
+            "label": "Házastárs fogyatékosságának mértéke",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "string",
+            "choices": [],
+            "help": [
+              "Házastárs fogyatékossági fokozata (ha alkalmazható)",
+              "Fogyatékossági fokozat 33%-tól 64%-ig: Elismert 33–64%-os fogyatékosság - növeli a személyi minimumot.",
+              "Fogyatékossági fokozat 65% vagy magasabb: Elismert 65%-os vagy nagyobb fogyatékosság - nagyobb személyiminimum-növekedés.",
+              "Bírói cselekvőképesség-korlátozás vagy azzal egyenértékű: Bíróság által megállapított cselekvőképtelenség - a tanúsított foktól függetlenül 65%+ként kezelendő.",
+              "Harmadik személy segítsége vagy korlátozott mozgásképesség: Igazolt harmadik személy segítségének szükségessége vagy csökkent mozgásképesség - asszisztencia-növekményt ad."
+            ],
+            "about": "Spouse disability grade code for Modelo 100.",
+            "row_index": null
+          },
+          {
+            "path": "renta_spouse.non_resident_irpf",
+            "label": "Házastárs nem rezidens (nem IRPF-adózó)",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "choices": [
+              { "value": "true", "label": "Igen" },
+              { "value": "false", "label": "Nem" }
+            ],
+            "help": ["Házastárs nem rezidens IRPF szerint"],
+            "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
+            "row_index": null
+          },
+          {
+            "path": "renta_spouse.eu_eea_resident",
+            "label": "Házastárs EU/EGT-rezidens",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "choices": [
+              { "value": "true", "label": "Igen" },
+              { "value": "false", "label": "Nem" }
+            ],
+            "help": ["Házastárs EU/EGT-ben él"],
+            "about": "Whether the non-resident spouse is resident in the EU or EEA.",
+            "row_index": null
+          },
+          {
+            "path": "renta_spouse.eu_eea_country",
+            "label": "Házastárs EU/EGT országa",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "string",
+            "choices": [],
+            "help": ["Házastárs EU/EGT országa"],
+            "about": "EU or EEA country of residence for the spouse.",
+            "row_index": null
+          }
+        ]
+      },
+      {
+        "key": "renta_family",
+        "title": "Család (Renta)",
+        "summary": "Gyermekek és más hozzátartozók, akik után családi kedvezmény illetheti meg.",
+        "repeatable": false,
+        "fields": [
+          {
+            "path": "renta_family.minor_children_in_unit",
+            "label": "Kiskorú gyermekek a családi egységben",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "choices": [
+              { "value": "true", "label": "Igen" },
+              { "value": "false", "label": "Nem" }
+            ],
+            "help": ["Kiskorú gyermekek a családi egységben"],
+            "about": "Minor children in the family unit.",
+            "row_index": null
+          },
+          {
+            "path": "renta_family.descendants_eu_eea_deduction",
+            "label": "EU/EGT-leszármazott kedvezmény",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "boolean",
+            "choices": [
+              { "value": "true", "label": "Igen" },
+              { "value": "false", "label": "Nem" }
+            ],
+            "help": ["EU/EEE leszármazottak a családi egység levonásban"],
+            "about": "EU/EEA descendant deduction flag for Modelo 100.",
+            "row_index": null
+          },
+          {
+            "path": "renta_family.situacion_familiar",
+            "label": "Családi helyzet",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "enum",
+            "choices": [
+              { "value": "casado", "label": "Házas" },
+              {
+                "value": "pareja_hecho_registrada",
+                "label": "Bejegyzett élettársi kapcsolat"
+              },
+              {
+                "value": "pareja_hecho_no_registrada",
+                "label": "Nem bejegyzett élettársi kapcsolat"
+              },
+              { "value": "soltero", "label": "Egyedülálló" },
+              {
+                "value": "separado_divorciado",
+                "label": "Különélő vagy elvált"
+              }
+            ],
+            "help": [
+              "Családi állapot (LIRPF 82. cikk)",
+              "Családi állapot a LIRPF 82. cikke értelmében: meghatározza, hogy elérhető-e az együttes adózás, és melyik családi egység típus alkalmazandó.",
+              "Házas: Érvényes házasság - együttes adózás elérhető (LIRPF 82. cikk 1. bek. 1. pont)",
+              "Bejegyzett élettársi kapcsolat: Az autonóm közösség nyilvántartásába bejegyzett - együttes adózás elérhető (LIRPF 82. cikk 1. bek. 2. pont)",
+              "Nem bejegyzett élettársi kapcsolat: Regisztráció nélküli együttélés - együttes adózás NEM elérhető",
+              "Egyedülálló: Egyedülálló, özvegy vagy elvált bejegyzett élettárs nélkül - egyéni adózás, közös csak egyszülős családként gyermekkel.",
+              "Elvált vagy különélő: Különvált vagy elvált - közös adózás csak a családi egységben lévő gyermekekkel lehetséges."
+            ],
+            "about": "Art. 82 LIRPF family situation used to validate joint taxation eligibility.",
+            "row_index": null
+          },
+          {
+            "path": "renta_family.descendientes_count",
+            "label": "Leszármazottak száma",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "choices": [],
+            "help": null,
+            "about": "Count of descendants represented in Renta family facts.",
+            "row_index": null
+          },
+          {
+            "path": "renta_family.madrid_nacimiento_adopcion_eligible_count",
+            "label": "Madrid születési/örökbefogadási kedvezményre jogosultak száma",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "choices": [],
+            "help": null,
+            "about": "Número prorrateado de descendientes convivientes que cumplen el plazo de nacimiento o adopción para la deducción de la Comunidad de Madrid (DL 1/2010 art. 4), aplicado a la casilla 1039 del Modelo 100.",
+            "row_index": null
+          },
+          {
+            "path": "renta_family.unidad_familiar_otros_miembros_base",
+            "label": "A családi egység többi tagjának adóalapja (Madrid)",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "choices": [],
+            "help": null,
+            "about": "Base imponible de los demás miembros de la unidad familiar para el límite de renta de la deducción de la Comunidad de Madrid (DL 1/2010 art. 18.1). En una unidad individual o monoparental equivale a cero; en una unidad conyugal solo se aplica cuando constan las bases necesarias.",
+            "row_index": null
+          },
+          {
+            "path": "renta_family.anualidades_alimentos_euros",
+            "label": "Bírósági határozat alapján fizetett gyermektartásdíj",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "choices": [],
+            "help": null,
+            "about": "Anualidades por alimentos a favor de los hijos satisfechas por decisión judicial. Un importe positivo suspende la asimilación por dependencia económica del artículo 58 para todos los descendientes mientras no pueda repartirse por hijo.",
+            "row_index": null
+          },
+          {
+            "path": "renta_family.cotizaciones_ss_madre_2024",
+            "label": "Anya társadalombiztosítási járulékai (2024)",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "decimal",
+            "choices": [],
+            "help": null,
+            "about": "Mother's Social Security cotizaciones paid in 2024 (Art. 81.2 LIRPF cap term).",
+            "row_index": null
+          }
+        ]
+      }
+    ]
+  },
+  "minimums": [
+    {
+      "address": { "kind": "casilla", "casilla_id": "0511" },
+      "box": "0511",
+      "label": {
+        "text": "Állami rész: Az adózó minimuma. Összeg",
+        "disclosure": "localized"
+      },
+      "help": null,
+      "data_type": "money",
+      "value": { "kind": "decimal", "text": "5550.00" },
+      "origin": "calculated",
+      "editability": "calculated",
+      "not_writable_reason": null,
+      "required": false,
+      "unattributed": false,
+      "grounded_rate": null,
+      "printed_rate": null,
+      "role": "computed",
+      "bindings": [],
+      "source": null,
+      "formula_id": "renta-minimo-contribuyente-estatal",
+      "formula_operands": [],
+      "blockers": [],
+      "constraints": null,
+      "legal_refs": ["ley-35-2006:art-56", "orden-hac-277-2026:art-3"],
+      "also_appears_on": [],
+      "standing": "done",
+      "edit_address": { "kind": "casilla", "casilla_id": "0511" },
+      "confirmable": false,
+      "held_zero": false,
+      "origin_words": "Számított",
+      "origin_explanation": null,
+      "editability_words": "A Cadrumo más rovatokból számítja ki.",
+      "value_text": "5 550,00 €",
+      "restorable": false,
+      "filers_own": false,
+      "confirm_value": null,
+      "takes_typed_value": false,
+      "clearable": false,
+      "own_value": null,
+      "confirm_comparable": null,
+      "state_digest": "709cc2e47f3f25f98996ec1a6e94dbc71b4b9cce765c72cc1cda1aa0c04b2b22"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "0512" },
+      "box": "0512",
+      "label": {
+        "text": "Autonóm közösségi rész: Az adózó minimuma. Összeg",
+        "disclosure": "localized"
+      },
+      "help": null,
+      "data_type": "money",
+      "value": { "kind": "decimal", "text": "5956.65" },
+      "origin": "calculated",
+      "editability": "calculated",
+      "not_writable_reason": null,
+      "required": false,
+      "unattributed": false,
+      "grounded_rate": null,
+      "printed_rate": null,
+      "role": "computed",
+      "bindings": [],
+      "source": null,
+      "formula_id": "renta-minimo-contribuyente-autonomica",
+      "formula_operands": ["renta-profile-tax-residence-ccaa"],
+      "blockers": [],
+      "constraints": null,
+      "legal_refs": ["ley-35-2006:art-56", "orden-hac-277-2026:art-3"],
+      "also_appears_on": [],
+      "standing": "done",
+      "edit_address": { "kind": "casilla", "casilla_id": "0512" },
+      "confirmable": false,
+      "held_zero": false,
+      "origin_words": "Számított",
+      "origin_explanation": null,
+      "editability_words": "A Cadrumo más rovatokból számítja ki.",
+      "value_text": "5 956,65 €",
+      "restorable": false,
+      "filers_own": false,
+      "confirm_value": null,
+      "takes_typed_value": false,
+      "clearable": false,
+      "own_value": null,
+      "confirm_comparable": null,
+      "state_digest": "5a719b7830d942030734385ad0fc2453498b650686e6e9b033bbf65b4c5effc9"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "0519" },
+      "box": "0519",
+      "label": {
+        "text": "Állami rész: Személyi és családi minimum",
+        "disclosure": "localized"
+      },
+      "help": null,
+      "data_type": "money",
+      "value": { "kind": "decimal", "text": "5550.00" },
+      "origin": "calculated",
+      "editability": "calculated",
+      "not_writable_reason": null,
+      "required": false,
+      "unattributed": false,
+      "grounded_rate": null,
+      "printed_rate": null,
+      "role": "computed",
+      "bindings": [],
+      "source": null,
+      "formula_id": "renta-minimo-personal-y-familiar-estatal",
+      "formula_operands": ["0511", "0513", "0515", "0517"],
+      "blockers": [],
+      "constraints": null,
+      "legal_refs": ["ley-35-2006:art-56", "orden-hac-277-2026:art-3"],
+      "also_appears_on": [],
+      "standing": "done",
+      "edit_address": { "kind": "casilla", "casilla_id": "0519" },
+      "confirmable": false,
+      "held_zero": false,
+      "origin_words": "Számított",
+      "origin_explanation": null,
+      "editability_words": "A Cadrumo más rovatokból számítja ki.",
+      "value_text": "5 550,00 €",
+      "restorable": false,
+      "filers_own": false,
+      "confirm_value": null,
+      "takes_typed_value": false,
+      "clearable": false,
+      "own_value": null,
+      "confirm_comparable": null,
+      "state_digest": "709cc2e47f3f25f98996ec1a6e94dbc71b4b9cce765c72cc1cda1aa0c04b2b22"
+    },
+    {
+      "address": { "kind": "casilla", "casilla_id": "0520" },
+      "box": "0520",
+      "label": {
+        "text": "A személyi és családi minimum megnövelt vagy csökkentett teljes összege az autonóm-közösségi adó számítása szempontjából",
+        "disclosure": "localized"
+      },
+      "help": null,
+      "data_type": "money",
+      "value": { "kind": "decimal", "text": "5956.65" },
+      "origin": "calculated",
+      "editability": "calculated",
+      "not_writable_reason": null,
+      "required": false,
+      "unattributed": false,
+      "grounded_rate": null,
+      "printed_rate": null,
+      "role": "computed",
+      "bindings": [],
+      "source": null,
+      "formula_id": "renta-minimo-personal-y-familiar-autonomica",
+      "formula_operands": ["0512", "0514", "0516", "0518"],
+      "blockers": [],
+      "constraints": null,
+      "legal_refs": ["ley-35-2006:art-56", "orden-hac-277-2026:art-3"],
+      "also_appears_on": [],
+      "standing": "done",
+      "edit_address": { "kind": "casilla", "casilla_id": "0520" },
+      "confirmable": false,
+      "held_zero": false,
+      "origin_words": "Számított",
+      "origin_explanation": null,
+      "editability_words": "A Cadrumo más rovatokból számítja ki.",
+      "value_text": "5 956,65 €",
+      "restorable": false,
+      "filers_own": false,
+      "confirm_value": null,
+      "takes_typed_value": false,
+      "clearable": false,
+      "own_value": null,
+      "confirm_comparable": null,
+      "state_digest": "5a719b7830d942030734385ad0fc2453498b650686e6e9b033bbf65b4c5effc9"
+    }
+  ]
+}

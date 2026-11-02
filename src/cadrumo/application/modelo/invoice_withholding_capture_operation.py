@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pydantic import BaseModel
 
-from ..live.live_operation_registration import resolve_whole_profile_capture_access
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
@@ -60,11 +60,11 @@ def resolve_modelo_invoice_withholding_capture_access(
     /,
 ) -> ResolvedOperationAccess:
     """Bind exact profile and all-period invoice-catalogue rights, including fresh COMMIT."""
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,
-        payload_type=ModeloInvoiceWithholdingCaptureRequest,
+        request_type=ModeloInvoiceWithholdingCaptureRequest,
     )
 
 

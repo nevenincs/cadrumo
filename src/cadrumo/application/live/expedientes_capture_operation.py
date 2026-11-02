@@ -17,6 +17,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
@@ -32,11 +33,7 @@ from .filed_history_operation import (
     FiledHistoryProviderPreflight,
 )
 from .live_operation_execution import fenced_persistence_guard, own_provider_browser, publish_live_capture_report
-from .live_operation_registration import (
-    build_live_operation_definition,
-    require_live_capture_receipt,
-    resolve_whole_profile_capture_access,
-)
+from .live_operation_registration import build_live_operation_definition, require_live_capture_receipt
 from .remote_state_models import ExpedientesBulkCaptureFailureRow, ExpedientesBulkCaptureReport
 from .session import LiveSessionWriteReceipt
 
@@ -329,22 +326,22 @@ def build_expedientes_bulk_capture_definition(
 def resolve_expedientes_single_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=EXPEDIENTES_SINGLE_CAPTURE_DEFINITION_ID,
-        payload_type=ExpedientesSingleCaptureRequest,
+        request_type=ExpedientesSingleCaptureRequest,
     )
 
 
 def resolve_expedientes_bulk_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=EXPEDIENTES_BULK_CAPTURE_DEFINITION_ID,
-        payload_type=ExpedientesBulkCaptureRequest,
+        request_type=ExpedientesBulkCaptureRequest,
     )
 
 

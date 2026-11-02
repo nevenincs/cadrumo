@@ -32,15 +32,13 @@ from ...core.identity_check_verdict import IdentityCheckVerdict
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..live.live_operation_execution import (
     publish_live_read_report,
     require_exact_profile_worker,
     require_live_executor_identity,
 )
-from ..live.live_operation_registration import (
-    build_live_operation_definition,
-    resolve_whole_profile_read_access,
-)
+from ..live.live_operation_registration import build_live_operation_definition
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import EPHEMERAL_CREDENTIAL_FREE_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
@@ -331,11 +329,11 @@ def resolve_aeat_sync_status_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-profile read access for the stored captures."""
-    return resolve_whole_profile_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
         definition_id=LIVE_SYNC_STATUS_DEFINITION_ID,
-        payload_type=AeatSyncStatusRequest,
+        request_type=AeatSyncStatusRequest,
     )
 
 

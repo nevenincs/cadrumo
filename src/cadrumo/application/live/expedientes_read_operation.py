@@ -17,6 +17,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
@@ -28,11 +29,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .expedientes import ExpedientesService, PersistedExpedientesSnapshot
 from .expedientes_ports import ExpedientesPortsFactory
 from .live_operation_execution import publish_live_read_report, require_exact_profile_worker
-from .live_operation_registration import (
-    build_live_operation_definition,
-    require_live_read_receipt,
-    resolve_whole_profile_read_access,
-)
+from .live_operation_registration import build_live_operation_definition, require_live_read_receipt
 
 EXPEDIENTES_LIST_DEFINITION_ID = "live.expedientes.list"
 EXPEDIENTES_SHOW_DEFINITION_ID = "live.expedientes.show"
@@ -407,24 +404,24 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
 def resolve_expedientes_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=EXPEDIENTES_LIST_DEFINITION_ID, payload_type=ExpedientesListRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=EXPEDIENTES_LIST_DEFINITION_ID, request_type=ExpedientesListRequest
     )
 
 
 def resolve_expedientes_show_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=EXPEDIENTES_SHOW_DEFINITION_ID, payload_type=ExpedientesShowRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=EXPEDIENTES_SHOW_DEFINITION_ID, request_type=ExpedientesShowRequest
     )
 
 
 def resolve_expedientes_latest_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=EXPEDIENTES_LATEST_DEFINITION_ID, payload_type=ExpedientesLatestRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=EXPEDIENTES_LATEST_DEFINITION_ID, request_type=ExpedientesLatestRequest
     )
 
 

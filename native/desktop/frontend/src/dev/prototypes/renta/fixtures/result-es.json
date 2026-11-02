@@ -1,0 +1,359 @@
+{
+  "failed": {
+    "header": {
+      "state": "failed",
+      "casilla_id": "0670",
+      "box": "0670",
+      "settles": true,
+      "direction": "unknown",
+      "words": null,
+      "amount_text": null,
+      "text": "Resultado: no se pudo calcular",
+      "short_text": "Resultado: no se pudo calcular",
+      "brief_text": "Resultado: no se pudo calcular",
+      "help": ["Cálculo de Cadrumo. La AEAT no lo ha visto."],
+      "out_of_date_words": null
+    },
+    "fields": [
+      {
+        "address": { "kind": "casilla", "casilla_id": "0670" },
+        "box": "0670",
+        "label": {
+          "text": "Resultado de la declaración",
+          "disclosure": "localized"
+        },
+        "help": "Este campo calculado recoge el resultado de la declaración mediante la fórmula declarada sobre las casillas [0610], [0611], [0612], [0613], [0623], [0624], [0636], [0637], [0248], [0249], [0660], [0661], [0662], [0663], [0664], [0666] y [0669].",
+        "data_type": "decimal",
+        "value": { "kind": "null", "text": "" },
+        "origin": "calculation_failed",
+        "editability": "calculated",
+        "not_writable_reason": null,
+        "required": false,
+        "unattributed": false,
+        "grounded_rate": null,
+        "printed_rate": null,
+        "role": "result",
+        "bindings": [],
+        "source": null,
+        "formula_id": "renta-resultado-declaracion",
+        "formula_operands": [
+          "0610",
+          "0611",
+          "0612",
+          "0613",
+          "0623",
+          "0624",
+          "0636",
+          "0637",
+          "0248",
+          "0249",
+          "0660",
+          "0661",
+          "0662",
+          "0663",
+          "0664",
+          "0666",
+          "0669"
+        ],
+        "blockers": [],
+        "constraints": null,
+        "legal_refs": ["ley-35-2006:art-103", "orden-hac-277-2026:art-3"],
+        "also_appears_on": [],
+        "standing": "needs_you",
+        "edit_address": { "kind": "casilla", "casilla_id": "0670" },
+        "confirmable": false,
+        "held_zero": false,
+        "origin_words": "No se pudo calcular",
+        "origin_explanation": null,
+        "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+        "value_text": null,
+        "restorable": false,
+        "filers_own": false,
+        "confirm_value": null,
+        "takes_typed_value": false,
+        "clearable": false,
+        "own_value": null,
+        "confirm_comparable": null,
+        "state_digest": "406cda705f9b73b812514662a61f30bd525df9ab22af7e5b1a0699aeeb55804e"
+      },
+      {
+        "address": { "kind": "casilla", "casilla_id": "0700" },
+        "box": "0700",
+        "label": {
+          "text": "Resultado a ingresar o a devolver (casilla [0670] o casilla [0695] de la declaración)",
+          "disclosure": "localized"
+        },
+        "help": "Este campo recoge el resultado a ingresar o a devolver, utilizando la casilla [0670] o la casilla [0695] de la declaración, según corresponda.",
+        "data_type": "decimal",
+        "value": { "kind": "decimal", "text": "0" },
+        "origin": "optional_empty",
+        "editability": "editable_value",
+        "not_writable_reason": null,
+        "required": false,
+        "unattributed": true,
+        "grounded_rate": null,
+        "printed_rate": null,
+        "role": "input",
+        "bindings": [],
+        "source": null,
+        "formula_id": null,
+        "formula_operands": [],
+        "blockers": [],
+        "constraints": null,
+        "legal_refs": ["ley-35-2006:art-97", "orden-hac-277-2026:art-3"],
+        "also_appears_on": [],
+        "standing": "done",
+        "edit_address": { "kind": "casilla", "casilla_id": "0700" },
+        "confirmable": false,
+        "held_zero": true,
+        "origin_words": "Opcional, se queda en 0",
+        "origin_explanation": null,
+        "editability_words": "Escribe el importe o el dato de esta casilla.",
+        "value_text": "0",
+        "restorable": false,
+        "filers_own": false,
+        "confirm_value": null,
+        "takes_typed_value": true,
+        "clearable": false,
+        "own_value": null,
+        "confirm_comparable": null,
+        "state_digest": "a98b28313c97e2f9b5bc587c178da1333f391127e7d64b384a0b74d1941df620"
+      }
+    ]
+  },
+  "not_calculated": {
+    "header": {
+      "state": "not_calculated",
+      "casilla_id": "0670",
+      "box": "0670",
+      "settles": true,
+      "direction": "unknown",
+      "words": null,
+      "amount_text": null,
+      "text": "Resultado: aún sin calcular",
+      "short_text": "Resultado: aún sin calcular",
+      "brief_text": "Resultado: aún sin calcular",
+      "help": [],
+      "out_of_date_words": null
+    },
+    "fields": [
+      {
+        "address": { "kind": "casilla", "casilla_id": "0670" },
+        "box": "0670",
+        "label": {
+          "text": "Resultado de la declaración",
+          "disclosure": "localized"
+        },
+        "help": "Este campo calculado recoge el resultado de la declaración mediante la fórmula declarada sobre las casillas [0610], [0611], [0612], [0613], [0623], [0624], [0636], [0637], [0248], [0249], [0660], [0661], [0662], [0663], [0664], [0666] y [0669].",
+        "data_type": "decimal",
+        "value": { "kind": "null", "text": "" },
+        "origin": "not_calculated_yet",
+        "editability": "calculated",
+        "not_writable_reason": null,
+        "required": false,
+        "unattributed": false,
+        "grounded_rate": null,
+        "printed_rate": null,
+        "role": "result",
+        "bindings": [],
+        "source": null,
+        "formula_id": "renta-resultado-declaracion",
+        "formula_operands": [
+          "0610",
+          "0611",
+          "0612",
+          "0613",
+          "0623",
+          "0624",
+          "0636",
+          "0637",
+          "0248",
+          "0249",
+          "0660",
+          "0661",
+          "0662",
+          "0663",
+          "0664",
+          "0666",
+          "0669"
+        ],
+        "blockers": [],
+        "constraints": null,
+        "legal_refs": ["ley-35-2006:art-103", "orden-hac-277-2026:art-3"],
+        "also_appears_on": [],
+        "standing": "waiting",
+        "edit_address": { "kind": "casilla", "casilla_id": "0670" },
+        "confirmable": false,
+        "held_zero": false,
+        "origin_words": "Aún sin calcular",
+        "origin_explanation": null,
+        "editability_words": "Cadrumo la calcula a partir de otras casillas.",
+        "value_text": null,
+        "restorable": false,
+        "filers_own": false,
+        "confirm_value": null,
+        "takes_typed_value": false,
+        "clearable": false,
+        "own_value": null,
+        "confirm_comparable": null,
+        "state_digest": "9374bb1cdcfb87e1f7532a0eb7c9e1e56d970f66a5cff9b3886bae5458e98f81"
+      },
+      {
+        "address": { "kind": "casilla", "casilla_id": "0700" },
+        "box": "0700",
+        "label": {
+          "text": "Resultado a ingresar o a devolver (casilla [0670] o casilla [0695] de la declaración)",
+          "disclosure": "localized"
+        },
+        "help": "Este campo recoge el resultado a ingresar o a devolver, utilizando la casilla [0670] o la casilla [0695] de la declaración, según corresponda.",
+        "data_type": "decimal",
+        "value": { "kind": "null", "text": "" },
+        "origin": "optional_empty",
+        "editability": "editable_value",
+        "not_writable_reason": null,
+        "required": false,
+        "unattributed": false,
+        "grounded_rate": null,
+        "printed_rate": null,
+        "role": "input",
+        "bindings": [],
+        "source": null,
+        "formula_id": null,
+        "formula_operands": [],
+        "blockers": [],
+        "constraints": null,
+        "legal_refs": ["ley-35-2006:art-97", "orden-hac-277-2026:art-3"],
+        "also_appears_on": [],
+        "standing": "done",
+        "edit_address": { "kind": "casilla", "casilla_id": "0700" },
+        "confirmable": false,
+        "held_zero": false,
+        "origin_words": "Opcional, vacía",
+        "origin_explanation": null,
+        "editability_words": "Escribe el importe o el dato de esta casilla.",
+        "value_text": null,
+        "restorable": false,
+        "filers_own": false,
+        "confirm_value": null,
+        "takes_typed_value": true,
+        "clearable": false,
+        "own_value": null,
+        "confirm_comparable": null,
+        "state_digest": "30d730026e4304045aa9dbcf81aa468891a86ef828acc92cead53e33cf9dd814"
+      }
+    ]
+  },
+  "stated": {
+    "to_pay": {
+      "state": "stated",
+      "casilla_id": "0670",
+      "box": "0670",
+      "settles": true,
+      "direction": "to_pay",
+      "words": "A ingresar",
+      "amount_text": "1.234,56 €",
+      "text": "A ingresar  1.234,56 €  [0670]",
+      "short_text": "A ingresar  1.234,56 €",
+      "brief_text": "A ingresar  1.234,56 €",
+      "help": ["Cálculo de Cadrumo. La AEAT no lo ha visto."],
+      "out_of_date_words": null
+    },
+    "to_refund": {
+      "state": "stated",
+      "casilla_id": "0670",
+      "box": "0670",
+      "settles": true,
+      "direction": "to_refund",
+      "words": "A devolver",
+      "amount_text": "482,10 €",
+      "text": "A devolver  482,10 €  [0670]",
+      "short_text": "A devolver  482,10 €",
+      "brief_text": "A devolver  482,10 €",
+      "help": ["Cálculo de Cadrumo. La AEAT no lo ha visto."],
+      "out_of_date_words": null
+    }
+  },
+  "export_offer": {
+    "artefacts": [
+      {
+        "artefact": "fichero_boe",
+        "words": "Fichero BOE para presentar en la AEAT",
+        "availability": {
+          "available": false,
+          "reason": "blocks",
+          "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 5)."
+        }
+      },
+      {
+        "artefact": "calculation_report_csv",
+        "words": "Informe de cálculo (CSV), solo registro local",
+        "availability": {
+          "available": false,
+          "reason": "not_verified",
+          "words": "Comprueba la declaración antes de exportarla."
+        }
+      },
+      {
+        "artefact": "calculation_report_pdf",
+        "words": "Resumen del cálculo firmado (PDF), solo registro local",
+        "availability": {
+          "available": false,
+          "reason": "not_verified",
+          "words": "Comprueba la declaración antes de exportarla."
+        }
+      },
+      {
+        "artefact": "calculation_review_xlsx",
+        "words": "Revisión del cálculo guardado (XLSX)",
+        "availability": { "available": true, "reason": null, "words": null }
+      }
+    ],
+    "record": {
+      "available": false,
+      "reason": "blocks",
+      "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 5)."
+    },
+    "review_package": {
+      "words": "Paquete para tu gestor",
+      "availability": {
+        "available": false,
+        "reason": "blocks",
+        "words": "Resuelve lo que impide presentar antes de generar el fichero o registrar la presentación (impiden presentar: 5)."
+      }
+    },
+    "asks_elections": false,
+    "elections": [],
+    "file_format": "xml_dictionary",
+    "file_format_words": "Fichero XML de la AEAT"
+  },
+  "elections_303": [
+    {
+      "election": "refund",
+      "words": "Resultado negativo: compensar o solicitar la devolución",
+      "default": "compensar",
+      "choices": [
+        { "value": "compensar", "words": "Compensar en periodos posteriores" },
+        { "value": "devolver", "words": "Solicitar la devolución" }
+      ]
+    },
+    {
+      "election": "payment",
+      "words": "Resultado a ingresar: forma de pago",
+      "default": "ingreso",
+      "choices": [
+        { "value": "ingreso", "words": "Ingreso" },
+        { "value": "domiciliacion", "words": "Domiciliación bancaria" },
+        { "value": "cuenta_corriente", "words": "Cuenta corriente tributaria" }
+      ]
+    },
+    {
+      "election": "prior_domiciliation",
+      "words": "Domiciliación anterior (solo autoliquidación rectificativa)",
+      "default": "keep",
+      "choices": [
+        { "value": "keep", "words": "Mantenerla" },
+        { "value": "cancel_or_modify", "words": "Anularla o modificarla" }
+      ]
+    }
+  ]
+}

@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.period import Period
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
@@ -37,7 +38,7 @@ from .live_operation_execution import (
     require_exact_profile_worker,
     track_capture_session,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import SourceFiledDataCaptureReport
 
 FILED_SOURCE_CAPTURE_DEFINITION_ID = "live.filed-capture.source"
@@ -152,8 +153,8 @@ def resolve_filed_source_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile dependency access and a fresh COMMIT fence."""
-    return resolve_whole_profile_capture_access(
-        request, context, definition_id=FILED_SOURCE_CAPTURE_DEFINITION_ID, payload_type=FiledSourceCaptureRequest
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=FILED_SOURCE_CAPTURE_DEFINITION_ID, request_type=FiledSourceCaptureRequest
     )
 
 

@@ -4576,6 +4576,37 @@ desktop:
     search: Cerca
     settings: Configuració
     tui: Espai de treball
+  renta:
+    proto:
+      election:
+        save: Desa la resposta
+        year: Exercici
+      excerpt: Aquest prototip només conté alguns apartats de la declaració real.
+        Tria un altre apartat per veure'l aquí.
+      family:
+        boxes: Caselles que alimenten aquestes dades
+        edit: Canvia-ho al teu perfil
+        empty: Sense indicar
+        profile: Del teu perfil
+      gap:
+        body: El backend encara no serveix això, així que la finestra no mostra res
+          al seu lloc.
+        operation: 'Necessita: {operation}'
+        title: Encara no se serveix
+      nav:
+        boxes: 'Caselles: {count}'
+        failed: 'No s''ha pogut calcular: {count}'
+        needs_you: 'Et necessita: {count}'
+        only_attention: Només el que et necessita
+        proposed: Esquema proposat
+        served: Tal com se serveix avui
+        technical: 'Encapçalament tècnic: el disseny encara no hi té un encapçalament
+          revisat'
+        title: Apartats
+      result:
+        composed: Xifra redactada pel generador de capçalera del mateix backend, no
+          calculada
+        example: Forma que ja se serveix per a una altra declaració
   session:
     enter_restarts: Retorn el reinicia
     exit_line: '[El procés ha acabat amb el codi {code}. Prem Retorn per tornar a
@@ -10236,3 +10267,27 @@ workspace:
       not_applicable: no s'aplica
       not_known_yet: Encara no se sap
     was: 'abans: {value}'
+  renta:
+    election:
+      proposed: Resposta proposada
+      stated: Indicat per a {year}
+      title: Criteri d'imputació de la teva activitat
+      undeclared: Encara no l'has indicat. Les caselles d'activitat que en depenen
+        continuen sense resoldre fins que l'indiquis.
+    outline:
+      activities: Activitats econòmiques
+      annexes: Annexos i informació addicional
+      bases: Bases imposables i liquidables
+      capital_gains: Guanys i pèrdues patrimonials
+      credits: Retencions i pagaments a compte
+      employment: Rendiments del treball
+      family: Unitat familiar
+      identification: Identificació i situació familiar
+      liability: Quotes íntegres i deduccions
+      minimums: Mínim personal i familiar
+      movable_capital: Rendiments del capital mobiliari
+      other: Altres dades
+      real_estate: Rendiments del capital immobiliari i imputacions de renda
+      result: Resultat de la declaració
+    result:
+      settlement: Com es paga o es retorna

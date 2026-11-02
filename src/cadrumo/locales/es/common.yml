@@ -4573,6 +4573,37 @@ desktop:
     search: Buscar
     settings: Ajustes
     tui: Espacio de trabajo
+  renta:
+    proto:
+      election:
+        save: Guarda la respuesta
+        year: Ejercicio
+      excerpt: Este prototipo solo contiene algunos apartados de la declaración real.
+        Elige otro apartado para verlo aquí.
+      family:
+        boxes: Casillas que alimentan estos datos
+        edit: Cámbialo en tu perfil
+        empty: Sin indicar
+        profile: De tu perfil
+      gap:
+        body: El backend aún no sirve esto, así que la ventana no muestra nada en
+          su lugar.
+        operation: 'Necesita: {operation}'
+        title: Aún no se sirve
+      nav:
+        boxes: 'Casillas: {count}'
+        failed: 'No se pudo calcular: {count}'
+        needs_you: 'Te necesita: {count}'
+        only_attention: Solo lo que te necesita
+        proposed: Esquema propuesto
+        served: Tal como se sirve hoy
+        technical: 'Encabezado técnico: el diseño aún no tiene aquí un encabezado
+          revisado'
+        title: Apartados
+      result:
+        composed: Cifra redactada por el propio generador de cabecera del backend,
+          no calculada
+        example: Forma que ya se sirve para otra declaración
   session:
     enter_restarts: Intro lo reinicia
     exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
@@ -10241,3 +10272,27 @@ workspace:
       not_applicable: no aplica
       not_known_yet: Aún no se sabe
     was: 'antes: {value}'
+  renta:
+    election:
+      proposed: Respuesta propuesta
+      stated: Indicado para {year}
+      title: Criterio de imputación de tu actividad
+      undeclared: Aún no lo has indicado. Las casillas de actividad que dependen de
+        él siguen sin resolver hasta que lo indiques.
+    outline:
+      activities: Actividades económicas
+      annexes: Anexos e información adicional
+      bases: Bases imponibles y liquidables
+      capital_gains: Ganancias y pérdidas patrimoniales
+      credits: Retenciones y pagos a cuenta
+      employment: Rendimientos del trabajo
+      family: Unidad familiar
+      identification: Identificación y situación familiar
+      liability: Cuotas íntegras y deducciones
+      minimums: Mínimo personal y familiar
+      movable_capital: Rendimientos del capital mobiliario
+      other: Otros datos
+      real_estate: Rendimientos del capital inmobiliario e imputaciones de renta
+      result: Resultado de la declaración
+    result:
+      settlement: Cómo se paga o se devuelve
