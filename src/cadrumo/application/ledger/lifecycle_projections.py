@@ -9,7 +9,6 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.errors.hierarchy import CadrumoError
-from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction
@@ -18,6 +17,7 @@ from ..operations.models import (
     refused_receipt_references_hold,
     require_succeeded_terminal_receipt,
 )
+from ..operations.result_size import refuse_oversized_result
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
 from .lifecycle_contracts import (
@@ -180,8 +180,7 @@ def project_lifecycle_validation_from_error(
 
 def require_lifecycle_result_size(result: LedgerLifecycleExecutionResult) -> None:
     """Reject an encrypted lifecycle result that exceeds its registered byte limit."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > LEDGER_LIFECYCLE_MAX_RESULT_BYTES - 128:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, LEDGER_LIFECYCLE_MAX_RESULT_BYTES - 128)
 
 
 def _lifecycle_receipt_identity_matches(

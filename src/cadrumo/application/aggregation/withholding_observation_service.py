@@ -99,7 +99,7 @@ class WithholdingProjectionIdentity(BaseModel):
     def token(self) -> str:
         """Return the stable liability identity, independent of later settlement."""
         identity = self.model_dump(mode="json", exclude={"settlement_event_id"})
-        return sha256_hex(_canonical_json(identity).encode("utf-8"))
+        return sha256_hex(withholding_canonical_json(identity).encode("utf-8"))
 
 
 class SourceLiabilitySnapshot(BaseModel):
@@ -127,9 +127,9 @@ class SourceLiabilitySnapshot(BaseModel):
     def source_token(self) -> str:
         """Return the guard scope, deliberately independent of revisions."""
         return sha256_hex(
-            _canonical_json({"source_kind": self.source_kind, "source_object_id": self.source_object_id}).encode(
-                "utf-8"
-            )
+            withholding_canonical_json(
+                {"source_kind": self.source_kind, "source_object_id": self.source_object_id}
+            ).encode("utf-8")
         )
 
 
@@ -149,7 +149,7 @@ class EconomicAllocation(BaseModel):
     def guard_identity(self) -> str:
         """Return the allocation identity without revision or settlement IDs."""
         return sha256_hex(
-            _canonical_json(
+            withholding_canonical_json(
                 {
                     "source_kind": self.liability.source_kind,
                     "source_object_id": self.liability.source_object_id,
@@ -255,8 +255,8 @@ class WithholdingMutationEnvelope(BaseModel):
     def command_digest(self) -> str:
         """Return the canonical digest used for idempotency comparison."""
         value = self.model_dump(mode="json")
-        value["entries"] = sorted(value["entries"], key=lambda item: _identity_json_token(item["identity"]))
-        return sha256_hex(_canonical_json(value).encode("utf-8"))
+        value["entries"] = sorted(value["entries"], key=lambda item: withholding_canonical_json(item["identity"]))
+        return sha256_hex(withholding_canonical_json(value).encode("utf-8"))
 
 
 def _validate_mutation_envelope(envelope: WithholdingMutationEnvelope) -> None:
@@ -456,11 +456,12 @@ def _successor(
     return tuple(sorted((*current, *envelope.entries), key=lambda entry: entry.identity.token))
 
 
-def _identity_json_token(value: object) -> str:
-    return _canonical_json(value)
+def withholding_canonical_json(value: object) -> str:
+    """Spell a value the way stored withholding identities and digests were hashed.
 
-
-def _canonical_json(value: object) -> str:
+    It differs from the core canonical form on purpose: it escapes non-ASCII and
+    admits NaN, and adopting that form would move every stored token.
+    """
     return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
 
 
@@ -485,4 +486,5 @@ __all__ = [
     "WithholdingWindowBaseline",
     "WithholdingWindowScope",
     "WithholdingWindowState",
+    "withholding_canonical_json",
 ]

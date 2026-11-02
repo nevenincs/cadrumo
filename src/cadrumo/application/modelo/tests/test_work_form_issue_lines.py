@@ -25,8 +25,11 @@ from ....domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
     VerificationCompletenessStatus,
 )
+from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import (
     CALCULATION_NOTE_ATTENTION,
+    CALCULATION_SCREEN_OUTDATED_REASON,
+    FILED_BEFORE_GRADE_CAP_REASON,
     PRINTED_BOX_REASONS,
     RECORDS_REASONS,
     note_attention,
@@ -191,6 +194,26 @@ def test_a_calculation_note_about_records_leads_to_the_ledger(operation: PinnedA
     assert line.where == say("workspace.modelo.issues.where.records")
     assert line.message == say(what_locale_key(reason), box=say("application.modelo.finding_fact.box_unnumbered"))
     assert line.technical == f"{say('workspace.modelo.issues.technical')}: {reason}"
+
+
+@pytest.mark.parametrize("reason", [CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON])
+def test_a_note_the_gate_derives_is_put_right_by_calculating_again(
+    operation: PinnedAuthorityOperation, reason: str
+) -> None:
+    """A revision the gate refuses before it reads any note offers calculating again on its line, and blocks."""
+    note = ModeloFormCalculationNote(
+        reason=reason, attention=note_attention(reason, box=None), withholds_filing=gate_refuses(reason, None)
+    )
+    other = ModeloFormCalculationNote(reason="source_issue", attention=note_attention("source_issue", box=None))
+    form = built_form(operation, "130", 2026, "1T").model_copy(update={"calculation_notes": (note, other)})
+
+    derived, kept = form_issue_lines(form, OutputLanguage.EN)
+
+    assert derived.from_calculation
+    assert derived.level is ModeloFormAttention.BLOCKS
+    assert derived.recalculates
+    assert kept.from_calculation
+    assert not kept.recalculates
 
 
 @pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.ES])

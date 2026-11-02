@@ -1516,10 +1516,10 @@ application:
         no se incluye.'
       activity_undeclared: '{element}: su compra no indica tipo de actividad y otro
         de tus elementos es agrario, así que se cuenta como no agraria.'
-      advisory_imputation_period_ungrounded: 'Casilla {box}: {amount} de retenciones
-        quedan en espera porque no está confirmado el periodo al que corresponden.
-        Una retención se imputa al periodo de la renta sobre la que se practicó (art.
-        79 RIRPF), y tus registros fechan cada cobro por su llegada al banco, lo que
+      advisory_imputation_period_ungrounded: 'Casilla {box}: {amount} queda en espera
+        porque no está confirmado el periodo al que corresponde. Los ingresos y gastos
+        de la actividad se imputan al devengo y una retención va con su renta (art.
+        79 RIRPF), y tus registros fechan cada movimiento por su llegada al banco, lo que
         solo es correcto si optaste por el criterio de cobros y pagos (art. 7.2 RIRPF;
         art. 14.1.b LIRPF).'
       advisory_value_proven_zero: 'Casilla {box}: el cero se mantiene, porque en el

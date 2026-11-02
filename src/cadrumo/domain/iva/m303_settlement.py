@@ -18,7 +18,8 @@ if TYPE_CHECKING:
 # Registry authority: M303 annual settlement ordering is resolved through the
 # generation-pinned revision directory; the authored revision remains external.
 
-_M303_LIQUIDATION_KINDS: frozenset[PeriodKind] = frozenset((PeriodKind.QUARTERLY, PeriodKind.MONTHLY))
+#: Orden EHA/3786/2008 art. 7 settles Modelo 303 by quarter or, for the filers it names, by month.
+M303_LIQUIDATION_CADENCES: tuple[PeriodKind, ...] = (PeriodKind.QUARTERLY, PeriodKind.MONTHLY)
 
 
 def _pinned_selection(authority: PinnedAuthorityOperation | None) -> tuple[Any, Any]:
@@ -56,7 +57,7 @@ def m303_cadence_liquidation_periods(
         RegistryValidationError: When ``kind`` is not a Modelo 303 liquidation
             cadence, or no generation-pinned authority is in scope.
     """
-    if kind not in _M303_LIQUIDATION_KINDS:
+    if kind not in M303_LIQUIDATION_CADENCES:
         raise RegistryValidationError(
             f"Modelo 303 liquidation periods are quarterly or monthly; got {kind.value}",
         )
@@ -89,7 +90,7 @@ def m303_liquidation_periods(
         NoRevisionForPeriodError: When no Modelo 303 revision declares the
             requested period or its derived terminal period for the year.
     """
-    if not period.has_date_span() or period.kind not in _M303_LIQUIDATION_KINDS:
+    if not period.has_date_span() or period.kind not in M303_LIQUIDATION_CADENCES:
         raise RegistryValidationError(
             f"Modelo 303 settlement ordering requires a quarterly or monthly liquidation period; got {period}",
         )
@@ -168,6 +169,7 @@ def m303_annual_settlement_order_key(
 
 
 __all__ = [
+    "M303_LIQUIDATION_CADENCES",
     "is_m303_annual_settlement_period",
     "m303_annual_settlement_order_key",
     "m303_annual_settlement_period_order",

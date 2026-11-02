@@ -72,6 +72,7 @@ from .view_download import deliver_download, discard_download
 from .view_input import ViewInputAdapter
 from .view_login_session import ViewLoginSessionFactory
 from .view_presentation import interrupts_assisted_login, is_aeat_page, safe_filename, view_state
+from .view_work import settle
 
 if TYPE_CHECKING:
     from playwright.async_api import Dialog, Download, FileChooser, FilePayload
@@ -540,19 +541,10 @@ class SedeViewPage:
         self._track(work)
 
     def _track(self, work: Coroutine[object, object, None]) -> asyncio.Task[None]:
-        task = asyncio.get_running_loop().create_task(_settle(work))
+        task = asyncio.get_running_loop().create_task(settle(work, logger))
         self._background.add(task)
         task.add_done_callback(self._background.discard)
         return task
-
-
-async def _settle(work: Coroutine[object, object, None]) -> None:
-    try:
-        await work
-    except PlaywrightError as exc:
-        logger.debug("aeat view page work ended exc_type=%s", type(exc).__name__)
-    except Exception as exc:
-        logger.error("aeat view page work failed exc_type=%s", type(exc).__name__)
 
 
 async def open_sede_view(opening: SedeViewOpening) -> SedeViewPage:

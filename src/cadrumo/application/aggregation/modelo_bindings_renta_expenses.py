@@ -2,13 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
-from typing import ClassVar, Protocol
+from decimal import Decimal
+from typing import ClassVar, Final, Protocol
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
+from ...core.period import Period
 from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
     resolve_activity_asset_disposal_binding_values,
     resolve_activity_asset_disposal_element_type_values,
@@ -17,6 +19,7 @@ from ...domain.calculations.registry.actividad_asset_disposal_bindings import (
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.errors import RegistryError
 from ...domain.calculations.registry.form_codes import form_for_role
+from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     RentaGastosEstimacionDirectaObservationProtocol,
     activity_asset_amortization_casillas,
@@ -29,6 +32,8 @@ from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindin
     resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values,
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
 )
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
@@ -82,6 +87,7 @@ from .renta_gasto_ledger import (
     RentaGastoObservation,
     aggregate_renta_gasto_ledger_from_repositories,
 )
+from .renta_imputation import accruing_invoices, ledger_sum_outcome
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .renta_ledger_models import RentaLedgerExpenseAggregation
 from .source_mesh import (
@@ -355,6 +361,15 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
             },
             enum_binding_values=element_types,
             inapplicable_binding_ids=element_types_inapplicable,
+            value_outcomes=_ledger_expense_value_outcomes(
+                context,
+                resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
+                    context.revision, all_observations
+                ),
+                held_back_rows=any(issue.reason.value not in _NOT_AN_EXPENSE_ISSUES for issue in issues),
+                period=aggregation.period,
+                invoices=self._ports.invoice_reader.load(),
+            ),
             source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
             diagnostics=source_issue_diagnostics(
                 issues,
@@ -395,6 +410,40 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 resolved_binding_source=BindingSourceKind.ACTIVITY_ASSET_DISPOSAL,
             ),
         )
+
+
+_NOT_AN_EXPENSE_ISSUES: Final[frozenset[str]] = frozenset(
+    {"personal_transaction", "unsupported_direction", "outside_period"}
+)
+"""Issues naming a row that is not this window's activity expense, so it says nothing against a zero."""
+
+
+def _ledger_expense_value_outcomes(
+    context: CalculationSourceContext,
+    binding_values: Mapping[BindingId, Decimal],
+    *,
+    held_back_rows: bool,
+    period: Period,
+    invoices: InvoiceCatalogue,
+) -> dict[BindingId, BindingValueOutcome]:
+    """State what each resolved expense box rests on.
+
+    A row a gate held back, or a received invoice accruing in the window, may
+    belong in any expense box until it is classified, so either keeps every zero
+    from being proven.
+    """
+    with source_context_operation(context):
+        accruing = accruing_invoices(
+            invoices.values(),
+            kind=InvoiceKind.RECEIVED,
+            bucket_id=context.bucket_id,
+            start=date(period.filing_year, 1, 1),
+            end=period.end_date,
+        )
+    return {
+        binding_id: ledger_sum_outcome(value, rows_present=held_back_rows, accruing_invoice_present=bool(accruing))
+        for binding_id, value in binding_values.items()
+    }
 
 
 def _m100_unrouted_diagnostics(
@@ -611,6 +660,15 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
             binding_values=resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
                 context.revision,
                 all_observations,
+            ),
+            value_outcomes=_ledger_expense_value_outcomes(
+                context,
+                resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
+                    context.revision, all_observations
+                ),
+                held_back_rows=any(issue.reason.value not in _NOT_AN_EXPENSE_ISSUES for issue in issues),
+                period=aggregation_period,
+                invoices=self._invoice_reader.load(),
             ),
             source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
             diagnostics=out_of_window_summary_diagnostics(

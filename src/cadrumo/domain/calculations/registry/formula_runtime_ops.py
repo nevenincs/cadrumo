@@ -34,9 +34,9 @@ from ._formula_operator_contracts import require_formula_operator_arity
 from .casilla_membership import undeclared_casilla_ids
 from .errors import RegistrySnapshotError, RegistryValidationError
 from .formula_input_keys import canonicalize_formula_input_keys
-from .ids import RevisionId
+from .ids import ParameterId, RevisionId
 from .schema_base import NUMERIC_CASILLA_DATA_TYPES
-from .schema_formula import BracketEntry, DatedValue, ParameterDefinition
+from .schema_formula import BracketEntry, DatedValue, FormulaExpression, ParameterDefinition
 from .schema_rounding import RegistryRoundingCode
 
 if TYPE_CHECKING:
@@ -117,6 +117,28 @@ def numeric_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:
     ctx.operand_casilla_refs.append(casilla_id)
     ctx.operand_values.append(value)
     return value
+
+
+def require_casilla_leaf(expression: FormulaExpression, *, op: str, position: int) -> CasillaId:
+    """Return the casilla id a dispatch argument must carry, refusing any other leaf kind."""
+    if expression.casilla_id is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{position}] to be a casilla leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
+        )
+    return expression.casilla_id
+
+
+def require_parameter_leaf(expression: FormulaExpression, *, op: str, position: int) -> ParameterId:
+    """Return the parameter id a dispatch argument must carry, refusing any other leaf kind."""
+    if expression.parameter is None:
+        raise RegistryValidationError(
+            f"formula op {op!r} requires args[{position}] to be a parameter leaf",
+            translated_message="errors.calc.lookup_dispatch_arg_kind",
+            context={"op": op, "position": f"args[{position}]", "expected_kind": "parameter"},
+        )
+    return expression.parameter
 
 
 def text_tolerant_casilla_value(casilla_id: CasillaId, ctx: _EvalContext) -> Decimal:

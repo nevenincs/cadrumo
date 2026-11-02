@@ -155,6 +155,7 @@ function columns(t: Translate): GridColumn<Row>[] {
               {subline(row) ?? ""}
             </DataGridText>
           )}
+          <RowNotes notes={row.calculation_notes} t={t} />
         </span>
       ),
     },
@@ -206,6 +207,35 @@ function columns(t: Translate): GridColumn<Row>[] {
         ) : null,
     },
   ];
+}
+
+/** What the row's current calculation noted that withholds nothing, as the
+ * read model words it: the first on the row, every one in its tooltip. */
+function RowNotes({ notes, t }: { notes: readonly string[]; t: Translate }) {
+  const first = notes[0];
+  if (first === undefined) return null;
+  return (
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <span className="declarations-row-notes flex min-w-0 items-center gap-1 text-xs text-muted-foreground">
+          <span
+            role="img"
+            aria-label={t("desktop.declarations.notes.label")}
+            className="inline-flex shrink-0"
+          >
+            <Icon name="info" size="xs" className="text-faint" />
+          </span>
+          <DataGridText>{first}</DataGridText>
+          {notes.length > 1 && <Badge variant="count">{notes.length}</Badge>}
+        </span>
+      </TooltipTrigger>
+      <TooltipContent className="flex-col items-start">
+        {notes.map((note, index) => (
+          <span key={index}>{note}</span>
+        ))}
+      </TooltipContent>
+    </Tooltip>
+  );
 }
 
 function StateCell({ row, t }: { row: Row; t: Translate }) {
@@ -549,13 +579,15 @@ export function DeclarationsPage({
             }}
             density="comfortable"
             // Fixed heights, so every cell spans its row: two lines, or three
-            // where the AEAT side is said too.
+            // where the AEAT side or the calculation's notes are said too.
             rowHeight={(row) =>
               row.kind !== "data"
                 ? undefined
-                : row.data.aeat_submission_state !== null
-                  ? 4.25
-                  : 3.5
+                : row.data.calculation_notes.length > 0
+                  ? 4.75
+                  : row.data.aeat_submission_state !== null
+                    ? 4.25
+                    : 3.5
             }
             positionLabel={(row, count) =>
               t("desktop.declarations.position", { row, count })

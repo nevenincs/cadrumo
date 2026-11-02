@@ -10,7 +10,8 @@ through the real calculation-note gate, which export and local filing call, and
 the real work-form service, which the TUI and MCP read:
 
 * the calculation succeeds, casilla 06 carries the invoices' stated retención
-  and the revision carries one blocking ``advisory_binding_value`` note;
+  and the revision carries one blocking ``advisory_binding_value`` note for it,
+  beside the one the capped income casilla 01 carries for the same receipts;
 * the revision is stamped with the current screen, and calculating the same
   inputs again addresses the same content-addressed revision;
 * the form shows the note and withholds the file, and offers neither the check
@@ -21,11 +22,13 @@ the real work-form service, which the TUI and MCP read:
 * the review workbook, a preview, shows the capped figure with the note's
   sentence beside it rather than refusing it;
 * a revision recorded as filed before the cap existed, with no screen stamp and
-  no note, is refused its export while casilla 06 holds the 510,00 and exports
-  past the gate with a zero, and its form offers the recalculation;
-* a quarter whose receipts carry no retención proves casilla 06 zero, carries
-  no blocking note and passes the gate; the proven zero persists, so the form
-  reopened in a new process and the declarations list both say the zero stands.
+  no note, is refused its export while a capped box holds a figure, and its
+  form offers the recalculation; a zero in casilla 06 is not named, but the
+  income casilla 01 beside it is capped too and still refuses the export;
+* a quarter whose receipts carry no retención proves casilla 06 zero, and the
+  proven zero persists, so the form reopened in a new process and the
+  declarations list both say the zero stands; the income those receipts bring
+  is capped on casilla 01, so the gate still refuses through that box.
 
 Every figure is invoice arithmetic worked out here, with synthetic data.
 """
@@ -52,7 +55,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo import work_form_service
-from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloCrossPeriodCleanStateError
+from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -138,6 +141,7 @@ _ZERO_YEAR: Final = 2025
 _QUARTER: Final = "1T"
 _M130_REVISION: Final = "2019-y-siguientes"
 _RETENCIONES_BOX: CasillaId = validated_casilla_id("06")
+_INCOME_BOX: CasillaId = validated_casilla_id("01")
 _REASON: Final = "advisory_binding_value"
 
 # Hand-derived invoice arithmetic at the general 15 % professional rate (RIRPF art. 95.1)
@@ -415,8 +419,15 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
         revision = _calculate(work_unit, operation)
 
         assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == _STATED_RETENCION
-        (note,) = [issue for issue in revision.source_issues if issue.reason == _REASON]
-        assert note.casilla_id == _RETENCIONES_BOX
+        assert {issue.casilla_id for issue in revision.source_issues if issue.reason == _REASON} == {
+            _INCOME_BOX,
+            _RETENCIONES_BOX,
+        }
+        (note,) = [
+            issue
+            for issue in revision.source_issues
+            if issue.reason == _REASON and issue.casilla_id == _RETENCIONES_BOX
+        ]
         assert note.source_ref == "modelo-130-actividad-economica-retenciones-cumulative"
         snapshot = operation.snapshot("130", filing_year=_CAPPED_YEAR, period=_QUARTER)
         assert revision.screen_stamp is not None
@@ -425,8 +436,11 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
         assert _calculate(work_unit, operation).calculation_revision_id == revision.calculation_revision_id
 
         load = _form(secure_objects, _CAPPED_YEAR, operation)
-        (shown,) = [item for item in load.form.calculation_notes if item.reason == _REASON]
-        assert shown.withholds_filing and shown.box == "06"
+        # The expense casilla 02 states a proven zero beside them, which shows but withholds nothing.
+        withholding_boxes = {
+            item.box for item in load.form.calculation_notes if item.reason == _REASON and item.withholds_filing
+        }
+        assert withholding_boxes == {"01", "06"}
         assert form_next_step(load.form, verified=load.verified, filed=load.filed).action not in {
             ModeloFormNextAction.VERIFY,
             ModeloFormNextAction.EXPORT,
@@ -436,7 +450,7 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
         with pytest.raises(ModeloCalculationBlockedError) as refused:
             _verify(revision, operation)
         assert (refused.value.context or {})["reason"] == _REASON
-        assert (refused.value.context or {})["box"] == "06"
+        assert (refused.value.context or {})["box"] in {"01", "06"}
         assert _gate_reasons(work_unit, revision, operation) == {
             action: _REASON for action in ("verify", "export", "file")
         }
@@ -449,7 +463,8 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
             assert sentence is not None
             notes = _review_notes_by_box(revision, language, operation)
             assert notes["06"] == sentence, language
-            assert {box for box, note in notes.items() if note} == {"06"}, language
+            assert notes["01"] == sentence, language
+            assert {box for box, note in notes.items() if note} == {"01", "06"}, language
 
         # The export and the recording each refuse the unchecked revision before their gate is reached.
         with pytest.raises(CalculationRevisionStateError):
@@ -546,30 +561,42 @@ def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(
         )
         assert revision is not None
         assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == Decimal("0")
-        (proven,) = [issue for issue in revision.source_issues if issue.reason == _REASON]
-        assert proven.casilla_id == _RETENCIONES_BOX
+        (proven,) = [
+            issue
+            for issue in revision.source_issues
+            if issue.reason == _REASON and issue.casilla_id == _RETENCIONES_BOX
+        ]
         assert proven.value_outcome is BindingValueOutcome.PROVEN_ZERO
         assert proven.fact is not None and proven.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
-        assert _gate_reasons(work_unit, revision, operation) == {}
+        # The 2.000,00 of income the same receipt brings is capped on casilla 01 and still withholds the file.
+        (income,) = [
+            issue for issue in revision.source_issues if issue.reason == _REASON and issue.casilla_id == _INCOME_BOX
+        ]
+        assert income.value_outcome is not BindingValueOutcome.PROVEN_ZERO
+        assert _gate_reasons(work_unit, revision, operation) == {
+            action: _REASON for action in ("verify", "export", "file")
+        }
 
         # A new process holds none of the calculation's notes, so the form reads only what persisted.
         monkeypatch.setattr(work_form_service, "CALCULATION_NOTES", CalculationNoteStore())
         load = _form(secure_objects, _ZERO_YEAR, operation)
-        assert not [item for item in load.form.calculation_notes if item.withholds_filing]
-        (shown,) = [item for item in load.form.calculation_notes if item.reason == _REASON]
-        assert shown.attention is ModeloFormAttention.INFO and shown.box == "06"
+        assert {item.box for item in load.form.calculation_notes if item.withholds_filing} == {"01"}
+        (shown,) = [item for item in load.form.calculation_notes if item.reason == _REASON and item.box == "06"]
+        assert shown.attention is ModeloFormAttention.INFO
         assert shown.fact == proven.fact
         assert note_fact_text(shown.fact, locale="en") == (
             "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt."
         )
 
         summary, listed = _listed_row(work_unit, revision, operation)
-        assert summary.blocking_count is None and summary.proven_zero_notes == (proven.fact,)
-        assert listed.calculation_notes == (
-            "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt.",
+        assert summary.proven_zero_notes == (proven.fact,)
+        assert (
+            "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt."
+            in listed.calculation_notes
         )
         notes = _review_notes_by_box(revision, OutputLanguage.ES, operation)
-        assert "06" in notes and not any(notes.values())
+        assert "06" in notes and not notes["06"]
+        assert {box for box, note in notes.items() if note} == {"01"}
 
 
 def _store_as_filed_before_the_cap(
@@ -644,13 +671,13 @@ def test_a_revision_filed_before_the_cap_is_refused_its_export_until_it_is_calcu
         with pytest.raises(ModeloCalculationBlockedError) as refused:
             _export(filed, operation, output)
         assert (refused.value.context or {})["reason"] == FILED_BEFORE_GRADE_CAP_REASON
-        assert (refused.value.context or {})["box"] == "06"
+        assert (refused.value.context or {})["box"] in {"01", "06"}
         assert not output.exists()
 
         load = _form(secure_objects, _CAPPED_YEAR, operation)
         assert load.filed
         (shown,) = [item for item in load.form.calculation_notes if item.reason == FILED_BEFORE_GRADE_CAP_REASON]
-        assert shown.withholds_filing and shown.box == "06"
+        assert shown.withholds_filing and shown.box in {"01", "06"}
         step = form_next_step(load.form, verified=load.verified, filed=load.filed)
         assert step.action is ModeloFormNextAction.RECALCULATE
 
@@ -658,28 +685,35 @@ def test_a_revision_filed_before_the_cap_is_refused_its_export_until_it_is_calcu
         recalculated = _calculate(work_unit, operation)
         assert recalculated.state is CalculationRevisionState.BORRADOR
         assert recalculated.screen_stamp is not None
-        assert [issue.reason for issue in recalculated.source_issues if issue.reason == _REASON] == [_REASON]
+        assert {issue.casilla_id for issue in recalculated.source_issues if issue.reason == _REASON} == {
+            _INCOME_BOX,
+            _RETENCIONES_BOX,
+        }
 
 
-def test_a_revision_filed_before_the_cap_with_a_zero_in_casilla_06_passes_the_gate(
+def test_a_revision_filed_before_the_cap_with_a_zero_in_casilla_06_is_refused_only_through_the_income_box(
     secure_objects: SecureObjectRepository, tmp_path: Path
 ) -> None:
     _seed_taxpayer_profile()
     _persist_ledger(secure_objects)
 
     with bundled_indexed_authority().operation() as operation:
-        # The earlier year's receipt carries no retención, so its calculation proves casilla 06 zero.
+        # The earlier year's receipt carries no retención, so its calculation proves casilla 06 zero; the
+        # income it brings sits in casilla 01, whose binding is capped as well.
         work_unit = _work_unit(secure_objects, _ZERO_YEAR, operation)
         filed = _store_as_filed_before_the_cap(secure_objects, work_unit, _calculate(work_unit, operation), operation)
         assert Decimal(filed.casilla_values[_RETENCIONES_BOX]) == Decimal("0")
+        assert Decimal(filed.casilla_values[_INCOME_BOX]) > Decimal("0")
 
-        assert _gate_reasons(work_unit, filed, operation) == {}
-        # The export passes the calculation-note gate and stops at the next precondition: the cross-period
-        # clean state, which needs the prior quarters this single hand-stored filing does not have.
-        with pytest.raises(ModeloCrossPeriodCleanStateError):
-            _export(filed, operation, tmp_path / "modelo-130.txt")
+        output = tmp_path / "modelo-130.txt"
+        with pytest.raises(ModeloCalculationBlockedError) as refused:
+            _export(filed, operation, output)
+        assert (refused.value.context or {})["reason"] == FILED_BEFORE_GRADE_CAP_REASON
+        assert (refused.value.context or {})["box"] == "01"
+        assert not output.exists()
 
         load = _form(secure_objects, _ZERO_YEAR, operation)
-        assert not [item for item in load.form.calculation_notes if item.reason == FILED_BEFORE_GRADE_CAP_REASON]
+        (shown,) = [item for item in load.form.calculation_notes if item.reason == FILED_BEFORE_GRADE_CAP_REASON]
+        assert shown.box == "01"
         step = form_next_step(load.form, verified=load.verified, filed=load.filed)
-        assert step.action is ModeloFormNextAction.RECORDED
+        assert step.action is ModeloFormNextAction.RECALCULATE

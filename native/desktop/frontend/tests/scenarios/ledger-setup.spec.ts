@@ -510,6 +510,98 @@ test("a prorrata election is refused until it names its document", async ({
   );
 });
 
+test("the prorrata register lists a declared gross cuota and removes it once confirmed", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openSetup(target, "registers");
+  await area(target, "desktop.ledger.registers.area.prorrata");
+  const gross = target.locator(".ledger-prorrata-gross");
+  const row = gross.locator(".ledger-prorrata-gross-table tr", {
+    hasText: "LIQ-2026-1T",
+  });
+  // The period, the cuota as the register serves it and its document.
+  await expect(row).toContainText("2026");
+  await expect(row).toContainText("1T");
+  await expect(row).toContainText("1,234.56");
+  await row
+    .getByRole("button", {
+      name: label("desktop.ledger.prorrata.gross.remove_of", {
+        liquidation: "2026 · 1T",
+      }),
+    })
+    .click();
+  // Nothing is removed until the person confirms.
+  const confirmation = gross.locator(".ledger-prorrata-gross-removing");
+  await expect(confirmation).toContainText(
+    label("desktop.ledger.prorrata.gross.remove_what", {
+      liquidation: "2026 · 1T",
+    }),
+  );
+  await expect(row).toBeVisible();
+  await confirmation
+    .getByRole("button", {
+      name: label("desktop.ledger.prorrata.gross.remove_confirm"),
+    })
+    .click();
+  await expect(gross.locator(".ledger-prorrata-gross-empty")).toHaveText(
+    label("desktop.ledger.prorrata.gross.empty"),
+  );
+  await expect(confirmation).toBeHidden();
+  await expect(target.locator(".setup-call-line")).toBeHidden();
+});
+
+test("a gross cuota is declared, refused while one stands and replaced when asked", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openSetup(target, "registers");
+  await area(target, "desktop.ledger.registers.area.prorrata");
+  const declare = async (period: string, amount: string, replace = false) => {
+    const opened = target.locator(".ledger-prorrata-form");
+    if (!(await opened.isVisible()))
+      await button(
+        target,
+        "desktop.ledger.prorrata.action.declare_gross",
+      ).click();
+    const form = target.locator(".ledger-prorrata-form");
+    await field(form, "desktop.ledger.prorrata.gross.period").selectOption(
+      period,
+    );
+    await field(form, "desktop.ledger.prorrata.gross.gross_cuota").fill(amount);
+    await field(form, "desktop.ledger.prorrata.gross.evidence").fill(
+      `LIQ-2026-${period}`,
+    );
+    const replacing = field(form, "desktop.ledger.prorrata.gross.replace");
+    if ((await replacing.isChecked()) !== replace)
+      await replacing.setChecked(replace);
+    await form
+      .getByRole("button", {
+        name: label("desktop.ledger.prorrata.action.declare_gross"),
+      })
+      .click();
+    return form;
+  };
+  const table = target.locator(".ledger-prorrata-gross-table");
+
+  const form = await declare("2T", "500");
+  await expect(form).toBeHidden();
+  const row = table.locator("tr", { hasText: "LIQ-2026-2T" });
+  await expect(row).toContainText("500.00");
+
+  // The register keeps the cuota it holds until the person asks to replace it.
+  await declare("2T", "600");
+  await expect(target.locator(".setup-call-line")).toContainText(
+    label("desktop.ledger.prorrata.refusal.gross_declaration_duplicate"),
+  );
+  await expect(row).toContainText("500.00");
+  await declare("2T", "600", true);
+  await expect(target.locator(".ledger-prorrata-form")).toBeHidden();
+  await expect(row).toContainText("600.00");
+  await expect(row).not.toContainText("500.00");
+  await expect(table.locator("tr", { hasText: "LIQ-2026-2T" })).toHaveCount(1);
+});
+
 for (const language of ["en", "es", "ca", "hu"]) {
   test(`the register's name, kind, method and state words are whole and unclipped in ${language}`, async ({
     page: target,

@@ -15,7 +15,6 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validat
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import CadrumoError
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
@@ -35,7 +34,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_capture_queries import list_filed_data, list_filed_data_bulk
 from .filed_data import FiledDataListingRow
 from .filed_data_ports import FiledDataCapturePort
-from .filed_history_discovery import FiledHistoryDiscoveryReport, discover_filed_history
+from .filed_history_discovery import FiledHistoryDiscoveryReport, discover_filed_history, resolve_discovery_profile
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
 from .live_operation_execution import (
     own_provider_browser,
@@ -178,17 +177,6 @@ class FiledReadCompositionFactory(Protocol):
 
 
 FiledReadProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
-
-
-def _resolve_active_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile | None:
-    """Use the pinned profile schema; preserve discovery before profile setup."""
-    from ..wizard.status import load_active_taxpayer_profile
-    from ..workflow.persistence import workflow_state_repository
-
-    try:
-        return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
-    except CadrumoError:
-        return None
 
 
 def _list_row_in_scope(row: FiledDataListingRow, payload: FiledListRequest) -> bool:
@@ -353,7 +341,7 @@ def build_filed_discover_definition(
     composition_factory: FiledReadCompositionFactory,
     browser_resources_factory: FiledHistoryBrowserResourcesFactory,
     provider_preflight: FiledHistoryProviderPreflight,
-    profile_resolver: FiledReadProfileResolver = _resolve_active_profile,
+    profile_resolver: FiledReadProfileResolver = resolve_discovery_profile,
 ) -> OperationDefinition:
     """Declare read-only, recorded register/profile grid discovery."""
 

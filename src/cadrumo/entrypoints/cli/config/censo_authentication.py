@@ -30,7 +30,12 @@ from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.auth.sync_requirement_text import sync_requirement_reason
 from ....application.user_profile.profile_operation_contracts import ProfileFieldMutationOperationRequest
 from ....application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
-from ....core.auth_provider import DEFAULT_CLAVE_MOVIL_ROUTE, AuthProviderKind, ClaveMovilRoute
+from ....core.auth_provider import (
+    DEFAULT_CLAVE_MOVIL_ROUTE,
+    PASSWORD_CREDENTIAL_PROVIDERS,
+    AuthProviderKind,
+    ClaveMovilRoute,
+)
 from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.operations import OperationEffect, profile_operation_subject
@@ -179,7 +184,7 @@ def _prompt_provider_fields(client: FrontendClient, kind: AuthProviderKind, rout
             for item in pending.requirements:
                 if item.field in {"auth.fecha_validez", "auth.numero_soporte"}:
                     _prompt_field(client, item.field)
-    if kind in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}:
+    if kind in PASSWORD_CREDENTIAL_PROVIDERS:
         _save_password(client, kind)
 
 
@@ -192,7 +197,7 @@ def _save_password(client: FrontendClient, provider: AuthProviderKind) -> None:
         AuthCredentialSaveResult,
     )
 
-    if provider not in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}:
+    if provider not in PASSWORD_CREDENTIAL_PROVIDERS:
         raise ValueError("This authentication method does not store a password")
     credential_provider = "certificate" if provider is AuthProviderKind.CERTIFICATE else "clave_permanente"
     password = prompt_secret_no_echo(tr("cli.censo_auth.password"))
