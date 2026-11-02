@@ -103,7 +103,7 @@ import { ManageProfiles } from "./components/account/ManageProfiles";
 import { Titlebar } from "./components/Titlebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useFilingCalendar } from "./shell/calendar";
-import { useUserProfile } from "./shell/userProfile";
+import { regionReader, useUserProfile } from "./shell/userProfile";
 import { useMessages } from "./shell/messages";
 import { useSignIn } from "./shell/signIn";
 import { usePersonActivity } from "./shell/usePersonActivity";
@@ -2724,6 +2724,19 @@ export function App({ host }: { host: Host }) {
           locale={locale}
           shown={firstPaneShown}
           page={declarationsPage}
+          readRegion={
+            host.userProfile
+              ? regionReader(host.userProfile, locale)
+              : undefined
+          }
+          profileCompanions={
+            host.profileCompanions && host.userProfile
+              ? {
+                  reads: host.profileCompanions,
+                  change: host.userProfile.change,
+                }
+              : undefined
+          }
           pane={{
             title: t("workspace.declarations.destination.overview"),
             onToggleMaximize: () => toggleMaximize("docs"),

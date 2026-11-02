@@ -21,8 +21,10 @@ from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.modelos.calculation_revision import derive_calculation_revision_id
+from ....domain.modelos.source_disagreement import SourceDisagreementRole
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
-from ...aggregation.source_mesh import CalculationSourceContext
+from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ...aggregation.source_resolution_operations import PrecedenceTier, merge_source_resolutions_by_precedence
 from ...live.borrador_100 import (
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
@@ -273,8 +275,6 @@ def _command(
     borrador_snapshot_id: str | None,
     modelo: str = "100",
     bucket_id: str = _BUCKET_ID,
-    caller_binding_values: dict[BindingId, Decimal] | None = None,
-    caller_enum_binding_values: dict[BindingId, str] | None = None,
     filing_year: int = _YEAR,
     period: str = _PERIOD,
 ) -> Modelo100BorradorBindingCommand:
@@ -285,8 +285,6 @@ def _command(
         filing_year=filing_year,
         period=typed_period,
         borrador_snapshot_id=borrador_snapshot_id,
-        caller_binding_values=caller_binding_values or {},
-        caller_enum_binding_values=caller_enum_binding_values or {},
     )
 
 
@@ -322,20 +320,6 @@ def test_borrador_binding_command_carries_structured_period() -> None:
 
     assert command.period == Period.from_year_and_code(_YEAR, _PERIOD)
     assert command.model_dump(mode="json")["period"] == {"filing_year": _YEAR, "code": _PERIOD}
-
-
-def test_borrador_binding_command_rejects_noncanonical_caller_binding_keys() -> None:
-    with pytest.raises(ValidationError) as decimal_exc:
-        _command(borrador_snapshot_id="snap-1", caller_binding_values={"Bad Binding": Decimal("1")})
-    assert decimal_exc.value.errors()[0]["loc"][0] == "caller_binding_values"
-
-    with pytest.raises(ValidationError) as enum_exc:
-        _command(borrador_snapshot_id="snap-1", caller_enum_binding_values={"Bad Binding": "madrid"})
-    assert enum_exc.value.errors()[0]["loc"][0] == "caller_enum_binding_values"
-
-    with pytest.raises(ValidationError) as blank_exc:
-        _command(borrador_snapshot_id="snap-1", caller_binding_values={" ": Decimal("1")})
-    assert blank_exc.value.errors()[0]["loc"][0] == "caller_binding_values"
 
 
 def test_borrador_resolution_is_inert_without_named_snapshot(
@@ -434,8 +418,6 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
 
     resolution = Modelo100BorradorSourceResolver(
         borrador_snapshot_id=snapshot_id,
-        caller_binding_values={},
-        caller_enum_binding_values={},
         registry_snapshot=registry_snapshot,
         snapshot_repository=snapshot_repository,
         operation=authority_operation,
@@ -521,7 +503,7 @@ def test_borrador_snapshot_id_participates_in_calculation_revision_identity() ->
     assert first != second
 
 
-def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
+def test_borrador_states_every_value_it_supplies_and_the_overlay_keeps_the_callers_beside_it(
     snapshot_repository: Borrador100SnapshotRepository,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -534,20 +516,36 @@ def test_borrador_resolution_leaves_explicit_caller_binding_in_control(
     )
 
     result = resolve_modelo_100_borrador_bindings(
-        _command(
-            borrador_snapshot_id=snapshot_id,
-            caller_binding_values={_DECIMAL_BINDING: Decimal("0")},
-            caller_enum_binding_values={_ENUM_BINDING: "cataluna"},
-        ),
+        _command(borrador_snapshot_id=snapshot_id),
         registry_snapshot=_modelo_100_registry_snapshot(),
         snapshot_repository=snapshot_repository,
         operation=authority_operation,
     )
+    caller = CalculationSourceResolution(
+        resolver_id="calculate_caller_bindings",
+        binding_values={_DECIMAL_BINDING: Decimal("0")},
+        enum_binding_values={_ENUM_BINDING: "cataluna"},
+    )
+    overlay = merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(role=SourceDisagreementRole.BORRADOR, resolution=result, source_family="borrador"),
+            PrecedenceTier(role=SourceDisagreementRole.CALLER, resolution=caller, source_family="operator_input"),
+        )
+    )
 
+    # The withholding credit is held for comparison only, so the borrador never states it in the ladder;
+    # the residence CCAA it does supply, even though the operator also set one.
     assert result.binding_values == {}
-    assert result.enum_binding_values == {}
-    assert result.borrador_provenance is not None
-    assert result.borrador_provenance.bindings_sourced == ()
+    assert result.enum_binding_values == {_ENUM_BINDING: "madrid"}
+    assert overlay.resolution.binding_values == {_DECIMAL_BINDING: Decimal("0")}
+    assert overlay.resolution.enum_binding_values == {_ENUM_BINDING: "cataluna"}
+    (divergence,) = overlay.divergences
+    assert (divergence.key, divergence.value_channel) == (_ENUM_BINDING, "enum")
+    assert divergence.selected_role is SourceDisagreementRole.CALLER
+    assert [source.role for source in divergence.sources] == [
+        SourceDisagreementRole.BORRADOR,
+        SourceDisagreementRole.CALLER,
+    ]
 
 
 def test_borrador_resolution_rejects_registry_unmarked_binding_values(

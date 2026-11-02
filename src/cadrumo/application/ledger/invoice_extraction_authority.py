@@ -176,7 +176,7 @@ def _rate_kind_percentages(
 ) -> set[Decimal]:
     from ...domain.invoices.enums import iva_rate_percentage, resolve_iva_rate_slot
     from ...domain.iva.errors import IvaRateNotFoundError
-    from ...domain.iva.lookup import coexisting_tier_rates, lookup_rate
+    from ...domain.iva.lookup import coexisting_tier_rates, lookup_published_rate
     from ...domain.iva.schema import spanish_eu_member_state
 
     if kind == zero_token:
@@ -189,7 +189,7 @@ def _rate_kind_percentages(
     state = spanish_eu_member_state(effective_date=on_date, authority=operation)
     percentages: set[Decimal] = set()
     with suppress(IvaRateNotFoundError):
-        percentages.add(lookup_rate(state, kind, on_date, operation=operation).pct)
+        percentages.add(lookup_published_rate(state, kind, on_date, operation=operation).pct)
     percentages.update(rate.pct for rate in coexisting_tier_rates(state, kind, on_date, operation=operation))
     return percentages
 

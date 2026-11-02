@@ -68,6 +68,7 @@ from .enums import (
     invoice_class_rectificativa,
     invoice_class_simplificada,
     iva_rate_percentage,
+    iva_rate_slot_is_published,
     resolve_iva_rate_token,
 )
 from .errors import InvoiceValidationError
@@ -788,7 +789,11 @@ class Invoice(BaseModel):
                 ) from exc
             if line.oss_rate_kind is not None:
                 continue
-            raise_first_figure_finding((line_iva_finding(line.subtotal, line.iva_amount, rate),))
+            finding = line_iva_finding(line.subtotal, line.iva_amount, rate)
+            if finding is not None and not answer_once(iva_rate_slot_is_published, line.iva_rate, devengo_date):
+                # The rate is only the nearest edition, so a differing cuota is not shown wrong.
+                finding = rate_refusal_finding(line.iva_rate, devengo_date, coverage_gap=True)
+            raise_first_figure_finding((finding,))
         return self
 
     @model_validator(mode="after")

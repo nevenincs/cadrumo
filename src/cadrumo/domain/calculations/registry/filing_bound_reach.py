@@ -15,30 +15,46 @@ Reach is read from four declared edges, in one walk:
 - a relation fold, which is keyed by the binding it materialises, so it reaches
   wherever that binding does.
 
-A casilla with ``export_refs`` is exported. An ``internal_only`` casilla on the
-way carries reach through like any other; it never ends it. A binding read only
+A casilla is exported when the filed return carries it, in whatever format the
+revision's official layouts take: it declares ``export_refs``, or the canonical
+classification of official casillas finds a layout addressing it directly or
+representing it through a binding field. That covers fixed-width records and
+the XML dictionary alike; the dictionary's casilla mapping is read from the
+published source bytes it cites. An ``internal_only`` casilla on the way
+carries reach through like any other; it never ends it. A binding read only
 by verification predicates, or by casillas that reach no exported box, is not
 filing-bound, and nothing of a revision declared below the filing rung is.
 """
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Set
 from dataclasses import dataclass
 from types import MappingProxyType
 from typing import TYPE_CHECKING
 
 from ....core.authority_grade import RegistryAuthorityGrade
 from ....core.casilla_id import CasillaId
+from ....core.estado_casilla_oficial import EstadoCasillaOficial
+from ....core.export_layout_format import ExportLayoutFormat
 from ....core.hashing import content_hash_hex
 from .binding_targets import bound_casilla_binding_ids
+from .export import clasificar_casillas_oficiales, derive_export_layouts_from_bindings
 from .runtime_graph import expression_binding_refs, expression_casilla_refs, expression_date_binding_refs
 
 if TYPE_CHECKING:
+    from .authority import PinnedAuthorityOperation
     from .ids import BindingId
-    from .schema import ModeloRevision
+    from .schema import ModeloRevision, RegistrySnapshot
+    from .schema_references import SourceReference
 
-__all__ = ["FilingBoundReach", "filing_bound_reach", "filing_bound_reach_digest"]
+__all__ = [
+    "FilingBoundReach",
+    "filing_bound_reach",
+    "filing_bound_reach_digest",
+    "official_export_casilla_ids",
+    "snapshot_filing_bound_reach",
+]
 
 
 @dataclass(frozen=True, slots=True)
@@ -87,8 +103,30 @@ def _formula_edges(
     return casilla_readers, binding_readers
 
 
+def official_export_casilla_ids(
+    revision: ModeloRevision,
+    *,
+    sources: Mapping[str, SourceReference] | None = None,
+    source_payloads: Mapping[str, bytes] | None = None,
+) -> frozenset[CasillaId]:
+    """The casillas of ``revision`` the filed return carries.
+
+    A revision with an XML dictionary layout needs the published sources and
+    their payloads, since the dictionary's casilla mapping lives in those bytes;
+    without them the classification refuses rather than reading the
+    dictionary's casillas as unexported.
+    """
+    classified = clasificar_casillas_oficiales(revision, sources=sources, source_payloads=source_payloads)
+    return frozenset(
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.export_refs
+        or classified.get(casilla.id, EstadoCasillaOficial.UNDEFINED) is not EstadoCasillaOficial.UNDEFINED
+    )
+
+
 def _casilla_reach(
-    revision: ModeloRevision, casilla_readers: Mapping[CasillaId, set[CasillaId]]
+    revision: ModeloRevision, casilla_readers: Mapping[CasillaId, set[CasillaId]], exported: Set[CasillaId]
 ) -> dict[CasillaId, frozenset[CasillaId]]:
     """Every casilla's exported reach, itself included when it is exported.
 
@@ -96,7 +134,6 @@ def _casilla_reach(
     ``visiting`` guard keeps a revision built outside that validation from
     recursing without end.
     """
-    exported = {casilla.id for casilla in revision.casillas if casilla.export_refs}
     reach: dict[CasillaId, frozenset[CasillaId]] = {}
     visiting: set[CasillaId] = set()
 
@@ -105,9 +142,9 @@ def _casilla_reach(
         if known is not None:
             return known
         if casilla_id in visiting:
-            return frozenset()
+            return frozenset[CasillaId]()
         visiting.add(casilla_id)
-        found = {casilla_id} if casilla_id in exported else set()
+        found: set[CasillaId] = {casilla_id} if casilla_id in exported else set()
         for reader in casilla_readers.get(casilla_id, ()):
             found.update(walk(reader))
         visiting.discard(casilla_id)
@@ -119,18 +156,20 @@ def _casilla_reach(
     return reach
 
 
-def filing_bound_reach(revision: ModeloRevision) -> FilingBoundReach:
+def filing_bound_reach(revision: ModeloRevision, *, exported: Set[CasillaId]) -> FilingBoundReach:
     """Derive the filing-bound bindings and casillas of ``revision`` and the exported casillas each reaches.
 
-    The test reads the revision's declared ``authority_grade``, not the rung an
-    operation pins: a calculation pins the calculation rung while the revision
-    it persists feeds check and export.
+    ``exported`` is the set the filed return carries
+    (:func:`official_export_casilla_ids`). The test reads the revision's
+    declared ``authority_grade``, not the rung an operation pins: a calculation
+    pins the calculation rung while the revision it persists feeds check and
+    export.
     """
     if revision.authority_grade is not RegistryAuthorityGrade.FILING:
         return _empty_reach()
     order = {casilla.id: index for index, casilla in enumerate(revision.casillas)}
     casilla_readers, binding_readers = _formula_edges(revision)
-    casilla_reach = _casilla_reach(revision, casilla_readers)
+    casilla_reach = _casilla_reach(revision, casilla_readers, exported)
     binding_reach: dict[BindingId, set[CasillaId]] = {}
     for casilla in revision.casillas:
         for binding_id in bound_casilla_binding_ids(casilla):
@@ -146,6 +185,28 @@ def filing_bound_reach(revision: ModeloRevision) -> FilingBoundReach:
     bindings = {binding_id: ordered(reached) for binding_id, reached in binding_reach.items() if reached}
     casillas = {casilla_id: ordered(reached) for casilla_id, reached in casilla_reach.items() if reached}
     return FilingBoundReach(bindings=MappingProxyType(bindings), casillas=MappingProxyType(casillas))
+
+
+def snapshot_filing_bound_reach(snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation) -> FilingBoundReach:
+    """Derive the filing-bound reach of ``snapshot``'s revision under ``operation``'s pinned authority.
+
+    The XML dictionary payloads the classification needs are loaded from the
+    pinned generation's published source evidence, and nothing is loaded for a
+    revision below the filing rung.
+    """
+    revision = snapshot.revision
+    if revision.authority_grade is not RegistryAuthorityGrade.FILING:
+        return _empty_reach()
+    dictionary_ids = sorted(
+        {
+            layout.dictionary_source_ref
+            for layout in derive_export_layouts_from_bindings(revision)
+            if layout.format is ExportLayoutFormat.XML_DICTIONARY and layout.dictionary_source_ref is not None
+        }
+    )
+    payloads = {source_id: operation.source_evidence(source_id).payload for source_id in dictionary_ids}
+    exported = official_export_casilla_ids(revision, sources=snapshot.sources, source_payloads=payloads)
+    return filing_bound_reach(revision, exported=exported)
 
 
 def filing_bound_reach_digest(reach: FilingBoundReach) -> str:

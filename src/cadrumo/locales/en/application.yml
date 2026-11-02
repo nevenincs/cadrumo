@@ -1144,7 +1144,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: The keys of the values supplied must not be blank.
         decimal_value_invalid: The borrador value for numeric source %{binding_id}
           must be decimal-compatible.
         forbidden_bindings: 'The borrador contains values that the modelo definitions
@@ -1376,6 +1375,16 @@ application:
           Cadrumo did not work out that tax.
         what_to_do: No action is needed if you made no such sales. Otherwise enter
           the amounts yourself.
+      precedence_tier_divergence:
+        what: Two sources hold different values for a figure that reaches box {box},
+          and Cadrumo used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong, then calculate
+          again. Checking, exporting and recording wait until they agree.
+      precedence_tier_divergence_advisory:
+        what: Two sources hold different values for a working figure, and Cadrumo
+          used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong. No exported
+          box depends on this figure.
       prior_payment_minoracion_not_captured:
         what: The reduction that comes from earlier payments is not recorded in box
           {box}.
@@ -2206,6 +2215,10 @@ application:
       invoice_fingerprint_drift: Your invoices changed after modelo %{modelo} %{filing_year},
         %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
         %{added_count} added). Calculate it again before verifying.
+      invoice_fingerprint_narrower_scope: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates the tracking of invoices accrued with no bank movement,
+        so Cadrumo cannot say whether those have changed since. Calculate it again
+        to start tracking them.
       invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
         them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
         cannot be shown to be current. Try again once they can be read.
@@ -2280,6 +2293,9 @@ application:
         for estimación objetiva (módulos).'
       oss_evidence_missing: This declaration includes one-stop-shop (OSS) activity,
         but no supporting documents for it are saved.
+      oss_no_activity_contradicted: You declared this period without activity, but
+        it holds invoices under the regime. Remove the declaration or review those
+        invoices.
       oss_source_unrouted: Some one-stop-shop (OSS) entries are not counted in any
         box of this form.
       printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines
@@ -2295,6 +2311,9 @@ application:
         enough to file it.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
+      scheme_period_contradicted: The value {entered} in {binding_id} contradicts
+        this work's period, which is {expected}. Correct it or open the work for the
+        right period.
       selected_option_requires_nonzero: The selected option requires a nonzero value
         in this field.
       selected_option_requires_zero: The selected option requires an explicit zero

@@ -30,7 +30,7 @@ def _fields() -> list[ExportFieldDefinition]:
             for field in record.fields
             if field.computed_key == "continuation_page_marker"
         )
-    assert len(fields) == 9
+    assert len(fields) == 12
     assert all(field.required and field.data_type == "text" and field.length == 1 for field in fields)
     assert all(field.producer_key is None and field.presence_marker == "C" for field in fields)
     return fields

@@ -306,6 +306,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
             invoice_id_of=lambda row: row.purchase_invoice_evidence_id,
             start=window.start,
             end=window.end,
+            criteria=criteria,
         )
         left_out = rows_left_out_summary(whole_catalogue, catalogue)
     iva_deduction_ratio = resolve_iva_deduction_ratio(

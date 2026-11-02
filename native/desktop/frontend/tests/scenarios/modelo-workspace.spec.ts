@@ -192,3 +192,158 @@ test("what the calculation noted about a box is said beside it, at its level", a
     workspace(target).getByText(elsewhere.message, { exact: true }),
   ).toBeVisible();
 });
+
+// The navigator beside a long form: the outline the read model served, its
+// counts, and the jump to a section. The served envelope is read through the
+// scenario's own modelo port, as the window reads it.
+
+/** The Modelo 100 of the scenario's synthetic filer, as served in English. */
+async function servedRenta(target: Page) {
+  return target.evaluate(async () => {
+    const port = window.__fixtureModelo!;
+    const list = await port.declarations("en");
+    const unit = list.creation_targets.find(
+      (entry) => entry.modelo === "100" && entry.existing,
+    )!.existing!.work_unit_id;
+    return port.form(unit, "en");
+  });
+}
+
+/** Opens the filer's 2025 Modelo 100 the way the list offers it: its row
+ * opens no local work, so the new-declaration dialog opens the one that
+ * exists. */
+async function openRenta(target: Page) {
+  await target.goto(
+    "/scenarios.html?scenario=ledger&latency=0&bar=off&modelo=renta",
+  );
+  await target.locator("[data-rail=declarations]").click();
+  const read = await target.evaluate(async () =>
+    window.__fixtureModelo!.declarations("en"),
+  );
+  const existing = read.creation_targets.find(
+    (entry) => entry.modelo === "100" && entry.existing,
+  )!;
+  await target
+    .getByRole("button", { name: label("workspace.declarations.list.key.new") })
+    .first()
+    .click();
+  const dialog = target.getByRole("dialog");
+  await dialog.getByText(existing.modelo_title, { exact: true }).click();
+  await dialog.getByRole("radio", { name: existing.period_words! }).click();
+  await dialog
+    .getByRole("button", {
+      name: label("workspace.declarations.list.new.open_it"),
+    })
+    .click();
+  // The Modelo 100's form is one large read; it takes a while to arrive.
+  await expect(
+    workspace(target).getByRole("heading", { level: 1 }),
+  ).toBeVisible({ timeout: 30_000 });
+}
+
+async function openOutline(target: Page) {
+  await target
+    .getByRole("tab", { name: label("desktop.modelo.side.outline") })
+    .click();
+  const tree = workspace(target).getByRole("tree", {
+    name: label("desktop.modelo.outline.label"),
+  });
+  await expect(tree).toBeVisible();
+  return tree;
+}
+
+test("the outline navigator jumps to a section of a long form", async ({
+  page: target,
+}) => {
+  await openRenta(target);
+  const tree = await openOutline(target);
+  const read = await servedRenta(target);
+  const form = read.form.form;
+  // A section on another page than the one first shown.
+  const page = form.pages.find(
+    (candidate, index) =>
+      index > 0 && candidate.sections.some((s) => s.applies !== false),
+  )!;
+  const section = page.sections.find((s) => s.applies !== false)!;
+  const item = tree.locator(`[data-outline-section="${section.id}"]`);
+  await item.click();
+  await expect(item).toHaveAttribute("aria-current", "location");
+  await expect(
+    workspace(target).getByRole("tab", {
+      name: new RegExp(`^${page.heading.text}`),
+    }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    workspace(target).locator(`[id="section-${section.id}"]`),
+  ).toBeInViewport();
+  // The keyboard reaches the next section and jumps to it the same way.
+  await item.press("ArrowDown");
+  const next = tree.locator("[role=treeitem]:focus");
+  await next.press("Enter");
+  const nextId = await next.getAttribute("data-outline-section");
+  if (nextId)
+    await expect(
+      workspace(target).locator(`[id="section-${nextId}"]`),
+    ).toBeInViewport();
+});
+
+test("the outline's counts and applicability are the served ones", async ({
+  page: target,
+}) => {
+  await openRenta(target);
+  const tree = await openOutline(target);
+  const read = await servedRenta(target);
+  const groups = tree.locator("[data-outline-group]");
+  await expect(groups).toHaveCount(read.form.form.outline.length);
+  for (const group of read.form.form.outline) {
+    const item = tree.locator(`[data-outline-group="${group.id}"]`);
+    const row = item;
+    await expect(row).toContainText(group.heading.text);
+    await expect(item).toHaveAttribute("data-applies", String(group.applies));
+    const needs = row.locator("[data-mark=needs_you]");
+    const failed = row.locator("[data-mark=could_not_calculate]");
+    if (group.applies !== false && group.counts.needs_you > 0) {
+      await expect(needs).toHaveText(String(group.counts.needs_you));
+      await expect(item).toHaveAccessibleName(
+        new RegExp(
+          label("desktop.modelo.outline.needs_you", {
+            count: group.counts.needs_you,
+          }),
+        ),
+      );
+    } else await expect(needs).toHaveCount(0);
+    if (group.applies !== false && group.counts.could_not_calculate > 0)
+      await expect(failed).toHaveText(String(group.counts.could_not_calculate));
+    else await expect(failed).toHaveCount(0);
+  }
+});
+
+test("withholding credit 0596 routes from the form to the register", async ({
+  page: target,
+}) => {
+  await openRenta(target);
+  const tree = await openOutline(target);
+  const read = await servedRenta(target);
+  const holder = read.form.form.pages
+    .flatMap((page) => page.sections)
+    .find((section) =>
+      JSON.stringify(section.blocks).includes('"box":"0596"'),
+    )!;
+  await tree.locator(`[data-outline-section="${holder.id}"]`).click();
+  const row = workspace(target).locator('[data-key="c:0596"]');
+  await expect(row).toBeVisible();
+  // The credit is never typed into here: it is corrected in the register.
+  await expect(row.getByRole("textbox")).toHaveCount(0);
+  await row
+    .getByRole("button", {
+      name: label("workspace.modelo.surface.correct.withholding"),
+    })
+    .click();
+  await expect(target.locator(".ledger-setup-registers")).toBeVisible();
+  await expect(
+    target.getByRole("tab", {
+      name: label("desktop.ledger.registers.area.withholding"),
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-selected", "true");
+});

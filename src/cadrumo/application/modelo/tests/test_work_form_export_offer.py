@@ -266,8 +266,8 @@ def test_the_split_states_both_instalments_of_the_amount_left_to_pay_as_advisory
 
     assert instalment.state is ModeloFormElectionState.AVAILABLE
     first, second = instalment.figures
-    assert (first.instalment, first.amount) == (ModeloFormInstalment.FIRST, Decimal("600.01"))
-    assert (second.instalment, second.amount) == (ModeloFormInstalment.SECOND, Decimal("400.00"))
+    assert (first.instalment, first.amount) == (ModeloFormInstalment.FIRST, "600.01")
+    assert (second.instalment, second.amount) == (ModeloFormInstalment.SECOND, "400.00")
     assert all(figure.advisory and figure.advisory_words for figure in instalment.figures)
     assert "60%" in first.words and "600.01" in first.words
     assert "40%" in second.words and "400.00" in second.words
@@ -276,11 +276,19 @@ def test_the_split_states_both_instalments_of_the_amount_left_to_pay_as_advisory
 def test_an_advisory_figure_carries_its_reason_and_only_then() -> None:
     with pytest.raises(ValueError, match="advisory"):
         ModeloFormElectionFigure(
-            instalment=ModeloFormInstalment.FIRST, amount=Decimal("1"), words="x", advisory=True, advisory_words=None
+            instalment=ModeloFormInstalment.FIRST, amount="1.00", words="x", advisory=True, advisory_words=None
         )
     with pytest.raises(ValueError, match="advisory"):
         ModeloFormElectionFigure(
-            instalment=ModeloFormInstalment.FIRST, amount=Decimal("1"), words="x", advisory=False, advisory_words="y"
+            instalment=ModeloFormInstalment.FIRST, amount="1.00", words="x", advisory=False, advisory_words="y"
+        )
+
+
+@pytest.mark.parametrize("amount", ["-1.00", "1.001", "1,00", ""])
+def test_a_figure_amount_is_the_decimal_text_of_cents(amount: str) -> None:
+    with pytest.raises(ValueError):
+        ModeloFormElectionFigure(
+            instalment=ModeloFormInstalment.FIRST, amount=amount, words="x", advisory=True, advisory_words="y"
         )
 
 
@@ -311,7 +319,7 @@ def test_a_result_to_pay_with_nothing_left_to_pay_offers_no_settlement(operation
     for election in (ModeloFormElection.PAYMENT, ModeloFormElection.INSTALMENT, ModeloFormElection.CHARGE_ACCOUNT):
         assert questions[election].state is ModeloFormElectionState.UNAVAILABLE, election
         assert questions[election].reason is ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED, election
-        assert questions[election].state_words and questions[election].figures == ()
+        assert questions[election].state_words is not None and questions[election].figures == ()
 
 
 def test_an_account_is_offered_by_its_label_and_mask_never_its_number(operation: PinnedAuthorityOperation) -> None:

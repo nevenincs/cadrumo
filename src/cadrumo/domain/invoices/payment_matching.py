@@ -133,6 +133,96 @@ def _invoice_id(pair: PaymentPair) -> str:
     return pair.invoice.invoice_id
 
 
+def _open_movements(transactions: Iterable[Transaction], taken: Mapping[str, str]) -> list[Transaction]:
+    return [
+        transaction
+        for transaction in transactions
+        if can_take_invoice(transaction) and transaction.invoice_id is None and transaction.transaction_id not in taken
+    ]
+
+
+def _unmatched_invoices(invoices: Iterable[Invoice], taken: Mapping[str, str]) -> list[Invoice]:
+    taken_invoices = set(taken.values())
+    return [
+        invoice
+        for invoice in invoices
+        if not invoice.linked_transaction_ids and invoice.invoice_id not in taken_invoices
+    ]
+
+
+def _candidate_pairs(
+    transactions: Iterable[Transaction],
+    invoices: Iterable[Invoice],
+    taken: Mapping[str, str],
+) -> list[PaymentPair]:
+    """Return every settling pair of an open movement and an unmatched invoice, best rank first."""
+    open_movements = _open_movements(transactions, taken)
+    pairs = [
+        pair
+        for invoice in _unmatched_invoices(invoices, taken)
+        for transaction in open_movements
+        if (pair := _pair(transaction, invoice)) is not None
+    ]
+    pairs.sort(key=lambda pair: (pair.rank, _invoice_id(pair), _movement_id(pair)))
+    return pairs
+
+
+def _movement_alternatives(pairs: list[PaymentPair], pair: PaymentPair) -> tuple[PaymentPair, ...]:
+    movement_id = _movement_id(pair)
+    return tuple(other for other in pairs if other is not pair and _movement_id(other) == movement_id)
+
+
+def _equal_rivals(
+    pairs: list[PaymentPair], pair: PaymentPair, used_movements: set[str], used_invoices: set[str]
+) -> tuple[PaymentPair, ...]:
+    movement_id, invoice_id = _movement_id(pair), _invoice_id(pair)
+    return tuple(
+        other
+        for other in pairs
+        if other is not pair
+        and (_movement_id(other) == movement_id or _invoice_id(other) == invoice_id)
+        and _movement_id(other) not in used_movements
+        and _invoice_id(other) not in used_invoices
+        and other.rank == pair.rank
+    )
+
+
+def _best_per_movement(pairs: list[PaymentPair]) -> dict[str, PaymentSuggestion]:
+    """Take pairs best first, each movement and each invoice once, noting equally ranked rivals."""
+    used_movements: set[str] = set()
+    used_invoices: set[str] = set()
+    best: dict[str, PaymentSuggestion] = {}
+    for pair in pairs:
+        movement_id, invoice_id = _movement_id(pair), _invoice_id(pair)
+        if movement_id in used_movements or invoice_id in used_invoices:
+            continue
+        ties = _equal_rivals(pairs, pair, used_movements, used_invoices)
+        used_movements.add(movement_id)
+        used_invoices.add(invoice_id)
+        best[movement_id] = PaymentSuggestion(
+            pair=pair,
+            ambiguous=bool(ties),
+            ties=ties,
+            others=_movement_alternatives(pairs, pair),
+        )
+    return best
+
+
+def _add_tied_movements(best: dict[str, PaymentSuggestion], pairs: list[PaymentPair]) -> None:
+    """Point a movement that ties for another's invoice at the same choice."""
+    for suggestion in tuple(best.values()):
+        for tie in suggestion.ties:
+            tied_id = _movement_id(tie)
+            if tied_id in best:
+                continue
+            best[tied_id] = PaymentSuggestion(
+                pair=tie,
+                ambiguous=True,
+                ties=(suggestion.pair,),
+                others=_movement_alternatives(pairs, tie),
+            )
+
+
 def suggest_payments(
     transactions: Iterable[Transaction],
     invoices: Iterable[Invoice],
@@ -144,61 +234,9 @@ def suggest_payments(
     ``staged`` maps a movement id to the invoice id a staged link already gives it: neither is
     offered to anything else.
     """
-    taken = staged or {}
-    taken_invoices = set(taken.values())
-    open_movements = [
-        transaction
-        for transaction in transactions
-        if can_take_invoice(transaction) and transaction.invoice_id is None and transaction.transaction_id not in taken
-    ]
-    unmatched = [
-        invoice
-        for invoice in invoices
-        if not invoice.linked_transaction_ids and invoice.invoice_id not in taken_invoices
-    ]
-    pairs = [
-        pair
-        for invoice in unmatched
-        for transaction in open_movements
-        if (pair := _pair(transaction, invoice)) is not None
-    ]
-    pairs.sort(key=lambda pair: (pair.rank, _invoice_id(pair), _movement_id(pair)))
-    used_movements: set[str] = set()
-    used_invoices: set[str] = set()
-    best: dict[str, PaymentSuggestion] = {}
-    for pair in pairs:
-        movement_id, invoice_id = _movement_id(pair), _invoice_id(pair)
-        if movement_id in used_movements or invoice_id in used_invoices:
-            continue
-        ties = tuple(
-            other
-            for other in pairs
-            if other is not pair
-            and (_movement_id(other) == movement_id or _invoice_id(other) == invoice_id)
-            and _movement_id(other) not in used_movements
-            and _invoice_id(other) not in used_invoices
-            and other.rank == pair.rank
-        )
-        used_movements.add(movement_id)
-        used_invoices.add(invoice_id)
-        best[movement_id] = PaymentSuggestion(
-            pair=pair,
-            ambiguous=bool(ties),
-            ties=ties,
-            others=tuple(other for other in pairs if other is not pair and _movement_id(other) == movement_id),
-        )
-    # A movement that ties for another's invoice points at the same choice.
-    for suggestion in tuple(best.values()):
-        for tie in suggestion.ties:
-            tied_id = _movement_id(tie)
-            if tied_id in best:
-                continue
-            best[tied_id] = PaymentSuggestion(
-                pair=tie,
-                ambiguous=True,
-                ties=(suggestion.pair,),
-                others=tuple(other for other in pairs if other is not tie and _movement_id(other) == tied_id),
-            )
+    pairs = _candidate_pairs(transactions, invoices, staged or {})
+    best = _best_per_movement(pairs)
+    _add_tied_movements(best, pairs)
     newest_first = sorted(best.values(), key=lambda found: _movement_id(found.pair))
     newest_first.sort(key=lambda found: payment_date(found.pair.transaction), reverse=True)
     return tuple(newest_first)

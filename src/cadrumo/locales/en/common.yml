@@ -322,6 +322,8 @@ aggregation:
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
+      precedence_tier_out_of_order: Calculation sources were overlaid out of their
+        precedence order.
       proven_zero_value_not_zero: A source resolver stated a proven zero for a binding
         whose value is not zero.
       provenance_binding_source_mismatch: The source kind declared on the origin row
@@ -4286,7 +4288,14 @@ desktop:
       move: Move between boxes
       next_attention: Next box that needs you (while the form has focus)
     outline:
+      collapse_all: Collapse all groups
+      could_not_calculate: 'Could not be calculated: {count}'
+      does_not_apply: Doesn't apply
+      expand_all: Expand all groups
+      hide_not_applicable: Hide what doesn't apply
       label: Form outline
+      may_apply: Only if it applies to you
+      needs_you: 'Needs you: {count}'
     rename:
       name: Name
       save: Save name
@@ -9530,6 +9539,20 @@ workspace:
       save: Keep for review
       save_next: Keep and go to next
       unreadable: This value could not be read.
+    election:
+      clear: Clear {year}
+      contradictory: Your profile states more than one answer for {year}. Choose the
+        right one and save it, or clear the year.
+      other_years: Other years your profile states
+      reading: Reading what your profile states…
+      retry: Read again
+      save: Save for {year}
+      saved: Saved for {year}.
+      state:
+        contradictory: Stated more than once for {year}, with different answers
+        declared: Stated for {year}
+        undeclared: Not stated for {year}
+      title: Business income criterion for {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'Confirm the assumed values before creating the file or recording
@@ -9547,9 +9570,19 @@ workspace:
         past_filing_window: The filing period has ended, and paying in two instalments
           needs the return filed within it.
         result_unknown: 'Calculate the declaration first: its result decides this.'
+        settlement_unsupported: The amount this return settles does not go the way
+          its result does, as when the whole amount to pay is suspended against your
+          spouse's refund. The official file has no way to state that, so it cannot
+          be settled here.
       file_format:
         fixed_width: AEAT file in the fixed-width BOE design
         xml_dictionary: AEAT XML file
+      instalment:
+        advisory: 'Advisory: Cadrumo rounds the first instalment to the cent and leaves
+          the rest to the second. No official rule says which instalment a cent goes
+          to, so check both amounts in Renta WEB before you pay.'
+        first: 'First instalment, %{share}% when you file: %{amount}'
+        second: 'Second instalment, the other %{share}%: %{amount}'
       resolve_first: 'Resolve what blocks filing before creating the file or recording
         the filing (blocking: {count}).'
       title: Export the declaration
@@ -9742,6 +9775,10 @@ workspace:
     in_spanish: (in Spanish)
     issues:
       action:
+        at_source: Add or correct the records or details it comes from, then calculate
+          again.
+        at_source_if_applies: No action is needed unless that figure applies to you.
+          If it does, add or correct the records it comes from, then calculate again.
         confirm: Open each box and confirm its value, or type the right one.
         confirm_by_section: Open each section and confirm its values, or type the
           right ones.

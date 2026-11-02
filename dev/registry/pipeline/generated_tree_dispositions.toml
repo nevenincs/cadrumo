@@ -29,36 +29,4 @@
 # is not the measure of progress.
 
 schema_version = 4
-
-[[dispositions]]
-kind = "record_drift"
-modelo = "369"
-revision = "esquema-exterior"
-source_ref = "aeat-dr-369-2021"
-source_sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
-remedy = "republish"
-differing_records = 3
-reason = "The Complementaria byte follows the page, not the amendment flag: DR369 and its file description define C only as an extra page."
-reconsideration_condition = "Retire once this tree is republished."
-
-[[dispositions]]
-kind = "record_drift"
-modelo = "369"
-revision = "esquema-union"
-source_ref = "aeat-dr-369-2021"
-source_sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
-remedy = "republish"
-differing_records = 6
-reason = "The Complementaria byte follows the page, not the amendment flag: DR369 and its file description define C only as an extra page."
-reconsideration_condition = "Retire once this tree is republished."
-
-[[dispositions]]
-kind = "record_drift"
-modelo = "369"
-revision = "esquema-importacion"
-source_ref = "aeat-dr-369-2021"
-source_sha256 = "b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3"
-remedy = "republish"
-differing_records = 3
-reason = "The Complementaria byte follows the page, not the amendment flag: DR369 and its file description define C only as an extra page."
-reconsideration_condition = "Retire once this tree is republished."
+dispositions = []
