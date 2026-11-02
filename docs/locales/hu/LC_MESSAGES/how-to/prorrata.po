@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:16+0100\n"
+"POT-Creation-Date: 2026-11-02 11:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: hu\n"
@@ -105,18 +105,63 @@ msgstr ""
 "differenciált szektorokra osztod a vállalkozásodat."
 
 #: ../../how-to/prorrata.md:33
+msgid "Provisional and definitive percentage"
+msgstr "Ideiglenes és végleges százalék"
+
+#: ../../how-to/prorrata.md:35
+msgid "Prorrata works with two percentages for each year:"
+msgstr "A prorrata évente két százalékkal dolgozik:"
+
+#: ../../how-to/prorrata.md:37
+msgid ""
+"The **provisional percentage** is the one you elect or carry forward. The"
+" periods before the last one deduct input VAT at this percentage (LIVA "
+"art. 105.Uno and 105.Dos)."
+msgstr ""
+"Az **ideiglenes százalék** az, amelyet kiválasztasz vagy átviszel. Az "
+"utolsó előtti időszakok ezen a százalékon vonják le a bejövő áfát (LIVA "
+"art. 105.Uno és 105.Dos)."
+
+#: ../../how-to/prorrata.md:40
+msgid ""
+"The **definitive percentage** is calculated at the end of the year from "
+"the year's full-year volumes of operations with and without the right to "
+"deduct (LIVA art. 104.Dos). It is never taken from a single quarter. The "
+"tool reads those volumes from the annual volume casillas of the "
+"settlement period's calculation; if they are not declared, it reports "
+"that instead of guessing."
+msgstr ""
+"A **végleges százalék** az év végén készül el, az egész év levonási "
+"joggal és anélkül végzett ügyleteinek forgalmából (LIVA art. 104.Dos). "
+"Soha nem egyetlen negyedévből származik. Az eszköz ezeket a forgalmakat "
+"az elszámolási időszak számításának éves forgalmi casilláiból olvassa; ha"
+" nincsenek megadva, jelzi, ahelyett hogy találgatna."
+
+#: ../../how-to/prorrata.md:46
+msgid ""
+"The register stores both. The provisional percentage is the election; the"
+" definitive one is recorded on the year's entry once it is settled. A "
+"year's definitive percentage seeds the next year's provisional one with "
+"`prorrata seed`."
+msgstr ""
+"A nyilvántartás mindkettőt tárolja. Az ideiglenes százalék a választás; a"
+" végleges az év tételében kerül rögzítésre, miután elszámoltad. Egy év "
+"végleges százaléka a `prorrata seed` paranccsal adja a következő év "
+"ideiglenes százalékát."
+
+#: ../../how-to/prorrata.md:51
 msgid "Elect general prorrata"
 msgstr "Az általános arányosítás választása"
 
-#: ../../how-to/prorrata.md:35
+#: ../../how-to/prorrata.md:53
 msgid "Elect the year's general percentage:"
 msgstr "Válaszd ki az évre érvényes általános levonási százalékot:"
 
-#: ../../how-to/prorrata.md:41
+#: ../../how-to/prorrata.md:59
 msgid "`--ejercicio` is the filing year the election covers."
 msgstr "Az `--ejercicio` a benyújtási év, amelyre a választás vonatkozik."
 
-#: ../../how-to/prorrata.md:42
+#: ../../how-to/prorrata.md:60
 msgid ""
 "`--percentage` is the provisional deduction percentage, 0 to 100 (LIVA "
 "art. 104.Uno + 105.Uno)."
@@ -124,7 +169,7 @@ msgstr ""
 "A `--percentage` az ideiglenes levonási százalék, 0-tól 100-ig (LIVA art."
 " 104.Uno + 105.Uno)."
 
-#: ../../how-to/prorrata.md:44
+#: ../../how-to/prorrata.md:62
 msgid ""
 "`--provenance` and `--reference` name the document the percentage stands "
 "on: `inicio_actividad` for a start-of-activity proposal (LIVA art. "
@@ -137,7 +182,7 @@ msgstr ""
 "AEAT által engedélyezett százalékhoz (LIVA art. 105.Dos). Az eszköz "
 "mindkettő nélkül elutasítja a kézzel megadott százalékot."
 
-#: ../../how-to/prorrata.md:48
+#: ../../how-to/prorrata.md:66
 msgid ""
 "To carry the prior year's definitive percentage (LIVA art. 105.Uno), run "
 "`aeat app ledger prorrata seed --ejercicio <year>` instead. It reads the "
@@ -150,15 +195,15 @@ msgstr ""
 "és elutasítja, ha egyetlen tárolt elszámolás sem tartalmaz végleges "
 "százalékot."
 
-#: ../../how-to/prorrata.md:53
+#: ../../how-to/prorrata.md:71
 msgid "Elect especial prorrata and classify inputs"
 msgstr "A különleges arányosítás választása és a beszerzések besorolása"
 
-#: ../../how-to/prorrata.md:55
+#: ../../how-to/prorrata.md:73
 msgid "Elect especial for the year:"
 msgstr "Válaszd a különleges arányosítást az adott évre:"
 
-#: ../../how-to/prorrata.md:61
+#: ../../how-to/prorrata.md:79
 msgid ""
 "Here `--percentage` is the common-use percentage, the rate applied to "
 "shared inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same "
@@ -173,17 +218,17 @@ msgstr ""
 "dokumentumot nevezi meg. Hagyd el a kapcsolót, ha azt akarod rögzíteni, "
 "hogy a már hatályos rendszer folytatódik."
 
-#: ../../how-to/prorrata.md:67
+#: ../../how-to/prorrata.md:85
 msgid "Then tag each input entry with its use when you add it:"
 msgstr ""
 "Ezután címkézzen meg minden előzetes IVA-tételt a használatával, amikor "
 "hozzáadja:"
 
-#: ../../how-to/prorrata.md:73
+#: ../../how-to/prorrata.md:91
 msgid "`--input-classification` takes one value:"
 msgstr "Az `--input-classification` egy értéket vesz fel:"
 
-#: ../../how-to/prorrata.md:75
+#: ../../how-to/prorrata.md:93
 msgid ""
 "`exclusively_deductible` - the input serves only operations that grant "
 "the right to deduct; it deducts in full."
@@ -191,7 +236,7 @@ msgstr ""
 "`exclusively_deductible`: a beszerzés csak levonásra jogosító ügyleteket "
 "szolgál; teljes egészében levonódik."
 
-#: ../../how-to/prorrata.md:77
+#: ../../how-to/prorrata.md:95
 msgid ""
 "`exclusively_non_deductible` - the input serves only operations that do "
 "not; it deducts nothing."
@@ -199,13 +244,13 @@ msgstr ""
 "`exclusively_non_deductible`: a beszerzés csak nem jogosító ügyleteket "
 "szolgál; semmi sem vonódik le belőle."
 
-#: ../../how-to/prorrata.md:79
+#: ../../how-to/prorrata.md:97
 msgid "`common` - the input is shared; it deducts at the common-use percentage."
 msgstr ""
 "`common`: a beszerzés megosztott; a közös használatú százalékon vonódik "
 "le."
 
-#: ../../how-to/prorrata.md:81
+#: ../../how-to/prorrata.md:99
 msgid ""
 "Tag an input but elect no especial for that year and the tool warns the "
 "tag is inert: the input deducts under the general percentage. The "
@@ -218,7 +263,7 @@ msgstr ""
 "választás nélkül indul, ezért a figyelmeztetés megjelenik. A címke "
 "érvényesítéséhez válaszd a különleges arányosítást."
 
-#: ../../how-to/prorrata.md:86
+#: ../../how-to/prorrata.md:104
 msgid ""
 "The tag only sets how much of a deductible input deducts. An input "
 "deducts only when its row also carries `--deduction-kind` on `ledger add`"
@@ -233,11 +278,11 @@ msgstr ""
 "szükséges. Lásd: [Számlák és bizonylatok csatolása a tranzakciókhoz"
 "](ledger-evidence.md)."
 
-#: ../../how-to/prorrata.md:91
+#: ../../how-to/prorrata.md:109
 msgid "Declare a differentiated sector"
 msgstr "Differenciált szektor deklarálása"
 
-#: ../../how-to/prorrata.md:93
+#: ../../how-to/prorrata.md:111
 msgid ""
 "Declare a differentiated sector when part of the activity has its own "
 "deduction regime (LIVA arts. 9.1.c / 101):"
@@ -245,7 +290,7 @@ msgstr ""
 "Deklarálj egy differenciált szektort, ha a tevékenység egy részének saját"
 " levonási rendszere van (LIVA art. 9.1.c / 101):"
 
-#: ../../how-to/prorrata.md:100
+#: ../../how-to/prorrata.md:118
 msgid ""
 "`--sector-id` is a stable id that the register entries and the entries in"
 " your records reference."
@@ -253,7 +298,7 @@ msgstr ""
 "A `--sector-id` egy stabil azonosító, amelyre a nyilvántartás bejegyzései"
 " és a nyilvántartásaid tételei hivatkoznak."
 
-#: ../../how-to/prorrata.md:101
+#: ../../how-to/prorrata.md:119
 msgid ""
 "`--letra` is the LIVA art. 9.1.c subparagraph that makes the sector "
 "differentiated: `a`, `b`, `c`, or `d`."
@@ -261,7 +306,7 @@ msgstr ""
 "A `--letra` a LIVA art. 9.1.c betűje, amely a szektort differenciálttá "
 "teszi: `a`, `b`, `c` vagy `d`."
 
-#: ../../how-to/prorrata.md:103
+#: ../../how-to/prorrata.md:121
 msgid ""
 "`--activity-code` is a CNAE or IAE code grouped into the sector. Repeat "
 "it for each code; give at least one."
@@ -269,7 +314,7 @@ msgstr ""
 "Az `--activity-code` egy CNAE- vagy IAE-kód, amelyet egy szektorhoz "
 "sorolnak. Ismételd meg minden kódnál; adj meg legalább egyet."
 
-#: ../../how-to/prorrata.md:106
+#: ../../how-to/prorrata.md:124
 msgid ""
 "Scope an election to a sector with `--sector`, and tag an entry's sector "
 "with `--sector` on `ledger add`:"
@@ -277,7 +322,7 @@ msgstr ""
 "Korlátozz egy választást egy szektorra a `--sector` opcióval, és címkézd "
 "meg egy tétel szektorát a `--sector` opcióval a `ledger add` parancson:"
 
-#: ../../how-to/prorrata.md:113
+#: ../../how-to/prorrata.md:131
 msgid ""
 "Tag an entry with a sector you have not declared and the tool warns the "
 "tag is unmatched: the input deducts at the common-use percentage until "
@@ -292,7 +337,7 @@ msgstr ""
 "ezt a figyelmeztetést. Előbb deklaráld a szektort, vagy javítsd ki az "
 "azonosítót."
 
-#: ../../how-to/prorrata.md:118
+#: ../../how-to/prorrata.md:136
 msgid ""
 "Three more commands manage a sector's percentage. `prorrata seed-sector` "
 "seeds a sector's provisional percentage from its own prior-year "
@@ -312,11 +357,146 @@ msgstr ""
 "kapcsolót. Futtasd mindegyiket a `--help` kapcsolóval, hogy lásd a "
 "lehetőségeiket."
 
-#: ../../how-to/prorrata.md:126
+#: ../../how-to/prorrata.md:144
+msgid "Regularise in the last period (casilla 44)"
+msgstr "Szabályosítás az utolsó időszakban (44-es casilla)"
+
+#: ../../how-to/prorrata.md:146
+msgid ""
+"The settlement period of the year is the 4th quarter, or month 12 for a "
+"monthly filer. In that Modelo 303 the two percentages split the work in "
+"two:"
+msgstr ""
+"Az év elszámolási időszaka a 4. negyedév, havi bevallónál a 12. hónap. "
+"Ebben a Modelo 303-ban a két százalék megosztja a munkát:"
+
+#: ../../how-to/prorrata.md:149
+msgid ""
+"The settlement period's own input VAT deducts at the **definitive** "
+"percentage, through the ledger, like any other period's input VAT at its "
+"percentage."
+msgstr ""
+"Az elszámolási időszak saját bejövő áfája a **végleges** százalékon "
+"vonódik le a főkönyvön keresztül, ahogyan bármely más időszak bejövő "
+"áfája a saját százalékán."
+
+#: ../../how-to/prorrata.md:152
+msgid ""
+"Casilla 44 (`Regularización prorrata por porcentaje definitivo`, LIVA "
+"art. 105.Cuatro) regularises only the **earlier** periods of the year. "
+"For each of them the tool takes the gross deductible input VAT, applies "
+"the definitive percentage, and subtracts the deduction that period "
+"actually practised at the provisional percentage. The difference, "
+"positive or negative, goes into casilla 44."
+msgstr ""
+"A 44-es casilla (`Regularización prorrata por porcentaje definitivo`, "
+"LIVA art. 105.Cuatro) csak az év **korábbi** időszakait szabályosítja. "
+"Mindegyikhez az eszköz veszi a levonható bruttó bejövő áfát, alkalmazza a"
+" végleges százalékot, és kivonja azt a levonást, amelyet az az időszak "
+"ténylegesen az ideiglenes százalékon érvényesített. A különbség, pozitív "
+"vagy negatív, a 44-es casillába kerül."
+
+#: ../../how-to/prorrata.md:159
+msgid ""
+"The tool re-derives each earlier period's gross input VAT from your "
+"ledger and reads the deduction it practised from that period's filed "
+"observation. The Modelo 390 regularisation field restates the filed "
+"settlement casilla 44."
+msgstr ""
+"Az eszköz a korábbi időszakok bruttó bejövő áfáját újra levezeti a "
+"főkönyvedből, az érvényesített levonást pedig az adott időszak benyújtott"
+" megfigyeléséből olvassa. A Modelo 390 szabályosítási mezője a benyújtott"
+" elszámolás 44-es casilláját ismétli meg."
+
+#: ../../how-to/prorrata.md:163
+msgid ""
+"If a source is missing or contradicts another, casilla 44 stays "
+"unresolved and the calculation reports a finding that names the cause. "
+"Nothing defaults to zero. See [Unresolved findings](#unresolved-"
+"findings)."
+msgstr ""
+"Ha egy forrás hiányzik, vagy ellentmond egy másiknak, a 44-es casilla "
+"feloldatlan marad, és a számítás az okot megnevező megállapítást jelent. "
+"Semmi sem lesz alapértelmezetten nulla. Lásd: [Feloldatlan megállapítások"
+"](#unresolved-findings)."
+
+#: ../../how-to/prorrata.md:167
+msgid "Declare a gross base for periods entered by hand"
+msgstr "Bruttó alap megadása a kézzel felvitt időszakokra"
+
+#: ../../how-to/prorrata.md:169
+msgid ""
+"An earlier period you filed outside Cadrumo, or entered by hand, may have"
+" no deductible input VAT in the ledger. The tool then cannot re-derive "
+"its gross base. Declare it yourself, per period and, where you declared "
+"sectors, per sector:"
+msgstr ""
+"A Cadrumón kívül benyújtott vagy kézzel felvitt korábbi időszaknak lehet,"
+" hogy nincs levonható bejövő áfája a főkönyvben. Ilyenkor az eszköz nem "
+"tudja újra levezetni a bruttó alapot. Add meg magad, időszakonként, és ha"
+" szektorokat deklaráltál, szektoronként:"
+
+#: ../../how-to/prorrata.md:178
+msgid ""
+"`--amount` is the gross deductible input VAT of that period before "
+"prorrata, in euros with at most two decimals."
+msgstr ""
+"A `--amount` az adott időszak levonható bruttó bejövő áfája a prorrata "
+"előtt, euróban, legfeljebb két tizedessel."
+
+#: ../../how-to/prorrata.md:180
+msgid ""
+"`--evidence` names your own document that backs the amount. It is "
+"required."
+msgstr ""
+"Az `--evidence` a saját dokumentumodat nevezi meg, amely az összeget "
+"alátámasztja. Kötelező."
+
+#: ../../how-to/prorrata.md:181
+msgid ""
+"`--sector` scopes the declaration to a declared differentiated sector; "
+"omit it for the whole-activity entry."
+msgstr ""
+"A `--sector` a nyilatkozatot egy deklarált, elkülönített szektorra "
+"korlátozza; hagyd el az egész tevékenységre vonatkozó tételhez."
+
+#: ../../how-to/prorrata.md:183
+msgid ""
+"`--replace` replaces a declaration already held for the same period and "
+"sector. Without it, a second declaration for the same period is refused."
+msgstr ""
+"A `--replace` felülírja az ugyanarra az időszakra és szektorra már "
+"meglévő nyilatkozatot. Nélküle ugyanarra az időszakra a második "
+"nyilatkozatot elutasítja."
+
+#: ../../how-to/prorrata.md:186
+msgid ""
+"A declaration is your own statement, recorded with the provenance "
+"`operator_declared`. It is not an AEAT observation. The regularisation "
+"uses it only for a period whose ledger holds no deductible input. Where "
+"the ledger does hold input, the ledger wins and must agree with your "
+"declaration; a disagreement becomes a finding."
+msgstr ""
+"A nyilatkozat a saját megállapításod, `operator_declared` eredettel "
+"rögzítve. Nem AEAT-megfigyelés. A szabályosítás csak olyan időszaknál "
+"használja, amelynek főkönyvében nincs levonható bejövő áfa. Ahol a "
+"főkönyv tartalmaz bejövő áfát, a főkönyv az irányadó, és egyeznie kell a "
+"nyilatkozatoddal; az eltérés megállapítássá válik."
+
+#: ../../how-to/prorrata.md:192
+msgid ""
+"Remove a declaration with `aeat app ledger prorrata remove-gross "
+"--ejercicio <year> --period 1T`, adding `--sector` for a sector entry."
+msgstr ""
+"Nyilatkozat törlése: `aeat app ledger prorrata remove-gross --ejercicio "
+"<year> --period 1T`, szektortételnél kiegészítve a `--sector` "
+"kapcsolóval."
+
+#: ../../how-to/prorrata.md:195
 msgid "Read the settlement advisories"
 msgstr "Olvasd el az elszámolási figyelmeztetéseket"
 
-#: ../../how-to/prorrata.md:128
+#: ../../how-to/prorrata.md:197
 msgid ""
 "When you calculate the year-end Modelo 303 for the 4th quarter "
 "settlement, the tool may surface an advisory that does not block filing:"
@@ -325,7 +505,7 @@ msgstr ""
 "elszámoláshoz, az eszköz olyan figyelmeztetést jeleníthet meg, amely nem "
 "akadályozza a benyújtást:"
 
-#: ../../how-to/prorrata.md:131
+#: ../../how-to/prorrata.md:200
 msgid ""
 "**Especial may be mandatory** - when the taxpayer computes under general "
 "prorrata and the deduction under general exceeds the deduction under "
@@ -343,13 +523,13 @@ msgstr ""
 "be őket. Az ellenőrzés nem fut le olyan nyilvántartásnál, amelyben "
 "szektorok vannak deklarálva."
 
-#: ../../how-to/prorrata.md:138
+#: ../../how-to/prorrata.md:207
 msgid "Two more warnings appear when you add a row, not at settlement:"
 msgstr ""
 "Két további figyelmeztetés a sor hozzáadásakor jelenik meg, nem az "
 "elszámoláskor:"
 
-#: ../../how-to/prorrata.md:140
+#: ../../how-to/prorrata.md:209
 msgid ""
 "**Inert classification** - an `--input-classification` tag set with no "
 "especial election for that year."
@@ -357,13 +537,13 @@ msgstr ""
 "**Hatástalan besorolás** - az `--input-classification` címke hatástalan, "
 "ha az adott évre nem választottál különleges arányosítást."
 
-#: ../../how-to/prorrata.md:142
+#: ../../how-to/prorrata.md:211
 msgid "**Unmatched sector** - a `--sector` tag naming a sector not yet declared."
 msgstr ""
 "**Párját nem lelő szektor**: egy `--sector` címke, amely egy még nem "
 "deklarált szektort nevez meg."
 
-#: ../../how-to/prorrata.md:144
+#: ../../how-to/prorrata.md:213
 msgid ""
 "These are notes, not refusals. Read them alongside the [calculation "
 "inputs](review-calculation-values.md) before you [check the filing"
@@ -373,19 +553,129 @@ msgstr ""
 "bemenetek](review-calculation-values.md) mellett, mielőtt ellenőrzöd a "
 "[benyújtást](verification-reports.md)."
 
-#: ../../how-to/prorrata.md:148
+#: ../../how-to/prorrata.md:217
 msgid "Review the register"
 msgstr "A nyilvántartás felülvizsgálata"
 
-#: ../../how-to/prorrata.md:150
-msgid "List every election and declared sector on the active profile:"
-msgstr "Listázd az aktív profil minden választását és deklarált szektorát:"
+#: ../../how-to/prorrata.md:219
+msgid ""
+"List every election, declared sector and declared gross base on the "
+"active profile:"
+msgstr ""
+"Listázd az aktív profil minden választását, deklarált szektorát és "
+"megadott bruttó alapját:"
 
-#: ../../how-to/prorrata.md:156
+#: ../../how-to/prorrata.md:226
+msgid ""
+"Each declared gross base shows its period, sector (if any), gross amount,"
+" provenance (`operator_declared`), evidence reference and declaration "
+"time. The text output prints one `gross` line per declaration, after the "
+"entries and sectors. `--format json` carries the same fields under "
+"`gross_declarations`."
+msgstr ""
+"Minden megadott bruttó alap mutatja az időszakát, szektorát (ha van), "
+"bruttó összegét, eredetét (`operator_declared`), a bizonyíték "
+"hivatkozását és a nyilatkozat idejét. A szöveges kimenet "
+"nyilatkozatonként egy `gross` sort ír ki a tételek és a szektorok után. A"
+" `--format json` ugyanezeket a mezőket adja a `gross_declarations` alatt."
+
+#: ../../how-to/prorrata.md:231
+msgid "Unresolved findings"
+msgstr "Feloldatlan megállapítások"
+
+#: ../../how-to/prorrata.md:233
+msgid ""
+"The regularisation never fills a gap with a guess. When it cannot "
+"calculate casilla 44 it leaves the box unresolved and reports a finding. "
+"The common ones mean:"
+msgstr ""
+"A szabályosítás sosem tölt ki hiányt találgatással. Ha nem tudja "
+"kiszámítani a 44-es casillát, feloldatlanul hagyja, és megállapítást "
+"jelent. A leggyakoribbak jelentése:"
+
+#: ../../how-to/prorrata.md:237
+msgid ""
+"**Annual volumes not declared** - declare the year's volumes of "
+"operations with and without the right to deduct, so the definitive "
+"percentage can be calculated."
+msgstr ""
+"**Az éves forgalom nincs megadva**: add meg az év levonási joggal és "
+"anélkül végzett ügyleteinek forgalmát, hogy a végleges százalék "
+"kiszámítható legyen."
+
+#: ../../how-to/prorrata.md:240
+msgid ""
+"**Provisional percentage missing** - elect or seed a percentage, or file "
+"the prior year's settlement so it can be carried."
+msgstr ""
+"**Hiányzik az ideiglenes százalék**: válassz vagy képezz egy százalékot, "
+"vagy nyújtsd be az előző év elszámolását, hogy átvihető legyen."
+
+#: ../../how-to/prorrata.md:242
+msgid ""
+"**Earlier liquidations not filed** - the regularisation covers the year's"
+" earlier periods; each one must be filed in Cadrumo or have a declared "
+"gross base."
+msgstr ""
+"**A korábbi elszámolások nincsenek benyújtva**: a szabályosítás az év "
+"korábbi időszakait fedi le; mindegyiket be kell nyújtani a Cadrumóban, "
+"vagy bruttó alapot kell hozzá megadni."
+
+#: ../../how-to/prorrata.md:245
+msgid ""
+"**Gross base unknown or disagreeing** - the ledger holds no deductible "
+"input for a period that declared some, or the ledger and your declaration"
+" differ. Record the input, or declare or replace the gross base."
+msgstr ""
+"**A bruttó alap ismeretlen vagy eltér**: a főkönyvben nincs levonható "
+"bejövő áfa egy olyan időszakhoz, amelyik megadott ilyet, vagy a főkönyv "
+"és a nyilatkozatod eltér. Rögzítsd a bejövő áfát, vagy add meg, illetve "
+"cseréld le a bruttó alapot."
+
+#: ../../how-to/prorrata.md:248
+msgid ""
+"**Ledger and filed liquidation diverge** - the input VAT at the "
+"provisional percentage does not reproduce what the period filed. "
+"Reconcile them first."
+msgstr ""
+"**A főkönyv és a benyújtott elszámolás eltér**: az ideiglenes százalékon "
+"számolt bejövő áfa nem adja vissza azt, amit az időszak benyújtott. "
+"Először egyeztesd őket."
+
+#: ../../how-to/prorrata.md:250
+msgid ""
+"**Sector definitive percentage missing** - settle each sector with "
+"`prorrata settle-sector` before regularising."
+msgstr ""
+"**Hiányzik a szektor végleges százaléka**: szabályosítás előtt számold el"
+" az egyes szektorokat a `prorrata settle-sector` paranccsal."
+
+#: ../../how-to/prorrata.md:253
+msgid ""
+"Fix the named cause and recalculate. A finding that asks you to calculate"
+" the box yourself means the case is outside what the tool derives."
+msgstr ""
+"Szüntesd meg a megnevezett okot, és számolj újra. Ha egy megállapítás "
+"arra kér, hogy a casillát magad számold ki, az az esetet az eszköz "
+"levezetésén kívül esőnek jelzi."
+
+#: ../../how-to/prorrata.md:256
+msgid ""
+"Nothing here files or submits anything. The register, the percentages and"
+" the declared gross bases are stored locally with the profile, and the "
+"calculation only fills casilla 44 in a local draft. Filing and any AEAT "
+"submission stay with you."
+msgstr ""
+"Ez semmit sem nyújt be és nem küld el. A nyilvántartást, a százalékokat "
+"és a megadott bruttó alapokat a program helyben, a profillal együtt "
+"tárolja, a számítás pedig csak a 44-es casillát tölti ki egy helyi "
+"vázlatban. A benyújtás és minden AEAT-felé történő beküldés nálad marad."
+
+#: ../../how-to/prorrata.md:261
 msgid "Next steps"
 msgstr "Következő lépések"
 
-#: ../../how-to/prorrata.md:158
+#: ../../how-to/prorrata.md:263
 msgid ""
 "[Classify transactions](classify-transactions.md) so each input carries "
 "the data prorrata needs."
@@ -393,7 +683,7 @@ msgstr ""
 "[Tranzakciók besorolása](classify-transactions.md), hogy minden "
 "beszerzési tétel tartalmazza az arányosításhoz szükséges adatokat."
 
-#: ../../how-to/prorrata.md:160
+#: ../../how-to/prorrata.md:265
 msgid ""
 "[Review calculation inputs](review-calculation-values.md) to see the "
 "deducted amounts."
@@ -401,7 +691,7 @@ msgstr ""
 "[Számítási bemenetek áttekintése](review-calculation-values.md) a levont "
 "összegek megtekintéséhez."
 
-#: ../../how-to/prorrata.md:162
+#: ../../how-to/prorrata.md:267
 msgid ""
 "[Prepare a Modelo 303 VAT filing](modelo-303.md) and [the annual Modelo "
 "390 summary](modelo-390.md)."
