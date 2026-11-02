@@ -243,15 +243,18 @@ def test_a_modelo_303_credit_is_carried_forward_unless_a_refund_is_elected(
     assert result.election_may_change
 
 
-def test_a_result_box_with_no_declared_sign_rule_has_no_direction(operation: PinnedAuthorityOperation) -> None:
-    """Modelo 100 names box 0670 as its result, but the registry declares no rule for its sign."""
-    result = _form(operation, "100", 2025, "0A", values={"0670": Decimal("-812.40")}).result
+def test_a_modelo_100_result_settles_by_its_declared_type(operation: PinnedAuthorityOperation) -> None:
+    """Box 0670 decides the 2025 record's "tipo de declaración": a negative result is a refund, "D"."""
+    refund = _form(operation, "100", 2025, "0A", values={"0670": Decimal("-812.40")}).result
+    to_pay = _form(operation, "100", 2025, "0A", values={"0670": Decimal("812.40")}).result
 
-    assert result is not None
-    assert result.box == "0670"
-    assert result.value == Decimal("-812.40")
-    assert result.direction is ModeloFormResultDirection.UNKNOWN
-    assert result.disposition is None
+    assert refund is not None and to_pay is not None
+    assert refund.box == "0670"
+    assert refund.value == Decimal("-812.40")
+    assert refund.direction is ModeloFormResultDirection.TO_REFUND
+    assert refund.disposition is ResultDisposition.DEVOLUCION
+    assert to_pay.direction is ModeloFormResultDirection.TO_PAY
+    assert to_pay.disposition is ResultDisposition.INGRESO
 
 
 def test_an_informative_return_has_no_settlement_box(operation: PinnedAuthorityOperation) -> None:

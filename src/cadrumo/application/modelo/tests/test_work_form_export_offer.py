@@ -137,7 +137,7 @@ def _deadline(days: int) -> ModeloFormDeadline:
     return ModeloFormDeadline(
         closes_on=closes,
         nominal_closes_on=closes,
-        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         reference_on=_TODAY,
         days_remaining=days if days >= 0 else None,
         days_overdue=-days if days < 0 else None,
