@@ -573,7 +573,7 @@ def test_an_amended_return_refuses_export_because_the_design_cannot_declare_it(
         amended = result.revision.model_copy(
             update={
                 "amendment_identity": CalculationRevisionAmendmentIdentity(
-                    kind=kind, amends_filing_record_id="filing-ficticio", m303_rectificativa_motive=None
+                    kind=kind, amends_filing_record_id="a" * 64, m303_rectificativa_motive=None
                 )
             }
         )
