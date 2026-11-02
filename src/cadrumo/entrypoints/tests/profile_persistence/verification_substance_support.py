@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from decimal import Decimal
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -92,10 +92,14 @@ def _seed_ready_profile(
     )
 
 
-def workflow_profile() -> TaxpayerProfile:
+def workflow_profile(
+    *, tax_id: str = "X1234567L", iva_regime: str = "GENERAL", activity_start_date: date | None = None
+) -> TaxpayerProfile:
+    """The plain workflow profile: no employees, rent retention, intracommunity trade or foreign assets."""
     return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
+        tax_id=tax_id,
+        iva_regime=IVARegime(iva_regime),
+        activity_start_date=activity_start_date,
         has_employees=False,
         pays_rent_with_retencion=False,
         does_intracomunitario=False,

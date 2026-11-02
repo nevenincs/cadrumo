@@ -33,8 +33,12 @@ _INCOME = validated_casilla_id("0012")
 _FAMILY_ID = "test-retencion-soportada-trabajo"
 _MANUAL_ID = "test-manual-credit"
 
-_FAMILY_PROVIDER = {"kind": "retencion_soportada", "income_class": "trabajo", "quantity": "pago_a_cuenta"}
-_LEDGER_PROVIDER = {
+_FAMILY_PROVIDER: dict[str, object] = {
+    "kind": "retencion_soportada",
+    "income_class": "trabajo",
+    "quantity": "pago_a_cuenta",
+}
+_LEDGER_PROVIDER: dict[str, object] = {
     "kind": "ledger_renta_income_aggregation",
     "modelo": "100",
     "target_casilla_id": "0171",

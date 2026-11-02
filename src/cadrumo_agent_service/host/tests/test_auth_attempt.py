@@ -11,6 +11,7 @@ from typing import override
 from uuid import uuid4
 
 import pytest
+from pydantic import JsonValue
 
 from ..auth_attempt import AuthAttempt
 from ..auth_protocol import AuthEvent, AuthProtocol, snapshot
@@ -57,27 +58,63 @@ def _frame(attempt: str, event: str, **fields: str) -> bytes:
     ).encode()
 
 
-def test_code_submission_uses_same_pipe_once_and_does_not_expose_the_code() -> None:
+def _awaiting_code_exchange(
+    *, url: str, protocol: AuthProtocol | None = None
+) -> tuple[AuthAttempt, io.BytesIO, Queue[bytes | None], str]:
+    """Return an attempt whose helper stream has already asked for an authorization code, not yet being read."""
     valid = Event()
     valid.set()
     attempt = _exchange_attempt(valid)
+    if protocol is not None:
+        attempt._protocol = protocol
     stream = io.BytesIO()
     attempt._input = stream
     queue: Queue[bytes | None] = Queue()
     helper_id = str(uuid4())
     for event in ("ready", "started"):
         queue.put(_frame(helper_id, event))
-    queue.put(_frame(helper_id, "browser_action", url="https://example.org/login?state=opaque"))
+    queue.put(_frame(helper_id, "browser_action", url=url))
     queue.put(_frame(helper_id, "authorization_code_required"))
+    return attempt, stream, queue, helper_id
+
+
+def _wait_for_code_request(attempt: AuthAttempt) -> dict[str, JsonValue]:
+    deadline = time.monotonic() + 3
+    while attempt.observe()["event"] != "authorization_code_required" and time.monotonic() < deadline:
+        time.sleep(0.01)
+    observed = attempt.observe()
+    assert observed["event"] == "authorization_code_required"
+    return observed
+
+
+def _code_submitter(attempt: AuthAttempt, submissions: list[str]) -> tuple[Thread, Event]:
+    submitting = Event()
+
+    def submit() -> None:
+        submitting.set()
+        try:
+            attempt.submit_code(bytearray(b"synthetic-code"))
+            submissions.append("accepted")
+        except ValueError:
+            submissions.append("refused")
+
+    return Thread(target=submit), submitting
+
+
+def _release_and_join(release: Event, worker: Thread, submitter: Thread) -> None:
+    release.set()
+    worker.join(3)
+    if submitter.ident is not None:
+        submitter.join(3)
+
+
+def test_code_submission_uses_same_pipe_once_and_does_not_expose_the_code() -> None:
+    attempt, stream, queue, helper_id = _awaiting_code_exchange(url="https://example.org/login?state=opaque")
     outcomes: list[tuple[str, str | None]] = []
     worker = Thread(target=lambda: outcomes.append(attempt._exchange(stream, queue)))
     worker.start()
     try:
-        deadline = time.monotonic() + 3
-        while attempt.observe()["event"] != "authorization_code_required" and time.monotonic() < deadline:
-            time.sleep(0.01)
-        before = attempt.observe()
-        assert before["event"] == "authorization_code_required"
+        before = _wait_for_code_request(attempt)
         assert before["url"] == "https://example.org/login?state=opaque"
         for invalid in (b"", b"contains space", b"\xff", b"x" * 2049, b'"' * 2048):
             with pytest.raises(ValueError, match="invalid_request"):
@@ -185,47 +222,22 @@ def test_terminal_event_withdraws_code_state_before_a_waiting_submission() -> No
                 assert release.wait(3)
             return event
 
-    valid = Event()
-    valid.set()
-    attempt = _exchange_attempt(valid)
-    attempt._protocol = PausedProtocol("example")
-    stream = io.BytesIO()
-    attempt._input = stream
-    queue: Queue[bytes | None] = Queue()
-    helper_id = str(uuid4())
-    for event in ("ready", "started"):
-        queue.put(_frame(helper_id, event))
-    queue.put(_frame(helper_id, "browser_action", url="https://example.org/login"))
-    queue.put(_frame(helper_id, "authorization_code_required"))
+    attempt, stream, queue, helper_id = _awaiting_code_exchange(
+        url="https://example.org/login", protocol=PausedProtocol("example")
+    )
     outcomes: list[tuple[str, str | None]] = []
     worker = Thread(target=lambda: outcomes.append(attempt._exchange(stream, queue)))
     worker.start()
-    submitting = Event()
     submissions: list[str] = []
-
-    def submit() -> None:
-        submitting.set()
-        try:
-            attempt.submit_code(bytearray(b"synthetic-code"))
-            submissions.append("accepted")
-        except ValueError:
-            submissions.append("refused")
-
-    submitter = Thread(target=submit)
+    submitter, submitting = _code_submitter(attempt, submissions)
     try:
-        deadline = time.monotonic() + 3
-        while attempt.observe()["event"] != "authorization_code_required" and time.monotonic() < deadline:
-            time.sleep(0.01)
-        assert attempt.observe()["event"] == "authorization_code_required"
+        _wait_for_code_request(attempt)
         queue.put(_frame(helper_id, "failed"))
         assert terminal_read.wait(3)
         submitter.start()
         assert submitting.wait(3)
     finally:
-        release.set()
-        worker.join(3)
-        if submitter.ident is not None:
-            submitter.join(3)
+        _release_and_join(release, worker, submitter)
     assert outcomes == [("failed", None)]
     assert submissions == ["refused"]
     assert len(stream.getvalue().splitlines()) == 1  # only the start command
@@ -245,18 +257,9 @@ def test_bad_stream_withdraws_code_state_before_a_waiting_submission(raw: bytes 
                 assert release.wait(3)
                 raise
 
-    valid = Event()
-    valid.set()
-    attempt = _exchange_attempt(valid)
-    attempt._protocol = PausedProtocol("example")
-    stream = io.BytesIO()
-    attempt._input = stream
-    queue: Queue[bytes | None] = Queue()
-    helper_id = str(uuid4())
-    for event in ("ready", "started"):
-        queue.put(_frame(helper_id, event))
-    queue.put(_frame(helper_id, "browser_action", url="https://example.org/login"))
-    queue.put(_frame(helper_id, "authorization_code_required"))
+    attempt, stream, queue, _helper_id = _awaiting_code_exchange(
+        url="https://example.org/login", protocol=PausedProtocol("example")
+    )
     failures: list[str] = []
 
     def exchange() -> None:
@@ -267,32 +270,16 @@ def test_bad_stream_withdraws_code_state_before_a_waiting_submission(raw: bytes 
 
     worker = Thread(target=exchange)
     worker.start()
-    submitting = Event()
     submissions: list[str] = []
-
-    def submit() -> None:
-        submitting.set()
-        try:
-            attempt.submit_code(bytearray(b"synthetic-code"))
-            submissions.append("accepted")
-        except ValueError:
-            submissions.append("refused")
-
-    submitter = Thread(target=submit)
+    submitter, submitting = _code_submitter(attempt, submissions)
     try:
-        deadline = time.monotonic() + 3
-        while attempt.observe()["event"] != "authorization_code_required" and time.monotonic() < deadline:
-            time.sleep(0.01)
-        assert attempt.observe()["event"] == "authorization_code_required"
+        _wait_for_code_request(attempt)
         queue.put(raw)
         assert invalid_read.wait(3)
         submitter.start()
         assert submitting.wait(3)
     finally:
-        release.set()
-        worker.join(3)
-        if submitter.ident is not None:
-            submitter.join(3)
+        _release_and_join(release, worker, submitter)
     assert failures == ["invalid_auth_event"]
     assert submissions == ["refused"]
     assert attempt._cancel.is_set()

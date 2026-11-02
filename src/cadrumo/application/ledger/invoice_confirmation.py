@@ -810,8 +810,8 @@ def _retention_figure_refusal(error: ValidationError) -> InvoiceRetentionFigureE
     in the validation error pydantic builds around it.
     """
     for detail in error.errors(include_url=False):
-        cause: BaseException | None = (detail.get("ctx") or {}).get("error")
-        while cause is not None:
+        cause = (detail.get("ctx") or {}).get("error")
+        while isinstance(cause, BaseException):
             if isinstance(cause, InvoiceRetentionFigureError):
                 return cause
             cause = cause.__cause__

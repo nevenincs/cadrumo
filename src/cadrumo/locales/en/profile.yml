@@ -256,6 +256,8 @@ profile:
         tax_id:
           label: Tax ID (NIF/NIE/CIF)
       irpf:
+        activity_income_cash_criterion_elected:
+          label: 'Cash criterion stated in the return'
         activity_income_imputation_criterion:
           choices:
             cobros_y_pagos: 'When paid or collected (art. 7.2 RIRPF)'

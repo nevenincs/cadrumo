@@ -82,7 +82,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.filing_record import ModeloRecord
 from cadrumo.domain.modelos.protocols import CalculationRevisionCatalogueRepositoryProtocol
@@ -106,6 +106,7 @@ from .secure_store_baseline import (
     provision_seeded_profile,
     reopened_seeded_profile,
 )
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -505,15 +506,7 @@ _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        activity_start_date=date(2000, 1, 1),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
+    return plain_workflow_profile(activity_start_date=date(2000, 1, 1))
 
 
 def _target_filing_records(

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 import re
 import time
-from collections.abc import AsyncIterator, Coroutine
+from collections.abc import AsyncGenerator, Coroutine
 from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
@@ -113,7 +113,7 @@ def _rule(pattern: str, priority: int) -> LedgerClassificationRule:
 
 class _Rules:
     def __init__(self, *rules: LedgerClassificationRule) -> None:
-        self._rules = rules
+        self._rules: tuple[LedgerClassificationRule, ...] = rules
         self.saved: list[LedgerClassificationRule] = []
 
     def save(self, payload: LedgerClassificationRule) -> None:
@@ -162,7 +162,7 @@ def _ports(movements: _Movements, operation: object) -> LedgerActionPorts:
 
 
 @asynccontextmanager
-async def _irreversible_section() -> AsyncIterator[None]:
+async def _irreversible_section() -> AsyncGenerator[None]:
     yield
 
 

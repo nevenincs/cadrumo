@@ -254,6 +254,8 @@ profile:
         tax_id:
           label: NIF/NIE/CIF d'identificació
       irpf:
+        activity_income_cash_criterion_elected:
+          label: 'Criteri de cobraments i pagaments consignat a la declaració'
         activity_income_imputation_criterion:
           choices:
             cobros_y_pagos: 'Cobraments i pagaments (art. 7.2 RIRPF)'

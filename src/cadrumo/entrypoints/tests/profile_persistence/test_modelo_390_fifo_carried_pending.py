@@ -107,6 +107,14 @@ _GENERADA: CasillaId = validated_casilla_id("iva.compensacion-generada-periodo")
 _APLICADA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
 _DISPONIBLE: CasillaId = validated_casilla_id("iva.compensacion-disponible-fin-periodo")
 
+# A quarter's credit comes from its own general-regime totals: a filed 303 states
+# them, and the annual reconciliation slots fold them. This filer applies no
+# prorrata, so its 4T filed a [44] of zero.
+_DEVENGADA: CasillaId = validated_casilla_id("iva.cuota-devengada-total")
+_DEDUCIBLE: CasillaId = validated_casilla_id("iva.cuota-deducible-total")
+_RESULTADO_GENERAL: CasillaId = validated_casilla_id("iva.resultado-regimen-general")
+_PRORRATA_REGULARIZACION: CasillaId = validated_casilla_id("44")
+
 # M390 annual carry boxes the partition overrides.
 _M390_BOX_97: CasillaId = validated_casilla_id("iva.anual.compensacion-ultimo-periodo-97")
 _M390_BOX_662: CasillaId = validated_casilla_id("iva.anual.compensacion-generada-ejercicio-no-97")
@@ -116,6 +124,9 @@ _M390_BOX_662: CasillaId = validated_casilla_id("iva.anual.compensacion-generada
 # the whole year's credit carries into the 4T autoliquidacion.
 _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
     "1T": {
+        _DEVENGADA: Decimal("0.00"),
+        _DEDUCIBLE: Decimal("100.00"),
+        _RESULTADO_GENERAL: Decimal("-100.00"),
         M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-100.00"),
         _GENERADA: Decimal("100.00"),
         _APLICADA: Decimal("0.00"),
@@ -123,6 +134,9 @@ _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _DISPONIBLE: Decimal("100.00"),
     },
     "2T": {
+        _DEVENGADA: Decimal("0.00"),
+        _DEDUCIBLE: Decimal("20.00"),
+        _RESULTADO_GENERAL: Decimal("-20.00"),
         M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-20.00"),
         _GENERADA: Decimal("20.00"),
         _APLICADA: Decimal("0.00"),
@@ -130,6 +144,9 @@ _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _DISPONIBLE: Decimal("120.00"),
     },
     "3T": {
+        _DEVENGADA: Decimal("0.00"),
+        _DEDUCIBLE: Decimal("30.00"),
+        _RESULTADO_GENERAL: Decimal("-30.00"),
         M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-30.00"),
         _GENERADA: Decimal("30.00"),
         _APLICADA: Decimal("0.00"),
@@ -137,6 +154,10 @@ _M303_COMPENSACION_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _DISPONIBLE: Decimal("150.00"),
     },
     "4T": {
+        _DEVENGADA: Decimal("0.00"),
+        _DEDUCIBLE: Decimal("50.00"),
+        _RESULTADO_GENERAL: Decimal("-50.00"),
+        _PRORRATA_REGULARIZACION: Decimal("0.00"),
         M303_COMPENSATION_RESULTADO_CASILLA: Decimal("-50.00"),
         _GENERADA: Decimal("50.00"),
         _APLICADA: Decimal("0.00"),

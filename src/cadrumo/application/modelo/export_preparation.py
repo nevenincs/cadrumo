@@ -253,7 +253,12 @@ def compose_export_dictionary_values(
     Takes ``draft`` as a :class:`ModeloDraft`.
     """
     values: dict[str, object] = dict(
-        resolve_profile_export_values(profile_export_bindings, bucket_id=bucket_id, operation=operation),
+        resolve_profile_export_values(
+            profile_export_bindings,
+            bucket_id=bucket_id,
+            filing_year=draft.period.filing_year,
+            operation=operation,
+        ),
     )
     if taxpayer_identity.full_name is None:
         raise ModeloExportError(
