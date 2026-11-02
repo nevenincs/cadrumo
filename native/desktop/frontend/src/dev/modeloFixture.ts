@@ -97,7 +97,13 @@ import { hex64 } from "./fixtures/ledger";
  * register, so the credits and the totals that read them are unresolved;
  * `renta-pay` and `renta-refund` are the same filer with a certificate that
  * leaves a result to pay or to refund; `renta-activity` is a self-employed
- * filer whose activity income the ledger books. */
+ * filer whose activity income the ledger books. `renta-projected` and
+ * `renta-credited` hold a calculated first-quarter Modelo 130 as well, so the
+ * estimate from the quarterly declarations is answered: the first without a
+ * certificate in the register, so the employment credit and the totals that
+ * read it stay unresolved in it, the second with one. The estimate of every
+ * other filer is refused as the application refused it, for want of a
+ * quarterly declaration. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
@@ -128,6 +134,8 @@ export const MODELO_SHAPES = [
   "renta-pay",
   "renta-refund",
   "renta-activity",
+  "renta-projected",
+  "renta-credited",
   "refused",
   "unknown",
   "unavailable",
@@ -454,7 +462,11 @@ export function modeloFixture(options: Options): ModeloPort {
   };
   /** The written form each admitted baseline was read from. */
   const admittedBy = new Map<string, string>();
+  /** The language the window last read a form in, which the application
+   * words an estimate in. */
+  let spoken: OutputLanguage = "en";
   const readForm = async (workUnitId: string, language: OutputLanguage) => {
+    spoken = language;
     const name = await formName(workUnitId);
     const read =
       name === LATER_STATES
@@ -675,8 +687,18 @@ export function modeloFixture(options: Options): ModeloPort {
           request.report_language,
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
       }
+      if (
+        definition === "modelo.project" &&
+        !catalogue[`project-${rentaForm(shape)}-${spoken}`]
+      )
+        return (await refusedWith(
+          "project-no-quarters",
+          spoken,
+        )) as LedgerOutcome<ModeloResult<typeof definition>>;
       const result = await (async (): Promise<unknown> => {
         switch (definition) {
+          case "modelo.project":
+            return written(`project-${rentaForm(shape)}-${spoken}`);
           case "modelo.declarations.list":
             return port.declarations(language);
           case "modelo.work.form":

@@ -9709,6 +9709,20 @@ workspace:
       save: Deixar per revisar
       save_next: Deixar i passar a la següent
       unreadable: No s'ha pogut llegir aquest valor.
+    election:
+      clear: Esborra el {year}
+      contradictory: El teu perfil indica més d'una resposta per al {year}. Tria la
+        correcta i desa-la, o esborra l'exercici.
+      other_years: Altres anys que indica el teu perfil
+      reading: Llegint el que indica el teu perfil…
+      retry: Torna a llegir
+      save: Desa per al {year}
+      saved: Desat per al {year}.
+      state:
+        contradictory: Indicat més d'un cop per al {year}, amb respostes diferents
+        declared: Indicat per al {year}
+        undeclared: Sense indicar per al {year}
+      title: Criteri dels ingressos de la teva activitat el {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma els valors suposats abans de generar el fitxer o registrar

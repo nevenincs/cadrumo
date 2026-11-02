@@ -228,3 +228,11 @@ def test_a_stated_ascendant_count_larger_than_its_rows_is_incomplete_like_descen
         _incomplete_words(stated="3", recorded=1),
     )
     assert len(rows) == 1
+
+
+def test_each_group_serves_the_most_rows_the_design_holds() -> None:
+    # The 2025 Modelo 100 design repeats Hijo 15 times and Ascendiente 4 times, whatever the household holds.
+    for values in ({}, {_ASCENDANT_COUNT: "0", _DESCENDANT_COUNT: "0"}):
+        descendants, _ = _descendant_group(values)
+        ascendants, _ = _ascendant_group(values)
+        assert (descendants.max_rows, ascendants.max_rows) == (15, 4)

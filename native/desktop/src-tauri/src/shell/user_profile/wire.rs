@@ -9,6 +9,20 @@ pub struct Choice {
     value: String,
     label: String,
 }
+/// What one stored fact states for the ejercicio its window starts in.
+#[derive(Clone, Deserialize, Serialize)]
+pub struct EjercicioStatement {
+    ejercicio: i64,
+    value: String,
+}
+/// The wizard questions a field stated per ejercicio is answered through,
+/// and what it states so far.
+#[derive(Clone, Deserialize, Serialize)]
+pub struct EjercicioAnswer {
+    question_id: String,
+    year_question_id: String,
+    statements: Vec<EjercicioStatement>,
+}
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Field {
     pub path: String,
@@ -17,9 +31,14 @@ pub struct Field {
     masked: bool,
     required: bool,
     field_type: String,
+    /// The country codes offered; any code of the field's shape stays allowed.
+    #[serde(default)]
+    country_options: Vec<String>,
     choices: Vec<Choice>,
     help: Option<Vec<String>>,
     about: String,
+    #[serde(default)]
+    ejercicio_answer: Option<EjercicioAnswer>,
     row_index: Option<String>,
 }
 #[derive(Serialize)]
@@ -331,9 +350,40 @@ pub(super) fn mutation_failure(projection: &serde_json::Value) -> &'static str {
     "refused"
 }
 
+/// The longest sentence a refusal is relayed with.
+const REFUSAL_WORDS_LIMIT: usize = 1024;
+
+/// The finished sentence a registered error detail carries for the refusal,
+/// where it carries one within the bound. The host words nothing itself.
+pub(super) fn refusal_words(detail: &serde_json::Value) -> Option<String> {
+    detail["refusal_words"]
+        .as_str()
+        .map(str::trim)
+        .filter(|words| !words.is_empty() && words.chars().count() <= REFUSAL_WORDS_LIMIT)
+        .map(str::to_owned)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn a_refusal_is_relayed_with_only_a_bounded_sentence_the_application_served() {
+        let served = json!({"detail_version":1,"kind":"registered_error","refusal_words":" Row 2 needs a date of birth. "});
+        assert_eq!(
+            refusal_words(&served).as_deref(),
+            Some("Row 2 needs a date of birth.")
+        );
+        for unserved in [
+            json!({"kind":"registered_error"}),
+            json!({"refusal_words":""}),
+            json!({"refusal_words":"   "}),
+            json!({"refusal_words":7}),
+            json!({"refusal_words":"a".repeat(REFUSAL_WORDS_LIMIT + 1)}),
+            json!(null),
+        ] {
+            assert_eq!(refusal_words(&unserved), None, "{unserved}");
+        }
+    }
     #[test]
     fn only_a_settled_no_effect_conflict_is_safe_to_correct() {
         let mut projection = json!({
@@ -350,6 +400,36 @@ mod tests {
     }
     fn page() -> Value {
         json!({"profile_id":"p","page_kind":"overview","outcome":"page","record_revision":1,"content_digest":"a".repeat(64),"setup_state":"incomplete","schema_version":1,"valid":true,"cursor":0,"next_cursor":null,"total_items":1,"items":[{"kind":"section","key":"identity","title":"Identity","summary":"","repeatable":false}]})
+    }
+    #[test]
+    fn a_field_keeps_the_country_codes_and_the_ejercicio_answer_it_is_served_with() {
+        let served = json!({
+            "path": "irpf.activity_income_imputation_criterion",
+            "label": "Criterion",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "code",
+            "country_options": ["ES", "PT"],
+            "choices": [],
+            "help": null,
+            "about": "",
+            "ejercicio_answer": {
+                "question_id": "q",
+                "year_question_id": "y",
+                "statements": [{"ejercicio": 2025, "value": "devengo"}]
+            },
+            "row_index": null
+        });
+        let field: Field = serde_json::from_value(served.clone()).unwrap();
+        assert_eq!(serde_json::to_value(&field).unwrap(), served);
+        let mut bare = served;
+        bare.as_object_mut().unwrap().remove("country_options");
+        bare.as_object_mut().unwrap().remove("ejercicio_answer");
+        let field: Field = serde_json::from_value(bare).unwrap();
+        let held = serde_json::to_value(&field).unwrap();
+        assert_eq!(held["country_options"], json!([]));
+        assert_eq!(held["ejercicio_answer"], Value::Null);
     }
     #[test]
     fn only_complete_pinned_streams_are_released() {

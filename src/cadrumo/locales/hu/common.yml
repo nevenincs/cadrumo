@@ -9666,6 +9666,20 @@ workspace:
       save: Megtartás átnézésre
       save_next: Megtartás és tovább
       unreadable: Ez az érték nem olvasható.
+    election:
+      clear: A(z) {year}. év törlése
+      contradictory: A profilod több választ is tartalmaz a(z) {year}. évre. Válaszd
+        ki a helyeset, és mentsd el, vagy töröld az évet.
+      other_years: Más évek, amelyeket a profilod megad
+      reading: A profilod adatainak beolvasása…
+      retry: Olvasás újra
+      save: Mentés a(z) {year}. évre
+      saved: Elmentve a(z) {year}. évre.
+      state:
+        contradictory: A(z) {year}. évre többször is meg van adva, eltérő válasszal
+        declared: Megadva a(z) {year}. évre
+        undeclared: Nincs megadva a(z) {year}. évre
+      title: A vállalkozói bevétel elszámolási módja, {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt erősítsd

@@ -9723,6 +9723,20 @@ workspace:
       save: Dejar para revisar
       save_next: Dejar y pasar a la siguiente
       unreadable: No se ha podido leer este valor.
+    election:
+      clear: Borrar {year}
+      contradictory: Tu perfil indica más de una respuesta para {year}. Elige la correcta
+        y guárdala, o borra el ejercicio.
+      other_years: Otros años que indica tu perfil
+      reading: Leyendo lo que indica tu perfil…
+      retry: Volver a leer
+      save: Guardar para {year}
+      saved: Guardado para {year}.
+      state:
+        contradictory: Indicado más de una vez para {year}, con respuestas distintas
+        declared: Indicado para {year}
+        undeclared: Sin indicar para {year}
+      title: Criterio de ingresos de tu actividad en {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma los valores supuestos antes de generar el fichero o

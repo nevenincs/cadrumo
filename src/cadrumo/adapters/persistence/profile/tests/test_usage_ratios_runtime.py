@@ -10,9 +10,9 @@ import pytest
 from cadrumo.adapters.persistence.storage.errors import StorageValidationError
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.ratios import (
+    apply_usage_ratio_override,
+    clear_usage_ratio_override,
     list_eligible_ratios_for_bucket,
-    set_usage_ratio,
-    unset_usage_ratio,
     validate_ratios_for_bucket,
 )
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
@@ -30,14 +30,16 @@ class TestRuntimeFacade:
             isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
             bundled_indexed_authority().operation() as operation,
         ):
-            prior = set_usage_ratio(
+            applied = apply_usage_ratio_override(
                 bucket_id=profile.bucket_id,
                 category=SpendingCategory.from_registry("arrendamiento_vivienda_afecto"),
                 ratio=Decimal("0.42"),
+                year=2025,
                 operation=operation,
             )
 
-            assert prior is None
+            assert applied.prior_ratio is None
+            assert applied.new_ratio == Decimal("0.42")
 
             report = validate_ratios_for_bucket(bucket_id=profile.bucket_id, operation=operation)
             assert report.profile_present is True
@@ -49,12 +51,13 @@ class TestRuntimeFacade:
             )
             assert targeted.override_present is True
 
-            cleared = unset_usage_ratio(
+            cleared = clear_usage_ratio_override(
                 bucket_id=profile.bucket_id,
                 category=SpendingCategory.from_registry("arrendamiento_vivienda_afecto"),
                 operation=operation,
             )
-            assert cleared == Decimal("0.42")
+            assert cleared.prior_ratio == Decimal("0.42")
+            assert cleared.new_ratio is None
             assert validate_ratios_for_bucket(bucket_id=profile.bucket_id, operation=operation).profile_present is False
 
     def test_bucket_wrappers_fail_closed_for_inactive_runtime_bucket(self, tmp_path: Path) -> None:
@@ -63,10 +66,11 @@ class TestRuntimeFacade:
             bundled_indexed_authority().operation() as operation,
         ):
             with pytest.raises(StorageValidationError, match=r"errors\.storage\.runtime\.not_ready"):
-                set_usage_ratio(
+                apply_usage_ratio_override(
                     bucket_id=_OTHER_BUCKET_ID,
                     category=SpendingCategory.from_registry("arrendamiento_vivienda_afecto"),
                     ratio=Decimal("0.42"),
+                    year=2025,
                     operation=operation,
                 )
 
