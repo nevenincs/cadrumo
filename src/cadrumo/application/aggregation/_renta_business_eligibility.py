@@ -64,7 +64,6 @@ class RentaExpenseAdvisoryReason(StrEnum):
     """Why a Renta expense row kept its figure under a reading the operator should review."""
 
     MIXED_SHARE_OUTSIDE_USAGE_RATIO = "mixed_share_outside_usage_ratio"
-    UNCATEGORIZED_WHOLE_BUSINESS_ROW = "uncategorized_whole_business_row"
 
 
 class RentaExpenseAdvisory(BaseModel):
@@ -161,7 +160,7 @@ def row_scaling_proportion(
 
 def renta_expense_advisory(
     transaction: Transaction,
-    rule: ProportionalityRule | None,
+    rule: ProportionalityRule,
 ) -> RentaExpenseAdvisory | None:
     """Return the advisory an accepted expense row carries, or ``None``.
 
@@ -169,26 +168,15 @@ def renta_expense_advisory(
     ELEMENTO PATRIMONIAL to a separately usable part, and refuse it for an
     indivisible one, which the exclusive-use categories already model. Neither
     says whether a consumed good or service is such an element, so a share of one
-    outside a usage-ratio category is kept and reported. A row marked wholly
-    business with no category is kept for the same reason: no provision refuses
-    it, but the category rule that could cap or refuse it did not run.
+    outside a usage-ratio category is kept and reported.
 
     Args:
         transaction: A row that produced an observation.
-        rule: The proportionality rule of its category, or ``None`` when it declares none.
+        rule: The proportionality rule of its category.
 
     Returns:
         The advisory for the row, or ``None`` when its figure rests on no open reading.
     """
-    if rule is None:
-        return RentaExpenseAdvisory(
-            transaction_id=transaction.transaction_id,
-            reason=RentaExpenseAdvisoryReason.UNCATEGORIZED_WHOLE_BUSINESS_ROW,
-            detail=(
-                "a business expense with no spending category was counted whole, with no category rule run on it; "
-                "assign its category"
-            ),
-        )
     if transaction.business_classification is BusinessClassification.MIXED and not rule.kind.is_usage_ratio:
         return RentaExpenseAdvisory(
             transaction_id=transaction.transaction_id,
