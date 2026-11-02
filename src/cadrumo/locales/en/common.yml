@@ -153,6 +153,9 @@ aggregation:
       unsupported_period: Unsupported modelo period for totals from your records.
   oss_ioss:
     errors:
+      consignment_exceeds_ceiling: 'A consignment exceeds this regime''s limit: its
+        intrinsic value may not pass the ceiling set by law. Check the invoice or
+        declare it outside the import scheme.'
       detail_consumption_state_excluded: Union-scheme services cannot be declared
         for the member state of identification, because the scheme only covers services
         supplied in a member state where you are not established.

@@ -565,3 +565,19 @@ def test_no_cli_root_oss_or_ioss_verb_is_registered() -> None:
     assert offenders == {}, "CLI tree registers a forbidden OSS/IOSS verb: " + ", ".join(
         f"{p.relative_to(cli_root)} ({hits})" for p, hits in offenders.items()
     )
+
+
+def test_a_consignment_is_the_sum_of_its_invoice_lines_against_the_ceiling() -> None:
+    """Two 100.00 lines are one 200.00 consignment on one invoice, and two of 100.00 on two invoices."""
+
+    def line(ledger_id: str) -> OssIossLedgerCandidate:
+        return _candidate(
+            ledger_id=ledger_id,
+            regime=OssIossRegime("import_scheme"),
+            transaction_kind=TransactionKind("ioss_distance_sale_low_value"),
+        )
+
+    assert len(validate_oss_ioss_observations([line("invoice-a:1"), line("invoice-b:1")])) == 2
+    with pytest.raises(AggregationValidationError) as refused:
+        validate_oss_ioss_observations([line("invoice-a:1"), line("invoice-a:2")])
+    assert refused.value.context["consignment_value_eur"] == "200"

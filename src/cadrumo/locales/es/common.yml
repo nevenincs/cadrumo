@@ -166,6 +166,9 @@ aggregation:
       unsupported_period: Periodo de modelo no soportado para los totales de tus registros.
   oss_ioss:
     errors:
+      consignment_exceeds_ceiling: 'Un envío supera el valor máximo de este régimen:
+        su valor intrínseco no puede exceder el límite de la ley. Revisa la factura
+        o decláralo fuera del régimen de importación.'
       detail_consumption_state_excluded: Los servicios del régimen de la Unión no
         se pueden declarar para el Estado miembro de identificación, porque el régimen
         solo cubre los servicios prestados en un Estado miembro en el que no estés

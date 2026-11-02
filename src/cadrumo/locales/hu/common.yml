@@ -159,6 +159,9 @@ aggregation:
         számított összesítésekhez.
   oss_ioss:
     errors:
+      consignment_exceeds_ceiling: 'Egy küldemény meghaladja e rendszer korlátját:
+        belső értéke nem lépheti túl a törvényi felső határt. Ellenőrizd a számlát,
+        vagy vallsd be az importrendszeren kívül.'
       detail_consumption_state_excluded: Az uniós séma szolgáltatásai nem vallhatók
         be az azonosítás szerinti tagállamra, mert a séma csak olyan tagállamban nyújtott
         szolgáltatásokra vonatkozik, ahol nem vagy letelepedve.

@@ -342,25 +342,25 @@ def test_two_states_at_both_rates_agree_from_calculation_to_bytes(
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """France 20/10 and Poland 23/8. Cuotas: 200.00 + 20.00 + 23.00 + 4.00 = 247.00."""
+    """France 20/10 and Poland 23/8. Cuotas: 20.00 + 2.00 + 23.00 + 4.00 = 49.00."""
     result, work_unit = _calculate(
         objects,
         scenario,
         (
-            _invoice(scenario, "OSS-1", "FR", "general", "1000.00", "200.00"),
-            _invoice(scenario, "OSS-2", "FR", "reduced", "200.00", "20.00"),
+            _invoice(scenario, "OSS-1", "FR", "general", "100.00", "20.00"),
+            _invoice(scenario, "OSS-2", "FR", "reduced", "20.00", "2.00"),
             _invoice(scenario, "OSS-3", "PL", "general", "100.00", "23.00"),
             _invoice(scenario, "OSS-4", "PL", "reduced", "50.00", "4.00"),
         ),
         operation,
     )
     assert result.revision.source_issues == ()
-    assert Decimal(result.revision.casilla_values[scenario.total_casilla]) == Decimal("247.00")
+    assert Decimal(result.revision.casilla_values[scenario.total_casilla]) == Decimal("49.00")
 
     form_values = _form_values(work_unit, result, operation)
-    assert Decimal(str(form_values[("casilla", scenario.total_casilla)])) == Decimal("247.00")
+    assert Decimal(str(form_values[("casilla", scenario.total_casilla)])) == Decimal("49.00")
     form_cuotas = [Decimal(str(form_values[("binding", binding_id)])) for binding_id in _cuota_bindings(scenario)[:4]]
-    assert form_cuotas == [Decimal("200.00"), Decimal("20.00"), Decimal("23.00"), Decimal("4.00")]
+    assert form_cuotas == [Decimal("20.00"), Decimal("2.00"), Decimal("23.00"), Decimal("4.00")]
 
     report = _verify(result)
     assert report.granted_verificado_completo is True, [
@@ -370,8 +370,8 @@ def test_two_states_at_both_rates_agree_from_calculation_to_bytes(
     wire = _export(objects, tmp_path, scenario, result)
     start = wire.index(scenario.page_tag) + scenario.first_position - 1
     assert wire[start : start + 4 * 42] == (
-        _line("FR", "02000", "S", "100000", "20000")
-        + _line("FR", "01000", "R", "20000", "2000")
+        _line("FR", "02000", "S", "10000", "2000")
+        + _line("FR", "01000", "R", "2000", "200")
         + _line("PL", "02300", "S", "10000", "2300")
         + _line("PL", "00800", "R", "5000", "400")
     )
@@ -391,7 +391,7 @@ def test_two_states_at_both_rates_agree_from_calculation_to_bytes(
         for field in parsed.fields
         if field.binding_id in cuota_bindings and isinstance(field.value, Decimal)
     ]
-    assert sorted(amounts) == [Decimal("4.00"), Decimal("20.00"), Decimal("23.00"), Decimal("200.00")]
+    assert sorted(amounts) == [Decimal("2.00"), Decimal("4.00"), Decimal("20.00"), Decimal("23.00")]
 
 
 @pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
@@ -508,6 +508,40 @@ def test_a_missing_period_close_rate_refuses_and_the_stamp_does_not_stand_in(
         _calculate(objects, scenario, (_zloty_invoice(scenario),), operation)
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_currency_unconverted"
     assert refused.value.context["rate_date"] == _CLOSE.isoformat()
+
+
+def test_a_consignment_exactly_at_the_ceiling_files(
+    objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIVA art. 163 quinvicies.Uno admits a value that does not exceed 150 euros: 20% of 150.00 is 30.00."""
+    result, _ = _calculate(
+        objects, _IMPORT, (_invoice(_IMPORT, "IOSS-150", "FR", "general", "150.00", "30.00"),), operation
+    )
+    assert Decimal(result.revision.casilla_values[_IMPORT.total_casilla]) == Decimal("30.00")
+
+
+def test_a_consignment_a_cent_over_the_ceiling_refuses_before_any_figure(
+    objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    with pytest.raises(AggregationValidationError) as refused:
+        _calculate(objects, _IMPORT, (_invoice(_IMPORT, "IOSS-OVER", "FR", "general", "150.01", "30.00"),), operation)
+    assert refused.value.translated_message == "aggregation.oss_ioss.errors.consignment_exceeds_ceiling"
+    assert refused.value.context["consignment_value_eur"] == "150.01"
+
+
+def test_the_ceiling_belongs_to_the_import_regime_alone(
+    objects: SecureObjectRepository,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    result, _ = _calculate(
+        objects, _UNION, (_invoice(_UNION, "OSS-BIG", "FR", "general", "1000.00", "200.00"),), operation
+    )
+    assert Decimal(result.revision.casilla_values[_UNION.total_casilla]) == Decimal("200.00")
 
 
 def _published_rows(scenario: _Scenario, operation: PinnedAuthorityOperation) -> tuple[Invoice, ...]:

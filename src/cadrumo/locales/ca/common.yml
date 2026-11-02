@@ -162,6 +162,9 @@ aggregation:
       unsupported_period: Període de model no admès per als totals dels teus registres.
   oss_ioss:
     errors:
+      consignment_exceeds_ceiling: 'Un enviament supera el valor màxim d''aquest règim:
+        el seu valor intrínsec no pot excedir el límit de la llei. Revisa la factura
+        o declara''l fora del règim d''importació.'
       detail_consumption_state_excluded: Els serveis del règim de la Unió no es poden
         declarar per a l'Estat membre d'identificació, perquè el règim només cobreix
         els serveis prestats en un Estat membre on no estiguis establert.

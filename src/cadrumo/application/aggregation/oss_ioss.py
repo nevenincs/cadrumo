@@ -242,6 +242,40 @@ def validate_oss_ioss_observation(
     )
 
 
+def _refuse_consignments_over_ceiling(
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a consignment whose value is above its regime's published intrinsic-value ceiling.
+
+    One invoice is read as one consignment, the unit the law limits, so its lines
+    are summed; the line identifier carries the invoice as its leading segment.
+    The base includes any shipping the invoice charged in its lines, which can
+    refuse a consignment the law admits but never admits one it excludes.
+    """
+    consignments: dict[tuple[str, str], Decimal] = {}
+    dated: dict[tuple[str, str], date] = {}
+    for observation in observations:
+        key = (observation.regime, observation.ledger_id.split(":", 1)[0])
+        consignments[key] = consignments.get(key, Decimal("0")) + observation.base_amount
+        dated[key] = observation.transaction_date
+    for key, value in consignments.items():
+        regime, invoice_id = key
+        catalogue = resolve_oss_ioss_regime_catalogue(effective_date=dated[key], authority=operation)
+        ceiling = catalogue.definition(regime).intrinsic_value_ceiling_eur
+        if ceiling is not None and value > Decimal(ceiling):
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.consignment_exceeds_ceiling"),
+                context={
+                    "invoice_id": invoice_id,
+                    "regime": regime,
+                    "consignment_value_eur": str(value),
+                    "intrinsic_value_ceiling_eur": ceiling,
+                },
+            )
+
+
 def validate_oss_ioss_observations(
     candidates: Iterable[OssIossLedgerCandidate],
     *,
@@ -261,7 +295,9 @@ def validate_oss_ioss_observations(
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return validate_oss_ioss_observations(candidates, operation=indexed_operation)
-    return tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
+    observations = tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
+    _refuse_consignments_over_ceiling(observations, operation=operation)
+    return observations
 
 
 def aggregate_oss_ioss_bindings(
