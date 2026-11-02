@@ -196,7 +196,8 @@ cli:
           Para `choose`, indica la lectura por su valor o por el resumen que mostró
           `review`. Repite una vez por incidencia; no hay opción masiva.'
         confirm_retention_amount_help: Importe de retención de IRPF de la factura.
-        confirm_retention_rate_help: Porcentaje de retención de IRPF de la factura.
+        confirm_retention_rate_help: 'Retención de IRPF de la factura como fracción:
+          0.15 para el 15 %.'
         confirm_review_contradicted_regime_message: Este documento se contradice a
           sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba
           con qué.
