@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:8aacf592da0867ed65e520d5d03323a6d9fdb645d46e664f07beab754c6e6c9c'
+body_hash: 'sha256:8fa80eb41d37b6d189ef7fbd8edcab7f51cfccf5b5ad7b6bae6e1e1562a69de6'
 related:
   - "[[2026-09-23-tuimodelo-export-paths-reference]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
