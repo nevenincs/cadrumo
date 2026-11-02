@@ -455,6 +455,8 @@ application:
         xml_value_not_a_number: Box %{box} must hold a number under the official schema.
         xml_value_not_listed: Box %{box} holds a value outside the options the official
           schema lists.
+        xml_value_required_missing: Box %{box} is required by the official schema
+          and has no value. Enter it before exporting; nothing was written.
         xml_value_too_long: Box %{box} holds %{observed} characters; the official
           schema admits at most %{limit}.
         xml_value_too_many_decimals: Box %{box} holds %{observed} decimal places;

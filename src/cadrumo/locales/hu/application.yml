@@ -484,6 +484,8 @@ application:
           kell tartalmaznia.
         xml_value_not_listed: A(z) %{box} rovat értéke nem szerepel a hivatalos sémában
           felsorolt lehetőségek között.
+        xml_value_required_missing: A hivatalos séma megköveteli a(z) %{box} rovatot,
+          de nincs értéke. Add meg exportálás előtt; nem íródott ki semmi.
         xml_value_too_long: A(z) %{box} rovat %{observed} karaktert tartalmaz; a hivatalos
           séma legfeljebb %{limit} karaktert enged meg.
         xml_value_too_many_decimals: A(z) %{box} rovat %{observed} tizedesjegyet tartalmaz;

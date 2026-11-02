@@ -490,6 +490,8 @@ application:
           l'esquema oficial.
         xml_value_not_listed: La casella %{box} conté un valor fora de les opcions
           que enumera l'esquema oficial.
+        xml_value_required_missing: L'esquema oficial exigeix la casella %{box} i
+          no té valor. Indica-la abans d'exportar; no s'ha escrit res.
         xml_value_too_long: La casella %{box} té %{observed} caràcters; l'esquema
           oficial n'admet com a màxim %{limit}.
         xml_value_too_many_decimals: La casella %{box} té %{observed} decimals; l'esquema

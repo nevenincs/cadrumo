@@ -32,6 +32,7 @@ from ...domain.filing.schema import ModeloCasillaProvenance, ModeloDraft
 from ._export_xml_dictionary import (
     expected_xml_dictionary_root_identity,
     mismatched_xml_dictionary_repeated_casillas,
+    stamped_individual_return_titular,
     read_xml_dictionary_root_identity,
     refuse_xml_dictionary_payload_outside_xsd,
     xml_dictionary_repeated_rows,
@@ -493,7 +494,8 @@ def _mismatched_xml_dictionary_casilla_ids(
             )
         if any(rows.holds(entry.path) for rows in repeated_rows):
             continue
-        expected_wire = _xml_dictionary_checked_wire_value(
+        stamped = stamped_individual_return_titular(entry, payload) if expected is None else None
+        expected_wire = stamped or _xml_dictionary_checked_wire_value(
             entry,
             expected,
             modelo=draft.modelo,

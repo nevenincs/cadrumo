@@ -492,6 +492,8 @@ application:
           esquema oficial.
         xml_value_not_listed: La casilla %{box} contiene un valor fuera de las opciones
           que enumera el esquema oficial.
+        xml_value_required_missing: El esquema oficial exige la casilla %{box} y no
+          tiene valor. Indícala antes de exportar; no se ha escrito nada.
         xml_value_too_long: La casilla %{box} tiene %{observed} caracteres; el esquema
           oficial admite como máximo %{limit}.
         xml_value_too_many_decimals: La casilla %{box} tiene %{observed} decimales;
