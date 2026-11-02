@@ -210,7 +210,7 @@ def rectificativa_reading(
                 reduction=row.base_total_eur,
             )
             for row in rows
-            if row.base_total_eur
+            if row.base_total_eur is not None and row.base_total_eur != Decimal("0")
         )
     return RectificativaReading(tuple(corrections), tuple(refused))
 
@@ -248,7 +248,7 @@ def _rectificativa_refusal(
         or corrected_on.year != window_end.year
     ):
         return ImputationUnresolved.RECTIFICATIVA_ACROSS_YEARS
-    if rectificativa.retention_amount:
+    if rectificativa.retention_amount is not None and rectificativa.retention_amount != Decimal("0"):
         return ImputationUnresolved.RECTIFICATIVA_RETENCION_STATED
     return None
 
