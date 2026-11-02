@@ -43,6 +43,7 @@ from .....application.modelo.value_presentation import (
     absent_value_text,
 )
 from .....application.modelo.work_form_models import (
+    ORIGINS_WITHOUT_A_VALUE,
     ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
@@ -92,16 +93,6 @@ _EMPTY_VALUE: Final[str] = "·"
 _SEPARATOR: Final[str] = " · "
 _RATIO_DATA_TYPE: Final[str] = "ratio"
 _MONEY_DATA_TYPE: Final[str] = "money"
-_ABSENT_BY_ORIGIN: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {
-        ModeloFormOrigin.NOT_APPLICABLE,
-        ModeloFormOrigin.NOT_CALCULATED_YET,
-        ModeloFormOrigin.CALCULATION_FAILED,
-        ModeloFormOrigin.NOT_IMPORTED_YET,
-        ModeloFormOrigin.CLEARED,
-    }
-)
-"""Origins whose words say there is no value, whatever the field still holds."""
 _ABSENT_WHEN_NONE: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.OPTIONAL_EMPTY, ModeloFormOrigin.NEEDS_INPUT}
 )
@@ -244,7 +235,7 @@ def _origin_says_absence(field: ModeloFormField) -> bool:
     A held zero is a value, of a rate box as of any other: it is shown, and
     the origin words say it was left at zero rather than that the box is empty.
     """
-    if field.origin in _ABSENT_BY_ORIGIN:
+    if field.origin in ORIGINS_WITHOUT_A_VALUE:
         return True
     return field.origin in _ABSENT_WHEN_NONE and holds_nothing(field.value)
 

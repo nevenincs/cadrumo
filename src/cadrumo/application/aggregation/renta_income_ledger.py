@@ -911,10 +911,8 @@ def _income_business_proportion_or_issue(
     )
     if proportion is not None:
         return proportion
-    reason = (
-        RentaIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-        if transaction.business_classification is BusinessClassification.PERSONAL
-        else RentaIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    reason = RentaIncomeLedgerAggregationIssueReason(
+        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return RentaIncomeLedgerAggregationIssue(
         transaction_id=transaction.transaction_id,

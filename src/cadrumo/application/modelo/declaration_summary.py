@@ -20,7 +20,11 @@ from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.models import STRICT_FROZEN_CONFIG
-from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from ...domain.modelos.calculation_revision import (
+    CURRENT_SEALED_REVISION_STATES,
+    CalculationRevision,
+    CalculationRevisionState,
+)
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.verification_report import ModeloVerificationFindingSeverity, VerificationReportCatalogue
 from ...domain.modelos.work_unit import WorkUnitState
@@ -155,7 +159,7 @@ def _verification_summary(
         if report is None
         else sum(finding.severity is ModeloVerificationFindingSeverity.BLOCKING for finding in report.findings)
     )
-    checked = head.state in {CalculationRevisionState.VERIFICADO_COMPLETO, CalculationRevisionState.PRESENTADO}
+    checked = head.state in CURRENT_SEALED_REVISION_STATES
     return blockers, checked
 
 

@@ -5,7 +5,7 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
@@ -19,8 +19,6 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ...adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live.notification_ports import (
     NotificationsPorts,
@@ -61,7 +59,7 @@ from ...tests.aeat_literal_fixtures import (
     SEDE_NOTIFICATIONS_URL_FIXTURE,
 )
 from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
-from .supervised_operation_rig import run_to_terminal
+from .supervised_operation_rig import build_supervised_operation, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -281,7 +279,7 @@ def _supervised_capture(
     query: object,
     repository: _SnapshotRepository,
     events: list[str],
-    durable_root: Path,
+    tmp_path: Path,
     monkeypatch: pytest.MonkeyPatch,
 ) -> tuple[
     OperationSupervisor,
@@ -352,19 +350,12 @@ def _supervised_capture(
     assert admitted.policy.requires_all_periods
     assert AccessAction.COMMIT in admitted.policy.actions
 
-    journal = OperationJournalRepository(storage_root=durable_root)
-    operands = operation_secure_reference_repository(objects=profile.repository)
-    supervisor = OperationSupervisor(
-        authority_operation=authority,
+    journal, _, operands, supervisor, _ = build_supervised_operation(
+        tmp_path=tmp_path,
+        objects=profile.repository,
+        authority=authority,
         registry=registry,
-        journal=journal,
-        event_stream=journal,
-        leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-        operands=operands,
-        owner_id="1" * 64,
-        lease_token_factory=lambda: "2" * 64,
-        clock=lambda: _NOW,
-        lease_duration=timedelta(minutes=5),
+        now=_NOW,
         execution_authority=RecordingExecutionAuthority(events),
     )
     return supervisor, registry, request, journal, operands, resources
@@ -391,7 +382,7 @@ def test_supervisor_settles_capture_with_fresh_commit_and_dedup_receipts(
             query=Query(),
             repository=repository,
             events=events,
-            durable_root=tmp_path / "operations",
+            tmp_path=tmp_path,
             monkeypatch=monkeypatch,
         )
         result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
@@ -481,7 +472,7 @@ def test_an_ended_aeat_session_during_the_notifications_query_settles_as_its_own
             query=query,
             repository=repository,
             events=events,
-            durable_root=tmp_path / "operations",
+            tmp_path=tmp_path,
             monkeypatch=monkeypatch,
         )
 

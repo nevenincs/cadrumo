@@ -7,6 +7,8 @@ import type {
   PublicModeloFormField,
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
+import { BoxNoteList } from "./BoxNoteList";
+import { notesOf } from "./boxNotes";
 import { BoxNumber } from "./BoxNumber";
 import { readOnlyReason } from "./entryField";
 import { useForm } from "./formContext";
@@ -101,6 +103,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const confirm = !staged && editable ? confirmIntent(field) : null;
   const reason = readOnlyReason(field);
   const ref = useChosenFocus<HTMLDivElement>(selected, open !== null);
+  const notes = notesOf(form.notes, field);
   return (
     <div
       ref={ref}
@@ -171,6 +174,11 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
           </Button>
         )}
       </span>
+      {notes.length > 0 && (
+        <span role="gridcell" className="col-span-3 col-start-2 pb-1">
+          <BoxNoteList notes={notes} />
+        </span>
+      )}
     </div>
   );
 }

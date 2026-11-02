@@ -7,7 +7,7 @@ from decimal import Decimal
 from ...core.external_constants import DEFAULT_CURRENCY
 from ...domain.calculations.registry.prorrata_vocabulary import resolve_input_classification_definition
 from ...domain.renta.actividad_asset.claims import current_revisions
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..operations.public_scalar import PublicDecimal, project_scalar
 from .activity_asset_read_models import (
@@ -48,7 +48,7 @@ def acquisition_candidates(
         for row in catalogue.transactions.values()
         if row.direction is TransactionDirection.OUTGOING
         and row.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and row.business_classification in {BusinessClassification.BUSINESS, BusinessClassification.MIXED}
+        and row.business_classification in BUSINESS_BEARING_STATES
         and row.transaction_id not in owned
     )
     return tuple(

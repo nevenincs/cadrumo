@@ -69,6 +69,7 @@ from cadrumo_client.contracts.view_stream import (
 from .....core.config import Settings
 from .....core.logging import get_logger
 from .._playwright import BrowserContext, Page, PlaywrightError
+from .view_work import settle
 
 if TYPE_CHECKING:
     from playwright.async_api import CDPSession, Dialog
@@ -519,18 +520,9 @@ class ViewInputAdapter:
 
     def _keep(self, task: Awaitable[object]) -> None:
         """Hold ``task`` until it ends, and report a failure by its type alone."""
-        background = asyncio.ensure_future(_settle(task))
+        background = asyncio.ensure_future(settle(task, logger))
         self._background.add(background)
         background.add_done_callback(self._background.discard)
-
-
-async def _settle(work: Awaitable[object]) -> None:
-    try:
-        await work
-    except PlaywrightError as exc:
-        logger.debug("aeat view page work ended exc_type=%s", type(exc).__name__)
-    except Exception as exc:
-        logger.error("aeat view page work failed exc_type=%s", type(exc).__name__)
 
 
 def _validated_event(

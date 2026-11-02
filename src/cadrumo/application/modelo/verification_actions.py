@@ -14,7 +14,6 @@ from typing import TYPE_CHECKING
 from ...core.casilla_id import CasillaId
 from ...core.config import Settings
 from ...core.identity.hex_ids import CalculationRevisionId
-from ...core.secure_object_write import SecureObjectWrite
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
@@ -25,7 +24,6 @@ from ...domain.modelos.calculation_revision import (
     CalculationRevisionCatalogue,
     CalculationRevisionState,
 )
-from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     TransactionParticipationIndexRepositoryProtocol,
@@ -76,6 +74,7 @@ from .m303_regimen_simplificado_scope import (
     taxpayer_profile_for_work,
 )
 from .modelo_bucket_events import emit_modelo_bucket_event as _emit_bucket_event
+from .participation_writes import build_participation_writes
 from .preconditions import ModeloPreconditionFailure
 from .stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs as _refuse_stored_row_field_scalar_inputs
 from .verification_gate_findings import collect_verification_gate_findings
@@ -486,38 +485,6 @@ def _repair_verified_revision_current_pointer(
     work_unit_repository.mutate(_stamp)
 
 
-def _build_participation_writes(
-    *,
-    verified: CalculationRevision,
-    work_unit: WorkUnit,
-    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
-) -> tuple[SecureObjectWrite, ...]:
-    """Build the per-transaction participation-index co-emission writes.
-
-    For each ``source_transaction_id`` of the verified revision, load that
-    transaction's existing
-    :class:`~TransactionRevisionParticipationIndex`, upsert
-    the new ``VERIFICADO_COMPLETO`` participation (replacing any prior entry for
-    the same revision), and return the resulting ``SecureObjectWrite`` so the
-    caller co-emits them in the same atomic unit of work as the revision save. A
-    revision with no contributing transactions yields no writes.
-    """
-    writes: list[SecureObjectWrite] = []
-    for transaction_id in verified.source_transaction_ids:
-        index = participation_index_repository.load(transaction_id)
-        participation = TransactionRevisionParticipation(
-            calculation_revision_id=verified.calculation_revision_id,
-            work_unit_id=work_unit.work_unit_id,
-            modelo=work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-            revision_state=CalculationRevisionState.VERIFICADO_COMPLETO.value,
-        )
-        updated = upsert_transaction_participation(index, participation)
-        writes.append(participation_index_repository.to_secure_object_write(updated))
-    return tuple(writes)
-
-
 def _persist_verified_revision_evidence(
     *,
     target: CalculationRevision,
@@ -554,9 +521,10 @@ def _persist_verified_revision_evidence(
         },
     )
     updated_catalogue = upsert_calculation_revision(revisions, verified)
-    participation_writes = _build_participation_writes(
-        verified=verified,
+    participation_writes = build_participation_writes(
+        revision=verified,
         work_unit=work_unit,
+        revision_state=CalculationRevisionState.VERIFICADO_COMPLETO,
         participation_index_repository=participation_index_repository,
     )
     # Co-emit the participation index atomically with the revision save (per the

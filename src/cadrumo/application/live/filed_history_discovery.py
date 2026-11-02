@@ -20,6 +20,7 @@ from ...core.register_scoping_signal import RegisterScopingSignal
 from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.verification_tolerance import verification_tolerance_or_exact
+from ...domain.deadlines.errors import ProfileError
 from ..calculations.observations_repository import require_observation_envelope_coordinates_current
 from ..calculations.ports import ObservedCasillaValueProtocol
 from ..storage.sync_runs.records import (
@@ -50,6 +51,23 @@ class _RecaptureObservationRepository(Protocol):
     def load_observation(self, modelo: str, period: Period) -> ObservationEnvelopePayload | None:
         """Load the prior envelope for one modelo and period."""
         ...
+
+
+def resolve_discovery_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile | None:
+    """Return the selected taxpayer, or ``None`` while its facts are not declared.
+
+    Discovery still has a truthful register-options answer before profile setup,
+    so only a missing profile or undeclared facts reduce it to that. A state that
+    could not be read propagates: it says nothing about what the taxpayer declared.
+    """
+    from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
+    from ..workflow.persistence import workflow_state_repository
+
+    state = workflow_state_repository().load()
+    try:
+        return load_active_taxpayer_profile(state, schema=operation.profile_schema())
+    except (WizardStatusError, ProfileError):
+        return None
 
 
 async def discover_filed_history(

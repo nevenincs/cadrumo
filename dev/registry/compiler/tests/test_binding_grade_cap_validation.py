@@ -29,6 +29,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _M130_REVISION = "2019-y-siguientes"
 _CAPPED_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _INCOME_BINDING = "modelo-130-actividad-economica-ingresos-cumulative"
+_EXPENSE_BINDING = "modelo-130-actividad-economica-gastos-cumulative"
+_CAPPED_BINDINGS = {_INCOME_BINDING, _CAPPED_BINDING, _EXPENSE_BINDING}
 _CAP_LEGAL_REF = "rd-439-2007:art-79"
 
 
@@ -63,7 +65,8 @@ def test_every_compiled_revision_passes_and_modelo_130_carries_its_cap(
     revision = _m130(_worker_compiled_authority)
     capped = [binding.id for binding in revision.bindings if binding.grade_cap is not None]
 
-    assert capped == [_CAPPED_BINDING]
+    # Income, expense and retención are each dated by the same ledger rows, so each declares the cap.
+    assert sorted(capped) == sorted(_CAPPED_BINDINGS)
     for modelo in _worker_compiled_authority.modelos:
         for revision_id, candidate in modelo.revisions.items():
             assert (
@@ -82,10 +85,13 @@ def test_a_cap_on_a_revision_that_already_stops_at_or_below_it_is_refused(
 ) -> None:
     revision = _m130(_worker_compiled_authority).model_copy(update={"authority_grade": grade})
 
-    (failure,) = _failures(_worker_compiled_authority, revision)
+    failures = _failures(_worker_compiled_authority, revision)
 
-    assert f"binding {_CAPPED_BINDING} grade_cap" in failure
-    assert "a cap must narrow the revision's reach" in failure
+    # One failure per capped binding, each refused on its own declaration.
+    assert len(failures) == len(_CAPPED_BINDINGS)
+    for binding_id in _CAPPED_BINDINGS:
+        (failure,) = [item for item in failures if f"binding {binding_id} grade_cap" in item]
+        assert "a cap must narrow the revision's reach" in failure
 
 
 def test_a_cap_on_a_provider_kind_with_no_executable_resolver_is_refused(
@@ -126,10 +132,13 @@ def test_a_cap_citing_a_provision_the_legal_catalogue_lacks_is_refused(
 ) -> None:
     revision = _m130(_worker_compiled_authority)
 
-    (failure,) = _failures(_worker_compiled_authority, revision, without=(_CAP_LEGAL_REF,))
+    failures = _failures(_worker_compiled_authority, revision, without=(_CAP_LEGAL_REF,))
 
-    assert _CAP_LEGAL_REF in failure
-    assert f"binding {_CAPPED_BINDING} grade_cap" in failure
+    # Every capped binding cites the provision, so each is refused once.
+    assert len(failures) == len(_CAPPED_BINDINGS)
+    for binding_id in _CAPPED_BINDINGS:
+        (failure,) = [item for item in failures if f"binding {binding_id} grade_cap" in item]
+        assert _CAP_LEGAL_REF in failure
 
 
 def test_a_cap_whose_binding_reaches_no_casilla_is_refused(
@@ -150,9 +159,20 @@ def test_a_reviewed_alternate_whose_cap_differs_from_its_primary_is_refused(
     _worker_compiled_authority: ValidatedRegistryAuthority,
 ) -> None:
     original = _m130(_worker_compiled_authority)
+    # The capped bindings agree with each other, so the primary is a bound casilla with no cap.
+    capped_ids = {binding.id for binding in original.bindings if binding.grade_cap is not None}
+    (primary,) = {
+        casilla.binding
+        for casilla in original.casillas
+        if casilla.input_kind is InputKind.BOUND
+        and casilla.binding is not None
+        and casilla.binding not in capped_ids
+        and casilla.id == next(item.id for item in original.casillas if item.binding == casilla.binding)
+    } or {None}
+    assert primary is not None, "the revision keeps a bound casilla whose binding declares no cap"
     casillas = tuple(
         casilla.model_copy(update={"alternate_bindings": (_CAPPED_BINDING,)})
-        if casilla.input_kind is InputKind.BOUND and casilla.binding == _INCOME_BINDING
+        if casilla.input_kind is InputKind.BOUND and casilla.binding == primary
         else casilla
         for casilla in original.casillas
     )
@@ -161,4 +181,4 @@ def test_a_reviewed_alternate_whose_cap_differs_from_its_primary_is_refused(
     (failure,) = _failures(_worker_compiled_authority, revision)
 
     assert f"alternate binding {_CAPPED_BINDING!r} declares grade cap" in failure
-    assert f"primary binding {_INCOME_BINDING!r}" in failure
+    assert f"primary binding {primary!r}" in failure

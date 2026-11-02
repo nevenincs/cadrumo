@@ -11,6 +11,8 @@ import type {
 } from "../../../shell/modeloContract";
 import { factsGap } from "../../../shell/compose";
 import { useStrings } from "../../../shell/strings";
+import { BoxNoteMark } from "./BoxNoteList";
+import { notesOf } from "./boxNotes";
 import { BoxNumber } from "./BoxNumber";
 import { readOnlyReason } from "./entryField";
 import { calm, Label, useChosenFocus } from "./FieldRow";
@@ -49,7 +51,8 @@ function GridCell({ cell }: { cell: PublicModeloFormGridCell }) {
 
 function GridBox({ field }: { field: PublicModeloFormField }) {
   const t = useStrings();
-  const { session, editing, setEditing, onDone, onOpenSurface } = useForm();
+  const { session, editing, setEditing, onDone, onOpenSurface, notes } =
+    useForm();
   const key = fieldKey(field);
   const selected = session.selectedKey === key;
   const open = editing?.key === key ? editing.request : null;
@@ -87,6 +90,7 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
       }}
     >
       <div className="flex items-center justify-end gap-2">
+        <BoxNoteMark notes={notesOf(notes, field)} />
         <BoxNumber box={field.box} size="sm" />
         {reason ? (
           <Tooltip>

@@ -1125,6 +1125,8 @@ desktop:
     close: Close declarations
     loading: Reading your declarations…
     maximize: Maximize declarations
+    notes:
+      label: What the latest calculation noted
     position: Declaration {row} of {count}
     read_failed: Cadrumo could not read your declarations.
     retry: Try again
@@ -3458,6 +3460,7 @@ desktop:
     prorrata:
       accepted: 'Accepted: {provenances}.'
       action:
+        declare_gross: Declare a gross cuota
         declare_sector: Declare a sector
         elect_especial: Elect especial
         elect_general: Elect general
@@ -3482,6 +3485,7 @@ desktop:
       evidence: Evidence reference
       evidence_hint: The document of the option or its revocation
       form:
+        declare_gross: Declare the gross deductible cuota of a liquidation of {ejercicio}
         declare_sector: Declare a differentiated sector
         elect_especial: Elect prorrata especial for {ejercicio}
         elect_general: Elect prorrata general for {ejercicio}
@@ -3489,6 +3493,26 @@ desktop:
         seed: Seed {ejercicio} from the prior year
         seed_sector: Seed a sector's provisional prorrata for {ejercicio}
         settle_sector: Settle a sector's definitive prorrata for {ejercicio}
+      gross:
+        column:
+          evidence: Document
+          gross_cuota: Gross cuota
+          period: Period
+        empty: No gross cuota is declared for any liquidation period.
+        evidence: Supporting document
+        evidence_hint: Reference to your own document that supports the amount.
+        gross_cuota: Gross deductible cuota
+        gross_cuota_hint: Before prorrata, in euros with up to two decimals.
+        period: Liquidation period
+        remove: Remove
+        remove_confirm: Remove the declaration
+        remove_of: Remove the gross cuota declared for {liquidation}
+        remove_what: Remove the gross cuota you declared for {liquidation}?
+        replace: Replace the gross cuota already declared for the same period and
+          sector
+        title: Gross deductible cuota of earlier liquidations
+        what: The gross deductible cuota, before prorrata, of an earlier liquidation
+          you entered by hand, for a period the ledger holds no input for.
       kind:
         definitiva: Final
         provisional: Provisional
@@ -4050,6 +4074,8 @@ desktop:
     none_unread: None unread at the last sync
     unread: '{count} unread'
   modelo:
+    box_notes:
+      label: What the calculation noted about this box
     correction:
       kind_label: Kind of correction
       motive_label: Reason for the rectification

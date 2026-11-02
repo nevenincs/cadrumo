@@ -33,8 +33,7 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
-from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
-from cadrumo.domain.invoices.models import Invoice, InvoiceLine
+from cadrumo.domain.invoices.models import Invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
@@ -43,7 +42,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 
-from .....domain.iva.schema import InvoiceKind
+from .issued_invoice_support import paid_servicios_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
 
@@ -112,33 +111,7 @@ def _transaction(
 
 
 def _invoice(*, issued_at: date = date(2026, 2, 5)) -> Invoice:
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": "INV-001",
-            "issued_at": issued_at,
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "payment_status": PaymentStatus.PAID,
-            "lines": (
-                InvoiceLine.model_validate(
-                    {
-                        "description": "Servicios",
-                        "quantity": Decimal("1"),
-                        "unit_price": Decimal("100.00"),
-                        "subtotal": Decimal("100.00"),
-                        "iva_rate": IvaRate.from_registry("RATE_21"),
-                        "iva_amount": Decimal("21.00"),
-                    },
-                ),
-            ),
-        },
-    )
+    return paid_servicios_invoice("INV-001", issued_at=issued_at)
 
 
 def _evidence(*, evidence_id: str = "ev-001") -> PurchaseInvoiceEvidence:

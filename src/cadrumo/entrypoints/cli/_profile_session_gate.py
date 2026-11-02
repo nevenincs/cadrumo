@@ -9,11 +9,12 @@ from typing import TYPE_CHECKING, Any, Never, Protocol
 import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.sign_in_refusal_projection import session_refusal_translation_key
 from cadrumo_client.commands.spec import CommandSpec
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.profile_session import ProfileSessionRefusalReason, ReceiptBindingRefusal
+from ...core.profile_session import ProfileSessionRefusalReason
 from .state_projection_support import authority_operation
 
 if TYPE_CHECKING:
@@ -40,42 +41,6 @@ class RootAuthenticator(Protocol):
         spec: CommandSpec,
         arguments: Mapping[str, object],
     ) -> ProfileLoginOutcome: ...
-
-
-_LOGGED_OUT_REFUSALS = frozenset(
-    {ProfileSessionRefusalReason.ABSENT, ProfileSessionRefusalReason.KEYCHAIN_ENTRY_MISSING}
-)
-
-_UNVERIFIABLE_REFUSALS = frozenset({ProfileSessionRefusalReason.MALFORMED, ProfileSessionRefusalReason.TAMPERED})
-
-
-def session_refusal_translation_key(
-    refusal: ProfileSessionRefusalReason, binding: ReceiptBindingRefusal | None = None
-) -> str:
-    """Map every typed resume refusal to its stable operator diagnostic.
-
-    A receipt refused for the sign-in it belongs to says so: a sign-out
-    elsewhere and a sign-in from another login are not the absence of one.
-    """
-    if binding is ReceiptBindingRefusal.LOGIN_MISMATCH:
-        return "cli.config.errors.profile_session_login_mismatch"
-    if binding is ReceiptBindingRefusal.GENERATION_CHANGED:
-        return "cli.config.errors.profile_session_signed_out"
-    if binding is not None:
-        return "cli.config.errors.profile_session_unreadable"
-    if refusal is ProfileSessionRefusalReason.CUSTODY_CHANGED:
-        return "cli.config.errors.profile_session_custody_changed"
-    if refusal is ProfileSessionRefusalReason.SCHEMA_VERSION_MISMATCH:
-        return "cli.config.errors.profile_session_outdated"
-    if refusal in _UNVERIFIABLE_REFUSALS:
-        return "cli.config.errors.profile_session_unreadable"
-    if refusal is ProfileSessionRefusalReason.KEYRING_UNAVAILABLE:
-        return "errors.auth.auth_storage_keyring_unavailable"
-    return (
-        "cli.config.errors.profile_session_absent"
-        if refusal in _LOGGED_OUT_REFUSALS
-        else "cli.config.errors.profile_session_expired"
-    )
 
 
 def _common() -> Any:
@@ -417,7 +382,6 @@ __all__ = [
     "activate_profile_session",
     "bind_profile_target",
     "normalize_ambient_profile",
-    "session_refusal_translation_key",
 ]
 
 
