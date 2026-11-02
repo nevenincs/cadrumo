@@ -52,8 +52,8 @@ from ...aggregation.tests.test_actividad_retencion_declared_credit import (
 from ..advisory_binding_value import add_advisory_binding_value_diagnostics
 from ..calculation_bucket_actions import unrouted_source_issues
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
-from ..calculation_notes import GATE_REFUSED_REASONS
-from ..calculation_screen import CALCULATION_SCREEN_OUTDATED_REASON, calculation_screen_stamp
+from ..calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, GATE_REFUSED_REASONS
+from ..calculation_screen import calculation_screen_stamp
 from ..printed_boxes import snapshot_printed_boxes
 from .work_form_fixture import built_form
 
@@ -154,7 +154,7 @@ def _revision(
     stamp: CalculationScreenStamp | None,
     state: CalculationRevisionState = CalculationRevisionState.BORRADOR,
 ) -> CalculationRevision:
-    filed = state is CalculationRevisionState.PRESENTADO
+    filed = state in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=unit.work_unit_id,
@@ -183,6 +183,7 @@ def _revision(
         verified_by="operator" if filed else None,
         filed_at=_CLOCK if filed else None,
         filed_by="operator" if filed else None,
+        superseded_at=_CLOCK if state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO else None,
     )
 
 
@@ -305,11 +306,36 @@ def test_a_revision_without_a_stamp_or_with_another_digest_is_outdated(operation
     assert CALCULATION_SCREEN_OUTDATED_REASON not in GATE_REFUSED_REASONS, "the reason is derived, never persisted"
 
 
-def test_a_filed_revision_is_not_adjudicated_again(operation: PinnedAuthorityOperation) -> None:
+def test_a_filed_revision_is_not_screened_again(operation: PinnedAuthorityOperation) -> None:
+    """A filed revision without a stamp, or with another digest, is never refused as stale."""
     snapshot = _snapshot(operation)
-    revision = _revision(_work_unit(snapshot), (), stamp=None, state=CalculationRevisionState.PRESENTADO)
+    unit = _work_unit(snapshot)
+    current = _stamp(snapshot, operation)
+    other = CalculationScreenStamp(contract_version=current.contract_version, digest="0" * 64)
 
-    assert _refused_reasons(operation, revision) is None
+    for state in (CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO):
+        for stamp in (None, other):
+            assert _refused_reasons(operation, _revision(unit, (), stamp=stamp, state=state)) is None, (state, stamp)
+
+
+def test_a_filed_revision_carrying_a_blocking_note_is_still_refused_at_export(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The filed state exempts the revision from the screen only: the note it was persisted with still refuses."""
+    snapshot = _snapshot(operation)
+    _, persisted = _calculated(operation, _resolve(snapshot, *declared_pair()))
+    assert [issue.reason for issue in persisted if issue.reason == _REASON] == [_REASON]
+    unit = _work_unit(snapshot)
+
+    for state in (CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO):
+        revision = _revision(unit, persisted, stamp=None, state=state)
+        with pytest.raises(ModeloCalculationBlockedError) as refused:
+            require_work_unit_calculation_unblocked(
+                work_unit=unit, revision=revision, action="export", operation=operation
+            )
+        context = refused.value.context or {}
+        assert context["reason"] == _REASON, state
+        assert context["box"] == _CAPPED_BOX, state
 
 
 def test_the_stamp_reads_only_the_screen_declarations(operation: PinnedAuthorityOperation) -> None:

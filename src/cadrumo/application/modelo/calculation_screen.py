@@ -22,7 +22,7 @@ from typing import TYPE_CHECKING, Final
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, capped_binding_reach_digest
 from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
-from .calculation_notes import what_locale_key
+from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, what_locale_key
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -31,9 +31,6 @@ if TYPE_CHECKING:
 
 CALCULATION_SCREEN_CONTRACT_VERSION: Final[int] = 1
 """One version for every screen together; raised when a screen is added or its reading changes."""
-
-CALCULATION_SCREEN_OUTDATED_REASON: Final[str] = "calculation_screen_outdated"
-"""The derived reason a stale or unstamped revision is refused with; never persisted."""
 
 
 def _screen_payload(snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation) -> dict[str, object]:
@@ -70,7 +67,6 @@ def calculation_screen_outdated_message_key() -> str:
 
 __all__ = [
     "CALCULATION_SCREEN_CONTRACT_VERSION",
-    "CALCULATION_SCREEN_OUTDATED_REASON",
     "calculation_screen_is_current",
     "calculation_screen_outdated_message_key",
     "calculation_screen_stamp",

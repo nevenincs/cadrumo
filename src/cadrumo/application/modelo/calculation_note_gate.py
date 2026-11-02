@@ -23,15 +23,21 @@ See Also:
 from __future__ import annotations
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
+from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloPreconditionErrorMixin
-from .calculation_notes import GATE_REFUSED_REASONS, capped_value_proven_zero, what_locale_key
-from .calculation_screen import (
+from .calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
+    GATE_REFUSED_REASONS,
+    capped_value_proven_zero,
+    what_locale_key,
+)
+from .calculation_screen import (
     calculation_screen_is_current,
     calculation_screen_outdated_message_key,
     calculation_screen_stamp,
@@ -57,8 +63,11 @@ def gate_refuses(
     step all decide with. An unrouted one-stop-shop row is the Modelo 369
     check's to decide. ``outcome`` is what the resolver stated beside a capped
     value: a proven zero withholds nothing, and a capped value without a stated
-    outcome withholds like any other.
+    outcome withholds like any other. A revision whose screen is outdated is
+    refused before its notes are read, so its derived reason withholds too.
     """
+    if reason == CALCULATION_SCREEN_OUTDATED_REASON:
+        return True
     if reason not in GATE_REFUSED_REASONS:
         return False
     if capped_value_proven_zero(reason, outcome):
@@ -116,6 +125,43 @@ def require_no_blocking_calculation_notes(
     )
 
 
+def _screened_snapshot(
+    operation: PinnedAuthorityOperation, *, modelo: str, filing_year: int, period: Period
+) -> RegistrySnapshot:
+    return operation.snapshot(modelo, filing_year=filing_year, period=period.registry_token)
+
+
+def _screen_outdated(
+    revision: CalculationRevision, snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
+) -> bool:
+    if revision.state in _FILED_STATES:
+        return False
+    return not calculation_screen_is_current(revision, calculation_screen_stamp(snapshot, operation=operation))
+
+
+def calculation_screen_outdated(
+    revision: CalculationRevision,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether the gate refuses ``revision`` as stale before reading its notes, as checking, exporting and recording do.
+
+    A revision is stale when its screen stamp is absent or differs from the one
+    a calculation under ``operation``'s pinned authority would carry. A revision
+    already recorded as filed keeps its history and is never stale. The form
+    asks this to offer a recalculation exactly where the gate refuses.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
+    """
+    snapshot = _screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
+    return _screen_outdated(revision, snapshot, operation)
+
+
 def require_work_unit_calculation_unblocked(
     *, work_unit: WorkUnit, revision: CalculationRevision, action: str, operation: PinnedAuthorityOperation
 ) -> None:
@@ -125,7 +171,7 @@ def require_work_unit_calculation_unblocked(
     a calculation under ``operation``'s pinned authority would carry: its notes
     were screened against other declarations, so it is refused before its notes
     are read. A revision already recorded as filed keeps its history and is not
-    adjudicated again.
+    screened again, but a blocking note it carries still refuses.
 
     Raises:
         ModeloCalculationBlockedError: The revision is stale or carries a blocking note.
@@ -134,12 +180,15 @@ def require_work_unit_calculation_unblocked(
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
             The stored calculation head carrying values, provenance and lifecycle facts.
     """
-    if revision.state in _FILED_STATES:
-        return
-    snapshot = operation.snapshot(
-        str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period.registry_token
+    filed = revision.state in _FILED_STATES
+    snapshot = (
+        None
+        if filed
+        else _screened_snapshot(
+            operation, modelo=str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period
+        )
     )
-    if not calculation_screen_is_current(revision, calculation_screen_stamp(snapshot, operation=operation)):
+    if snapshot is not None and _screen_outdated(revision, snapshot, operation):
         raise ModeloCalculationBlockedError(
             translated_message=calculation_screen_outdated_message_key(),
             context={
@@ -151,12 +200,17 @@ def require_work_unit_calculation_unblocked(
         )
     if not blocking_calculation_issues(revision):
         return
+    if snapshot is None:
+        snapshot = _screened_snapshot(
+            operation, modelo=str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period
+        )
     require_no_blocking_calculation_notes(revision, action=action, boxes=snapshot_printed_boxes(operation, snapshot))
 
 
 __all__ = [
     "ModeloCalculationBlockedError",
     "blocking_calculation_issues",
+    "calculation_screen_outdated",
     "gate_refuses",
     "require_no_blocking_calculation_notes",
     "require_work_unit_calculation_unblocked",

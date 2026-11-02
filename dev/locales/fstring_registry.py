@@ -496,11 +496,11 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
     """
     from cadrumo.application.modelo.calculation_notes import (
         CALCULATION_NOTE_ATTENTION,
+        CALCULATION_SCREEN_OUTDATED_REASON,
         fact_locale_key,
         what_locale_key,
         what_to_do_locale_key,
     )
-    from cadrumo.application.modelo.calculation_screen import CALCULATION_SCREEN_OUTDATED_REASON
     from cadrumo.application.modelo.edit_models import ModeloEditParseReason
     from cadrumo.application.modelo.edit_review_wording import WORDED_FINDING_CODES
     from cadrumo.application.modelo.source_policy import SourceFamily

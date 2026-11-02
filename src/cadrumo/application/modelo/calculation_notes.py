@@ -96,6 +96,12 @@ EXPORT_REFUSED_REASONS: Final[frozenset[str]] = frozenset({"rate_boxes_underacco
 """Reasons the export refuses the file on: an IVA total its rate boxes do not account for."""
 BLOCKING_REASONS: Final[frozenset[str]] = GATE_REFUSED_REASONS | CHECK_REFUSED_REASONS | EXPORT_REFUSED_REASONS
 """Every reason the application refuses filing on, and so the editor too."""
+CALCULATION_SCREEN_OUTDATED_REASON: Final[str] = "calculation_screen_outdated"
+"""The derived reason a stale or unstamped revision is refused with and the editor withholds filing on.
+
+It is never persisted and no resolver raises it, so it is not among the
+diagnostic reasons; its remedy is to calculate again.
+"""
 
 CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingProxyType(
     {
@@ -241,6 +247,8 @@ def note_attention(reason: str, *, box: str | None, outcome: BindingValueOutcome
     stated outcome for a capped value: a proven zero is for the filer's
     information.
     """
+    if reason == CALCULATION_SCREEN_OUTDATED_REASON:
+        return _B
     if reason in PRINTED_BOX_REASONS and box is None:
         return _C
     if capped_value_proven_zero(reason, outcome):
@@ -417,6 +425,7 @@ __all__ = [
     "BLOCKING_REASONS",
     "CALCULATION_NOTES",
     "CALCULATION_NOTE_ATTENTION",
+    "CALCULATION_SCREEN_OUTDATED_REASON",
     "CHECK_REFUSED_REASONS",
     "EXPORT_REFUSED_REASONS",
     "GATE_REFUSED_REASONS",
