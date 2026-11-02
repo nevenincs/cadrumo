@@ -1236,7 +1236,8 @@ cli:
         binding_help: Additional value for a Modelo 100 box source, as KEY=VALUE.
           Repeat for multiple. Withholding sources default to zero when not supplied.
         casilla_help: Additional M100 casilla override as CASILLA_ID=DECIMAL (e.g.
-          0513=1150 for age supplement). Repeat for multiple overrides.
+          0003=1150 for cash employment pay). Only entry boxes are accepted; a computed
+          box is refused. Repeat for multiple overrides.
         ccaa_help: Autonomous community tax residence key for the Modelo 100 autonomic
           scale (e.g. cataluna, comunidad-valenciana). Must match a value listed in
           the modelo definitions.
@@ -1246,6 +1247,9 @@ cli:
         no_m130_units: No Modelo 130 draft declarations exist for filing year %{year}.
           Run `aeat app modelo work create --modelo 130 --year %{year} --period 1T`
           first.
+        profile_fact_missing: 'The projection cannot produce the base liquidable and
+          quota boxes because the active profile does not declare: %{profile_facts}.
+          Set the fact with `%{command}` and run the projection again.'
         year_help: Filing year (e.g. 2024).
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:

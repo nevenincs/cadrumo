@@ -1318,7 +1318,9 @@ cli:
         binding_help: Valor addicional per a l'origen d'una casella del Modelo 100,
           com a KEY=VALUE. Repeteix l'opció per indicar-ne diversos. Els orígens de
           retencions valen zero si no s'indiquen.
-        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (repetible).
+        casilla_help: Valor de casella amb la sintaxi CASILLA_ID=DECIMAL (p. ex. 0003=1150
+          per a retribucions dineràries del treball). Només s'accepten caselles d'entrada;
+          una casella calculada es rebutja. Repeteix l'opció per indicar-ne diverses.
         ccaa_help: Clau de la comunitat autònoma de residència fiscal per a l'escala
           autonòmica del Modelo 100 (p. ex. cataluna, comunidad-valenciana). Ha de
           coincidir amb un valor de les definicions dels models.
@@ -1328,6 +1330,9 @@ cli:
         no_m130_units: No hi ha declaracions del Modelo 130 en esborrany per a l'exercici
           %{year}. Crea'n una abans amb `aeat app modelo work create --modelo 130
           --year %{year} --period 1T`.
+        profile_fact_missing: 'La projecció no pot obtenir les caselles de base liquidable
+          i quota perquè el perfil actiu no declara: %{profile_facts}. Indica-ho amb
+          `%{command}` i torna a executar la projecció.'
         year_help: Any fiscal per a la projecció.
       project_help: Executar projeccions agregades de models (p. ex. agregació anual
         del Model 130).

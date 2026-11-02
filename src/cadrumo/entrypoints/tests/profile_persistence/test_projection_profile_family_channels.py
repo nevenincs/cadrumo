@@ -8,6 +8,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.modelo.projection import ModeloProjectionError, ModeloProjectServiceResult
+from cadrumo.core.i18n.render import tr
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.user_profile.values import UserProfileFact
 
@@ -58,6 +59,12 @@ def test_a_joint_filing_without_the_minor_children_fact_is_not_given_a_stand_in_
     context = refused.value.context
     assert context is not None
     assert context["casilla_produced"] is False
+    assert context["profile_facts"] == "renta_family.minor_children_in_unit", context
+    assert context["command"] == "aeat config profile edit"
+    assert refused.value.translated_message == "cli.app.modelo.project.profile_fact_missing"
+    rendered = tr(refused.value.translated_message, **context)
+    assert "renta_family.minor_children_in_unit" in rendered
+    assert "aeat config profile edit" in rendered
 
 
 def test_an_individual_filing_without_the_fact_needs_no_family_reduction(

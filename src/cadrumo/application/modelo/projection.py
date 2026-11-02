@@ -38,6 +38,7 @@ from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...core.period import Period
+from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
 from ...domain.calculations.registry.bindings import CasillaObservation, resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.errors import (
@@ -644,7 +645,6 @@ def _verb_baseline_projection_bindings(
         return _binding_id(value, surface="project modelo 100 baseline binding id")
 
     verb_baseline_bindings: dict[BindingId, Decimal] = {
-        binding("renta-modelo-100-estimacion-directa-es-normal"): Decimal("1"),
         binding("renta-profile-declaration-type"): Decimal("1"),
         binding("renta-profile-family-minor-children-in-unit"): Decimal("0"),
         binding("renta-profile-cotizaciones-ss-madre"): Decimal("0"),
@@ -656,6 +656,7 @@ def _verb_baseline_projection_bindings(
         binding("renta-profile-tax-residence-ccaa"): ccaa,
     }
     verb_baseline_boolean_bindings: dict[BindingId, bool] = {
+        binding("renta-modelo-100-estimacion-directa-es-normal"): True,
         binding("renta-profile-marriage-full-year"): False,
     }
     return (
@@ -714,6 +715,71 @@ def _absent_profile_binding_ids(revision: ModeloRevision, *, supplied: set[Bindi
         binding.id
         for binding in revision.bindings
         if binding.source is BindingSourceKind.PROFILE and binding.id not in supplied
+    )
+
+
+def _raise_if_absent_profile_facts_block_projection(
+    engine_result: RegistryCalculationResult,
+    revision: ModeloRevision,
+    *,
+    absent_profile_binding_ids: tuple[BindingId, ...],
+    declaration: _ProjectionDeclaration,
+) -> None:
+    """Refuse a projection a missing profile fact blocks, naming each fact and the command that sets it.
+
+    The result schema needs the base liquidable and quota boxes, so a profile
+    fact their formulas read and the profile never declared leaves nothing
+    honest to return. The refusal names those facts instead of the box alone.
+    """
+    required = (
+        declaration.base_liquidable_general,
+        declaration.pagos_fraccionados,
+        declaration.cuota_integra_estatal,
+        declaration.cuota_integra_autonomica,
+        declaration.cuota_liquida_estatal,
+        declaration.cuota_liquida_autonomica,
+        declaration.cuota_resultante,
+    )
+    if all(casilla_id in engine_result.values for casilla_id in required):
+        return
+    observed = {observation.casilla_id for observation in engine_result.observations}
+    expression_by_target = {
+        formula.target_casilla_id: formula.expression.model_dump_json()
+        for formula in revision.formulas
+        if formula.target_casilla_id not in observed
+    }
+    # Follow only the unresolved formulas the required boxes actually read, so an
+    # unrelated undeclared fact is not blamed for the refusal.
+    pending = [casilla_id for casilla_id in required if casilla_id in expression_by_target]
+    reached: dict[CasillaId, str] = {}
+    while pending:
+        casilla_id = pending.pop()
+        if casilla_id in reached:
+            continue
+        reached[casilla_id] = expression_by_target[casilla_id]
+        pending.extend(
+            target for target in expression_by_target if target not in reached and f'"{target}"' in reached[casilla_id]
+        )
+    unresolved_expressions = list(reached.values())
+    bindings_by_id = revision_bindings_by_id(revision)
+    fact_paths: list[str] = []
+    for binding_id in absent_profile_binding_ids:
+        if not any(f'"{binding_id}"' in expression for expression in unresolved_expressions):
+            continue
+        selector = selector_as_dict(bindings_by_id[binding_id])
+        profile_key = selector.get("profile_key")
+        fact_path = profile_key if isinstance(profile_key, str) else str(binding_id)
+        if fact_path not in fact_paths:
+            fact_paths.append(fact_path)
+    if not fact_paths:
+        return
+    raise ModeloProjectionError(
+        translated_message="cli.app.modelo.project.profile_fact_missing",
+        context={
+            "profile_facts": ", ".join(fact_paths),
+            "command": "aeat config profile edit",
+            "casilla_produced": False,
+        },
     )
 
 
@@ -1012,6 +1078,12 @@ def project_modelo_100_from_m130(
         )
         raise
 
+    _raise_if_absent_profile_facts_block_projection(
+        engine_result,
+        m100_snapshot.revision,
+        absent_profile_binding_ids=absent_profile_binding_ids,
+        declaration=declaration,
+    )
     return ModeloProjectServiceResult(
         year=year,
         ccaa=ccaa,
