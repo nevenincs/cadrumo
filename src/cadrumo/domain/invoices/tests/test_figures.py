@@ -14,7 +14,6 @@ import pytest
 from pydantic import ValidationError
 
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ...calculations.registry.errors import RegistryValidationError
 from ...iva.schema import InvoiceKind
 from ..enums import IvaRate, PaymentStatus
 from ..errors import InvoiceValidationError
