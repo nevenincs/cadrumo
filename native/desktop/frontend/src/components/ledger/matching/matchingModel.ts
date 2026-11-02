@@ -15,12 +15,14 @@ import type {
   LedgerCheckResult,
   LedgerRow,
 } from "../../../shell/ledger";
-import { takesChanges, takesInvoice } from "../../../shell/ledgerContract";
+import {
+  INVOICE_MATCH_TOLERANCE,
+  SETTLING_DIRECTION,
+  takesChanges,
+  takesInvoice,
+} from "../../../shell/ledgerContract";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 
-/** How far apart, in cents, a movement and an invoice may be and still
- * settle: the product's own tolerance. */
-const TOLERANCE_UNITS = 10_000n; // one cent at six decimals
 const SCALE = 6;
 /** Paid this many days before the invoice's date still ranks by the gap;
  * earlier than that ranks after every payment made after issue. */
@@ -54,10 +56,6 @@ export function settlement(invoice: CatalogueInvoice): string | null {
   if (withheld === null) return null;
   return centsText(total - withheld);
 }
-
-/** The movement direction an invoice of `kind` is paid in. */
-export const flowOf = (invoice: CatalogueInvoice) =>
-  invoice.kind === "issued" ? "INCOMING" : "OUTGOING";
 
 const DAY_MS = 86_400_000;
 /** Whole days from `from` to `to`, both calendar days. */
@@ -183,14 +181,15 @@ export const linkable = (row: LedgerRow) =>
 
 /** Whether `row` settles `invoice` by flow, currency and amount. */
 export function settles(row: LedgerRow, invoice: CatalogueInvoice): boolean {
-  if (row.transaction.direction !== flowOf(invoice)) return false;
+  if (row.transaction.direction !== SETTLING_DIRECTION[invoice.kind])
+    return false;
   if (row.transaction.currency !== invoice.currency) return false;
   const owed = settlement(invoice);
   const paid = units(row.transaction.amount);
   const due = owed === null ? null : units(owed);
   if (paid === null || due === null) return false;
   const distance = paid > due ? paid - due : due - paid;
-  return distance <= TOLERANCE_UNITS;
+  return distance <= units(INVOICE_MATCH_TOLERANCE)!;
 }
 
 function pairOf(row: LedgerRow, invoice: CatalogueInvoice): MatchPair | null {
@@ -369,7 +368,10 @@ export function linkPicker(
   const staged = stagedLinks(actions);
   const id = row.transaction.transaction_id;
   const options = invoices
-    .filter((invoice) => row.transaction.direction === flowOf(invoice))
+    .filter(
+      (invoice) =>
+        row.transaction.direction === SETTLING_DIRECTION[invoice.kind],
+    )
     .map((invoice): PickerOption => ({
       invoice,
       stagedFor:
@@ -421,7 +423,7 @@ export function movementPicker(
         linkable(row) &&
         row.transaction.invoice_id === null &&
         !staged.rows.has(row.transaction.transaction_id) &&
-        row.transaction.direction === flowOf(invoice) &&
+        row.transaction.direction === SETTLING_DIRECTION[invoice.kind] &&
         row.transaction.currency === invoice.currency &&
         Math.abs(daysBetween(invoice.issued_at, row.transaction.date)) <=
           PICK_WINDOW_DAYS,

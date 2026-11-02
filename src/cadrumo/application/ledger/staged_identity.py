@@ -10,8 +10,14 @@ from __future__ import annotations
 
 from collections.abc import Set as AbstractSet
 from decimal import Decimal, InvalidOperation
+from typing import Final
 
 from .staged_check_contracts import LedgerStagedRow, StageFieldName
+
+TRANSACTION_IDENTITY_FIELDS: Final[frozenset[StageFieldName]] = frozenset(
+    {"amount", "description", "booked_date", "value_date", "own_account_id"}
+)
+"""The stageable facts ``derive_transaction_id`` hashes; a frontend asks the check once they are staged."""
 
 
 def _same_amount(left: str | None, right: str | None) -> bool:

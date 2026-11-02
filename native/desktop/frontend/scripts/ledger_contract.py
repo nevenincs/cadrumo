@@ -9,7 +9,9 @@ it on regeneration.
 
 It also holds what a stored code alone decides and every drawn row needs at once, such as
 whether a lifecycle takes a change or which fields a direction locks: each is worked out here
-by calling the function or reading the constant that owns the rule, over all the codes.
+by calling the function or reading the constant that owns the rule, over all the codes. The
+same goes for a static route: which facts make a movement's identity, which field a readiness
+reason is put right in, which correction waits on a verdict.
 
 ``scripts/ledger-contract.mjs`` drives this module and formats what it writes; run that, not
 this. This module writes the unformatted source to standard output.
@@ -24,20 +26,27 @@ from enum import StrEnum
 from pydantic import BaseModel
 
 from cadrumo.application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
+from cadrumo.application.invoices.figures_preview_contracts import INVOICE_CORRECTION_JUDGED_FIELDS
 from cadrumo.application.ledger.classify_requests import CLASSIFY_UNCLEARABLE_FIELD_NAMES
 from cadrumo.application.ledger.evidence_mutation_operation import LedgerEvidenceUpdatePatch
+from cadrumo.application.ledger.preflight import LedgerPreflightIssueReason
+from cadrumo.application.ledger.readiness_routes import IVA_DERIVABLE_REASONS, READINESS_REASON_FIELDS
 from cadrumo.application.ledger.staged_check import DRAFT_REQUIRED_FIELDS, TRANSFER_LOCKED_FIELDS
+from cadrumo.application.ledger.staged_identity import TRANSACTION_IDENTITY_FIELDS
 from cadrumo.application.ledger.update_contracts import LEDGER_UPDATE_REQUIRED_FIELD_NAMES, LedgerUpdatePatch
 from cadrumo.application.transactions.diagnostics import LedgerImportDiagnosticKind
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.period import Period, PeriodKind, StandardPeriodCode
 from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.invoices.enums import PaymentStatus
+from cadrumo.domain.invoices.service import INVOICE_MATCH_TOLERANCE, invoice_settling_direction
+from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
 from cadrumo.domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from cadrumo.domain.transactions.classification_effects import (
     awaits_invoice,
     fields_cleared_by_classification,
+    takes_capital_good_acquisition,
     takes_changes,
     takes_classification,
     takes_invoice,
@@ -93,6 +102,13 @@ _ENUMS: tuple[tuple[str, str, str | None, str, type[StrEnum]], ...] = (
         None,
         "What an import marked on a movement, as the list filters it.",
         LedgerImportDiagnosticKind,
+    ),
+    (
+        "READINESS_REASONS",
+        "LedgerPreflightReason",
+        None,
+        "Why a period's check says a movement is not ready.",
+        LedgerPreflightIssueReason,
     ),
     (
         "WITHHOLDING_INCOME_CLASSES",
@@ -223,6 +239,11 @@ def _restricted(constant: str, doc: str, by_code: Mapping[str, Sequence[str]]) -
     )
 
 
+def _record(constant: str, doc: str, by_code: Mapping[str, str]) -> str:
+    body = "".join(f'  "{code}": "{value}",\n' for code, value in by_code.items())
+    return "\n".join([f"/** {doc} */", f"export const {constant}: Readonly<Record<string, string>> = {{\n{body}}};"])
+
+
 def _rules() -> list[str]:
     """What a stored code decides, each read from the function or constant that owns the rule."""
     classifications = list(BusinessClassification)
@@ -270,6 +291,46 @@ def _rules() -> list[str]:
             "takesM210Income",
             "The directions a movement can carry Modelo 210 income in.",
             [direction.value for direction in directions if takes_m210_income(direction)],
+        ),
+        _set(
+            "CAPITAL_GOOD_ACQUISITION_DIRECTIONS",
+            "takesCapitalGoodAcquisition",
+            "The directions a movement can be the purchase of a capital good in.",
+            [direction.value for direction in directions if takes_capital_good_acquisition(direction)],
+        ),
+        _record(
+            "SETTLING_DIRECTION",
+            "The direction a movement settles an invoice of each kind in.",
+            {kind.value: invoice_settling_direction(kind).value for kind in InvoiceKind},
+        ),
+        "\n".join(
+            [
+                "/** How far a movement's amount may be from what an invoice settles for and still be offered. */",
+                f'export const INVOICE_MATCH_TOLERANCE = "{INVOICE_MATCH_TOLERANCE}";',
+            ]
+        ),
+        _set(
+            "IDENTITY_FIELDS",
+            "isIdentityField",
+            "The facts a movement's id is worked out from, so a change to one gives it a new id.",
+            sorted(TRANSACTION_IDENTITY_FIELDS),
+        ),
+        _set(
+            "CORRECTION_JUDGED_FIELDS",
+            "isCorrectionJudged",
+            "The fields of a stored invoice whose correction waits on the ledger's answer.",
+            sorted(INVOICE_CORRECTION_JUDGED_FIELDS),
+        ),
+        _record(
+            "READINESS_REASON_FIELD",
+            "The field a readiness reason is put right in, for the reasons that name one.",
+            {reason.value: field for reason, field in READINESS_REASON_FIELDS.items()},
+        ),
+        _set(
+            "IVA_DERIVABLE_REASONS",
+            "isIvaDerivableReason",
+            "The readiness reasons the product's own IVA derivation can answer.",
+            sorted(reason.value for reason in IVA_DERIVABLE_REASONS),
         ),
         _restricted(
             "CLASSIFICATIONS_OF_DIRECTION",

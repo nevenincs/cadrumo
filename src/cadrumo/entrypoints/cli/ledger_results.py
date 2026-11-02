@@ -144,6 +144,7 @@ class LedgerStagedRowPayload(OutputSchema):
     classified: bool
     takes_expense_category: bool
     takes_share: bool
+    category_askable: bool
     category_settable: bool
     category_on_income: bool
     takes_changes: bool

@@ -83,6 +83,21 @@ class InvoiceFiguresPreviewStored(BaseModel):
     operation_date_role: str | None = Field(default=None, max_length=128)
 
 
+INVOICE_CORRECTION_JUDGED_FIELDS: Final[frozenset[str]] = frozenset(
+    {
+        "counterparty_country",
+        "iva_category",
+        "operation_date",
+        "series",
+        "invoice_class",
+        "rectifies_invoice_number",
+        "retention_rate",
+        "retention_amount",
+    }
+)
+"""The stored-invoice fields whose correction waits on the preview's verdict; any other goes without it."""
+
+
 class InvoiceFiguresPreviewRequest(BaseModel):
     """One draft invoice, with lines or with a bare base for a correction editor."""
 
@@ -250,6 +265,7 @@ class InvoiceFiguresPreviewExecutionResult(BaseModel):
 
 
 __all__ = [
+    "INVOICE_CORRECTION_JUDGED_FIELDS",
     "INVALID_INVOICE_REFUSAL",
     "INVOICE_FIGURES_PREVIEW_LABEL_PREFIX",
     "INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID",

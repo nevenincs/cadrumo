@@ -83,6 +83,15 @@ def takes_invoice(direction: TransactionDirection) -> bool:
     return direction is not TransactionDirection.INTERNAL_TRANSFER
 
 
+def takes_capital_good_acquisition(direction: TransactionDirection) -> bool:
+    """Return whether a row going ``direction`` can be the purchase a capital good was acquired in.
+
+    A capital good's cuota is IVA soportado, which money out bears; IVA aggregation refuses
+    deduction authority carried on a row of any other flow.
+    """
+    return direction is TransactionDirection.OUTGOING
+
+
 def takes_m210_income(direction: TransactionDirection) -> bool:
     """Return whether a row going ``direction`` can carry Modelo 210 income."""
     return direction is TransactionDirection.INCOMING
@@ -146,6 +155,7 @@ __all__ = [
     "awaits_invoice",
     "fields_cleared_by_classification",
     "lifecycle_actions_taken",
+    "takes_capital_good_acquisition",
     "takes_changes",
     "takes_classification",
     "takes_expense_category",

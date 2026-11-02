@@ -18,6 +18,8 @@ import type {
   LedgerPort,
 } from "../../../shell/ledger";
 import {
+  isIvaDerivableReason,
+  READINESS_REASON_FIELD,
   lockedByDirection,
   takesBusinessShare,
   takesClassification,
@@ -71,30 +73,6 @@ import { formatPercent, heldDecimal } from "../../../shared/numbers";
 const KIND_OF: Readonly<Record<string, ClassifyKind>> = Object.fromEntries(
   CLASSIFY_KINDS.map((kind) => [CLASSIFICATION_OF[kind], kind]),
 );
-
-/** The field a readiness reason is fixed in, where the inspector has
- * one. */
-const REASON_FIELD: Record<string, string> = {
-  missing_category: "category_id",
-  missing_taxable_base: "taxable_base",
-  missing_iva_amount: "iva_amount",
-  missing_iva_rate: "iva_rate",
-  missing_counterparty_identification_state:
-    "counterparty_identification_state",
-  missing_proportionality_reference: "business_pct",
-  inadmissible_deduction_classification: "business_classification",
-  domestic_identification_on_intra_community_transaction: "iva_category",
-  eu_member_state_on_export_transaction: "iva_category",
-  missing_counterparty_establishment_on_export: "iva_category",
-  anomaly_non_declarable_iva_category: "iva_category",
-  anomaly_non_declarable_recargo_equivalencia: "iva_category",
-};
-/** The reasons the product's own IVA derivation may fix. */
-const DERIVABLE = [
-  "missing_taxable_base",
-  "missing_iva_amount",
-  "missing_iva_rate",
-];
 
 /**
  * The inspector's Classify section: what the last check found missing and
@@ -209,8 +187,8 @@ export function ClassifySection({
             </span>
             <ul className="grid gap-1 text-foreground">
               {issues.map((reason) => {
-                const target = REASON_FIELD[reason];
-                const derive = DERIVABLE.includes(reason);
+                const target = READINESS_REASON_FIELD[reason];
+                const derive = isIvaDerivableReason(reason);
                 return (
                   <li
                     key={reason}

@@ -8,6 +8,7 @@
 // only: never in storage, a log line or an error message.
 
 import type {
+  LedgerPreflightReason,
   EvidenceUpdateField,
   InvoiceUpdateField,
   LedgerUpdateField,
@@ -868,6 +869,7 @@ export type LedgerStagedRowAnswer = {
   classified: boolean;
   takes_expense_category: boolean;
   takes_share: boolean;
+  category_askable: boolean;
   category_settable: boolean;
   category_on_income: boolean;
   takes_changes: boolean;
@@ -1089,25 +1091,6 @@ export type LedgerStatusResult = {
   }[];
 };
 
-export type LedgerPreflightReason =
-  | "missing_business_classification"
-  | "missing_category"
-  | "missing_taxable_base"
-  | "missing_iva_amount"
-  | "missing_iva_rate"
-  | "missing_eur_tax_substrate"
-  | "missing_counterparty_identification_state"
-  | "domestic_identification_on_intra_community_transaction"
-  | "eu_member_state_on_export_transaction"
-  | "missing_counterparty_establishment_on_export"
-  | "inadmissible_deduction_classification"
-  | "missing_proportionality_reference"
-  | "unsupported_currency"
-  | "unsupported_period"
-  | "censo_ratio_mismatch"
-  | "missing_home_office_afectacion"
-  | "anomaly_non_declarable_iva_category"
-  | "anomaly_non_declarable_recargo_equivalencia";
 export type LedgerPreflightRequest = { period: PublicPeriod };
 export type LedgerPreflightResult = {
   profile_id: string;
