@@ -438,9 +438,9 @@ class OperationCompositionInputs:
 
     def invoice_lifecycle(self) -> CatalogueLifecyclePortsFactory:
         """The injected invoice catalogue lifecycle ports factory or the profile adapter."""
-        from ..adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
+        from .adapter_composition_ports import build_invoice_lifecycle_ports
 
-        return supplied(self.invoice_lifecycle_ports_factory, build_catalogue_lifecycle_ports)
+        return supplied(self.invoice_lifecycle_ports_factory, build_invoice_lifecycle_ports)
 
     def invoice_inspection(self) -> InvoiceInspectionReadPortsFactory:
         """The injected invoice inspection read ports factory or the production composition."""
