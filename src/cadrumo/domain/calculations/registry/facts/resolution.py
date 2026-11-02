@@ -203,6 +203,16 @@ class _ResolvedFact(RegistryModel):
     projection_direction: TemporalProjectionDirection = TemporalProjectionDirection.AUTHORED
     projected_from_date: date | None = None
 
+    @property
+    def published_on_date(self) -> bool:
+        """Return whether the supplying edition's window holds the queried date.
+
+        ``False`` only for a standing rate read from the nearest edition. A date
+        below the support floor inside a real window stays published: it is
+        projected as to filing grade, not as to the law stated for it.
+        """
+        return self.valid_from <= self.effective_date and (self.valid_to is None or self.effective_date <= self.valid_to)
+
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_resolution_context(self) -> _ResolvedFact:
@@ -441,12 +451,21 @@ def resolve_validated_governed_fact(
     window holds the date, or the first of a track whose start says only where
     the corpus begins, by being absent or equal to the floor. It never crosses a
     start declared earlier than the floor or after the date, which records law.
+
+    A track the fact declares a standing rate is the exception, because a date
+    always has a rate: a date-addressed query reaches below the floor, and a
+    coordinate no window holds reads the nearest edition, marked as projected
+    from it. See :func:`_nearest_edition_coordinate` for what nearest means.
     """
-    query_selectors = _validate_fact_query(fact, query, support)
+    standing = fact.stands_for(query.selectors)
+    query_selectors = _validate_fact_query(fact, query, support, standing=standing)
     date_support = support.date_envelope()
-    windows = _fact_windows(fact, query, date_support)
+    windows = _fact_windows(fact, query, date_support, standing=standing)
     track = _matching_fact_track(fact, query, query_selectors, windows)
     candidates = _containing_fact_candidates(track, query.effective_date)
+    nearest = _nearest_edition_coordinate(track, query.effective_date) if standing and not candidates else None
+    if nearest is not None:
+        candidates = _containing_fact_candidates(track, nearest)
     if not candidates:
         raise GovernedFactNotApplicableError(
             fact_id=query.fact_id,
@@ -455,7 +474,11 @@ def resolve_validated_governed_fact(
         )
     winner, winner_window = _select_fact_winner(query, fact, candidates)
     source_revision_ids = _winner_source_revision_ids(winner)
-    projection_direction, projected_from_date = _resolved_projection_context(date_support, query.effective_date)
+    projection_direction, projected_from_date = (
+        _resolved_projection_context(date_support, query.effective_date)
+        if nearest is None
+        else _nearest_edition_projection(nearest, query.effective_date)
+    )
     return _materialize_resolved_fact(
         fact,
         query,
@@ -472,6 +495,8 @@ def _validate_fact_query(
     fact: GovernedFact,
     query: GovernedFactQuery,
     support: TemporalSupportEnvelope,
+    *,
+    standing: bool,
 ) -> frozenset[tuple[str, type[object], object]]:
     if fact.fact_id != query.fact_id:
         raise RegistryValidationError(
@@ -483,7 +508,8 @@ def _validate_fact_query(
         )
     query_selectors = _selector_identity(query.selectors)
     coordinate_year = query.filing_year if query.filing_year is not None else query.effective_date.year
-    below_floor_reach = query.reaches_below_support and query.filing_year is None and coordinate_year < support.floor
+    reaches = query.reaches_below_support or standing
+    below_floor_reach = reaches and query.filing_year is None and coordinate_year < support.floor
     if not below_floor_reach and not support.admits_coordinate(coordinate_year):
         raise RegistryValidationError(
             f"governed fact {query.fact_id!r} query year {coordinate_year} falls outside the supported filing years"
@@ -495,9 +521,12 @@ def _fact_windows(
     fact: GovernedFact,
     query: GovernedFactQuery,
     support: DateSupportEnvelope,
+    *,
+    standing: bool,
 ) -> Mapping[RegistryRevisionNodeId, RegistryValidityWindow]:
     """Return the windows a query reads, reaching back only where a track's start states no law."""
-    if not query.reaches_below_support or query.filing_year is not None or query.effective_date >= support.floor:
+    reaches = query.reaches_below_support or standing
+    if not reaches or query.filing_year is not None or query.effective_date >= support.floor:
         return fact.materialized_windows(support)
     windows = dict(
         fact.materialized_windows(
@@ -535,6 +564,34 @@ def _containing_fact_candidates(
     effective_date: date,
 ) -> tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...]:
     return tuple((variant, window) for variant, window in track if window.contains_date(effective_date))
+
+
+def _nearest_edition_coordinate(
+    track: tuple[tuple[GovernedFactVariant, RegistryValidityWindow], ...],
+    effective_date: date,
+) -> date | None:
+    """Return the closest edge of the track's nearest edition, earlier or later.
+
+    Distance runs to the edge of an edition's window, in days. Equal distance
+    takes the earlier edition: it is the last rate enacted by that date, and a
+    later one would apply law not yet made. ``None`` means the track is empty.
+    """
+    earlier = max(
+        (window.valid_to for _variant, window in track if window.valid_to is not None and window.valid_to < effective_date),
+        default=None,
+    )
+    later = min((window.valid_from for _variant, window in track if window.valid_from > effective_date), default=None)
+    if earlier is None or later is None:
+        return later if earlier is None else earlier
+    return earlier if effective_date - earlier <= later - effective_date else later
+
+
+def _nearest_edition_projection(
+    nearest: date,
+    effective_date: date,
+) -> tuple[TemporalProjectionDirection, date]:
+    direction = TemporalProjectionDirection.FORWARD if nearest < effective_date else TemporalProjectionDirection.BACKWARD
+    return direction, nearest
 
 
 def _select_fact_winner(
