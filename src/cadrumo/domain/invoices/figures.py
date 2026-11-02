@@ -30,13 +30,12 @@ from decimal import Decimal, DecimalException
 from enum import StrEnum
 from typing import Final
 
+from ...core.decimal.constants import ONE, ZERO
 from ...core.money.rounding import CENT, round_to_cents
 from ..iva.errors import IvaRateNotFoundError
 from .enums import IvaRate, iva_rate_percentage, iva_rate_slots_on
 from .errors import InvoiceRetentionFigureError, InvoiceValidationError
 
-_ZERO: Final = Decimal("0")
-_ONE: Final = Decimal("1")
 _COMPARISON_SCALE: Final = Decimal("0.0001")
 
 
@@ -132,7 +131,7 @@ def _beyond_a_cent(stated: Decimal, expected: Decimal) -> bool:
 
 def quantity_finding(quantity: Decimal) -> FigureFinding | None:
     """A line's quantity is strictly positive."""
-    if quantity <= _ZERO:
+    if quantity <= ZERO:
         return FigureFinding(
             FigureFindingCode.LINE_QUANTITY_NOT_POSITIVE,
             "quantity must be strictly positive",
@@ -143,7 +142,7 @@ def quantity_finding(quantity: Decimal) -> FigureFinding | None:
 
 def line_amount_finding(amount: Decimal, *, field_name: str = "amount") -> FigureFinding | None:
     """A line's price, subtotal and cuota are non-negative magnitudes."""
-    if amount < _ZERO:
+    if amount < ZERO:
         return FigureFinding(
             FigureFindingCode.LINE_AMOUNT_NEGATIVE,
             "monetary value must be non-negative",
@@ -178,7 +177,7 @@ def expected_line_iva(subtotal: Decimal, rate: Decimal) -> Decimal:
 def line_iva_finding(subtotal: Decimal, iva_amount: Decimal, rate: Decimal | None) -> FigureFinding | None:
     """A stated cuota is zero on a nonnumeric slot and otherwise within a cent of the product."""
     if rate is None:
-        if iva_amount != _ZERO:
+        if iva_amount != ZERO:
             return FigureFinding(
                 FigureFindingCode.LINE_IVA_NOT_ZERO_FOR_NONNUMERIC,
                 "iva_amount must be zero for nonnumeric IVA lines",
@@ -231,7 +230,7 @@ def computed_line_subtotal(quantity: Decimal, unit_price: Decimal) -> Decimal:
 
 def computed_line_iva(base: Decimal, rate: Decimal | None) -> Decimal:
     """Return the cuota the backend states on ``base``, zero only for a nonnumeric slot."""
-    return _ZERO if rate is None else round_to_cents(base * rate)
+    return ZERO if rate is None else round_to_cents(base * rate)
 
 
 def rounded_line_totals(subtotals: Sequence[Decimal], iva_amounts: Sequence[Decimal]) -> tuple[Decimal, Decimal]:
@@ -240,12 +239,12 @@ def rounded_line_totals(subtotals: Sequence[Decimal], iva_amounts: Sequence[Deci
 
 
 def _exact_sum(values: Iterable[Decimal]) -> Decimal:
-    return sum(values, start=_ZERO)
+    return sum(values, start=ZERO)
 
 
 def computed_grand_total(base_total: Decimal, iva_total: Decimal, recargo: Decimal | None) -> Decimal:
     """Return the total: recargo rides inside it, and a retención stays outside."""
-    return base_total + iva_total + (recargo or _ZERO)
+    return base_total + iva_total + (recargo or ZERO)
 
 
 def settlement_amount(grand_total: Decimal, retention_amount: Decimal | None) -> Decimal:
@@ -254,12 +253,12 @@ def settlement_amount(grand_total: Decimal, retention_amount: Decimal | None) ->
     A retención is withheld at source, so the cash that moves is the total less
     the withheld figure; the total itself never reaches the bank.
     """
-    return grand_total - (retention_amount or _ZERO)
+    return grand_total - (retention_amount or ZERO)
 
 
 def total_sign_finding(total: Decimal) -> FigureFinding | None:
     """An invoice total is a non-negative magnitude."""
-    if total < _ZERO:
+    if total < ZERO:
         return FigureFinding(
             FigureFindingCode.TOTAL_NEGATIVE,
             "invoice totals must be non-negative",
@@ -296,7 +295,7 @@ def invoice_total_findings(
                 ("iva_total", "lines"),
             )
         )
-    if grand_total != base_total + iva_total + (recargo or _ZERO) + (suplido or _ZERO):
+    if grand_total != base_total + iva_total + (recargo or ZERO) + (suplido or ZERO):
         findings.append(
             FigureFinding(
                 FigureFindingCode.GRAND_TOTAL_IDENTITY,
@@ -322,7 +321,7 @@ def nonnumeric_invoice_findings(
     unrelated to whether the underlying supply is taxable, so it stays permitted.
     """
     findings: list[FigureFinding] = []
-    if iva_total != _ZERO:
+    if iva_total != ZERO:
         findings.append(
             FigureFinding(
                 FigureFindingCode.NONNUMERIC_IVA_TOTAL_NOT_ZERO,
@@ -330,7 +329,7 @@ def nonnumeric_invoice_findings(
                 ("iva_total",),
             )
         )
-    if (recargo or _ZERO) != _ZERO:
+    if (recargo or ZERO) != ZERO:
         findings.append(
             FigureFinding(
                 FigureFindingCode.NONNUMERIC_RECARGO_NOT_ZERO,
@@ -338,7 +337,7 @@ def nonnumeric_invoice_findings(
                 ("recargo_amount",),
             )
         )
-    if grand_total != base_total + (suplido or _ZERO):
+    if grand_total != base_total + (suplido or ZERO):
         findings.append(
             FigureFinding(
                 FigureFindingCode.NONNUMERIC_GRAND_TOTAL_IDENTITY,
@@ -351,7 +350,7 @@ def nonnumeric_invoice_findings(
 
 def recargo_sign_finding(recargo: Decimal | None) -> FigureFinding | None:
     """A stated recargo is a non-negative magnitude; ``None`` states nothing about it."""
-    if recargo is not None and recargo < _ZERO:
+    if recargo is not None and recargo < ZERO:
         return FigureFinding(
             FigureFindingCode.RECARGO_NEGATIVE,
             "recargo_amount must be non-negative",
@@ -375,7 +374,7 @@ def recargo_ceiling_finding(recargo: Decimal | None, iva_total: Decimal) -> Figu
 
 def suplido_finding(suplido: Decimal | None) -> FigureFinding | None:
     """A stated suplido is a non-negative magnitude; it carries no rate and no other bound."""
-    if suplido is not None and suplido < _ZERO:
+    if suplido is not None and suplido < ZERO:
         return FigureFinding(
             FigureFindingCode.SUPLIDO_NEGATIVE,
             "suplido_amount must be non-negative",
@@ -411,7 +410,7 @@ def retention_findings(
 
 
 def _retention_amount_sign(amount: Decimal | None) -> FigureFinding | None:
-    if amount is not None and amount < _ZERO:
+    if amount is not None and amount < ZERO:
         return FigureFinding(
             FigureFindingCode.RETENTION_AMOUNT_NEGATIVE,
             "retention_amount must be non-negative",
@@ -421,7 +420,7 @@ def _retention_amount_sign(amount: Decimal | None) -> FigureFinding | None:
 
 
 def _retention_rate_range(rate: Decimal | None) -> FigureFinding | None:
-    if rate is not None and (rate < _ZERO or rate > _ONE):
+    if rate is not None and (rate < ZERO or rate > ONE):
         return FigureFinding(
             FigureFindingCode.RETENTION_RATE_OUT_OF_RANGE,
             "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
@@ -588,7 +587,7 @@ def _subtotal_figure(
 
 
 def _unverified_verdict(stated: Decimal) -> StatedFigureVerdict:
-    return StatedFigureVerdict.REFUSED if stated < _ZERO else StatedFigureVerdict.NOT_CHECKED
+    return StatedFigureVerdict.REFUSED if stated < ZERO else StatedFigureVerdict.NOT_CHECKED
 
 
 def _oss_iva_figure(stated: Decimal | None) -> StatedFigure:
@@ -619,7 +618,7 @@ def _iva_figure(
     if oss_rate:
         return _oss_iva_figure(stated), ()
     if slot.fraction is None:
-        return _judged_with(_ZERO, stated, _stated_iva_finding(_ZERO, stated, None))
+        return _judged_with(ZERO, stated, _stated_iva_finding(ZERO, stated, None))
     if base is None:
         return _unchecked(stated), ()
     finding = _stated_iva_finding(base, stated, slot.fraction)
@@ -827,7 +826,7 @@ def _nonnumeric_findings(
 
 
 def _implied_retention(rate: Decimal | None, base: Decimal | None) -> Decimal | None:
-    if rate is None or base is None or rate < _ZERO or rate > _ONE:
+    if rate is None or base is None or rate < ZERO or rate > ONE:
         return None
     return round_to_cents(base * rate)
 
