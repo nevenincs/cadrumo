@@ -69,6 +69,7 @@ _VALUES = {
     "box": "0208",
     "year": "2024",
     "count": "2",
+    "income_class": "arrendamiento_inmueble_urbano_actividad",
 }
 _RAW = re.compile(
     r"[0-9a-f]{12,}"  # a hash or the tail of one

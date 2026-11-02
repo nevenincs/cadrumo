@@ -48,6 +48,8 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
+from ...core.retencion_soportada import RetencionSoportadaClase
+from ...core.retencion_soportada_label import RETENCION_SOPORTADA_CLASE_LABEL_KEYS
 from ...domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
@@ -241,6 +243,7 @@ _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_da
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
     {"amount", "cost", "paid", "price", "base", "remainder", "effect", "transmission_value", "net_value", "row_amount"}
 )
+_INCOME_CLASS_VALUE: Final[str] = "income_class"
 _logger = get_logger(__name__)
 STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
@@ -295,7 +298,8 @@ def note_fact_text(
 ) -> str:
     """State a note's facts in words, in ``locale`` or the active language.
 
-    Dates and amounts read as a box writes them. An element goes by the name it
+    Dates and amounts read as a box writes them, and an income class by its Renta
+    label in the language read in, never its stored token. An element goes by the name it
     has now, or by a plain phrase when it has none or has left the register.
     """
     language = OutputLanguage(locale or output_language())
@@ -325,6 +329,8 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         return format_casilla_value(date.fromisoformat(value), data_type="date", language=language)
     if name in _AMOUNT_VALUES:
         return format_casilla_value(Decimal(value), data_type="money", language=language)
+    if name == _INCOME_CLASS_VALUE:
+        return tr(RETENCION_SOPORTADA_CLASE_LABEL_KEYS[RetencionSoportadaClase(value)], locale=language.value)
     return value
 
 
