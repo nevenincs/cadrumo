@@ -293,7 +293,7 @@ def test_a_restatement_is_refused_against_the_edition_that_first_stated_the_clai
         ("2026", _disposition("2026", "Stated once.")),
     )
 
-    with pytest.raises(RegistryLoadError, match="inheriting from '2025'.*stated by edition '2024'"):
+    with pytest.raises(RegistryLoadError, match=r"inheriting from '2025'.*stated by edition '2024'"):
         load_modelo_directory(modelo_dir)
 
 
@@ -310,29 +310,36 @@ def test_a_restatement_over_a_storage_only_edge_is_refused(tmp_path: Path) -> No
         load_modelo_directory(modelo_dir)
 
 
+_OTHER_ORDEN: Final = "orden-hac-200-2024:art-2"
+
+
 @pytest.mark.parametrize(
-    "changed",
+    ("reason", "legal_refs", "source_refs"),
     [
-        'reason = "Changed."
-legal_refs = ["{article}"]
-source_refs = ["{source}"]
-',
-        'reason = "Stated once."
-legal_refs = ["{article}", "{other}"]
-source_refs = ["{source}"]
-',
-        'reason = "Stated once."
-legal_refs = ["{article}"]
-source_refs = ["{source}", "{other}"]
-',
+        ("Changed.", (_ARTICLE,), (_SOURCE,)),
+        ("Stated once.", (_ARTICLE, _OTHER_ORDEN), (_SOURCE,)),
+        ("Stated once.", (_ARTICLE,), (_SOURCE, "aeat-instructions")),
     ],
     ids=["reason", "legal-refs", "source-refs"],
 )
-def test_a_changed_claim_is_accepted_as_an_override(tmp_path: Path, changed: str) -> None:
+def test_a_changed_claim_is_accepted_as_an_override(
+    tmp_path: Path,
+    reason: str,
+    legal_refs: tuple[str, ...],
+    source_refs: tuple[str, ...],
+) -> None:
     """A difference in provenance is a difference: the references are part of the claim."""
-    body = changed.format(article=_ARTICLE, source=_SOURCE, other="orden-hac-200-2024:art-2")
-    revised = f'[revisions."2025".family_dispositions.{_FAMILY}]
-{body}'
+    legal = ", ".join(f'"{ref}"' for ref in legal_refs)
+    sources = ", ".join(f'"{ref}"' for ref in source_refs)
+    revised = "\n".join(
+        (
+            f'[revisions."2025".family_dispositions.{_FAMILY}]',
+            f'reason = "{reason}"',
+            f"legal_refs = [{legal}]",
+            f"source_refs = [{sources}]",
+            "",
+        )
+    )
     definition = load_modelo_directory(
         _chain(tmp_path, ("2024", _disposition("2024", "Stated once.")), ("2025", revised)),
     )
@@ -356,8 +363,7 @@ def test_removing_and_restating_the_same_claim_stays_refused_as_removed_and_auth
     modelo_dir = _chain(
         tmp_path,
         ("2024", _disposition("2024", "Stated once.")),
-        ("2025", _REMOVE_FAMILY + "
-" + _disposition("2025", "Stated once.")),
+        ("2025", _REMOVE_FAMILY + "\n" + _disposition("2025", "Stated once.")),
     )
 
     with pytest.raises(RegistryLoadError, match="both removed and authored"):
