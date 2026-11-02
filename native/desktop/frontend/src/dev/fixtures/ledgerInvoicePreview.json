@@ -3298,7 +3298,7 @@
         "--invoice-number",
         "F-2026-021",
         "--invoice-date",
-        "2021-06-01",
+        "2020-12-31",
         "--currency",
         "EUR",
         "--invoice-class",
@@ -3315,7 +3315,7 @@
         "counterparty_country": "ES",
         "series": "F",
         "invoice_number": "F-2026-021",
-        "issued_at": "2021-06-01",
+        "issued_at": "2020-12-31",
         "currency": "EUR",
         "invoice_class": "ORDINARIA",
         "lines": [
@@ -3342,8 +3342,8 @@
         ]
       },
       "result": {
-        "input_digest": "af2753d73150a82ff917bba4222984cf782cfb735362dde499783a8fcc235e78",
-        "on_date": "2021-06-01",
+        "input_digest": "dffec80b4c056c3539276008ef7a6466452759ca6fb00d3fad723215f6b94be6",
+        "on_date": "2020-12-31",
         "on_date_source": "issued_at",
         "rate_slots": [],
         "lines": [
@@ -3409,7 +3409,7 @@
             "values": [
               {
                 "key": "on_date",
-                "value": "2021-06-01"
+                "value": "2020-12-31"
               }
             ],
             "label_key": "application.invoices.figures_preview.finding.rate_date_unresolved"

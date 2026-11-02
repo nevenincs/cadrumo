@@ -457,7 +457,7 @@ test("a date that strands a rate is a finding on that line", () => {
 });
 
 test("before the registry's rates, the served finding stands and no rate is invented", () => {
-  const check = checked(filled({ issuedAt: "2021-06-01" }), "before_registry");
+  const check = checked(filled({ issuedAt: "2020-12-31" }), "before_registry");
   expect(answer("before_registry").rate_slots).toEqual([]);
   expect(check.request).toBeNull();
   expect(check.findings.general.map(({ code }) => code)).toEqual([
