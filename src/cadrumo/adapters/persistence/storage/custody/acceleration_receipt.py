@@ -186,6 +186,16 @@ class ReceiptDeletion(StrEnum):
     RECEIPT_RETAINED = "receipt_retained"
     """The on-disk receipt survived its compare-and-clear."""
 
+    @property
+    def receipt_removed(self) -> bool:
+        """Whether the on-disk receipt is gone (or was never there to remove)."""
+        return self is not ReceiptDeletion.RECEIPT_RETAINED
+
+    @property
+    def keychain_removed(self) -> bool:
+        """Whether the keychain key is confirmed gone (or was never bound)."""
+        return self in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED}
+
 
 class ProfileSessionResumeOutcome(BaseModel):
     """Typed outcome of a fail-closed persisted-session resume evaluation.
