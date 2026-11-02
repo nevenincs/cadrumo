@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:6aa310499d921a13841f5eaf131e87e9c36240924bf97c6fe35ad83ab2ee3789'
+body_hash: 'sha256:21ae076745d419fb3cb99a1d0d6b0c2af1da57bcd43381232b4961ed6fd52a33'
 ---
 
 # `frontend-polish` plan
@@ -73,7 +73,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [ ] `S32` - Restore canonical frontend input generation with accepted diagnostic severity parity and lossless public export-offer projection; `src/cadrumo/application/modelo/calculation_notes.py, src/cadrumo/application/modelo/workbench_projection.py, src/cadrumo/application/modelo/projection_operation.py, src/cadrumo/core/errors/registry/_application_modelo.py, src/cadrumo/application/modelo/tests/, native/desktop/frontend/scripts/modelo_fixtures.py, native/desktop/frontend/src/shell/modeloContract.ts, native/desktop/frontend/src/components/modelo/workspace/CreditsPanel.tsx, native/desktop/frontend/src/components/modelo/workspace/CreditsView.tsx, native/desktop/frontend/src/components/modelo/workspace/EstimateView.tsx`.
 - [x] `S33` - Expose the supported local declaration PDF comparison beside receipt import, preserving backend refusals and write holds; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [x] `S34` - Retry failed casilla help in place without changing selection or staged edits; `native/desktop/frontend/src/components/modelo/details/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
-- [ ] `S35` - Keep delayed agent clarification and approval results within their originating conversation and request owner; `native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`.
+- [x] `S35` - Keep delayed agent clarification and approval results within their originating conversation and request owner; `native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`.
 - [ ] `S36` - Mount one responsive Modelo details panel and preserve its state across narrow and wide layouts; `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 
 ## Parallelization
