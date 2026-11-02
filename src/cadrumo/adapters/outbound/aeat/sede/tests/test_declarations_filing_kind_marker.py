@@ -19,7 +19,7 @@ from ......application.filing.draft_construction import build_draft
 from ......application.filing.export import export_draft
 from ......application.filing.producer_snapshot import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ......application.filing.runtime import ModeloOperatorProfile
-from ......application.filing.tests.export_support import _PERIOD, _schema_provider, _typed_producer_snapshot
+from ......application.filing.tests.export_support import FILING_PERIOD, schema_provider, typed_producer_snapshot
 from ......application.live.filed_observation_persistence import filed_observation_filing_kind
 from ......core.casilla_id import validated_casilla_id
 from ......core.modelo import Modelo
@@ -196,7 +196,7 @@ _M131_CASILLA_05 = validated_casilla_id("05", surface="test_declarations_filing_
 
 def _m131_multi_activity_file(tmp_path: Path) -> bytes:
     """Export a two-activity Modelo 131 2026 fichero through the real renderer."""
-    template = _typed_producer_snapshot()
+    template = typed_producer_snapshot()
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo("131"),
         taxpayer_tax_id=template.taxpayer_tax_id,
@@ -209,10 +209,10 @@ def _m131_multi_activity_file(tmp_path: Path) -> bytes:
         charge_account=None,
         m303_filing_facts=None,
     )
-    provider = _schema_provider(filing_year=2026, period="1T", modelos=("131",))
+    provider = schema_provider(filing_year=2026, period="1T", modelos=("131",))
     draft = build_draft(
         modelo="131",
-        period=_PERIOD,
+        period=FILING_PERIOD,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Filing kind fixture"),
         inputs={
             _M131_CASILLA_03: Decimal("1000"),

@@ -37,7 +37,7 @@ from ....domain.calculations.registry.schema_base import CasillaDataType
 from ....domain.calculations.registry.schema_exports import ExportFieldDefinition, ExportRecordDefinition
 from ..record_field_renderer import render_record
 from ..record_types import RecordRenderRow
-from .export_support import _approved_registry_draft, _typed_producer_snapshot
+from .export_support import _approved_registry_draft, typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -91,7 +91,7 @@ def _render(fields: tuple[ExportFieldDefinition, ...]) -> str:
         _record(fields),
         draft=_approved_registry_draft(),
         producer_values={},
-        producer_snapshot=_typed_producer_snapshot(),
+        producer_snapshot=typed_producer_snapshot(),
         casilla_values={},
         binding_values={},
         row=RecordRenderRow(row_index=None, active_binding_ids=frozenset()),

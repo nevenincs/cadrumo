@@ -28,7 +28,7 @@ from cadrumo.core.config import Settings
 from cadrumo.domain.invoices.decomposition import InvoiceDecompositionDefect, decompose_invoice
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
-from .....application.aggregation._renta_income_evidence import income_withheld_amount, sales_invoice_evidence_payload
+from .....application.aggregation.renta_income_evidence import income_withheld_amount, sales_invoice_evidence_payload
 from .....core.aggregation import LedgerWithholdingDerivation
 from .....domain.iva.schema import InvoiceKind
 from .....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState

@@ -24,18 +24,6 @@ from .carry_forward import (
 )
 from .carry_window import resolve_iva_compensation_carry_window_years
 
-CompensationExpiryYear = FourDigitYear
-"""A coarse year-level carry-window review boundary for a compensation lot.
-
-Deliberately wider than FilingYear. This derived review year may fall beyond
-the last year a return can be filed for. It is not an exact statutory filing
-deadline.
-
-Declared once because the CLI wallet payload projects the same field. The bound
-was written out at both sites identically, which is the shape that drifts: the
-payload can loosen or tighten without the model noticing.
-"""
-
 
 class IvaWalletBalanceReport(BaseModel):
     """Aggregated IVA compensation carry-forward balance as of a reference year."""
@@ -47,7 +35,7 @@ class IvaWalletBalanceReport(BaseModel):
     active_balance: Decimal = Field(ge=Decimal("0"))
     expired_balance: Decimal = Field(ge=Decimal("0"))
     lot_count: NonNegativeInt
-    next_expiry_year: CompensationExpiryYear | None = None
+    next_expiry_year: FourDigitYear | None = None
     unallocated_applied_amount: Decimal = Field(ge=Decimal("0"))
 
 

@@ -8,13 +8,13 @@ from uuid import UUID
 from pydantic import BaseModel, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from .activity_asset_contracts import (
     ActivityAssetAuthorityProvenance,
     ActivityAssetId,
     ActivityAssetRefusal,
-    ActivityAssetTaxYear,
 )
 from .activity_asset_read_models import (
     ActivityAssetAcquisitionCandidate,
@@ -129,7 +129,7 @@ class ActivityAssetClaimProjection(_ActivityAssetOperationProjection):
 class ActivityAssetFilingHandoffProjection(_ActivityAssetOperationProjection):
     """Public typed filing handoff without recomputing or consuming claims."""
 
-    tax_year: ActivityAssetTaxYear | None = None
+    tax_year: FourDigitYear | None = None
     m130_period: ActivityAssetM130Period | None = None
     filing_handoff: ActivityAssetFilingHandoffSnapshot | None = None
 

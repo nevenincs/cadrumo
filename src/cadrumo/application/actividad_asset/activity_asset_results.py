@@ -8,6 +8,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
@@ -19,7 +20,6 @@ from .activity_asset_contracts import (
     ActivityAssetId,
     ActivityAssetRefusalCode,
     ActivityAssetRefusalReasonKey,
-    ActivityAssetTaxYear,
     require_da18_facts_match,
 )
 from .activity_asset_read_models import (
@@ -130,7 +130,7 @@ def require_claim_identity(claim_id: str | None, reproduced_claim_id: str | None
 def require_filing_frame(
     *,
     outcome: Literal["succeeded", "refused"],
-    tax_year: ActivityAssetTaxYear | None,
+    tax_year: FourDigitYear | None,
     m130_period: str | None,
     filing_handoff: ActivityAssetFilingHandoff | ActivityAssetFilingHandoffSnapshot | None,
 ) -> None:
@@ -213,7 +213,7 @@ class ActivityAssetClaimResult(ActivityAssetOperationResult):
 class ActivityAssetFilingHandoffResult(ActivityAssetOperationResult):
     """Private terminal result for the requested M100/M130 filing frame."""
 
-    tax_year: ActivityAssetTaxYear | None = None
+    tax_year: FourDigitYear | None = None
     m130_period: ActivityAssetM130Period | None = None
     filing_handoff: ActivityAssetFilingHandoff | None = None
 
