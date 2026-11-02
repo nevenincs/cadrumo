@@ -38,6 +38,11 @@ SENT_ACT_UNKNOWN_OUTCOME_REFUSALS: frozenset[RefusalCode] = frozenset(
 )
 """The refusals that arise only after an act was sent, so what it did is not known."""
 
+ACCEPT_REFUSALS_THAT_KEEP_LISTENING: frozenset[RefusalCode] = frozenset(
+    {RefusalCode.TIMEOUT, RefusalCode.PEER_UNTRUSTED, RefusalCode.CONNECTION_CLOSED}
+)
+"""The ordinary per-peer refusals of one accepted connection, after which a listener accepts the next one."""
+
 
 class RefusalError(CadrumoError):
     """Carry only an allowlisted transport outcome across public boundaries."""
