@@ -3473,6 +3473,8 @@ cli:
         cross_bucket_invoice: A számla egy másik buckethez tartozik, mint az aktív
           profil.
         invoice_not_found: A számlaazonosító nem található az aktív profil számlakatalógusában.
+        transaction_takes_no_invoice: Számla csak aktív, pénzbevételi vagy pénzkiadási
+          tételhez kapcsolható.
       help: Egyetlen atomi művelettel összekapcsol egy tranzakciót a nyilvántartásból
         egy egyeztetési katalógusbeli számlával. Elutasítja a bucketek közötti hivatkozásokat.
         Csak helyi; soha nem lép kapcsolatba az AEAT-tal.

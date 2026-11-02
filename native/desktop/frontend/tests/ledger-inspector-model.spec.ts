@@ -191,23 +191,37 @@ test("set for all skips what cannot take it, and counts hidden movements apart",
   const visible = new Set(
     ids.filter((id) => id !== hidden.transaction.transaction_id),
   );
-  const found = setForAll("iva_category", "domestic_general", ids, rows, {
+  const context = {
     check: checkOf(EMPTY_CONTENT, [...rows.values()]),
     sealed: NONE,
     visible,
-  });
+  };
+  const found = setForAll(
+    "iva_category",
+    "domestic_general",
+    ids,
+    rows,
+    context,
+  );
   expect(found.cells.map((cell) => cell.id)).toEqual([
     business.transaction.transaction_id,
+    personal.transaction.transaction_id,
+    pending.transaction.transaction_id,
     hidden.transaction.transaction_id,
   ]);
-  expect(found.visible).toBe(1);
+  expect(found.visible).toBe(3);
   expect(found.hidden).toBe(1);
-  expect(found.skipped).toEqual({
-    personal: 1,
-    transfer: 1,
-    not_active: 1,
-    unclassified: 1,
-  });
+  expect(found.skipped).toEqual({ transfer: 1, not_active: 1 });
+
+  // A Personal write drops the category, so it is left out of that set alone.
+  const category = setForAll(
+    "category_id",
+    "office_supplies",
+    ids,
+    rows,
+    context,
+  );
+  expect(category.skipped).toEqual({ personal: 1, transfer: 1, not_active: 1 });
   // A group label is no tax fact: Personal and unclassified rows take it.
   const labels = setForAll("group_label", "Oficina", ids, rows, {
     check: checkOf(EMPTY_CONTENT, [...rows.values()]),
