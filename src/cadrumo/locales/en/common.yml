@@ -4281,8 +4281,6 @@ desktop:
           you hold. It is not the calculation of your return and changes nothing in
           it.
         mark: Estimate
-        needs_region: Your profile does not state the region you live in, and the
-          estimate needs it. Add it to your profile and ask again.
         nothing_left: No withholding or box is left without a figure in this estimate.
         quarters: 'Quarterly declarations used: {count}.'
         refused: The estimate could not be made.
@@ -4572,6 +4570,7 @@ desktop:
       missing_fields: Missing required information
       open_profile: Open profile
       show_details: Show details
+    open_from_form: Open your profile, where these are kept
     password:
       again: Repeat the new password
       changed: Password changed

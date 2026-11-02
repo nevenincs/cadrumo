@@ -4314,8 +4314,6 @@ desktop:
         lead: Az éves bevallás becslése a meglévő negyedéves bevallásaidból vetítve.
           Nem a bevallásod kiszámítása, és semmit nem változtat rajta.
         mark: Becslés
-        needs_region: A profilod nem tartalmazza az autonóm közösséget, ahol élsz,
-          a becsléshez pedig szükség van rá. Add meg a profilodban, és kérd újra.
         nothing_left: Ebben a becslésben nem maradt érték nélküli levonás vagy rovat.
         quarters: 'Felhasznált negyedéves bevallások: {count}.'
         refused: A becslést nem lehetett elkészíteni.
@@ -4615,6 +4613,7 @@ desktop:
       missing_fields: Hiányzó kötelező adatok
       open_profile: Profil megnyitása
       show_details: Részletek megjelenítése
+    open_from_form: Nyisd meg a profilodat, ahol ezek vannak
     password:
       again: Új jelszó még egyszer
       changed: Jelszó módosítva

@@ -12,6 +12,7 @@ from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from enum import StrEnum
 from pathlib import Path
 from uuid import UUID
 
@@ -69,6 +70,14 @@ _M130_Q1_VALUES: dict[CasillaId, Decimal] = {
 }
 
 
+class QuarterSeeding(StrEnum):
+    """How much of the first Modelo 130 quarter a scenario stores."""
+
+    CALCULATED = "calculated"
+    DRAFT_ONLY = "draft_only"
+    NONE = "none"
+
+
 @dataclass(frozen=True, slots=True)
 class PayerRecord:
     """One synthetic payer certificate: its payer and the retención it states."""
@@ -78,9 +87,20 @@ class PayerRecord:
     retencion: Decimal
 
 
-def _seed_profile(profile_id: str, *, income_categories: str, profile_facts: tuple[UserProfileFact, ...]) -> None:
-    """Seed the complete profile; ``profile_facts`` replace a base fact of the same path."""
+def _seed_profile(
+    profile_id: str,
+    *,
+    income_categories: str,
+    profile_facts: tuple[UserProfileFact, ...],
+    states_region: bool,
+) -> None:
+    """Seed the complete profile; ``profile_facts`` replace a base fact of the same path.
+
+    ``states_region`` is false for a profile whose tax residence never named a region.
+    """
     scenario_paths = {fact.path for fact in profile_facts}
+    if not states_region:
+        scenario_paths.add("tax_residence.ccaa")
     base_facts = (
         *general_iva_profile_facts(tax_id=_TAXPAYER_TAX_ID, activity_start_date="2020-01-01"),
         UserProfileFact(path="taxpayer_type.irpf_income_categories", value=income_categories),
@@ -102,8 +122,12 @@ def _seed_profile(profile_id: str, *, income_categories: str, profile_facts: tup
     )
 
 
-def _seed_first_quarter(profile: TestRuntimeProfile, operation: PinnedAuthorityOperation) -> None:
-    """Store one Modelo 130 1T draft revision carrying the boxes the projection reads."""
+def _seed_first_quarter(
+    profile: TestRuntimeProfile, operation: PinnedAuthorityOperation, *, seeding: QuarterSeeding
+) -> None:
+    """Store the Modelo 130 1T draft, and with ``CALCULATED`` its revision carrying the boxes the projection reads."""
+    if seeding is QuarterSeeding.NONE:
+        return
     work_unit = create_work_unit(
         bucket_id=profile.bucket_id,
         modelo="130",
@@ -114,6 +138,8 @@ def _seed_first_quarter(profile: TestRuntimeProfile, operation: PinnedAuthorityO
         clock=_T0,
         operation=operation,
     )
+    if seeding is QuarterSeeding.DRAFT_ONLY:
+        return
     inputs = {casilla_id: str(value) for casilla_id, value in _M130_Q1_VALUES.items()}
     revision = CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
@@ -187,16 +213,28 @@ def run_projection(
     casilla_overrides: Mapping[str, str] | None = None,
     binding_overrides: Mapping[str, str] | None = None,
     profile_facts: tuple[UserProfileFact, ...] = (),
+    ccaa: str | None = "madrid",
+    states_region: bool = True,
+    quarter: QuarterSeeding = QuarterSeeding.CALCULATED,
 ) -> ModeloProjectServiceResult:
-    """Seed one isolated profile and return the real projection service's result for it."""
+    """Seed one isolated profile and return the real projection service's result for it.
+
+    ``ccaa`` is the region the request names, or ``None`` to leave it to the
+    profile; ``states_region`` is whether the profile's tax residence names one.
+    """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        _seed_profile(profile.bucket_id, income_categories=income_categories, profile_facts=profile_facts)
-        _seed_first_quarter(profile, operation)
+        _seed_profile(
+            profile.bucket_id,
+            income_categories=income_categories,
+            profile_facts=profile_facts,
+            states_region=states_region,
+        )
+        _seed_first_quarter(profile, operation, seeding=quarter)
         _seed_payer_records(profile, payer_records, operation)
         with bundled_indexed_authority().operation() as projection_operation:
             return project_modelo_100_from_m130(
                 year=PROJECTION_YEAR,
-                ccaa="madrid",
+                ccaa=ccaa,
                 bucket_id=profile.bucket_id,
                 ports=build_calculation_action_ports(bucket_id=profile.bucket_id, operation=projection_operation),
                 operation=projection_operation,
@@ -205,4 +243,11 @@ def run_projection(
             )
 
 
-__all__ = ["ACTIVITY_ONLY", "M130_Q1_RESULTADO", "PROJECTION_YEAR", "PayerRecord", "run_projection"]
+__all__ = [
+    "ACTIVITY_ONLY",
+    "M130_Q1_RESULTADO",
+    "PROJECTION_YEAR",
+    "PayerRecord",
+    "QuarterSeeding",
+    "run_projection",
+]

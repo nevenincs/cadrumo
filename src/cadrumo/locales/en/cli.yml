@@ -1285,9 +1285,6 @@ cli:
         no_m130_units: No Modelo 130 draft declarations exist for filing year %{year}.
           Run `aeat app modelo work create --modelo 130 --year %{year} --period 1T`
           first.
-        profile_fact_missing: 'The projection cannot produce the base liquidable and
-          quota boxes because the active profile does not declare: %{profile_facts}.
-          Set the fact with `%{command}` and run the projection again.'
         year_help: Filing year (e.g. 2024).
       project_help: Run modelo aggregate projections (e.g. year-end Modelo 130 aggregation).
       readiness:

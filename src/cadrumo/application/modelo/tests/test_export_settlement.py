@@ -12,6 +12,7 @@ from decimal import Decimal
 
 import pytest
 
+from ....core.errors.error_codes import resolve_error_message
 from ....core.payment_instalment_election import PaymentInstalmentElection
 from ....core.resources.bundled_data import resolve_corpus_binary
 from ....core.result_disposition import ResultDisposition
@@ -246,6 +247,32 @@ def test_a_refund_without_an_account_or_an_amount_is_refused() -> None:
     assert no_account.value.context == {"cause": "refund_account_missing", "result_disposition": "D"}
     assert no_amount.value.context == {"cause": "result_unknown", "result_disposition": "I"}
     assert unsupported.value.context == {"cause": "settlement_unsupported", "result_disposition": "I"}
+    assert no_amount.value.translated_message == "application.modelo.errors.export_settlement_unknown"
+    assert unsupported.value.translated_message == "application.modelo.errors.export_settlement_unsupported"
+
+
+@pytest.mark.parametrize("locale", ["en", "es", "ca", "hu"])
+@pytest.mark.parametrize("refusal", list(SettlementRefusal))
+def test_a_settlement_refusal_reads_in_every_language_and_is_no_write_failure(
+    refusal: SettlementRefusal, locale: str
+) -> None:
+    with pytest.raises(ModeloExportError) as refused:
+        settlement_dictionary_values(
+            disposition=ResultDisposition.INGRESO,
+            settlement=DeclaredSettlement(amount=None, refusal=refusal),
+            instalment=PaymentInstalmentElection.SINGLE,
+            first_instalment_share=_SIXTY,
+            charge_account=None,
+            refund_account=None,
+        )
+
+    generic = ModeloExportError(
+        translated_message="application.modelo.errors.export_draft_write_failed",
+        context={"calculation_revision_id": "revision-1"},
+    )
+    message = resolve_error_message(refused.value, locale=locale)
+    assert message != resolve_error_message(generic, locale=locale)
+    assert "application.modelo.errors" not in message and "%{" not in message
 
 
 def test_a_split_the_modelo_does_not_declare_is_refused() -> None:
@@ -291,6 +318,5 @@ def test_an_amount_whose_second_instalment_would_be_nothing_is_paid_at_once_neve
     )
 
     assert refused.value.context == {"cause": "second_instalment_zero", "result_disposition": "I"}
-    assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": Decimal("0.01")}
+    assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": Decimal("0.01"), "ING_CUENTACORRIENTE": None}
     assert least["ING_IMPORTE_PF1"] == Decimal("0.01") and least["ING_IMPORTE_PF2"] == Decimal("0.01")
-

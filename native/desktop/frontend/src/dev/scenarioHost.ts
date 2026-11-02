@@ -695,8 +695,8 @@ export function scenarioHost(
     options.election ?? "undeclared",
     options.language,
   );
-  // A Renta shape's filers live in Madrid, which the estimate asks the profile
-  // for.
+  // A Renta shape's filers live in Madrid, which the estimate takes from the
+  // profile.
   const profile = userProfileFixture(
     scenario.censo,
     options.modelo?.startsWith("renta")

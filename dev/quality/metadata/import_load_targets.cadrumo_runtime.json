@@ -30,6 +30,7 @@
         "cadrumo_runtime.adapters.login",
         "cadrumo_runtime.adapters.login_policy",
         "cadrumo_runtime.adapters.macos_coalition",
+        "cadrumo_runtime.adapters.macos_console",
         "cadrumo_runtime.adapters.macos_job_print",
         "cadrumo_runtime.adapters.macos_login",
         "cadrumo_runtime.adapters.macos_process",
@@ -278,7 +279,8 @@
         "cadrumo_runtime.host.worker_service",
         "cadrumo_runtime.host.worker_stall_watchdog",
         "cadrumo_runtime.host.worker_submission_staging",
-        "cadrumo_runtime.host.worker_view_stream"
+        "cadrumo_runtime.host.worker_view_stream",
+        "cadrumo_runtime.host.worker_view_uploads"
       ]
     }
   }

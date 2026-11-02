@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { formatAmount } from "../../../shared/numbers";
+import { formatAmount, formatDecimal } from "../../../shared/numbers";
 import type { LedgerOutcome } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
@@ -17,8 +17,6 @@ export type EstimateRead =
   | { phase: "idle" }
   | { phase: "reading" }
   | { phase: "ready"; projection: ModeloProjectOperationProjection }
-  /** The profile does not state the region the estimate is made for. */
-  | { phase: "needs_region" }
   /** The application settled it without estimating, in its own words. */
   | { phase: "refused"; words: string | null }
   /** The request did not reach the application, or its answer was lost. */
@@ -30,19 +28,20 @@ export type SendWrite = <Result>(
 ) => Promise<OperationRun<Result> | null>;
 
 /**
- * The estimate of one declaration's year. `region` reads the region the
- * profile states for it, or null where it states none; `run` is the
- * workspace's one way to send a write.
+ * The estimate of one declaration's year. `projectable` is the form's own
+ * statement that the application can estimate this declaration; `run` is the
+ * workspace's one way to send a write. The region is the application's to
+ * resolve from the profile, so none is sent.
  */
 export function useEstimate({
   port,
   year,
-  region,
+  projectable,
   run,
 }: {
   port: ModeloPort;
   year: number;
-  region: (() => Promise<string | null>) | undefined;
+  projectable: boolean;
   run: SendWrite;
 }) {
   const [read, setRead] = useState<EstimateRead>({ phase: "idle" });
@@ -54,23 +53,8 @@ export function useEstimate({
     };
   }, []);
   const ask = useCallback(async () => {
-    if (!region) return;
     setRead({ phase: "reading" });
-    let ccaa: string | null;
-    try {
-      ccaa = await region();
-    } catch {
-      if (alive.current) setRead({ phase: "failed" });
-      return;
-    }
-    if (!alive.current) return;
-    if (!ccaa) {
-      setRead({ phase: "needs_region" });
-      return;
-    }
-    const outcome = await run(() =>
-      port.submit("modelo.project", { year, ccaa }),
-    );
+    const outcome = await run(() => port.submit("modelo.project", { year }));
     if (!alive.current) return;
     if (!outcome) setRead({ phase: "idle" });
     else if (outcome.kind === "settled")
@@ -78,8 +62,8 @@ export function useEstimate({
     else if (outcome.kind === "refused")
       setRead({ phase: "refused", words: outcome.words });
     else setRead({ phase: "failed" });
-  }, [port, region, run, year]);
-  return { read, ask: region ? ask : null };
+  }, [port, run, year]);
+  return { read, ask: projectable ? ask : null };
 }
 
 /** The currency a register's figures are in. */
@@ -91,9 +75,53 @@ export function estimateFigure(
   field: PublicModeloFormField | null,
   value: string,
 ): string {
-  return field?.data_type === "money"
-    ? formatAmount(locale, value, { currency: CURRENCY })
-    : value;
+  switch (field?.data_type) {
+    case "money":
+      return formatAmount(locale, value, { currency: CURRENCY });
+    case "decimal":
+      return formatDecimal(locale, value, { minFraction: 2 });
+    default:
+      return value;
+  }
+}
+
+/** One figure the estimate gives with the name the application served for it. */
+export type EstimateFigure = { id: string; label: string; value: string };
+
+function named<Key extends string>(
+  group: string,
+  values: Record<NoInfer<Key>, string>,
+  words: Record<Key, string>,
+): EstimateFigure[] {
+  return (Object.keys(words) as Key[]).map((key) => ({
+    id: `${group}.${key}`,
+    label: words[key],
+    value: values[key],
+  }));
+}
+
+/** The figures of the estimate, each under the name the application served
+ * for it: the quarterly declarations' totals, then the projected return's. */
+export function estimateFigures(
+  projection: ModeloProjectOperationProjection,
+): EstimateFigure[] {
+  return [
+    ...named(
+      "quarterly",
+      projection.m130_accumulated,
+      projection.m130_accumulated.words,
+    ),
+    ...named(
+      "annual",
+      projection.m100_projection,
+      projection.m100_projection.words,
+    ),
+  ];
+}
+
+/** An amount of the estimate, in the window's language. */
+export function estimateAmount(locale: string, value: string): string {
+  return formatAmount(locale, value, { currency: CURRENCY });
 }
 
 /** What the estimate gave one box, to be drawn beside the form's own words

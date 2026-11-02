@@ -350,9 +350,8 @@ def test_m100_places_stated_rows_by_the_criterion_through_export(
                 bucket_id=BUCKET_ID, taxpayer_tax_id=TAX_ID, secure_objects=secure_objects
             ),
         )
-    # The registry declares the two-instalment payment from the 2025 ejercicio, so a 2024 return is refused first
-    # because its period declares no split, before its refund would refuse it as nothing to pay.
-    assert split.value.context is not None and split.value.context["reason"] == "not_declared"
+    # The split holds for the 2024 ejercicio too, so this return's refund is what refuses it, as nothing to pay.
+    assert split.value.context is not None and split.value.context["reason"] == "nothing_to_pay"
     assert not (tmp_path / "split.xml").exists()
     assert _election_marks(payload) == (["1"] if marks else [])
     result = _money(annual, _M100_RESULT_CASILLA)

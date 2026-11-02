@@ -184,6 +184,7 @@ def test_an_unresolved_settled_box_refuses_the_settlement_and_never_reads_the_re
 
     assert settled.refusal is SettlementRefusal.RESULT_UNKNOWN
     assert refused.value.context == {"cause": "result_unknown", "result_disposition": "D"}
+    assert refused.value.translated_message == "application.modelo.errors.export_settlement_unknown"
 
 
 def test_a_result_to_pay_wholly_suspended_is_refused_as_unsupported(operation: PinnedAuthorityOperation) -> None:
@@ -197,3 +198,4 @@ def test_a_result_to_pay_wholly_suspended_is_refused_as_unsupported(operation: P
         _compose(operation, provider, draft)
 
     assert refused.value.context == {"cause": "settlement_unsupported", "result_disposition": "I"}
+    assert refused.value.translated_message == "application.modelo.errors.export_settlement_unsupported"

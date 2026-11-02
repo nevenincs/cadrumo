@@ -1,6 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
-import { userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
@@ -30,10 +30,13 @@ function Navigator({
   modelo,
   shape = "fixture",
   locale,
+  withProfile = false,
 }: {
   modelo: keyof typeof UNITS;
   shape?: ModeloShape;
   locale: OutputLanguage;
+  /** Offers the way to the profile, as the window does where it has one. */
+  withProfile?: boolean;
 }) {
   const port = useRef<ModeloPort | null>(null);
   port.current ??= modeloFixture({
@@ -46,6 +49,7 @@ function Navigator({
   const [envelope, setEnvelope] =
     useState<ModeloWorkbenchFormProjectionV1 | null>(null);
   const [current, setCurrent] = useState<string | null>(null);
+  const [opened, setOpened] = useState(0);
   useEffect(() => {
     let live = true;
     void port.current?.form(UNITS[modelo], locale).then((read) => {
@@ -63,8 +67,14 @@ function Navigator({
           form={envelope.form.form}
           currentSectionId={current}
           onJump={setCurrent}
+          onOpenProfile={
+            withProfile ? () => setOpened((n) => n + 1) : undefined
+          }
         />
       )}
+      <output data-opened-profile={opened} className="sr-only">
+        {opened}
+      </output>
     </div>
   );
 }
@@ -104,6 +114,35 @@ export const RentaJumped: Story = {
       '[data-outline-section="datoseconomicos-resultados.calculoimpuestores-4"]',
     );
     if (section) await userEvent.click(section);
+  },
+};
+
+export const RentaKeptInProfile: Story = {
+  name: "100 · a group with boxes kept in the profile leads to it",
+  render: (_, { globals }) => (
+    <Navigator
+      modelo="100"
+      shape="renta"
+      locale={language(globals)}
+      withProfile
+    />
+  ),
+  play: async ({ canvasElement }) => {
+    const outline = await tree(canvasElement);
+    const links = outline.querySelectorAll<HTMLElement>(
+      "[data-outline-profile]",
+    );
+    expect(links.length).toBeGreaterThan(0);
+    // Only a group whose boxes the read model says are kept there has one.
+    expect(links.length).toBeLessThan(
+      outline.querySelectorAll("[data-outline-group]").length,
+    );
+    await userEvent.click(links[0]!);
+    await waitFor(() =>
+      expect(
+        canvasElement.querySelector("[data-opened-profile]"),
+      ).toHaveAttribute("data-opened-profile", "1"),
+    );
   },
 };
 

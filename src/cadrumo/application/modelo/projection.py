@@ -33,15 +33,17 @@ from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
-from ...core.errors.hierarchy import CadrumoError
+from ...core.errors.hierarchy import CadrumoError, TerminalPreconditionErrorMixin
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
-from ...core.period import Period
+from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...core.period import Period, StandardPeriodCode
 from ...domain.calculations.registry.binding_selector_utils import selector_as_dict
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id, sole_bound_casilla
 from ...domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ...domain.calculations.registry.errors import (
+    GovernedFactNotApplicableError,
     RegistrySnapshotError,
     RegistryValidationError,
 )
@@ -62,9 +64,11 @@ from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnaps
 from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
-from ...domain.modelos.work_unit import WorkUnitState
+from ...domain.modelos.work_unit import WorkUnit, WorkUnitState
 from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
+from ..operator_actions.models import PreconditionVerdict
+from ..user_profile.projections import fact_value
 from ._calculation_source_staging import add_expected_missing_binding_diagnostics
 from ._registry_helpers import validate_casilla_input_ids
 from .calculate_input_validation import (
@@ -76,9 +80,11 @@ from .calculation_action_ports import CalculationActionPorts
 from .calculation_revision_queries import list_calculation_revisions
 from .calculation_route import require_calculation_route_resolver
 from .calculation_source_guards import reject_caller_overrides_of_source_bindings
+from .preconditions import build_modelo_precondition_failure_for_scenario
 from .profile_binding import resolve_profile_sourced_bindings
 from .profile_readiness_gate import load_modelo_work_profile
 from .work_lifecycle import list_work_units
+from .work_profile import ModeloWorkProfile
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -105,6 +111,8 @@ _VERB_BASELINE_BOOLEAN_BINDINGS: Mapping[str, bool] = {
     "renta-modelo-100-estimacion-directa-es-normal": True,
     "renta-profile-marriage-full-year": False,
 }
+_REGION_BINDING_ID = "renta-profile-tax-residence-ccaa"
+"""The value source that carries the filer's tax-residence region into the annual return."""
 
 
 class ModeloProjectionError(CadrumoError):
@@ -125,12 +133,28 @@ class ModeloProjectionError(CadrumoError):
         )
 
 
-class ModeloProjectNoM130UnitsError(ModeloProjectionError):
-    """Raised when a year-end projection has no quarterly Modelo 130 work units."""
+class ModeloProjectNoM130UnitsError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError):
+    """Raised when a year-end projection has no quarterly Modelo 130 work units.
+
+    The verdict names creating the first quarter as the remedy, so a frontend
+    offers that action without any command in the sentence it shows.
+    """
 
 
-class ModeloProjectNoM130RevisionsError(ModeloProjectionError):
-    """Raised when Modelo 130 work units exist but have no calculation revisions."""
+class ModeloProjectNoM130RevisionsError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError):
+    """Raised when Modelo 130 work units exist but have no calculation revisions.
+
+    The verdict names calculating the earliest uncalculated quarter as the remedy.
+    """
+
+
+class ModeloProjectRegionUnstatedError(TerminalPreconditionErrorMixin[PreconditionVerdict], ModeloProjectionError):
+    """Raised when a projection names no region and the profile's tax residence states none.
+
+    A region is never guessed: the filer's own tax residence decides which
+    autonomous-community scale applies, so without one nothing honest can be
+    projected.
+    """
 
 
 class ModeloProjectInvalidDecimalOverrideError(ModeloProjectionError):
@@ -297,6 +321,7 @@ class _ProjectionDeclaration:
     source_modelo: str
     target_modelo: str
     target_period: str
+    target_revision: str
     ingresos: CasillaId
     gastos: CasillaId
     rendimiento_neto: CasillaId
@@ -342,6 +367,7 @@ def _projection_declaration_from(resolved: ResolvedMappingFact) -> _ProjectionDe
         source_modelo=declared("source.modelo"),
         target_modelo=declared("target.modelo"),
         target_period=declared("period.default"),
+        target_revision=declared("revision"),
         ingresos=box("source.casilla.ingresos"),
         gastos=box("source.casilla.gastos"),
         rendimiento_neto=box("source.casilla.rendimiento_neto"),
@@ -354,6 +380,32 @@ def _projection_declaration_from(resolved: ResolvedMappingFact) -> _ProjectionDe
         cuota_liquida_autonomica=box("target.casilla.cuota_liquida_autonomica"),
         cuota_resultante=box("target.casilla.cuota_resultante"),
         pagos_fraccionados=box("target.casilla.pagos_fraccionados"),
+    )
+
+
+def modelo_projection_available(
+    *,
+    modelo: str,
+    period: Period,
+    filing_year: int,
+    registry_revision_id: str,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether the registry lets this declaration's revision ask for the annual projection.
+
+    The dated cross-model projection declaration names the modelo, period and
+    revision it was authored against. A declaration is projectable only when it
+    is exactly that target, so the answer follows the registry and never the
+    modelo's number. A year the declaration does not reach is not projectable.
+    """
+    try:
+        declaration = _registry_projection_declaration(filing_year, operation=operation)
+    except GovernedFactNotApplicableError:
+        return False
+    return (
+        declaration.target_modelo == modelo
+        and declaration.target_period == period.registry_token
+        and declaration.target_revision == registry_revision_id
     )
 
 
@@ -373,6 +425,42 @@ def _source_quarter_count(
     return len(revision.period_selector.periods_for_year(year))
 
 
+def _no_quarter_remedy(year: int, *, declaration: _ProjectionDeclaration) -> PreconditionVerdict:
+    """The verdict that names creating the first quarter's declaration as the way to a projection."""
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.project",
+        scenario_id="modelo.project.m130_quarters.no_work_units",
+        evidence_id="modelo.project.m130_quarters",
+        evidence_values={"modelo": declaration.source_modelo, "year": year, "work_units_present": False},
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values={
+            "modelo": declaration.source_modelo,
+            "period": StandardPeriodCode.Q1.value,
+            "year": year,
+        },
+    ).verdict
+
+
+def _uncalculated_quarter_remedy(
+    year: int, *, declaration: _ProjectionDeclaration, uncalculated: list[WorkUnit]
+) -> PreconditionVerdict:
+    """The verdict that names calculating the earliest quarter that has no calculation."""
+    earliest = min(uncalculated, key=lambda unit: unit.period.quarter_ordinal or 0)
+    return build_modelo_precondition_failure_for_scenario(
+        subject_leaf_key="modelo.project",
+        scenario_id="modelo.project.m130_quarters.no_calculation",
+        evidence_id="modelo.project.m130_quarters",
+        evidence_values={
+            "modelo": declaration.source_modelo,
+            "year": year,
+            "work_unit_id": earliest.work_unit_id,
+            "calculation_present": False,
+        },
+        provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        action_argument_values={"work_unit_id": earliest.work_unit_id},
+    ).verdict
+
+
 def _m130_quarter_revisions(
     year: int,
     *,
@@ -387,23 +475,26 @@ def _m130_quarter_revisions(
         if str(unit.modelo) == declaration.source_modelo
         and unit.filing_year == year
         and unit.state is WorkUnitState.BORRADOR
+        and unit.period.is_quarterly
     ]
     if not m130_units:
         raise ModeloProjectNoM130UnitsError(
             context={"year": year},
-            translated_message="cli.app.modelo.project.no_m130_units",
+            translated_message="application.modelo.projection_words.no_m130_units",
+            precondition_verdict=_no_quarter_remedy(year, declaration=declaration),
         )
 
     m130_quarters: dict[Period, CalculationRevision] = {}
     for unit in m130_units:
         revisions = list_calculation_revisions(work_unit_id=unit.work_unit_id, ports=ports)
-        if revisions and unit.period.is_quarterly:
+        if revisions:
             m130_quarters[unit.period] = revisions[-1]
 
     if not m130_quarters:
         raise ModeloProjectNoM130RevisionsError(
             context={"year": year},
-            translated_message="cli.app.modelo.project.no_m130_revisions",
+            translated_message="application.modelo.projection_words.no_m130_revisions",
+            precondition_verdict=_uncalculated_quarter_remedy(year, declaration=declaration, uncalculated=m130_units),
         )
     return m130_quarters
 
@@ -570,7 +661,7 @@ def _verb_baseline_projection_bindings(
 
     return (
         baseline(_VERB_BASELINE_DECIMAL_BINDINGS, owned),
-        baseline({"renta-profile-tax-residence-ccaa": ccaa}, declared),
+        baseline({_REGION_BINDING_ID: ccaa}, declared),
         baseline(_VERB_BASELINE_BOOLEAN_BINDINGS, owned),
     )
 
@@ -680,7 +771,7 @@ def _raise_if_absent_profile_facts_block_projection(
     absent_profile_binding_ids: tuple[BindingId, ...],
     declaration: _ProjectionDeclaration,
 ) -> None:
-    """Refuse a projection a missing profile fact blocks, naming each fact and the command that sets it.
+    """Refuse a projection a missing profile fact blocks, naming each fact the profile never declared.
 
     The result schema needs the base liquidable and quota boxes, so a profile
     fact their formulas read and the profile never declared leaves nothing
@@ -707,12 +798,8 @@ def _raise_if_absent_profile_facts_block_projection(
     if not fact_paths:
         return
     raise ModeloProjectionError(
-        translated_message="cli.app.modelo.project.profile_fact_missing",
-        context={
-            "profile_facts": ", ".join(fact_paths),
-            "command": "aeat config profile edit",
-            "casilla_produced": False,
-        },
+        translated_message="application.modelo.projection_words.profile_fact_missing",
+        context={"profile_facts": ", ".join(fact_paths), "casilla_produced": False},
     )
 
 
@@ -741,6 +828,7 @@ def _suffered_withholding_resolution(
     year: int,
     period: Period,
     bucket_id: str,
+    profile: ModeloWorkProfile | None,
     ports: CalculationActionPorts,
     operation: PinnedAuthorityOperation,
 ) -> CalculationSourceResolution:
@@ -759,10 +847,7 @@ def _suffered_withholding_resolution(
         filing_year=year,
         period=period,
         revision=m100_snapshot.revision,
-        profile=load_modelo_work_profile(
-            bucket_id=bucket_id,
-            profile_decode_context=operation.profile_decode_context(),
-        ),
+        profile=profile,
         operation=operation,
     )
     return add_expected_missing_binding_diagnostics(m100_snapshot.revision, resolver.resolve(context))
@@ -959,10 +1044,55 @@ def _projection_service_result(
     )
 
 
+def _binding_overrides_with_region(
+    binding_overrides: Mapping[BindingId, str] | None,
+    *,
+    ccaa: str | None,
+    revision: ModeloRevision,
+) -> Mapping[BindingId, str] | None:
+    """Make a region the caller named an override of the profile's, as the caller's own value.
+
+    Without it the profile's tax residence would win over the region the
+    request names while the result still reported the requested one. A
+    binding override the caller names for the region itself stays.
+    """
+    if ccaa is None:
+        return binding_overrides
+    region_binding = _binding_id(_REGION_BINDING_ID, surface="project modelo 100 region binding id")
+    if region_binding not in {binding.id for binding in revision.bindings}:
+        return binding_overrides
+    overrides: dict[BindingId, str] = {region_binding: ccaa}
+    overrides.update(binding_overrides or {})
+    return overrides
+
+
+def _projection_region(ccaa: str | None, *, profile: ModeloWorkProfile | None) -> str:
+    """The region the projection is made for: the caller's own, else the profile's tax residence.
+
+    Refuses when neither states one. The region selects the autonomous-community
+    scale of the tax, so it is the filer's to state and is never defaulted.
+    """
+    if ccaa is not None:
+        return ccaa
+    stated = fact_value(None if profile is None else profile.record, "tax_residence.ccaa")
+    if stated is not None and stated.strip():
+        return stated
+    raise ModeloProjectRegionUnstatedError(
+        translated_message="application.modelo.projection_words.region_unstated",
+        precondition_verdict=build_modelo_precondition_failure_for_scenario(
+            subject_leaf_key="modelo.project",
+            scenario_id="modelo.project.region.unstated",
+            evidence_id="modelo.project.region",
+            evidence_values={"profile_region_stated": False},
+            provenance=ActionEvidenceProvenance.PERSISTED_STATE,
+        ).verdict,
+    )
+
+
 def project_modelo_100_from_m130(
     *,
     year: int,
-    ccaa: str,
+    ccaa: str | None,
     bucket_id: str,
     ports: CalculationActionPorts,
     operation: PinnedAuthorityOperation,
@@ -976,8 +1106,14 @@ def project_modelo_100_from_m130(
     box as the paid-instalment relation, resolves the annual registry snapshot, and returns
     a result without persisting a synthetic revision. All registry reads use the
     caller-owned operation supplied for this workflow.
+
+    ``ccaa`` is the region the projection is made for. A caller that omits it
+    gets the region the exact profile's tax residence states, and a profile
+    that states none is refused with :class:`ModeloProjectRegionUnstatedError`.
     """
     declaration = _registry_projection_declaration(year, operation=operation)
+    profile = load_modelo_work_profile(bucket_id=bucket_id, profile_decode_context=operation.profile_decode_context())
+    region = _projection_region(ccaa, profile=profile)
     annual = _m130_annual_projection(year, declaration=declaration, ports=ports, operation=operation)
 
     m100_snapshot = operation.snapshot(declaration.target_modelo, filing_year=year, period=declaration.target_period)
@@ -990,7 +1126,7 @@ def project_modelo_100_from_m130(
     )
 
     extra_bindings, extra_enum_bindings = _parse_projection_binding_overrides(
-        binding_overrides,
+        _binding_overrides_with_region(binding_overrides, ccaa=ccaa, revision=m100_snapshot.revision),
         m100_snapshot.revision,
     )
     reject_caller_overrides_of_source_bindings(
@@ -1007,6 +1143,7 @@ def project_modelo_100_from_m130(
         year=year,
         period=Period.from_year_and_code(year, declaration.target_period),
         bucket_id=bucket_id,
+        profile=profile,
         ports=ports,
         operation=operation,
     )
@@ -1029,7 +1166,7 @@ def project_modelo_100_from_m130(
     }
     declared_binding_ids = {binding.id for binding in m100_snapshot.revision.bindings}
     verb_baseline_bindings, verb_baseline_enum_bindings, verb_baseline_boolean_bindings = (
-        _verb_baseline_projection_bindings(ccaa, m100_snapshot.revision)
+        _verb_baseline_projection_bindings(region, m100_snapshot.revision)
     )
     profile_decimal_bindings, profile_date_bindings, profile_enum_bindings, profile_boolean_bindings = (
         _profile_projection_bindings(
@@ -1066,7 +1203,7 @@ def project_modelo_100_from_m130(
     engine_result = _calculate_projection(
         m100_snapshot,
         year=year,
-        ccaa=ccaa,
+        ccaa=region,
         inputs=m100_inputs,
         bindings=merged_bindings,
         enum_bindings=merged_enum_bindings,
@@ -1083,7 +1220,7 @@ def project_modelo_100_from_m130(
     )
     return _projection_service_result(
         year=year,
-        ccaa=ccaa,
+        ccaa=region,
         annual=annual,
         engine_result=engine_result,
         credits=credits,
@@ -1099,6 +1236,7 @@ __all__ = [
     "ModeloProjectM130Accumulated",
     "ModeloProjectNoM130RevisionsError",
     "ModeloProjectNoM130UnitsError",
+    "ModeloProjectRegionUnstatedError",
     "ModeloProjectServiceResult",
     "ModeloProjectionCasillaObservation",
     "ModeloProjectionError",
@@ -1106,5 +1244,6 @@ __all__ = [
     "ModeloProjectionUnresolvedCasilla",
     "RegistrySnapshotError",
     "RegistryValidationError",
+    "modelo_projection_available",
     "project_modelo_100_from_m130",
 ]

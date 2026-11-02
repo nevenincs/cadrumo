@@ -138,7 +138,8 @@ def prepare_modelo_projection_history_conformance_case(
         )
         assert expected.quarters_filed == 1 and expected.quarters_available == ("1T",)
         return ModeloProjectionHistoryConformanceCase(
-            request=ModeloProjectOperationRequest(profile_id=profile_id, year=2025, ccaa="madrid"),
+            # The region is left to the profile, whose tax residence states the one expected above.
+            request=ModeloProjectOperationRequest(profile_id=profile_id, year=2025),
             expected_projection=ModeloProjectOperationProjection.from_service(
                 profile_id, expected, authority_generation=operation.generation.logical_generation
             ),

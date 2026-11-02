@@ -13,6 +13,11 @@ deletes, so an edition that populates a family its predecessor declared not
 applicable must say so with a removal; the typed revision refuses the
 contradiction otherwise.
 
+An authored disposition must change the answer it replaces. One whose typed
+claim equals the inherited one restates what the edition already carries, so
+the build refuses it: the edition either drops the entry or states the claim
+that differs.
+
 Inheriting a claim is not new evidence. The inherited entry keeps the reason
 and references its stating edition wrote and names that edition in
 ``inherited_from``; no grade is derived from it.
@@ -23,8 +28,11 @@ from __future__ import annotations
 from collections.abc import Mapping
 from pathlib import Path
 
-from cadrumo.domain.calculations.registry.errors import RegistryLoadError
+from pydantic import ValidationError
+
+from cadrumo.domain.calculations.registry.errors import RegistryLoadError, RegistryValidationError
 from cadrumo.domain.calculations.registry.modelo_localization import as_toml_array
+from cadrumo.domain.calculations.registry.schema_overrides import SchemaFamilyDispositionDeclaration
 from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
 
 from .loader_fields import _DISPOSITION_REMOVALS_FIELD, _DISPOSITIONS_FIELD, _ROW_INHERITED_FROM_FIELD
@@ -68,6 +76,7 @@ def refuse_removals_without_predecessor(source_path: Path, raw_revisions: Mappin
 def inherit_family_dispositions(
     context: str,
     *,
+    modelo_id: str,
     baseline_id: str | None,
     predecessor: Mapping[str, object] | None,
     successor: Mapping[str, object],
@@ -79,18 +88,21 @@ def inherit_family_dispositions(
 
     Args:
         context: Locator prefix for refusals.
+        modelo_id: The modelo the edition belongs to, named in a restatement refusal.
         baseline_id: The edition the families resolve against, or ``None``.
         predecessor: That edition's materialised table, or ``None`` with no baseline.
         successor: The edition's own authored table.
 
     Raises:
         RegistryLoadError: When a removal names a family the edition does not
-            inherit, repeats a family, or names a family the edition also authors.
+            inherit, repeats a family, or names a family the edition also authors,
+            or when an authored disposition states the claim it would inherit.
     """
     authored = _as_toml_table(successor.get(_DISPOSITIONS_FIELD)) or {}
     inherited = _inheritable(baseline_id, predecessor)
     removals = _removed_families(successor)
     _refuse_invalid_removals(context, removals=removals, inherited=inherited, authored=authored)
+    _refuse_restated_dispositions(context, modelo_id=modelo_id, inherited=inherited, authored=authored)
     effective: dict[str, object] = {}
     for family, entry in inherited.items():
         if family in removals or family in authored:
@@ -140,3 +152,42 @@ def _refuse_invalid_removals(
                 f"{context}: family disposition {family!r} is removed but not inherited from the predecessor; "
                 "a removal deletes only an inherited disposition",
             )
+
+
+def _refuse_restated_dispositions(
+    context: str,
+    *,
+    modelo_id: str,
+    inherited: Mapping[str, object],
+    authored: Mapping[str, object],
+) -> None:
+    for family, entry in authored.items():
+        carried = inherited.get(family)
+        if carried is None:
+            continue
+        claim, carried_claim = _typed_claim(entry), _typed_claim(carried)
+        if claim is None or claim != carried_claim:
+            continue
+        origin = _as_toml_table(carried)
+        stated_by = None if origin is None else origin.get(_ROW_INHERITED_FROM_FIELD)
+        raise RegistryLoadError(
+            f"{context}: modelo {modelo_id!r} family disposition {family!r} restates, unchanged, the disposition "
+            f"the edition already inherits from its predecessor (stated by edition {stated_by!r}); an omitted "
+            "disposition is inherited, so drop the entry or state the claim that differs",
+        )
+
+
+def _typed_claim(entry: object) -> SchemaFamilyDispositionDeclaration | None:
+    """Return a disposition's typed meaning without its origin marker, or ``None`` when it is not well formed.
+
+    A malformed entry is left for typed construction to refuse with the schema's
+    own error, so it is never reported here as a restatement.
+    """
+    table = _as_toml_table(entry)
+    if table is None:
+        return None
+    declared = {key: value for key, value in table.items() if key != _ROW_INHERITED_FROM_FIELD}
+    try:
+        return SchemaFamilyDispositionDeclaration.model_validate(declared)
+    except (ValidationError, RegistryValidationError):
+        return None

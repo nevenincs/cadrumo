@@ -129,15 +129,17 @@ def test_at_least_one_supported_year_settles_from_its_result(operation: PinnedAu
 def test_a_plain_amount_to_pay_is_paid_and_split_from_the_result(operation: PinnedAuthorityOperation) -> None:
     for year in _years_settled_from_the_result(operation):
         provider = _provider(operation, year)
-        inputs: dict[str, ModeloInputValue] = {} if _result_is_calculated(provider) else {str(_RESULT): Decimal("900.00")}
+        inputs: dict[str, ModeloInputValue] = (
+            {} if _result_is_calculated(provider) else {str(_RESULT): Decimal("900.00")}
+        )
         draft = _draft(provider, year, inputs)
         result = _money(draft, _RESULT)
-        assert result > 0 and _money(draft, _SUSPENDED) == 0, year
+        assert result > 0 and _values(draft)[_SUSPENDED] is None, year
 
         at_once = _compose(operation, provider, year, draft)
         split = _compose(operation, provider, year, draft, PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_PAID)
 
-        assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": result}, year
+        assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": result, "ING_CUENTACORRIENTE": None}, year
         first, second = split["ING_IMPORTE_PF1"], split["ING_IMPORTE_PF2"]
         assert isinstance(first, Decimal) and isinstance(second, Decimal)
         assert first + second == result and abs(first - result * Decimal("0.60")) < Decimal("0.01"), year
@@ -161,20 +163,22 @@ def test_a_suspended_part_is_refused_because_the_remainder_is_not_computed(
 
         assert settled.refusal is SettlementRefusal.SETTLEMENT_UNSUPPORTED, year
         assert refused.value.context == {"cause": "settlement_unsupported", "result_disposition": "I"}, year
+        assert refused.value.translated_message == "application.modelo.errors.export_settlement_unsupported", year
 
 
-def test_a_suspended_part_the_declaration_does_not_state_leaves_the_result_unknown(
+def test_a_suspended_part_left_blank_is_nothing_as_the_calculation_reads_it(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """A box that holds no value is neither nothing suspended nor a part suspended."""
     for year in _years_settled_from_the_result(operation):
         provider = _provider(operation, year)
         revision = provider.get_snapshot("100").revision
-        values: dict[CasillaId, object] = {_RESULT: Decimal("900.00")}
+        values: dict[CasillaId, object] = {_RESULT: Decimal("900.00"), _SUSPENDED: None}
 
         settled = declared_settlement("100", revision, values, disposition=None)
+        never_keyed = declared_settlement("100", revision, {_RESULT: Decimal("900.00")}, disposition=None)
 
-        assert settled.amount is None and settled.refusal is SettlementRefusal.RESULT_UNKNOWN, year
+        assert settled.amount == Decimal("900.00") and settled.refusal is None, year
+        assert never_keyed == settled, year
 
 
 def test_a_refund_is_paid_out_from_the_result(operation: PinnedAuthorityOperation) -> None:

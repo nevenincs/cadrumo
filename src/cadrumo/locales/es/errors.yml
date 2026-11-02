@@ -1017,6 +1017,8 @@ errors:
       o selecciona un perfil y vuelve a intentarlo.
     modelo_project_invalid_decimal_override: Una sobrescritura de proyección no es
       un importe decimal válido.
+    modelo_project_region_unstated: La proyección necesita la comunidad autónoma en
+      la que tributa el contribuyente y el perfil no indica ninguna.
     modelo_revision_pick: No se pudo seleccionar la revisión de cálculo indicada.
     modelo_work_capture_not_current: La selección de trabajo ya no es actual. Vuelve
       a leer el objetivo de trabajo e inténtalo de nuevo.

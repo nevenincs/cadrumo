@@ -15,7 +15,6 @@ import { label } from "../support/strings";
 const LANGUAGES = ["en", "es", "ca", "hu"] as const;
 type Language = (typeof LANGUAGES)[number];
 const YEAR = 2025;
-const REGION = "madrid";
 
 const workspace = (target: Page) => target.locator(".declarations-workspace");
 
@@ -103,7 +102,7 @@ async function servedEstimate(
   language: Language,
 ): Promise<ModeloProjectOperationProjection> {
   return target.evaluate(
-    async ([asked, year, ccaa]) => {
+    async ([asked, year]) => {
       const port = window.__fixtureModelo!;
       // The estimate is worded in the language the form was last read in.
       const list = await port.declarations(asked);
@@ -113,12 +112,11 @@ async function servedEstimate(
       await port.form(unit, asked);
       const outcome = await port.submit("modelo.project", {
         year: Number(year),
-        ccaa: String(ccaa),
       });
       if (outcome.kind !== "settled") throw new Error("the estimate refused");
       return outcome.result;
     },
-    [language, YEAR, REGION] as const,
+    [language, YEAR] as const,
   );
 }
 
@@ -263,6 +261,15 @@ for (const language of LANGUAGES) {
         ),
       ).toBe(false);
     await expect(result.locator("[data-estimate-box]")).toHaveCount(0);
+    // Each figure carries the name the application served for it.
+    for (const [group, figures] of [
+      ["quarterly", served.m130_accumulated],
+      ["annual", served.m100_projection],
+    ] as const)
+      for (const [name, words] of Object.entries(figures.words))
+        await expect(
+          result.locator(`[data-estimate-figure="${group}.${name}"]`),
+        ).toContainText(words);
     await expect(panel.getByRole("textbox")).toHaveCount(0);
   });
 }
@@ -307,6 +314,9 @@ for (const language of LANGUAGES) {
     await expect(section.getByRole("status")).toContainText(
       refusalWords(language),
     );
+    // The sentence names no command: the way to put it right is served as an
+    // action, not written into the words.
+    expect(refusalWords(language)).not.toMatch(/aeat|`/i);
     await expect(section.locator("[data-estimate-result]")).toHaveCount(0);
   });
 }

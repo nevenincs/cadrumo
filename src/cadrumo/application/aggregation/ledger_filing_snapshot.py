@@ -335,6 +335,10 @@ def _normalised_source_refs(refs: Iterable[SourceRefId], *, field_name: str) -> 
         raise ModeloValidationError(f"ledger filing evidence has invalid {field_name}") from exc
 
 
+def _iso_date(value: date | None) -> str | None:
+    return None if value is None else value.isoformat()
+
+
 def _evidence_row(
     transaction: Transaction,
     *,
@@ -355,9 +359,9 @@ def _evidence_row(
         transaction_id=transaction.transaction_id,
         fingerprint=row_fingerprint(transaction),
         booked_date=raw.booked_date.isoformat(),
-        value_date=raw.value_date.isoformat() if raw.value_date is not None else None,
-        operation_date=transaction.operation_date.isoformat() if transaction.operation_date is not None else None,
-        accrual_date=transaction.accrual_date.isoformat() if transaction.accrual_date is not None else None,
+        value_date=_iso_date(raw.value_date),
+        operation_date=_iso_date(transaction.operation_date),
+        accrual_date=_iso_date(transaction.accrual_date),
         deduction_evidence_digest=deduction_provenance.evidence_digest if deduction_provenance is not None else None,
         amount=raw.amount,
         currency=raw.currency,

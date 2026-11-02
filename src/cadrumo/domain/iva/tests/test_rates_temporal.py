@@ -538,7 +538,12 @@ def test_tier_rates_within_lists_each_rate_of_a_span_in_force_order() -> None:
             assert before is not None
             after = before + timedelta(days=1)
             old = lookup_rate(member_state, _GENERAL, before, operation=operation).pct
-            new = lookup_rate(member_state, _GENERAL, after, operation=operation).pct
+            successor = lookup_rate(member_state, _GENERAL, after, operation=operation)
+            if not successor.published_on_date:
+                # An edition with no successor yet: the span lists published rates only.
+                assert tier_rates_within(member_state, _GENERAL, before, after, operation=operation) == (old,)
+                continue
+            new = successor.pct
             assert tier_rates_within(member_state, _GENERAL, before, before, operation=operation) == (old,)
             assert tier_rates_within(member_state, _GENERAL, after, after, operation=operation) == (new,)
             expected = (old,) if old == new else (old, new)

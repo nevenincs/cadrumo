@@ -19,6 +19,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
+from pydantic import TypeAdapter
+
 from dev.temporary_output import prepare_temp_root
 
 if TYPE_CHECKING:
@@ -28,6 +30,7 @@ if TYPE_CHECKING:
     from cadrumo.domain.user_profile.values import UserProfileFact
 
 LANGUAGES = ("en", "es", "ca", "hu")
+_OBJECT = TypeAdapter(dict[str, object])
 #: The ejercicio every state is read for.
 TAX_YEAR = 2025
 PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
@@ -99,7 +102,7 @@ def _read(operation: PinnedAuthorityOperation, language: str) -> dict[str, objec
     )
     result = read_imputation_election(request, authority_operation=operation)
     projection = ProfileImputationElectionReadProjection.model_validate(result.model_dump(mode="python"))
-    return json.loads(projection.model_dump_json())
+    return _OBJECT.validate_json(projection.model_dump_json())
 
 
 def _normalised(read: dict[str, object], state: str) -> dict[str, object]:
@@ -137,7 +140,7 @@ def _refusal(operation: PinnedAuthorityOperation, language: str, name: str) -> d
             detail = build_operation_error_detail(error)
         if detail is None:
             raise SystemExit(f"{name} records no error detail") from error
-        return json.loads(detail.model_dump_json())
+        return _OBJECT.validate_json(detail.model_dump_json())
     raise SystemExit(f"{name} was not refused")
 
 
@@ -168,7 +171,7 @@ def render_fixture(root: Path) -> str:
 
 
 def _comparable(text: str) -> Mapping[str, object]:
-    return json.loads(text)
+    return _OBJECT.validate_json(text)
 
 
 def main() -> None:

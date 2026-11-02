@@ -19,7 +19,14 @@ from dev.quality.source_import_analysis import (
 
 from .unreachable_memo import parse_module
 from .unreachable_models import ShippedModule
-from .unreachable_policy import DATA_GLOBS, DEV_LABEL, PACKAGING_LABEL, SKIPPED_DIRS
+from .unreachable_policy import (
+    BUILD_GENERATOR_LABEL,
+    BUILD_GENERATOR_SCRIPTS,
+    DATA_GLOBS,
+    DEV_LABEL,
+    PACKAGING_LABEL,
+    SKIPPED_DIRS,
+)
 
 
 def _repository_console_scripts(repo_root: Path) -> tuple[Path, dict[str, str]]:
@@ -163,9 +170,23 @@ class ShippedTreeSpec:
                 OutsideCorpus(label="tests", root=repo_root / "conftest.py"),
                 OutsideCorpus(label=DEV_LABEL, root=repo_root / DEVELOPMENT_TOOLING),
                 OutsideCorpus(label=PACKAGING_LABEL, root=repo_root / PACKAGING_HOOKS),
+                *_build_generator_corpora(repo_root),
             ),
             data_globs=DATA_GLOBS,
         )
+
+
+def _build_generator_corpora(repo_root: Path) -> tuple[OutsideCorpus, ...]:
+    """The named production build generators present in this checkout.
+
+    A missing script is left out rather than refused: its symbols then lose their
+    consumer and the gates report them, so absence can only add findings.
+    """
+    return tuple(
+        OutsideCorpus(label=BUILD_GENERATOR_LABEL, root=repo_root / script)
+        for script in BUILD_GENERATOR_SCRIPTS
+        if (repo_root / script).is_file()
+    )
 
 
 def _module_execution_roots(src_root: Path, packages: tuple[str, ...], excludes: tuple[str, ...]) -> tuple[str, ...]:

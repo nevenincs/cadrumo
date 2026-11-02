@@ -261,7 +261,7 @@ class NamespaceRegistryError(StorageError):
     Fires from Pydantic field and model validators on
     :class:`~adapters.persistence.storage.secure_object_namespaces.SecureObjectNamespaceDefinition`,
     :class:`~adapters.persistence.storage.storage_path_definitions.StoragePathDefinition`, and
-    :class:`~adapters.persistence.storage.secure_object_namespaces.StorageHierarchyRegistry` when a
+    :class:`~adapters.persistence.storage.storage_hierarchy_registry.StorageHierarchyRegistry` when a
     registry key, namespace slug, path segment, or uniqueness constraint is
     violated at construction time.  Inherits from :class:`StorageError` and
     ultimately from :class:`~core.errors.hierarchy.CadrumoError` so callers can catch
@@ -269,7 +269,7 @@ class NamespaceRegistryError(StorageError):
 
     Pydantic callback boundaries translate this registered error to a plain
     ``ValueError`` while preserving it as ``__cause__``. Direct callers of
-    :class:`~adapters.persistence.storage.secure_object_namespaces.StorageHierarchyRegistry` helper
+    :class:`~adapters.persistence.storage.storage_hierarchy_registry.StorageHierarchyRegistry` helper
     methods receive the raw :class:`NamespaceRegistryError`.
     """
 

@@ -84,6 +84,32 @@ def test_no_es_tier_currently_exhibits_an_uncovered_but_lawful_date() -> None:
             )
 
 
+def test_no_spanish_date_publishes_one_positive_tier_without_the_others() -> None:
+    """Any-tier coverage answers for one tier only while the tiers start and end together.
+
+    Walks every edge of the Spanish positive tiers, which is where coverage can change.
+    """
+    with _indexed_authority_for_test().operation() as operation:
+        spain = EUMemberState.from_registry("es")
+        edges: set[date] = set()
+        for variant in operation.governed_fact("iva-rate-schedule").variants:
+            selectors = {selector.name: selector.value for selector in variant.selectors}
+            if selectors.get("member_state") != "es" or selectors.get("rate_role") != "ordinary":
+                continue
+            if variant.valid_from is not None:
+                edges |= {variant.valid_from - timedelta(days=1), variant.valid_from}
+            if variant.valid_to is not None:
+                edges |= {variant.valid_to, variant.valid_to + timedelta(days=1)}
+
+        partial = [
+            day
+            for day in sorted(edges)
+            if len({rate_table_covers(spain, day, kind, operation=operation) for kind in _POSITIVE_TIERS}) != 1
+        ]
+
+        assert partial == []
+
+
 @pytest.mark.parametrize("rate", (IvaRate.from_registry("RATE_21"), IvaRate.from_registry("RATE_10")))
 def test_the_general_and_reducido_gap_is_closed_and_stays_closed(rate: IvaRate) -> None:
     """These two once refused on 2023 and must not again.

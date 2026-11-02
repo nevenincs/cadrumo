@@ -1383,9 +1383,6 @@ cli:
         no_m130_units: No existen declaraciones del Modelo 130 en borrador para el
           ejercicio %{year}. Crea antes una con `aeat app modelo work create --modelo
           130 --year %{year} --period 1T`.
-        profile_fact_missing: 'La proyección no puede obtener las casillas de base
-          liquidable y cuota porque el perfil activo no declara: %{profile_facts}.
-          Indícalo con `%{command}` y vuelve a ejecutar la proyección.'
         year_help: Ejercicio fiscal para la proyección.
       project_help: Ejecutar proyecciones agregadas de modelos (p. ej. agregación
         anual del Modelo 130).

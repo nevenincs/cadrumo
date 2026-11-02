@@ -985,6 +985,10 @@ class ModeloWorkForm(ModeloFormBase):
     deadline: ModeloFormDeadline | None = None
     #: The AEAT tax data the current calculation replayed; ``None`` when it replayed none.
     aeat_data: ModeloFormAeatData | None = None
+    #: Whether the annual estimate from the quarterly declarations (``modelo.project``) can be asked
+    #: for this declaration: the registry's projection declaration targets this modelo, period and
+    #: revision. ``False`` says it cannot, never that an estimate would be empty.
+    projectable: bool = False
     #: Set when the declaration is recorded as filed.
     filing: ModeloFormFiling | None = None
     #: The latest file exported for this declaration, or ``None`` when none was ever exported.

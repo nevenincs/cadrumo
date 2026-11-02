@@ -27,11 +27,8 @@ from ..errors import (
 )
 from ..runtime_readiness import StorageRuntimeReadinessCode, runtime_not_ready_error
 from ..schema_lineage import ensure_schema_version_readable, inner_envelope_classification_is_expected
-from ..secure_object_namespaces import (
-    SecureObjectNamespaceDefinition,
-    StorageHierarchyRegistry,
-    is_former_product_namespace,
-)
+from ..secure_object_namespaces import SecureObjectNamespaceDefinition, is_former_product_namespace
+from ..storage_hierarchy_registry import StorageHierarchyRegistry
 from ._secure_object_integrity import (
     iter_namespace_decryptability as _iter_namespace_decryptability,
 )
@@ -143,7 +140,7 @@ class SecureObjectRepository(SecureObjectWriteOperations):
         """Return the bound hierarchy registry, if any.
 
         The registry is a
-        :class:`~adapters.persistence.storage.secure_object_namespaces.StorageHierarchyRegistry`.
+        :class:`~adapters.persistence.storage.storage_hierarchy_registry.StorageHierarchyRegistry`.
         """
         return self._namespace_registry
 

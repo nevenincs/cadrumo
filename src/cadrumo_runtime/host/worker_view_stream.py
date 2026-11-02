@@ -66,8 +66,6 @@ from cadrumo_client.contracts.view_transfer import (
     ViewTransferDirection,
     ViewTransferDownstreamDocument,
     ViewUpload,
-    ViewUploadCancelled,
-    ViewUploadedFile,
 )
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import write_document
@@ -75,7 +73,6 @@ from cadrumo_client.transport.native_wake import NativeWake
 from cadrumo_client.transport.posix_channel import PosixChannel
 from cadrumo_client.transport.view_stream import (
     ViewTransferChunk,
-    ViewTransferReceiver,
     ViewTransferSender,
     write_view_document,
     write_view_image,
@@ -88,6 +85,7 @@ from ..adapters.connection_handshake import accept_connection_handshake
 from ..adapters.native_peer import require_live_native_peer
 from ..adapters.worker_native_identity import worker_view_namespace
 from ..adapters.worker_transport import WorkerChannel, WorkerEndpoint, worker_endpoint
+from .worker_view_uploads import ViewUploadIntake
 
 _LOGGER = get_logger(__name__)
 
@@ -108,9 +106,6 @@ held down in the page. Once this many wait, the reader holds the next one and
 reads nothing more until the executor takes one, so the host's writes wait in
 turn. That paces the window; it does not limit what the person may do.
 """
-
-_UPLOAD_REGRANT = VIEW_TRANSFER_CREDIT_MAX_CHUNKS // 2
-"""Top an upload's credit back up once the window has spent this much of it."""
 
 type _Write = (
     tuple[ViewClosedReason, None, None, None]
@@ -141,21 +136,6 @@ def _is_person_input(item: ViewSinkInput) -> bool:
     return isinstance(item, ViewInput | ViewNavigate | ViewResize | ViewDialog | ViewClipboard | ViewClipboardCommit)
 
 
-class _Upload:
-    """One file the window is sending, held in memory until its completion checks it."""
-
-    __slots__ = ("credit", "data", "upload")
-
-    def __init__(self, upload: ViewUpload) -> None:
-        self.upload = upload
-        self.data = bytearray()
-        self.credit = 0
-
-    def wipe(self) -> None:
-        self.data[:] = bytes(len(self.data))
-        self.data = bytearray()
-
-
 class WorkerViewStream:
     """One view's stream from the worker to the runtime host; the ``ViewStreamSink`` the executor holds."""
 
@@ -182,8 +162,7 @@ class WorkerViewStream:
         self._inbox: deque[ViewSinkInput] = deque()
         self._person_inputs = 0
         self._close_requested = False
-        self._uploads = ViewTransferReceiver(ViewTransferDirection.UPLOAD)
-        self._receiving: dict[int, _Upload] = {}
+        self._intake = ViewUploadIntake()
         self._sender: ViewTransferSender | None = None
         self._sender_result: bool | None = None
         self._early_credit: dict[int, int] = {}
@@ -320,9 +299,7 @@ class WorkerViewStream:
         self._ended.set()
         self._stopping.set()
         with self._signal:
-            for upload in self._receiving.values():
-                upload.wipe()
-            self._receiving.clear()
+            self._intake.wipe()
             self._signal.notify_all()
         channel = self._channel
         if channel is not None:
@@ -381,7 +358,7 @@ class WorkerViewStream:
 
     def _read(self, channel: WorkerChannel) -> None:
         """Take credit, person input and transfers until the host closes the channel."""
-        reader = ViewUpstreamReader(channel, self._uploads)
+        reader = ViewUpstreamReader(channel, self._intake.receiver)
         try:
             while not self._stopping.is_set():
                 if not channel.wait_readable(self._stopping):
@@ -406,10 +383,7 @@ class WorkerViewStream:
         elif isinstance(item, ViewTransferCancel):
             self._take_transfer_cancel(item)
         elif isinstance(item, ViewUpload):
-            self._uploads.expect(item.transfer_id, size=item.size)
-            upload = _Upload(item)
-            self._receiving[item.transfer_id] = upload
-            self._grant_upload(upload, VIEW_TRANSFER_CREDIT_MAX_CHUNKS)
+            self._transfer_documents.append(self._intake.begin(item))
         elif isinstance(item, ViewTransferChunk):
             self._receive_chunk(item)
         elif isinstance(item, ViewTransferComplete):
@@ -443,11 +417,10 @@ class WorkerViewStream:
             self._cancel_download(item.transfer_id)
             self._inbox.append(item)
         else:
-            upload = self._receiving.pop(item.transfer_id, None)
-            if upload is not None:
-                upload.wipe()
+            cancelled = self._intake.cancel(item.transfer_id)
+            if cancelled is not None:
                 # Only this file's chooser loses its files; other choosers keep waiting.
-                self._inbox.append(ViewUploadCancelled(chooser_id=upload.upload.chooser_id))
+                self._inbox.append(cancelled)
 
     def _wait_for_input_room(self) -> bool:
         """Hold the reader until the executor has room for one more person input; hold ``_signal``.
@@ -480,33 +453,15 @@ class WorkerViewStream:
             )
         self._sender_result = False
 
-    def _grant_upload(self, upload: _Upload, chunks: int) -> None:
-        self._transfer_documents.append(self._uploads.grant(upload.upload.transfer_id, chunks))
-        upload.credit += chunks
-
     def _receive_chunk(self, chunk: ViewTransferChunk) -> None:
-        upload = self._receiving.get(chunk.transfer_id)
-        if upload is None:
-            return
-        upload.data.extend(chunk.data)
-        upload.credit -= 1
-        if not chunk.last and upload.credit <= _UPLOAD_REGRANT:
-            self._grant_upload(upload, VIEW_TRANSFER_CREDIT_MAX_CHUNKS - upload.credit)
+        regrant = self._intake.chunk(chunk)
+        if regrant is not None:
+            self._transfer_documents.append(regrant)
 
     def _complete_upload(self, transfer_id: int) -> None:
-        """Hand over a file whose completion the receiver has already checked in size and digest."""
-        upload = self._receiving.pop(transfer_id, None)
-        if upload is None:
-            return
-        self._inbox.append(
-            ViewUploadedFile(
-                chooser_id=upload.upload.chooser_id,
-                name=upload.upload.name,
-                mime=upload.upload.mime,
-                data=bytes(upload.data),
-            )
-        )
-        upload.wipe()
+        uploaded = self._intake.complete(transfer_id)
+        if uploaded is not None:
+            self._inbox.append(uploaded)
 
     def _write(self, channel: WorkerChannel) -> None:
         """Send documents, credited images and download chunks; ``view.closed`` is always the last frame."""
@@ -550,23 +505,30 @@ class WorkerViewStream:
         """Wait for the next frame: the closing reason, a document, a credited image or a credited chunk."""
         with self._signal:
             while not self._ended.is_set():
-                if self._closing is not None:
-                    return self._closing, None, None, None
-                if self._clipboard_reply is not None:
-                    reply, self._clipboard_reply = self._clipboard_reply, None
-                    return None, reply, None, None
-                if self._documents:
-                    return None, self._documents.popleft(), None, None
-                if self._transfer_documents:
-                    return None, self._transfer_documents.popleft(), None, None
-                pending = self._outbox.take()
-                if pending is not None:
-                    return None, None, pending, None
-                sender = self._sender
-                if sender is not None and self._sender_result is None and sender.credit > 0 and not sender.done:
-                    return None, None, None, sender
+                ready = self._ready_write()
+                if ready is not None:
+                    return ready
                 self._signal.wait()
             return None, None, None, None
+
+    def _ready_write(self) -> _Write | None:
+        """Return the frame to write now, if any; hold ``_signal``."""
+        if self._closing is not None:
+            return self._closing, None, None, None
+        if self._clipboard_reply is not None:
+            reply, self._clipboard_reply = self._clipboard_reply, None
+            return None, reply, None, None
+        if self._documents:
+            return None, self._documents.popleft(), None, None
+        if self._transfer_documents:
+            return None, self._transfer_documents.popleft(), None, None
+        pending = self._outbox.take()
+        if pending is not None:
+            return None, None, pending, None
+        sender = self._sender
+        if sender is not None and self._sender_result is None and sender.credit > 0 and not sender.done:
+            return None, None, None, sender
+        return None
 
 
 class WorkerViewStreams:

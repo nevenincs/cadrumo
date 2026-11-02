@@ -21,13 +21,10 @@ const language = (globals: Record<string, unknown>) =>
 function Credits({
   shape,
   locale,
-  region = "madrid",
   onOpenSurface = () => undefined,
 }: {
   shape: ModeloShape;
   locale: OutputLanguage;
-  /** The region the made-up profile states; none where null. */
-  region?: string | null;
   onOpenSurface?: (surface: string) => void;
 }) {
   const port = useRef<ModeloPort | null>(null);
@@ -50,7 +47,6 @@ function Credits({
         canOpenSurface={() => true}
         openLink={() => undefined}
         initialView="credits"
-        readRegion={async () => region}
       />
     </div>
   );
@@ -185,24 +181,6 @@ export const EstimateRefused: Story = {
   name: "Estimate: no quarterly declaration, refused in the application's words",
   render: (_, { globals }) => (
     <Credits shape="renta" locale={language(globals)} />
-  ),
-  play: async ({ canvasElement }) => {
-    await ask(canvasElement);
-    await waitFor(
-      () =>
-        expect(
-          canvasElement.querySelector("[data-estimate] [role=status]"),
-        ).not.toBeNull(),
-      { timeout: 15_000 },
-    );
-    expect(canvasElement.querySelector("[data-estimate-result]")).toBeNull();
-  },
-};
-
-export const EstimateNeedsRegion: Story = {
-  name: "Estimate: the profile states no region, so none is asked for",
-  render: (_, { globals }) => (
-    <Credits shape="renta-projected" locale={language(globals)} region={null} />
   ),
   play: async ({ canvasElement }) => {
     await ask(canvasElement);

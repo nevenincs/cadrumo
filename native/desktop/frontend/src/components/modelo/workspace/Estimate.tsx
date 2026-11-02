@@ -10,10 +10,14 @@ import type {
   PublicModeloFormField,
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
-import type { OpenableSurface } from "../details/Details";
 import { BoxNumber } from "../form/BoxNumber";
 import { BoxLabel } from "./BoxLabel";
-import { estimateFigure, type EstimateRead } from "./estimateRead";
+import {
+  estimateAmount,
+  estimateFigure,
+  estimateFigures,
+  type EstimateRead,
+} from "./estimateRead";
 
 // The estimate of the annual return from the quarterly declarations, as the
 // application served it: marked as an estimate, with the boxes it could not
@@ -106,6 +110,20 @@ function Result({
         {projection.is_extrapolated &&
           ` ${t("desktop.modelo.credits.estimate.extrapolated")}`}
       </p>
+      <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card">
+        {estimateFigures(projection).map((figure) => (
+          <li
+            key={figure.id}
+            data-estimate-figure={figure.id}
+            className="flex items-center justify-between gap-3 px-4 py-3"
+          >
+            <span className="min-w-0 text-base">{figure.label}</span>
+            <span className="font-mono text-base tabular-nums">
+              {estimateAmount(locale, figure.value)}
+            </span>
+          </li>
+        ))}
+      </ul>
       {given.length > 0 && (
         <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card">
           {given.map((row) => {
@@ -196,8 +214,6 @@ export function Estimate({
   locale,
   fieldAt,
   results,
-  onOpenSurface,
-  canOpenSurface,
 }: {
   read: EstimateRead;
   /** Asks for the estimate, or null where this window cannot. */
@@ -205,8 +221,6 @@ export function Estimate({
   locale: string;
   fieldAt(address: ModeloFormAddressV1): PublicModeloFormField | null;
   results: readonly string[];
-  onOpenSurface(surface: OpenableSurface): void;
-  canOpenSurface(surface: OpenableSurface): boolean;
 }) {
   const t = useStrings();
   const reading = read.phase === "reading";
@@ -241,22 +255,6 @@ export function Estimate({
             ? t("desktop.modelo.credits.estimate.again")
             : t("desktop.modelo.credits.estimate.ask")}
         </Button>
-      )}
-      {read.phase === "needs_region" && (
-        <Alert tone="warning" icon={<Icon name="alert" />}>
-          <span>{t("desktop.modelo.credits.estimate.needs_region")}</span>
-          {canOpenSurface("profile") && (
-            <Button
-              size="sm"
-              variant="link"
-              className="justify-self-start"
-              onClick={() => onOpenSurface("profile")}
-            >
-              {t("workspace.modelo.surface.open.profile")}
-              <Icon name="forward" size="xs" />
-            </Button>
-          )}
-        </Alert>
       )}
       {read.phase === "refused" && (
         <Alert tone="warning" icon={<Icon name="alert" />}>

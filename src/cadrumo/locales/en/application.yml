@@ -1917,6 +1917,13 @@ application:
         which cannot be mapped to a filing period of the modelo.
       export_revision_state_refused: The saved calculation %{calculation_revision_id}
         is not checked and complete, or recorded as filed, and cannot be exported.
+      export_settlement_unknown: The export cannot state how the return is settled
+        because its result is not calculated. Calculate the declaration and export
+        it again.
+      export_settlement_unsupported: 'The export cannot state how the return is settled:
+        the amount settled does not go the way the result does, as when part of the
+        result is suspended against your spouse''s refund. The official file has no
+        way to state that.'
       export_unsupported: Modelo %{modelo} cannot be exported to fichero-BOE because
         %{reason}. The calculation, the check and the records of filings you keep
         may still exist, but this command cannot produce an AEAT upload file for this
@@ -2470,6 +2477,32 @@ application:
           so it has none either. It is never shown as zero.
         waived_refund_result_unsupported: The result when a refund is waived is not
           supported yet, so this box has no value. It is never shown as zero.
+      figure:
+        m100:
+          base_liquidable_general: General taxable base
+          cuota_integra_autonomica: Regional gross tax
+          cuota_integra_estatal: State gross tax
+          cuota_liquida_autonomica: Regional net tax
+          cuota_liquida_estatal: State net tax
+          cuota_resultante: Tax resulting from the self-assessment
+          pagos_fraccionados: Instalments paid on account
+        m130:
+          gastos: Expenses so far (Modelo 130 declarations)
+          ingresos: Income so far (Modelo 130 declarations)
+          pagos_fraccionados: Instalments paid (Modelo 130 declarations)
+          rendimiento_neto: Net income so far (Modelo 130 declarations)
+      no_m130_revisions: The Modelo 130 declarations for filing year %{year} have
+        not been calculated yet, so there is nothing to base an estimate of the annual
+        return on. Calculate a quarter, then ask for the estimate again.
+      no_m130_units: No Modelo 130 draft declaration exists for filing year %{year},
+        so there is nothing to base an estimate of the annual return on. Create the
+        first quarter's declaration, then ask for the estimate again.
+      profile_fact_missing: 'The estimate cannot work out the taxable base and the
+        tax boxes because your profile does not state: %{profile_facts}. Add them
+        to your profile, then ask for the estimate again.'
+      region_unstated: Your profile does not state the region you pay tax in, so the
+        estimate cannot be made. Add your region of tax residence to your profile,
+        then ask for the estimate again.
     quickfile:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused

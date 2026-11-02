@@ -206,6 +206,36 @@ def _draft_invoice_fingerprint(
         return None
 
 
+def _draft_anchors(
+    *,
+    work_unit: WorkUnit,
+    source_transaction_ids: tuple[str, ...],
+    source_issues: tuple[CalculationSourceIssue, ...],
+    ports: CalculationActionPorts,
+    transaction_repository: TransactionCatalogueRepositoryProtocol | None,
+    profile: ModeloWorkProfile,
+    captured_at: datetime,
+) -> tuple[LedgerFilingSnapshot | None, InvoiceFingerprintSnapshot | None]:
+    """Pin the ledger rows and invoices a draft was computed from, so verify can detect that they moved."""
+    ledger_filing_snapshot = _draft_ledger_anchor(
+        work_unit=work_unit,
+        source_transaction_ids=source_transaction_ids,
+        transaction_repository=transaction_repository
+        if transaction_repository is not None
+        else ports.transaction_repository,
+        captured_at=captured_at,
+    )
+    invoice_fingerprint = _draft_invoice_fingerprint(
+        work_unit=work_unit,
+        source_transaction_ids=source_transaction_ids,
+        source_issues=source_issues,
+        ports=ports,
+        profile=profile,
+        captured_at=captured_at,
+    )
+    return ledger_filing_snapshot, invoice_fingerprint
+
+
 def _optional_mapping_as_dict[OptionalMappingKey, OptionalMappingValue](
     value: Mapping[OptionalMappingKey, OptionalMappingValue] | None,
 ) -> dict[OptionalMappingKey, OptionalMappingValue]:
@@ -324,10 +354,10 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         profile=profile,
         backend_source_provenance=source_provenance,
     )
-    work_units = prepared.work_units
     work_unit = prepared.work_unit
     snapshot = prepared.snapshot
-    revision_source_issues = (*source_issues, *_precedence_issues(prepared.channels.precedence_diagnostics))
+    channels = prepared.channels
+    revision_source_issues = (*source_issues, *_precedence_issues(channels.precedence_diagnostics))
     (
         engine_result,
         replay_payloads,
@@ -352,19 +382,12 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         m303_regimen_simplificado_annual_summary_handoff,
     )
 
-    ledger_filing_snapshot = _draft_ledger_anchor(
-        work_unit=work_unit,
-        source_transaction_ids=source_transaction_ids,
-        transaction_repository=(
-            transaction_repository if transaction_repository is not None else ports.transaction_repository
-        ),
-        captured_at=now,
-    )
-    invoice_fingerprint = _draft_invoice_fingerprint(
+    ledger_filing_snapshot, invoice_fingerprint = _draft_anchors(
         work_unit=work_unit,
         source_transaction_ids=source_transaction_ids,
         source_issues=revision_source_issues,
         ports=ports,
+        transaction_repository=transaction_repository,
         profile=prepared.profile,
         captured_at=now,
     )
@@ -375,7 +398,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         rendering_snapshot=_capture_calculation_rendering(snapshot, operation=ports.operation),
         screen_stamp=calculation_screen_stamp(snapshot, operation=ports.operation),
         work_unit=work_unit,
-        work_units=work_units,
+        work_units=prepared.work_units,
         work_units_revision_id=prepared.work_units_revision_id,
         ledger_filing_snapshot=ledger_filing_snapshot,
         invoice_fingerprint=invoice_fingerprint,
@@ -391,8 +414,8 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         source_transaction_ids=source_transaction_ids,
         m210_official_tipo_renta_code=m210_official_tipo_renta_code,
         m210_gross_income_source_mode=m210_gross_source_mode(work_unit, m210_gross_income_source_mode),
-        borrador_snapshot_id=prepared.channels.borrador_snapshot_id,
-        bindings_sourced_from_borrador=prepared.channels.bindings_sourced_from_borrador,
+        borrador_snapshot_id=channels.borrador_snapshot_id,
+        bindings_sourced_from_borrador=channels.bindings_sourced_from_borrador,
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
         observations=typed_observations,
@@ -410,9 +433,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         bucket_event_repository=ports.bucket_event_repository,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
-    return TrustedMeshCalculation(
-        publication=publication, precedence_diagnostics=prepared.channels.precedence_diagnostics
-    )
+    return TrustedMeshCalculation(publication=publication, precedence_diagnostics=channels.precedence_diagnostics)
 
 
 def _reject_clears_of_source_fed_casillas(

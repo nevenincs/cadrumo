@@ -120,8 +120,6 @@ DERIVED_GATE_REASONS: Final[frozenset[str]] = frozenset(
 CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingProxyType(
     {
         **dict.fromkeys(BLOCKING_REASONS, _B),
-        # A contested figure that reaches no exported box withholds nothing.
-        "precedence_tier_divergence_advisory": _C,
         # Persisted and shown, not refused: the route it reports may lack a terminal origin by design.
         "terminal_origin_mismatch": _C,
         "unresolved_derived_binding": _C,
@@ -181,6 +179,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "register_acquisition_partly_accounted": _C,
         "register_acquisition_row_missing": _C,
         "ledger_expense_may_be_durable": _C,
+        # Two sources hold different values for a figure that reaches no exported box.
+        "precedence_tier_divergence_advisory": _C,
         # For the filer's information.
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,

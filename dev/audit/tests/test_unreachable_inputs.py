@@ -212,6 +212,39 @@ def test_packaging_hooks_clear_resolved_consumers_but_not_lookalikes_or_tests(tm
     assert result.dev_cleared == 0
 
 
+def test_the_named_build_generator_clears_its_symbols_but_not_unread_or_test_only_ones(tmp_path: Path) -> None:
+    """Only the declared generator script counts as a consumer root; other scripts and tests do not."""
+    _write_repository(
+        tmp_path,
+        {
+            "src/cadrumo/__init__.py": "",
+            "src/cadrumo/cli.py": "from . import facts\ndef main(): pass\n",
+            "src/cadrumo/facts.py": (
+                "def generated_only(): pass\ndef unread(): pass\ndef test_only(): pass\ndef sibling_script(): pass\n"
+            ),
+            "native/desktop/frontend/scripts/ledger_contract.py": (
+                "from cadrumo.facts import generated_only\ngenerated_only()\n"
+            ),
+            "native/desktop/frontend/scripts/other_generator.py": (
+                "from cadrumo.facts import sibling_script\nsibling_script()\n"
+            ),
+            "src/cadrumo/tests/test_facts.py": "from cadrumo.facts import test_only\ntest_only()\n",
+            "conftest.py": "",
+            "pyproject.toml": _pyproject("cadrumo.cli:main"),
+        },
+    )
+
+    spec = ShippedTreeSpec.from_repository(tmp_path)
+    result = scan_unreachable_code(spec)
+
+    assert any(corpus.label == "build-generator" for corpus in spec.outside)
+    symbols = {(finding.module, finding.name): finding for finding in result.symbols}
+    assert ("cadrumo.facts", "generated_only") not in symbols
+    assert ("cadrumo.facts", "unread") in symbols
+    assert symbols["cadrumo.facts", "test_only"].used_by == ("tests",)
+    assert ("cadrumo.facts", "sibling_script") in symbols
+
+
 def test_a_package_outside_the_declared_source_scope_is_refused(tmp_path: Path) -> None:
     """Auditing around an undeclared package would understate where the gate stops."""
     _write_repository(

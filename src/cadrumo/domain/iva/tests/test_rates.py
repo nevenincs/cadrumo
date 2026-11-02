@@ -13,7 +13,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
-from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.eu_member_state_catalogue import resolve_eu_member_state_catalogue
 
 from ..errors import IvaRateNotFoundError
@@ -123,23 +122,19 @@ def test_lookup_rate_raises_for_unknown_kind() -> None:
         }
 
 
-def test_lookup_rate_refuses_a_date_below_the_supported_floor() -> None:
-    """A date before the supported floor is refused, not matched to a window.
-
-    The ES general window opens on 2012-09-01 (RDL 20/2012 art. 23.Dos), before
-    the registry's supported floor, so the earliest date a lookup can reach is
-    the floor itself. The day before the floor must refuse at the support gate
-    even though an authored window covers it.
-    """
+def test_lookup_rate_answers_a_date_below_the_supported_floor() -> None:
+    """A rate stands below the floor: the ES general window of RDL 20/2012 art. 23.Dos holds that day."""
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         floor = _authority_operation_for_test.supported_filing_years().date_envelope().floor
-        with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
-            lookup_rate(
-                EUMemberState.from_registry("es"),
-                IvaRateKind("general"),
-                floor - timedelta(days=1),
-                operation=_authority_operation_for_test,
-            )
+        record = lookup_rate(
+            EUMemberState.from_registry("es"),
+            IvaRateKind("general"),
+            floor - timedelta(days=1),
+            operation=_authority_operation_for_test,
+        )
+
+    assert record.pct == Decimal("21")
+    assert record.published_on_date
 
 
 def test_every_rate_window_is_well_ordered() -> None:

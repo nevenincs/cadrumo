@@ -66,6 +66,7 @@ from .caller_context import caller_context_of
 from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .effective_deadline import resolve_effective_filing_deadline
 from .profile_binding import resolve_profile_sourced_bindings
+from .projection import modelo_projection_available
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
 from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport
@@ -310,7 +311,14 @@ def load_modelo_work_form(
     )
     form = form.model_copy(
         update={
-            "last_export": _last_export(bucket_events, bucket_id, review.work_unit_id, review.calculation_revision_id)
+            "last_export": _last_export(bucket_events, bucket_id, review.work_unit_id, review.calculation_revision_id),
+            "projectable": modelo_projection_available(
+                modelo=str(modelo),
+                period=period,
+                filing_year=filing_year,
+                registry_revision_id=review.registry_revision_id,
+                operation=operation,
+            ),
         }
     )
     state = review.lifecycle_state

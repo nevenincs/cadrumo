@@ -103,7 +103,6 @@ function Ready({
   initialView,
   onLeaveGuard,
   profileCompanions,
-  readRegion,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   port: ModeloPort;
@@ -119,7 +118,6 @@ function Ready({
   initialView: WorkspaceView;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   profileCompanions?: ProfileCompanionKit;
-  readRegion?: () => Promise<string | null>;
 }) {
   const t = useStrings();
   const session: FormSession = useFormSession({ envelope, port, language });
@@ -214,7 +212,7 @@ function Ready({
   const estimate = useEstimate({
     port,
     year: envelope.form.form.filing_year,
-    region: readRegion,
+    projectable: envelope.form.form.projectable,
     run,
   });
   const settledThenReread = async <Result,>(
@@ -483,6 +481,11 @@ function Ready({
             envelope={envelope}
             session={session}
             onPicked={() => setView("form")}
+            onOpenProfile={
+              canOpenSurface("profile")
+                ? () => onOpenSurface("profile")
+                : undefined
+            }
           />
         ),
         details: (
@@ -698,7 +701,6 @@ export function WorkspaceScreen({
   onWritten,
   holds: suppliedHolds,
   profileCompanions,
-  readRegion,
 }: {
   port: ModeloPort;
   workUnitId: string;
@@ -721,10 +723,6 @@ export function WorkspaceScreen({
   /** The profile's reads and write door, for the elements a profile source
    * group holds; none are drawn without it. */
   profileCompanions?: ProfileCompanionKit;
-  /** Reads the region the profile states, which the estimate from the
-   * quarterly declarations is made for; the estimate is not offered without
-   * it. */
-  readRegion?: () => Promise<string | null>;
 }) {
   const t = useStrings();
   const [localHolds] = useState(createModeloWriteHolds);
@@ -797,7 +795,6 @@ export function WorkspaceScreen({
         initialView={initialView}
         onLeaveGuard={onLeaveGuard}
         profileCompanions={profileCompanions}
-        readRegion={readRegion}
       />
     );
   return (

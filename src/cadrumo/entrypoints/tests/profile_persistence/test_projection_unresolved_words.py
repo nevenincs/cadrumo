@@ -47,7 +47,7 @@ def test_an_unresolved_credit_and_the_totals_computed_from_it_are_served_in_ever
             )
 
     for language, projection in served.items():
-        assert projection.result_version == 2
+        assert projection.result_version == 3
         assert projection.words_language is OutputLanguage(language)
         (credit,) = projection.unresolved_bindings
         # The tokens are the service's, unchanged; the words are added beside them.

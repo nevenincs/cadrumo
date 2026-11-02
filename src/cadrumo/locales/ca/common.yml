@@ -4349,8 +4349,6 @@ desktop:
           trimestrals que tens. No és el càlcul de la teva declaració i no hi canvia
           res.
         mark: Estimació
-        needs_region: El teu perfil no indica la comunitat autònoma on vius i l'estimació
-          la necessita. Afegeix-la al teu perfil i torna-ho a demanar.
         nothing_left: En aquesta estimació no queda cap retenció ni casella sense
           xifra.
         quarters: 'Declaracions trimestrals utilitzades: {count}.'
@@ -4644,6 +4642,7 @@ desktop:
       missing_fields: Falta informació obligatòria
       open_profile: Obre el perfil
       show_details: Mostra els detalls
+    open_from_form: Obre el teu perfil, on es desen
     password:
       again: Repeteix la contrasenya nova
       changed: Contrasenya canviada
