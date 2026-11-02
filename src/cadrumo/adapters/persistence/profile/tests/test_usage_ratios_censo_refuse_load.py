@@ -26,7 +26,7 @@ from ...tests.runtime_profile_fixture import (
 )
 from ..usage_ratios import (
     load_usage_ratios_with_censo_guard,
-    save_usage_ratios,
+    save_usage_ratios_with_secure_object_writes,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -46,7 +46,7 @@ def authority_operation() -> Iterator[PinnedAuthorityOperation]:
 def test_load_returns_profile_when_no_home_office_overrides(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    save_usage_ratios(UsageRatioProfile(), bucket_id=_BUCKET_ID)
+    save_usage_ratios_with_secure_object_writes(UsageRatioProfile(), (), bucket_id=_BUCKET_ID)
 
     profile = load_usage_ratios_with_censo_guard(
         bucket_id=_BUCKET_ID,
@@ -61,8 +61,9 @@ def test_load_returns_profile_when_no_home_office_overrides(
 def test_refuses_when_censo_unset_but_home_office_override_persisted(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(ratios={SpendingCategory.from_registry("suministros_home_office_luz"): Decimal("0.20")}),
+        (),
         bucket_id=_BUCKET_ID,
     )
 
@@ -88,8 +89,9 @@ def test_refuses_when_censo_unset_but_telefonia_fija_override_persisted(
     censo -- the same defect class this guard closes for its four statutory
     siblings.
     """
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_fija"): Decimal("0.20")}),
+        (),
         bucket_id=_BUCKET_ID,
     )
 
@@ -109,8 +111,9 @@ def test_accepts_telefonia_fija_when_persisted_matches_censo_derived_value(
 ) -> None:
     """A telefonia_fija override equal to raw * 0.30 (its statutory_multiplier) is accepted."""
     raw = Decimal("0.20")
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(ratios={SpendingCategory.from_registry("telefonia_fija"): raw * Decimal("0.30")}),
+        (),
         bucket_id=_BUCKET_ID,
     )
 
@@ -135,8 +138,9 @@ def test_refuses_when_censo_unset_but_arrendamiento_vivienda_afecto_override_per
     rent with no consistency check against the bound censo -- the same
     defect class this guard closes for its three titularidad siblings.
     """
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.20")}),
+        (),
         bucket_id=_BUCKET_ID,
     )
 
@@ -156,8 +160,9 @@ def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_deri
 ) -> None:
     """An arrendamiento override equal to the raw ratio (no statutory_multiplier) is accepted."""
     raw = Decimal("0.20")
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): raw}),
+        (),
         bucket_id=_BUCKET_ID,
     )
 
@@ -174,8 +179,9 @@ def test_accepts_arrendamiento_vivienda_afecto_when_persisted_matches_censo_deri
 def test_refuses_on_mismatch_between_persisted_and_censo_derived(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(ratios={SpendingCategory.from_registry("ibi_vivienda_afecto"): Decimal("0.50")}),
+        (),
         bucket_id=_BUCKET_ID,
     )
 
@@ -196,13 +202,14 @@ def test_accepts_when_persisted_matches_censo_derived_value(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     raw = Decimal("0.20")
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(
             ratios={
                 SpendingCategory.from_registry("ibi_vivienda_afecto"): raw,
                 SpendingCategory.from_registry("comunidad_vivienda_afecto"): raw,
             },
         ),
+        (),
         bucket_id=_BUCKET_ID,
     )
 

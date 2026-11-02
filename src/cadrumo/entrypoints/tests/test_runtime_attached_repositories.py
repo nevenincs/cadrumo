@@ -44,7 +44,7 @@ from ...adapters.persistence.profile.recipient_replay_guard import RecipientRepl
 from ...adapters.persistence.profile.submission import SubmissionRepository
 from ...adapters.persistence.profile.tests.wallet_history import load_decision_history
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios
+from ...adapters.persistence.profile.usage_ratios import load_usage_ratios, save_usage_ratios_with_secure_object_writes
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.errors import StorageValidationError
 from ...adapters.persistence.storage.master_key.active_session import activate_session
@@ -581,7 +581,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         CalculationObservationRepository(bucket_id=_BUCKET_A_ID).save(envelope_a)
         IvaWalletDecisionRepository().save_decision(decision_a)
         IvaCompensationHistoryRepository(bucket_id=_BUCKET_A_ID).save_period(_iva_state(_BUCKET_A_ID))
-        save_usage_ratios(usage_a, bucket_id=_BUCKET_A_ID)
+        save_usage_ratios_with_secure_object_writes(usage_a, (), bucket_id=_BUCKET_A_ID)
 
     with _active_runtime(tmp_path, _BUCKET_B_ID):
         assert (
@@ -631,7 +631,7 @@ def test_application_repository_defaults_isolate_active_profile_writes(tmp_path:
         )
         IvaWalletDecisionRepository().save_decision(decision_b)
         IvaCompensationHistoryRepository(bucket_id=_BUCKET_B_ID).save_period(_iva_state(_BUCKET_B_ID))
-        save_usage_ratios(usage_b, bucket_id=_BUCKET_B_ID)
+        save_usage_ratios_with_secure_object_writes(usage_b, (), bucket_id=_BUCKET_B_ID)
 
     with _active_runtime(tmp_path, _BUCKET_A_ID):
         modelo_ids = ModeloHistoryRepository(

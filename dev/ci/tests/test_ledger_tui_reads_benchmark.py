@@ -49,7 +49,7 @@ from pydantic import BaseModel
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.ledger_classification_rules import LedgerClassificationRuleRepository
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios
+from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios_with_secure_object_writes
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from cadrumo.application.bienes_inversion.declare_command import (
     BienInversionDeclarationCommand,
@@ -366,7 +366,9 @@ def _seed_rules(bucket_id: str) -> None:
 
 def _seed_ratios(bucket_id: str, operation: PinnedAuthorityOperation) -> None:
     category = require_spending_category("suministros_home_office_luz", authority=operation)
-    save_usage_ratios(UsageRatioProfile(ratios={category: Decimal("0.060")}), bucket_id=bucket_id)
+    save_usage_ratios_with_secure_object_writes(
+        UsageRatioProfile(ratios={category: Decimal("0.060")}), (), bucket_id=bucket_id
+    )
 
 
 def _seed_registers(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
