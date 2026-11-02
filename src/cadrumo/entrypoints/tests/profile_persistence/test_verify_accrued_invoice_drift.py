@@ -355,7 +355,9 @@ def _as_stored_by_the_previous_build(
 ) -> CalculationRevision:
     """Store the draft as an older version left it, with that version's digests of the rows given."""
     fingerprints = tuple(
-        InvoiceRowFingerprint(invoice_id=row.invoice_id, fingerprint=invoice_row_fingerprint(row, field_set_version=version))
+        InvoiceRowFingerprint(
+            invoice_id=row.invoice_id, fingerprint=invoice_row_fingerprint(row, field_set_version=version)
+        )
         for row in rows
     )
     old = revision.model_copy(

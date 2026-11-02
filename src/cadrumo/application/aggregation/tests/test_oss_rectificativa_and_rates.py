@@ -78,9 +78,7 @@ def test_a_correction_nets_at_the_rate_of_the_invoice_it_corrects(operation: Pin
         _UNION, "F-1", country=code, tier="general", base="100.00", cuota=str(cuota), supply_date=change.last_day_before
     )
     half = round_to_cents(cuota / 2)
-    corrected = _correction(
-        country=code, base="50.00", cuota=str(half), supply_date=change.first_day_after
-    )
+    corrected = _correction(country=code, base="50.00", cuota=str(half), supply_date=change.first_day_after)
     resolution = _resolve(operation, _UNION, (original, corrected), period=period)
     assert _row(resolution, _UNION, 1) == (code, "S", change.pct_before, Decimal("50.00"), cuota - half)
 

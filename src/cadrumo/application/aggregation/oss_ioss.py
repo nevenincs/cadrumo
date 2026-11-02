@@ -996,15 +996,24 @@ def _corrected_invoice_devengo(invoice: Invoice, catalogue: InvoiceCatalogue, pr
     context = {"invoice_id": invoice.invoice_id, "invoice_number": invoice.invoice_number}
     target = rectified_invoice(invoice, catalogue)
     if target is None:
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.rectificativa_target_unknown"), context=context)
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rectificativa_target_unknown"),
+            context=context,
+        )
     if (
         target.oss_ioss_regime != invoice.oss_ioss_regime
         or target.oss_transaction_kind != invoice.oss_transaction_kind
         or target.counterparty_eu_member_state != invoice.counterparty_eu_member_state
     ):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.rectificativa_target_differs"), context=context)
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rectificativa_target_differs"),
+            context=context,
+        )
     if not invoice_devengo_in_period(target, period=projection_period):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.rectificativa_outside_period"), context=context)
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rectificativa_outside_period"),
+            context=context,
+        )
     return resolve_invoice_devengo(target).devengo_date
 
 

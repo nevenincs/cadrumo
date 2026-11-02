@@ -41,6 +41,7 @@ from ...domain.calculations.registry.travel_agency_mediation import (
     is_travel_agency_air_passenger_transport,
 )
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
 from ...domain.invoices.models import Invoice
 from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
