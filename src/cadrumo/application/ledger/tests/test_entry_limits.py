@@ -12,11 +12,12 @@ import pytest
 from pydantic import TypeAdapter, ValidationError
 
 from ....core.decimal.grammar import european_thousands_reading_is_ambiguous
-from ....core.percentage import Percentage
+from ....core.percentage import Percentage, fraction_of_percentage
 from ....core.unit_proportion import UnitProportion
 from ....domain.invoices import figures
 from ..entry_limits import LedgerEntryDecimalRule, ledger_entry_limits
 from ..evidence_mutation_operation import LedgerEvidenceUpdatePatch
+from ..invoice_evidence_confirm_operation import LedgerEvidenceConfirmRequest
 from ..update_contracts import LedgerUpdatePatch
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -106,6 +107,18 @@ def test_the_two_way_shape_served_answers_as_the_owner_does(text: str, two_way: 
 def test_an_evidence_rate_is_on_the_points_scale_the_field_is_served_on() -> None:
     units = {item.field: item.unit for item in ledger_entry_limits().document_percent_fields}
     assert units["iva_rate"] == "points"
+    assert units["retention_rate"] == "points"
+    # What the confirmation takes in those points, and the fraction a stored invoice holds for them.
+    assert "retention_points" in LedgerEvidenceConfirmRequest.model_fields
+    assert fraction_of_percentage(Decimal("15")) == Decimal("0.15")
+    assert figures.retention_findings(fraction_of_percentage(Decimal("1")), Decimal("10"), Decimal("1000")) == ()
+    assert figures.retention_findings(Decimal("1"), Decimal("1000"), Decimal("1000")) == ()
+    assert [
+        finding.code
+        for finding in figures.retention_findings(
+            fraction_of_percentage(Decimal("1")), Decimal("1000"), Decimal("1000")
+        )
+    ] == [figures.FigureFindingCode.RETENTION_AMOUNT_MISMATCH]
     assert LedgerEvidenceUpdatePatch(iva_rate="100").iva_rate == "100"
     with pytest.raises(ValidationError):
         LedgerEvidenceUpdatePatch(iva_rate="100.5")
