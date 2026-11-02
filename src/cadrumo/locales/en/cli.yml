@@ -880,6 +880,7 @@ cli:
           regularizacion_bienes_inversion: capital-goods adjustment
           regularizacion_prorrata: prorrata adjustment
           retencion: withholding
+          retencion_soportada: withholding suffered from a payer
           withholding296_perceptor: withholding-declaration recipient
         relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse\
           \ --relation %{relation_id}=VALUE"
