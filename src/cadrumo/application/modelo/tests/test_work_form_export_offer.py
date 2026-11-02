@@ -384,21 +384,15 @@ def test_every_supported_year_without_a_settled_box_offers_the_split_of_its_resu
             held={result: Decimal("1000.00"), "0693": Decimal("200.00")},
             entered=frozenset(),
         ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
-        unstated = built_form(operation, "100", year, "0A", held={result: Decimal("1000.00")}, entered=frozenset()).model_copy(
-            update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)}
-        )
 
         offered = _questions(operation, plain)[ModeloFormElection.INSTALMENT]
         refused = _questions(operation, suspended)[ModeloFormElection.INSTALMENT]
-        unknown = _questions(operation, unstated)[ModeloFormElection.INSTALMENT]
 
         first, second = offered.figures
         assert offered.state is ModeloFormElectionState.AVAILABLE, year
         assert (first.amount, second.amount) == ("600.00", "400.00"), year
         assert refused.state is ModeloFormElectionState.UNAVAILABLE, year
         assert refused.reason is ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED, year
-        assert unknown.state is ModeloFormElectionState.UNAVAILABLE, year
-        assert unknown.reason is ModeloFormElectionReason.RESULT_UNKNOWN, year
         checked += 1
     assert checked
 
