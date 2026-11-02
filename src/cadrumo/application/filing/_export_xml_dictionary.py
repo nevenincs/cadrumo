@@ -477,7 +477,8 @@ def _stamp_individual_return_titular(root: ElementTree.Element[str]) -> None:
     if economic is None or economic.get(_TAXATION_OPTION_ATTRIBUTE) != _INDIVIDUAL_TAXATION:
         return
     for block in economic.iter(_TOMA_DATOS_TAG):
-        if not block.get(_TITULAR_ATTRIBUTE):
+        titular = block.get(_TITULAR_ATTRIBUTE)
+        if titular is None or titular == "":
             block.set(_TITULAR_ATTRIBUTE, format_xml_dictionary_value(_HOLDER_DICTIONARY_TYPE, _DECLARANTE_HOLDER))
 
 

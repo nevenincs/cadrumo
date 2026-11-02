@@ -125,6 +125,7 @@ def test_a_caller_cannot_state_a_suffered_withholding_credit_before_the_mesh_run
             owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
             caller_binding_values={"renta-retencion-soportada-trabajo": Decimal("1.00")},
             caller_casilla_inputs={},
+            subject_leaf_key="modelo.work.calculate",
         )
     with pytest.raises(ModeloAggregationBindingError):
         reject_caller_overrides_of_source_bindings(
@@ -132,6 +133,7 @@ def test_a_caller_cannot_state_a_suffered_withholding_credit_before_the_mesh_run
             owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
             caller_binding_values={},
             caller_casilla_inputs={validated_casilla_id("0596"): Decimal("1.00")},
+            subject_leaf_key="modelo.work.calculate",
         )
 
 

@@ -134,10 +134,11 @@ def _calculate(objects: SecureObjectRepository, *, activity_key: str | None) -> 
             operation=operation,
             clock=_T0,
         )
+    stated_activity_key = activity_key is not None and activity_key != ""
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unit.work_unit_id,
         binding_values=_m100_non_relation_zero_bindings(),
-        text_casilla_inputs={_ACTIVITY_KEY_CASILLA: activity_key} if activity_key else None,
+        text_casilla_inputs={_ACTIVITY_KEY_CASILLA: activity_key} if stated_activity_key else None,
         work_unit_repository=units,
         calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
         clock=_T0,

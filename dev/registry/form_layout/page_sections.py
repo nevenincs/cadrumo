@@ -419,7 +419,7 @@ def _row_column_limit(build: _Build, columns: Sequence[tuple[str, str]]) -> int 
     elements = {
         _repeating_element(build, build.positions[anchors[0]])
         for _binding_id, casilla_id in columns
-        if (anchors := build.anchors.get(casilla_id))
+        if (anchors := build.anchors.get(casilla_id)) is not None and len(anchors) > 0
     }
     if len(elements) != 1:
         return None

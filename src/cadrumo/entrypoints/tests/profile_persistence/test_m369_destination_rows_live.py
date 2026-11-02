@@ -513,6 +513,7 @@ def test_a_missing_period_close_rate_refuses_and_the_stamp_does_not_stand_in(
     with bind_exchange_rate_provider_factory(lambda: provider), pytest.raises(AggregationValidationError) as refused:
         _calculate(objects, scenario, (_zloty_invoice(scenario),), operation)
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_currency_unconverted"
+    assert refused.value.context is not None
     assert refused.value.context["rate_date"] == _CLOSE.isoformat()
 
 
@@ -536,6 +537,7 @@ def test_a_consignment_a_cent_over_the_ceiling_refuses_before_any_figure(
     with pytest.raises(AggregationValidationError) as refused:
         _calculate(objects, _IMPORT, (_invoice(_IMPORT, "IOSS-OVER", "FR", "general", "150.01", "30.00"),), operation)
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.consignment_exceeds_ceiling"
+    assert refused.value.context is not None
     assert refused.value.context["consignment_value_eur"] == "150.01"
 
 
