@@ -23,7 +23,7 @@ from .export_field_render_profile_derivation import (
     _render_profile_anchor,
     _render_profile_numeric_derivation,
 )
-from .export_field_schema import _is_required, _is_required_admitting_blank_text, _schema_field
+from .export_field_schema import _is_required, _is_required_admitting_blank_text, _presence_marker, _schema_field
 from .export_fragment_provenance import (
     ExportFieldDerivation,
     ExportFieldDerivationCode,
@@ -574,6 +574,7 @@ def _text_field_derivation(
     required = (
         _is_required_admitting_blank_text(parser_field.validation, parser_field.content)
         if joined_field.semantic_entry.kind in {CasillaFieldKind.CASILLA, CasillaFieldKind.COMPUTED}
+        and _presence_marker(joined_field) is None
         else _is_required(parser_field.validation)
     )
     return _schema_field(
