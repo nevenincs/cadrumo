@@ -754,6 +754,26 @@ export type LedgerEntryOptionsResult = {
       group?: string | null;
     }[];
   }[];
+  limits: LedgerEntryLimits;
+};
+/** The limits an entry form holds typed text to; `shell/ledgerLimits` holds
+ * them for the page. Figures are decimal text, unread here. */
+export type LedgerEntryLimits = {
+  decimal_text_max: number;
+  two_way_decimal: string;
+  decimal_rules: {
+    rule: "amount" | "tax_amount" | "quantity" | "unit_price";
+    decimals: number;
+    zero: boolean;
+  }[];
+  percent_decimals: number;
+  percent_points_max: string;
+  percent_fraction_max: string;
+  percent_bare_fraction_ceiling: string;
+  document_percent_fields: {
+    field: string;
+    unit: "points" | "fraction";
+  }[];
 };
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */

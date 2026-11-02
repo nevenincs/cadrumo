@@ -141,10 +141,6 @@ class LedgerStagedRowPayload(OutputSchema):
     takes_invoice: bool
     evidence_advised: bool
     lifecycle_actions: list[str]
-    takes_changes: bool
-    takes_invoice: bool
-    evidence_advised: bool
-    lifecycle_actions: list[str]
     tax_set_skip: str | None
     transfer_locked_fields: list[str]
     classifying_fields: list[str]
@@ -980,9 +976,9 @@ __all__ = [
     "LedgerClassifyResult",
     "LedgerClassifySingleResult",
     "LedgerDetachResult",
-    "LedgerEntryOptionFamilyPayload",
     "LedgerEntryDecimalRulePayload",
     "LedgerEntryLimitsPayload",
+    "LedgerEntryOptionFamilyPayload",
     "LedgerEntryOptionPayload",
     "LedgerEntryOptionsResult",
     "LedgerEntryPercentFieldPayload",
@@ -1008,12 +1004,12 @@ __all__ = [
     "LedgerRestoreResult",
     "LedgerReviewResult",
     "LedgerReviewRowPayload",
+    "LedgerRuleTrialEnvelope",
     "LedgerSplitChildIdPayload",
     "LedgerSplitChildProposalPayload",
     "LedgerSplitResult",
     "LedgerStagedBlockerPayload",
     "LedgerStagedCategoryFitPayload",
-    "LedgerRuleTrialEnvelope",
     "LedgerStagedCheckEnvelope",
     "LedgerStagedDraftPayload",
     "LedgerStagedNotePayload",

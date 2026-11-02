@@ -119,7 +119,9 @@ class LedgerRuleTrialExecutor:
         def answer() -> LedgerRuleTrialResult:
             repository = transaction_catalogue_repository(bucket_id=bucket_id)
             transactions = (
-                repository.load_by_ids(payload.transaction_ids).transactions if payload.transaction_ids else {}
+                repository.load_by_ids(payload.transaction_ids).transactions
+                if payload.transaction_ids
+                else dict[str, Transaction]()
             )
             return try_rule_pattern(payload.profile_id, payload.description_pattern, transactions)
 

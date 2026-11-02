@@ -8,6 +8,7 @@
 // with the digest of the review the page read. What it answers is design and
 // test evidence only. Its call lines name a definition, never a value.
 
+import { answerRuleTrial } from "./ledgerRuleTrialFixture";
 import { isClassification, isDirection } from "../shell/ledgerContract";
 import {
   isLedgerDefinition,
@@ -292,6 +293,10 @@ const BULK_COLUMNS = [
   "irpf_category",
   "notes",
 ];
+/** A number with a wrong check digit, which the account register refuses; a test
+ * in the owning Python package holds the backend to that answer. */
+const IBAN_THE_BACKEND_REFUSES = "ES9221000418450200051332";
+
 const OWN_ACCOUNT_SECRETS = [
   "iban",
   "swift_bic",
@@ -1850,6 +1855,8 @@ export function ledgerFixture(options: Options): LedgerPort {
       (account) => account.own_account_id === id,
     );
     if (action === "add" && (!iban || !text(request.label))) return invalid();
+    if (iban === IBAN_THE_BACKEND_REFUSES)
+      throw new Stopped("REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION");
     if (action === "update" && !existing)
       throw new Stopped("ERROR_TRANSACTION_VALIDATION");
     const masked = iban
@@ -1948,6 +1955,19 @@ export function ledgerFixture(options: Options): LedgerPort {
     ...movementWork.reads,
     ...setupWork.reads,
     "ledger.known-values": (request) => knownValues(ledger, request),
+    "ledger.rule.trial": (request) => {
+      const answer = answerRuleTrial(
+        request.description_pattern as string,
+        request.transaction_ids as string[],
+        (id) =>
+          ledger.movements.find(
+            (each) => each.transaction.transaction_id === id,
+          )?.transaction,
+        LEDGER_FIXTURE_PROFILE_ID,
+      );
+      if (!answer) throw new Error("unrecorded rule trial");
+      return answer as unknown as JsonObject;
+    },
     "ledger.staged.check": (request) => {
       const answer = answerStagedCheck(
         request as unknown as LedgerStagedCheckRequest,

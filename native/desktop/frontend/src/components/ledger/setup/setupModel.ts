@@ -15,9 +15,12 @@ import type {
   LedgerRow,
 } from "../../../shell/ledger";
 import { ledgerFailure } from "../../../shell/ledger";
+import { isDecidedClassification } from "../../../shell/ledgerContract";
+import { ledgerLimits } from "../../../shell/ledgerLimits";
 import {
   compareDecimal,
   parseDecimal,
+  PERCENT_POINTS_RULE,
   type Parsed,
 } from "../../../shell/ledgerGrammar";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
@@ -128,57 +131,6 @@ export function patternWords(pattern: string): string | null {
   return words.join(" ");
 }
 
-/** The pattern as this window can try it on loaded movements: the
- * product matches ignoring case, anywhere in the description. Null where
- * the expression uses grammar this window does not read the same way. */
-export function patternMatcher(pattern: string): RegExp | null {
-  // Named groups and inline flags are spelled differently here.
-  if (/\(\?P|\(\?[aiLmsux]+\)/.test(pattern)) return null;
-  try {
-    return new RegExp(pattern, "iu");
-  } catch {
-    return null;
-  }
-}
-
-/** The active movements of `rows` whose description `pattern` finds,
- * whatever their classification. Null where the window cannot try the
- * pattern. */
-export function patternHits(
-  pattern: string,
-  rows: readonly LedgerRow[],
-): string[] | null {
-  const matcher = patternMatcher(pattern);
-  if (!matcher) return null;
-  return rows
-    .filter(
-      (row) =>
-        row.transaction.lifecycle_state === "ACTIVE" &&
-        matcher.test(row.transaction.description),
-    )
-    .map((row) => row.transaction.transaction_id);
-}
-
-/** The movements of `rows` a rule with `pattern` would classify now: the
- * active ones still to classify whose description it finds. Null where the
- * window cannot try the pattern. */
-export function patternMatches(
-  pattern: string,
-  rows: readonly LedgerRow[],
-): string[] | null {
-  const hits = patternHits(pattern, rows);
-  if (hits === null) return null;
-  const pending = new Set(
-    rows
-      .filter(
-        (row) =>
-          row.transaction.business_classification === "NOT_YET_PROCESSED",
-      )
-      .map((row) => row.transaction.transaction_id),
-  );
-  return hits.filter((id) => pending.has(id));
-}
-
 // ---- A rule from a selection ---------------------------------------------
 
 /** The prefilled rule: the words every chosen description shares, and the
@@ -188,8 +140,6 @@ export type RulePrefill = {
   classification: string | null;
   categoryId: string | null;
 };
-
-const DECIDED = new Set(["BUSINESS", "PERSONAL", "MIXED"]);
 
 /** The longest run of whole words found in every description, without
  * the digits and references that tell one payment from the next. */
@@ -234,7 +184,7 @@ export function rulePrefill(
   return {
     words: commonWords(chosen.map((row) => row.transaction.description)),
     classification:
-      classification !== null && DECIDED.has(classification)
+      classification !== null && isDecidedClassification(classification)
         ? classification
         : null,
     categoryId: shared((row) => row.transaction.category_id),
@@ -324,13 +274,15 @@ export function reorderWrites(
 // ---- Numbers -------------------------------------------------------------
 
 /** A percentage written in points, as the registers keep it: `92` is
- * ninety-two per cent, from 0 to 100. */
+ * ninety-two per cent. Its decimals and its stop are served. */
 export function parsePoints(raw: string): Parsed<string> {
-  const parsed = parseDecimal(raw.replace(/\s*%$/, ""), {
-    decimals: 4,
-    zero: true,
-  });
-  if (parsed.kind === "value" && compareDecimal(parsed.value, "100") > 0)
+  const parsed = parseDecimal(raw.replace(/\s*%$/, ""), PERCENT_POINTS_RULE);
+  const stop = ledgerLimits()?.percent_points_max;
+  if (
+    parsed.kind === "value" &&
+    stop !== undefined &&
+    compareDecimal(parsed.value, stop) > 0
+  )
     return { kind: "refused", refusal: { key: "percent_above_100", raw } };
   return parsed;
 }

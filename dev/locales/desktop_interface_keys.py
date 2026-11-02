@@ -37,7 +37,6 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.about.unavailable",
         "desktop.about.version",
         "desktop.about.version_row",
-        "desktop.ledger.edit.refusal.iban_check",
         "desktop.startup.starting",
         "desktop.startup.progress",
         "desktop.startup.environment_step",

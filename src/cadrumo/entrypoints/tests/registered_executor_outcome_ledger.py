@@ -75,8 +75,8 @@ from ...application.ledger.preflight_operation import LedgerPreflightProjection,
 from ...application.ledger.remove_operation import LedgerRemoveOperationResult, LedgerRemoveRequest
 from ...application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ...application.ledger.review_operation import LedgerReviewProjection
-from ...application.ledger.split_operation import LedgerSplitOperationResult, LedgerSplitRequest
 from ...application.ledger.rule_trial_operation import LedgerRuleTrialRequest, LedgerRuleTrialResult
+from ...application.ledger.split_operation import LedgerSplitOperationResult, LedgerSplitRequest
 from ...application.ledger.staged_check_contracts import LedgerStagedCheckRequest, LedgerStagedCheckResult
 from ...application.ledger.status_operation import LedgerStatusProjection, LedgerStatusRequest
 from ...application.ledger.update_contracts import LedgerUpdateOperationResult, LedgerUpdateRequest

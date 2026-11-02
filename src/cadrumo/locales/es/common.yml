@@ -1205,7 +1205,6 @@ desktop:
       iban: IBAN
       iban_hint: Se envía una vez por un canal protegido y después se muestra enmascarado.
       iban_problem:
-        check: Los dígitos de control del IBAN no cuadran.
         shape: No es un IBAN.
       label: Nombre
       modelo: Modelo {modelo}
@@ -2311,7 +2310,8 @@ desktop:
         date_not_iso: '«{raw}»: escribe la fecha empezando por el año, {suggestion}.'
         exponent: '«{raw}» está en notación exponencial: escribe las cifras.'
         grouping: '«{raw}» separa los miles: escribe {suggestion}.'
-        iban_check: Este IBAN tiene un dígito incorrecto.
+        limits_unavailable: '«{raw}» aún no se puede comprobar: el libro no ha indicado
+          qué admite este campo.'
         line_break: '«{raw}» contiene un tabulador o un salto de línea: déjalo en
           una línea.'
         locked: No se edita aquí
@@ -2334,7 +2334,6 @@ desktop:
         unknown_choice: «{raw}» no es una de las opciones.
         use: Usar {suggestion}
         year_not_a_number: «{raw}» no es un año.
-        year_out_of_range: «{raw}» está fuera de los años que admite Cadrumo.
         zero: '«{raw}» es cero: un importe es mayor que cero.'
       revert_cell: Revertir celda
       revert_movement: Revertir movimiento
@@ -3258,6 +3257,8 @@ desktop:
         date_not_iso: '"{raw}": escribe la fecha año-mes-día.'
         exponent: '"{raw}": escribe el número completo.'
         grouping: '"{raw}": sin separador de miles.'
+        limits_unavailable: '«{raw}»: no se puede comprobar hasta que el libro indique
+          qué admite este campo.'
         line_break: 'Una sola línea: sin tabuladores ni saltos de línea.'
         meant: ¿Querías decir {suggestion}?
         not_a_date: '"{raw}" no es una fecha.'

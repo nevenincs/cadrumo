@@ -609,8 +609,8 @@ def apply_classification_rule_match(
 
 
 __all__ = [
-    "classification_rule_in_scope",
     "add_classification_rule",
     "apply_classification_rule_match",
     "bulk_classify_from_csv",
+    "classification_rule_in_scope",
 ]

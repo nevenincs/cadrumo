@@ -222,6 +222,47 @@ export const DRAFT_REQUIRED_FIELDS = [
   "description",
 ] as const;
 
+/** The periods a ledger can be filtered by: those with a calendar span, and the months it runs. */
+export const LEDGER_PERIOD_SPANS = {
+  "1T": { granularity: "quarter", first: 1, last: 3 },
+  "2T": { granularity: "quarter", first: 4, last: 6 },
+  "3T": { granularity: "quarter", first: 7, last: 9 },
+  "4T": { granularity: "quarter", first: 10, last: 12 },
+  "0A": { granularity: "year", first: 1, last: 12 },
+  "01": { granularity: "month", first: 1, last: 1 },
+  "02": { granularity: "month", first: 2, last: 2 },
+  "03": { granularity: "month", first: 3, last: 3 },
+  "04": { granularity: "month", first: 4, last: 4 },
+  "05": { granularity: "month", first: 5, last: 5 },
+  "06": { granularity: "month", first: 6, last: 6 },
+  "07": { granularity: "month", first: 7, last: 7 },
+  "08": { granularity: "month", first: 8, last: 8 },
+  "09": { granularity: "month", first: 9, last: 9 },
+  "10": { granularity: "month", first: 10, last: 10 },
+  "11": { granularity: "month", first: 11, last: 11 },
+  "12": { granularity: "month", first: 12, last: 12 },
+} as const;
+export type LedgerPeriodCode = keyof typeof LEDGER_PERIOD_SPANS;
+
+/** The quarters, in calendar order. */
+export const QUARTER_CODES = ["1T", "2T", "3T", "4T"] as const;
+
+/** The months, in calendar order. */
+export const MONTH_CODES = [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
+] as const;
+
 /** The fields a movement may be corrected in. */
 export const LEDGER_UPDATE_FIELDS = [
   "booked_date",

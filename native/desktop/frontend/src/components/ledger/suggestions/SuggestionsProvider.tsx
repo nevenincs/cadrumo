@@ -37,6 +37,7 @@ import {
   type ServedVocabulary,
   type VocabularyState,
 } from "../../../shell/ledgerServedVocabulary";
+import { holdLedgerLimits } from "../../../shell/ledgerLimits";
 import type { StagedContent } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { useLedgerRead } from "../documents/useLedgerRead";
@@ -278,6 +279,11 @@ export function LedgerSuggestions({
     {},
   );
   const entryOptions = entryRead.value;
+  const limits = entryOptions?.limits ?? null;
+  useEffect(() => {
+    holdLedgerLimits(limits);
+    return () => holdLedgerLimits(null);
+  }, [limits]);
   const served = useMemo(
     () =>
       entryOptions

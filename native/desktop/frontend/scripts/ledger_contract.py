@@ -30,6 +30,7 @@ from cadrumo.application.ledger.staged_check import DRAFT_REQUIRED_FIELDS, TRANS
 from cadrumo.application.ledger.update_contracts import LEDGER_UPDATE_REQUIRED_FIELD_NAMES, LedgerUpdatePatch
 from cadrumo.application.transactions.diagnostics import LedgerImportDiagnosticKind
 from cadrumo.core.aggregation import IntracomOperationType
+from cadrumo.core.period import Period, PeriodKind, StandardPeriodCode
 from cadrumo.domain.invoices.enums import PaymentStatus
 from cadrumo.domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevisionState
 from cadrumo.domain.transactions.classification_effects import (
@@ -320,6 +321,36 @@ def _rules() -> list[str]:
     ]
 
 
+def _periods() -> list[str]:
+    """The periods with a calendar span, each worked out from the period that owns it."""
+    granularity = {PeriodKind.ANNUAL: "year", PeriodKind.QUARTERLY: "quarter", PeriodKind.MONTHLY: "month"}
+    spans = [
+        period
+        for period in (Period(filing_year=2000, code=code) for code in StandardPeriodCode)
+        if period.has_date_span()
+    ]
+    rows = "".join(
+        f'  "{period.code}": {{ granularity: "{granularity[period.kind]}", '
+        f"first: {period.start_date.month}, last: {period.end_date.month} }},\n"
+        for period in spans
+    )
+    codes = {
+        kind: [period.code for period in spans if period.kind is kind]
+        for kind in (PeriodKind.QUARTERLY, PeriodKind.MONTHLY)
+    }
+    return [
+        "\n".join(
+            [
+                "/** The periods a ledger can be filtered by: those with a calendar span, and the months it runs. */",
+                f"export const LEDGER_PERIOD_SPANS = {{\n{rows}}} as const;",
+                "export type LedgerPeriodCode = keyof typeof LEDGER_PERIOD_SPANS;",
+            ]
+        ),
+        _literal_set("QUARTER_CODES", "The quarters, in calendar order.", codes[PeriodKind.QUARTERLY]),
+        _literal_set("MONTH_CODES", "The months, in calendar order.", codes[PeriodKind.MONTHLY]),
+    ]
+
+
 def _literal_set(constant: str, doc: str, values: Sequence[str]) -> str:
     return "\n".join([f"/** {doc} */", f"export const {constant} = {_literal(values)}"])
 
@@ -332,6 +363,7 @@ def render() -> str:
     ]
     blocks += [_subset(*entry) for entry in _CLASSIFICATION_SETS]
     blocks += _rules()
+    blocks += _periods()
     blocks += [
         _names(constant, type_name, doc, list(model.model_fields), None) for constant, type_name, doc, model in _MASKS
     ]

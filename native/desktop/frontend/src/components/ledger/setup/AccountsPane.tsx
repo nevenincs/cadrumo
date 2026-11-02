@@ -29,7 +29,7 @@ import type {
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold, type Landing } from "../WritePause";
 import { formatDay } from "../../../shared/dateFormats";
-import { ibanProblem, ibanText } from "../../../shared/iban";
+import { ibanMalformed, ibanText } from "../../../shared/iban";
 import {
   CallLine,
   ChoiceField,
@@ -160,7 +160,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
   );
 
   const iban = ibanText(secrets.iban);
-  const ibanWrong = iban !== "" ? ibanProblem(iban) : null;
+  const ibanWrong = iban !== "" && ibanMalformed(iban);
   const openedOn = parseIsoDate(opened);
   const closing = parseIsoDate(closedOn);
   const bankBlock = (
@@ -205,7 +205,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     label.trim() !== "" &&
     holding !== "" &&
     iban !== "" &&
-    ibanWrong === null &&
+    !ibanWrong &&
     CURRENCY.test(currency) &&
     openedOn.kind === "value";
   const add = () => {
@@ -277,7 +277,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
     );
   };
   const updateReady = (account: OwnAccount) =>
-    (iban === "" || ibanWrong === null) &&
+    !ibanWrong &&
     (iban !== "" ||
       bankBlock.length > 0 ||
       (label.trim() !== "" && label.trim() !== account.label));
@@ -524,9 +524,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
         label={t("desktop.ledger.accounts.iban")}
         hint={t("desktop.ledger.accounts.iban_hint")}
         error={
-          ibanWrong
-            ? t(`desktop.ledger.accounts.iban_problem.${ibanWrong}`)
-            : null
+          ibanWrong ? t("desktop.ledger.accounts.iban_problem.shape") : null
         }
       >
         {(control) => (

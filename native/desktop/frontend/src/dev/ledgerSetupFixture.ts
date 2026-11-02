@@ -2281,6 +2281,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         families: Object.entries(ENTRY_OPTION_FAMILIES).map(
           ([family, options]) => ({ family, options }),
         ),
+        limits: servedEntryOptions.limits,
       };
     },
     "ledger.inventory.options": (request) => {
