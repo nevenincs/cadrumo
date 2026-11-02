@@ -197,8 +197,8 @@ aggregation:
         használd az operator_declaration eredetet.
       ejercicio_unsupported: A rekord ejercicio-ja kívül esik a Cadrumo által támogatott
         bevallási éveken.
-      family_not_declared: Az ejercicio Modelo 100 változata nem olvas elszenvedett
-        levonást, így a rekord soha nem jutna el egy számításhoz.
+      family_not_declared: Az adóév Modelo 100 változata nem olvas elszenvedett levonást,
+        így a rekord soha nem jutna el egy számításhoz.
       identity_mismatch: A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemtípussal
         vagy igazolással.
       not_found: Ehhez az ejercicióhoz, jövedelemosztályhoz és kifizetői hivatkozáshoz
