@@ -3,6 +3,17 @@ import { readFileSync } from "node:fs";
 import type { ModeloDeclarationsListProjectionV1 } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
 
+declare global {
+  interface Window {
+    __modeloRecovery?: {
+      terminal: boolean;
+      failReads: number;
+      submitted: number;
+    };
+    __modeloRelease?: () => void;
+  }
+}
+
 // The Declarations page over the scenario's modelo family, which answers the
 // declarations list the application read for a synthetic taxpayer. The rows,
 // their groups, words and notices are the read model's; the page filters,
@@ -180,18 +191,209 @@ test("a creation whose settlement was not seen is unknown and holds", async ({
   );
   // A fresh list alone cannot establish settlement.
   await expect(submit).toBeDisabled();
-  await dialog(target).getByRole("radio", { name: /3rd quarter 2026/ }).click();
+  await dialog(target)
+    .getByRole("radio", { name: /3rd quarter 2026/ })
+    .click();
   await expect(submit).toBeEnabled();
-  await dialog(target).getByRole("radio", { name: /2nd quarter 2026/ }).click();
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
   await expect(submit).toBeDisabled();
-  await dialog(target).getByRole("button", { name: label("workspace.modelo.editor.cancel"), exact: true }).click();
+  await dialog(target)
+    .getByRole("button", {
+      name: label("workspace.modelo.editor.cancel"),
+      exact: true,
+    })
+    .click();
   await target.locator("[data-rail=ledger]").click();
   await target.locator("[data-rail=declarations]").click();
   await chooseModelo(target, "130", 2026);
-  await dialog(target).getByRole("radio", { name: /2nd quarter 2026/ }).click();
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
   await expect(submit).toBeDisabled();
   const calls = await target.evaluate(() => window.__scenarioHostCalls ?? []);
-  expect(calls.filter((call) => call === "modelo submit modelo.work.create")).toHaveLength(1);
+  expect(
+    calls.filter((call) => call === "modelo submit modelo.work.create"),
+  ).toHaveLength(1);
+});
+
+test("a known creation operation stays held through running status and a failed post-completion list read", async ({
+  page: target,
+}) => {
+  await openDeclarations(target, "&modelo=unknown");
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    const submit = port.submit;
+    const declarations = port.declarations;
+    const recovery = (window.__modeloRecovery = {
+      terminal: false,
+      failReads: 0,
+      submitted: 0,
+    });
+    port.submit = async (...args) => {
+      recovery.submitted++;
+      return submit(...args);
+    };
+    port.observe = async (operation) =>
+      recovery.terminal
+        ? {
+            kind: "refused",
+            operation_id: operation,
+            revision: 2,
+            reason: null,
+            detail: null,
+          }
+        : {
+            kind: "running",
+            operation_id: operation,
+            revision: 1,
+            cancellable: false,
+          };
+    port.declarations = async (language) => {
+      if (recovery.failReads > 0) {
+        recovery.failReads--;
+        throw Object.assign(new Error("fixture read failure"), {
+          code: "unavailable",
+        });
+      }
+      return declarations(language);
+    };
+  });
+  await chooseModelo(target, "130", 2026);
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
+  const submit = dialog(target).locator(".new-declaration-submit");
+  await submit.click();
+  const check = dialog(target).getByRole("button", {
+    name: label("workspace.modelo.write_hold.check_status"),
+    exact: true,
+  });
+  await check.click();
+  await expect(check).toBeEnabled();
+  await expect(submit).toBeDisabled();
+  await target.evaluate(() => {
+    window.__modeloRecovery!.terminal = true;
+    window.__modeloRecovery!.failReads = 1;
+  });
+  await check.click();
+  await expect(dialog(target).getByRole("alert")).toContainText(
+    label("workspace.modelo.write_hold.reload_needed"),
+  );
+  await expect(submit).toBeDisabled();
+  await dialog(target)
+    .getByRole("button", {
+      name: label("workspace.modelo.write_hold.reload_list"),
+      exact: true,
+    })
+    .click();
+  await expect(page(target).locator(".declarations-failed")).toBeVisible();
+  expect(await target.evaluate(() => window.__modeloRecovery!.submitted)).toBe(
+    1,
+  );
+  await page(target)
+    .getByRole("button", {
+      name: label("desktop.declarations.retry"),
+      exact: true,
+    })
+    .click();
+  await dialog(target)
+    .locator(".new-declaration-modelo")
+    .filter({ hasText: "130" })
+    .first()
+    .click();
+  await dialog(target)
+    .getByRole("radiogroup", {
+      name: label("workspace.declarations.list.new.year"),
+    })
+    .getByText("2026", { exact: true })
+    .click();
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
+  await expect(submit).toBeEnabled();
+  expect(await target.evaluate(() => window.__modeloRecovery!.submitted)).toBe(
+    1,
+  );
+});
+
+test("closing the chooser while creation waits does not allow a second submission", async ({
+  page: target,
+}) => {
+  await openDeclarations(target, "&modelo=unknown");
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    const submit = port.submit;
+    port.submit = async (...args) => {
+      await new Promise<void>((resolve) => {
+        window.__modeloRelease = resolve;
+      });
+      return submit(...args);
+    };
+  });
+  await chooseModelo(target, "130", 2026);
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
+  await dialog(target).locator(".new-declaration-submit").click();
+  await expect
+    .poll(() => target.evaluate(() => Boolean(window.__modeloRelease)))
+    .toBe(true);
+  await dialog(target)
+    .getByRole("button", {
+      name: label("workspace.modelo.editor.cancel"),
+      exact: true,
+    })
+    .click();
+  await chooseModelo(target, "130", 2026);
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
+  await expect(
+    dialog(target).locator(".new-declaration-submit"),
+  ).toBeDisabled();
+  await target.evaluate(() => window.__modeloRelease!());
+  await expect(dialog(target).getByRole("alert")).toContainText(
+    label("workspace.modelo.write_hold.unknown"),
+  );
+  await expect(
+    dialog(target).locator(".new-declaration-submit"),
+  ).toBeDisabled();
+});
+
+test("a creation with no operation identifier stays unresolved without a fictional status action", async ({
+  page: target,
+}) => {
+  await openDeclarations(target);
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    const submit = port.submit;
+    port.submit = async (...args) => {
+      if (args[0] === "modelo.work.create")
+        throw Object.assign(new Error("fixture lost response"), {
+          code: "unknown",
+        });
+      return submit(...args);
+    };
+  });
+  await chooseModelo(target, "130", 2026);
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
+  await dialog(target).locator(".new-declaration-submit").click();
+  await expect(dialog(target).getByRole("alert")).toContainText(
+    label("workspace.modelo.write_hold.unresolved"),
+  );
+  await expect(
+    dialog(target).getByRole("button", {
+      name: label("workspace.modelo.write_hold.check_status"),
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect(
+    dialog(target).locator(".new-declaration-submit"),
+  ).toBeDisabled();
 });
 
 test("returning from a declaration keeps the list as it was, unread", async ({
