@@ -83,6 +83,7 @@ from .....core.time.utc import UtcInstant
 from .....core.unit_proportion import UnitFraction
 from .....domain.calculations.registry.form_codes import form_for_role, form_role_validator
 from .....domain.calculations.registry.schema_references import RegistrySnapshotRef
+from .....domain.modelos.filing_kind_evidence import SubmittedFileFilingKindMarker
 from .errors import SedeValidationError
 
 
@@ -330,6 +331,11 @@ class FiledDeclaracionObservation(BaseModel):
     ``casillas``; and it is not free-form provenance text, so a flat map loses
     the record-design position that makes it auditable. ``metadata`` remains the
     home for register-row provenance that genuinely is untyped text.
+
+    ``filing_kind_marker`` carries the submitted fichero's complementaria
+    readings, blank included. ``None`` means the marker was not read -- no
+    submitted file, a failed parse, or a capture stored before the marker was
+    read -- never that it was blank.
     """
 
     model_config = _STRICT_FROZEN
@@ -344,6 +350,7 @@ class FiledDeclaracionObservation(BaseModel):
     artefacts: tuple[FiledDeclaracionArtefact, ...] = Field(min_length=1)
     casillas: tuple[ObservedCasillaValue, ...] = ()
     headers: tuple[ObservedHeaderFact, ...] = ()
+    filing_kind_marker: SubmittedFileFilingKindMarker | None = None
     metadata: dict[str, str] = Field(default_factory=dict)
     extraction_coverage: dict[str, float] = Field(default_factory=dict)
     registry_snapshot_ref: RegistrySnapshotRef

@@ -37,6 +37,7 @@ from .....core.observed_header_fact import ObservedHeaderFact
 from .....core.period import Period
 from .....core.time.clock import now
 from .....domain.calculations.export_field_kind import CasillaFieldKind
+from .....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from .....domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from .....domain.calculations.registry.casilla_membership import casillas_by_id
 from .....domain.calculations.registry.errors import (
@@ -46,6 +47,7 @@ from .....domain.calculations.registry.errors import (
 from .....domain.calculations.registry.export import resolve_export_layout, row_binding_casilla_ids_by_field
 from .....domain.calculations.registry.export_parse import parse_filed_payload
 from .....domain.calculations.registry.export_parse_models import ParsedExportFieldValue
+from .....domain.calculations.registry.filing_kind_marker import FilingKindMarkerRole, filing_kind_marker_role
 from .....domain.calculations.registry.form_codes import form_for_role
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_AVAILABLE_CASILLA,
@@ -67,6 +69,11 @@ from .....domain.iva_compensation.filed_derivation import (
     CompensationCasillaDeclarations,
     M303CompensationAvailableDerivation,
     derive_m303_compensation_available_from_casillas,
+)
+from .....domain.modelos.filing_kind_evidence import (
+    SubmittedFileFilingKindMarker,
+    submitted_file_marker_reading,
+    submitted_file_page_indicator_reading,
 )
 from .errors import SedeParseError, SedeValidationError
 from .schema import (
@@ -94,6 +101,7 @@ __all__ = [
     "_with_derived_303_compensation_available_observation",
     "non_numeric_observed_casillas",
     "observed_casillas_from_submitted_file",
+    "observed_filing_kind_marker_from_submitted_file",
     "published_layout_source_payloads",
     "registry_observation_from_filed_declaration",
 ]
@@ -335,6 +343,62 @@ def observed_header_facts_from_submitted_file(
             ),
         )
     return tuple(facts)
+
+
+def observed_filing_kind_marker_from_submitted_file(
+    *,
+    snapshot: RegistrySnapshot,
+    body: bytes,
+    operation: PinnedAuthorityOperation,
+) -> SubmittedFileFilingKindMarker | None:
+    """Return the filing-kind readings AEAT's submitted fichero states, blank included.
+
+    Unlike :func:`observed_header_facts_from_submitted_file`, a blank marker is
+    recorded: the record design gives the blank a meaning (not a
+    complementaria), so dropping it would make "blank" and "not read" the same.
+    ``None`` means the marker was not read: the payload did not parse against
+    the pinned layout, or the layout declares no single declaration-level marker.
+
+    Page-level indicators on records other than the marker's are kept as
+    unadmitted readings, one per occurrence.
+
+    Core types:
+    :class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`.
+    """
+    resolved = resolve_export_layout(snapshot)
+    source_payloads = published_layout_source_payloads(snapshot=snapshot, operation=operation)
+    try:
+        parsed = parse_filed_payload(
+            resolved.layout,
+            body,
+            sources=snapshot.sources,
+            source_payloads=source_payloads,
+        )
+    except RegistryValidationError:
+        return None
+    bindings_by_id = revision_bindings_by_id(snapshot.revision)
+    markers: list[ParsedExportFieldValue] = []
+    indicators: list[ParsedExportFieldValue] = []
+    for field_value in parsed.fields:
+        definition = resolved.fields_by_id.get(field_value.field_id)
+        if definition is None:
+            continue
+        role = filing_kind_marker_role(definition, bindings_by_id=bindings_by_id)
+        if role is FilingKindMarkerRole.DECLARATION_MARKER:
+            markers.append(field_value)
+        elif role is FilingKindMarkerRole.PAGE_INDICATOR:
+            indicators.append(field_value)
+    if len(markers) != 1:
+        return None
+    (marker,) = markers
+    return SubmittedFileFilingKindMarker(
+        declaration_marker=submitted_file_marker_reading(marker.raw, source_locator=marker.source_locator),
+        page_indicators=tuple(
+            submitted_file_page_indicator_reading(indicator.raw, source_locator=indicator.source_locator)
+            for indicator in indicators
+            if indicator.record_id != marker.record_id
+        ),
+    )
 
 
 def observed_casillas_from_submitted_file(

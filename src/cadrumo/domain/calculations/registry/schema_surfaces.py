@@ -43,12 +43,12 @@ from .schema_scalars import DecimalValue
 
 __all__ = [
     "CalculationCompletenessCasilla",
-    "ComplementariaOnlyDeclaration",
     "CalculationCompletenessManifest",
     "CasillaAlias",
     "CasillaConstraints",
     "CasillaContinuidadEvolutionDefinition",
     "CasillaDefinition",
+    "ComplementariaOnlyDeclaration",
     "validate_family_identity_uniqueness",
 ]
 
