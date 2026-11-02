@@ -30,6 +30,7 @@ if TYPE_CHECKING:
     from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
     from ...domain.justificante.protocols import JustificanteRepositoryProtocol
     from ...domain.justificante.schema import Justificante
+    from ...domain.modelos.filing_kind_evidence import ObservedFilingKind
     from ...domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
     from ..calculations.observations_repository import ObservationEnvelopePayload, ObservationSourceKind
     from ..modelo.filing_chain_reconciliation import AeatRegisterEntry, FilingReconciliationResult
@@ -273,6 +274,7 @@ class FiledCalculationObservationRepositoryPort(Protocol):
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Build a validated calculation-observation envelope."""
         ...

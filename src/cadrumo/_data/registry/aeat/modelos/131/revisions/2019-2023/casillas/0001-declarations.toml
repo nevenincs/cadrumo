@@ -113,6 +113,13 @@ section = ["complementaria"]
 semantic_role = "resultado_anteriores_autoliquidaciones"
 continuidad_id = "resultado-anteriores-autoliquidaciones"
 legal_refs = ["rd-439-2007:art-110", "rd-439-2007:art-95"]
+[revisions."2019-2023".casillas.complementaria_only]
+source_refs = ["aeat-modelo-131-instructions"]
+[[revisions."2019-2023".casillas.complementaria_only.source_citations]]
+source_ref = "aeat-modelo-131-instructions"
+required_text = [
+    "debemos consignar en esta casilla el resultado a ingresar de las autoliquidaciones, modelo 131, presentadas anteriormente por el mismo ejercicio y período.",
+]
 [[revisions."2019-2023".casillas]]
 id = "15"
 number = "15"

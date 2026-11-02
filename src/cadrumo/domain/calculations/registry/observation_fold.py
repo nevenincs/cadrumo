@@ -12,35 +12,95 @@ See Also:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final, NamedTuple
 
 from ....core.aggregation import RelationAggregationOp
+from ....core.casilla_id import CasillaId
 from ....core.period import Period
+from ...modelos.filing_kind_evidence import (
+    UNKNOWN_FILING_KIND,
+    ComplementariaOnlySourceOutcome,
+    ObservedFilingKind,
+    complementaria_only_source_outcome,
+)
 from .errors import RegistryValidationError
 
 if TYPE_CHECKING:
     from .bindings import RegistryModeloObservation
     from .relations import RegistryFoldRequirement
+    from .schema import ModeloRevision
+
+
+@dataclass(frozen=True, slots=True)
+class SourceFilingKindEvidence:
+    """What the fold may know about one matched source filing beyond its casillas.
+
+    ``filing_kind`` is the observed declaration's kind with its evidence basis;
+    ``complementaria_only_casilla_ids`` are the casillas the source filing's own
+    registry revision declares only a complementaria fills. Both come from
+    outside the calculation-only observation, so the caller supplies them.
+    """
+
+    filing_kind: ObservedFilingKind
+    complementaria_only_casilla_ids: frozenset[CasillaId]
+
+
+UNKNOWN_SOURCE_FILING_KIND: Final[SourceFilingKindEvidence] = SourceFilingKindEvidence(
+    filing_kind=UNKNOWN_FILING_KIND,
+    complementaria_only_casilla_ids=frozenset(),
+)
+"""The evidence assumed for a matched filing the caller supplied none for."""
+
+type SourceFilingKindIndex = Mapping[tuple[str, int, str], SourceFilingKindEvidence]
+"""Source filing-kind evidence keyed by ``(modelo, filing_year, period)``."""
+
+
+class GatheredRequirementValues(NamedTuple):
+    """The per-period source values of one requirement and the casillas proven zero.
+
+    ``proven_zero`` names each ``(period, casilla)`` that was absent from its
+    filing and folded as zero because the filing is an admitted original and the
+    casilla is declared complementaria-only.
+    """
+
+    values: tuple[tuple[Decimal, ...], ...]
+    proven_zero: tuple[tuple[str, CasillaId], ...]
+
+
+def complementaria_only_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
+    """Return the casillas ``revision`` declares only a complementaria fills."""
+    return frozenset(casilla.id for casilla in revision.casillas if casilla.complementaria_only is not None)
 
 
 def gather_observed_requirement_values(
     requirement: RegistryFoldRequirement,
     observations: tuple[RegistryModeloObservation, ...],
-) -> tuple[tuple[Decimal, ...], ...]:
+    *,
+    source_filing_kinds: SourceFilingKindIndex | None = None,
+) -> GatheredRequirementValues:
     """Return the source-casilla values matched for one fold requirement, per period.
 
     Matches exactly one
     :class:`~domain.calculations.registry.bindings.RegistryModeloObservation` per
     declared source period and extracts every one of the requirement's source
-    :class:`~core.casilla_id.CasillaId` values from it. The returned tuple carries
+    :class:`~core.casilla_id.CasillaId` values from it. The returned values carry
     one entry per ``requirement.periods`` entry, in declaration order; each entry
     holds the period's values in ``requirement.source_casilla_ids`` order, ready
-    for :func:`fold_observed_requirement_values`. A matched filing that lacks any
-    declared source casilla is refused, so the requirement stays unresolved
-    rather than reading the missing value as zero.
+    for :func:`fold_observed_requirement_values`.
+
+    A matched filing that lacks a declared source casilla is refused, so the
+    requirement stays unresolved rather than reading the missing value as zero,
+    unless :func:`~domain.modelos.filing_kind_evidence.complementaria_only_source_outcome`
+    proves it zero from ``source_filing_kinds``. A filing with no entry there has
+    an unknown kind. An admitted original carrying a nonzero complementaria-only
+    value is refused as contradictory.
     """
+    kinds: SourceFilingKindIndex = source_filing_kinds if source_filing_kinds is not None else {}
     per_period: list[tuple[Decimal, ...]] = []
+    proven_zero: list[tuple[str, CasillaId]] = []
     for source_period in _filed_cadence_periods(requirement, observations):
         matches = tuple(
             observation
@@ -55,9 +115,29 @@ def gather_observed_requirement_values(
                 f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, found {len(matches)}",
             )
         casilla_values = matches[0].casilla_values
+        evidence = kinds.get(
+            (requirement.source_modelo, requirement.filing_year, source_period),
+            UNKNOWN_SOURCE_FILING_KIND,
+        )
         period_values: list[Decimal] = []
         for source_casilla_id in requirement.source_casilla_ids:
             value = casilla_values.get(source_casilla_id)
+            outcome = complementaria_only_source_outcome(
+                source_casilla_id,
+                observed_value=value,
+                filing_kind=evidence.filing_kind,
+                complementaria_only_casilla_ids=evidence.complementaria_only_casilla_ids,
+            )
+            if outcome is ComplementariaOnlySourceOutcome.CONTRADICTED:
+                raise RegistryValidationError(
+                    f"relation requirement {_requirement_ids(requirement)!r} reads complementaria-only casilla "
+                    f"{source_casilla_id!r} = {value} from "
+                    f"{requirement.source_modelo!r}/{requirement.filing_year}/{source_period!r}, whose filing kind "
+                    f"is original on basis {evidence.filing_kind.basis.value!r}",
+                )
+            if outcome is ComplementariaOnlySourceOutcome.PROVEN_ZERO:
+                proven_zero.append((source_period, source_casilla_id))
+                value = Decimal("0")
             if value is None:
                 raise RegistryValidationError(
                     f"relation requirement {_requirement_ids(requirement)!r} requires observed source casilla id "
@@ -66,7 +146,7 @@ def gather_observed_requirement_values(
                 )
             period_values.append(value)
         per_period.append(tuple(period_values))
-    return tuple(per_period)
+    return GatheredRequirementValues(values=tuple(per_period), proven_zero=tuple(proven_zero))
 
 
 def _filed_cadence_periods(
@@ -211,13 +291,17 @@ def _requirement_ids(requirement: RegistryFoldRequirement) -> tuple[str, ...]:
 def resolve_observed_requirement_value(
     requirement: RegistryFoldRequirement,
     observations: tuple[RegistryModeloObservation, ...],
+    *,
+    source_filing_kinds: SourceFilingKindIndex | None = None,
 ) -> Decimal:
     """Gather and fold one requirement to a single :class:`~decimal.Decimal`.
 
     Convenience wrapper for callers that already hold the normalized
     :class:`~domain.calculations.registry.bindings.RegistryModeloObservation` rows.
     """
-    return fold_observed_requirement_values(
+    gathered = gather_observed_requirement_values(
         requirement,
-        gather_observed_requirement_values(requirement, observations),
+        observations,
+        source_filing_kinds=source_filing_kinds,
     )
+    return fold_observed_requirement_values(requirement, gathered.values)

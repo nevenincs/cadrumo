@@ -53,6 +53,7 @@ from cadrumo.domain.calculations.registry.errors import RegistrySnapshotError
 from cadrumo.domain.calculations.registry.form_codes import form_for_role
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from cadrumo.domain.modelos.filing_kind_evidence import ObservedFilingKind
 
 from ....core.period import StandardPeriodCode
 from ..storage.envelope.contract import Envelope
@@ -261,6 +262,7 @@ class CalculationObservationRepository:
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         override: ObservationOverride | None = None,
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Build one validated observation envelope without writing it.
 
@@ -292,6 +294,10 @@ class CalculationObservationRepository:
 
         ``override`` records the audit of an operator figure; only a
         non-official envelope can carry one.
+
+        ``filing_kind`` is the typed original or correction kind of the
+        observed declaration with the basis that admitted it. ``None`` stores
+        no projection, which every reader takes as unknown.
 
         Every Modelo 303 envelope crosses the canonical disposition-aware
         normalization ingress. Incomplete or conflicting evidence is refused;
@@ -325,6 +331,7 @@ class CalculationObservationRepository:
                     "result_disposition": result_disposition,
                     "prior_domiciliation_election": prior_domiciliation_election,
                     "override": override,
+                    "filing_kind": filing_kind,
                 },
                 context={"canonical_m303_ingress_candidate": True},
             )

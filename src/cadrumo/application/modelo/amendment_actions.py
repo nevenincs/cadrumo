@@ -72,6 +72,7 @@ from ...domain.modelos.calculation_revision_amendment import (
     CalculationRevisionAmendmentIdentity,
     CalculationRevisionAmendmentKind,
     M303RectificativaMotive,
+    declaration_kind_for_amendment_kind,
     m303_rectificativa_motive_is_applicable,
 )
 from ...domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
@@ -654,7 +655,7 @@ def _finalize_amendment(
         in_force=in_force,
         filing_catalogue=filing_catalogue,
         new_revision_id=new_revision_id,
-        declaration_kind=FilingDeclarationKind(amendment_kind.value),
+        declaration_kind=declaration_kind_for_amendment_kind(amendment_kind),
         actor=actor,
         now=now,
     )

@@ -60,6 +60,8 @@ from ...domain.calculations.registry.bindings import RegistryModeloObservation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision_amendment import filing_declaration_kind_for_amendment
+from ...domain.modelos.filing_kind_evidence import observed_filing_kind_for_local_revision
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.iva_compensation_history import iva_compensation_state_from_observation_envelope
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
@@ -191,14 +193,21 @@ def prepare_filed_revision_observation(
         else None
     )
     require_filing_result_disposition(work_unit=work_unit, result_disposition=result_disposition)
+    local_filing_locator = f"local-filing:{filing_record_id or key}"
     disposition_projection = (
         ResultDispositionProjection(
             disposition=result_disposition,
             provenance_kind="app_filing",
-            provenance_locator=f"local-filing:{filing_record_id or key}",
+            provenance_locator=local_filing_locator,
         )
         if result_disposition is not None
         else None
+    )
+    # The revision's own amendment identity decides its kind: Cadrumo filed it
+    # and its export renders the complementaria marker from the same identity.
+    filing_kind = observed_filing_kind_for_local_revision(
+        filing_declaration_kind_for_amendment(revision.amendment_identity),
+        source_locator=local_filing_locator,
     )
     payload = repository.prepare_observation_envelope(
         observation,
@@ -207,6 +216,7 @@ def prepare_filed_revision_observation(
         stamped_revision_id=work_unit.revision_id,
         result_disposition=disposition_projection,
         prior_domiciliation_election=prior_domiciliation_election,
+        filing_kind=filing_kind,
     )
     state = None
     if history_repo is not None and taxpayer_nif is not None:
