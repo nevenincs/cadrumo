@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ba8b0074a1f861d960cba870d2da989b87918a0a686ad5dc0c57f5bd57f1e484'
+body_hash: 'sha256:5d09f7d9f77d61733e51a456197bbea79ace497af6e336547d68765c2aa7311d'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -388,6 +388,66 @@ related:
 - `S18` `A` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
 - `S18` `verify:` `pytest test_retencion_soportada_cli+mesh+conformance` -> `pass`
 - `S18` `by:` `implementer`
+- `S29` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S29` `M` `dev/quality/metadata/import_load_targets.json`
+- `S29` `M` `src/cadrumo/adapters/persistence/profile/retencion_soportada_records.py`
+- `S29` `A` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_soportada_absence.py`
+- `S29` `M` `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`
+- `S29` `A` `src/cadrumo/application/aggregation/retencion_soportada_absence_repository.py`
+- `S29` `M` `src/cadrumo/application/aggregation/retencion_soportada_repository.py`
+- `S29` `M` `src/cadrumo/application/aggregation/retencion_soportada_source.py`
+- `S29` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/__init__.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/contracts.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/executor.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/ports.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/projections.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/registered_operation.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/requests.py`
+- `S29` `A` `src/cadrumo/application/retencion_soportada_absence/results.py`
+- `S29` `M` `src/cadrumo/core/errors/registry/_application_ledger.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S29` `M` `src/cadrumo/domain/calculations/registry/tests/test_retencion_soportada_bindings.py`
+- `S29` `M` `src/cadrumo/domain/modelos/calculation_revision_sources.py`
+- `S29` `A` `src/cadrumo/domain/renta/retencion_soportada_absence.py`
+- `S29` `A` `src/cadrumo/domain/renta/retencion_soportada_applicability.py`
+- `S29` `A` `src/cadrumo/domain/renta/tests/test_retencion_soportada_absence.py`
+- `S29` `M` `src/cadrumo/entrypoints/adapter_composition_work_ports.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_app_ledger_command_specs.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/_app_ledger_retencion_soportada_absence_command_specs.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/_profile_authentication_gate.py`
+- `S29` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/operation_ledger_retencion_soportada_absence.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/retencion_soportada_absence_commands.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/retencion_soportada_absence_results.py`
+- `S29` `A` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_absence_cli.py`
+- `S29` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S29` `A` `src/cadrumo/entrypoints/operation_composition_retencion_soportada_absence.py`
+- `S29` `A` `src/cadrumo/entrypoints/retencion_soportada_absence_composition.py`
+- `S29` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S29` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_retencion_soportada_absence_m100.py`
+- `S29` `A` `src/cadrumo/entrypoints/tests/test_retencion_soportada_absence_executor.py`
+- `S29` `M` `src/cadrumo/locales/ca/application.yml`
+- `S29` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S29` `M` `src/cadrumo/locales/ca/common.yml`
+- `S29` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S29` `M` `src/cadrumo/locales/en/application.yml`
+- `S29` `M` `src/cadrumo/locales/en/cli.yml`
+- `S29` `M` `src/cadrumo/locales/en/common.yml`
+- `S29` `M` `src/cadrumo/locales/en/errors.yml`
+- `S29` `M` `src/cadrumo/locales/es/application.yml`
+- `S29` `M` `src/cadrumo/locales/es/cli.yml`
+- `S29` `M` `src/cadrumo/locales/es/common.yml`
+- `S29` `M` `src/cadrumo/locales/es/errors.yml`
+- `S29` `M` `src/cadrumo/locales/hu/application.yml`
+- `S29` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S29` `M` `src/cadrumo/locales/hu/common.yml`
+- `S29` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S29` `verify:` `pytest focused S29 suites (domain, adapter, M100 2025, executor)` -> `pass`
+- `S29` `verify:` `lint-imports` -> `pass`
+- `S29` `verify:` `just check-style` -> `pass`
+- `S29` `verify:` `just check-format` -> `pass`
+- `S29` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -415,3 +475,4 @@ related:
 - `S15` final review fix
 - `S17` Both failures pre-exist S17 and touch no S17 path: `test_exception_base_hygiene` names unrelated builtin-rooted classes, and check-types reports 2 basedpyright diagnostics in `invoice_filing_fingerprint.py.` check-locales is unavailable on an absent desktop.ledger.inspector key outside S17. The bundled registry declares no `retencion_soportada` binding yet, so production writes refuse `family_not_declared` until S06.
 - `S16` Modelo 131 complementaria export render
+- `S29` Commit 52d53539e6 was made by another committer from in-progress S29 work and also carries a non-S29 `test_borrador_binding.py` hunk; history was not rewritten. Native CLI test `test_retencion_soportada_absence_cli.py` stays red until `contract_manifest.json` is regenerated.
