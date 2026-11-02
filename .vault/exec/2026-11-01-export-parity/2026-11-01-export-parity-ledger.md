@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:7710fdcc9318f4fed5e9d3a0a49862bef1485afa81e120d12ddfdaa67e41d57a'
+body_hash: 'sha256:690e3f24dc3661209f32a7e0a368cf6a65e6c0b0df7ec032541ead8f3dafd7f2'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -621,6 +621,11 @@ related:
 - `S06` `verify:` `ruff format+check touched files` -> `pass`
 - `S06` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
 - `S06` `verify:` `python -m dev.quality.types --full, no diagnostics on touched files` -> `pass`
+- `S06` `M` `src/cadrumo/entrypoints/tests/profile_persistence/projection_m130_seeding_support.py`
+- `S06` `A` `src/cadrumo/application/modelo/tests/test_projection_baseline_channels.py`
+- `S06` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_profile_family_channels.py`
+- `S06` `verify:` `pytest projection suites` -> `pass`
+- `S06` `by:` `implementer`
 
 ## Notes
 
