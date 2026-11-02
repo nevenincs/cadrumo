@@ -213,7 +213,7 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ErrorCode(
             code="REFUSED_RETENCION_SOPORTADA_WRITE",
             category=ErrorCategory.REFUSED,
-            message_key="errors.refused.retencion_soportada_write",
+            message_key="errors.refused.retencion_soportada_write_refused",
             retryable=False,
             runbook_id=None,
         ),

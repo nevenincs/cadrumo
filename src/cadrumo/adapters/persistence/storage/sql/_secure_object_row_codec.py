@@ -48,7 +48,12 @@ from ..schema_lineage import (
 from ..secure_object_namespaces import SecureObjectNamespaceDefinition
 from . import orm as _orm
 from .secure_object_crypto import verify_revision_self_consistency
-from .secure_object_records import SecureObjectBatchLoadItem, SecureObjectRecord, SecureObjectUnreadable
+from .secure_object_records import (
+    SecureObjectBatchLoadItem,
+    SecureObjectRecord,
+    SecureObjectUnreadable,
+    SecureObjectUnreadableKind,
+)
 
 _log = get_logger(__name__)
 
@@ -441,7 +446,9 @@ def secure_object_list_item_from_raw_row(
     written_at = normalised.written_at
     payload_wire = normalised.payload
 
-    def unreadable(reason: str) -> SecureObjectUnreadable:
+    def unreadable(
+        reason: str, kind: SecureObjectUnreadableKind = SecureObjectUnreadableKind.OTHER
+    ) -> SecureObjectUnreadable:
         """Report this row as unreadable, carrying the identity every reason shares.
 
         Every failure mode below reports the SAME row identity and differs
@@ -457,6 +464,7 @@ def secure_object_list_item_from_raw_row(
             schema_version=schema_version,
             written_at=written_at,
             reason=reason,
+            kind=kind,
         )
 
     if malformed_fields:
@@ -493,7 +501,13 @@ def secure_object_list_item_from_raw_row(
     except ClassificationError as exc:
         return unreadable(_classification_reason(exc))
     except EnvelopeVersionError as exc:
-        return unreadable(resolve_error_message(exc))
+        # The version check precedes decryption, so this row was never opened: only
+        # its stored schema version, not its content, made it unreadable.
+        outdated = schema_version < max_supported_version
+        return unreadable(
+            resolve_error_message(exc),
+            SecureObjectUnreadableKind.OUTDATED_SCHEMA if outdated else SecureObjectUnreadableKind.OTHER,
+        )
     except Exception as exc:
         # An upgrade hop is namespace-supplied and may raise anything; a batch
         # scan must attribute that to its row rather than abort the whole scan.
