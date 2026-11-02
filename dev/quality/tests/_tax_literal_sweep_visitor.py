@@ -686,7 +686,10 @@ class _Sweep(_BoundReader, ast.NodeVisitor):
             self._report("inner_value", f"{name}={number}", node)
 
     def _visit_form_width_call(self, node: ast.Call, name: str, keywords: dict[str | None, ast.expr]) -> None:
-        for bound in _LENGTH_BOUNDS:
+        plurality = self._plurality_bound(
+            node, _constant_number(keywords.get("min_length")), _constant_number(keywords.get("max_length"))
+        )
+        for bound in () if plurality else _LENGTH_BOUNDS:
             number = _constant_number(keywords.get(bound))
             if number is not None and number not in _ARITHMETIC_BOUNDS and not _machine_capacity(number):
                 self._report("form_width", f"{bound}={number}", node)

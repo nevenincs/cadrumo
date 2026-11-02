@@ -331,7 +331,7 @@ def test_inventory_plurality_requires_its_canonical_evidence_type() -> None:
 )
 def test_a_source_disagreement_alone_may_require_two_sources(field: str, owner: str, admitted: bool) -> None:
     findings = sweep_source(field, modelos=_FAKE_MODELOS, periods=_FAKE_PERIODS, owner=owner)
-    assert any(f.startswith("field_length:") for f in findings) is not admitted
+    assert any(f.startswith(("field_length:", "form_width:")) for f in findings) is not admitted
 
 
 def test_nested_import_cannot_authorize_a_module_field_annotation() -> None:
