@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
@@ -85,7 +86,9 @@ def m369_source_issue_finding(
 
 def _declares_no_activity(work_unit: WorkUnit, target: CalculationRevision) -> bool:
     """Read the operator's own answer on the return's no-activity row through the dated fact."""
-    declaration = resolve_oss_ioss_regime_catalogue(effective_date=work_unit.period.end_date).no_activity
+    period = work_unit.period
+    effective_date = period.end_date if period.has_date_span() else date(period.filing_year, 12, 31)
+    declaration = resolve_oss_ioss_regime_catalogue(effective_date=effective_date).no_activity
     if declaration is None:
         return False
     for binding_id, entered in target.binding_overrides.items():
