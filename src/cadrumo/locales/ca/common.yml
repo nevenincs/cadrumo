@@ -9945,6 +9945,7 @@ workspace:
       where:
         declaration: Tota la declaració
         not_on_form: Una casella que no apareix a les pàgines d'aquesta declaració
+        profile: Al teu perfil
         record_value: Una dada que necessita cada registre d'una taula
         records: Als teus registres
         unnumbered: 'Valors sense número de casella: {count}'

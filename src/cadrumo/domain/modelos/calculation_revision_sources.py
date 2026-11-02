@@ -171,6 +171,8 @@ class CalculationNoteSentence(StrEnum):
     """A suffered-withholding class that may have income has neither a payer record nor an absence attestation."""
     RETENCION_SOPORTADA_ABSENCE_CONTRADICTED = "retencion_soportada_absence_contradicted"
     """A suffered-withholding class holds payer records and an operator's attestation that it has none."""
+    HOUSEHOLD_ROWS_INCOMPLETE = "household_rows_incomplete"
+    """A household group states more people than the profile records."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(
@@ -298,9 +300,12 @@ class CalculationSourceIssue(BaseModel):
     what the resolver stated beside that value: a proven zero persists too, so a
     reopened declaration still shows the zero was proven, and withholds nothing;
     a capped note without a stated outcome withholds. Only that reason carries an
-    outcome. ``fact`` states such a note's own row, element, interval and
-    amount. ``binding_source`` is ``None`` only where the condition names no
-    binding source kind.
+    outcome. ``household_rows_incomplete`` is a household group whose stated
+    count is larger than the rows the profile records: the recorded rows are
+    used and the group is not proven complete; it withholds nothing. ``fact``
+    states such a note's own row, element, interval and amount.
+    ``binding_source`` is ``None`` only where the condition names no binding
+    source kind.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -330,6 +335,7 @@ class CalculationSourceIssue(BaseModel):
         "register_acquisition_row_missing",
         "register_owned_capital_acquisition",
         "ledger_expense_may_be_durable",
+        "household_rows_incomplete",
         "advisory_binding_value",
     ]
     binding_source: BindingSourceKind | None

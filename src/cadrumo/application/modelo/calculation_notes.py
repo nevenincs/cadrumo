@@ -48,6 +48,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
+from ...domain.user_profile.labels import profile_field_label_key
 from ...domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
@@ -133,6 +134,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "prorrata_volume_divergence": _C,
         "missing_transaction_evidence": _M,
         "unclassified_declarant_role_fact": _M,
+        "household_rows_incomplete": _M,
         "unconverted_foreign_currency": _M,
         "aggregation_activity_undeclared": _M,
         # Worth checking. A value Cadrumo inferred or kept is among them: no box
@@ -231,6 +233,9 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
 )
 """Reasons whose cause is an entry in the filer's records, where the note sits and is put right."""
 
+PROFILE_REASONS: Final[frozenset[str]] = frozenset({"household_rows_incomplete"})
+"""Reasons whose cause is a fact the filer keeps in their profile, where the note is put right."""
+
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
 _FACT_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_fact"
 _ELEMENT_NAME_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.named_element"
@@ -270,6 +275,7 @@ _INCOME_CLASS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 _OTHER_INCOME_CLASS_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.income_class.other"
 _ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
 _INCOME_CLASS_VALUE: Final[str] = "income_class"
+_PROFILE_GROUP_VALUE: Final[str] = "group"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
     {"amount", "cost", "paid", "price", "base", "remainder", "effect", "transmission_value", "net_value", "row_amount"}
@@ -360,6 +366,9 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         return format_casilla_value(Decimal(value), data_type="money", language=language)
     if name == _INCOME_CLASS_VALUE:
         return tr(_INCOME_CLASS_LOCALE_KEYS.get(value, _OTHER_INCOME_CLASS_LOCALE_KEY), locale=language.value)
+    if name == _PROFILE_GROUP_VALUE:
+        section, _, field = value.partition(".")
+        return tr(profile_field_label_key(section, field), locale=language.value)
     return value
 
 
@@ -491,6 +500,7 @@ __all__ = [
     "FILED_BEFORE_GRADE_CAP_REASON",
     "GATE_REFUSED_REASONS",
     "PRINTED_BOX_REASONS",
+    "PROFILE_REASONS",
     "RECORDS_REASONS",
     "REOPEN_HINT_LOCALE_KEY",
     "STALE_LOCALE_KEY",

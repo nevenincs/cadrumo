@@ -64,7 +64,7 @@ required_text = ["CalculoImpuestoRes/RESULTADO", "[0670]", "DatosIngresoDevoluci
 # compensation suspends part of the amount to pay.
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-100-2025-dictionary"
-required_text = ["IngresoDevolucionRes/RESINGDEV", "Resultado a ingresar o a devolver (casilla [0670] o casilla [0695] de la declaración)"]
+required_text = ["IngresoDevolucionRes/RESINGDEV", "Resultado a ingresar o a devolver (casilla [0670] o casilla [0695]"]
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-100-2025-xsd"

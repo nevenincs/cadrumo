@@ -800,6 +800,8 @@ def _durable_register_note_reason(diagnostic: CalculationSourceDiagnostic) -> _D
         return "register_owned_capital_acquisition"
     if diagnostic.reason == "ledger_expense_may_be_durable":
         return "ledger_expense_may_be_durable"
+    if diagnostic.reason == "household_rows_incomplete":
+        return "household_rows_incomplete"
     return None
 
 
@@ -1005,6 +1007,7 @@ _DurableSourceIssueReason = Literal[
     "register_acquisition_row_missing",
     "register_owned_capital_acquisition",
     "ledger_expense_may_be_durable",
+    "household_rows_incomplete",
     "advisory_binding_value",
 ]
 

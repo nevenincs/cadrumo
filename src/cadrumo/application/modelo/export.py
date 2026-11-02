@@ -256,7 +256,7 @@ def _persist_exported_draft(
                 ),
                 instalment=command.instalment_election,
                 first_instalment_share=first_instalment_share(
-                    modelo, period_day=work_unit.period.end_date(), authority=operation
+                    modelo, period_day=work_unit.period.end_date, authority=operation
                 ),
                 charge_account=export_charge_account(accounts),
                 refund_account=export_refund_account(accounts),

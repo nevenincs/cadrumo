@@ -9763,6 +9763,7 @@ workspace:
       where:
         declaration: Whole declaration
         not_on_form: A box not shown on this declaration's pages
+        profile: In your profile
         record_value: A value every record in a table needs
         records: In your records
         unnumbered: 'Values without a box number: {count}'

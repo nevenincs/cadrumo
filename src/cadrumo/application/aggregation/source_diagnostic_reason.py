@@ -298,4 +298,9 @@ CalculationSourceDiagnosticReason = Literal[
     # another of whose elements is agrarian. It counts in the Modelo 130 expense
     # box, since silence does not mean agrarian, but only the filer can settle it.
     "activity_asset_activity_undeclared",
+    # A household group (descendants, ascendants) whose stated count is larger than
+    # the rows the profile records. The recorded rows are used and the declaration
+    # is not stopped, but the group is not proven complete: the filer described
+    # people the profile does not yet hold.
+    "household_rows_incomplete",
 ]

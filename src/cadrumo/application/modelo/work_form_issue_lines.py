@@ -48,6 +48,7 @@ from ...domain.modelos.verification_report import (
 )
 from .calculation_notes import (
     DERIVED_GATE_REASONS,
+    PROFILE_REASONS,
     RECORDS_REASONS,
     note_fact_text,
     what_locale_key,
@@ -76,6 +77,7 @@ _RECORDS_FIELD_MISSING_LOCALE_KEY: Final[str] = "workspace.modelo.issues.records
 _RECORDS_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.records_at_source"
 _RECORD_VALUE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.record_value"
 _RECORDS_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.records"
+_PROFILE_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.profile"
 _DECLARATION_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.declaration"
 _NOT_ON_FORM_WHERE_LOCALE_KEY: Final[str] = "workspace.modelo.issues.where.not_on_form"
 _BOX_NOT_ON_FORM_LOCALE_KEY: Final[str] = "workspace.modelo.issues.box_not_on_form"
@@ -417,11 +419,19 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         detail=detail,
         technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
         address=None if field is None else field.address,
-        surface=SourceSurface.LEDGER if note.reason in RECORDS_REASONS else _owning_surface(field),
+        surface=_note_surface(note, field),
         from_calculation=True,
         # A revision the gate refuses before reading its notes is put right by calculating again.
         recalculates=note.reason in DERIVED_GATE_REASONS,
     )
+
+
+def _note_surface(note: ModeloFormCalculationNote, field: ModeloFormField | None) -> SourceSurface | None:
+    if note.reason in RECORDS_REASONS:
+        return SourceSurface.LEDGER
+    if note.reason in PROFILE_REASONS:
+        return SourceSurface.PROFILE
+    return _owning_surface(field)
 
 
 def _note_where(note: ModeloFormCalculationNote, field: ModeloFormField | None, context: _Context) -> str | None:
@@ -431,6 +441,8 @@ def _note_where(note: ModeloFormCalculationNote, field: ModeloFormField | None, 
         return None
     if note.reason in RECORDS_REASONS:
         return context.say(_RECORDS_WHERE_LOCALE_KEY)
+    if note.reason in PROFILE_REASONS:
+        return context.say(_PROFILE_WHERE_LOCALE_KEY)
     return context.say(_DECLARATION_WHERE_LOCALE_KEY)
 
 

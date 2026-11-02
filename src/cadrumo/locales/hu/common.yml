@@ -9899,6 +9899,7 @@ workspace:
       where:
         declaration: A teljes bevallás
         not_on_form: Egy rovat, amely nem szerepel a bevallás oldalain
+        profile: A profilodban
         record_value: Olyan adat, amelyet a táblázat minden tételéhez meg kell adni
         records: A nyilvántartásaidban
         unnumbered: 'Rovatszám nélküli értékek: {count}'

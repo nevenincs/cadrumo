@@ -410,7 +410,7 @@ def _instalment_refusal_reason(
     operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Name the first condition of the split the export fails, or ``None`` when it meets them all."""
-    if not two_instalments_declared(str(work_unit.modelo), period_day=work_unit.period.end_date(), authority=operation):
+    if not two_instalments_declared(str(work_unit.modelo), period_day=work_unit.period.end_date, authority=operation):
         return "not_declared"
     if resolved_result_disposition not in _INSTALMENT_PAYABLE:
         return "nothing_to_pay"

@@ -157,11 +157,9 @@ def project_printed_casillas(
             translated_message="cli.app.live.borrador.import_casilla_owner_ambiguous",
             context={"casillas": ", ".join(sorted(ambiguous))},
         )
-    blank_boxes = {casilla_id: None for casilla_id in blank if casilla_id not in printed}
-    candidates: dict[CasillaId, Decimal | str | None] = {
-        **{casilla_id: printed[casilla_id] for casilla_id in unowned},
-        **blank_boxes,
-    }
+    blank_boxes = frozenset(casilla_id for casilla_id in blank if casilla_id not in printed)
+    candidates: dict[CasillaId, Decimal | str | None] = {casilla_id: printed[casilla_id] for casilla_id in unowned}
+    candidates.update(dict.fromkeys(blank_boxes))
     observed, undeclared = _observed_boxes(revision, admitted, candidates)
     return BorradorCasillaProjection(
         binding_values={binding_id: printed[owned[0]] for binding_id, owned in sorted(owned_by.items())},

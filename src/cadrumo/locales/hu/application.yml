@@ -1314,6 +1314,12 @@ application:
           visszatartanak, ezért ebben a formában nem exportálhatod.
         what_to_do: Számold újra a bevallást, ellenőrizd, majd rögzítsd újra; az új
           rögzítés felváltja ezt.
+      household_rows_incomplete:
+        what: A profilod ebben a csoportban több személyt jelez, mint amennyit rögzít,
+          ezért a nyilatkozat csak a rögzített személyeket használja, és a csoportot
+          nem tekinti teljesnek.
+        what_to_do: Vedd fel a hiányzó személyeket a profilodba, vagy javítsd a számot,
+          majd számolj újra.
       inferred_retencion_excluded_from_credit:
         what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
           összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél
@@ -1630,6 +1636,7 @@ application:
       disposal_zero_result: '{element}: a(z) {date} napi eladás {transmission_value}
         átruházási értékkel és {net_value} nettó értékkel sem nyereséget, sem veszteséget
         nem eredményez, ezért egyik mezőbe sem kerül.'
+      household_rows_incomplete: '{group}: {stated} megadva, {recorded} rögzítve.'
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
@@ -3046,6 +3053,7 @@ application:
           label: A halálozás dátuma
         nif:
           label: A felmenő adószáma (NIF/NIE) (hagyd üresen, ha nincs)
+      incomplete: '{stated} megadva, {recorded} rögzítve'
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'
