@@ -1039,6 +1039,7 @@ desktop:
     as_of: From local records as of {date}. Nothing here was asked of the tax agency.
     close: Close the calendar
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: Closes no earlier than {date}
     empty: No filing obligations in this period.
     event:
       filing: Filing

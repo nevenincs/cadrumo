@@ -159,6 +159,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.declarations.calendar.aeat.justificante_verified",
         "workspace.declarations.calendar.evidence.disagrees",
         "workspace.declarations.calendar.legal.due_today",
+        "workspace.declarations.calendar.legal.unknown",
         "workspace.declarations.destination.overview",
         "workspace.declarations.due.days_late",
         "workspace.declarations.due.days_left",

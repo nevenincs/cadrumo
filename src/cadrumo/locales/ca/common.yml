@@ -1071,6 +1071,7 @@ desktop:
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
     close: Tanca el calendari
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: No tanca abans del {date}
     empty: No hi ha obligacions de presentació en aquest període.
     event:
       filing: Presentació

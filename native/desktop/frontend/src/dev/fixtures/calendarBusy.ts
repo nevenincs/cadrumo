@@ -1,5 +1,5 @@
 import type { CalendarEntry, FilingCalendar } from "../../shell/views";
-import { FIXTURE_CALENDAR } from "./calendar";
+import { FIXTURE_CALENDAR, FIXTURE_STATUS } from "./calendar";
 
 // The turn of a year, when most of a small business's obligations fall due
 // together: nine filing windows open over the same weeks of January, one
@@ -31,6 +31,7 @@ function entry(
     payment_cutoff_on: null,
     evaluated_on: BUSY_TODAY,
     days_overdue: null,
+    status: FIXTURE_STATUS[change.user_state ?? "due"],
     user_state: "due",
     local_filing_state: "not_ready_to_file",
     aeat_submission_state: "not_observed",

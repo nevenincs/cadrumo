@@ -8,6 +8,18 @@
 /** What the person still has to do about an obligation. */
 export type CalendarUserState = "due" | "late" | "filed" | "unknown";
 
+/** The deadline engine's status of an obligation, as the product spells it.
+ * `UNKNOWN` is a projected window whose close the product could not work
+ * out: its closing dates are then only the earliest it can close. */
+export type CalendarObligationStatus =
+  | "UPCOMING"
+  | "DUE_SOON"
+  | "DUE_TODAY"
+  | "OVERDUE"
+  | "FILED"
+  | "NOT_APPLICABLE"
+  | "UNKNOWN";
+
 /** The local filing work. Never a statement about the tax agency. */
 export type LocalFilingState =
   "not_ready_to_file" | "ready_to_file" | "external_baseline_imported";
@@ -25,9 +37,11 @@ export type CalendarEntry = {
    * no source for it. The window is then not drawn, only its close: an
    * opening is never guessed. */
   opens_on: string | null;
-  /** The legal closing date, as an ISO date. */
+  /** The legal closing date, as an ISO date. Where the close is unknown,
+   * the earliest it can be, and not a deadline. */
   closes_on: string;
-  /** The closing date after weekends and holidays; the one that binds. */
+  /** The closing date after weekends and holidays; the one that binds.
+   * Where the close is unknown, the same earliest close. */
   adjusted_closes_on: string;
   /** Why the two differ; `none` when they do not. */
   shift_reason: string;
@@ -37,6 +51,7 @@ export type CalendarEntry = {
   evaluated_on: string;
   /** Days past the binding date; set only for a late obligation. */
   days_overdue: number | null;
+  status: CalendarObligationStatus;
   user_state: CalendarUserState;
   local_filing_state: LocalFilingState;
   aeat_submission_state: AeatSubmissionState;

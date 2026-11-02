@@ -1,6 +1,8 @@
 import type {
   CalendarEntry,
   CalendarEvent,
+  CalendarObligationStatus,
+  CalendarUserState,
   FilingCalendar,
   NotificationsSummary,
 } from "../../shell/views";
@@ -10,6 +12,19 @@ import type {
 // same on any day; nothing here is a real taxpayer's.
 
 export const FIXTURE_TODAY = "2026-10-06";
+
+/** The deadline status a fixture row carries with each reading, unless the
+ * row names its own. A reading the product could not place is reported as
+ * not applicable; a close it could not work out is set row by row. */
+export const FIXTURE_STATUS: Record<
+  CalendarUserState,
+  CalendarObligationStatus
+> = {
+  due: "UPCOMING",
+  late: "OVERDUE",
+  filed: "FILED",
+  unknown: "NOT_APPLICABLE",
+};
 
 function entry(
   modelo: string,
@@ -28,6 +43,7 @@ function entry(
     payment_cutoff_on: null,
     evaluated_on: FIXTURE_TODAY,
     days_overdue: null,
+    status: FIXTURE_STATUS[change.user_state ?? "due"],
     user_state: "due",
     local_filing_state: "not_ready_to_file",
     aeat_submission_state: "not_observed",
@@ -166,6 +182,26 @@ export const STRADDLING_CALENDAR: FilingCalendar = {
       aeat_submission_state: "accepted",
     }),
     ...AHEAD_CALENDAR.entries,
+  ],
+};
+
+/** Windows whose close the product could not work out, beside known ones:
+ * one whose earliest close is still ahead of today, among the closes of its
+ * month, and one whose earliest close has passed, which is not known to be
+ * late. Their dates are only the earliest each can close. */
+export const CLOSE_UNKNOWN_CALENDAR: FilingCalendar = {
+  ...FIXTURE_CALENDAR,
+  warnings: [],
+  entries: [
+    ...FIXTURE_CALENDAR.entries,
+    entry("115", "2026-2T", "2026-07-01", "2026-07-20", {
+      status: "UNKNOWN",
+      user_state: "unknown",
+    }),
+    entry("123", "2026-3T", "2026-10-01", "2026-10-20", {
+      status: "UNKNOWN",
+      user_state: "unknown",
+    }),
   ],
 };
 

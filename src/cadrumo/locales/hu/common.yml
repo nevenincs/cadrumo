@@ -1052,6 +1052,7 @@ desktop:
       le az AEAT-től.
     close: Naptár bezárása
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: 'Legkorábbi zárás: {date}'
     empty: Ebben az időszakban nincs bevallási kötelezettség.
     event:
       filing: Bevallás

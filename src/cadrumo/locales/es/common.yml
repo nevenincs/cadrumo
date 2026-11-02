@@ -1077,6 +1077,7 @@ desktop:
       AEAT.
     close: Cerrar el calendario
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: No cierra antes del {date}
     empty: No hay obligaciones de presentación en este periodo.
     event:
       filing: Presentación
