@@ -10376,3 +10376,14 @@ workspace:
       not_applicable: no aplica
       not_known_yet: Aún no se sabe
     was: 'antes: {value}'
+    write_hold:
+      check_status: Comprobar estado
+      reload_list: Volver a cargar la lista de declaraciones
+      reload_needed: La solicitud ha finalizado. Vuelve a cargar los datos antes de
+        hacer más cambios.
+      saved_unread: El cambio se ha guardado, pero no se ha podido cargar su resultado.
+        Vuelve a cargar los datos antes de hacer más cambios.
+      unknown: El resultado no está confirmado. La solicitud puede haber surtido efecto.
+        Los cambios quedan en pausa.
+      unresolved: Cadrumo no puede confirmar el resultado de esta solicitud en esta
+        sesión. Los cambios siguen en pausa.

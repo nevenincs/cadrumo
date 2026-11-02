@@ -10369,3 +10369,14 @@ workspace:
       not_applicable: no s'aplica
       not_known_yet: Encara no se sap
     was: 'abans: {value}'
+    write_hold:
+      check_status: Comprova l'estat
+      reload_list: Torna a carregar la llista de declaracions
+      reload_needed: La sol·licitud ha finalitzat. Torna a carregar les dades abans
+        de fer més canvis.
+      saved_unread: El canvi s'ha desat, però no s'ha pogut carregar el resultat.
+        Torna a carregar les dades abans de fer més canvis.
+      unknown: El resultat no està confirmat. La sol·licitud pot haver tingut efecte.
+        Els canvis queden en pausa.
+      unresolved: Cadrumo no pot confirmar el resultat d'aquesta sol·licitud en aquesta
+        sessió. Els canvis continuen en pausa.

@@ -1,5 +1,5 @@
-import { useMemo, useState } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useLayoutEffect, useMemo, useRef, useState } from "react";
+import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
@@ -18,8 +18,13 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import { ledgerFailure, servedRefusalWords } from "../../../shell/ledger";
 import { MODELO_ACTOR, type ModeloPort } from "../../../shell/modelo";
+import {
+  creationWriteKey,
+  type ModeloWriteHolds,
+} from "../../../shell/modeloWriteHolds";
+import { runOperation } from "../dialogs/operationRun";
+import { WriteHoldNotice, useModeloWriteHold } from "../WriteHoldNotice";
 import type {
   ModeloDeclarationCreationTargetV1 as Target,
   ModeloDeclarationListRowV1,
@@ -35,15 +40,9 @@ export type NewDeclarationStart = {
 
 type Attempt =
   | { kind: "idle" }
-  | { kind: "creating" }
   /** `words` is why, as the backend served it; null when it served none. */
   | { kind: "refused"; words: string | null }
-  | { kind: "failed" }
-  /** The write may have happened: nothing is sent again until the list is
-   * read again. */
-  | { kind: "unknown" }
-  /** The declaration was created; only its answer was not read. */
-  | { kind: "saved_unread" };
+  | { kind: "failed" };
 
 const at = (target: Target, period: PublicPeriod | null) =>
   period !== null &&
@@ -64,6 +63,9 @@ export function NewDeclarationDialog({
   start = null,
   onOpen,
   onWritten,
+  holds,
+  onReload,
+  refreshing,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -74,6 +76,9 @@ export function NewDeclarationDialog({
   onOpen: (workUnitId: string) => void;
   /** A write was sent: the list is read again, whatever came back. */
   onWritten: () => void;
+  holds: ModeloWriteHolds;
+  onReload: () => void;
+  refreshing: boolean;
 }) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -85,6 +90,9 @@ export function NewDeclarationDialog({
           start={start}
           onOpen={onOpen}
           onWritten={onWritten}
+          holds={holds}
+          onReload={onReload}
+          refreshing={refreshing}
           onClose={() => onOpenChange(false)}
         />
       )}
@@ -100,6 +108,9 @@ function Chooser({
   onOpen,
   onWritten,
   onClose,
+  holds,
+  onReload,
+  refreshing,
 }: {
   port: ModeloPort;
   targets: readonly Target[];
@@ -108,6 +119,9 @@ function Chooser({
   onOpen: (workUnitId: string) => void;
   onWritten: () => void;
   onClose: () => void;
+  holds: ModeloWriteHolds;
+  onReload: () => void;
+  refreshing: boolean;
 }) {
   const t = useStrings();
   const [modelo, setModelo] = useState<string | null>(start?.modelo ?? null);
@@ -119,6 +133,14 @@ function Chooser({
     start?.period?.filing_year ?? null,
   );
   const [attempt, setAttempt] = useState<Attempt>({ kind: "idle" });
+  const alive = useRef(false);
+  const activeTarget = useRef("");
+  useLayoutEffect(() => {
+    alive.current = true;
+    return () => {
+      alive.current = false;
+    };
+  }, []);
 
   // The modelos offered, in the order the read model offers them.
   const modelos = useMemo(() => {
@@ -142,6 +164,11 @@ function Chooser({
     periods.find((x) => x.suggested) ??
     periods[0] ??
     null;
+  const targetKey = picked ? creationWriteKey(picked) : "";
+  const hold = useModeloWriteHold(holds, targetKey);
+  useLayoutEffect(() => {
+    activeTarget.current = targetKey;
+  }, [targetKey]);
   // One declaration a year asks which year; several ask which period.
   const yearly = years.every(
     (y) => forModelo.filter((x) => x.filing_year === y).length === 1,
@@ -156,40 +183,46 @@ function Chooser({
     ).length;
 
   const create = async (target: Target) => {
-    setAttempt({ kind: "creating" });
-    try {
-      const outcome = await port.submit("modelo.work.create", {
-        modelo: target.modelo,
-        period: { filing_year: target.filing_year, code: target.period_code },
-        actor: MODELO_ACTOR,
-      });
-      onWritten();
-      if (outcome.kind === "settled") {
-        const result = outcome.result.outcome;
-        if (result.kind === "success") {
+    const key = creationWriteKey(target);
+    const lease = holds.begin(key);
+    if (!lease) return;
+    setAttempt({ kind: "idle" });
+    const outcome = await runOperation(
+      port,
+      () =>
+        port.submit("modelo.work.create", {
+          modelo: target.modelo,
+          period: { filing_year: target.filing_year, code: target.period_code },
+          actor: MODELO_ACTOR,
+        }),
+      () => alive.current,
+    );
+    const current = () => alive.current && activeTarget.current === key;
+    if (outcome.kind === "settled") {
+      const result = outcome.result.outcome;
+      if (result.kind === "success") {
+        holds.needsRead(lease);
+        onWritten();
+        if (current()) {
           onOpen(result.unit.work_unit_id);
           onClose();
-        } else setAttempt({ kind: "refused", words: null });
-      } else if (outcome.kind === "refused")
-        setAttempt({
-          kind: "refused",
-          words: servedRefusalWords(outcome.detail),
-        });
-      // Paused or still running: its settlement was not seen.
-      else setAttempt({ kind: "unknown" });
-    } catch (error: unknown) {
-      const failure = ledgerFailure(error);
-      if (failure.code === "unknown") {
-        onWritten();
-        setAttempt({ kind: "unknown" });
-      } else if (failure.code === "saved_unread") {
-        onWritten();
-        setAttempt({ kind: "saved_unread" });
-      } else
-        // A refusal settled without writing; any other failure never sent.
+        }
+      } else {
+        holds.notWritten(lease);
+        if (current()) setAttempt({ kind: "refused", words: null });
+      }
+    } else if (outcome.kind === "unknown") {
+      holds.unknown(lease, outcome.operationId);
+      onWritten();
+    } else if (outcome.kind === "saved_unread") {
+      holds.needsRead(lease, true);
+      onWritten();
+    } else {
+      holds.notWritten(lease);
+      if (current())
         setAttempt(
-          failure.code === "refused"
-            ? { kind: "refused", words: null }
+          outcome.kind === "refused"
+            ? { kind: "refused", words: outcome.words }
             : { kind: "failed" },
         );
     }
@@ -227,8 +260,8 @@ function Chooser({
     );
   };
 
-  const busy = attempt.kind === "creating";
-  const held = attempt.kind === "unknown" || attempt.kind === "saved_unread";
+  const busy = hold?.phase === "running";
+  const held = hold !== undefined;
 
   return (
     <DialogContent
@@ -331,6 +364,7 @@ function Chooser({
               onValueChange={(value) => {
                 setYear(Number(value));
                 setChosen(null);
+                setAttempt({ kind: "idle" });
               }}
               className="self-start"
             >
@@ -396,20 +430,15 @@ function Chooser({
                   t("workspace.declarations.list.new.refused"))
                 : t("workspace.declarations.list.new.failed")}
             </Alert>
-          ) : attempt.kind === "saved_unread" ? (
-            <Alert tone="success" role="status" icon={<Icon name="check" />}>
-              {t("workspace.declarations.list.new.saved_unread")}
-            </Alert>
-          ) : attempt.kind === "unknown" ? (
-            <Alert tone="warning" role="alert" icon={<Icon name="unknown" />}>
-              <AlertTitle>
-                {t("workspace.declarations.list.new.unknown")}
-              </AlertTitle>
-              <AlertDescription>
-                {t("workspace.declarations.list.new.unknown_next")}
-              </AlertDescription>
-            </Alert>
           ) : null}
+          <WriteHoldNotice
+            holds={holds}
+            target={targetKey}
+            port={port}
+            onReload={onReload}
+            refreshing={refreshing}
+            creation
+          />
           <DialogFooter>
             <Button variant="ghost" onClick={onClose}>
               {t("workspace.modelo.editor.cancel")}

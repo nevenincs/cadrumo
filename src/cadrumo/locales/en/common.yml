@@ -10182,3 +10182,13 @@ workspace:
       not_applicable: n/a
       not_known_yet: Not known yet
     was: was {value}
+    write_hold:
+      check_status: Check status
+      reload_list: Reload declaration list
+      reload_needed: The request has finished. Reload before making further changes.
+      saved_unread: The change was saved, but its result could not be loaded. Reload
+        before making further changes.
+      unknown: The outcome is not confirmed. The request may already have taken effect.
+        Further changes here are paused.
+      unresolved: Cadrumo cannot confirm this request's outcome in this session. Further
+        changes remain paused.
