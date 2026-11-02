@@ -20,7 +20,6 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError, WorkUnitMutationRefusedError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -501,7 +500,7 @@ def test_calculate_service_refuses_existing_work_unit_with_incomplete_profile(tm
                 bucket_id=work_unit.bucket_id, work_unit_repository=repository
             ) as _calculation_ports_461,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -541,7 +540,7 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
                 bucket_id=work_unit.bucket_id, work_unit_repository=repository
             ) as _calculation_ports_496,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -611,7 +610,7 @@ def test_calculate_service_refuses_existing_nonresident_legal_entity_m200(tmp_pa
                 calculation_repository=calculation_repository,
             ) as _calculation_ports_559,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -656,7 +655,7 @@ def test_calculate_service_refuses_existing_nonresident_natural_person_m100(tmp_
                 calculation_repository=calculation_repository,
             ) as _calculation_ports_599,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -865,7 +864,7 @@ def test_stale_pre_activity_m130_calculate_refuses_before_revision_mutation(tmp_
                 calculation_repository=calculation_repository,
             ) as _calculation_ports_791,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
@@ -1077,7 +1076,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
                 bucket_id=work_unit.bucket_id, work_unit_repository=repository
             ) as _calculation_ports_955,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},

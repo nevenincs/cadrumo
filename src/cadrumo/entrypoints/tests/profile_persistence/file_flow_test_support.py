@@ -47,11 +47,18 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
     SEED_CLOCK,
     seed_clean_cross_period_sources,
 )
+from cadrumo.adapters.persistence.profile.tests.m130_source_support import (
+    seed_m130_expense_transaction,
+    seed_m130_income_transaction,
+)
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    open_test_profile_session,
+    seed_test_profile_record,
+)
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
@@ -491,9 +498,10 @@ _M111_ACTIVITY_WITHHELD_CASILLA: CasillaId = validated_casilla_id("27")
 _M111_TOTAL_WITHHELD_CASILLA: CasillaId = validated_casilla_id("29")
 _M180_PERCEPTOR_BASE_CASILLA: CasillaId = validated_casilla_id("perc.base")
 
+#: Operator-owned M130 inputs of the baseline scenario. Casillas 01 and 02 are
+#: the ledger's: :func:`_seed_m130_activity` records the baseline income and
+#: gastos as ledger rows instead.
 _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
-    _M130_INCOME_CASILLA: Decimal("10000"),  # economic-activity gross income
-    _M130_EXPENSE_CASILLA: Decimal("3000"),  # economic-activity gross expenses
     _M130_PREVIOUS_PAYMENTS_CASILLA: Decimal("0"),
     _M130_WITHHELD_CASILLA: Decimal("0"),
     _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
@@ -501,6 +509,61 @@ _DEFAULT_130_BASELINE_INPUTS: dict[CasillaId, Decimal] = {
     _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
     _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
 }
+
+
+_DEFAULT_130_BASELINE_INCOME = Decimal("10000")  # economic-activity gross income
+_DEFAULT_130_BASELINE_EXPENSE = Decimal("3000")  # economic-activity gross expenses
+
+
+def _m130_ledger_totals(work_unit: WorkUnit, *, through: date) -> tuple[Decimal, Decimal]:
+    """Return the seeded activity income and gastos dated in the work unit's year up to ``through``."""
+    with bundled_indexed_authority().operation(), open_test_profile_session(work_unit.bucket_id):
+        transactions = TransactionCatalogueRepository(bucket_id=work_unit.bucket_id).load().transactions.values()
+    totals = {"m130_oracle_income": Decimal("0"), "m130_oracle_expense": Decimal("0")}
+    for transaction in transactions:
+        kind = transaction.raw.raw_fields.get("source_kind")
+        value_date = transaction.raw.value_date or transaction.raw.booked_date
+        if kind in totals and value_date.year == work_unit.filing_year and value_date <= through:
+            totals[kind] += transaction.raw.amount
+    return totals["m130_oracle_income"], totals["m130_oracle_expense"]
+
+
+def _seed_m130_activity(
+    work_unit: WorkUnit,
+    *,
+    income: Decimal = Decimal("0"),
+    expense: Decimal = Decimal("0"),
+) -> None:
+    """Make the ledger's year-to-date activity income and gastos read ``income`` and ``expense``.
+
+    Modelo 130 casillas 01 and 02 are those year-to-date ledger totals, so the
+    bucket calculation reads them from real ledger rows. The rows added here
+    are dated inside the work unit's quarter and make up the difference from
+    what the ledger already holds; a total cannot fall, as no row is removed.
+    """
+    quarter = int(work_unit.period.registry_token[0])
+    row_date = date(work_unit.filing_year, 3 * (quarter - 1) + 1, 5)
+    quarter_end = date(work_unit.filing_year, 3 * quarter, 28)
+    held_income, held_expense = _m130_ledger_totals(work_unit, through=quarter_end)
+    if income < held_income or expense < held_expense:
+        raise AssertionError(f"the ledger already holds {held_income} income and {held_expense} gastos")
+    source_key = f"{work_unit.period.registry_token}-{held_income}-{held_expense}"
+    if income > held_income:
+        seed_m130_income_transaction(
+            amount=income - held_income,
+            filing_year=work_unit.filing_year,
+            source_key=source_key,
+            value_date=row_date,
+            bucket_id=work_unit.bucket_id,
+        )
+    if expense > held_expense:
+        seed_m130_expense_transaction(
+            amount=expense - held_expense,
+            filing_year=work_unit.filing_year,
+            source_key=source_key,
+            value_date=row_date,
+            bucket_id=work_unit.bucket_id,
+        )
 
 
 def workflow_profile() -> TaxpayerProfile:
@@ -697,6 +760,8 @@ def _seed_modelo_193_work_unit(wu_repo: WorkUnitCatalogueRepository):
     return _seed_work_unit(wu_repo, modelo="193", filing_year=2024, period="0A", revision_id="2024")
 
 
+DEFAULT_130_BASELINE_EXPENSE = _DEFAULT_130_BASELINE_EXPENSE
+DEFAULT_130_BASELINE_INCOME = _DEFAULT_130_BASELINE_INCOME
 DEFAULT_130_BASELINE_INPUTS = _DEFAULT_130_BASELINE_INPUTS
 DEFAULT_130_BINDING_VALUES = _DEFAULT_130_BINDING_VALUES
 DEFAULT_180_BINDING_VALUES = _DEFAULT_180_BINDING_VALUES
@@ -738,6 +803,7 @@ canonical_work_unit_period = _canonical_work_unit_period
 file_revision = _file_revision
 registry_required_manual_casillas = _registry_required_manual_casillas
 seed_modelo_180_work_unit = _seed_modelo_180_work_unit
+seed_m130_activity = _seed_m130_activity
 seed_modelo_193_work_unit = _seed_modelo_193_work_unit
 seed_work_unit = _seed_work_unit
 target_filing_records = _target_filing_records

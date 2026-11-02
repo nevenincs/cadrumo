@@ -36,7 +36,9 @@ from ....application.export.calculation_review_xlsx_operation import (
 )
 from ....application.export.publication_receipt import PublicationReceipt, PublicationState
 from ....application.export.review_snapshot import ReviewSnapshot
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.export_sink import ModeloExportOutputPathError
 from ....application.operations.models import OperationIdentity, OperationRequest
 from ....application.operations.owner import OperationExecutorContext
@@ -54,11 +56,11 @@ from ...calculation_review_snapshot_composition import load_calculation_review_s
 from ...calculation_review_xlsx_operation_composition import build_calculation_review_xlsx_ports
 from .file_flow_test_support import (
     DEFAULT_130_BINDING_VALUES,
-    M130_INCOME_CASILLA,
     T1,
     T2,
     Repos,
     calculation_ports_for_test,
+    seed_m130_activity,
     seed_work_unit,
 )
 
@@ -68,19 +70,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 def _calculate(repos: Repos, *, income: str = "1000") -> CalculationRevision:
     units, calculations, _, _, events = repos
     unit = seed_work_unit(units)
+    seed_m130_activity(unit, income=Decimal(income))
     with calculation_ports_for_test(
         bucket_id=unit.bucket_id,
         work_unit_repository=units,
         calculation_repository=calculations,
         bucket_event_repository=events,
     ) as ports:
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             unit.work_unit_id,
-            casilla_inputs={M130_INCOME_CASILLA: Decimal(income)},
+            casilla_inputs={},
             binding_values=DEFAULT_130_BINDING_VALUES,
             ports=ports,
             clock=T1 if income == "1000" else T2,
-        )
+        ).revision
 
 
 class _Events:

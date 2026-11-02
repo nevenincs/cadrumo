@@ -4,11 +4,13 @@ from __future__ import annotations
 
 import asyncio
 from dataclasses import replace
+from datetime import date
 from decimal import Decimal
 
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
     plant_calculation_revision_unchecked,
 )
@@ -18,13 +20,19 @@ from cadrumo.application.modelo.action_errors import (
     CalculationRevisionNotFoundError,
     CalculationRevisionStateError,
 )
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.calculation_revision_queries import get_calculation_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import get_work_unit
 from cadrumo.application.workflow.run_models import WorkflowDeadlineContextDetails, WorkflowPurpose, WorkflowStage
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.invoices.enums import IvaRate, PaymentStatus
+from cadrumo.domain.invoices.models import Invoice, InvoiceLine, derive_invoice_id
+from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+from cadrumo.domain.iva.schema import InvoiceKind
 from cadrumo.domain.modelos.calculation_repository import (
     CalculationRevisionPersistenceError,
     upsert_calculation_revision,
@@ -49,18 +57,8 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     _FILE_FLOW_PROFILE_ID,
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
-    M111_ACTIVITY_AMOUNT_CASILLA,
-    M111_ACTIVITY_COUNT_CASILLA,
-    M111_ACTIVITY_WITHHELD_CASILLA,
-    M111_EMPLOYMENT_WITHHELD_CASILLA,
-    M111_FORESTRY_WITHHELD_CASILLA,
-    M111_IMAGE_RIGHTS_WITHHELD_CASILLA,
-    M111_IMPUTED_INCOME_WITHHELD_CASILLA,
-    M111_PRIZE_WITHHELD_CASILLA,
-    M111_PROFESSIONAL_WITHHELD_CASILLA,
-    M111_TOTAL_WITHHELD_CASILLA,
     M130_CARRY_FORWARD_CASILLA,
-    M130_INCOME_CASILLA,
+    M130_HOME_DEDUCTION_CASILLA,
     T1,
     T2,
     T3,
@@ -104,13 +102,13 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
     wu_repo, cr_repo, _, _vr_repo, _bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     stale = revision.model_copy(
         update={
             "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
@@ -161,13 +159,13 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos, monk
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
 
     reads: list[str] = []
     load = cr_repo.load
@@ -227,13 +225,13 @@ def test_verify_repairs_missing_current_revision_pointer(repos: Repos) -> None:
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
     baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=baseline_inputs,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     calculated_work_unit = get_work_unit(
         work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID)
     )
@@ -268,23 +266,23 @@ def test_verify_does_not_overwrite_different_current_revision(repos: Repos) -> N
     baseline_inputs = dict(DEFAULT_130_BASELINE_INPUTS)
     baseline_inputs.pop(M130_CARRY_FORWARD_CASILLA, None)
     with bundled_indexed_authority().operation() as operation:
-        first = calculate_modelo_revision(
+        first = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=baseline_inputs,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     second_inputs = dict(baseline_inputs)
-    second_inputs[M130_INCOME_CASILLA] = second_inputs[M130_INCOME_CASILLA] + Decimal("1")
+    second_inputs[M130_HOME_DEDUCTION_CASILLA] = second_inputs[M130_HOME_DEDUCTION_CASILLA] + Decimal("1")
     with bundled_indexed_authority().operation() as operation:
-        second = calculate_modelo_revision(
+        second = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=second_inputs,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T2,
-        )
+        ).revision
     assert first.calculation_revision_id != second.calculation_revision_id
     current_work_unit = get_work_unit(
         work_unit.work_unit_id, ports=build_work_lifecycle_ports(bucket_id=_FILE_FLOW_PROFILE_ID)
@@ -319,13 +317,13 @@ def test_verify_records_deadline_state_as_informational_not_abort(repos: Repos) 
     wu_repo, _cr_repo, _, _, _bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
         gate = workflow_gate(revision=revision, work_unit=work_unit, clock=T2, operation=operation)
         result = asyncio.run(
             gate.engine.run_for_period(
@@ -375,13 +373,13 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
     )
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
 
     report = verify_revision(
         revision.calculation_revision_id,
@@ -445,12 +443,12 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
     supplied = {cid: Decimal("1") for cid in required[1:]}
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=supplied,
             clock=T1,
-        )
+        ).revision
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -473,7 +471,9 @@ def test_verify_refuses_when_required_casilla_missing_real_registry(
         ).report
 
     assert report.granted_verificado_completo is False
-    assert report.completeness_status is VerificationCompletenessStatus.INCOMPLETE
+    # No per-perceptor withholding record exists, and the bucket calculation notes that absence
+    # as blocking, so the report is blocked beside the missing casilla rather than only incomplete.
+    assert report.completeness_status is VerificationCompletenessStatus.BLOCKED
     assert any(
         f.kind is ModeloVerificationFindingKind.MISSING_REQUIRED_CASILLA
         and f.severity is ModeloVerificationFindingSeverity.BLOCKING
@@ -532,13 +532,13 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -634,33 +634,15 @@ def test_verify_refuses_non_draft_revision_with_no_granting_report(repos: Repos)
     """
 
     wu_repo, cr_repo, _, _vr_repo, _bv_repo = repos
-    # Modelo 111 has no cross-period dependencies, so mark can transition it to
-    # VERIFICADO_COMPLETO without seeding cross-period evidence.
-    work_unit = seed_work_unit(
-        wu_repo,
-        modelo="111",
-        filing_year=2026,
-        period="1T",
-        revision_id="2019-y-siguientes",
-    )
+    work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs={
-                M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
-                M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
-                M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
-                M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
-                M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
-                M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
-                M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
-                M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
-                M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
-                M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
-            },
+            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
+            binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     # Construct the inconsistent persisted state directly: this test owns the
     # verifier's refusal of a sealed revision that has no granting report.
     verified = revision.model_copy(
@@ -697,13 +679,13 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
             binding_values=DEFAULT_130_BINDING_VALUES,
             clock=T1,
-        )
+        ).revision
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,
@@ -732,6 +714,43 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
         assert fetched.verification_report_id == report.verification_report_id
 
 
+def _received_invoice(bucket_id: str, *, number: str, issued_at: date) -> Invoice:
+    base_total, iva_total = Decimal("2479.34"), Decimal("520.66")
+    grand_total = base_total + iva_total
+    return Invoice(
+        invoice_id=derive_invoice_id(
+            kind=InvoiceKind.RECEIVED,
+            invoice_number=number,
+            issued_at=issued_at,
+            counterparty_tax_id="B12345674",
+            currency="EUR",
+            grand_total=grand_total,
+        ),
+        bucket_id=bucket_id,
+        kind=InvoiceKind.RECEIVED,
+        invoice_number=number,
+        issued_at=issued_at,
+        counterparty_name="PROVEEDOR EJEMPLO SL",
+        counterparty_tax_id="B12345674",
+        counterparty_country="ES",
+        base_total=base_total,
+        iva_total=iva_total,
+        grand_total=grand_total,
+        currency="EUR",
+        lines=(
+            InvoiceLine(
+                description="Operacion interior",
+                quantity=Decimal("1"),
+                unit_price=base_total,
+                subtotal=base_total,
+                iva_rate=IvaRate.from_registry("RATE_21"),
+                iva_amount=iva_total,
+            ),
+        ),
+        payment_status=PaymentStatus.PAID,
+    )
+
+
 def test_verify_takes_modelo_347_counterparty_fields_from_their_rows_real_registry(repos: Repos) -> None:
     """Modelo 347's counterparty NIF and operation key are answered by the detail rows.
 
@@ -742,29 +761,22 @@ def test_verify_takes_modelo_347_counterparty_fields_from_their_rows_real_regist
     """
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, modelo="347", filing_year=2024, period="0A", revision_id="2011-2024")
-    counterparty_row = {
-        ("modelo-347-contraparte-row-nif", 1): "B12345674",
-        ("modelo-347-contraparte-row-nombre", 1): "PROVEEDOR EJEMPLO SL",
-        ("modelo-347-contraparte-row-clave", 1): "A",
-        ("modelo-347-contraparte-row-importe", 1): Decimal("12000.00"),
-        ("modelo-347-contraparte-row-importe-q1", 1): Decimal("3000.00"),
-        ("modelo-347-contraparte-row-importe-q2", 1): Decimal("3000.00"),
-        ("modelo-347-contraparte-row-importe-q3", 1): Decimal("3000.00"),
-        ("modelo-347-contraparte-row-importe-q4", 1): Decimal("3000.00"),
-    }
+    # Four received invoices of 3.000,00 from one supplier, one per quarter: a declarable
+    # 12.000,00 counterparty (clave A) that the invoice resolver puts on the row channel.
+    invoices = tuple(
+        _received_invoice(work_unit.bucket_id, number=f"P-{quarter}", issued_at=date(2024, 3 * quarter - 1, 10))
+        for quarter in (1, 2, 3, 4)
+    )
+    InvoiceCatalogueRepository(bucket_id=work_unit.bucket_id).save(build_invoice_catalogue(invoices))
 
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs={},
-            binding_values={
-                "modelo-347-declarante-numero-personas-entidades": Decimal("1"),
-                "modelo-347-declarante-importe-total-anual-operaciones": Decimal("12000.00"),
-            },
-            row_binding_values=counterparty_row,
             clock=T1,
-        )
+        ).revision
+    assert revision.row_binding_values["modelo-347-contraparte-row-nif"] == {"1": "B12345674"}
+    assert Decimal(revision.row_binding_values["modelo-347-contraparte-row-importe"]["1"]) == Decimal("12000.00")
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,

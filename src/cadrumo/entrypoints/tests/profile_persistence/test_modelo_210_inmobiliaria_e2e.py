@@ -78,7 +78,9 @@ from ....adapters.persistence.profile.transactions import TransactionCatalogueRe
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
@@ -230,7 +232,7 @@ def _calculate_and_verify_m210_inmobiliaria(
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_230:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={
@@ -242,7 +244,7 @@ def _calculate_and_verify_m210_inmobiliaria(
                 filing_period_date=date(_FILING_YEAR, 12, 31),
                 ports=_calculation_ports_230,
                 clock=_CLOCK,
-            )
+            ).revision
         transaction_repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID)
         observation_repository = CalculationObservationRepository()
         with bundled_indexed_authority().operation() as operation:
