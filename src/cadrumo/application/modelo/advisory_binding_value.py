@@ -19,7 +19,11 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingValueOutcome
-from ...domain.calculations.registry.binding_grade_cap_reach import CappedBindingReach, capped_binding_reach
+from ...domain.calculations.registry.binding_grade_cap_reach import (
+    CappedBindingReach,
+    capped_binding_reach,
+    snapshot_reach_date,
+)
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.modelos.calculation_revision_sources import (
     GRADE_CAP_NOTE_SENTENCES,
@@ -108,7 +112,9 @@ def collect_advisory_binding_value_diagnostics(
     A stated outcome is carried only beside a decimal value, the one channel a
     resolver states it for; any other channel's capped value withholds.
     """
-    reach_map = capped_binding_reach(snapshot.revision, authority=operation)
+    reach_map = capped_binding_reach(
+        snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+    )
     if not reach_map:
         return ()
     bindings = revision_bindings_by_id(snapshot.revision)

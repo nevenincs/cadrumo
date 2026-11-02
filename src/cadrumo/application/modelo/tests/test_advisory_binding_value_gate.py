@@ -24,7 +24,7 @@ import pytest
 from ....core.aggregation import BindingSourceKind, BindingValueOutcome
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach
+from ....domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
 from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
@@ -374,7 +374,9 @@ def test_the_income_box_fed_by_the_same_provider_kind_stays_filing_grade(operati
         assert binding.grade_cap is None
         reached = {
             str(casilla_id)
-            for entry in capped_binding_reach(snapshot.revision, authority=operation).values()
+            for entry in capped_binding_reach(
+                snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+            ).values()
             for casilla_id in entry.casilla_ids
         }
         assert casilla not in reached

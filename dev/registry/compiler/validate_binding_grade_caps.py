@@ -25,11 +25,13 @@ so they run at build:
 from __future__ import annotations
 
 from collections.abc import Mapping
+from datetime import date
 
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach
 from cadrumo.domain.calculations.registry.binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
 from cadrumo.domain.calculations.registry.binding_targets import revision_bindings_by_id
+from cadrumo.domain.calculations.registry.governed_fact_scope import require_governed_fact_authority
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.schema_references import LegalReference
@@ -76,12 +78,34 @@ def validate_binding_grade_cap_section(
     return failures
 
 
+def _screened_dates(revision: ModeloRevision) -> tuple[date, ...]:
+    """The close of every supported ejercicio the revision is in force for, the dates a calculation reads it at.
+
+    A revision ending inside a year is read at its last day there. The years
+    come from the support envelope of the validation in progress, so no year
+    limit is frozen here.
+    """
+    envelope = require_governed_fact_authority(None, subject="binding grade cap reach").supported_filing_years()
+    dates: list[date] = []
+    for year in envelope.years:
+        closes = date(year, 12, 31)
+        if revision.valid_to is not None and revision.valid_to < closes:
+            closes = revision.valid_to
+        if closes.year == year and closes >= revision.valid_from:
+            dates.append(closes)
+    return tuple(dates)
+
+
 def _unreached_cap_failures(*, prefix: str, revision: ModeloRevision) -> list[str]:
+    unreached: dict[str, list[date]] = {}
+    for screened in _screened_dates(revision):
+        for binding_id, reach in capped_binding_reach(revision, authority=None, effective_date=screened).items():
+            if not reach.casilla_ids:
+                unreached.setdefault(str(binding_id), []).append(screened)
     return [
-        f"{prefix}: binding {binding_id} grade_cap reaches no casilla: no BOUND casilla names the binding and "
-        "no declared output redirect writes it, so the cap withholds nothing"
-        for binding_id, reach in capped_binding_reach(revision, authority=None).items()
-        if not reach.casilla_ids
+        f"{prefix}: binding {binding_id} grade_cap reaches no casilla on {', '.join(map(date.isoformat, dates))}: "
+        "no BOUND casilla names the binding and no declared output redirect writes it, so the cap withholds nothing"
+        for binding_id, dates in unreached.items()
     ]
 
 

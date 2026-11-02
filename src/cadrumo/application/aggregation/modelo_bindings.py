@@ -645,7 +645,7 @@ def _m130_retenciones_backend_inputs(
     binding_values: Mapping[BindingId, Decimal],
 ) -> dict[CasillaId, Decimal]:
     """Redirect the selected registry binding route to its declared endpoint."""
-    route = resolve_m130_retenciones_route(authority=context.operation)
+    route = resolve_m130_retenciones_route(effective_date=context.period.end_date, authority=context.operation)
     if context.modelo != route.modelo_id:
         return {}
     value = binding_values.get(route.binding_id)

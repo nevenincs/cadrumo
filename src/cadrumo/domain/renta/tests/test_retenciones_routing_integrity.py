@@ -8,25 +8,33 @@ committed M130 revision's real snapshot build passes it.
 
 from __future__ import annotations
 
+from datetime import date
+
 import pytest
 
 from ....core.modelo import Modelo
 from ...calculations.registry.authority import bundled_indexed_authority
+from ...calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
+from ...calculations.registry.facts.resolution import GovernedFactQuery, MappingFactQuery, ResolvedGovernedFact
+from ...calculations.registry.governed_fact_scope import GovernedFactSource
+from ...calculations.registry.schema_references import TemporalSupportEnvelope
 from ...calculations.registry.tests.registry_tree import full_published_modelo
 from ..retenciones_routing_integrity import (
+    M130_RETENCIONES_ROUTING_FACT_ID,
     check_m130_retenciones_output_casilla,
     resolve_m130_retenciones_route,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
 
-# The route check reads no year-dated authority, so any snapshot year serves.
+# One routing variant is in force from 2019, so any supported filing year selects it.
 _FILING_YEAR = 2025
+_PERIOD_END = date(_FILING_YEAR, 3, 31)
 
 
 def test_output_casilla_is_the_registry_validated_casilla_id() -> None:
     """The constant is a real, validated casilla id -- "06", not a bare string literal."""
-    assert resolve_m130_retenciones_route().output_casilla == "06"
+    assert resolve_m130_retenciones_route(effective_date=_PERIOD_END).output_casilla == "06"
 
 
 def test_retenciones_check_is_registered_with_the_registry_validator() -> None:
@@ -62,7 +70,7 @@ def test_check_fires_only_when_the_declared_binding_has_nowhere_to_report() -> N
     passed through unused, so an empty and a populated value must produce
     the same result.
     """
-    route = resolve_m130_retenciones_route()
+    route = resolve_m130_retenciones_route(effective_date=_PERIOD_END)
     unrelated_targets = frozenset({"0183"})
     declared = frozenset({route.binding_id})
 
@@ -122,7 +130,7 @@ def test_modelo_130_revisions_declare_the_output_casilla() -> None:
     constant reproduces the exact defect the registered check guards
     against.
     """
-    output_casilla = resolve_m130_retenciones_route().output_casilla
+    output_casilla = resolve_m130_retenciones_route(effective_date=_PERIOD_END).output_casilla
     with bundled_indexed_authority().operation() as operation:
         modelo_130 = full_published_modelo(operation, "130")
 
@@ -144,3 +152,35 @@ def test_modelo_130_snapshot_builds_cleanly_for_every_quarter() -> None:
         for period in ("1T", "2T", "3T", "4T"):
             snapshot = operation.snapshot(Modelo("130"), filing_year=2026, period=period)
             assert snapshot.revision.id == "2019-y-siguientes"
+
+
+class _RecordingFacts:
+    """The published authority, recording the date each governed-fact query selects."""
+
+    def __init__(self, authority: GovernedFactSource) -> None:
+        self._authority = authority
+        self.dates: list[date] = []
+
+    def resolve_governed_fact(self, query: GovernedFactQuery) -> ResolvedGovernedFact:
+        if isinstance(query, MappingFactQuery) and query.fact_id == M130_RETENCIONES_ROUTING_FACT_ID:
+            self.dates.append(query.effective_date)
+        return self._authority.resolve_governed_fact(query)
+
+    def supported_filing_years(self) -> TemporalSupportEnvelope:
+        return self._authority.supported_filing_years()
+
+
+@pytest.mark.parametrize(
+    ("year", "period", "closes"), [(2025, "1T", date(2025, 3, 31)), (2026, "3T", date(2026, 9, 30))]
+)
+def test_the_capped_reach_reads_the_route_at_the_period_it_screens(year: int, period: str, closes: date) -> None:
+    """The redirect behind casilla 06's cap is the route in force for the quarter, never the route of today."""
+    with bundled_indexed_authority().operation() as operation:
+        snapshot = operation.snapshot(Modelo("130"), filing_year=year, period=period)
+        facts = _RecordingFacts(operation)
+        reach = capped_binding_reach(snapshot.revision, authority=facts, effective_date=snapshot_reach_date(snapshot))
+
+    assert snapshot_reach_date(snapshot) == closes
+    assert facts.dates == [closes]
+    route = resolve_m130_retenciones_route(effective_date=closes, authority=operation)
+    assert reach[route.binding_id].casilla_ids == (route.output_casilla,)

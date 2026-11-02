@@ -20,7 +20,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final
 
 from ...core.hashing import content_hash_hex
-from ...domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, capped_binding_reach_digest
+from ...domain.calculations.registry.binding_grade_cap_reach import (
+    capped_binding_reach,
+    capped_binding_reach_digest,
+    snapshot_reach_date,
+)
 from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, what_locale_key
 
@@ -35,7 +39,9 @@ CALCULATION_SCREEN_CONTRACT_VERSION: Final[int] = 1
 
 def _screen_payload(snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation) -> dict[str, object]:
     return {
-        "binding_grade_caps": capped_binding_reach_digest(capped_binding_reach(snapshot.revision, authority=operation)),
+        "binding_grade_caps": capped_binding_reach_digest(
+            capped_binding_reach(snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot))
+        ),
     }
 
 

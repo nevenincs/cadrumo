@@ -37,7 +37,7 @@ from ....core.aggregation import BindingSourceKind, BindingValueOutcome
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach
+from ....domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
 from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
@@ -370,7 +370,9 @@ def test_the_cap_sits_on_the_activity_credit_and_not_on_the_income_box(operation
     assert set(credit.grade_cap.legal_refs) == {"rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"}
     reached = {
         str(casilla_id)
-        for entry in capped_binding_reach(snapshot.revision, authority=operation).values()
+        for entry in capped_binding_reach(
+            snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+        ).values()
         for casilla_id in entry.casilla_ids
     }
     assert "0599" in reached

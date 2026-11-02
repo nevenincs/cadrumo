@@ -270,7 +270,10 @@ _SCOPED_RESOLVERS: tuple[tuple[str, Callable[[GovernedFactSource | None], object
         ),
     ),
     ("retention_floor", lambda authority: retention_floor_years(effective_date=_EFFECTIVE, authority=authority)),
-    ("m130_retenciones_route", lambda authority: resolve_m130_retenciones_route(authority=authority)),
+    (
+        "m130_retenciones_route",
+        lambda authority: resolve_m130_retenciones_route(effective_date=_EFFECTIVE, authority=authority),
+    ),
     ("first_slice_expense_routing", _first_slice_routing),
     ("irpf_category_taxonomy", lambda authority: ledger_irpf_category_catalogue(authority=authority)),
     (
