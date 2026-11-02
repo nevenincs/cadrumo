@@ -2290,7 +2290,6 @@ export interface LedgerRequests {
   "ledger.retencion_soportada.record": WithholdingRecordRequest;
   "ledger.retencion_soportada.remove": WithholdingRemoveRequest;
   "ledger.retencion_soportada.attest_absence": WithholdingAttestRequest;
-  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListRequest;
   "ledger.retencion_soportada.withdraw_absence": WithholdingWithdrawRequest;
   "ledger.bienes_inversion.list": Record<string, never>;
   "ledger.bienes_inversion.declare": CapitalGoodDeclareRequest;
@@ -2406,7 +2405,6 @@ export interface LedgerResults {
   "ledger.retencion_soportada.record": WithholdingMutationResult;
   "ledger.retencion_soportada.remove": WithholdingMutationResult;
   "ledger.retencion_soportada.attest_absence": WithholdingAbsenceResult;
-  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListResult;
   "ledger.retencion_soportada.withdraw_absence": WithholdingAbsenceResult;
   "ledger.bienes_inversion.list": CapitalGoodsListResult;
   "ledger.bienes_inversion.declare": CapitalGoodDeclareResult;
