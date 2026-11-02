@@ -7,13 +7,13 @@ from decimal import Decimal
 
 from pydantic import SecretStr
 
+from cadrumo.adapters.persistence.profile.usage_ratios import save_usage_ratios
 from cadrumo.adapters.persistence.storage.certificate_secret_backend import build_certificate_secret_backend
 
 from ...application.auth.certificate_source_operations import (
     register_operator_certificate_source,
     set_operator_certificate_source_secret,
 )
-from ...application.ledger.usage_ratio_repository import save_usage_ratio_profile
 from ...application.user_profile.bundle_export_contracts import ProfileBundleExportPurpose
 from ...application.user_profile.censal_file_import_operation import CensalFileImportProvenance
 from ...application.user_profile.censal_operation import (
@@ -150,7 +150,7 @@ def _ledger_ratios_set(ctx: PayloadContext) -> PayloadResult:
 
 def _ledger_ratios_unset(ctx: PayloadContext) -> PayloadResult:
     category = require_spending_category("arrendamiento_vivienda_afecto", authority=ctx.operation)
-    save_usage_ratio_profile(
+    save_usage_ratios(
         UsageRatioProfile(ratios={category: Decimal("0.50")}),
         bucket_id=str(ctx.profile_id),
     )

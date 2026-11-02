@@ -913,6 +913,7 @@
         "cadrumo.application.modelo.profile_export_binding",
         "cadrumo.application.modelo.profile_readiness_gate",
         "cadrumo.application.modelo.projection",
+        "cadrumo.application.modelo.projection_compare",
         "cadrumo.application.modelo.projection_migration_ports",
         "cadrumo.application.modelo.projection_operation",
         "cadrumo.application.modelo.prorrata_regularizacion_advisory",

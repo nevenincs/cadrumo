@@ -23,7 +23,7 @@ fabricated default — no percentage is ever assumed.
 This is a taxpayer-fact store, sibling to :mod:`domain.bienes_inversion`: it
 holds the per-ejercicio percentages and their provenance, never the regulatory
 constants. The prorrata compute substrate (:mod:`domain.iva`:
-``compute_prorrata_definitiva_anual``, ``compute_regularizacion_prorrata_anual``)
+``compute_prorrata_definitiva_anual``, ``compute_regularizacion_prorrata_particionada``)
 is consumed at settlement, not re-implemented here, and this module reads no
 secure-object store — the seed, in-year apportionment, and settlement write-back
 live in the application layer.

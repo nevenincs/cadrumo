@@ -328,7 +328,7 @@ def _render_prepared_export(
                 product_software_identity=product_software_identity,
             ),
         ).payload
-    return _render_export_layout(
+    return render_export_layout(
         prepared.layout,
         draft=draft,
         headers=prepared.producer_values,
@@ -724,7 +724,7 @@ def _declaracion_export_format(layout: ExportLayoutDefinition) -> _DeclaracionEx
     return _DeclaracionExportFormat.FICHERO_BOE
 
 
-def _render_export_layout(
+def render_export_layout(
     layout: ExportLayoutDefinition,
     *,
     draft: ModeloDraft,
@@ -737,6 +737,7 @@ def _render_export_layout(
     schema_provider: RegistrySchemaAccessor,
     registry_snapshot: RegistrySnapshot,
 ) -> bytes:
+    """Render ``layout`` to export bytes, refusing shared cells and a missing XML Aux/VERSION token."""
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         if xml_aux_version is None:
             raise FilingExportValidationError("XML dictionary export requires a canonical Aux/VERSION token")
@@ -958,5 +959,6 @@ __all__ = [
     "export_draft",
     "refuse_incomplete_xml_export",
     "refuse_xml_export_content",
+    "render_export_layout",
     "render_filing_layout",
 ]

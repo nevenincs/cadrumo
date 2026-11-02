@@ -12,8 +12,8 @@ import type {
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import { BoxNumber } from "../form/BoxNumber";
-import { Label } from "../form/FieldRow";
-import { estimateFigure, type EstimateRead } from "./estimate";
+import { BoxLabel } from "./BoxLabel";
+import { estimateFigure, type EstimateRead } from "./estimateRead";
 
 // The estimate of the annual return from the quarterly declarations, as the
 // application served it: marked as an estimate, with the boxes it could not
@@ -26,20 +26,28 @@ type Figures = ModeloProjectOperationProjection["casilla_observations"];
 /** The name of a language, in the window's own. */
 function languageName(locale: string, code: string): string {
   try {
-    return new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code;
+    return (
+      new Intl.DisplayNames([locale], { type: "language" }).of(code) ?? code
+    );
   } catch {
     return code;
   }
 }
 
 /** A box named by its printed number and the form's label for it. */
-function BoxName({ field, box }: { field: PublicModeloFormField | null; box: string | null }) {
+function BoxName({
+  field,
+  box,
+}: {
+  field: PublicModeloFormField | null;
+  box: string | null;
+}) {
   return (
     <span className="flex min-w-0 items-start gap-2">
       <BoxNumber box={box} />
       {field && (
         <span className="min-w-0 text-base">
-          <Label text={field.label} />
+          <BoxLabel text={field.label} />
         </span>
       )}
     </span>
@@ -118,7 +126,9 @@ function Result({
         </ul>
       )}
       {projection.unresolved_bindings.length > 0 && (
-        <Unresolved title={t("desktop.modelo.credits.estimate.unresolved_credits")}>
+        <Unresolved
+          title={t("desktop.modelo.credits.estimate.unresolved_credits")}
+        >
           <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card">
             {projection.unresolved_bindings.map((row) => (
               <li
@@ -130,14 +140,18 @@ function Result({
                 {row.source_words && (
                   <span className="text-sm text-faint">{row.source_words}</span>
                 )}
-                <span className="text-sm text-muted-foreground">{row.words}</span>
+                <span className="text-sm text-muted-foreground">
+                  {row.words}
+                </span>
               </li>
             ))}
           </ul>
         </Unresolved>
       )}
       {reasons.size > 0 && (
-        <Unresolved title={t("desktop.modelo.credits.estimate.unresolved_boxes")}>
+        <Unresolved
+          title={t("desktop.modelo.credits.estimate.unresolved_boxes")}
+        >
           {[...reasons].map(([words, boxes]) => (
             <div
               key={words}
@@ -219,13 +233,10 @@ export function Estimate({
           className="self-start"
           disabled={reading}
           aria-busy={reading}
+          data-estimate-ask=""
           onClick={onAsk}
         >
-          {reading ? (
-            <Spinner />
-          ) : (
-            <Icon name="sync" size="xs" />
-          )}
+          {reading ? <Spinner /> : <Icon name="sync" size="xs" />}
           {read.phase === "ready"
             ? t("desktop.modelo.credits.estimate.again")
             : t("desktop.modelo.credits.estimate.ask")}

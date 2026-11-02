@@ -7,7 +7,7 @@ shape-based pass: a heading-shaped key no layout declares is still extra.
 
 import pytest
 
-from .._registry_scanner import is_form_layout_heading_candidate, scan_form_layout_heading_keys
+from ..form_layout_heading_scan import is_form_layout_heading_candidate, scan_form_layout_heading_keys
 from ..locale_audit import _audit_locale_file
 from ..manager import LocaleManager
 
