@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import date, timedelta
 from decimal import Decimal
+from itertools import pairwise
 
 import pytest
 
@@ -96,7 +97,7 @@ def test_no_spanish_date_since_the_first_edition_is_left_to_projection(operation
             if {selector.name: selector.value for selector in variant.selectors} == expected
         )
         assert windows[0][0] == _FIRST_DAY_OF_16
-        for (_start, end), (next_start, _next_end) in zip(windows, windows[1:], strict=False):
+        for (_start, end), (next_start, _next_end) in pairwise(windows):
             assert end + timedelta(days=1) == next_start, kind
 
 
