@@ -167,6 +167,10 @@ aggregation:
         declarar en aquest model.
       exterior_detail_not_representable: El disseny del règim exterior no pot representar
         totes les files o tots els seus camps. Revisa el detall abans de continuar.
+      exterior_rate_change_devengo_undeclared: Una factura OSS/IOSS no té data d'operació
+        i el tipus de l'Estat membre de consum va canviar durant aquest trimestre,
+        de manera que la seva data d'emissió no permet saber quin tipus s'aplica.
+        Registra la data d'operació a la factura.
       exterior_rate_kind_unsupported: El règim exterior de la finestreta única només
         admet serveis al tipus general o reduït de l'Estat membre de consum. L'observació
         aportada declara un altre tipus de gravamen, que no es pot agregar en aquest

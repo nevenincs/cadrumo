@@ -27,11 +27,11 @@ from collections import defaultdict
 from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Annotated, ClassVar
+from typing import Annotated, ClassVar, NamedTuple
 
 from pydantic import BaseModel, Field, StringConstraints
 
-from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole, InvoiceDevengoRank
 from ...core.hashing import content_hash_hex
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.bucket import BucketId
@@ -39,7 +39,6 @@ from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
-from ...core.time.clock import today_madrid
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet, RecordRowMembership
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
@@ -58,7 +57,7 @@ from ...domain.calculations.registry.schema_references import RegistrySnapshotRe
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import TransactionKind, require_transaction_kind, resolve_transaction_kind_catalogue
-from ...domain.iva.lookup import lookup_rate
+from ...domain.iva.lookup import lookup_rate, tier_rates_within
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
 from ..invoices.catalogue_reads_ports import (
@@ -309,15 +308,14 @@ def _exterior_detail_binding_values(
     The record-design bindings are generated from AEAT's positional workbook,
     so discover their semantic field names from the revision instead of
     duplicating generated binding ids here.  One row represents one
-    destination/rate tier; repeated invoice lines in that tier are summed.
+    destination and applied rate; repeated invoice lines at that rate are summed.
     """
     if revision.id != "esquema-exterior":
         return {}, {}
     grouped = _group_exterior_service_observations(observations, operation=operation)
     if not grouped:
         return {}, {}
-    declarations = _exterior_projection_declarations(observations[0].transaction_date, operation=operation)
-    return _bind_exterior_detail_values(revision, grouped, declarations, operation=operation)
+    return _bind_exterior_detail_values(revision, grouped)
 
 
 _MODELO_369_EXTERIOR_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
@@ -360,79 +358,97 @@ def _exterior_projection_declarations(
     return declarations
 
 
-def _group_exterior_service_observations(
-    observations: Sequence[OssIossLedgerObservation],
-    *,
-    operation: PinnedAuthorityOperation,
-) -> dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]]:
-    """Group Exterior service observations by destination and supported rate."""
-    grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]] = defaultdict(list)
-    effective_date = observations[0].transaction_date if observations else today_madrid()
-    transaction_catalogue = resolve_transaction_kind_catalogue(effective_date, operation=operation)
-    external_kinds = transaction_catalogue.kinds_for_oss_regime("external_scheme")
+class _ExteriorRowKey(NamedTuple):
+    """What makes two Exterior service lines one row of the return.
+
+    The percentage is part of the key because LIVA art. 90.Dos takes each
+    operation's rate at its own devengo and art. 163 noniesdecies.Uno.c) requires
+    the tax per Member State "desglosado por tipos impositivos". The rate tier
+    alone cannot do this: a Member State can change a tier's percentage inside a
+    quarter. The wire codes are dated declarations, so they are part of it too.
+    """
+
+    member_state: EUMemberState
+    rate_kind: IvaRateKind
+    rate: Decimal
+    country_code: str
+    rate_code: str
+
+
+def _is_exterior_service(observation: OssIossLedgerObservation, *, operation: PinnedAuthorityOperation) -> bool:
+    """Classify one observation against the catalogues in force on its own date."""
+    effective_date = observation.transaction_date
+    external_kinds = resolve_transaction_kind_catalogue(effective_date, operation=operation).kinds_for_oss_regime(
+        "external_scheme"
+    )
     external_regime = resolve_oss_ioss_regime_catalogue(
         effective_date=effective_date,
         authority=operation,
     ).regime_for_transaction_kind(next(iter(external_kinds)).value)
-    for observation in observations:
-        if observation.regime != external_regime:
-            continue
-        if observation.transaction_kind not in external_kinds:
-            continue
-        _validate_exterior_rate_kind(observation, operation=operation)
-        grouped[(observation.destination_member_state, observation.rate_kind)].append(observation)
-    return grouped
+    return observation.regime == external_regime and observation.transaction_kind in external_kinds
 
 
-def _validate_exterior_rate_kind(
+def _exterior_row_key(
     observation: OssIossLedgerObservation,
     *,
     operation: PinnedAuthorityOperation,
-) -> None:
-    """Refuse Exterior rate tiers that have no official positional code."""
+) -> _ExteriorRowKey:
+    """Resolve an observation's row from the rate and wire codes on its own date."""
     declarations = _exterior_projection_declarations(observation.transaction_date, operation=operation)
-    if f"rate_code.{observation.rate_kind.value}" in declarations:
-        return
-    raise AggregationValidationError(
-        tr("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
-        context={
-            "ledger_id": observation.ledger_id,
-            "rate_kind": observation.rate_kind.value,
-        },
-    )
+    rate_code = declarations.get(f"rate_code.{observation.rate_kind.value}")
+    if rate_code is None:
+        # A rate tier without an official positional code cannot be written.
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"),
+            context={
+                "ledger_id": observation.ledger_id,
+                "rate_kind": observation.rate_kind.value,
+            },
+        )
+    member_state = observation.destination_member_state
+    # The design writes ISO-3166 alpha-2 codes with its own exceptions ("EL" for
+    # Greece, "XI" for Northern Ireland), so the wire code is the dated
+    # declaration's, never the member-state token itself.
+    country_code = declarations.get(f"country_code.{member_state.value}")
+    if country_code is None:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.exterior_country_code_undeclared"),
+            context={"member_state": member_state.value},
+        )
+    rate = lookup_rate(
+        member_state,
+        observation.rate_kind,
+        observation.transaction_date,
+        operation=operation,
+    ).pct
+    return _ExteriorRowKey(member_state, observation.rate_kind, rate, country_code, rate_code)
+
+
+def _group_exterior_service_observations(
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> dict[_ExteriorRowKey, list[OssIossLedgerObservation]]:
+    """Group Exterior service observations into one list per row of the return."""
+    grouped: dict[_ExteriorRowKey, list[OssIossLedgerObservation]] = defaultdict(list)
+    for observation in observations:
+        if _is_exterior_service(observation, operation=operation):
+            grouped[_exterior_row_key(observation, operation=operation)].append(observation)
+    return grouped
 
 
 def _exterior_detail_row_fields(
     row: int,
-    country: EUMemberState,
-    rate_kind: IvaRateKind,
+    key: _ExteriorRowKey,
     observations: Sequence[OssIossLedgerObservation],
-    declarations: dict[str, str],
-    *,
-    operation: PinnedAuthorityOperation,
 ) -> tuple[dict[str, str], dict[str, Decimal]]:
-    """Build the workbook field values for one destination/rate row."""
-    rate = lookup_rate(
-        country,
-        rate_kind,
-        observations[0].transaction_date,
-        operation=operation,
-    ).pct
-    # The design writes ISO-3166 alpha-2 codes with its own exceptions ("EL" for
-    # Greece, "XI" for Northern Ireland), so the wire code is the dated
-    # declaration's, never the member-state token itself.
-    country_code = declarations.get(f"country_code.{country.value}")
-    if country_code is None:
-        raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.exterior_country_code_undeclared"),
-            context={"member_state": country.value},
-        )
+    """Build the workbook field values for one row."""
     fields = {
-        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": country_code,
-        f"3-prestaciones-de-servicios-tipo-iva-{row}": declarations[f"rate_code.{rate_kind.value}"],
+        f"3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-{row}": key.country_code,
+        f"3-prestaciones-de-servicios-tipo-iva-{row}": key.rate_code,
     }
     decimals = {
-        f"3-prestaciones-de-servicios-tipo-de-iva-{row}": rate,
+        f"3-prestaciones-de-servicios-tipo-de-iva-{row}": key.rate,
         f"3-prestaciones-de-servicios-base-imponible-{row}": sum(
             (item.base_amount for item in observations),
             Decimal("0"),
@@ -445,25 +461,64 @@ def _exterior_detail_row_fields(
     return fields, decimals
 
 
-def _bind_exterior_detail_values(
-    revision: ModeloRevision,
-    grouped: dict[tuple[EUMemberState, IvaRateKind], list[OssIossLedgerObservation]],
-    declarations: dict[str, str],
+def _refuse_exterior_rate_chosen_by_issue_date(
+    context: CalculationSourceContext,
+    projection: OssIossInvoiceProjection,
+    observations: Sequence[OssIossLedgerObservation],
     *,
     operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a row whose rate would rest on an issue date standing in for the devengo.
+
+    Elsewhere that substitution stays advisory because it only risks the period.
+    Here it would also choose the percentage written on the row, so where the
+    quarter has more than one rate for the tier the record cannot answer art.
+    90.Dos. A quarter with one rate gives the same percentage on any of its days.
+    """
+    if context.revision.id != "esquema-exterior":
+        return
+    undated = {
+        invoice.invoice_id: invoice
+        for invoice in projection.contributing_invoices
+        if resolve_invoice_devengo(invoice).rank is InvoiceDevengoRank.ISSUE_DATE_PROXY
+    }
+    if not undated:
+        return
+    quarter = _projection_period(context.period)
+    for observation in observations:
+        invoice = undated.get(observation.ledger_id.split(":", 1)[0])
+        if invoice is None or not _is_exterior_service(observation, operation=operation):
+            continue
+        rates = tier_rates_within(
+            observation.destination_member_state,
+            observation.rate_kind,
+            quarter.start_date,
+            quarter.end_date,
+            operation=operation,
+        )
+        if len(rates) > 1:
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.exterior_rate_change_devengo_undeclared"),
+                context={
+                    "invoice_id": invoice.invoice_id,
+                    "invoice_number": invoice.invoice_number,
+                    "destination_member_state": observation.destination_member_state.value,
+                    "rate_kind": observation.rate_kind.value,
+                    "period": context.period.registry_token,
+                    "rates": ",".join(str(rate) for rate in rates),
+                },
+            )
+
+
+def _bind_exterior_detail_values(
+    revision: ModeloRevision,
+    grouped: dict[_ExteriorRowKey, list[OssIossLedgerObservation]],
 ) -> tuple[dict[BindingId, Decimal], dict[BindingId, str]]:
     """Resolve generated revision selectors against Exterior row fields."""
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
-    for row, ((country, rate_kind), rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
-        fields, decimals = _exterior_detail_row_fields(
-            row,
-            country,
-            rate_kind,
-            rows,
-            declarations,
-            operation=operation,
-        )
+    for row, (key, rows) in enumerate(sorted(grouped.items(), key=lambda item: item[0]), start=1):
+        fields, decimals = _exterior_detail_row_fields(row, key, rows)
         _assign_exterior_detail_bindings(revision, fields, decimals, decimal_values, enum_values)
     return decimal_values, enum_values
 
@@ -776,6 +831,16 @@ def _project_oss_invoice(invoice: Invoice, projection_period: Period) -> list[Os
     ]
 
 
+def _projection_period(period: Period) -> Period:
+    """Return the calendar period an Exterior token such as ``EXT-3T`` files."""
+    if period.registry_token.startswith("EXT-"):
+        return Period.from_year_and_code(
+            period.filing_year,
+            period.registry_token.removeprefix("EXT-"),
+        )
+    return period
+
+
 def project_oss_ioss_invoices_from_repositories(
     *,
     period: Period,
@@ -798,12 +863,7 @@ def project_oss_ioss_invoices_from_repositories(
         The candidates for the period beside the invoices they were projected
         from.
     """
-    projection_period = period
-    if period.registry_token.startswith("EXT-"):
-        projection_period = Period.from_year_and_code(
-            period.filing_year,
-            period.registry_token.removeprefix("EXT-"),
-        )
+    projection_period = _projection_period(period)
     if not projection_period.has_date_span():
         return OssIossInvoiceProjection()
     candidates: list[OssIossLedgerCandidate] = []
@@ -960,6 +1020,12 @@ class OssIossLedgerSourceResolver:
                 )
                 candidates = projection.candidates
                 observations = validate_oss_ioss_observations(candidates, operation=indexed_operation)
+                _refuse_exterior_rate_chosen_by_issue_date(
+                    context,
+                    projection,
+                    observations,
+                    operation=indexed_operation,
+                )
                 exterior_values, exterior_enum_values = _exterior_detail_binding_values(
                     context.revision,
                     observations,

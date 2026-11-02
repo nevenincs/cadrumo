@@ -36,6 +36,7 @@ from cadrumo.application.aggregation.oss_ioss import (
 from cadrumo.application.aggregation.source_mesh import (
     CalculationSourceContext,
 )
+from cadrumo.application.aggregation.tests.oss_rate_change_support import rate_change_inside_a_quarter
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_bucket_actions import (
@@ -524,6 +525,122 @@ def test_m369_exterior_period_calculate_review_export_e2e(
 
     _assert_exterior_detail(detail, period_token, expected_detail_period)
     _assert_exterior_correction_pages(layout, parsed, wire)
+
+
+def test_m369_exterior_quarter_with_a_rate_change_keeps_both_rates_and_stops_at_routing(
+    m369_objects: SecureObjectRepository,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The calculation persists one row per rate; the routing check withholds it from export."""
+    change = rate_change_inside_a_quarter(operation)
+    amounts = (
+        (change.last_day_before, change.pct_before, Decimal("100.00")),
+        (change.first_day_after, change.pct_after, Decimal("200.00")),
+    )
+    wu_repo = WorkUnitCatalogueRepository(objects=m369_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=m369_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
+    invoice_repo = InvoiceCatalogueRepository(bucket_id=_M369_BUCKET, objects=m369_objects)
+    invoice_repo.save(
+        build_invoice_catalogue(
+            tuple(
+                _m369_invoice(
+                    invoice_number=f"OSS-EXT-CHANGE-{index}",
+                    issued_at=supply_date,
+                    operation_date=supply_date,
+                    counterparty_name="Synthetic Exterior Consumer",
+                    counterparty_tax_id=f"{change.member_state.upper()}1234567{index}",
+                    counterparty_country=change.member_state.upper(),
+                    transaction_kind=TransactionKind("external_scheme_services"),
+                    base_amount=base,
+                    iva_amount=base * pct / Decimal("100"),
+                    regime=OssIossRegime("external_scheme"),
+                )
+                for index, (supply_date, pct, base) in enumerate(amounts)
+            ),
+        ),
+    )
+    work_unit = create_work_unit(
+        bucket_id=_M369_BUCKET,
+        modelo="369",
+        filing_year=change.period.filing_year,
+        period=change.period,
+        revision_id="esquema-exterior",
+        ports=WorkLifecyclePorts(
+            work_unit_repository=wu_repo, bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects)
+        ),
+        clock=_T0,
+        operation=operation,
+    )
+    with calculation_ports_for_test(
+        bucket_id=_M369_BUCKET,
+        work_unit_repository=wu_repo,
+        calculation_repository=cr_repo,
+        bucket_event_repository=BucketEventHistoryRepository(objects=m369_objects),
+        transaction_repository=tx_repo,
+        invoice_repository=invoice_repo,
+    ) as calculation_ports:
+        result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=calculation_ports,
+            binding_values={
+                "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0"),
+            },
+            enum_binding_values={
+                key: value
+                for key, value in _EXTERIOR_DECLARANT_BINDINGS.items()
+                if key != "modelo-369-exterior-fichero.2-ejercicio-y-periodo-declaracion-sin-actividad"
+            },
+            clock=_T1,
+        )
+
+    prefix = "modelo-369-exterior-fichero.3-prestaciones-de-servicios-"
+    values = result.revision.binding_overrides
+    persisted = {
+        Decimal(values[f"{prefix}tipo-de-iva-{row}"]): (
+            Decimal(values[f"{prefix}base-imponible-{row}"]),
+            Decimal(values[f"{prefix}cuota-iva-{row}"]),
+        )
+        for row in (1, 2)
+    }
+    assert persisted == {pct: (base, base * pct / Decimal("100")) for _, pct, base in amounts}
+    assert {issue.reason for issue in result.revision.source_issues} == {"unrouted_observation"}
+
+    with bundled_indexed_authority().operation() as verification_operation:
+        report = verify_modelo_revision_with_preconditions(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="m369-exterior-reviewer",
+            workflow_profile=workflow_profile(),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=verification_operation,
+        ).report
+    assert report.granted_verificado_completo is False
+
+    with (
+        pytest.raises(CalculationRevisionStateError),
+        bundled_indexed_authority().operation() as export_operation,
+    ):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=result.revision.calculation_revision_id,
+                output_path=tmp_path / "modelo-369-rate-change.txt",
+                actor="m369-exterior-exporter",
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_M369_BUCKET,
+                secure_objects=m369_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+            ),
+            operation=export_operation,
+        )
+    assert not (tmp_path / "modelo-369-rate-change.txt").exists()
 
 
 @pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind("super_reduced"), IvaRateKind("zero")))
