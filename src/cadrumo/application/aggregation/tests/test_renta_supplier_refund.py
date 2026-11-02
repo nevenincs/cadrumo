@@ -30,7 +30,6 @@ from ....domain.transactions.models import Transaction
 from ...actividad_asset.history import ActivityAssetHistory
 from ..source_mesh import CalculationSourceResolution
 from .ledger_source_mesh_support import (
-    BUCKET_ID,
     _InMemoryInvoiceCatalogueRepository,
     m130_box,
     resolve_m100,
@@ -188,4 +187,3 @@ def test_a_refund_on_a_correction_is_left_to_the_netting_in_both_returns(
     assert m130_box(instalment) == _ZERO
     assert _blocked(annual) == []
     assert _blocked(instalment) == []
-    assert BUCKET_ID

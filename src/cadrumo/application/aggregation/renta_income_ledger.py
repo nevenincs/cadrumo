@@ -47,6 +47,7 @@ from ..invoices.source_observations import is_rectificativa
 from . import _shared_issue_reasons, renta_income_evidence
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
+from ._renta_business_eligibility import is_supplier_refund
 from .business_proportion import business_proportion
 from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .concepto_ingreso_admission import row_counts_toward_volumen_de_ingresos
@@ -879,10 +880,12 @@ def _income_transaction_is_out_of_scope(transaction: Transaction) -> bool:
     # Operator reviewed and deliberately excluded this row from filing (a final
     # disposition): omit it before the actividad-económica category override can
     # re-admit it. OUTGOING rows belong to the gasto pipeline and are skipped
-    # rather than reported as income exclusions.
+    # rather than reported as income exclusions. So do a supplier's refunds, which
+    # take the expense back there rather than coming in as income here.
     return (
         transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
         or transaction.direction is not TransactionDirection.INCOMING
+        or is_supplier_refund(transaction)
     )
 
 
