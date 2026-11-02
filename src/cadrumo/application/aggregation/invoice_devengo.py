@@ -13,10 +13,9 @@ one field: :attr:`~cadrumo.domain.invoices.models.Invoice.operation_date` record
 date, and :attr:`~cadrumo.domain.invoices.models.Invoice.operation_date_role` records
 which of art. 75's two clauses it answers. The art. 25 exclusion and the
 "money was actually received" precondition are enforced at construction time
-on the invoice itself, so a record carrying an ``ADVANCE_PAYMENT_RECEIVED``
-role that reaches this module is already a legally consistent one; this
-module supplies nothing beyond reading the fact the invoice already declares
-and, where the invoice declares nothing, saying so out loud.
+on the invoice itself; this module reads the fact the invoice declares, where
+the invoice declares nothing says so out loud, and refuses the one stored
+shape whose date cannot carry the whole invoice (see below).
 
 That last part is why the resolution is a record and not a date. Not every
 invoice carries a recorded operation date, so a fallback exists, and a
@@ -36,7 +35,11 @@ question differently: there is one implementation and both consume it.
 
 A staged schedule of several partial advance payments, each devengoing
 separately for its own amount, is not representable by a single date and is
-not attempted here.
+not attempted here. Invoice admission therefore requires a pago anticipado
+invoice to be collected in full. A record stored before that rule can still
+carry the advance role on a partly collected price; attributing it would file
+the whole base in the advance's period at the rate then in force (art. 90.Dos),
+so the period predicate refuses it instead of producing that figure.
 
 See Also:
     :attr:`cadrumo.domain.invoices.models.Invoice.operation_date`
@@ -58,7 +61,11 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel
 
 from ...core.aggregation import InvoiceDevengoRank
+from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...domain.invoices.enums import PaymentStatus, advance_payment_received_role
+from ._preconditions import AggregationPreconditionCondition, aggregation_no_recovery_verdict
+from .errors import AggregationValidationError
 from .source_mesh import CalculationSourceDiagnostic
 
 if TYPE_CHECKING:
@@ -128,6 +135,13 @@ def resolve_invoice_devengo(invoice: Invoice) -> InvoiceDevengo:
     return InvoiceDevengo(devengo_date=invoice.issued_at, rank=InvoiceDevengoRank.ISSUE_DATE_PROXY)
 
 
+def _advance_payment_partially_collected(invoice: Invoice) -> bool:
+    """Whether a stored invoice claims a pago anticipado devengo on a partly collected price."""
+    if invoice.operation_date_role is None or invoice.payment_status is not PaymentStatus.PARTIALLY_PAID:
+        return False
+    return invoice.operation_date_role == advance_payment_received_role()
+
+
 def invoice_devengo_in_period(invoice: Invoice, *, period: Period) -> bool:
     """Return whether *invoice* devengues inside *period*.
 
@@ -143,8 +157,37 @@ def invoice_devengo_in_period(invoice: Invoice, *, period: Period) -> bool:
     Returns:
         Whether the resolved devengo date falls inside the period's inclusive
         span.
+
+    Raises:
+        AggregationValidationError: When the invoice carries a pago anticipado
+            devengo on a partly collected price and *period* ends on or after
+            the advance. Art. 75.Dos devengues only the amount collected, and
+            the remainder devengues at a later entrega or prestación the record
+            does not state, so no period from the advance onward can be told
+            what this invoice contributes. A period ending before the advance
+            is unaffected: neither part can devengar there.
     """
-    return period.contains(resolve_invoice_devengo(invoice).devengo_date)
+    devengo_date = resolve_invoice_devengo(invoice).devengo_date
+    if devengo_date <= period.end_date and _advance_payment_partially_collected(invoice):
+        raise AggregationValidationError(
+            tr("aggregation.modelo_bindings.errors.invoice_advance_payment_partially_collected"),
+            context={
+                "reason": "invoice_advance_payment_partially_collected",
+                "invoice_id": invoice.invoice_id,
+                "invoice_number": invoice.invoice_number,
+                "filing_year": str(period.filing_year),
+                "period": period.registry_token,
+            },
+            precondition_verdict=aggregation_no_recovery_verdict(
+                AggregationPreconditionCondition.INVOICE_DEVENGO_ATTRIBUTABLE,
+                facts={
+                    "filing_year": str(period.filing_year),
+                    "period": period.registry_token,
+                    "invoice_count": 1,
+                },
+            ),
+        )
+    return period.contains(devengo_date)
 
 
 def devengo_proxy_attribution_diagnostics(

@@ -237,14 +237,33 @@ class IvaLedgerAggregationIssueReason(StrEnum):
 #: Shortening the sentence is strictly the lesser loss.
 
 
+class IvaLedgerRowDateSource(StrEnum):
+    """Which of a ledger row's dates stood as its LIVA art. 75 devengo date.
+
+    A row with no recorded ``operation_date`` is dated by its bank movement:
+    the value date, else the booked date. A refusal keyed on that date reads
+    as a fault in the rate or the year when the fact actually missing may be
+    the operation date, so the issue names which date was used.
+    """
+
+    OPERATION_DATE = "operation_date"
+    VALUE_DATE = "value_date"
+    BOOKED_DATE = "booked_date"
+
+
 class IvaLedgerAggregationIssue(BaseModel):
-    """Traceable exclusion emitted while projecting IVA ledger observations."""
+    """Traceable exclusion emitted while projecting IVA ledger observations.
+
+    ``operation_date_source`` is stated only by the refusals that judge the row
+    on its devengo date, and ``None`` elsewhere.
+    """
 
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: IvaLedgerAggregationIssueReason
     detail: IssueDetail
+    operation_date_source: IvaLedgerRowDateSource | None = None
 
 
 class ProrrataLedgerReference(BaseModel):
@@ -951,6 +970,7 @@ __all__ = [
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
     "IvaLedgerAggregationIssueReason",
+    "IvaLedgerRowDateSource",
     "IvaLedgerProrrataApportionment",
     "IvaLedgerSectorApportionment",
     "IvaLedgerSettlementApportionment",

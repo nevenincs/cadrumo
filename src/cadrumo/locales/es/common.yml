@@ -83,6 +83,11 @@ aggregation:
       investment_observations_missing_bienes_inversion_authority: Las observaciones
         de IVA de inversión requieren el registro explícito de bienes de inversión
         y una autoridad de perfil coincidente.
+      iva_rate_date_outside_table_coverage_on_movement_date: No hay ningún tipo de
+        IVA registrado para el %{date}. Esa es la fecha del movimiento bancario, usada
+        como fecha de devengo porque este apunte no tiene fecha de operación. Registra
+        la fecha en que se hizo la entrega o se prestó el servicio; puede que eso
+        lo resuelva.
       missing_counterparty_establishment_on_export: Una exportación está exenta porque
         la operación sale de la Unión, por lo que depende de dónde esté ESTABLECIDA
         la contraparte. Registra el país de la contraparte; un código ausente o no
@@ -109,6 +114,10 @@ aggregation:
       unaccepted_registry_value: '%{field} figura como %{value}, un valor que la autoridad
         fijada del registro tributario no admite para %{effective_date}, así que el
         apunte no puede alimentar el cálculo del IVA. Corrige ese valor en el apunte.'
+      unsupported_iva_rate_on_movement_date: El tipo de IVA %{rate} no es válido el
+        %{date}. Esa es la fecha del movimiento bancario, usada como fecha de devengo
+        porque este apunte no tiene fecha de operación. Registra la fecha en que se
+        hizo la entrega o se prestó el servicio; puede que eso lo resuelva.
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: El registro de prorrata
@@ -146,6 +155,11 @@ aggregation:
         fechadas fuera del periodo de declaración solicitado.
   modelo_bindings:
     errors:
+      invoice_advance_payment_partially_collected: Una factura registra un pago anticipado
+        sobre un precio cobrado solo en parte. Un anticipo solo devenga IVA por el
+        importe cobrado, así que la factura no puede asignarse a un periodo de declaración
+        tal como está. Registra el anticipo como una factura propia, o marca esta
+        como pagada si el anticipo cubre todo el precio.
       invoice_line_currency_unconverted: Una línea de factura está denominada en moneda
         extranjera sin tipo de cambio a euros resuelto, por lo que no puede declararse
         en este modelo.

@@ -827,6 +827,10 @@ application:
         rate_5: IVA 5 %
         rate_7_5: IVA 7,5 %
       rule_finding:
+        advance_payment_not_fully_collected: Un pago anticipado solo devenga IVA por
+          el importe cobrado, así que una factura solo puede llevar la fecha del anticipo
+          si has cobrado todo el precio. Registra el anticipo como una factura propia,
+          o marca esta como pagada si el anticipo cubre todo el precio.
         counterparty_country_invalid: No es un código de país de dos letras que el
           libro reconozca.
         counterparty_name_blank: El nombre de la contraparte no puede quedar en blanco.

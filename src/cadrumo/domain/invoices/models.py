@@ -90,6 +90,7 @@ from .figures import (
 from .rule_findings import (
     InvoiceRuleFinding,
     InvoiceRuleFindingCode,
+    advance_payment_collection_finding,
     invoice_class_rule_findings,
     invoice_rule_refusal,
     lease_kind_finding,
@@ -134,6 +135,31 @@ AUTHENTICATED_STORED_READ: Final = _AuthenticatedStoredRead()
 def _reads_authenticated_record(info: ValidationInfo) -> bool:
     """Return whether this validation decodes a record the store authenticated."""
     return info.context is AUTHENTICATED_STORED_READ
+
+
+@final
+class _InvoiceWriteAdmission:
+    """Validation context naming an invoice a write path is about to persist.
+
+    Passed only where an operator's facts become a stored invoice: the
+    catalogue's construction authority and its edit. Under it the rules that
+    were tightened after records could already be stored are asked as well.
+    Every other validation -- a catalogue decoded from the store on any read
+    or write path, a link update that changes no invoice fact -- hydrates a
+    record written under the earlier rule, so the operator can still open it,
+    and the edit that corrects it, rather than finding the catalogue locked.
+    Downstream consumers refuse such a record where its facts would be used.
+    """
+
+    __slots__ = ()
+
+
+INVOICE_WRITE_ADMISSION: Final = _InvoiceWriteAdmission()
+
+
+def _admits_written_record(info: ValidationInfo) -> bool:
+    """Return whether this validation admits facts a write path is about to persist."""
+    return info.context is INVOICE_WRITE_ADMISSION
 
 
 def _simplificada_mandatory_tax_id_categories(
@@ -1011,7 +1037,7 @@ class Invoice(BaseModel):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _validate_operation_date_consistency(self) -> Self:
+    def _validate_operation_date_consistency(self, info: ValidationInfo) -> Self:
         """Enforce the LIVA art. 75 devengo-date axis art. 6.1.i lets an invoice state.
 
         ``operation_date`` and ``operation_date_role`` travel together: a date
@@ -1026,6 +1052,14 @@ class Invoice(BaseModel):
         "las entregas de bienes comprendidas en el artículo 25" from the
         pagos-anticipados rule, so that category always devengues under
         art. 75.Uno.8.º regardless of any advance received.
+
+        Write admission (:data:`INVOICE_WRITE_ADMISSION`) further requires
+        the price to be collected in full. The advance devengues only "por
+        los importes efectivamente percibidos", and one invoice carries one
+        devengo date, so a partly collected price would file the whole base
+        in the advance's period. A record stored before this rule still
+        hydrates, so the operator can open and correct it; aggregation
+        refuses to attribute it.
         """
         raise_first_rule_finding(
             (
@@ -1046,6 +1080,15 @@ class Invoice(BaseModel):
                 raise InvoiceValidationError(
                     f"operation_date_role {advance_payment_role.value} requires a collected payment_status "
                     "(PAID or PARTIALLY_PAID); LIVA art. 75.Dos devengues on actual cobro",
+                )
+            if _admits_written_record(info):
+                raise_first_rule_finding(
+                    (
+                        advance_payment_collection_finding(
+                            advance_role=True,
+                            fully_collected=self.payment_status is PaymentStatus.PAID,
+                        ),
+                    )
                 )
         return self
 

@@ -34,7 +34,7 @@ from ...core.time.clock import now
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import InvoiceClass, PaymentStatus
 from ...domain.invoices.errors import InvoiceValidationError
-from ...domain.invoices.models import Invoice
+from ...domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice
 from ...domain.iva.schema import IvaCategory
 from .catalogue_lifecycle_ports import CatalogueLifecyclePorts
 from .catalogue_selection import select_catalogue_invoice_id
@@ -235,7 +235,7 @@ def update_catalogue_invoice(
         # sever a bidirectional binding the operator never asked to break.
         payload["linked_transaction_ids"] = existing.linked_transaction_ids
         payload["updated_at"] = commit_time
-        corrected = Invoice.model_validate(payload)
+        corrected = Invoice.model_validate(payload, context=INVOICE_WRITE_ADMISSION)
 
         written.clear()
         written.append(corrected)

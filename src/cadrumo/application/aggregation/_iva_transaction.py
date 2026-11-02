@@ -62,7 +62,12 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .currency_predicates import is_non_eur_without_conversion
 from .invoice_kind import invoice_kind_for_direction
-from .iva_ledger import IvaLedgerAggregationIssue, IvaLedgerAggregationIssueReason, ProrrataLedgerReference
+from .iva_ledger import (
+    IvaLedgerAggregationIssue,
+    IvaLedgerAggregationIssueReason,
+    IvaLedgerRowDateSource,
+    ProrrataLedgerReference,
+)
 from .iva_ledger_classification import (
     business_proportionality_for,
     has_converted_non_eur_amount,
@@ -588,6 +593,15 @@ def _resolved_iva_transaction_amounts(
     )
 
 
+def _operation_date_source(transaction: Transaction) -> IvaLedgerRowDateSource:
+    """Name the date :func:`_resolve_iva_transaction_context` takes as the row's devengo date."""
+    if transaction.operation_date is not None:
+        return IvaLedgerRowDateSource.OPERATION_DATE
+    if transaction.raw.value_date is not None:
+        return IvaLedgerRowDateSource.VALUE_DATE
+    return IvaLedgerRowDateSource.BOOKED_DATE
+
+
 def _canonical_iva_rate_kind(
     transaction: Transaction,
     *,
@@ -595,9 +609,17 @@ def _canonical_iva_rate_kind(
     operation_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaRateKind | _IvaTransactionOutcome:
-    """Resolve a declared rate against the legal table available on its date."""
+    """Resolve a declared rate against the legal table available on its date.
+
+    When the row records no operation date, the date judged is its bank
+    movement's, so each refusal says so: the fact to correct may then be the
+    missing operation date (LIVA arts. 75.Uno and 90.Dos) rather than the rate
+    or the year.
+    """
     rate_kind = iva_rate_kind_for(iva_rate, on_date=operation_date, operation=operation)
     if rate_kind is None:
+        date_source = _operation_date_source(transaction)
+        movement_dated = date_source is not IvaLedgerRowDateSource.OPERATION_DATE
         member_state = spanish_eu_member_state(effective_date=operation_date, authority=operation)
         if rate_table_covers_any_positive_tier(member_state, operation_date, operation=operation):
             return _IvaTransactionOutcome(
@@ -605,8 +627,18 @@ def _canonical_iva_rate_kind(
                     transaction_id=transaction.transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
                     detail=(
-                        f"IVA rate {iva_rate} is not a canonical substrate IVA rate for {operation_date.isoformat()}"
+                        render_tr(
+                            "aggregation.iva_ledger.errors.unsupported_iva_rate_on_movement_date",
+                            rate=str(iva_rate),
+                            date=operation_date.isoformat(),
+                        )
+                        if movement_dated
+                        else (
+                            f"IVA rate {iva_rate} is not a canonical substrate IVA rate for "
+                            f"{operation_date.isoformat()}"
+                        )
                     ),
+                    operation_date_source=date_source,
                 ),
             )
         return _IvaTransactionOutcome(
@@ -614,11 +646,19 @@ def _canonical_iva_rate_kind(
                 transaction_id=transaction.transaction_id,
                 reason=IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE,
                 detail=(
-                    f"no IVA rate is on record for {operation_date.isoformat()}: the rate table "
-                    "reaches no tier bearing a positive rate on that date, so a transaction dated "
-                    f"there cannot be classified whatever rate it carries. The rate {iva_rate} is "
-                    "not what needs correcting -- the filing year is outside the supported window"
+                    render_tr(
+                        "aggregation.iva_ledger.errors.iva_rate_date_outside_table_coverage_on_movement_date",
+                        date=operation_date.isoformat(),
+                    )
+                    if movement_dated
+                    else (
+                        f"no IVA rate is on record for {operation_date.isoformat()}: the rate table "
+                        "reaches no tier bearing a positive rate on that date, so a transaction dated "
+                        f"there cannot be classified whatever rate it carries. The rate {iva_rate} is "
+                        "not what needs correcting -- the filing year is outside the supported window"
+                    )
                 ),
+                operation_date_source=date_source,
             ),
         )
     return rate_kind
