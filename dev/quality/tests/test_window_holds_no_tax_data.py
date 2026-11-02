@@ -5,7 +5,7 @@ sends what the person typed; a category list, a rate, a figure worked out from
 other figures or a rule about which class takes which field belongs to the
 backend, and a copy in the window goes stale the day the registry changes.
 
-Four rules scan every TypeScript source under the frontend's ``src`` (stories,
+Five rules scan every TypeScript source under the frontend's ``src`` (stories,
 specs and ``src/dev`` excluded; a generated file is excluded only when it opens
 with the exact header its generator writes):
 
@@ -30,10 +30,14 @@ with the exact header its generator writes):
     or ``recargo_amount`` from a computation: arithmetic, a numeric literal, a
     conversion to a number, or a local name that is itself computed. A value
     taken from the preview's answer or the text the person typed passes.
+``classification``
+    A stored classification the person decides (read from its owner) compared
+    with ``===`` or ``!==``: what a classification allows is answered by the
+    ledger or generated from its owner, and a word for one is looked up by key.
 
-Limits. The scan is lexical. It cannot judge an eligibility rule written as
-ordinary conditionals (which class takes which field, which category applies to
-which kind), and it does not see arithmetic on plain numbers or a figure
+Limits. The scan is lexical. It cannot judge any other eligibility rule written
+as ordinary conditionals (which lifecycle or direction takes which action, which
+category applies to which kind), and it does not see arithmetic on plain numbers or a figure
 computed in another file. Those are reviewed by hand; the gate does not prove
 their absence.
 
@@ -60,6 +64,7 @@ from cadrumo.application.ledger.entry_options_operation import ledger_entry_opti
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import iva_rate_percentage, iva_rate_slots_on
 from cadrumo.domain.iva.errors import IvaRateNotFoundError
+from cadrumo.domain.transactions.enums import CLASSIFIED_STATES
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -72,7 +77,8 @@ _EXCLUDED_NAME: Final = re.compile(r"\.(?:stories|spec)\.[^.]+$")
 
 _MIN_TOKEN: Final = 3
 _FIGURE_KEYS: Final = frozenset({"subtotal", "iva_amount", "retention_amount", "recargo_amount"})
-_RULES: Final = ("vocabulary", "rates", "multiplication", "figures")
+_RULES: Final = ("vocabulary", "rates", "multiplication", "figures", "classification")
+_CLASSIFICATIONS: Final = frozenset(state.value for state in CLASSIFIED_STATES)
 
 #: Copies awaiting removal, keyed by file (relative to ``src``) and rule.
 _PENDING: Final[dict[tuple[str, str], str]] = {}
@@ -559,6 +565,20 @@ def figure_hits(tokens: list[Token]) -> list[Hit]:
     return hits
 
 
+def classification_hits(tokens: list[Token]) -> list[Hit]:
+    """A decided classification compared directly, on either side of the comparison."""
+    return [
+        Hit("classification", token.line, token.text)
+        for index, token in enumerate(tokens)
+        if token.kind == "str"
+        and token.text in _CLASSIFICATIONS
+        and (
+            (index > 0 and tokens[index - 1].text in {"===", "!=="})
+            or (index + 1 < len(tokens) and tokens[index + 1].text in {"===", "!=="})
+        )
+    ]
+
+
 def scan_source(source: str, facts: Facts) -> list[Hit]:
     """Run every rule over one file's source."""
     tokens = lex(source)
@@ -567,6 +587,7 @@ def scan_source(source: str, facts: Facts) -> list[Hit]:
         *rate_hits(tokens, facts),
         *multiplication_hits(tokens),
         *figure_hits(tokens),
+        *classification_hits(tokens),
     ]
 
 
@@ -692,6 +713,13 @@ def test_two_short_tokens_count_only_inside_one_list(facts: Facts) -> None:
     apart = f'const a = "{letters[0]}";\nfunction f() {{ return "{letters[1]}"; }}\n'
     assert "vocabulary" in _fired(listed, facts)
     assert "vocabulary" not in _fired(apart, facts)
+
+
+def test_comparing_a_decided_classification_fails_the_classification_rule(facts: Facts) -> None:
+    assert "classification" in _fired('const share = code === "MIXED";\n', facts)
+    assert "classification" in _fired('const share = "BUSINESS" !== code;\n', facts)
+    assert "classification" not in _fired('const named = { mixed: "MIXED" };\n', facts)
+    assert "classification" not in _fired('const refused = code === "NOT_YET_PROCESSED";\n', facts)
 
 
 def test_a_clean_file_with_one_token_and_a_power_of_ten_passes(facts: Facts) -> None:
