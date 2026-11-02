@@ -9861,6 +9861,11 @@ workspace:
     in_spanish: (spanyolul)
     issues:
       action:
+        at_source: Add meg vagy javítsd ki azokat a nyilvántartásokat vagy adatokat,
+          amelyekből származik, majd számolj újra.
+        at_source_if_applies: Nincs teendőd, kivéve ha ez az összeg rád vonatkozik.
+          Ha igen, add meg vagy javítsd ki azokat a nyilvántartásokat, amelyekből
+          származik, majd számolj újra.
         confirm: Nyisd meg a rovatokat egyenként, és erősítsd meg az értéküket, vagy
           írd be a helyeset.
         confirm_by_section: Nyisd meg a szakaszokat egyenként, és erősítsd meg az

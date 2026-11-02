@@ -9726,6 +9726,10 @@ workspace:
     in_spanish: (in Spanish)
     issues:
       action:
+        at_source: Add or correct the records or details it comes from, then calculate
+          again.
+        at_source_if_applies: No action is needed unless that figure applies to you.
+          If it does, add or correct the records it comes from, then calculate again.
         confirm: Open each box and confirm its value, or type the right one.
         confirm_by_section: Open each section and confirm its values, or type the
           right ones.

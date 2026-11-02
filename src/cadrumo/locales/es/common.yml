@@ -9919,6 +9919,10 @@ workspace:
     in_spanish: (en español)
     issues:
       action:
+        at_source: Añade o corrige los registros o datos de los que procede y vuelve
+          a calcular.
+        at_source_if_applies: No hace falta hacer nada, salvo que esa cifra te afecte.
+          Si es así, añade o corrige los registros de los que procede y vuelve a calcular.
         confirm: Abre cada casilla y confirma su valor, o escribe el correcto.
         confirm_by_section: Abre cada sección y confirma sus valores, o escribe los
           correctos.

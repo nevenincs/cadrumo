@@ -88,6 +88,37 @@ _FAILED_RESULT_LOCALE_KEY: Final[str] = "workspace.modelo.issues.failed_result"
 _FAILED_RESULT_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.failed_result"
 _FAILED_RESULT_DETAIL_LOCALE_KEY: Final[str] = "workspace.modelo.issues.detail.calculation_failed"
 _FAILED_RESULT_CODE: Final[str] = "calculation_failed"
+_AT_SOURCE_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.at_source"
+_AT_SOURCE_IF_APPLIES_ACTION_LOCALE_KEY: Final[str] = "workspace.modelo.issues.action.at_source_if_applies"
+_FINDING_ACTION_ROOT: Final[str] = "application.modelo.work_form.finding_action"
+
+_AT_SOURCE_ACTION_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        f"{_FINDING_ACTION_ROOT}.enter_box_value": _AT_SOURCE_ACTION_LOCALE_KEY,
+        f"{_FINDING_ACTION_ROOT}.enter_required_statement": _AT_SOURCE_ACTION_LOCALE_KEY,
+        f"{_FINDING_ACTION_ROOT}.check_possible_reduction": _AT_SOURCE_IF_APPLIES_ACTION_LOCALE_KEY,
+        **{
+            what_to_do_locale_key(reason): _AT_SOURCE_ACTION_LOCALE_KEY
+            for reason in (
+                "unresolved_binding",
+                "unhandled_binding_source",
+                "official_box_unpopulated",
+                "prior_payment_minoracion_not_captured",
+                "prior_payment_not_deducted",
+                "settlement_not_computed",
+            )
+        },
+        **{
+            what_to_do_locale_key(reason): _AT_SOURCE_IF_APPLIES_ACTION_LOCALE_KEY
+            for reason in ("deferred_binding_source", "oss_no_live_source")
+        },
+    }
+)
+"""The sentence a box that takes no typed value says instead, for each action that tells the filer to type one.
+
+A box whose value follows the filer's records, profile or a register is put right
+where it comes from; offering to type it would contradict its editability.
+"""
 
 DETAIL_LOCALE_KEYS: Final[Mapping[ModeloVerificationFindingKind, str]] = MappingProxyType(
     {
@@ -260,6 +291,13 @@ def _owning_surface(field: ModeloFormField | None) -> SourceSurface | None:
     return None if surface is SourceSurface.NONE else surface
 
 
+def _action_words(action_key: str, field: ModeloFormField | None, context: _Context, **values: object) -> str:
+    """What to do, as one sentence that never offers to type a value into a box that takes none."""
+    if field is not None and not field.takes_typed_value:
+        action_key = _AT_SOURCE_ACTION_LOCALE_KEYS.get(action_key, action_key)
+    return context.say(_WHAT_TO_DO_LOCALE_KEY, action=context.say(action_key, **values))
+
+
 def _technical(finding: ModeloVerificationFinding, context: _Context) -> str:
     codes = [
         finding.kind.value,
@@ -354,7 +392,7 @@ def _finding_line(issue: ModeloFormIssue, context: _Context) -> ModeloFormIssueL
         box=target.box or None,
         where=target.where,
         message=message,
-        action=context.say(_WHAT_TO_DO_LOCALE_KEY, action=context.say(issue.action_locale_key)),
+        action=_action_words(issue.action_locale_key, target.field, context),
         detail=target.detail,
         technical=_technical(finding, context),
         address=target.address,
@@ -413,9 +451,7 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
         box=note.box or None,
         where=_note_where(note, field, context),
         message=message,
-        action=context.say(
-            _WHAT_TO_DO_LOCALE_KEY, action=context.say(what_to_do_locale_key(note.reason), box=box_text)
-        ),
+        action=_action_words(what_to_do_locale_key(note.reason), field, context, box=box_text),
         detail=detail,
         technical=f"{context.say(_TECHNICAL_LOCALE_KEY)}: {' · '.join(codes)}",
         address=None if field is None else field.address,
