@@ -409,9 +409,8 @@ def _overpaid_invoice_issues(
         invoice = invoices.get(invoice_id)
         if invoice is None or invoice.kind is not InvoiceKind.ISSUED or invoice.bucket_id != bucket_id:
             continue
-        if len(receipts) < 2 or sum((abs(row.raw.amount) for row in receipts), Decimal("0")) <= (
-            renta_income_evidence.invoice_net_cash(invoice)
-        ):
+        comparison = renta_income_evidence.settlement_comparison(invoice, receipts)
+        if len(receipts) < 2 or comparison is None or comparison.cash <= comparison.owed:
             continue
         issues.extend(
             RentaIncomeLedgerAggregationIssue(

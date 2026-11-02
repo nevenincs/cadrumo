@@ -9,6 +9,7 @@ bounded retención can be inferred from the transaction itself.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from decimal import Decimal
 from enum import StrEnum
 from typing import NamedTuple
@@ -21,6 +22,7 @@ from ...core.money.rounding import round_to_cents
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.decomposition import decompose_invoice
 from ...domain.invoices.models import Invoice
+from ...domain.invoices.service import INVOICE_MATCH_TOLERANCE
 from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
@@ -29,6 +31,7 @@ from ...domain.transactions.retencion_facts import (
     maximum_supported_activity_retencion_rate,
     retencion_effective_date,
 )
+from .currency_predicates import effective_eur_amount, is_non_eur_without_conversion
 
 
 class SalesInvoiceEvidenceRefusal(StrEnum):
@@ -55,6 +58,7 @@ class SalesInvoiceEvidenceRefusal(StrEnum):
     PARTIAL_OR_MULTI_TRANSACTION = "partial_or_multi_transaction_sales_invoice"
     AMOUNT_MISMATCH = "sales_invoice_amount_mismatch"
     UNGROUNDED_DECOMPOSITION = "ungrounded_sales_invoice_decomposition"
+    NO_EUR_VALUE = "sales_invoice_no_eur_value"
 
 
 class _SalesInvoiceEvidencePayload(BaseModel):
@@ -79,26 +83,60 @@ def invoice_net_cash(invoice: Invoice) -> Decimal:
     return invoice.grand_total - (invoice.retention_amount or Decimal("0"))
 
 
+class SettlementComparison(NamedTuple):
+    """Receipts and what their invoice leaves to be paid, stated in one currency."""
+
+    cash: Decimal
+    owed: Decimal
+
+    @property
+    def settled(self) -> bool:
+        """Return whether the cash settles the invoice within the link tolerance."""
+        return abs(self.cash - self.owed) <= INVOICE_MATCH_TOLERANCE
+
+
+def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> SettlementComparison | None:
+    """Put ``receipts`` and ``invoice`` in one currency, or return ``None`` when none can be justified.
+
+    Figures stated in the invoice's own currency compare as stated, because no rate
+    stands between them. Any other receipt compares in EUR: the movement's own
+    ``value_in_eur`` against the invoice's total at the rate stamped on it. A side with
+    no EUR value leaves nothing to compare, and the raw figures never stand in for it.
+    """
+    if all(receipt.raw.currency == invoice.currency for receipt in receipts):
+        return SettlementComparison(
+            cash=sum((abs(receipt.raw.amount) for receipt in receipts), Decimal("0")),
+            owed=invoice_net_cash(invoice),
+        )
+    total_eur = invoice.grand_total_eur
+    if total_eur is None or any(is_non_eur_without_conversion(receipt) for receipt in receipts):
+        return None
+    return SettlementComparison(
+        cash=sum((abs(effective_eur_amount(receipt)) for receipt in receipts), Decimal("0")),
+        owed=total_eur - (invoice.retention_amount_eur or Decimal("0")),
+    )
+
+
 def part_payment_share(invoice: Invoice, transaction: Transaction) -> Decimal | None:
     """Return the share of ``invoice`` this receipt settles, or ``None`` when it is no part payment.
 
-    The share is cash over what the invoice leaves to be paid, base + IVA - retención.
-    A receipt settling the whole invoice alone, or exceeding it, is no part payment,
-    and foreign-currency or ungrounded figures cannot be shared out.
+    The share is cash over what the invoice leaves to be paid, base + IVA - retención,
+    both in EUR, so a foreign receipt counts for its EUR value. A receipt settling the
+    whole invoice alone, or exceeding it, is no part payment, and a foreign-currency
+    invoice, a receipt with no EUR value or ungrounded figures cannot be shared out.
     """
-    net = invoice_net_cash(invoice)
-    cash = abs(transaction.raw.amount)
+    comparison = settlement_comparison(invoice, (transaction,))
     if (
         invoice.currency != "EUR"
-        or transaction.raw.currency != "EUR"
+        or comparison is None
         or transaction.transaction_id not in invoice.linked_transaction_ids
-        or net <= Decimal("0")
-        or cash > net
-        or (cash == net and len(invoice.linked_transaction_ids) == 1)
+        or comparison.owed <= Decimal("0")
+        or comparison.cash > comparison.owed
+        or (comparison.settled and len(invoice.linked_transaction_ids) == 1)
         or not decompose_invoice(invoice).is_grounded
     ):
         return None
-    return cash / net
+    return comparison.cash / comparison.owed
 
 
 def sales_invoice_evidence_payload(
@@ -123,6 +161,9 @@ def sales_invoice_evidence_payload(
     professional invoices this evidence path exists to ground; asserting it
     against the cash without the retención term would accept an invoice that
     does not describe the payment.
+
+    The cash and the invoice are compared through :func:`settlement_comparison`, and
+    the figures returned are always EUR, whatever currency the invoice is stated in.
 
     Core types:
     :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
@@ -153,9 +194,15 @@ def sales_invoice_evidence_payload(
         )
     if len(invoice.linked_transaction_ids) != 1:
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.PARTIAL_OR_MULTI_TRANSACTION
-    expected_cash = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
-    if abs(transaction.raw.amount) != expected_cash:
+    comparison = settlement_comparison(invoice, (transaction,))
+    if comparison is None:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.NO_EUR_VALUE
+    if not comparison.settled:
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
+    base_eur = invoice.base_total_eur
+    iva_eur = invoice.iva_total_eur
+    if base_eur is None or iva_eur is None:
+        return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.NO_EUR_VALUE
     # Linkage is established by this point; coherence is a separate question and
     # the guards above cannot answer it. Delegated rather than re-derived: the
     # decomposition contract is the single authority on whether an invoice's own
@@ -165,9 +212,9 @@ def sales_invoice_evidence_payload(
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNGROUNDED_DECOMPOSITION
     return (
         _SalesInvoiceEvidencePayload(
-            taxable_base=invoice.base_total,
-            iva_amount=invoice.iva_total,
-            retencion_amount=invoice.retention_amount,
+            taxable_base=base_eur,
+            iva_amount=iva_eur,
+            retencion_amount=invoice.retention_amount_eur,
         ),
         None,
     )
