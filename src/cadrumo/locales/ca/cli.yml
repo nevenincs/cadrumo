@@ -456,6 +456,16 @@ cli:
           per cada --line. Per a l'entrada estructurada substitueix els camps escalars
           --taxable-base i --iva-rate.
         list_help: Llista les factures del catàleg de conciliació.
+        match_help: Respon quin moviment salda quina factura i les opcions per vincular
+          a mà, sense vincular res.
+        match_invalid: Un vincle preparat ha d'indicar l'id d'un moviment i el d'una
+          factura com MOVIMENT:FACTURA, tots dos complets.
+        match_invoice_help: 'Id complet d''una factura: pondera només aquesta factura
+          i llista els moviments oberts propers al seu dia d''emissió.'
+        match_staged_help: Vincle preparat i sense desar, repetible, com MOVIMENT:FACTURA;
+          cap dels dos s'ofereix a una altra cosa.
+        match_transaction_help: 'Id complet d''un moviment: retorna només el seu suggeriment
+          i llista les factures a les quals es pot vincular.'
         operation_date_help: Data en que es va fer el lliurament o la prestació (AAAA-MM-DD).
           Es la data de meritació de l'art. 75 LIVA que determina en quin període
           es declara la quota; sense aquesta s'utilitza la data de factura.

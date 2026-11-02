@@ -10,6 +10,7 @@
 
 import { answerInvoiceDuplicate } from "./ledgerDuplicateFixture";
 import { answerRuleTrial } from "./ledgerRuleTrialFixture";
+import { answerInvoiceMatch } from "./ledgerInvoiceMatchFixture";
 import { answerSplitCheck } from "./ledgerSplitCheckFixture";
 import { isClassification, isDirection } from "../shell/ledgerContract";
 import {
@@ -35,6 +36,7 @@ import {
   type LedgerTransaction,
   type PublicPeriod,
   type LedgerInvoiceDuplicateRequest,
+  type LedgerInvoiceMatchRequest,
   type LedgerSplitCheckRequest,
   type LedgerStagedCheckRequest,
 } from "../shell/ledger";
@@ -1982,6 +1984,13 @@ export function ledgerFixture(options: Options): LedgerPort {
     "ledger.invoice.duplicate": (request) =>
       answerInvoiceDuplicate(
         request as unknown as LedgerInvoiceDuplicateRequest,
+        ledger.invoices,
+        LEDGER_FIXTURE_PROFILE_ID,
+      ) as unknown as JsonObject,
+    "ledger.invoice.match": (request) =>
+      answerInvoiceMatch(
+        request as unknown as LedgerInvoiceMatchRequest,
+        ledger.movements,
         ledger.invoices,
         LEDGER_FIXTURE_PROFILE_ID,
       ) as unknown as JsonObject,

@@ -96,6 +96,7 @@ function invoice(facts: Partial<CatalogueInvoice> = {}): CatalogueInvoice {
     iva_total_eur: null,
     grand_total_eur: null,
     referencia_catastral: null,
+    settlement_amount: { decimal: "1210.00" },
     ...facts,
   };
 }

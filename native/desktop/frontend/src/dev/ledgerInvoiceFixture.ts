@@ -21,6 +21,7 @@ import {
   isPaymentStatus,
 } from "../shell/ledgerContract";
 import type { FixtureLedger } from "./fixtures/ledger";
+import { settlementOf } from "./ledgerSettlement";
 import recorded from "./fixtures/ledgerInvoicePreview.json" with { type: "json" };
 
 /** A request its registered contract would not decode. */
@@ -471,6 +472,10 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
       iva_total_eur: null,
       grand_total_eur: null,
       referencia_catastral: referencia || null,
+      settlement_amount: settlementOf(
+        textOf(total),
+        request.retention_amount ? decimal(request.retention_amount)! : null,
+      ),
     };
     if (!holds(invoice)) refuseAdd("invalid_invoice");
     // The identity is the kind, number, issue date, tax id, currency and
@@ -538,6 +543,10 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
       const value = values[field] ?? null;
       next[field] = value;
     }
+    next.settlement_amount = settlementOf(
+      found.invoice.grand_total.decimal,
+      (next.retention_amount as { decimal: string } | null)?.decimal ?? null,
+    );
     const corrected = next as unknown as CatalogueInvoice;
     if (
       corrected.counterparty_name === null ||

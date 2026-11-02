@@ -533,6 +533,7 @@ function catalogueInvoice(
     iva_total_eur: null,
     grand_total_eur: null,
     referencia_catastral: null,
+    settlement_amount: { decimal: total },
   };
 }
 
