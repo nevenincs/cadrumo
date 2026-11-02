@@ -222,6 +222,13 @@ TRANSLATION_SPANISH_TAX_TERM_RE: Final[re.Pattern[str]] = re.compile(
     r"certificado de situación censal|situación censal|"
     r"censal(?= (?:certificate|facts|read))|"
     r"código seguro de verificación|"
+    # The activity-income imputation guidance keeps the statutory name of the
+    # commercial accounting code (https://www.boe.es/buscar/act.php?id=BOE-A-1885-6627)
+    # and RIRPF art. 7's two criteria, accrual (devengo) and cash (cobros y pagos),
+    # which the declaration forms and the imputation flags state in Spanish
+    # (https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820). The ingreso a cuenta
+    # is the payer's payment on account on income in kind (LIRPF art. 99).
+    r"código de comercio|cobros y pagos|devengo|ingresos? a cuenta|"
     r"mínimo por descendientes|anualidades por alimentos|guarda y custodia|"
     r"régimen de atribución de rentas|comunidad de bienes|sociedad civil|"
     # The Renta/VAT guides retain these complete Spanish box and regime
