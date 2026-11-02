@@ -34,6 +34,8 @@ scoped_families = ["workbook_parity_refs", "verification_expectations", "complet
 
 
 
+family_disposition_removals = ["parameters"]
+
 [revisions."2018-y-siguientes".family_dispositions.formulas]
 reason = "The declarant reports its OWN operaciones with related parties and with paraisos fiscales; the valuation of those operations is settled in the Impuesto sobre Sociedades self-assessment, not here. This form carries information about the declarant's own transactions and computes no liability, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [

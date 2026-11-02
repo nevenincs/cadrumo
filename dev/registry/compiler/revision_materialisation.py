@@ -27,11 +27,13 @@ from cadrumo.domain.calculations.registry.revision_contracts import validate_pre
 from dev.registry.compiler._toml_helpers import as_toml_table as _as_toml_table
 
 from . import casilla_inheritance as _casilla_inheritance
+from . import family_disposition_inheritance as _disposition_inheritance
 from . import keyed_family_inheritance as _keyed_family_inheritance
 from .casilla_inheritance import _LabelOrigins
 from .loader_fields import (
     _CASILLA_STORAGE_BASELINE_FIELD,
     _CLEARED_FAMILIES_FIELD,
+    _DISPOSITIONS_FIELD,
     _FAMILY_STORAGE_BASELINE_FIELD,
     _INHERITED_SECTION,
     _NO_PREDECESSOR_TABLE_KEY,
@@ -186,9 +188,11 @@ def _materialise_revisions(
     enrolment; the raw rows carry no marker, so a materialised table written
     back as a full copy states nothing the loader would refuse.
     """
+    _disposition_inheritance.refuse_authored_disposition_markers(source_path, raw_revisions)
     declarations = _raw_predecessor_declarations(raw_revisions)
     storage_named, family_storage_named = _storage_baselines(source_path, raw_revisions)
     if not _requires_materialisation(declarations, storage_named, family_storage_named):
+        _disposition_inheritance.refuse_removals_without_predecessor(source_path, raw_revisions)
         return _MaterialisedRevisions(revisions=raw_revisions, label_origins={})
     _validate_predecessor_declarations(source_path, modelo_id, declarations)
     semantic_named = {} if declarations is None else declarations.named
@@ -306,6 +310,12 @@ def _materialise_revision(
     casilla_baseline_id = predecessor_id or storage_named.get(revision_id)
     family_baseline_id = predecessor_id or family_storage_named.get(revision_id)
     if casilla_baseline_id is None and family_baseline_id is None:
+        _disposition_inheritance.inherit_family_dispositions(
+            f"{source_path}: revision {revision_id!r}",
+            baseline_id=None,
+            predecessor=None,
+            successor=table,
+        )
         result = _MaterialisedRevision(table=table, label_origins=None)
     else:
         rows, label_origins, text_origins = _materialise_revision_casillas(
@@ -337,6 +347,18 @@ def _materialise_revision(
                 merged,
                 resolved,
             )
+        _inherit_revision_dispositions(
+            source_path,
+            raw_revisions,
+            named,
+            storage_named,
+            family_storage_named,
+            revision_id,
+            family_baseline_id,
+            table,
+            merged,
+            resolved,
+        )
         result = _MaterialisedRevision(table=merged, label_origins=label_origins, text_origins=text_origins)
     resolved[revision_id] = result
     return result
@@ -418,6 +440,36 @@ def _inherit_revision_families(
         )
         if members is not None:
             merged[family.section] = members
+
+
+def _inherit_revision_dispositions(
+    source_path: Path,
+    raw_revisions: Mapping[str, object],
+    named: Mapping[str, str],
+    storage_named: Mapping[str, str],
+    family_storage_named: Mapping[str, str],
+    revision_id: str,
+    baseline_id: str | None,
+    successor: Mapping[str, object],
+    merged: dict[str, object],
+    resolved: dict[str, _MaterialisedRevision],
+) -> None:
+    """Replace the edition's authored dispositions with its effective ones, over the family link."""
+    predecessor = (
+        None
+        if baseline_id is None
+        else _materialise_revision(
+            source_path, raw_revisions, named, storage_named, family_storage_named, baseline_id, resolved
+        ).table
+    )
+    effective = _disposition_inheritance.inherit_family_dispositions(
+        f"{source_path}: revision {revision_id!r} inheriting from {baseline_id!r}",
+        baseline_id=baseline_id,
+        predecessor=predecessor,
+        successor=successor,
+    )
+    if effective:
+        merged[_DISPOSITIONS_FIELD] = effective
 
 
 def _materialise_one_family(
