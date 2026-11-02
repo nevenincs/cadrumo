@@ -4600,7 +4600,9 @@ export type ModeloFormInspectionReason =
  * `address` is where choosing the line leads: the box the form shows, or with
  * `in_records` the table whose records carry the value; `None` when the line
  * leads nowhere on the form. `surface` is the area of the application that
- * owns the value, when one does.
+ * owns the value, when one does: for a line about a box it is the area its
+ * primary source belongs to, so a credit the withholding register supplies
+ * leads to that register and never to a place to type it.
  */
 export type ModeloFormIssueLine = {
   level: ModeloFormAttention;
