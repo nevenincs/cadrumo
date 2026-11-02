@@ -78,7 +78,9 @@ def resolve_persisted_amendment_export_evidence(
             _raise(command, "typed amendment evidence was supplied for a non-amendment revision")
         return None
     with validating_governed_facts(operation):
-        assert_amendment_kind_permitted(modelo=str(work_unit.modelo), period=work_unit.period, amendment_kind=identity.kind)
+        assert_amendment_kind_permitted(
+            modelo=str(work_unit.modelo), period=work_unit.period, amendment_kind=identity.kind
+        )
     records = filing_repository.load()
     target = _target(command, identity=identity, work_unit=work_unit, records=records)
     justificantes, receipt = _receipt(
