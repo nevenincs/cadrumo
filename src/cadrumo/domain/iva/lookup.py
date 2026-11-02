@@ -17,8 +17,8 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.errors import GovernedFactNotApplicableError
+from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
@@ -422,7 +422,9 @@ def tier_rates_within(
     Returns:
         The percentages in the order they came into force.
     """
-    resolved_kind = require_iva_rate_kind(kind, effective_date=rate_vocabulary_date(start, operation), authority=operation)
+    resolved_kind = require_iva_rate_kind(
+        kind, effective_date=rate_vocabulary_date(start, operation), authority=operation
+    )
     starts = {
         variant.valid_from
         for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants

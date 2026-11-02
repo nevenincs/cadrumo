@@ -179,8 +179,12 @@ def test_the_selector_narrows_the_claim_to_the_tracks_carrying_it() -> None:
     ordinary = {"name": "role", "value": "ordinary"}
     temporary = {"name": "role", "value": "temporary"}
     fact = _fact(
-        _variant("test.rate:ordinary", "0.21", valid_from=date(_FLOOR, 1, 1), valid_to=_FIRST_END, selectors=(ordinary,)),
-        _variant("test.rate:temporary", "0.05", valid_from=date(_FLOOR, 1, 1), valid_to=_FIRST_END, selectors=(temporary,)),
+        _variant(
+            "test.rate:ordinary", "0.21", valid_from=date(_FLOOR, 1, 1), valid_to=_FIRST_END, selectors=(ordinary,)
+        ),
+        _variant(
+            "test.rate:temporary", "0.05", valid_from=date(_FLOOR, 1, 1), valid_to=_FIRST_END, selectors=(temporary,)
+        ),
         standing_rate={"track_selector": ordinary},
     )
     after = _FIRST_END + timedelta(days=1)
@@ -198,7 +202,9 @@ def test_an_absent_track_is_not_answered_by_another() -> None:
     )
 
     with pytest.raises(GovernedFactNotApplicableError):
-        _resolve(fact, _FIRST_END, selectors=(FactSelector(name="role", value="ordinary"), FactSelector(name="x", value="y")))
+        _resolve(
+            fact, _FIRST_END, selectors=(FactSelector(name="role", value="ordinary"), FactSelector(name="x", value="y"))
+        )
 
 
 def test_a_selector_no_variant_carries_is_refused_at_validation() -> None:

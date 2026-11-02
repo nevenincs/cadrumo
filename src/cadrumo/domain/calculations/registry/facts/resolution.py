@@ -211,7 +211,9 @@ class _ResolvedFact(RegistryModel):
         below the support floor inside a real window stays published: it is
         projected as to filing grade, not as to the law stated for it.
         """
-        return self.valid_from <= self.effective_date and (self.valid_to is None or self.effective_date <= self.valid_to)
+        return self.valid_from <= self.effective_date and (
+            self.valid_to is None or self.effective_date <= self.valid_to
+        )
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -577,7 +579,11 @@ def _nearest_edition_coordinate(
     later one would apply law not yet made. ``None`` means the track is empty.
     """
     earlier = max(
-        (window.valid_to for _variant, window in track if window.valid_to is not None and window.valid_to < effective_date),
+        (
+            window.valid_to
+            for _variant, window in track
+            if window.valid_to is not None and window.valid_to < effective_date
+        ),
         default=None,
     )
     later = min((window.valid_from for _variant, window in track if window.valid_from > effective_date), default=None)
@@ -590,7 +596,9 @@ def _nearest_edition_projection(
     nearest: date,
     effective_date: date,
 ) -> tuple[TemporalProjectionDirection, date]:
-    direction = TemporalProjectionDirection.FORWARD if nearest < effective_date else TemporalProjectionDirection.BACKWARD
+    direction = (
+        TemporalProjectionDirection.FORWARD if nearest < effective_date else TemporalProjectionDirection.BACKWARD
+    )
     return direction, nearest
 
 

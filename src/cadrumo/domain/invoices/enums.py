@@ -554,10 +554,13 @@ def iva_rate_slot_is_published(rate: IvaRate, on_date: date) -> bool:
         return True
     operation = _pinned_iva_rate_operation()
     kind = _iva_rate_slot_kind(declarations, on_date)
-    if kind == resolve_iva_rate_kind_catalogue(
-        effective_date=rate_vocabulary_date(on_date, operation),
-        authority=operation,
-    ).zero_token:
+    if (
+        kind
+        == resolve_iva_rate_kind_catalogue(
+            effective_date=rate_vocabulary_date(on_date, operation),
+            authority=operation,
+        ).zero_token
+    ):
         return True
     return resolve_iva_rate(
         spanish_eu_member_state(effective_date=rate_vocabulary_date(on_date, operation), authority=operation),
@@ -635,7 +638,6 @@ __all__ = [
     "InvoiceOperationDateRole",
     "IvaRate",
     "IvaRateNotFoundError",
-    "iva_rate_slot_is_published",
     "PaymentStatus",
     "advance_payment_received_role",
     "default_invoice_class",
@@ -645,6 +647,7 @@ __all__ = [
     "invoice_legal_mention_declarations",
     "iva_rate_kind",
     "iva_rate_percentage",
+    "iva_rate_slot_is_published",
     "operation_performed_role",
     "require_invoice_class",
     "require_invoice_operation_date_role",
