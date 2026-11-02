@@ -40,8 +40,15 @@ from typing import Any
 import pytest
 from pydantic import SecretStr
 
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import create_user_profile_record
+from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+    _M303_LEDGER_CUOTA,
+    _seed_modelo_303_ledger_iva_for,
+)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
@@ -67,7 +74,6 @@ from ....application.calculations.iva_wallet_reconciliation import reconcile_mod
 from ....application.calculations.relation_prefill import resolve_relations_from_local_store
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.action_errors import ModeloRefundElectionNotEligibleError
-from ....application.modelo.calculation_actions import calculate_modelo_revision
 from ....application.modelo.filing_actions import file_modelo_revision
 from ....application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
 from ....application.modelo.verification_actions import verify_modelo_revision_with_preconditions
@@ -128,14 +134,6 @@ _SALDO_CASILLA: CasillaId = validated_casilla_id("iva.compensacion-disponible-fi
 #: A negative-result M303 credit scenario: cuota soportada (interiores) exceeds
 #: cuota repercutida, so the régimen-general result is negative — the IVA credit
 #: that is refunded (election) or carried (compensar).
-_NEGATIVE_CREDIT_ENGINE_INPUTS = {
-    "modelo-303-iva-repercutido-general-cuota": Decimal("0.00"),
-    "modelo-303-iva-repercutido-reducido-cuota": Decimal("0.00"),
-    "modelo-303-iva-repercutido-super-reducido-cuota": Decimal("0.00"),
-    "modelo-303-iva-soportado-interiores-cuota": Decimal("1000.00"),
-    "modelo-303-iva-autorepercutido-intracomunitaria-cuota": Decimal("0.00"),
-    "modelo-303-profile-state-attribution-ratio": Decimal("100"),
-}
 
 
 def _create_work_unit(**kwargs: Any) -> Any:
@@ -149,11 +147,11 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     for key in ("work_unit_repository", "calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
             **kwargs,
-        )
+        ).revision
 
 
 def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
@@ -328,12 +326,12 @@ def _calculate_negative_period(
         repository=work_repo,
         clock=decided_at,
     )
+    _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, soportado=_M303_LEDGER_CUOTA)
     revision = _calculate_modelo_revision(
         work_unit.work_unit_id,
         actor="operator",
         casilla_inputs={},
         binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-        backend_binding_values=_NEGATIVE_CREDIT_ENGINE_INPUTS,
         iva_compensation_decision=report.decision,
         filing_instance_evidence=general_m303_filing_evidence(
             work_unit.period,

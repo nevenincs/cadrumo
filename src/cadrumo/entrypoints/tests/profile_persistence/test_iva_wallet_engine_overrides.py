@@ -20,7 +20,9 @@ from cadrumo.adapters.persistence.storage.runtime_repository import secure_objec
 from cadrumo.application.calculations.binding_prefill import extract_modelo_303_local_iva_compensation_recurrence
 from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from cadrumo.application.calculations.observations_repository import CalculationObservationPorts
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from cadrumo.application.modelo.iva_wallet_seed import (
     ModeloIvaWalletOverrideFreshWalletError,
@@ -46,15 +48,16 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+    _M303_LEDGER_CUOTA,
     _M303_RESULTADO_CASILLA,
     _TARGET_PERIOD,
     _TARGET_PERIOD_VALUE,
     _TARGET_YEAR,
     _TAXPAYER_NIF,
     _filing_instance_evidence,
-    _modelo_303_engine_inputs,
     _save_wallet_gate_decision,
     _secure_backend,
+    _seed_modelo_303_ledger_iva_for,
     _snapshot_303,
     _store_operator_profile,
     _store_prior_303_compensation,
@@ -159,18 +162,18 @@ def test_missing_wallet_requires_explicit_override_before_real_modelo_303_engine
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_136:
-            revision = calculate_modelo_revision(
+            _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                backend_binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=report.decision,
                 filing_instance_evidence=_filing_instance_evidence(work_unit.period, operation=operation),
                 filing_period_date=date(2026, 6, 30),
                 ports=_calculation_ports_136,
                 clock=_DECIDED_AT,
-            )
+            ).revision
 
         assert revision.casilla_values[_M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA] == Decimal("1200.00")
 
@@ -197,18 +200,18 @@ def test_recorded_override_unblocks_carry_and_reduces_final_result(tmp_path: Pat
                 calculation_repository=calc_repo,
                 bucket_event_repository=event_repo,
             ) as _calculation_ports_171:
-                return calculate_modelo_revision(
+                _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
+                return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                     work_unit.work_unit_id,
                     actor="operator",
                     casilla_inputs={},
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                    backend_binding_values=_modelo_303_engine_inputs(),
                     iva_compensation_decision=None,
                     filing_instance_evidence=_filing_instance_evidence(work_unit.period, operation=operation),
                     filing_period_date=date(2026, 6, 30),
                     ports=_calculation_ports_171,
                     clock=_DECIDED_AT,
-                )
+                ).revision
 
         # NEGATIVE CONTROL: no override recorded and no wallet/local recurrence
         # exists for the in-scope prior period, so calculation fails closed.

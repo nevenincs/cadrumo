@@ -142,6 +142,12 @@ def product_software_identity() -> AeatProductSoftwareIdentity:
     )
 
 
+def transaction_booked_date(period: str, *, filing_year: int = _YEAR) -> date:
+    """The date :func:`iva_transaction` books a row of ``period`` on: a quarter's middle month or the month itself."""
+    month = _QUARTER_MONTH[period] if period in _QUARTER_MONTH else int(period)
+    return date(filing_year, month, 10)
+
+
 def iva_transaction(
     provider_id: str,
     *,
@@ -159,7 +165,7 @@ def iva_transaction(
     deduction_fact_kind: IvaDeductionFactKind | None = None,
     deduction_provenance: IvaDeductionClassificationProvenance | None = None,
 ) -> Transaction:
-    booked = date(filing_year, _QUARTER_MONTH[period], 10)
+    booked = transaction_booked_date(period, filing_year=filing_year)
     payload: dict[str, object] = {
         "raw": RawTransaction(
             provider_transaction_id=provider_id,

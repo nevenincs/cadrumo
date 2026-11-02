@@ -18,7 +18,9 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.application.calculations.binding_prefill import BindingPrefillReport
 from cadrumo.application.calculations.iva_wallet_reconciliation import reconcile_modelo_303_iva_compensation
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.iva_wallet_gate import (
     ModeloIvaWalletReconciliationBlocked,
@@ -35,12 +37,13 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
+    _M303_LEDGER_CUOTA,
     _M303_POSTERIOR_CASILLA,
     _M303_RESULTADO_CASILLA,
     _TAXPAYER_NIF,
-    _modelo_303_engine_inputs,
     _save_wallet_gate_decision,
     _secure_backend,
+    _seed_modelo_303_ledger_iva_for,
     _snapshot_303,
     _store_operator_profile,
     _store_operator_profile_with_tax_id,
@@ -74,11 +77,11 @@ def _calculate_modelo_revision(work_unit_id: str, **kwargs: Any) -> Any:
     for key in ("calculation_repository", "bucket_event_repository"):
         kwargs.pop(key, None)
     with bundled_indexed_authority().operation() as operation:
-        return calculate_modelo_revision(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit_id,
             ports=build_calculation_action_ports(bucket_id=repository.bucket_id, operation=operation),
             **kwargs,
-        )
+        ).revision
 
 
 def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
@@ -130,12 +133,12 @@ def test_grounded_first_period_zero_decision_feeds_real_modelo_303_engine_and_li
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
             snapshot, operation=operation
         )
+        _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
         revision = _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs={},
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-            backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=report.decision,
             filing_period_date=date(2026, 3, 31),
             work_unit_repository=work_repo,
@@ -240,12 +243,12 @@ def test_wallet_only_decision_feeds_real_modelo_303_engine_and_lifecycle_gate(
         work_unit, work_repo, calc_repo, event_repo = _work_unit_repositories_with_modelo_303_work_unit(
             snapshot, operation=operation
         )
+        _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
         revision = _calculate_modelo_revision(
             work_unit.work_unit_id,
             actor="operator",
             casilla_inputs={},
             binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-            backend_binding_values=_modelo_303_engine_inputs(),
             iva_compensation_decision=report.decision,
             filing_period_date=date(2026, 6, 30),
             work_unit_repository=work_repo,
@@ -333,12 +336,12 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
                 local_recurrence=None,
                 prefill_report=BindingPrefillReport(prefilled=(), binding_values={}),
             )
+            _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
             revision = _calculate_modelo_revision(
                 work_unit.work_unit_id,
                 actor="operator",
                 casilla_inputs={},
                 binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                backend_binding_values=_modelo_303_engine_inputs(),
                 iva_compensation_decision=fresh.decision,
                 filing_period_date=date(2026, 3, 31),
                 work_unit_repository=work_repo,
@@ -380,12 +383,12 @@ def test_backdated_lifecycle_clock_refuses_before_wallet_decision_persistence(
 
         with pytest.raises(ModeloLifecycleClockPrecedesError) as exc_info:
             if action == "calculate":
+                _seed_modelo_303_ledger_iva_for(work_unit.work_unit_id, repercutido=_M303_LEDGER_CUOTA)
                 _calculate_modelo_revision(
                     work_unit.work_unit_id,
                     actor="operator",
                     casilla_inputs={},
                     binding_values={"modelo-303-profile-state-attribution-ratio": Decimal("100")},
-                    backend_binding_values=_modelo_303_engine_inputs(),
                     filing_period_date=date(2026, 3, 31),
                     work_unit_repository=work_repo,
                     calculation_repository=calc_repo,
