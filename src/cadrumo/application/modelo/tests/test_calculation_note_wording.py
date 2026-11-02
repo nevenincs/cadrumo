@@ -18,6 +18,7 @@ import pytest
 
 from ....core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
 from ....core.i18n.render import lookup_translation
+from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.actividad_asset_disposal_bindings import activity_asset_disposal_route_casillas
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
@@ -69,6 +70,7 @@ _VALUES = {
     "box": "0208",
     "year": "2024",
     "count": "2",
+    "income_class": RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD.value,
 }
 _RAW = re.compile(
     r"[0-9a-f]{12,}"  # a hash or the tail of one
@@ -107,6 +109,20 @@ def test_no_sentence_shows_an_id_a_hash_or_a_raw_token(
     assert _RAW.search(text) is None, text
     if names and _placeholders(sentence, language) & {"element", "elements"}:
         assert "Office laptop" in text
+
+
+@pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
+@pytest.mark.parametrize("income_class", tuple(RetencionSoportadaClase))
+def test_every_income_class_a_sentence_names_reads_in_words(
+    income_class: RetencionSoportadaClase, language: str
+) -> None:
+    fact = CalculationNoteFact.of(
+        CalculationNoteSentence.RETENCION_SOPORTADA_EVIDENCE_REQUIRED, income_class=income_class.value
+    )
+
+    text = note_fact_text(fact, locale=language)
+
+    assert _RAW.search(text) is None, text
 
 
 def test_a_name_with_a_stored_look_still_reads_only_as_itself() -> None:

@@ -30,7 +30,7 @@ from textual.color import Color
 from textual.widget import Widget
 from textual.widgets import OptionList, Static
 
-from ......application.modelo.finding_message_text import FINDING_FACT_KINDS, FindingFactKind
+from ......application.modelo.finding_message_text import FINDING_FACT_KINDS, NO_PERIODS_FACT, FindingFactKind
 from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
@@ -72,6 +72,7 @@ _LEGAL_REF: Final[str] = "ley-37-1992:art-99"
 
 _REPRESENTATIVE: Final[Mapping[FindingFactKind, tuple[str | int | Decimal, ...]]] = {
     FindingFactKind.PERIOD: ("4T", "0A", "01", "2P", "EXT-3T", "EVENT-3"),
+    FindingFactKind.PERIODS: ("1T|2T", NO_PERIODS_FACT, "EXT-3T|0A|EVENT-3"),
     FindingFactKind.DATE: ("2025-03-01", "unknown"),
     FindingFactKind.BOX: ("op.codigo-pais", "0435", "m100.casilla-rnt"),
     FindingFactKind.BOX_NUMBER: ("76-77", "12"),
@@ -227,8 +228,10 @@ def _fact_names(module: ast.Module, call: ast.Call, facts: ast.expr) -> set[str]
     if isinstance(facts, ast.Call) and isinstance(facts.func, ast.Name):
         return _builder_keys(module, facts.func.id)
     keys, splats = _dict_keys(facts)
-    for _ in splats:
-        keys |= _call_site_keys(module, _enclosing(module, call).name)
+    function = _enclosing(module, call)
+    parameters = {argument.arg for argument in [*function.args.args, *function.args.kwonlyargs]}
+    for splat in splats:
+        keys |= _call_site_keys(module, function.name) if splat in parameters else _local_keys(module, function, splat)
     return keys
 
 
