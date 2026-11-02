@@ -306,6 +306,7 @@ _LOCAL_WRITES: Final = (
     # builds local objects only and opens no browser or session.
     "modelo.work.verify",
     "profile.archive.export",
+    "user-profile.ascendants",
     "user-profile.automation-approve",
     "user-profile.automation-decline",
     "user-profile.automation-inventory",

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ac02e0555bf5400e78523850912a590266cd2f6f20a1b0550585cba744a0fc3d'
+body_hash: 'sha256:88c5310c0e9672edb682d6bfbb088508d7578ea3610240feac541ec0138956d4'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -138,6 +138,22 @@ related:
 - `S30` `M` `native/desktop/frontend/tests/scenarios/palette.spec.ts`
 - `S30` `verify:` `All palette browser scenarios 15` -> `pass`
 - `S30` `verify:` `TypeScript scoped ESLint and formatting` -> `pass`
+- `S19` `A` `native/desktop/frontend/src/shell/modeloWriteHolds.ts`
+- `S19` `A` `native/desktop/frontend/src/components/modelo/WriteHoldNotice.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/declarations/NewDeclarationDialog.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPage.tsx`
+- `S19` `M` `native/desktop/frontend/src/components/modelo/declarations/useDeclarationsList.ts`
+- `S19` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S19` `M` `native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`
+- `S19` `A` `native/desktop/frontend/tests/live/modelo-write-holds.unit.ts`
+- `S19` `M` `dev/locales/desktop_workspace_keys.py`
+- `S19` `M` `src/cadrumo/locales/en/common.yml`
+- `S19` `M` `src/cadrumo/locales/es/common.yml`
+- `S19` `M` `src/cadrumo/locales/ca/common.yml`
+- `S19` `M` `src/cadrumo/locales/hu/common.yml`
+- `S19` `verify:` `Declarations and list lifecycle browser scenarios 16 plus final lifecycle rerun 5` -> `pass`
+- `S19` `verify:` `Modelo hold state race unit tests 4` -> `pass`
+- `S19` `verify:` `TypeScript targeted ESLint formatting and canonical four-language chrome` -> `pass`
 
 ## Notes
 

@@ -221,7 +221,6 @@ def test_a_stale_revision_is_refused_and_writes_nothing(world: _World) -> None:
     [
         (_FIRST, "accrual", None),
         (_FIRST, "devengo", "perhaps"),
-        (25, "devengo", None),
     ],
 )
 def test_an_answer_the_wizard_question_does_not_accept_is_refused(
@@ -231,6 +230,14 @@ def test_an_answer_the_wizard_question_does_not_accept_is_refused(
 
     with pytest.raises(WizardValidationError):
         world.state(year, criterion=criterion, accounting=accounting)
+    assert world.record().content_digest == before.content_digest
+
+
+def test_an_ejercicio_not_written_as_a_year_is_refused_at_the_contract(world: _World) -> None:
+    before = world.record()
+
+    with pytest.raises(ValidationError):
+        world.state(25, criterion="devengo")
     assert world.record().content_digest == before.content_digest
 
 

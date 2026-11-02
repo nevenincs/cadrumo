@@ -15,6 +15,7 @@ from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONF
 from ...core.operations import profile_operation_subject as _profile_subject
 from ...domain.user_profile.plantilla_media import PlantillaMediaState
 from ..operations.models import OperationTerminalReceipt
+from .ascendant_rows import ProfileAscendantRow
 from .bundle_export_contracts import (
     ProfileBundleExportPurpose,
     ProfileBundleExportResult,
@@ -28,6 +29,8 @@ PROFILE_PATCH_OPERATION_DEFINITION_ID = "user-profile.patch"
 PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID = "user-profile.plantilla-media"
 
 PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID = "user-profile.descendants"
+
+PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID = "user-profile.ascendants"
 
 PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID = "user-profile.repeatable-row-mutation"
 
@@ -61,6 +64,12 @@ PROFILE_DESCENDANTS_PHASES = (
     "user-profile.descendants.preflight",
     "user-profile.descendants.execute",
     "user-profile.descendants.settlement",
+)
+
+PROFILE_ASCENDANTS_PHASES = (
+    "user-profile.ascendants.preflight",
+    "user-profile.ascendants.execute",
+    "user-profile.ascendants.settlement",
 )
 
 PROFILE_REPEATABLE_ROW_MUTATION_PHASES = (
@@ -189,6 +198,17 @@ class ProfileDescendantsOperationRequest(BaseModel):
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
     descendants: tuple[ProfileDescendantRow, ...] = Field(max_length=256, repr=False)
+
+
+class ProfileAscendantsOperationRequest(BaseModel):
+    """Replace the complete set of ascendants at an exact encrypted revision."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    expected_revision: int = Field(ge=1)
+    expected_content_digest: ContentDigest
+    ascendants: tuple[ProfileAscendantRow, ...] = Field(max_length=256, repr=False)
 
 
 class ProfileRepeatableRowValue(BaseModel):
@@ -345,6 +365,13 @@ class ProfileDescendantsOperationResult(ProfileMutationOperationResult):
     changed: bool
 
 
+class ProfileAscendantsOperationResult(ProfileMutationOperationResult):
+    """Encrypted ascendant replacement witness without retained personal rows."""
+
+    total: NonNegativeInt
+    changed: bool
+
+
 class ProfileRepeatableRowMutationOperationResult(ProfileMutationOperationResult):
     """Safe row identity and revision witness for a completed row mutation."""
 
@@ -394,6 +421,13 @@ class ProfileDescendantsOperationProjection(ProfileMutationOperationProjection):
     changed: bool
 
 
+class ProfileAscendantsOperationProjection(ProfileMutationOperationProjection):
+    """Settled ascendant count and change without personal rows or fingerprints."""
+
+    total: NonNegativeInt
+    changed: bool
+
+
 class ProfileRepeatableRowMutationOperationProjection(ProfileMutationOperationProjection):
     """Public location of the newly committed profile row."""
 
@@ -436,6 +470,13 @@ def project_profile_mutation_result(result: BaseModel, receipt: OperationTermina
         )
     if isinstance(result, ProfileDescendantsOperationResult):
         return ProfileDescendantsOperationProjection(
+            profile_id=result.profile_id,
+            record_revision=result.record_revision,
+            total=result.total,
+            changed=result.changed,
+        )
+    if isinstance(result, ProfileAscendantsOperationResult):
+        return ProfileAscendantsOperationProjection(
             profile_id=result.profile_id,
             record_revision=result.record_revision,
             total=result.total,

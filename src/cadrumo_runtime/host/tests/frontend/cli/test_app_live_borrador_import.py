@@ -9,8 +9,9 @@ the real extraction profile, and the encrypted snapshot repository.
 Three contracts are pinned here:
 
 - The happy path persists a snapshot the existing read verbs can retrieve,
-  reports the printed casillas no borrador-admitted binding owns instead of
-  storing them, and resolves a re-import of the same PDF to the same snapshot.
+  keeps the printed casillas no borrador-admitted binding owns as
+  comparison-only observations rather than binding values, and resolves a
+  re-import of the same PDF to the same snapshot.
 - The registry profile's ``min_coverage`` refuses a PDF that does not carry
   enough target casillas, and persists nothing when it does.
 - The operator's filesystem path never reaches the persisted snapshot; the
@@ -60,7 +61,8 @@ _FIXTURE_PDF = (
 # The borrador extraction profile declares these five target casillas at
 # min_coverage = 1, so every one of them must be read for the import to stand.
 # All five are computed casillas of the revision, so no binding admitted to the
-# borrador owns one: each is reported as unowned and none is stored.
+# borrador owns one: each is kept as a comparison-only observation and none is
+# stored as a binding value.
 _PROFILE_TARGET_CASILLAS = ("0505", "0545", "0546", "0585", "0586")
 
 _NEW_TRANSLATION_KEYS = (
@@ -131,7 +133,8 @@ def _assert_first_import(profile: NativeCliProfileFixture) -> dict[str, Any]:
     assert payload["artefact_kind"] == "BORRADOR"
     assert payload["binding_count"] == 0
     assert payload["blank_casillas"] == []
-    assert payload["unowned_casillas"] == list(_PROFILE_TARGET_CASILLAS)
+    assert payload["observed_casillas"] == list(_PROFILE_TARGET_CASILLAS)
+    assert payload["unowned_casillas"] == []
     assert (payload["state"], payload["outcome"]) == ("active", "captured")
     digest = hashlib.sha256(_FIXTURE_PDF.read_bytes()).hexdigest()
     assert payload["source_pdf_sha256"] == digest

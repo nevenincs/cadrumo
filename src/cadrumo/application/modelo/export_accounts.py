@@ -45,13 +45,13 @@ from typing import NamedTuple
 
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.modelo import Modelo
-from ...core.payment_instalment_election import two_instalments_declared
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
 from ...core.time.clock import MADRID_TZ
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
+from ...domain.calculations.registry.payment_instalment_split import two_instalments_declared
 from ...domain.deadlines.domiciliation_cutoff import (
     DerivedPaymentCutoff,
     UnavailablePaymentCutoff,
@@ -410,7 +410,7 @@ def _instalment_refusal_reason(
     operation: PinnedAuthorityOperation,
 ) -> str | None:
     """Name the first condition of the split the export fails, or ``None`` when it meets them all."""
-    if not two_instalments_declared(str(work_unit.modelo)):
+    if not two_instalments_declared(str(work_unit.modelo), period_day=work_unit.period.end_date(), authority=operation):
         return "not_declared"
     if resolved_result_disposition not in _INSTALMENT_PAYABLE:
         return "nothing_to_pay"

@@ -16,6 +16,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ModeloValidationError
+from .source_disagreement import SourceDisagreementFact
 
 
 class CalculationSourceRef(BaseModel):
@@ -338,6 +339,7 @@ class CalculationSourceIssue(BaseModel):
     casilla_id: CasillaId | None = None
     fact: CalculationNoteFact | None = None
     value_outcome: BindingValueOutcome | None = None
+    disagreement: SourceDisagreementFact | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

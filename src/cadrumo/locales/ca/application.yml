@@ -1073,6 +1073,9 @@ application:
         binding_value_key_blank: Les claus dels valors de l'esborrany no poden estar
           buides.
         bucket_id_blank: L'identificador del bucket de l'esborrany no pot estar buit.
+        printed_observations_unresolved: 'Aquest esborrany desat conserva valors impresos
+          de caselles que les definicions del model ja no identifiquen, així que no
+          es pot fer servir; torna a importar el document: %{casillas}.'
         snapshot_id_blank: L'identificador del snapshot de l'esborrany no pot estar
           buit.
         snapshot_not_found: Cap snapshot de l'esborrany coincideix amb l'identificador
@@ -2997,6 +3000,24 @@ application:
             a una fórmula de full de càlcul.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: La data de naixement de l'ascendent %{row} no
+        és una data vàlida; escriu-la com any-mes-dia.
+      ascendant_birth_date_required: L'ascendent %{row} no té data de naixement, i
+        cada ascendent en necessita una.
+      ascendant_convivientes_invalid: El nombre de descendents amb qui conviu l'ascendent
+        %{row} ha de ser un nombre enter de 0 a %{limit}.
+      ascendant_death_before_birth: L'ascendent %{row} té una data de defunció anterior
+        a la data de naixement.
+      ascendant_death_date_invalid: La data de defunció de l'ascendent %{row} no és
+        una data vàlida; escriu-la com any-mes-dia.
+      ascendant_fact_unsupported: L'ascendent %{row} indica una dada que el perfil
+        no guarda per a un ascendent.
+      ascendant_limit_unknown: El disseny de la declaració no indica cap límit d'ascendents,
+        així que la llista no es pot comprovar ni desar.
+      ascendant_nif_invalid: El NIF o NIE de l'ascendent %{row} no és vàlid; revisa'n
+        les lletres i xifres.
+      ascendant_rows_over_limit: Una declaració inclou com a màxim %{limit} ascendents
+        i se n'han indicat %{count}.
       censal_read_identity_absent: La lectura censal no inclou cap NIF, de manera
         que no es pot confirmar que correspongui a aquest perfil.
       censal_read_identity_cleared: El NIF d'aquest perfil s'ha buidat, de manera

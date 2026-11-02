@@ -186,6 +186,10 @@ def _user_profile_descendants(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(ctx.raw_profile_subject, {**_baselined(ctx), "descendants": ()})
 
 
+def _user_profile_ascendants(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(ctx.raw_profile_subject, {**_baselined(ctx), "ascendants": ()})
+
+
 def _user_profile_complete_setup(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(ctx.raw_profile_subject, _baselined(ctx))
 
@@ -330,6 +334,7 @@ PROFILE_BUILDERS: dict[str, PayloadBuilder] = {
     "user-profile.patch": _user_profile_patch,
     "user-profile.plantilla-media": _user_profile_plantilla_media,
     "user-profile.descendants": _user_profile_descendants,
+    "user-profile.ascendants": _user_profile_ascendants,
     "user-profile.complete-setup": _user_profile_complete_setup,
     "user-profile.view": _user_profile_view,
     "user-profile.imputation-election.read": _user_profile_imputation_election_read,

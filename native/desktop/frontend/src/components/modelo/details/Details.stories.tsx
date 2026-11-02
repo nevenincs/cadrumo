@@ -12,6 +12,11 @@ import type {
 import { clearIntent, useFormSession, type FormSession } from "../form/session";
 import { Details } from "./Details";
 import { TodoRail } from "./TodoRail";
+import {
+  createModeloWriteHolds,
+  declarationWriteKey,
+} from "../../../shell/modeloWriteHolds";
+import { ModeloWriteScope, ScopedWriteHoldNotice } from "../WriteScope";
 
 // The details panel and the To do rail on the envelopes the application's
 // read path produced for the synthetic taxpayer, with the help cards it
@@ -94,6 +99,8 @@ function Session({
     [shape],
   );
   const [envelope, setEnvelope] = useState(initial);
+  const [holds] = useState(createModeloWriteHolds);
+  const target = declarationWriteKey(envelope.work_unit_id);
   const session = useFormSession({ envelope, port, language });
   const prepared = useRef(false);
   useEffect(() => {
@@ -112,11 +119,18 @@ function Session({
     if (choose) session.selectCasilla(choose);
   }, [session, edits, choose]);
   const reread = async () => {
+    const before = holds.get(target);
     // A new read of the same declaration: the same envelope as a new object.
     setEnvelope(structuredClone(envelope));
+    if (before) holds.readCompleted(before);
     return Promise.resolve(true);
   };
-  return <>{children({ envelope, port, language, session, reread })}</>;
+  return (
+    <ModeloWriteScope holds={holds} target={target} port={port} reload={reread}>
+      <ScopedWriteHoldNotice />
+      {children({ envelope, port, language, session, reread })}
+    </ModeloWriteScope>
+  );
 }
 
 const M130 = "modelo-130-1T";

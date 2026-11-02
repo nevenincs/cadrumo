@@ -1057,6 +1057,9 @@ application:
           használható; importáld újra a dokumentumot: %{bindings}.'
         binding_value_key_blank: A borrador értékeinek kulcsai nem lehetnek üresek.
         bucket_id_blank: A borrador bucket azonosítója nem lehet üres.
+        printed_observations_unresolved: 'Ez a tárolt borrador olyan mezők nyomtatott
+          értékeit őrzi, amelyeket a nyomtatványdefiníciók már nem azonosítanak, ezért
+          nem használható; importáld újra a dokumentumot: %{casillas}.'
         snapshot_id_blank: A borrador pillanatkép azonosítója nem lehet üres.
         snapshot_not_found: Egyetlen borrador pillanatkép sem felel meg a kért azonosítónak.
         snapshot_prefix_ambiguous: A borrador pillanatkép előtagja több pillanatképre
@@ -2947,6 +2950,24 @@ application:
             táblázatképletté.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: A(z) %{row}. felmenő születési dátuma nem érvényes
+        dátum; évszám-hónap-nap alakban add meg.
+      ascendant_birth_date_required: A(z) %{row}. felmenőnek nincs születési dátuma,
+        pedig minden felmenőhöz kell egy.
+      ascendant_convivientes_invalid: Az a leszármazottszám, akivel a(z) %{row}. felmenő
+        együtt él, 0 és %{limit} közötti egész szám legyen.
+      ascendant_death_before_birth: A(z) %{row}. felmenő halálozási dátuma korábbi,
+        mint a születési dátuma.
+      ascendant_death_date_invalid: A(z) %{row}. felmenő halálozási dátuma nem érvényes
+        dátum; évszám-hónap-nap alakban add meg.
+      ascendant_fact_unsupported: A(z) %{row}. felmenő olyan adatot ad meg, amelyet
+        a profil nem tárol felmenőnél.
+      ascendant_limit_unknown: A bevallás kialakítása nem ad meg felső korlátot a
+        felmenőkre, ezért a lista nem ellenőrizhető és nem menthető.
+      ascendant_nif_invalid: A(z) %{row}. felmenő NIF- vagy NIE-száma nem érvényes;
+        ellenőrizd a betűit és számjegyeit.
+      ascendant_rows_over_limit: Egy bevallás legfeljebb %{limit} felmenőt tartalmaz,
+        de %{count} lett megadva.
       censal_read_identity_absent: A nyilvántartási olvasás nem tartalmazott adóazonosítót,
         ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.
       censal_read_identity_cleared: Ennek a profilnak az adóazonosítója ki lett ürítve,

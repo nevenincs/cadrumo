@@ -9,6 +9,8 @@ refuses, and a layout of another format reaches no finding here.
 
 from __future__ import annotations
 
+from dataclasses import dataclass
+
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -33,10 +35,17 @@ from .preconditions import ModeloPreconditionFailure
 from .profile_export_binding import resolve_export_identity
 from .verification_preconditions import build_verification_precondition_failure
 
-_REQUIRED_CONTENT_MISSING = "application.modelo.findings.xml_required_content_missing"
-_VALUE_REFUSED = "application.modelo.findings.xml_value_refused"
-_NOT_RENDERED = "application.modelo.findings.xml_return_not_rendered"
-_NOT_RENDERED_BOX = ""
+
+@dataclass(frozen=True, slots=True)
+class _Refusal:
+    """What the export would refuse: boxes when it names them, none when no file can be built."""
+
+    message_locale_key: str
+    boxes: tuple[str | None, ...] = (None,)
+
+
+def _not_rendered() -> _Refusal:
+    return _Refusal(message_locale_key="application.modelo.findings.xml_return_not_rendered")
 
 
 def _refused_boxes(
@@ -45,8 +54,8 @@ def _refused_boxes(
     target: CalculationRevision,
     profile: TaxpayerProfile,
     operation: PinnedAuthorityOperation,
-) -> tuple[str, tuple[str, ...]] | None:
-    """Return the finding key and boxes of what the export would refuse, or ``None`` when it would pass."""
+) -> _Refusal | None:
+    """Return what the export would refuse, or ``None`` when it would pass."""
     provider = build_runtime_schema_provider(
         filing_year=work_unit.filing_year,
         period=work_unit.period,
@@ -64,7 +73,7 @@ def _refused_boxes(
         )
         identity = resolve_export_identity(bucket_id=work_unit.bucket_id, operation=operation)
         if identity is None:
-            return _NOT_RENDERED, (_NOT_RENDERED_BOX,)
+            return _not_rendered()
         refuse_xml_export_content(
             draft,
             dictionary_values=compose_export_dictionary_values(
@@ -78,11 +87,17 @@ def _refused_boxes(
         )
     except (ModeloDraftError, ModeloError) as refused:
         if is_xml_required_content_refusal(refused):
-            return _REQUIRED_CONTENT_MISSING, refused_xml_boxes(refused)
+            return _Refusal(
+                message_locale_key="application.modelo.findings.xml_required_content_missing",
+                boxes=refused_xml_boxes(refused),
+            )
         if is_xml_value_refusal(refused):
-            return _VALUE_REFUSED, refused_xml_boxes(refused)
+            return _Refusal(
+                message_locale_key="application.modelo.findings.xml_value_refused",
+                boxes=refused_xml_boxes(refused),
+            )
         # Any other cause may quote a private value, so only the fact of it travels.
-        return _NOT_RENDERED, (_NOT_RENDERED_BOX,)
+        return _not_rendered()
     return None
 
 
@@ -104,15 +119,14 @@ def append_export_content_findings(
         refused = _refused_boxes(work_unit=work_unit, target=target, profile=profile, operation=operation)
     if refused is None:
         return
-    message_locale_key, boxes = refused
     declared_casillas = {casilla.id for casilla in snapshot.revision.casillas}
-    for box in boxes:
+    for box in refused.boxes:
         finding = ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
             casilla_id=box if box in declared_casillas else None,
-            message_locale_key=message_locale_key,
-            message_facts={"box": box} if box else {},
+            message_locale_key=refused.message_locale_key,
+            message_facts={} if box is None else {"box": box},
             legal_refs=tuple(layout.legal_refs),
             source_refs=tuple(layout.source_refs),
         )
@@ -123,7 +137,10 @@ def append_export_content_findings(
             condition_id="modelo.work.verify.xml_return_content.accepted",
             scenario_id="modelo.work.verify.xml_return_content.refused",
             evidence_id="modelo.work.verify.xml_return_content",
-            evidence_values={"box": box, "refusal": message_locale_key.rpartition(".")[2]},
+            evidence_values={
+                "refusal": refused.message_locale_key.rpartition(".")[2],
+                **({} if box is None else {"box": box}),
+            },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         )
 

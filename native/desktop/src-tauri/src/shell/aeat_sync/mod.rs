@@ -1195,9 +1195,13 @@ fn borrador_outcome(result: &Value) -> Option<&'static str> {
     })
 }
 
-/// The import's result as the window's outcome and unkept-box count.
+/// The import's result as the window's outcome and unkept-box count. A draft
+/// that kept no binding value but kept printed boxes for comparison was found.
 fn borrador_import_reply(result: &Value) -> Result<BorradorImported> {
-    if result["snapshot"]["binding_count"].as_u64() == Some(0) {
+    let snapshot = &result["snapshot"];
+    if snapshot["binding_count"].as_u64() == Some(0)
+        && snapshot["printed_observation_count"].as_u64().unwrap_or(0) == 0
+    {
         return Ok(BorradorImported {
             outcome: "nothing_found",
             unowned: 0,

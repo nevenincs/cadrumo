@@ -1217,6 +1217,16 @@ fn a_borrador_import_passes_the_served_outcome_through() {
             unowned: 0
         }
     );
+    let printed_only = json!({"outcome": "captured",
+        "snapshot": {"binding_count": 0, "printed_observation_count": 5},
+        "unowned_casillas": []});
+    assert_eq!(
+        borrador_import_reply(&printed_only).unwrap(),
+        BorradorImported {
+            outcome: "captured",
+            unowned: 0
+        }
+    );
     for unserved in [
         json!({"snapshot": {"binding_count": 4}}),
         json!({"outcome": "imported", "snapshot": {"binding_count": 4}}),

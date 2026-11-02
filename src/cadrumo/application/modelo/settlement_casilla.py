@@ -27,10 +27,12 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol
 
 from ...core.errors.hierarchy import CadrumoError
-from ...domain.calculations.registry.result_casillas import result_disposition_casilla_ids
+from ...domain.calculations.registry.result_casillas import result_disposition_casilla_ids, settlement_casilla_role
+from ...domain.calculations.registry.schema_input_kind import InputKind
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
+    from ...domain.calculations.registry.schema import ModeloRevision
 
 SETTLEMENT_SEMANTIC_ROLES: Final = frozenset(
     {
@@ -164,6 +166,38 @@ def declaration_result_casillas(modelo: str, revision: SettlementRevisionV1) -> 
     return None if role is None else DeclarationResultCasillas(casilla_ids=(role,), by_declared_type=False)
 
 
+def declaration_settlement_casilla_id(modelo: str, revision: ModeloRevision) -> CasillaId | None:
+    """Return the casilla whose value ``revision`` pays or refunds, or ``None`` when it names none.
+
+    A modelo whose record states its amount to pay or refund apart from its
+    result names that box's role in the registry; the revision's box of that
+    role settles it, but only where the revision computes it, because a box
+    the filer may type is no declared amount. Otherwise the amount settled is
+    the result itself: the one result box the "tipo de declaración" rule reads,
+    where the revision defines it.
+
+    Raises:
+        AmbiguousDeclarationResultError: Two computed casillas of the revision
+            claim the settlement role.
+    """
+    role = settlement_casilla_role(modelo)
+    if role is not None:
+        settling = [
+            casilla.id
+            for casilla in revision.casillas
+            if casilla.semantic_role == role and casilla.input_kind is InputKind.COMPUTED
+        ]
+        if len(settling) > 1:
+            raise AmbiguousDeclarationResultError(
+                f"revision {revision.id!r} computes {len(settling)} casillas of the settlement role {role!r}"
+            )
+        if settling:
+            return settling[0]
+    defined = {casilla.id for casilla in revision.casillas}
+    declared = [casilla_id for casilla_id in result_disposition_casilla_ids(modelo) or () if casilla_id in defined]
+    return declared[0] if len(declared) == 1 else None
+
+
 __all__ = [
     "DECLARATION_RESULT_SEMANTIC_ROLES",
     "SETTLEMENT_SEMANTIC_ROLES",
@@ -171,4 +205,5 @@ __all__ = [
     "DeclarationResultCasillas",
     "declaration_result_casilla_id",
     "declaration_result_casillas",
+    "declaration_settlement_casilla_id",
 ]

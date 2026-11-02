@@ -10,11 +10,22 @@ the official dictionary declares for it, which is the address the XML
 renderer writes a non-casilla value at; a dictionary that declares none of
 them writes none of them.
 
-The amounts come from the declaration's own result; the accounts are the
-charge and refund own accounts the export resolved; the disposition is the
-one the shared resolver determined. A ``NEGATIVA`` block is written only by
-a corrective declaration, which this export does not compose, so a zero
+The amount comes from the box the declaration settles
+(:func:`~.settlement_casilla.declaration_settlement_casilla_id`): for the
+Modelo 100 its computed "Resultado a ingresar o a devolver" (``RESINGDEV``),
+which is the remainder still to pay once the spouse compensation suspends part
+of the result, otherwise the result itself. The disposition is the one the
+shared resolver derived from the result, and the settled amount must agree
+with it: the official design gives no settlement block for a result to pay of
+which nothing remains to pay, so such a settlement, like one whose amount is
+unknown, is refused rather than guessed. The accounts are the charge and
+refund own accounts the export resolved. A ``NEGATIVA`` block is written only
+by a corrective declaration, which this export does not compose, so a zero
 result states its disposition alone.
+
+A split in two instalments takes the first instalment's share from the
+registry; the cent it rounds to is Cadrumo's own, as no official source states
+one.
 
 Account numbers pass through here in memory only, into the exported file.
 """
@@ -22,16 +33,21 @@ Account numbers pass through here in memory only, into the exported file.
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from decimal import Decimal
-from typing import Final
+from enum import StrEnum
+from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId
 from ...core.payment_instalment_election import PaymentInstalmentElection, instalment_amounts
 from ...core.result_disposition import ResultDisposition
-from ...domain.calculations.registry.result_casillas import result_disposition_casilla_ids
 from ...domain.deadlines.models import ChargeAccount, RefundAccount
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
 from ...domain.modelos.errors import ModeloExportError
+from .settlement_casilla import declaration_settlement_casilla_id
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.schema import ModeloRevision
 
 DISPOSITION_FIELD: Final = "TIPODECLARACION"
 _SINGLE_AMOUNT_FIELD: Final = "ING_IMPORTE"
@@ -56,16 +72,32 @@ _TO_REFUND: Final = frozenset(
 _STATED_ALONE: Final = frozenset({ResultDisposition.NEGATIVA})
 
 
-def declared_result_amount(modelo: str, casilla_values: Mapping[CasillaId, object]) -> Decimal | None:
-    """The declaration's result, read from the casilla its "tipo de declaración" rule names.
+class SettlementRefusal(StrEnum):
+    """Why a declaration's settlement cannot be composed."""
 
-    ``None`` when the modelo names no single result casilla or the draft
-    carries no amount there.
+    #: The box the declaration settles holds no value: it is unresolved or not calculated.
+    RESULT_UNKNOWN = "result_unknown"
+    #: The settled amount does not go the way the result does, and the official design gives no block for that.
+    SETTLEMENT_UNSUPPORTED = "settlement_unsupported"
+
+
+@dataclass(frozen=True, slots=True)
+class DeclaredSettlement:
+    """The amount a declaration settles, signed as its result is, or why it has none.
+
+    Exactly one of ``amount`` and ``refusal`` is set.
     """
-    result_ids = result_disposition_casilla_ids(modelo)
-    if result_ids is None or len(result_ids) != 1:
-        return None
-    value = casilla_values.get(result_ids[0])
+
+    amount: Decimal | None
+    refusal: SettlementRefusal | None
+
+    def __post_init__(self) -> None:
+        """Refuse a settlement that carries both an amount and a refusal, or neither."""
+        if (self.amount is None) is (self.refusal is None):
+            raise ValueError("a settlement carries its amount or its refusal, never both or neither")
+
+
+def _decimal(value: object) -> Decimal | None:
     if isinstance(value, Decimal):
         return value
     if isinstance(value, int) and not isinstance(value, bool):
@@ -73,11 +105,47 @@ def declared_result_amount(modelo: str, casilla_values: Mapping[CasillaId, objec
     return None
 
 
+def _agrees(disposition: ResultDisposition | None, amount: Decimal) -> bool:
+    """Whether ``amount`` settles the way ``disposition`` says the result does."""
+    if disposition in _TO_PAY:
+        return amount > 0
+    if disposition in _TO_REFUND:
+        return amount < 0
+    if disposition in _STATED_ALONE:
+        return amount <= 0
+    return True
+
+
+def declared_settlement(
+    modelo: str,
+    revision: ModeloRevision,
+    casilla_values: Mapping[CasillaId, object],
+    *,
+    disposition: ResultDisposition | None,
+) -> DeclaredSettlement:
+    """The amount ``revision`` settles, read from the box it settles and checked against ``disposition``.
+
+    Args:
+        modelo: The modelo number.
+        revision: The registry revision the values belong to.
+        casilla_values: The declaration's values by casilla id; an absent box holds no value.
+        disposition: The disposition derived from the result, before any filing election.
+    """
+    casilla_id = declaration_settlement_casilla_id(modelo, revision)
+    amount = None if casilla_id is None else _decimal(casilla_values.get(casilla_id))
+    if amount is None:
+        return DeclaredSettlement(amount=None, refusal=SettlementRefusal.RESULT_UNKNOWN)
+    if not _agrees(disposition, amount):
+        return DeclaredSettlement(amount=None, refusal=SettlementRefusal.SETTLEMENT_UNSUPPORTED)
+    return DeclaredSettlement(amount=amount, refusal=None)
+
+
 def settlement_dictionary_values(
     *,
     disposition: ResultDisposition | None,
-    result_amount: Decimal | None,
+    settlement: DeclaredSettlement,
     instalment: PaymentInstalmentElection,
+    first_instalment_share: Decimal | None,
     charge_account: ChargeAccount | None,
     refund_account: RefundAccount | None,
 ) -> dict[str, object]:
@@ -85,23 +153,28 @@ def settlement_dictionary_values(
 
     Args:
         disposition: The resolved result disposition; ``None`` writes nothing.
-        result_amount: The declaration's signed result.
+        settlement: The amount the declaration settles, signed as its result is.
         instalment: Whether a result to pay is paid at once or in two instalments.
+        first_instalment_share: The registry's share of the first instalment,
+            ``None`` where the modelo declares no split.
         charge_account: The account AEAT debits, when a payment is direct-debited.
         refund_account: The account AEAT pays a refund into.
 
     Raises:
-        ModeloExportError: When the disposition needs an amount or an account
-            the export does not hold, or is one this export never composes.
+        ModeloExportError: When the settled amount is unknown or disagrees
+            with the disposition, the disposition needs an account the export
+            does not hold, or is one this export never composes.
     """
     if disposition is None:
         return {}
+    if settlement.refusal is not None:
+        raise _uncomposed(disposition, cause=settlement.refusal.value)
     values: dict[str, object] = {DISPOSITION_FIELD: disposition.value}
     if disposition in _STATED_ALONE:
         return values
-    amount = _required_amount(disposition, result_amount)
+    amount = _required_amount(disposition, settlement.amount)
     if disposition in _TO_PAY:
-        values.update(_payment_values(disposition, amount, instalment, charge_account))
+        values.update(_payment_values(disposition, amount, instalment, first_instalment_share, charge_account))
         return values
     if disposition in _TO_REFUND:
         values.update(_refund_values(-amount, refund_account))
@@ -119,6 +192,7 @@ def _payment_values(
     disposition: ResultDisposition,
     amount: Decimal,
     instalment: PaymentInstalmentElection,
+    first_share: Decimal | None,
     charge_account: ChargeAccount | None,
 ) -> dict[str, object]:
     debits_first = disposition is ResultDisposition.DOMICILIACION
@@ -130,7 +204,9 @@ def _payment_values(
         iban = charge_account.iban
     if not instalment.splits:
         return {_SINGLE_AMOUNT_FIELD: amount, _SINGLE_ACCOUNT_FIELD: iban if debits_first else None}
-    first, second = instalment_amounts(amount)
+    if first_share is None:
+        raise _uncomposed(disposition, cause="instalment_split_undeclared")
+    first, second = instalment_amounts(amount, first_share=first_share)
     # The manual requires the second instalment to be debited from the same
     # account as the first when both are, so one charge account serves both.
     return {
@@ -174,6 +250,8 @@ def _uncomposed(disposition: ResultDisposition, *, cause: str) -> ModeloExportEr
 
 __all__ = [
     "DISPOSITION_FIELD",
-    "declared_result_amount",
+    "DeclaredSettlement",
+    "SettlementRefusal",
+    "declared_settlement",
     "settlement_dictionary_values",
 ]
