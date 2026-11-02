@@ -8826,6 +8826,47 @@ tui:
       stale_context: La declaración seleccionada cambió mientras el formulario estaba
         abierto. No se ha calculado nada; vuelve a elegir Calcular.
       title: Datos de la autoliquidación del modelo 303
+    m360_solicitud:
+      account_kind:
+        own_account: Una de mis cuentas (solicitante)
+        representante: La cuenta del representante
+      action:
+        declare: Declarar una solicitud
+        remove: Eliminar una solicitud
+      column:
+        account: Cuenta
+        cause: Causa
+        destination: Destino
+        holder: Titular
+        year: Ejercicio
+      detail: '%{year} · destino %{destination} · %{cause} · titular %{holder} · representante
+        %{representante} · cuenta %{account}'
+      done_declare: Solicitud declarada.
+      done_remove: Solicitud eliminada.
+      empty: Todavía no hay ninguna solicitud del Modelo 360 declarada.
+      field:
+        account_kind: Cuenta de devolución
+        action: Acción
+        bank_address: Dirección del banco (opcional)
+        bank_city: Ciudad del banco (opcional)
+        bank_country_code: Código de país del banco (opcional)
+        bank_name: Nombre del banco (opcional)
+        facts_path: Archivo de datos (JSON)
+        filing_year: Ejercicio
+        iban: IBAN del representante
+        own_account_id: Identificador de cuenta propia
+        swift_bic: SWIFT-BIC del representante
+      list: Solicitudes declaradas
+      prompt: Todas las solicitudes del Modelo 360 que has declarado, por ejercicio.
+        Elige declarar o eliminar una, revísala y confírmala. Los datos salen de un
+        archivo que indicas; la cuenta es una de tus cuentas o la de un representante.
+      source: 'Datos leídos de: %{path}'
+      source_invalid: 'El archivo %{path} no contiene datos de solicitud válidos:
+        se han encontrado %{count} problemas.'
+      source_unreadable: No se ha podido leer el archivo %{path}.
+      title: Solicitudes del Modelo 360
+      tool: Solicitudes del Modelo 360 (devolución de IVA)
+      unchanged: 'No ha cambiado nada: el registro ya lo contenía.'
     next_line: 'Siguiente: {action} [{key}]'
     search:
       prompt: Busca en todas las páginas por número de casilla o por palabras. Intro

@@ -8646,6 +8646,47 @@ tui:
       stale_context: The selected declaration changed while the form was open. Nothing
         was calculated; choose Calculate again.
       title: Modelo 303 filing facts
+    m360_solicitud:
+      account_kind:
+        own_account: One of my own accounts (solicitante)
+        representante: The representante's account
+      action:
+        declare: Declare a solicitud
+        remove: Remove a solicitud
+      column:
+        account: Account
+        cause: Cause
+        destination: Destination
+        holder: Holder
+        year: Year
+      detail: '%{year} · destination %{destination} · %{cause} · holder %{holder}
+        · representante %{representante} · account %{account}'
+      done_declare: Solicitud declared.
+      done_remove: Solicitud removed.
+      empty: No Modelo 360 solicitud is declared yet.
+      field:
+        account_kind: Refund account
+        action: Action
+        bank_address: Bank address (optional)
+        bank_city: Bank city (optional)
+        bank_country_code: Bank country code (optional)
+        bank_name: Bank name (optional)
+        facts_path: Facts file (JSON)
+        filing_year: Filing year
+        iban: Representante IBAN
+        own_account_id: Own account id
+        swift_bic: Representante SWIFT-BIC
+      list: Declared solicitudes
+      prompt: Every Modelo 360 solicitud you have declared, by filing year. Choose
+        to declare or remove one, review it, then confirm. The facts come from a file
+        you name; the account is one of your own accounts or a representante's account.
+      source: 'Facts read from: %{path}'
+      source_invalid: 'The file %{path} is not valid solicitud facts: %{count} problems
+        were found.'
+      source_unreadable: The file %{path} could not be read.
+      title: Modelo 360 solicitudes
+      tool: Modelo 360 solicitudes (VAT refund)
+      unchanged: 'Nothing changed: the register already held this.'
     next_line: 'Next: {action} [{key}]'
     search:
       prompt: Search every page by box number or by words. Enter goes to the box.

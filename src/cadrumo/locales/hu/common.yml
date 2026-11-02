@@ -8774,6 +8774,48 @@ tui:
       stale_context: A kiválasztott bevallás megváltozott, miközben az űrlap nyitva
         volt. Semmi sem lett kiszámítva; válaszd újra a Számítást.
       title: A Modelo 303 bevallási adatai
+    m360_solicitud:
+      account_kind:
+        own_account: Az egyik saját számlám (kérelmező)
+        representante: A képviselő számlája
+      action:
+        declare: Kérelem bejelentése
+        remove: Kérelem törlése
+      column:
+        account: Számla
+        cause: Ok
+        destination: Célország
+        holder: Tulajdonos
+        year: Adóév
+      detail: '%{year} · célország %{destination} · %{cause} · tulajdonos %{holder}
+        · képviselő %{representante} · számla %{account}'
+      done_declare: A kérelem bejelentve.
+      done_remove: A kérelem törölve.
+      empty: Még nincs bejelentett 360-as modell szerinti kérelem.
+      field:
+        account_kind: Visszatérítési számla
+        action: Művelet
+        bank_address: A bank címe (nem kötelező)
+        bank_city: A bank városa (nem kötelező)
+        bank_country_code: A bank országkódja (nem kötelező)
+        bank_name: A bank neve (nem kötelező)
+        facts_path: Adatfájl (JSON)
+        filing_year: Adóév
+        iban: A képviselő IBAN-száma
+        own_account_id: Saját számla azonosítója
+        swift_bic: A képviselő SWIFT-BIC kódja
+      list: Bejelentett kérelmek
+      prompt: Az összes bejelentett 360-as modell szerinti kérelem, adóév szerint.
+        Válaszd a bejelentést vagy a törlést, nézd át, majd erősítsd meg. Az adatokat
+        egy általad megadott fájlból olvassuk; a számla a saját számlád vagy a képviselő
+        számlája.
+      source: 'Az adatok forrása: %{path}'
+      source_invalid: 'A(z) %{path} fájl nem érvényes kérelemadatokat tartalmaz: %{count}
+        hiba található.'
+      source_unreadable: A(z) %{path} fájl nem olvasható.
+      title: A 360-as modell kérelmei
+      tool: 360-as modell kérelmei (áfa-visszatérítés)
+      unchanged: 'Nem változott semmi: a nyilvántartás már tartalmazta.'
     next_line: 'Következő: {action} [{key}]'
     search:
       prompt: Keresés minden oldalon rovatszám vagy szavak alapján. Az Enter a rovathoz

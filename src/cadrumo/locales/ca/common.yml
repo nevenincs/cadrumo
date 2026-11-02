@@ -8812,6 +8812,47 @@ tui:
       stale_context: La declaració seleccionada ha canviat mentre el formulari era
         obert. No s'ha calculat res; torna a triar Calcula.
       title: Dades de l'autoliquidació del Model 303
+    m360_solicitud:
+      account_kind:
+        own_account: Un dels meus comptes (sol·licitant)
+        representante: El compte del representant
+      action:
+        declare: Declarar una sol·licitud
+        remove: Eliminar una sol·licitud
+      column:
+        account: Compte
+        cause: Causa
+        destination: Destinació
+        holder: Titular
+        year: Exercici
+      detail: '%{year} · destinació %{destination} · %{cause} · titular %{holder}
+        · representant %{representante} · compte %{account}'
+      done_declare: Sol·licitud declarada.
+      done_remove: Sol·licitud eliminada.
+      empty: Encara no hi ha cap sol·licitud del Model 360 declarada.
+      field:
+        account_kind: Compte de devolució
+        action: Acció
+        bank_address: Adreça del banc (opcional)
+        bank_city: Ciutat del banc (opcional)
+        bank_country_code: Codi de país del banc (opcional)
+        bank_name: Nom del banc (opcional)
+        facts_path: Fitxer de dades (JSON)
+        filing_year: Exercici
+        iban: IBAN del representant
+        own_account_id: Identificador de compte propi
+        swift_bic: SWIFT-BIC del representant
+      list: Sol·licituds declarades
+      prompt: Totes les sol·licituds del Model 360 que has declarat, per exercici.
+        Tria declarar-ne o eliminar-ne una, revisa-la i confirma-la. Les dades surten
+        d'un fitxer que indiques; el compte és un dels teus comptes o el d'un representant.
+      source: 'Dades llegides de: %{path}'
+      source_invalid: 'El fitxer %{path} no conté dades de sol·licitud vàlides: s''han
+        trobat %{count} problemes.'
+      source_unreadable: No s'ha pogut llegir el fitxer %{path}.
+      title: Sol·licituds del Model 360
+      tool: Sol·licituds del Model 360 (devolució d'IVA)
+      unchanged: 'No ha canviat res: el registre ja ho contenia.'
     next_line: 'Següent: {action} [{key}]'
     search:
       prompt: Cerca a totes les pàgines per número de casella o per paraules. Retorn
