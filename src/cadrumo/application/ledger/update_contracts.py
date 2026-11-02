@@ -63,7 +63,11 @@ LedgerUpdatePatchField = Literal[
     "own_account_id",
 ]
 _UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=16)]
-_UpdateText = Annotated[str, Field(max_length=4096)]
+LEDGER_UPDATE_TEXT_MAX = 4096
+"""The longest description, counterparty or notes a ledger correction takes."""
+LEDGER_GROUP_LABEL_MAX = 64
+"""The longest group label a ledger correction takes."""
+_UpdateText = Annotated[str, Field(max_length=LEDGER_UPDATE_TEXT_MAX)]
 _DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _IsoDateText = Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}$")]
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
@@ -90,7 +94,7 @@ class LedgerUpdatePatch(BaseModel):
     iva_amount: _DecimalText | None = None
     irpf_category: _UpdateText | None = None
     notes: _UpdateText | None = None
-    group_label: Annotated[str, Field(max_length=64)] | None = None
+    group_label: Annotated[str, Field(max_length=LEDGER_GROUP_LABEL_MAX)] | None = None
     own_account_id: OwnAccountId | None = None
 
     @field_validator("booked_date", "value_date")
@@ -204,7 +208,7 @@ class LedgerUpdateOperationResult(BaseModel):
     transaction: LedgerTransactionProjection | None = None
     review_status: LedgerReviewStatus | None = None
     bucket_event_ids: Annotated[tuple[str, ...], Field(max_length=_MAX_UPDATE_EVENT_IDS)] = ()
-    group_label: Annotated[str, Field(max_length=64)] | None = None
+    group_label: Annotated[str, Field(max_length=LEDGER_GROUP_LABEL_MAX)] | None = None
     own_account_id: OwnAccountId | None = None
     validation_messages: LedgerUpdateValidationMessages = ()
 

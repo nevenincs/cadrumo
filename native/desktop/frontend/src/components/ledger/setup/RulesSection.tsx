@@ -413,7 +413,17 @@ function RulesPane({
             {t("desktop.ledger.rules.run_note")}
           </p>
         )}
-        <CallLine call={preview} />
+        <CallLine
+          call={preview}
+          refusal={() => {
+            const code =
+              preview?.kind === "refused"
+                ? (preview.detail as { validation_code?: string } | null)
+                    ?.validation_code
+                : null;
+            return code ? t(`desktop.ledger.rules.refusal.${code}`) : null;
+          }}
+        />
         {(stagedNote || staged.length > 0) && (
           <Alert icon={<Icon name="pending" />} className="ledger-rules-staged">
             {stagedNote ??

@@ -27,7 +27,8 @@ from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody._kdf_process import worker_environment, worker_interpreter
+from cadrumo.adapters.persistence.storage.custody._kdf_process import worker_environment
+from cadrumo.core.package_interpreter import isolated_interpreter_command
 from cadrumo.tests.audited_process import run_audited_process
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
@@ -111,7 +112,7 @@ def _launched_child_modules(neutral_root: Path, prelude: str = "") -> frozenset[
         # resolves its import roots itself; the probe needs them explicitly.
         environment["PYTHONPATH"] = ":".join(entry for entry in sys.path if entry)
     completed = run_audited_process(
-        [*worker_interpreter(), "-c", source],
+        [*isolated_interpreter_command(), "-c", source],
         cwd=neutral_root,
         env=environment,
         capture_output=True,

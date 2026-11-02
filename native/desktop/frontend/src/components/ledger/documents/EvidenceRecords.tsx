@@ -20,6 +20,7 @@ import {
   type EvidenceUpdateField,
 } from "../../../shell/ledgerContract";
 import { readAnswer } from "../../../shell/ledgerWindow";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { localDay } from "../../../shared/dates";
 import { formatDay } from "../../../shared/dateFormats";
@@ -77,6 +78,7 @@ function RecordDetail({
   say(text: string): void;
 }) {
   const t = useStrings();
+  const noteLimit = useTextLimit("evidence_note");
   const base = useId();
   const [typed, setTyped] = useState<
     Partial<Record<EvidenceUpdateField, string>>
@@ -294,7 +296,7 @@ function RecordDetail({
                 )}`}
               >
                 <TypedField
-                  field={entrySpec(EVIDENCE_SHAPES[field])}
+                  field={entrySpec(EVIDENCE_SHAPES[field], undefined, "record")}
                   id={`${base}-${field}`}
                   controlSize="sm"
                   invalid={refused.has(field) || undefined}
@@ -323,7 +325,7 @@ function RecordDetail({
           <NotesEditor
             id={`${base}-notes`}
             controlSize="sm"
-            maxLength={16384}
+            maxLength={noteLimit ?? undefined}
             value={shown("notes")}
             onChange={(notes) => setTyped((held) => ({ ...held, notes }))}
           />

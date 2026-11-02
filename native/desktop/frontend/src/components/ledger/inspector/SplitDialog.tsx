@@ -29,6 +29,7 @@ import type {
   SplitPartClassification,
   StageEvent,
 } from "../../../shell/ledgerStage";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { refusalText } from "../editing/editingWords";
 import {
@@ -37,7 +38,6 @@ import {
   vocabularyEmpty,
 } from "../movements/movementWords";
 import {
-  SPLIT_PARTS_MAX,
   checkSplit,
   splitRemainder,
   type SplitProblem,
@@ -84,6 +84,8 @@ export function SplitDialog({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const mostParts = useTextLimit("split_parts");
+  const reasonLimit = useTextLimit("event_payload_value");
   const reasonId = useId();
   const partId = useId();
   const tx = row.transaction;
@@ -122,9 +124,11 @@ export function SplitDialog({
   };
   const problemText = (found: SplitProblem): string => {
     switch (found.kind) {
+      case "limits_unavailable":
+        return refusalText(t, { key: "limits_unavailable", raw: "" });
       case "count":
         return t("desktop.ledger.inspector.split.count", {
-          max: SPLIT_PARTS_MAX,
+          max: mostParts ?? "",
         });
       case "amount":
         return t("desktop.ledger.inspector.split.amount", {
@@ -388,7 +392,7 @@ export function SplitDialog({
             variant="outline"
             size="sm"
             className="w-fit"
-            disabled={parts.length >= SPLIT_PARTS_MAX}
+            disabled={mostParts === null || parts.length >= mostParts}
             onClick={() => {
               setProblem(null);
               setParts((held) => [
@@ -407,7 +411,7 @@ export function SplitDialog({
             </label>
             <TextEditor
               id={reasonId}
-              maxLength={500}
+              maxLength={reasonLimit ?? undefined}
               value={reason}
               onChange={setReason}
             />

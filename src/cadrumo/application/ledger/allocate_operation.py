@@ -45,6 +45,8 @@ from .transaction_projection import LedgerTransactionProjection
 LEDGER_ALLOCATE_OPERATION_DEFINITION_ID = "ledger.allocate"
 LEDGER_ALLOCATE_PHASE = "ledger.allocate"
 _MAX_BUCKET_EVENT_IDS = 4096
+LEDGER_ALLOCATE_RATIO_ID_MAX = 128
+"""The longest usage-ratio category an allocation names."""
 _BusinessShareText = Annotated[str, Field(min_length=1, max_length=128)]
 _BucketEventIds = Annotated[tuple[BucketEventId, ...], Field(max_length=_MAX_BUCKET_EVENT_IDS)]
 
@@ -58,7 +60,7 @@ class LedgerAllocateRequest(BaseModel):
     transaction_id: Annotated[str, Field(min_length=1, max_length=128)]
     business_pct: _BusinessShareText
     category_id: Annotated[str, Field(max_length=128)] | None = None
-    usage_ratio_id: Annotated[str, Field(max_length=128)] | None = None
+    usage_ratio_id: Annotated[str, Field(max_length=LEDGER_ALLOCATE_RATIO_ID_MAX)] | None = None
     prorrata_reference: ProrrataReferenceText | None = None
     actor: Annotated[str, Field(min_length=1, max_length=64)] | None = None
 

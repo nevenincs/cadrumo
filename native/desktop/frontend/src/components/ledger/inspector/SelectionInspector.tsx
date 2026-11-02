@@ -49,6 +49,7 @@ import {
   type StageEvent,
   type StageState,
 } from "../../../shell/ledgerStage";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { COST_WARNING_WRITES } from "../editing/MovementEditing";
 import { fieldName, valueText } from "../editing/editingWords";
@@ -235,6 +236,9 @@ export function SelectionInspector({
   const holding = useRef<Asked[]>([]);
   const stagedReviews = useRef<ReadonlySet<string>>(new Set());
   const askTurn = useRef(0);
+  const mostParts = useTextLimit("split_parts");
+  const groupLimit = useTextLimit("group_label");
+  const textLimit = useTextLimit("entry_text");
   useEffect(() => {
     portRef.current = port;
   }, [port]);
@@ -284,7 +288,7 @@ export function SelectionInspector({
     "ledger.history.typed",
     { transaction_prefix: first, include_split_siblings: true },
     `${first}:${generation}`,
-    ids.length >= 2 && ids.length <= 128,
+    mostParts !== null && ids.length >= 2 && ids.length <= mostParts,
   );
   const cohort =
     history?.kind === "ready" &&
@@ -768,8 +772,8 @@ export function SelectionInspector({
           )}
           {(
             [
-              ["group_label", group, setGroup, 64],
-              ["notes", notes, setNotes, 4096],
+              ["group_label", group, setGroup, groupLimit],
+              ["notes", notes, setNotes, textLimit],
             ] as const
           ).map(([field, value, setValue, max]) => {
             const preview = setForAll(field, value || "x", ids, rows, {
@@ -797,7 +801,7 @@ export function SelectionInspector({
                   <TextEditor
                     id={`${shareId}-${field}`}
                     controlSize="sm"
-                    maxLength={max}
+                    maxLength={max ?? undefined}
                     value={value}
                     disabled={blocked}
                     onChange={setValue}

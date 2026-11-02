@@ -63,7 +63,10 @@ _ClassifyFields = Annotated[tuple[LedgerClassifyPatchField, ...], Field(min_leng
 
 LedgerClassifyDecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 
-LedgerClassifyShortText = Annotated[str, Field(max_length=128)]
+LEDGER_CLASSIFY_SHORT_TEXT_MAX = 128
+"""The longest category, rate-class or asset code a classification takes."""
+
+LedgerClassifyShortText = Annotated[str, Field(max_length=LEDGER_CLASSIFY_SHORT_TEXT_MAX)]
 
 LedgerClassifyLongText = Annotated[str, Field(max_length=4096)]
 

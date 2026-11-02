@@ -14,8 +14,9 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.pattern_search import PatternSearchOverrunError, PatternSearchUnreadableError, first_matching_patterns
 from ...core.time.clock import now
-from ...domain.transactions.classification_rule import description_pattern_error, description_pattern_matches
+from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH, description_pattern_error
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -34,7 +35,7 @@ LEDGER_RULE_TRIAL_OPERATION_DEFINITION_ID: Final = "ledger.rule.trial"
 
 _MAX_TRANSACTIONS: Final = 50_000
 
-RuleTrialOutcome = Literal["matched", "empty_pattern", "invalid_pattern"]
+RuleTrialOutcome = Literal["matched", "empty_pattern", "invalid_pattern", "too_long", "overrun"]
 
 
 class LedgerRuleTrialRequest(BaseModel):
@@ -74,13 +75,27 @@ def try_rule_pattern(
     """Answer as saving and applying the pattern would: refused the same way, matched by the same engine."""
     if not description_pattern.strip():
         return LedgerRuleTrialResult(profile_id=profile_id, outcome="empty_pattern")
+    if len(description_pattern) > RULE_PATTERN_ENTRY_MAX_LENGTH:
+        return LedgerRuleTrialResult(profile_id=profile_id, outcome="too_long")
     if description_pattern_error(description_pattern) is not None:
         return LedgerRuleTrialResult(profile_id=profile_id, outcome="invalid_pattern")
-    found = {
+    active = {
         transaction_id: transaction
         for transaction_id, transaction in transactions.items()
         if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and description_pattern_matches(description_pattern, transaction.raw.description)
+    }
+    try:
+        winners = first_matching_patterns(
+            (description_pattern,), [transaction.raw.description for transaction in active.values()]
+        )
+    except PatternSearchOverrunError:
+        return LedgerRuleTrialResult(profile_id=profile_id, outcome="overrun")
+    except PatternSearchUnreadableError:
+        return LedgerRuleTrialResult(profile_id=profile_id, outcome="invalid_pattern")
+    found = {
+        transaction_id: transaction
+        for (transaction_id, transaction), winner in zip(active.items(), winners, strict=True)
+        if winner is not None
     }
     return LedgerRuleTrialResult(
         profile_id=profile_id,

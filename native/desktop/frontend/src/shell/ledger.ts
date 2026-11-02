@@ -800,7 +800,8 @@ export type LedgerRuleTrialRequest = {
  * finds, and which of those it would classify now. */
 export type LedgerRuleTrialResult = {
   profile_id: string;
-  outcome: "matched" | "empty_pattern" | "invalid_pattern";
+  outcome:
+    "matched" | "empty_pattern" | "invalid_pattern" | "too_long" | "overrun";
   hits: string[];
   pending: string[];
 };

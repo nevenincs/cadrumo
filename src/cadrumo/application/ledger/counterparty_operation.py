@@ -44,6 +44,10 @@ from .counterparty_establishment_ports import (
 from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
 
 LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID = "ledger.counterparty"
+LEDGER_COUNTERPARTY_TAX_ID_MAX = 256
+"""The longest tax identifier a counterparty confirmation takes."""
+LEDGER_COUNTERPARTY_NOTE_MAX = 4096
+"""The longest note a counterparty confirmation takes."""
 
 
 def _require_confirmation_action_fields(
@@ -91,12 +95,12 @@ class LedgerCounterpartyRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
     action: Literal["confirm", "withdraw", "view"]
-    tax_identifier: str = Field(min_length=1, max_length=256)
+    tax_identifier: str = Field(min_length=1, max_length=LEDGER_COUNTERPARTY_TAX_ID_MAX)
     country_code: CountryCodeAlpha2 | None = None
     territorial_scope: str | None = Field(default=None, min_length=1, max_length=64)
     identification_state: CountryCodeAlpha2 | None = None
     evidenced_scope: str | None = Field(default=None, min_length=1, max_length=64)
-    note: str = Field(default="", max_length=4096)
+    note: str = Field(default="", max_length=LEDGER_COUNTERPARTY_NOTE_MAX)
     asserted_by: str | None = Field(default=None, max_length=256)
 
     @model_validator(mode="after")
@@ -125,12 +129,12 @@ class CounterpartyFactProjection(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     counterparty_key: Hex64Str
-    canonical_tax_identifier: str = Field(min_length=1, max_length=256)
+    canonical_tax_identifier: str = Field(min_length=1, max_length=LEDGER_COUNTERPARTY_TAX_ID_MAX)
     territorial_scope: str | None = Field(default=None, min_length=1, max_length=64)
     identification_state: CountryCodeAlpha2 | None = None
     asserted_by: str = Field(min_length=1, max_length=256)
     asserted_at: datetime
-    note: str = Field(default="", max_length=4096)
+    note: str = Field(default="", max_length=LEDGER_COUNTERPARTY_NOTE_MAX)
 
     @classmethod
     def from_fact(cls, fact: ConfirmedCounterpartyFacts) -> CounterpartyFactProjection:

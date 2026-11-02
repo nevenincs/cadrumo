@@ -560,6 +560,57 @@
         "field": "retention_rate",
         "unit": "points"
       }
+    ],
+    "rule_pattern_max": 2048,
+    "text_limits": [
+      {
+        "name": "split_parts",
+        "max": 128
+      },
+      {
+        "name": "entry_text",
+        "max": 4096
+      },
+      {
+        "name": "group_label",
+        "max": 64
+      },
+      {
+        "name": "classify_token",
+        "max": 128
+      },
+      {
+        "name": "usage_ratio_id",
+        "max": 128
+      },
+      {
+        "name": "event_payload_value",
+        "max": 500
+      },
+      {
+        "name": "evidence_label",
+        "max": 1024
+      },
+      {
+        "name": "evidence_note",
+        "max": 16384
+      },
+      {
+        "name": "own_account_iban",
+        "max": 64
+      },
+      {
+        "name": "own_account_swift_bic",
+        "max": 16
+      },
+      {
+        "name": "counterparty_tax_id",
+        "max": 256
+      },
+      {
+        "name": "counterparty_note",
+        "max": 4096
+      }
     ]
   }
 }
