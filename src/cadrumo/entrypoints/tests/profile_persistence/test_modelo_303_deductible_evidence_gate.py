@@ -66,7 +66,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -98,6 +98,7 @@ from ...adapter_composition_work_ports import (
 )
 from .general_iva_profile_facts_support import general_iva_profile_facts
 from .ledger_drift_support import raw_transaction
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -235,15 +236,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id=_TAX_ID,
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        activity_start_date=date(_YEAR, 1, 1),
-    )
+    return plain_workflow_profile(tax_id=_TAX_ID, activity_start_date=date(_YEAR, 1, 1))
 
 
 def _wallet_decision() -> IvaCompensationReconciliationDecision:

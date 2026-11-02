@@ -34,7 +34,7 @@ from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import CalculationRevision
@@ -46,6 +46,7 @@ from ....domain.user_profile.values import ProfileSetupState
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports
 from .general_iva_profile_facts_support import general_iva_profile_facts
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 BUCKET_ID = "30300000-0000-4000-8000-000000000303"
 TAX_ID = "12345678Z"
@@ -58,15 +59,7 @@ _IVA_RATE = Decimal("0.21")
 
 def workflow_profile() -> TaxpayerProfile:
     """Return the profile facts used by the live verify workflow."""
-    return TaxpayerProfile(
-        tax_id=TAX_ID,
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        activity_start_date=date(_YEAR, 1, 1),
-    )
+    return plain_workflow_profile(tax_id=TAX_ID, activity_start_date=date(_YEAR, 1, 1))
 
 
 def _store_profile(objects: SecureObjectRepository) -> None:
