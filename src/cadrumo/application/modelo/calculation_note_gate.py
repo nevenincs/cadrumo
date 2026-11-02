@@ -29,6 +29,7 @@ from ...core.casilla_id import CasillaId
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
+from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
@@ -191,20 +192,20 @@ def saved_calculation_screen_outdated(
     period: Period,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Whether a saved ``revision`` is shown as stale, read from the registry snapshot it was calculated under.
+    """Whether a saved ``revision`` is shown as stale, read exactly as the gate reads it.
 
-    A revision that retained its rendering snapshot is compared with the stamp
-    that snapshot's declarations carry, so reviewing it never resolves a
-    current registry revision; the operation supplies only the governed facts
-    in force. A revision without one retained no snapshot, so it is read as the
-    gate reads it.
+    Review and export screen the revision against the same snapshot, the one
+    ``operation`` selects for the law in force, so they never disagree about a
+    revision. A revision not yet recorded as filed whose snapshot cannot be
+    selected is reported stale: nothing shows it current. A filed revision is
+    never stale.
     """
-    rendering = revision.rendering_snapshot
-    if rendering is None:
+    try:
         return calculation_screen_outdated(
             revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
         )
-    return _screen_outdated(revision, rendering.registry_snapshot, operation)
+    except RegistrySnapshotError:
+        return revision.state not in _FILED_STATES
 
 
 def _filed_before_grade_cap(
