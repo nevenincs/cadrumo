@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:fce8e07279e62e9d5072597a8599691082d14114ae2fc961f2937194a91d2af0'
+body_hash: 'sha256:ba8b0074a1f861d960cba870d2da989b87918a0a686ad5dc0c57f5bd57f1e484'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -381,6 +381,13 @@ related:
 - `S16` `verify:` `dev.registry.conformance valid` -> `pass`
 - `S16` `verify:` `dev.registry.bindings --strict` -> `pass`
 - `S16` `verify:` `ruff check, format and lint-imports` -> `pass`
+- `S18` `A` `src/cadrumo/application/retencion_soportada_certificado/executor.py`
+- `S18` `A` `src/cadrumo/entrypoints/cli/retencion_soportada_commands.py`
+- `S18` `A` `src/cadrumo/adapters/persistence/profile/retencion_soportada_certificado.py`
+- `S18` `A` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S18` `A` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
+- `S18` `verify:` `pytest test_retencion_soportada_cli+mesh+conformance` -> `pass`
+- `S18` `by:` `implementer`
 
 ## Notes
 

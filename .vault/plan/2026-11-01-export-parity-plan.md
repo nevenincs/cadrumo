@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:c19178744843469ed278331aa576de7048284a7782ca95008d2763db79e62dba'
+body_hash: 'sha256:0a66e8ce8210658780fe6c85ebdad3849385f51aebb96630426f66b78a47ff5d'
 ---
 
 # `export-parity` plan
@@ -59,7 +59,7 @@ Land the blocking advisory grade, the typed filing kind and the single borrador 
 Give the Modelo 100 credit casillas a typed, encrypted per-payer evidence source enrolled in the canonical source mesh.
 
 - [x] `P03.S17` - Add the suffered-withholding namespace, record, source kind, validator and resolver with encrypted round-trip tests; `src/cadrumo/core/aggregation.py, src/cadrumo/application/aggregation/ and src/cadrumo/adapters/persistence/`.
-- [ ] `P03.S18` - Add the certificate import flow under the app hierarchy; `src/cadrumo/entrypoints/cli/ and src/cadrumo/application/`.
+- [x] `P03.S18` - Add the certificate import flow under the app hierarchy; `src/cadrumo/entrypoints/cli/ and src/cadrumo/application/`.
 - [ ] `P03.S29` - Add the absence-attestation operation for credit classes a taxpayer has no payer for; `src/cadrumo/application/ and src/cadrumo/entrypoints/cli/`.
 - [ ] `P03.S06` - Fold the manual 0596 certificate binding into the family with the borrador cross-check-only marker, and bind 0596, 0597 and 0603 by semantic role; `src/cadrumo/_data/registry/aeat/modelos/100/`.
 
