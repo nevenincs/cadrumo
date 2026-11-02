@@ -101,39 +101,28 @@ class ProfileOperationsTransport(ProfileServiceTransport):
         self, request: ProfileRecoveryPrepare, *, deadline: float
     ) -> ProfileRecoveryPrepared | AccessRefusal:
         """Read exact nonsecret lock state before a separate human proof."""
-        with self._exchange(deadline=deadline):
-            try:
-                if self._closed:
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                reply = self._reply(request.request_id, deadline=deadline).root
-                if not isinstance(reply, ProfileRecoveryPrepared | AccessRefusal):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                if isinstance(reply, ProfileRecoveryPrepared) and reply.profile_id != request.profile_id:
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return reply
-            except BaseException as error:
-                self._close_after_failure(error)
-                raise
+        return self._request_reply(
+            request,
+            request.request_id,
+            (ProfileRecoveryPrepared, AccessRefusal),
+            deadline=deadline,
+            admits=lambda reply: (
+                not isinstance(reply, ProfileRecoveryPrepared) or reply.profile_id == request.profile_id
+            ),
+        )
 
     def deny_automation(self, request: AutomationDeny, *, deadline: float) -> AutomationDenied | AccessRefusal:
         """Return only the durable denial receipt for this exact profile change."""
-        with self._exchange(deadline=deadline):
-            try:
-                if self._closed:
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                reply = self._reply(request.request_id, deadline=deadline).root
-                if not isinstance(reply, AutomationDenied | AccessRefusal):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                if isinstance(reply, AutomationDenied) and (
-                    reply.receipt.request_id != request.request_id or reply.receipt.profile_id != request.profile_id
-                ):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return reply
-            except BaseException as error:
-                self._close_after_failure(error)
-                raise
+        return self._request_reply(
+            request,
+            request.request_id,
+            (AutomationDenied, AccessRefusal),
+            deadline=deadline,
+            admits=lambda reply: (
+                not isinstance(reply, AutomationDenied)
+                or (reply.receipt.request_id == request.request_id and reply.receipt.profile_id == request.profile_id)
+            ),
+        )
 
     def resume_profile(
         self, request: ProfileResume, password: bytearray, *, deadline: float
@@ -166,22 +155,16 @@ class ProfileOperationsTransport(ProfileServiceTransport):
 
     def session_inventory(self, request: SessionInventory, *, deadline: float) -> SessionInventoryReply | AccessRefusal:
         """Read an allowlisted inventory for exactly this profile."""
-        with self._exchange(deadline=deadline):
-            try:
-                if self._closed:
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                reply = self._reply(request.request_id, deadline=deadline).root
-                if not isinstance(reply, SessionInventoryReply | AccessRefusal):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                if isinstance(reply, SessionInventoryReply) and any(
-                    session.profile_id != request.profile_id for session in reply.sessions
-                ):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return reply
-            except BaseException as error:
-                self._close_after_failure(error)
-                raise
+        return self._request_reply(
+            request,
+            request.request_id,
+            (SessionInventoryReply, AccessRefusal),
+            deadline=deadline,
+            admits=lambda reply: (
+                not isinstance(reply, SessionInventoryReply)
+                or all(session.profile_id == request.profile_id for session in reply.sessions)
+            ),
+        )
 
     def operation_secret(
         self, request: OperationSecret, secret: bytearray, *, deadline: float
