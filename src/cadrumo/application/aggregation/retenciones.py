@@ -33,6 +33,7 @@ from ...core.aggregation import (
     WorkIncomeRetencionTreatment,
 )
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -144,7 +145,7 @@ class Modelo180PropertyEvidence(BaseModel):
     address: Modelo180StructuredAddress
     recipient_province_code: SpanishProvinceCode
     modality: str = Field(min_length=1)
-    accrual_year: int = Field(ge=1900, le=9999)
+    accrual_year: FourDigitYear
     withholding_percentage: Decimal = Field(ge=Decimal("0"), decimal_places=2)
     representative_nif: TaxIdIdentityToken | None = Field(default=None, min_length=1, max_length=16)
 

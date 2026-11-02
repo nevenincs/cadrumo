@@ -8,7 +8,7 @@ from typing import Annotated
 from pydantic import AfterValidator
 
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from ...core.filing_year import FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ...core.period import Period
 from ...core.time.utc import validate_utc_aware
 
@@ -23,7 +23,7 @@ def _is_a_registry_period_token(value: str) -> str:
     the canonical period grammar is what stops ``period='bogus'`` from being
     emitted as a capture's filing period.
     """
-    Period.from_year_and_code(FILING_YEAR_MIN, value)
+    Period.from_year_and_code(FOUR_DIGIT_YEAR_FIRST, value)
     return value
 
 
