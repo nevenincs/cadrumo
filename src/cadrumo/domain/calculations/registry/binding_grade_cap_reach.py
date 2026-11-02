@@ -23,6 +23,7 @@ from __future__ import annotations
 import importlib
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
+from datetime import date
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
 
@@ -34,12 +35,13 @@ if TYPE_CHECKING:
     from .binding_grade_cap import BindingGradeCap
     from .governed_fact_scope import GovernedFactSource
     from .ids import BindingId
-    from .schema import ModeloRevision
+    from .schema import ModeloRevision, RegistrySnapshot
 
 type BindingOutputRedirect = Callable[
-    [ModeloRevision, GovernedFactSource | None], Mapping[BindingId, tuple[CasillaId, ...]]
+    [ModeloRevision, GovernedFactSource | None, date], Mapping[BindingId, tuple[CasillaId, ...]]
 ]
-"""Read one domain's declared redirects: each redirected binding of the revision and the casillas it writes."""
+"""Read one domain's declared redirects: each redirected binding of the revision and the casillas it writes,
+as the governed facts in force on the given filing-period date declare them."""
 
 # Each entry names the public defining module whose import registers a redirect.
 _BINDING_OUTPUT_REDIRECT_MODULES: Final[tuple[str, ...]] = ("...renta.retenciones_routing_integrity",)
@@ -72,27 +74,38 @@ def _install_redirect_modules() -> None:
     _redirect_modules_installed = True
 
 
+def snapshot_reach_date(snapshot: RegistrySnapshot) -> date:
+    """The filing-period date a snapshot's redirects are read at: the close of its period, else of its ejercicio.
+
+    A snapshot without a filing period, such as a communication with no
+    period, is read at the close of its filing year.
+    """
+    period = snapshot.filing_period
+    return date(snapshot.filing_year, 12, 31) if period is None else period.end_date
+
+
 def binding_output_redirects(
-    revision: ModeloRevision, *, authority: GovernedFactSource | None
+    revision: ModeloRevision, *, authority: GovernedFactSource | None, effective_date: date
 ) -> dict[BindingId, tuple[CasillaId, ...]]:
-    """Return every declared output redirect of ``revision``, read through ``authority``.
+    """Return every declared output redirect of ``revision``, read through ``authority`` at ``effective_date``.
 
     ``authority`` is the generation-pinned fact source; ``None`` reads the facts
-    of the registry validation in progress.
+    of the registry validation in progress. ``effective_date`` is the
+    filing-period date the governed facts are selected for.
     """
     _install_redirect_modules()
     redirected: dict[BindingId, list[CasillaId]] = {}
     for redirect in _redirects:
-        for binding_id, casilla_ids in redirect(revision, authority).items():
+        for binding_id, casilla_ids in redirect(revision, authority, effective_date).items():
             targets = redirected.setdefault(binding_id, [])
             targets.extend(casilla_id for casilla_id in casilla_ids if casilla_id not in targets)
     return {binding_id: tuple(casilla_ids) for binding_id, casilla_ids in redirected.items()}
 
 
 def capped_binding_reach(
-    revision: ModeloRevision, *, authority: GovernedFactSource | None
+    revision: ModeloRevision, *, authority: GovernedFactSource | None, effective_date: date
 ) -> Mapping[BindingId, CappedBindingReach]:
-    """Map each capped binding of ``revision`` to its cap and the casillas it reaches.
+    """Map each capped binding of ``revision`` to its cap and the casillas it reaches on ``effective_date``.
 
     A revision without a cap reads no redirect, so the common case touches no
     governed fact. A capped binding that reaches nothing keeps an empty
@@ -104,7 +117,7 @@ def capped_binding_reach(
         no_reach: dict[BindingId, CappedBindingReach] = {}
         return MappingProxyType(no_reach)
     bound = casillas_by_binding(revision)
-    redirected = binding_output_redirects(revision, authority=authority)
+    redirected = binding_output_redirects(revision, authority=authority, effective_date=effective_date)
     reach: dict[BindingId, CappedBindingReach] = {}
     for binding_id, cap in caps.items():
         casilla_ids = list(bound.get(binding_id, ()))
@@ -139,4 +152,5 @@ __all__ = [
     "capped_binding_reach",
     "capped_binding_reach_digest",
     "register_binding_output_redirect",
+    "snapshot_reach_date",
 ]

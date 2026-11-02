@@ -18,7 +18,12 @@ from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, 
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .calculation_note_gate import gate_refuses
-from .calculation_notes import CHECK_REFUSED_REASONS, durable_binding_source, note_attention
+from .calculation_notes import (
+    CALCULATION_SCREEN_OUTDATED_REASON,
+    CHECK_REFUSED_REASONS,
+    durable_binding_source,
+    note_attention,
+)
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import ModeloFormCalculationNote, ModeloFormCasillaAddressV1, ModeloFormField
 from .work_review import ModeloWorkReview
@@ -79,14 +84,25 @@ with the language it is worded in."""
 
 
 def collect_note_sources(
-    revision: CalculationRevision | None, diagnostics: tuple[CalculationSourceDiagnostic, ...] | None
+    revision: CalculationRevision | None,
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] | None,
+    *,
+    screen_outdated: bool = False,
 ) -> tuple[NoteSource, ...]:
     """Each latest-calculation reason with the box it names: every diagnostic when held, else the durable ones.
 
+    ``screen_outdated`` says the gate refuses ``revision`` as stale before it
+    reads any note, so the derived reason leads them.
+
     Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
+    stale: tuple[NoteSource, ...] = (
+        ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None),)
+        if screen_outdated and revision is not None
+        else ()
+    )
     if diagnostics is not None:
-        return tuple(
+        return stale + tuple(
             (
                 diagnostic.reason,
                 diagnostic.casilla_id,
@@ -103,7 +119,7 @@ def collect_note_sources(
         return ()
     # A persisted note is never a proven zero: those are held, not stored. Its stored message is a
     # technical account in no language of the filer's, so the note is worded by its reason alone.
-    return tuple(
+    return stale + tuple(
         (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, None, None)
         for issue in revision.source_issues
     )

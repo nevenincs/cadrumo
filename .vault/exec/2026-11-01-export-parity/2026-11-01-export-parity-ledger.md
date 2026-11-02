@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:e90f67c38fe022c00eea62c29b62eef27665f60ba3f97aae6fa28c667dcf8b71'
+body_hash: 'sha256:b7196334e73d66d94c507a7c20b2b7d5ed9e121109bfefe4dab0ec05d5f324c6'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -218,6 +218,23 @@ related:
 - `S27` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
 - `S27` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
 - `S28` `M` `.vault/plan/2026-11-01-export-parity-plan.md`
+- `S15` `M` `src/cadrumo/application/aeat_sync/status_operation.py`
+- `S15` `M` `src/cadrumo/application/aeat_sync/workspace.py`
+- `S15` `M` `src/cadrumo/application/aeat_sync/workspace_reader.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_keys.py`
+- `S15` `M` `src/cadrumo/application/live/snapshot_base.py`
+- `S15` `M` `src/cadrumo/entrypoints/aeat_sync_status_composition.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/tests/test_app_live_borrador_payload_contract.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py`
+- `S15` `A` `src/cadrumo/entrypoints/tests/test_borrador_100_snapshot_lifecycle.py`
+- `S15` `verify:` `uv run --no-sync pytest -m 'unit or integration' src/cadrumo/application/live src/cadrumo/application/aeat_sync src/cadrumo/entrypoints/tui/aeat_sync` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest -m integration src/cadrumo_runtime/host/tests/frontend/cli/test_app_live_borrador_import.py src/cadrumo/entrypoints/tests/test_registered_executor_conformance.py -k borrador` -> `pass`
+- `S15` `verify:` `uv run --no-sync pytest src/cadrumo/entrypoints/cli/tests/test_app_live_borrador_payload_contract.py src/cadrumo/entrypoints/tests/test_aeat_sync_status_composition.py src/cadrumo/entrypoints/tests/test_borrador_100_snapshot_lifecycle.py` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `just check-format` -> `pass`
+- `S15` `verify:` `just check-types` -> `pass`
+- `S15` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S15` `verify:` `uv run --no-sync python -m dev.operation_contract_manifest.generate --check` -> `pass`
 
 ## Notes
 
@@ -231,3 +248,4 @@ related:
 - `S16` post-close test alignment
 - `S15` Every target casilla of the 2022-2023 borrador profile is computed, so a real import stores no value and reports all five as unowned; installed stdio acceptance fixture updated but not run (disposable host only)
 - `S28` coordination with IVA and registry sessions happened after S16 landed; consumer-domain items forwarded to operator
+- `S15` phase-review fix

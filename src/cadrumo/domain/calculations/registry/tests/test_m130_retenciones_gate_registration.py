@@ -98,13 +98,15 @@ def test_m130_gate_registers_and_bites_without_aggregation_imported() -> None:
         check = registered[key]
 
         from cadrumo.domain.calculations.registry.governed_fact_scope import validating_governed_facts
+        from datetime import date
+
         from cadrumo.domain.renta.retenciones_routing_integrity import resolve_m130_retenciones_route
 
         casilla_ids = frozenset(casilla.id for casilla in snapshot.revision.casillas)
         binding_ids = frozenset(binding.id for binding in snapshot.revision.bindings)
         with bundled_indexed_authority().operation() as operation, validating_governed_facts(operation):
             # The route is registry data; read it from the same published authority.
-            route = resolve_m130_retenciones_route()
+            route = resolve_m130_retenciones_route(effective_date=date(2025, 12, 31))
             assert route.binding_id in binding_ids, (
                 "the committed M130 revision must declare the retenciones binding, or "
                 "the failure case below asserts nothing"

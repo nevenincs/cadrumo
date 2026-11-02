@@ -9,6 +9,7 @@ from uuid import UUID
 
 from ....domain.modelos.ledger_filing_snapshot import LedgerEvidenceRow
 from ...export.review_snapshot import CalculationReviewSelection, ReviewSnapshot, ReviewSourceKind
+from ...export.review_snapshot_loader import CALCULATION_NOTE_FINDING_PREFIX
 from .form_workbook import add_saved_review_form
 from .number_formats import numeric_format
 from .records import (
@@ -45,7 +46,7 @@ def _column_width(header: str) -> int:
         return 14
     if header in {"booked_date", "value_date", "review_date"}:
         return 18
-    if header in {"detail", "finding", "scenario", "description", "reason"}:
+    if header in {"detail", "finding", "scenario", "description", "reason", "calculation_note"}:
         return 60
     if header in {"value", "digest", "registry_digest", "source_refs", "legal_refs"}:
         return 48
@@ -296,10 +297,24 @@ def _render_overview(
     layout.style(TabName.GUIDE, _FIRST_ROW, _FIRST_ROW + 1, 2, StyleRole.SECTION_BANNER)
 
 
+def _calculation_notes_by_casilla(snapshot: ReviewSnapshot, label: ReviewLabelResolver) -> dict[str, str]:
+    """The words of each note that withholds a saved box from filing, by the box it names."""
+    notes: dict[str, list[str]] = {}
+    for finding in snapshot.findings:
+        if not finding.code.startswith(CALCULATION_NOTE_FINDING_PREFIX) or not finding.related_ids:
+            continue
+        words = label("note_" + finding.code.removeprefix(CALCULATION_NOTE_FINDING_PREFIX))
+        kept = notes.setdefault(finding.related_ids[0], [])
+        if words not in kept:
+            kept.append(words)
+    return {casilla_id: "\n".join(words) for casilla_id, words in notes.items()}
+
+
 def _render_results(snapshot: ReviewSnapshot, layout: _ReviewLayout, source_addresses: dict[str, str]) -> None:
     label = layout.label
     selection = snapshot.selection
     if isinstance(selection, CalculationReviewSelection):
+        notes = _calculation_notes_by_casilla(snapshot, label)
         layout.table(
             TabName.CALCULOS,
             "results",
@@ -317,6 +332,7 @@ def _render_results(snapshot: ReviewSnapshot, layout: _ReviewLayout, source_addr
                 "formula",
                 "legal_refs",
                 "source_refs",
+                "calculation_note",
             ),
             [
                 (
@@ -332,6 +348,7 @@ def _render_results(snapshot: ReviewSnapshot, layout: _ReviewLayout, source_addr
                     item.formula_reference,
                     "\n".join(item.legal_refs),
                     "\n".join(item.source_refs),
+                    notes.get(str(item.casilla_id), ""),
                 )
                 for item in snapshot.amounts
             ]
@@ -349,6 +366,7 @@ def _render_results(snapshot: ReviewSnapshot, layout: _ReviewLayout, source_addr
                     item.formula_reference,
                     "\n".join(item.legal_refs),
                     "\n".join(item.source_refs),
+                    notes.get(str(item.casilla_id), ""),
                 )
                 for item in snapshot.text_values
             ],

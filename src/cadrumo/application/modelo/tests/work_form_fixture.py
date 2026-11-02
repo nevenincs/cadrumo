@@ -21,6 +21,7 @@ from ....domain.filing.schema import ModeloValueKind
 from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFinding
+from ..calculation_note_gate import calculation_screen_outdated
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form import build_modelo_work_form
@@ -52,6 +53,7 @@ def built_form(
     """Build a form whose ``held`` boxes carry the calculation's values; ``entered`` ``None`` is an unknown record.
 
     ``revision`` is the calculation the form shows, whose notes the form carries; ``None`` before any.
+    Whether its screen is outdated is the calculation-note gate's own answer, as the form service asks it.
     """
     snapshot = form_snapshot(operation, modelo, year, code)
     values = held or {}
@@ -85,6 +87,10 @@ def built_form(
         entered_casilla_ids=None if entered is None else frozenset(validated_casilla_id(item) for item in entered),
         overridden_binding_ids=None if entered is None else frozenset(),
         language=language,
+        calculation_screen_outdated=revision is not None
+        and calculation_screen_outdated(
+            revision, modelo=modelo, filing_year=year, period=Period.from_year_and_code(year, code), operation=operation
+        ),
     )
 
 

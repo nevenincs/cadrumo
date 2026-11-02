@@ -67,6 +67,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
+from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
 from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
@@ -1098,8 +1099,15 @@ class ModeloWorkForm(_FormModel):
 
     @property
     def calculation_out_of_date(self) -> bool:
-        """Whether the last check found the records changed after the calculation, so it must be calculated again."""
-        return any(issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues)
+        """Whether the calculation must be worked out again before it can be checked, exported or recorded.
+
+        The last check found the records changed after the calculation, or the
+        calculation was screened against other registry declarations than the
+        pinned ones, which the gate refuses until it is calculated again.
+        """
+        return any(
+            issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues
+        ) or any(note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in self.calculation_notes)
 
     @property
     def blocking_calculation_notes(self) -> tuple[ModeloFormCalculationNote, ...]:

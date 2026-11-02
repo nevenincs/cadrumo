@@ -2654,6 +2654,7 @@ application:
           booked_date: Data comptable
           business_pct: Proporció empresarial registrada
           byte_length: Mida original en bytes
+          calculation_note: Nota del càlcul
           calculation_revision: Revisió del càlcul
           calculation_state: Estat del càlcul desat
           calculation_state_borrador: 'Esborrany: provisional'
