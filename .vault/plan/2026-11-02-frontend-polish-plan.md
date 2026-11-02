@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:1869fd01f487bd392e89592dc40d8766e8f1741249c7705d92d32c05b58d37c2'
+body_hash: 'sha256:77d215e1c66cd7eaa2c5a320944d2c80ea70b56206cb08b5fb9f023fce3c51e0'
 ---
 
 # `frontend-polish` plan
@@ -42,7 +42,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S01` - Harden document and register reads against changed payloads, hidden views and late replies; `native/desktop/frontend/src/components/ledger/documents/useLedgerRead.ts, native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`.
 - [x] `S22` - Restore a single main landmark around the dock workspace and verify full-window accessibility; `native/desktop/frontend/src/components/docking/DockWorkspace.tsx, native/desktop/frontend/tests/scenarios/docking.spec.ts, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`.
 - [x] `S02` - Prevent obsolete declarations-list reads from overwriting shared workspace cache invalidation; `native/desktop/frontend/src/components/modelo/declarations/`.
-- [ ] `S03` - Retire stale provider mutation results and prevent old reads from replacing newly accepted settings; `native/desktop/frontend/src/shell/providerSettings.ts, native/desktop/frontend/src/shell/agentViews.ts`.
+- [x] `S03` - Retire stale provider mutation results and prevent old reads from replacing newly accepted settings; `native/desktop/frontend/src/shell/providerSettings.ts, native/desktop/frontend/src/shell/agentViews.ts`.
 - [ ] `S04` - Bind reading-model selections and agent observations to the current reader lifecycle; `native/desktop/frontend/src/shell/readingModel.ts, native/desktop/frontend/src/shell/agentLive.ts, native/desktop/frontend/src/components/AgentColumn.tsx`.
 - [ ] `S05` - Show every available matching-evidence chip without extra disclosure controls; `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`.
 - [ ] `S06` - Distinguish failed AEAT result refreshes and unavailable empty outcomes from confirmed empty observations; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/shell/aeatSyncResults.ts`.
@@ -55,6 +55,8 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [ ] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/workspace/, native/desktop/frontend/src/components/modelo/filing/, native/desktop/frontend/tests/scenarios/modelo*.spec.ts`.
 - [ ] `S21` - Expose returned reconciliation differences and advisory limitations using the Sol design brief and localized labels; `native/desktop/frontend/src/components/modelo/filing/, native/desktop/frontend/src/dev/, dev/locales/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [ ] `S11` - Complete modelo workflow review from declaration selection through editing, review, calculation, export and reconciliation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modelo.ts`.
+- [ ] `S23` - Keep AEAT progress uncertainty visible before the first snapshot and after a failed observation of completed work; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/shell/aeatSyncRun.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
+- [ ] `S24` - Recover refused Sede dialog answers and viewport updates without replaying uncertain person input; `native/desktop/frontend/src/components/browser/useSedeView.ts, native/desktop/frontend/tests/scenarios/sede-browser.spec.ts, native/desktop/frontend/src/dev/`.
 - [ ] `S12` - Complete AEAT and browser workflow review including preparation, progress, outcomes, notifications and calendar interactions; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/components/calendar/`.
 - [ ] `S13` - Complete agent conversation, approval, clarification, attachments, documents and skills workflow review; `native/desktop/frontend/src/components/agent/, native/desktop/frontend/src/shell/agentPermission.ts, native/desktop/frontend/src/shell/agentClarification.ts`.
 - [ ] `S14` - Complete settings, provider, model and provisioning workflow review; `native/desktop/frontend/src/components/settings/, native/desktop/frontend/src/components/setup/, native/desktop/frontend/src/shell/provisioning.ts`.

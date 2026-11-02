@@ -14,7 +14,11 @@ use super::timestamps::{utc_isoformat, utc_text};
 use super::transport::MAXIMUM_FRAME_BYTES;
 use crate::canonical_json::{canonical_json, compact_json};
 use crate::runtime_client::{
-    session::Admitted, events::Event, framing::MAXIMUM_SECRET_BYTES, events::Pushed, refusal::Refusal, connection::SessionExchange,
+    connection::SessionExchange,
+    events::{Event, Pushed},
+    framing::MAXIMUM_SECRET_BYTES,
+    refusal::Refusal,
+    session::Admitted,
 };
 use crate::value::Sha256Digest;
 use serde_json::{Map, Value, json};

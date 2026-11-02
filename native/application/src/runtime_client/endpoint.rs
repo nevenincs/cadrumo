@@ -1,4 +1,4 @@
-use super::framing::{sha256_hex, text};
+use super::framing::sha256_hex;
 use super::refusal::Refusal;
 use cadrumo_platform::runtime_connect::ConnectRefusal;
 use std::path::Path;

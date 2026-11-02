@@ -10,7 +10,11 @@ use super::protocol::{
 use super::sensitive::sent_then_wiped;
 use super::transport::{Held, MAXIMUM_FRAME_BYTES, remaining};
 use crate::canonical_json::canonical_json;
-use crate::runtime_client::{events::Event, events::Pushed, refusal::Refusal, framing::base64_decode};
+use crate::runtime_client::{
+    events::{Event, Pushed},
+    framing::base64_decode,
+    refusal::Refusal,
+};
 use crate::value::Sha256Digest;
 use serde_json::{Map, Value, json};
 use std::sync::mpsc;

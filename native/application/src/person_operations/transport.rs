@@ -1,7 +1,9 @@
 use super::failure::{Failure, Outcome};
 use super::lifecycle::Upload;
 use super::protocol::{REPLY_KINDS, members, text};
-use crate::runtime_client::{session::Admitted, refusal::Refusal, connection::SessionExchange, framing::request_id};
+use crate::runtime_client::{
+    connection::SessionExchange, framing::request_id, refusal::Refusal, session::Admitted,
+};
 use crate::value::Sha256Digest;
 use serde_json::{Map, Value, json};
 use std::time::{Duration, Instant};

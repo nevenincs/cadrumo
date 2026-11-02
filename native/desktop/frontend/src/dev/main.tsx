@@ -125,11 +125,27 @@ declare global {
       declarationsList(): Promise<
         typeof import("../components/modelo/declarations/useDeclarationsList")
       >;
+      providerReads(): Promise<{
+        settings: typeof import("../shell/providerSettings");
+        views: typeof import("../shell/agentViews");
+      }>;
+      agentReaders(): Promise<{
+        models: typeof import("../shell/readingModel");
+        live: typeof import("../shell/agentLive");
+      }>;
     };
   }
 }
 
 window.__scenarioModules = {
+  agentReaders: async () => ({
+    models: await import("../shell/readingModel"),
+    live: await import("../shell/agentLive"),
+  }),
+  providerReads: async () => ({
+    settings: await import("../shell/providerSettings"),
+    views: await import("../shell/agentViews"),
+  }),
   declarationsList: () =>
     import("../components/modelo/declarations/useDeclarationsList"),
   tauriHost: () => import("../shell/tauriHost"),

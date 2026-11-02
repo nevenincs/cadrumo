@@ -6,7 +6,7 @@ use super::framing::{
     sha256_hex, text,
 };
 use super::handshake::{Cohort, Hello, handshake_cancellable};
-use super::refusal::{CUSTODY_RECOVERING, Refusal};
+use super::refusal::Refusal;
 use super::session::access_refusal;
 use serde_json::{Map, Value};
 use std::sync::atomic::{AtomicBool, Ordering};

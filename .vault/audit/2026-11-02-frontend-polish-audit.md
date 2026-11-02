@@ -10,25 +10,6 @@ related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
 
-<!-- FRONTMATTER RULES:
-     tags: one directory tag (hardcoded #audit) and one feature tag.
-     Replace frontend-polish with a kebab-case feature tag, e.g. #foo-bar.
-     Exactly these two tags are allowed; do not append additional tags.
-
-     Related: use wiki-links as '[[yyyy-mm-dd-foo-bar]]'.
-
-     modified: CLI-maintained last-modified stamp; set at scaffold time,
-     refreshed by mutating CLI verbs and vault check fix; never hand-edit.
-
-     DO NOT add fields beyond those scaffolded; metadata lives
-     only in the frontmatter. -->
-
-<!-- LINK RULES:
-     - [[wiki-links]] are ONLY for .vault/ documents in the related: field above.
-     - NEVER use [[wiki-links]] or markdown links in the document body.
-     - Cite code as inline backtick locators: `src/module.py:42`; never as a
-       markdown link. -->
-
 # `frontend-polish` audit: `Frontend workflow coverage and hardening`
 
 ## Scope
@@ -40,15 +21,6 @@ S08 static coverage: shared buttons, inputs, textarea, native select, field, cal
 S11 static workflow coverage: declarations list and creation targets; WorkspaceScreen and form/baseline loading; Form, Details/Todo, Check, Sources, History/corrections and Filing; staged edits, preflight, one stale-baseline renewal, apply, calculate/verify, local export, local filing records and justificante import. Reviewed useEditReview, form/session and filing/modelo contracts. Authority includes accepted desktop-modelo-workspace, modelo-editor-workbench-operator-layer and filing-chain-reconciliation decisions. No AEAT submission is implemented or inferred. Remaining evidence: settlement fixes, structured reconciliation details and integrated scenario checks.
 
 ## Findings
-
-<!-- A rolling log of findings: append one subsection per finding, grouped or ordered by
-     severity, using the heading form
-
-       ### Frontend workflow coverage and hardening | {level} | {summary}
-
-     followed by a paragraph carrying the detail. Frontend workflow coverage and hardening is a concise kebab-case slug,
-     {level} is the severity (critical, high, medium, low), and {summary} is a one-line
-     statement. Append continuously as findings surface; do not rewrite settled entries. -->
 
 ### shared-control-keyboard | medium | Highlight visibility and no-match Tab require repair
 
@@ -86,10 +58,18 @@ PASS for S22 semantic scope: the existing dock container now supplies one main l
 
 PASS for corrected S02. Terra rereview confirms interrupted requests are retried while completed cache entries remain reusable; the completion guard runs before marking a request settled. Both final deferred-response tests pass, including same-mounted hide/show, workspace unmount with late success/failure, mounted write invalidation and no-write cache reuse. The earlier 11 UI declaration scenarios passed and their affected behavior is unchanged. Final TypeScript and scoped formatting pass; scoped ESLint passed. No new high/critical findings remain in this Step.
 
+### s03-review | low | Provider settlement and cached status ordering pass
+
+PASS for S03. Terra reviewed mutation guards across reader/host replacement and A-null-A return, plus accepted cached answers superseding older pending reads. Seven focused cases and seven existing provider UI cases pass (settings reopening, save/refusal secret handling, switches, sign-in completion, late account-change start, unavailable account). TypeScript and targeted ESLint pass; changed files formatted. The change suppresses obsolete UI updates; it does not cancel or reinterpret backend writes. Scenario evidence does not establish packaged-host behavior.
+
+### s09-static-coverage | low | Account and profile review found no new concrete defect
+
+Terra inspected userProfile state/readback, ProfileEditor, AeatAccessEditor, CreateProfile, ManageProfiles, SignIn, shell/signIn, AccountMenu, ProfileDialogs and profileInput. Covered loading/unavailable/signed-out/unknown creation/conflict/saved-unread/refusal; masked write-only fields, revision/digest drafts, focus restoration, navigation guards, password clearing, deletion acknowledgement and reobservation. No new correctness or privacy defect established. Existing verification seams are user-profile, profiles, manage-profiles and profile-views scenarios; S09 still needs applicable integrated evidence. Clearing corrected CreateProfile errors sooner is optional UX polish, not a proven contract defect.
+
+### s12-static-coverage | medium | AEAT observation and Sede recovery need focused repairs
+
+Terra traced overview, preflight, dependencies/access, assisted sign-in, host-owned progress queue, area results, comparisons, notifications and Borrador import; BrowserPage/Toolbar/Surface/Prompts/PageDialog, useSedeView and the typed Sede port. Accepted desktop-aeat-sync and sede-browser decisions preserve no-network status reads, host queue lifetime, explicit uncertain retry, person-driven browser actions and native upload/download authority. S23 addresses progress errors hidden both before any snapshot and after a retained clean done snapshot, without interpreting absent progress as permission for another update. S24 addresses page-dialog answers removed before confirmed enqueue even when native code restores the offer on queue refusal; download/chooser offers have different consumption semantics and must not inherit that fix. Resize records a sent size before acknowledgement and swallows rejection; retain acknowledged geometry and provide bounded recovery without replaying input. Input rejection is also swallowed, but its outcome needs precise host-code grounding before deciding warning/retry behavior. Existing test seams: aeat-sync and sede-browser, using fixtures only. Calendar coverage grouping is already verified, but S12 is not closed.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.
-
-<!-- Actionable recommendations, each tied to a finding above. An
-     architecturally significant recommendation names the decision a
-     follow-on ADR must make; the decision itself is never recorded here. -->
