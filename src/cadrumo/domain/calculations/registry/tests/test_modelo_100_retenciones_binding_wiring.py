@@ -1,16 +1,15 @@
 """Wiring contract for the Modelo 100 withholding credit casillas 0596 and 0597.
 
-The credit belongs to the perceptor. Casilla 0596 (retenciones del trabajo) is
-therefore bound to the payee's own salary-certificate figure, and casilla 0597
-(retenciones de capital mobiliario) is keyed by the declarant until a typed
-per-payer evidence family carries it. Neither is fed by a withholding-agent
-return the declarant files for other people.
+The credit belongs to the perceptor. Casillas 0596 (retenciones del trabajo)
+and 0597 (retenciones de capital mobiliario) are therefore bound to the sum of
+the payee's own payer certificates of each income class. Neither is fed by a
+withholding-agent return the declarant files for other people.
 
 Binding-to-casilla plumbing contract (not a formula derivation):
-  - binding ``renta-certificado-trabajo-retenciones`` -> casilla 0596
-  - casilla 0597 takes a keyed manual amount
+  - binding ``renta-retencion-soportada-trabajo`` -> casilla 0596
+  - binding ``renta-retencion-soportada-capital-mobiliario`` -> casilla 0597
 
-The certificate binding is an operator-keyed source, so its value reaches the
+The calculation's source mesh resolves each family binding to one value, which reaches the
 engine the way every calculate path sends it: through
 ``resolve_available_bound_inputs_by_casilla_id``, which projects a binding value
 onto the casilla the registry binds it to. Asserting 0596 == the certificate
@@ -63,8 +62,8 @@ def test_zero_salary_certificate_retenciones_gives_zero_0596(prior_edition_snaps
     scenarios.check_zero_salary_certificate_retenciones_gives_zero_0596(prior_edition_snapshot)
 
 
-def test_keyed_capital_mobiliario_retenciones_reach_0609(prior_edition_snapshot: RegistrySnapshot) -> None:
-    scenarios.check_keyed_capital_mobiliario_retenciones_reach_0609(prior_edition_snapshot)
+def test_capital_mobiliario_retenciones_binding_reaches_0609(prior_edition_snapshot: RegistrySnapshot) -> None:
+    scenarios.check_capital_mobiliario_retenciones_binding_reaches_0609(prior_edition_snapshot)
 
 
 def test_salary_certificate_retenciones_change_reflects_proportionally_in_0610(
