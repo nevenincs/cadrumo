@@ -19,12 +19,14 @@ these assertions with no test edit.
 
 The two personas differ only in whether the six payer-side returns are filed.
 Both assert the same oracle, hand-derived below from the seeded Modelo 130
-quarters and the keyed salary certificate:
+quarters and the recorded salary certificate:
 
-* ``0596`` = the salary certificate the operator keys (perceptor-side evidence).
+* ``0596`` = the employer's certificate the operator records (perceptor-side evidence).
 * ``0604`` = the four seeded Modelo 130 casilla 19 quarters, plus a Modelo 131
   true zero.
-* every other credit casilla = 0, because this persona bore no other withholding.
+* every other credit casilla = 0, because this persona bore no other withholding:
+  the profile declares only work and activity income, which proves the other
+  payer-record classes zero.
 * ``0609`` = ``0596`` + ``0604``.
 
 Real-behaviour, real-adapter (real encrypted-SQLite observation store via
@@ -50,6 +52,7 @@ from ....adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -64,6 +67,7 @@ from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
@@ -115,7 +119,6 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
     surface="_M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA",
 )
 
-_SALARY_CERTIFICATE_BINDING: BindingId = "renta-certificado-trabajo-retenciones"
 # The withholding the taxpayer's own employer certifies as borne. Perceptor-side
 # evidence, so this is the only work-income credit the declaration may carry.
 _SALARY_CERTIFICATE_RETENCIONES = Decimal("1234.56")
@@ -332,6 +335,7 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="economic activity"),
             *GENERAL_REGIME_NATURAL_PERSON_FACTS,
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo,actividad_economica"),
             UserProfileFact(path="censo.activity_start_date", value=date(_YEAR - 5, 1, 1)),
             UserProfileFact(path="withholding.colegio_concertado", value=False),
             UserProfileFact(path="renta_taxpayer.birth_date", value=date(_YEAR - 45, 3, 15)),
@@ -351,22 +355,35 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
     seed_test_profile_record(record)
 
 
-def _caller_binding_values() -> dict[BindingId, Decimal]:
-    """Supply the caller-owned annual bindings: zero, plus the salary certificate.
+def _seed_salary_certificate(operation: PinnedAuthorityOperation) -> None:
+    """Record the employer's certificate through the real write port."""
+    seed_payer_certificate(
+        operation=operation,
+        taxpayer_tax_id="12345678Z",
+        ejercicio=_YEAR,
+        payer_tax_id="B00000000",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=_SALARY_CERTIFICATE_RETENCIONES,
+        importe_integro_dinerario=Decimal("20000.00"),
+    )
 
-    ``profile`` and ``relation_prefill`` sources are resolved by the live mesh
-    and must stay out of ``binding_values``; the bucket-locked kinds are derived
-    from the caller-override ladder rather than hand-listed. What remains is the
-    caller's own channel, zero for a persona with no other prior activity.
+
+def _caller_binding_values() -> dict[BindingId, Decimal]:
+    """Supply the caller-owned annual bindings, all zero.
+
+    ``profile``, ``relation_prefill`` and the payer-record credits are resolved
+    by the live mesh and must stay out of ``binding_values``; the bucket-locked
+    kinds are derived from the caller-override ladder rather than hand-listed.
+    What remains is the caller's own channel, zero for a persona with no other
+    prior activity.
     """
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
-    resolved_elsewhere = frozenset({"profile", _RELATION_PREFILL_SOURCE}) | {
+    resolved_elsewhere = frozenset({"profile", _RELATION_PREFILL_SOURCE, "retencion_soportada"}) | {
         kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)
     }
     values = {
         binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source not in resolved_elsewhere
     }
-    values[_SALARY_CERTIFICATE_BINDING] = _SALARY_CERTIFICATE_RETENCIONES
     return values
 
 
@@ -387,6 +404,7 @@ def _calculate_m100_annual(
     """Run the live annual Modelo 100 calculate over the seeded bucket."""
     _seed_taxpayer_unit_profile(secure_objects)
     _seed_prior_year_m100_zero_carry(secure_objects)
+    _seed_salary_certificate(operation)
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     snapshot = published_authority_operation().snapshot("100", filing_year=_YEAR, period=_ANNUAL_PERIOD)
     work_unit = create_work_unit(
@@ -434,7 +452,7 @@ def _assert_credit_oracle(result: BucketAggregationCalculationResult) -> None:
 def test_credit_casillas_carry_only_perceptor_side_evidence(
     secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """Baseline: with no payer-side return filed, the credits are the keyed evidence.
+    """Baseline: with no payer-side return filed, the credits are the perceptor-side evidence.
 
     Legal grounding: LIRPF art. 99 with RIRPF arts. 109 and 110 for the pagos
     fraccionados, and LIRPF arts. 99 and 101 with RIRPF arts. 80 and 86 for the

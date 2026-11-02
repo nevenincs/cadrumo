@@ -21,6 +21,7 @@ from ....adapters.persistence.profile.buckets import BucketEventHistoryRepositor
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.modelo_303_filed_disposition import modelo_303_filed_disposition
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.tests.wizard_catalogue_fixtures import register_wizard_catalogue
@@ -61,6 +62,7 @@ from ....application.modelo.verification_actions import verify_modelo_revision_w
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
+from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -638,11 +640,21 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
 ) -> None:
     """A salaried M100 with explicit zero prior BIN is filable without prior M100 evidence."""
     zero_binding = "renta-base-liquidable-negativa-general-anterior"
-    retenciones_trabajo_binding = "renta-certificado-trabajo-retenciones"
+    retenciones_trabajo_binding = "renta-retencion-soportada-trabajo"
     retenciones_trabajo_casilla = "0596"
     retenciones_trabajo_amount = Decimal("4200.00")
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_SALARIED_M100_ZERO_BIN_PROFILE_ID) as profile:
         _seed_m100_profile_facts(profile.bucket_id, profile.repository)
+        # The employer's certificate; the profile declares only work income, so no other credit class is owed.
+        seed_payer_certificate(
+            operation=operation,
+            taxpayer_tax_id="X1234567L",
+            ejercicio=2025,
+            payer_tax_id="B00000000",
+            income_class=RetencionSoportadaClase.TRABAJO,
+            retencion=retenciones_trabajo_amount,
+            importe_integro_dinerario=Decimal("32000.00"),
+        )
         snapshot = published_authority_operation().snapshot("100", filing_year=2025, period="0A")
         work_unit = create_work_unit(
             bucket_id=profile.bucket_id,
@@ -671,7 +683,6 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
                 },
                 binding_values={
                     "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
-                    retenciones_trabajo_binding: retenciones_trabajo_amount,
                     zero_binding: Decimal("0"),
                 },
                 clock=_CLOCK,
