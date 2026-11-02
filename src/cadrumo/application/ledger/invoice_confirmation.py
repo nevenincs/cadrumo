@@ -56,7 +56,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Final, Literal, NamedTuple, NoReturn
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ValidationError
 
 from ...core.aggregation import IntracomOperationType
 from ...core.config import Settings
@@ -73,7 +73,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.invoice_legal_classification import resolve_invoice_legal_classification_catalogue
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import InvoiceClass
-from ...domain.invoices.errors import InvoiceValidationError
+from ...domain.invoices.errors import InvoiceRetentionFigureError, InvoiceValidationError
 from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
@@ -770,30 +770,51 @@ def _build_confirmed_invoice_candidate(
         invoice_class=invoice_class,
         rectifies_invoice_number=resolved_rectifies,
     )
-    return build_catalogue_invoice(
-        bucket_id=bucket_id,
-        kind=kind,
-        counterparty_name=resolved_counterparty_name,
-        counterparty_tax_id=resolved_counterparty_tax_id,
-        counterparty_country=counterparty_country,
-        invoice_number=resolved_invoice_number,
-        issued_at=resolved_invoice_date,
-        taxable_base=resolved_taxable_base if confirmed_lines is None else None,
-        iva_rate=resolved_iva_rate if confirmed_lines is None else None,
-        currency=resolved_currency,
-        notes=notes,
-        iva_category=resolved_iva_category,
-        operation_type=operation_type,
-        operation_date=operation_date,
-        retention_rate=resolved_retention_rate,
-        retention_amount=resolved_retention_amount,
-        invoice_class=resolved_invoice_class,
-        series=resolved_series,
-        rectifies_invoice_number=resolved_rectifies,
-        recargo_amount=resolved_recargo_amount,
-        lines=confirmed_lines,
-        rate_provider=catalogue_creation_ports.rate_provider,
-    )
+    try:
+        return build_catalogue_invoice(
+            bucket_id=bucket_id,
+            kind=kind,
+            counterparty_name=resolved_counterparty_name,
+            counterparty_tax_id=resolved_counterparty_tax_id,
+            counterparty_country=counterparty_country,
+            invoice_number=resolved_invoice_number,
+            issued_at=resolved_invoice_date,
+            taxable_base=resolved_taxable_base if confirmed_lines is None else None,
+            iva_rate=resolved_iva_rate if confirmed_lines is None else None,
+            currency=resolved_currency,
+            notes=notes,
+            iva_category=resolved_iva_category,
+            operation_type=operation_type,
+            operation_date=operation_date,
+            retention_rate=resolved_retention_rate,
+            retention_amount=resolved_retention_amount,
+            invoice_class=resolved_invoice_class,
+            series=resolved_series,
+            rectifies_invoice_number=resolved_rectifies,
+            recargo_amount=resolved_recargo_amount,
+            lines=confirmed_lines,
+            rate_provider=catalogue_creation_ports.rate_provider,
+        )
+    except ValidationError as error:
+        refusal = _retention_figure_refusal(error)
+        if refusal is None:
+            raise
+        raise refusal from error
+
+
+def _retention_figure_refusal(error: ValidationError) -> InvoiceRetentionFigureError | None:
+    """Return the retention refusal an invoice's own validation raised, if that is what failed.
+
+    The invoice validates inside a model, so the typed refusal reaches here wrapped
+    in the validation error pydantic builds around it.
+    """
+    for detail in error.errors(include_url=False):
+        cause: BaseException | None = (detail.get("ctx") or {}).get("error")
+        while cause is not None:
+            if isinstance(cause, InvoiceRetentionFigureError):
+                return cause
+            cause = cause.__cause__
+    return None
 
 
 def _persist_confirmed_invoice(

@@ -33,7 +33,7 @@ from typing import Final
 from ...core.money.rounding import CENT, round_to_cents
 from ..iva.errors import IvaRateNotFoundError
 from .enums import IvaRate, iva_rate_percentage, iva_rate_slots_on
-from .errors import InvoiceValidationError
+from .errors import InvoiceRetentionFigureError, InvoiceValidationError
 
 _ZERO: Final = Decimal("0")
 _ONE: Final = Decimal("1")
@@ -72,6 +72,17 @@ class FigureFindingCode(StrEnum):
     PRINTED_TOTAL_DIFFERS = "printed_total_differs"
 
 
+_RETENTION_FINDING_CODES: Final = frozenset(
+    {
+        FigureFindingCode.RETENTION_AMOUNT_NEGATIVE,
+        FigureFindingCode.RETENTION_RATE_OUT_OF_RANGE,
+        FigureFindingCode.RETENTION_RATE_WITHOUT_AMOUNT,
+        FigureFindingCode.RETENTION_AMOUNT_ABOVE_BASE,
+        FigureFindingCode.RETENTION_AMOUNT_MISMATCH,
+    }
+)
+
+
 class FigureFindingSeverity(StrEnum):
     """Whether a finding stops acceptance or only informs the person."""
 
@@ -101,7 +112,8 @@ class FigureFinding:
 
 def figure_refusal(finding: FigureFinding) -> InvoiceValidationError:
     """Return the refusal a validator raises for ``finding``, carrying its stable code."""
-    return InvoiceValidationError(
+    refusal_type = InvoiceRetentionFigureError if finding.code in _RETENTION_FINDING_CODES else InvoiceValidationError
+    return refusal_type(
         finding.message,
         context={"finding_code": finding.code.value, "fields": finding.fields},
     )

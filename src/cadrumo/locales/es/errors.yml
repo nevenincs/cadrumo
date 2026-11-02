@@ -1191,6 +1191,9 @@ errors:
       y el año indicados.
     refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
       Corrige la entrada y vuelve a intentarlo.
+    refused_invoice_retention_figures: La retención indicada se contradice o no encaja
+      con la base imponible de la factura. Indica de nuevo el tipo y el importe de
+      modo que el importe sea la base por el tipo.
     refused_iva_compensation_decimal_parse: 'Rechazado: el importe de compensación
       de IVA no se pudo interpretar como decimal.'
     refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensación

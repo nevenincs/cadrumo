@@ -198,6 +198,7 @@ _PROFILE_CONNECTION_KEYS = frozenset(
         "app_ledger_rule_add",
         "app_ledger_rule_list",
         "app_ledger_rule_apply",
+        "app_ledger_rule_remove",
         "app_ledger_rule_trial",
         "app_ledger_evidence_add",
         "app_ledger_evidence_list",

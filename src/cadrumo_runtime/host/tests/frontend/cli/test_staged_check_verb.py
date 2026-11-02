@@ -18,6 +18,7 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 
 from ...native_profile_facts import native_general_iva_facts
 from .cli_runner import invoke_cached_cli
+from .machine_secret_pipe import machine_secret_descriptor_option
 
 pytestmark = [
     pytest.mark.integration,
@@ -30,12 +31,17 @@ pytestmark = [
 _PROFILE_FACTS = native_general_iva_facts(surnames="Staged", description="synthetic staged check profile")
 
 
-def _invoke(profile: NativeCliProfileFixture, *command: str) -> Result:
+def _invoke(profile: NativeCliProfileFixture, *command: str, secrets: dict[str, str] | None = None) -> Result:
     assert profile.label is not None
     close_active_bucket_session()
     profile_secret = json.dumps({"profile_passphrase": profile.passphrase})
+    channel = () if secrets is None else machine_secret_descriptor_option(secrets)
     result = invoke_cached_cli(
-        ["--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin", *command],
+        [
+            *("--language", "en", "--format", "json", "--profile", profile.label, "--profile-secrets-stdin"),
+            *command,
+            *channel,
+        ],
         input=profile_secret,
     )
     assert profile.passphrase not in result.output
@@ -66,9 +72,15 @@ def test_staged_cells_are_answered_and_nothing_is_written(tmp_path: Path) -> Non
         checked = _invoke(
             profile,
             *("app", "ledger", "staged-check"),
-            *("--row", _row(transaction_id, business_classification="MIXED", notes=None, amount="61.00")),
-            *("--row", _row("0" * 64, notes="unknown row")),
-            *("--draft", json.dumps({"key": "new", "fields": [{"field": "amount", "value": "1.00"}]})),
+            secrets={
+                "rows": json.dumps(
+                    [
+                        json.loads(_row(transaction_id, business_classification="MIXED", notes=None, amount="61.00")),
+                        json.loads(_row("0" * 64, notes="unknown row")),
+                    ]
+                ),
+                "drafts": json.dumps([{"key": "new", "fields": [{"field": "amount", "value": "1.00"}]}]),
+            },
         )
 
         assert checked.exit_code == 0, checked.output
@@ -94,3 +106,13 @@ def test_staged_cells_are_answered_and_nothing_is_written(tmp_path: Path) -> Non
         assert listed.exit_code == 0, listed.output
         rows = unwrap_cli_result(listed)["rows"]
         assert [item["transaction_id"] for item in rows] == [transaction_id]
+
+
+def test_a_staged_row_on_the_command_line_is_refused_as_an_unknown_option(tmp_path: Path) -> None:
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-staged-check-argv", facts=_PROFILE_FACTS)
+
+        refused = _invoke(profile, "app", "ledger", "staged-check", "--row", _row("0" * 64, notes="private"))
+
+        assert refused.exit_code != 0
+        assert "Unknown option '--row'" in refused.output

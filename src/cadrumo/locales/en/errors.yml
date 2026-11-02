@@ -1099,6 +1099,9 @@ errors:
       year provided.
     refused_inventory_service_input: An input provided violates the inventory contract.
       Correct the input and try again.
+    refused_invoice_retention_figures: The stated retention contradicts itself or
+      the invoice's taxable base. Restate the rate and the amount so that the amount
+      equals the base times the rate.
     refused_iva_compensation_decimal_parse: 'Refused: IVA compensation amount could
       not be parsed as a decimal.'
     refused_iva_compensation_year_range: 'Refused: IVA compensation year is outside

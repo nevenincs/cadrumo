@@ -1,6 +1,12 @@
 from __future__ import annotations
 
 from cadrumo_client.commands.parameters import ArgumentSpec, OptionSpec
+from cadrumo_client.commands.secret_contracts import (
+    MachineSecretFieldSpec,
+    MachineSecretSpec,
+    MachineSecretVariantSpec,
+)
+from cadrumo_client.commands.secret_parameters import MACHINE_SECRET_FD_OPTION, MACHINE_SECRET_STDIN_OPTION
 from cadrumo_client.commands.shared_contracts import (
     DeferredTarget,
     LazyBinding,
@@ -429,38 +435,6 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         invocation=_LEAF_INVOCATION,
         parameters=(
             OptionSpec(
-                name="row",
-                declarations=("--row",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(()),
-                help_key=TranslationKey("cli.ledger.staged_check_row_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=True,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
-                name="draft",
-                declarations=("--draft",),
-                value=ValueContract(DeferredTarget("builtins", "str")),
-                default=ParameterDefault.value(()),
-                help_key=TranslationKey("cli.ledger.staged_check_draft_help"),
-                metavar=None,
-                is_flag=False,
-                flag_value=None,
-                multiple=True,
-                count=False,
-                eager=False,
-                constraint=ParameterConstraint(),
-                show_default=True,
-                hidden=False,
-            ),
-            OptionSpec(
                 name="category",
                 declarations=("--category",),
                 value=ValueContract(DeferredTarget("builtins", "str")),
@@ -476,6 +450,8 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 show_default=True,
                 hidden=False,
             ),
+            MACHINE_SECRET_STDIN_OPTION,
+            MACHINE_SECRET_FD_OPTION,
         ),
         policy=_POLICY_5,
         handler=LazyBinding.available(DeferredTarget(".staged_check_commands", "staged_check", __package__)),
@@ -483,6 +459,18 @@ LEDGER_MANAGEMENT_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             SchemaState.TARGET,
             target=DeferredTarget(".ledger_results", "LedgerStagedCheckEnvelope", __package__),
             identity="ledger.staged-check",
+        ),
+        machine_secret=MachineSecretSpec(
+            (
+                MachineSecretVariantSpec(
+                    "staged",
+                    (
+                        MachineSecretFieldSpec("rows"),
+                        MachineSecretFieldSpec("drafts"),
+                    ),
+                    DeferredTarget(".staged_check_commands", "StagedCheckSecrets", __package__),
+                ),
+            ),
         ),
     ),
     CommandSpec(

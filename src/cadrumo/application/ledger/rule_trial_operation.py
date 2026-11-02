@@ -103,6 +103,17 @@ def try_rule_pattern(
     return _matched_result(profile_id, active, winners)
 
 
+def rule_pattern_overruns_ledger(bucket_id: str, description_pattern: str) -> bool:
+    """Return whether the bounded matcher gives up on the pattern over this profile's active descriptions.
+
+    Those are the texts a later apply would search, so a pattern that outruns the
+    matcher here would keep every apply refused for as long as the rule stayed stored.
+    """
+    catalogue = transaction_catalogue_repository(bucket_id=bucket_id).load()
+    answer = try_rule_pattern(UUID(bucket_id), description_pattern, catalogue.transactions)
+    return answer.outcome == "overrun"
+
+
 def _matched_result(
     profile_id: UUID, active: Mapping[str, Transaction], winners: tuple[int | None, ...]
 ) -> LedgerRuleTrialResult:
@@ -213,5 +224,6 @@ __all__ = [
     "build_ledger_rule_trial_definition",
     "build_ledger_rule_trial_registration",
     "resolve_ledger_rule_trial_access",
+    "rule_pattern_overruns_ledger",
     "try_rule_pattern",
 ]

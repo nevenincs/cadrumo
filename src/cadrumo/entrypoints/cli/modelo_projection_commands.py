@@ -18,7 +18,6 @@ from ...application.modelo.projection_operation import (
     ProjectionOverride,
 )
 from ...core.i18n.render import tr
-from ...core.modelo import Modelo
 from ...core.output_rendering import jsonable_output_payload
 from ._modelo_cli_support import (
     bad_parameter_from_localized_context,
@@ -221,7 +220,7 @@ def _compare_lines(service_result: ModeloCompareOperationProjection) -> list[str
     return lines
 
 
-def modelo_compare(ctx: typer.Context, year: list[int] | None = None, modelo: str = Modelo("100").value) -> None:
+def modelo_compare(ctx: typer.Context, modelo: str, year: list[int] | None = None) -> None:
     """Emit :class:`ModeloCompareResult` with grounded delta rows.
 
     Each service row arrives as :class:`ModeloCompareDeltaRow`; the CLI

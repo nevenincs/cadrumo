@@ -27,6 +27,11 @@ from ...application.ledger.rule_operation import (
     LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
     LEDGER_RULE_LIST_OPERATION_DEFINITION_ID,
 )
+from ...application.ledger.rule_remove_operation import (
+    LEDGER_RULE_REMOVE_OPERATION_DEFINITION_ID,
+    LedgerRuleRemoveProjection,
+    LedgerRuleRemoveRequest,
+)
 from ...application.ledger.rule_results import LEDGER_RULE_VALIDATION_REFUSAL_CODE
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .common import active_bucket_id_or_refuse
@@ -140,7 +145,37 @@ def submit_ledger_rule_apply(
     return completed
 
 
-__all__ = ["submit_ledger_rule_add", "submit_ledger_rule_apply", "submit_ledger_rule_list"]
+def submit_ledger_rule_remove(
+    ctx: typer.Context,
+    request: LedgerRuleRemoveRequest,
+) -> RegisteredOperationCompletion[LedgerRuleRemoveProjection]:
+    """Submit one guarded removal and correlate its outcome with the receipt's effect."""
+    completed = _submit(
+        ctx,
+        request,
+        definition_id=LEDGER_RULE_REMOVE_OPERATION_DEFINITION_ID,
+        result_type=LedgerRuleRemoveProjection,
+        allow_refusal_detail=False,
+    )
+    projection = completed.projection
+    removed = projection.outcome == "removed"
+    if (
+        completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
+        or completed.refusal_code is not None
+        or projection.profile_id != request.profile_id
+        or completed.effect is not (OperationEffect.UPDATED if removed else OperationEffect.NONE)
+        or (projection.rule is not None and projection.rule.rule_id != request.rule_id)
+    ):
+        raise invalid_completion_error(completed)
+    return completed
+
+
+__all__ = [
+    "submit_ledger_rule_add",
+    "submit_ledger_rule_apply",
+    "submit_ledger_rule_list",
+    "submit_ledger_rule_remove",
+]
 
 
 def _ledger_rule_add_refusal(

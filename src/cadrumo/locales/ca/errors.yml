@@ -1198,6 +1198,9 @@ errors:
       i l'any indicats.
     refused_inventory_service_input: Una dada indicada infringeix el contracte de
       l'inventari. Corregeix l'entrada i torna-ho a provar.
+    refused_invoice_retention_figures: La retenció indicada es contradiu o no encaixa
+      amb la base imposable de la factura. Indica de nou el tipus i l'import de manera
+      que l'import sigui la base pel tipus.
     refused_iva_compensation_decimal_parse: 'Refusat: l''import de compensació d''IVA
       no s''ha pogut interpretar com a decimal.'
     refused_iva_compensation_year_range: 'Refusat: l''exercici de compensació d''IVA

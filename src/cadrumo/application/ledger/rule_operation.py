@@ -91,6 +91,7 @@ from .rule_results import (
     project_ledger_rule_apply_result,
     publish_rule_apply_refusal,
 )
+from .rule_trial_operation import rule_pattern_overruns_ledger
 
 LEDGER_RULE_ADD_OPERATION_DEFINITION_ID = "ledger.rule.add"
 LEDGER_RULE_LIST_OPERATION_DEFINITION_ID = "ledger.rule.list"
@@ -169,6 +170,13 @@ async def _prepare_rule_add(
         LedgerRuleRowProjection.from_rule(candidate)
     except (ClassificationRuleError, ValidationError, ValueError) as error:
         projection = _add_validation_projection(payload.profile_id, code="invalid_pattern", error=error)
+        return await _publish_add_refusal(context, projection)
+    if await asyncio.to_thread(rule_pattern_overruns_ledger, bucket_id, payload.description_pattern):
+        projection = _add_validation_projection(
+            payload.profile_id,
+            code="pattern_overrun",
+            error=ValueError("the pattern did not finish searching this profile's descriptions within its bound"),
+        )
         return await _publish_add_refusal(context, projection)
     return candidate, category_id
 

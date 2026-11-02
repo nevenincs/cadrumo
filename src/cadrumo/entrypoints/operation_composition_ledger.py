@@ -480,17 +480,23 @@ def compose_ledger_rule_operation(inputs: OperationCompositionInputs) -> Operati
         build_ledger_rule_list_definition,
         build_ledger_rule_list_registration,
     )
+    from ..application.ledger.rule_remove_operation import (
+        build_ledger_rule_remove_definition,
+        build_ledger_rule_remove_registration,
+    )
 
     rules, caller = inputs.ledger_rules(), inputs.execution_caller_reader
     add = build_ledger_rule_add_definition(rules, execution_caller_reader=caller)
     listing = build_ledger_rule_list_definition(rules)
     apply = build_ledger_rule_apply_definition(inputs.ledger_actions(), rules, execution_caller_reader=caller)
+    remove = build_ledger_rule_remove_definition(rules)
     return built(
-        (add, listing, apply),
+        (add, listing, apply, remove),
         (
             build_ledger_rule_add_registration(add),
             build_ledger_rule_list_registration(listing),
             build_ledger_rule_apply_registration(apply),
+            build_ledger_rule_remove_registration(remove),
         ),
     )
 
