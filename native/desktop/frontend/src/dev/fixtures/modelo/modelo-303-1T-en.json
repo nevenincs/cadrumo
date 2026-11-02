@@ -40,6 +40,7 @@
                     "text": "Tax identification number",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -50,6 +51,7 @@
                     "text": "Full name or company name",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -60,6 +62,7 @@
                     "text": "Taxation exclusively by a foral administration",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -70,6 +73,7 @@
                     "text": "Monthly refund register",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -77,6 +81,7 @@
                   "kind": "context_field",
                   "id": "regimen",
                   "label": { "text": "Tax regime", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -87,6 +92,7 @@
                     "text": "Joint self-assessment",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -97,6 +103,7 @@
                     "text": "Cash accounting scheme",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -107,6 +114,7 @@
                     "text": "Recipient of transactions under cash accounting",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -117,6 +125,7 @@
                     "text": "Election of special pro rata",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -127,6 +136,7 @@
                     "text": "Revocation of special pro rata election",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -137,6 +147,7 @@
                     "text": "Insolvency declared in this period",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -147,6 +158,7 @@
                     "text": "Date of insolvency order",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -157,6 +169,7 @@
                     "text": "Pre-insolvency or post-insolvency return",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -167,6 +180,7 @@
                     "text": "Voluntarily enrolled in SII",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -177,6 +191,7 @@
                     "text": "Exempt from annual summary, form 390",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -187,6 +202,7 @@
                     "text": "Non-zero annual turnover",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -7822,6 +7838,7 @@
                     "text": "Amendment (5)",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -7832,6 +7849,7 @@
                     "text": "Previous return receipt number",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -7839,6 +7857,7 @@
                   "kind": "context_field",
                   "id": "motivo-rectificacion",
                   "label": { "text": "Corrections", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -7849,6 +7868,7 @@
                     "text": "Disagreement with administrative interpretation",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -7909,6 +7929,7 @@
                     "text": "Activity code",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -7919,6 +7940,7 @@
                     "text": "IAE activity heading",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -7953,6 +7975,7 @@
                     "text": "Activity code",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -7963,6 +7986,7 @@
                     "text": "IAE activity heading",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -7997,6 +8021,7 @@
                     "text": "Activity code",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -8007,6 +8032,7 @@
                     "text": "IAE activity heading",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -8041,6 +8067,7 @@
                     "text": "Activity code",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -8051,6 +8078,7 @@
                     "text": "IAE activity heading",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -8085,6 +8113,7 @@
                     "text": "Activity code",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -8095,6 +8124,7 @@
                     "text": "IAE activity heading",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -8129,6 +8159,7 @@
                     "text": "Activity code",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -8139,6 +8170,7 @@
                     "text": "IAE activity heading",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -8173,6 +8205,7 @@
                     "text": "D · Required to submit the annual third-party transactions declaration",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -14340,6 +14373,7 @@
                   "kind": "context_field",
                   "id": "iban",
                   "label": { "text": "IBAN", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -14350,6 +14384,7 @@
                     "text": "SWIFT-BIC code",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -14357,6 +14392,7 @@
                   "kind": "context_field",
                   "id": "banco",
                   "label": { "text": "Bank name", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -14367,6 +14403,7 @@
                     "text": "Bank address",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -14374,6 +14411,7 @@
                   "kind": "context_field",
                   "id": "ciudad-banco",
                   "label": { "text": "City", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -14384,6 +14422,7 @@
                     "text": "Country code",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -18282,7 +18321,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -21398,9 +21437,9 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:28:49.145599Z",
-    "expires_at": "2026-11-02T16:33:49.145599Z",
-    "baseline_id": "1672fd63da903883a1055ab544f6154e2b3e79bd3ccc12771cdbcd15762ca981"
+    "issued_at": "2026-11-02T20:27:51.373669Z",
+    "expires_at": "2026-11-02T20:32:51.373669Z",
+    "baseline_id": "d915bf45e2742ff679f6792aa7dce18bfa67d004338a5edecbe8a1f8a28518b1"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

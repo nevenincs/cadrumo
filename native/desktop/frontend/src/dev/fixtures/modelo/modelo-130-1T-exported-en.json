@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+      "calculation_revision_id": "b691d64f7eaff57a754290c6e92d55116236ed7ef3ffb963bbd733a044864aec",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -37,6 +37,7 @@
                     "text": "Tax identification number (NIF)",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -44,6 +45,7 @@
                   "kind": "context_field",
                   "id": "nombre",
                   "label": { "text": "Given name", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -51,6 +53,7 @@
                   "kind": "context_field",
                   "id": "apellidos",
                   "label": { "text": "Surname", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -82,6 +85,7 @@
                   "kind": "context_field",
                   "id": "ejercicio",
                   "label": { "text": "Tax year", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "integer", "text": "2026" },
                   "value_text": "2026"
                 },
@@ -89,6 +93,7 @@
                   "kind": "context_field",
                   "id": "periodo",
                   "label": { "text": "Period", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "string", "text": "1T" },
                   "value_text": "1st quarter 2026"
                 }
@@ -1322,6 +1327,7 @@
                   "kind": "context_field",
                   "id": "iban",
                   "label": { "text": "IBAN", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -1356,6 +1362,7 @@
                     "text": "Supplementary self-assessment",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -1366,6 +1373,7 @@
                     "text": "Previous self-assessment receipt number",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -1648,8 +1656,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-02T16:33:10.439522Z",
-        "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+        "exported_at": "2026-11-02T20:31:17.808483Z",
+        "calculation_revision_id": "b691d64f7eaff57a754290c6e92d55116236ed7ef3ffb963bbd733a044864aec",
         "current": true
       },
       "edit_closure": null,
@@ -1666,7 +1674,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1701,9 +1709,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "95b6a32bc5cfd6ae7bba22923ac2a917235f32ee3a7b731b8c4f9761538d7130",
-    "calculation_head_digest": "f14ee90153f9231254b3439bc216209eecd6357062b911e90d2e3580eed8efbe",
-    "current_calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+    "work_unit_record_digest": "70dd4fbac89a4e80281eb6ff81691d7b51efea2272e615ce6e6ea0db7c92e90d",
+    "calculation_head_digest": "c508bf2fb6dff5336dfca2b20fcc1243c998282a021dd80390497a08e682486e",
+    "current_calculation_revision_id": "b691d64f7eaff57a754290c6e92d55116236ed7ef3ffb963bbd733a044864aec",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2006,9 +2014,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:33:18.210111Z",
-    "expires_at": "2026-11-02T16:38:18.210111Z",
-    "baseline_id": "7da35a9ce5501a58564fd4c14c6d80b89a82dcd94fef4af162cc6a4be42f5319"
+    "issued_at": "2026-11-02T20:31:26.429591Z",
+    "expires_at": "2026-11-02T20:36:26.429591Z",
+    "baseline_id": "0fa8aee48ef2f01f089a681f5f6c12d5822de874051c07d0170cea9c3f1756d6"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2018,7 +2026,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-02T16:33:10.439522Z",
+    "file_created_at": "2026-11-02T20:31:17.808483Z",
     "receipt_to_add": false
   },
   "header": {
@@ -2044,7 +2052,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-02T16:33:10.439522Z",
+      "exported_at": "2026-11-02T20:31:17.808483Z",
       "created_on": "Nov 2, 2026",
       "current": true,
       "words": "File created on Nov 2, 2026"
@@ -2072,8 +2080,8 @@
     "words": "The check passed.",
     "unapplied_words": "The saved calculation passed its check; your changes are not applied."
   },
-  "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
-  "verification_report_id": "ba530f77fd23b7fc8772753431ae62ad2cd34aba5e7bc9cc35c567f16d7e5d57",
+  "calculation_revision_id": "b691d64f7eaff57a754290c6e92d55116236ed7ef3ffb963bbd733a044864aec",
+  "verification_report_id": "011ffc026b91dffc029431076763be85127eb967914acc6578d254ad5c272c16",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",

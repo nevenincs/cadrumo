@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "0A" },
       "registry_revision_id": "2025-y-siguientes",
       "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-      "calculation_revision_id": "5fbb308eacf803b57f1d30eb852bff20cd849b55532e470fd9aa04e14d7759f3",
+      "calculation_revision_id": "18e2a0adc9691328db20d91b28e48b5ef2c3fd3a44956bd14776de3251f875d4",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -37,6 +37,7 @@
                     "text": "Declarant tax ID",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -47,6 +48,7 @@
                     "text": "Full name or legal name",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -456,6 +458,7 @@
                     "text": "Previous declaration receipt number",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -487,9 +490,10 @@
                   "kind": "context_field",
                   "id": "resumen-personas",
                   "label": {
-                    "text": "[01] Total persons and entities",
+                    "text": "Total persons and entities",
                     "disclosure": "localized"
                   },
+                  "box_number": "01",
                   "value": { "kind": "decimal", "text": "0" },
                   "value_text": "0"
                 },
@@ -497,9 +501,10 @@
                   "kind": "context_field",
                   "id": "resumen-operaciones",
                   "label": {
-                    "text": "[02] Total annual transaction amount",
+                    "text": "Total annual transaction amount",
                     "disclosure": "localized"
                   },
+                  "box_number": "02",
                   "value": { "kind": "decimal", "text": "0" },
                   "value_text": "0"
                 },
@@ -507,9 +512,10 @@
                   "kind": "context_field",
                   "id": "resumen-inmuebles",
                   "label": {
-                    "text": "[03] Total properties",
+                    "text": "Total properties",
                     "disclosure": "localized"
                   },
+                  "box_number": "03",
                   "value": { "kind": "decimal", "text": "0" },
                   "value_text": "0"
                 },
@@ -517,9 +523,10 @@
                   "kind": "context_field",
                   "id": "resumen-arrendamientos",
                   "label": {
-                    "text": "[04] Total business premises rental amount",
+                    "text": "Total business premises rental amount",
                     "disclosure": "localized"
                   },
+                  "box_number": "04",
                   "value": { "kind": "decimal", "text": "0" },
                   "value_text": "0"
                 }
@@ -1405,7 +1412,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1440,9 +1447,9 @@
     "period_filing_year": 2026,
     "period_code": "0A",
     "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-    "work_unit_record_digest": "d45ccc90990d7c96f33ebb5604fde2dbd5fd8f757285fde33a8e9cd04b2b8bc1",
-    "calculation_head_digest": "4e97a5e14a45a1521c66ecfb32148c381f2ba49c4093c13ff4a71462ac8729cd",
-    "current_calculation_revision_id": "5fbb308eacf803b57f1d30eb852bff20cd849b55532e470fd9aa04e14d7759f3",
+    "work_unit_record_digest": "e7a511a37469ba2be8f36afacafccc1a9f35e1de1a67f874034fb2e476f5c89a",
+    "calculation_head_digest": "b044b8e586be8146033e2151f7f4b25dd72e7d79c3c1e19a09d370c88f639d09",
+    "current_calculation_revision_id": "18e2a0adc9691328db20d91b28e48b5ef2c3fd3a44956bd14776de3251f875d4",
     "law_selected_revision_id": "2025-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-347-2025-y-siguientes",
@@ -2163,9 +2170,9 @@
     ],
     "permitted_surface_digest": "c258bc8ca1f53449315c27e6a6e73d340ff63f1c625609083c5d48dde37106ae",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:23:01.114224Z",
-    "expires_at": "2026-11-02T16:28:01.114224Z",
-    "baseline_id": "418ec78a0b92b1891dc634c8861b6f515152d730e09d8b8ceaa22ee1e865a480"
+    "issued_at": "2026-11-02T20:27:58.974755Z",
+    "expires_at": "2026-11-02T20:32:58.974755Z",
+    "baseline_id": "0bcec8120412dbb5be837dc5be58a9d8705fab509c5ce76107a6a8ed91a7b6c0"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2200,7 +2207,7 @@
     "words": "The declaration has not been checked yet.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "5fbb308eacf803b57f1d30eb852bff20cd849b55532e470fd9aa04e14d7759f3",
+  "calculation_revision_id": "18e2a0adc9691328db20d91b28e48b5ef2c3fd3a44956bd14776de3251f875d4",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

@@ -7644,6 +7644,7 @@ export type PublicModeloFormContextFieldBlock = {
   kind: "context_field";
   id: string;
   label: ModeloFormText;
+  box_number: string | null;
   value: PublicScalarValueV1 | null;
   value_text: string | null;
 };

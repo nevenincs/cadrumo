@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "a207384d8019e076a2f0539ac91d8e408aba35f448177a27d75152127ceb4885",
+      "calculation_revision_id": "b691d64f7eaff57a754290c6e92d55116236ed7ef3ffb963bbd733a044864aec",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -34,6 +34,7 @@
                   "kind": "context_field",
                   "id": "nif",
                   "label": { "text": "NIF", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 },
@@ -41,6 +42,7 @@
                   "kind": "context_field",
                   "id": "nombre",
                   "label": { "text": "Nom", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 },
@@ -48,6 +50,7 @@
                   "kind": "context_field",
                   "id": "apellidos",
                   "label": { "text": "Cognoms", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 }
@@ -76,6 +79,7 @@
                   "kind": "context_field",
                   "id": "ejercicio",
                   "label": { "text": "Exercici", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "integer", "text": "2026" },
                   "value_text": "2026"
                 },
@@ -83,6 +87,7 @@
                   "kind": "context_field",
                   "id": "periodo",
                   "label": { "text": "Període", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "string", "text": "1T" },
                   "value_text": "1r trimestre 2026"
                 }
@@ -1319,6 +1324,7 @@
                   "kind": "context_field",
                   "id": "iban",
                   "label": { "text": "Codi IBAN", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 }
@@ -1353,6 +1359,7 @@
                     "text": "Autoliquidació complementària",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 },
@@ -1363,6 +1370,7 @@
                     "text": "Núm. de justificant de l’autoliquidació anterior",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 }
@@ -1645,8 +1653,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-02T16:25:22.496400Z",
-        "calculation_revision_id": "a207384d8019e076a2f0539ac91d8e408aba35f448177a27d75152127ceb4885",
+        "exported_at": "2026-11-02T20:31:17.808483Z",
+        "calculation_revision_id": "b691d64f7eaff57a754290c6e92d55116236ed7ef3ffb963bbd733a044864aec",
         "current": true
       },
       "edit_closure": null,
@@ -1663,7 +1671,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1698,9 +1706,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "d168457d5d9a0603f77d5241ac4d26d9beb983b0e716a8ae3a7d5cddd7981a4a",
-    "calculation_head_digest": "e4419e9ebe793d6d6b34d713730a0e004ffb1a9a289f16c867a26d45a5327d07",
-    "current_calculation_revision_id": "a207384d8019e076a2f0539ac91d8e408aba35f448177a27d75152127ceb4885",
+    "work_unit_record_digest": "70dd4fbac89a4e80281eb6ff81691d7b51efea2272e615ce6e6ea0db7c92e90d",
+    "calculation_head_digest": "c508bf2fb6dff5336dfca2b20fcc1243c998282a021dd80390497a08e682486e",
+    "current_calculation_revision_id": "b691d64f7eaff57a754290c6e92d55116236ed7ef3ffb963bbd733a044864aec",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2003,9 +2011,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:25:29.738773Z",
-    "expires_at": "2026-11-02T16:30:29.738773Z",
-    "baseline_id": "284994a03093b38cf2e508329f706feab0a005436ae913c9f02120dc0f0e1111"
+    "issued_at": "2026-11-02T20:31:28.501818Z",
+    "expires_at": "2026-11-02T20:36:28.501818Z",
+    "baseline_id": "7d382f15237b0057812105712ebfe1882ab168ee2424daa45be3b4c8c82c4dc2"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2015,7 +2023,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-02T16:25:22.496400Z",
+    "file_created_at": "2026-11-02T20:31:17.808483Z",
     "receipt_to_add": false
   },
   "header": {
@@ -2041,7 +2049,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-02T16:25:22.496400Z",
+      "exported_at": "2026-11-02T20:31:17.808483Z",
       "created_on": "2 de nov. 2026",
       "current": true,
       "words": "Fitxer generat el 2 de nov. 2026"
@@ -2069,8 +2077,8 @@
     "words": "La comprovació és correcta.",
     "unapplied_words": "El càlcul desat ha superat la comprovació; els teus canvis no s'han aplicat."
   },
-  "calculation_revision_id": "a207384d8019e076a2f0539ac91d8e408aba35f448177a27d75152127ceb4885",
-  "verification_report_id": "401843e109251837e89c275cf5cf71b368c1fa17f52cd096d8e8fa3b05a7e8a5",
+  "calculation_revision_id": "b691d64f7eaff57a754290c6e92d55116236ed7ef3ffb963bbd733a044864aec",
+  "verification_report_id": "011ffc026b91dffc029431076763be85127eb967914acc6578d254ad5c272c16",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",

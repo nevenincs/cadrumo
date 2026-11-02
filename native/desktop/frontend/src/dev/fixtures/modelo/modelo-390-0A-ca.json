@@ -20919,6 +20919,7 @@
                     "text": "Regularització de quotes de l'art. 80.Cinc.5a LIVA",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -20929,6 +20930,7 @@
                     "text": "Suma de resultats",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -21000,6 +21002,7 @@
                     "text": "Resultat liquidació anual - IVA a la importació liquidat per la Duana (només subjectes passius amb opció de diferiment) [659]",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -21068,6 +21071,7 @@
                     "text": "Pagament a compte atribuïble a l'Administració de l'Estat deduït en l'exercici per lliuraments de gasolines, gasoils i biocarburants",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },

@@ -20976,6 +20976,7 @@
                     "text": "Adjustment of VAT amounts under LIVA art. 80.Five.5",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -20986,6 +20987,7 @@
                     "text": "Sum of results",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -21057,6 +21059,7 @@
                     "text": "Annual settlement result - Import VAT assessed by Customs (only taxpayers electing deferred payment) [659]",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -21125,6 +21128,7 @@
                     "text": "Payment on account attributable to the State Administration deducted in the year for supplies of petrol, diesel and biofuels",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },

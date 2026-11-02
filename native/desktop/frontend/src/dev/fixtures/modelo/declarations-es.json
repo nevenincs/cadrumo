@@ -2495,19 +2495,19 @@
     {
       "zone": "declarations",
       "availability": "available",
-      "observed_at": "2026-11-02T16:29:29.624295Z",
+      "observed_at": "2026-11-02T20:28:15.221655Z",
       "words": "Disponible"
     },
     {
       "zone": "calculation_revisions",
       "availability": "available",
-      "observed_at": "2026-11-02T16:29:29.624295Z",
+      "observed_at": "2026-11-02T20:28:15.221655Z",
       "words": "Disponible"
     },
     {
       "zone": "filing_history",
       "availability": "available",
-      "observed_at": "2026-11-02T16:29:29.624295Z",
+      "observed_at": "2026-11-02T20:28:15.221655Z",
       "words": "Disponible"
     }
   ],
@@ -2515,14 +2515,14 @@
     {
       "source": "schedule",
       "availability": "available",
-      "observed_at": "2026-11-02T16:29:29.624295Z",
-      "words": "Calendario legal: Disponible · Observado: 2 nov 2026 16:29 UTC"
+      "observed_at": "2026-11-02T20:28:15.221655Z",
+      "words": "Calendario legal: Disponible · Observado: 2 nov 2026 20:28 UTC"
     },
     {
       "source": "local.filing",
       "availability": "available",
-      "observed_at": "2026-11-02T16:29:29.624295Z",
-      "words": "Presentación local: Disponible · Observado: 2 nov 2026 16:29 UTC"
+      "observed_at": "2026-11-02T20:28:15.221655Z",
+      "words": "Presentación local: Disponible · Observado: 2 nov 2026 20:28 UTC"
     },
     {
       "source": "aeat.evidence",
@@ -2534,7 +2534,7 @@
   "notices": [
     "Estado en la AEAT: Disponible · Observado: 15 jul 2026 09:00 UTC"
   ],
-  "deadline_note_words": "solo festivos nacionales; festivos autonómicos y locales sin comprobar",
+  "deadline_note_words": null,
   "creation_targets": [
     {
       "modelo": "038",

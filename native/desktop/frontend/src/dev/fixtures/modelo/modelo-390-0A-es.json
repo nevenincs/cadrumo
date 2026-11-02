@@ -20919,6 +20919,7 @@
                     "text": "Regularización de cuotas del art. 80.Cinco.5ª LIVA",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -20929,6 +20930,7 @@
                     "text": "Suma de resultados",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -21000,6 +21002,7 @@
                     "text": "Resultado liquidación anual - IVA a la importación liquidado por la Aduana (sólo sujetos pasivos con opción de diferimiento) [659]",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -21068,6 +21071,7 @@
                     "text": "Pago a cuenta atribuible a la Administración del Estado deducido en el ejercicio por entregas de gasolinas, gasóleos y biocarburantes",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },

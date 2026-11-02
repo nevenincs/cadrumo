@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
+      "calculation_revision_id": "b3793648450e0c20843d20c88e0a8efaefba292c56287f1f1a4604708f614b15",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -34,6 +34,7 @@
                   "kind": "context_field",
                   "id": "nif",
                   "label": { "text": "NIF", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 },
@@ -41,6 +42,7 @@
                   "kind": "context_field",
                   "id": "nombre",
                   "label": { "text": "Nom", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 },
@@ -48,6 +50,7 @@
                   "kind": "context_field",
                   "id": "apellidos",
                   "label": { "text": "Cognoms", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 }
@@ -76,6 +79,7 @@
                   "kind": "context_field",
                   "id": "ejercicio",
                   "label": { "text": "Exercici", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "integer", "text": "2026" },
                   "value_text": "2026"
                 },
@@ -83,6 +87,7 @@
                   "kind": "context_field",
                   "id": "periodo",
                   "label": { "text": "Període", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "string", "text": "1T" },
                   "value_text": "1r trimestre 2026"
                 }
@@ -1319,6 +1324,7 @@
                   "kind": "context_field",
                   "id": "iban",
                   "label": { "text": "Codi IBAN", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 }
@@ -1353,6 +1359,7 @@
                     "text": "Autoliquidació complementària",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 },
@@ -1363,6 +1370,7 @@
                     "text": "Núm. de justificant de l’autoliquidació anterior",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sense dada"
                 }
@@ -1661,7 +1669,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1696,9 +1704,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "e85117dc375397b049fb7d6d98102bb0739178c0302ce4061b4fc216f8f78c45",
-    "calculation_head_digest": "7a10cf73973761d15cab0989a318b1cf840f310f76d51230e29c464338fa9719",
-    "current_calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
+    "work_unit_record_digest": "7aa5c8faf55c4b1b81f5db379b7262f71413bcd05bc911fd5d56a727f8a6eee2",
+    "calculation_head_digest": "18fa80621a1c0353f6d63ec31e1b6934643e669a8f2792c0cf37cc59d4b2c13a",
+    "current_calculation_revision_id": "b3793648450e0c20843d20c88e0a8efaefba292c56287f1f1a4604708f614b15",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2001,9 +2009,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:02:40.593240Z",
-    "expires_at": "2026-11-02T16:07:40.593240Z",
-    "baseline_id": "b3bec0d2c4b65529dec150b3d2e4bb54f0baec88c367433c9cdc7a292275fd7c"
+    "issued_at": "2026-11-02T20:00:39.181380Z",
+    "expires_at": "2026-11-02T20:05:39.181380Z",
+    "baseline_id": "84c616d41a20356ef6bfbc33af65ecff0b86f8531ffad1640fa4730931e5cdbe"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2096,7 +2104,7 @@
     "words": "La declaració encara no s'ha comprovat.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
+  "calculation_revision_id": "b3793648450e0c20843d20c88e0a8efaefba292c56287f1f1a4604708f614b15",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

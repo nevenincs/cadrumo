@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
+      "calculation_revision_id": "b3793648450e0c20843d20c88e0a8efaefba292c56287f1f1a4604708f614b15",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -37,6 +37,7 @@
                     "text": "Adóazonosító szám (NIF)",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 },
@@ -44,6 +45,7 @@
                   "kind": "context_field",
                   "id": "nombre",
                   "label": { "text": "Utónév", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 },
@@ -51,6 +53,7 @@
                   "kind": "context_field",
                   "id": "apellidos",
                   "label": { "text": "Vezetéknév", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 }
@@ -82,6 +85,7 @@
                   "kind": "context_field",
                   "id": "ejercicio",
                   "label": { "text": "Adóév", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "integer", "text": "2026" },
                   "value_text": "2026"
                 },
@@ -89,6 +93,7 @@
                   "kind": "context_field",
                   "id": "periodo",
                   "label": { "text": "Időszak", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "string", "text": "1T" },
                   "value_text": "2026. I. negyedév"
                 }
@@ -1325,6 +1330,7 @@
                   "kind": "context_field",
                   "id": "iban",
                   "label": { "text": "IBAN", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 }
@@ -1359,6 +1365,7 @@
                     "text": "Kiegészítő önadózási bevallás",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 },
@@ -1369,6 +1376,7 @@
                     "text": "Az előző önadózási bevallás igazolásszáma",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 }
@@ -1716,7 +1724,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1751,9 +1759,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "be0f03991f54fcbcf0cd9bbba46d80f10fd614e7298a3eda9aa81d71cf5230b1",
-    "calculation_head_digest": "2011f4d63d0194fa1dd4a1e0f3209a386fcdfc4c86e709cd87e10f3edb8d12f1",
-    "current_calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
+    "work_unit_record_digest": "d975b35e71fd024e308c6d55ddb6c29702bdd5bb466fbd2b5f328c4b7059cfa8",
+    "calculation_head_digest": "80c81b2d96569b0d4117e2568c477bf0f60af3cfb4127152798cac3b801e82a4",
+    "current_calculation_revision_id": "b3793648450e0c20843d20c88e0a8efaefba292c56287f1f1a4604708f614b15",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2056,9 +2064,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:30:08.161533Z",
-    "expires_at": "2026-11-02T16:35:08.161533Z",
-    "baseline_id": "fecaf7aaf0779569ad43fa79402aad0a61077893adddf2b8a010407188dd1527"
+    "issued_at": "2026-11-02T20:28:37.031629Z",
+    "expires_at": "2026-11-02T20:33:37.031629Z",
+    "baseline_id": "b31a355246963bcfbccb2f95e4fe58223789cd0ee7e231cb3c67b33d0660538c"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2163,7 +2171,7 @@
     "words": "Az ellenőrzés olyasmit talált, ami akadályozza a benyújtást.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
+  "calculation_revision_id": "b3793648450e0c20843d20c88e0a8efaefba292c56287f1f1a4604708f614b15",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

@@ -37,6 +37,7 @@
                   "kind": "context_field",
                   "id": "nif",
                   "label": { "text": "NIF", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -47,6 +48,7 @@
                     "text": "Apellidos y nombre o Razón social",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -57,6 +59,7 @@
                     "text": "Tributación exclusivamente foral",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -67,6 +70,7 @@
                     "text": "Registro de devolución mensual",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -77,6 +81,7 @@
                     "text": "Régimen de tributación",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -87,6 +92,7 @@
                     "text": "Autoliquidación conjunta",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -97,6 +103,7 @@
                     "text": "Régimen especial del criterio de caja",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -107,6 +114,7 @@
                     "text": "Destinatario de operaciones acogidas al criterio de caja",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -117,6 +125,7 @@
                     "text": "Opción por la prorrata especial",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -127,6 +136,7 @@
                     "text": "Revocación de la opción por la prorrata especial",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -137,6 +147,7 @@
                     "text": "Declaración de concurso en este período",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -147,6 +158,7 @@
                     "text": "Fecha del auto de declaración de concurso",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -157,6 +169,7 @@
                     "text": "Autoliquidación preconcursal o postconcursal",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -167,6 +180,7 @@
                     "text": "Acogido voluntariamente al SII",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -177,6 +191,7 @@
                     "text": "Exonerado de la declaración-resumen anual, modelo 390",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -187,6 +202,7 @@
                     "text": "Volumen anual de operaciones distinto de cero",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -7816,6 +7832,7 @@
                     "text": "Rectificativa (5)",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -7826,6 +7843,7 @@
                     "text": "Número de justificante de la autoliquidación anterior",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -7836,6 +7854,7 @@
                     "text": "Rectificaciones",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -7846,6 +7865,7 @@
                     "text": "Discrepancia de criterio administrativo",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -7906,6 +7926,7 @@
                     "text": "Código de actividad",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -7916,6 +7937,7 @@
                     "text": "Epígrafe IAE",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -7950,6 +7972,7 @@
                     "text": "Código de actividad",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -7960,6 +7983,7 @@
                     "text": "Epígrafe IAE",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -7994,6 +8018,7 @@
                     "text": "Código de actividad",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -8004,6 +8029,7 @@
                     "text": "Epígrafe IAE",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -8038,6 +8064,7 @@
                     "text": "Código de actividad",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -8048,6 +8075,7 @@
                     "text": "Epígrafe IAE",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -8082,6 +8110,7 @@
                     "text": "Código de actividad",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -8092,6 +8121,7 @@
                     "text": "Epígrafe IAE",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -8126,6 +8156,7 @@
                     "text": "Código de actividad",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -8136,6 +8167,7 @@
                     "text": "Epígrafe IAE",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -8170,6 +8202,7 @@
                     "text": "D · Obligación de presentar la declaración anual de operaciones con terceras personas",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -14337,6 +14370,7 @@
                   "kind": "context_field",
                   "id": "iban",
                   "label": { "text": "IBAN", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -14347,6 +14381,7 @@
                     "text": "Código SWIFT-BIC",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -14354,6 +14389,7 @@
                   "kind": "context_field",
                   "id": "banco",
                   "label": { "text": "Banco", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -14364,6 +14400,7 @@
                     "text": "Dirección del banco",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -14371,6 +14408,7 @@
                   "kind": "context_field",
                   "id": "ciudad-banco",
                   "label": { "text": "Ciudad", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 },
@@ -14381,6 +14419,7 @@
                     "text": "Código del país",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "sin dato"
                 }
@@ -18282,7 +18321,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -21398,9 +21437,9 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:28:50.051959Z",
-    "expires_at": "2026-11-02T16:33:50.051959Z",
-    "baseline_id": "a90925cc26825c71f5ce18c613b8fbd4478f06a2c1ae17357280531f8addef9f"
+    "issued_at": "2026-11-02T20:27:51.951606Z",
+    "expires_at": "2026-11-02T20:32:51.951606Z",
+    "baseline_id": "0296d74e71103684ca3b76e128e9910193c5aca5c33c0ecbcc92c4e0355e69f9"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "0A" },
       "registry_revision_id": "2025-y-siguientes",
       "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-      "calculation_revision_id": "404ba1e740cb4cfd87fb7b4be37dcf221550ccad270049aea2b4f0e6780aa5ad",
+      "calculation_revision_id": "18e2a0adc9691328db20d91b28e48b5ef2c3fd3a44956bd14776de3251f875d4",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -37,6 +37,7 @@
                     "text": "Bevalló adóazonosítója",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 },
@@ -47,6 +48,7 @@
                     "text": "Teljes név vagy cégnév",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 },
@@ -456,6 +458,7 @@
                     "text": "Előző bevallás bizonylatszáma",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "nincs adat"
                 }
@@ -487,9 +490,10 @@
                   "kind": "context_field",
                   "id": "resumen-personas",
                   "label": {
-                    "text": "[01] Személyek és szervezetek száma",
+                    "text": "Személyek és szervezetek száma",
                     "disclosure": "localized"
                   },
+                  "box_number": "01",
                   "value": { "kind": "decimal", "text": "0" },
                   "value_text": "0"
                 },
@@ -497,9 +501,10 @@
                   "kind": "context_field",
                   "id": "resumen-operaciones",
                   "label": {
-                    "text": "[02] Ügyletek éves összege",
+                    "text": "Ügyletek éves összege",
                     "disclosure": "localized"
                   },
+                  "box_number": "02",
                   "value": { "kind": "decimal", "text": "0" },
                   "value_text": "0"
                 },
@@ -507,9 +512,10 @@
                   "kind": "context_field",
                   "id": "resumen-inmuebles",
                   "label": {
-                    "text": "[03] Ingatlanok száma",
+                    "text": "Ingatlanok száma",
                     "disclosure": "localized"
                   },
+                  "box_number": "03",
                   "value": { "kind": "decimal", "text": "0" },
                   "value_text": "0"
                 },
@@ -517,9 +523,10 @@
                   "kind": "context_field",
                   "id": "resumen-arrendamientos",
                   "label": {
-                    "text": "[04] Üzlethelyiségek bérbeadásának összege",
+                    "text": "Üzlethelyiségek bérbeadásának összege",
                     "disclosure": "localized"
                   },
+                  "box_number": "04",
                   "value": { "kind": "decimal", "text": "0" },
                   "value_text": "0"
                 }
@@ -1402,7 +1409,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1437,9 +1444,9 @@
     "period_filing_year": 2026,
     "period_code": "0A",
     "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-    "work_unit_record_digest": "834f7f625780e35fd02badb61ed7339d67e6af0e1ef34fb17c99fde455a4f8e3",
-    "calculation_head_digest": "275a89e74addc9eb7009004a671cc6aee5c1f58ab97edc09969a927a2246a652",
-    "current_calculation_revision_id": "404ba1e740cb4cfd87fb7b4be37dcf221550ccad270049aea2b4f0e6780aa5ad",
+    "work_unit_record_digest": "e7a511a37469ba2be8f36afacafccc1a9f35e1de1a67f874034fb2e476f5c89a",
+    "calculation_head_digest": "b044b8e586be8146033e2151f7f4b25dd72e7d79c3c1e19a09d370c88f639d09",
+    "current_calculation_revision_id": "18e2a0adc9691328db20d91b28e48b5ef2c3fd3a44956bd14776de3251f875d4",
     "law_selected_revision_id": "2025-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-347-2025-y-siguientes",
@@ -2160,9 +2167,9 @@
     ],
     "permitted_surface_digest": "c258bc8ca1f53449315c27e6a6e73d340ff63f1c625609083c5d48dde37106ae",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:29:02.723660Z",
-    "expires_at": "2026-11-02T16:34:02.723660Z",
-    "baseline_id": "c7224a4e0bd68c56765fec3a71698e6a9789f15100a3b38f8454d3704aee2838"
+    "issued_at": "2026-11-02T20:27:59.973433Z",
+    "expires_at": "2026-11-02T20:32:59.973433Z",
+    "baseline_id": "7b7a2548f6cac692c2aa87fdee31734977c29dd8cec6af4ed0c4532e70f7c7e8"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2197,7 +2204,7 @@
     "words": "A bevallást még nem ellenőrizték.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "404ba1e740cb4cfd87fb7b4be37dcf221550ccad270049aea2b4f0e6780aa5ad",
+  "calculation_revision_id": "18e2a0adc9691328db20d91b28e48b5ef2c3fd3a44956bd14776de3251f875d4",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

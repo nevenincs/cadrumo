@@ -37,6 +37,7 @@
                     "text": "Tax identification number (NIF)",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -44,6 +45,7 @@
                   "kind": "context_field",
                   "id": "nombre",
                   "label": { "text": "Given name", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -51,6 +53,7 @@
                   "kind": "context_field",
                   "id": "apellidos",
                   "label": { "text": "Surname", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -82,6 +85,7 @@
                   "kind": "context_field",
                   "id": "ejercicio",
                   "label": { "text": "Tax year", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "integer", "text": "2026" },
                   "value_text": "2026"
                 },
@@ -89,6 +93,7 @@
                   "kind": "context_field",
                   "id": "periodo",
                   "label": { "text": "Period", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "string", "text": "3T" },
                   "value_text": "3rd quarter 2026"
                 }
@@ -1331,6 +1336,7 @@
                   "kind": "context_field",
                   "id": "iban",
                   "label": { "text": "IBAN", "disclosure": "localized" },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -1365,6 +1371,7 @@
                     "text": "Supplementary self-assessment",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 },
@@ -1375,6 +1382,7 @@
                     "text": "Previous self-assessment receipt number",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": "no data"
                 }
@@ -1656,7 +1664,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "7f83309498e90757749efa95f4f4083ea69d45fc05a03e2385fc662f7c987027",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1996,9 +2004,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:23:51.732096Z",
-    "expires_at": "2026-11-02T16:28:51.732096Z",
-    "baseline_id": "164fea2e0407b46eccaafacd435be9e0d3d5757a7e30da996c3cb8f910ecaa72"
+    "issued_at": "2026-11-02T20:28:42.923662Z",
+    "expires_at": "2026-11-02T20:33:42.923662Z",
+    "baseline_id": "f699c88454d44b691b4c7885c98857b84634cb41b95edd41950dceb0fda78516"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

@@ -20976,6 +20976,7 @@
                     "text": "A LIVA 80. cikk Ötödik bekezdés 5. pontja szerinti adóösszegek helyesbítése",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -20986,6 +20987,7 @@
                     "text": "Eredmények összege",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -21057,6 +21059,7 @@
                     "text": "Éves elszámolás eredménye - A vámhatóság által kivetett import-áfa (csak halasztott fizetést választó adóalanyoknál) [659]",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
@@ -21125,6 +21128,7 @@
                     "text": "Az állami adóhatóságnak betudható, az adóévben levont adóelőleg benzin, gázolaj és bioüzemanyag értékesítése után",
                     "disclosure": "localized"
                   },
+                  "box_number": null,
                   "value": { "kind": "null", "text": "" },
                   "value_text": null
                 },
