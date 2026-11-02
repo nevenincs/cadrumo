@@ -36,7 +36,7 @@ from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedE
 from cadrumo.core.operations import profile_operation_subject
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, OperationAccessRequest
 
 
 class SupervisedOperation(NamedTuple):
@@ -128,6 +128,29 @@ async def settle_and_project[Result: BaseModel](
     return terminal, projected
 
 
+def operation_access_context(
+    contract: OperationPublicDefinitionContractV1,
+    *,
+    profile_id: UUID,
+    action: AccessAction = AccessAction.SUBMIT,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+    destination_id: UUID | None = None,
+    authority_operation: PinnedAuthorityOperation | None = None,
+    admitted_request: OperationAccessRequest | None = None,
+) -> OperationAccessContext:
+    """Return the access context of ``action`` against published authority, for a random destination unless given."""
+    return OperationAccessContext(
+        profile_id=profile_id,
+        destination_id=uuid4() if destination_id is None else destination_id,
+        action=action,
+        frontend=frontend,
+        contract=contract,
+        published_authority=Availability.AVAILABLE,
+        admitted_request=admitted_request,
+        authority_operation=authority_operation,
+    )
+
+
 def cli_submit_context(
     *,
     profile_id: UUID,
@@ -135,15 +158,7 @@ def cli_submit_context(
     authority_operation: PinnedAuthorityOperation | None = None,
 ) -> OperationAccessContext:
     """Return the access context of a CLI submission against published authority for a random destination."""
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=contract,
-        published_authority=Availability.AVAILABLE,
-        authority_operation=authority_operation,
-    )
+    return operation_access_context(contract, profile_id=profile_id, authority_operation=authority_operation)
 
 
 class ProcessResourceScope:

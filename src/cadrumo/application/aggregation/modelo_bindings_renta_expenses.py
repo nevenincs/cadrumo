@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -36,6 +36,7 @@ from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
+from ...domain.transactions.models import TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..actividad_asset.history import ActivityAssetHistory
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -87,7 +88,13 @@ from .renta_gasto_ledger import (
     RentaGastoObservation,
     aggregate_renta_gasto_ledger_from_repositories,
 )
-from .renta_imputation import accruing_invoices, ledger_sum_outcome
+from .renta_imputation import (
+    ActivityImputationCriterion,
+    accruing_invoices,
+    declared_imputation_criteria,
+    imputation_blocking_diagnostics,
+    ledger_sum_outcome,
+)
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .renta_ledger_models import RentaLedgerAggregationIssueReason, RentaLedgerExpenseAggregation
 from .source_mesh import (
@@ -221,6 +228,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     operation=operation,
                     ownership_share=dwelling_ownership_share(asset_history.revisions),
                     register_owned_transaction_ids=register_acquisition_transaction_ids(asset_history.revisions),
+                    criteria=declared_imputation_criteria(profile.record if profile is not None else None),
                 )
         except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
@@ -382,6 +390,24 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     }
                 ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",
+                suppressed_reasons=frozenset({RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
+            )
+            + _expense_imputation_diagnostics(
+                context,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
+                binding_ids=resolve_ledger_renta_gastos_estimacion_directa_aggregation_binding_values(
+                    context.revision, all_observations
+                ),
+                unresolved=tuple(
+                    issue.detail
+                    for issue in issues
+                    if issue.reason is RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED
+                ),
+                rows_present=bool(ledger_observations),
+                period=aggregation.period,
+                invoices=self._ports.invoice_reader.load(),
+                transactions=self._ports.transaction_reader.load(),
             )
             + source_issue_diagnostics(
                 aggregation.advisories,
@@ -456,6 +482,52 @@ def _ledger_expense_value_outcomes(
         binding_id: ledger_sum_outcome(value, rows_present=held_back_rows, accruing_invoice_present=bool(accruing))
         for binding_id, value in binding_values.items()
     }
+
+
+def _expense_imputation_diagnostics(
+    context: CalculationSourceContext,
+    *,
+    source_kind: str,
+    resolver_id: str,
+    binding_ids: Iterable[BindingId],
+    unresolved: Sequence[str],
+    rows_present: bool,
+    period: Period,
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Withhold the expense boxes while a row or an unpaid received invoice cannot be placed.
+
+    Under accrual a received invoice with no payment still accrues, but only a
+    ledger row carries the category and business share that decide its box, so
+    it stays unresolved rather than entering a box it was never classified for.
+    """
+    criteria = declared_imputation_criteria(context.profile.record if context.profile is not None else None)
+    with source_context_operation(context):
+        accruing = accruing_invoices(
+            invoices.values(),
+            kind=InvoiceKind.RECEIVED,
+            bucket_id=context.bucket_id,
+            start=date(period.filing_year, 1, 1),
+            end=period.end_date,
+        )
+    evidenced = {row.purchase_invoice_evidence_id for row in transactions.values()}
+    unpaid = tuple(
+        f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
+        for invoice in accruing
+        if invoice.invoice_id not in evidenced
+        and criteria.usable(period.filing_year) is ActivityImputationCriterion.DEVENGO
+    )
+    return imputation_blocking_diagnostics(
+        source_kind=source_kind,
+        resolver_id=resolver_id,
+        revision=context.revision,
+        binding_ids=binding_ids,
+        criteria=criteria,
+        year=period.filing_year,
+        activity_present=bool(rows_present or accruing or unresolved),
+        unresolved_details=(*unresolved, *unpaid),
+    )
 
 
 def _m100_unrouted_diagnostics(
@@ -596,6 +668,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         try:
             asset_history = self._activity_asset_history_repository.load()
             with source_context_operation(context) as operation:
+                invoices = self._invoice_reader.load()
                 aggregation = aggregate_renta_gasto_ledger_from_repositories(
                     bucket_id=context.bucket_id,
                     period=aggregation_period,
@@ -615,6 +688,8 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     operation=operation,
                     ownership_share=dwelling_ownership_share(asset_history.revisions),
                     register_owned_transaction_ids=register_acquisition_transaction_ids(asset_history.revisions),
+                    criteria=declared_imputation_criteria(profile_record),
+                    invoices=invoices,
                 )
                 classification = classify_ledger_expenses_against_asset_register(
                     asset_history.revisions,
@@ -680,7 +755,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 ),
                 held_back_rows=any(issue.reason.value not in _NOT_AN_EXPENSE_ISSUES for issue in issues),
                 period=aggregation_period,
-                invoices=self._invoice_reader.load(),
+                invoices=invoices,
             ),
             source_transaction_ids=sorted_ids(ledger_observations, lambda observation: observation.transaction_id),
             diagnostics=out_of_window_summary_diagnostics(
@@ -701,6 +776,24 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     }
                 ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",
+                suppressed_reasons=frozenset({RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
+            )
+            + _expense_imputation_diagnostics(
+                context,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
+                binding_ids=resolve_ledger_renta_gastos_pago_fraccionado_aggregation_binding_values(
+                    context.revision, all_observations
+                ),
+                unresolved=tuple(
+                    issue.detail
+                    for issue in issues
+                    if issue.reason is RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED
+                ),
+                rows_present=bool(ledger_observations),
+                period=aggregation_period,
+                invoices=invoices,
+                transactions=self._transaction_repository.load(),
             )
             + source_issue_diagnostics(
                 aggregation.advisories,

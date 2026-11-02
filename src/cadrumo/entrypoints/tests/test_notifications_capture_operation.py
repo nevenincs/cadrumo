@@ -15,7 +15,7 @@ import pytest
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.operations.journal import OperationJournalRepository
@@ -37,7 +37,7 @@ from ...application.live.notifications_capture_operation import (
     resolve_notifications_capture_access,
 )
 from ...application.live.snapshot_base import SnapshotRepository
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
@@ -59,7 +59,7 @@ from ...tests.aeat_literal_fixtures import (
     SEDE_NOTIFICATIONS_URL_FIXTURE,
 )
 from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
-from .supervised_operation_rig import build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -337,13 +337,8 @@ def _supervised_capture(
         subject_ref=profile_operation_subject(profile.bucket_id),
         payload=NotificationsCaptureRequest(profile_id=profile_id),
     )
-    access_context = OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+    access_context = operation_access_context(
+        registration.contract, profile_id=profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
     )
     admitted = resolve_operation_access(registry=registry, request=request, context=access_context)
     assert admitted.request.period_independent
@@ -501,14 +496,7 @@ def test_capture_access_is_whole_profile_and_requires_commit() -> None:
         subject_ref=profile_operation_subject(str(_PROFILE_ID)),
         payload=NotificationsCaptureRequest(profile_id=_PROFILE_ID),
     )
-    context = OperationAccessContext(
-        profile_id=_PROFILE_ID,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    context = operation_access_context(registration.contract, profile_id=_PROFILE_ID)
 
     access = resolve_notifications_capture_access(request, context)
 

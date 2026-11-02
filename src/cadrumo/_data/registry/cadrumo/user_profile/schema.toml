@@ -928,6 +928,33 @@ legal_refs = [
 ]
 
 [[sections.fields]]
+key = "activity_income_imputation_criterion"
+type = "enum"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "The criterion placing economic-activity income and expenses in an ejercicio: devengo (RIRPF art. 7.1) or cobros_y_pagos (art. 7.2, kept at least three years). The election is stated in the return (Modelo 100 casillas 0169, 1443, 1487), not in Modelo 036 or 037. One dated value per ejercicio. Operator-declared; absent means undeclared and must not be read as either value."
+enum_values = ["devengo", "cobros_y_pagos"]
+model_selectors = ["irpf.activity_income_imputation_criterion"]
+legal_refs = [
+    "rd-439-2007:art-7",
+    "ley-35-2006:art-14",
+    "ley-27-2014:art-11",
+]
+
+[[sections.fields]]
+key = "codigo_comercio_accounting"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = true
+description = "Whether the taxpayer is obliged to keep, or voluntarily keeps, accounting under the Codigo de Comercio (RIRPF arts. 7.2.3 and 68.2), which closes the cobros_y_pagos election and ends one already made. Operator-declared; absent means undeclared and must not be read as either value."
+model_selectors = ["irpf.codigo_comercio_accounting"]
+legal_refs = [
+    "rd-439-2007:art-7",
+]
+
+[[sections.fields]]
 key = "activity_kind"
 type = "enum"
 required = false

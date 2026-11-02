@@ -101,9 +101,16 @@ from .modelo_bindings_actividad_assets import (
     activity_asset_disposal_excess,
     activity_asset_disposal_excess_m131_findings,
 )
-from .renta_imputation import accruing_invoices, ledger_sum_outcome
+from .renta_imputation import (
+    ImputationCriteria,
+    accruing_invoices,
+    declared_imputation_criteria,
+    imputation_blocking_diagnostics,
+    ledger_sum_outcome,
+)
 from .renta_income_ledger import (
     RentaIncomeLedgerAggregation,
+    RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
     aggregate_renta_m131_agrario_income_ledger_from_repositories,
@@ -249,6 +256,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # narrows the rows first -- to the art. 110.1.c activity set, and away from
         # the subvenciones de capital and indemnizaciones that article excludes.
         target_casilla_id = _renta_income_target_casilla(context)
+        criteria = declared_imputation_criteria(context.profile.record if context.profile is not None else None)
         with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = _activity_category_matcher(operation)
@@ -263,6 +271,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
+                        criteria=criteria,
                     )
                 elif context.modelo == form_for_role("renta.objective_instalment"):
                     agrarian_activity_codes = frozenset(
@@ -293,6 +302,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         activity_category_matcher=activity_category_matcher,
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
+                        criteria=criteria,
                     )
                 disposal_excess = (
                     ()
@@ -312,7 +322,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
-        return self._assemble_resolution(context, aggregation, profile_decode_context, disposal_excess)
+        return self._assemble_resolution(context, aggregation, profile_decode_context, disposal_excess, criteria)
 
     def _assemble_resolution(
         self,
@@ -320,11 +330,17 @@ class LedgerRentaIncomeAggregationSourceResolver:
         aggregation: RentaIncomeLedgerAggregation,
         profile_decode_context: ProfileDecodeContext,
         disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
+        criteria: ImputationCriteria,
     ) -> CalculationSourceResolution:
         declared_excess = _declared_disposal_excess(context, disposal_excess)
         binding_values = resolve_ledger_renta_income_aggregation_binding_values(
             context.revision,
-            (*aggregation.observations, *declared_excess),
+            (*aggregation.observations, *declared_excess, *aggregation.accrued_unpaid),
+        )
+        unresolved_rows = tuple(
+            issue
+            for issue in aggregation.issues
+            if issue.reason is RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED
         )
         # Fail-closed advisory parity with the IVA screen: a non-zero declarable
         # income whose target_casilla_id matches no ledger_renta_income_aggregation
@@ -365,6 +381,31 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 aggregation.issues,
                 source_kind="ledger_renta_income_aggregation",
                 resolver_id=self.resolver_id,
+                suppressed_reasons=frozenset({RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
+            )
+            + (
+                ()
+                if context.modelo == form_for_role("renta.objective_instalment")
+                else imputation_blocking_diagnostics(
+                    source_kind="ledger_renta_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    revision=context.revision,
+                    binding_ids=binding_values,
+                    criteria=criteria,
+                    year=context.filing_year,
+                    activity_present=bool(
+                        aggregation.observations
+                        or unresolved_rows
+                        or accruing_invoices(
+                            self._ports.invoice_reader.load().values(),
+                            kind=InvoiceKind.ISSUED,
+                            bucket_id=context.bucket_id,
+                            start=date(context.filing_year, 1, 1),
+                            end=context.period.end_date,
+                        )
+                    ),
+                    unresolved_details=tuple(issue.detail for issue in unresolved_rows),
+                )
             )
             + tuple(
                 CalculationSourceDiagnostic(
@@ -424,6 +465,19 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 context, aggregation, binding_values, invoices=self._ports.invoice_reader.load()
             ),
             provenance=_disposal_excess_provenance(declared_excess, resolver_id=self.resolver_id)
+            + tuple(
+                CalculationSourceProvenance(
+                    resolver_id=self.resolver_id,
+                    resolved_binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+                    contributor_source_kind="ledger_renta_income_aggregation",
+                    contributor_binding_source=BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION,
+                    lineage_role=CalculationSourceLineageRole.PRIMARY,
+                    source_ref=accrued.transaction_id,
+                    parent_source_ref=None,
+                    terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
+                )
+                for accrued in aggregation.accrued_unpaid
+            )
             + _provenance_for(
                 aggregation.observations,
                 lambda observation: CalculationSourceProvenance(
@@ -478,7 +532,9 @@ def _resolved_income_value_outcomes(
         stated = withholding.get(binding_id)
         if stated is None:
             outcomes[binding_id] = ledger_sum_outcome(
-                value, rows_present=bool(aggregation.observations), accruing_invoice_present=bool(accruing)
+                value,
+                rows_present=bool(aggregation.observations or aggregation.accrued_unpaid),
+                accruing_invoice_present=bool(accruing),
             )
         else:
             outcomes[binding_id] = BindingValueOutcome.FROM_BEARING_ROWS if bearing_invoice else stated

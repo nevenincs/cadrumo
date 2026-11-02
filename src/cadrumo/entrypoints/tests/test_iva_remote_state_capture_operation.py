@@ -10,7 +10,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -42,7 +42,7 @@ from cadrumo.application.live.remote_state_models import (
     LiveIvaReadSurface,
 )
 from cadrumo.application.live.session import SessionWriteReporter
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.capabilities import OperationOwnedResource
 from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
@@ -61,12 +61,13 @@ from cadrumo.core.operations import (
 )
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from .supervised_operation_rig import (
     ProcessResourceScope,
     assert_foreign_profile_refused,
     build_supervised_operation,
+    operation_access_context,
     settle_and_project,
 )
 
@@ -477,13 +478,10 @@ def test_supervisor_captures_iva_remote_state_for_exact_external_client_profile(
                 taxpayer_nif=_NIF,
             ),
         )
-        access_context = OperationAccessContext(
+        access_context = operation_access_context(
+            registration.contract,
             profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
             frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
             authority_operation=authority,
         )
         admitted = resolve_operation_access(

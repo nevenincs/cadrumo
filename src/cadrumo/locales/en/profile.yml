@@ -256,6 +256,13 @@ profile:
         tax_id:
           label: Tax ID (NIF/NIE/CIF)
       irpf:
+        activity_income_imputation_criterion:
+          choices:
+            cobros_y_pagos: 'When paid or collected (art. 7.2 RIRPF)'
+            devengo: 'On an accrual basis'
+          label: 'Income and expense timing'
+        codigo_comercio_accounting:
+          label: 'Keeps Código de Comercio accounting'
         activity_kind:
           choices:
             profesional: Professional activity

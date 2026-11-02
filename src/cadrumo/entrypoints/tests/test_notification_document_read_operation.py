@@ -42,7 +42,6 @@ from cadrumo.application.operations.frontend_requests import (
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.persistence.journal import OperationPersistedSnapshot
 from cadrumo.application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -58,9 +57,9 @@ from cadrumo.domain.attachments.protocols import AttachmentStoreProtocol
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.notifications.sancion import SancionLiquidacion
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
-from .supervised_operation_rig import build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -186,13 +185,11 @@ def _access_context(
     destination_id: UUID,
     authority: object,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return operation_access_context(
+        registration.contract,
         profile_id=profile_id,
         destination_id=destination_id,
         action=action,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
         authority_operation=cast(Any, authority),
     )
 

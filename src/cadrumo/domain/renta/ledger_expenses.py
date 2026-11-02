@@ -713,8 +713,12 @@ def build_renta_deductible_expense_observation(
     result: RentaDeductibilityResult,
     *,
     tax_year: int,
+    imputed_on: date | None = None,
 ) -> RentaDeductibleExpenseObservation:
     """Build a first-slice Modelo 100 observation from an eligible result.
+
+    ``imputed_on`` is the date the taxpayer's imputation criterion places the
+    fact on, when it was consulted; otherwise the fact's own filing date stands.
 
     Returns:
         A :class:`RentaDeductibleExpenseObservation` ready for filing assembly.
@@ -723,9 +727,10 @@ def build_renta_deductible_expense_observation(
         raise RentaValidationError(f"ineligible deductibility result cannot become an observation: {result.reason}")
     if fact.category != result.category:
         raise RentaValidationError("fact and result categories must match")
-    if not Period.from_year_and_code(tax_year, "0A").contains(fact.filing_date):
+    filing_date = fact.filing_date if imputed_on is None else imputed_on
+    if not Period.from_year_and_code(tax_year, "0A").contains(filing_date):
         raise RentaValidationError("fact filing date falls outside the requested tax year")
-    target_casilla_id = renta_first_slice_expense_routing(effective_date=fact.filing_date).get(fact.category)
+    target_casilla_id = renta_first_slice_expense_routing(effective_date=filing_date).get(fact.category)
     if target_casilla_id is None:
         raise RentaValidationError(f"category {fact.category.value!r} is outside the first Renta expense slice")
     invoice_status = (
@@ -748,7 +753,7 @@ def build_renta_deductible_expense_observation(
         invoice_issue_date=fact.invoice_issue_date,
         posting_date=fact.posting_date,
         payment_date=fact.payment_date,
-        filing_date=fact.filing_date,
+        filing_date=filing_date,
         gross_amount=result.gross_amount,
         taxable_base=fact.taxable_base * fact.sign if fact.taxable_base is not None else None,
         iva_amount=fact.iva_amount * fact.sign if fact.iva_amount is not None else None,

@@ -6,11 +6,11 @@ import asyncio
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
 from ...adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
@@ -30,14 +30,14 @@ from ...application.live.verify_capture_operation import (
     build_verify_capture_registration,
     resolve_verify_capture_access,
 )
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.identity_check_verdict import IdentityCheckVerdict
@@ -52,6 +52,7 @@ from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowse
 from .supervised_operation_rig import (
     build_supervised_operation,
     cli_submit_context,
+    operation_access_context,
     run_to_terminal,
     settle_and_project,
 )
@@ -472,12 +473,5 @@ def test_capture_access_refuses_a_foreign_profile_subject() -> None:
     with pytest.raises(ProfileAccessRefusedError):
         resolve_verify_capture_access(
             request,
-            OperationAccessContext(
-                profile_id=_PROFILE_ID,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.CLI,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
-            ),
+            operation_access_context(registration.contract, profile_id=_PROFILE_ID),
         )
