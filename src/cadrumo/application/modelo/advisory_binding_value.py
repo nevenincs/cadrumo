@@ -20,7 +20,11 @@ from typing import TYPE_CHECKING, Final
 from ...core.aggregation import BindingValueOutcome
 from ...domain.calculations.registry.binding_grade_cap_reach import CappedBindingReach, capped_binding_reach
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
-from ...domain.modelos.calculation_revision_sources import GRADE_CAP_NOTE_SENTENCES, CalculationNoteFact
+from ...domain.modelos.calculation_revision_sources import (
+    GRADE_CAP_NOTE_SENTENCES,
+    CalculationNoteFact,
+    CalculationNoteSentence,
+)
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
 from .printed_boxes import snapshot_printed_boxes
 
@@ -60,6 +64,10 @@ def _diagnostic(
 ) -> CalculationSourceDiagnostic:
     cap = reach.cap
     proven_zero = outcome is BindingValueOutcome.PROVEN_ZERO
+    # The cap's sentence says the amount is held back, which a proven zero is not.
+    sentence = (
+        CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO if proven_zero else GRADE_CAP_NOTE_SENTENCES[cap.reason]
+    )
     message = (
         f"binding {binding.id!r} reaches box {box} with a proven zero: its rows carry nothing the "
         f"{cap.reason.value} cap concerns"
@@ -77,7 +85,7 @@ def _diagnostic(
         message=message,
         asserted_legal_refs=cap.legal_refs,
         fact=(
-            CalculationNoteFact.of(GRADE_CAP_NOTE_SENTENCES[cap.reason], box=box, amount=value, binding=binding.id)
+            CalculationNoteFact.of(sentence, box=box, amount=value, binding=binding.id)
             if isinstance(value, Decimal)
             else None
         ),
