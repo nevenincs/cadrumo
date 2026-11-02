@@ -144,8 +144,7 @@ RULE_DECIDED_STATES: frozenset[BusinessClassification] = frozenset(
         BusinessClassification.SKIPPED_BY_RULE,
     },
 )
-"""What a person is offered to have a rule decide. The rule's contract accepts any
-classification; this narrower offer is what a frontend puts in front of a person."""
+"""What a new rule may decide. A rule already stored keeps whatever it names."""
 
 
 TRANSFER_ALLOWED_STATES: frozenset[BusinessClassification] = frozenset(
@@ -164,8 +163,7 @@ RULE_CATEGORY_STATES: frozenset[BusinessClassification] = frozenset(
         BusinessClassification.BUSINESS,
     },
 )
-"""What a person's new rule names a spending category with. The rule's contract accepts one
-on any classification; this narrower offer is what a frontend puts in front of a person."""
+"""What a new rule may name a spending category with: no other classification write keeps one."""
 
 
 SPLIT_PART_CATEGORY_REQUIRED_STATES: frozenset[BusinessClassification] = frozenset(
@@ -173,7 +171,20 @@ SPLIT_PART_CATEGORY_REQUIRED_STATES: frozenset[BusinessClassification] = frozens
         BusinessClassification.BUSINESS,
     },
 )
-"""What a split part cannot be staged as without naming a spending category."""
+"""What a person is told to name a spending category for on a split part; advice, not a writer rule.
+
+The readiness check holds any expense row without a category, so an uncategorized
+part still cannot reach a calculation."""
+
+
+UNDECIDED_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.NOT_YET_PROCESSED,
+        BusinessClassification.PROCESSED_UNCLASSIFIED,
+        BusinessClassification.FAILED_VALIDATION,
+    },
+)
+"""Classifications no person or rule decided, so classifying over one overwrites no decision; advice."""
 
 
 SHARE_BEARING_STATES: frozenset[BusinessClassification] = frozenset(

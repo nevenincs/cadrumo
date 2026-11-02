@@ -13,6 +13,7 @@ from ....core.identity.transaction_ids import TransactionId
 from ..components.language import localized, repaint_tables
 from ..components.widgets import ContentDataTable
 from .controller import LEDGER_TRANSACTION_FOCUS, LedgerWorkspaceController, review_status_label
+from .entries_browse_layout import fit_columns
 from .models import LedgerEntryRowV1
 from .workspace_presentation import ledger_workspace_page, restore_transaction_focus
 from .workspace_screen import LedgerEntrySelected, LedgerTransactionDetailRequested, LedgerWorkspaceScreen
@@ -163,20 +164,7 @@ class LedgerEntriesScreen(LedgerWorkspaceScreen):
 
     def _visible_columns(self, width: int) -> tuple[tuple[str, str, int], ...]:
         """Take columns in priority order while they still fit the terminal."""
-        taken: list[tuple[str, str, int]] = []
-        used = 0
-        for column in self._COLUMNS:
-            # The header is a floor on the rendered column, not merely a label:
-            # a column narrower than its own heading is widened to fit it, so
-            # budgeting the authored width alone under-counts every column
-            # whose translated heading is longer and overflows the last one.
-            # Two cells of padding per column, plus one for the scrollbar.
-            cost = max(column[2], len(tr(column[1]))) + 2
-            if used + cost > width - 1:
-                break
-            taken.append(column)
-            used += cost
-        return tuple(taken)
+        return fit_columns(self._COLUMNS, width)
 
     def _fill_table(self, table: ContentDataTable[str], width: int) -> None:
         """Rebuild the table for this width, preserving row identity.

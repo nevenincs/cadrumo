@@ -21,8 +21,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import CalculationRevisionId, FilingRecordId, WorkUnitId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...domain.modelos.codes import ModeloCode
-from ...domain.modelos.errors import ModeloValidationError
+from ...domain.modelos.codes import ModeloCode, coerce_modelo_code
 from ...domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue, WorkUnitState
 
 _RevisionId = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=128)]
@@ -108,11 +107,7 @@ class ModeloWorkSelectorRequest(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _coerce_modelo(cls, value: object) -> ModeloCode | None:
-        if value is None or isinstance(value, ModeloCode):
-            return value
-        if isinstance(value, str):
-            return ModeloCode(value)
-        raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
+        return None if value is None else coerce_modelo_code(value)
 
     @field_validator("revision_id", "bucket_id")
     @classmethod

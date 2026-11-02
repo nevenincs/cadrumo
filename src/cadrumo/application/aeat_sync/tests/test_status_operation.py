@@ -102,6 +102,7 @@ class _BorradorRepository:
     def __init__(self) -> None:
         self.bucket_id = _BUCKET
         self._snapshots: dict[str, Borrador100Snapshot] = {}
+        self.outdated = 0
 
     def exists(self, snapshot_id: str) -> bool:
         return snapshot_id in self._snapshots
@@ -114,6 +115,9 @@ class _BorradorRepository:
 
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return tuple(sorted(self._snapshots.values(), key=lambda item: (item.captured_at, item.snapshot_id)))
+
+    def outdated_stored_snapshot_count(self) -> int:
+        return self.outdated
 
     def save(self, snapshot: Borrador100Snapshot) -> None:
         self._snapshots[snapshot.snapshot_id] = snapshot

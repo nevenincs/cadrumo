@@ -65,8 +65,8 @@ _PRINCIPAL = " "
 
 #: (modelo, filing year, period, record id, field id) of every shipped page indicator.
 _PAGE_INDICATORS = (
-    ("131", 2026, "1T", "modelo-131-dpa", "modelo-131-dpa-complementaria-indicator"),
-    ("131", 2026, "3T", "modelo-131-dpa", "modelo-131-dpa-complementaria-indicator"),
+    ("131", 2026, "1T", "modelo-131-dpa", "modelo-131-dpa-pagina-complementaria-indicator"),
+    ("131", 2026, "3T", "modelo-131-dpa", "modelo-131-dpa-pagina-complementaria-indicator"),
     ("232", 2025, "0A", "m232-operaciones-vinculadas", "m232-2018.dr23201.f005"),
     ("232", 2025, "0A", "m232-paraisos-fiscales", "m232-2018.dr23202.f005"),
     ("303", 2026, "1T", "m303-regimen-simplificado", "m303-2026.dp30302.f005"),

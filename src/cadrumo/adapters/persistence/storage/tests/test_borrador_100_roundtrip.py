@@ -21,12 +21,13 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.snapshots import SecureSnapshotRepository
-from cadrumo.adapters.persistence.storage.errors import StorageValidationError
+from cadrumo.adapters.persistence.storage.errors import SecureObjectUnreadableError, StorageValidationError
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
+    restamp_secure_object_schema_version,
 )
 from cadrumo.application.live.borrador_100 import (
     Borrador100Snapshot,
@@ -272,3 +273,144 @@ def test_borrador_100_dropped_superseded_pointer_surfaces_at_load(
             match=r"state_supersession_pointer_required|superseded",
         ):
             repo.load(original.snapshot_id)
+
+
+def _snapshot_with_values(
+    *, bucket_id: str, source_digit: str, binding_values: dict[str, Decimal | str]
+) -> Borrador100Snapshot:
+    source_url = "file-import:sha256:" + source_digit * 64
+    return Borrador100Snapshot(
+        snapshot_id=derive_borrador_100_snapshot_id(
+            filing_year=2024,
+            period=_PERIOD,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+            source_url=source_url,
+            binding_values=binding_values,
+        ),
+        bucket_id=bucket_id,
+        modelo="100",
+        filing_year=2024,
+        period=_PERIOD,
+        registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+        captured_at=datetime(2024, 4, 12, 11, 30, 0, tzinfo=UTC),
+        source_url=source_url,
+        state=SnapshotLifecycleState.ACTIVE,
+        binding_values=binding_values,
+    )
+
+
+def test_borrador_100_text_and_decimal_values_keep_their_exact_type_through_storage(tmp_path: Path) -> None:
+    """Text such as ``"09"`` stays text, a decimal keeps its scale, and a mixed mapping is preserved."""
+
+    bucket_id = _BUCKET_ID
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id):
+        repo = _borrador_repository(bucket_id=bucket_id)
+        text_only = _snapshot_with_values(bucket_id=bucket_id, source_digit="1", binding_values={_RESIDENCE: "09"})
+        decimal_only = _snapshot_with_values(
+            bucket_id=bucket_id, source_digit="2", binding_values={_CERTIFICATE: Decimal("9.50")}
+        )
+        mixed = _snapshot_with_values(
+            bucket_id=bucket_id,
+            source_digit="3",
+            binding_values={_CERTIFICATE: Decimal("9"), _RESIDENCE: "9", "renta-other": "0009.0"},
+        )
+        for snapshot in (text_only, decimal_only, mixed):
+            repo.save(snapshot)
+
+        loaded_text = repo.load(text_only.snapshot_id).binding_values[_RESIDENCE]
+        assert loaded_text == "09"
+        assert type(loaded_text) is str
+
+        loaded_decimal = repo.load(decimal_only.snapshot_id).binding_values[_CERTIFICATE]
+        assert type(loaded_decimal) is Decimal
+        assert loaded_decimal.as_tuple() == Decimal("9.50").as_tuple()
+
+        loaded_mixed = repo.load(mixed.snapshot_id).binding_values
+        assert {key: (type(value), value) for key, value in loaded_mixed.items()} == {
+            _CERTIFICATE: (Decimal, Decimal("9")),
+            _RESIDENCE: (str, "9"),
+            "renta-other": (str, "0009.0"),
+        }
+
+
+def test_borrador_100_snapshot_id_tells_text_nine_from_decimal_nine() -> None:
+    """The content id hashes the tagged value, so the same characters as text and as a decimal differ."""
+
+    def derive(value: str | Decimal) -> str:
+        return derive_borrador_100_snapshot_id(
+            filing_year=2024,
+            period=_PERIOD,
+            registry_snapshot_ref=_REGISTRY_SNAPSHOT_REF,
+            source_url="file-import:sha256:" + "4" * 64,
+            binding_values={_CERTIFICATE: value},
+        )
+
+    assert derive("9") != derive(Decimal("9"))
+    assert derive("09") != derive("9")
+    assert derive(Decimal("9")) == derive(Decimal("9"))
+
+
+def _restamp_as_earlier_schema(profile, bucket_id: str, snapshot_id: str) -> None:
+    from sqlalchemy import select
+
+    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+
+    def to_earlier_shape(document):
+        document["schema_version"] = 1
+        payload = document["payload"]
+        payload["binding_values"] = {key: value["value"] for key, value in payload["binding_values"].items()}
+
+    restamp_secure_object_schema_version(
+        profile.repository._engine,
+        row_statement=select(SecureObjectRow).where(
+            SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+            SecureObjectRow.object_key == borrador_100_snapshot_object_key(bucket_id, snapshot_id),
+        ),
+        schema_version=1,
+        mutate=to_earlier_shape,
+    )
+
+
+def test_borrador_100_row_stored_under_the_earlier_schema_is_counted_not_raised(tmp_path: Path) -> None:
+    """An earlier-schema row cannot be read, so listing counts it and still returns the current rows."""
+
+    bucket_id = _BUCKET_ID
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+        repo = _borrador_repository(bucket_id=bucket_id)
+        current = _snapshot_with_values(bucket_id=bucket_id, source_digit="5", binding_values={_RESIDENCE: "09"})
+        earlier = _snapshot_with_values(bucket_id=bucket_id, source_digit="6", binding_values={_RESIDENCE: "09"})
+        repo.save(current)
+        repo.save(earlier)
+        _restamp_as_earlier_schema(profile, bucket_id, earlier.snapshot_id)
+
+        snapshots, outdated = repo.list_snapshots_with_outdated_count()
+        assert snapshots == (current,)
+        assert outdated == 1
+        with pytest.raises(SecureObjectUnreadableError):
+            repo.list_snapshots()
+
+
+def test_borrador_100_row_unreadable_for_another_reason_still_raises(tmp_path: Path) -> None:
+    """Only the older-schema refusal is counted; a row from a newer schema is not swallowed."""
+
+    bucket_id = _BUCKET_ID
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+        repo = _borrador_repository(bucket_id=bucket_id)
+        snapshot = _snapshot_with_values(bucket_id=bucket_id, source_digit="7", binding_values={_RESIDENCE: "09"})
+        repo.save(snapshot)
+
+        from sqlalchemy import select
+
+        from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+
+        restamp_secure_object_schema_version(
+            profile.repository._engine,
+            row_statement=select(SecureObjectRow).where(
+                SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+            ),
+            schema_version=LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.schema_version + 1,
+            mutate=lambda document: None,
+        )
+
+        with pytest.raises(SecureObjectUnreadableError):
+            repo.list_snapshots_with_outdated_count()

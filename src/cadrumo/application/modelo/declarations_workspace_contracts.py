@@ -71,6 +71,11 @@ class DeclarationsWorkspaceAvailability(StrEnum):
     NEVER_CAPTURED = "never_captured"
     UNAVAILABLE = "unavailable"
 
+    @property
+    def is_observable(self) -> bool:
+        """Whether the zone holds an observation that can support a claim, current or stale."""
+        return self in {DeclarationsWorkspaceAvailability.AVAILABLE, DeclarationsWorkspaceAvailability.STALE}
+
 
 class DeclarationsLifecycleKind(StrEnum):
     """Sanitized lifecycle meanings accepted by the workspace projection.
@@ -110,10 +115,7 @@ class DeclarationsWorkspaceZoneObservationV1(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _availability_has_truthful_evidence(self) -> Self:
-        observable = self.availability in {
-            DeclarationsWorkspaceAvailability.AVAILABLE,
-            DeclarationsWorkspaceAvailability.STALE,
-        }
+        observable = self.availability.is_observable
         if observable and self.observed_at is None:
             raise ValueError("an available or stale Declarations zone requires an observation time")
         if self.availability is DeclarationsWorkspaceAvailability.AVAILABLE and self.reason_code is not None:
@@ -134,10 +136,7 @@ class DeclarationsWorkspaceZoneStateV1(DeclarationsWorkspaceZoneObservationV1):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _count_matches_observability(self) -> Self:
-        observable = self.availability in {
-            DeclarationsWorkspaceAvailability.AVAILABLE,
-            DeclarationsWorkspaceAvailability.STALE,
-        }
+        observable = self.availability.is_observable
         if observable != (self.item_count is not None):
             raise ValueError("only observable Declarations zones carry a measured item count")
         if not self.sources or len(self.sources) != len(set(self.sources)):

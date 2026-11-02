@@ -80,9 +80,12 @@ from .operations.runtime_profile_session import RuntimeProfileSession
 _STALE_RECORD_KEY = "tui.ledger.records.stale"
 """The refusal shown when a record changed after the operator opened it."""
 
-_LINK_REFUSAL_KEYS: Final[dict[Literal["missing_invoice", "cross_bucket_invoice"], str]] = {
+_LINK_REFUSAL_KEYS: Final[
+    dict[Literal["missing_invoice", "cross_bucket_invoice", "transaction_takes_no_invoice"], str]
+] = {
     "missing_invoice": "tui.ledger.link.refused.missing_invoice",
     "cross_bucket_invoice": "tui.ledger.link.refused.cross_bucket_invoice",
+    "transaction_takes_no_invoice": "tui.ledger.link.refused.transaction_takes_no_invoice",
 }
 """The refusal shown for each reason ``ledger.link`` declares."""
 

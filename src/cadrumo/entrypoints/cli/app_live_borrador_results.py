@@ -89,12 +89,15 @@ class Borrador100ListResult(OutputSchema):
     :class:`Borrador100Snapshot` records returned by
     :class:`Borrador100SnapshotService`. ``refused`` names each selected
     snapshot the pinned authority refuses; ``count`` counts ``rows`` only.
+    ``outdated_stored_snapshots`` counts stored rows written under an older
+    storage schema, which cannot be read or named.
     """
 
     bucket_id: BucketId
     count: NonNegativeInt
     rows: list[Borrador100SnapshotSummaryPayload]
     refused: list[Borrador100RefusedSnapshotPayload] = []
+    outdated_stored_snapshots: NonNegativeInt = 0
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -160,6 +163,8 @@ class Borrador100LatestResult(OutputSchema):
     shape stable while still identifying the queried ``filing_year``.
     ``refused`` names each active snapshot of the year the pinned authority
     refuses, so a year holding only refused snapshots is not reported as empty.
+    ``outdated_stored_snapshots`` counts stored rows written under an older
+    storage schema, which are neither readable nor named.
     """
 
     bucket_id: BucketId
@@ -171,6 +176,7 @@ class Borrador100LatestResult(OutputSchema):
     binding_count: NonNegativeInt | None = None
     state: Literal["active"] | None = None
     refused: list[Borrador100RefusedSnapshotPayload] = []
+    outdated_stored_snapshots: NonNegativeInt = 0
 
     @field_validator("period")
     @classmethod

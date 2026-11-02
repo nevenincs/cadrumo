@@ -53,8 +53,9 @@ from ...core.time.utc import coerce_utc_aware
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH, BucketEventObjectType, BucketEventType
 from ...domain.iva.saturation import resolve_category_rate, split_gross_at_rate
 from ...domain.iva.schema import IvaCategory
+from ...domain.transactions.classification_effects import takes_changes
 from ...domain.transactions.classification_origin import written_classification_origin
-from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.enums import BUSINESS_BEARING_STATES, BusinessClassification
 from ...domain.transactions.errors import TransactionNotFoundError, TransactionValidationError
 from ...domain.transactions.llm import (
     LLMClassificationResponse,
@@ -330,7 +331,7 @@ def _validate_active_llm_transaction(catalogue: TransactionCatalogue, transactio
             translated_message="application.ledger.errors.transaction_not_found",
             context={"transaction_id": transaction_id},
         )
-    if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(current.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can be classified; archived, stashed, and split-parent rows are immutable",
             context={
@@ -979,7 +980,7 @@ def reject_llm_suggestion(
             translated_message="application.ledger.errors.transaction_not_found",
             context={"transaction_id": suggestion.transaction_id},
         )
-    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(transaction.lifecycle_state):
         raise TransactionValidationError(
             "only active ledger transactions can carry an LLM rejection record",
             context={

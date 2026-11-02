@@ -1,8 +1,7 @@
 """Filing-kind evidence admits only the submitted-file marker and a local revision.
 
 The expected kinds are transcribed from the record designs' value domains --
-"Declaración complementaria" is ``blanco o "X"`` and the Modelo 131 page
-indicator is ``Blanco (No complementaria) o "C"`` -- never read from the code
+"Declaración complementaria" is ``blanco o "X"`` -- never read from the code
 under test.
 """
 
@@ -33,7 +32,6 @@ from ..filing_kind_evidence import (
     observed_filing_kind_from_capture,
     register_tipo_solicitud_reading,
     submitted_file_marker_reading,
-    submitted_file_page_indicator_reading,
 )
 from ..filing_record import FilingDeclarationKind
 
@@ -42,16 +40,12 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 _C18 = validated_casilla_id("18", surface="test_filing_kind_evidence.casilla")
 _C19 = validated_casilla_id("19", surface="test_filing_kind_evidence.casilla")
 _MARKER_LOCATOR = "modelo-130-fichero-boe:modelo-130-page-01:modelo-130-page-01-declaracion-complementaria:432:1"
-_DPA_LOCATOR = "modelo-131-fichero-boe:modelo-131-dpa:modelo-131-dpa-complementaria-indicator:12:1"
 _REGISTER_LOCATOR = "aeat-register:202610013522223B:tipo_solicitud"
 
 
-def _marker(token: str, *indicators: str) -> SubmittedFileFilingKindMarker:
+def _marker(token: str) -> SubmittedFileFilingKindMarker:
     return SubmittedFileFilingKindMarker(
         declaration_marker=submitted_file_marker_reading(token, source_locator=_MARKER_LOCATOR),
-        page_indicators=tuple(
-            submitted_file_page_indicator_reading(indicator, source_locator=_DPA_LOCATOR) for indicator in indicators
-        ),
     )
 
 
@@ -104,12 +98,9 @@ def test_a_register_request_type_naming_no_correction_is_no_reading(tipo_solicit
 @pytest.mark.parametrize(
     ("marker", "register"),
     [
-        (_marker(" ", "C"), None),
-        (_marker("X", " "), None),
-        (_marker(" ", " ", "Z"), None),
         (_marker(" "), "complementaria"),
     ],
-    ids=("dpa-c-beside-blank", "dpa-blank-beside-x", "dpa-unreadable", "register-beside-blank"),
+    ids=("register-beside-blank",),
 )
 def test_readings_naming_another_kind_make_the_kind_unknown(
     marker: SubmittedFileFilingKindMarker, register: str | None
@@ -125,12 +116,26 @@ def test_readings_naming_another_kind_make_the_kind_unknown(
     assert FilingKindReadingSource.SUBMITTED_FILE_MARKER in sources
 
 
-def test_agreeing_page_indicators_keep_the_marker_kind_and_add_nothing() -> None:
-    observed = observed_filing_kind_from_capture(_marker("X", "C", "C"))
+def test_a_stored_page_indicator_reading_is_ignored_when_the_projection_loads() -> None:
+    stored = {
+        "kind": "original",
+        "basis": "submitted_file_marker",
+        "source_locator": _MARKER_LOCATOR,
+        "readings": [
+            {"source": "submitted_file_marker", "kind": "original", "token": "", "source_locator": _MARKER_LOCATOR},
+            {
+                "source": "submitted_file_page_indicator",
+                "kind": "complementaria",
+                "token": "C",
+                "source_locator": "modelo-131-fichero-boe:modelo-131-dpa:f:12:1",
+            },
+        ],
+    }
 
-    assert observed.kind is FilingDeclarationKind.COMPLEMENTARIA
-    assert observed.basis is FilingKindEvidenceBasis.SUBMITTED_FILE_MARKER
-    assert len(observed.readings) == 3
+    loaded = ObservedFilingKind.model_validate(stored)
+
+    assert loaded.admitted_kind is FilingDeclarationKind.ORIGINAL
+    assert [reading.source for reading in loaded.readings] == [FilingKindReadingSource.SUBMITTED_FILE_MARKER]
 
 
 @pytest.mark.parametrize(
@@ -189,7 +194,7 @@ def test_the_projection_refuses_a_kind_and_basis_that_disagree(payload: dict[str
 
 def test_a_stored_projection_round_trips_through_json() -> None:
     observed = observed_filing_kind_from_capture(
-        _marker(" ", " "),
+        _marker(" "),
         register_reading=None,
     )
 

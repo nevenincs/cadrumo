@@ -26,6 +26,8 @@ from ...application.live.snapshot_base import SnapshotLifecycleState
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistrySnapshotError
+from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.calculations.registry.temporal import select_authored_revision_metadata
 from ..adapter_composition_ports import build_borrador_100_snapshot_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
@@ -68,6 +70,38 @@ def _store_legacy_snapshot(
         period=period,
         registry_snapshot_ref=ref,
         captured_at=captured_at,
+        source_url=source,
+        state=SnapshotLifecycleState.ACTIVE,
+        binding_values=values,
+    )
+    build_borrador_100_snapshot_repository(bucket_id=bucket_id).save(snapshot)
+    return snapshot
+
+
+def _store_snapshot_below_support_floor(operation: PinnedAuthorityOperation, bucket_id: str) -> Borrador100Snapshot:
+    """Store an active snapshot whose year the registry authors but its support envelope refuses."""
+    filing_year = operation.supported_filing_years().floor - 1
+    period = Period.from_year_and_code(filing_year, "0A")
+    revision_id = select_authored_revision_metadata(
+        operation.modelo_directory("100"), filing_year=filing_year, period="0A"
+    ).id
+    ref = RegistrySnapshotRef(modelo="100", revision_id=revision_id, modelo_year=filing_year, period="0A")
+    values = {_CERTIFICATE: Decimal("15.25")}
+    source = _source(filing_year)
+    snapshot = Borrador100Snapshot(
+        snapshot_id=derive_borrador_100_snapshot_id(
+            filing_year=filing_year,
+            period=period,
+            registry_snapshot_ref=ref,
+            source_url=source,
+            binding_values=values,
+        ),
+        bucket_id=bucket_id,
+        modelo="100",
+        filing_year=filing_year,
+        period=period,
+        registry_snapshot_ref=ref,
+        captured_at=_CAPTURED_AT,
         source_url=source,
         state=SnapshotLifecycleState.ACTIVE,
         binding_values=values,
@@ -139,6 +173,24 @@ def test_a_snapshot_whose_revision_no_longer_reconfirms_is_refused_with_that_rea
     assert [(item.snapshot.snapshot_id, item.reason) for item in reading.refused] == [
         (stale.snapshot_id, Borrador100SnapshotRefusalReason.REGISTRY_COORDINATE_UNCONFIRMED)
     ]
+
+
+def test_a_snapshot_outside_the_support_envelope_is_refused_while_the_others_still_read(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path) as runtime:
+        outside = _store_snapshot_below_support_floor(operation, runtime.bucket_id)
+        valid = _store_legacy_snapshot(operation, runtime.bucket_id, filing_year=2025, key=_CERTIFICATE)
+        service = _service(runtime.bucket_id)
+        reading = service.read_snapshots(operation=operation)
+        latest = service.read_latest_for_year(filing_year=outside.filing_year, operation=operation)
+
+    assert reading.readable == (valid,)
+    assert [(item.snapshot.snapshot_id, item.reason) for item in reading.refused] == [
+        (outside.snapshot_id, Borrador100SnapshotRefusalReason.COORDINATE_OUTSIDE_SUPPORT)
+    ]
+    assert latest.readable == ()
+    assert [item.reason for item in latest.refused] == [Borrador100SnapshotRefusalReason.COORDINATE_OUTSIDE_SUPPORT]
 
 
 def test_a_capture_with_an_inadmissible_key_writes_nothing(tmp_path: Path, operation: PinnedAuthorityOperation) -> None:

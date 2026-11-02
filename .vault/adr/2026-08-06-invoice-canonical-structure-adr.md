@@ -13,9 +13,9 @@ related:
   - '[[2026-08-06-llm-invoice-read-reconciliation-adr]]'
 supersedes:
   - '2026-06-10-ledger-invoice-unification-adr'
-modified: '2026-10-29'
+modified: '2026-11-02'
 body_schema: 'body-v1'
-body_hash: 'sha256:86da04edcbe0cc2bbb61685a1807266060d34d999ed8325bcdc5211020fe7667'
+body_hash: 'sha256:936bf421de51868bc7d4fa35a39e9d46f6e4ae2aad3f50325872e3c328a2c223'
 ---
 # `invoice-canonical-structure` adr: `One canonical invoice aggregate; delete the slim store` | (**status:** `accepted`)
 
@@ -379,6 +379,47 @@ it is not later added as an apparent omission. This is D3, and it is orthogonal
 to D-E rather than in tension with it: D-F governs who may assert, D-E governs
 where the operator supplies. Both hold at once.
 
+**AMENDMENT (2026-11-02, operator ruling: "retencion must be readable from
+invoices if possible - it is an important aspect of the invoice parsing and tax
+calculation").** The first sentence above is reversed. A retención a document
+states IS read, reaches the draft, and is kept on the invoice through the same
+reviewed confirm as its sibling figures, on issued and received invoices alike.
+
+The reason given above conflated two questions. Whether the taxpayer owes a
+retención as retenedor is a legal conclusion the document cannot settle. What
+figure the document prints as withheld is a printed fact, exactly as D-M found
+for the recargo. Reading the second asserts nothing about the first, and that
+separation holds for both directions, so neither is excepted:
+
+- **Issued.** The figure is what the payer withheld from the taxpayer. The cash
+  that settles the invoice and the income evidence depend on it.
+- **Received.** The figure is what the document says was withheld. The retenedor
+  liability stays where it was: the store holds only what the explicit withholding
+  capture records against the invoice, and the Axis-A role and defect sweep still
+  decide whether the invoice can supply one. Reading the figure records no
+  liability.
+
+The terms of the reversal, all binding:
+
+- **A read value is a proposal until confirmed.** It crosses the review gate like
+  every sibling field, and the operator's statement outranks it, field by field.
+- **The two figures must agree.** A reading whose rate and amount disagree beyond
+  one cent on the base is a blocking finding. Answered without a statement of the
+  operator's own, the amount the document prints is kept and the rate is not,
+  because the invoice cannot hold a rate its amount contradicts and an amount may
+  stand alone.
+- **Only an IRPF withholding is a retención.** It is read only where the format
+  identifies it as IRPF. A withheld figure the format does not identify stays
+  unread and raises a finding. It is never inferred, and never taken for IVA or a
+  recargo.
+- **Absent stays absent.** A format with no element for it yields nothing, not
+  zero. A format that requires the element and states zero has stated zero.
+- **Existing records are not rewritten.** Re-confirming a document whose invoice
+  holds no retention returns that invoice unchanged and reports what the document
+  reads. It neither refuses nor silently writes the figure.
+
+D-E is unaffected: the operator may still assert a retención no reader recovered.
+
 **D-G — Mixed-rate invoices are fixed at the writer end within this campaign,
 at BOTH synthesis sites.** `build_catalogue_invoice`
 (`application/invoices/_creation.py`) stops synthesising exactly one line and
@@ -475,6 +516,13 @@ pass** may assert, and retención is not a header field a document can be read
 for; the confirm boundary is the operator speaking, and the operator may assert
 it. The two decisions partition on *who is speaking*, not on *which field*.
 
+**AMENDMENT (2026-11-02, with D-F).** The clause "retención is not a header field
+a document can be read for" is withdrawn. The override set is unchanged and still
+mirrors the writer, and the operator's value still wins. What changes is the
+fallback: where the operator states no retención, the confirm now falls back to
+the reading exactly as it does for the recargo and the other sibling figures, in
+place of holding nothing. Retyping a read value is still a statement.
+
 Both source agents agreed this item should ship **first**, on the ground that it
 is independently shippable and unblocks the most fields per unit of work. An
 earlier draft of this record labelled D-E as D2, which made an undelivered
@@ -492,7 +540,8 @@ document totals more than the record and has no field to put the difference in.
 An advisory that fires with no available resolution is the shape that trains
 operators to ignore advisories.
 
-Recargo therefore diverges from retención (D-F): a printed `base + cuota +
+Recargo therefore diverged from retención (D-F, until its 2026-11-02 amendment
+brought retención onto the same footing): a printed `base + cuota +
 recargo` **is** a header fact the document states, LIVA art. 161, and reading it
 is not an inference about the taxpayer's own obligations. It gets a draft slot,
 a confirm-boundary override (D-L), and it must satisfy the peer totals identity

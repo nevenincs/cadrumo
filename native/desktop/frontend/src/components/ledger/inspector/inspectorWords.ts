@@ -54,8 +54,6 @@ export function skipName(t: Translate, reason: SkipReason): string {
       return t("desktop.ledger.inspector.skip.transfer");
     case "personal":
       return t("desktop.ledger.inspector.skip.personal");
-    case "unclassified":
-      return t("desktop.ledger.inspector.skip.unclassified");
   }
 }
 

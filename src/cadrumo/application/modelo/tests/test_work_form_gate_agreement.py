@@ -38,6 +38,9 @@ from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
 from ..calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, PRINTED_BOX_REASONS, note_attention
 from ..calculation_screen import calculation_screen_stamp
+from ..declaration_summary import declaration_summary
+from ..declarations_list import DeclarationListGroup, DeclarationListNextStep, DeclarationListRow, next_step
+from ..declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
 from ..work_form_findings import ModeloFormAttention
@@ -382,3 +385,57 @@ def test_rules_short_of_calculation_grade_halt_the_next_step_through_the_read(
     assert refused_otherwise.next_step is not None
     public = project_modelo_workbench_form(profile, form.work_unit_id, refused_otherwise).next_step
     assert public is not None and public.action is ModeloFormNextAction.FILL
+
+
+def _listed_step(
+    unit: WorkUnit, revision: CalculationRevision, operation: PinnedAuthorityOperation
+) -> DeclarationListNextStep | None:
+    declaration = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id=unit.work_unit_id,
+        modelo=unit.modelo,
+        filing_year=unit.filing_year,
+        period=unit.period,
+        state=unit.state,
+        has_current_calculation=True,
+        has_current_filing=False,
+    )
+    summary = declaration_summary(
+        declaration, revisions={revision.calculation_revision_id: revision}, verification=None, operation=operation
+    )
+    row = DeclarationListRow(
+        unit.work_unit_id,
+        "210",
+        unit.period,
+        summary.state.value,
+        DeclarationListGroup.IN_PROGRESS,
+        declaration=declaration.model_copy(update={"summary": summary}),
+    )
+    return next_step(row)
+
+
+@pytest.mark.parametrize("stale", [None, 0, 1], ids=["current", "unstamped", "other_digest"])
+@pytest.mark.parametrize("note", [None, "advisory_binding_value"], ids=["no_note", "advisory"])
+def test_the_declarations_list_and_the_form_agree_for_one_checked_revision(
+    operation: PinnedAuthorityOperation, stale: int | None, note: str | None
+) -> None:
+    unit = _work_unit(operation)
+    issues = () if note is None else (_Note(note).issue(),)
+    stamp = None if stale is None else (_stale_stamps(operation)[stale],)
+    revision = _revision(operation, unit, *issues, stale=stamp).model_copy(
+        update={"state": CalculationRevisionState.VERIFICADO_COMPLETO}
+    )
+    form = _checked_form(operation, revision)
+
+    form_step = form_next_step(form, verified=True, filed=False).action
+    listed = _listed_step(unit, revision, operation)
+
+    if stale is not None:
+        assert form_step is ModeloFormNextAction.RECALCULATE
+        assert listed is DeclarationListNextStep.RECALCULATE
+    elif note is not None:
+        assert form_step is ModeloFormNextAction.RESOLVE
+        assert listed is DeclarationListNextStep.FIX
+    else:
+        assert form_step in _FILE_ACTIONS
+        assert listed is DeclarationListNextStep.CREATE_FILE
+    assert (listed is DeclarationListNextStep.CREATE_FILE) is _gate_admits(unit, revision, operation)

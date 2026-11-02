@@ -2468,15 +2468,21 @@ desktop:
       without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
     field:
+      art_104_tres_exclusion: Exclusión del art. 104.Tres
+      attachment_ids: Adjuntos
       booked_date: Fecha contable
       business_pct: Parte profesional
       counterparty_country: País de la contraparte
       counterparty_identification_state: Identificación a efectos de IVA
       currency: Moneda
       deduction_fact_kind: Hecho deducible
+      input_classification: Uso de la adquisición
       investment_asset_id: Bien de inversión
       m210_income_classification: Renta del modelo 210
       own_account_id: Cuenta
+      prorrata_reference: Referencia de prorrata
+      prorrata_sector_id: Sector de prorrata
+      purchase_invoice_evidence_id: Documento de compra
       recargo_amount: Recargo
       usage_ratio_id: Ratio de uso
       value_date: Fecha valor
@@ -3047,7 +3053,6 @@ desktop:
         sealed: bloqueados
         sealed_unread: sin saber si están bloqueados
         transfer: transferencias
-        unclassified: sin clasificar
       source_jurisdiction: Jurisdicción de origen
       split:
         add_part: Añadir una parte
@@ -7995,6 +8000,8 @@ tui:
           vincular.
         missing_invoice: La factura ya no está en el catálogo, así que no se puede
           vincular.
+        transaction_takes_no_invoice: 'Este movimiento no admite factura: solo puede
+          tenerla un movimiento activo de entrada o salida de dinero.'
     overview:
       affected_declarations: Declaraciones afectadas
       areas: Áreas de Registros
@@ -9156,6 +9163,7 @@ workspace:
         link_aeat: Vincular la presentación de la AEAT
         none: Nada pendiente
         open_local_draft: Abrir el borrador local
+        recalculate: Vuelve a calcular
         start: Empezarla
       no_match: Ninguna declaración coincide con «{query}».
       none_listed: No hay declaraciones en la lista.

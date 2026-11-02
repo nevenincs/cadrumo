@@ -12,6 +12,7 @@ import type {
   LedgerTransaction,
 } from "../../../shell/ledger";
 import {
+  FIELDS_DROPPED_BY_PERSONAL,
   takesBusinessShare,
   takesChanges,
 } from "../../../shell/ledgerContract";
@@ -158,12 +159,7 @@ export type SetForAllField = (typeof SET_FOR_ALL_FIELDS)[number];
 
 /** Why a movement is left out of a change set for all. */
 export type SkipReason =
-  | "not_active"
-  | "sealed"
-  | "sealed_unread"
-  | "transfer"
-  | "personal"
-  | "unclassified";
+  "not_active" | "sealed" | "sealed_unread" | "transfer" | "personal";
 
 const TAX_SETS: ReadonlySet<SetForAllField> = new Set([
   "category_id",
@@ -185,7 +181,11 @@ export function setSkip(
   if (sealed.has(id)) return "sealed";
   if (unread?.has(id)) return "sealed_unread";
   if (!TAX_SETS.has(field)) return null;
-  return check.rows.get(id)?.tax_set_skip ?? null;
+  const skip = check.rows.get(id)?.tax_set_skip ?? null;
+  return skip === "personal" &&
+    !(FIELDS_DROPPED_BY_PERSONAL as readonly string[]).includes(field)
+    ? null
+    : skip;
 }
 
 export type SetForAll = {
