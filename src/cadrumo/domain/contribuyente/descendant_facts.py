@@ -416,6 +416,31 @@ def _descendant_from_stored_row(
     )
 
 
+def _stored_optional_date(raw: str | None) -> date | None:
+    """Parse a stored ISO date; absent or empty reads as ``None``."""
+    if raw is None or not raw:
+        return None
+    return parse_iso8601_date(raw)
+
+
+def _stored_disability_value(
+    raw: str | None,
+    *,
+    index: int,
+    authority: GovernedFactSource | None,
+) -> int | None:
+    """Read the stored disability grade, refusing a non-whole or unsupported governed value."""
+    if raw is not None and not is_plain_whole_number(raw.strip()):
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.discapacidad must be a whole-number grade; got {raw!r}.",
+            context={"key": f"renta_family.descendiente.{index}.discapacidad"},
+        )
+    value = int(raw) if raw is not None else None
+    if value is not None and value not in accepted_descendant_disability_grades(authority=authority):
+        raise ProfileAnswerTypeError(f"DISCAPACIDAD carries an unsupported governed grade: {value!r}")
+    return value
+
+
 def _stored_civil_fields(
     row: dict[str, str],
     *,
@@ -425,25 +450,11 @@ def _stored_civil_fields(
     inscripcion_raw = row.get("inscripcion_registro_civil")
     acogimiento_raw = row.get("acogimiento_resolucion")
     fallecimiento_raw = row.get("fallecimiento")
-    discapacidad_raw = row.get("discapacidad")
-    if discapacidad_raw is not None and not is_plain_whole_number(discapacidad_raw.strip()):
-        raise ProfileAnswerTypeError(
-            f"renta_family.descendiente.{index}.discapacidad must be a whole-number grade; got {discapacidad_raw!r}.",
-            context={"key": f"renta_family.descendiente.{index}.discapacidad"},
-        )
-    disc_val = int(discapacidad_raw) if discapacidad_raw is not None else None
-    if disc_val is not None and disc_val not in accepted_descendant_disability_grades(authority=authority):
-        raise ProfileAnswerTypeError(f"DISCAPACIDAD carries an unsupported governed grade: {disc_val!r}")
+    disc_val = _stored_disability_value(row.get("discapacidad"), index=index, authority=authority)
     return {
-        "inscripcion_registro_civil_date": parse_iso8601_date(inscripcion_raw)
-        if (inscripcion_raw is not None and inscripcion_raw)
-        else None,
-        "acogimiento_resolucion_date": parse_iso8601_date(acogimiento_raw)
-        if (acogimiento_raw is not None and acogimiento_raw)
-        else None,
-        "death_date": parse_iso8601_date(fallecimiento_raw)
-        if (fallecimiento_raw is not None and fallecimiento_raw)
-        else None,
+        "inscripcion_registro_civil_date": _stored_optional_date(inscripcion_raw),
+        "acogimiento_resolucion_date": _stored_optional_date(acogimiento_raw),
+        "death_date": _stored_optional_date(fallecimiento_raw),
         "discapacidad_grado": _discapacidad_grade(disc_val, authority=authority),
     }
 

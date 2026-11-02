@@ -598,6 +598,56 @@ def _clause_modelos(operation: PinnedAuthorityOperation) -> tuple[str, ...]:
     )
 
 
+def _unauthored_row(
+    operation: PinnedAuthorityOperation,
+    *,
+    modelo: str,
+    filing_year: int,
+    token: str,
+) -> ProjectedWindowRow | None:
+    """Project one scheduled coordinate into a row, or ``None`` when it cannot be projected."""
+    try:
+        period = Period.from_year_and_code(filing_year, token)
+    except PeriodError:
+        return None
+    if not period.has_date_span():
+        return None
+    scheduled = _scheduled_coordinate(operation, modelo=modelo, filing_year=filing_year, token=token)
+    if scheduled is None:
+        return None
+    metadata, schedule = scheduled
+    resolution = _project_scheduled_window(operation, modelo=modelo, period=period, schedule=schedule, calendars=())
+    if resolution is None:
+        return None
+    return ProjectedWindowRow(modelo=modelo, revision=metadata, resolution=resolution)
+
+
+def _unauthored_modelo_rows(
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    filing_year: int,
+    covered: frozenset[str],
+) -> list[ProjectedWindowRow]:
+    """Project one modelo's scheduled coordinates that no authored window covers."""
+    directory = operation.modelo_directory(modelo)
+    tokens = sorted(
+        {
+            token
+            for metadata in directory.revisions
+            for schedule in metadata.filing_schedules
+            for token in schedule.periods
+        },
+    )
+    rows: list[ProjectedWindowRow] = []
+    for token in tokens:
+        if token in covered:
+            continue
+        row = _unauthored_row(operation, modelo=modelo, filing_year=filing_year, token=token)
+        if row is not None:
+            rows.append(row)
+    return rows
+
+
 def project_unauthored_filing_windows(
     operation: PinnedAuthorityOperation,
     filing_year: int,
@@ -617,34 +667,7 @@ def project_unauthored_filing_windows(
     for modelo in _clause_modelos(operation):
         if modelo not in registered:
             continue
-        directory = operation.modelo_directory(modelo)
-        tokens = sorted(
-            {
-                token
-                for metadata in directory.revisions
-                for schedule in metadata.filing_schedules
-                for token in schedule.periods
-            },
-        )
-        covered = authored.get(modelo, frozenset())
-        for token in tokens:
-            if token in covered:
-                continue
-            try:
-                period = Period.from_year_and_code(filing_year, token)
-            except PeriodError:
-                continue
-            if not period.has_date_span():
-                continue
-            scheduled = _scheduled_coordinate(operation, modelo=modelo, filing_year=filing_year, token=token)
-            if scheduled is None:
-                continue
-            metadata, schedule = scheduled
-            resolution = _project_scheduled_window(
-                operation, modelo=modelo, period=period, schedule=schedule, calendars=()
-            )
-            if resolution is not None:
-                rows.append(ProjectedWindowRow(modelo=modelo, revision=metadata, resolution=resolution))
+        rows.extend(_unauthored_modelo_rows(operation, modelo, filing_year, authored.get(modelo, frozenset())))
     return tuple(rows)
 
 
