@@ -49,7 +49,6 @@ from ...domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ...domain.modelos.filing_repository import upsert_filing_record
-from ...domain.modelos.participation_index import TransactionRevisionParticipation, upsert_transaction_participation
 from ...domain.modelos.protocols import (
     CalculationRevisionCatalogueRepositoryProtocol,
     ModeloRecordCatalogueRepositoryProtocol,
@@ -84,6 +83,7 @@ from .filed_revision_observation import (
 )
 from .m303_filing_evidence import m303_filing_evidence_failure
 from .modelo_bucket_events import build_modelo_bucket_event
+from .participation_writes import build_participation_writes
 
 _PRORRATA_VOLUMEN_TOTAL_CASILLA = validated_casilla_id(
     "iva.prorrata-volumen-total",
@@ -153,40 +153,6 @@ def validate_filing_instance_evidence_for_work_unit(
             ),
         )
     return None
-
-
-def _build_filed_participation_writes(
-    *,
-    filed_target: CalculationRevision,
-    work_unit: WorkUnit,
-    filing_record_id: str,
-    participation_index_repository: TransactionParticipationIndexRepositoryProtocol,
-) -> tuple[SecureObjectWrite, ...]:
-    """Build the per-transaction participation writes for a filed revision.
-
-    For each ``source_transaction_id`` of the filed revision, load that
-    transaction's
-    :class:`~TransactionRevisionParticipationIndex`, upsert
-    the ``PRESENTADO`` participation carrying the ``filing_record_id``
-    (replacing the prior verified entry for the same revision in place), and
-    return the resulting ``SecureObjectWrite`` so the caller co-emits them in
-    the same atomic unit of work as the filing save.
-    """
-    writes: list[SecureObjectWrite] = []
-    for transaction_id in filed_target.source_transaction_ids:
-        index = participation_index_repository.load(transaction_id)
-        participation = TransactionRevisionParticipation(
-            calculation_revision_id=filed_target.calculation_revision_id,
-            work_unit_id=work_unit.work_unit_id,
-            modelo=work_unit.modelo,
-            filing_year=work_unit.filing_year,
-            period=work_unit.period,
-            revision_state=CalculationRevisionState.PRESENTADO.value,
-            filing_record_id=filing_record_id,
-        )
-        updated = upsert_transaction_participation(index, participation)
-        writes.append(participation_index_repository.to_secure_object_write(updated))
-    return tuple(writes)
 
 
 def _build_prorrata_settlement_write(
@@ -755,9 +721,10 @@ def _prepare_filing_catalogues_and_writes(
         ),
     )
 
-    participation_writes = _build_filed_participation_writes(
-        filed_target=filed_target,
+    participation_writes = build_participation_writes(
+        revision=filed_target,
         work_unit=work_unit,
+        revision_state=CalculationRevisionState.PRESENTADO,
         filing_record_id=new_filing_id,
         participation_index_repository=participation_index_repository,
     )
