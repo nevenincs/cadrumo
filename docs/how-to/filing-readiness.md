@@ -98,15 +98,23 @@ quarters available and marks the output, for example
 planning estimate, not a draft Renta: it assumes the remaining quarters look
 like the filed ones.
 
-Refine the projection with values the quarters cannot know: withholdings,
-personal circumstances, or specific boxes:
+Refine the projection with values the quarters cannot know: personal
+circumstances or specific boxes:
 
 ```{cli-sequence} filing-readiness-project-refine
 ```
 
-Withholdings default to zero when not supplied, so a projection without them
-overstates the balance due if you had withholdings. Each projected box carries its
-formula and legal references in the JSON output, the same legal basis as a real
+The projection does not read the withholding records you saved with
+`app ledger retencion-soportada record`. The headline figures stop at the
+resulting tax (<span lang="es">cuota resultante</span>), which is calculated
+before any withholding credit. The JSON output also lists the later boxes
+(<span lang="es">cuota diferencial</span>), and there an unsupplied withholding
+box counts as zero without a marker beyond the extrapolation flag, so
+<span lang="es">cuota diferencial</span> equals <span lang="es">cuota resultante</span>
+and overstates the balance due if you had withholdings. To include them, supply
+the withholding boxes with `--casilla`, for example `--casilla 0596=2400` for
+withholdings on employment income. Each projected box carries its formula and
+legal references in the JSON output, the same legal basis as a real
 calculation.
 
 For when the year-end filing actually happens, see
