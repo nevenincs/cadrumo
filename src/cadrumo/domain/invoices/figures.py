@@ -185,12 +185,28 @@ def line_iva_finding(subtotal: Decimal, iva_amount: Decimal, rate: Decimal | Non
     return None
 
 
-def line_rate_refusal_finding(rate: IvaRate, on_date: date, cause: IvaRateNotFoundError) -> FigureFinding:
-    """Name why a slot yields no rate on a date, keeping our coverage apart from the law."""
-    coverage_gap = (cause.context or {}).get("rate_registry_covers_date") is False
+def rate_refusal_is_coverage_gap(cause: IvaRateNotFoundError) -> bool:
+    """Tell a refusal on our registry's reach from one on the law, by its machine fact."""
+    return (cause.context or {}).get("rate_registry_covers_date") is False
+
+
+def rate_refusal_finding(
+    rate: IvaRate,
+    on_date: date,
+    *,
+    coverage_gap: bool,
+    cause: IvaRateNotFoundError | None = None,
+) -> FigureFinding:
+    """Name why a slot yields no rate on a date, keeping our coverage apart from the law.
+
+    A coverage gap says nothing about Spanish law, so it never claims the rate was
+    out of force.
+    """
+    claim = "is not covered by the rate registry on" if coverage_gap else "was not in force on"
+    reason = "" if cause is None else f": {cause}"
     return FigureFinding(
         FigureFindingCode.LINE_RATE_COVERAGE_GAP if coverage_gap else FigureFindingCode.LINE_RATE_NOT_IN_FORCE,
-        f"line rate {rate.name} was not in force on {on_date.isoformat()}: {cause}",
+        f"line rate {rate.name} {claim} {on_date.isoformat()}{reason}",
         ("iva_rate",),
         values={"slot": str(rate), "on_date": on_date.isoformat()},
     )
@@ -473,8 +489,7 @@ def dated_rate_slots(on_date: date) -> tuple[DatedRateSlot, ...]:
         try:
             fraction = iva_rate_percentage(slot, on_date)
         except IvaRateNotFoundError as refused:
-            coverage_gap = (refused.context or {}).get("rate_registry_covers_date") is False
-            slots.append(DatedRateSlot(slot, None, in_force=False, coverage_gap=coverage_gap))
+            slots.append(DatedRateSlot(slot, None, in_force=False, coverage_gap=rate_refusal_is_coverage_gap(refused)))
         else:
             slots.append(DatedRateSlot(slot, fraction, in_force=True))
     return tuple(slots)
@@ -827,12 +842,13 @@ __all__ = [
     "invoice_total_findings",
     "line_amount_finding",
     "line_iva_finding",
-    "line_rate_refusal_finding",
     "line_subtotal_finding",
     "nonnumeric_invoice_findings",
     "printed_total_finding",
     "quantity_finding",
     "raise_first_figure_finding",
+    "rate_refusal_finding",
+    "rate_refusal_is_coverage_gap",
     "recargo_ceiling_finding",
     "recargo_sign_finding",
     "retention_findings",
