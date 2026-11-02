@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:498a7950676aab340dbf217589436c56efa664a69977248199e7743fae2dec9b'
+body_hash: 'sha256:1b465b189cd2801012f488f0b357c35c792b04a6974bd7a39acde803eea80460'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -183,6 +183,46 @@ related:
 - `S16` `verify:` `pytest-profile_persistence-fold-tests` -> `pass`
 - `S16` `verify:` `just-check-style-format-types` -> `pass`
 - `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/observation_seeding_support.py`
+- `S15` `A` `src/cadrumo/application/live/borrador_100_keys.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_import.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_contracts.py`
+- `S15` `M` `src/cadrumo/application/live/borrador_100_operation.py`
+- `S15` `M` `src/cadrumo/application/modelo/borrador_binding.py`
+- `S15` `M` `src/cadrumo/domain/calculations/registry/binding_terminal_origin.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/app_live_borrador_commands.py`
+- `S15` `M` `src/cadrumo/entrypoints/cli/app_live_borrador_results.py`
+- `S15` `M` `src/cadrumo/locales/en/cli.yml`
+- `S15` `M` `src/cadrumo/locales/es/cli.yml`
+- `S15` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S15` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S15` `M` `src/cadrumo/locales/en/application.yml`
+- `S15` `M` `src/cadrumo/locales/es/application.yml`
+- `S15` `M` `src/cadrumo/locales/ca/application.yml`
+- `S15` `M` `src/cadrumo/locales/hu/application.yml`
+- `S15` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S15` `M` `dev/quality/metadata/import_load_targets.json`
+- `S15` `M` `docs/technical/articles/063-live-snapshots-and-filed-data-capture-operations.md`
+- `S15` `A` `src/cadrumo/application/live/tests/test_borrador_100_keys.py`
+- `S15` `M` `src/cadrumo/application/live/tests/test_borrador_100.py`
+- `S15` `M` `src/cadrumo/application/live/tests/test_borrador_100_operation.py`
+- `S15` `M` `src/cadrumo/application/modelo/tests/test_borrador_binding.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/tests/test_borrador_100_roundtrip.py`
+- `S15` `M` `src/cadrumo/application/aeat_sync/tests/test_status_operation.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/conformance_live_borrador_support.py`
+- `S15` `M` `src/cadrumo/entrypoints/tests/_runtime_attached_repositories_support.py`
+- `S15` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_app_live_borrador_import.py`
+- `S15` `M` `dev/runtime_lifecycle/tests/test_installed_borrador_stdio.py`
+- `S15` `verify:` `pytest focused borrador and terminal-origin tests (621)` -> `pass`
+- `S15` `verify:` `pytest -m integration test_app_live_borrador_import.py (35)` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `just check-format` -> `pass`
+- `S15` `verify:` `just check-types` -> `pass`
+- `S15` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S15` `verify:` `python -m dev.registry.conformance valid` -> `pass`
+- `S15` `verify:` `just check-bindings` -> `pass`
+- `S15` `by:` `implementation-engineer-high`
 
 ## Notes
 
@@ -194,3 +234,4 @@ related:
 - `S14` post-close regression fix: fixtures seeded unstamped revisions outside the calculation producer; dirs went 36 failed to 4 failed, the 4 outside S14 (0599 proven-zero diagnostic, 0604 fold)
 - `S05` post-close test alignment
 - `S16` post-close test alignment
+- `S15` Every target casilla of the 2022-2023 borrador profile is computed, so a real import stores no value and reports all five as unowned; installed stdio acceptance fixture updated but not run (disposable host only)
