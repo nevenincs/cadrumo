@@ -492,6 +492,8 @@ application:
           esquema oficial.
         xml_value_not_listed: La casilla %{box} contiene un valor fuera de las opciones
           que enumera el esquema oficial.
+        xml_value_required_missing: El esquema oficial exige la casilla %{box} y no
+          tiene valor. Indícala antes de exportar; no se ha escrito nada.
         xml_value_too_long: La casilla %{box} tiene %{observed} caracteres; el esquema
           oficial admite como máximo %{limit}.
         xml_value_too_many_decimals: La casilla %{box} tiene %{observed} decimales;
@@ -2926,6 +2928,8 @@ application:
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
       profile_authentication_refused: No se aceptó la contraseña del perfil.
+      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica
+        a qué ejercicio corresponde esta respuesta.
       profile_password_contains_surrogate: La contraseña del perfil contiene un valor
         que no puede codificarse como UTF-8 estricto.
       profile_password_too_few_scalars: La contraseña del perfil debe tener al menos
@@ -2936,7 +2940,6 @@ application:
         máximo {maximum_utf8_bytes} bytes UTF-8; se recibieron {utf8_byte_count}.
       profile_proof_cancelled: Se canceló la comprobación de la contraseña del perfil
         antes de terminar.
-      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica a qué ejercicio corresponde esta respuesta.
       profile_text_too_long: El campo %{field} admite como máximo %{limit} caracteres;
         acórtalo.
       recovery_already_enrolled: Este perfil ya tiene un código de recuperación. Desactívalo

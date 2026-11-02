@@ -455,6 +455,8 @@ application:
         xml_value_not_a_number: Box %{box} must hold a number under the official schema.
         xml_value_not_listed: Box %{box} holds a value outside the options the official
           schema lists.
+        xml_value_required_missing: Box %{box} is required by the official schema
+          and has no value. Enter it before exporting; nothing was written.
         xml_value_too_long: Box %{box} holds %{observed} characters; the official
           schema admits at most %{limit}.
         xml_value_too_many_decimals: Box %{box} holds %{observed} decimal places;
@@ -2776,6 +2778,8 @@ application:
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
       profile_authentication_refused: The profile password was not accepted.
+      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say
+        which ejercicio this answer is for.
       profile_password_contains_surrogate: The profile password contains a value that
         cannot be encoded as strict UTF-8.
       profile_password_too_few_scalars: The profile password must be at least {minimum_scalars}
@@ -2786,7 +2790,6 @@ application:
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
       profile_proof_cancelled: The profile password check was cancelled before it
         finished.
-      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say which ejercicio this answer is for.
       profile_text_too_long: The field %{field} holds at most %{limit} characters;
         shorten it.
       recovery_already_enrolled: This profile already has a recovery code. Disable

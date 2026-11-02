@@ -484,6 +484,8 @@ application:
           kell tartalmaznia.
         xml_value_not_listed: A(z) %{box} rovat értéke nem szerepel a hivatalos sémában
           felsorolt lehetőségek között.
+        xml_value_required_missing: A hivatalos séma megköveteli a(z) %{box} rovatot,
+          de nincs értéke. Add meg exportálás előtt; nem íródott ki semmi.
         xml_value_too_long: A(z) %{box} rovat %{observed} karaktert tartalmaz; a hivatalos
           séma legfeljebb %{limit} karaktert enged meg.
         xml_value_too_many_decimals: A(z) %{box} rovat %{observed} tizedesjegyet tartalmaz;
@@ -2882,6 +2884,8 @@ application:
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
       profile_authentication_refused: A profiljelszó hitelesítése sikertelen.
+      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni;
+        add meg, melyik adóévre vonatkozik ez a válasz.
       profile_password_contains_surrogate: A profiljelszó olyan értéket tartalmaz,
         amely nem kódolható szigorú UTF-8 formában.
       profile_password_too_few_scalars: A profiljelszónak legalább {minimum_scalars}
@@ -2892,7 +2896,6 @@ application:
         {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
       profile_proof_cancelled: A profiljelszó ellenőrzése megszakadt, mielőtt befejeződött
         volna.
-      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni; add meg, melyik adóévre vonatkozik ez a válasz.
       profile_text_too_long: A(z) %{field} mező legfeljebb %{limit} karaktert enged
         meg; rövidítsd le.
       recovery_already_enrolled: Ehhez a profilhoz már tartozik helyreállítási kód.

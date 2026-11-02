@@ -1,4 +1,4 @@
-"""Hold every value of an XML declaration to the facets its official XSD declares.
+"""Hold every value of an XML declaration to what its official XSD declares.
 
 The dictionary says where a value goes; only the XSD says how long it may be, which
 amounts its type admits and which characters it accepts. Every limit here is read
@@ -15,6 +15,10 @@ schemas spells its alphabet in capitals, while an operator types ordinary text, 
 :func:`canonical_xml_text` capitalizes a value only when its declared type refuses it
 as written and admits it capitalized. Nothing else is rewritten: a character the type
 does not admit in either case is refused, never dropped or replaced.
+
+The same walk holds each element it meets to its declared content: a required child or
+attribute the document lacks refuses by its box, because padding cannot supply a fact
+and a block without its required content is a file AEAT's own schema rejects.
 
 Refusals name the box and the limit and never carry the value, which may be private.
 """
@@ -35,6 +39,12 @@ XSD_NS = "{http://www.w3.org/2001/XMLSchema}"
 _MODEL_GROUP_TAGS = frozenset({"complexType", "complexContent", "sequence", "choice", "all"})
 
 _VALUE_REFUSAL_PREFIX = "application.filing.export.errors.xml_value_"
+_REQUIRED_MISSING = "application.filing.export.errors.xml_value_required_missing"
+
+_CONTENT_GROUP_TAGS = frozenset({"sequence", "choice", "all"})
+
+# The negative token of the schemas' ``tipo_SINO_Exclusivo``.
+_SCHEMA_NEGATIVE_ANSWER = "NO"
 
 #: The facets this check applies. Any other refuses the type, so a limit a later
 #: edition adds in a form this module does not know is never silently passed.
@@ -280,6 +290,7 @@ def _element_violations(
             yield from _value_violations(node.text or "", simple, path=path)
         return
     yield from _attribute_violations(node, complex_type, path=path, schema=schema)
+    yield from _missing_content_violations(node, complex_type, path=path)
     children = {item.get("name"): item for item in xsd_declared_children(complex_type)}
     for child in node:
         child_path = f"{path}/{child.tag}"
@@ -312,6 +323,97 @@ def _attribute_violations(
         simple = _declared_simple_type(attribute, schema)
         if simple is not None:
             yield from _value_violations(value, simple, path=attribute_path)
+
+
+def _missing_content_violations(node: Element[str], complex_type: Element[str], *, path: str) -> Iterator[_Violation]:
+    """Report the required attributes and child elements ``node`` does not hold."""
+    for attribute in complex_type.findall(f"{XSD_NS}attribute"):
+        name = attribute.get("name")
+        if attribute.get("use") == "required" and name is not None and name not in node.attrib:
+            yield _Violation(path=f"{path}/@{name}", translated_message=_REQUIRED_MISSING)
+    for name in _missing_required_children(complex_type, frozenset(str(child.tag) for child in node)):
+        yield _Violation(path=f"{path}/{name}", translated_message=_REQUIRED_MISSING)
+
+
+def _missing_required_children(complex_type: Element[str], present: frozenset[str]) -> tuple[str, ...]:
+    """Return the child elements the content model of ``complex_type`` still requires."""
+    return tuple(
+        name
+        for particle in complex_type
+        if _local_name(particle) in _CONTENT_GROUP_TAGS
+        for name in _particle_missing(particle, present)
+    )
+
+
+def _particle_missing(particle: Element[str], present: frozenset[str]) -> Iterator[str]:
+    """Walk one particle; an optional group or a choice requires only what it has begun."""
+    local_name = _local_name(particle)
+    if local_name == "element":
+        name = particle.get("name")
+        if name is not None and name not in present and particle.get("minOccurs", "1") != "0":
+            yield name
+        return
+    if not _particle_touched(particle, present) and particle.get("minOccurs", "1") == "0":
+        return
+    members = tuple(item for item in particle if _local_name(item) in {"element", *_CONTENT_GROUP_TAGS})
+    if local_name == "choice":
+        touched = tuple(item for item in members if _particle_touched(item, present))
+        members = touched[:1] or members[:1]
+    for member in members:
+        yield from _particle_missing(member, present)
+
+
+def _particle_touched(particle: Element[str], present: frozenset[str]) -> bool:
+    if _local_name(particle) == "element":
+        return particle.get("name") in present
+    return any(
+        _particle_touched(item, present)
+        for item in particle
+        if _local_name(item) in {"element", *_CONTENT_GROUP_TAGS}
+    )
+
+
+def _local_name(node: Element[str]) -> str:
+    return str(node.tag).rpartition("}")[2]
+
+
+def prune_childless_negative_blocks(document: Element[str], *, schema: XmlValueSchema) -> None:
+    """Remove an optional block holding only ``NO`` answers and lacking its required content.
+
+    Such a block states an absence the schema can only express by leaving the block
+    out: ``Hijos`` admits its flag only alongside the ``Hijo`` occurrences it requires.
+    A block answering ``SI`` is a stated fact and stays, for the check to refuse.
+
+    Args:
+        document: The ``Declaracion`` element, after zero-only pruning.
+        schema: The edition's :class:`XmlValueSchema`.
+    """
+    _prune_negative_children(document, schema.declaration, schema=schema)
+
+
+def _prune_negative_children(node: Element[str], declaration: Element[str], *, schema: XmlValueSchema) -> None:
+    complex_type = _declared_complex_type(declaration, schema)
+    if complex_type is None:
+        return
+    declared = {item.get("name"): item for item in xsd_declared_children(complex_type)}
+    for child in tuple(node):
+        child_declaration = declared.get(child.tag)
+        if child_declaration is None:
+            continue
+        _prune_negative_children(child, child_declaration, schema=schema)
+        if child_declaration.get("minOccurs", "1") == "0" and _is_unfillable_negative(child, child_declaration, schema):
+            node.remove(child)
+
+
+def _is_unfillable_negative(node: Element[str], declaration: Element[str], schema: XmlValueSchema) -> bool:
+    complex_type = _declared_complex_type(declaration, schema)
+    return (
+        complex_type is not None
+        and len(node) == 0
+        and bool(node.attrib)
+        and all(value == _SCHEMA_NEGATIVE_ANSWER for value in node.attrib.values())
+        and bool(_missing_required_children(complex_type, frozenset()))
+    )
 
 
 def _undeclared_children(node: Element[str], path: str) -> Iterator[_Violation]:
@@ -496,6 +598,7 @@ __all__ = [
     "XmlValueSchema",
     "canonical_xml_text",
     "is_xml_value_refusal",
+    "prune_childless_negative_blocks",
     "refuse_xml_values_outside_schema",
     "xml_value_schema",
     "xsd_declared_children",
