@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:8171fd905bbbd61f505b79590aaedb0910a0c4b95f835e6f3ca395d886befa1a'
+body_hash: 'sha256:a4ba603b4a29cdae42b53823f168a18da4f21dc5a16d276ea113bdadd4fb10f1'
 ---
 
 # `export-parity` plan
@@ -42,7 +42,7 @@ Draft and accept the decision records and grounding that every later Phase build
 - [x] `P01.S12` - Ground and draft the suffered-withholding, reconciliation and resolution-record schemas as a code reference and an export-parity ADR amendment; `.vault/reference/ and .vault/adr/`.
 - [x] `P01.S13` - Ground the income imputation criterion in primary LIRPF, RIRPF, DGT and TEAC text and draft its profile-fact decision; `.vault/research/ and .vault/adr/`.
 - [ ] `P01.S04` - Ground the AEAT datos fiscales download format against an official specimen or record design; `.vault/research/`.
-- [ ] `P01.S28` - Coordinate the tier-divergence and filing-kind effects with the IVA, registry-binding and consumer domains before P02.S16 and P04.S07; `.vault/plan/`.
+- [x] `P01.S28` - Coordinate the tier-divergence and filing-kind effects with the IVA, registry-binding and consumer domains before P02.S16 and P04.S07; `.vault/plan/`.
 - [x] `P01.S27` - Present the open rulings from the decision records (zero cap, casilla 06 endpoint, absent imputation fact, legal readings, cross-domain coordination) and record the operator's answers; `.vault/adr/`.
 
 ### Phase `P02` - Build the grade, filing-kind and borrador foundations
