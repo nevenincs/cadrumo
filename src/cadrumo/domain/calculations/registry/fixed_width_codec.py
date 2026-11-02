@@ -51,14 +51,15 @@ class ExportEncoding(StrEnum):
 
 
 class ExportSignPosition(StrEnum):
-    """A sign byte an official design reserves ahead of an amount's magnitude.
+    """How an official design writes an amount's sign where the general rule does not hold.
 
     The general AEAT convention reserves nothing: an 'N' displaces the leading
     digit of a negative amount and a non-negative amount is digits throughout.
     Some designs instead subdivide an amount into a leading alphabetic SIGNO
     position and a numeric magnitude that "no irá precedido de signo alguno";
     the magnitude then owns every remaining byte, and the sign byte follows
-    the design's own rule rather than the general one.
+    the design's own rule rather than the general one. Others keep the slot
+    undivided and only name a different marker.
     """
 
     #: 'N' when the amount is below zero, otherwise a space ("En cualquier otro
@@ -68,6 +69,10 @@ class ExportSignPosition(StrEnum):
     #: value is a non-negative magnitude written after an 'N'; when there is
     #: nothing to declare the whole slot "se rellenará a ceros".
     N_UNLESS_ZERO = "n_unless_zero"
+    #: No byte is reserved: the marker is the hyphen, "un caracter '-' inmediatamente
+    #: delante de los números", so a negative amount gives up its leading digit and
+    #: a non-negative one is digits throughout.
+    MINUS_DISPLACES_DIGIT = "minus_displaces_digit"
 
 
 def _coerce_closed_axis(value: object, axis: type[StrEnum]) -> object:
@@ -452,10 +457,10 @@ def _validate_signed_shape(field: ExportField) -> None:
 def _validate_sign_position(field: ExportField) -> None:
     """Refuse a reserved sign byte on a slot that cannot carry one.
 
-    ``BLANK_OR_N`` writes a negative amount, so it needs ``signed``;
-    ``N_UNLESS_ZERO`` writes a magnitude whose direction the design fixes, so a
-    negative value there would say the opposite of the constant 'N' and the
-    field must stay unsigned to refuse it.
+    ``BLANK_OR_N`` and ``MINUS_DISPLACES_DIGIT`` write a negative amount, so they
+    need ``signed``; ``N_UNLESS_ZERO`` writes a magnitude whose direction the
+    design fixes, so a negative value there would say the opposite of the constant
+    'N' and the field must stay unsigned to refuse it.
     """
     length = require_length(field)
     if field.data_type != "money":
@@ -470,7 +475,7 @@ def _validate_sign_position(field: ExportField) -> None:
         raise RegistryValidationError(
             f"sign_position export field {field.id!r} cannot also declare a value policy or allowed values",
         )
-    required_signed = field.sign_position is ExportSignPosition.BLANK_OR_N
+    required_signed = field.sign_position is not ExportSignPosition.N_UNLESS_ZERO
     if field.signed is not required_signed:
         raise RegistryValidationError(
             f"sign_position {field.sign_position!s} on export field {field.id!r} requires signed = "
@@ -678,6 +683,8 @@ def _render_numeric_digits(field: ExportField, digits: str, *, negative: bool) -
     length = require_length(field)
     if negative and not field.signed:
         raise RegistryValidationError(f"unsigned export field {field.id!r} cannot render a negative value")
+    if field.sign_position is ExportSignPosition.MINUS_DISPLACES_DIGIT:
+        return _render_displacing_marker(field, digits, marker="-", negative=negative, length=length)
     if field.sign_position is not None:
         return _render_with_reserved_sign(field, digits, negative=negative, length=length)
     if field.signed:
@@ -711,10 +718,14 @@ def _render_signed_digits(field: ExportField, digits: str, *, negative: bool, le
     # amounts "15 enteros (o N + 14) y 2 decimales" on a seventeen-byte slot.
     # "Sin signos" excludes a blank as much as a '+': a blank belongs to
     # alphanumeric and alphabetic fields, which pad with blancos, not to these.
+    return _render_displacing_marker(field, digits, marker="N", negative=negative, length=length)
+
+
+def _render_displacing_marker(field: ExportField, digits: str, *, marker: str, negative: bool, length: int) -> str:
     magnitude_width = length - 1 if negative else length
     if len(digits) > magnitude_width:
         raise RegistryValidationError(f"export field {field.id!r} value exceeds length {length}")
-    return ("N" if negative else "") + digits.rjust(magnitude_width, "0")
+    return (marker if negative else "") + digits.rjust(magnitude_width, "0")
 
 
 def _render_boolean(value: object) -> str:

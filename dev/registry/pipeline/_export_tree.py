@@ -42,6 +42,7 @@ from .generated_export_inheritance_model import GeneratedExportInheritanceContex
 from .generated_tree_dispositions import type_column_rulings_for
 from .joined_record_design import JoinedRecordDesign, JoinedRecordDesignRecord
 from .note_absent_fill import NoteAbsentFillDeclaration, note_absent_fill_for, with_note_absent_fill
+from .note_negative_amount import NoteNegativeAmountDeclaration, note_negative_amount_for, with_note_negative_amount
 from .note_literals import NoteLiteralDeclaration, note_literals_for
 from .render_profile import validate_render_profile
 from .render_profile_evidence import RenderProfileSourceEvidence
@@ -98,6 +99,7 @@ def render_complete_export_tree(
         note_governed_amounts=note_governed_amounts,
         applicability_notes=applicability_notes,
         absent_fill_note=note_absent_fill_for(joined.source),
+        negative_amount_note=note_negative_amount_for(joined.source),
         scheme_period_fields=design_scheme_period_fields_for(joined.source),
     )
     layout, derivations = _build_export_layout(
@@ -346,6 +348,7 @@ def _render_records(
     note_governed_amounts: tuple[NoteGovernedAmountDeclaration, ...] = (),
     applicability_notes: tuple[NoteStatedApplicabilityDeclaration, ...] = (),
     absent_fill_note: NoteAbsentFillDeclaration | None = None,
+    negative_amount_note: NoteNegativeAmountDeclaration | None = None,
     scheme_period_fields: DesignSchemePeriodFieldsDeclaration | None = None,
 ) -> tuple[tuple[ExportRecordDefinition, ...], tuple[ExportFieldDerivation, ...]]:
     records: list[ExportRecordDefinition] = []
@@ -361,15 +364,18 @@ def _render_records(
         record_derivations = tuple(
             with_scheme_period_part(
                 with_note_absent_fill(
-                    _normalise_field(
-                        field,
-                        transport_profile,
-                        render_profile,
-                        export_record_id=record_id,
-                        source_defects=source_defects,
-                        literal_notes=literal_notes,
-                        note_governed_amounts=note_governed_amounts,
-                        applicability_notes=applicability_notes,
+                    with_note_negative_amount(
+                        _normalise_field(
+                            field,
+                            transport_profile,
+                            render_profile,
+                            export_record_id=record_id,
+                            source_defects=source_defects,
+                            literal_notes=literal_notes,
+                            note_governed_amounts=note_governed_amounts,
+                            applicability_notes=applicability_notes,
+                        ),
+                        negative_amount_note,
                     ),
                     absent_fill_note,
                 ),
