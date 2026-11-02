@@ -1961,3 +1961,32 @@ image = "cadrumo-agent"
 arguments = ["-m", "cadrumo_agent.cli.main", "preflight", "--json"]
 ambient = { HOME = "/home/ada" }
 refusal = { code = "invocation_undeclared", subject = "cadrumo-agent" }
+
+# Shared operational defaults. These are presentation timings, not authority controls.
+[settings.shell_toast_ms]
+default = 2400
+minimum = 100
+maximum = 60000
+unit = "milliseconds"
+description = "How long the desktop shell keeps a transient notice visible."
+
+[settings.layout_save_delay_ms]
+default = 250
+minimum = 0
+maximum = 5000
+unit = "milliseconds"
+description = "Quiet interval before persisting workspace layout changes."
+
+[settings.focus_wish_ms]
+default = 1000
+minimum = 100
+maximum = 10000
+unit = "milliseconds"
+description = "How long a requested workspace view may wait to receive focus."
+
+[settings.ledger_toast_ms]
+default = 4000
+minimum = 100
+maximum = 60000
+unit = "milliseconds"
+description = "How long ledger operation feedback remains visible."

@@ -7,7 +7,7 @@
 //! roots never do. The channel stays in the identifier, so stable and preview never
 //! share a scope either. The joining grammar is declared by the transport contract.
 
-use crate::runtime_client::Endpoint;
+use crate::runtime_client::endpoint::Endpoint;
 use cadrumo_platform::INSTANCE_ROOT_SCOPE;
 use std::{io, path::Path};
 

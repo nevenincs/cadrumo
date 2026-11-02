@@ -4,7 +4,7 @@
 //! its own words. No operation's meaning lives here.
 use crate::agent::person::{HeldPerson, PersonEvent};
 use cadrumo_application::error::application::ApplicationError;
-use cadrumo_application::runtime_client::MAXIMUM_SECRET_BYTES;
+use cadrumo_application::runtime_client::framing::MAXIMUM_SECRET_BYTES;
 use serde::Serialize;
 use serde_json::{Value, json};
 use std::{sync::Mutex, time::Duration};
@@ -72,7 +72,7 @@ impl std::fmt::Debug for Wiped {
 }
 impl Drop for Wiped {
     fn drop(&mut self) {
-        cadrumo_application::person_operations::wipe(&mut self.0);
+        cadrumo_application::person_operations::sensitive::wipe(&mut self.0);
     }
 }
 
@@ -197,7 +197,8 @@ const PAYLOAD_HEADROOM: usize = 256;
 /// The longest payload, in bytes of compact JSON, the host sends: the
 /// document the native relay carries, less the headroom.
 pub(crate) const PAYLOAD_LIMIT: usize =
-    cadrumo_application::person_operations::PROJECTION_DOCUMENT_MAX_BYTES - PAYLOAD_HEADROOM;
+    cadrumo_application::person_operations::protocol::PROJECTION_DOCUMENT_MAX_BYTES
+        - PAYLOAD_HEADROOM;
 
 /// Refuses a submission the relay could not take, before anything is written
 /// to it. A request that is too large is the window's to make smaller; the
@@ -326,7 +327,7 @@ mod tests {
             assert_eq!(wiped_body(&refused, 64).unwrap_err().code, "invalid");
         }
         let mut read = read;
-        cadrumo_application::person_operations::wipe(&mut read.0);
+        cadrumo_application::person_operations::sensitive::wipe(&mut read.0);
         assert_eq!(read.0, json!({"amount": 0, "iban": ""}));
     }
 
@@ -339,7 +340,7 @@ mod tests {
             r#"{"password":"horse-staple"}"#.to_owned(),
         )
         .unwrap();
-        let (_, members) = cadrumo_application::person_operations::RELAY_ACTION_KEYS
+        let (_, members) = cadrumo_application::person_operations::relay::RELAY_ACTION_KEYS
             .iter()
             .find(|(action, _)| *action == "operation_secret_submit")
             .unwrap();
@@ -358,7 +359,7 @@ mod tests {
         assert_eq!(request.0["secret"], r#"{"password":"horse-staple"}"#);
         assert!(!format!("{request:?}").contains("horse-staple"));
         let mut request = request;
-        cadrumo_application::person_operations::wipe(&mut request.0);
+        cadrumo_application::person_operations::sensitive::wipe(&mut request.0);
         assert_eq!(request.0["secret"], "");
     }
 
