@@ -514,7 +514,10 @@ def is_rectificativa(invoice: Invoice) -> bool:
 
 
 def rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue) -> Invoice | None:
-    """Return the ordinary invoice the correction names, read by its kind, bucket, counterparty and number."""
+    """Return the ordinary invoice the correction names, read by its kind, bucket, counterparty and number.
+
+    A simplified invoice names no customer, so a correction naming one can still be its correction.
+    """
     return next(
         (
             invoice
@@ -522,7 +525,7 @@ def rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue) -> Inv
             if invoice.kind is rectificativa.kind
             and invoice.bucket_id == rectificativa.bucket_id
             and not is_rectificativa(invoice)
-            and invoice.counterparty_tax_id == rectificativa.counterparty_tax_id
+            and invoice.counterparty_tax_id in (None, rectificativa.counterparty_tax_id)
             and invoice.invoice_number == rectificativa.rectifies_invoice_number
         ),
         None,

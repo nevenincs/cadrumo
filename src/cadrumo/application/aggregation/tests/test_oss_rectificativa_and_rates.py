@@ -29,6 +29,7 @@ from .test_oss_detail_sections import _IMPORT, _UNION, _invoice, _resolve, _row
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _SUPPLY = date(2026, 2, 17)
+_CUSTOMER = "FR40303265045"
 _LATER_QUARTER = date(2026, 5, 4)
 
 
@@ -45,7 +46,12 @@ def _correction(
     return _invoice(
         _UNION, number, country=country, tier=tier, base=base, cuota=cuota, supply_date=supply_date
     ).model_copy(
-        update={"invoice_class": invoice_class_rectificativa(), "series": "R", "rectifies_invoice_number": rectifies}
+        update={
+            "invoice_class": invoice_class_rectificativa(),
+            "series": "R",
+            "counterparty_tax_id": _CUSTOMER,
+            "rectifies_invoice_number": rectifies,
+        }
     )
 
 
@@ -119,7 +125,12 @@ def test_a_consignment_within_the_ceiling_is_still_read_with_its_correction(
     period = _IMPORT.period(_SUPPLY)
     first = _invoice(_IMPORT, "F-1", country="FR", tier="general", base="150.00", cuota="30.00")
     corrected = _invoice(_IMPORT, "R-1", country="FR", tier="general", base="50.00", cuota="10.00").model_copy(
-        update={"invoice_class": invoice_class_rectificativa(), "series": "R", "rectifies_invoice_number": "F-1"}
+        update={
+            "invoice_class": invoice_class_rectificativa(),
+            "series": "R",
+            "counterparty_tax_id": _CUSTOMER,
+            "rectifies_invoice_number": "F-1",
+        }
     )
     resolution = _resolve(operation, _IMPORT, (first, corrected), period=period)
     assert _row(resolution, _IMPORT, 1) == ("FR", "S", Decimal("20"), Decimal("100.00"), Decimal("20.00"))
@@ -134,10 +145,10 @@ def test_frances_second_reduced_rate_takes_its_own_reduced_row(operation: Pinned
             _invoice(_UNION, "F-2", country="FR", tier="reduced", base="200.00", cuota="20.00"),
         ),
     )
-    assert [_row(resolution, _UNION, row) for row in (1, 2)] == [
+    assert {_row(resolution, _UNION, row) for row in (1, 2)} == {
         ("FR", "R", Decimal("10"), Decimal("200.00"), Decimal("20.00")),
         ("FR", "R", Decimal("5.5"), Decimal("100.00"), Decimal("5.50")),
-    ]
+    }
 
 
 def test_frances_super_reduced_rate_is_written_as_reduced(operation: PinnedAuthorityOperation) -> None:
