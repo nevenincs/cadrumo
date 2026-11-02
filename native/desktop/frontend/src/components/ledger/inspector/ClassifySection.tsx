@@ -38,6 +38,7 @@ import {
   storedFieldValue,
   type StagedAction,
 } from "../../../shell/ledgerStage";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { fieldName, refusalText } from "../editing/editingWords";
 import {
@@ -778,6 +779,7 @@ function AllocateForm({
 }) {
   const t = useStrings();
   const formId = useId();
+  const ratioLimit = useTextLimit("usage_ratio_id");
   const { row, onStage } = scope;
   const id = row.transaction.transaction_id;
   const staged = actions.find(
@@ -875,7 +877,7 @@ function AllocateForm({
           id={`${formId}-ratio`}
           controlSize="sm"
           value={ratio}
-          maxLength={128}
+          maxLength={ratioLimit ?? undefined}
           disabled={lock !== null}
           onChange={setRatio}
           suggestions={ratioOptions}

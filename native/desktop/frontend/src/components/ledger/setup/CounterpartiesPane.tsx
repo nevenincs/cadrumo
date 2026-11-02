@@ -8,6 +8,7 @@ import { Icon } from "@/components/ui/icon";
 import { facts } from "@/shell/compose";
 import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
 import type { LedgerCounterpartyResult } from "../../../shell/ledgerSetup";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing } from "../WritePause";
 import { formatTime } from "../../../shared/dateFormats";
@@ -44,6 +45,8 @@ const TWO_LETTERS = /^[A-Za-z]{2}$/;
  */
 export function CounterpartiesPane({ port, locale }: SetupProps) {
   const t = useStrings();
+  const taxIdLimit = useTextLimit("counterparty_tax_id");
+  const noteLimit = useTextLimit("counterparty_note");
   const [taxId, setTaxId] = useState("");
   const [viewed, setViewed] =
     useState<SetupCall<LedgerCounterpartyResult> | null>(null);
@@ -168,7 +171,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
               onChange={setTaxId}
               invalid={control.invalid}
               describedBy={control.describedBy}
-              maxLength={256}
+              maxLength={taxIdLimit ?? undefined}
               {...taxIds}
               onPick={(picked) => void view(picked.value)}
             />
@@ -278,7 +281,7 @@ export function CounterpartiesPane({ port, locale }: SetupProps) {
                   onChange={setNote}
                   invalid={control.invalid}
                   describedBy={control.describedBy}
-                  maxLength={4096}
+                  maxLength={noteLimit ?? undefined}
                 />
               )}
             </EditorField>

@@ -9,6 +9,7 @@ import type { Suggestion } from "@/components/ui/suggestions";
 import type { LedgerRow } from "../../../shell/ledger";
 import { takesChanges } from "../../../shell/ledgerContract";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
+import { textLimit } from "../../../shell/ledgerLimits";
 import {
   effectiveFacts,
   storedFieldValue,
@@ -264,17 +265,24 @@ export function stagedField(
                     : t("desktop.ledger.inspector.refused.currency"),
               };
         }
-        if (kind === "token")
-          return text.length <= 128
+        if (kind === "token") {
+          const most = textLimit("classify_token");
+          if (most === null)
+            return {
+              kind: "refused",
+              message: refusalText(t, { key: "limits_unavailable", raw }),
+            };
+          return text.length <= most
             ? { kind: "value", value: text }
             : {
                 kind: "refused",
                 message: refusalText(t, {
                   key: "too_long",
                   raw,
-                  limit: 128,
+                  limit: most,
                 }),
               };
+        }
         const parsed = parseEntry(kind, field, raw, labels);
         if (parsed.kind === "refused")
           return {

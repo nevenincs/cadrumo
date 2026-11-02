@@ -24,6 +24,7 @@ import {
 import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { useWritePause, WriteHold } from "../WritePause";
 import { fieldName, refusalText, valueText } from "../editing/editingWords";
@@ -86,6 +87,7 @@ export function ModelSuggestion({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const reasonLimit = useTextLimit("event_payload_value");
   const { held: paused } = useWritePause();
   const id = row.transaction.transaction_id;
   const fieldId = useId();
@@ -444,7 +446,7 @@ export function ModelSuggestion({
               id={`${fieldId}-reason`}
               controlSize="sm"
               autoFocus
-              maxLength={500}
+              maxLength={reasonLimit ?? undefined}
               value={rejecting}
               onChange={setRejecting}
             />

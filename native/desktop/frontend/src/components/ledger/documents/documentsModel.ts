@@ -32,13 +32,14 @@ import {
   sameDecimal,
   type Parsed,
 } from "../../../shell/ledgerGrammar";
-import { ledgerLimits } from "../../../shell/ledgerLimits";
+import { ledgerLimits, textLimit } from "../../../shell/ledgerLimits";
 import { parsePoints } from "../setup/setupModel";
 
-/** The longest label the confirmation and evidence contracts take. */
-export const LABEL_MAX = 1024;
-/** The longest note they take. */
-export const NOTE_MAX = 16_384;
+/** The longest label the window lets a typed correction or a supplied
+ * finding value take. The confirmation request takes up to 2048, so this is
+ * narrower than its owner and is kept as it was until that is ruled on; an
+ * evidence record's label and note are served instead. */
+const CONFIRMATION_LABEL_MAX = 1024;
 
 /** What a field holds, which decides how a typed value is read. */
 export type FieldShape = "text" | "date" | "amount" | "percent" | "currency";
@@ -66,13 +67,25 @@ export function fieldWidth(shape: FieldShape | "note", name = false): string {
  * the cell's padding, so a value is always read and edited in full. */
 export const VALUE_COLUMN_MIN_PX = 228;
 
-const SPECS: Record<Exclude<FieldShape, "percent"> | "note", FieldSpec> = {
-  text: { kind: "text", maxLength: LABEL_MAX },
+const SPECS: Record<"date" | "amount" | "currency", FieldSpec> = {
   date: { kind: "date" },
   amount: { kind: "money" },
   currency: { kind: "currency" },
-  note: { kind: "notes", maxLength: NOTE_MAX },
 };
+
+/** Where a field is typed: in the reading table, whose corrections go to the
+ * confirmation, or on a kept evidence record, whose limits are served. */
+export type EntryScope = "reading" | "record";
+
+function textSpec(shape: "text" | "note", scope: EntryScope): FieldSpec {
+  if (shape === "note")
+    return { kind: "notes", maxLength: textLimit("evidence_note") };
+  return {
+    kind: "text",
+    maxLength:
+      scope === "record" ? textLimit("evidence_label") : CONFIRMATION_LABEL_MAX,
+  };
+}
 
 /** The scale a document's rate is typed on, as served; null where it is not. */
 function percentUnit(field: string | undefined) {
@@ -98,11 +111,13 @@ function readRate(field: string, raw: string): Parsed<string> {
 export function entrySpec(
   shape: FieldShape | "note",
   field?: string,
+  scope: EntryScope = "reading",
 ): FieldSpec {
   if (field === "counterparty_tax_id") return { kind: "taxId" };
+  if (shape === "text" || shape === "note") return textSpec(shape, scope);
   if (shape !== "percent") return SPECS[shape];
   const unit = percentUnit(field);
-  return unit === null ? SPECS.text : { kind: "percent", unit };
+  return unit === null ? textSpec("text", scope) : { kind: "percent", unit };
 }
 
 /** A stored value as an editor holds it: a figure or a rate is seeded through
@@ -252,7 +267,7 @@ export function readCorrection(
 ): ReadCorrection {
   switch (CORRECTION_SHAPES[field]) {
     case "text":
-      return parseLine(raw, LABEL_MAX);
+      return parseLine(raw, CONFIRMATION_LABEL_MAX);
     case "date":
       return parseIsoDate(raw);
     case "amount": {
@@ -360,7 +375,7 @@ export function resolutionOf(
       ? { blocker_id: blocker.blocker_id, action: "attest", value: null, note }
       : null;
   const value = answer.value.trim();
-  if (!value || value.length > LABEL_MAX) return null;
+  if (!value || value.length > CONFIRMATION_LABEL_MAX) return null;
   if (
     answer.action === "choose_candidate" &&
     !(blocker.candidates ?? []).some((candidate) => candidate.value === value)
@@ -581,13 +596,17 @@ function readRecordField(
   raw: string,
 ): Parsed<string | null> {
   const shape = EVIDENCE_SHAPES[field];
-  if (shape === "note")
-    return raw.length > NOTE_MAX
-      ? { kind: "refused", refusal: { key: "too_long", raw, limit: NOTE_MAX } }
+  if (shape === "note") {
+    const most = textLimit("evidence_note");
+    if (most === null)
+      return { kind: "refused", refusal: { key: "limits_unavailable", raw } };
+    return raw.length > most
+      ? { kind: "refused", refusal: { key: "too_long", raw, limit: most } }
       : { kind: "value", value: raw };
+  }
   const parsed =
     shape === "text"
-      ? parseLine(raw, LABEL_MAX)
+      ? parseLine(raw, textLimit("evidence_label"))
       : shape === "date"
         ? parseIsoDate(raw)
         : shape === "percent"

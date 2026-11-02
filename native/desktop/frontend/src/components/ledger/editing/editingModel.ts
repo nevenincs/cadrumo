@@ -21,7 +21,9 @@ import {
   type GrammarRefusalKey,
   type Parsed,
 } from "../../../shell/ledgerGrammar";
+import { textLimit } from "../../../shell/ledgerLimits";
 import type { LedgerPlan } from "../../../shell/ledgerPlan";
+import type { TextLimitName } from "../../../shell/ledgerSetup";
 import type {
   SinceReadConflict,
   StepOutcome,
@@ -88,12 +90,10 @@ export const EDIT_KINDS: Partial<Record<ColumnId, EditKind>> = {
   notes: "text",
 };
 
-/** The longest text each one-line field takes, from the update contract. */
-const TEXT_LIMITS: Partial<Record<StageField, number>> = {
-  description: 4096,
-  counterparty: 4096,
-  notes: 4096,
-  group_label: 64,
+/** Which served limit bounds a one-line field: a correction's text, but for
+ * the group label, which has its own. */
+const TEXT_LIMITS: Partial<Record<StageField, TextLimitName>> = {
+  group_label: "group_label",
 };
 
 /** Points typed in a percentage field, said as the grammar reads a percent
@@ -106,9 +106,10 @@ export const pointsText = (held: string): string =>
 export const typedPoints = (said: string): string =>
   said.replace(/\s*%\s*$/, "");
 
-/** The most a text field takes. */
-export const textLimitOf = (field: StageField | DraftField): number =>
-  TEXT_LIMITS[field as StageField] ?? 4096;
+/** The most a text field takes, as the ledger serves it, or null where it
+ * has served none. */
+export const textLimitOf = (field: StageField | DraftField): number | null =>
+  textLimit(TEXT_LIMITS[field as StageField] ?? "entry_text");
 
 /** The columns whose change gives a movement a new id. */
 export const IDENTITY_COLUMNS: ReadonlySet<ColumnId> = new Set([

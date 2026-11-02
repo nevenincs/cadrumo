@@ -37,7 +37,10 @@ function byShape(
 export function checkField(field: FieldSpec, raw: string): Parsed<string> {
   switch (field.kind) {
     case "text":
-      return parseLine(raw, field.maxLength ?? LINE_LIMIT);
+      return parseLine(
+        raw,
+        field.maxLength === undefined ? LINE_LIMIT : field.maxLength,
+      );
     case "notes":
     case "choice":
       return raw.trim() === ""
