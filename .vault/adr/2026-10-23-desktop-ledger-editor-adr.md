@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-ledger-editor'
 date: '2026-10-23'
-modified: '2026-11-01'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:3acaad80a5eaac28a90cc2479e6ddad629171a5e0eb15ff713341923db8e2459'
+body_hash: 'sha256:54e5aaa88bbfce827b72d0338991ea39c45b4685a7d18b571da3410e13ee9d7c'
 related:
   - "[[2026-10-06-desktop-shell-capabilities-shell-profile-reads-adr]]"
   - "[[2026-10-04-desktop-shell-adr]]"
