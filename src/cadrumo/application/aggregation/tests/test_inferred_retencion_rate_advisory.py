@@ -40,7 +40,6 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
@@ -50,7 +49,6 @@ from ....core.aggregation import LedgerWithholdingDerivation
 from ....core.period import Period
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.transactions.retencion_facts import (
     load_retencion_actividades_rates,
     statutory_activity_retencion_rates,
@@ -64,6 +62,7 @@ from ..renta_income_ledger import RentaIncomeObservation, aggregate_renta_income
 from .renta_income_aggregation_support import (
     M130_INGRESOS_CASILLA,
     M130_MODELO,
+    csv_income_raw,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
@@ -80,27 +79,6 @@ _EFFECTIVE_DATE = date(2024, 3, 15)
 _DEFAULT_IVA_CATEGORY = IvaCategory("domestic_general")
 
 
-def _raw(provider_id: str, *, amount: Decimal) -> RawTransaction:
-    return RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=date(2024, 3, 15),
-        value_date=date(2024, 3, 15),
-        amount=amount,
-        currency="EUR",
-        counterparty="Cliente SA",
-        description=f"income row {provider_id}",
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="b" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.CSV,
-            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
-            provider_name="CSV provider",
-        ),
-        raw_fields={"Concepto": provider_id},
-    )
-
-
 def _income_row(
     provider_id: str,
     *,
@@ -110,7 +88,7 @@ def _income_row(
 ) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": _raw(provider_id, amount=Decimal(cash)),
+            "raw": csv_income_raw(provider_id, amount=Decimal(cash), value_date=_EFFECTIVE_DATE),
             "direction": TransactionDirection.INCOMING,
             "group_label": None,
             "source_jurisdiction": "ES",
