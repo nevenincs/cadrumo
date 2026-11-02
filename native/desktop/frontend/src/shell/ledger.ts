@@ -400,6 +400,7 @@ export type LedgerTransaction = {
   booked_date: string;
   value_date: string | null;
   operation_date: string | null;
+  accrual_date: string | null;
   amount: string;
   currency: string;
   direction: string;
@@ -623,6 +624,7 @@ export type LedgerAddRequest = {
   description: string;
   value_date?: string | null;
   operation_date?: string | null;
+  accrual_date?: string | null;
   currency?: string;
   counterparty?: string | null;
   business_classification?: string;

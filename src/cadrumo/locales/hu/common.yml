@@ -2493,6 +2493,7 @@ desktop:
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:
+      accrual_date: IRPF szerinti elszámolás dátuma
       art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
       attachment_ids: Mellékletek
       booked_date: Könyvelési dátum
@@ -7269,6 +7270,7 @@ tui:
         created: 'Hozzáadva: {entry}. Átnézési állapot: {status}.'
         edit_again: Szerkesztés újra
         field:
+          accrual_date: IRPF szerinti elszámolás dátuma (ÉÉÉÉ-HH-NN)
           amount: Összeg, előjel nélkül
           art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
           booked_date: Könyvelési dátum (ÉÉÉÉ-HH-NN)
@@ -8279,6 +8281,7 @@ tui:
       totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Tétel részletei
       transaction_field:
+        accrual_date: IRPF szerinti elszámolás dátuma (ÉÉÉÉ-HH-NN, nem kötelező)
         amount: Összeg (előjel nélkül)
         booked_date: Könyvelés dátuma (ÉÉÉÉ-HH-NN)
         counterparty: Partner (nem kötelező)

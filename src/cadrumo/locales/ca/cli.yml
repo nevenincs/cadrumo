@@ -3154,6 +3154,9 @@ cli:
     add:
       account_help: Compte bancari propi al qual pertany el moviment, pel seu id (p.
         ex. acc-01).
+      accrual_date_help: Data en què l'ingrés o la despesa es merita a la Renda segons
+        l'art. 14 LIRPF i l'art. 7 RIRPF (AAAA-MM-DD). No canvia el període de l'IVA.
+        Si l'omets no es desa cap data.
       actor_help: El teu nom, registrat a l'esdeveniment del bucket
       amount_help: Import de la transacció en la moneda de la transacció (decimal,
         p. ex. 1200.50).
@@ -3514,6 +3517,7 @@ cli:
       kind_help: Només aquest tipus de valor; repeteix-lo per a diversos. Sense això,
         tots els tipus.
     labels:
+      accrual_date: Data de meritació a la Renda
       active: Actives
       amount: Import
       archived: Arxivades
@@ -3718,6 +3722,8 @@ cli:
     update:
       account_help: Vincula l'entrada a aquest compte bancari propi, pel seu id (p.
         ex. acc-01).
+      accrual_date_help: Nova data en què l'ingrés o la despesa es merita a la Renda
+        segons l'art. 14 LIRPF i l'art. 7 RIRPF (AAAA-MM-DD).
       amount_help: Nova magnitud d'import no negativa de la transacció
       counterparty_help: Nova descripció de la contrapart
       currency_help: Nou codi de moneda ISO 4217

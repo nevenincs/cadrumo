@@ -198,6 +198,13 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     #: states it. Absent means the IVA placement falls back to the bank movement
     #: date and says so. Never derived from a bank date.
     operation_date: date | None = None
+    #: The LIRPF art. 14 / RIRPF art. 7 date on which this row's income or
+    #: expense accrues for Renta, as the operator states it. Never derived from
+    #: a bank date, an invoice or ``operation_date``. Distinct from
+    #: ``operation_date`` (the LIVA art. 75 IVA devengo) because the two can
+    #: differ: an advance moves IVA at payment while the income accrues on
+    #: delivery. It moves no IVA period.
+    accrual_date: date | None = None
     amount: Decimal
     currency: IsoCurrencyCode = DEFAULT_CURRENCY
     direction: TransactionDirection
@@ -296,6 +303,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
         forbidden = {
             "category_id": self.category_id,
             "operation_date": self.operation_date,
+            "accrual_date": self.accrual_date,
             "iva_category": self.iva_category,
             "deduction_fact_kind": self.deduction_fact_kind,
             "investment_asset_id": self.investment_asset_id,
@@ -326,6 +334,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     booked_date: date | None = None
     value_date: date | None = None
     operation_date: date | None = None
+    accrual_date: date | None = None
     amount: Decimal | None = None
     # The create command validates this and the patch did not, so an operator
     # could not CREATE a row with a malformed currency but could EDIT one into
@@ -408,6 +417,7 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     booked_date: IsoDateText
     value_date: str | None = None
     operation_date: str | None = None
+    accrual_date: str | None = None
     amount: str = Field(min_length=1)
     currency: IsoCurrencyCode
     direction: str = Field(min_length=1)
@@ -958,6 +968,7 @@ class LedgerExportRow(BaseModel):
     booked_date: IsoDateText
     value_date: str = ""
     operation_date: str = ""
+    accrual_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
     currency: IsoCurrencyCode
@@ -1003,7 +1014,7 @@ class LedgerExportRow(BaseModel):
             raise ValueError("must be an ISO-8601 date")
         return value
 
-    @field_validator("value_date", "operation_date")
+    @field_validator("value_date", "operation_date", "accrual_date")
     @classmethod
     @pydantic_validation_boundary
     def _validate_optional_iso_date(cls, value: str) -> str:

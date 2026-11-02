@@ -2935,6 +2935,9 @@ cli:
       plan_minimum_incomplete: incomplete
     add:
       account_help: Own bank account the movement belongs to, by its id (e.g. acc-01).
+      accrual_date_help: Date the income or expense accrues for Renta under LIRPF
+        art. 14 and RIRPF art. 7 (YYYY-MM-DD). It never moves the IVA period. Leave
+        it out and none is recorded.
       actor_help: Your name, recorded on the bucket event
       amount_help: Transaction amount in the transaction currency (decimal, e.g. 1200.50).
       art_104_tres_exclusion_help: LIVA art. 104.Tres denominator exclusion that you
@@ -3279,6 +3282,7 @@ cli:
       kind_help: Only this kind of value; repeat it for several. Without it, every
         kind.
     labels:
+      accrual_date: Accrual date
       active: Active
       amount: Amount
       archived: Archived
@@ -3480,6 +3484,8 @@ cli:
       transaction_id_help: Id of the transaction to inspect
     update:
       account_help: Bind the entry to this own bank account, by its id (e.g. acc-01).
+      accrual_date_help: New date the income or expense accrues for Renta under LIRPF
+        art. 14 and RIRPF art. 7 (YYYY-MM-DD).
       amount_help: New non-negative amount magnitude (full replace)
       counterparty_help: New counterparty descriptor
       currency_help: New three-letter ISO 4217 currency code

@@ -477,6 +477,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.draft.remove",
         "desktop.ledger.draft.required",
         "desktop.ledger.draft.untitled",
+        "desktop.ledger.field.accrual_date",
         "desktop.ledger.field.art_104_tres_exclusion",
         "desktop.ledger.field.attachment_ids",
         "desktop.ledger.field.booked_date",

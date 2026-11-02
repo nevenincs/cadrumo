@@ -257,6 +257,9 @@ class LedgerEvidenceRow(BaseModel):
     investment_asset_id: str | None = None
     counterparty_identification_state: str | None = None
     operation_date: str | None = None
+    # The operator-stated LIRPF art. 14 accrual date, present from field-set
+    # version 7; a row bundled earlier carries ``None`` and loads unchanged.
+    accrual_date: str | None = None
     deduction_evidence_digest: str | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None

@@ -799,6 +799,7 @@ def command_from_patch(
         booked_date=booked_date,
         value_date=patch.value_date if "value_date" in patch_fields else raw.value_date,
         operation_date=patch.operation_date if "operation_date" in patch_fields else current.operation_date,
+        accrual_date=patch.accrual_date if "accrual_date" in patch_fields else current.accrual_date,
         amount=amount,
         currency=currency,
         direction=direction,

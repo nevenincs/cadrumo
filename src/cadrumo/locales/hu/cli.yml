@@ -3124,6 +3124,9 @@ cli:
     add:
       account_help: A saját bankszámla, amelyhez a mozgás tartozik, azonosítója szerint
         (pl. acc-01).
+      accrual_date_help: Az a nap, amikor a bevétel vagy a költség a személyi jövedelemadóban
+        elszámolandó (LIRPF 14. cikk, RIRPF 7. cikk; ÉÉÉÉ-HH-NN). Nem módosítja az
+        áfaidőszakot. Ha kihagyod, nem rögzítünk dátumot.
       actor_help: A neved, amelyet a bucket-eseményen rögzítünk.
       amount_help: Tranzakciós összeg a tranzakció pénznemében (tizedes, pl. 1200.50).
       art_104_tres_exclusion_help: Az általad megadott LIVA art. 104.Tres nevezői
@@ -3477,6 +3480,7 @@ cli:
         a legfrissebbekkel kezdve.
       kind_help: Csak ez az értéktípus; többhöz ismételd meg. Nélküle minden típus.
     labels:
+      accrual_date: IRPF szerinti elszámolás dátuma
       active: Aktív
       amount: Összeg
       archived: Archivált
@@ -3689,6 +3693,8 @@ cli:
     update:
       account_help: A bejegyzés hozzárendelése ehhez a saját bankszámlához, azonosítója
         szerint (pl. acc-01).
+      accrual_date_help: A bevétel vagy a költség új elszámolási napja a személyi
+        jövedelemadóban (LIRPF 14. cikk, RIRPF 7. cikk; ÉÉÉÉ-HH-NN).
       amount_help: Új nem negatív összegmagnitúdó (teljes csere).
       counterparty_help: Új szerződő fél leírása.
       currency_help: Új háromjegyű ISO 4217 pénznemkód.

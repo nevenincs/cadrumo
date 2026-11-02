@@ -196,6 +196,7 @@ export const FIELDS_LOCKED_BY_DIRECTION: Readonly<
   Record<string, readonly string[]>
 > = {
   INTERNAL_TRANSFER: [
+    "accrual_date",
     "business_pct",
     "category_id",
     "deduction_fact_kind",
@@ -326,6 +327,7 @@ export const LEDGER_UPDATE_FIELDS = [
   "booked_date",
   "value_date",
   "operation_date",
+  "accrual_date",
   "amount",
   "direction",
   "currency",

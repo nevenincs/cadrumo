@@ -61,7 +61,7 @@ from .renta_imputation import (
     ActivityImputationCriterion,
     ImputationCriteria,
     ImputationUnresolved,
-    impute_row,
+    impute_ledger_row,
     invoice_accrual_date,
     linked_accrual_date,
     rows_left_out_summary,
@@ -1300,10 +1300,10 @@ def _imputed_income_date_or_issue(
     cash = transaction.raw.value_date or transaction.raw.booked_date
     invoice = None if transaction.invoice_id is None else invoices.get(transaction.invoice_id)
     accrual = linked_accrual_date(invoice, kind=InvoiceKind.ISSUED)
-    in_window = cumulative_start <= cash <= cumulative_end or (
-        accrual is not None and cumulative_start <= accrual <= cumulative_end
+    in_window = any(
+        on is not None and cumulative_start <= on <= cumulative_end for on in (cash, accrual, transaction.accrual_date)
     )
-    imputed = impute_row(cash, accrual, criteria)
+    imputed = impute_ledger_row(transaction, invoice, kind=InvoiceKind.ISSUED, criteria=criteria)
     # A capital subsidy follows its asset's amortization under either criterion, and no
     # ledger row carries a schedule: AEAT Manual Renta, ch. 6, citing STS 398/2022.
     if str(transaction.concepto_ingreso) == _CAPITAL_SUBSIDY_CONCEPT:

@@ -556,6 +556,14 @@ class Transaction(BaseModel):
             movement date stands as the operation date -- correct
             whenever an operation is settled on the day it occurs, which
             is the ordinary case.
+        accrual_date: The LIRPF art. 14 / RIRPF art. 7 date on which the
+            row's income or expense accrues for Renta, exactly as the
+            operator states it. It is never derived from the bank date,
+            an invoice or ``operation_date``. It is distinct from
+            ``operation_date``, the LIVA art. 75 IVA devengo, because the
+            two can differ: an advance moves IVA at payment while the
+            income accrues on delivery. It does not move any IVA period.
+            ``None`` means the operator has stated no accrual date.
         cash_accounting_payment_evidence: Total or partial
             collection/payment events that settle affected base/cuota
             under LIVA arts. 163 terdecies / quinquiesdecies.
@@ -636,6 +644,7 @@ class Transaction(BaseModel):
     counterparty_identification_state: EUMemberState | None = None
     cash_accounting_treatment: IvaCashAccountingTreatment = Field(default_factory=default_iva_cash_accounting_treatment)
     operation_date: date | None = None
+    accrual_date: date | None = None
     cash_accounting_payment_evidence: tuple[IvaCashAccountingPaymentEvidence, ...] = ()
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
