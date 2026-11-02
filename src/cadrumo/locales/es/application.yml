@@ -828,6 +828,9 @@ application:
   live:
     borrador:
       errors:
+        binding_keys_not_admitted: 'Este borrador guardado tiene valores con claves
+          que las definiciones del modelo no admiten, así que no se puede usar; vuelve
+          a importar el documento: %{bindings}.'
         binding_value_key_blank: Las claves de los valores del borrador no pueden
           estar vacías.
         bucket_id_blank: El identificador del bucket del borrador no puede estar vacío.

@@ -616,6 +616,9 @@ cli:
       borrador:
         app_help: Snapshots de borrador del modelo 100
         filing_year_help: Ejercicio fiscal (p. ej. 2024)
+        import_casilla_owner_ambiguous: 'Más de un enlace de las definiciones del
+          modelo podría recoger estas casillas impresas, así que no se importó nada:
+          %{casillas}.'
         import_coverage_absent: El analizador no devolvió cobertura de extracción
           para el perfil de las definiciones del modelo; no se importó nada.
         import_ejercicio_mismatch: El ejercicio impreso en el PDF no coincide con

@@ -575,6 +575,8 @@ cli:
       borrador:
         app_help: Modelo 100 borrador snapshots
         filing_year_help: Filing year (e.g. 2024)
+        import_casilla_owner_ambiguous: 'More than one binding of the modelo definitions
+          could hold these printed casillas, so nothing was imported: %{casillas}.'
         import_coverage_absent: The parser returned no extraction coverage for the
           modelo definitions' profile; nothing was imported.
         import_ejercicio_mismatch: The tax year printed on the PDF does not match
