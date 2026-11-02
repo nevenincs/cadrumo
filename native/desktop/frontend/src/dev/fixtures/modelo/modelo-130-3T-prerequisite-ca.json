@@ -1596,9 +1596,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "0919302f638829c8c7bf4483f355b3af7845fdee3860cb70f9508fc4a1bb7c8f",
+      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "57d9ab030b9861527117df250660488031eb2fc941547097d945db79feb547eb",
+      "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1622,7 +1622,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "c2de1e743c21145b11a0d8d342617f90404b240711fcfadd721600d8163ac565"
+        "schema_fingerprint": "81d858dbdb0c3ec407c65875b61e6e19bfac3277ea0e99a220e9aa2e783e7ee5"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1936,9 +1936,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T01:34:36.314594Z",
-    "expires_at": "2026-11-02T01:39:36.314594Z",
-    "baseline_id": "273aef447a581c36640ebd10929db6687687019632c01582179f7305a1adc2c9"
+    "issued_at": "2026-11-02T09:09:06.303933Z",
+    "expires_at": "2026-11-02T09:14:06.303933Z",
+    "baseline_id": "a0a751781e6a27e3c725ce0e63f025c520be1baefea5c6dd1037e6a131109276"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

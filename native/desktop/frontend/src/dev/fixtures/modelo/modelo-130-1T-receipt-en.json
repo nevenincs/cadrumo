@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+      "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -119,7 +119,7 @@
                     "label": { "text": "Income", "disclosure": "localized" },
                     "help": "Total cumulative business income for the tax year.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "12000.00" },
+                    "value": { "kind": "decimal", "text": "0" },
                     "origin": "imported",
                     "editability": "locked_source",
                     "not_writable_reason": null,
@@ -162,11 +162,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "01" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "From your records",
                     "origin_explanation": null,
                     "editability_words": "It follows your records; correct it there and recalculate.",
-                    "value_text": "12,000.00 €",
+                    "value_text": "0.00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -174,7 +174,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "3857746d964868b8e4b0973c9763f89c55b35e18b781ddbcaecf16af845ae55e"
+                    "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
                   }
                 },
                 {
@@ -253,7 +253,7 @@
                     "label": { "text": "Net yield", "disclosure": "localized" },
                     "help": "Net yield from direct-estimation economic activities, calculated as income minus expenses.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "12000.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -280,11 +280,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "03" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculated",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo calculates it from other boxes.",
-                    "value_text": "12,000.00 €",
+                    "value_text": "0.00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -292,7 +292,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "e1331da9df525c1a8cbd4419fbe5b48383a8473a15848cdd1e2c3e3a44dc2c0b"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -307,7 +307,7 @@
                     },
                     "help": "Fractional payment amount for direct-estimation activities before prior payments and withholdings.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -342,11 +342,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "04" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculated",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo calculates it from other boxes.",
-                    "value_text": "2,400.00 €",
+                    "value_text": "0.00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -354,7 +354,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -525,7 +525,7 @@
                     },
                     "help": "Partial Section I result after subtracting prior payments and withholdings from the direct-estimation fractional payment.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -550,11 +550,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "07" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculated",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo calculates it from other boxes.",
-                    "value_text": "2,400.00 €",
+                    "value_text": "0.00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -562,7 +562,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
               ],
@@ -863,7 +863,7 @@
                     },
                     "help": "Sum of the partial results from Sections I and II.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -888,11 +888,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "12" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculated",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo calculates it from other boxes.",
-                    "value_text": "2,400.00 €",
+                    "value_text": "0.00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -900,7 +900,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -969,7 +969,7 @@
                     },
                     "help": "Amount remaining after applying the net-yield reduction.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -994,11 +994,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "14" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculated",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo calculates it from other boxes.",
-                    "value_text": "2,400.00 €",
+                    "value_text": "0.00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1006,7 +1006,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -1138,7 +1138,7 @@
                     },
                     "help": "Difference after applying prior-quarter negative results and any main-residence deduction.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -1163,11 +1163,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "17" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculated",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo calculates it from other boxes.",
-                    "value_text": "2,400.00 €",
+                    "value_text": "0.00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1175,7 +1175,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -1242,7 +1242,7 @@
                     },
                     "help": "Final Modelo 130 amount payable after all deductions and prior self-assessments.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -1267,11 +1267,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "19" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculated",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo calculates it from other boxes.",
-                    "value_text": "2,400.00 €",
+                    "value_text": "0.00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1279,7 +1279,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
               ],
@@ -1471,12 +1471,24 @@
       "issues": [],
       "calculation_notes": [
         {
-          "reason": "unresolved_retencion_substrate",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
+          "reason": "advisory_binding_value",
+          "attention": "info",
+          "casilla_id": "06",
+          "box": "06",
           "withholds_filing": false,
-          "fact": null,
+          "fact": {
+            "sentence": "advisory_value_proven_zero",
+            "values": [
+              ["amount", "0"],
+              [
+                "binding",
+                "modelo-130-actividad-economica-retenciones-cumulative"
+              ],
+              ["box", "06"]
+            ],
+            "element_refs": [],
+            "row_refs": []
+          },
           "element_names": [],
           "message": null
         }
@@ -1560,9 +1572,9 @@
       "result": {
         "casilla_id": "19",
         "box": "19",
-        "value": "2400.00",
-        "direction": "to_pay",
-        "disposition": "I",
+        "value": "0.00",
+        "direction": "nil",
+        "disposition": "N",
         "election_may_change": false
       },
       "deadline": {
@@ -1574,7 +1586,7 @@
         "days_overdue": 196
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-11-02T01:35:15.579783Z" },
+      "filing": { "recorded_at": "2026-11-02T09:09:38.270719Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF instalment payment, direct assessment",
@@ -1590,9 +1602,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "0919302f638829c8c7bf4483f355b3af7845fdee3860cb70f9508fc4a1bb7c8f",
+      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "57d9ab030b9861527117df250660488031eb2fc941547097d945db79feb547eb",
+      "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1616,7 +1628,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "c2de1e743c21145b11a0d8d342617f90404b240711fcfadd721600d8163ac565"
+        "schema_fingerprint": "81d858dbdb0c3ec407c65875b61e6e19bfac3277ea0e99a220e9aa2e783e7ee5"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1625,9 +1637,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "18288453972b89d0ade4bb6520cb95e9c0c02ff47d22c01839a47583cb261114",
-    "calculation_head_digest": "7967c2ca82e07afae1f098af2cae1ad7f4be857cb24949fefa7fcefd156f9a82",
-    "current_calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+    "work_unit_record_digest": "c7c22a1103a592ae7e08d32c45a25acc258307a68504b8c26d45f6a4ef15b294",
+    "calculation_head_digest": "32b290015ce5dee36c58de39d677bc90c6ad053861f185cf0ddf1ec033011886",
+    "current_calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1930,9 +1942,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T01:35:33.962188Z",
-    "expires_at": "2026-11-02T01:40:33.962188Z",
-    "baseline_id": "28977f48b6a91c0df8c2ad445c93bb0396733265adb22335387c50ae3192df1a"
+    "issued_at": "2026-11-02T09:10:02.951065Z",
+    "expires_at": "2026-11-02T09:15:02.951065Z",
+    "baseline_id": "ac9fe2e411de381c9b604cfad671d4df8be238fe847e8ede77e85df531992396"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1941,7 +1953,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-11-02T01:35:15.579783Z",
+    "recorded_at": "2026-11-02T09:09:38.270719Z",
     "file_created_at": null,
     "receipt_to_add": false
   },
@@ -1952,12 +1964,12 @@
       "casilla_id": "19",
       "box": "19",
       "settles": true,
-      "direction": "to_pay",
-      "words": "To pay",
-      "amount_text": "2,400.00 €",
-      "text": "To pay  2,400.00 €  [19]",
-      "short_text": "To pay  2,400.00 €",
-      "brief_text": "To pay  2,400.00 €",
+      "direction": "nil",
+      "words": null,
+      "amount_text": null,
+      "text": "Result zero  [19]",
+      "short_text": "Result zero",
+      "brief_text": "Result zero",
       "help": ["Cadrumo's calculation. AEAT has not seen it."],
       "out_of_date_words": null
     },
@@ -1967,14 +1979,14 @@
   },
   "issue_lines": [
     {
-      "level": "check",
-      "box": null,
-      "where": "Whole declaration",
-      "message": "For some issued invoices Cadrumo cannot tell how much was withheld, so your withholding credit may be missing an unknown amount and you may pay more than needed.",
-      "action": "What to do: Enter the invoice base and the withholding for each of those invoices in your records, then calculate again.",
-      "detail": null,
-      "technical": "Technical details: unresolved_retencion_substrate",
-      "address": null,
+      "level": "info",
+      "box": "06",
+      "where": "Withholdings and payments on account",
+      "message": "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt.",
+      "action": "What to do: Compare the figure with your records and the payer's certificate. While it is held back, Cadrumo cannot check, export or record this declaration; a later version that confirms the period will release it.",
+      "detail": "A figure in a box rests on a reading Cadrumo cannot confirm yet, so you can see and preview it, but you cannot check, export or record the declaration with it.",
+      "technical": "Technical details: advisory_binding_value · 06",
+      "address": { "kind": "casilla", "casilla_id": "06" },
       "in_records": false,
       "surface": null,
       "from_calculation": true,
@@ -1986,8 +1998,8 @@
     "words": "The check passed.",
     "unapplied_words": "The saved calculation passed its check; your changes are not applied."
   },
-  "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
-  "verification_report_id": "b29ec25dc957c2c55a4728929db4b3c224283a1ee3b764d1e5f96e117f0a9cbe",
+  "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+  "verification_report_id": "8988638e6722d5796a0b3f72f4a6ddcfdf6bd2e56d8d98ea9db7638693055a0f",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -2049,7 +2061,7 @@
     "file_format_words": "AEAT file in the fixed-width BOE design"
   },
   "receipt": {
-    "recorded_at": "2026-11-02T01:35:15.579783Z",
+    "recorded_at": "2026-11-02T09:09:38.270719Z",
     "verified": true,
     "verified_at": "2026-04-21T09:30:00Z",
     "words": "AEAT receipt verified on Apr 21, 2026."

@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "df779aebae6b9dd892e657aef6ca4b6b64dc17989fb58c1f92d199de1eebb32f",
+      "calculation_revision_id": "7917ba8c592d4e250777e15c0db17ba1871795886dbad28f758972df978b7fc2",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -113,7 +113,7 @@
                     "label": { "text": "Ingressos", "disclosure": "localized" },
                     "help": "Ingressos acumulats de l'activitat econòmica.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "12000.00" },
+                    "value": { "kind": "decimal", "text": "0" },
                     "origin": "imported",
                     "editability": "locked_source",
                     "not_writable_reason": null,
@@ -156,11 +156,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "01" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Dels teus registres",
                     "origin_explanation": null,
                     "editability_words": "Surt dels teus registres; corregeix-ho allà i torna a calcular.",
-                    "value_text": "12.000,00 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -168,7 +168,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "3857746d964868b8e4b0973c9763f89c55b35e18b781ddbcaecf16af845ae55e"
+                    "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
                   }
                 },
                 {
@@ -250,7 +250,7 @@
                     },
                     "help": "Rendiment net de les activitats econòmiques en estimació directa, calculat com ingressos menys despeses.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "12000.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -277,11 +277,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "03" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculada",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo la calcula a partir d'altres caselles.",
-                    "value_text": "12.000,00 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -289,7 +289,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "e1331da9df525c1a8cbd4419fbe5b48383a8473a15848cdd1e2c3e3a44dc2c0b"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -304,7 +304,7 @@
                     },
                     "help": "Import del pagament fraccionat per activitats en estimació directa abans de pagaments previs i retencions.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -339,11 +339,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "04" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculada",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo la calcula a partir d'altres caselles.",
-                    "value_text": "2.400,00 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -351,7 +351,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -525,7 +525,7 @@
                     },
                     "help": "Resultat parcial de l'apartat I després de restar pagaments previs i retencions al pagament fraccionat d'estimació directa.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -550,11 +550,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "07" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Calculada",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo la calcula a partir d'altres caselles.",
-                    "value_text": "2.400,00 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -562,7 +562,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
               ],
@@ -863,7 +863,7 @@
                     },
                     "help": "Suma dels resultats parcials dels apartats I i II.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2410.00" },
+                    "value": { "kind": "decimal", "text": "10.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -892,7 +892,7 @@
                     "origin_words": "Calculada",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo la calcula a partir d'altres caselles.",
-                    "value_text": "2.410,00 €",
+                    "value_text": "10,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -900,7 +900,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "fec6b9f46dac68521bbf2adec7f1fa038c2ea89a7fa906a6912a983632e30a7d"
+                    "state_digest": "2eede6483fc35cf95bb9f42dfdf050662565c391c9d09b84f3e1af8f5f00032a"
                   }
                 },
                 {
@@ -969,7 +969,7 @@
                     },
                     "help": "Import restant després d'aplicar la minoració per rendiments nets.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2410.00" },
+                    "value": { "kind": "decimal", "text": "10.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -998,7 +998,7 @@
                     "origin_words": "Calculada",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo la calcula a partir d'altres caselles.",
-                    "value_text": "2.410,00 €",
+                    "value_text": "10,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1006,7 +1006,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "fec6b9f46dac68521bbf2adec7f1fa038c2ea89a7fa906a6912a983632e30a7d"
+                    "state_digest": "2eede6483fc35cf95bb9f42dfdf050662565c391c9d09b84f3e1af8f5f00032a"
                   }
                 },
                 {
@@ -1138,7 +1138,7 @@
                     },
                     "help": "Diferència després d'aplicar resultats negatius anteriors i, si escau, la deducció per habitatge habitual.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2370.00" },
+                    "value": { "kind": "decimal", "text": "-30.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -1167,7 +1167,7 @@
                     "origin_words": "Calculada",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo la calcula a partir d'altres caselles.",
-                    "value_text": "2.370,00 €",
+                    "value_text": "−30,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1175,7 +1175,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "9a23de5f5f8a4e3407684847cca02c355087bca66c99d1791f4df9156f413e4a"
+                    "state_digest": "5be59157a36298deccc1467fb943514602fcaecb0f477e84747f26d5a87d7f3b"
                   }
                 },
                 {
@@ -1242,7 +1242,7 @@
                     },
                     "help": "Import final a ingressar del Model 130 després de totes les deduccions i autoliquidacions anteriors.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2370.00" },
+                    "value": { "kind": "decimal", "text": "-30.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -1271,7 +1271,7 @@
                     "origin_words": "Calculada",
                     "origin_explanation": null,
                     "editability_words": "Cadrumo la calcula a partir d'altres caselles.",
-                    "value_text": "2.370,00 €",
+                    "value_text": "−30,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1279,7 +1279,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "9a23de5f5f8a4e3407684847cca02c355087bca66c99d1791f4df9156f413e4a"
+                    "state_digest": "5be59157a36298deccc1467fb943514602fcaecb0f477e84747f26d5a87d7f3b"
                   }
                 }
               ],
@@ -1389,7 +1389,7 @@
           },
           "help": "Llavor de traspàs calculada quan la casella 17 és negativa, usada com a deducció a la casella 15 d'un trimestre posterior.",
           "data_type": "money",
-          "value": { "kind": "decimal", "text": "0.00" },
+          "value": { "kind": "decimal", "text": "30.00" },
           "origin": "calculated",
           "editability": "calculated",
           "not_writable_reason": null,
@@ -1427,11 +1427,11 @@
             "casilla_id": "saldo-negativo-fin-periodo"
           },
           "confirmable": false,
-          "held_zero": true,
+          "held_zero": false,
           "origin_words": "Calculada",
           "origin_explanation": null,
           "editability_words": "Cadrumo la calcula a partir d'altres caselles.",
-          "value_text": "0,00 €",
+          "value_text": "30,00 €",
           "restorable": false,
           "filers_own": false,
           "confirm_value": null,
@@ -1439,7 +1439,7 @@
           "clearable": false,
           "own_value": null,
           "confirm_comparable": null,
-          "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
+          "state_digest": "a5721aee2b535c1610848956519588b26722f333ed85953900ff7e9c5ea50503"
         }
       ],
       "unplaced": [],
@@ -1471,12 +1471,24 @@
       "issues": [],
       "calculation_notes": [
         {
-          "reason": "unresolved_retencion_substrate",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
+          "reason": "advisory_binding_value",
+          "attention": "info",
+          "casilla_id": "06",
+          "box": "06",
           "withholds_filing": false,
-          "fact": null,
+          "fact": {
+            "sentence": "advisory_value_proven_zero",
+            "values": [
+              ["amount", "0"],
+              [
+                "binding",
+                "modelo-130-actividad-economica-retenciones-cumulative"
+              ],
+              ["box", "06"]
+            ],
+            "element_refs": [],
+            "row_refs": []
+          },
           "element_names": [],
           "message": null
         }
@@ -1570,9 +1582,9 @@
       "result": {
         "casilla_id": "19",
         "box": "19",
-        "value": "2370.00",
-        "direction": "to_pay",
-        "disposition": "I",
+        "value": "-30.00",
+        "direction": "to_deduct_later",
+        "disposition": "B",
         "election_may_change": false
       },
       "deadline": {
@@ -1586,8 +1598,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-02T01:35:49.222011Z",
-        "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+        "exported_at": "2026-11-02T09:10:21.405696Z",
+        "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
         "current": false
       },
       "edit_closure": null,
@@ -1604,9 +1616,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "0919302f638829c8c7bf4483f355b3af7845fdee3860cb70f9508fc4a1bb7c8f",
+      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "57d9ab030b9861527117df250660488031eb2fc941547097d945db79feb547eb",
+      "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1630,7 +1642,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "c2de1e743c21145b11a0d8d342617f90404b240711fcfadd721600d8163ac565"
+        "schema_fingerprint": "81d858dbdb0c3ec407c65875b61e6e19bfac3277ea0e99a220e9aa2e783e7ee5"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1639,9 +1651,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "1ea594824f51e806a2ee5287731a87b93ea2349a2fc81618f8963ee0a4a63785",
-    "calculation_head_digest": "e08d9e70c0613507395df1b14b3f813351042fc340be2c190109acd75bc50f83",
-    "current_calculation_revision_id": "df779aebae6b9dd892e657aef6ca4b6b64dc17989fb58c1f92d199de1eebb32f",
+    "work_unit_record_digest": "b25736dde0e47a0c4aa3972d133c76a11d9b53a20511f7c8249faa69b58c668a",
+    "calculation_head_digest": "e46bc3e8b6826e36e79bcc02ebeabaf4d78800cfbbddbb05347a380e84c0858d",
+    "current_calculation_revision_id": "7917ba8c592d4e250777e15c0db17ba1871795886dbad28f758972df978b7fc2",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1944,9 +1956,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T01:36:37.058950Z",
-    "expires_at": "2026-11-02T01:41:37.058950Z",
-    "baseline_id": "e75c66a46590b37056e2c879d8d46220d6d5092cab21763aa9916eff0aceacf5"
+    "issued_at": "2026-11-02T09:11:39.464437Z",
+    "expires_at": "2026-11-02T09:16:39.464437Z",
+    "baseline_id": "5d5f902941966f3e20463a43a1463cd8f27aacce5234045550e0a948a0432939"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1956,23 +1968,26 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-02T01:35:49.222011Z",
+    "file_created_at": "2026-11-02T09:10:21.405696Z",
     "receipt_to_add": false
   },
   "header": {
-    "attention": [{ "level": "check", "count": 1, "words": "per revisar: 1" }],
+    "attention": [],
     "result": {
       "state": "stated",
       "casilla_id": "19",
       "box": "19",
       "settles": true,
-      "direction": "to_pay",
-      "words": "A ingressar",
-      "amount_text": "2.370,00 €",
-      "text": "A ingressar  2.370,00 €  [19]",
-      "short_text": "A ingressar  2.370,00 €",
-      "brief_text": "A ingressar  2.370,00 €",
-      "help": ["Càlcul de Cadrumo. L'AEAT no l'ha vist."],
+      "direction": "to_deduct_later",
+      "words": null,
+      "amount_text": null,
+      "text": "Resultat negatiu: 30,00 € a deduir en els trimestres següents  [19]",
+      "short_text": "Resultat negatiu: 30,00 € a deduir en els trimestres següents",
+      "brief_text": "Resultat negatiu: 30,00 € a deduir en els trimestres següents",
+      "help": [
+        "Càlcul de Cadrumo. L'AEAT no l'ha vist.",
+        "La casella [19] figura al model oficial com a −30,00 €. A dalt es mostra l'import sense signe i el sentit en paraules."
+      ],
       "out_of_date_words": null
     },
     "deadline": {
@@ -1982,7 +1997,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-02T01:35:49.222011Z",
+      "exported_at": "2026-11-02T09:10:21.405696Z",
       "created_on": "2 de nov. 2026",
       "current": false,
       "words": "El fitxer del 2 de nov. 2026 està desactualitzat. Torna a generar-lo."
@@ -1995,14 +2010,14 @@
   },
   "issue_lines": [
     {
-      "level": "check",
-      "box": null,
-      "where": "Tota la declaració",
-      "message": "En algunes factures emeses Cadrumo no pot saber quant es va retenir, així que a la teva deducció per retencions li pot faltar un import desconegut i podries pagar més del necessari.",
-      "action": "Què cal fer: Indica als teus registres la base i la retenció de cadascuna d'aquestes factures i torna a calcular.",
-      "detail": null,
-      "technical": "Detalls tècnics: unresolved_retencion_substrate",
-      "address": null,
+      "level": "info",
+      "box": "06",
+      "where": "Retencions i ingressos a compte",
+      "message": "Casella 06: el zero es manté, perquè en el període no hi ha cap xifra el període de la qual pugui ser dubtós.",
+      "action": "Què cal fer: Compara la xifra amb els teus registres i amb el certificat del pagador. Mentre estigui en espera, Cadrumo no pot comprovar, exportar ni registrar aquesta declaració; una versió posterior que confirmi el període l'alliberarà.",
+      "detail": "Una xifra d'una casella es basa en una lectura que Cadrumo encara no pot confirmar: pots veure-la i previsualitzar-la, però no comprovar, exportar ni registrar la declaració amb ella.",
+      "technical": "Detalls tècnics: advisory_binding_value · 06",
+      "address": { "kind": "casilla", "casilla_id": "06" },
       "in_records": false,
       "surface": null,
       "from_calculation": true,
@@ -2014,7 +2029,7 @@
     "words": "La declaració encara no s'ha comprovat.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "df779aebae6b9dd892e657aef6ca4b6b64dc17989fb58c1f92d199de1eebb32f",
+  "calculation_revision_id": "7917ba8c592d4e250777e15c0db17ba1871795886dbad28f758972df978b7fc2",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

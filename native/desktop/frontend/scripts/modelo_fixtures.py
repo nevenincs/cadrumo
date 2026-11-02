@@ -78,8 +78,6 @@ FILED_130_ANSWERS: tuple[tuple[str, str], ...] = (
     ("modelo-130-pagos-fraccionados-anteriores", "0"),
 )
 #: The boxes whose help card the envelopes carry, by modelo.
-#: The quarter's activity income booked for the filled 130s.
-INCOME_130 = Decimal("12000.00")
 #: When the synthetic AEAT receipt of the filed 130 is imported.
 RECEIPT_AT = datetime(2026, 4, 21, 9, 30, tzinfo=UTC)
 #: The quarter the AEAT holds a Modelo 130 for that the profile has no declaration of, and when it was filed and seen.
@@ -606,7 +604,9 @@ def _check_clean(work: Any) -> Any:
 
     A clean check needs the operator's answers to the earlier-filing figures
     and the earlier Renta the 130 reads present as filed AEAT evidence under
-    the profile's own tax id.
+    the profile's own tax id. The profile books no activity in its ledger:
+    the bank-dated income, expense and retención boxes are capped below
+    filing grade, so only their proven zero lets the check pass.
     """
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import seed_clean_cross_period_sources
     from cadrumo.application.modelo.edit_models import (
@@ -642,13 +642,6 @@ def _check_clean(work: Any) -> Any:
     if not checked.granted_verificado_completo:
         raise SystemExit(f"the 130's check was not complete: {checked.completeness_status}")
     return checked
-
-
-def _seed_income(work: Any) -> None:
-    """Book the quarter's activity income in the profile's ledger, so the 130's boxes carry figures."""
-    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
-
-    seed_m130_income_transaction(amount=INCOME_130, filing_year=work.work_unit.filing_year, source_key="desktop")
 
 
 def _record_filed(work: Any) -> BaseModel:
@@ -1590,7 +1583,6 @@ def write_envelopes(directory: Path) -> None:
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _seeded(Path(tmp), facts=facts) as filed,
     ):
-        _seed_income(filed)
         _write(directory, "file-130.json", _record_filed(filed))
         _write_form(directory, filed, "modelo-130-1T-filed")
         _write_receipt_import(directory, filed)
@@ -1614,7 +1606,6 @@ def write_envelopes(directory: Path) -> None:
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
         _seeded(Path(tmp), facts=facts) as stale,
     ):
-        _seed_income(stale)
         _check_clean(stale)
         _write(directory, "export-130.json", _export_file(stale, Path(tmp) / "modelo-130.txt"))
         # Checked, its file made and current: what recording the filing starts from.

@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "d8e960e4b22719b6ad8e58b7ca5b0f64549382eb43aa3f4d68ef11a544c147be",
+      "calculation_revision_id": "8cfcf16d5d3c5ff2418f7be788d591fc789cb5eb297a46e548528918574929ca",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -119,7 +119,7 @@
                     "label": { "text": "Bevételek", "disclosure": "localized" },
                     "help": "Az adóévben elért összesített vállalkozási bevétel.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "12000.00" },
+                    "value": { "kind": "decimal", "text": "0" },
                     "origin": "imported",
                     "editability": "locked_source",
                     "not_writable_reason": null,
@@ -162,11 +162,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "01" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "A nyilvántartásaidból",
                     "origin_explanation": null,
                     "editability_words": "A nyilvántartásaidból származik; ott javítsd, majd számolj újra.",
-                    "value_text": "12 000,00 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -174,7 +174,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "3857746d964868b8e4b0973c9763f89c55b35e18b781ddbcaecf16af845ae55e"
+                    "state_digest": "26f32cb7d29df130e8fd740bb4ebe49e99b6c577404d3a364110735683bfa903"
                   }
                 },
                 {
@@ -256,7 +256,7 @@
                     },
                     "help": "A közvetlen becslésű gazdasági tevékenységek nettó jövedelme, a bevételek és kiadások különbözeteként.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "12000.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -283,11 +283,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "03" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Számított",
                     "origin_explanation": null,
                     "editability_words": "A Cadrumo más rovatokból számítja ki.",
-                    "value_text": "12 000,00 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -295,7 +295,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "e1331da9df525c1a8cbd4419fbe5b48383a8473a15848cdd1e2c3e3a44dc2c0b"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -310,7 +310,7 @@
                     },
                     "help": "A közvetlen becslésű tevékenységek részletfizetési összege a korábbi befizetések és levonások előtt.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "2400.00" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -345,11 +345,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "04" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Számított",
                     "origin_explanation": null,
                     "editability_words": "A Cadrumo más rovatokból számítja ki.",
-                    "value_text": "2 400,00 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -357,7 +357,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "c2738ba7fa69aede3fb49a11f4e958d322c1398d6cbe27b4e4cbff5c6edcc301"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -531,7 +531,7 @@
                     },
                     "help": "Az I. rész részeredménye a korábbi befizetések és levonások levonása után.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "1165.44" },
+                    "value": { "kind": "decimal", "text": "-1234.56" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -560,7 +560,7 @@
                     "origin_words": "Számított",
                     "origin_explanation": null,
                     "editability_words": "A Cadrumo más rovatokból számítja ki.",
-                    "value_text": "1 165,44 €",
+                    "value_text": "−1 234,56 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -568,7 +568,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
+                    "state_digest": "442bf4e8cddb78819b968df21dd02eb27588e78f56ef0cd0a9905b461e7f8fd9"
                   }
                 }
               ],
@@ -869,7 +869,7 @@
                     },
                     "help": "Az I. és II. rész részeredményeinek összege.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "1165.44" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -894,11 +894,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "12" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Számított",
                     "origin_explanation": null,
                     "editability_words": "A Cadrumo más rovatokból számítja ki.",
-                    "value_text": "1 165,44 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -906,7 +906,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -975,7 +975,7 @@
                     },
                     "help": "A nettó jövedelmi csökkentés alkalmazása után fennmaradó összeg.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "1165.44" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -1000,11 +1000,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "14" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Számított",
                     "origin_explanation": null,
                     "editability_words": "A Cadrumo más rovatokból számítja ki.",
-                    "value_text": "1 165,44 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1012,7 +1012,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -1144,7 +1144,7 @@
                     },
                     "help": "Különbözet a korábbi negyedévek negatív eredményei és az esetleges lakóhelyi kedvezmény alkalmazása után.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "1165.44" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -1169,11 +1169,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "17" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Számított",
                     "origin_explanation": null,
                     "editability_words": "A Cadrumo más rovatokból számítja ki.",
-                    "value_text": "1 165,44 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1181,7 +1181,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 },
                 {
@@ -1248,7 +1248,7 @@
                     },
                     "help": "A Modelo 130 nyomtatvány végső fizetendő összege minden levonás és korábbi önadózás után.",
                     "data_type": "money",
-                    "value": { "kind": "decimal", "text": "1165.44" },
+                    "value": { "kind": "decimal", "text": "0.00" },
                     "origin": "calculated",
                     "editability": "calculated",
                     "not_writable_reason": null,
@@ -1273,11 +1273,11 @@
                     "standing": "done",
                     "edit_address": { "kind": "casilla", "casilla_id": "19" },
                     "confirmable": false,
-                    "held_zero": false,
+                    "held_zero": true,
                     "origin_words": "Számított",
                     "origin_explanation": null,
                     "editability_words": "A Cadrumo más rovatokból számítja ki.",
-                    "value_text": "1 165,44 €",
+                    "value_text": "0,00 €",
                     "restorable": false,
                     "filers_own": false,
                     "confirm_value": null,
@@ -1285,7 +1285,7 @@
                     "clearable": false,
                     "own_value": null,
                     "confirm_comparable": null,
-                    "state_digest": "942f5571a3529002561294bea7b8ade8574850a568344d579b9fac5fc0e86f97"
+                    "state_digest": "dad37cf7233f6ef80e35bba252f2e2ec233922713fb9e6f545511d96b83c6b64"
                   }
                 }
               ],
@@ -1477,22 +1477,34 @@
       "issues": [],
       "calculation_notes": [
         {
-          "reason": "unresolved_retencion_substrate",
-          "attention": "check",
-          "casilla_id": null,
-          "box": null,
-          "withholds_filing": false,
-          "fact": null,
-          "element_names": [],
-          "message": null
-        },
-        {
           "reason": "operator_override_diverges_from_computed",
           "attention": "check",
           "casilla_id": "06",
           "box": "06",
           "withholds_filing": false,
           "fact": null,
+          "element_names": [],
+          "message": null
+        },
+        {
+          "reason": "advisory_binding_value",
+          "attention": "info",
+          "casilla_id": "06",
+          "box": "06",
+          "withholds_filing": false,
+          "fact": {
+            "sentence": "advisory_value_proven_zero",
+            "values": [
+              ["amount", "0"],
+              [
+                "binding",
+                "modelo-130-actividad-economica-retenciones-cumulative"
+              ],
+              ["box", "06"]
+            ],
+            "element_refs": [],
+            "row_refs": []
+          },
           "element_names": [],
           "message": null
         }
@@ -1584,9 +1596,9 @@
       "result": {
         "casilla_id": "19",
         "box": "19",
-        "value": "1165.44",
-        "direction": "to_pay",
-        "disposition": "I",
+        "value": "0.00",
+        "direction": "nil",
+        "disposition": "N",
         "election_may_change": false
       },
       "deadline": {
@@ -1600,8 +1612,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-02T01:35:49.222011Z",
-        "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+        "exported_at": "2026-11-02T09:10:21.405696Z",
+        "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
         "current": false
       },
       "edit_closure": null,
@@ -1618,9 +1630,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "0919302f638829c8c7bf4483f355b3af7845fdee3860cb70f9508fc4a1bb7c8f",
+      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "57d9ab030b9861527117df250660488031eb2fc941547097d945db79feb547eb",
+      "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1644,7 +1656,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "c2de1e743c21145b11a0d8d342617f90404b240711fcfadd721600d8163ac565"
+        "schema_fingerprint": "81d858dbdb0c3ec407c65875b61e6e19bfac3277ea0e99a220e9aa2e783e7ee5"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1653,9 +1665,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "16085e23dbd39ad72a6343aa363c58fcf030f28391e0902dc91c288ccba82005",
-    "calculation_head_digest": "319b84ef62ff286a40ddd04fd88233b2646a6b0df6e7953bb91d526e2f419e39",
-    "current_calculation_revision_id": "d8e960e4b22719b6ad8e58b7ca5b0f64549382eb43aa3f4d68ef11a544c147be",
+    "work_unit_record_digest": "c5921c604605a6082dd184c9d739840c0118b9f7fb1ae5de3d2207d72ec0dd61",
+    "calculation_head_digest": "52b94eee39209d37d28ead3a60f6715f8c4c52b877c2b00ee325679dd35815c4",
+    "current_calculation_revision_id": "8cfcf16d5d3c5ff2418f7be788d591fc789cb5eb297a46e548528918574929ca",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1958,9 +1970,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T01:36:16.457386Z",
-    "expires_at": "2026-11-02T01:41:16.457386Z",
-    "baseline_id": "abb9bf29134b44cba3d38ccf4ef39c0cb6513a5731b59db11d16a1be9c0f45d3"
+    "issued_at": "2026-11-02T09:10:58.080774Z",
+    "expires_at": "2026-11-02T09:15:58.080774Z",
+    "baseline_id": "e8dc272d5c40a7911f258248e7333b32fa2d976d1a77ec8f6a42a2afa419d43f"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1970,22 +1982,22 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-02T01:35:49.222011Z",
+    "file_created_at": "2026-11-02T09:10:21.405696Z",
     "receipt_to_add": false
   },
   "header": {
-    "attention": [{ "level": "check", "count": 2, "words": "átnézendő: 2" }],
+    "attention": [{ "level": "check", "count": 1, "words": "átnézendő: 1" }],
     "result": {
       "state": "stated",
       "casilla_id": "19",
       "box": "19",
       "settles": true,
-      "direction": "to_pay",
-      "words": "Fizetendő",
-      "amount_text": "1 165,44 €",
-      "text": "Fizetendő  1 165,44 €  [19]",
-      "short_text": "Fizetendő  1 165,44 €",
-      "brief_text": "Fizetendő  1 165,44 €",
+      "direction": "nil",
+      "words": null,
+      "amount_text": null,
+      "text": "Nulla eredmény  [19]",
+      "short_text": "Nulla eredmény",
+      "brief_text": "Nulla eredmény",
       "help": ["A Cadrumo számítása; az AEAT még nem látta."],
       "out_of_date_words": null
     },
@@ -1996,7 +2008,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-02T01:35:49.222011Z",
+      "exported_at": "2026-11-02T09:10:21.405696Z",
       "created_on": "2026. nov. 2.",
       "current": false,
       "words": "A(z) 2026. nov. 2. napi fájl elavult. Hozd létre újra."
@@ -2004,20 +2016,6 @@
     "export_hold": null
   },
   "issue_lines": [
-    {
-      "level": "check",
-      "box": null,
-      "where": "A teljes bevallás",
-      "message": "Néhány kiállított számlánál a Cadrumo nem tudja, mennyit vontak le, ezért a levonási jóváírásból ismeretlen összeg hiányozhat, és a szükségesnél többet fizethetsz.",
-      "action": "Teendő: Add meg a nyilvántartásodban az érintett számlák alapját és a levonást, majd számolj újra.",
-      "detail": null,
-      "technical": "Technikai részletek: unresolved_retencion_substrate",
-      "address": null,
-      "in_records": false,
-      "surface": null,
-      "from_calculation": true,
-      "recalculates": false
-    },
     {
       "level": "check",
       "box": "06",
@@ -2031,6 +2029,20 @@
       "surface": null,
       "from_calculation": true,
       "recalculates": false
+    },
+    {
+      "level": "info",
+      "box": "06",
+      "where": "Levonások és adóelőlegek",
+      "message": "A(z) 06 mező: a nulla érvényes, mert az időszakban nincs olyan tétel, amelynek az időszaka kétséges lehetne.",
+      "action": "Teendő: Vesd össze az összeget a saját nyilvántartásoddal és a kifizető igazolásával. Amíg az összeg függőben van, a Cadrumo nem tudja ellenőrizni, exportálni vagy rögzíteni ezt a bevallást; egy későbbi változat, amely megerősíti az időszakot, feloldja.",
+      "detail": "Egy mező összege olyan értelmezésen alapul, amelyet a Cadrumo még nem tud megerősíteni: megnézheted és előnézetben láthatod, de a bevallást ezzel nem ellenőrizheted, nem exportálhatod és nem rögzítheted.",
+      "technical": "Technikai részletek: advisory_binding_value · 06",
+      "address": { "kind": "casilla", "casilla_id": "06" },
+      "in_records": false,
+      "surface": null,
+      "from_calculation": true,
+      "recalculates": false
     }
   ],
   "verdict": {
@@ -2038,8 +2050,8 @@
     "words": "Az ellenőrzés sikeres.",
     "unapplied_words": "A mentett számítás ellenőrzése sikeres; a módosításaidat nem alkalmaztuk."
   },
-  "calculation_revision_id": "d8e960e4b22719b6ad8e58b7ca5b0f64549382eb43aa3f4d68ef11a544c147be",
-  "verification_report_id": "eb42d06f7b2b5ae7bc1c1d0ba090246a685a7fde28f70699f92b93ac3659692b",
+  "calculation_revision_id": "8cfcf16d5d3c5ff2418f7be788d591fc789cb5eb297a46e548528918574929ca",
+  "verification_report_id": "e5807895b9508977b05d01e4c82a9222740c99b38f8139d58353c30021c4c561",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
