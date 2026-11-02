@@ -17,9 +17,9 @@ the unidad familiar and only flips ``declaration_type`` to 1, so it faithfully
 models a **single-earner** household. It does not compute two separate spouse
 returns; a genuine two-earner individual comparison requires a per-spouse
 income axis that does not yet exist. Every result therefore carries
-``individual_branch_single_earner_only`` and an
-``individual_branch_caveat`` so no surface presents the individual figure as
-authoritative for a two-earner couple.
+``individual_branch_single_earner_only``, and the surfaces serve its caveat in
+words so none presents the individual figure as authoritative for a two-earner
+couple.
 
 The comparison is snapshot-grounded. It resolves the result casillas by their
 declared semantic roles, refuses ambiguous role matches before choosing a
@@ -100,24 +100,6 @@ def _select_taxation_work_unit(
     return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
 
 
-#: Honesty scope caveat for the individual filing branch. The individual run
-#: reuses the *single* input set assembled for the unidad familiar and merely
-#: flips ``declaration_type`` to 1, so it faithfully models only a **single-earner**
-#: household. It does NOT compute two separate spouse returns (each on that
-#: spouse's own income); a genuine two-earner individual comparison requires a
-#: per-spouse income attribution axis that does not yet exist. Surfacing this
-#: statement keeps the comparator from presenting an unfaithful two-earner figure
-#: as authoritative.
-INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT = (
-    "The individual-mode figure is a single-return computation over the unidad "
-    "familiar's combined inputs and is faithful only for a single-earner household. "
-    "It does not model two separate spouse returns (each taxed on that spouse's own "
-    "income); for a genuine two-earner couple the individual comparison is not yet "
-    "available, pending a per-spouse income axis. Treat the individual figure as "
-    "directional, not authoritative, for two-earner households."
-)
-
-
 class TaxationRecommendation(StrEnum):
     """Recommended filing mode based on the computed cuota differential.
 
@@ -181,11 +163,12 @@ class TaxationComparisonResult(BaseModel):
     # input set, so it is faithful only for a single-earner household.
     # ``individual_branch_single_earner_only`` is always True today; a genuine
     # two-earner individual comparison (two separate spouse returns) requires a
-    # per-spouse income axis that does not yet exist. ``individual_branch_caveat``
-    # carries the operator-facing disclosure so no surface presents the
-    # individual figure as authoritative for a two-earner couple.
+    # per-spouse income axis that does not yet exist. The operator-facing words
+    # of this disclosure are served by
+    # :func:`~cadrumo.application.modelo.taxation_comparison_words.individual_branch_caveat_words`
+    # so no surface presents the individual figure as authoritative for a
+    # two-earner couple.
     individual_branch_single_earner_only: bool = True
-    individual_branch_caveat: str = INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
 
 
 # ---------------------------------------------------------------------------

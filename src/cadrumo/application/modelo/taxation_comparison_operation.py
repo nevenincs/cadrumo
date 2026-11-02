@@ -49,7 +49,7 @@ from .taxation_comparison import (
     compare_taxation_for_work_unit,
 )
 from .taxation_comparison_ports import TaxationComparisonPortsFactory
-from .taxation_comparison_words import recommendation_reason_words
+from .taxation_comparison_words import individual_branch_caveat_words, recommendation_reason_words
 
 MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID = "modelo.work.compare_taxation"
 _WorkUnitId = Annotated[str, Field(pattern=r"^(?:[0-9a-f]{12}|[0-9a-f]{64})$")]
@@ -77,7 +77,9 @@ class ModeloTaxationComparisonProjection(BaseModel):
 
     ``recommendation_reason`` is the closed token of why the mode is
     recommended; ``recommendation_reason_words`` is the same reason in words
-    naming the results it compares, in ``words_language``.
+    naming the results it compares, in ``words_language``;
+    ``individual_branch_caveat`` states in the same language why the individual
+    figure is reliable only for a single-earner household.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -157,7 +159,7 @@ class ModeloTaxationComparisonProjection(BaseModel):
             ),
             words_language=language,
             individual_branch_single_earner_only=True,
-            individual_branch_caveat=comparison.individual_branch_caveat,
+            individual_branch_caveat=individual_branch_caveat_words(language),
         )
 
 

@@ -8172,7 +8172,9 @@ export type RefundElection = "compensar" | "devolver";
  * Closed reason catalogue for typed formula outcomes with no Decimal value.
  */
 export type RegistryUnresolvedOutcomeReason =
-  "m210-baseline-tipo-deferred" | "m210-convenio-rate-missing";
+  | "m210-baseline-tipo-deferred"
+  | "m210-convenio-rate-missing"
+  | "waived-refund-result-unsupported";
 
 export type RelationId = string;
 

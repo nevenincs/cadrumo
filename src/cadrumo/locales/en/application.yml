@@ -2443,6 +2443,12 @@ application:
         so either filing mode is acceptable.
       conjunta_lower_result: 'Joint filing comes out lower: your result is {conjunta}
         jointly and {individual} individually, a difference of {difference}.'
+      individual_branch_caveat: The individual figure is a single return worked out
+        from your whole household's combined inputs, so it is only reliable when one
+        person earns the household's income. It does not work out two separate returns,
+        one on each spouse's own income, and that comparison is not available yet.
+        If two people in your household earn income, read the individual figure as
+        a rough guide, not as the amount to file.
       individual_lower_result: 'Individual filing comes out lower: your result is
         {individual} individually and {conjunta} jointly, a difference of {difference}.'
     value_date:

@@ -2587,6 +2587,13 @@ application:
       conjunta_lower_result: 'La tributación conjunta sale más barata: tu resultado
         es {conjunta} en conjunta y {individual} en individual, una diferencia de
         {difference}.'
+      individual_branch_caveat: La cifra individual es una única declaración calculada
+        con los datos conjuntos de toda tu unidad familiar, así que solo es fiable
+        cuando una sola persona aporta los ingresos del hogar. No calcula dos declaraciones
+        separadas, una con los ingresos de cada cónyuge, y esa comparación todavía
+        no está disponible. Si en tu unidad familiar hay dos personas con ingresos,
+        toma la cifra individual como una orientación aproximada, no como el importe
+        que debes presentar.
       individual_lower_result: 'La tributación individual sale más barata: tu resultado
         es {individual} en individual y {conjunta} en conjunta, una diferencia de
         {difference}.'

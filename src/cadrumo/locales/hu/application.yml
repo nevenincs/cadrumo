@@ -2544,6 +2544,12 @@ application:
         mint {threshold}, ezért bármelyik adózási mód megfelelő.
       conjunta_lower_result: 'A közös adózás kedvezőbb: az eredményed közösen {conjunta},
         egyénileg {individual}, a különbség {difference}.'
+      individual_branch_caveat: Az egyéni összeg egyetlen bevallás, amelyet a teljes
+        családi egységed összesített adataiból számoltunk, ezért csak akkor megbízható,
+        ha a család jövedelmét egyetlen személy keresi. Nem számol két külön bevallást,
+        egyet-egyet a házastársak saját jövedelméből, és ez az összehasonlítás egyelőre
+        nem érhető el. Ha a családodban ketten keresnek, az egyéni összeget tekintsd
+        durva tájékoztatásnak, nem a benyújtandó összegnek.
       individual_lower_result: 'Az egyéni adózás kedvezőbb: az eredményed egyénileg
         {individual}, közösen {conjunta}, a különbség {difference}.'
     value_date:

@@ -38,7 +38,6 @@ from ....core.casilla_id import CasillaId, validated_casilla_id, validated_casil
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..taxation_comparison import (
-    INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,
     TaxationRecommendation,
     TaxationRecommendationReason,
@@ -303,14 +302,6 @@ def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapsh
     # The first slice is single-earner-faithful only; the flag must say so.
     assert result.individual_branch_single_earner_only is True
 
-    # The disclosure text is the single-sourced constant and must honestly name
-    # the limitation (single-earner faithful; two-earner not yet modelled).
-    assert result.individual_branch_caveat == INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
-    caveat = result.individual_branch_caveat.lower()
-    assert "single-earner" in caveat
-    assert "two-earner" in caveat
-    assert "not yet available" in caveat
-
 
 def test_individual_branch_caveat_present_when_individual_recommended(
     snapshot_2025: RegistrySnapshot,
@@ -335,7 +326,6 @@ def test_individual_branch_caveat_present_when_individual_recommended(
     )
 
     assert result.individual_branch_single_earner_only is True
-    assert result.individual_branch_caveat == INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
     assert result.recommendation_reason is _REASON_OF[result.recommendation]
 
 
