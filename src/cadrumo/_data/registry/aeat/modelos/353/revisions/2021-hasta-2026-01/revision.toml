@@ -48,6 +48,12 @@ source_refs = [
     "aeat-calendario-contribuyente-2025",
     "aeat-calendario-contribuyente-2026-domiciliacion",
 ]
+[revisions."2021-hasta-2026-01".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["orden-eha-3434-2007:art-2", "orden-eha-3434-2007:art-8", "orden-hac-27-2026:disposicion-final-unica", "rd-1624-1992:art-71"]
+source_refs = ["aeat-dr-353-2021-2025", "aeat-modelo-353-procedure", "boe-modelo-353-2007-form", "aeat-calendario-contribuyente-2022", "aeat-calendario-contribuyente-2023", "aeat-calendario-contribuyente-2024", "aeat-calendario-contribuyente-2025", "aeat-calendario-contribuyente-2026-domiciliacion"]
+
 [revisions."2021-hasta-2026-01".family_dispositions.parameters]
 reason = """
 A parameter is a regulatory value the engine applies -- a rate, a bracket tranche, a threshold, a reduction coefficient. 353 applies none. It is an AGGREGATION return: every cuota it reports was already determined, at its own rate, on the member entity's own Modelo 322, and 353 only sums those results and nets them against the group's pending compensaciones and prior payments. Every formula on this revision is addition and subtraction over casillas whose values arrive from the members; not one \

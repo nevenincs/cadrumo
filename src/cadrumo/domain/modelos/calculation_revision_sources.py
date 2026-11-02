@@ -16,6 +16,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from .errors import ModeloValidationError
+from .source_disagreement import SourceDisagreementFact
 
 
 class CalculationSourceRef(BaseModel):
@@ -297,7 +298,12 @@ class CalculationSourceIssue(BaseModel):
     what the resolver stated beside that value: a proven zero persists too, so a
     reopened declaration still shows the zero was proven, and withholds nothing;
     a capped note without a stated outcome withholds. Only that reason carries an
-    outcome. ``fact`` states such a note's own row, element, interval and
+    outcome. ``credit_source_disagreement`` is a credit casilla whose value
+    source and a declared cross-check source differ by any amount; it carries
+    the whole :class:`~.source_disagreement.SourceDisagreementFact` in
+    ``disagreement`` and withholds filing. ``credit_cross_check_absent`` is a
+    declared cross-check source with nothing to compare, which reads "not
+    cross-checked", never agreement, and withholds nothing. ``fact`` states such a note's own row, element, interval and
     amount. ``binding_source`` is ``None`` only where the condition names no
     binding source kind.
     """
@@ -330,6 +336,8 @@ class CalculationSourceIssue(BaseModel):
         "register_owned_capital_acquisition",
         "ledger_expense_may_be_durable",
         "advisory_binding_value",
+        "credit_source_disagreement",
+        "credit_cross_check_absent",
     ]
     binding_source: BindingSourceKind | None
     message: str = Field(min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)
@@ -338,12 +346,20 @@ class CalculationSourceIssue(BaseModel):
     casilla_id: CasillaId | None = None
     fact: CalculationNoteFact | None = None
     value_outcome: BindingValueOutcome | None = None
+    disagreement: SourceDisagreementFact | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _require_outcome_on_capped_value_only(self) -> Self:
         if self.value_outcome is not None and self.reason != "advisory_binding_value":
             raise ModeloValidationError("only a capped binding value carries a resolver-stated value outcome")
+        return self
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _require_disagreement_on_credit_disagreement_only(self) -> Self:
+        if (self.disagreement is not None) != (self.reason == "credit_source_disagreement"):
+            raise ModeloValidationError("a credit source disagreement, and only that reason, carries its sources")
         return self
 
 

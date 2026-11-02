@@ -34,6 +34,12 @@ source_refs = [
 ]
 
 
+[revisions."2013-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["ley-58-2003:da-18", "rd-1065-2007:art-42-bis", "rd-1065-2007:art-42-ter", "rd-1065-2007:art-54-bis", "orden-hap-72-2013:art-1", "orden-hap-72-2013:art-2", "orden-hap-72-2013:art-7", "ley-58-2003:art-93"]
+source_refs = ["aeat-dr-720", "aeat-modelo-720-procedure", "boe-modelo-720-2013-form"]
+
 [revisions."2013-y-siguientes".family_dispositions.formulas]
 reason = "The declarant reports its OWN bienes y derechos situados en el extranjero. Any tax consequence of those assets arises in the IRPF or Impuesto sobre Sociedades return, never in this one: the form is a holdings inventory and computes no liability, so the formula family is inapplicable by this modelo's nature rather than merely absent."
 legal_refs = [

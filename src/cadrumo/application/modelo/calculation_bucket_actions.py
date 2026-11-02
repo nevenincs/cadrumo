@@ -1006,6 +1006,8 @@ _DurableSourceIssueReason = Literal[
     "register_owned_capital_acquisition",
     "ledger_expense_may_be_durable",
     "advisory_binding_value",
+    "credit_source_disagreement",
+    "credit_cross_check_absent",
 ]
 
 

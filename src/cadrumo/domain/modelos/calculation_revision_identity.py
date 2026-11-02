@@ -306,7 +306,7 @@ def _source_issues_revision_id_payload(
     source_issues: Sequence[CalculationSourceIssue],
 ) -> dict[str, object]:
     """Build the optional unresolved-source-issue payload key."""
-    # A box, a fact and a stated outcome are appended only when an issue carries
+    # A box, a fact, a stated outcome and a disagreement are appended only when an issue carries
     # one, so every issue stored before issues could carry them keeps the
     # identity it was stored under. The outcome is tagged, so it can never read
     # as a part of the fact before it.
@@ -321,6 +321,11 @@ def _source_issues_revision_id_payload(
                 *(() if issue.casilla_id is None else (issue.casilla_id,)),
                 *(() if issue.fact is None else issue.fact.identity()),
                 *(() if issue.value_outcome is None else (f"value_outcome={issue.value_outcome.value}",)),
+                *(
+                    ()
+                    if issue.disagreement is None
+                    else (f"disagreement={content_hash_hex(issue.disagreement.model_dump(mode='json'))}",)
+                ),
             )
             for issue in source_issues
         )

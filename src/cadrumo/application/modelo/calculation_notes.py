@@ -78,6 +78,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unhandled_binding_source",
         "source_domain_not_ready",
         "advisory_binding_value",
+        "credit_source_disagreement",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
@@ -122,6 +123,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         **dict.fromkeys(BLOCKING_REASONS, _B),
         # Persisted and shown, not refused: the route it reports may lack a terminal origin by design.
         "terminal_origin_mismatch": _C,
+        # A credit no second source could confirm: worth checking, never agreement.
+        "credit_cross_check_absent": _C,
         "unresolved_derived_binding": _C,
         # Something only the filer can supply.
         "source_issue": _M,

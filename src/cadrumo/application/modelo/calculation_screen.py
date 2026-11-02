@@ -1,7 +1,7 @@
 """The one staleness check for every screen a calculation runs against registry declarations.
 
 A screen is a calculation note that exists because the pinned registry declares
-something: the first is the binding grade cap. A calculation stamps the
+something: the binding grade cap, then the credit reconciliation. A calculation stamps the
 revision with the screen contract version and a digest of the screen-relevant
 declarations of its own registry revision. Checking, exporting and recording
 recompute the expected stamp from the operation's pinned authority and refuse
@@ -25,6 +25,7 @@ from ...domain.calculations.registry.binding_grade_cap_reach import (
     capped_binding_reach_digest,
     snapshot_reach_date,
 )
+from ...domain.calculations.registry.credit_reconciliation_checks import credit_reconciliation_digest
 from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, what_locale_key
 
@@ -33,7 +34,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos.calculation_revision import CalculationRevision
 
-CALCULATION_SCREEN_CONTRACT_VERSION: Final[int] = 1
+CALCULATION_SCREEN_CONTRACT_VERSION: Final[int] = 2
 """One version for every screen together; raised when a screen is added or its reading changes."""
 
 
@@ -42,6 +43,7 @@ def _screen_payload(snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOpe
         "binding_grade_caps": capped_binding_reach_digest(
             capped_binding_reach(snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot))
         ),
+        "credit_reconciliation": credit_reconciliation_digest(snapshot.revision),
     }
 
 

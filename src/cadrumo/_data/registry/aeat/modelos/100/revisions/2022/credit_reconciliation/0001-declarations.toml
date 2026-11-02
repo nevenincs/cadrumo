@@ -1,0 +1,43 @@
+# Each credit casilla of withholding suffered takes its value from one declared
+# source and is compared with every other source that states the same figure
+# (LIRPF art. 99; RIRPF art. 108.3 makes the payer certificate the evidence). A
+# disagreement left after the comparison refuses checking, export and local
+# filing; a cross-check that holds nothing is noted and does not refuse.
+#
+# The borrador is informative: it only ever cross-checks a credit, and is absent
+# when no borrador snapshot was supplied to the calculation.
+[[revisions."2022".credit_reconciliation]]
+casilla_id = "0596"
+value_source = { binding = "renta-retencion-soportada-trabajo" }
+cross_checks = [{ kind = "borrador", binding = "renta-retencion-soportada-trabajo" }]
+
+[[revisions."2022".credit_reconciliation]]
+casilla_id = "0597"
+value_source = { binding = "renta-retencion-soportada-capital-mobiliario" }
+cross_checks = [{ kind = "borrador", binding = "renta-retencion-soportada-capital-mobiliario" }]
+
+# Casilla 0598 sums two independently evidenced parts, so each part is compared
+# with the source that states it: the per-property withholding in 0153 with the
+# urban-rental payer records. The activity part is the payer records of the
+# rental activity class, which are its own value source. No borrador snapshot
+# key states the computed 0598 total, so the borrador does not cross-check it.
+[[revisions."2022".credit_reconciliation]]
+casilla_id = "0598"
+value_source = { formula = "renta-retenciones-arrendamientos-urbanos" }
+cross_checks = [{ kind = "retencion_soportada", income_class = "arrendamiento_inmueble_urbano", operand = { casilla_id = "0153" } }]
+
+# Casilla 0599 is the withholding the taxpayer's own invoices declare. Each
+# payer's certificate of the activity class states the same figure from the
+# payer's side, and the borrador states it as AEAT received it.
+[[revisions."2022".credit_reconciliation]]
+casilla_id = "0599"
+value_source = { binding = "renta-ledger-actividad-retenciones-0599" }
+cross_checks = [
+    { kind = "retencion_soportada", income_class = "actividad_economica" },
+    { kind = "borrador", binding = "renta-ledger-actividad-retenciones-0599" },
+]
+
+[[revisions."2022".credit_reconciliation]]
+casilla_id = "0603"
+value_source = { binding = "renta-retencion-soportada-ganancia-patrimonial" }
+cross_checks = [{ kind = "borrador", binding = "renta-retencion-soportada-ganancia-patrimonial" }]

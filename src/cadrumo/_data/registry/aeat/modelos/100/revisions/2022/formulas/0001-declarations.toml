@@ -382,8 +382,13 @@ required_text = ["cuota resultante", "cuota diferencial"]
 [[revisions."2022".formulas]]
 id = "renta-retenciones-arrendamientos-urbanos"
 target_casilla_id = "0598"
-expression = { op = "copy", args = [
+# The urban-rental credit field takes the withholding of every urban rental: the
+# per-property capital-inmobiliario withholding in 0153, and the withholding on a
+# rental carried on as an economic activity (RIRPF art. 100), which no property
+# row holds.
+expression = { op = "sum", args = [
     { casilla_id = "0153" },
+    { binding = "renta-retencion-soportada-arrendamiento-actividad" },
 ] }
 rounding = "money-2"
 legal_refs = ["ley-35-2006:art-99", "ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "rd-439-2007:art-100"]

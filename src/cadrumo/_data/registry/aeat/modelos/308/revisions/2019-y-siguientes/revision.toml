@@ -14,6 +14,12 @@ source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-
 family_storage_baseline = "2016-2018"
 scoped_families = ["workbook_parity_refs", "completeness_manifest"]
 
+[revisions."2019-y-siguientes".family_dispositions.credit_reconciliation]
+reason = """
+The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
+legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2008:art-2", "orden-eha-3786-2008:art-11", "ley-37-1992:art-161"]
+source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
+
 [revisions.2019-y-siguientes.predecessor.none]
 reason = "No legal predecessor is declared: naming 2016-2018 would claim that the 2019 design continues the 2016 one, a separate continuity decision. The payload is stored against 2016-2018 through casilla_storage_baseline and family_storage_baseline: the two header casillas and the shared filing schedule, construct and application links carry only this edition's differences as overrides, and what this edition states itself (its liquidation and identification casillas, the export layout and its application link, the live cross-references and the record-design parity anchor) is not declared by the 2016-2018 edition. Storage reuse makes no continuity claim."
 legal_refs = ["ley-37-1992:art-21"]
