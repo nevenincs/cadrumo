@@ -594,19 +594,16 @@ def build_borrador_100_snapshot_repository(
         @override
         def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
             """List snapshots while translating storage failures inward."""
-            try:
-                snapshots, _outdated = self.list_snapshots_with_outdated_count()
-                return tuple(sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id)))
-            except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
-                raise PersistenceDegradationError("borrador_snapshot_list") from exc
+            return self.list_snapshots_with_outdated_count()[0]
 
         @override
-        def outdated_stored_snapshot_count(self) -> int:
-            """Count rows stored under an older schema, which no reader can name."""
+        def list_snapshots_with_outdated_count(self) -> tuple[tuple[Borrador100Snapshot, ...], int]:
+            """List snapshots in capture order with the older-schema row count, translating storage failures inward."""
             try:
-                return self.list_snapshots_with_outdated_count()[1]
+                snapshots, outdated = super().list_snapshots_with_outdated_count()
             except (StorageError, OSError, ValidationError, UnicodeDecodeError) as exc:
                 raise PersistenceDegradationError("borrador_snapshot_list") from exc
+            return tuple(sorted(snapshots, key=lambda item: (item.captured_at, item.snapshot_id))), outdated
 
         @override
         def save(self, snapshot: Borrador100Snapshot) -> None:

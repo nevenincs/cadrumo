@@ -211,6 +211,8 @@ aggregation:
         o el certificado ya guardados para él.
       own_tax_id: El NIF del pagador es el tuyo; una retención que practicas tú no
         es un pago a cuenta a tu favor.
+      stale_revision: Este registro de retención cambió desde que lo leíste; vuelve
+        a leerlo antes de guardar.
   retenciones:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
