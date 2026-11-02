@@ -39,12 +39,8 @@ from ..operations.registry import (
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .calculation_action_ports import CalculationActionPorts, CalculationActionPortsFactory
-from .projection import (
-    ModeloCompareServiceResult,
-    ModeloProjectServiceResult,
-    compare_modelo_years,
-    project_modelo_100_from_m130,
-)
+from .projection import ModeloProjectServiceResult, project_modelo_100_from_m130
+from .projection_compare import ModeloCompareServiceResult, compare_modelo_years
 from .projection_migration_ports import ProjectionMigrationPlan, ProjectionMigrationPort
 from .projection_words import binding_source_words, unresolved_binding_words, unresolved_casilla_reason_words
 
@@ -374,7 +370,7 @@ def _decimal(value: object) -> str:
 
 
 def _compare_row(row: object) -> CompareDeltaRowProjection:
-    from .projection import ModeloCompareDeltaRow
+    from .projection_compare import ModeloCompareDeltaRow
 
     if not isinstance(row, ModeloCompareDeltaRow):
         raise TypeError("canonical comparison row has changed type")

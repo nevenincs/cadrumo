@@ -57,6 +57,9 @@ export type HouseholdGroup = {
   /** "N stated, M recorded" in the product's words; only for an `incomplete`
    * group, which is not a complete household. */
   incomplete_words: string | null;
+  /** The most people the declaration's design lets the group hold, where it
+   * declares one. A group at it takes no more. */
+  max_rows: number | null;
   leaves: HouseholdLeaf[];
   rows: HouseholdRow[];
 };

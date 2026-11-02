@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING, Annotated, Literal, Protocol
 from pydantic import AfterValidator, BaseModel, field_validator
 
 from ....core.aggregation import BindingSourceKind
-from ....core.casilla_id import CasillaId, validated_casilla_id
+from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from .binding_selector_utils import computed_money_binding_failures
@@ -29,7 +29,6 @@ __all__ = [
     "ProrrataSourceRole",
     "prorrata_definitive_percentage_source_casilla_id",
     "prorrata_source_casilla_id",
-    "prorrata_source_casilla_ids",
     "validate_prorrata_regularizacion_binding",
 ]
 
@@ -39,19 +38,6 @@ class _BindingWithProvider(Protocol):
     def provider(self) -> object:
         """Return the binding's typed provider declaration."""
         ...
-
-
-def prorrata_source_casilla_ids(bindings: Iterable[_BindingWithProvider]) -> tuple[CasillaId, ...]:
-    """Return the unique, declared prorrata source casillas in registry order."""
-    ids: list[CasillaId] = []
-    for binding in bindings:
-        if not isinstance(binding.provider, ProrrataRegularizacionProvider):
-            continue
-        for casilla_id in binding.provider.source_casilla_ids:
-            value = validated_casilla_id(casilla_id, surface="selected prorrata source casilla")
-            if value not in ids:
-                ids.append(value)
-    return tuple(ids)
 
 
 class ProrrataRegularizacionOutput(StrEnum):

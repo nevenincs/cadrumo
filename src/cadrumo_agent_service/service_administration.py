@@ -211,13 +211,7 @@ class AgentServiceAdministration(ABC):
         if action == "local_models":
             return self._local_model_list()
         if action in {"catalog", "status"}:
-            if self._closing.is_set():
-                return {"kind": "refused", "code": "service_stopping"}
-            # Each reads what the profile and the tree are now; a result is
-            # served only for the lease and tree it was read under.
-            key = (Identity(self.client.lease), Identity(self._controller))
-            read = self._catalog_read if action == "catalog" else self._status_read
-            return read.answer(key, within=ADMIN_READ_SECONDS)
+            return self._cached_read(action)
         arguments: dict[str, Any] = {
             "provider": provider,
             "expected_revision": expected_revision,
@@ -228,6 +222,18 @@ class AgentServiceAdministration(ABC):
             "model": model,
             "secret": secret,
         }
+        return self._lifecycle_admin(action, arguments)
+
+    def _cached_read(self, action: str) -> Any:
+        if self._closing.is_set():
+            return {"kind": "refused", "code": "service_stopping"}
+        # Each reads what the profile and the tree are now; a result is
+        # served only for the lease and tree it was read under.
+        key = (Identity(self.client.lease), Identity(self._controller))
+        read = self._catalog_read if action == "catalog" else self._status_read
+        return read.answer(key, within=ADMIN_READ_SECONDS)
+
+    def _lifecycle_admin(self, action: str, arguments: dict[str, Any]) -> Any:
         if action == "start":
             # A start does not change the tree here: it is handed to its own thread.
             return self._admin(action, **arguments)
@@ -264,6 +270,12 @@ class AgentServiceAdministration(ABC):
             return releases.revoke(grant_id)
         if action == "attachment_conversation_forget" and conversation_id is not None:
             return releases.forget_conversation(conversation_id)
+        return self._attachment_request_admin(action, run_id, request_id, scope)
+
+    def _attachment_request_admin(
+        self, action: str, run_id: str | None, request_id: str | None, scope: str | None
+    ) -> dict[str, Any]:
+        releases = self._attachment_releases
         if run_id is None or request_id is None:
             return {"kind": "refused", "code": "invalid_request"}
         if action == "attachment_card":

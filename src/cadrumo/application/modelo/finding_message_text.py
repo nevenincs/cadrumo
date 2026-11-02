@@ -19,7 +19,7 @@ token before someone decides how it reads.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import Decimal, InvalidOperation
 from enum import StrEnum
@@ -291,6 +291,32 @@ def _plain(value: FindingFactValue, pattern: re.Pattern[str], fallback_key: str,
     return text if pattern.fullmatch(text) else _in_words(fallback_key, language)
 
 
+def _modelo_number(value: FindingFactValue, language: OutputLanguage) -> str:
+    return _plain(value, _MODELO_NUMBER, _UNKNOWN_MODELO_LOCALE_KEY, language)
+
+
+def _year(value: FindingFactValue, language: OutputLanguage) -> str:
+    return _plain(value, _YEAR, _ABSENT_VALUE_LOCALE_KEY, language)
+
+
+def _official_code(value: FindingFactValue, language: OutputLanguage) -> str:
+    return str(value)
+
+
+# The kinds written from their value and the output language alone; the box kinds
+# also read the form's box words, and every remaining kind is a figure.
+_VALUE_WRITERS: Final[Mapping[FindingFactKind, Callable[[FindingFactValue, OutputLanguage], str]]] = MappingProxyType(
+    {
+        FindingFactKind.PERIOD: _period,
+        FindingFactKind.PERIODS: _periods,
+        FindingFactKind.DATE: _date,
+        FindingFactKind.MODELO: _modelo_number,
+        FindingFactKind.YEAR: _year,
+        FindingFactKind.OFFICIAL_CODE: _official_code,
+    }
+)
+
+
 def fact_text(
     kind: FindingFactKind,
     value: FindingFactValue,
@@ -308,23 +334,12 @@ def fact_text(
     """
     if kind is FindingFactKind.TECHNICAL:
         return None
-    if kind is FindingFactKind.PERIOD:
-        return _period(value, language)
-    if kind is FindingFactKind.PERIODS:
-        return _periods(value, language)
-    if kind is FindingFactKind.DATE:
-        return _date(value, language)
     if kind is FindingFactKind.BOX:
         return _box(value, box_words, language)
     if kind is FindingFactKind.BOX_NUMBER:
         return own_box or _box(value, {}, language)
-    if kind is FindingFactKind.MODELO:
-        return _plain(value, _MODELO_NUMBER, _UNKNOWN_MODELO_LOCALE_KEY, language)
-    if kind is FindingFactKind.YEAR:
-        return _plain(value, _YEAR, _ABSENT_VALUE_LOCALE_KEY, language)
-    if kind is FindingFactKind.OFFICIAL_CODE:
-        return str(value)
-    return _figure_text(value, kind, language)
+    writer = _VALUE_WRITERS.get(kind)
+    return writer(value, language) if writer is not None else _figure_text(value, kind, language)
 
 
 def finding_message_text(

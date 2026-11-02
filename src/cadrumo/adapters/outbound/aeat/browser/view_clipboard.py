@@ -23,7 +23,7 @@ from cadrumo_client.contracts.view_stream import (
 from .._playwright import Page, PlaywrightError
 
 if TYPE_CHECKING:
-    from playwright.async_api import JSHandle
+    from playwright.async_api import Frame, JSHandle
 
 _CAPTURE = """() => {
   if (!document.hasFocus()) return { kind: 'none', text: '' };
@@ -92,6 +92,20 @@ _DELETE = """(saved) => {
 }"""
 
 
+def _copyable_text(description: dict[str, object], request: ViewClipboard) -> str | None:
+    """Return the selected text when this request may take it: never a password, nothing empty or oversized."""
+    text = description.get("text")
+    if (
+        description.get("kind") == "password"
+        or not isinstance(text, str)
+        or not text
+        or len(text.encode("utf-8")) > VIEW_MAX_CLIPBOARD_BYTES
+        or (request.action is ViewClipboardAction.CUT and not description.get("cuttable"))
+    ):
+        return None
+    return text
+
+
 @dataclass(slots=True)
 class _Pending:
     request_id: int
@@ -120,37 +134,37 @@ class ViewClipboardAdapter:
         if page is None or page.is_closed():
             return refused
         for frame in reversed(page.frames):
-            handle: JSHandle | None = None
-            try:
-                handle = await frame.evaluate_handle(_CAPTURE)
-                description = await handle.evaluate(
-                    "saved => ({ kind: saved.kind, text: saved.text, cuttable: saved.cuttable === true })"
-                )
-                kind = description.get("kind")
-                if kind == "none":
-                    await handle.dispose()
-                    continue
-                text = description.get("text")
-                if (
-                    kind == "password"
-                    or not isinstance(text, str)
-                    or not text
-                    or len(text.encode("utf-8")) > VIEW_MAX_CLIPBOARD_BYTES
-                    or (request.action is ViewClipboardAction.CUT and not description.get("cuttable"))
-                ):
-                    await handle.dispose()
-                    return refused
-                if request.action is ViewClipboardAction.CUT:
-                    self._pending = _Pending(request_id=request.request_id, page=page, handle=handle)
-                else:
-                    await handle.dispose()
-                return ViewClipboardSelection(request_id=request.request_id, text=text)
-            except PlaywrightError:
-                if handle is not None:
-                    with suppress(PlaywrightError):
-                        await handle.dispose()
-                return refused
+            selection = await self._select_in_frame(frame, page, request)
+            if selection is not None:
+                return selection
         return refused
+
+    async def _select_in_frame(self, frame: Frame, page: Page, request: ViewClipboard) -> ViewClipboardSelection | None:
+        """Read one frame's selection; ``None`` means the frame holds none and the next may be asked."""
+        refused = ViewClipboardSelection(request_id=request.request_id)
+        handle: JSHandle | None = None
+        try:
+            handle = await frame.evaluate_handle(_CAPTURE)
+            description = await handle.evaluate(
+                "saved => ({ kind: saved.kind, text: saved.text, cuttable: saved.cuttable === true })"
+            )
+            if description.get("kind") == "none":
+                await handle.dispose()
+                return None
+            text = _copyable_text(description, request)
+            if text is None:
+                await handle.dispose()
+                return refused
+            if request.action is ViewClipboardAction.CUT:
+                self._pending = _Pending(request_id=request.request_id, page=page, handle=handle)
+            else:
+                await handle.dispose()
+            return ViewClipboardSelection(request_id=request.request_id, text=text)
+        except PlaywrightError:
+            if handle is not None:
+                with suppress(PlaywrightError):
+                    await handle.dispose()
+            return refused
 
     async def commit(self, answer: ViewClipboardCommit, page: Page | None) -> bool:
         """Delete only the same selection after a successful clipboard write."""

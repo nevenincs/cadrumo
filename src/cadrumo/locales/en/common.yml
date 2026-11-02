@@ -4266,6 +4266,36 @@ desktop:
       kind_label: Kind of correction
       motive_label: Reason for the rectification
       values_label: Corrected values
+    credits:
+      dependents: Boxes that read them
+      dependents_lead: A box that reads a withholding without a figure has no figure
+        either. It is not zero.
+      estimate:
+        again: Estimate again
+        ask: Make the estimate
+        extrapolated: The income of the quarters after the last one is extrapolated
+          from it.
+        failed: The estimate was not made. Try again.
+        in_estimate: 'In the estimate: {amount}'
+        lead: An estimate of the annual return, projected from the quarterly declarations
+          you hold. It is not the calculation of your return and changes nothing in
+          it.
+        mark: Estimate
+        needs_region: Your profile does not state the region you live in, and the
+          estimate needs it. Add it to your profile and ask again.
+        nothing_left: No withholding or box is left without a figure in this estimate.
+        quarters: 'Quarterly declarations used: {count}.'
+        refused: The estimate could not be made.
+        title: Estimate from your quarterly declarations
+        unresolved_boxes: Boxes without a figure
+        unresolved_credits: Withholdings without a figure
+        words_language: These explanations are written in {language}.
+      lead: These boxes are filled from your withholding records, never typed here.
+        To change one, correct it in your withholding records and calculate again.
+      list: Withholdings
+      show: Show on the form
+      show_box: Show box {box} on the form
+      title: Withholdings taken from your income
     details:
       close: Close details
       hide: Hide details
@@ -4300,6 +4330,7 @@ desktop:
       label: Beside the form
       outline: Outline
     view:
+      credits: Withholdings
       form: Form
     views:
       label: Declaration views
@@ -4485,6 +4516,36 @@ desktop:
     entries_none: No entries yet
     entry_required: '* required in each entry'
     field_help: About this field
+    household:
+      add: Add person
+      blocked_hidden: Some values of this group are hidden, so its people cannot be
+        changed here.
+      cap_reached: This group is full, so no more people can be added.
+      declare_none: I have none
+      edit_person: Edit person {number}
+      hidden: Hidden value
+      lead: The people your declaration lists. A group you have not answered is unknown,
+        which is not the same as none.
+      limit: '{count} of at most {max} people'
+      people: 'People: {count}'
+      reading: Reading your household…
+      remove: Remove person
+      remove_help: Remove this person from your household? The count is updated with
+        it.
+      remove_person: Remove person {number}
+      retry: Try again
+      saved: Household saved.
+      state:
+        incomplete: Not complete
+        none_declared: None declared
+        none_declared_help: You stated that there are none.
+        not_served: Not available here
+        not_served_help: Your profile does not offer this group.
+        rows: People recorded
+        unknown: Not stated yet
+        unknown_help: Nothing is recorded for this group. That is not the same as
+          none.
+      title: Household
     keys:
       actions: Open the palette with the profile actions
       clear: Clear the search
@@ -9565,6 +9626,8 @@ workspace:
         past_filing_window: The filing period has ended, and paying in two instalments
           needs the return filed within it.
         result_unknown: 'Calculate the declaration first: its result decides this.'
+        second_instalment_nothing: This amount is so small that the second instalment
+          would come to nothing, so it is paid in one payment.
         settlement_unsupported: The amount this return settles does not go the way
           its result does, as when the whole amount to pay is suspended against your
           spouse's refund. The official file has no way to state that, so it cannot

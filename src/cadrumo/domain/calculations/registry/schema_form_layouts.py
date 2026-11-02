@@ -614,13 +614,7 @@ class FormLayoutDefinition(RegistryModel):
         _require_unique(owner, "placements for casillas", tuple(item.casilla_id for item in self.placements))
         _require_unique(owner, "design sources", tuple(item.source_ref for item in self.design_sources))
         sections = {(page.id, section.id) for page in self.pages for section in page.sections}
-        for placement in self.placements:
-            for alias in placement.aliases:
-                if (alias.page_id, alias.section_id) not in sections:
-                    raise RegistryValidationError(
-                        f"{owner} placement {placement.casilla_id!r} aliases unknown section "
-                        f"{alias.page_id!r}/{alias.section_id!r}",
-                    )
+        _require_alias_sections_exist(owner, self.placements, sections)
         _require_total_outline(owner, self.outline, tuple(item for page in self.pages for item in _page_sections(page)))
         return self
 
@@ -653,6 +647,24 @@ def _require_total_outline(
     _require_unique(owner, "outline groups", tuple(group.id for group in outline))
     grouped = tuple((item.page_id, item.section_id) for group in outline for item in group.sections)
     _require_unique(owner, "outline sections", tuple(f"{page}/{section}" for page, section in grouped))
+    _require_outline_matches_sections(owner, grouped, sections)
+
+
+def _require_alias_sections_exist(
+    owner: str, placements: tuple[FormPlacementDefinition, ...], sections: set[tuple[str, str]]
+) -> None:
+    for placement in placements:
+        for alias in placement.aliases:
+            if (alias.page_id, alias.section_id) not in sections:
+                raise RegistryValidationError(
+                    f"{owner} placement {placement.casilla_id!r} aliases unknown section "
+                    f"{alias.page_id!r}/{alias.section_id!r}",
+                )
+
+
+def _require_outline_matches_sections(
+    owner: str, grouped: tuple[tuple[str, str], ...], sections: tuple[tuple[str, str], ...]
+) -> None:
     known = set(sections)
     unknown = sorted(f"{page}/{section}" for page, section in grouped if (page, section) not in known)
     if unknown:
