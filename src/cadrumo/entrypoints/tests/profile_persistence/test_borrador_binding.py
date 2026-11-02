@@ -1,4 +1,9 @@
-"""Persistence-adapter integration tests for Modelo 100 borrador bindings."""
+"""Persistence-adapter integration tests for Modelo 100 borrador bindings.
+
+The 2025 borrador may supply the tax-residence enum, which takes its value from
+it, and may hold the work-withholding credit, which it only cross-checks: the
+credit is the taxpayer's to evidence, so the borrador never supplies it.
+"""
 
 from __future__ import annotations
 
@@ -139,10 +144,10 @@ def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
 
 
 def _zero_relation_values() -> dict[RelationId, Decimal]:
-    """Zero every relation that does not feed the casilla the borrador supplies.
+    """Zero every relation that does not feed the casilla the borrador holds.
 
     Relations share their binding's identity, and equivalent bindings of one
-    casilla must agree, so a zero filler there would contradict the borrador.
+    casilla must agree, so a zero filler there would stand in for the credit.
     """
     revision = _modelo_100_registry_snapshot().revision
     targets = casillas_by_binding(revision)
@@ -234,7 +239,9 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
             ports=_calculation_ports_221,
         )
 
-    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
+    # The borrador's 125,50 is held for comparison only: it never becomes the credit.
+    assert _DECIMAL_BINDING not in revision.binding_overrides
+    assert Decimal(revision.casilla_values["0596"]) != Decimal("125.50")
     assert revision.binding_overrides[_ENUM_BINDING] == "madrid"
     # A relation shares its binding's identity, so each id is persisted on one
     # channel only; the relation channel keeps the ids no binding supplied.
@@ -242,14 +249,14 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     assert all(Decimal(value) == Decimal("0") for value in revision.relation_overrides.values())
     assert set(revision.binding_overrides).isdisjoint(revision.relation_overrides)
     assert revision.borrador_snapshot_id == snapshot_id
-    assert revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
+    assert revision.bindings_sourced_from_borrador == (_ENUM_BINDING,)
     fresh_calculation_repository = CalculationRevisionCatalogueRepository(objects=objects)
     stored_revision = fresh_calculation_repository.load().get(revision.calculation_revision_id)
     assert stored_revision == revision
     assert stored_revision is not None
     assert stored_revision.borrador_snapshot_id == snapshot_id
-    assert stored_revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
-    assert Decimal(stored_revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
+    assert stored_revision.bindings_sourced_from_borrador == (_ENUM_BINDING,)
+    assert _DECIMAL_BINDING not in stored_revision.binding_overrides
     assert stored_revision.relation_overrides == revision.relation_overrides
     calculation_events = [
         event
@@ -263,14 +270,11 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     assert event.payload["calculation_revision_id"] == revision.calculation_revision_id
     assert event.payload["borrador_snapshot_id"] == snapshot_id
     assert event.payload["borrador_participated"] == "true"
-    assert event.payload["borrador_binding_count"] == "2"
-    assert (
-        event.payload["borrador_bindings_trace_sha256"]
-        == hashlib.sha256("\n".join((_DECIMAL_BINDING, _ENUM_BINDING)).encode("utf-8")).hexdigest()
-    )
+    assert event.payload["borrador_binding_count"] == "1"
+    assert event.payload["borrador_bindings_trace_sha256"] == hashlib.sha256(_ENUM_BINDING.encode("utf-8")).hexdigest()
 
 
-def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_backend(
+def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_the_credit_with_its_backend(
     service_repositories: tuple[
         WorkUnitCatalogueRepository,
         CalculationRevisionCatalogueRepository,
@@ -322,6 +326,8 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
             ports=_calculation_ports_303,
         )
 
-    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
+    # The backend's credit stands; the borrador's differing 125,50 does not replace it.
+    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("1.00")
+    assert Decimal(revision.casilla_values["0596"]) == Decimal("1.00")
     assert revision.binding_overrides[_ENUM_BINDING] == "cataluna"
-    assert revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING,)
+    assert revision.bindings_sourced_from_borrador == ()
