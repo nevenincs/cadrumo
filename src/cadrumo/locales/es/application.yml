@@ -1226,8 +1226,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Las claves de los valores aportados no pueden estar
-          en blanco.
         decimal_value_invalid: El valor de borrador para el origen numérico %{binding_id}
           debe ser compatible con decimal.
         forbidden_bindings: 'El borrador contiene valores que las definiciones del
