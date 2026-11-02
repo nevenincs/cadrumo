@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:cbf3e2f2c2ab85e070123f34151fbd33d85696578eff97bd438ef57db26455bb'
+body_hash: 'sha256:1c4e2f709dff96027832b982066701b6a0726dc16c2f28509a5ff9a3a6a126bb'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -172,6 +172,18 @@ related:
 - `S23` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
 - `S23` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
 - `S23` `by:` `sonnet-high`
+- `S06` `M` `src/cadrumo/application/modelo/taxation_comparison_words.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_taxation_comparison_words.py`
+- `S06` `M` `src/cadrumo/locales/en/application.yml`
+- `S06` `verify:` `pytest taxation comparison` -> `pass`
+- `S06` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S21` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S21` `M` `src/cadrumo/application/modelo/projection_words.py`
+- `S21` `M` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_resultado_ingresar_o_devolver.py`
+- `S21` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S21` `verify:` `pytest resultado and unresolved outcome` -> `pass`
+- `S21` `verify:` `lint-imports` -> `pass`
+- `S21` `by:` `sonnet-high`
 
 ## Notes
 
@@ -187,3 +199,5 @@ related:
 - `S12` Commit 208a60e27b; also fixed pre-existing ledger admitted ordering and regenerated stale modeloContract.ts; Rust profile Field lacks `ejercicio_answer` and `country_options`
 - `S02` Work landed across 526ca3d9a1, 75044c208a, be43f09bca and 586b72dcf8; disability deductions stay flat; `apellidos_nombre` and `discapacidad_clave` unwritten; ascendiente object added without a writer
 - `S23` Commit 2a52318aee; dated amendment, no devengo preselection
+- `S06` Review fix compare-taxation-caveat-words; landed inside another worker's commit e88563425e
+- `S21` Committed by sweeps df0021ab64 and e88563425e; new generic `unresolved_outcome` operator; contract lock released early during overlapping regeneration
