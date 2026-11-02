@@ -19,6 +19,7 @@ from cadrumo.core.profile_session import ProfileSessionRefusalReason
 from cadrumo_client.commands import profile_selection
 from cadrumo_client.commands.custody_payloads import ConfigLogoutResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError, attach_cli_policy_verdict
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.secure_input import (
     MachineSecretPayload,
     MachineSecretSelection,
@@ -308,7 +309,7 @@ def config_login(
     output_language: OutputLanguage | None = None,
 ) -> None:
     """Authenticate one profile and mint its resumable session."""
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
 
     machine_secret = select_machine_secret_channel(
         secrets_stdin=secrets_stdin,
@@ -379,7 +380,7 @@ def config_logout(
     channel proves the person for this sign-out. That is how a sign-in that
     was never persisted, such as a held one, is ended from another process.
     """
-    _activate_subcommand_output_language(ctx, output_language)
+    activate_subcommand_output_language(ctx, output_language)
 
     machine_secret = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
     selected = profile_selection.runtime_selected_profile_id()
