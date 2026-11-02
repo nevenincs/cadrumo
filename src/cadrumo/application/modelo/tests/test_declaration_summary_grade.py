@@ -116,4 +116,4 @@ def test_a_refusal_of_the_calculation_gate_is_confined_to_its_row(operation: Pin
     )
 
     assert summary.state is DeclarationSummaryState.UNREADABLE
-    assert summary.result is None and summary.technical_reason
+    assert summary.result is None and summary.technical_reason is not None
