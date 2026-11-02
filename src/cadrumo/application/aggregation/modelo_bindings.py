@@ -114,8 +114,8 @@ from .renta_imputation import (
 from .renta_income_diagnostics import (
     accrued_withholding_unpaid_diagnostics,
     part_payment_diagnostics,
-    rectificativa_netting_diagnostics,
     rectification_diagnostics,
+    rectificativa_netting_diagnostics,
 )
 from .renta_income_diagnostics import (
     fitted_diagnostic_id_list as _fitted_id_list,

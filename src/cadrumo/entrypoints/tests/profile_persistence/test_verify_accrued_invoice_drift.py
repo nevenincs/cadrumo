@@ -19,6 +19,7 @@ import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
+from cadrumo.adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -27,7 +28,6 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
 from cadrumo.application.aggregation.invoice_filing_fingerprint import (
     capture_invoice_fingerprint,
     invoice_row_fingerprint,
@@ -75,11 +75,11 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_verification_repository_bundle,
 )
 from cadrumo.entrypoints.tests.profile_persistence.ledger_drift_support import TAX_ID
-from cadrumo.entrypoints.tests.profile_persistence.verification_substance_support import (
-    workflow_profile as plain_workflow_profile,
-)
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
+)
+from cadrumo.entrypoints.tests.profile_persistence.verification_substance_support import (
+    workflow_profile as plain_workflow_profile,
 )
 from cadrumo.tests.env_scope import ready_clave_settings
 
@@ -350,7 +350,9 @@ def test_under_cash_an_unpaid_invoice_is_out_of_scope(cash_draft: _Draft) -> Non
     assert _drift_counts(_verify(cash_draft, revision)) is None
 
 
-def _as_stored_by_the_previous_build(draft: _Draft, revision: CalculationRevision, *rows: Invoice) -> CalculationRevision:
+def _as_stored_by_the_previous_build(
+    draft: _Draft, revision: CalculationRevision, *rows: Invoice
+) -> CalculationRevision:
     """Store the draft as version 1 left it: version-1 digests of linked invoices only, here none linked."""
     fingerprints = tuple(
         InvoiceRowFingerprint(invoice_id=row.invoice_id, fingerprint=invoice_row_fingerprint(row, field_set_version=1))
