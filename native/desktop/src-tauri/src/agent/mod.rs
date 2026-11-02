@@ -31,7 +31,7 @@ use serde_json::Value;
 use session::{Answer, RequestRef, SendRequest, Session};
 use std::sync::Arc;
 use stream::StreamEvent;
-use supervisor::{Observation, Status, Supervisor};
+use supervisor::{Supervisor, protocol::Observation, protocol::Status};
 use tauri::{Manager, Runtime, State, ipc::Channel, plugin::TauriPlugin};
 
 /// A refusal the column words from its stable code.
@@ -59,7 +59,7 @@ pub struct AgentHost {
 impl AgentHost {
     fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>) -> Self {
         let watched = sign_in.clone();
-        let changed: supervisor::Changed =
+        let changed: supervisor::protocol::Changed =
             Arc::new(move || Box::pin(watched.observation_changed()));
         let held = sign_in.clone();
         let observed = sign_in.clone();
@@ -75,12 +75,12 @@ impl AgentHost {
                 })
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
-        let launch: supervisor::Launch = Arc::new(move |_bearer: &str, profile: &str| {
+        let launch: supervisor::protocol::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
             let person = sign_in.person(&profile_id)?;
             let mut command = sign_in.service()?.command();
             command.args(["serve", "--profile-id", &profile_id]);
-            Ok(supervisor::Prepared {
+            Ok(supervisor::protocol::Prepared {
                 command,
                 person: Some(person),
             })
@@ -198,12 +198,12 @@ impl AgentHost {
 /// Calls racing service admission are retryable; other failures keep their diagnostics.
 fn command_refusal(
     diagnostics: &Diagnostics,
-    state: &supervisor::State,
+    state: &supervisor::protocol::State,
     code: &str,
     error: cadrumo_application::error::application::ApplicationError,
 ) -> Refused {
     use cadrumo_application::error::application::ErrorCode;
-    let awaiting_admission = matches!(state, supervisor::State::Starting)
+    let awaiting_admission = matches!(state, supervisor::protocol::State::Starting)
         && matches!(
             (error.code, error.reason.as_deref()),
             (
@@ -1135,18 +1135,27 @@ mod tests {
             (ErrorCode::ReadFailed, "agent_admin_unavailable"),
         ] {
             for (state, expected, failures) in [
-                (supervisor::State::Starting, "agent_service_busy", 0),
-                (supervisor::State::Stopped, "agent_service_failed", 1),
                 (
-                    supervisor::State::Ready {
+                    supervisor::protocol::State::Starting,
+                    "agent_service_busy",
+                    0,
+                ),
+                (
+                    supervisor::protocol::State::Stopped,
+                    "agent_service_failed",
+                    1,
+                ),
+                (
+                    supervisor::protocol::State::Ready {
                         agent_version: "synthetic".into(),
                     },
                     "agent_service_failed",
                     1,
                 ),
                 (
-                    supervisor::State::Refused {
-                        code: supervisor::Refusal::ServiceFailed,
+                    supervisor::protocol::State::Refused {
+                        code:
+                            cadrumo_application::diagnostics::service::AgentRefusal::ServiceFailed,
                     },
                     "agent_service_failed",
                     1,
@@ -1172,7 +1181,7 @@ mod tests {
             let error = ApplicationError::new(code, Operation::Cli).with_reason(reason);
             let refused = command_refusal(
                 &diagnostics,
-                &supervisor::State::Starting,
+                &supervisor::protocol::State::Starting,
                 "agent_service_failed",
                 error,
             );

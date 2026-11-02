@@ -1,7 +1,7 @@
 //! Native file drops. Only coordinates, counts and a single-use handle cross
 //! to the page; paths stay bound to the observer and its exact gateway.
 
-use super::{Refused, supervisor::Gateway};
+use super::{Refused, supervisor::protocol::Gateway};
 use serde::Serialize;
 use std::{
     path::PathBuf,
