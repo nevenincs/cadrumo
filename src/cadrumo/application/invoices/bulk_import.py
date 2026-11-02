@@ -53,6 +53,7 @@ from ...core.hex import Hex64Str
 from ...core.legacy_workbook import read_legacy_workbook
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
+from ...core.percentage import fraction_of_percentage
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.time.clock import now
@@ -358,7 +359,9 @@ def _parse_bulk_row_retention_rate(
     """Return the row's retención rate as a fraction, or ``None``.
 
     A book prints the rate either as a percentage (``15``) or as a fraction
-    (``0.15``); a value above one is read as a percentage. A rate is only
+    (``0.15``); a value above one is read as a percentage, and a ``%`` suffix
+    marks points whatever the value. A bare ``1`` is one per cent or the whole,
+    so it is refused rather than guessed. A rate is only
     accepted beside the amount it produced: the amount is what the document
     states, and the importer never computes it from the rate. A zero rate with
     no amount is a book saying nothing was withheld, and is read as no
@@ -378,7 +381,14 @@ def _parse_bulk_row_retention_rate(
             field="retencion_amount",
             reason="retencion_amount is required when retencion_rate is given; the amount is never derived",
         )
-    return rate / 100 if rate > 1 else rate
+    marked_as_percentage = coerce_cell_text(raw_row.get("retencion_rate")).rstrip().endswith("%")
+    if rate == 1 and not marked_as_percentage:
+        raise _RowParseError(
+            row_number=row_number,
+            field="retencion_rate",
+            reason="a bare retencion_rate of 1 is ambiguous between one per cent and the whole; write 1% or 0.01",
+        )
+    return fraction_of_percentage(rate) if rate > 1 or marked_as_percentage else rate
 
 
 def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
