@@ -42,6 +42,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import (
     BindingDefinition,
@@ -56,6 +57,7 @@ from ..aggregation.source_mesh import (
 )
 from ..aggregation.source_resolution_operations import storage_degradation_resolution
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from ..live.borrador_100_keys import borrador_admitted_bindings
 from ..persistence_errors import PersistenceDegradationError
 from ._decimal_parsing import decimal_from_string
 from .action_errors import ModeloPreconditionErrorMixin
@@ -186,7 +188,7 @@ def _assert_borrador_bindings_allowed(
     snapshot: Borrador100Snapshot,
     eligible_bindings: dict[BindingId, BindingDefinition],
 ) -> None:
-    """Refuse snapshot values not marked ``aeat_prefilled`` by the registry."""
+    """Refuse stored keys the revision does not admit, free casilla keys included."""
     unknown_or_forbidden = sorted(set(snapshot.binding_values) - set(eligible_bindings))
     if unknown_or_forbidden:
         raise Modelo100BorradorBindingError(
@@ -242,11 +244,7 @@ def _borrador_resolution(
                 lineage_role=CalculationSourceLineageRole.PRIMARY,
                 source_ref=f"borrador:{snapshot.snapshot_id}:binding:{binding_id}",
                 parent_source_ref=None,
-                # No terminal origin: ``borrador`` is a mesh-only source with no
-                # provider registration, so no declared expectation exists for a
-                # resolved class to be audited against. The snapshot is AEAT's
-                # own prefill, not a terminal fact this product holds.
-                terminal_origin=None,
+                terminal_origin=TerminalOriginClass.AEAT_THIRD_PARTY_DATA,
                 fingerprint=snapshot_fingerprint,
             )
             for binding_id in sourced
@@ -303,7 +301,7 @@ def resolve_modelo_100_borrador_bindings(
         snapshot_repository=snapshot_repository,
         operation=operation,
     )
-    eligible_bindings = _borrador_capable_bindings(registry_snapshot)
+    eligible_bindings = borrador_admitted_bindings(registry_snapshot.revision)
     _assert_borrador_bindings_allowed(snapshot, eligible_bindings)
     caller_owned = set(command.caller_binding_values) | set(command.caller_enum_binding_values)
     decimal_values, enum_values = _resolve_borrador_binding_values(
@@ -435,10 +433,6 @@ def _assert_registry_snapshot_axis(
                 "period": command.period.registry_token,
             },
         )
-
-
-def _borrador_capable_bindings(registry_snapshot: RegistrySnapshot) -> dict[BindingId, BindingDefinition]:
-    return {binding.id: binding for binding in registry_snapshot.revision.bindings if binding.aeat_prefilled is True}
 
 
 def _decimal_value(binding_id: BindingId, value: Decimal | str) -> Decimal:

@@ -29,6 +29,7 @@ from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculations.revision_carry_gate import revision_carry_outcome
+from .borrador_100_keys import require_borrador_keys_admitted
 from .errors import LiveApplicationInputError
 from .snapshot_base import (
     SnapshotLifecycleState,
@@ -108,13 +109,24 @@ def require_borrador_100_snapshot_coordinates_current(
     *,
     operation: PinnedAuthorityOperation,
 ) -> Borrador100Snapshot:
-    """Return a persisted borrador only when its producing coordinate re-confirms."""
+    """Return a persisted borrador only when its coordinate and every stored key re-confirm.
+
+    A key is current only when the pinned revision admits it to a borrador
+    snapshot, so a snapshot keyed by free casilla ids or by a binding the
+    revision no longer declares is refused rather than read.
+    """
     outcome = revision_carry_outcome(snapshot.registry_snapshot_ref, operation=operation)
     if outcome.refused:
         raise RegistrySnapshotError(
             "borrador registry coordinate cannot be re-confirmed: "
             f"{snapshot.registry_snapshot_ref.revision_id}: {outcome.detail}"
         )
+    revision = operation.snapshot(
+        snapshot.modelo,
+        filing_year=snapshot.filing_year,
+        period=snapshot.period.registry_token,
+    ).revision
+    require_borrador_keys_admitted(snapshot.binding_values, revision)
     return snapshot
 
 
@@ -138,15 +150,15 @@ def derive_borrador_100_snapshot_id(
     filing_year: int,
     period: Period,
     registry_snapshot_ref: RegistrySnapshotRef,
-    captured_at: datetime,
     source_url: str,
     binding_values: Mapping[BindingId, _BorradorValue],
 ) -> str:
-    """Return the content-addressed id for one Modelo 100 borrador capture.
+    """Return the content-addressed id for one Modelo 100 borrador document.
 
-    The canonical-JSON shape is preserved exactly so existing on-disk
-    snapshot ids remain valid: the core canonical JSON hash does not change
-    the hashed bytes.
+    The id covers what the document says: its coordinate, the pinned registry
+    revision, the source (which names the PDF digest for a file import) and the
+    projected values. The capture instant is not part of it, so importing the
+    same document again resolves to the snapshot already stored.
     """
     if (
         registry_snapshot_ref.modelo != form_for_role("renta.annual")
@@ -160,7 +172,6 @@ def derive_borrador_100_snapshot_id(
             "filing_year": filing_year,
             "period": period.registry_token,
             "registry_snapshot_ref": registry_snapshot_ref.model_dump(mode="json"),
-            "captured_at": captured_at.isoformat(),
             "source_url": source_url,
             "binding_values": {
                 key: format(value, "f") if isinstance(value, Decimal) else value
@@ -262,15 +273,14 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         filing_year: int | None = None,
         state: SnapshotLifecycleState | None = SnapshotLifecycleState.ACTIVE,
     ) -> tuple[Borrador100Snapshot, ...]:
-        snapshots = tuple(
-            require_borrador_100_snapshot_coordinates_current(snapshot, operation=operation)
-            for snapshot in super().list_snapshots()
-        )
+        snapshots = super().list_snapshots()
         if filing_year is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.filing_year == filing_year)
         if state is not None:
             snapshots = tuple(snapshot for snapshot in snapshots if snapshot.state is state)
-        return snapshots
+        return tuple(
+            require_borrador_100_snapshot_coordinates_current(snapshot, operation=operation) for snapshot in snapshots
+        )
 
     def show(self, snapshot_id: str, *, operation: PinnedAuthorityOperation) -> Borrador100Snapshot:
         """Execute this public contract operation."""
@@ -303,7 +313,6 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
             filing_year=capture.filing_year,
             period=capture.period,
             registry_snapshot_ref=capture.registry_snapshot_ref,
-            captured_at=capture.captured_at,
             source_url=capture.source_url,
             binding_values=capture.binding_values,
         )
