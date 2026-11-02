@@ -99,6 +99,8 @@ class Borrador100ImportResult(Borrador100SnapshotSummaryPayload):
     ``blank_casillas`` and ``warnings`` keep absence distinguishable from zero:
     a target casilla the extractor located but found blank is listed there and
     contributes no binding value, rather than being persisted as ``0``.
+    ``unowned_casillas`` lists printed casillas no borrador-admitted binding of
+    the pinned revision owns; their values were read but not stored.
     """
 
     bucket_id: BucketId
@@ -107,6 +109,7 @@ class Borrador100ImportResult(Borrador100SnapshotSummaryPayload):
     artefact_kind: str
     source_pdf_sha256: str
     blank_casillas: list[str] = []
+    unowned_casillas: list[str] = []
     warnings: list[str] = []
 
 

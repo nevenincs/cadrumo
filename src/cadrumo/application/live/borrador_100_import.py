@@ -16,8 +16,10 @@ from ...core.identity.documents import IdentityError
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionSurface
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
+from .borrador_100_keys import project_printed_casillas
 from .borrador_100_operation_ports import (
     Borrador100ArtefactKind,
     Borrador100ImportObservation,
@@ -29,7 +31,12 @@ from .errors import LiveApplicationInputError
 
 @dataclass(frozen=True, slots=True)
 class PreparedBorrador100Import:
-    """Validated observed values; no retained PDF bytes or local source path."""
+    """Validated observed values; no retained PDF bytes or local source path.
+
+    ``binding_values`` holds each printed value under the binding that owns its
+    casilla in the pinned revision. ``unowned_casillas`` lists printed casillas
+    no borrador-admitted binding owns: they are reported, not stored.
+    """
 
     extraction_profile_id: str
     extraction_coverage: Decimal
@@ -37,6 +44,7 @@ class PreparedBorrador100Import:
     source_pdf_sha256: ContentDigest
     binding_values: Mapping[BindingId, Decimal | str]
     blank_casillas: tuple[CasillaId, ...]
+    unowned_casillas: tuple[CasillaId, ...]
     warnings: tuple[str, ...]
 
     @property
@@ -55,7 +63,7 @@ def prepare_borrador_100_import(
     profile_tax_id: Callable[[], str | None],
 ) -> PreparedBorrador100Import:
     """Resolve authority, read once, and validate the parser receipt before writes."""
-    profile = _resolve_import_profile(operation, filing_year=filing_year, period=period)
+    revision, profile = _resolve_import_profile(operation, filing_year=filing_year, period=period)
     pdf_bytes = source_path.read_bytes()
     digest = sha256_hex(pdf_bytes)
     observation = parser.parse(
@@ -66,14 +74,16 @@ def prepare_borrador_100_import(
     )
     coverage = _require_parser_receipt(observation, profile=profile, digest=digest, filing_year=filing_year)
     _require_document_belongs_to_profile(observation.tax_id, profile_tax_id())
-    binding_values, blanks = _collect_import_values(profile, observation.values)
+    printed, blanks = _collect_printed_values(profile, observation.values)
+    projection = project_printed_casillas(revision, printed)
     return PreparedBorrador100Import(
         extraction_profile_id=profile.id,
         extraction_coverage=coverage,
         artefact_kind=observation.artefact_kind,
         source_pdf_sha256=digest,
-        binding_values=MappingProxyType(binding_values),
+        binding_values=MappingProxyType(dict(projection.binding_values)),
         blank_casillas=tuple(sorted(blanks)),
+        unowned_casillas=projection.unowned_casillas,
         warnings=observation.warnings,
     )
 
@@ -83,7 +93,7 @@ def _resolve_import_profile(
     *,
     filing_year: int,
     period: Period,
-) -> ExtractionProfileDefinition:
+) -> tuple[ModeloRevision, ExtractionProfileDefinition]:
     if period.filing_year != filing_year:
         raise ValueError("borrador import period differs from filing year")
     snapshot = operation.snapshot("100", filing_year=filing_year, period=period.registry_token)
@@ -94,7 +104,7 @@ def _resolve_import_profile(
     )
     if len(profiles) != 1:
         raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_profile_unresolved")
-    return profiles[0]
+    return snapshot.revision, profiles[0]
 
 
 def _require_parser_receipt(
@@ -147,13 +157,13 @@ def _require_document_belongs_to_profile(document_tax_id: str | None, recorded_t
         raise LiveApplicationInputError(translated_message="cli.app.live.borrador.import_tax_id_mismatch")
 
 
-def _collect_import_values(
+def _collect_printed_values(
     profile: ExtractionProfileDefinition,
     rows: tuple[Borrador100PrintedValue, ...],
-) -> tuple[dict[BindingId, Decimal | str], list[CasillaId]]:
+) -> tuple[dict[CasillaId, Decimal | str], list[CasillaId]]:
     targets = {target.casilla_id for target in profile.target_casillas}
     seen: set[CasillaId] = set()
-    binding_values: dict[BindingId, Decimal | str] = {}
+    printed: dict[CasillaId, Decimal | str] = {}
     blanks: list[CasillaId] = []
     for row in rows:
         if row.casilla_id not in targets or row.casilla_id in seen:
@@ -164,5 +174,5 @@ def _collect_import_values(
         else:
             if isinstance(row.value, Decimal) and not row.value.is_finite():
                 raise InternalInvariantError("borrador parser returned a nonfinite value")
-            binding_values["casilla." + row.casilla_id] = row.value
-    return binding_values, blanks
+            printed[row.casilla_id] = row.value
+    return printed, blanks

@@ -980,6 +980,9 @@ application:
   live:
     borrador:
       errors:
+        binding_keys_not_admitted: 'Ez a tárolt borrador olyan kulcsok alatt tart
+          értékeket, amelyeket a nyomtatványdefiníciók nem fogadnak el, ezért nem
+          használható; importáld újra a dokumentumot: %{bindings}.'
         binding_value_key_blank: A borrador értékeinek kulcsai nem lehetnek üresek.
         bucket_id_blank: A borrador bucket azonosítója nem lehet üres.
         snapshot_id_blank: A borrador pillanatkép azonosítója nem lehet üres.

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:dd9ee8f493b63d61585bceb61e6ba4e396de4822fdabbae865cd58cf8ae4269d'
+body_hash: 'sha256:498a7950676aab340dbf217589436c56efa664a69977248199e7743fae2dec9b'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -174,6 +174,15 @@ related:
 - `S14` `verify:` `just check-types` -> `pass`
 - `S14` `verify:` `just check-bindings` -> `pass`
 - `S14` `by:` `vaultspec-high-executor`
+- `S05` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_m131_pagos_fold_in_live.py`
+- `S05` `verify:` `pytest-profile_persistence-fold-tests` -> `pass`
+- `S05` `verify:` `just-check-style-format-types` -> `pass`
+- `S05` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_pagos_fraccionados_fold_in_live.py`
+- `S05` `M` `src/cadrumo/entrypoints/tests/profile_persistence/proven_zero_withholding_support.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_100_payer_side_returns_leave_credits_unchanged_live.py`
+- `S16` `verify:` `pytest-profile_persistence-fold-tests` -> `pass`
+- `S16` `verify:` `just-check-style-format-types` -> `pass`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/observation_seeding_support.py`
 
 ## Notes
 
@@ -183,3 +192,5 @@ related:
 - `S16` check-import-boundaries fails only in its subordinate checker, which crashes because dev/quality/types.py shadows the stdlib types module; contracts kept and 5341/5341 modules load.
 - `S16` 31 sede/live tests fail because the worktree has no Chromium build; none touch filing-kind code.
 - `S14` post-close regression fix: fixtures seeded unstamped revisions outside the calculation producer; dirs went 36 failed to 4 failed, the 4 outside S14 (0599 proven-zero diagnostic, 0604 fold)
+- `S05` post-close test alignment
+- `S16` post-close test alignment

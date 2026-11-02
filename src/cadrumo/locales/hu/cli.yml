@@ -648,6 +648,8 @@ cli:
       borrador:
         app_help: Modelo 100 borrador pillanatképek.
         filing_year_help: Benyújtási év (pl. 2024).
+        import_casilla_owner_ambiguous: 'A nyomtatványdefiníciók több kötése is tartalmazhatná
+          ezeket a nyomtatott mezőket, ezért semmi sem lett importálva: %{casillas}.'
         import_coverage_absent: Az elemző nem adott vissza kinyerési lefedettséget
           a nyomtatványdefiníciók profiljához; semmi sem lett importálva.
         import_ejercicio_mismatch: A PDF-en szereplő adóév nem egyezik a kért benyújtási
