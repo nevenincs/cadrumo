@@ -112,7 +112,24 @@ export function useGridNavigation<R>({
       if (active.key === null) {
         if (ordered.some((column) => column.id === active.column))
           return active;
-      } else if (index.has(active.key)) return active;
+      } else {
+        const at = index.get(active.key);
+        const row = at === undefined ? undefined : rows[at];
+        if (row && cellCount(row, ordered.length) > 0) {
+          if (row.kind === "data") {
+            if (ordered.some((column) => column.id === active.column))
+              return active;
+            return {
+              key: active.key,
+              column: columnAt(row, preferred.current),
+            };
+          }
+          return {
+            key: active.key,
+            column: columnAt(row, cellIndexOf(row, active.column)),
+          };
+        }
+      }
     }
     return firstStop();
   })();

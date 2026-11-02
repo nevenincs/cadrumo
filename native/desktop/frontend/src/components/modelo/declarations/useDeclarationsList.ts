@@ -14,6 +14,10 @@ import {
 } from "react";
 import { ledgerFailure, type LedgerFailure } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
+import {
+  isCreationWriteKey,
+  type ModeloWriteMemory,
+} from "../../../shell/modeloWriteHolds";
 import type {
   ModeloDeclarationsListProjectionV1,
   OutputLanguage,
@@ -25,7 +29,7 @@ export type DeclarationsRead =
   | { phase: "failed"; failure: LedgerFailure; list: null };
 
 /** The list as last read, and whether a write since has left it stale. */
-export type ListMemory = {
+export type ListMemory = ModeloWriteMemory & {
   list?: ModeloDeclarationsListProjectionV1;
   stale?: boolean;
 };
@@ -74,6 +78,13 @@ export function useDeclarationsList(
     generation.current += 1;
     const mine = generation.current;
     let settled = false;
+    const writes = memory.current.writes;
+    const completed =
+      writes
+        ?.snapshot()
+        .filter(
+          (hold) => hold.phase === "refresh" && isCreationWriteKey(hold.key),
+        ) ?? [];
     setRead((held) => ({
       phase: "reading",
       list: held.phase === "failed" ? null : held.list,
@@ -86,6 +97,7 @@ export function useDeclarationsList(
         memory.current.list = list;
         memory.current.stale = false;
         setRead({ phase: "ready", list });
+        completed.forEach((hold) => writes?.readCompleted(hold));
       })
       .catch((error: unknown) => {
         if (mine !== generation.current) return;

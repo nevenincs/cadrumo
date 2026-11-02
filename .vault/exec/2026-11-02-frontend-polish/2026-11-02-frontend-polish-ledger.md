@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:41866fe6369cdc2a475fe655ede45e05a293c36ea44bb2264bfb2c15015b5518'
+body_hash: 'sha256:ac02e0555bf5400e78523850912a590266cd2f6f20a1b0550585cba744a0fc3d'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -41,6 +41,103 @@ related:
 - `S03` `verify:` `TypeScript and targeted provider read ESLint` -> `pass`
 - `S03` `verify:` `provider-reads deferred response scenarios (7)` -> `pass`
 - `S03` `verify:` `selected provider settings save/refusal/reopen/switch/sign-in scenarios (7)` -> `pass`
+- `S04` `M` `native/desktop/frontend/src/shell/readingModel.ts`
+- `S04` `M` `native/desktop/frontend/src/shell/agentLive.ts`
+- `S04` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S04` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S04` `A` `native/desktop/frontend/tests/scenarios/agent-readers.spec.ts`
+- `S04` `verify:` `TypeScript and targeted agent reader ESLint` -> `pass`
+- `S04` `verify:` `agent-readers and reading-model scenarios (4)` -> `pass`
+- `S04` `verify:` `agent status messaging catalog smoke scenarios (5)` -> `pass`
+- `S05` `M` `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`
+- `S05` `M` `native/desktop/frontend/tests/scenarios/ledger-matching.spec.ts`
+- `S05` `verify:` `TypeScript and matching/invoice targeted ESLint` -> `pass`
+- `S05` `verify:` `ledger-matching and ledger-invoices scenarios (25)` -> `pass`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
+- `S07` `verify:` `TypeScript and matching/invoice targeted ESLint` -> `pass`
+- `S07` `verify:` `ledger-invoices and ledger-matching scenarios (25)` -> `pass`
+- `S06` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S06` `M` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S06` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S06` `M` `dev/locales/desktop_interface_keys.py`
+- `S06` `M` `src/cadrumo/locales/en/common.yml`
+- `S06` `M` `src/cadrumo/locales/es/common.yml`
+- `S06` `M` `src/cadrumo/locales/ca/common.yml`
+- `S06` `M` `src/cadrumo/locales/hu/common.yml`
+- `S06` `verify:` `canonical desktop-frontend-chrome generation` -> `pass`
+- `S06` `verify:` `TypeScript and targeted AEAT ESLint` -> `pass`
+- `S06` `verify:` `AEAT behavior cases (30) and corrected multilingual local reload cases (4)` -> `pass`
+- `S25` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S25` `M` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S25` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S25` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S25` `verify:` `TypeScript and targeted AEAT ESLint and formatting` -> `pass`
+- `S25` `verify:` `AEAT exact retry scope and overlapping request regressions (6)` -> `pass`
+- `S18` `M` `native/desktop/frontend/src/components/ui/suggestions.tsx`
+- `S18` `M` `native/desktop/frontend/src/components/ui/combobox.tsx`
+- `S18` `M` `native/desktop/frontend/src/components/ui/dataGridNavigation.ts`
+- `S18` `M` `native/desktop/frontend/src/components/ledger/editing/CellEditor.tsx`
+- `S18` `M` `native/desktop/frontend/src/dev/primitives/DataGridHarness.tsx`
+- `S18` `M` `native/desktop/frontend/src/dev/primitives/LayersHarness.tsx`
+- `S18` `M` `native/desktop/frontend/src/dev/primitives/main.tsx`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/data-grid.spec.ts`
+- `S18` `M` `native/desktop/frontend/tests/scenarios/escape-layers.spec.ts`
+- `S18` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
+- `S18` `verify:` `Shared grid and escape layer cases (45)` -> `pass`
+- `S18` `verify:` `Editor cases after installing canonical fixture limits (42)` -> `pass`
+- `S26` `M` `native/desktop/frontend/src/components/agent/Transcript.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/agent/Transcript.stories.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/agent/SkillDialog.tsx`
+- `S26` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S26` `M` `native/desktop/frontend/src/dev/fixtures/agent.ts`
+- `S26` `M` `native/desktop/frontend/src/dev/fixtures/agentSkills.ts`
+- `S26` `M` `native/desktop/frontend/tests/scenarios/agent-mentions.spec.ts`
+- `S26` `M` `native/desktop/frontend/tests/scenarios/agent-skills.spec.ts`
+- `S26` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
+- `S26` `verify:` `agent mentions and skills browser scenarios (24)` -> `pass`
+- `S08` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S08` `verify:` `Shared-control and typed-editor static review plus 87 applicable browser cases after S18` -> `pass`
+- `S09` `M` `native/desktop/frontend/tests/scenarios/user-profile.spec.ts`
+- `S09` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S09` `verify:` `Profile account and authentication scenarios after dock selector correction (95)` -> `pass`
+- `S09` `verify:` `TypeScript scoped test lint and format` -> `pass`
+- `S28` `M` `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx`
+- `S28` `M` `native/desktop/frontend/src/shell/ledgerSetup.ts`
+- `S28` `M` `native/desktop/frontend/src/dev/ledgerFixture.ts`
+- `S28` `M` `native/desktop/frontend/src/dev/ledgerSetupFixture.ts`
+- `S28` `M` `native/desktop/frontend/src/dev/fixtures/ledgerEntryOptions.json`
+- `S28` `M` `native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`
+- `S28` `M` `src/cadrumo/application/ledger/counterparty_operation.py`
+- `S28` `M` `src/cadrumo/application/ledger/entry_limits.py`
+- `S28` `M` `src/cadrumo/application/ledger/tests/test_entry_limits.py`
+- `S28` `M` `dev/locales/desktop_ledger_catalogue_keys.py`
+- `S28` `M` `src/cadrumo/locales/en/common.yml`
+- `S28` `M` `src/cadrumo/locales/es/common.yml`
+- `S28` `M` `src/cadrumo/locales/ca/common.yml`
+- `S28` `M` `src/cadrumo/locales/hu/common.yml`
+- `S28` `verify:` `Counterparty focused browser cases and failed refresh attribution` -> `pass`
+- `S28` `verify:` `TypeScript scoped ESLint formatting and canonical chrome generation` -> `pass`
+- `S28` `verify:` `Scoped Ruff checks and backend entry limits tests 47` -> `pass`
+- `S27` `M` `native/desktop/frontend/src/components/ledger/transfer/ExportDialog.tsx`
+- `S27` `M` `native/desktop/frontend/src/components/ledger/transfer/ImportDialog.tsx`
+- `S27` `M` `native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts`
+- `S27` `verify:` `Transfer and write-pause scenarios plus four focused picker/export regressions` -> `pass`
+- `S27` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
+- `S29` `M` `native/desktop/frontend/src/shell/localAiLanes.ts`
+- `S29` `M` `native/desktop/frontend/src/shell/localModels.ts`
+- `S29` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/setup/LocalAi.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/setup/ProvisioningPanel.tsx`
+- `S29` `M` `native/desktop/frontend/src/components/settings/LocalModels.tsx`
+- `S29` `M` `native/desktop/frontend/src/dev/agentFixtureHost.ts`
+- `S29` `M` `native/desktop/frontend/tests/scenarios/local-models.spec.ts`
+- `S29` `verify:` `All local models browser scenarios 17` -> `pass`
+- `S29` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
+- `S30` `M` `native/desktop/frontend/src/components/CommandPalette.tsx`
+- `S30` `M` `native/desktop/frontend/tests/scenarios/palette.spec.ts`
+- `S30` `verify:` `All palette browser scenarios 15` -> `pass`
+- `S30` `verify:` `TypeScript scoped ESLint and formatting` -> `pass`
 
 ## Notes
 

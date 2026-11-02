@@ -5,7 +5,7 @@
 //! are read as JSON; a refusal leaves as a typed code, never as the gateway's
 //! prose.
 
-use super::{Refused, supervisor::Gateway};
+use super::{Refused, supervisor::protocol::Gateway};
 use serde_json::Value;
 use std::{io::Read, time::Duration};
 

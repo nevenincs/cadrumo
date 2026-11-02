@@ -68,7 +68,11 @@ function LocalAiElement({
   const settled = run?.stage === "settled" ? run.operation_id : null;
   const [reads, setReads] = useState({ settled, count: 0 });
   if (reads.settled !== settled) setReads({ settled, count: reads.count + 1 });
-  const { lanes, host } = useLocalAiLanes(localAi, expanded, reads.count);
+  const { lanes, host, status, retry } = useLocalAiLanes(
+    localAi,
+    expanded,
+    reads.count,
+  );
   return (
     <li
       data-setup-element={row.item}
@@ -93,6 +97,8 @@ function LocalAiElement({
         <div id={contentId}>
           <LocalAi
             lanes={lanes}
+            status={status}
+            onRetry={retry}
             host={host}
             locale={locale}
             signedOut={signedOut}

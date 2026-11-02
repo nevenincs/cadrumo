@@ -10,6 +10,7 @@ import type {
 /** How the scenario host serves skills: a handful, hundreds for scrolling,
  * a read that fails, or none at all. */
 export type FixtureSkills = "bundled" | "many" | "failed" | "unavailable";
+export const LONG_SKILL_PATH = `references/${"comprobaciones-".repeat(12)}trimestrales.md`;
 
 const digestOf = (seed: string) => {
   let hash = 0;
@@ -50,7 +51,7 @@ export const FIXTURE_SKILLS: readonly AgentSkillSummary[] = [
       profile_match: "all",
       temporal_trigger: "quarter_close",
     },
-    ["references/casillas.md"],
+    ["references/casillas.md", LONG_SKILL_PATH],
   ),
   skill(
     "cadrumo-renta-anual",

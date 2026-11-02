@@ -65,6 +65,12 @@ S02 health tooling may run concurrently with S03 frontend and S04 Rust source re
 
 
 
+Current delegated lanes (user-directed autonomous execution, 2026-11-02):
+- S04 Sol medium: desktop agent supervisor and its new child modules; exclusive ownership of Rust desktop checks for this batch.
+- S03 Sol medium: invoice editor and new invoice editor modules; owns focused invoice checks only.
+- S03 Terra xhigh: review-dialog outcome/presentation extraction and its new child modules; owns focused review-dialog checks only.
+Each lane may update direct consumer imports only within its stated folder; cross-lane consumers are reported for later integration. No worker edits App.tsx, CommandPalette.tsx, shared IPC/settings, justfile, or plan metadata. Workers run their own commands to completion and return evidence; the parent does not poll their internal command handles. Shared full frontend checks and commits are deferred until the batch is stable.
+
 ## Verification
 
 Run focused regression tests and existing frontend npm check, CMake-owned Rust tests/quality, and Python gates appropriate to tooling changes. Exercise scanner defects using isolated fixtures. Audit all authored modules for cohesion and duplication, documenting justified generated/data exclusions. Final integrated review is required; unresolved verification leaves Steps open.

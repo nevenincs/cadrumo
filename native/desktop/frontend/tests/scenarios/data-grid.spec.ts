@@ -215,6 +215,46 @@ test("a combobox editor is named, grouped and commits with Tab", async ({
   await expect(focused(page)).toHaveAttribute("data-column", "category");
 });
 
+for (const key of ["Tab", "Shift+Tab"])
+  test(`${key} cancels an unmatched combobox without committing or losing the grid`, async ({
+    page,
+  }) => {
+    await open(page);
+    const cell = grid(page).locator(
+      '[aria-rowindex="2"] [data-column="category"]',
+    );
+    await cell.click();
+    await page.keyboard.press("Enter");
+    const field = page.getByRole("combobox");
+    await field.fill("unmatched-zzzz-query");
+    await expect(page.getByRole("option")).toHaveCount(0);
+    await page.keyboard.press(key);
+    await expect(field).toHaveCount(0);
+    await expect(cell).toBeFocused();
+    expect(
+      (await events(page)).filter((event) => event.startsWith("commit ")),
+    ).toEqual([]);
+    await expect(grid(page).locator('[tabindex="0"]')).toHaveCount(1);
+  });
+
+test("hiding the active column keeps one tab stop in the same row without stealing focus", async ({
+  page,
+}) => {
+  await open(page, "rows=40&columnControls");
+  await grid(page)
+    .locator('[aria-rowindex="2"] [data-column="category"]')
+    .click();
+  const hide = page.getByRole("button", { name: "Hide category" });
+  await hide.click();
+  await expect(hide).toBeFocused();
+  const stop = grid(page).locator('[tabindex="0"]');
+  await expect(stop).toHaveCount(1);
+  await expect(stop).not.toHaveAttribute("data-column", "category");
+  await expect(stop.locator("xpath=..")).toHaveAttribute("aria-rowindex", "2");
+  await page.keyboard.press("Shift+Tab");
+  await expect(stop).toBeFocused();
+});
+
 test("cells say what the row's state is, and a read-only cell says why", async ({
   page,
 }) => {
