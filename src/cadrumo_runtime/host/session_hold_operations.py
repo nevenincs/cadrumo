@@ -32,6 +32,7 @@ from uuid import UUID, uuid4
 
 from pydantic import BaseModel, JsonValue, ValidationError
 
+from cadrumo.application.operations.error_detail import operation_error_detail_schema
 from cadrumo.application.operations.frontend_projection import (
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
@@ -49,7 +50,11 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
-from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 from cadrumo_client.commands.registered_operation_responses import (
     require_registered_response_control,
     submit_registered_review_response,
@@ -305,7 +310,15 @@ class OperationRelay:
             projection.terminal_condition is OperationTerminalCondition.REFUSED
             and projection.refusal_ref in contract.refusal_detail_codes
         )
-        if projection.lifecycle is not OperationLifecycle.TERMINAL or not documented or schema is None:
+        if (
+            projection.lifecycle is OperationLifecycle.TERMINAL
+            and not documented
+            and projection.terminal_condition in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL
+        ):
+            # Any other stop may carry the registered error detail, with the
+            # sentence the product words for it; one that recorded none has no result.
+            schema = operation_error_detail_schema()
+        elif projection.lifecycle is not OperationLifecycle.TERMINAL or not documented or schema is None:
             raise RelayRefusedError("no_result")
         document = self._client.read_result_document(
             OperationResultProjectionRequestV1(
@@ -317,6 +330,8 @@ class OperationRelay:
             timeout=remaining_budget(deadline),
             deadline=deadline,
         )
+        if document.get("outcome") == "refused":
+            raise RelayRefusedError("no_result")
         if document.get("result_schema") != schema.model_dump(mode="json") or document.get(
             "definition_contract_digest"
         ) != str(contract.definition_contract_digest):
