@@ -2909,6 +2909,7 @@ application:
         máximo {maximum_utf8_bytes} bytes UTF-8; se recibieron {utf8_byte_count}.
       profile_proof_cancelled: Se canceló la comprobación de la contraseña del perfil
         antes de terminar.
+      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica a qué ejercicio corresponde esta respuesta.
       profile_text_too_long: El campo %{field} admite como máximo %{limit} caracteres;
         acórtalo.
       recovery_already_enrolled: Este perfil ya tiene un código de recuperación. Desactívalo

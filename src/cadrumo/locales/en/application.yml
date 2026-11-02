@@ -2760,6 +2760,7 @@ application:
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
       profile_proof_cancelled: The profile password check was cancelled before it
         finished.
+      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say which ejercicio this answer is for.
       profile_text_too_long: The field %{field} holds at most %{limit} characters;
         shorten it.
       recovery_already_enrolled: This profile already has a recovery code. Disable

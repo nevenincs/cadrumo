@@ -124,6 +124,11 @@ _EJERCICIO_DIGITS: Final[int] = 4
 PROFILE_OUTPUT_LANGUAGE_PATH: Final[str] = "preferences.output_language"
 """Dotted profile-record path for the setup flow's output-language answer."""
 
+EJERCICIO_STATED_PROFILE_PATHS: Final[frozenset[str]] = frozenset(
+    {"irpf.activity_income_imputation_criterion", "irpf.codigo_comercio_accounting"}
+)
+"""Paths the RIRPF art. 7 resolver reads only from a fact dated into an ejercicio; an undated value answers nothing."""
+
 
 # ---------------------------------------------------------------------------
 # SetupAnswers
@@ -678,6 +683,7 @@ class SetupAnswers(BaseModel):
 
 
 __all__ = [
+    "EJERCICIO_STATED_PROFILE_PATHS",
     "PROFILE_OUTPUT_LANGUAGE_PATH",
     "SetupAnswers",
 ]
