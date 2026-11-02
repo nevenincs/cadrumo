@@ -1,3 +1,4 @@
+import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import type {
   CatalogueInvoice,
@@ -104,6 +105,54 @@ test("only corrections that change the reading are sent, in the confirmation's s
   expect(
     correctionValues(draft, null, { counterparty_name: "Otra SL" }),
   ).toEqual({ kind: "ok", values: {} });
+});
+
+test("a retención is sent in points, for the ledger to turn into its fraction", () => {
+  const confirmed = (retention_rate: string) => {
+    const result = confirmation({
+      reference: { kind: "evidence", id: "e-1" },
+      binding: {
+        sourceSha256: "a".repeat(64),
+        draftReviewSha256: "b".repeat(64),
+      },
+      draft,
+      blockers: [],
+      answers: {},
+      kind: "received",
+      country: "ES",
+      corrections: { retention_rate, retention_amount: "150" },
+      duplicate: null,
+      confirmAnyway: false,
+    });
+    if (result.kind !== "ready") throw new Error("held");
+    return result.request;
+  };
+  // One typed means one per cent, not the whole.
+  expect(confirmed("1").retention_points).toBe("1");
+  expect(confirmed("1").retention_rate).toBeUndefined();
+  expect(confirmed("0.5").retention_points).toBe("0.5");
+  expect(confirmed("0.5").retention_amount).toBe("150");
+});
+
+test("saying the retención the document printed is still saying it", () => {
+  const read = {
+    ...draft,
+    retencion_rate: { decimal: "15" },
+    retencion_amount: { decimal: "150.00" },
+  };
+  expect(
+    correctionValues(read as typeof draft, "received", {
+      retention_rate: "15",
+      retention_amount: "150.00",
+    }),
+  ).toEqual({
+    kind: "ok",
+    values: { retention_rate: "15", retention_amount: "150" },
+  });
+  expect(correctionValues(read as typeof draft, "received", {})).toEqual({
+    kind: "ok",
+    values: {},
+  });
 });
 
 test("a rate is read as points, so half a point is not mistaken for a fraction", () => {

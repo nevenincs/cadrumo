@@ -9,8 +9,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import {
-  LEDGER_YEAR_MAX,
-  LEDGER_YEAR_MIN,
   MONTH_CODES,
   QUARTER_CODES,
   stepPeriod,
@@ -149,7 +147,7 @@ export function PeriodSelector({
             ? "desktop.ledger.period.year_previous"
             : "desktop.ledger.period.previous",
         )}
-        disabled={value === null || (yearMode && value.year <= LEDGER_YEAR_MIN)}
+        disabled={value === null || (yearMode && !yearAdmitted(value.year - 1))}
         onClick={() => step(-1)}
       >
         <Icon name="back" />
@@ -205,7 +203,7 @@ export function PeriodSelector({
           <div className="flex items-center gap-1">
             <IconButton
               label={t("desktop.ledger.period.year_previous")}
-              disabled={shownYear <= LEDGER_YEAR_MIN}
+              disabled={!yearAdmitted(shownYear - 1)}
               onClick={() => setShownYear((year) => year - 1)}
             >
               <Icon name="back" />
@@ -231,7 +229,7 @@ export function PeriodSelector({
             )}
             <IconButton
               label={t("desktop.ledger.period.year_next")}
-              disabled={shownYear >= LEDGER_YEAR_MAX}
+              disabled={!yearAdmitted(shownYear + 1)}
               onClick={() => setShownYear((year) => year + 1)}
             >
               <Icon name="forward" />
@@ -352,7 +350,7 @@ export function PeriodSelector({
             ? "desktop.ledger.period.year_next"
             : "desktop.ledger.period.next",
         )}
-        disabled={value === null || (yearMode && value.year >= LEDGER_YEAR_MAX)}
+        disabled={value === null || (yearMode && !yearAdmitted(value.year + 1))}
         onClick={() => step(1)}
       >
         <Icon name="forward" />

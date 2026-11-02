@@ -45,7 +45,7 @@ from ...domain.calculations.registry.prorrata_exclusions import require_art104_t
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
-from ...domain.transactions.enums import BusinessClassification, TransactionDirection
+from ...domain.transactions.enums import TRANSFER_ALLOWED_STATES, BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
     TransactionEditLineageEntry,
@@ -62,15 +62,6 @@ from ...domain.transactions.own_accounts import OwnAccountId
 from ...domain.transactions.repository import ImportSummary
 from ..export.tabular import ExportSerializationFormat, verify_export_metadata
 from ..review.filter import LedgerReviewStatus
-
-_TRANSFER_ALLOWED_STATES = frozenset(
-    {
-        BusinessClassification.NOT_YET_PROCESSED,
-        BusinessClassification.PERSONAL,
-        BusinessClassification.PROCESSED_UNCLASSIFIED,
-        BusinessClassification.SKIPPED_BY_RULE,
-    },
-)
 
 
 def _validate_iso_3166_jurisdiction(value: str | None) -> str | None:
@@ -290,7 +281,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
         return self
 
     def _validate_internal_transfer_payload(self) -> None:
-        if self.business_classification not in _TRANSFER_ALLOWED_STATES:
+        if self.business_classification not in TRANSFER_ALLOWED_STATES:
             raise TransactionValidationError(
                 "INTERNAL_TRANSFER rows must not be classified as tax-relevant business rows",
             )

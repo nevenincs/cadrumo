@@ -5,6 +5,7 @@
 // stages the cells it returns and says what it staged. Nothing here writes.
 
 import type { LedgerRow } from "./ledger";
+import { takesChanges, takesClassification } from "./ledgerContract";
 import { parsePercent, type GrammarRefusal } from "./ledgerGrammar";
 import type { StagedCheck } from "./ledgerStagedCheck";
 import {
@@ -22,6 +23,12 @@ export const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
   personal: "PERSONAL",
   mixed: "MIXED",
 };
+
+/** The classify command that sets a stored classification; Personal for any
+ * other, which no control offers. */
+export const classifyKindOf = (classification: string): ClassifyKind =>
+  CLASSIFY_KINDS.find((kind) => CLASSIFICATION_OF[kind] === classification) ??
+  "personal";
 
 /** The movements a classify command is asked to act on: the selection, or
  * a group's movements, in the order they are drawn. */
@@ -58,8 +65,6 @@ export type ClassifyAvailability =
       partial: boolean;
     }
   | { kind: "blocked"; block: ClassifyBlock };
-
-const TRANSFER = "INTERNAL_TRANSFER";
 
 /** How the movements a classify command stages split by what they take, as
  * the ledger answers: a spending category, or none, being income. */
@@ -99,15 +104,17 @@ export function classifyAvailability(
   const named = target.ids.filter((id) => rows.has(id));
   if (named.length === 0)
     return { kind: "blocked", block: { kind: "nothing_selected" } };
-  const active = named.filter(
-    (id) => rows.get(id)!.transaction.lifecycle_state === "ACTIVE",
+  const active = named.filter((id) =>
+    takesChanges(rows.get(id)!.transaction.lifecycle_state),
   );
   if (active.length === 0)
     return { kind: "blocked", block: { kind: "inactive_only" } };
-  const ids =
-    kind === "personal"
-      ? active
-      : active.filter((id) => rows.get(id)!.transaction.direction !== TRANSFER);
+  const ids = active.filter((id) =>
+    takesClassification(
+      rows.get(id)!.transaction.direction,
+      CLASSIFICATION_OF[kind],
+    ),
+  );
   if (ids.length === 0)
     return { kind: "blocked", block: { kind: "transfers_only" } };
   return {

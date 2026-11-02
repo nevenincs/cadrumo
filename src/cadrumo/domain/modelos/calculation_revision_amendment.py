@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
+from typing import assert_never
 
 from pydantic import BaseModel, model_validator
 
@@ -17,6 +18,7 @@ from ..calculations.registry.schema import RegistrySnapshot
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import SourceReference
 from .errors import ModeloValidationError
+from .filing_record import FilingDeclarationKind
 
 
 class CalculationRevisionAmendmentKind(StrEnum):
@@ -62,6 +64,34 @@ class CalculationRevisionAmendmentIdentity(BaseModel):
         ):
             raise ModeloValidationError("an M303 rectificativa motive is valid only for amendment kind rectificativa")
         return self
+
+
+def declaration_kind_for_amendment_kind(kind: CalculationRevisionAmendmentKind) -> FilingDeclarationKind:
+    """Return the declaration kind an amendment of ``kind`` is filed as.
+
+    Spelled out member by member, so a new amendment kind is a type error here
+    rather than reaching a filing record through a string-value cast.
+    """
+    match kind:
+        case CalculationRevisionAmendmentKind.COMPLEMENTARIA:
+            return FilingDeclarationKind.COMPLEMENTARIA
+        case CalculationRevisionAmendmentKind.SUSTITUTIVA:
+            return FilingDeclarationKind.SUSTITUTIVA
+        case CalculationRevisionAmendmentKind.RECTIFICATIVA:
+            return FilingDeclarationKind.RECTIFICATIVA
+    assert_never(kind)
+
+
+def filing_declaration_kind_for_amendment(
+    amendment_identity: CalculationRevisionAmendmentIdentity | None,
+) -> FilingDeclarationKind:
+    """Return the declaration kind a revision with ``amendment_identity`` is filed as.
+
+    A revision without an amendment identity is an original declaration.
+    """
+    if amendment_identity is None:
+        return FilingDeclarationKind.ORIGINAL
+    return declaration_kind_for_amendment_kind(amendment_identity.kind)
 
 
 def _registry_m303_rectificativa_declarations(
@@ -155,6 +185,8 @@ __all__ = [
     "CalculationRevisionAmendmentIdentity",
     "CalculationRevisionAmendmentKind",
     "M303RectificativaMotive",
+    "declaration_kind_for_amendment_kind",
+    "filing_declaration_kind_for_amendment",
     "m303_rectificativa_motive_is_applicable",
     "m303_rectificativa_record_design_from_snapshot",
 ]

@@ -10,6 +10,7 @@ import type {
   CatalogueInvoice,
   InvoiceListResult,
   LedgerRow,
+  LedgerStagedRowAnswer,
 } from "../../../shell/ledger";
 import type { StageEvent, StagedAction } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -37,6 +38,7 @@ import { formatDay } from "../../../shared/dateFormats";
  */
 export function InvoiceSection({
   row,
+  answer,
   rows,
   invoices,
   actions,
@@ -48,6 +50,8 @@ export function InvoiceSection({
   say,
 }: {
   row: LedgerRow;
+  /** The ledger's answer about the movement; absent until it has answered. */
+  answer: LedgerStagedRowAnswer | undefined;
   /** The window's movements, for suggestions one to one. */
   rows: readonly LedgerRow[];
   invoices: InspectorRead<InvoiceListResult> | null;
@@ -83,8 +87,9 @@ export function InvoiceSection({
       new Map(rows.map((entry) => [entry.transaction.transaction_id, entry])),
     [rows],
   );
-  const lock =
-    tx.lifecycle_state === "ACTIVE"
+  const lock = !answer
+    ? t("desktop.ledger.apply.reading")
+    : answer.takes_changes
       ? null
       : t("desktop.ledger.inspector.invoice.active_only");
 
@@ -126,7 +131,7 @@ export function InvoiceSection({
     </div>
   );
 
-  if (tx.direction === "INTERNAL_TRANSFER")
+  if (answer && !answer.takes_invoice)
     return (
       <p className="text-sm text-muted-foreground">
         {t("desktop.ledger.inspector.invoice.transfer")}

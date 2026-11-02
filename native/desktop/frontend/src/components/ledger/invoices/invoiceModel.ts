@@ -686,6 +686,19 @@ export function correctionOf(invoice: CatalogueInvoice): CorrectionDraft {
     paymentId: "",
   };
 }
+/** A correction's retención. A stored rate finer than a person types is seeded
+ * in full and stands as stored until retyped: it is neither refused nor sent. */
+function correctionRetention(
+  invoice: CatalogueInvoice,
+  draft: CorrectionDraft,
+) {
+  const read = readRetention(draft.retentionRate, draft.retentionAmount);
+  return invoice.retention_rate &&
+    draft.retentionRate === correctionOf(invoice).retentionRate
+    ? { ...read, rate: invoice.retention_rate, rateProblem: null }
+    : read;
+}
+
 /** A stored fraction in the points the field is typed in. */
 function percentText(fraction: string): string | null {
   const found = /^(\d+)(?:\.(\d+))?$/.exec(fraction);
@@ -707,7 +720,7 @@ export function correctionPreview(
   correctiveClass: string | null,
 ): InvoicePreviewRequest {
   const operation = parseIsoDate(draft.operationDate);
-  const retention = readRetention(draft.retentionRate, draft.retentionAmount);
+  const retention = correctionRetention(invoice, draft);
   const country = draft.country.trim().toUpperCase();
   return {
     kind: invoice.kind,
@@ -826,7 +839,7 @@ export function checkCorrection(
     problems.rectifies_invoice_number = rectifies.problem;
   else if (rectified !== invoice.rectifies_invoice_number)
     set("rectifies_invoice_number", rectified);
-  const retention = readRetention(draft.retentionRate, draft.retentionAmount);
+  const retention = correctionRetention(invoice, draft);
   if (retention.rateProblem) problems.retention_rate = retention.rateProblem;
   if (retention.amountProblem)
     problems.retention_amount = retention.amountProblem;

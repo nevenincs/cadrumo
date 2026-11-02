@@ -1180,7 +1180,6 @@ desktop:
       iban: IBAN
       iban_hint: Egyszer, védett csatornán megy el, utána csak takarva látszik.
       iban_problem:
-        check: Az IBAN ellenőrző számjegyei nem egyeznek.
         shape: Nem IBAN.
       label: Név
       modelo: '{modelo}-s nyomtatvány'
@@ -2298,7 +2297,8 @@ desktop:
         date_not_iso: '„{raw}”: évvel kezdve írd a dátumot: {suggestion}.'
         exponent: '„{raw}” hatványalakban van: írd ki a számjegyeket.'
         grouping: '„{raw}” ezreseket tagol: írd így: {suggestion}.'
-        iban_check: Ebben az IBAN-ban hibás egy számjegy.
+        limits_unavailable: '„{raw}” még nem ellenőrizhető: a főkönyv nem adta meg,
+          mit fogad el ez a mező.'
         line_break: '„{raw}” tabulátort vagy sortörést tartalmaz: maradjon egy sorban.'
         locked: Itt nem szerkeszthető
         needs_share: '„{raw}”: a Vegyes üzleti arányt kér, például Vegyes 50%.'
@@ -2318,7 +2318,6 @@ desktop:
         unknown_choice: „{raw}” nem a választható értékek egyike.
         use: '{suggestion} használata'
         year_not_a_number: „{raw}” nem évszám.
-        year_out_of_range: „{raw}” kívül esik a Cadrumo által kezelt éveken.
         zero: '„{raw}” nulla: az összeg nullánál nagyobb.'
       revert_cell: Cella visszaállítása
       revert_movement: Tétel visszaállítása
@@ -3240,6 +3239,8 @@ desktop:
         date_not_iso: '"{raw}": év-hónap-nap alakban írd.'
         exponent: '"{raw}": írd ki a számot teljesen.'
         grouping: '"{raw}": ezres elválasztó nélkül.'
+        limits_unavailable: '„{raw}”: nem ellenőrizhető, amíg a főkönyv meg nem adja,
+          mit fogad el ez a mező.'
         line_break: 'Csak egy sor: tabulátor és sortörés nélkül.'
         meant: 'Erre gondoltál: {suggestion}?'
         not_a_date: '"{raw}" nem dátum.'

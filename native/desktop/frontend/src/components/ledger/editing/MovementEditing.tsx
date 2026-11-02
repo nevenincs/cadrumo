@@ -17,6 +17,8 @@ import type { CellRange } from "@/components/ui/dataGridModel";
 import { chordMatches, type ChordKeys } from "@/shared/chords";
 import { REDO_CHORDS, REVIEW_CHORDS, UNDO_CHORD } from "../ledgerChords";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import { classifyKindOf } from "../../../shell/ledgerCommands";
+import { isBusinessBearing } from "../../../shell/ledgerContract";
 import { percentOf, copyAmount } from "../../../shell/ledgerGrammar";
 import { planApply } from "../../../shell/ledgerPlan";
 import {
@@ -141,7 +143,6 @@ export const REVERT_CELL_CHORD: ChordKeys = {
 };
 
 const cellKey = (key: string, column: string) => `${key}\u0000${column}`;
-const TRANSFER = "INTERNAL_TRANSFER";
 
 /** What staged editing needs from the movements section. */
 export type MovementEditingInput = {
@@ -419,17 +420,16 @@ export function useMovementEditing(input: MovementEditingInput) {
                 }}
               />
             );
-          const transfer =
+          const direction =
             subject.kind === "draft"
-              ? subject.draft.fields.direction === TRANSFER
-              : effectiveFacts(subject.row, subject.changes).direction ===
-                TRANSFER;
+              ? subject.draft.fields.direction
+              : effectiveFacts(subject.row, subject.changes).direction;
           return (
             <ChoiceEditor
               context={context}
               kind={kind}
               value={value}
-              transfer={transfer}
+              direction={direction ?? null}
               accounts={input.accounts}
             />
           );
@@ -624,10 +624,13 @@ export function useMovementEditing(input: MovementEditingInput) {
       if (!field) return;
       if (
         field === "business_classification" &&
-        (value.value === "BUSINESS" || value.value === "MIXED") &&
+        isBusinessBearing(value.value) &&
         value.share === undefined
       ) {
-        input.askDraft(value.value === "BUSINESS" ? "business" : "mixed", key);
+        input.askDraft(
+          classifyKindOf(value.value) as "business" | "mixed",
+          key,
+        );
         return;
       }
       applyDrafts(draftEdits(key, field, value));
@@ -636,14 +639,7 @@ export function useMovementEditing(input: MovementEditingInput) {
     const field = columnField(column, subject.row);
     if (!field) return;
     if (field === "business_classification" && value.share === undefined) {
-      input.classify(
-        value.value === "BUSINESS"
-          ? "business"
-          : value.value === "MIXED"
-            ? "mixed"
-            : "personal",
-        [key],
-      );
+      input.classify(classifyKindOf(value.value), [key]);
       return;
     }
     stageChecked({

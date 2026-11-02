@@ -1167,7 +1167,6 @@ desktop:
       iban: IBAN
       iban_hint: Sent once through a protected channel and shown masked afterwards.
       iban_problem:
-        check: The IBAN's check digits don't match.
         shape: Not an IBAN.
       label: Name
       modelo: Modelo {modelo}
@@ -2276,7 +2275,8 @@ desktop:
         date_not_iso: '“{raw}”: write the date year first, {suggestion}.'
         exponent: '“{raw}” is written as a power of ten: write the digits.'
         grouping: '“{raw}” groups thousands: write {suggestion}.'
-        iban_check: This IBAN has a wrong digit.
+        limits_unavailable: '“{raw}” cannot be checked yet: the ledger has not said
+          what this field takes.'
         line_break: '“{raw}” holds a tab or line break: keep it on one line.'
         locked: Not editable here
         needs_share: '“{raw}”: Mixed needs a business share, such as Mixed 50%.'
@@ -2297,7 +2297,6 @@ desktop:
         unknown_choice: “{raw}” is not one of the choices.
         use: Use {suggestion}
         year_not_a_number: “{raw}” is not a year.
-        year_out_of_range: “{raw}” is outside the years Cadrumo takes.
         zero: '“{raw}” is zero: an amount is above zero.'
       revert_cell: Revert cell
       revert_movement: Revert movement
@@ -3215,6 +3214,8 @@ desktop:
         date_not_iso: '"{raw}": write the date year-month-day.'
         exponent: '"{raw}": write the number out in full.'
         grouping: '"{raw}": no thousands separator.'
+        limits_unavailable: '“{raw}”: cannot be checked until the ledger says what
+          this field takes.'
         line_break: 'One line only: no tabs or line breaks.'
         meant: Did you mean {suggestion}?
         not_a_date: '"{raw}" isn''t a date.'

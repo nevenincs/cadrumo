@@ -97,6 +97,172 @@ export const RULE_CLASSIFICATIONS = [
 export const isRuleClassification = (id: string): boolean =>
   (RULE_CLASSIFICATIONS as readonly string[]).includes(id);
 
+/** The classifications that carry a business share. */
+export const SHARE_BEARING_CLASSIFICATIONS = ["MIXED"] as const;
+export const takesBusinessShare = (id: string): boolean =>
+  (SHARE_BEARING_CLASSIFICATIONS as readonly string[]).includes(id);
+
+/** The classifications a person's new rule names a spending category with. */
+export const RULE_CATEGORY_CLASSIFICATIONS = ["BUSINESS"] as const;
+export const ruleNamesCategory = (id: string): boolean =>
+  (RULE_CATEGORY_CLASSIFICATIONS as readonly string[]).includes(id);
+
+/** The classifications a split part cannot be staged as without a spending category. */
+export const SPLIT_PART_CATEGORY_REQUIRED_CLASSIFICATIONS = [
+  "BUSINESS",
+] as const;
+export const splitPartNeedsCategory = (id: string): boolean =>
+  (SPLIT_PART_CATEGORY_REQUIRED_CLASSIFICATIONS as readonly string[]).includes(
+    id,
+  );
+
+/** The lifecycle states in which a movement takes a change to its facts. */
+export const CHANGEABLE_LIFECYCLE_STATES = ["ACTIVE"] as const;
+export const takesChanges = (id: string): boolean =>
+  (CHANGEABLE_LIFECYCLE_STATES as readonly string[]).includes(id);
+
+/** The directions a movement is offered an invoice in. */
+export const INVOICE_DIRECTIONS = ["INCOMING", "OUTGOING"] as const;
+export const takesInvoice = (id: string): boolean =>
+  (INVOICE_DIRECTIONS as readonly string[]).includes(id);
+
+/** The directions a movement can carry Modelo 210 income in. */
+export const M210_INCOME_DIRECTIONS = ["INCOMING"] as const;
+export const takesM210Income = (id: string): boolean =>
+  (M210_INCOME_DIRECTIONS as readonly string[]).includes(id);
+
+/** What a movement may be classified as, for the directions that do not take every classification. */
+export const CLASSIFICATIONS_OF_DIRECTION: Readonly<
+  Record<string, readonly string[]>
+> = {
+  INTERNAL_TRANSFER: [
+    "PERSONAL",
+    "NOT_YET_PROCESSED",
+    "PROCESSED_UNCLASSIFIED",
+    "SKIPPED_BY_RULE",
+  ],
+};
+
+export const takesClassification = (
+  direction: string | null | undefined,
+  classification: string,
+): boolean =>
+  !direction ||
+  !(direction in CLASSIFICATIONS_OF_DIRECTION) ||
+  CLASSIFICATIONS_OF_DIRECTION[direction]!.includes(classification);
+
+/** What cannot be edited on a movement, for the directions that lock any field. */
+export const FIELDS_LOCKED_BY_DIRECTION: Readonly<
+  Record<string, readonly string[]>
+> = {
+  INTERNAL_TRANSFER: [
+    "category_id",
+    "counterparty_identification_state",
+    "deduction_fact_kind",
+    "investment_asset_id",
+    "irpf_category",
+    "iva_amount",
+    "iva_category",
+    "iva_rate",
+    "taxable_base",
+  ],
+};
+
+export const lockedByDirection = (
+  direction: string | null | undefined,
+  field: string,
+): boolean =>
+  !!direction && !!FIELDS_LOCKED_BY_DIRECTION[direction]?.includes(field);
+
+/** An unlinked movement waits for its invoice in these lifecycle, direction and classification codes. */
+export const AWAITING_INVOICE = [
+  "ACTIVE|INCOMING|BUSINESS",
+  "ACTIVE|INCOMING|MIXED",
+  "ACTIVE|OUTGOING|BUSINESS",
+  "ACTIVE|OUTGOING|MIXED",
+] as const;
+
+export const awaitsInvoice = (
+  lifecycle: string,
+  direction: string,
+  classification: string,
+  linked: boolean,
+): boolean =>
+  !linked &&
+  (AWAITING_INVOICE as readonly string[]).includes(
+    `${lifecycle}|${direction}|${classification}`,
+  );
+
+/** The declaration revision states that seal the movements a revision cites. */
+export const SEALING_REVISION_STATES = [
+  "verificado_completo",
+  "presentado",
+] as const;
+export const sealsMovements = (id: string): boolean =>
+  (SEALING_REVISION_STATES as readonly string[]).includes(id);
+
+/** The fields a write can replace but never blank, having no empty value. */
+export const UNCLEARABLE_FIELDS = ["business_classification", "notes"] as const;
+
+/** The facts every movement carries, which a write can replace but never blank. */
+export const REQUIRED_FIELDS = [
+  "amount",
+  "booked_date",
+  "currency",
+  "description",
+  "direction",
+] as const;
+
+/** The fields a new movement must have before it can be added. */
+export const DRAFT_REQUIRED_FIELDS = [
+  "booked_date",
+  "amount",
+  "currency",
+  "direction",
+  "description",
+] as const;
+
+/** The periods a ledger can be filtered by: those with a calendar span, and the months it runs. */
+export const LEDGER_PERIOD_SPANS = {
+  "1T": { granularity: "quarter", first: 1, last: 3 },
+  "2T": { granularity: "quarter", first: 4, last: 6 },
+  "3T": { granularity: "quarter", first: 7, last: 9 },
+  "4T": { granularity: "quarter", first: 10, last: 12 },
+  "0A": { granularity: "year", first: 1, last: 12 },
+  "01": { granularity: "month", first: 1, last: 1 },
+  "02": { granularity: "month", first: 2, last: 2 },
+  "03": { granularity: "month", first: 3, last: 3 },
+  "04": { granularity: "month", first: 4, last: 4 },
+  "05": { granularity: "month", first: 5, last: 5 },
+  "06": { granularity: "month", first: 6, last: 6 },
+  "07": { granularity: "month", first: 7, last: 7 },
+  "08": { granularity: "month", first: 8, last: 8 },
+  "09": { granularity: "month", first: 9, last: 9 },
+  "10": { granularity: "month", first: 10, last: 10 },
+  "11": { granularity: "month", first: 11, last: 11 },
+  "12": { granularity: "month", first: 12, last: 12 },
+} as const;
+export type LedgerPeriodCode = keyof typeof LEDGER_PERIOD_SPANS;
+
+/** The quarters, in calendar order. */
+export const QUARTER_CODES = ["1T", "2T", "3T", "4T"] as const;
+
+/** The months, in calendar order. */
+export const MONTH_CODES = [
+  "01",
+  "02",
+  "03",
+  "04",
+  "05",
+  "06",
+  "07",
+  "08",
+  "09",
+  "10",
+  "11",
+  "12",
+] as const;
+
 /** The fields a movement may be corrected in. */
 export const LEDGER_UPDATE_FIELDS = [
   "booked_date",

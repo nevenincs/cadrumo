@@ -61,7 +61,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ....domain.transactions.service import link_invoice
 from ...actividad_asset.tests.register_support import MemoryRepository
 from ...modelo.advisory_binding_value import add_advisory_binding_value_diagnostics
-from ...modelo.calculation_bucket_actions import _unrouted_source_issues
+from ...modelo.calculation_bucket_actions import unrouted_source_issues
 from ...modelo.calculation_note_gate import (
     ModeloCalculationBlockedError,
     gate_refuses,
@@ -72,7 +72,7 @@ from ...modelo.printed_boxes import snapshot_printed_boxes
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
 from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
-from .renta_income_aggregation_support import _catalogue_read_ports, _period
+from .renta_income_aggregation_support import _period, catalogue_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -240,7 +240,7 @@ def _resolve(
     resolver = LedgerRentaIncomeAggregationSourceResolver(
         activity_asset_history_repository=MemoryRepository(),
         transaction_repository=repository,
-        ports=_catalogue_read_ports(invoices=invoices, transactions=transactions),
+        ports=catalogue_read_ports(invoices=invoices, transactions=transactions),
     )
     return resolver.resolve(
         CalculationSourceContext(
@@ -291,7 +291,7 @@ def _calculated(
     """Run the post-merge emission and the durable projection a calculation persists."""
     snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
     emitted = add_advisory_binding_value_diagnostics(snapshot, resolution, operation=operation)
-    persisted = _unrouted_source_issues(emitted.diagnostics, snapshot_printed_boxes(operation, snapshot))
+    persisted = unrouted_source_issues(emitted.diagnostics, snapshot_printed_boxes(operation, snapshot))
     return emitted, persisted
 
 

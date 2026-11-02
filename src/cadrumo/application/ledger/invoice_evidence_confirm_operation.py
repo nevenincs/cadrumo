@@ -21,6 +21,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationEffect,
 )
+from ...core.percentage import fraction_of_percentage
 from ...core.time.clock import now
 from ...domain.iva.schema import InvoiceKind, IvaCategory
 from ...domain.iva.supply_nature import SupplyNature
@@ -98,6 +99,9 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     operation_type: IntracomOperationType | None = None
     operation_date: date | None = None
     retention_rate: InvoiceEvidenceDecimalText | None = None
+    """The retención as a fraction: 0.15 for 15 %."""
+    retention_points: InvoiceEvidenceDecimalText | None = None
+    """The same retención as a person states it, in points: 15 for 15 %."""
     retention_amount: InvoiceEvidenceDecimalText | None = None
     recargo_amount: InvoiceEvidenceDecimalText | None = None
     invoice_class: Annotated[str, Field(min_length=1, max_length=128)] | None = None
@@ -107,7 +111,15 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     notes: InvoiceEvidenceNote = ""
     resolutions: Annotated[tuple[FindingResolutionInputV1, ...], Field(max_length=128)] = ()
 
-    @field_validator("taxable_base", "iva_rate", "iva_amount", "retention_rate", "retention_amount", "recargo_amount")
+    @field_validator(
+        "taxable_base",
+        "iva_rate",
+        "iva_amount",
+        "retention_rate",
+        "retention_points",
+        "retention_amount",
+        "recargo_amount",
+    )
     @classmethod
     def _canonical_decimal(cls, value: str | None) -> str | None:
         """Reject malformed figures before they become a durable operation."""
@@ -118,6 +130,12 @@ class LedgerEvidenceConfirmRequest(BaseModel):
     def _one_reference(self) -> Self:
         if (self.evidence_id is None) == (self.attachment_id is None):
             raise ValueError("exactly one evidence or attachment reference is required")
+        return self
+
+    @model_validator(mode="after")
+    def _one_retention_scale(self) -> Self:
+        if self.retention_rate is not None and self.retention_points is not None:
+            raise ValueError("a retention is stated as a fraction or in points, not both")
         return self
 
 
@@ -151,6 +169,11 @@ def _decimal(value: str | None) -> Decimal | None:
     if not parsed.is_finite() or str(parsed) != value:
         raise ValueError("confirmation decimal must be finite and canonical")
     return parsed
+
+
+def _stated_retention_fraction(payload: LedgerEvidenceConfirmRequest) -> Decimal | None:
+    points = _decimal(payload.retention_points)
+    return _decimal(payload.retention_rate) if points is None else fraction_of_percentage(points)
 
 
 class LedgerEvidenceConfirmExecutor:
@@ -192,7 +215,7 @@ class LedgerEvidenceConfirmExecutor:
                 iva_category=None if payload.iva_category is None else IvaCategory(payload.iva_category),
                 operation_type=payload.operation_type,
                 operation_date=payload.operation_date,
-                retention_rate=_decimal(payload.retention_rate),
+                retention_rate=_stated_retention_fraction(payload),
                 retention_amount=_decimal(payload.retention_amount),
                 recargo_amount=_decimal(payload.recargo_amount),
                 invoice_class_token=payload.invoice_class,

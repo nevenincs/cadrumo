@@ -703,7 +703,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         settled_binding_ids=settled_binding_ids(channels.source_resolution),
         source_transaction_ids=tuple(channels.source_resolution.source_transaction_ids),
         source_provenance=_source_provenance_refs(channels.source_resolution),
-        source_issues=_unrouted_source_issues(
+        source_issues=unrouted_source_issues(
             channels.reconciliation.source_diagnostics,
             snapshot_printed_boxes(ports.operation, preparation.snapshot),
         ),
@@ -838,7 +838,7 @@ def _durable_source_issue_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
     return _durable_invoice_source_reason(diagnostic)
 
 
-def _unrouted_source_issues(
+def unrouted_source_issues(
     source_diagnostics: tuple[CalculationSourceDiagnostic, ...],
     boxes: PrintedBoxes,
 ) -> tuple[CalculationSourceIssue, ...]:

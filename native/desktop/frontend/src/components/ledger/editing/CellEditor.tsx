@@ -23,7 +23,11 @@ import { formatDay } from "@/shared/dateFormats";
 import type { FieldSpec } from "@/shared/fieldKind";
 import { formatDecimal } from "@/shared/numbers";
 import type { DraftField, StageField } from "../../../shell/ledgerStage";
-import { DIRECTIONS } from "../../../shell/ledgerContract";
+import {
+  DECIDED_CLASSIFICATIONS,
+  DIRECTIONS,
+  takesClassification,
+} from "../../../shell/ledgerContract";
 import { useStrings } from "../../../shell/strings";
 import {
   categoryOption,
@@ -317,7 +321,7 @@ export function TypedEditor({
 /** The options a choice column offers, grouped and labelled. */
 function useChoices(
   kind: EditKind,
-  transfer: boolean,
+  direction: string | null,
   accounts: readonly OwnAccountChoice[] | null,
 ): { options: ComboboxOption[]; label: string } {
   const t = useStrings();
@@ -346,18 +350,16 @@ function useChoices(
       case "classification":
         return {
           label: t("desktop.ledger.column.classification"),
-          options: (["BUSINESS", "PERSONAL", "MIXED"] as const).map(
-            (value) => ({
-              value,
-              label: classificationLabel(t, value),
-              ...(transfer && value !== "PERSONAL"
-                ? {
-                    disabled: true,
-                    reason: t("desktop.ledger.classify.transfers_only"),
-                  }
-                : {}),
-            }),
-          ),
+          options: DECIDED_CLASSIFICATIONS.map((value) => ({
+            value,
+            label: classificationLabel(t, value),
+            ...(takesClassification(direction, value)
+              ? {}
+              : {
+                  disabled: true,
+                  reason: t("desktop.ledger.classify.transfers_only"),
+                }),
+          })),
         };
       case "category":
         return {
@@ -383,7 +385,7 @@ function useChoices(
           })),
         };
     }
-  }, [kind, transfer, accounts, t, vocabulary]);
+  }, [kind, direction, accounts, t, vocabulary]);
 }
 
 /** A choice cell editor: a searchable list, grouped where the vocabulary
@@ -392,19 +394,19 @@ export function ChoiceEditor({
   context,
   kind,
   value,
-  transfer = false,
+  direction = null,
   accounts = null,
 }: {
   context: EditorContext;
   kind: EditKind;
   value: string | null;
-  /** The movement is a transfer, which is Personal or unclassified only. */
-  transfer?: boolean;
+  /** The way the movement goes, on which what it may be classified as rests. */
+  direction?: string | null;
   /** The register's own accounts, for the account column. */
   accounts?: readonly OwnAccountChoice[] | null;
 }) {
   const t = useStrings();
-  const { options, label } = useChoices(kind, transfer, accounts);
+  const { options, label } = useChoices(kind, direction, accounts);
   const vocabulary = useVocabulary();
   return (
     <Combobox

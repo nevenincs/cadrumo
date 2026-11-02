@@ -18,6 +18,13 @@ import type {
   LedgerPort,
 } from "../../../shell/ledger";
 import {
+  lockedByDirection,
+  takesBusinessShare,
+  takesClassification,
+  takesM210Income,
+} from "../../../shell/ledgerContract";
+import {
+  CLASSIFICATION_OF,
   CLASSIFY_KINDS,
   type ClassifyKind,
   type ClassifySelection,
@@ -59,16 +66,10 @@ import {
 import { formatTime } from "../../../shared/dateFormats";
 import { formatPercent, heldDecimal } from "../../../shared/numbers";
 
-const CLASSIFICATION_OF: Record<ClassifyKind, string> = {
-  business: "BUSINESS",
-  personal: "PERSONAL",
-  mixed: "MIXED",
-};
-const KIND_OF: Record<string, ClassifyKind> = {
-  BUSINESS: "business",
-  PERSONAL: "personal",
-  MIXED: "mixed",
-};
+/** The classify command of a stored classification; none for a disposition. */
+const KIND_OF: Readonly<Record<string, ClassifyKind>> = Object.fromEntries(
+  CLASSIFY_KINDS.map((kind) => [CLASSIFICATION_OF[kind], kind]),
+);
 
 /** The field a readiness reason is fixed in, where the inspector has
  * one. */
@@ -129,7 +130,11 @@ export function ClassifySection({
   const id = row.transaction.transaction_id;
   const effective = effectiveFacts(row, changes);
   const lock = fieldLock(scope, "business_classification");
-  const transfer = effective.direction === "INTERNAL_TRANSFER";
+  const refusesClass = CLASSIFY_KINDS.some(
+    (kind) =>
+      !takesClassification(effective.direction, CLASSIFICATION_OF[kind]),
+  );
+  const refusesDerive = lockedByDirection(effective.direction, "iva_category");
   const shareId = useId();
   const [share, setShare] = useState("");
   const [shareError, setShareError] = useState<string | null>(null);
@@ -266,13 +271,18 @@ export function ClassifySection({
             <SegmentedControlItem
               key={kind}
               value={kind}
-              disabled={transfer && kind !== "personal"}
+              disabled={
+                !takesClassification(
+                  effective.direction,
+                  CLASSIFICATION_OF[kind],
+                )
+              }
             >
               {classificationLabel(t, CLASSIFICATION_OF[kind])}
             </SegmentedControlItem>
           ))}
         </SegmentedControl>
-        {transfer && (
+        {refusesClass && (
           <p className="text-sm text-muted-foreground">
             {t("desktop.ledger.classify.transfers_only")}
           </p>
@@ -292,7 +302,7 @@ export function ClassifySection({
             })}
           </p>
         )}
-        {effective.business_classification === "MIXED" && (
+        {takesBusinessShare(effective.business_classification ?? "") && (
           <div className="grid gap-1">
             <label htmlFor={shareId} className="text-sm">
               {t("desktop.ledger.inspector.share")}
@@ -349,7 +359,7 @@ export function ClassifySection({
         </dt>
         <dd className="px-1.5 py-1 text-sm">
           {row.transaction.usage_ratio_id ??
-            (effective.business_classification === "MIXED"
+            (takesBusinessShare(effective.business_classification ?? "")
               ? t("desktop.ledger.inspector.ratio_missing")
               : t("desktop.ledger.inspector.ratio_not_needed"))}
         </dd>
@@ -406,7 +416,7 @@ export function ClassifySection({
                 variant="outline"
                 size="sm"
                 data-field="iva-derive"
-                disabled={lock !== null || transfer}
+                disabled={lock !== null || refusesDerive}
                 className="min-w-0 flex-1 justify-between"
               >
                 <span className="truncate">
@@ -420,7 +430,9 @@ export function ClassifySection({
             <Button
               variant="outline"
               size="sm"
-              disabled={deriveCategory === null || lock !== null || transfer}
+              disabled={
+                deriveCategory === null || lock !== null || refusesDerive
+              }
               onClick={() => {
                 if (!deriveCategory) return;
                 onStage({
@@ -614,7 +626,7 @@ function M210Form({
   const [values, setValues] = useState(initial);
   const [error, setError] = useState<string | null>(null);
   const [rateError, setRateError] = useState<string | null>(null);
-  const incoming = row.transaction.direction === "INCOMING";
+  const incoming = takesM210Income(row.transaction.direction);
   const offered = {
     payer_id: useFieldSuggestions("m210_payer"),
     asset_or_right_id: useFieldSuggestions("m210_asset"),

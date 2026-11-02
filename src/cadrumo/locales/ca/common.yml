@@ -1199,7 +1199,6 @@ desktop:
       iban: IBAN
       iban_hint: S'envia una vegada per un canal protegit i després es mostra emmascarat.
       iban_problem:
-        check: Els dígits de control de l'IBAN no quadren.
         shape: No és un IBAN.
       label: Nom
       modelo: Model {modelo}
@@ -2316,7 +2315,8 @@ desktop:
         date_not_iso: '«{raw}»: escriu la data començant per l''any, {suggestion}.'
         exponent: '«{raw}» està en notació exponencial: escriu les xifres.'
         grouping: '«{raw}» separa els milers: escriu {suggestion}.'
-        iban_check: Aquest IBAN té un dígit incorrecte.
+        limits_unavailable: '«{raw}» encara no es pot comprovar: el llibre no ha indicat
+          què admet aquest camp.'
         line_break: '«{raw}» conté un tabulador o un salt de línia: deixa-ho en una
           línia.'
         locked: No s'edita aquí
@@ -2338,7 +2338,6 @@ desktop:
         unknown_choice: «{raw}» no és una de les opcions.
         use: Fes servir {suggestion}
         year_not_a_number: «{raw}» no és un any.
-        year_out_of_range: «{raw}» és fora dels anys que admet Cadrumo.
         zero: '«{raw}» és zero: un import és més gran que zero.'
       revert_cell: Reverteix la cel·la
       revert_movement: Reverteix el moviment
@@ -3259,6 +3258,8 @@ desktop:
         date_not_iso: '"{raw}": escriu la data any-mes-dia.'
         exponent: '"{raw}": escriu el número sencer.'
         grouping: '"{raw}": sense separador de milers.'
+        limits_unavailable: '«{raw}»: no es pot comprovar fins que el llibre indiqui
+          què admet aquest camp.'
         line_break: 'Una sola línia: sense tabuladors ni salts de línia.'
         meant: Volies dir {suggestion}?
         not_a_date: '"{raw}" no és una data.'

@@ -1,4 +1,4 @@
-import { useEffect, useId, useState } from "react";
+import { useEffect, useId, useMemo, useState } from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -19,7 +19,11 @@ import {
   type LedgerRemoveResult,
   type LedgerRow,
 } from "../../../shell/ledger";
-import type { StageEvent } from "../../../shell/ledgerStage";
+import { EMPTY_CONTENT, type StageEvent } from "../../../shell/ledgerStage";
+import {
+  stagedCheckRequest,
+  useStagedCheck,
+} from "../../../shell/ledgerStagedCheck";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import { useStrings } from "../../../shell/strings";
 import {
@@ -44,6 +48,8 @@ type Preview =
   | { kind: "reading" }
   | { kind: "ready"; report: LedgerRemoveResult["report"] }
   | { kind: "failed"; code: string };
+
+const NOTHING_ASKED: readonly string[] = [];
 
 /**
  * Stages a lifecycle change, a removal or a merge, with one reason for
@@ -114,13 +120,28 @@ export function ActionDialog({
   }, [port, removing]);
 
   const lifecycle = request.kind !== "remove" && request.kind !== "merge";
+  const asked = lifecycle ? request.ids : NOTHING_ASKED;
+  const checked = useStagedCheck(
+    port,
+    useMemo(
+      () => stagedCheckRequest(EMPTY_CONTENT, rows, { ids: asked }),
+      [rows, asked],
+    ),
+  );
+  // The dialog cannot stage anything until the ledger has answered.
   const takes = lifecycle
-    ? request.ids.filter((id) => {
-        const row = rows.get(id);
-        return row !== undefined && lifecycleTakes(request.kind, row, sealed);
-      })
+    ? request.ids.filter(
+        (id) =>
+          rows.has(id) &&
+          lifecycleTakes(
+            request.kind,
+            checked.current?.rows.get(id),
+            sealed.has(id),
+          ),
+      )
     : [];
-  const skipped = lifecycle ? request.ids.length - takes.length : 0;
+  const skipped =
+    lifecycle && checked.current ? request.ids.length - takes.length : 0;
   const blocked =
     preview?.kind === "ready" &&
     preview.report.blocking_modelo_references.length > 0;

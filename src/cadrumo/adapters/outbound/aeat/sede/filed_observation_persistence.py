@@ -54,6 +54,7 @@ from .....domain.calculations.registry.bindings import RegistryModeloObservation
 from .....domain.iva_compensation.carry_forward import IvaCompensationPeriodState
 from .....domain.justificante.protocols import JustificanteRepositoryProtocol
 from .....domain.justificante.schema import Justificante
+from .....domain.modelos.filing_kind_evidence import ObservedFilingKind
 from .....domain.modelos.filing_record import ModeloRecordCatalogue
 from .....domain.modelos.protocols import ModeloRecordCatalogueRepositoryProtocol
 from ....inbound.justificante.parser import parse_justificante_bytes
@@ -217,6 +218,7 @@ class CalculationObservationRepositoryAdapter(FiledCalculationObservationReposit
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Prepare one validated calculation-observation envelope."""
         return _call_adapter(
@@ -228,6 +230,7 @@ class CalculationObservationRepositoryAdapter(FiledCalculationObservationReposit
                 captured_at=captured_at,
                 source_metadata=source_metadata,
                 source_headers=source_headers,
+                filing_kind=filing_kind,
             ),
         )
 

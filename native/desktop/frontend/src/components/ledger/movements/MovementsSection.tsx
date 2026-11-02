@@ -47,7 +47,11 @@ import {
   type ClassifyScope,
   type OpenRuleFromSelection,
 } from "../../../shell/ledgerCommands";
-import { isBusinessBearing } from "../../../shell/ledgerContract";
+import {
+  isBusinessBearing,
+  takesChanges,
+  takesClassification,
+} from "../../../shell/ledgerContract";
 import {
   checkOnce,
   stagedCheckRequest,
@@ -553,7 +557,7 @@ export function MovementsSection({
         .filter(
           (row) =>
             flagged.ids.has(idOf(row)) &&
-            row.transaction.lifecycle_state === "ACTIVE",
+            takesChanges(row.transaction.lifecycle_state),
         )
         .map(idOf),
     );
@@ -682,7 +686,11 @@ export function MovementsSection({
             <GroupActions
               ids={group.rows.map(idOf)}
               transfers={group.rows.every(
-                (row) => row.transaction.direction === "INTERNAL_TRANSFER",
+                (row) =>
+                  !takesClassification(
+                    row.transaction.direction,
+                    CLASSIFICATION_OF.business,
+                  ),
               )}
               commands={groupCommands}
             />
@@ -997,14 +1005,7 @@ export function MovementsSection({
         raw: typedPoints(outcome.refusal.raw),
       });
     if (outcome.kind === "needs") return null;
-    const classification = classificationLabel(
-      t,
-      kind === "business"
-        ? "BUSINESS"
-        : kind === "mixed"
-          ? "MIXED"
-          : "PERSONAL",
-    );
+    const classification = classificationLabel(t, CLASSIFICATION_OF[kind]);
     const detail = facts(t, [
       answer.share ? `${answer.share.trim().replace(/\s*%$/, "")}%` : "",
       answer.category && check && categorySplit(ids, byId, check).expenses > 0
@@ -1112,7 +1113,8 @@ export function MovementsSection({
     const takes = ids.filter((id) => {
       const row = byId.get(id);
       return (
-        row?.transaction.lifecycle_state === "ACTIVE" &&
+        !!row &&
+        takesChanges(row.transaction.lifecycle_state) &&
         isBusinessBearing(row.transaction.business_classification)
       );
     });
@@ -1912,7 +1914,9 @@ export function MovementsSection({
                 onStage({ type: "edit_draft", key, field, value });
               edit(
                 "business_classification",
-                asking.kind === "mixed" ? "MIXED" : "BUSINESS",
+                CLASSIFICATION_OF[
+                  asking.kind === "mixed" ? "mixed" : "business"
+                ],
               );
               if (answer.category) edit("category_id", answer.category);
               edit(

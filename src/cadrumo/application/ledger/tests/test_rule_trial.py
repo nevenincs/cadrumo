@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -10,6 +11,7 @@ from uuid import UUID
 
 import pytest
 
+from ....core.iban import iban_mod_97
 from ....domain.transactions.classification_rule import LedgerClassificationRule
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.errors import ClassificationRuleError
@@ -21,6 +23,9 @@ from ..rule_trial_operation import try_rule_pattern
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _PROFILE: Final = UUID("11111111-1111-4111-8111-111111111111")
+_RECORDING: Final = (
+    Path(__file__).resolve().parents[5] / "native/desktop/frontend/src/dev/fixtures/ledgerRuleTrial.json"
+)
 
 
 def _row(
@@ -122,3 +127,18 @@ def test_the_answer_is_the_engines_own_match(pattern: str, description: str, fou
         description_pattern=pattern, classification=BusinessClassification.BUSINESS, actor="t"
     )
     assert saved.matches(description) is found
+
+
+def test_every_recorded_answer_is_the_engines() -> None:
+    recorded = json.loads(_RECORDING.read_text(encoding="utf-8"))
+    for answer in recorded["answers"]:
+        pattern = answer["description_pattern"]
+        rows = {description: _row(description) for description in recorded["descriptions"]}
+        live = try_rule_pattern(_PROFILE, pattern, rows)
+        assert (live.outcome, list(live.hits)) == (answer["outcome"], answer["matches"]), pattern
+
+
+def test_the_number_the_window_recording_refuses_is_refused_and_its_correction_is_taken() -> None:
+    # 91 is the control pair of this account; worked by hand, mod 97 of the moved digits is 1.
+    assert iban_mod_97("ES9121000418450200051332") == 1
+    assert iban_mod_97("ES9221000418450200051332") != 1

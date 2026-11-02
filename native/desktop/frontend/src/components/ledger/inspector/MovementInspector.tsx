@@ -25,6 +25,7 @@ import { INSPECTOR_CHORD } from "../ledgerChords";
 import { facts, listed, noted } from "../../../shell/compose";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { ClassifySelection } from "../../../shell/ledgerCommands";
+import { takesChanges } from "../../../shell/ledgerContract";
 import {
   stagedCheckRequest,
   useStagedCheck,
@@ -305,7 +306,7 @@ export function MovementInspector({
   ).map((kind) => (
     <DropdownMenuItem
       key={kind}
-      disabled={!lifecycleTakes(kind, row, sealed ? new Set([id]) : new Set())}
+      disabled={!lifecycleTakes(kind, answer, sealed)}
       onSelect={() => onAction({ kind, ids: [id] })}
     >
       {lifecycleName(t, kind)}…
@@ -313,9 +314,10 @@ export function MovementInspector({
   ));
   const cohort = useMemo(() => {
     if (history?.kind !== "ready") return [];
-    return history.result.object_ids.filter(
-      (other) => byId.get(other)?.transaction.lifecycle_state === "ACTIVE",
-    );
+    return history.result.object_ids.filter((other) => {
+      const state = byId.get(other)?.transaction.lifecycle_state;
+      return state !== undefined && takesChanges(state);
+    });
   }, [history, byId]);
 
   const section = (
@@ -374,7 +376,7 @@ export function MovementInspector({
               <DropdownMenuSeparator />
               <DropdownMenuItem
                 icon="split"
-                disabled={tx.lifecycle_state !== "ACTIVE" || sealed}
+                disabled={!answer?.takes_changes || sealed}
                 onSelect={() => onSplit(row)}
               >
                 {t("desktop.ledger.inspector.action.split")}…
@@ -392,13 +394,7 @@ export function MovementInspector({
                 <DropdownMenuItem
                   icon="copy"
                   className="ledger-archive-duplicate"
-                  disabled={
-                    !lifecycleTakes(
-                      "archive",
-                      row,
-                      sealed ? new Set([id]) : new Set(),
-                    )
-                  }
+                  disabled={!lifecycleTakes("archive", answer, sealed)}
                   onSelect={() =>
                     onAction({
                       kind: "archive",
@@ -534,6 +530,7 @@ export function MovementInspector({
           <DocumentsSection
             port={port}
             row={row}
+            answer={answer}
             evidence={evidence}
             actions={actions}
             onStage={onStage}
@@ -546,6 +543,7 @@ export function MovementInspector({
           "invoice",
           <InvoiceSection
             row={row}
+            answer={answer}
             rows={rows}
             invoices={invoices}
             actions={actions}

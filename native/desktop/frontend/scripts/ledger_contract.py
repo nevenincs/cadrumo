@@ -7,6 +7,10 @@ diagnostic, and the fields each correction may name. Each is read from the enum 
 model that owns it, so the window holds no list of its own and a member added there reaches
 it on regeneration.
 
+It also holds what a stored code alone decides and every drawn row needs at once, such as
+whether a lifecycle takes a change or which fields a direction locks: each is worked out here
+by calling the function or reading the constant that owns the rule, over all the codes.
+
 ``scripts/ledger-contract.mjs`` drives this module and formats what it writes; run that, not
 this. This module writes the unformatted source to standard output.
 """
@@ -14,21 +18,35 @@ this. This module writes the unformatted source to standard output.
 from __future__ import annotations
 
 import sys
-from collections.abc import Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from enum import StrEnum
 
 from pydantic import BaseModel
 
 from cadrumo.application.invoices.catalogue_lifecycle import CatalogueInvoicePatch
+from cadrumo.application.ledger.classify_requests import CLASSIFY_UNCLEARABLE_FIELD_NAMES
 from cadrumo.application.ledger.evidence_mutation_operation import LedgerEvidenceUpdatePatch
-from cadrumo.application.ledger.update_contracts import LedgerUpdatePatch
+from cadrumo.application.ledger.staged_check import DRAFT_REQUIRED_FIELDS, TRANSFER_LOCKED_FIELDS
+from cadrumo.application.ledger.update_contracts import LEDGER_UPDATE_REQUIRED_FIELD_NAMES, LedgerUpdatePatch
 from cadrumo.application.transactions.diagnostics import LedgerImportDiagnosticKind
 from cadrumo.core.aggregation import IntracomOperationType
+from cadrumo.core.period import Period, PeriodKind, StandardPeriodCode
 from cadrumo.domain.invoices.enums import PaymentStatus
+from cadrumo.domain.modelos.calculation_revision import CURRENT_SEALED_REVISION_STATES, CalculationRevisionState
+from cadrumo.domain.transactions.classification_effects import (
+    awaits_invoice,
+    takes_changes,
+    takes_classification,
+    takes_invoice,
+    takes_m210_income,
+)
 from cadrumo.domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
     CLASSIFIED_STATES,
+    RULE_CATEGORY_STATES,
     RULE_DECIDED_STATES,
+    SHARE_BEARING_STATES,
+    SPLIT_PART_CATEGORY_REQUIRED_STATES,
     BusinessClassification,
     TransactionDirection,
     TransactionLifecycleState,
@@ -94,6 +112,24 @@ _CLASSIFICATION_SETS: tuple[tuple[str, str, str, frozenset[BusinessClassificatio
         "The classifications a person may have a rule decide.",
         RULE_DECIDED_STATES,
     ),
+    (
+        "SHARE_BEARING_CLASSIFICATIONS",
+        "takesBusinessShare",
+        "The classifications that carry a business share.",
+        SHARE_BEARING_STATES,
+    ),
+    (
+        "RULE_CATEGORY_CLASSIFICATIONS",
+        "ruleNamesCategory",
+        "The classifications a person's new rule names a spending category with.",
+        RULE_CATEGORY_STATES,
+    ),
+    (
+        "SPLIT_PART_CATEGORY_REQUIRED_CLASSIFICATIONS",
+        "splitPartNeedsCategory",
+        "The classifications a split part cannot be staged as without a spending category.",
+        SPLIT_PART_CATEGORY_REQUIRED_STATES,
+    ),
 )
 
 #: Each mask as ``(constant, type, doc, model)``.
@@ -138,7 +174,10 @@ def _names(constant: str, type_name: str, doc: str, values: Sequence[str], guard
 
 
 def _subset(constant: str, guard: str, doc: str, members: frozenset[BusinessClassification]) -> str:
-    values = [member.value for member in BusinessClassification if member in members]
+    return _set(constant, guard, doc, [member.value for member in BusinessClassification if member in members])
+
+
+def _set(constant: str, guard: str, doc: str, values: Sequence[str]) -> str:
     return "\n".join(
         [
             f"/** {doc} */",
@@ -149,6 +188,173 @@ def _subset(constant: str, guard: str, doc: str, members: frozenset[BusinessClas
     )
 
 
+def _fields(constant: str, doc: str, fields: Iterable[str]) -> str:
+    return "\n".join([f"/** {doc} */", f"export const {constant} = {_literal(sorted(fields))}"])
+
+
+def _restricted(constant: str, doc: str, by_code: Mapping[str, Sequence[str]]) -> str:
+    body = "".join(f'  "{code}": {_literal(values).removesuffix(" as const;")},\n' for code, values in by_code.items())
+    return "\n".join(
+        [f"/** {doc} */", f"export const {constant}: Readonly<Record<string, readonly string[]>> = {{\n{body}}};"]
+    )
+
+
+def _rules() -> list[str]:
+    """What a stored code decides, each read from the function or constant that owns the rule."""
+    classifications = list(BusinessClassification)
+    directions = list(TransactionDirection)
+    lifecycles = list(TransactionLifecycleState)
+    restricted = {
+        direction.value: [member.value for member in classifications if takes_classification(direction, member)]
+        for direction in directions
+        if not all(takes_classification(direction, member) for member in classifications)
+    }
+    locked = {
+        direction.value: sorted(TRANSFER_LOCKED_FIELDS)
+        for direction in directions
+        if direction is TransactionDirection.INTERNAL_TRANSFER
+    }
+    waiting = [
+        f"{lifecycle.value}|{direction.value}|{classification.value}"
+        for lifecycle in lifecycles
+        for direction in directions
+        for classification in classifications
+        if awaits_invoice(lifecycle, direction, classification, linked=False)
+    ]
+    if any(
+        awaits_invoice(lifecycle, direction, classification, linked=True)
+        for lifecycle in lifecycles
+        for direction in directions
+        for classification in classifications
+    ):
+        raise ValueError("a linked movement cannot be written as waiting for its invoice")
+    return [
+        _set(
+            "CHANGEABLE_LIFECYCLE_STATES",
+            "takesChanges",
+            "The lifecycle states in which a movement takes a change to its facts.",
+            [state.value for state in lifecycles if takes_changes(state)],
+        ),
+        _set(
+            "INVOICE_DIRECTIONS",
+            "takesInvoice",
+            "The directions a movement is offered an invoice in.",
+            [direction.value for direction in directions if takes_invoice(direction)],
+        ),
+        _set(
+            "M210_INCOME_DIRECTIONS",
+            "takesM210Income",
+            "The directions a movement can carry Modelo 210 income in.",
+            [direction.value for direction in directions if takes_m210_income(direction)],
+        ),
+        _restricted(
+            "CLASSIFICATIONS_OF_DIRECTION",
+            "What a movement may be classified as, for the directions that do not take every classification.",
+            restricted,
+        ),
+        "\n".join(
+            [
+                "export const takesClassification = (",
+                "  direction: string | null | undefined,",
+                "  classification: string,",
+                "): boolean =>",
+                "  !direction ||",
+                "  !(direction in CLASSIFICATIONS_OF_DIRECTION) ||",
+                "  CLASSIFICATIONS_OF_DIRECTION[direction]!.includes(classification);",
+            ]
+        ),
+        _restricted(
+            "FIELDS_LOCKED_BY_DIRECTION",
+            "What cannot be edited on a movement, for the directions that lock any field.",
+            locked,
+        ),
+        "\n".join(
+            [
+                "export const lockedByDirection = (",
+                "  direction: string | null | undefined,",
+                "  field: string,",
+                "): boolean =>",
+                "  !!direction && !!FIELDS_LOCKED_BY_DIRECTION[direction]?.includes(field);",
+            ]
+        ),
+        _literal_set(
+            "AWAITING_INVOICE",
+            "An unlinked movement waits for its invoice in these lifecycle, direction and classification codes.",
+            waiting,
+        ),
+        "\n".join(
+            [
+                "export const awaitsInvoice = (",
+                "  lifecycle: string,",
+                "  direction: string,",
+                "  classification: string,",
+                "  linked: boolean,",
+                "): boolean =>",
+                "  !linked &&",
+                "  (AWAITING_INVOICE as readonly string[]).includes(",
+                "    `${lifecycle}|${direction}|${classification}`,",
+                "  );",
+            ]
+        ),
+        _set(
+            "SEALING_REVISION_STATES",
+            "sealsMovements",
+            "The declaration revision states that seal the movements a revision cites.",
+            [state.value for state in CalculationRevisionState if state in CURRENT_SEALED_REVISION_STATES],
+        ),
+        _fields(
+            "UNCLEARABLE_FIELDS",
+            "The fields a write can replace but never blank, having no empty value.",
+            CLASSIFY_UNCLEARABLE_FIELD_NAMES,
+        ),
+        _fields(
+            "REQUIRED_FIELDS",
+            "The facts every movement carries, which a write can replace but never blank.",
+            LEDGER_UPDATE_REQUIRED_FIELD_NAMES - CLASSIFY_UNCLEARABLE_FIELD_NAMES,
+        ),
+        "\n".join(
+            [
+                "/** The fields a new movement must have before it can be added. */",
+                f"export const DRAFT_REQUIRED_FIELDS = {_literal(DRAFT_REQUIRED_FIELDS)}",
+            ]
+        ),
+    ]
+
+
+def _periods() -> list[str]:
+    """The periods with a calendar span, each worked out from the period that owns it."""
+    granularity = {PeriodKind.ANNUAL: "year", PeriodKind.QUARTERLY: "quarter", PeriodKind.MONTHLY: "month"}
+    spans = [
+        period
+        for period in (Period(filing_year=2000, code=code) for code in StandardPeriodCode)
+        if period.has_date_span()
+    ]
+    rows = "".join(
+        f'  "{period.code}": {{ granularity: "{granularity[period.kind]}", '
+        f"first: {period.start_date.month}, last: {period.end_date.month} }},\n"
+        for period in spans
+    )
+    codes = {
+        kind: [period.code for period in spans if period.kind is kind]
+        for kind in (PeriodKind.QUARTERLY, PeriodKind.MONTHLY)
+    }
+    return [
+        "\n".join(
+            [
+                "/** The periods a ledger can be filtered by: those with a calendar span, and the months it runs. */",
+                f"export const LEDGER_PERIOD_SPANS = {{\n{rows}}} as const;",
+                "export type LedgerPeriodCode = keyof typeof LEDGER_PERIOD_SPANS;",
+            ]
+        ),
+        _literal_set("QUARTER_CODES", "The quarters, in calendar order.", codes[PeriodKind.QUARTERLY]),
+        _literal_set("MONTH_CODES", "The months, in calendar order.", codes[PeriodKind.MONTHLY]),
+    ]
+
+
+def _literal_set(constant: str, doc: str, values: Sequence[str]) -> str:
+    return "\n".join([f"/** {doc} */", f"export const {constant} = {_literal(values)}"])
+
+
 def render() -> str:
     """The generated ledger contract module, before the frontend's formatter writes it."""
     blocks = [
@@ -156,6 +362,8 @@ def render() -> str:
         for constant, type_name, guard, doc, enum in _ENUMS
     ]
     blocks += [_subset(*entry) for entry in _CLASSIFICATION_SETS]
+    blocks += _rules()
+    blocks += _periods()
     blocks += [
         _names(constant, type_name, doc, list(model.model_fields), None) for constant, type_name, doc, model in _MASKS
     ]

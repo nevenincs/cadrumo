@@ -444,6 +444,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "payment_id_shape",
         ),
         "desktop.ledger.invoices.refusal.": (
+            "limits_unavailable",
             "too_long",
             "signed",
             "exponent",
@@ -560,6 +561,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "paused",
         ),
         "desktop.ledger.edit.refusal.": (
+            "limits_unavailable",
             "too_long",
             "signed",
             "exponent",
@@ -576,11 +578,9 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "date_not_in_calendar",
             "not_a_date",
             "year_not_a_number",
-            "year_out_of_range",
             "period_unknown",
             "line_break",
             "not_an_iban",
-            "iban_check",
             "not_a_bic",
             "not_a_country",
             "not_a_currency",
@@ -670,7 +670,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "not_sent",
         ),
         "desktop.ledger.accounts.holding.": ("titular", "cotitular"),
-        "desktop.ledger.accounts.iban_problem.": ("shape", "check"),
+        "desktop.ledger.accounts.iban_problem.": ("shape",),
         "desktop.ledger.accounts.named.": ("update", "close", "designate"),
         "desktop.ledger.accounts.role.": ("charge", "refund"),
         "desktop.ledger.accounts.submit.": ("add", "update", "close", "designate"),
@@ -814,7 +814,7 @@ DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = (
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
-    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|application\.inventory\.labels|application\.inventory\.service|application\.ledger\.entry_options|application\.modelo\.edit_choice|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
+    r"""["'`]((?:desktop|workspace|ledger\.actividad_asset|tui\.ledger\.activity_asset|tui\.modelo\.export\.result\.warning|application\.inventory\.labels|application\.inventory\.service|application\.ledger\.entry_options|application\.modelo\.edit_choice|auth\.sync\.requirement)\.[A-Za-z0-9_.]+|application\.inventory\.advisories\.)["'`]"""
 )
 _SHELL_TEMPLATE_HEAD: Final[re.Pattern[str]] = re.compile(
     r"`((?:desktop|workspace|ledger\.actividad_asset)\.[A-Za-z0-9_.]*)\$\{"

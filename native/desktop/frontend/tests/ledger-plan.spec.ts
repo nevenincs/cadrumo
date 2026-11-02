@@ -1,3 +1,4 @@
+import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import type { LedgerRow } from "../src/shell/ledger";
 import { RELAY_PAYLOAD_LIMIT } from "../src/shell/relayBounds";

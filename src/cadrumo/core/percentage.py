@@ -39,10 +39,24 @@ PERCENTAGE_BARE_FRACTION_CEILING: Final[Decimal] = Decimal("1")
 Percentage = Annotated[Decimal, Field(ge=PERCENTAGE_MIN, le=PERCENTAGE_MAX)]
 """A rate stated on the AEAT scale, where a hundred is the whole."""
 
+
+def fraction_of_percentage(points: Decimal) -> Decimal:
+    """Return the fraction a percentage names, moving the decimal point and nothing else.
+
+    Built from the digits rather than divided, because division rounds to the
+    active context and a rate crossing scales must not lose a digit doing so.
+    """
+    sign, digits, exponent = points.as_tuple()
+    if not isinstance(exponent, int):
+        raise ValueError("only a finite percentage names a fraction")
+    return Decimal((sign, digits, exponent - 2))
+
+
 __all__ = [
     "PERCENTAGE_BARE_FRACTION_CEILING",
     "PERCENTAGE_ENTRY_DECIMALS",
     "PERCENTAGE_MAX",
     "PERCENTAGE_MIN",
     "Percentage",
+    "fraction_of_percentage",
 ]

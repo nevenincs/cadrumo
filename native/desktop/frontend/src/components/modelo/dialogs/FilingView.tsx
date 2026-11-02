@@ -60,7 +60,14 @@ type Write =
 /** What the last write on this view came to, for its notice. */
 type Notice =
   | { kind: "busy"; write: Write }
-  | { kind: "saved"; write: Write; name: string; unverified: boolean }
+  | {
+      kind: "saved";
+      write: Write;
+      name: string;
+      unverified: boolean;
+      /** The result says no direct-debit cutoff was checked. */
+      cutoffUnverified: boolean;
+    }
   | { kind: "recorded" }
   /** It committed, and what it answered could not be read. */
   | { kind: "done" }
@@ -327,6 +334,8 @@ export function FilingView({
           write,
           name: picked.name,
           unverified: result.completeness === "unverified",
+          cutoffUnverified:
+            result.fichero_boe?.domiciliation_cutoff_unverified === true,
         };
       },
       [picked.token],
@@ -355,6 +364,7 @@ export function FilingView({
         write: "package",
         name: picked.name,
         unverified: false,
+        cutoffUnverified: false,
       }),
       [picked.token],
       picked.token,
@@ -779,6 +789,11 @@ function FilingNotice({
             {notice.unverified && (
               <span className="text-warning">
                 {t("workspace.modelo.filing.completeness_unverified")}
+              </span>
+            )}
+            {notice.cutoffUnverified && (
+              <span className="text-warning">
+                {t("tui.modelo.export.result.warning.cutoff_unverified")}
               </span>
             )}
           </span>

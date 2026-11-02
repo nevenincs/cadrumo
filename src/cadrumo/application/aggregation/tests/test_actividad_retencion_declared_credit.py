@@ -57,7 +57,7 @@ from .test_renta_income_actividad_contract import (
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
-_BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
+BUCKET = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
 _Q1 = Period.from_year_and_code(2026, "1T")
 _Q4 = Period.from_year_and_code(2026, "4T")
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
@@ -143,7 +143,7 @@ def _issued_invoice(
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
-            "bucket_id": _BUCKET,
+            "bucket_id": BUCKET,
             "base_total": base,
             "iva_total": line.iva_amount,
             "grand_total": base + line.iva_amount,
@@ -158,7 +158,7 @@ def _issued_invoice(
     )
 
 
-def _declared_pair() -> tuple[TransactionCatalogue, InvoiceCatalogue]:
+def declared_pair() -> tuple[TransactionCatalogue, InvoiceCatalogue]:
     """Two issued invoices whose retención each invoice states, at 15 % and 7 %."""
     profesional = _transaction(provider_id="cobro-15", cash=_PROFESIONAL_CASH)
     reduced = _transaction(provider_id="cobro-07", cash=_REDUCED_CASH)
@@ -193,7 +193,7 @@ def _aggregate(
     return aggregate_renta_income_ledger(
         transactions,
         invoices,
-        bucket_id=_BUCKET,
+        bucket_id=BUCKET,
         period=period,
         modelo="130",
         target_casilla_id=_M130_INGRESOS_CASILLA,
@@ -209,7 +209,7 @@ def test_declared_retenciones_at_two_rates_reach_the_credit() -> None:
     7 % of 2.000,00, so the credit is 290,00. No single rate over the combined
     3.000,00 base reproduces that figure, which is why two rates are used.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
 
     aggregation = _aggregate(transactions, invoices)
     revision = _m130_2026_q1_revision()
@@ -228,7 +228,7 @@ def test_every_consumed_row_carries_its_declaring_marker() -> None:
     The marker is what the fact dispatches on, so a row whose figure the invoice
     states and one reconstructed from cash must not arrive indistinguishable.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
 
     observations = _aggregate(transactions, invoices).observations
 
@@ -250,7 +250,7 @@ def test_an_inferred_row_raises_the_advisory_and_leaves_the_credit_unchanged() -
     retención is reconstructed, so the credit stays at 290,00 and the excluded
     amount is reported with its count.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
     inferred = _transaction(provider_id="cobro-sin-factura", cash=Decimal("850.00"))
     transactions = TransactionCatalogue.from_transactions((*transactions.values(), inferred))
 
@@ -277,7 +277,7 @@ def test_a_substrate_less_row_is_unresolved_rather_than_a_proven_zero() -> None:
     nothing, which the ledger does not know, so it is reported as unresolved and
     the credit stays at the declared 290,00.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
     substrate_less = _transaction(provider_id="cobro-sin-base", cash=Decimal("400.00"))
     transactions = TransactionCatalogue.from_transactions((*transactions.values(), substrate_less))
 
@@ -311,7 +311,7 @@ def test_employment_and_non_activity_rows_never_reach_the_credit() -> None:
     reported as inferred or unresolved, because neither leaves a retención
     undetermined: there is none to determine.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
     employment = _transaction(
         provider_id="nomina",
         cash=Decimal("1800.00"),
@@ -344,7 +344,7 @@ def test_the_unrouted_quantity_screen_is_silent_while_a_binding_draws_the_retenc
     the revision and the same rows produce the finding, which is what proves the
     screen was watching rather than switched off.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
     observations = _aggregate(transactions, invoices).observations
 
     assert unrouted_ledger_renta_income_quantities(_m130_2026_q1_revision(), observations) == ()
@@ -366,7 +366,7 @@ def test_the_fourth_quarter_credit_agrees_with_the_same_ledger_read_annually() -
     consistency the annual declaration has to agree with, asserted against the
     hand-derived 290,00 rather than against either read's own output.
     """
-    transactions, invoices = _declared_pair()
+    transactions, invoices = declared_pair()
 
     fourth_quarter = _aggregate(transactions, invoices, period=_Q4)
     revision = _m130_2026_q1_revision()

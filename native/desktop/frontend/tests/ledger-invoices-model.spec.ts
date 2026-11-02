@@ -1,3 +1,4 @@
+import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -668,6 +669,38 @@ test("the next number follows the highest in its series, class and year", () => 
       year: 2026,
     }),
   ).toBeNull();
+});
+
+test("a stored rate finer than a person types stands unsent until it is retyped", () => {
+  const stored = invoice({
+    retention_rate: { decimal: "0.1234567" },
+    retention_amount: { decimal: "123.46" },
+  });
+  const draft = correctionOf(stored);
+  expect(draft.retentionRate).toBe("12.34567");
+  const kept = checkCorrection(
+    stored,
+    { ...draft, notes: "Cobrada" },
+    null,
+    null,
+  );
+  expect(kept.problems.retention_rate).toBeUndefined();
+  expect(kept.request?.patch.fields).toEqual(["notes"]);
+  expect(correctionPreview(stored, draft, null).retention_rate).toEqual({
+    decimal: "0.1234567",
+  });
+  // Retyped, it is what the person typed, under the same limit as any other.
+  const retyped = checkCorrection(
+    stored,
+    { ...draft, retentionRate: "12.34568" },
+    null,
+    null,
+  );
+  expect(retyped.problems.retention_rate).toBeDefined();
+  expect(
+    checkCorrection(stored, { ...draft, retentionRate: "12" }, null, null)
+      .problems.retention_rate,
+  ).toBeUndefined();
 });
 
 test("a stored rate that points write as 12.345 is held longer, so no language reads it as thousands", () => {

@@ -6,9 +6,10 @@ After the source mesh is merged this step reads the pinned revision's capped
 bindings, finds each one that produced a value in any channel, and emits one
 ``advisory_binding_value`` diagnostic per box the value reaches. The diagnostic
 carries the binding, the box, the cap's reason and provisions, the amount and
-the resolver's stated outcome. A proven zero withholds nothing; every other
-value, including one whose resolver stated no outcome, withholds verify, export
-and local filing through the calculation-note gate.
+the resolver's stated outcome. A proven zero withholds nothing and is held with
+the calculation's other notes rather than persisted; every other value,
+including one whose resolver stated no outcome, persists with the revision and
+withholds verify, export and local filing through the calculation-note gate.
 """
 
 from __future__ import annotations
@@ -64,10 +65,6 @@ def _diagnostic(
 ) -> CalculationSourceDiagnostic:
     cap = reach.cap
     proven_zero = outcome is BindingValueOutcome.PROVEN_ZERO
-    # The cap's sentence says the amount is held back, which a proven zero is not.
-    sentence = (
-        CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO if proven_zero else GRADE_CAP_NOTE_SENTENCES[cap.reason]
-    )
     message = (
         f"binding {binding.id!r} reaches box {box} with a proven zero: its rows carry nothing the "
         f"{cap.reason.value} cap concerns"
@@ -85,7 +82,14 @@ def _diagnostic(
         message=message,
         asserted_legal_refs=cap.legal_refs,
         fact=(
-            CalculationNoteFact.of(sentence, box=box, amount=value, binding=binding.id)
+            CalculationNoteFact.of(
+                CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
+                if proven_zero
+                else GRADE_CAP_NOTE_SENTENCES[cap.reason],
+                box=box,
+                amount=value,
+                binding=binding.id,
+            )
             if isinstance(value, Decimal)
             else None
         ),

@@ -203,6 +203,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.rule.add",
   "ledger.rule.apply",
   "ledger.rule.list",
+  "ledger.rule.trial",
   "ledger.split.manual",
   "ledger.split.review",
   "ledger.staged.check",
@@ -791,6 +792,18 @@ export type LedgerStagedDraft = {
 };
 /** Staged work and the movements asked about, answered the way the writers
  * would take them, plus the categories to judge a classification against. */
+export type LedgerRuleTrialRequest = {
+  description_pattern: string;
+  transaction_ids: string[];
+};
+/** Whether the rule engine reads a pattern, which of the movements named it
+ * finds, and which of those it would classify now. */
+export type LedgerRuleTrialResult = {
+  profile_id: string;
+  outcome: "matched" | "empty_pattern" | "invalid_pattern";
+  hits: string[];
+  pending: string[];
+};
 export type LedgerStagedCheckRequest = {
   rows: LedgerStagedRow[];
   drafts: LedgerStagedDraft[];
@@ -824,6 +837,10 @@ export type LedgerStagedRowAnswer = {
   takes_share: boolean;
   category_settable: boolean;
   category_on_income: boolean;
+  takes_changes: boolean;
+  takes_invoice: boolean;
+  evidence_advised: boolean;
+  lifecycle_actions: ("archive" | "stash" | "restore" | "exclude")[];
   tax_set_skip: "transfer" | "personal" | "unclassified" | null;
   transfer_locked_fields: string[];
   classifying_fields: string[];
@@ -1852,6 +1869,7 @@ export type EvidenceConfirmRequest = {
   operation_type?: string | null;
   operation_date?: string | null;
   retention_rate?: string | null;
+  retention_points?: string | null;
   retention_amount?: string | null;
   recargo_amount?: string | null;
   invoice_class?: string | null;
@@ -2048,6 +2066,7 @@ export interface LedgerRequests {
   "ledger.invoice.view": InvoiceViewRequest;
   "ledger.invoice.add": InvoiceAddRequest;
   "ledger.invoice.preview": InvoicePreviewRequest;
+  "ledger.rule.trial": LedgerRuleTrialRequest;
   "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
@@ -2154,6 +2173,7 @@ export interface LedgerResults {
   "ledger.invoice.view": InvoiceViewResult;
   "ledger.invoice.add": InvoiceAddResult;
   "ledger.invoice.preview": InvoicePreviewResult;
+  "ledger.rule.trial": LedgerRuleTrialResult;
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;

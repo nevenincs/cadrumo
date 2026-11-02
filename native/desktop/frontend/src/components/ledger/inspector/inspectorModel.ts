@@ -8,8 +8,13 @@
 import type {
   LedgerLlmSuggestion,
   LedgerRow,
+  LedgerStagedRowAnswer,
   LedgerTransaction,
 } from "../../../shell/ledger";
+import {
+  takesBusinessShare,
+  takesChanges,
+} from "../../../shell/ledgerContract";
 import type { StagedCheck } from "../../../shell/ledgerStagedCheck";
 import {
   parseDecimal,
@@ -175,7 +180,7 @@ export function setSkip(
   unread?: ReadonlySet<string>,
 ): SkipReason | null {
   const id = row.transaction.transaction_id;
-  if (row.transaction.lifecycle_state !== "ACTIVE") return "not_active";
+  if (!takesChanges(row.transaction.lifecycle_state)) return "not_active";
   if (sealed.has(id)) return "sealed";
   if (unread?.has(id)) return "sealed_unread";
   if (!TAX_SETS.has(field)) return null;
@@ -240,20 +245,14 @@ export const LIFECYCLE_KINDS = [
 ] as const;
 export type LifecycleAction = (typeof LIFECYCLE_KINDS)[number];
 
-/** Whether a lifecycle action can be staged on `row`. */
+/** Whether a lifecycle action can be staged on a movement, as the ledger
+ * answers; with no answer it waits. */
 export function lifecycleTakes(
   kind: LifecycleAction,
-  row: LedgerRow,
-  sealed: ReadonlySet<string>,
+  answer: LedgerStagedRowAnswer | undefined,
+  sealed: boolean,
 ): boolean {
-  const t = row.transaction;
-  if (sealed.has(t.transaction_id)) return false;
-  if (kind === "restore")
-    return t.lifecycle_state === "ARCHIVED" || t.lifecycle_state === "STASHED";
-  if (t.lifecycle_state !== "ACTIVE") return false;
-  return !(
-    kind === "exclude" && t.business_classification === "REVIEWED_EXCLUDED"
-  );
+  return !sealed && (answer?.lifecycle_actions.includes(kind) ?? false);
 }
 
 /** The staged action of one lifecycle change, by a stable id, so staging
@@ -274,9 +273,10 @@ export function completeCohort(
   objectIds: readonly string[],
   rows: ReadonlyMap<string, LedgerRow>,
 ): boolean {
-  const parts = objectIds.filter(
-    (id) => rows.get(id)?.transaction.lifecycle_state === "ACTIVE",
-  );
+  const parts = objectIds.filter((id) => {
+    const state = rows.get(id)?.transaction.lifecycle_state;
+    return state !== undefined && takesChanges(state);
+  });
   return (
     parts.length >= 2 &&
     parts.length === selected.length &&
@@ -397,7 +397,10 @@ export function suggestionWrites(
       field: "business_classification",
       value: suggestion.classification,
     });
-  if (suggestion.classification === "MIXED")
+  if (
+    suggestion.classification &&
+    takesBusinessShare(suggestion.classification)
+  )
     writes.push({ field: "business_pct", value: suggestion.business_pct });
   if (suggestion.category)
     writes.push({ field: "category_id", value: suggestion.category });
@@ -414,7 +417,8 @@ export function suggestionWrites(
  * share, which only a new review asked with it can carry. */
 export const needsShare = (suggestion: LedgerLlmSuggestion["suggestion"]) =>
   suggestion.kind !== "split" &&
-  suggestion.classification === "MIXED" &&
+  !!suggestion.classification &&
+  takesBusinessShare(suggestion.classification) &&
   suggestion.business_pct === null;
 
 // ---- Dates ---------------------------------------------------------------------

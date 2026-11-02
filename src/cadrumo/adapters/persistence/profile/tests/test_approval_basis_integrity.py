@@ -64,6 +64,7 @@ from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservat
 from cadrumo.domain.calculations.registry.ids import RevisionId
 from cadrumo.domain.filing.schema import APPROVAL_BASIS_VERSION, ModeloDraft
 from cadrumo.domain.invoices.catalogue import InvoiceCatalogue
+from cadrumo.domain.modelos.filing_kind_evidence import ObservedFilingKind
 from cadrumo.domain.submission.models import ModeloDraftStatus
 from cadrumo.domain.transactions.date_partition import LedgerDatePartition
 from cadrumo.domain.transactions.models import TransactionCatalogue
@@ -245,6 +246,7 @@ class _EmptyObservationRepository:
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         override: ObservationOverride | None = None,
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         del (
             observation,
@@ -257,6 +259,7 @@ class _EmptyObservationRepository:
             result_disposition,
             prior_domiciliation_election,
             override,
+            filing_kind,
         )
         raise AssertionError("approval-basis observation fake does not prepare envelopes")
 

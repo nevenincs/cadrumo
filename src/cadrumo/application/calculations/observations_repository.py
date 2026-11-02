@@ -68,6 +68,7 @@ from ...domain.calculations.registry.ids import RevisionId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.iva_compensation.filed_derivation import M303CompensationBasisValue
 from ...domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
+from ...domain.modelos.filing_kind_evidence import ObservedFilingKind, filing_kind_or_unknown
 from ...domain.modelos.filing_text import ModeloActorLabel, OperatorReason
 from .errors import (
     ObservationCasillaReferenceError,
@@ -324,6 +325,20 @@ class ObservationEnvelopePayload(BaseModel):
         default=None,
         description="Audit of the operator override this local envelope records, when it is one.",
     )
+    filing_kind: ObservedFilingKind | None = Field(
+        default=None,
+        description=(
+            "Typed original or correction kind of the observed declaration with the "
+            "basis that admitted it and every unadmitted reading. Envelope evidence, "
+            "never a casilla. Absent on rows stored before the kind was captured; "
+            "read it through observed_filing_kind, which treats absence as unknown."
+        ),
+    )
+
+    @property
+    def observed_filing_kind(self) -> ObservedFilingKind:
+        """Return the observed filing kind, reading an absent projection as unknown."""
+        return filing_kind_or_unknown(self.filing_kind)
 
     @field_validator("source_kind", mode="before")
     @classmethod
@@ -705,6 +720,7 @@ class CalculationObservationRepositoryProtocol(Protocol):
         result_disposition: ResultDispositionProjection | None = None,
         prior_domiciliation_election: PriorDomiciliationElectionProjection | None = None,
         override: ObservationOverride | None = None,
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Validate and normalize one observation before persistence."""
         ...

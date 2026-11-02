@@ -1,6 +1,7 @@
 import {
   isRuleClassification,
   RULE_CLASSIFICATIONS,
+  ruleNamesCategory,
 } from "../../../shell/ledgerContract";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
@@ -22,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
+import { useRuleTrial } from "../../../shell/ledgerRuleTrial";
 import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
 import type { StageEvent } from "../../../shell/ledgerStage";
 import { useStrings } from "../../../shell/strings";
@@ -37,9 +39,6 @@ import { descriptionWords, listOptions } from "../suggestions/setupSuggestions";
 import { EditorField } from "./EditorField";
 import { CallLine, ChoiceField, useSetupRead } from "./SetupParts";
 import {
-  patternHits,
-  patternMatcher,
-  patternMatches,
   patternWords,
   priorityAt,
   ruleOrder,
@@ -166,9 +165,15 @@ export function RuleDialog({
   const [saved, setSaved] = useState<SetupCall<unknown> | null>(null);
 
   const pattern = advanced ? expression.trim() : wordsPattern(words);
-  const patternBroken = advanced && pattern !== "" && !patternMatcher(pattern);
-  const hits = rows && pattern ? patternHits(pattern, rows) : null;
-  const matches = rows && pattern ? patternMatches(pattern, rows) : null;
+  const trial = useRuleTrial(port, pattern, rows);
+  const answered = trial.kind === "answer" && pattern !== "";
+  const patternBroken = answered && trial.result.outcome === "invalid_pattern";
+  const found =
+    answered && rows && trial.result.outcome === "matched"
+      ? trial.result
+      : null;
+  const hits = found?.hits ?? null;
+  const matches = found?.pending ?? null;
   const vocabulary = useVocabulary();
   const categories = useMemo<ComboboxOption[]>(
     () => [
@@ -185,7 +190,7 @@ export function RuleDialog({
     (pattern !== target.rule.description_pattern ||
       classification !== target.rule.classification ||
       (category || null) !== target.rule.category_id);
-  const takesCategory = classification === "BUSINESS";
+  const takesCategory = ruleNamesCategory(classification);
   const { hold, held } = useWritePause();
   // A save the page settles after this dialog closed says nothing here.
   const mounted = useRef(true);
@@ -199,7 +204,8 @@ export function RuleDialog({
     held === null &&
     rules !== null &&
     pattern !== "" &&
-    !patternBroken &&
+    answered &&
+    trial.result.outcome === "matched" &&
     classification !== "" &&
     priority !== null &&
     !saving;

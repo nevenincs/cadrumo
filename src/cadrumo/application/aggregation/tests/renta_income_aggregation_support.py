@@ -69,7 +69,7 @@ class _TransactionCatalogueReader:
         )
 
 
-def _catalogue_read_ports(
+def catalogue_read_ports(
     *,
     invoices: InvoiceCatalogue,
     transactions: TransactionCatalogue,
@@ -187,7 +187,7 @@ def _income_transaction(
     )
 
 
-def _actividad_transaction(
+def actividad_transaction(
     provider_id: str,
     *,
     value_date: date,

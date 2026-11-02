@@ -1,3 +1,4 @@
+import { isDecidedClassification } from "../../../shell/ledgerContract";
 import {
   useContext,
   type ComponentProps,
@@ -187,7 +188,7 @@ function movementColumns(
     ),
     eur: missingOr("eur", (row) => <EuroCell row={row} locale={locale} />),
     classification: missingOr("classification", (row) => {
-      const decided = ["BUSINESS", "PERSONAL", "MIXED"].includes(
+      const decided = isDecidedClassification(
         row.transaction.business_classification,
       );
       return (

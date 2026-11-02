@@ -11,6 +11,7 @@ import {
   isClassification,
   isDirection,
   isLifecycleState,
+  takesBusinessShare,
 } from "../../../shell/ledgerContract";
 import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type { Translate } from "../../../shell/strings";
@@ -78,7 +79,10 @@ export function classificationText(
   >,
 ): string {
   const fraction = transaction.business_pct;
-  if (transaction.business_classification === "MIXED" && fraction !== null)
+  if (
+    takesBusinessShare(transaction.business_classification) &&
+    fraction !== null
+  )
     return t("desktop.ledger.classification.mixed_share", {
       share: formatPercent(locale, fraction, { unit: "fraction" }),
     });

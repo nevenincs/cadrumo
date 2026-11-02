@@ -26,11 +26,13 @@ import {
   TAX_AMOUNT_RULE,
   canonicalDecimal,
   parseDecimal,
+  parseFractionPercent,
   parseIsoDate,
   parseLine,
   sameDecimal,
   type Parsed,
 } from "../../../shell/ledgerGrammar";
+import { ledgerLimits } from "../../../shell/ledgerLimits";
 import { parsePoints } from "../setup/setupModel";
 
 /** The longest label the confirmation and evidence contracts take. */
@@ -64,14 +66,32 @@ export function fieldWidth(shape: FieldShape | "note", name = false): string {
  * the cell's padding, so a value is always read and edited in full. */
 export const VALUE_COLUMN_MIN_PX = 228;
 
-const SPECS: Record<FieldShape | "note", FieldSpec> = {
+const SPECS: Record<Exclude<FieldShape, "percent"> | "note", FieldSpec> = {
   text: { kind: "text", maxLength: LABEL_MAX },
   date: { kind: "date" },
   amount: { kind: "money" },
-  percent: { kind: "percent", unit: "points" },
   currency: { kind: "currency" },
   note: { kind: "notes", maxLength: NOTE_MAX },
 };
+
+/** The scale a document's rate is typed on, as served; null where it is not. */
+function percentUnit(field: string | undefined) {
+  return (
+    ledgerLimits()?.document_percent_fields.find(
+      (found) => found.field === field,
+    )?.unit ?? null
+  );
+}
+
+/** Reads a typed rate on the scale its field is served on. With no scale served
+ * the text is left as typed and not taken. */
+function readRate(field: string, raw: string): Parsed<string> {
+  if (raw.trim() === "") return { kind: "empty" };
+  const unit = percentUnit(field);
+  if (unit === null)
+    return { kind: "refused", refusal: { key: "limits_unavailable", raw } };
+  return unit === "fraction" ? parseFractionPercent(raw) : parsePoints(raw);
+}
 
 /** Which editor a field of `shape` is typed in. The tax id is text by shape
  * and has an editor of its own. */
@@ -79,7 +99,10 @@ export function entrySpec(
   shape: FieldShape | "note",
   field?: string,
 ): FieldSpec {
-  return field === "counterparty_tax_id" ? { kind: "taxId" } : SPECS[shape];
+  if (field === "counterparty_tax_id") return { kind: "taxId" };
+  if (shape !== "percent") return SPECS[shape];
+  const unit = percentUnit(field);
+  return unit === null ? SPECS.text : { kind: "percent", unit };
 }
 
 /** A stored value as an editor holds it: a figure or a rate is seeded through
@@ -239,7 +262,7 @@ export function readCorrection(
         : parsed;
     }
     case "percent":
-      return parsePoints(raw);
+      return readRate(field, raw);
     case "currency": {
       const text = raw.trim().toUpperCase();
       if (text === "") return { kind: "empty" };
@@ -253,13 +276,20 @@ export function readCorrection(
   }
 }
 
+/** What the ledger takes only as the person's own statement, never from the
+ * reading, so saying what the document says is still saying it. */
+const STATED_NOT_READ: ReadonlySet<CorrectionField> = new Set<CorrectionField>([
+  "retention_rate",
+  "retention_amount",
+]);
+
 /** Whether a corrected value is the value read: no correction at all. */
 export function sameAsRead(
   field: CorrectionField,
   value: string,
   read: string | null,
 ): boolean {
-  if (read === null) return false;
+  if (read === null || STATED_NOT_READ.has(field)) return false;
   const shape = CORRECTION_SHAPES[field];
   if (shape === "amount" || shape === "percent")
     return sameDecimal(value, read);
@@ -428,7 +458,8 @@ export function confirmation(input: {
     input.corrections,
   );
   if (corrected.kind === "refused") holds.push("corrections");
-  const values = corrected.kind === "ok" ? corrected.values : {};
+  const { retention_rate: retentionPoints, ...values } =
+    corrected.kind === "ok" ? corrected.values : {};
   if (!values.currency && !readValue(input.draft, "currency"))
     holds.push("currency");
   const findings = findingsState(input.blockers, input.answers);
@@ -444,6 +475,8 @@ export function confirmation(input: {
       kind: input.kind,
       counterparty_country: country,
       ...values,
+      // A person states a retención in points; the ledger owns its fraction.
+      ...(retentionPoints ? { retention_points: retentionPoints } : {}),
       ...(findings.resolutions.length
         ? { resolutions: findings.resolutions }
         : {}),
@@ -558,7 +591,7 @@ function readRecordField(
       : shape === "date"
         ? parseIsoDate(raw)
         : shape === "percent"
-          ? parsePoints(raw)
+          ? readRate(field, raw)
           : (() => {
               const amount = parseDecimal(raw, TAX_AMOUNT_RULE);
               return amount.kind === "value"

@@ -16,7 +16,14 @@ from uuid import UUID
 from ...core.hashing import content_hash_hex
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.categories.spending_category_catalogue import resolve_spending_category_catalogue
-from ...domain.transactions.classification_effects import fields_cleared_by_classification, takes_expense_category
+from ...domain.transactions.classification_effects import (
+    advises_purchase_evidence,
+    fields_cleared_by_classification,
+    lifecycle_actions_taken,
+    takes_changes,
+    takes_expense_category,
+    takes_invoice,
+)
 from ...domain.transactions.enums import (
     BUSINESS_BEARING_STATES,
     BusinessClassification,
@@ -85,7 +92,7 @@ _DRAFT_TRANSFER_TAX_FIELDS: Final[tuple[str, ...]] = (
     "counterparty_identification_state",
 )
 
-_TRANSFER_LOCKED_FIELDS: Final[tuple[StageFieldName, ...]] = (
+TRANSFER_LOCKED_FIELDS: Final[tuple[StageFieldName, ...]] = (
     "category_id",
     "iva_category",
     "taxable_base",
@@ -102,7 +109,7 @@ _CLASSIFYING_FIELDS: Final[frozenset[str]] = frozenset(
     {*TRANSFER_TAX_FIELDS, "business_classification", "counterparty_country"}
 )
 
-_DRAFT_REQUIRED_FIELDS: Final = ("booked_date", "amount", "currency", "direction", "description")
+DRAFT_REQUIRED_FIELDS: Final = ("booked_date", "amount", "currency", "direction", "description")
 
 # The read of a movement does not carry these two, so only a staged one is judged.
 _STAGE_ONLY_FIELDS: Final = frozenset({"deduction_fact_kind", "investment_asset_id"})
@@ -322,11 +329,20 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
         takes_expense_category=takes_category,
         takes_share=classification is not None and takes_business_share(classification),
         category_settable=settable,
+        takes_changes=takes_changes(transaction.lifecycle_state),
+        takes_invoice=takes_invoice(transaction.direction),
+        evidence_advised=advises_purchase_evidence(
+            transaction.lifecycle_state,
+            transaction.direction,
+            transaction.business_classification,
+            has_evidence=transaction.purchase_invoice_evidence_id is not None,
+        ),
+        lifecycle_actions=lifecycle_actions_taken(transaction.lifecycle_state, transaction.business_classification),
         category_on_income=(classification in BUSINESS_BEARING_STATES)
         and bool(after["category_id"])
         and not takes_category,
         tax_set_skip=_tax_set_skip(direction, classification),
-        transfer_locked_fields=_TRANSFER_LOCKED_FIELDS if transfer else (),
+        transfer_locked_fields=TRANSFER_LOCKED_FIELDS if transfer else (),
         classifying_fields=tuple(cell.field for cell in row.cells if cell.field in _CLASSIFYING_FIELDS),
         identity_fields=identity,
         routes=routes,
@@ -338,7 +354,7 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
 def check_draft(draft: LedgerStagedDraft) -> LedgerStagedDraftAnswer:
     """Answer one new movement."""
     fields: dict[str, str | None] = {item.field: item.value for item in draft.fields}
-    missing = tuple(field for field in _DRAFT_REQUIRED_FIELDS if not _filled(fields.get(field)))
+    missing = tuple(field for field in DRAFT_REQUIRED_FIELDS if not _filled(fields.get(field)))
     blockers: list[LedgerStagedBlocker] = []
     if missing:
         blockers.append(LedgerStagedBlocker(kind="draft_incomplete", fields=missing))
@@ -395,6 +411,8 @@ def check_staged_work(
 
 
 __all__ = [
+    "DRAFT_REQUIRED_FIELDS",
+    "TRANSFER_LOCKED_FIELDS",
     "TRANSFER_TAX_FIELDS",
     "check_draft",
     "check_staged_work",

@@ -625,6 +625,7 @@ DESKTOP_LEDGER_DOCUMENT_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.invoices.read_failed",
         "desktop.ledger.invoices.refusal.meant",
         "desktop.ledger.invoices.refusal.too_long",
+        "desktop.ledger.invoices.refusal.limits_unavailable",
         "desktop.ledger.invoices.refusal.signed",
         "desktop.ledger.invoices.refusal.exponent",
         "desktop.ledger.invoices.refusal.currency_symbol",
