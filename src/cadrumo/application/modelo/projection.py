@@ -27,6 +27,7 @@ from typing import TYPE_CHECKING
 
 from pydantic import BaseModel, Field, TypeAdapter, ValidationError
 
+from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId, validated_casilla_id
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import CadrumoError
@@ -67,6 +68,7 @@ from .calculate_input_validation import (
 )
 from .calculation_action_ports import CalculationActionPorts
 from .calculation_revision_queries import list_calculation_revisions
+from .calculation_source_guards import reject_caller_overrides_of_source_bindings
 from .profile_binding import resolve_profile_sourced_bindings
 from .work_lifecycle import list_work_units
 
@@ -76,6 +78,10 @@ if TYPE_CHECKING:
 _LOG = get_logger(__name__)
 _BINDING_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(BindingId)
 _RELATION_ID_ADAPTER: TypeAdapter[str] = TypeAdapter(RelationId)
+# Suffered withholding is owned by the payer records and absence attestations,
+# so a caller figure would stand in for the evidence the calculation refuses to
+# take from a caller; the projection refuses it the same way.
+_PROJECTION_SOURCE_OWNED_KINDS: frozenset[BindingSourceKind] = frozenset({BindingSourceKind.RETENCION_SOPORTADA})
 
 
 class ModeloProjectionError(CadrumoError):
@@ -701,6 +707,14 @@ def project_modelo_100_from_m130(
     extra_bindings, extra_enum_bindings = _parse_projection_binding_overrides(
         binding_overrides,
         m100_snapshot.revision,
+    )
+    reject_caller_overrides_of_source_bindings(
+        revision=m100_snapshot.revision,
+        owned_sources=_PROJECTION_SOURCE_OWNED_KINDS,
+        caller_binding_values=extra_bindings,
+        caller_casilla_inputs=extra_inputs,
+        caller_enum_binding_values=extra_enum_bindings,
+        subject_leaf_key="modelo.project",
     )
 
     m100_inputs: dict[CasillaId, Decimal] = {

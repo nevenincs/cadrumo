@@ -170,6 +170,7 @@ def test_m390_bienes_inversion_casilla_is_barred_from_operator_override(
             owned_sources=_GUARDED_SOURCES,
             caller_binding_values={},
             caller_casilla_inputs={barred: Decimal("1.00")},
+            subject_leaf_key="modelo.work.calculate",
         )
 
     reject_caller_overrides_of_source_bindings(
@@ -177,4 +178,5 @@ def test_m390_bienes_inversion_casilla_is_barred_from_operator_override(
         owned_sources=_GUARDED_SOURCES,
         caller_binding_values={},
         caller_casilla_inputs={"44": Decimal("1.00")},
+        subject_leaf_key="modelo.work.calculate",
     )

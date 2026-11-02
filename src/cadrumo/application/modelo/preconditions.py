@@ -197,15 +197,14 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.calculate.borrador_snapshot.active",
         "modelo.work.calculate.borrador_snapshot.inactive",
     ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.source_inputs.unowned",
-        "modelo.work.calculate.source_inputs.binding_override_rejected",
-    ),
-    _profile(
-        "modelo.work.calculate",
-        "modelo.work.calculate.source_inputs.unowned",
-        "modelo.work.calculate.source_inputs.casilla_override_rejected",
+    *(
+        _profile(
+            leaf,
+            f"{leaf}.source_inputs.unowned",
+            f"{leaf}.source_inputs.{kind}_override_rejected",
+        )
+        for leaf in ("modelo.work.calculate", "modelo.project")
+        for kind in ("binding", "casilla")
     ),
     _profile(
         "modelo.work.calculate",

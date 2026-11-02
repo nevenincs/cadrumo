@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from decimal import Decimal
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Literal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
@@ -145,6 +145,10 @@ def _registered_disposition(source: BindingSourceKind) -> str | None:
     return None if registration is None else registration.disposition
 
 
+type SourceInputGuardLeaf = Literal["modelo.work.calculate", "modelo.project"]
+"""The command leaves whose caller inputs are checked against source-owned bindings."""
+
+
 def _source_owned_binding_ids(
     revision: ModeloRevision, owned_sources: frozenset[BindingSourceKind]
 ) -> frozenset[BindingId]:
@@ -169,6 +173,7 @@ def reject_caller_overrides_of_source_bindings(
     caller_casilla_inputs: Mapping[CasillaId, Decimal],
     caller_enum_binding_values: Mapping[BindingId, str] | None = None,
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
+    subject_leaf_key: SourceInputGuardLeaf,
 ) -> None:
     """Refuse caller-supplied bindings or casilla inputs that collide with values bucket source resolvers own.
 
@@ -179,7 +184,10 @@ def reject_caller_overrides_of_source_bindings(
     to aggregate. Both collisions are rejected before any value reaches
     the engine.
 
-    Takes ``revision`` as a :class:`ModeloRevision`.
+    Takes ``revision`` as a :class:`ModeloRevision`. ``subject_leaf_key``
+    names the command whose refusal this is, so the precondition failure
+    carries that command's recovery subject: calculation and the Modelo 100
+    projection refuse the same collisions under their own leaves.
     """
     # A closed table can populate positional manual-input bindings. Its actual
     # ownership therefore cannot be inferred from the binding's provider kind.
@@ -196,10 +204,10 @@ def reject_caller_overrides_of_source_bindings(
             translated_message="errors.error.error_modelo_aggregation_binding",
             context={"rejected_binding_ids": rejected_bindings},
             precondition_failure=build_modelo_precondition_failure(
-                subject_leaf_key="modelo.work.calculate",
-                condition_id="modelo.work.calculate.source_inputs.unowned",
-                scenario_id="modelo.work.calculate.source_inputs.binding_override_rejected",
-                evidence_id="modelo.work.calculate.source_inputs",
+                subject_leaf_key=subject_leaf_key,
+                condition_id=f"{subject_leaf_key}.source_inputs.unowned",
+                scenario_id=f"{subject_leaf_key}.source_inputs.binding_override_rejected",
+                evidence_id=f"{subject_leaf_key}.source_inputs",
                 evidence_values={
                     "rejected_binding_count": len(rejected_bindings),
                     "rejected_binding_ids": "|".join(rejected_bindings),
@@ -214,10 +222,10 @@ def reject_caller_overrides_of_source_bindings(
             translated_message="application.modelo.errors.caller_casilla_source_binding_conflict",
             context={"casillas": rejected_casillas},
             precondition_failure=build_modelo_precondition_failure(
-                subject_leaf_key="modelo.work.calculate",
-                condition_id="modelo.work.calculate.source_inputs.unowned",
-                scenario_id="modelo.work.calculate.source_inputs.casilla_override_rejected",
-                evidence_id="modelo.work.calculate.source_inputs",
+                subject_leaf_key=subject_leaf_key,
+                condition_id=f"{subject_leaf_key}.source_inputs.unowned",
+                scenario_id=f"{subject_leaf_key}.source_inputs.casilla_override_rejected",
+                evidence_id=f"{subject_leaf_key}.source_inputs",
                 evidence_values={
                     "rejected_casilla_count": len(rejected_casillas),
                     "rejected_casilla_ids": "|".join(rejected_casillas),
