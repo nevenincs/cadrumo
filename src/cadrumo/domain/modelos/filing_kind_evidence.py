@@ -233,10 +233,12 @@ def filing_kind_or_unknown(projection: ObservedFilingKind | None) -> ObservedFil
     return UNKNOWN_FILING_KIND if projection is None else projection
 
 
-#: Record-design value domain of the declaration-level marker: blank or "X".
+#: The record designs' flag mark: the declaration-level marker is blank or this byte.
+_RECORD_FLAG_MARK: Final = "X"
+
 _DECLARATION_MARKER_KINDS: Final[dict[str, FilingDeclarationKind]] = {
     "": FilingDeclarationKind.ORIGINAL,
-    "X": FilingDeclarationKind.COMPLEMENTARIA,
+    _RECORD_FLAG_MARK: FilingDeclarationKind.COMPLEMENTARIA,
 }
 
 

@@ -29,7 +29,7 @@ def require_m347_declarado_casillas_have_one_row(
     no binding names the counterparty it concerns. Writing the value on each row
     would state it for counterparties it was never typed for.
     """
-    if record.id != _M347_DECLARADO_RECORD_ID or len(rows) < 2:
+    if record.id != _M347_DECLARADO_RECORD_ID or not rows[1:]:
         return
     populated = sorted(
         {

@@ -31,7 +31,7 @@ PERCENTAGE_MIN: Final[Decimal] = Decimal("0")
 PERCENTAGE_MAX: Final[Decimal] = Decimal("100")
 
 #: The most decimals a typed percentage takes: a governed rate has two at most, a usage ratio a little more.
-PERCENTAGE_ENTRY_DECIMALS: Final[int] = 4
+PERCENTAGE_ENTRY_FRACTION_DIGITS: Final[int] = 4
 
 #: Below this, a bare number may be a fraction or a small percentage, so entry refuses it unmarked.
 PERCENTAGE_BARE_FRACTION_CEILING: Final[Decimal] = Decimal("1")
@@ -54,7 +54,7 @@ def fraction_of_percentage(points: Decimal) -> Decimal:
 
 __all__ = [
     "PERCENTAGE_BARE_FRACTION_CEILING",
-    "PERCENTAGE_ENTRY_DECIMALS",
+    "PERCENTAGE_ENTRY_FRACTION_DIGITS",
     "PERCENTAGE_MAX",
     "PERCENTAGE_MIN",
     "Percentage",

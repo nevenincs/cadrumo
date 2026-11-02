@@ -86,13 +86,13 @@ if sys.platform == "win32":
 
     from .windows_job_object import (
         JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
+        JOB_OBJECT_LIMIT_ACTIVE_PROCESS,
         JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        JOB_OBJECT_LIMIT_PROCESS_MEMORY,
+        JOB_OBJECT_LIMIT_PROCESS_TIME,
+        JOB_OBJECT_TIME_UNITS_PER_SECOND,
         JobObjectExtendedLimitInformation,
     )
-
-    _JOB_LIMIT_PROCESS_TIME: Final = 0x00000002
-    _JOB_LIMIT_ACTIVE_PROCESS: Final = 0x00000008
-    _JOB_LIMIT_PROCESS_MEMORY: Final = 0x00000100
 
     class _Containment:
         """A kill-on-close Job Object holding exactly the one child, ended with its last handle."""
@@ -105,12 +105,12 @@ if sys.platform == "win32":
                 raise PatternSearchUnavailableError("the pattern search job could not be created")
             self._handle: int = int(handle)
             information = JobObjectExtendedLimitInformation()
-            information.BasicLimitInformation.PerProcessUserTimeLimit = _CHILD_CPU_SECONDS * 10_000_000
+            information.BasicLimitInformation.PerProcessUserTimeLimit = _CHILD_CPU_SECONDS * JOB_OBJECT_TIME_UNITS_PER_SECOND
             information.BasicLimitInformation.ActiveProcessLimit = 1
             information.BasicLimitInformation.LimitFlags = (
-                _JOB_LIMIT_PROCESS_TIME
-                | _JOB_LIMIT_ACTIVE_PROCESS
-                | _JOB_LIMIT_PROCESS_MEMORY
+                JOB_OBJECT_LIMIT_PROCESS_TIME
+                | JOB_OBJECT_LIMIT_ACTIVE_PROCESS
+                | JOB_OBJECT_LIMIT_PROCESS_MEMORY
                 | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             )
             information.ProcessMemoryLimit = _CHILD_MEMORY_BYTES

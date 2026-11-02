@@ -28,7 +28,7 @@ from decimal import Decimal
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import HUNDRED
 from ...core.i18n.render import tr
-from ...core.money.rounding import round_to_cents
+from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -60,7 +60,7 @@ from .observations_repository import CalculationObservationRepositoryProtocol, O
 from .revision_carry_gate import revision_carry_outcome
 
 #: The most one filed box can differ from its unrounded deduction: half a cent.
-_HALF_CENT = Decimal("0.005")
+_HALF_CENT = CENT / 2
 
 
 def format_period_list(periods: Iterable[Period]) -> str:
