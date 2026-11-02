@@ -285,7 +285,7 @@ def invoice_row_fingerprint(
 
 def _linked_invoice_ids(ports: InvoiceCatalogueReadPorts, contributors: frozenset[str]) -> frozenset[str]:
     if not contributors:
-        return frozenset()
+        return frozenset[str]()
     named: set[str] = set()
     for transaction in ports.transaction_reader.load().values():
         if transaction.transaction_id not in contributors:
