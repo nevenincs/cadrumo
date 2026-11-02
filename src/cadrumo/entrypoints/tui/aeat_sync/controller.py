@@ -10,6 +10,7 @@ from ....application.aeat_sync.workspace import (
     AeatSyncWorkspaceProjectionV1,
     AeatSyncWorkspaceZone,
     AeatSyncWorkspaceZoneStateV1,
+    source_observation_is_observable,
 )
 from ....application.auth.sync_readiness import AuthSyncReadiness
 from ....application.operations.models import OperationDefinitionId
@@ -185,10 +186,7 @@ class AeatSyncWorkspaceController:
         """Keep the overview reachable to explain unavailable sources."""
         if zone is AeatSyncWorkspaceZone.OVERVIEW:
             return self.state_for(zone).availability is not AeatSyncWorkspaceAvailability.LOCKED
-        return self.state_for(zone).availability in {
-            AeatSyncWorkspaceAvailability.AVAILABLE,
-            AeatSyncWorkspaceAvailability.STALE,
-        }
+        return source_observation_is_observable(self.state_for(zone).availability)
 
 
 __all__ = ["AeatSyncWorkspaceController"]
