@@ -176,6 +176,13 @@ number = "18"
 section = ["resultado_final"]
 semantic_role = "resultado_anteriores_autoliquidaciones"
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
+[revisions."2019-y-siguientes".casillas.complementaria_only]
+source_refs = ["aeat-modelo-130-instructions"]
+[[revisions."2019-y-siguientes".casillas.complementaria_only.source_citations]]
+source_ref = "aeat-modelo-130-instructions"
+required_text = [
+    "Casilla 18. En el supuesto de autoliquidación complementaria, consignaremos en esta casilla el resultado a ingresar de las autoliquidaciones, modelo 130, presentadas anteriormente por el mismo ejercicio y período.",
+]
 
 [[revisions."2019-y-siguientes".casillas]]
 id = "19"

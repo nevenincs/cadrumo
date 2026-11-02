@@ -14,6 +14,7 @@ from ....core.period import Period
 from ....domain.buckets.event import BucketEventHistoryCatalogue
 from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.justificante.schema import Justificante
+from ....domain.modelos.filing_kind_evidence import ObservedFilingKind
 from ....domain.modelos.filing_record import ModeloRecord, ModeloRecordCatalogue
 from ...calculations.observations_repository import (
     ObservationEnvelopePayload,
@@ -162,6 +163,7 @@ class _InMemoryCalculationRepository:
         captured_at: datetime | None = None,
         source_metadata: Mapping[str, str] | None = None,
         source_headers: tuple[ObservedHeaderFact, ...] = (),
+        filing_kind: ObservedFilingKind | None = None,
     ) -> ObservationEnvelopePayload:
         """Build one validated payload accepted by this test repository."""
         if captured_at is None:
@@ -173,6 +175,7 @@ class _InMemoryCalculationRepository:
             captured_at=captured_at,
             source_metadata=dict(source_metadata or {}),
             source_headers=source_headers,
+            filing_kind=filing_kind,
         )
         self.payloads.append(payload)
         return payload
