@@ -18,10 +18,12 @@ import pytest
 from ....core.money.rounding import round_to_cents
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
+from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.models import Invoice
 from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.lookup import coexisting_tier_rates, lookup_rate
 from ....domain.iva.schema import EUMemberState, IvaRateKind
+from ...exchange_rate_provider import bind_exchange_rate_provider_factory
 from ..errors import AggregationValidationError
 from .oss_rate_change_support import ordinary_general_variants, rate_change_inside_a_quarter
 from .test_oss_detail_sections import _IMPORT, _UNION, _invoice, _resolve, _row
@@ -276,3 +278,44 @@ def test_a_correction_two_invoices_could_answer_refuses(operation: PinnedAuthori
     assert _refusal(operation, _first(), other, _correction()) == (
         "aggregation.oss_ioss.errors.rectificativa_target_ambiguous"
     )
+
+
+class _Quote:
+    """A rate authority publishing one rate; the lookup's parsing has its own tests."""
+
+    rate_source_id = "ecb_reference"
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        del currency
+        return EurRateLookup(
+            status=EurRateLookupStatus.FOUND,
+            rate_date=rate_date,
+            source=self.rate_source_id,
+            rate=Decimal("0.9195"),
+            observation_date=rate_date,
+        )
+
+
+def _dutch(number: int, *, currency: str, base: str, cuota: str) -> Invoice:
+    return _invoice(
+        _UNION, f"N-{number}", country="NL", tier="general", base=base, cuota=cuota
+    ).model_copy(update={"currency": currency})
+
+
+def test_a_foreign_currency_row_converts_at_the_level_of_the_row(operation: PinnedAuthorityOperation) -> None:
+    """1.000 x USD 1,00 + 0,21 at 0,9195 and 21: base 919,50, cuota 919,50 x 0,21 = 193,095, so 193,10.
+
+    Rounding each line first gives 0,92 and 0,19, so 920,00 and 190,00, a cuota that is not
+    21 of its own base.
+    """
+    invoices = tuple(_dutch(number, currency="USD", base="1.00", cuota="0.21") for number in range(1000))
+    with bind_exchange_rate_provider_factory(_Quote):
+        resolution = _resolve(operation, _UNION, invoices)
+    assert _row(resolution, _UNION, 1) == ("NL", "S", Decimal("21"), Decimal("919.50"), Decimal("193.10"))
+
+
+def test_a_euro_row_declares_its_cuota_at_its_own_rate(operation: PinnedAuthorityOperation) -> None:
+    """100 x 0,99 + 0,21: base 99,00, cuota 99,00 x 0,21 = 20,79, where the lines would add up to 21,00."""
+    invoices = tuple(_dutch(number, currency="EUR", base="0.99", cuota="0.21") for number in range(100))
+    resolution = _resolve(operation, _UNION, invoices)
+    assert _row(resolution, _UNION, 1) == ("NL", "S", Decimal("21"), Decimal("99.00"), Decimal("20.79"))
