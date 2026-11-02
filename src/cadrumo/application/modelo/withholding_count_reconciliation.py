@@ -32,7 +32,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 from dataclasses import dataclass
 from decimal import Decimal
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
@@ -52,6 +52,7 @@ from ...domain.modelos.verification_report import (
 from ..aggregation.withholding_filing_cadence import QUARTERLY_WITHHOLDING_PERIODS
 from ..aggregation.withholding_modelo_routing import annual_withholding_composition
 from ..aggregation.withholding_source import withholding_binding_grounding
+from .finding_message_text import NO_PERIODS_FACT, PERIOD_LIST_SEPARATOR
 from .verification_preconditions import build_verification_precondition_failure
 
 if TYPE_CHECKING:
@@ -62,8 +63,6 @@ if TYPE_CHECKING:
     from ..aggregation.percepciones_observations_repository import PercepcionObservationRepository
     from ..calculations.observations_repository import CalculationObservationRepositoryProtocol
     from .preconditions import ModeloPreconditionFailure
-
-_NONE_FACT: Final = "none"
 
 
 @dataclass(frozen=True, slots=True)
@@ -187,7 +186,7 @@ def _count_binding_grounding(revision: ModeloRevision) -> tuple[tuple[LegalRefId
 
 
 def _joined(values: Sequence[str]) -> str:
-    return "|".join(values) if values else _NONE_FACT
+    return PERIOD_LIST_SEPARATOR.join(values) if values else NO_PERIODS_FACT
 
 
 def append_withholding_count_reconciliation_findings(

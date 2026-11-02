@@ -29,7 +29,7 @@ from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_
 from .actions_lifecycle import remove_manual_transaction
 from .id_resolution import resolve_transaction_id
 from .models import LedgerTransactionRemovalReport
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_access
 from .removal_receipt_projection import (
     MAX_LEDGER_REMOVAL_RECEIPT_REASON_LENGTH,
     LedgerRemovalReceiptProjection,
@@ -184,12 +184,13 @@ def resolve_ledger_remove_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile access and COMMIT for a confirmed mutation."""
-    if request.definition_id != LEDGER_REMOVE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerRemoveRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.dry_run else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+        request_type=LedgerRemoveRequest,
+        commits=lambda payload: not payload.dry_run,
+    )
 
 
 def build_ledger_remove_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

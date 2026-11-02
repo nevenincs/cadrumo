@@ -1552,20 +1552,19 @@ application:
         not hold.
     calc_diagnostic_words:
       income_class:
-        actividad_economica: economic activity other than an urban rental
-        arrendamiento_inmueble_urbano: urban property rental that is not an economic
+        actividad_economica: economic activities
+        arrendamiento_inmueble_urbano: urban property rental
+        arrendamiento_inmueble_urbano_actividad: urban property rental run as an economic
           activity
-        arrendamiento_inmueble_urbano_actividad: urban property rental that is an
-          economic activity
-        atribucion_actividad_economica: economic activity income attributed by an
-          entity
-        atribucion_capital_inmobiliario: property income attributed by an entity
-        atribucion_capital_mobiliario: investment income attributed by an entity
-        atribucion_ganancia_patrimonial: capital gains attributed by an entity
-        capital_mobiliario: investment income (capital mobiliario)
-        ganancia_patrimonial: capital gains, prizes included
-        imputacion_aie_ute: income allocated by an AIE or UTE
-        imputacion_derechos_imagen: image-rights income allocation
+        atribucion_actividad_economica: attributed economic activities
+        atribucion_capital_inmobiliario: attributed real estate income
+        atribucion_capital_mobiliario: attributed movable capital income
+        atribucion_ganancia_patrimonial: attributed capital gains
+        capital_mobiliario: movable capital income
+        ganancia_patrimonial: capital gains
+        imputacion_aie_ute: AIE and UTE imputation
+        imputacion_derechos_imagen: image-rights imputation
+        other: another income
         trabajo: employment income
       named_element: '"{name}"'
       unnamed_element: An asset with no name

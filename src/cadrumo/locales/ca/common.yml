@@ -9625,6 +9625,8 @@ workspace:
         registrar la presentació (impedeixen presentar: {count}).'
       title: Exporta la declaració
       verify_first: Comprova la declaració abans d'exportar-la.
+    field:
+      details: Sobre aquesta casella
     filed:
       read_only: 'Registrada com a presentada: la pots consultar, però no canviar.
         Per canviar-la, inicia una correcció d''aquesta declaració.'

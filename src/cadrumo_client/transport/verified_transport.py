@@ -264,6 +264,33 @@ class VerifiedTransport:
             result = Reply(read_session_inventory(self._channel, result.root, deadline=deadline))
         return result
 
+    def _request_reply[ReplyT](
+        self,
+        request: BaseModel,
+        request_id: UUID,
+        accepted: tuple[type[ReplyT], ...],
+        *,
+        deadline: float,
+        admits: Callable[[ReplyT], bool] | None = None,
+    ) -> ReplyT:
+        """Exchange one credential-free document for a reply of an accepted type that ``admits`` passes.
+
+        A reply of another type, or one ``admits`` refuses, is an invalid frame; any failure closes the
+        connection.
+        """
+        with self._exchange(deadline=deadline):
+            try:
+                if self._closed:
+                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
+                write_document(self._channel, request, deadline=deadline)
+                reply = self._reply(request_id, deadline=deadline).root
+                if not isinstance(reply, accepted) or (admits is not None and not admits(reply)):
+                    raise RefusalError(RefusalCode.INVALID_FRAME)
+                return reply
+            except BaseException as error:
+                self._close_after_failure(error)
+                raise
+
     def _verify_reply(self, expected: UUID, received: UUID, boot: UUID, connection: UUID) -> None:
         if (
             expected != received

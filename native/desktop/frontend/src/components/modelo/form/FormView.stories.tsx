@@ -117,6 +117,21 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
+/** Opens what the read serves about the chosen box, once the form draws it. */
+export async function openChosenFacts(canvasElement: HTMLElement) {
+  const button = await waitFor(
+    () => {
+      const found = canvasElement.querySelector<HTMLButtonElement>(
+        '[aria-selected="true"] [data-field-facts]',
+      );
+      if (!found) throw new Error("the chosen box is not drawn yet");
+      return found;
+    },
+    { timeout: 15_000 },
+  );
+  button.click();
+}
+
 export const OnePage: Story = {
   name: "130 · one page, boxes that could not be calculated",
   render: (_, { globals }) => <Form modelo="130" locale={language(globals)} />,
@@ -136,6 +151,40 @@ export const BoxNotes: Story = {
       { timeout: 15_000 },
     );
   },
+};
+
+export const FieldHelp: Story = {
+  name: "130 · a box's help and details",
+  render: (_, { globals }) => (
+    <Form
+      modelo="130"
+      locale={language(globals)}
+      setup={(session) => {
+        session.selectBox("03");
+      }}
+    />
+  ),
+  play: ({ canvasElement }) => openChosenFacts(canvasElement),
+};
+
+export const FieldWithoutHelp: Story = {
+  name: "303 · a box the read gives no help",
+  render: (_, { globals }) => (
+    <Form
+      modelo="303"
+      locale={language(globals)}
+      setup={(session, envelope) => {
+        // A box on its own line, so its row is the one the story opens.
+        const bare = envelope.form.form.pages
+          .flatMap((page) => page.sections)
+          .flatMap((section) => section.blocks)
+          .flatMap((block) => (block.kind === "field" ? [block.field] : []))
+          .find((field) => field.help === null && field.box !== null);
+        if (bare) session.selectAddress(bare.address);
+      }}
+    />
+  ),
+  play: ({ canvasElement }) => openChosenFacts(canvasElement),
 };
 
 export const Staged: Story = {

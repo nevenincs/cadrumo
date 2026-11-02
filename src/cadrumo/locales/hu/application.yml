@@ -1603,22 +1603,20 @@ application:
         eszközt rögzít.
     calc_diagnostic_words:
       income_class:
-        actividad_economica: a városi ingatlan bérbeadásától eltérő gazdasági tevékenység
-        arrendamiento_inmueble_urbano: városi ingatlan bérbeadása, amely nem gazdasági
-          tevékenység
-        arrendamiento_inmueble_urbano_actividad: városi ingatlan bérbeadása, amely
-          gazdasági tevékenység
-        atribucion_actividad_economica: egy szervezet által tulajdonított gazdasági
-          tevékenységből származó jövedelem
-        atribucion_capital_inmobiliario: egy szervezet által tulajdonított ingatlanjövedelem
-        atribucion_capital_mobiliario: egy szervezet által tulajdonított ingó tőkejövedelem
-        atribucion_ganancia_patrimonial: egy szervezet által tulajdonított vagyoni
-          nyereség
-        capital_mobiliario: ingó tőkejövedelem (capital mobiliario)
-        ganancia_patrimonial: vagyoni nyereség, a nyereményeket is beleértve
-        imputacion_aie_ute: egy AIE vagy UTE által tulajdonított jövedelem
-        imputacion_derechos_imagen: képmáshasznosítási jogból származó jövedelem tulajdonítása
-        trabajo: munkából származó jövedelem
+        actividad_economica: Gazdasági tevékenységből származó
+        arrendamiento_inmueble_urbano: Városi ingatlan bérbeadásából származó
+        arrendamiento_inmueble_urbano_actividad: Gazdasági tevékenységként végzett
+          városi ingatlan-bérbeadásból származó
+        atribucion_actividad_economica: Hozzárendelt gazdasági tevékenységből származó
+        atribucion_capital_inmobiliario: Hozzárendelt, ingatlanból származó
+        atribucion_capital_mobiliario: Hozzárendelt, ingó tőkéből származó
+        atribucion_ganancia_patrimonial: Hozzárendelt vagyoni nyereségből származó
+        capital_mobiliario: Ingó tőkéből származó
+        ganancia_patrimonial: Vagyoni nyereségből származó
+        imputacion_aie_ute: AIE- és UTE-imputációs
+        imputacion_derechos_imagen: Képmásjog-imputációs
+        other: Egyéb
+        trabajo: Munkából származó
       named_element: „{name}”
       unnamed_element: Névtelen eszköz
     calculation_report:

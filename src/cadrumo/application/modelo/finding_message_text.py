@@ -31,12 +31,18 @@ from ...core.i18n.render import tr
 from ...domain.modelos.verification_report import ModeloVerificationFinding
 from .value_presentation import format_casilla_value
 
+#: What a producer states for a list of periods that is empty.
+NO_PERIODS_FACT: Final = "none"
+PERIOD_LIST_SEPARATOR: Final = "|"
+
 
 class FindingFactKind(StrEnum):
     """How one finding fact is written into its sentence."""
 
     #: A filing period's registry token, written as the period's name without its year.
     PERIOD = "period"
+    #: Several period tokens joined by ``|``, each written as its name, or :data:`NO_PERIODS_FACT` for none.
+    PERIODS = "periods"
     #: A calendar date in ISO form, written in the language's order.
     DATE = "date"
     #: A casilla id, written as its printed box number or the words the form gives it.
@@ -66,6 +72,8 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "period_code": FindingFactKind.PERIOD,
         "source_period": FindingFactKind.PERIOD,
         "target_period": FindingFactKind.PERIOD,
+        "checked_periods": FindingFactKind.PERIODS,
+        "unchecked_periods": FindingFactKind.PERIODS,
         # Dates.
         "activity_start_date": FindingFactKind.DATE,
         "transaction_date": FindingFactKind.DATE,
@@ -117,16 +125,19 @@ FINDING_FACT_KINDS: Final[Mapping[str, FindingFactKind]] = MappingProxyType(
         "claims_removed": FindingFactKind.COUNT,
         "contradicting_invoice_count": FindingFactKind.COUNT,
         "contradicting_ledger_row_count": FindingFactKind.COUNT,
+        "declared_perceptors": FindingFactKind.COUNT,
         "disposals_changed": FindingFactKind.COUNT,
         "removed_count": FindingFactKind.COUNT,
         "rows_changed": FindingFactKind.COUNT,
         "rows_current": FindingFactKind.COUNT,
+        "rows": FindingFactKind.COUNT,
         "rows_recorded": FindingFactKind.COUNT,
         "schedules_changed": FindingFactKind.COUNT,
         "settled_prior_accrual_rows": FindingFactKind.COUNT,
         "source_issue_count": FindingFactKind.COUNT,
         "source_modelo_count": FindingFactKind.COUNT,
         "source_ref_count": FindingFactKind.COUNT,
+        "summary_perceptors": FindingFactKind.COUNT,
         "unidentified_source_count": FindingFactKind.COUNT,
         # Official codes printed on AEAT's forms.
         "country_code": FindingFactKind.OFFICIAL_CODE,
@@ -235,6 +246,13 @@ def _period(value: FindingFactValue, language: OutputLanguage) -> str:
     return _in_words(_PERIOD_LOCALE_KEYS.get(str(value), _OTHER_PERIOD_LOCALE_KEY), language)
 
 
+def _periods(value: FindingFactValue, language: OutputLanguage) -> str:
+    text = str(value)
+    if text == NO_PERIODS_FACT:
+        return _in_words(_ABSENT_VALUE_LOCALE_KEY, language)
+    return ", ".join(_period(token, language) for token in text.split(PERIOD_LIST_SEPARATOR))
+
+
 def _date(value: FindingFactValue, language: OutputLanguage) -> str:
     try:
         day = date.fromisoformat(str(value))
@@ -288,6 +306,8 @@ def fact_text(
         return None
     if kind is FindingFactKind.PERIOD:
         return _period(value, language)
+    if kind is FindingFactKind.PERIODS:
+        return _periods(value, language)
     if kind is FindingFactKind.DATE:
         return _date(value, language)
     if kind is FindingFactKind.BOX:
@@ -331,4 +351,11 @@ def finding_message_text(
     return tr(finding.message_locale_key, locale=language.value, **facts)
 
 
-__all__ = ["FINDING_FACT_KINDS", "FindingFactKind", "fact_text", "finding_message_text"]
+__all__ = [
+    "FINDING_FACT_KINDS",
+    "NO_PERIODS_FACT",
+    "PERIOD_LIST_SEPARATOR",
+    "FindingFactKind",
+    "fact_text",
+    "finding_message_text",
+]

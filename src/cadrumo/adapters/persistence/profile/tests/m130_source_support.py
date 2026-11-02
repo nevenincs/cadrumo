@@ -1,18 +1,61 @@
-"""Real ledger source helpers for Modelo 130 CLI tests."""
+"""Real ledger source helpers for Modelo 130 CLI tests.
+
+The seeded rows are bank movements linking no invoice, which only the cobros y
+pagos criterion can place in a quarter (RIRPF art. 7.2): under devengo their
+accrual is unknown, and with no criterion the box stays unresolved. Each seed
+therefore declares that election for its year unless told not to.
+"""
 
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from uuid import UUID
 
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
+    bound_test_profile_record,
+    open_test_profile_session,
+    upsert_test_profile_facts,
+)
 from cadrumo.core.bucket_pointer import resolve_active_bucket_id
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
+from cadrumo.domain.user_profile.values import UserProfileFact
+
+_CRITERION_PATH = "irpf.activity_income_imputation_criterion"
+_REGIME_PATH = "irpf.estimation_regime"
+
+
+def _declare_cash_criterion(bucket_id: str, filing_year: int) -> None:
+    """Extend the profile's cobros y pagos declaration over ``filing_year``, keeping a regime already in force."""
+    with bound_test_profile_record(UUID(bucket_id)) as repository:
+        existing = repository.load(UUID(bucket_id)).facts
+    declared = next((fact for fact in existing if fact.path == _CRITERION_PATH), None)
+    first = (
+        filing_year if declared is None or declared.valid_from is None else min(declared.valid_from.year, filing_year)
+    )
+    last = filing_year if declared is None or declared.valid_to is None else max(declared.valid_to.year, filing_year)
+    regime_in_force = any(fact.path == _REGIME_PATH and fact.valid_from is None for fact in existing)
+    upsert_test_profile_facts(
+        bucket_id,
+        tuple(
+            UserProfileFact.model_validate(
+                {
+                    "path": fact.path,
+                    "value": fact.value,
+                    "valid_from": date(first, 1, 1),
+                    "valid_to": date(last, 12, 31),
+                }
+            )
+            for fact in cash_criterion_facts(filing_year)
+            if not (regime_in_force and fact.path == _REGIME_PATH)
+        ),
+    )
 
 
 def seed_m130_income_transaction(
@@ -21,6 +64,7 @@ def seed_m130_income_transaction(
     filing_year: int,
     source_key: str,
     value_date: date | None = None,
+    criterion_declared: bool = True,
 ) -> None:
     """Seed one real actividad-economica income row for source-bound M130 casilla 01.
 
@@ -33,6 +77,8 @@ def seed_m130_income_transaction(
     with bundled_indexed_authority().operation():
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None, "test profile must install an active bucket pointer"
+        if criterion_declared:
+            _declare_cash_criterion(bucket_id, filing_year)
         if value_date is None:
             value_date = date(filing_year, 2, 15)
         income = Transaction.model_validate(
@@ -62,8 +108,9 @@ def seed_m130_income_transaction(
                 "business_pct": None,
                 "category_id": None,
                 "taxable_base": amount,
-                "iva_rate": None,
-                "iva_amount": None,
+                # A stated nil cuota is what lets cash equal base + cuota prove nothing was withheld.
+                "iva_rate": Decimal("0"),
+                "iva_amount": Decimal("0.00"),
                 "irpf_category": "actividad_economica",
                 "purchase_invoice_evidence_id": None,
                 "classified_at": datetime(filing_year, 2, 16, 13, 0, tzinfo=UTC),
@@ -84,6 +131,7 @@ def seed_m130_expense_transaction(
     filing_year: int,
     source_key: str,
     value_date: date | None = None,
+    criterion_declared: bool = True,
 ) -> None:
     """Seed one real deductible actividad-economica expense (gasto) row for casilla 02.
 
@@ -98,6 +146,8 @@ def seed_m130_expense_transaction(
     with bundled_indexed_authority().operation():
         bucket_id = resolve_active_bucket_id()
         assert bucket_id is not None, "test profile must install an active bucket pointer"
+        if criterion_declared:
+            _declare_cash_criterion(bucket_id, filing_year)
         if value_date is None:
             value_date = date(filing_year, 2, 15)
         expense = Transaction.model_validate(
@@ -125,7 +175,7 @@ def seed_m130_expense_transaction(
                 "business_classification": BusinessClassification.BUSINESS,
                 "source_jurisdiction": "ES",
                 "business_pct": None,
-                "category_id": None,
+                "category_id": "material_oficina",
                 "taxable_base": amount,
                 "iva_rate": None,
                 "iva_amount": None,

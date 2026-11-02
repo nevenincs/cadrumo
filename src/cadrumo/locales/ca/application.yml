@@ -1642,19 +1642,19 @@ application:
         registre.
     calc_diagnostic_words:
       income_class:
-        actividad_economica: activitat econòmica diferent de l'arrendament urbà
-        arrendamiento_inmueble_urbano: arrendament d'immobles urbans que no és una
+        actividad_economica: activitats econòmiques
+        arrendamiento_inmueble_urbano: arrendament d'immoble urbà
+        arrendamiento_inmueble_urbano_actividad: arrendament d'immoble urbà com a
           activitat econòmica
-        arrendamiento_inmueble_urbano_actividad: arrendament d'immobles urbans que
-          és una activitat econòmica
-        atribucion_actividad_economica: activitat econòmica atribuïda per una entitat
-        atribucion_capital_inmobiliario: capital immobiliari atribuït per una entitat
-        atribucion_capital_mobiliario: capital mobiliari atribuït per una entitat
-        atribucion_ganancia_patrimonial: guanys patrimonials atribuïts per una entitat
+        atribucion_actividad_economica: rendes atribuïdes d'activitats econòmiques
+        atribucion_capital_inmobiliario: rendes atribuïdes de capital immobiliari
+        atribucion_capital_mobiliario: rendes atribuïdes de capital mobiliari
+        atribucion_ganancia_patrimonial: rendes atribuïdes de guanys patrimonials
         capital_mobiliario: rendiments del capital mobiliari
-        ganancia_patrimonial: guanys patrimonials, premis inclosos
-        imputacion_aie_ute: rendes imputades per una AIE o UTE
-        imputacion_derechos_imagen: imputació de rendes per la cessió de drets d'imatge
+        ganancia_patrimonial: guanys patrimonials
+        imputacion_aie_ute: imputació d'AIE i UTE
+        imputacion_derechos_imagen: imputació de drets d'imatge
+        other: una altra renda
         trabajo: rendiments del treball
       named_element: «{name}»
       unnamed_element: Un element sense nom

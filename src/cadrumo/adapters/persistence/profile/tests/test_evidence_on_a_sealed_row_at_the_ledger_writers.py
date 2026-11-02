@@ -1,11 +1,11 @@
 """Evidence on a row a finalized revision cites, and an identifier that names no evidence.
 
 The ledger actions run over real secure storage, with a finalized revision
-citing the row. Linking evidence leaves what the revision sealed, whichever
-mechanism stamped the row: the row's identity and fingerprint stay as they
-were, the attach is admitted, and the cited revisions are reported as stale.
-Linking purchase evidence changes how a calculation reads the row and makes it
-the linker's; a supplementary attachment does not. An identifier of only
+citing the row. Linking evidence leaves the row's identity as it was, whichever
+mechanism stamped the row, and the attach is admitted and the cited revisions
+are reported as stale. Purchase evidence changes how a calculation reads the
+row, so the current fingerprint field set moves with it and the row becomes the
+linker's; a supplementary attachment moves neither. An identifier of only
 whitespace names no evidence: it links nothing and decides nothing.
 
 A confirmation that carries a reason is a change to the row, so it is refused
@@ -147,8 +147,11 @@ def test_a_person_linking_purchase_evidence_to_a_sealed_row_takes_it_and_reports
     after = ledger.row(row)
     assert after.purchase_invoice_evidence_id == invoice.invoice_id
     assert after.transaction_id == before.transaction_id
-    assert row_fingerprint(after) == row_fingerprint(before)
-    assert evaluate_ledger_filing_staleness(snapshot, ledger.transactions.load()).is_stale is False
+    # The current field set watches the evidence a recalculation reads, so a snapshot sealed under it
+    # goes stale; the set before it, which an older revision keeps comparing under, does not see the link.
+    assert row_fingerprint(after) != row_fingerprint(before)
+    assert row_fingerprint(after, field_set_version=3) == row_fingerprint(before, field_set_version=3)
+    assert evaluate_ledger_filing_staleness(snapshot, ledger.transactions.load()).is_stale is True
     assert len(result.stale_finalized_revisions) == 1
     assert after.classification_origin is ClassificationOrigin.PERSON
 

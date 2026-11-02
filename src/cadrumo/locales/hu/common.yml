@@ -9587,6 +9587,8 @@ workspace:
         ami akadályozza a benyújtást (akadályozó: {count}).'
       title: A bevallás exportálása
       verify_first: Exportálás előtt ellenőrizd a bevallást.
+    field:
+      details: Erről a rovatról
     filed:
       read_only: 'Benyújtottként rögzítve: megtekinthető, de nem módosítható. A módosításhoz
         indítsd el a bevallás helyesbítését.'

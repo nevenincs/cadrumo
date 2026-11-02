@@ -285,12 +285,10 @@ def _runtime_registrations(
     """Enumerate runtime refusal, action and terminal-condition copy."""
     from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaRefusalReason
     from cadrumo.application.live.errors import LiveIvaAcquisitionFailureMode
-    from cadrumo.application.modelo.calculation_notes import income_class_word_key
     from cadrumo.application.review.filter import LedgerReviewStatus
     from cadrumo.application.workflow.resume import WorkflowResumeRefusalReason
     from cadrumo.core.errors.error_codes import ErrorCategory
     from cadrumo.core.operations import OperationTerminalCondition
-    from cadrumo.core.retencion_soportada import RetencionSoportadaClase
     from cadrumo.entrypoints.tui.components.account_chrome import AccountActionV1
     from dev.locales.activity_asset_fstring_registrations import activity_asset_dynamic_registrations
     from dev.locales.desktop_entry_option_keys import ENTRY_OPTION_KEYS
@@ -301,13 +299,6 @@ def _runtime_registrations(
     from .m303_carry_fstring_registrations import m303_carry_error_registration
 
     return (
-        FStringKeyRegistration(
-            # A suffered-withholding note names its income class in words, deriving
-            # the key from the class token in application/modelo/calculation_notes.py.
-            description="application.modelo.calc_diagnostic_words.income_class.* (RetencionSoportadaClase)",
-            key_factory=lambda key: key,
-            values=tuple(income_class_word_key(item) for item in RetencionSoportadaClase),
-        ),
         FStringKeyRegistration(
             # The operations modal renders tr(terminal_copy_key), a key the
             # projection selects per terminal condition, plus the partial-success

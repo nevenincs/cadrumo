@@ -6,10 +6,8 @@ from dataclasses import dataclass
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..ledger.read_access import resolve_ledger_exact_request_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
@@ -18,7 +16,6 @@ from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import OperationPublicDefinitionRegistrationV1, OperationResultProjector
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .contracts import (
     RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID,
@@ -30,7 +27,6 @@ from .ports import RetencionSoportadaCertificadoPortsFactory
 from .projections import project_retencion_soportada_list_result, project_retencion_soportada_mutation_result
 from .requests import (
     RetencionSoportadaListRequest,
-    RetencionSoportadaProfileRequest,
     RetencionSoportadaRecordRequest,
     RetencionSoportadaRemoveRequest,
 )
@@ -74,14 +70,12 @@ def resolve_retencion_soportada_operation_access(
     /,
 ) -> ResolvedOperationAccess:
     """Bind each certificate operation to the exact profile and its all-period scope."""
-    shape = _SHAPES.get(request.definition_id)
-    payload = request.payload
-    if shape is None or type(payload) is not shape.request_type:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if not isinstance(payload, RetencionSoportadaProfileRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
-    return with_commit_action(resolved) if shape.mutation else resolved
+    return resolve_ledger_exact_request_access(
+        request,
+        context,
+        request_types={definition_id: shape.request_type for definition_id, shape in _SHAPES.items()},
+        commit_definition_ids=frozenset(definition_id for definition_id, shape in _SHAPES.items() if shape.mutation),
+    )
 
 
 def _definition(

@@ -462,14 +462,14 @@ async def test_a_long_field_label_never_pushes_the_value_off_screen(tmp_path) ->
         )
 
         app = ProfileManagerScreen(written, persist=_persist)
-        async with ScreenHostApp(app).run_test(size=(80, 24)) as pilot:
+        # Eighty columns is the claim. The height only has to hold the whole
+        # IRPF table below the section header, which grows with every field the
+        # section declares, so "does the value column fit once the operator can
+        # see the row" is not answered by "is the row above or below the fold"
+        # -- a separate, already-covered question the vertical ContentScroll
+        # host answers.
+        async with ScreenHostApp(app).run_test(size=(80, 80)) as pilot:
             await settle(pilot)
-            # The IRPF section sits well below the fold on an 80x24
-            # terminal; scroll the page (and, transitively, the section's
-            # own table) to the edited row so what is checked is "does the
-            # value column fit once the operator can see the row", not
-            # "is the row above or below the fold" -- a separate, already
-            # -covered question the vertical ContentScroll host answers.
             app.query_one("#fold-irpf", DisclosureGroup).collapsed = False
             await settle(pilot)
             table = app._table_by_section["irpf"]
