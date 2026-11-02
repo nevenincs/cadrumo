@@ -163,7 +163,7 @@ def _write(operation: PinnedAuthorityOperation, shape: Household) -> None:
 
 def _secret_schema(operation: PinnedAuthorityOperation) -> ProfileSchemaDefinition:
     """The profile schema with the stored descendant object declared secret."""
-    from cadrumo.domain.user_profile.schema import SensitivityClass
+    from cadrumo.core.classification.policies import SensitivityClass
 
     schema = operation.profile_schema()
 

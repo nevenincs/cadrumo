@@ -37,12 +37,11 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
+from cadrumo.entrypoints.tests.profile_persistence.m130_m100_annual_support import BUCKET_ID, seed_prior_year_m100
 from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters_to_m100_annual import (
     _EXPECTED_M100_ACTIVITY_NET,
-    BUCKET_ID,
     _calculate_m100_annual,
     _persist_autonoma_style_ledger,
-    seed_prior_year_m100,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
