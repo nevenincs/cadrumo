@@ -99,7 +99,7 @@ async def test_the_first_question_mark_names_exactly_the_symbols_on_screen() -> 
     (
         (
             DeadlineHolidayCoverage.NATIONAL_ONLY,
-            "national holidays only; regional and local holidays not checked",
+            "weekends and national non-working days checked; regional and local holidays do not move a filing deadline",
         ),
         (
             DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
