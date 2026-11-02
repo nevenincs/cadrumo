@@ -40,7 +40,8 @@ from cadrumo.domain.modelos.filing_record import (
     ModeloRecordStatus,
 )
 from cadrumo.entrypoints.adapter_composition_work_ports import build_filing_action_ports
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
     _BUCKET_ID,
     _DECIDED_AT,
     _M303_DISPONIBLE_CASILLA,
@@ -54,12 +55,11 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _snapshot_303,
     _store_operator_profile_with_tax_id,
     _store_prior_303_compensation,
-    _wallet_observation,
     _work_unit_repositories,
     _work_unit_repositories_with_modelo_303_work_unit,
+    wallet_observation,
     workflow_profile,
 )
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
     M303_LEDGER_CUOTA,
     seed_m303_period_cuotas,
@@ -88,7 +88,7 @@ def test_wallet_only_modelo_303_can_be_locally_filed_with_real_clave_provider_pr
             report = reconcile_modelo_303_iva_compensation(
                 snapshot,
                 taxpayer_nif=taxpayer_nif,
-                wallet=_wallet_observation(
+                wallet=wallet_observation(
                     pending=Decimal("1200.00"), taxpayer_nif=taxpayer_nif, captured_at=_FILING_WALLET_CAPTURED_AT
                 ),
                 repository=CalculationObservationRepository(),
@@ -212,7 +212,7 @@ def _calculate_verify_and_file_303_with_wallet_credit(
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=taxpayer_nif,
-            wallet=_wallet_observation(
+            wallet=wallet_observation(
                 pending=wallet_pending, taxpayer_nif=taxpayer_nif, captured_at=_FILING_WALLET_CAPTURED_AT
             ),
             repository=CalculationObservationRepository(),

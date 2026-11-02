@@ -2,9 +2,9 @@
 
 The registry declares both in the dated ``payment-instalment-split`` fact,
 grounded in Ley 35/2006 art. 97.2 and RD 439/2007 art. 62.2 as the Orden
-approving the 2025 Modelo 100 and the Manual práctico de Renta 2025 restate
-them. The fact is read on the declaration's own period, so a period the fact
-does not cover declares no split.
+approving the Modelo 100 of each ejercicio and the Manual práctico de Renta of
+that ejercicio restate them. The fact is read on the declaration's own period,
+so a period the fact does not cover declares no split.
 
 No official source says how an instalment that is not a whole number of cents
 is rounded, so the fact declares no rounding: the split

@@ -132,25 +132,74 @@ def _sum_problem(difference: Decimal) -> LedgerSplitProblem:
     return LedgerSplitProblem(kind="sum", difference=display_decimal(abs(difference)), over=difference > 0)
 
 
+def _typed_amounts(parts: tuple[LedgerSplitCheckPart, ...]) -> list[Decimal | None]:
+    return [_typed_amount(part.amount) if part.amount is not None else None for part in parts]
+
+
 def _amounts_answer(
     parent_amount: Decimal, parts: tuple[LedgerSplitCheckPart, ...]
 ) -> tuple[tuple[Decimal, ...] | None, Decimal | None, LedgerSplitProblem | None]:
     """Read each part's amount; return the amounts, what the open part took, and the first amount problem."""
     open_last = bool(parts) and parts[-1].amount is None
     named = parts[:-1] if open_last else parts
-    typed: list[Decimal | None] = [_typed_amount(part.amount) if part.amount is not None else None for part in named]
+    typed = _typed_amounts(named)
     left = _remainder(parent_amount, tuple(typed)) if open_last else None
-    for index, amount in enumerate(typed):
-        if amount is None:
-            return None, None, LedgerSplitProblem(kind="amount", index=index)
+    unreadable = next((index for index, amount in enumerate(typed) if amount is None), None)
+    if unreadable is not None:
+        return None, None, LedgerSplitProblem(kind="amount", index=unreadable)
     amounts = [amount for amount in typed if amount is not None]
     if not open_last:
         return tuple(amounts), None, None
+    return _with_open_part(amounts, left, len(parts) - 1)
+
+
+def _with_open_part(
+    amounts: list[Decimal], left: Decimal | None, open_index: int
+) -> tuple[tuple[Decimal, ...] | None, Decimal | None, LedgerSplitProblem | None]:
+    """Give the open last part what the named parts leave, refusing when nothing or less than nothing is left."""
     if left is None or left == 0:
-        return None, None, LedgerSplitProblem(kind="amount", index=len(parts) - 1)
+        return None, None, LedgerSplitProblem(kind="amount", index=open_index)
     if left < 0:
         return None, None, _sum_problem(-left)
     return (*amounts, left), left, None
+
+
+def _checked_amounts(
+    parent_amount: Decimal,
+    parts: tuple[LedgerSplitCheckPart, ...],
+    amounts: tuple[Decimal, ...] | None,
+    amount_problem: LedgerSplitProblem | None,
+    descriptions: tuple[str, ...],
+) -> tuple[Decimal, ...] | LedgerSplitProblem:
+    """Return the amounts the writer would take, or the first thing it would refuse."""
+    if not SPLIT_CHILDREN_MIN <= len(parts) <= LEDGER_SPLIT_CHILDREN_MAX:
+        return LedgerSplitProblem(kind="count", max=LEDGER_SPLIT_CHILDREN_MAX)
+    if amounts is None:
+        return amount_problem or LedgerSplitProblem(kind="amount", index=0)
+    for index, description in enumerate(descriptions):
+        problem = _description_problem(index, description)
+        if problem is not None:
+            return problem
+    found = split_amount_problem(parent_amount=parent_amount, amounts=amounts)
+    if found is None:
+        return amounts
+    if found.index is not None:
+        return LedgerSplitProblem(kind="amount", index=found.index)
+    return _sum_problem(found.child_sum - parent_amount)
+
+
+def _children(
+    amounts: tuple[Decimal, ...], descriptions: tuple[str, ...]
+) -> tuple[LedgerSplitChildRequest, ...] | LedgerSplitProblem:
+    """Spell each part as the writer's request, or name the part whose figure the request cannot spell."""
+    children: list[LedgerSplitChildRequest] = []
+    for index, (amount, description) in enumerate(zip(amounts, descriptions, strict=True)):
+        try:
+            children.append(LedgerSplitChildRequest(amount=display_decimal(amount), description=description))
+        except ValidationError:
+            # A worked-out figure the request cannot spell: three fraction digits read two ways.
+            return LedgerSplitProblem(kind="amount", index=index)
+    return tuple(children)
 
 
 def check_split(
@@ -163,35 +212,14 @@ def check_split(
         return LedgerSplitCheckResult(profile_id=profile_id, problem=LedgerSplitProblem(kind="gone"))
     if not takes_changes(parent.lifecycle_state):
         return LedgerSplitCheckResult(profile_id=profile_id, problem=LedgerSplitProblem(kind="not_active"))
-    parent_amount = parent.raw.amount
-    amounts, left, amount_problem = _amounts_answer(parent_amount, parts)
+    amounts, left, amount_problem = _amounts_answer(parent.raw.amount, parts)
     remainder = display_decimal(left) if left is not None else None
-
-    def refused(problem: LedgerSplitProblem) -> LedgerSplitCheckResult:
-        return LedgerSplitCheckResult(profile_id=profile_id, remainder=remainder, problem=problem)
-
-    if not SPLIT_CHILDREN_MIN <= len(parts) <= LEDGER_SPLIT_CHILDREN_MAX:
-        return refused(LedgerSplitProblem(kind="count", max=LEDGER_SPLIT_CHILDREN_MAX))
-    if amount_problem is not None or amounts is None:
-        return refused(amount_problem or LedgerSplitProblem(kind="amount", index=0))
     descriptions = tuple(part.description.strip() for part in parts)
-    for index, description in enumerate(descriptions):
-        problem = _description_problem(index, description)
-        if problem is not None:
-            return refused(problem)
-    found = split_amount_problem(parent_amount=parent_amount, amounts=amounts)
-    if found is not None:
-        if found.index is not None:
-            return refused(LedgerSplitProblem(kind="amount", index=found.index))
-        return refused(_sum_problem(found.child_sum - parent_amount))
-    children: list[LedgerSplitChildRequest] = []
-    for index, (amount, description) in enumerate(zip(amounts, descriptions, strict=True)):
-        try:
-            children.append(LedgerSplitChildRequest(amount=display_decimal(amount), description=description))
-        except ValidationError:
-            # A worked-out figure the request cannot spell: three fraction digits read two ways.
-            return refused(LedgerSplitProblem(kind="amount", index=index))
-    return LedgerSplitCheckResult(profile_id=profile_id, remainder=remainder, children=tuple(children))
+    checked = _checked_amounts(parent.raw.amount, parts, amounts, amount_problem, descriptions)
+    children = _children(checked, descriptions) if not isinstance(checked, LedgerSplitProblem) else checked
+    if isinstance(children, LedgerSplitProblem):
+        return LedgerSplitCheckResult(profile_id=profile_id, remainder=remainder, problem=children)
+    return LedgerSplitCheckResult(profile_id=profile_id, remainder=remainder, children=children)
 
 
 class LedgerSplitCheckExecutor:

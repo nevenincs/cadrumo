@@ -33,7 +33,7 @@ export function dependentFields(
   );
   const found: PublicModeloFormField[] = [];
   // A box can read one that is drawn after it, so repeat until nothing joins.
-  for (let joined = true; joined; ) {
+  for (let joined = true; joined;) {
     joined = false;
     for (const { field } of placed) {
       if (!field.box || reading.has(field.box)) continue;

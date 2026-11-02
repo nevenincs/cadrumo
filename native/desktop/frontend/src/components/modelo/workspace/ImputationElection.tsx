@@ -269,27 +269,16 @@ export function ImputationElection({
     const clearsAccounting =
       election.codigo_comercio_accounting.state !== "undeclared";
     const failure = notice?.kind === "failed" ? notice.failure : null;
+    const mark = STATE[election.criterion.state];
     return (
       <>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <Icon
-            name={STATE_ICON[election.criterion.state]}
-            size="xs"
-            className={
-              election.criterion.state === "declared"
-                ? "text-success"
-                : election.criterion.state === "contradictory"
-                  ? "text-warning"
-                  : "text-faint"
-            }
-          />
+          <Icon name={mark.icon} size="xs" className={mark.tone} />
           <span
             data-election-state={election.criterion.state}
             className="font-medium text-foreground"
           >
-            {t(`workspace.modelo.election.state.${election.criterion.state}`, {
-              year: election.tax_year,
-            })}
+            {t(mark.words, { year: election.tax_year })}
           </span>
         </div>
         {election.criterion.state === "contradictory" && (

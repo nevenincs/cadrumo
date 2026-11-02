@@ -317,6 +317,30 @@ def _binding_keyed_provenance(
     return provenance
 
 
+_LOWER_TIER_ROLES = (SourceDisagreementRole.PROFILE, SourceDisagreementRole.BORRADOR)
+
+
+def _lower_tier_bound_inputs(
+    revision: ModeloRevision,
+    *,
+    resolved_bindings: Mapping[BindingId, Decimal],
+    selected_binding_roles: Mapping[BindingId, SourceDisagreementRole],
+    backend_binding_ids: frozenset[BindingId],
+) -> dict[SourceDisagreementRole, dict[CasillaId, Decimal]]:
+    """Return, per profile or borrador tier, the box values its non-mesh resolved bindings bring."""
+    return {
+        role: resolve_available_bound_inputs_by_casilla_id(
+            revision,
+            {
+                binding_id: value
+                for binding_id, value in resolved_bindings.items()
+                if selected_binding_roles.get(binding_id) is role and binding_id not in backend_binding_ids
+            },
+        )
+        for role in _LOWER_TIER_ROLES
+    }
+
+
 def _caller_casillas_over_tier_bound_values(
     revision: ModeloRevision,
     *,
@@ -331,18 +355,12 @@ def _caller_casillas_over_tier_bound_values(
     values are merged with the operator's boxes, so it is left out here, as is
     a box whose binding the operator also set: both values are the operator's.
     """
-    lower_roles = (SourceDisagreementRole.PROFILE, SourceDisagreementRole.BORRADOR)
-    bound_by_role = {
-        role: resolve_available_bound_inputs_by_casilla_id(
-            revision,
-            {
-                binding_id: value
-                for binding_id, value in resolved_bindings.items()
-                if selected_binding_roles.get(binding_id) is role and binding_id not in backend_binding_ids
-            },
-        )
-        for role in lower_roles
-    }
+    bound_by_role = _lower_tier_bound_inputs(
+        revision,
+        resolved_bindings=resolved_bindings,
+        selected_binding_roles=selected_binding_roles,
+        backend_binding_ids=backend_binding_ids,
+    )
     contested = {
         casilla_id: value
         for casilla_id, value in casilla_inputs.items()
@@ -361,7 +379,7 @@ def _caller_casillas_over_tier_bound_values(
             ),
             source_family=role.value,
         )
-        for role in lower_roles
+        for role in _LOWER_TIER_ROLES
     ]
     tiers.append(
         PrecedenceTier(

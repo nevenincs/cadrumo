@@ -128,8 +128,37 @@ def _refusal_context(result: Result) -> dict[str, object]:
     return context
 
 
+def _record_trabajo_payer(profile: RegisteredCliProfile) -> None:
+    recorded = _invoke(
+        profile,
+        "record",
+        _PAYER,
+        *_target("trabajo"),
+        "--origin",
+        "operator_declaration",
+        "--retencion",
+        "1200.00",
+        "--ingreso-a-cuenta",
+        "300.00",
+        "--ingreso-a-cuenta-repercutido",
+        "0.00",
+        "--importe-integro",
+        "20000.00",
+        "--payer-name",
+        "Pagador Sintetico SL",
+    )
+    assert recorded.exit_code == 0, recorded.output
+
+
+def _stored_bytes(profile: RegisteredCliProfile) -> bytes:
+    # A runtime lock file is held open by the worker and carries no stored content.
+    return b"".join(
+        path.read_bytes() for path in profile.storage_root.rglob("*") if path.is_file() and path.suffix != ".lock"
+    )
+
+
 @pytest.mark.windows_only
-def test_native_absence_attest_refuse_withdraw_and_reattest(native_absence_profile: RegisteredCliProfile) -> None:
+def test_native_absence_is_attested_and_a_repeat_is_refused(native_absence_profile: RegisteredCliProfile) -> None:
     profile = native_absence_profile
 
     # Nothing is stored yet: an empty year lists as an empty result, not an error.
@@ -150,26 +179,15 @@ def test_native_absence_attest_refuse_withdraw_and_reattest(native_absence_profi
     assert (repeated["reason"], repeated["refusal_code"]) == ("already_attested", _ABSENCE_CODE)
     assert repeated["income_class"] == "capital_mobiliario"
 
+
+@pytest.mark.windows_only
+def test_native_absence_is_refused_beside_payer_records_and_never_listed_as_a_certificate(
+    native_absence_profile: RegisteredCliProfile,
+) -> None:
+    profile = native_absence_profile
+
     # A class that already holds a payer record cannot be attested absent.
-    recorded = _invoke(
-        profile,
-        "record",
-        _PAYER,
-        *_target("trabajo"),
-        "--origin",
-        "operator_declaration",
-        "--retencion",
-        "1200.00",
-        "--ingreso-a-cuenta",
-        "300.00",
-        "--ingreso-a-cuenta-repercutido",
-        "0.00",
-        "--importe-integro",
-        "20000.00",
-        "--payer-name",
-        "Pagador Sintetico SL",
-    )
-    assert recorded.exit_code == 0, recorded.output
+    _record_trabajo_payer(profile)
     beside_records = _refusal_context(_attest(profile, "trabajo"))
     assert (beside_records["reason"], beside_records["refusal_code"]) == ("records_present", _ABSENCE_CODE)
     unsupported = _refusal_context(
@@ -187,6 +205,15 @@ def test_native_absence_attest_refuse_withdraw_and_reattest(native_absence_profi
     )
     assert listed.count == 1
     assert [row.income_class for row in listed.rows] == ["trabajo"]
+    assert _PAYER.encode() not in _stored_bytes(profile)
+
+
+@pytest.mark.windows_only
+def test_native_absence_is_withdrawn_under_its_revision_and_stays_listed(
+    native_absence_profile: RegisteredCliProfile,
+) -> None:
+    profile = native_absence_profile
+    first = _attested(_attest(profile, "capital_mobiliario"))
 
     # Withdrawal needs the stored revision, and a withdrawn attestation cannot be withdrawn again.
     stale = _refusal_context(_withdraw(profile, "capital_mobiliario", "f" * 64))
@@ -208,6 +235,17 @@ def test_native_absence_attest_refuse_withdraw_and_reattest(native_absence_profi
     # The worker resolves the label in the profile's output language, whatever language the CLI renders in.
     assert withdrawn_row.income_class_label in _MOVABLE_CAPITAL_LABELS
 
+
+@pytest.mark.windows_only
+def test_native_withdrawn_absence_is_reattested_and_listed_per_ejercicio(
+    native_absence_profile: RegisteredCliProfile,
+) -> None:
+    profile = native_absence_profile
+    first = _attested(_attest(profile, "capital_mobiliario"))
+    withdrawn = RetencionSoportadaWithdrawAbsenceResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_withdraw(profile, "capital_mobiliario", first.attestation.revision_id)))
+    )
+
     # The decision is reversible: a new attestation replaces the withdrawn one under its revision.
     reattested = _attested(_attest(profile, "capital_mobiliario", revision=withdrawn.attestation.revision_id))
     assert reattested.attestation.state == "active"
@@ -219,7 +257,4 @@ def test_native_absence_attest_refuse_withdraw_and_reattest(native_absence_profi
     assert active_row.revision_id == reattested.attestation.revision_id
     assert active_row.note == _NOTE
     assert _listed(profile, "2024").attestations == []
-
-    on_disk = b"".join(path.read_bytes() for path in profile.storage_root.rglob("*") if path.is_file())
-    assert _NOTE.encode() not in on_disk
-    assert _PAYER.encode() not in on_disk
+    assert _NOTE.encode() not in _stored_bytes(profile)
