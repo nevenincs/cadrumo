@@ -53,6 +53,7 @@ from ._calculation_modelo_adjustments import (
 from ._calculation_modelo_adjustments import (
     union_detail_rows_by_identity as _union_detail_rows_by_identity,
 )
+from ._calculation_source_staging import settled_binding_ids
 from ._m349_ledger_guard import (
     raise_if_m349_intracom_ledger_rows_need_operator_rows as _raise_if_m349_intracom_ledger_rows_need_operator_rows,
 )
@@ -699,6 +700,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         relation_values=channels.reconciliation.merged_relation_values,
         unresolved_relation_ids=channels.reconciliation.unresolved_relation_ids,
         unresolved_binding_ids=channels.reconciliation.unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids(channels.source_resolution),
         source_transaction_ids=tuple(channels.source_resolution.source_transaction_ids),
         source_provenance=_source_provenance_refs(channels.source_resolution),
         source_issues=_unrouted_source_issues(
