@@ -1377,6 +1377,19 @@ export interface HostCommands {
     args: { language: string };
     result: import("../shell/userProfile").UserProfile;
   };
+  /** The household the profile states, in the product's words and at one
+   * profile revision. Rejects with `{ code }`: `not_signed_in` or
+   * `unavailable`. */
+  user_profile_household: {
+    args: { language: string };
+    result: import("../shell/profileHousehold").ProfileHousehold;
+  };
+  /** What `profile` states for the imputation election of `taxYear`, with
+   * the setup wizard's own questions and words in `language`. */
+  user_profile_imputation_election: {
+    args: { profile: string; taxYear: number; language: string };
+    result: import("../shell/profileHousehold").ImputationElection;
+  };
   profile_censo_readiness: {
     args: { profile: string };
     result: import("../shell/profileCenso").CensoReadiness;
@@ -1492,6 +1505,29 @@ export interface HostCommands {
   aeat_sync_borrador_import: {
     args: { profile: string; file: string; year?: number };
     result: import("../shell/aeatSyncResults").BorradorImportResult;
+  };
+  /** The Borrador 100 drafts the profile holds, as the full human read
+   * serves them. It reaches no network. */
+  aeat_sync_borrador_read: {
+    args: {
+      profile: string;
+      selector: import("../shell/borrador").BorradorSelector;
+    };
+    result: import("../shell/borrador").BorradorRead;
+  };
+  /** The same drafts without each capture's provenance. */
+  aeat_sync_borrador_query: {
+    args: {
+      profile: string;
+      selector: import("../shell/borrador").BorradorSelector;
+    };
+    result: import("../shell/borrador").BorradorRead;
+  };
+  /** The year's newest readable draft beside the saved Modelo 100
+   * calculation, in `language`. It changes no record. */
+  aeat_sync_borrador_compare: {
+    args: { profile: string; year: number; language: string };
+    result: import("../shell/borrador").BorradorComparison;
   };
   /** What an update needs before it reads AEAT: the secure browser's row and
    * whether the profile has AEAT access. It reaches no network. */

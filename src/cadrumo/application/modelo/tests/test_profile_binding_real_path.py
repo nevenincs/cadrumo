@@ -505,33 +505,29 @@ def test_ccaa_binding_selector_yields_model_selector_string() -> None:
     assert selectors == ["TaxResidenceProfile.ccaa"], f"expected ['TaxResidenceProfile.ccaa'], got {selectors!r}"
 
 
-def test_repeating_collection_selectors_yield_known_alias() -> None:
-    """Every ``profile_model`` + ``collection`` + ``repeating`` binding yields a known schema alias.
+def test_repeating_selectors_yield_declared_profile_paths() -> None:
+    """Every ``repeating`` binding yields selectors the profile schema declares.
 
-    The family descendant and ascendant bindings (0025-0035) use the
-    ``profile_model = RentaFamilyProfile, collection = <name>, field = <f>``
-    selector form with ``repeating = True``. :func:`profile_binding_selectors`
-    yields ``RentaFamilyProfile.<collection>.<field>`` for each. That alias
-    must appear in the schema's ``model_selectors`` for the matching field.
+    The family descendant and ascendant bindings read one leaf of a stored row
+    object (``rows = { object_path, leaf, count_path }``).
+    :func:`profile_binding_selectors` yields the object and count paths, which
+    must be declared schema field paths; a ``profile_model`` collection binding
+    must yield an alias one of the schema's fields declares in ``model_selectors``.
     """
     schema = published_profile_schema()
-    all_aliases: set[str] = {
+    declared: set[str] = set(schema.field_paths) | {
         alias for section in schema.sections for field in section.fields for alias in field.model_selectors
     }
 
-    profile_bindings = _profile_bindings()
-    for binding in profile_bindings:
-        selector = binding.provider
-        assert isinstance(selector, ProfileProvider), binding.id
-        if not selector.repeating:
-            continue
+    providers = [(binding.id, binding.provider) for binding in _profile_bindings()]
+    assert all(isinstance(provider, ProfileProvider) for _, provider in providers)
+    repeating = [(binding_id, provider) for binding_id, provider in providers if provider.repeating]
+    assert repeating
+    for binding_id, selector in repeating:
         selectors = list(profile_binding_selectors(selector))
         assert selectors, (
-            f"binding {binding.id!r} has repeating=True but profile_binding_selectors "
+            f"binding {binding_id!r} has repeating=True but profile_binding_selectors "
             f"yielded nothing; selector={selector!r}"
         )
         for sel in selectors:
-            assert sel in all_aliases, (
-                f"binding {binding.id!r}: selector {sel!r} not found in any field's "
-                f"model_selectors in the profile schema"
-            )
+            assert sel in declared, f"binding {binding_id!r}: selector {sel!r} is not declared by the profile schema"

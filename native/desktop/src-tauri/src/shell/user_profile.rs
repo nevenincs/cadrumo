@@ -1,6 +1,8 @@
 //! Profile presentation over the held person's registered-operation relay.
 //! No repository, credential or profile policy lives in the desktop host.
 pub(crate) mod censo;
+mod election;
+mod household;
 mod views;
 mod wire;
 use super::picked_files::{self, Files, Pick, Purpose};
@@ -92,6 +94,20 @@ const CREDENTIAL_BODY_LIMIT: usize = 8 * 1024;
 const CERTIFICATE_KINDS: &str = "PKCS #12";
 /// The longest an edit's own members may be, as compact JSON.
 const MEMBERS_LIMIT: usize = 10_000;
+/// What the baseline names beside an edit's own members, as compact JSON,
+/// with room to spare: the profile, the revision and the digest.
+const BASELINE_ALLOWANCE: usize = 512;
+/// The longest a family replacement's own members may be: the whole family is
+/// one request, so it is bounded by the relay's payload and not by the small
+/// edits' bound. The product validates every row and fact under the baseline.
+const FAMILY_MEMBERS_LIMIT: usize = relay::PAYLOAD_LIMIT - BASELINE_ALLOWANCE;
+/// The most people one family replacement may name, as the product bounds it.
+const FAMILY_ROWS: usize = 256;
+/// The most facts one person may state, as the product bounds it.
+const FAMILY_FACTS: usize = 128;
+/// The longest a fact's key is, and its value is, as the product bounds them.
+const FAMILY_KEY_LIMIT: usize = 128;
+const FAMILY_VALUE_LIMIT: usize = 4096;
 
 pub struct ProfileHost {
     sign_in: Arc<SignIn>,
@@ -490,6 +506,20 @@ enum Edit {
         row_key: String,
     },
     Complete,
+    /// The whole stated family at once: the product replaces every descendant
+    /// and the count with exactly these people, so a person left out is
+    /// removed.
+    Descendants {
+        rows: Vec<DescendantRow>,
+    },
+    /// What one ejercicio's imputation election states: each answer is the
+    /// token a served choice carries, an empty token clears the ejercicio's
+    /// statement, and an answer left out is left as stated.
+    ImputationElection {
+        tax_year: u16,
+        criterion: Option<String>,
+        codigo_comercio_accounting: Option<String>,
+    },
     /// The sign-in method with its Cl@ve Móvil route and certificate file:
     /// the one way to change `auth.provider` and `auth.clave_movil_route`.
     /// `certificate` is a token from `profile_aeat_certificate_pick`, never
@@ -506,6 +536,43 @@ struct RowValue {
     field_key: String,
     value: String,
 }
+/// One person of a family replacement: the facts it states, each under the
+/// key the product's family vocabulary gives it.
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct DescendantRow {
+    facts: Vec<DescendantFact>,
+}
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct DescendantFact {
+    field_key: String,
+    value: String,
+}
+impl DescendantRow {
+    /// Whether the person is within the product's bounds: some facts, each
+    /// under a lower-case key of its token shape and with a bounded value,
+    /// no key twice.
+    fn bounded(&self) -> bool {
+        let token = |key: &str| {
+            let mut bytes = key.bytes();
+            key.len() <= FAMILY_KEY_LIMIT
+                && bytes.next().is_some_and(|first| first.is_ascii_lowercase())
+                && bytes
+                    .all(|byte| byte.is_ascii_lowercase() || byte.is_ascii_digit() || byte == b'_')
+        };
+        let keys: std::collections::BTreeSet<&str> = self
+            .facts
+            .iter()
+            .map(|fact| fact.field_key.as_str())
+            .collect();
+        (1..=FAMILY_FACTS).contains(&self.facts.len())
+            && keys.len() == self.facts.len()
+            && self.facts.iter().all(|fact| {
+                token(&fact.field_key) && (1..=FAMILY_VALUE_LIMIT).contains(&fact.value.len())
+            })
+    }
+}
 
 /// The profile and the revision and content digest of the page an edit was
 /// made on.
@@ -518,6 +585,16 @@ impl Baseline<'_> {
     /// A user-profile operation's request: `members` under the page's
     /// baseline.
     fn record(&self, definition: &'static str, members: Value) -> Result<Prepared> {
+        self.record_as(definition, members, Confirm::Record)
+    }
+    /// As [`Baseline::record`], saved only where the settled result says
+    /// `confirm`.
+    fn record_as(
+        &self,
+        definition: &'static str,
+        members: Value,
+        confirm: Confirm,
+    ) -> Result<Prepared> {
         let Value::Object(members) = members else {
             return Err(protocol());
         };
@@ -531,7 +608,7 @@ impl Baseline<'_> {
             definition,
             payload,
             certificate: None,
-            confirm: Confirm::Record,
+            confirm,
         })
     }
     /// The sign-in method's request. The runtime names the profile by the
@@ -581,16 +658,32 @@ impl Prepared {
 enum Confirm {
     /// The profile record, at a revision no older than the page's.
     Record,
+    /// The profile record, and a family of exactly this many people.
+    Family(usize),
+    /// The profile record, and the statement of exactly this ejercicio.
+    Election(u16),
     /// The sign-in method configured, as the product reports it.
     Method(String),
 }
+/// Whether a settled result names the profile record at a revision no older
+/// than the page's.
+fn saved(result: &Value, expected_revision: u64) -> bool {
+    result["record_revision"]
+        .as_u64()
+        .is_some_and(|revision| revision >= expected_revision)
+}
+
 impl Confirm {
     fn holds(&self, result: &Value, profile_id: &str, expected_revision: u64) -> bool {
         result["profile_id"] == profile_id
             && match self {
-                Self::Record => result["record_revision"]
-                    .as_u64()
-                    .is_some_and(|revision| revision >= expected_revision),
+                Self::Record => saved(result, expected_revision),
+                Self::Family(people) => {
+                    saved(result, expected_revision) && result["total"] == *people
+                }
+                Self::Election(year) => {
+                    saved(result, expected_revision) && result["tax_year"] == *year
+                }
                 Self::Method(provider) => {
                     result["provider"] == *provider
                         && ["changed", "certificate_file_provided", "complete"]
@@ -644,6 +737,49 @@ impl Edit {
                 json!({"section_key":section_key,"row_key":row_key}),
             ),
             Self::Complete => ("user-profile.complete-setup", json!({})),
+            Self::Descendants { rows } => {
+                if rows.len() > FAMILY_ROWS || !rows.iter().all(DescendantRow::bounded) {
+                    return Err(Failure::new("refused"));
+                }
+                let members = json!({"descendants":rows});
+                if members.to_string().len() > FAMILY_MEMBERS_LIMIT {
+                    return Err(Failure::new("refused"));
+                }
+                let people = rows.len();
+                return baseline.record_as(
+                    "user-profile.descendants",
+                    members,
+                    Confirm::Family(people),
+                );
+            }
+            Self::ImputationElection {
+                tax_year,
+                criterion,
+                codigo_comercio_accounting,
+            } => {
+                let bounded = |answer: &Option<String>, limit: usize| {
+                    answer.as_ref().is_none_or(|token| token.len() <= limit)
+                };
+                if !election::TAX_YEARS.contains(&tax_year)
+                    || (criterion.is_none() && codigo_comercio_accounting.is_none())
+                    || !bounded(&criterion, 64)
+                    || !bounded(&codigo_comercio_accounting, 16)
+                {
+                    return Err(Failure::new("refused"));
+                }
+                let mut members = json!({"tax_year":tax_year});
+                if let Some(criterion) = criterion {
+                    members["criterion"] = json!(criterion);
+                }
+                if let Some(accounting) = codigo_comercio_accounting {
+                    members["codigo_comercio_accounting"] = json!(accounting);
+                }
+                return baseline.record_as(
+                    "user-profile.imputation-election.set",
+                    members,
+                    Confirm::Election(tax_year),
+                );
+            }
             Self::AuthMethod {
                 provider,
                 clave_movil_route,
@@ -732,6 +868,27 @@ async fn user_profile_read(
 ) -> Result<Overview> {
     host.read(language).await
 }
+/// The household the profile states: each group of people with the leaves
+/// its rows can state and the rows stored, in the product's words, at one
+/// profile revision.
+#[tauri::command]
+async fn user_profile_household(
+    host: State<'_, Arc<ProfileHost>>,
+    language: String,
+) -> Result<household::Household> {
+    host.household(language).await
+}
+/// What `profile` states for the imputation election of `tax_year`, with the
+/// setup wizard's own questions and words in `language`.
+#[tauri::command]
+async fn user_profile_imputation_election(
+    host: State<'_, Arc<ProfileHost>>,
+    profile: String,
+    tax_year: u16,
+    language: String,
+) -> Result<election::Election> {
+    host.imputation_election(profile, tax_year, language).await
+}
 #[tauri::command]
 async fn user_profile_change(host: State<'_, Arc<ProfileHost>>, change: Change) -> Result<()> {
     host.change(change).await
@@ -803,6 +960,8 @@ fn user_profile_unobserve(host: State<'_, Arc<ProfileHost>>, subscription: u32) 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
         user_profile_read,
+        user_profile_household,
+        user_profile_imputation_election,
         user_profile_change,
         user_profile_observe,
         user_profile_unobserve,
@@ -1004,6 +1163,142 @@ mod tests {
                 "values":[{"question_id":"criterion","value":"devengo"}]})),
             "refused"
         );
+    }
+
+    fn people(count: usize) -> Value {
+        Value::Array(
+            (0..count)
+                .map(|_| json!({"facts":[{"field_key":"nombre","value":"Ana"}]}))
+                .collect(),
+        )
+    }
+
+    #[test]
+    fn a_family_is_replaced_whole_under_its_baseline_and_saved_only_when_counted() {
+        let digest = "a".repeat(64);
+        let rows = json!([
+            {"facts":[{"field_key":"fecha_nacimiento","value":"2020-05-01"},
+                {"field_key":"discapacidad_grado","value":"0"}]},
+            {"facts":[{"field_key":"fecha_nacimiento","value":"2022-01-09"}]}
+        ]);
+        let request = prepared(json!({"kind":"descendants","rows":rows})).unwrap();
+        assert_eq!(request.definition, "user-profile.descendants");
+        assert_eq!(
+            request.payload,
+            json!({"profile_id":PROFILE_ID,"expected_revision":3,
+                "expected_content_digest":digest,"descendants":rows})
+        );
+        let settled = json!({"profile_id":PROFILE_ID,"record_revision":4,"total":2,"changed":true});
+        assert!(request.confirm.holds(&settled, PROFILE_ID, 3));
+        for unread in [
+            json!({"profile_id":PROFILE_ID,"record_revision":4,"total":1}),
+            json!({"profile_id":PROFILE_ID,"record_revision":4}),
+            json!({"profile_id":PROFILE_ID,"record_revision":2,"total":2}),
+            json!({"profile_id":"another","record_revision":4,"total":2}),
+        ] {
+            assert!(!request.confirm.holds(&unread, PROFILE_ID, 3), "{unread}");
+        }
+        // No people at all is a stated family of none, not a refusal.
+        let none = prepared(json!({"kind":"descendants","rows":[]})).unwrap();
+        assert_eq!(none.payload["descendants"], json!([]));
+        assert!(none.confirm.holds(
+            &json!({"profile_id":PROFILE_ID,"record_revision":3,"total":0}),
+            PROFILE_ID,
+            3
+        ));
+    }
+
+    #[test]
+    fn a_family_beyond_the_products_bounds_is_refused_before_it_is_submitted() {
+        assert!(prepared(json!({"kind":"descendants","rows":people(FAMILY_ROWS)})).is_ok());
+        let fact = |key: &str, value: &str| json!({"field_key":key,"value":value});
+        for rows in [
+            people(FAMILY_ROWS + 1),
+            json!([{"facts":[]}]),
+            json!([{"facts":[fact("nombre","")]}]),
+            json!([{"facts":[fact("nombre",&"a".repeat(FAMILY_VALUE_LIMIT + 1))]}]),
+            json!([{"facts":[fact("Nombre","x")]}]),
+            json!([{"facts":[fact("1nombre","x")]}]),
+            json!([{"facts":[fact("nombre-x","x")]}]),
+            json!([{"facts":[fact("","x")]}]),
+            json!([{"facts":[fact(&format!("a{}", "b".repeat(FAMILY_KEY_LIMIT)),"x")]}]),
+            json!([{"facts":[fact("nombre","x"),fact("nombre","y")]}]),
+            json!([{"facts":(0..=FAMILY_FACTS).map(|n| fact(&format!("k{n}"),"x")).collect::<Vec<_>>()}]),
+        ] {
+            assert_eq!(
+                refusal(json!({"kind":"descendants","rows":rows.clone()})),
+                "refused",
+                "{rows:.80}"
+            );
+        }
+        // A family that fits no request is the window's to make smaller, and the
+        // bound is the relay's payload, which the small edits' bound is not.
+        let full = json!({"facts":(0..FAMILY_FACTS)
+            .map(|n| json!({"field_key":format!("k{n}"),"value":"a".repeat(FAMILY_VALUE_LIMIT)}))
+            .collect::<Vec<_>>()});
+        let needed = FAMILY_MEMBERS_LIMIT / full.to_string().len() + 1;
+        assert!((3..=FAMILY_ROWS).contains(&needed), "{needed}");
+        assert_eq!(
+            refusal(json!({"kind":"descendants","rows":vec![full.clone(); needed]})),
+            "refused"
+        );
+        let fits = prepared(json!({"kind":"descendants","rows":vec![full; needed - 2]}));
+        assert!(fits.is_ok());
+        assert!(FAMILY_MEMBERS_LIMIT > MEMBERS_LIMIT);
+        for edit in [
+            json!({"kind":"descendants","rows":[],"extra":1}),
+            json!({"kind":"descendants","rows":[{"facts":[],"extra":1}]}),
+            json!({"kind":"descendants","rows":[{"facts":[{"field_key":"nombre","value":"x","masked":false}]}]}),
+            json!({"kind":"descendants"}),
+        ] {
+            assert!(serde_json::from_value::<Edit>(edit).is_err());
+        }
+    }
+
+    #[test]
+    fn an_election_names_its_ejercicio_and_only_the_answers_it_changes() {
+        let digest = "a".repeat(64);
+        let both = prepared(json!({"kind":"imputation_election","tax_year":2025,
+            "criterion":"devengo","codigo_comercio_accounting":"yes"}))
+        .unwrap();
+        assert_eq!(both.definition, "user-profile.imputation-election.set");
+        assert_eq!(
+            both.payload,
+            json!({"profile_id":PROFILE_ID,"expected_revision":3,"expected_content_digest":digest,
+                "tax_year":2025,"criterion":"devengo","codigo_comercio_accounting":"yes"})
+        );
+        // A left-out answer stays as stated, and an empty token clears.
+        let one = prepared(json!({"kind":"imputation_election","tax_year":2025,
+            "criterion":null,"codigo_comercio_accounting":""}))
+        .unwrap();
+        assert!(one.payload.get("criterion").is_none());
+        assert_eq!(one.payload["codigo_comercio_accounting"], "");
+        let settled =
+            json!({"profile_id":PROFILE_ID,"record_revision":4,"tax_year":2025,"changed":true});
+        assert!(both.confirm.holds(&settled, PROFILE_ID, 3));
+        for unread in [
+            json!({"profile_id":PROFILE_ID,"record_revision":4,"tax_year":2024}),
+            json!({"profile_id":PROFILE_ID,"record_revision":4}),
+            json!({"profile_id":PROFILE_ID,"record_revision":2,"tax_year":2025}),
+        ] {
+            assert!(!both.confirm.holds(&unread, PROFILE_ID, 3), "{unread}");
+        }
+        for edit in [
+            json!({"kind":"imputation_election","tax_year":2025,"criterion":null,"codigo_comercio_accounting":null}),
+            json!({"kind":"imputation_election","tax_year":999,"criterion":"devengo","codigo_comercio_accounting":null}),
+            json!({"kind":"imputation_election","tax_year":10000,"criterion":"devengo","codigo_comercio_accounting":null}),
+            json!({"kind":"imputation_election","tax_year":2025,"criterion":"a".repeat(65),"codigo_comercio_accounting":null}),
+            json!({"kind":"imputation_election","tax_year":2025,"criterion":null,"codigo_comercio_accounting":"a".repeat(17)}),
+        ] {
+            assert_eq!(refusal(edit.clone()), "refused", "{edit}");
+        }
+        for edit in [
+            json!({"kind":"imputation_election","tax_year":-1,"criterion":"x","codigo_comercio_accounting":null}),
+            json!({"kind":"imputation_election","tax_year":"2025","criterion":"x","codigo_comercio_accounting":null}),
+            json!({"kind":"imputation_election","tax_year":2025,"criterion":"x","codigo_comercio_accounting":null,"extra":1}),
+        ] {
+            assert!(serde_json::from_value::<Edit>(edit).is_err());
+        }
     }
 
     #[test]

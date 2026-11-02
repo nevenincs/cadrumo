@@ -5,8 +5,11 @@
 //! it holds no tax rule, and nothing here submits a return.
 //!
 //! The window receives closed states and outcomes only, never an operation,
-//! snapshot or row identifier, a refusal code or a path.
+//! snapshot or row identifier, a refusal code or a path. The exceptions are
+//! the Borrador 100 reads, which serve the product's own projections of the
+//! drafts and their comparison, in its words.
 mod admitted;
+mod borrador;
 pub(crate) mod outcome;
 mod run;
 
@@ -1248,6 +1251,42 @@ pub async fn aeat_sync_borrador_import(
     }
 }
 
+/// The Borrador 100 drafts the profile holds, as the full human read serves
+/// them: the stored drafts the selector names, with each capture's
+/// provenance. It reaches no network.
+#[tauri::command]
+pub async fn aeat_sync_borrador_read(
+    host: State<'_, Arc<ProfileHost>>,
+    profile: String,
+    selector: borrador::Selector,
+) -> Result<Value> {
+    borrador::read(&host, borrador::Reading::Read, profile, selector).await
+}
+
+/// The same drafts as the query serves them, without the capture's
+/// provenance. It reaches no network.
+#[tauri::command]
+pub async fn aeat_sync_borrador_query(
+    host: State<'_, Arc<ProfileHost>>,
+    profile: String,
+    selector: borrador::Selector,
+) -> Result<Value> {
+    borrador::read(&host, borrador::Reading::Query, profile, selector).await
+}
+
+/// The year's newest readable Borrador 100 draft beside the saved Modelo 100
+/// calculation, box by box, in `language`. It reaches no network and changes
+/// no record.
+#[tauri::command]
+pub async fn aeat_sync_borrador_compare(
+    host: State<'_, Arc<ProfileHost>>,
+    profile: String,
+    year: u16,
+    language: String,
+) -> Result<Value> {
+    borrador::compare(&host, profile, year, language).await
+}
+
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
     crate::app::commands![
         aeat_sync_status,
@@ -1264,7 +1303,10 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         aeat_sync_results,
         aeat_sync_notifications,
         aeat_sync_borrador_pick,
-        aeat_sync_borrador_import
+        aeat_sync_borrador_import,
+        aeat_sync_borrador_read,
+        aeat_sync_borrador_query,
+        aeat_sync_borrador_compare
     ]
 }
 

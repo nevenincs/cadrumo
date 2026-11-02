@@ -102,7 +102,10 @@ fn the_areas_submit_only_admitted_definitions_and_leave_none_unused() {
     let mut named: BTreeSet<&str> = BTreeSet::from([
         "auth.local-read",
         "auth.session.acquire",
+        "live.borrador.100.compare",
         "live.borrador.100.import",
+        "live.borrador.100.query",
+        "live.borrador.100.read",
         "live.notifications.latest",
         "live.notifications.show",
         "live.sync.status",

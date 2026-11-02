@@ -102,7 +102,7 @@ def _is_subsequence(candidate: Sequence[str], whole: Sequence[str]) -> bool:
     return all(any(token == value for value in iterator) for token in candidate)
 
 
-def _heading_key(modelo_id: str, *nodes: str) -> str:
+def form_heading_key(modelo_id: str, *nodes: str) -> str:
     """Return a per-modelo heading key.
 
     Section and row keys are named by the official heading's own words rather
@@ -112,10 +112,11 @@ def _heading_key(modelo_id: str, *nodes: str) -> str:
     return ".".join(("modelo", "schema", modelo_id, "form", *nodes, "heading"))
 
 
-def _column_heading_key(modelo_id: str, key: str) -> str:
+def column_form_heading_key(modelo_id: str, key: str) -> str:
+    """Return the heading key of a column: the shared one for a shared column, else a per-modelo key."""
     if key in SHARED_COLUMN_KEYS:
         return f"{SHARED_COLUMN_HEADING_KEY_PREFIX}.{key}"
-    return _heading_key(modelo_id, "column", key)
+    return form_heading_key(modelo_id, "column", key)
 
 
 def _section_slug(key: Sequence[str]) -> str:
@@ -277,7 +278,7 @@ def _grid_block(
     columns = tuple(
         FormGridColumn(
             key=key,
-            heading_key=_column_heading_key(build.modelo_id, key),
+            heading_key=column_form_heading_key(build.modelo_id, key),
             official_heading=clean_official_text(text) or None,
         )
         for key, text in zip(column_keys, first_row.columns, strict=True)
@@ -290,7 +291,7 @@ def _grid_block(
         grid_rows.append(
             FormGridRow(
                 key=row_key,
-                heading_key=_heading_key(build.modelo_id, "row", node_slug(row.stem)),
+                heading_key=form_heading_key(build.modelo_id, "row", node_slug(row.stem)),
                 official_heading=row.stem,
                 cells=tuple(
                     _cell(by_key[key]) if key in by_key else FormCell(kind=FormCellKind.BLANK) for key in column_keys
@@ -315,7 +316,7 @@ def _repeating_record_block(build: _Build, record: ExportRecordDefinition, block
             columns.append(
                 FormRepeatingColumn(
                     key=key,
-                    heading_key=_column_heading_key(build.modelo_id, key),
+                    heading_key=column_form_heading_key(build.modelo_id, key),
                     official_heading=text,
                     casilla_id=casilla_id,
                 )
@@ -365,8 +366,8 @@ def _official_repeat_columns(
             columns.append(
                 FormRepeatingColumn(
                     key=key,
-                    heading_key=_column_heading_key(build.modelo_id, key),
-                    official_heading=clean_official_text(position.description or "") or None,
+                    heading_key=column_form_heading_key(build.modelo_id, key),
+                    official_heading=None,
                     casilla_id=casilla_id,
                     binding_id=row_set[casilla_id],
                 )
@@ -419,7 +420,7 @@ def _row_column_limit(build: _Build, columns: Sequence[tuple[str, str]]) -> int 
     elements = {
         _repeating_element(build, build.positions[anchors[0]])
         for _binding_id, casilla_id in columns
-        if (anchors := build.anchors.get(casilla_id))
+        if (anchors := build.anchors.get(casilla_id, []))
     }
     if len(elements) != 1:
         return None
@@ -447,7 +448,7 @@ def _row_column_block(build: _Build, record: str, columns: list[tuple[str, str]]
         columns=tuple(
             FormRepeatingColumn(
                 key=f"box-{casilla_id}",
-                heading_key=_column_heading_key(build.modelo_id, f"box-{casilla_id}"),
+                heading_key=column_form_heading_key(build.modelo_id, f"box-{casilla_id}"),
                 casilla_id=casilla_id,
                 binding_id=binding_id,
             )

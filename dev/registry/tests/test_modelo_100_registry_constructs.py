@@ -29,8 +29,6 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from cadrumo.domain.calculations.registry.tests.modelo_100_profile_binding_tables import FAMILY_ROW_BINDINGS
 from cadrumo.domain.calculations.registry.tests.published_authority import published_supported_filing_years
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
-from cadrumo.domain.contribuyente.family_profile import RentaFamilyProfile
-from cadrumo.domain.contribuyente.family_types import RentaAscendantProfile, RentaDescendantProfile
 from cadrumo.domain.contribuyente.tax_residence import TaxResidenceProfile
 
 from ..compiler.validate_constructs import CONSTRUCT_MEMBER_ATTRIBUTES
@@ -436,19 +434,13 @@ def _assert_family_row_selectors(
     bindings_by_id: Mapping[str, BindingDefinition],
     casillas_by_id: Mapping[CasillaId, CasillaDefinition],
 ) -> None:
-    """Family-row bindings address a repeating collection + field pair on RentaFamilyProfile."""
-    for binding_id, (collection, field) in FAMILY_ROW_BINDINGS.items():
+    """Family-row bindings read one leaf of the canonical stored row object, counted by its stated count."""
+    for binding_id, (object_path, leaf, count_path) in FAMILY_ROW_BINDINGS.items():
         selector = selector_as_dict(bindings_by_id[binding_id])
-        assert selector["profile_model"] == "RentaFamilyProfile", binding_id
-        assert selector["collection"] == collection, binding_id
-        assert collection in RentaFamilyProfile.model_fields, binding_id
-        assert selector["field"] == field, binding_id
+        assert selector.get("profile_model") is None, binding_id
+        assert selector["rows"] == {"object_path": object_path, "leaf": leaf, "count_path": count_path}, binding_id
         assert selector["repeating"] is True, binding_id
         assert selector["dictionary_field"] in casillas_by_id, binding_id
-        row_model_fields = (
-            RentaDescendantProfile.model_fields if collection == "descendants" else RentaAscendantProfile.model_fields
-        )
-        assert field in row_model_fields, f"{binding_id}: row field {field!r} missing on {collection} model"
 
 
 def test_modelo_100_application_links_route_current_workflows_through_snapshots() -> None:
