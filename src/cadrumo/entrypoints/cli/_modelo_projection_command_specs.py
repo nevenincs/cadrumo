@@ -20,7 +20,6 @@ from cadrumo_client.contracts.command_ports import (
     CommandWriteRoute,
 )
 
-from ...core.modelo import Modelo
 
 _CALCULATION_READ = ExecutionPolicySpec(
     frozenset({"calculation", "encrypted-facts"}), frozenset({"none"}), "compute", CommandWriteRoute.NONE
@@ -125,7 +124,7 @@ MODELO_PROJECTION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 ("--modelo",),
                 _MODELO,
                 "cli.app.modelo.compare.modelo_help",
-                default=Modelo("100").value,
+                required=True,
             ),
         ),
         "ModeloCompareResult",
