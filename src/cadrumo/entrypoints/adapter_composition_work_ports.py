@@ -52,6 +52,7 @@ if TYPE_CHECKING:
     from ..application.modelo.work_lifecycle_ports import WorkLifecyclePorts
     from ..application.state_projection_ports import StateProjectionReadPorts
     from ..core.config import Settings
+    from ..core.secure_object_write import SecureObjectWrite
     from ..core.tabular import NormalizedTable
     from ..domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..domain.calculations.registry.tax_id_format import SubjectTaxId
@@ -604,6 +605,18 @@ def save_usage_ratios(profile: UsageRatioProfile, *, bucket_id: str) -> None:
     from ..adapters.persistence.profile.usage_ratios import save_usage_ratios
 
     save_usage_ratios(profile, bucket_id=bucket_id)
+
+
+def save_usage_ratios_with_secure_object_writes(
+    profile: UsageRatioProfile,
+    extra_writes: tuple[SecureObjectWrite, ...],
+    *,
+    bucket_id: str,
+) -> None:
+    """Compose the usage-ratio save that commits with other secure-object writes."""
+    from ..adapters.persistence.profile.usage_ratios import save_usage_ratios_with_secure_object_writes
+
+    save_usage_ratios_with_secure_object_writes(profile, extra_writes, bucket_id=bucket_id)
 
 
 def load_usage_ratios_with_censo_guard(

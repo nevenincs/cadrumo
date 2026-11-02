@@ -13,7 +13,7 @@ close the discoverability and pre-calculate readiness gaps:
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, datetime
 from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Self
@@ -27,8 +27,9 @@ from ...core.identity.bucket import BucketId
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.prose_elision import ElidedProse
 from ...core.text_bounds import NonEmptyStr
+from ...core.time.clock import now
 from ...core.unit_proportion import UnitProportion, is_unit_proportion
-from ...domain.buckets.event import BucketEventType
+from ...domain.buckets.event import BucketEvent, BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.categories.proportionality import ProportionalityKind, ProportionalityRule, effective_usage_ratio
@@ -38,7 +39,12 @@ from ...domain.usage_ratios.errors import UsageRatioValidationError
 from ...domain.usage_ratios.model import ELIGIBLE_USAGE_RATIO_CATEGORIES, UsageRatioProfile
 from ...domain.usage_ratios.service import usage_ratio_bucket_lock
 from ..bucket_event_repository import bucket_event_history_repository
-from .usage_ratio_repository import load_usage_ratio_profile, save_usage_ratio_profile
+from .persistence_ports import LedgerPersistenceConflictError
+from .usage_ratio_repository import (
+    load_usage_ratio_profile,
+    save_usage_ratio_profile,
+    save_usage_ratio_profile_with_writes,
+)
 
 
 class EligibleCategoryRow(BaseModel):
@@ -528,35 +534,67 @@ class UsageRatioMutationOutcomeV1(BaseModel):
     censo_override_warning: RatiosCensoOverrideWarning | None = None
 
 
-def _emit_ratio_event(
+def _ratio_event(
     *,
     bucket_id: str,
     event_type: BucketEventType,
     object_id: str,
     payload: dict[str, str],
     actor: str,
-) -> None:
-    """Append one ratios audit event to the bucket-event history.
+    occurred_at: datetime,
+) -> BucketEvent:
+    """Derive one ratios audit event without persisting it.
 
     The event's type, object class, actor and payload shape are the audit
     record's contract, not a display choice, so they are decided here rather
     than by whichever surface performed the mutation.
     """
-    from ...core.time.clock import now
     from ...domain.buckets.event import BucketEventObjectType
-    from ...domain.buckets.event_repository import emit_bucket_event
+    from ...domain.buckets.event_repository import build_bucket_event
 
-    emit_bucket_event(
-        repository=bucket_event_history_repository(bucket_id=bucket_id),
+    return build_bucket_event(
         bucket_id=bucket_id,
         event_type=event_type,
-        occurred_at=now(),
+        occurred_at=occurred_at,
         actor=actor,
         object_type=BucketEventObjectType.PROFILE,
         object_id=object_id,
         payload=payload,
         payload_version=1,
     )
+
+
+_RATIO_COMMIT_ATTEMPTS = 4
+
+
+def _commit_ratio_change(*, bucket_id: str, profile: UsageRatioProfile, events: tuple[BucketEvent, ...]) -> None:
+    """Persist ``profile`` and its audit ``events`` in one secure-object batch.
+
+    Both rows live in the bucket's one encrypted database, so the batch commits
+    them together or not at all. The event write carries the revision the
+    history was read at; when another writer appended in between, the batch is
+    refused whole and re-composed against the newly current history. Re-running
+    is safe: the profile is a value computed before this call and the events are
+    content-addressed, so a retry collapses onto the same entries.
+    """
+    from ...domain.buckets.event_repository import bucket_event_history_write
+
+    repository = bucket_event_history_repository(bucket_id=bucket_id)
+    last_conflict: LedgerPersistenceConflictError | None = None
+    for _attempt in range(_RATIO_COMMIT_ATTEMPTS):
+        try:
+            save_usage_ratio_profile_with_writes(
+                profile,
+                (bucket_event_history_write(repository, events),),
+                bucket_id=bucket_id,
+            )
+        except LedgerPersistenceConflictError as conflict:
+            last_conflict = conflict
+            continue
+        return
+    if last_conflict is not None:
+        raise last_conflict
+    raise AssertionError("ratio co-commit exhausted without a conflict")
 
 
 def _ratio_change_payload(*, category: SpendingCategory, prior: Decimal | None, new: Decimal | None) -> dict[str, str]:
@@ -586,11 +624,10 @@ def apply_usage_ratio_override(
     the operator declared to the AEAT. A surface that performed the write and
     forgot the comparison would let an override silently contradict the Censo.
 
-    NOT ATOMIC, and deliberately reported rather than papered over: the ratio
-    store and the event history are separate secure objects with no shared
-    commit, so a failure after the write leaves a persisted override with no
-    audit event. Making it atomic needs the co-commit treatment the invoice
-    link writer uses; this function does not invent one.
+    The profile row and the audit events commit in one secure-object batch
+    (see :func:`_commit_ratio_change`), so a failure leaves neither an override
+    without its event nor an event without its override. The Censo comparison is
+    computed before the batch, so its warning event joins it.
 
     Args:
         bucket_id: The owning profile bucket.
@@ -606,14 +643,7 @@ def apply_usage_ratio_override(
     Returns:
         The prior and new values, plus any Censo override warning raised.
     """
-    prior = set_usage_ratio(bucket_id=bucket_id, category=category, ratio=ratio, operation=operation)
-    _emit_ratio_event(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_RATIOS_SET,
-        object_id=category.value,
-        payload=_ratio_change_payload(category=category, prior=prior, new=ratio),
-        actor=actor,
-    )
+    occurred_at = now()
     warning = (
         censo_override_warning(
             category=category,
@@ -625,19 +655,38 @@ def apply_usage_ratio_override(
         if profile_id is not None and raw_afectacion_ratio is not None
         else None
     )
-    if warning is not None:
-        _emit_ratio_event(
-            bucket_id=bucket_id,
-            event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
-            object_id=warning.category.value,
-            payload={
-                "category": warning.category.value,
-                "override_ratio": str(warning.override_ratio),
-                "censo_derived_ratio": str(warning.censo_derived_ratio),
-                "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
-            },
-            actor=actor,
-        )
+    with usage_ratio_bucket_lock(bucket_id):
+        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
+        prior = profile.ratios.get(category)
+        with validating_governed_facts(operation):
+            updated = profile.with_ratio(category, ratio)
+        events = [
+            _ratio_event(
+                bucket_id=bucket_id,
+                event_type=BucketEventType.LEDGER_RATIOS_SET,
+                object_id=category.value,
+                payload=_ratio_change_payload(category=category, prior=prior, new=ratio),
+                actor=actor,
+                occurred_at=occurred_at,
+            )
+        ]
+        if warning is not None:
+            events.append(
+                _ratio_event(
+                    bucket_id=bucket_id,
+                    event_type=BucketEventType.LEDGER_RATIOS_CENSO_OVERRIDE_WARNING,
+                    object_id=warning.category.value,
+                    payload={
+                        "category": warning.category.value,
+                        "override_ratio": str(warning.override_ratio),
+                        "censo_derived_ratio": str(warning.censo_derived_ratio),
+                        "raw_afectacion_ratio": str(warning.raw_afectacion_ratio),
+                    },
+                    actor=actor,
+                    occurred_at=occurred_at,
+                )
+            )
+        _commit_ratio_change(bucket_id=bucket_id, profile=updated, events=tuple(events))
     return UsageRatioMutationOutcomeV1(
         category=category,
         prior_ratio=prior,
@@ -651,7 +700,7 @@ def clear_usage_ratio_override(
 ) -> UsageRatioMutationOutcomeV1:
     """Clear one override and record the clearance.
 
-    Carries the same non-atomicity as :func:`apply_usage_ratio_override`.
+    Commits the clearance and its event together, as :func:`apply_usage_ratio_override` does.
 
     Args:
         bucket_id: The owning profile bucket.
@@ -666,12 +715,23 @@ def clear_usage_ratio_override(
     Raises:
         UsageRatioValidationError: When the category carries no override.
     """
-    prior = unset_usage_ratio(bucket_id=bucket_id, category=category, operation=operation)
-    _emit_ratio_event(
-        bucket_id=bucket_id,
-        event_type=BucketEventType.LEDGER_RATIOS_UNSET,
-        object_id=category.value,
-        payload=_ratio_change_payload(category=category, prior=prior, new=None),
-        actor=actor,
-    )
+    occurred_at = now()
+    with usage_ratio_bucket_lock(bucket_id):
+        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
+        prior = profile.ratios.get(category)
+        if prior is None:
+            raise UsageRatioValidationError(
+                f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
+            )
+        with validating_governed_facts(operation):
+            updated = profile.without_ratio(category)
+        event = _ratio_event(
+            bucket_id=bucket_id,
+            event_type=BucketEventType.LEDGER_RATIOS_UNSET,
+            object_id=category.value,
+            payload=_ratio_change_payload(category=category, prior=prior, new=None),
+            actor=actor,
+            occurred_at=occurred_at,
+        )
+        _commit_ratio_change(bucket_id=bucket_id, profile=updated, events=(event,))
     return UsageRatioMutationOutcomeV1(category=category, prior_ratio=prior, new_ratio=None)
