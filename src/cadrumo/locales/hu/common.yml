@@ -9098,6 +9098,7 @@ workspace:
         link_aeat: Kapcsold össze az AEAT-benyújtást
         none: Nincs teendő
         open_local_draft: Helyi piszkozat megnyitása
+        recalculate: Számold újra
         start: Elkezdés
       no_match: 'Egy bevallás sem felel meg ennek: „{query}”.'
       none_listed: Nincs bevallás a listában.
