@@ -8,9 +8,8 @@ designs from 2024, an operator binding that names the same record-design field.
 :func:`filing_kind_marker_role` resolves both to one typed role, so the
 submitted-file reader never depends on which way a revision declares it.
 
-A second role covers a page-level "Indicador de página complementaria" on
-records other than the one holding the declaration marker. Its meaning is not
-settled by the design, so a reader records it without admitting it.
+The page-level "Indicador de página complementaria" of the Modelo 131 DPA
+record marks a continuation page, not a filing kind, so it has no role here.
 """
 
 from __future__ import annotations
@@ -21,7 +20,6 @@ from typing import TYPE_CHECKING, Final
 
 from ....core.filing_producer_key import FilingProducerKey
 from ..export_field_kind import CasillaFieldKind
-from .export_semantics import ExportComputedKey
 from .manual_input_selector import ManualInputProvider
 
 if TYPE_CHECKING:
@@ -35,11 +33,9 @@ class FilingKindMarkerRole(StrEnum):
 
     Attributes:
         DECLARATION_MARKER: The declaration-level complementaria byte.
-        PAGE_INDICATOR: A page-level complementaria indicator, recorded only.
     """
 
     DECLARATION_MARKER = "declaration_marker"
-    PAGE_INDICATOR = "page_indicator"
 
 
 #: The record-design field an operator binding names for the declaration-level
@@ -62,10 +58,9 @@ def filing_kind_marker_role(
 ) -> FilingKindMarkerRole | None:
     """Return the filing-kind role of one export field, or ``None`` when it has none.
 
-    Only one-byte positions qualify. A page indicator is any
-    ``continuation_page_marker`` position; the caller keeps only those on records
-    other than the declaration marker's, because the principal page's own
-    indicator is always blank by design.
+    Only one-byte positions qualify. A
+    ``continuation_page_marker`` position marks a continuation page and has no
+    filing-kind role.
     """
     if field.length != 1:
         return None
@@ -77,8 +72,6 @@ def filing_kind_marker_role(
         and _is_declaration_marker_binding(bindings_by_id.get(field.binding))
     ):
         return FilingKindMarkerRole.DECLARATION_MARKER
-    if field.kind is CasillaFieldKind.COMPUTED and field.computed_key is ExportComputedKey.CONTINUATION_PAGE_MARKER:
-        return FilingKindMarkerRole.PAGE_INDICATOR
     return None
 
 

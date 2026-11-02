@@ -26,8 +26,8 @@ from ....domain.modelos.filing_kind_evidence import (
     SubmittedFileFilingKindMarker,
     observed_filing_kind_for_local_revision,
     observed_filing_kind_from_capture,
+    register_tipo_solicitud_reading,
     submitted_file_marker_reading,
-    submitted_file_page_indicator_reading,
 )
 from ....domain.modelos.filing_record import FilingDeclarationKind
 from ..cross_period_dependency_evaluation import _declared_source_blockers
@@ -50,8 +50,8 @@ _COMPLEMENTARIA = observed_filing_kind_for_local_revision(
 _DISAGREEMENT = observed_filing_kind_from_capture(
     SubmittedFileFilingKindMarker(
         declaration_marker=submitted_file_marker_reading("", source_locator="m130:432:1"),
-        page_indicators=(submitted_file_page_indicator_reading("C", source_locator="m130:dpa:12:1"),),
-    )
+    ),
+    register_reading=register_tipo_solicitud_reading("Complementaria", source_locator="aeat-register:m130:tipo"),
 )
 
 _REQUIREMENT = CrossPeriodDependencyRequirement(
