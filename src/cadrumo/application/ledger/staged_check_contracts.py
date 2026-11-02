@@ -72,7 +72,7 @@ DraftFieldName = Literal[
 
 WriteRoute = Literal["bulk", "classify", "update"]
 RouteRefusal = Literal["cannot_clear", "needs_classification"]
-TaxSetSkip = Literal["transfer", "personal", "unclassified"]
+TaxSetSkip = Literal["transfer", "personal"]
 
 _Text = Annotated[str, Field(max_length=4096)]
 _Key = Annotated[str, Field(min_length=1, max_length=128)]

@@ -427,14 +427,16 @@ def add_classification_rule(
 
     Raises :exc:`ValueError` when ``description_pattern`` is not a valid
     regex, as validated by
-    :class:`~domain.transactions.classification_rule.LedgerClassificationRule`.
+    :class:`~domain.transactions.classification_rule.LedgerClassificationRule`,
+    and when no classification write could carry out the rule's decision.
     """
-    from ...domain.transactions.classification_rule import LedgerClassificationRule
+    from ...domain.transactions.classification_rule import LedgerClassificationRule, require_new_rule_decision
     from .rule_repository import ledger_classification_rule_repository
 
     repo = (
         rule_repository if rule_repository is not None else ledger_classification_rule_repository(bucket_id=bucket_id)
     )
+    require_new_rule_decision(classification, category_id)
     rule = LedgerClassificationRule.create(
         description_pattern=description_pattern,
         classification=classification,

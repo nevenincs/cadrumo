@@ -2470,15 +2470,21 @@ desktop:
       without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
     field:
+      art_104_tres_exclusion: Exclusió de l'art. 104.Tres
+      attachment_ids: Adjunts
       booked_date: Data comptable
       business_pct: Part professional
       counterparty_country: País de la contrapart
       counterparty_identification_state: Identificació a efectes d'IVA
       currency: Moneda
       deduction_fact_kind: Fet deduïble
+      input_classification: Ús de l'adquisició
       investment_asset_id: Bé d'inversió
       m210_income_classification: Renda del model 210
       own_account_id: Compte
+      prorrata_reference: Referència de prorrata
+      prorrata_sector_id: Sector de prorrata
+      purchase_invoice_evidence_id: Document de compra
       recargo_amount: Recàrrec
       usage_ratio_id: Ràtio d'ús
       value_date: Data valor
@@ -3048,7 +3054,6 @@ desktop:
         sealed: bloquejats
         sealed_unread: sense saber si estan bloquejats
         transfer: transferències
-        unclassified: sense classificar
       source_jurisdiction: Jurisdicció d'origen
       split:
         add_part: Afegeix una part
@@ -7981,6 +7986,8 @@ tui:
         cross_bucket_invoice: La factura pertany a un altre perfil, així que no es
           pot vincular.
         missing_invoice: La factura ja no és al catàleg, així que no es pot vincular.
+        transaction_takes_no_invoice: 'Aquest moviment no admet factura: només en
+          pot tenir un moviment actiu d''entrada o sortida de diners.'
     overview:
       affected_declarations: Declaracions afectades
       areas: Àrees de Registres

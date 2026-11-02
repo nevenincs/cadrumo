@@ -21,7 +21,7 @@ from ...domain.calculations.registry.iva_category_catalogue import registry_cate
 from ...domain.iva.schema import IvaCategory
 from ...domain.modelos.row_models import Modelo349OperadorRow, ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
-from ...domain.transactions.enums import TransactionLifecycleState
+from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from .action_errors import ModeloAggregationBindingError
@@ -42,6 +42,12 @@ def _is_active_guarded_transaction_in_period(
 ) -> bool:
     """Return whether a transaction belongs to the guarded M349 ledger slice."""
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        return False
+    # A transfer between own accounts and a personal row are no intra-community operation of the activity.
+    if (
+        transaction.direction is TransactionDirection.INTERNAL_TRANSFER
+        or transaction.business_classification is BusinessClassification.PERSONAL
+    ):
         return False
     if transaction.iva_category not in categories:
         return False

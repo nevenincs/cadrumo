@@ -78,7 +78,12 @@ from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProt
 from ...domain.prorrata_register.register import ProrrataRegister
 from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.dates import transaction_filing_date
-from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState
+from ...domain.transactions.enums import (
+    BUSINESS_BEARING_STATES,
+    BusinessClassification,
+    TransactionDirection,
+    TransactionLifecycleState,
+)
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
@@ -715,7 +720,8 @@ def _investment_acquisition_link(transaction: Transaction) -> InvestmentAssetAcq
     """Project one live ledger row onto the reciprocal edge it claims, if it claims one."""
     if (
         transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE
-        or transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED
+        or transaction.direction is TransactionDirection.INTERNAL_TRANSFER
+        or transaction.business_classification not in BUSINESS_BEARING_STATES
         or transaction.deduction_fact_kind is None
         or transaction.investment_asset_id is None
     ):

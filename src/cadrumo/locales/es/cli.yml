@@ -3533,6 +3533,8 @@ cli:
           activo.
         invoice_not_found: No se encontró el id de factura en el catálogo de facturas
           del perfil activo.
+        transaction_takes_no_invoice: Solo se puede vincular una factura a un movimiento
+          activo de entrada o salida de dinero.
       help: Vincula un movimiento de tus registros con una factura del catálogo de
         conciliación en una sola operación atómica. Rechaza vínculos entre buckets.
         Solo local; nunca contacta con la AEAT.
