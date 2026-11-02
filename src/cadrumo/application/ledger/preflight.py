@@ -816,6 +816,9 @@ _IVA_ISSUE_REASONS_NOT_REACHING_PREFLIGHT: Final[Mapping[IvaLedgerAggregationIss
     IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE: (
         "classification-path category rule: the law grants no deduction for mixed use, not a readiness gap"
     ),
+    IvaLedgerAggregationIssueReason.UNDETERMINED_MIXED_USE_TREATMENT: (
+        "classification-path category rule; preflight screens the missing category itself"
+    ),
     IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD: "upstream candidate filter; preflight is already period-scoped",
     IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE: (
         "projection-path rate-tier lookup; preflight does not classify rates against the tier table"
@@ -869,6 +872,7 @@ OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE: Mapping[
         IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION: OperatorActionAxis.REVIEW_ADVISORY,
         IvaLedgerAggregationIssueReason.NON_DEDUCTIBLE_MIXED_USE: OperatorActionAxis.REVIEW_ADVISORY,
+        IvaLedgerAggregationIssueReason.UNDETERMINED_MIXED_USE_TREATMENT: OperatorActionAxis.SUPPLY_MANUAL_INPUT,
         IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD: OperatorActionAxis.REVIEW_ADVISORY,
         IvaLedgerAggregationIssueReason.MISSING_TAXABLE_BASE: OperatorActionAxis.IMPORT_LEDGER_DATA,
         IvaLedgerAggregationIssueReason.MISSING_IVA_AMOUNT: OperatorActionAxis.IMPORT_LEDGER_DATA,

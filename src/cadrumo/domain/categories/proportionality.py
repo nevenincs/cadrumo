@@ -888,8 +888,8 @@ class ProportionalityRule(_ProportionalityStrictFrozenModel):
             ``Decimal("1")``). It never scales IVA; the IVA treatment is
             :attr:`iva_mixed_use`.
         iva_mixed_use: The category's own IVA treatment of MIXED-use rows,
-            or ``None`` when the category declares none and a MIXED row
-            deducts its business share.
+            or ``None`` when the category declares none, which leaves a MIXED
+            row's deduction undetermined.
         statutory_cap_eur_per_day: Daily statutory cap; only valid
             for a projected statutory-cap kind.
         statutory_cap_eur: Generic statutory cap amount; only valid

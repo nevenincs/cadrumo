@@ -451,8 +451,9 @@ def iva_category_deductible_proportion(
       for a BUSINESS row as well, because booking the vehicle in the activity
       is no proof of a higher degree of use (LIVA art. 95.Tres.4.ª).
 
-    A row without a category, or whose category the pinned authority does not
-    declare, keeps its own share.
+    A BUSINESS row without a category, or whose category the pinned authority
+    does not declare, keeps its own share. A MIXED one never reaches this
+    function: :func:`iva_mixed_use_treatment_is_undetermined` refuses it first.
 
     Args:
         transaction: The received ledger row.
@@ -478,6 +479,33 @@ def iva_category_deductible_proportion(
         threshold = _bien_inversion_threshold(operation_date=operation_date, operation=operation)
         return proportion if base is not None and base >= threshold else None
     return None
+
+
+def iva_mixed_use_treatment_is_undetermined(
+    transaction: Transaction,
+    *,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Return whether a MIXED received row's deduction cannot be decided from its category.
+
+    LIVA art. 95 denies a deduction for simultaneous use unless the good is a bien
+    de inversión or follows one, and the category is the typed statement of which
+    it is. Without one the row's share is not a degree of use the law recognises,
+    and zero is not established either.
+
+    Args:
+        transaction: The received ledger row.
+        year: The filing year whose category profiles apply.
+        operation: The caller-owned authority generation.
+
+    Returns:
+        ``True`` for a MIXED row whose category declares no IVA treatment under
+        ``operation``; ``False`` otherwise.
+    """
+    if transaction.business_classification is not BusinessClassification.MIXED:
+        return False
+    return _category_iva_mixed_use_rule(transaction, year=year, operation=operation) is None
 
 
 def _category_iva_mixed_use_rule(
