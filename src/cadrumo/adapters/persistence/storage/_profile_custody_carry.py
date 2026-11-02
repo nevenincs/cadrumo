@@ -66,6 +66,7 @@ from ..profile.justificante import JustificanteRepository
 from ..profile.modelo_reconciliation import ModeloReconciliationRecordRepository
 from ..profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from ..profile.retencion_observations import RetencionObservationRepositoryAdapter
+from ..profile.retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
 from ..profile.submission import SubmissionRepository
 from .attachment import unwrap_blob_payload
 from .envelope.contract import Envelope
@@ -234,6 +235,11 @@ def _natural_key_resolvers(
         return PercepcionObservationRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
 
     resolvers["cadrumo.withholding.observations"] = _bound_resolver(_percepciones_repo)
+
+    def _retencion_soportada_repo() -> RetencionSoportadaRecordRepositoryAdapter:
+        return RetencionSoportadaRecordRepositoryAdapter(objects=secure_object_repository_for_bucket(bucket_id))
+
+    resolvers["cadrumo.renta.retencion_soportada.records"] = _bound_resolver(_retencion_soportada_repo)
 
     def _filing_history_repo() -> ModeloHistoryRepository:
         return ModeloHistoryRepository(
