@@ -59,6 +59,10 @@ LEDGER_OWN_ACCOUNT_IBAN_MAX = 64
 """The longest account number an own account takes."""
 LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX = 16
 """The longest SWIFT/BIC an own account takes."""
+LEDGER_OWN_ACCOUNT_LABEL_MAX = 128
+"""The longest label an own account takes."""
+LEDGER_OWN_ACCOUNT_CURRENCY_MAX = 16
+"""The longest currency text an own account takes; which currencies exist is the served list's."""
 
 OwnAccountAction = Literal["add", "list", "show", "update", "close", "remove", "designate", "undesignate"]
 
@@ -92,7 +96,7 @@ class LedgerOwnAccountRequest(BaseModel):
     profile_id: UUID
     action: OwnAccountAction
     own_account_id: OwnAccountId | None = None
-    label: str | None = Field(default=None, min_length=1, max_length=128)
+    label: str | None = Field(default=None, min_length=1, max_length=LEDGER_OWN_ACCOUNT_LABEL_MAX)
     holding: OwnAccountHolding | None = None
     iban: str | None = Field(default=None, max_length=LEDGER_OWN_ACCOUNT_IBAN_MAX)
     swift_bic: str | None = Field(default=None, max_length=LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX)
@@ -100,7 +104,7 @@ class LedgerOwnAccountRequest(BaseModel):
     bank_address: str | None = Field(default=None, max_length=64)
     bank_city: str | None = Field(default=None, max_length=32)
     bank_country_code: CountryCodeAlpha2 | None = None
-    currency: str | None = Field(default=None, max_length=16)
+    currency: str | None = Field(default=None, max_length=LEDGER_OWN_ACCOUNT_CURRENCY_MAX)
     opened_on: date | None = None
     closed_on: date | None = None
     role: OwnAccountRole | None = None
@@ -147,7 +151,7 @@ class OwnAccountProjection(BaseModel):
     sepa_marca: str = Field(min_length=1, max_length=1)
     has_swift_bic: bool
     has_bank_block: bool
-    currency: str = Field(min_length=1, max_length=16)
+    currency: str = Field(min_length=1, max_length=LEDGER_OWN_ACCOUNT_CURRENCY_MAX)
     opened_on: date | None = None
     closed_on: date | None = None
 

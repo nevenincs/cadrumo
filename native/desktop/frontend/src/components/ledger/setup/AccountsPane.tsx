@@ -114,6 +114,8 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
   const t = useStrings();
   const ibanLimit = useTextLimit("own_account_iban");
   const bicLimit = useTextLimit("own_account_swift_bic");
+  const labelLimit = useTextLimit("own_account_label");
+  const currencyLimit = useTextLimit("own_account_currency");
   const { read, reload } = useSetupRead(
     port,
     reader,
@@ -692,7 +694,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                     onChange={setLabel}
                     invalid={control.invalid}
                     describedBy={control.describedBy}
-                    maxLength={80}
+                    maxLength={labelLimit ?? undefined}
                     required
                     autoFocus
                   />
@@ -716,7 +718,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                     onChange={setCurrency}
                     invalid={control.invalid}
                     describedBy={control.describedBy}
-                    maxLength={3}
+                    maxLength={currencyLimit ?? undefined}
                     required
                     {...currencies}
                   />
@@ -750,7 +752,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
                     onChange={setLabel}
                     invalid={control.invalid}
                     describedBy={control.describedBy}
-                    maxLength={80}
+                    maxLength={labelLimit ?? undefined}
                     autoFocus
                   />
                 )}

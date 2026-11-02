@@ -35,12 +35,6 @@ import {
 import { ledgerLimits, textLimit } from "../../../shell/ledgerLimits";
 import { parsePoints } from "../setup/setupModel";
 
-/** The longest label the window lets a typed correction or a supplied
- * finding value take. The confirmation request takes up to 2048, so this is
- * narrower than its owner and is kept as it was until that is ruled on; an
- * evidence record's label and note are served instead. */
-const CONFIRMATION_LABEL_MAX = 1024;
-
 /** What a field holds, which decides how a typed value is read. */
 export type FieldShape = "text" | "date" | "amount" | "percent" | "currency";
 
@@ -79,11 +73,19 @@ export type EntryScope = "reading" | "record";
 
 function textSpec(shape: "text" | "note", scope: EntryScope): FieldSpec {
   if (shape === "note")
-    return { kind: "notes", maxLength: textLimit("evidence_note") };
+    return {
+      kind: "notes",
+      maxLength:
+        scope === "record"
+          ? textLimit("evidence_note")
+          : textLimit("confirm_note"),
+    };
   return {
     kind: "text",
     maxLength:
-      scope === "record" ? textLimit("evidence_label") : CONFIRMATION_LABEL_MAX,
+      scope === "record"
+        ? textLimit("evidence_label")
+        : textLimit("confirm_label"),
   };
 }
 
@@ -267,7 +269,7 @@ export function readCorrection(
 ): ReadCorrection {
   switch (CORRECTION_SHAPES[field]) {
     case "text":
-      return parseLine(raw, CONFIRMATION_LABEL_MAX);
+      return parseLine(raw, textLimit("confirm_label"));
     case "date":
       return parseIsoDate(raw);
     case "amount": {
@@ -375,7 +377,8 @@ export function resolutionOf(
       ? { blocker_id: blocker.blocker_id, action: "attest", value: null, note }
       : null;
   const value = answer.value.trim();
-  if (!value || value.length > CONFIRMATION_LABEL_MAX) return null;
+  const longest = textLimit("confirm_label");
+  if (!value || longest === null || value.length > longest) return null;
   if (
     answer.action === "choose_candidate" &&
     !(blocker.candidates ?? []).some((candidate) => candidate.value === value)

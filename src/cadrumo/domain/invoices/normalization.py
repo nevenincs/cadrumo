@@ -6,6 +6,7 @@ public invoice record definitions and ``derive_invoice_id`` remain there.
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date, datetime
 from decimal import Decimal
@@ -363,6 +364,10 @@ def normalise_invoice_collections(
     return payload
 
 
+INVOICE_PAYMENT_ID_PATTERN: Final = r"^[0-9a-f]{64}$"
+"""The shape of a payment id once trimmed and lowercased: a transaction id, 64 lowercase hex digits."""
+
+
 def normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, object]:
     """Validate and normalise ``payment_id`` to lowercase hex in place, or raise.
 
@@ -376,7 +381,7 @@ def normalise_invoice_payment_id(payload: dict[str, object]) -> dict[str, object
     if not normalized:
         payload["payment_id"] = None
         return payload
-    if len(normalized) != 64 or any(char not in "0123456789abcdef" for char in normalized):
+    if re.fullmatch(INVOICE_PAYMENT_ID_PATTERN, normalized) is None:
         raise InvoiceValidationError("payment_id must be a 64-character lowercase hex digest")
     payload["payment_id"] = normalized
     return payload

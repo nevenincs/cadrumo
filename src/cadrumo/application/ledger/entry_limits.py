@@ -23,12 +23,19 @@ from ...core.percentage import PERCENTAGE_BARE_FRACTION_CEILING, PERCENTAGE_ENTR
 from ...core.unit_proportion import UNIT_PROPORTION_MAX
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 from ...domain.identifiers import canonical_decimal_string
+from ...domain.invoices.normalization import INVOICE_PAYMENT_ID_PATTERN
 from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH
 from .allocate_operation import LEDGER_ALLOCATE_RATIO_ID_MAX
 from .classify_requests import LEDGER_CLASSIFY_SHORT_TEXT_MAX
 from .counterparty_operation import LEDGER_COUNTERPARTY_NOTE_MAX, LEDGER_COUNTERPARTY_TAX_ID_MAX
 from .evidence import LEDGER_EVIDENCE_LABEL_MAX, LEDGER_EVIDENCE_TEXT_MAX
-from .own_account_operation import LEDGER_OWN_ACCOUNT_IBAN_MAX, LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX
+from .invoice_evidence_operation import INVOICE_EVIDENCE_LABEL_MAX, INVOICE_EVIDENCE_NOTE_MAX
+from .own_account_operation import (
+    LEDGER_OWN_ACCOUNT_CURRENCY_MAX,
+    LEDGER_OWN_ACCOUNT_IBAN_MAX,
+    LEDGER_OWN_ACCOUNT_LABEL_MAX,
+    LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX,
+)
 from .split_operation import LEDGER_SPLIT_CHILDREN_MAX, LEDGER_SPLIT_PART_DESCRIPTION_MAX
 from .update_contracts import LEDGER_GROUP_LABEL_MAX, LEDGER_UPDATE_TEXT_MAX
 
@@ -49,6 +56,10 @@ type TextLimitName = Literal[
     "own_account_swift_bic",
     "counterparty_tax_id",
     "counterparty_note",
+    "confirm_label",
+    "confirm_note",
+    "own_account_label",
+    "own_account_currency",
 ]
 
 
@@ -94,6 +105,7 @@ class LedgerEntryLimitsProjection(BaseModel):
     percent_bare_fraction_ceiling: str
     document_percent_fields: tuple[LedgerEntryPercentField, ...]
     rule_pattern_max: int
+    payment_id_pattern: str
     text_limits: tuple[LedgerEntryTextLimit, ...]
 
 
@@ -131,6 +143,10 @@ _TEXT_LIMITS: Final[tuple[LedgerEntryTextLimit, ...]] = (
     LedgerEntryTextLimit(name="own_account_swift_bic", max=LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX),
     LedgerEntryTextLimit(name="counterparty_tax_id", max=LEDGER_COUNTERPARTY_TAX_ID_MAX),
     LedgerEntryTextLimit(name="counterparty_note", max=LEDGER_COUNTERPARTY_NOTE_MAX),
+    LedgerEntryTextLimit(name="confirm_label", max=INVOICE_EVIDENCE_LABEL_MAX),
+    LedgerEntryTextLimit(name="confirm_note", max=INVOICE_EVIDENCE_NOTE_MAX),
+    LedgerEntryTextLimit(name="own_account_label", max=LEDGER_OWN_ACCOUNT_LABEL_MAX),
+    LedgerEntryTextLimit(name="own_account_currency", max=LEDGER_OWN_ACCOUNT_CURRENCY_MAX),
 )
 
 
@@ -146,6 +162,7 @@ def ledger_entry_limits() -> LedgerEntryLimitsProjection:
         percent_bare_fraction_ceiling=canonical_decimal_string(PERCENTAGE_BARE_FRACTION_CEILING),
         document_percent_fields=_DOCUMENT_PERCENT_FIELDS,
         rule_pattern_max=RULE_PATTERN_ENTRY_MAX_LENGTH,
+        payment_id_pattern=INVOICE_PAYMENT_ID_PATTERN,
         text_limits=_TEXT_LIMITS,
     )
 

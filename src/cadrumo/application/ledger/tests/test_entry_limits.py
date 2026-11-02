@@ -17,13 +17,15 @@ from ....core.percentage import Percentage, fraction_of_percentage
 from ....core.unit_proportion import UnitProportion
 from ....domain.buckets.event import BucketEvent
 from ....domain.invoices import figures
+from ....domain.invoices.errors import InvoiceValidationError
+from ....domain.invoices.normalization import normalise_invoice_payment_id
 from ..allocate_operation import LedgerAllocateRequest
 from ..classify_requests import LedgerClassifyPatch
 from ..counterparty_operation import LedgerCounterpartyRequest
 from ..entry_limits import LedgerEntryDecimalRule, TextLimitName, ledger_entry_limits
 from ..evidence_add_operation import LedgerEvidenceAddRequest
 from ..evidence_mutation_operation import LedgerEvidenceUpdatePatch
-from ..invoice_evidence_confirm_operation import LedgerEvidenceConfirmRequest
+from ..invoice_evidence_confirm_operation import FindingResolutionInputV1, LedgerEvidenceConfirmRequest
 from ..ledger_add_contracts import LedgerAddRequest
 from ..own_account_operation import LedgerOwnAccountRequest
 from ..split_operation import LedgerSplitChildRequest, LedgerSplitRequest
@@ -170,6 +172,14 @@ _OWNERS: Final[dict[str, list[tuple[type[BaseModel], str, Callable[[int], object
     "own_account_swift_bic": [(LedgerOwnAccountRequest, "swift_bic", _text)],
     "counterparty_tax_id": [(LedgerCounterpartyRequest, "tax_identifier", _text)],
     "counterparty_note": [(LedgerCounterpartyRequest, "note", _text)],
+    "confirm_label": [
+        (LedgerEvidenceConfirmRequest, "counterparty_name", _text),
+        (LedgerEvidenceConfirmRequest, "invoice_number", _text),
+        (FindingResolutionInputV1, "value", _text),
+    ],
+    "confirm_note": [(LedgerEvidenceConfirmRequest, "notes", _text), (FindingResolutionInputV1, "note", _text)],
+    "own_account_label": [(LedgerOwnAccountRequest, "label", _text)],
+    "own_account_currency": [(LedgerOwnAccountRequest, "currency", _text)],
 }
 
 
@@ -194,3 +204,24 @@ def test_the_writers_take_exactly_what_the_text_limit_served_says(name: str) -> 
     for model, field, fill in _OWNERS[name]:
         assert _takes(model, field, fill(served)), f"{model.__name__}.{field} refuses the served {served}"
         assert not _takes(model, field, fill(served + 1)), f"{model.__name__}.{field} takes more than {served}"
+
+
+@pytest.mark.parametrize(
+    ("text", "taken"),
+    [
+        ("a" * 64, True),
+        ("0123456789abcdef" * 4, True),
+        ("a" * 63, False),
+        ("a" * 65, False),
+        ("g" * 64, False),
+        ("a" * 63 + chr(10), False),
+    ],
+)
+def test_the_payment_id_shape_served_is_the_one_the_invoice_owner_takes(text: str, taken: bool) -> None:
+    served = ledger_entry_limits().payment_id_pattern
+    assert (re.fullmatch(served, text) is not None) is taken
+    if taken:
+        assert normalise_invoice_payment_id({"payment_id": text})["payment_id"] == text
+    else:
+        with pytest.raises(InvoiceValidationError):
+            normalise_invoice_payment_id({"payment_id": text.lower()})
