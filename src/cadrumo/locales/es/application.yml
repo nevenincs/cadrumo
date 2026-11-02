@@ -2357,6 +2357,11 @@ application:
         ni justificante adjunto. Adjúntalo al apunte de tus registros.
       transaction_evidence_missing_output: Una factura emitida con IVA repercutido
         no tiene justificante. Adjúntalo al apunte de tus registros.
+      undetermined_mixed_use_contributor: El cálculo guardado del modelo %{modelo}
+        de %{filing_year}, periodo %{period}, contó %{rows} gasto(s) de uso mixto
+        sin categoría de gasto por la parte indicada. Si calculas ahora, quedarán
+        retenidos hasta que les asignes la categoría. Los valores guardados no han
+        cambiado.
       withholding_detail_absent_against_ledger_evidence: 'El modelo %{modelo} de %{filing_year}
         no declara ninguna percepción para ningún perceptor, pero tus registros recogen
         rentas sometidas a retención pagadas ese año: %{contradicting_invoice_count}

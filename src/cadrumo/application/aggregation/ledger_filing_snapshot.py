@@ -152,8 +152,14 @@ _FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
     ("counterparty_identification_state", "counterparty_identification_state"),
 )
 
-# Version 4 is the vehicle-use field set, which must precede this one once both are
-# present; V5 extends it. V5 adds what a calculation reads and V3 could not see: the operation date, which
+# V4 adds ``iva_vehicle_use``: the statement moves a vehicle row's deducted cuota
+# (LIVA art. 95.Tres.2.ª) without moving any amount V3 watches.
+_FINGERPRINT_FIELDS_V4: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V3,
+    ("iva_vehicle_use", "iva_vehicle_use"),
+)
+
+# V5 extends V4 and adds what a calculation reads and V3 could not see: the operation date, which
 # picks the row's period and rate, and the evidence behind the deduction. Without
 # the provenance a row yields no input-IVA observation, so a draft holding a 21.00
 # cuota read as current after the evidence went while recalculating it refused.
@@ -161,7 +167,7 @@ _FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
 # figures from that invoice, so attaching one now asks for a recalculation too.
 # Supplementary ``attachment_ids`` feed no calculation and stay out.
 _FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
-    *_FINGERPRINT_FIELDS_V3,
+    *_FINGERPRINT_FIELDS_V4,
     ("operation_date", "operation_date"),
     ("purchase_invoice_evidence_id", "purchase_invoice_evidence_id"),
     ("deduction_authority", "deduction_provenance.authority"),
@@ -173,6 +179,7 @@ _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: _FINGERPRINT_FIELDS_V1,
     2: _FINGERPRINT_FIELDS_V2,
     3: _FINGERPRINT_FIELDS_V3,
+    4: _FINGERPRINT_FIELDS_V4,
     5: _FINGERPRINT_FIELDS_V5,
 }
 
@@ -366,6 +373,7 @@ def _evidence_row(
         m210_asset_or_right_id=(m210_classification.asset_or_right_id if m210_classification is not None else None),
         counterparty_country=transaction.counterparty_country,
         investment_asset_id=transaction.investment_asset_id,
+        iva_vehicle_use=_enum_value(transaction.iva_vehicle_use),
         counterparty_identification_state=_enum_value(transaction.counterparty_identification_state),
         fx_rate=transaction.fx_rate,
         value_in_eur=transaction.value_in_eur,

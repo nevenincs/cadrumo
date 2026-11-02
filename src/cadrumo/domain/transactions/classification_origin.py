@@ -41,6 +41,7 @@ CLASSIFICATION_DECISION_FIELDS: Final[frozenset[str]] = _MOVEMENT_FIELDS | {
     "m210_income_classification",
     "deduction_fact_kind",
     "investment_asset_id",
+    "iva_vehicle_use",
     "counterparty_country",
     "counterparty_identification_state",
     "art_104_tres_exclusion",

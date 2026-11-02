@@ -32,6 +32,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
 from ....domain.iva.schema import EUMemberState
+from ....domain.iva.vehicle_use import IvaVehicleUse
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -41,6 +42,7 @@ from ..ledger_filing_snapshot import (
     _FINGERPRINT_FIELDS_V1,
     _FINGERPRINT_FIELDS_V2,
     _FINGERPRINT_FIELDS_V3,
+    _FINGERPRINT_FIELDS_V4,
     _FINGERPRINT_FIELDS_V5,
     CURRENT_FINGERPRINT_FIELD_SET_VERSION,
     compute_ledger_filing_evidence,
@@ -145,9 +147,21 @@ def test_v3_appends_exactly_the_two_admission_facts_to_v2() -> None:
     )
 
 
+def test_v4_appends_exactly_the_stated_vehicle_use_to_v3() -> None:
+    assert _FINGERPRINT_FIELDS_V4[: len(_FINGERPRINT_FIELDS_V3)] == _FINGERPRINT_FIELDS_V3
+    assert _FINGERPRINT_FIELDS_V4[len(_FINGERPRINT_FIELDS_V3) :] == (("iva_vehicle_use", "iva_vehicle_use"),)
+
+
+def test_a_stated_vehicle_use_is_drift_under_v4_and_quiet_under_v3() -> None:
+    purchase = _purchase()
+    stated = purchase.model_copy(update={"iva_vehicle_use": IvaVehicleUse.SURVEILLANCE})
+    assert row_fingerprint(stated, field_set_version=4) != row_fingerprint(purchase, field_set_version=4)
+    assert row_fingerprint(stated, field_set_version=3) == row_fingerprint(purchase, field_set_version=3)
+
+
 def test_v5_appends_the_operation_date_and_the_evidence_facts_and_is_current() -> None:
-    assert _FINGERPRINT_FIELDS_V5[: len(_FINGERPRINT_FIELDS_V3)] == _FINGERPRINT_FIELDS_V3
-    assert [label for label, _path in _FINGERPRINT_FIELDS_V5[len(_FINGERPRINT_FIELDS_V3) :]] == [
+    assert _FINGERPRINT_FIELDS_V5[: len(_FINGERPRINT_FIELDS_V4)] == _FINGERPRINT_FIELDS_V4
+    assert [label for label, _path in _FINGERPRINT_FIELDS_V5[len(_FINGERPRINT_FIELDS_V4) :]] == [
         "operation_date",
         "purchase_invoice_evidence_id",
         "deduction_authority",
@@ -157,7 +171,7 @@ def test_v5_appends_the_operation_date_and_the_evidence_facts_and_is_current() -
     assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 5
 
 
-@pytest.mark.parametrize("version", [1, 2, 3])
+@pytest.mark.parametrize("version", [1, 2, 3, 4])
 def test_the_older_field_sets_do_not_see_a_new_operation_date_or_a_detached_evidence(version: int) -> None:
     purchase = _purchase()
     moved = purchase.model_copy(update={"operation_date": date(2026, 3, 30), "deduction_provenance": None})

@@ -2222,6 +2222,10 @@ application:
         or receipt attached. Attach it to the entry in your records.
       transaction_evidence_missing_output: An issued invoice on which you charge VAT
         has no supporting document. Attach it to the entry in your records.
+      undetermined_mixed_use_contributor: The stored %{modelo} calculation for %{filing_year},
+        period %{period}, counted %{rows} mixed-use expense(s) with no spending category
+        at their stated share. Calculating now would hold them back until you assign
+        the category. The stored values have not changed.
       withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
         declares no payments to anyone, but your records show payments subject to
         withholding made that year: %{contradicting_invoice_count} received invoice(s)

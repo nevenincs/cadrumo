@@ -18,6 +18,7 @@ from ...domain.renta.ledger_expenses import (
 )
 from . import _shared_issue_reasons
 from ._models import LedgerAggregationResultBase
+from ._renta_business_eligibility import RentaExpenseAdvisory
 
 
 class RentaLedgerAggregationIssueReason(StrEnum):
@@ -46,7 +47,7 @@ class RentaLedgerAggregationIssueReason(StrEnum):
     row already fed a pago fraccionado and what action clears it.
     """
     PERSONAL_TRANSACTION = _shared_issue_reasons.PERSONAL_TRANSACTION
-    MISSING_CATEGORY = "missing_category"
+    MISSING_CATEGORY = _shared_issue_reasons.MISSING_CATEGORY
     UNKNOWN_CATEGORY = _shared_issue_reasons.UNKNOWN_CATEGORY
     MISSING_CATEGORY_PROFILE = _shared_issue_reasons.MISSING_CATEGORY_PROFILE
     OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
@@ -87,6 +88,8 @@ class RentaLedgerExpenseAggregation(
     """
 
     profile_year: FilingYear
+    advisories: tuple[RentaExpenseAdvisory, ...] = ()
+    """Rows that keep their figure under a reading of the law the operator should review."""
 
     @property
     def casilla_values(self) -> Mapping[CasillaId, Decimal]:

@@ -18,6 +18,7 @@ import pytest
 
 from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import EUMemberState
@@ -40,7 +41,7 @@ from ....domain.transactions.raw_transaction import RawProvenance, RawTransactio
 from ...aggregation.ledger_filing_snapshot import compute_ledger_filing_snapshot, row_fingerprint
 from ...aggregation.ledger_membership import LedgerSourceMembership
 from ...aggregation.tests.ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
-from .._ledger_drift_gate import ledger_drift_findings
+from .._ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -208,3 +209,60 @@ def test_a_v2_anchored_draft_is_still_compared_under_v2(update: dict[str, object
     before = _purchase()
     after = before.model_copy(update=update)
     assert _gate(_draft(before, _anchor_sealed_under_v2(before)), after) == []
+
+
+def _undetermined_finding(
+    draft: tuple[WorkUnit, CalculationRevision], live: Transaction, operation: PinnedAuthorityOperation
+) -> ModeloVerificationFinding | None:
+    work_unit, revision = draft
+    repository = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET)
+    repository.save(TransactionCatalogue.from_transactions([live]))
+    return undetermined_mixed_use_contributor_finding(
+        target=revision,
+        work_unit=work_unit,
+        transaction_repository=repository,
+        operation=operation,
+    )
+
+
+def _uncategorized_mixed(purchase: Transaction) -> Transaction:
+    return purchase.model_copy(
+        update={
+            "business_classification": BusinessClassification.MIXED,
+            "business_pct": Decimal("0.50"),
+            "category_id": None,
+        },
+    )
+
+
+def test_a_stored_draft_that_counted_an_uncategorized_mixed_row_warns_and_stays_as_stored(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    row = _uncategorized_mixed(_purchase())
+    draft = _draft(row, _current_anchor(row))
+    assert _gate(draft, row) == []
+    finding = _undetermined_finding(draft, row, operation)
+    assert finding is not None
+    assert finding.severity is ModeloVerificationFindingSeverity.WARNING
+    assert finding.kind is ModeloVerificationFindingKind.ADVISORY
+    assert finding.message_facts["rows"] == 1
+    assert draft[1].casilla_values == {}
+
+
+@pytest.mark.parametrize(
+    "update",
+    [{"category_id": "vehiculo_combustible"}, {"direction": TransactionDirection.INCOMING}],
+    ids=["categorized", "income"],
+)
+def test_a_contributor_whose_treatment_is_known_does_not_warn(
+    update: dict[str, object], *, operation: PinnedAuthorityOperation
+) -> None:
+    row = _uncategorized_mixed(_purchase()).model_copy(update=update)
+    assert _undetermined_finding(_draft(row, _current_anchor(row)), row, operation) is None
+
+
+def test_a_row_that_is_not_a_contributor_does_not_warn(*, operation: PinnedAuthorityOperation) -> None:
+    row = _uncategorized_mixed(_purchase())
+    work_unit, revision = _draft(row, _current_anchor(row))
+    elsewhere = revision.model_copy(update={"source_transaction_ids": ("a" * 64,)})
+    assert _undetermined_finding((work_unit, elsewhere), row, operation) is None

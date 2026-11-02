@@ -136,6 +136,11 @@ LEDGER_CLASSIFICATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "cli.ledger.classify.investment_asset_id_help",
             ),
             _optional_text_option(
+                "iva_vehicle_use",
+                ("--iva-vehicle-use",),
+                "cli.ledger.classify.iva_vehicle_use_help",
+            ),
+            _optional_text_option(
                 "counterparty_country", ("--counterparty-country",), "cli.ledger.classify.counterparty_country_help"
             ),
             _option_from_application_contract(

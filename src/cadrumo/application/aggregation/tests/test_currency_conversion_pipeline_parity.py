@@ -378,6 +378,7 @@ def test_renta_gasto_ledger_reads_converted_eur_substrate(operation: PinnedAutho
         taxable_base=Decimal("826.45"),
         iva_amount=Decimal("173.55"),
         irpf_category="actividad_economica",
+        category_id="material_oficina",
     )
     result = _classify_gasto_transaction(
         tx,
