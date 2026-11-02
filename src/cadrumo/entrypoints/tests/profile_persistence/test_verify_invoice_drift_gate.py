@@ -312,23 +312,24 @@ def test_m347_removal_is_reported_and_recalculating_gives_the_worked_figure(m347
     assert _verify_m347(m347, recalculated).granted_verificado_completo is True
 
 
-def test_m347_untouched_draft_is_granted_and_a_sealed_revision_is_not_compared(m347: _M347) -> None:
+def test_m347_untouched_draft_is_granted_and_a_sealed_revision_refuses_the_write(m347: _M347) -> None:
     """The control for every refusal here, and the limit of the gate.
 
-    A grant seals the revision and verify then returns its report unchanged, so an
-    invoice edited afterwards is not seen: no block stops that edit the way the
-    participation guard stops a ledger one.
+    A grant seals the revision and verify then returns its report unchanged, so the
+    invoice is held at the write, as the participation guard holds a ledger row.
     """
     revision = _calculate(m347.work_unit)
     granted = _verify_m347(m347, revision)
     assert granted.granted_verificado_completo is True
     assert not _with_key(granted, _DRIFT_KEY)
 
-    remove_catalogue_invoice(
-        bucket_id=_BUCKET,
-        invoice_id=m347.second.invoice_id,
-        ports=build_catalogue_lifecycle_ports(bucket_id=_BUCKET),
-    )
+    with pytest.raises(CadrumoError) as refused:
+        remove_catalogue_invoice(
+            bucket_id=_BUCKET,
+            invoice_id=m347.second.invoice_id,
+            ports=build_catalogue_lifecycle_ports(bucket_id=_BUCKET),
+        )
+    assert "sealed_invoice_refused" in str(refused.value.translated_message)
     assert _verify_m347(m347, revision).verification_report_id == granted.verification_report_id
 
 

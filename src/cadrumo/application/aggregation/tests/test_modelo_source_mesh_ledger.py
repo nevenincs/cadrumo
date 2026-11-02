@@ -31,6 +31,7 @@ from ..iva_ledger import (
 from ..oss_ioss import OssIossLedgerCandidate, OssIossLedgerSourceResolver, aggregate_oss_ioss_bindings
 from ..source_mesh import (
     CalculationSourceContext,
+    CalculationSourceDiagnostic,
     CalculationSourceResolution,
 )
 from .iva_authority_support import aggregate_iva_ledger_observations
@@ -54,6 +55,13 @@ from .ledger_transaction_support import (
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+
+def _apart_from_the_bank_date_advisory(
+    resolution: CalculationSourceResolution,
+) -> list[CalculationSourceDiagnostic]:
+    """These rows state no operation date, so the fallback advisory is true of each of them."""
+    return [item for item in resolution.diagnostics if item.reason != "iva_row_placed_on_movement_date"]
 
 
 def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
@@ -96,7 +104,7 @@ def test_iva_source_mesh_resolver_resolves_general_sale_and_purchase() -> None:
         incoming.transaction_id,
         outgoing.transaction_id,
     }
-    assert resolution.diagnostics == ()
+    assert _apart_from_the_bank_date_advisory(resolution) == []
     assert {item.source_ref for item in resolution.provenance} == {
         f"transaction:{incoming.transaction_id}",
         f"transaction:{outgoing.transaction_id}",
@@ -339,8 +347,9 @@ def test_iva_source_mesh_resolver_accepts_m303_invoice_domestic_iva_when_transac
     # The invoice records no fecha de operacion, so its Q1 placement rests on
     # the issue date. LIVA art. 75.Uno binds devengo to the operation date, so
     # the substitution is disclosed rather than passed off as a determination.
-    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["devengo_date_proxy_attribution"]
-    assert "LAURA-1T-SALE" in resolution.diagnostics[0].message
+    (devengo,) = _apart_from_the_bank_date_advisory(resolution)
+    assert devengo.reason == "devengo_date_proxy_attribution"
+    assert "LAURA-1T-SALE" in devengo.message
 
 
 def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_date_is_recorded() -> None:
@@ -354,7 +363,7 @@ def test_iva_source_mesh_resolver_raises_no_devengo_advisory_when_the_operation_
     _, resolution = _resolve_laura_first_quarter_sale(operation_date=date(2025, 2, 5))
 
     assert resolution.binding_values["modelo-303-iva-repercutido-general-cuota"] == Decimal("2100.00")
-    assert resolution.diagnostics == ()
+    assert _apart_from_the_bank_date_advisory(resolution) == []
 
 
 def test_iva_source_mesh_resolver_routes_domestic_reverse_charge_to_box_13_and_37_net_zero() -> None:
@@ -533,7 +542,7 @@ def test_iva_source_mesh_resolver_surfaces_no_unconsumed_diagnostic_when_all_con
     )
 
     assert resolution.binding_values
-    assert resolution.diagnostics == ()
+    assert _apart_from_the_bank_date_advisory(resolution) == []
 
 
 def test_iva_source_mesh_resolver_summarizes_out_of_period_personal_source_diagnostic() -> None:

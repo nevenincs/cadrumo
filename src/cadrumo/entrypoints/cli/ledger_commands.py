@@ -160,6 +160,7 @@ def ledger_add(
     direction: TransactionDirection,
     description: str,
     value_date: str | None = None,
+    operation_date: str | None = None,
     currency: str = DEFAULT_CURRENCY,
     counterparty: str | None = None,
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
@@ -202,6 +203,7 @@ def ledger_add(
             direction=direction,
             description=description,
             value_date=value_date,
+            operation_date=operation_date,
             currency=currency,
             counterparty=counterparty,
             business_classification=business_classification,
@@ -273,6 +275,7 @@ def ledger_update(
     transaction_id: str,
     booked_date: str | None = None,
     value_date: str | None = None,
+    operation_date: str | None = None,
     amount: str | None = None,
     direction: TransactionDirection | None = None,
     currency: str | None = None,
@@ -292,6 +295,9 @@ def ledger_update(
         patch = _patch_from_options(
             booked_date=_parse_iso_date(booked_date, label="date") if booked_date is not None else None,
             value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
+            operation_date=(
+                _parse_iso_date(operation_date, label="operation-date") if operation_date is not None else None
+            ),
             amount=parse_amount_magnitude(amount) if amount is not None else None,
             direction=direction,
             currency=currency,

@@ -19,6 +19,13 @@ to one :class:`Invoice`. :func:`remove_catalogue_invoice` deletes one record,
 refusing an invoice that still carries ``linked_transaction_ids`` so the
 bidirectional link recorded on the transaction side is never silently orphaned
 into a one-sided inconsistency (``verify_link_consistency``).
+
+A sealed revision is guarded the way the ledger guards its contributors: the
+figures are frozen and verify, export and filing do not compare them again, so a
+write that would move what a sealed revision read is refused at the write. Those
+revisions stay exactly as filed. An edit that moves no fact the revision read
+passes, as does recording a later collection on an invoice whose devengo does not
+depend on it: LIVA art. 75.Uno does not date the cuota by the collection.
 """
 
 from __future__ import annotations
@@ -32,10 +39,13 @@ from ...core.aggregation import IntracomOperationType
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import now
 from ...domain.invoices.catalogue import InvoiceCatalogue
-from ...domain.invoices.enums import InvoiceClass, PaymentStatus
+from ...domain.invoices.enums import InvoiceClass, PaymentStatus, advance_payment_received_role
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice
 from ...domain.iva.schema import IvaCategory
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit
+from ..aggregation.invoice_filing_fingerprint import invoice_row_fingerprint
 from .catalogue_lifecycle_ports import CatalogueLifecyclePorts
 from .catalogue_selection import select_catalogue_invoice_id
 
@@ -67,6 +77,60 @@ def resolve_catalogue_invoice(catalogue: InvoiceCatalogue, invoice_id: str) -> I
     return catalogue.invoices[select_catalogue_invoice_id(catalogue.invoices.keys(), invoice_id)]
 
 
+def _sealed_citations(
+    invoice_id: str,
+    ports: CatalogueLifecyclePorts,
+) -> tuple[tuple[CalculationRevision, WorkUnit], ...]:
+    """Return the sealed revisions whose stored fingerprint read this invoice."""
+    return tuple(
+        (revision, work_unit)
+        for revision, work_unit in ports.sealed_revisions.sealed_revisions()
+        if revision.invoice_fingerprint is not None
+        and any(row.invoice_id == invoice_id for row in revision.invoice_fingerprint.rows)
+    )
+
+
+def _refuse_sealed_write(invoice_id: str, citation: tuple[CalculationRevision, WorkUnit]) -> None:
+    revision, work_unit = citation
+    raise InvoiceValidationError(
+        translated_message="application.invoices.lifecycle.errors.sealed_invoice_refused",
+        context={
+            "invoice_id": invoice_id,
+            "modelo": str(work_unit.modelo),
+            "filing_year": str(work_unit.filing_year),
+            "period": work_unit.period.registry_token,
+            "revision_state": revision.state.value,
+            "calculation_revision_id": revision.calculation_revision_id,
+        },
+    )
+
+
+def _as_a_sealed_revision_read_it(existing: Invoice, corrected: Invoice) -> Invoice:
+    """Leave out a collection recorded on an invoice whose devengo does not rest on it."""
+    advance = advance_payment_received_role()
+    if corrected.payment_status is existing.payment_status or advance in (
+        existing.operation_date_role,
+        corrected.operation_date_role,
+    ):
+        return corrected
+    return corrected.model_copy(update={"payment_status": existing.payment_status})
+
+
+def _require_sealed_revisions_undisturbed(
+    existing: Invoice,
+    corrected: Invoice,
+    ports: CatalogueLifecyclePorts,
+) -> None:
+    candidate = _as_a_sealed_revision_read_it(existing, corrected)
+    for citation in _sealed_citations(existing.invoice_id, ports):
+        snapshot = citation[0].invoice_fingerprint
+        version = 1 if snapshot is None else snapshot.field_set_version
+        if invoice_row_fingerprint(candidate, field_set_version=version) != invoice_row_fingerprint(
+            existing, field_set_version=version
+        ):
+            _refuse_sealed_write(existing.invoice_id, citation)
+
+
 def remove_catalogue_invoice(
     *,
     bucket_id: str,
@@ -79,14 +143,18 @@ def remove_catalogue_invoice(
     still carries ``linked_transaction_ids`` is refused: deleting it from the
     catalogue alone would leave the transaction side citing a vanished invoice
     — a one-sided link ``verify_link_consistency`` flags. The operator must
-    unlink first. The write rides the required application-owned mutation
-    capability; no parallel write path is introduced.
+    unlink first. A sealed revision that read the invoice refuses too: its figures
+    would stop matching the catalogue with nothing left to say so. The write rides
+    the required application-owned mutation capability; no parallel write path is
+    introduced.
     """
     resolved: list[Invoice] = []
 
     def _remove(catalogue: InvoiceCatalogue) -> InvoiceCatalogue:
         """Drop the resolved invoice, refusing one that still carries links."""
         invoice = resolve_catalogue_invoice(catalogue, invoice_id)
+        for citation in _sealed_citations(invoice.invoice_id, ports):
+            _refuse_sealed_write(invoice.invoice_id, citation)
         if invoice.linked_transaction_ids:
             linked = ", ".join(invoice.linked_transaction_ids)
             raise InvoiceValidationError(
@@ -202,8 +270,8 @@ def update_catalogue_invoice(
 
     Raises:
         InvoiceNotFoundError: No invoice matches ``invoice_id``.
-        InvoiceValidationError: The patch is empty, or the corrected record
-            would violate an invoice invariant.
+        InvoiceValidationError: The patch is empty, the corrected record would
+            violate an invoice invariant, or it would move what a sealed revision read.
     """
     from .catalogue_creation import build_catalogue_invoice_event
 
@@ -236,6 +304,7 @@ def update_catalogue_invoice(
         payload["linked_transaction_ids"] = existing.linked_transaction_ids
         payload["updated_at"] = commit_time
         corrected = Invoice.model_validate(payload, context=INVOICE_WRITE_ADMISSION)
+        _require_sealed_revisions_undisturbed(existing, corrected, ports)
 
         written.clear()
         written.append(corrected)

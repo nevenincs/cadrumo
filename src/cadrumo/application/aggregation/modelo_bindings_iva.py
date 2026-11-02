@@ -113,6 +113,9 @@ _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
 # Reasons whose marker also carries the issue's own sentence. Their detail names
 # a registry field and token, never a taxpayer figure, and without it the marker
 # could not say which stored value to correct.
+_DATED_ROW_SAMPLE_LIMIT = 3
+_DATED_ROW_PREFIX_LENGTH = 12
+
 _IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
     {
         IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
@@ -148,6 +151,66 @@ def _selected_scope_iva_evidence_diagnostics(
         for issue in issues
         if issue.reason in _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS
     )
+
+
+def _ledger_row_sample(ledger_ids: Sequence[str]) -> str:
+    """Name a few rows by the id prefix the ledger commands accept."""
+    ordered = sorted(ledger_ids)
+    sample = ", ".join(ledger_id[:_DATED_ROW_PREFIX_LENGTH] for ledger_id in ordered[:_DATED_ROW_SAMPLE_LIMIT])
+    elided = len(ordered) - _DATED_ROW_SAMPLE_LIMIT
+    return f"{sample} and {elided} more" if elided > 0 else sample
+
+
+def _iva_row_date_diagnostics(
+    aggregation: IvaLedgerAggregation,
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Say when a row's period rests on the bank date, or on a date after the money.
+
+    Neither refuses. A movement date is right for an operation settled the day it
+    occurs and for a collected pago anticipado, so only the operator can tell. The
+    one-sided invoice screen cannot catch this: it reports invoice figures above
+    ledger figures, so the quarter that receives a late-collected sale passes.
+    """
+    found: list[CalculationSourceDiagnostic] = []
+    if aggregation.movement_dated_ledger_ids:
+        found.append(
+            CalculationSourceDiagnostic(
+                reason="iva_row_placed_on_movement_date",
+                source_kind="ledger_iva_aggregation",
+                resolver_id=resolver_id,
+                message=(
+                    f"{len(aggregation.movement_dated_ledger_ids)} ledger row(s) were placed in this period on their "
+                    f"bank movement date because no operation date is recorded: "
+                    f"{_ledger_row_sample(aggregation.movement_dated_ledger_ids)}. LIVA art. 75 fixes the devengo by "
+                    "the operation, not the collection, so a sale near a period end can belong to the previous one"
+                ),
+                remedy=(
+                    "Record the operation date on each row. For a pago anticipado, art. 75.Dos dates the amount "
+                    "received at its collection, so record the collection date"
+                ),
+                asserted_legal_refs=("ley-37-1992:art-75",),
+            )
+        )
+    if aggregation.operation_after_movement_ledger_ids:
+        found.append(
+            CalculationSourceDiagnostic(
+                reason="iva_operation_date_after_movement",
+                source_kind="ledger_iva_aggregation",
+                resolver_id=resolver_id,
+                message=(
+                    f"{len(aggregation.operation_after_movement_ledger_ids)} ledger row(s) record an operation date "
+                    f"later than their bank movement: "
+                    f"{_ledger_row_sample(aggregation.operation_after_movement_ledger_ids)}. If that money was a pago "
+                    "anticipado, LIVA art. 75.Dos dates the amount received at its collection, except for art. 25 "
+                    "supplies"
+                ),
+                remedy="If the row is a pago anticipado, record the collection date as its operation date",
+                asserted_legal_refs=("ley-37-1992:art-75",),
+            )
+        )
+    return tuple(found)
 
 
 def _residue_categories(observations: Sequence[IvaLedgerObservation]) -> str:
@@ -288,6 +351,7 @@ class LedgerIvaAggregationSourceResolver:
                 source_kind="ledger_iva_aggregation",
                 resolver_id=self.resolver_id,
             )
+            + _iva_row_date_diagnostics(aggregation, resolver_id=self.resolver_id)
             + reverse_charge_underivable_diagnostics(
                 silence_report.reverse_charge_underivable,
                 resolver_id=self.resolver_id,

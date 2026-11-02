@@ -3190,6 +3190,9 @@ cli:
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       notes_help: Les teves notes, desades amb el moviment
+      operation_date_help: Data de la meritació de l'IVA segons l'art. 75 LIVA, que
+        tria el període de l'IVA (AAAA-MM-DD). En una bestreta, la data del cobrament.
+        Si l'omets es fa servir la data bancària i se t'avisa.
       prorrata_reference_help: Referència de prorrata d'IVA
       prorrata_sector_help: Identificador del sector diferenciat (arts. 9.1.c i 101
         LIVA) al qual pertany aquest input; ha de coincidir amb un sector ja declarat.
@@ -3545,6 +3548,7 @@ cli:
       'no': 'No'
       notes: Notes
       notice: Avís
+      operation_date: Data de l'operació
       output: Sortida
       parent_id: id_pare
       pending: Pendents de revisió
@@ -3723,6 +3727,8 @@ cli:
       iva_amount_help: Nou import d'IVA
       iva_rate_help: Nou tipus d'IVA com a decimal
       notes_help: Les teves notes noves
+      operation_date_help: Nova data de la meritació de l'IVA segons l'art. 75 LIVA
+        (AAAA-MM-DD). En una bestreta, la data del cobrament.
       taxable_base_help: Nou import de base imposable
       value_date_help: Nova data valor (AAAA-MM-DD)
     view:

@@ -488,6 +488,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.field.investment_asset_id",
         "desktop.ledger.field.input_classification",
         "desktop.ledger.field.m210_income_classification",
+        "desktop.ledger.field.operation_date",
         "desktop.ledger.field.own_account_id",
         "desktop.ledger.field.prorrata_reference",
         "desktop.ledger.field.prorrata_sector_id",

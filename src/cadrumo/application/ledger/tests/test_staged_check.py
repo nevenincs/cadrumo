@@ -82,6 +82,10 @@ def _route_of(field: str, *, clear: bool = False, classified: bool = True) -> st
         ("booked_date", False, True, "update"),
         ("booked_date", True, True, "cannot_clear"),
         ("value_date", True, True, "update"),
+        # A devengo date is an update's alone, and a blank clears it back to the fallback.
+        ("operation_date", False, True, "update"),
+        ("operation_date", True, True, "update"),
+        ("operation_date", False, False, "update"),
         # The bulk takes a set on a classified row and never carries a clear.
         ("category_id", False, True, "bulk"),
         ("category_id", True, True, "classify"),
@@ -229,6 +233,20 @@ def test_a_transfer_is_held_back_for_each_tax_field_it_carries() -> None:
     assert "category_id" in plain.transfer_locked_fields
     assert "business_pct" in plain.transfer_locked_fields
     assert plain.tax_set_skip == "transfer"
+
+
+def test_an_operation_date_is_read_back_held_back_on_a_transfer_and_needs_no_classification() -> None:
+    staged = check_stored_row(_row(("operation_date", "2026-03-30")), _stored())
+    assert staged.blockers == ()
+    assert staged.classifying_fields == ()
+    held = check_stored_row(
+        _row(("direction", "INTERNAL_TRANSFER"), ("operation_date", "2026-03-30")),
+        _stored(),
+    )
+    assert next(blocker for blocker in held.blockers if blocker.kind == "transfer_with_tax").fields == (
+        "operation_date",
+    )
+    assert "operation_date" in held.transfer_locked_fields
 
 
 def test_the_writer_refuses_the_core_of_what_a_transfer_is_held_back_for() -> None:

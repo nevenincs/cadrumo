@@ -28,7 +28,12 @@ from uuid import UUID
 from cadrumo.application.operations.models import OperationId
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import (
+    ACCEPT_REFUSALS_THAT_KEEP_LISTENING,
+    RefusalCode,
+    RefusalError,
+    ServerHello,
+)
 from cadrumo_client.contracts.view_stream import (
     ViewClose,
     ViewClosed,
@@ -325,7 +330,7 @@ class WorkerViewStream:
             try:
                 channel = self._endpoint.accept(timeout=None, wakes=(self._stopping,))
             except RefusalError as error:
-                if error.reason in {RefusalCode.CONNECTION_CLOSED, RefusalCode.TIMEOUT}:
+                if error.reason in ACCEPT_REFUSALS_THAT_KEEP_LISTENING:
                     continue
                 self._stop()
                 return

@@ -173,6 +173,7 @@ export const FIELDS_LOCKED_BY_DIRECTION: Readonly<
     "iva_amount",
     "iva_category",
     "iva_rate",
+    "operation_date",
     "taxable_base",
     "usage_ratio_id",
   ],
@@ -292,6 +293,7 @@ export const MONTH_CODES = [
 export const LEDGER_UPDATE_FIELDS = [
   "booked_date",
   "value_date",
+  "operation_date",
   "amount",
   "direction",
   "currency",

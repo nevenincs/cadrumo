@@ -5,12 +5,22 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Protocol
 
+from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.work_unit import WorkUnit
 from .catalogue_creation_ports import (
     CatalogueInvoiceAuditCommitPort,
     CatalogueInvoiceEventRepositoryPort,
     CatalogueInvoiceRepositoryPort,
 )
 from .catalogue_reads_ports import InvoiceCatalogueReadPorts
+
+
+class SealedRevisionReaderPort(Protocol):
+    """Read the sealed revisions of one bucket with the work unit each belongs to."""
+
+    def sealed_revisions(self) -> tuple[tuple[CalculationRevision, WorkUnit], ...]:
+        """Return every sealed revision whose work unit is in this bucket."""
+        ...
 
 
 @dataclass(frozen=True, slots=True)
@@ -21,6 +31,7 @@ class CatalogueLifecyclePorts:
     invoice_repository: CatalogueInvoiceRepositoryPort
     event_repository: CatalogueInvoiceEventRepositoryPort
     audit_commit: CatalogueInvoiceAuditCommitPort
+    sealed_revisions: SealedRevisionReaderPort
 
 
 class CatalogueLifecyclePortsFactory(Protocol):
@@ -31,4 +42,4 @@ class CatalogueLifecyclePortsFactory(Protocol):
         ...
 
 
-__all__ = ["CatalogueLifecyclePorts", "CatalogueLifecyclePortsFactory"]
+__all__ = ["CatalogueLifecyclePorts", "CatalogueLifecyclePortsFactory", "SealedRevisionReaderPort"]

@@ -831,6 +831,11 @@ application:
           linked to transactions: %{linked_transaction_ids}. There is no unlink command:
           remove those transactions with `aeat app ledger remove`, which releases
           the link, then remove the invoice.'
+        sealed_invoice_refused: Invoice %{invoice_id} was read by the Modelo %{modelo}
+          of %{filing_year} %{period} (%{revision_state}, revision %{calculation_revision_id}),
+          so this change is refused to keep those figures true. If it has not been
+          filed, discard that work with `aeat app modelo work discard` and calculate
+          again. If it has, issue a corrective invoice and file an amendment.
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -1243,6 +1248,17 @@ application:
           missing proof.
         what_to_do: Check the VAT records of the whole year, add the missing proof,
           then calculate again.
+      iva_operation_date_after_movement:
+        what: Some ledger rows have an operation date after their bank date. If that
+          money was an advance, its IVA fell due when it was collected.
+        what_to_do: For an advance, set the operation date to the collection date
+          and record the balance as its own row, then calculate again.
+      iva_row_placed_on_movement_date:
+        what: Some ledger rows have no operation date, so their bank date chose the
+          IVA period. IVA falls due when the operation takes place, not when the money
+          moves.
+        what_to_do: Add the operation date to rows near the end of a period, then
+          calculate again.
       iva_selected_scope_evidence_failure:
         what: The records behind the VAT in this declaration are missing proof or
           do not add up.

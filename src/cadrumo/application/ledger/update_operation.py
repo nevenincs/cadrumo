@@ -138,7 +138,7 @@ def _normalise_update_irpf_category(patch_values: dict[str, object], *, operatio
 
 
 def _normalise_update_dates(patch_values: dict[str, object]) -> None:
-    for field_name in ("booked_date", "value_date"):
+    for field_name in ("booked_date", "value_date", "operation_date"):
         raw_date = patch_values.get(field_name)
         if isinstance(raw_date, str):
             parsed_date = parse_iso8601_date(raw_date)

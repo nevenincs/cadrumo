@@ -32,6 +32,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
+from ...domain.iva.schema import is_iva_cash_accounting_none
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_sources import ActivityAssetConsumption
 from ...domain.modelos.verification_report import (
@@ -40,7 +41,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingSeverity,
 )
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
-from ..aggregation.ledger_filing_snapshot import evaluate_ledger_filing_staleness
+from ..aggregation.ledger_filing_snapshot import OPERATION_DATE_FIELD_SET_VERSION, evaluate_ledger_filing_staleness
 from ..aggregation.ledger_membership import (
     LedgerSourceMembership,
     consumed_inventory_rows,
@@ -49,7 +50,9 @@ from ..aggregation.ledger_membership import (
 
 if TYPE_CHECKING:
     from ...domain.modelos.calculation_revision import CalculationRevision
+    from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
     from ...domain.modelos.work_unit import WorkUnit
+    from ...domain.transactions.models import TransactionCatalogue
 
 #: Grounding for the drift refusal. A declaración must reflect the operator's
 #: real accounting records (LIVA art. 164.1.4 the IVA declaration duty, RD
@@ -171,11 +174,12 @@ def _transaction_drift_findings(
     ``transaction_repository`` is the live
     :class:`TransactionCatalogueRepositoryProtocol` the evidence gate reads.
     The caller supplies the repository bound to the work unit's bucket, so the
-    live side is never silently absent. The
-    anchor's fingerprint covers tax facts only, so a reclassify moves it and an
-    evidence attach does not — which is what lets this refuse the stale-draft
-    path without refusing the attach-and-re-verify recovery the
-    deductible-evidence promotion depends on.
+    live side is never silently absent. The anchor's field set says what it can
+    see: from version 5 a change to the deduction evidence moves it, attaching
+    included, so the recovery from a deductible-evidence refusal is to attach and
+    calculate again. An older anchor keeps its own narrower answer, except that an
+    operation date written after it was taken is reported below: nothing could
+    write one on a general-regime row when that anchor was taken.
 
     A ledger-derived draft with NO anchor is refused on the same terms rather
     than passed. It was calculated before the anchor existed, so whether its
@@ -216,7 +220,13 @@ def _transaction_drift_findings(
         )
         _observe_drift_finding(blocking_finding_observer, finding, False, (), (), added)
         return [finding]
-    verdict = evaluate_ledger_filing_staleness(anchor, tx_repo.load())
+    catalogue = tx_repo.load()
+    verdict = evaluate_ledger_filing_staleness(anchor, catalogue)
+    newly_dated = _operation_dated_since_older_anchor(anchor, catalogue)
+    if newly_dated:
+        verdict = verdict.model_copy(
+            update={"is_stale": True, "changed": tuple(sorted({*verdict.changed, *newly_dated}))},
+        )
     if not verdict.is_stale and not added:
         return []
     finding = _drift_finding(
@@ -231,6 +241,25 @@ def _transaction_drift_findings(
         blocking_finding_observer, finding, True, tuple(verdict.changed), tuple(verdict.removed), added
     )
     return [finding]
+
+
+def _operation_dated_since_older_anchor(
+    anchor: LedgerFilingSnapshot,
+    catalogue: TransactionCatalogue,
+) -> tuple[str, ...]:
+    """Name anchored general-regime rows carrying an operation date a pre-version-4 anchor cannot see."""
+    if anchor.fingerprint_field_set_version >= OPERATION_DATE_FIELD_SET_VERSION:
+        return ()
+    anchored = {row.transaction_id for row in anchor.rows}
+    return tuple(
+        sorted(
+            transaction.transaction_id
+            for transaction in catalogue.values()
+            if transaction.transaction_id in anchored
+            and transaction.operation_date is not None
+            and is_iva_cash_accounting_none(transaction.cash_accounting_treatment)
+        )
+    )
 
 
 def _inventory_drift_finding(

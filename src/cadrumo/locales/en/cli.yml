@@ -2971,6 +2971,9 @@ cli:
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
       notes_help: Your notes, stored with the transaction
+      operation_date_help: Date the IVA fell due under LIVA art. 75, which picks the
+        IVA period (YYYY-MM-DD). For an advance, the collection date. Leave it out
+        and the bank date is used, with a warning.
       prorrata_reference_help: IVA prorrata substrate reference
       prorrata_sector_help: Differentiated-sector id (LIVA arts. 9.1.c / 101) to which
         this input belongs; it must match an already declared sector.
@@ -3309,6 +3312,7 @@ cli:
       'no': 'No'
       notes: Notes
       notice: Notice
+      operation_date: Operation date
       output: Output
       parent_id: Parent transaction id
       pending: Pending review
@@ -3484,6 +3488,8 @@ cli:
       iva_amount_help: New IVA amount
       iva_rate_help: New IVA rate as a decimal fraction
       notes_help: Your new notes
+      operation_date_help: New date the IVA fell due under LIVA art. 75 (YYYY-MM-DD).
+        For an advance, the collection date.
       taxable_base_help: New IVA-exclusive base amount
       value_date_help: New value date (YYYY-MM-DD)
     view:

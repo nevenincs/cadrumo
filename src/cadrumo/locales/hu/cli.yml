@@ -3158,6 +3158,9 @@ cli:
       iva_amount_help: Opcionális IVA-összeg a soron.
       iva_rate_help: Opcionális IVA-kulcs tizedes törtként.
       notes_help: A megjegyzéseid, a tranzakcióval együtt tárolva.
+      operation_date_help: Az áfa esedékessége a LIVA 75. cikke szerint, ez választja
+        ki az áfaidőszakot (ÉÉÉÉ-HH-NN). Előlegnél a beérkezés napja. Ha kihagyod,
+        a banki dátum számít, és figyelmeztetést kapsz.
       prorrata_reference_help: IVA prorrata alapjának hivatkozása.
       prorrata_sector_help: Annak a megkülönböztetett szektornak az azonosítója (LIVA
         9.1.c és 101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy már
@@ -3507,6 +3510,7 @@ cli:
       'no': Nem
       notes: Megjegyzések
       notice: Értesítés
+      operation_date: Ügylet dátuma
       output: Kimenet
       parent_id: Szülő tranzakcióazonosító
       pending: Felülvizsgálatra vár
@@ -3694,6 +3698,8 @@ cli:
       iva_amount_help: Új IVA-összeg.
       iva_rate_help: Új IVA-kulcs tizedes törtként.
       notes_help: Az új megjegyzéseid.
+      operation_date_help: Az áfa új esedékessége a LIVA 75. cikke szerint (ÉÉÉÉ-HH-NN).
+        Előlegnél a beérkezés napja.
       taxable_base_help: Új ÁFA-mentes alapösszeg.
       value_date_help: Új értékdátum (ÉÉÉÉ-HH-NN).
     view:

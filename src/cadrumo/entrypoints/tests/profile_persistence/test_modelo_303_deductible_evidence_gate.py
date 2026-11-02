@@ -406,6 +406,28 @@ def _calculate_irene_revision(
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
 
+def _recalculate_after_a_ledger_write(
+    revision: CalculationRevision, *, wu_repo: WorkUnitCatalogueRepository
+) -> CalculationRevision:
+    """Take a new baseline: the facts moved, so the draft must read them again."""
+    work_unit = wu_repo.load().get(revision.work_unit_id)
+    assert work_unit is not None
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
+            actor="operator",
+            binding_values={
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            clock=_CALCULATED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:m303-deductible-evidence-gate", operation=operation
+            ),
+        ).revision
+
+
 def _persist_legacy_verified_revision(
     revision: CalculationRevision,
     *,
@@ -589,6 +611,10 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         reloaded = tx_repo.load().get(purchase.transaction_id)
         assert reloaded is not None
         assert reloaded.purchase_invoice_evidence_id == evidence.record.evidence_id
+        assert (
+            _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo).calculation_revision_id
+            == revision.calculation_revision_id
+        )
 
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision_with_preconditions(
@@ -712,6 +738,9 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         reloaded = tx_repo.load().get(purchase.transaction_id)
         assert reloaded is not None
         assert reloaded.invoice_id == created.invoice.invoice_id
+        # An invoice entered in the period after the calculation moves the invoice
+        # baseline, so the draft reads the catalogue again before it can be verified.
+        revision = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
 
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision_with_preconditions(
@@ -779,10 +808,10 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         assert tuple(filing_repo.load().values()) != ()
 
 
-def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
+def test_a_blocked_verify_is_recoverable_by_attaching_recalculating_and_verifying_again(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The recovery the whole promotion rests on: block, attach, re-verify, grant.
+    """The recovery the whole promotion rests on: block, attach, recalculate, grant.
 
     The sibling test above attaches BEFORE the first verify, which was the only
     ordering that ever worked. This one drives the ordering an operator actually
@@ -794,6 +823,10 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
     It also pins that the idempotent re-verify guard does not fire here. That
     guard keys on a non-BORRADOR state, so a blocked revision must stay BORRADOR
     for the second verify to do real work rather than return the first report.
+
+    Evidence is a watched fact, so verifying straight after the attach reports
+    drift. Recalculating the same figures keeps the content-addressed id and moves
+    only the draft's baseline, which is what leaves the path recoverable.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
@@ -844,6 +877,12 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
                 ports=ports,
                 occurred_at=_VERIFIED_AT,
             )
+
+        drifted = _verify()
+        assert drifted.granted_verificado_completo is False
+        assert any("drift" in finding.message_locale_key for finding in drifted.findings)
+        recalculated = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
+        assert recalculated.calculation_revision_id == revision.calculation_revision_id
 
         granted = _verify()
         assert granted.granted_verificado_completo is True

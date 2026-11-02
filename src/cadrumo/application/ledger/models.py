@@ -193,6 +193,10 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     bucket_id: BucketId
     booked_date: date
     value_date: date | None = None
+    #: The LIVA art. 75 devengo date of what this row settles, as the operator
+    #: states it. Absent means the IVA placement falls back to the bank movement
+    #: date and says so. Never derived from a bank date.
+    operation_date: date | None = None
     amount: Decimal
     currency: IsoCurrencyCode = DEFAULT_CURRENCY
     direction: TransactionDirection
@@ -287,6 +291,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
             )
         forbidden = {
             "category_id": self.category_id,
+            "operation_date": self.operation_date,
             "iva_category": self.iva_category,
             "deduction_fact_kind": self.deduction_fact_kind,
             "investment_asset_id": self.investment_asset_id,
@@ -315,6 +320,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
 
     booked_date: date | None = None
     value_date: date | None = None
+    operation_date: date | None = None
     amount: Decimal | None = None
     # The create command validates this and the patch did not, so an operator
     # could not CREATE a row with a malformed currency but could EDIT one into
@@ -393,6 +399,7 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     date: IsoDateText
     booked_date: IsoDateText
     value_date: str | None = None
+    operation_date: str | None = None
     amount: str = Field(min_length=1)
     currency: IsoCurrencyCode
     direction: str = Field(min_length=1)
@@ -942,6 +949,7 @@ class LedgerExportRow(BaseModel):
     invoice_id: str = ""
     booked_date: IsoDateText
     value_date: str = ""
+    operation_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
     currency: IsoCurrencyCode
@@ -987,7 +995,7 @@ class LedgerExportRow(BaseModel):
             raise ValueError("must be an ISO-8601 date")
         return value
 
-    @field_validator("value_date")
+    @field_validator("value_date", "operation_date")
     @classmethod
     @pydantic_validation_boundary
     def _validate_optional_iso_date(cls, value: str) -> str:

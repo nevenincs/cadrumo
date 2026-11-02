@@ -8,6 +8,7 @@ depends only on these protocol types, not on concrete adapter classes.
 from __future__ import annotations
 
 from collections.abc import Iterator, Mapping
+from datetime import date
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
@@ -35,6 +36,11 @@ class ParsedLedgerRowProtocol(Protocol):
     @property
     def direction(self) -> TransactionDirection:
         """Return the authoritative flow direction for this row."""
+        ...
+
+    @property
+    def operation_date(self) -> date | None:
+        """Return the devengo date only when the source states exactly that."""
         ...
 
     @property

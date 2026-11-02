@@ -885,6 +885,12 @@ application:
           continuï vinculada a transaccions: %{linked_transaction_ids}. No hi ha cap
           ordre de desvinculació: elimina aquestes transaccions amb `aeat app ledger
           remove`, cosa que allibera el vincle, i elimina després la factura.'
+        sealed_invoice_refused: La factura %{invoice_id} la va llegir el Model %{modelo}
+          de %{filing_year} %{period} (%{revision_state}, revisió %{calculation_revision_id}),
+          així que es rebutja aquest canvi perquè aquestes xifres continuïn sent certes.
+          Si no s'ha presentat, descarta aquest treball amb `aeat app modelo work
+          discard` i torna a calcular. Si s'ha presentat, emet una factura rectificativa
+          i presenta una complementària o substitutiva.
     linking:
       errors:
         linked_invoice_not_found: No s'ha trobat la factura %{invoice_id} després
@@ -1320,6 +1326,18 @@ application:
           justificant.
         what_to_do: Revisa els registres d'IVA de tot l'any, afegeix el justificant
           que falti i torna a calcular.
+      iva_operation_date_after_movement:
+        what: Algunes files del llibre tenen una data de l'operació posterior a la
+          bancària. Si aquests diners eren una bestreta, el seu IVA es va meritar
+          en cobrar-la.
+        what_to_do: En una bestreta, posa com a data de l'operació la del cobrament,
+          registra la resta en una fila pròpia i torna a calcular.
+      iva_row_placed_on_movement_date:
+        what: Algunes files del llibre no tenen la data de l'operació, així que la
+          seva data bancària ha triat el període de l'IVA. L'IVA es merita quan es
+          fa l'operació, no quan es mou el diner.
+        what_to_do: Afegeix la data de l'operació a les files de final de període
+          i torna a calcular.
       iva_selected_scope_evidence_failure:
         what: Els registres que sustenten l'IVA d'aquesta declaració no tenen justificant
           o no quadren.

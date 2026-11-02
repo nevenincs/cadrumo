@@ -20,6 +20,7 @@ _MAX_CATEGORIES: Final = 256
 StageFieldName = Literal[
     "booked_date",
     "value_date",
+    "operation_date",
     "amount",
     "direction",
     "currency",
@@ -46,6 +47,7 @@ StageFieldName = Literal[
 DraftFieldName = Literal[
     "booked_date",
     "value_date",
+    "operation_date",
     "amount",
     "direction",
     "currency",
@@ -93,7 +95,7 @@ class LedgerStagedRow(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     transaction_id: _Key
-    cells: Annotated[tuple[LedgerStagedCell, ...], Field(max_length=23)] = ()
+    cells: Annotated[tuple[LedgerStagedCell, ...], Field(max_length=24)] = ()
     evidence_staged: bool = False
     m210_staged: bool = False
 
@@ -119,7 +121,7 @@ class LedgerStagedDraft(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     key: _Key
-    fields: Annotated[tuple[LedgerStagedDraftField, ...], Field(max_length=24)] = ()
+    fields: Annotated[tuple[LedgerStagedDraftField, ...], Field(max_length=25)] = ()
 
 
 class LedgerStagedCheckRequest(BaseModel):

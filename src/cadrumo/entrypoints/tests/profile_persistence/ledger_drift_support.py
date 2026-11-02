@@ -26,6 +26,7 @@ from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepo
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....application.calculations.tests.filing_evidence import general_m303_filing_evidence
 from ....application.modelo.calculation_bucket_actions import (
+    BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
 from ....application.modelo.work_lifecycle import create_work_unit
@@ -37,6 +38,7 @@ from ....domain.deadlines.models import IVARegime, TaxpayerProfile
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
 from ....domain.modelos.calculation_revision import CalculationRevision
+from ....domain.modelos.work_unit import WorkUnit
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
@@ -86,13 +88,13 @@ def _store_profile(objects: SecureObjectRepository) -> None:
     )
 
 
-def _wallet_decision() -> IvaCompensationReconciliationDecision:
+def _wallet_decision(period: str = _PERIOD) -> IvaCompensationReconciliationDecision:
     return IvaCompensationReconciliationDecision(
         taxpayer_nif=TAX_ID,
         target_year=_YEAR,
-        target_period=Period.from_year_and_code(_YEAR, _PERIOD),
+        target_period=Period.from_year_and_code(_YEAR, period),
         target_registry_snapshot_ref=published_authority_operation()
-        .snapshot("303", filing_year=_YEAR, period=_PERIOD)
+        .snapshot("303", filing_year=_YEAR, period=period)
         .snapshot_ref,
         source_registry_snapshot_refs=(),
         selected_authority="aeat_wallet",
@@ -130,18 +132,20 @@ def raw_transaction(provider_id: str, *, booked_date: date, amount: Decimal) -> 
     )
 
 
-def _iva_transaction(
+def iva_transaction(
     provider_id: str,
     *,
     direction: TransactionDirection,
     taxable_base: Decimal,
+    booked_date: date = date(_YEAR, 2, 15),
+    operation_date: date | None = None,
 ) -> Transaction:
     iva_amount = (taxable_base * _IVA_RATE).quantize(Decimal("0.01"))
-    booked_date = date(_YEAR, 2, 15)
     return Transaction.model_validate(
         {
             "raw": raw_transaction(provider_id, booked_date=booked_date, amount=taxable_base + iva_amount),
             "direction": direction,
+            "operation_date": operation_date,
             "group_label": None,
             "source_jurisdiction": "ES",
             "business_classification": BusinessClassification.BUSINESS,
@@ -189,12 +193,35 @@ def _repositories(
     )
 
 
+def calculate_irene(
+    work_unit: WorkUnit, *, decision: IvaCompensationReconciliationDecision | None = None
+) -> BucketAggregationCalculationResult:
+    """Run the real bucket calculation, diagnostics included; a later run reads the persisted decision."""
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit.work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=BUCKET_ID, operation=operation),
+            actor="operator",
+            binding_values={
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            iva_compensation_decision=decision,
+            clock=_CALCULATED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                work_unit.period, reference="test:m303-deductible-evidence-gate", operation=operation
+            ),
+        )
+
+
 def calculate_irene_revision(
     objects: SecureObjectRepository,
     *,
     operation: PinnedAuthorityOperation,
     empty: bool = False,
     held_back_purchase: bool = False,
+    rows: tuple[Transaction, ...] | None = None,
+    period: str = _PERIOD,
 ) -> tuple[
     CalculationRevision,
     Transaction,
@@ -209,51 +236,45 @@ def calculate_irene_revision(
     """Seed Irene's deductible-evidence draft and return its repositories."""
     _store_profile(objects)
     wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = _repositories(objects)
-    sale = _iva_transaction(
+    sale = iva_transaction(
         "irene-sale-no-evidence",
         direction=TransactionDirection.INCOMING,
         taxable_base=Decimal("1000.00"),
     )
-    purchase = _iva_transaction(
+    purchase = iva_transaction(
         "irene-purchase-no-evidence",
         direction=TransactionDirection.OUTGOING,
         taxable_base=Decimal("200.00"),
     )
     if held_back_purchase:
         purchase = purchase.model_copy(update={"deduction_fact_kind": None, "deduction_provenance": None})
-    tx_repo.save(TransactionCatalogue.from_transactions(() if empty else (sale, purchase)))
-    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=_PERIOD)
+    seeded = rows if rows is not None else (() if empty else (sale, purchase))
+    tx_repo.save(TransactionCatalogue.from_transactions(seeded))
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period=period)
     work_unit = create_work_unit(
         bucket_id=BUCKET_ID,
         modelo="303",
         filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
+        period=Period.from_year_and_code(_YEAR, period),
         revision_id=snapshot.revision.id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=event_repo),
         clock=_T0,
         operation=operation,
     )
-    decision = _wallet_decision()
+    decision = _wallet_decision(period)
     from ....adapters.persistence.profile.calculation_observations import IvaWalletDecisionRepository
 
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
-    with bundled_indexed_authority().operation() as operation:
-        calculation_ports = build_calculation_action_ports(bucket_id=BUCKET_ID, operation=operation)
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
-            work_unit.work_unit_id,
-            ports=calculation_ports,
-            actor="operator",
-            binding_values={
-                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
-                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
-            },
-            iva_compensation_decision=decision,
-            clock=_CALCULATED_AT,
-            filing_instance_evidence=general_m303_filing_evidence(
-                work_unit.period, reference="test:m303-deductible-evidence-gate", operation=operation
-            ),
-        ).revision
+    revision = calculate_irene(work_unit, decision=decision).revision
     return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
 
-__all__ = ["BUCKET_ID", "TAX_ID", "calculate_irene_revision", "raw_transaction", "workflow_profile"]
+__all__ = [
+    "BUCKET_ID",
+    "TAX_ID",
+    "calculate_irene",
+    "calculate_irene_revision",
+    "iva_transaction",
+    "raw_transaction",
+    "workflow_profile",
+]

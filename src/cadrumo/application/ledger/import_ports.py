@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from datetime import date
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 
@@ -36,6 +37,7 @@ class LedgerParsedRow:
     raw: RawTransaction
     direction: TransactionDirection
     own_account_id: str | None = None
+    operation_date: date | None = None
 
 
 @dataclass(frozen=True, slots=True)
