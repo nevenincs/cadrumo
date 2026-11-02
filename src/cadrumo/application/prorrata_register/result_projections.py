@@ -172,6 +172,10 @@ def project_prorrata_list_result(
         sectors=tuple(
             _ProrrataSectorDefinitionProjection.from_definition(sector) for sector in register.sector_definitions
         ),
+        gross_declarations=tuple(
+            _ProrrataGrossDeclarationProjection.from_declaration(declaration)
+            for declaration in register.gross_declarations
+        ),
         count=len(register.entries),
     )
 

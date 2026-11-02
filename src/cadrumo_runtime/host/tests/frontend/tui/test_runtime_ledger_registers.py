@@ -479,6 +479,7 @@ _SUCCESSES: tuple[_Case, ...] = (
             profile_id=_PROFILE_ID,
             entries=(listed_prorrata_entry(synthetic_prorrata_entry(2025)),),
             sectors=(),
+            gross_declarations=(),
             count=1,
         ),
         OperationEffect.NONE,

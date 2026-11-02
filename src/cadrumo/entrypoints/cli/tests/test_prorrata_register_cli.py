@@ -95,7 +95,7 @@ def native_prorrata_profile(tmp_path: Path) -> Iterator[RegisteredCliProfile]:
         yield profile
 
 
-def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
+def _invoke(profile: RegisteredCliProfile, *command: str, output_format: str = "json") -> Result:
     if profile.label is None:
         raise AssertionError("native prorrata profile must be registered before invocation")
     close_active_bucket_session()
@@ -104,7 +104,7 @@ def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
             "--language",
             "en",
             "--format",
-            "json",
+            output_format,
             "--profile",
             profile.label,
             "--profile-secrets-stdin",
@@ -276,6 +276,35 @@ def test_native_gross_declaration_declares_replaces_refuses_and_removes(
         reason="gross_declaration_absent",
         refusal_code="REFUSED_PROFILE_PRORRATA_REGISTER_VALIDATION",
     )
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_native_list_shows_the_declared_gross_cuotas_in_json_and_text(
+    native_prorrata_profile: RegisteredCliProfile,
+) -> None:
+    empty = ProrrataListResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")))
+    )
+    assert empty.gross_declarations == []
+
+    declared = ProrrataDeclareGrossResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_declare_gross(native_prorrata_profile, "400.00")))
+    ).declaration
+    listed = ProrrataListResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")))
+    )
+    assert listed.gross_declarations == [declared]
+    assert declared.gross_cuota == "400.00"
+    assert declared.provenance == "operator_declared"
+
+    text = _invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list", output_format="text")
+    assert text.exit_code == 0, text.output
+    expected_line = (
+        f"gross	{_GROSS_YEAR}	1T	sector=	gross_cuota=400.00	provenance=operator_declared	"
+        f"evidence_reference=operator-evidence:303-1T	declared_at={declared.declared_at}"
+    )
+    assert expected_line in text.output.splitlines()
 
 
 @pytest.mark.windows_only

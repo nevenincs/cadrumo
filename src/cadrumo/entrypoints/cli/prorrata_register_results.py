@@ -182,11 +182,16 @@ class ProrrataRemoveGrossResult(OutputSchema):
 
 
 class ProrrataListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger prorrata list``."""
+    """JSON envelope for ``aeat app ledger prorrata list``.
+
+    ``gross_declarations`` are the operator's own earlier-period gross cuota
+    statements; they are not ledger facts or AEAT observations.
+    """
 
     bucket_id: BucketId
     entries: list[ProrrataEntryPayload]
     sectors: list[SectorDefinitionPayload]
+    gross_declarations: list[ProrrataGrossDeclarationPayload]
     count: int
 
 

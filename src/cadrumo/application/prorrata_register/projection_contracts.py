@@ -268,13 +268,14 @@ class ProrrataRefusalProjection(BaseModel):
 
 
 class ProrrataListProjection(BaseModel):
-    """Complete all-period list result for the profile's prorrata singleton."""
+    """Complete all-period list result for the profile's prorrata singleton, with its declared gross cuotas."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     entries: tuple[ProrrataListedEntryProjection, ...]
     sectors: tuple[ProrrataSectorDefinitionProjection, ...]
+    gross_declarations: tuple[ProrrataGrossDeclarationProjection, ...]
     count: NonNegativeInt
 
     @model_validator(mode="after")

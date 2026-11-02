@@ -194,6 +194,44 @@ def test_a_calculation_note_about_records_leads_to_the_ledger(operation: PinnedA
 
 
 @pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.ES])
+def test_a_calculation_note_without_facts_says_its_kind_then_what_its_resolver_wrote(
+    operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> None:
+    """The catalogue sentence stays first in the form's language; the resolver's own account follows as written."""
+    say = _say(language)
+    written = "Liquidation 1T declared deductible input VAT, but the ledger holds none for it."
+    note = ModeloFormCalculationNote(
+        reason="source_issue", attention=note_attention("source_issue", box=None), message=written
+    )
+    form = built_form(operation, "130", 2026, "1T", language=language).model_copy(update={"calculation_notes": (note,)})
+
+    (line,) = form_issue_lines(form, language)
+
+    assert line.from_calculation
+    assert line.message == say(
+        what_locale_key("source_issue"), box=say("application.modelo.finding_fact.box_unnumbered")
+    )
+    assert line.detail == written
+
+
+def test_the_public_read_carries_each_notes_written_account(operation: PinnedAuthorityOperation) -> None:
+    """The workbench read a frontend draws carries the note's message on the note and on its line."""
+    written = "The earlier liquidations this regularisation reads are missing."
+    note = ModeloFormCalculationNote(
+        reason="source_issue", attention=note_attention("source_issue", box=None), message=written
+    )
+    form = built_form(operation, "130", 2026, "1T").model_copy(update={"calculation_notes": (note,)})
+
+    projection = project_modelo_workbench_form(
+        UUID("13000000-0000-4000-8000-000000000456"), form.work_unit_id, read_before_calculation(form, operation)
+    )
+
+    assert [shown.message for shown in projection.form.form.calculation_notes] == [written]
+    assert [line.detail for line in projection.issue_lines if line.from_calculation] == [written]
+    assert type(projection).model_validate_json(projection.model_dump_json()) == projection
+
+
+@pytest.mark.parametrize("language", [OutputLanguage.EN, OutputLanguage.ES])
 def test_the_verdict_says_what_the_check_concluded(
     operation: PinnedAuthorityOperation, language: OutputLanguage
 ) -> None:

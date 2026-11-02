@@ -324,10 +324,22 @@ export type ProrrataListedEntry = ProrrataEntry & {
   reference_id: string | null;
   reference_kind: string | null;
 };
+/** A gross deductible cuota the operator declared for an earlier
+ * liquidation the ledger holds no input for, with the evidence it rests on. */
+export type ProrrataGrossDeclaration = {
+  ejercicio: number;
+  period: string;
+  sector_id: string | null;
+  gross_cuota: PublicDecimal;
+  evidence_reference: string;
+  provenance: "operator_declared";
+  declared_at: string;
+};
 export type ProrrataListResult = {
   profile_id: string;
   entries: ProrrataListedEntry[];
   sectors: ProrrataSector[];
+  gross_declarations: ProrrataGrossDeclaration[];
   count: number;
 };
 export type ProrrataFinding = {
@@ -351,7 +363,10 @@ export type ProrrataRefusalReason =
   | "seed_existing_blocked"
   | "regulated_override_standing"
   | "sector_prior_definitive_absent"
-  | "sector_settlement_entry_absent";
+  | "sector_settlement_entry_absent"
+  | "gross_declaration_duplicate"
+  | "gross_declaration_absent"
+  | "gross_declaration_sector_unknown";
 /** What a prorrata change did; a refused one is the refusal's detail. */
 export type ProrrataMutationResult = {
   operation_id: string;
@@ -359,6 +374,7 @@ export type ProrrataMutationResult = {
   outcome: "success" | "refused";
   entry: ProrrataEntry | null;
   sector_definition: ProrrataSector | null;
+  gross_declaration: ProrrataGrossDeclaration | null;
   seed_source: {
     modelo: string;
     filing_year: number;
@@ -409,6 +425,21 @@ export type ProrrataSettleSectorRequest = {
   sector_id: string;
   con_derecho_volume: PublicDecimal;
   sin_derecho_volume: PublicDecimal;
+};
+/** The gross deductible cuota of an earlier liquidation, before prorrata,
+ * where the ledger holds no input for it; `replace` swaps a standing one. */
+export type ProrrataDeclareGrossRequest = {
+  ejercicio: number;
+  period: string;
+  sector_id?: string | null;
+  gross_cuota: PublicDecimal;
+  evidence_reference: string;
+  replace?: boolean;
+};
+export type ProrrataRemoveGrossRequest = {
+  ejercicio: number;
+  period: string;
+  sector_id?: string | null;
 };
 
 // ---- Bienes de inversión -------------------------------------------------

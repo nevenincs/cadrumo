@@ -3515,6 +3515,12 @@ desktop:
       reference: Referència
       reference_hint: L'autorització o proposta en què es basa
       refusal:
+        gross_declaration_absent: 'El registre ha rebutjat la baixa: aquest període
+          no té cap declaració bruta.'
+        gross_declaration_duplicate: 'El registre ha rebutjat la declaració: aquest
+          període ja té una declaració bruta.'
+        gross_declaration_sector_unknown: 'El registre ha rebutjat la declaració:
+          aquest sector no és un sector diferenciat declarat.'
         provenance_not_electable: 'No acceptat: aquest origen es calcula, no es tria.'
         provenance_required: 'No acceptat: indica d''on surt el percentatge.'
         reference_not_permitted: 'No acceptat: aquest origen no té cap document a

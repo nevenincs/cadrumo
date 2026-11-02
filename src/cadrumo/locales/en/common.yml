@@ -3469,6 +3469,12 @@ desktop:
       reference: Reference
       reference_hint: The authorisation or proposal it stands on
       refusal:
+        gross_declaration_absent: 'The register refused the removal: this period has
+          no gross declaration.'
+        gross_declaration_duplicate: 'The register refused the declaration: this period
+          already has a gross declaration.'
+        gross_declaration_sector_unknown: 'The register refused the declaration: that
+          sector is not a declared differentiated sector.'
         provenance_not_electable: 'Not accepted: that source is calculated, not chosen.'
         provenance_required: 'Not accepted: say where the percentage comes from.'
         reference_not_permitted: 'Not accepted: that source has no document to reference.'

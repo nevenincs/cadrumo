@@ -3514,6 +3514,12 @@ desktop:
       reference: Referencia
       reference_hint: La autorización o propuesta en la que se basa
       refusal:
+        gross_declaration_absent: 'El registro ha rechazado la baja: este periodo
+          no tiene ninguna declaración bruta.'
+        gross_declaration_duplicate: 'El registro ha rechazado la declaración: este
+          periodo ya tiene una declaración bruta.'
+        gross_declaration_sector_unknown: 'El registro ha rechazado la declaración:
+          ese sector no es un sector diferenciado declarado.'
         provenance_not_electable: 'No aceptado: ese origen se calcula, no se elige.'
         provenance_required: 'No aceptado: indica de dónde sale el porcentaje.'
         reference_not_permitted: 'No aceptado: ese origen no tiene documento al que

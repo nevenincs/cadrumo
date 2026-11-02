@@ -32,6 +32,7 @@ from ...core.aggregation import BindingSourceKind, BindingValueOutcome, Calculat
 from ...core.casilla_id import CasillaId
 from ...core.decimal.coercion import coerce_decimal
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FilingYear
 from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import SnapshotId, WorkUnitId
@@ -264,6 +265,14 @@ class CalculationSourceDiagnostic(BaseModel):
     binding_source: BindingSourceKind | None = None
     """Canonical binding source when ``source_kind`` names one; ``None`` for advisory categories."""
     message: _DiagnosticMessage
+    message_language: OutputLanguage | None = None
+    """The language ``message`` is operator prose in, when its resolver worded it for the filer.
+
+    ``None`` where the message is a technical account: a binding or resolver
+    named by its identifier, a sanitized marker, or prose a reader in another
+    language could not read. A frontend that draws the message beside the
+    catalogue's own sentence draws it only in this language.
+    """
     remedy: str | None = Field(default=None, min_length=1, max_length=DIAGNOSTIC_REMEDY_MAX_LENGTH)
     """What the operator should DO about it, carried apart from what happened.
 

@@ -11,6 +11,7 @@ from collections.abc import Iterable, Mapping
 from typing import Final
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
+from ...core.external_constants import OutputLanguage
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, element_names_of
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
@@ -64,10 +65,16 @@ _ATTENTION_ORDER: Final[tuple[ModeloFormAttention, ...]] = tuple(ModeloFormAtten
 
 
 type NoteSource = tuple[
-    str, str | None, BindingSourceKind | None, CalculationNoteFact | None, BindingValueOutcome | None
+    str,
+    str | None,
+    BindingSourceKind | None,
+    CalculationNoteFact | None,
+    BindingValueOutcome | None,
+    tuple[str, OutputLanguage] | None,
 ]
 """One latest-calculation reason, the box it names, the binding source that raised it, its own facts,
-and the outcome its resolver stated for a capped value."""
+the outcome its resolver stated for a capped value, and the message its resolver worded for the filer
+with the language it is worded in."""
 
 
 def collect_note_sources(
@@ -85,14 +92,19 @@ def collect_note_sources(
                 durable_binding_source(diagnostic),
                 diagnostic.fact,
                 diagnostic.value_outcome,
+                None
+                if diagnostic.message_language is None or not diagnostic.message
+                else (diagnostic.message, diagnostic.message_language),
             )
             for diagnostic in diagnostics
         )
     if revision is None:
         return ()
-    # A persisted note is never a proven zero: those are held, not stored.
+    # A persisted note is never a proven zero: those are held, not stored. Its stored message is a
+    # technical account in no language of the filer's, so the note is worded by its reason alone.
     return tuple(
-        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, None) for issue in revision.source_issues
+        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, None, None)
+        for issue in revision.source_issues
     )
 
 
@@ -108,7 +120,9 @@ def project_calculation_notes(
     """The latest calculation's notes on the filer's scale, once each, leaving out what a finding already says.
 
     Notes of one reason about one box are one note unless their facts differ: two
-    elements with a gap in the same box are two things to read.
+    elements with a gap in the same box are two things to read. A note without
+    facts is told apart by its message instead, so two different accounts of one
+    reason are both read. A message is carried only in the form's own language.
 
     A reason the check decides on its own evidence waits for the check: once
     the current calculation has been checked, the check's finding of the same
@@ -120,8 +134,9 @@ def project_calculation_notes(
         field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
     notes: dict[tuple[str, str | None, tuple[str, ...]], ModeloFormCalculationNote] = {}
-    for reason, casilla_id, binding_source, fact, outcome in sources:
-        key = (reason, casilla_id, () if fact is None else fact.identity())
+    for reason, casilla_id, binding_source, fact, outcome, worded in sources:
+        message = worded[0] if worded is not None and worded[1] is context.language else None
+        key = (reason, casilla_id, (message or "",) if fact is None else fact.identity())
         if key in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
         if checked and reason in CHECK_REFUSED_REASONS:
@@ -136,6 +151,7 @@ def project_calculation_notes(
             withholds_filing=gate_refuses(reason, binding_source, outcome),
             fact=fact,
             element_names=element_names_of(fact, context.element_names),
+            message=message,
         )
     return tuple(sorted(notes.values(), key=lambda note: _ATTENTION_ORDER.index(note.attention)))
 

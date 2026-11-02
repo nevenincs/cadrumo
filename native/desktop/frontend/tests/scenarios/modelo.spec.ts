@@ -374,6 +374,9 @@ test("the check lists every finding under its level, in plain words only", async
     });
     const item = level.getByRole("listitem").filter({ hasText: line.message });
     await expect(item).toContainText(line.action);
+    // A calculation note's own account, worded for the filer, is drawn under
+    // its sentence, as a finding's kind is.
+    if (line.detail) await expect(item).toContainText(line.detail);
     await expect(item).not.toContainText(line.technical);
   }
 });
