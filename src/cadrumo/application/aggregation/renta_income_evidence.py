@@ -9,7 +9,7 @@ bounded retención can be inferred from the transaction itself.
 
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from decimal import Decimal
 from enum import StrEnum
 from typing import NamedTuple
@@ -25,6 +25,7 @@ from ...domain.invoices.models import Invoice
 from ...domain.invoices.service import INVOICE_MATCH_TOLERANCE
 from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.iva.schema import InvoiceKind
+from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
 from ...domain.transactions.models import Transaction
 from ...domain.transactions.retencion_facts import (
@@ -100,6 +101,17 @@ class SettlementComparison(NamedTuple):
         return abs(self.cash - self.owed) <= INVOICE_MATCH_TOLERANCE
 
 
+def row_settles_invoice(invoice: Invoice, row: Transaction) -> bool:
+    """Return whether the row moved money the way paying ``invoice`` does, rather than returning it."""
+    settling = TransactionDirection.INCOMING if invoice.kind is InvoiceKind.ISSUED else TransactionDirection.OUTGOING
+    return row.direction is settling
+
+
+def _in_settling_direction(invoice: Invoice, row: Transaction, magnitude: Decimal) -> Decimal:
+    """Return the row's magnitude as it counts towards ``invoice``: a refund takes off what a payment adds."""
+    return magnitude if row_settles_invoice(invoice, row) else -magnitude
+
+
 def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> SettlementComparison | None:
     """Put ``receipts`` and ``invoice`` in one currency, or return ``None`` when none can be justified.
 
@@ -110,14 +122,14 @@ def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> 
     """
     if all(receipt.raw.currency == invoice.currency for receipt in receipts):
         return SettlementComparison(
-            cash=sum((abs(receipt.raw.amount) for receipt in receipts), Decimal("0")),
+            cash=sum((_in_settling_direction(invoice, row, row.raw.amount) for row in receipts), Decimal("0")),
             owed=invoice_net_cash(invoice),
         )
     total_eur = invoice.grand_total_eur
     if total_eur is None or any(is_non_eur_without_conversion(receipt) for receipt in receipts):
         return None
     return SettlementComparison(
-        cash=sum((abs(effective_eur_amount(receipt)) for receipt in receipts), Decimal("0")),
+        cash=sum((_in_settling_direction(invoice, row, effective_eur_amount(row)) for row in receipts), Decimal("0")),
         owed=total_eur - (invoice.retention_amount_eur or Decimal("0")),
     )
 
@@ -130,14 +142,21 @@ def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> Se
     """
     if all(row.raw.currency == invoice.currency for row in rows):
         return SettlementComparison(
-            cash=sum((row.taxable_base or Decimal("0") for row in rows), Decimal("0")),
+            cash=sum(
+                (_in_settling_direction(invoice, row, row.taxable_base or Decimal("0")) for row in rows), Decimal("0")
+            ),
             owed=invoice.base_total,
         )
     base_eur = invoice.base_total_eur
     if base_eur is None or any(is_non_eur_without_conversion(row) for row in rows):
         return None
     return SettlementComparison(
-        cash=round_to_cents(sum((effective_eur_taxable_base(row) or Decimal("0") for row in rows), Decimal("0"))),
+        cash=round_to_cents(
+            sum(
+                (_in_settling_direction(invoice, row, effective_eur_taxable_base(row) or Decimal("0")) for row in rows),
+                Decimal("0"),
+            )
+        ),
         owed=base_eur,
     )
 
@@ -148,12 +167,13 @@ def part_payment_share(invoice: Invoice, transaction: Transaction) -> Decimal | 
     The share is cash over what the invoice leaves to be paid, base + IVA - retención,
     read through :func:`settlement_comparison`, and it applies to the invoice's EUR
     figures. A receipt settling the whole invoice alone, or exceeding it, is no part
-    payment, and an invoice with no EUR value, a receipt that cannot be compared or
-    ungrounded figures cannot be shared out.
+    payment, nor is a refund, and an invoice with no EUR value, a receipt that cannot be
+    compared or ungrounded figures cannot be shared out.
     """
     comparison = settlement_comparison(invoice, (transaction,))
     if (
-        invoice.grand_total_eur is None
+        not row_settles_invoice(invoice, transaction)
+        or invoice.grand_total_eur is None
         or comparison is None
         or transaction.transaction_id not in invoice.linked_transaction_ids
         or comparison.owed <= Decimal("0")
@@ -165,12 +185,47 @@ def part_payment_share(invoice: Invoice, transaction: Transaction) -> Decimal | 
     return comparison.cash / comparison.owed
 
 
+def receipt_overpays_invoice(invoice: Invoice, transaction: Transaction) -> bool:
+    """Return whether this one receipt exceeds what the invoice leaves to be paid, past the link tolerance."""
+    comparison = settlement_comparison(invoice, (transaction,))
+    return comparison is not None and comparison.cash - comparison.owed > INVOICE_MATCH_TOLERANCE
+
+
+def invoice_settled_in_parts(invoice: Invoice, receipts: Sequence[Transaction]) -> bool:
+    """Return whether every receipt the invoice links, all of them payments, together settle it."""
+    comparison = settlement_comparison(invoice, receipts)
+    return (
+        comparison is not None
+        and comparison.settled
+        and 1 < len(invoice.linked_transaction_ids) == len(receipts)
+        and all(part_payment_share(invoice, receipt) is not None for receipt in receipts)
+    )
+
+
+def _settled_part_of(
+    invoice: Invoice, transaction: Transaction, receipts: Sequence[Transaction], amount: Decimal
+) -> Decimal:
+    """Return the cents of ``amount`` this receipt carries when its receipts settle the invoice.
+
+    Cut by cumulative rounding in payment order, so the parts add up to ``amount`` exactly.
+    """
+    ordered = sorted(receipts, key=lambda row: (row.raw.value_date or row.raw.booked_date, row.transaction_id))
+    paid_before = Decimal("0")
+    for position, receipt in enumerate(ordered, start=1):
+        paid_after = paid_before + (part_payment_share(invoice, receipt) or Decimal("0"))
+        reached = Decimal("1") if position == len(ordered) else min(paid_after, Decimal("1"))
+        if receipt.transaction_id == transaction.transaction_id:
+            return round_to_cents(amount * reached) - round_to_cents(amount * paid_before)
+        paid_before = reached
+    return Decimal("0")
+
+
 def sales_invoice_evidence_payload(
     *,
     invoices: InvoiceCatalogue,
     bucket_id: str,
     transaction: Transaction,
-    allocate_part_payments: bool = False,
+    receipts_by_invoice: Mapping[str, Sequence[Transaction]] | None = None,
 ) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
     """Return the figures a linked sales invoice contributes, or why it is refused.
 
@@ -188,6 +243,10 @@ def sales_invoice_evidence_payload(
     The cash and the invoice are compared through :func:`settlement_comparison`, and
     the figures returned are always EUR, whatever currency the invoice is stated in.
 
+    ``receipts_by_invoice`` holds each invoice's active linked rows; without it a part
+    payment is not shared out. Receipts that together settle the invoice carry what it
+    states, retencion included. Short of that, each carries a pro rata share.
+
     Core types:
     :class:`~cadrumo.domain.invoices.catalogue.InvoiceCatalogue`.
     """
@@ -202,8 +261,20 @@ def sales_invoice_evidence_payload(
         return _SalesInvoiceEvidencePayload(), refusal
     base_eur = invoice.base_total_eur
     iva_eur = invoice.iva_total_eur
-    share = part_payment_share(invoice, transaction) if allocate_part_payments else None
+    receipts = None if receipts_by_invoice is None else receipts_by_invoice.get(invoice.invoice_id, ())
+    share = None if receipts is None else part_payment_share(invoice, transaction)
     if share is not None and base_eur is not None and iva_eur is not None:
+        if receipts is not None and invoice_settled_in_parts(invoice, receipts):
+            return (
+                _SalesInvoiceEvidencePayload(
+                    taxable_base=_settled_part_of(invoice, transaction, receipts, base_eur),
+                    iva_amount=_settled_part_of(invoice, transaction, receipts, iva_eur),
+                    retencion_amount=_settled_part_of(
+                        invoice, transaction, receipts, invoice.retention_amount_eur or Decimal("0")
+                    ),
+                ),
+                None,
+            )
         return (
             _SalesInvoiceEvidencePayload(
                 taxable_base=round_to_cents(base_eur * share),

@@ -61,6 +61,7 @@ from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.money.rounding import round_to_cents
 from ...core.period import Period
 from ...core.prose_elision import IssueDetail
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -111,6 +112,7 @@ from .renta_imputation import (
     rows_left_out_summary,
     rows_touching_window,
 )
+from .renta_income_diagnostics import received_rectificativa_reading
 from .renta_ledger import (
     CategoryRuleRefusal,
     RentaCategoryDeductionRules,
@@ -475,6 +477,19 @@ def aggregate_renta_gasto_ledger(
             if advisory is not None:
                 advisories.append(advisory)
 
+    if criteria is not None and invoices is not None:
+        observations = _net_received_corrections(
+            observations,
+            transactions,
+            received_rectificativa_reading(
+                invoices,
+                transactions,
+                bucket_id=bucket_id,
+                window_start=window.start,
+                window_end=window.end,
+                criteria=criteria,
+            ).fractions,
+        )
     observations = _apply_statutory_cap_trims(observations, rules=rules)
     casilla_aggregation = _gasto_casilla_aggregation(
         window.period,
@@ -738,6 +753,25 @@ def _apply_statutory_cap_trims(
         else observation
         for observation in observations
     ]
+
+
+def _net_received_corrections(
+    observations: list[RentaGastoObservation],
+    transactions: TransactionCatalogue,
+    fractions: Mapping[str, Decimal],
+) -> list[RentaGastoObservation]:
+    """Take off each row what the corrections remove from its invoice, before any statutory cap reads it."""
+
+    def corrected(observation: RentaGastoObservation) -> RentaGastoObservation:
+        row = transactions.get(observation.transaction_id)
+        fraction = None if row is None else fractions.get(row.purchase_invoice_evidence_id or "")
+        if fraction is None:
+            return observation
+        return observation.model_copy(
+            update={"deductible_amount": round_to_cents(observation.deductible_amount * (Decimal("1") - fraction))}
+        )
+
+    return [corrected(observation) for observation in observations]
 
 
 def _imputed_gasto_date(

@@ -12,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from datetime import date
 from decimal import Decimal
+from types import MappingProxyType
 from typing import NamedTuple
 
 from ...core.aggregation import LedgerWithholdingDerivation
@@ -19,6 +20,7 @@ from ...core.casilla_id import CasillaId
 from ...core.money.rounding import round_to_cents
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
+from ...domain.invoices.service import INVOICE_MATCH_TOLERANCE
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
@@ -72,12 +74,18 @@ def accrued_unpaid_income(
     return tuple(found)
 
 
-def issued_invoice_enters_window(
-    invoice: Invoice, *, bucket_id: str, window_start: date, window_end: date, criteria: ImputationCriteria
+def invoice_enters_window(
+    invoice: Invoice,
+    *,
+    kind: InvoiceKind,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
+    criteria: ImputationCriteria,
 ) -> bool:
-    """Return whether this bucket's issued invoice accrues inside the window or is carried into it."""
+    """Return whether this bucket's invoice of ``kind`` accrues inside the window or is carried into it."""
     accrual = invoice_accrual_date(invoice)
-    if invoice.kind is not InvoiceKind.ISSUED or invoice.bucket_id != bucket_id or accrual is None:
+    if invoice.kind is not kind or invoice.bucket_id != bucket_id or accrual is None:
         return False
     entry = accrual_entry_date(accrual, criteria, through_year=window_end.year)
     return entry is not None and window_start <= entry <= window_end
@@ -87,8 +95,13 @@ def _accrues_in_window(
     invoice: Invoice, *, bucket_id: str, window_start: date, window_end: date, criteria: ImputationCriteria
 ) -> bool:
     """Return whether this bucket's issued invoice, with a EUR value, enters the window."""
-    return invoice.base_total_eur is not None and issued_invoice_enters_window(
-        invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
+    return invoice.base_total_eur is not None and invoice_enters_window(
+        invoice,
+        kind=InvoiceKind.ISSUED,
+        bucket_id=bucket_id,
+        window_start=window_start,
+        window_end=window_end,
+        criteria=criteria,
     )
 
 
@@ -97,7 +110,10 @@ def _unsettled_remainder(
 ) -> AccruedUnpaidIncome | None:
     """Return the base and retencion the invoice's receipts leave unpaid, or ``None`` when nothing remains."""
     receipts = [active[row] for row in invoice.linked_transaction_ids if row in active]
-    shares = [renta_income_evidence.part_payment_share(invoice, receipt) for receipt in receipts]
+    if renta_income_evidence.invoice_settled_in_parts(invoice, receipts):
+        return None
+    payments = [row for row in receipts if renta_income_evidence.row_settles_invoice(invoice, row)]
+    shares = [renta_income_evidence.part_payment_share(invoice, receipt) for receipt in payments]
     if None in shares:
         return None
     base_total = invoice.base_total_eur
@@ -137,8 +153,13 @@ def accrued_without_eur_value(
         if (
             invoice.grand_total_eur is not None
             or is_rectificativa(invoice)
-            or not issued_invoice_enters_window(
-                invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
+            or not invoice_enters_window(
+                invoice,
+                kind=InvoiceKind.ISSUED,
+                bucket_id=bucket_id,
+                window_start=window_start,
+                window_end=window_end,
+                criteria=criteria,
             )
         ):
             continue
@@ -160,16 +181,72 @@ class RectificativaReading(NamedTuple):
     refused: tuple[str, ...] = ()
 
 
-def rectificativa_reading(
+class ReceivedRectificativaReading(NamedTuple):
+    """What the received corrections of a window take off each invoice they name."""
+
+    fractions: Mapping[str, Decimal] = MappingProxyType({})
+    """The share of each corrected invoice the window's corrections remove, keyed by its id."""
+    netted: tuple[Invoice, ...] = ()
+    refused: tuple[str, ...] = ()
+
+
+class _ReadCorrections(NamedTuple):
+    """The window's admitted corrections per invoice they reduce, and why others were refused."""
+
+    by_target: tuple[tuple[Invoice, tuple[Invoice, ...]], ...] = ()
+    refused: tuple[str, ...] = ()
+
+
+def _rows_of(invoice: Invoice, transactions: TransactionCatalogue) -> tuple[Transaction, ...]:
+    """Return the active rows that link ``invoice`` on the side its kind reads."""
+
+    def linked_id(row: Transaction) -> str | None:
+        return row.invoice_id if invoice.kind is InvoiceKind.ISSUED else row.purchase_invoice_evidence_id
+
+    return tuple(
+        row
+        for row in transactions.values()
+        if row.lifecycle_state is TransactionLifecycleState.ACTIVE and linked_id(row) == invoice.invoice_id
+    )
+
+
+def _cash_refund_refusals(
     invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
     *,
+    kind: InvoiceKind,
     bucket_id: str,
     window_start: date,
     window_end: date,
-    target_casilla_id: CasillaId,
+) -> tuple[str, ...]:
+    """Refuse each correction with money returned in the window: under cash no source says what it nets against.
+
+    RIRPF art. 7.2 and the AEAT manual place cobros and pagos by their date and stop there.
+    """
+    refused: list[str] = []
+    for invoice in invoices.values():
+        if invoice.kind is not kind or invoice.bucket_id != bucket_id or not is_rectificativa(invoice):
+            continue
+        if any(
+            not renta_income_evidence.row_settles_invoice(invoice, row)
+            and window_start <= (row.raw.value_date or row.raw.booked_date) <= window_end
+            for row in _rows_of(invoice, transactions)
+        ):
+            unresolved = ImputationUnresolved.RECTIFICATIVA_REFUND_UNDER_CASH.value
+            refused.append(f"{unresolved}: rectificativa {invoice.invoice_number}")
+    return tuple(refused)
+
+
+def _read_corrections(
+    invoices: InvoiceCatalogue,
+    *,
+    kind: InvoiceKind,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
     criteria: ImputationCriteria,
-) -> RectificativaReading:
-    """Read what the issued rectificativas of the window do to its accrued income.
+) -> _ReadCorrections:
+    """Read which corrections of ``kind`` accruing in the window reduce an invoice of the same year.
 
     A correction accruing in the year of its invoice nets against that year: LIRPF art.
     14.1.b and LIS art. 11.1 impute by accrual and the AEAT manual subtracts returns and
@@ -177,14 +254,12 @@ def rectificativa_reading(
     Nothing in those sources says which year a later correction reduces, so that case
     refuses, as does anything else that leaves the correction's effect unknown.
     """
-    if criteria.usable(window_end.year) is not ActivityImputationCriterion.DEVENGO:
-        return RectificativaReading()
     corrected: dict[str, list[Invoice]] = {}
     targets: dict[str, Invoice] = {}
     refused: list[str] = []
     for invoice in invoices.values():
-        if not is_rectificativa(invoice) or not issued_invoice_enters_window(
-            invoice, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
+        if not is_rectificativa(invoice) or not invoice_enters_window(
+            invoice, kind=kind, bucket_id=bucket_id, window_start=window_start, window_end=window_end, criteria=criteria
         ):
             continue
         target = _rectified_invoice(invoice, invoices, bucket_id=bucket_id)
@@ -194,7 +269,7 @@ def rectificativa_reading(
         elif target is not None and _accrues_by(target, window_end):
             targets[target.invoice_id] = target
             corrected.setdefault(target.invoice_id, []).append(invoice)
-    corrections: list[RectificativaCorrection] = []
+    admitted: list[tuple[Invoice, tuple[Invoice, ...]]] = []
     for target_id, rows in corrected.items():
         total = sum((row.base_total_eur or Decimal("0") for row in rows), Decimal("0"))
         base = targets[target_id].base_total_eur
@@ -202,26 +277,118 @@ def rectificativa_reading(
             unresolved = ImputationUnresolved.RECTIFICATIVA_ABOVE_INVOICE.value
             refused.extend(f"{unresolved}: rectificativa {row.invoice_number}" for row in rows)
             continue
-        corrections.extend(
-            RectificativaCorrection(
-                invoice_id=row.invoice_id,
-                invoice_number=row.invoice_number,
-                target_casilla_id=target_casilla_id,
-                reduction=row.base_total_eur,
+        admitted.append((targets[target_id], tuple(rows)))
+    return _ReadCorrections(tuple(admitted), tuple(refused))
+
+
+def rectificativa_reading(
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
+    *,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
+    target_casilla_id: CasillaId,
+    criteria: ImputationCriteria,
+) -> RectificativaReading:
+    """Read what the issued rectificativas of the window do to its income under the year's criterion."""
+    usable = criteria.usable(window_end.year)
+    if usable is ActivityImputationCriterion.COBROS_Y_PAGOS:
+        return RectificativaReading(
+            refused=_cash_refund_refusals(
+                invoices,
+                transactions,
+                kind=InvoiceKind.ISSUED,
+                bucket_id=bucket_id,
+                window_start=window_start,
+                window_end=window_end,
             )
-            for row in rows
-            if row.base_total_eur is not None and row.base_total_eur != Decimal("0")
         )
-    return RectificativaReading(tuple(corrections), tuple(refused))
+    if usable is not ActivityImputationCriterion.DEVENGO:
+        return RectificativaReading()
+    read = _read_corrections(
+        invoices,
+        kind=InvoiceKind.ISSUED,
+        bucket_id=bucket_id,
+        window_start=window_start,
+        window_end=window_end,
+        criteria=criteria,
+    )
+    corrections = tuple(
+        RectificativaCorrection(
+            invoice_id=row.invoice_id,
+            invoice_number=row.invoice_number,
+            target_casilla_id=target_casilla_id,
+            reduction=row.base_total_eur,
+        )
+        for _, rows in read.by_target
+        for row in rows
+        if row.base_total_eur is not None and row.base_total_eur != Decimal("0")
+    )
+    return RectificativaReading(corrections, read.refused)
+
+
+def received_rectificativa_reading(
+    invoices: InvoiceCatalogue,
+    transactions: TransactionCatalogue,
+    *,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
+    criteria: ImputationCriteria,
+) -> ReceivedRectificativaReading:
+    """Read what the received rectificativas of the window do to its expense under the year's criterion.
+
+    Only a ledger row carries the category and business share that decide a box, so a correction
+    is stated as the share it removes from the invoice it names, applied to that invoice's rows.
+    """
+    usable = criteria.usable(window_end.year)
+    if usable is ActivityImputationCriterion.COBROS_Y_PAGOS:
+        return ReceivedRectificativaReading(
+            refused=_cash_refund_refusals(
+                invoices,
+                transactions,
+                kind=InvoiceKind.RECEIVED,
+                bucket_id=bucket_id,
+                window_start=window_start,
+                window_end=window_end,
+            )
+        )
+    if usable is not ActivityImputationCriterion.DEVENGO:
+        return ReceivedRectificativaReading()
+    read = _read_corrections(
+        invoices,
+        kind=InvoiceKind.RECEIVED,
+        bucket_id=bucket_id,
+        window_start=window_start,
+        window_end=window_end,
+        criteria=criteria,
+    )
+    fractions: dict[str, Decimal] = {}
+    refused = list(read.refused)
+    netted: list[Invoice] = []
+    unresolved = ImputationUnresolved.RECTIFICATIVA_WITH_RECEIPT.value
+    for target, rows in read.by_target:
+        base = target.base_total_eur
+        if base is None or base == Decimal("0"):
+            continue
+        fractions[target.invoice_id] = sum((row.base_total_eur or Decimal("0") for row in rows), Decimal("0")) / base
+        netted.extend(rows)
+        refused.extend(
+            f"{unresolved}: rectificativa {row.invoice_number}"
+            for row in rows
+            if any(renta_income_evidence.row_settles_invoice(row, link) for link in _rows_of(row, transactions))
+        )
+    return ReceivedRectificativaReading(fractions, tuple(netted), tuple(refused))
 
 
 def _rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue, *, bucket_id: str) -> Invoice | None:
-    """Return the ordinary issued invoice the correction names, read by counterparty and number."""
+    """Return the ordinary invoice of the same kind the correction names, read by counterparty and number."""
     return next(
         (
             invoice
             for invoice in invoices.values()
-            if invoice.kind is InvoiceKind.ISSUED
+            if invoice.kind is rectificativa.kind
             and invoice.bucket_id == bucket_id
             and not is_rectificativa(invoice)
             and invoice.counterparty_tax_id == rectificativa.counterparty_tax_id
@@ -257,6 +424,30 @@ def _accrues_by(invoice: Invoice, window_end: date) -> bool:
     """Return whether the invoice has accrued by the window's end, so a correction has something to reduce."""
     accrual = invoice_accrual_date(invoice)
     return accrual is not None and accrual <= window_end
+
+
+def received_rectificativa_netting_diagnostics(
+    netted: Sequence[Invoice], *, source_kind: str, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name the received corrections netted as reductions, for the reason the issued ones are named."""
+    if not netted:
+        return ()
+    listed = ", ".join(f"{row.invoice_number} ({row.base_total_eur} EUR)" for row in netted)
+    return (
+        CalculationSourceDiagnostic(
+            reason="unsettled_legal_reading",
+            source_kind=source_kind,
+            resolver_id=resolver_id,
+            source_ref="renta-rectificativa:netted",
+            message=f"Activity expense nets these rectificativas as reductions of the year's expense: {listed}"[
+                :DIAGNOSTIC_MESSAGE_MAX_LENGTH
+            ],
+            remedy=(
+                "Check each listed rectificativa: one stating the amounts after the correction, or raising the "
+                "price, nets the wrong way and needs its base corrected."
+            ),
+        ),
+    )
 
 
 def rectificativa_netting_diagnostics(
@@ -312,9 +503,9 @@ def overpaid_invoice_issues(
 
 
 def _receipts_within_invoice(invoice: Invoice, receipts: Sequence[Transaction]) -> bool:
-    """Return whether the receipts are too few to compare or together stay within the invoice's net cash."""
+    """Return whether the receipts cannot be compared or stay within the invoice's net cash, past the tolerance."""
     comparison = renta_income_evidence.settlement_comparison(invoice, receipts)
-    return len(receipts) < 2 or comparison is None or comparison.cash <= comparison.owed
+    return comparison is None or comparison.cash - comparison.owed <= INVOICE_MATCH_TOLERANCE
 
 
 def _overpaid_receipt_issues(
@@ -411,7 +602,11 @@ def _retention_bearing_invoice(
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE or transaction.invoice_id is None:
         return None
     invoice = invoices.get(transaction.invoice_id)
-    if invoice is None or invoice.bucket_id != bucket_id:
+    if (
+        invoice is None
+        or invoice.bucket_id != bucket_id
+        or not renta_income_evidence.row_settles_invoice(invoice, transaction)
+    ):
         return None
     if invoice.retention_amount in (None, 0):
         return None
