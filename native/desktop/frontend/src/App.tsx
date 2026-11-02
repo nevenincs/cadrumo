@@ -1,3 +1,8 @@
+import { useShellShortcuts } from "./shell/useShellShortcuts";
+import settings from "virtual:operational-settings";
+import { useShellMenus } from "./shell/useShellMenus";
+import { useToastMessage } from "./shell/useToastMessage";
+import { ShellContexts } from "./shell/ShellContexts";
 import { usePersistedLayout } from "./shell/usePersistedLayout";
 import { useWindowCloseGuard } from "./shell/navigation/useWindowCloseGuard";
 import { observeInternalFailures } from "./shell/internalFailures";
@@ -14,7 +19,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type ReactNode,
   type SetStateAction,
 } from "react";
 import { cn } from "@/components/ui/cn";
@@ -48,7 +52,6 @@ import { Icon } from "@/components/ui/icon";
 import {
   DocsFrame,
   type DocsFrameApi,
-  type DocsMenuRequest,
 } from "./components/DocsFrame";
 import type { DocsTheme } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
@@ -59,12 +62,9 @@ import { AttendanceRequests } from "./components/AttendanceRequests";
 import { ReconnectingNotice } from "./components/ReconnectingNotice";
 import { BrowserPage } from "./components/browser/BrowserPage";
 import { HostRecordList } from "./components/HostRecordList";
-import type { RecordMenuRequest } from "./components/RecordList";
 import {
   DEFAULT_FILTERS,
   levelRank,
-  recordLine,
-  recordsText,
   type RecordFilters,
 } from "./shell/records";
 import { Settings } from "./components/Settings";
@@ -83,9 +83,7 @@ import {
   useSetup,
 } from "./shell/setup";
 import {
-  ProvisioningContext,
   useProvisioningStore,
-  type ProvisioningStore,
 } from "./shell/provisioning";
 import {
   provisionActionOf,
@@ -124,12 +122,9 @@ import {
   type TerminalStatus,
 } from "./components/TerminalPane";
 import {
-  bridgeChords,
-  findAction,
   primaryChord,
   viewActions,
   type Action,
-  type FocusArea,
   type ViewActionSpec,
 } from "./shell/actions";
 import type { Host, TerminalKind } from "./shell/host";
@@ -150,7 +145,6 @@ import { AEAT_SEDE } from "./shell/links";
 import {
   SOURCE_LOCALE,
   OUTPUT_LANGUAGES,
-  StringsContext,
   translator,
   type Translate,
 } from "./shell/strings";
@@ -161,10 +155,6 @@ import {
   LIGHT_TUI,
 } from "./shell/terminalThemes";
 import { failureCode } from "./errors";
-import {
-  NavigationContext,
-  type NavigationRuntime,
-} from "./shell/navigation/hooks";
 import {
   formatViewLink,
   isCadrumoLink,
@@ -181,13 +171,6 @@ import {
   pageViewId,
   type WindowViewEntry,
 } from "./shell/navigation/windowViews";
-
-const TOAST_MS = 2400;
-// A dragged splitter changes the layout on every pointer move; it is written
-// to storage once the changes have paused.
-const SAVE_DELAY_MS = 250;
-// How long a wish to focus a view waits for that view to be shown.
-const FOCUS_WISH_MS = 1000;
 
 type OpenMenu = { items: MenuEntry[]; at: MenuAnchor };
 
@@ -232,30 +215,6 @@ const activeTerminal = (): TerminalKind | null => {
     ? kind
     : null;
 };
-
-/** The window's own contexts: its strings, its navigation runtime and its
- * provisioning store. */
-function ShellContexts({
-  t,
-  navigation,
-  provisioning,
-  children,
-}: {
-  t: Translate;
-  navigation: NavigationRuntime;
-  provisioning: ProvisioningStore;
-  children: ReactNode;
-}) {
-  return (
-    <StringsContext.Provider value={t}>
-      <NavigationContext.Provider value={navigation}>
-        <ProvisioningContext.Provider value={provisioning}>
-          {children}
-        </ProvisioningContext.Provider>
-      </NavigationContext.Provider>
-    </StringsContext.Provider>
-  );
-}
 
 export function App({ host }: { host: Host }) {
   const account = useSignIn(host);
@@ -522,7 +481,7 @@ export function App({ host }: { host: Host }) {
   const [aboutOpen, setAboutOpen] = useState(false);
   const about = useAbout(host);
   const [menu, setMenu] = useState<OpenMenu | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
+  const { toast, say } = useToastMessage(settings.shell_toast_ms);
   // The sign-in dialog opens by itself whenever the TUI becomes gated; a
   // person who dismisses it, or who has just signed out here, reopens it.
   const [signInDismissed, setSignInDismissed] = useState(false);
@@ -571,7 +530,6 @@ export function App({ host }: { host: Host }) {
   );
   const docs = useRef<DocsFrameApi>(null);
   const terminals = useRef<Partial<Record<TerminalKind, TerminalApi>>>({});
-  const toastTimer = useRef(0);
 
   // Layout geometry, read from the canonical tokens (src/styles/tokens.css) instead
   // of duplicated as literals; each metric re-reads on resize.
@@ -609,7 +567,7 @@ export function App({ host }: { host: Host }) {
     patch({ docsShown: true });
   }, [patch, setPage, setMaximized]);
 
-  usePersistedLayout(prefs, layout, SAVE_DELAY_MS);
+  usePersistedLayout(prefs, layout, settings.layout_save_delay_ms);
 
   const gated = account.gated;
   const phase = account.phase;
@@ -922,11 +880,7 @@ export function App({ host }: { host: Host }) {
     );
   }, [environment, locale]);
 
-  const say = useCallback((text: string) => {
-    setToast(text);
-    window.clearTimeout(toastTimer.current);
-    toastTimer.current = window.setTimeout(() => setToast(null), TOAST_MS);
-  }, []);
+
 
   // The previous close ended changes before they reported: say once that
   // their outcome is unknown, so none is repeated blindly. The host gives the
@@ -1154,7 +1108,7 @@ export function App({ host }: { host: Host }) {
     if (!wish) return;
     if (
       !wish.waitingForTerminal &&
-      performance.now() > wish.since + FOCUS_WISH_MS
+      performance.now() > wish.since + settings.focus_wish_ms
     ) {
       wanted.current = null;
       return;
@@ -2391,78 +2345,12 @@ export function App({ host }: { host: Host }) {
       actionsRef.current.find((action) => action.id === id)?.run(),
     [],
   );
-  const isShellChord = useCallback(
-    (event: KeyboardEvent) =>
-      findAction(actionsRef.current, event, "terminal") !== null,
-    [],
+  const { isShellChord, chords, runShortcut } = useShellShortcuts(
+    actions,
+    actionsRef,
+    paletteOpen,
+    menu !== null || (signInAsked && !signInDismissed && account.status !== null),
   );
-
-  // The bridge keymap changes only when chords do, not on every label change.
-  const chordsKey = useMemo(
-    () => JSON.stringify(bridgeChords(actions)),
-    [actions],
-  );
-  const chords = useMemo(
-    () => JSON.parse(chordsKey) as ReturnType<typeof bridgeChords>,
-    [chordsKey],
-  );
-
-  // What holds the keyboard above the shell. A modal surface owns it: no
-  // chord reaches the shell from under one, except the palette's own, which
-  // closes the palette. The sign-in dialog is only on screen once the status
-  // read has answered. Chords pressed in the documentation arrive by its
-  // bridge and pass the same guard.
-  const modal = useRef({ palette: false, other: false });
-  modal.current = {
-    palette: paletteOpen,
-    other:
-      menu !== null ||
-      (signInAsked && !signInDismissed && account.status !== null),
-  };
-  const chordAllowed = useCallback(
-    (id: string) =>
-      !modal.current.other && (!modal.current.palette || id === "palette.open"),
-    [],
-  );
-  const runShortcut = useCallback(
-    (id: string) => {
-      // A chord from the documentation asks for an action by name: one that
-      // is not offered is not run, as a key pressed in the window is not.
-      const action = actionsRef.current.find((known) => known.id === id);
-      if (action && chordAllowed(id) && action.enabled?.() !== false)
-        action.run();
-    },
-    [chordAllowed],
-  );
-
-  useEffect(() => {
-    const key = (event: KeyboardEvent) => {
-      const focus: FocusArea = (event.target as HTMLElement | null)?.closest?.(
-        ".xterm, [data-browser-surface]",
-      )
-        ? "terminal"
-        : "chrome";
-      const action = findAction(actionsRef.current, event, focus);
-      if (!action) return;
-      if (
-        action.id === "window.leaveFullscreen" &&
-        document.querySelector(
-          '[role="dialog"], [role="menu"][data-state="open"]',
-        )
-      )
-        return;
-      if (event.repeat && action.id === "window.fullscreen") {
-        event.preventDefault();
-        return;
-      }
-      if (!chordAllowed(action.id)) return;
-      event.preventDefault();
-      event.stopPropagation();
-      action.run();
-    };
-    window.addEventListener("keydown", key, true);
-    return () => window.removeEventListener("keydown", key, true);
-  }, [chordAllowed]);
 
   // Menus: the shell draws every one, in the Cadrumo theme, whichever host it
   // runs in. The caller places it: at the pointer, or at what holds focus.
@@ -2471,168 +2359,10 @@ export function App({ host }: { host: Host }) {
     [],
   );
 
-  // An item that does what a registry action does takes its icon and its
-  // first chord, so a shown shortcut is one the keymap binds.
-  const registered = useCallback((id: string) => {
-    const known = actionsRef.current.find((action) => action.id === id);
-    return { icon: known?.icon, chord: known?.chords?.[0] };
-  }, []);
-
-  const docsMenu = useCallback(
-    (request: DocsMenuRequest) => {
-      openMenu(
-        [
-          {
-            id: "copy",
-            label: t("desktop.menu.copy"),
-            icon: "copy",
-            enabled: !!request.selection,
-            run: () => copy(request.selection),
-          },
-          {
-            id: "link",
-            label: t("desktop.menu.copy_link"),
-            icon: "link",
-            enabled: !!request.link,
-            run: () => copy(request.link?.href ?? ""),
-          },
-          { separator: true },
-          {
-            id: "back",
-            label: t("desktop.action.docs_back"),
-            ...registered("docs.back"),
-            enabled: true,
-            run: () => runAction("docs.back"),
-          },
-          {
-            id: "forward",
-            label: t("desktop.action.docs_forward"),
-            ...registered("docs.forward"),
-            enabled: true,
-            run: () => runAction("docs.forward"),
-          },
-          {
-            id: "home",
-            label: t("desktop.rail.docs_home"),
-            ...registered("docs.home"),
-            enabled: true,
-            run: () => runAction("docs.home"),
-          },
-        ],
-        { x: request.x, y: request.y },
-      );
-    },
-    [openMenu, registered, t, copy, runAction],
-  );
-
-  // The AEAT shortcut opens the browser in the window; its menu is the way
-  // to the person's own browser.
-  const aeatMenu = useCallback(
-    (at: MenuAnchor) =>
-      openMenu(
-        [
-          {
-            id: "external",
-            label: t("desktop.browser.external"),
-            ...registered("link.aeat"),
-            enabled: true,
-            run: () => runAction("link.aeat"),
-          },
-        ],
-        at,
-      ),
-    [openMenu, registered, t, runAction],
-  );
-
-  const terminalMenu = useCallback(
-    (event: MouseEvent, kind: TerminalKind) => {
-      const api = terminals.current[kind];
-      if (!api) return;
-      const items: MenuEntry[] = [
-        {
-          id: "copy",
-          label: t("desktop.menu.copy"),
-          ...registered("terminal.copy"),
-          enabled: api.hasSelection(),
-          run: () => copy(api.selection()),
-        },
-        {
-          id: "paste",
-          label: t("desktop.menu.paste"),
-          ...registered("terminal.paste"),
-          enabled: true,
-          run: () => paste(kind),
-        },
-        {
-          id: "select-all",
-          label: t("desktop.menu.select_all"),
-          icon: "selectAll",
-          enabled: true,
-          run: () => api.selectAll(),
-        },
-      ];
-      if (kind !== "tui")
-        items.push(
-          { separator: true },
-          {
-            id: "clear",
-            label: t("desktop.menu.clear"),
-            icon: "erase",
-            enabled: true,
-            run: () => api.clear(),
-          },
-        );
-      openMenu(items, { x: event.clientX, y: event.clientY });
-    },
-    [openMenu, registered, t, copy, paste],
-  );
-
-  const recordMenu = useCallback(
-    ({ at, record, visible }: RecordMenuRequest) => {
-      openMenu(
-        [
-          {
-            id: "line",
-            label: t("desktop.menu.copy_line"),
-            icon: "copy",
-            enabled: true,
-            run: () =>
-              copy(
-                record.detail
-                  ? `${recordLine(record)}\n${record.detail}`
-                  : recordLine(record),
-              ),
-          },
-          {
-            id: "visible",
-            label: t("desktop.menu.copy_visible"),
-            icon: "copyAll",
-            enabled: true,
-            run: () => copyLogs(recordsText(visible)),
-          },
-          { separator: true },
-          {
-            id: "logger",
-            label: t("desktop.menu.only_logger"),
-            icon: "filter",
-            enabled: !!record.logger,
-            run: () => setFilters((f) => ({ ...f, logger: record.logger })),
-          },
-          {
-            id: "level",
-            label: t("desktop.menu.only_level", {
-              level: (record.level ?? "INFO").toLowerCase(),
-            }),
-            icon: "filter",
-            enabled: !!record.level,
-            run: () => selectLogLevel(Math.max(0, levelRank(record.level))),
-          },
-        ],
-        at,
-      );
-    },
-    [openMenu, t, copy, copyLogs, setFilters, selectLogLevel],
-  );
+  const { docsMenu, aeatMenu, terminalMenu, recordMenu } = useShellMenus({
+    actionsRef, terminals, openMenu, t, copy, copyLogs, paste, runAction,
+    setFilters, selectLogLevel,
+  });
 
   const searchDocs: DocsSearch = useMemo(
     () =>

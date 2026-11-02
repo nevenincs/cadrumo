@@ -47,3 +47,14 @@ declare module "virtual:desktop-navigation" {
 declare module "virtual:docs-fixture" {
   export const port: number | null;
 }
+
+/** Defaults projected from the canonical native environment declaration. */
+declare module "virtual:operational-settings" {
+  const settings: Readonly<{
+    shell_toast_ms: number;
+    layout_save_delay_ms: number;
+    focus_wish_ms: number;
+    ledger_toast_ms: number;
+  }>;
+  export default settings;
+}

@@ -115,6 +115,13 @@ declare global {
         calendar: typeof import("../shell/calendar");
         messages: typeof import("../shell/messages");
       }>;
+      ledgerReads(): Promise<{
+        react: typeof import("react");
+        dom: typeof import("react-dom");
+        client: typeof import("react-dom/client");
+        documents: typeof import("../components/ledger/documents/useLedgerRead");
+        setup: typeof import("../components/ledger/setup/SetupParts");
+      }>;
     };
   }
 }
@@ -127,6 +134,13 @@ window.__scenarioModules = {
     client: await import("react-dom/client"),
     calendar: await import("../shell/calendar"),
     messages: await import("../shell/messages"),
+  }),
+  ledgerReads: async () => ({
+    react: await import("react"),
+    dom: await import("react-dom"),
+    client: await import("react-dom/client"),
+    documents: await import("../components/ledger/documents/useLedgerRead"),
+    setup: await import("../components/ledger/setup/SetupParts"),
   }),
 };
 
