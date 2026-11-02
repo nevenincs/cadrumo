@@ -32,6 +32,7 @@ from ..source_mesh import CalculationSourceResolution
 from .ledger_source_mesh_support import (
     _InMemoryInvoiceCatalogueRepository,
     m130_box,
+    reasons,
     resolve_m100,
     resolve_m130,
 )
@@ -57,6 +58,8 @@ _PAID_ON = date(_YEAR, 2, 1)
 _REFUNDED_ON = date(_YEAR, 5, 1)
 _ZERO = Decimal("0")
 _HUNDRED = Decimal("100.00")
+_PREMIUM = Decimal("400.00")
+_PREMIUM_IVA = Decimal("84.00")
 
 
 def _supplier_refund(
@@ -187,3 +190,60 @@ def test_a_refund_on_a_correction_is_left_to_the_netting_in_both_returns(
     assert m130_box(instalment) == _ZERO
     assert _blocked(annual) == []
     assert _blocked(instalment) == []
+    assert "source_issue" not in reasons(annual)
+    assert "source_issue" not in reasons(instalment)
+
+
+def _premium(on: date, *, direction: TransactionDirection, evidence_id: str | None) -> Transaction:
+    """Return a 400,00 health premium, or its refund, capped together with the others."""
+    return _expense_row(on, evidence_id=evidence_id, amount=_PREMIUM + _PREMIUM_IVA, base=_PREMIUM).model_copy(
+        update={"direction": direction, "category_id": SpendingCategory.from_registry("seguros_salud_autonomo").value}
+    )
+
+
+def _premium_invoice(number: str, on: date, linked: str) -> Invoice:
+    line = _received(on, linked=(linked,)).lines[0].model_copy(
+        update={
+            "unit_price": _PREMIUM,
+            "subtotal": _PREMIUM,
+            "iva_amount": _PREMIUM_IVA,
+        }
+    )
+    return _received(on, linked=(linked,)).model_copy(
+        update={
+            "invoice_number": number,
+            "base_total": _PREMIUM,
+            "iva_total": _PREMIUM_IVA,
+            "grand_total": _PREMIUM + _PREMIUM_IVA,
+            "lines": (line,),
+        }
+    )
+
+
+@pytest.mark.parametrize(
+    ("months", "expected"),
+    [((1, 2), Decimal("400.00")), ((1, 2, 3), Decimal("500.00"))],
+    ids=["refund_keeps_the_total_under_the_cap", "remainder_still_above_the_cap"],
+)
+def test_a_refund_counts_against_the_shared_cap_of_the_instalment(
+    operation: PinnedAuthorityOperation, months: tuple[int, ...], expected: Decimal
+) -> None:
+    """400,00 x 2 less 400,00 = 400,00 stays under the 500,00 cap; 400,00 x 3 less 400,00 = 800,00 is held to it."""
+    rows: list[Transaction] = []
+    invoices: list[Invoice] = []
+    for month in months:
+        on = date(_YEAR, month, 1)
+        row = _premium(on, direction=TransactionDirection.OUTGOING, evidence_id=None)
+        invoice = _premium_invoice(f"P-{month}", on, row.transaction_id)
+        invoices.append(invoice)
+        rows.append(_premium(on, direction=TransactionDirection.OUTGOING, evidence_id=invoice.invoice_id))
+    refund_on = date(_YEAR, 5, 1)
+    unlinked = _premium(refund_on, direction=TransactionDirection.INCOMING, evidence_id=None)
+    refund_invoice = _premium_invoice("P-R", refund_on, unlinked.transaction_id)
+    invoices.append(refund_invoice)
+    rows.append(_premium(refund_on, direction=TransactionDirection.INCOMING, evidence_id=refund_invoice.invoice_id))
+    profile = _profile(operation, _declared((_YEAR, _CASH)))
+    expense = resolve_m130(
+        ActivityAssetHistory(), "2T", rows=tuple(rows), profile=profile, invoices=_repository(*invoices)
+    )
+    assert m130_box(expense) == expected

@@ -85,7 +85,6 @@ from ...domain.transactions.enums import BusinessClassification, TransactionDire
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ...domain.user_profile.values import UserProfileRecord
-from ..invoices.source_observations import is_rectificativa
 from . import _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
@@ -115,7 +114,7 @@ from .renta_imputation import (
     rows_touching_window,
 )
 from .renta_income_diagnostics import received_rectificativa_reading
-from .renta_ledger_evidence import purchase_invoice_evidence_payload
+from .renta_ledger_evidence import purchase_invoice_evidence_payload, refund_left_to_correction_netting
 from .renta_ledger_models import RentaLedgerAggregationIssue
 from .renta_ledger import (
     CategoryRuleRefusal,
@@ -576,7 +575,7 @@ def _classify_gasto_transaction(
         return None
     refund = None
     if refunded:
-        refund = _refund_figures(transaction, invoices=invoices, bucket_id=bucket_id)
+        refund = _refund_figures(transaction, invoices=invoices, bucket_id=bucket_id, netting=criteria is not None)
         if refund is None or isinstance(refund, RentaGastoLedgerAggregationIssue):
             return refund
     gate_issue = _gasto_gate_issue(
@@ -623,6 +622,7 @@ def _refund_figures(
     *,
     invoices: InvoiceCatalogue | None,
     bucket_id: str,
+    netting: bool,
 ) -> _RefundFigures | RentaGastoLedgerAggregationIssue | None:
     """Read a supplier's refund through the evidence check the annual pipeline applies.
 
@@ -632,8 +632,7 @@ def _refund_figures(
     invoice_id = transaction.purchase_invoice_evidence_id
     if invoices is None or invoice_id is None:
         return None
-    invoice = invoices.get(invoice_id)
-    if invoice is not None and is_rectificativa(invoice):
+    if netting and refund_left_to_correction_netting(transaction, invoices):
         return None
     payload = purchase_invoice_evidence_payload(invoices=invoices, bucket_id=bucket_id, transaction=transaction)
     if isinstance(payload, RentaLedgerAggregationIssue):
