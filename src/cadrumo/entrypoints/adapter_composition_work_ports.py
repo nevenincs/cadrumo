@@ -555,9 +555,11 @@ def build_verification_repository_bundle(
     from ..adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+    from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
     from ..application.modelo.verification_repository_ports import VerificationRepositoryBundle
     from ..application.workflow.persistence import WorkflowRunRepository
     from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
@@ -588,6 +590,9 @@ def build_verification_repository_bundle(
         ),
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=normalized_bucket_id, objects=objects),
         retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
+        percepcion_observation_ports=PercepcionObservationPorts(
+            repository=PercepcionObservationRepositoryAdapter(objects=objects),
+        ),
         ledger_membership_ports=build_ledger_membership_ports(
             bucket_id=normalized_bucket_id, transaction_repository=transaction_repository, objects=objects
         ),

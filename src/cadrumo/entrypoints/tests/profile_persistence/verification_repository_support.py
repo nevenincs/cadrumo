@@ -20,12 +20,14 @@ from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCata
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.participation_index import TransactionParticipationIndexRepository
+from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.profile.workflow_gate import build_workflow_gate_ports
 from cadrumo.adapters.persistence.storage.runtime_repository import (
     secure_object_repository_for_active_bucket,
 )
+from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
@@ -59,6 +61,9 @@ def build_test_verification_repository_bundle() -> VerificationRepositoryBundle:
         workflow_gate_ports=build_workflow_gate_ports(bucket_id=bucket_id),
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
+        ),
+        percepcion_observation_ports=PercepcionObservationPorts(
+            repository=PercepcionObservationRepositoryAdapter(objects=objects),
         ),
         ledger_membership_ports=build_ledger_membership_ports(
             bucket_id=bucket_id, transaction_repository=transaction_repository
