@@ -394,7 +394,8 @@ export type CalculationNoteSentence =
   | "disposal_no_minimum_authority"
   | "disposal_minimum_unresolved"
   | "disposal_exemption_not_computed"
-  | "advisory_imputation_period_ungrounded";
+  | "advisory_imputation_period_ungrounded"
+  | "advisory_value_proven_zero";
 
 /**
  * Closed set of serialisations of one modelo calculation report.
@@ -550,6 +551,7 @@ export type CalculationSourceDiagnosticSnapshot = {
   out_of_window_count: number | null;
   out_of_window_min_filing_date: string | null;
   out_of_window_max_filing_date: string | null;
+  value_outcome: BindingValueOutcome | null;
 };
 
 /**
@@ -599,9 +601,11 @@ export type CalculationSourceDiagnosticSnapshot = {
  * filed record. None of them withholds anything. `advisory_binding_value` is a
  * value a binding produced whose declared grade cap stops it at calculation:
  * it names the box the value reaches and the binding, and withholds filing
- * unless the resolver stated a proven zero. `fact` states such a note's own
- * row, element, interval and amount. `binding_source` is `None` only where the
- * condition names no binding source kind.
+ * until a recalculation under an uncapped binding clears it; a capped value
+ * its resolver proved to be zero withholds nothing and is not persisted.
+ * `fact` states such a note's own row, element, interval and amount.
+ * `binding_source` is `None` only where the condition names no binding source
+ * kind.
  */
 export type CalculationSourceIssue = {
   reason:
@@ -636,7 +640,6 @@ export type CalculationSourceIssue = {
   source_ref: string | null;
   casilla_id: CasillaId | null;
   fact: CalculationNoteFact | null;
-  value_outcome: BindingValueOutcome | null;
 };
 
 /**
