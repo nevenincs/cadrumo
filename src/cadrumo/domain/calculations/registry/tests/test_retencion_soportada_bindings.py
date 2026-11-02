@@ -123,11 +123,11 @@ def test_the_provider_reads_a_known_class_and_quantity() -> None:
     assert provider.quantity is RetencionSoportadaCantidad.PAGO_A_CUENTA
 
 
-def test_the_registration_is_filing_grade_on_payer_certificate_and_operator_input() -> None:
+def test_the_registration_is_filing_grade_on_payer_certificate_operator_input_and_profile_field() -> None:
     registration = registration_for(BindingSourceKind.RETENCION_SOPORTADA)
     assert registration.disposition == "filing_grade"
     assert registration.permitted_terminal_origins == frozenset(
-        {TerminalOriginClass.PAYER_CERTIFICATE, TerminalOriginClass.OPERATOR_INPUT},
+        {TerminalOriginClass.PAYER_CERTIFICATE, TerminalOriginClass.OPERATOR_INPUT, TerminalOriginClass.PROFILE_FIELD},
     )
     assert TerminalOriginClass.PERCEPTOR_OBSERVATION not in registration.permitted_terminal_origins
     assert registration.permitted_aggregation_ops == frozenset({BindingAggregationOp.SUM})

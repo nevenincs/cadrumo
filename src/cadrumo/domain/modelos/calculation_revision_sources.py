@@ -166,6 +166,10 @@ class CalculationNoteSentence(StrEnum):
     DISPOSAL_EXEMPTION_NOT_COMPUTED = "disposal_exemption_not_computed"
     ADVISORY_IMPUTATION_PERIOD_UNGROUNDED = "advisory_imputation_period_ungrounded"
     ADVISORY_VALUE_PROVEN_ZERO = "advisory_value_proven_zero"
+    RETENCION_SOPORTADA_EVIDENCE_REQUIRED = "retencion_soportada_evidence_required"
+    """A suffered-withholding class that may have income has neither a payer record nor an absence attestation."""
+    RETENCION_SOPORTADA_ABSENCE_CONTRADICTED = "retencion_soportada_absence_contradicted"
+    """A suffered-withholding class holds payer records and an operator's attestation that it has none."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(

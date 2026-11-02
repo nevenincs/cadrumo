@@ -213,6 +213,18 @@ aggregation:
         nem zárható ki, hogy a kifizető te vagy. Előbb add meg a NIF-ed a profilban.
       validation: 'A levonási rekord nem lett mentve: ellenőrizd a kifizető NIF-jét,
         az összegeket (legfeljebb két tizedesjegy) és az igazolás ujjlenyomatát.'
+  retencion_soportada_absence:
+    errors:
+      already_attested: Erre a jövedelemosztályra és adóévre már van aktív hiánynyilatkozat.
+      ejercicio_unsupported: A nyilatkozat adóéve kívül esik a Cadrumo által támogatott
+        bevallási éveken.
+      family_not_declared: Az adóév Modelo 100 változata nem olvas elszenvedett levonást,
+        így a nyilatkozat soha nem jutna el egy számításig.
+      not_attested: Erre a jövedelemosztályra és adóévre nincs aktív hiánynyilatkozat.
+      records_present: Erre a jövedelemosztályra és adóévre már vannak kifizetői rekordok.
+        Töröld őket, mielőtt kijelented, hogy egyetlen kifizető sem vont le.
+      stale_revision: Ez a nyilatkozat megváltozott, mióta beolvastad. Használd azt
+        a változatot, amellyel most mentve van.
   retenciones:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}

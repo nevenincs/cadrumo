@@ -209,6 +209,20 @@ aggregation:
         is yourself cannot be ruled out. Add your NIF to the profile first.
       validation: 'The withholding record was not saved: check the payer ID, the amounts
         (at most two decimals) and the certificate fingerprint.'
+  retencion_soportada_absence:
+    errors:
+      already_attested: An active absence attestation already exists for this income
+        class and ejercicio.
+      ejercicio_unsupported: The ejercicio of this attestation is outside the filing
+        years Cadrumo supports.
+      family_not_declared: The Modelo 100 revision for this ejercicio reads no withholding
+        suffered, so the attestation would never reach a calculation.
+      not_attested: No active absence attestation exists for this income class and
+        ejercicio.
+      records_present: Payer records already exist for this income class and ejercicio.
+        Remove them before you attest that no payer withheld.
+      stale_revision: This attestation changed since you read it. Use the revision
+        it is stored at now.
   retenciones:
     errors:
       filing_year_out_of_range: Filing year %{filing_year} is outside the supported

@@ -1465,6 +1465,8 @@ errors:
       no coincideix amb la revisió de càlcul. Executa `aeat app modelo work calculate`
       per generar una revisió nova.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
+    retencion_soportada_absence_refused: No s'ha desat la declaració d'absència d'aquesta
+      classe de renda.
     retencion_soportada_revision_conflict: El registre de retenció ha canviat des
       que el vas llegir; torna a llegir-lo abans de desar.
     retencion_soportada_write_refused: No s'ha desat el registre de retenció d'aquest

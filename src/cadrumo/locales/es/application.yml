@@ -1519,9 +1519,9 @@ application:
       advisory_imputation_period_ungrounded: 'Casilla {box}: {amount} queda en espera
         porque no está confirmado el periodo al que corresponde. Los ingresos y gastos
         de la actividad se imputan al devengo y una retención va con su renta (art.
-        79 RIRPF), y tus registros fechan cada movimiento por su llegada al banco, lo que
-        solo es correcto si optaste por el criterio de cobros y pagos (art. 7.2 RIRPF;
-        art. 14.1.b LIRPF).'
+        79 RIRPF), y tus registros fechan cada movimiento por su llegada al banco,
+        lo que solo es correcto si optaste por el criterio de cobros y pagos (art.
+        7.2 RIRPF; art. 14.1.b LIRPF).'
       advisory_value_proven_zero: 'Casilla {box}: el cero se mantiene, porque en el
         periodo no hay ninguna cifra cuyo periodo pueda estar en duda.'
       agrarian_excluded: '{element}: pertenece a una actividad agraria, así que queda
@@ -1603,6 +1603,13 @@ application:
         que ya no existen.'
       residence_period_unknown: No hay residencia fiscal registrada para el {date},
         así que tus elementos se cuentan como si se aplicaran los Modelos 100 y 130.
+      retencion_soportada_absence_contradicted: 'Clase de renta {income_class}: hay
+        registros de pagadores y también tu declaración de que ningún pagador practicó
+        retención. Elimina los registros o retira la declaración.'
+      retencion_soportada_evidence_required: 'Clase de renta {income_class}: no hay
+        ningún registro de pagador ni declaración de ausencia, y tu perfil no declara
+        ausente esta renta. Registra el certificado de cada pagador o declara que
+        ningún pagador practicó retención.'
       row_unregistered: El movimiento del {row_date} por {row_amount} registra un
         elemento que no está en tu registro.
       row_unregistered_undated: Un movimiento registra un elemento que no consta en

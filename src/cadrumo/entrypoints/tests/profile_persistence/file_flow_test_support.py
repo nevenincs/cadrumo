@@ -39,7 +39,10 @@ from cadrumo.adapters.persistence.profile.percepciones_observations import Perce
 from cadrumo.adapters.persistence.profile.profile_path_values import ProfilePathValuesPersistenceAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
-from cadrumo.adapters.persistence.profile.retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
+from cadrumo.adapters.persistence.profile.retencion_soportada_records import (
+    RetencionSoportadaAbsenceRepositoryAdapter,
+    RetencionSoportadaRecordRepositoryAdapter,
+)
 from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
     SEED_CLOCK,
     seed_clean_cross_period_sources,
@@ -241,6 +244,7 @@ def calculation_ports_for_test(
             ),
             retencion_soportada_ports=RetencionSoportadaPorts(
                 repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
+                absences=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
             ),
             relation_override_migration=_RelationOverrideMigration(),
         )

@@ -1459,6 +1459,8 @@ errors:
       para generar una revisión nueva.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
+    retencion_soportada_absence_refused: No se guardó la declaración de ausencia de
+      esta clase de renta.
     retencion_soportada_revision_conflict: El registro de retención cambió desde que
       lo leíste; vuelve a leerlo antes de guardar.
     retencion_soportada_write_refused: No se guardó el registro de retención de este

@@ -220,6 +220,20 @@ aggregation:
         que el pagador siguis tu. Afegeix primer el teu NIF al perfil.
       validation: 'El registre de retenció no s''ha desat: revisa el NIF del pagador,
         els imports (com a màxim dos decimals) i l''empremta del certificat.'
+  retencion_soportada_absence:
+    errors:
+      already_attested: Ja hi ha una declaració d'absència activa per a aquesta classe
+        de renda i exercici.
+      ejercicio_unsupported: L'exercici d'aquesta declaració és fora dels anys de
+        presentació que Cadrumo admet.
+      family_not_declared: La revisió del Model 100 d'aquest exercici no llegeix retencions
+        suportades, de manera que la declaració mai no arribaria a un càlcul.
+      not_attested: No hi ha cap declaració d'absència activa per a aquesta classe
+        de renda i exercici.
+      records_present: Ja hi ha registres de pagadors per a aquesta classe de renda
+        i exercici. Elimina'ls abans de declarar que cap pagador no va practicar retenció.
+      stale_revision: Aquesta declaració ha canviat des que la vas llegir. Fes servir
+        la revisió amb què està desada ara.
   retenciones:
     errors:
       filing_year_out_of_range: El exercici %{filing_year} queda fora del rang admès

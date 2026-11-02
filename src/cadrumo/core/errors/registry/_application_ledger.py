@@ -219,6 +219,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.application.aggregation.retencion_soportada_absence_repository.RetencionSoportadaAbsenceRefusedError",
+        ErrorCode(
+            code="REFUSED_RETENCION_SOPORTADA_ABSENCE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.retencion_soportada_absence_refused",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.application.aggregation.invoice_retencion.InvoiceWithholdingEvidenceError",
         ErrorCode(
             code="REFUSED_INVOICE_WITHHOLDING_EVIDENCE",

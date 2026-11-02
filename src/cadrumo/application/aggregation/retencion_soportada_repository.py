@@ -34,6 +34,7 @@ from .observation_key_component import validate_observation_key_component
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .retencion_soportada_absence_repository import RetencionSoportadaAbsenceReader
 
 __all__ = [
     "PinnedRetencionSoportadaWriteAuthority",
@@ -137,9 +138,15 @@ class RetencionSoportadaRecordRepository(RetencionSoportadaRecordReader, Protoco
 
 @dataclass(frozen=True, slots=True)
 class RetencionSoportadaPorts:
-    """The suffered-withholding capability one calculation context reads through."""
+    """The suffered-withholding capability one calculation context reads through.
+
+    ``absences`` reads the operator's absence attestations. Without it no
+    attestation is honoured, so a class with no payer record stays unresolved
+    unless the profile declares its income absent: the omission fails closed.
+    """
 
     repository: RetencionSoportadaRecordReader
+    absences: RetencionSoportadaAbsenceReader | None = None
 
 
 class RetencionSoportadaWriteAuthority(Protocol):

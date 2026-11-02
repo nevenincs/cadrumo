@@ -618,10 +618,18 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         validate_retencion_soportada_binding,
         # Withholding the taxpayer suffered, one record per payer: a payer
         # certificate, or the operator's declaration where no certificate is
-        # held. Never PERCEPTOR_OBSERVATION, which is the withholding-agent side.
+        # held. A proven zero rests on the operator's absence attestation or on
+        # the profile's declaration that the class's income is absent. Never
+        # PERCEPTOR_OBSERVATION, which is the withholding-agent side.
         channels=_MONEY_CHANNELS,
         ops=frozenset({BindingAggregationOp.SUM}),
-        origins=frozenset({TerminalOriginClass.PAYER_CERTIFICATE, TerminalOriginClass.OPERATOR_INPUT}),
+        origins=frozenset(
+            {
+                TerminalOriginClass.PAYER_CERTIFICATE,
+                TerminalOriginClass.OPERATOR_INPUT,
+                TerminalOriginClass.PROFILE_FIELD,
+            },
+        ),
         output="scalar",
         resolver_id="retencion_soportada",
         stage="mesh",
