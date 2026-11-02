@@ -1546,6 +1546,22 @@ application:
       row_unregistered_undated: A ledger entry records an asset your register does
         not hold.
     calc_diagnostic_words:
+      income_class:
+        actividad_economica: economic activity other than an urban rental
+        arrendamiento_inmueble_urbano: urban property rental that is not an economic
+          activity
+        arrendamiento_inmueble_urbano_actividad: urban property rental that is an
+          economic activity
+        atribucion_actividad_economica: economic activity income attributed by an
+          entity
+        atribucion_capital_inmobiliario: property income attributed by an entity
+        atribucion_capital_mobiliario: investment income attributed by an entity
+        atribucion_ganancia_patrimonial: capital gains attributed by an entity
+        capital_mobiliario: investment income (capital mobiliario)
+        ganancia_patrimonial: capital gains, prizes included
+        imputacion_aie_ute: income allocated by an AIE or UTE
+        imputacion_derechos_imagen: image-rights income allocation
+        trabajo: employment income
       named_element: '"{name}"'
       unnamed_element: An asset with no name
     calculation_report:
