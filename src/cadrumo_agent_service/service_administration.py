@@ -41,7 +41,6 @@ from .providers.application.agent_credentials import ProviderSettingsAgentCreden
 from .providers.application.attachment_releases import (
     AttachmentReleases,
     DisclosureRefusalCode,
-    ReleaseScope,
 )
 from .providers.application.contracts import LocalModelListResult, ProviderSettingsRefusal
 from .providers.application.local_model_list import LocalModelListService
@@ -51,6 +50,7 @@ from .providers.application.resolution import ProviderCredentialResolver
 from .providers.application.service import AssistantAuthChoice, BaseUrlChange, ProviderSettingsService
 from .providers.persistence.attachment_disclosures import SecureAttachmentDisclosureStore
 from .providers.persistence.store import SecureLocalModelListStore, SecureProviderSettingsStore
+from .service_attachment_admin import answer_attachment_admin
 from .service_support import (
     ADMIN_READ_FRESH_SECONDS,
     ADMIN_READ_SECONDS,
@@ -203,7 +203,16 @@ class AgentServiceAdministration(ABC):
     ) -> Any:
         """Apply one bounded masked administration request under the live lease."""
         if action.startswith("attachment_"):
-            return self._attachment_admin(action, run_id, permission_request_id, scope, grant_id, conversation_id)
+            return answer_attachment_admin(
+                self._attachment_releases,
+                closing=self._closing.is_set(),
+                action=action,
+                run_id=run_id,
+                request_id=permission_request_id,
+                scope=scope,
+                grant_id=grant_id,
+                conversation_id=conversation_id,
+            )
         if action == "connect_submit_code":
             return self._submit_sign_in_code(attempt_id, secret)
         if action in {"connect_status", "connect_cancel"}:
@@ -250,39 +259,6 @@ class AgentServiceAdministration(ABC):
             return self._admin(action, **arguments)
         finally:
             self._guard.release()
-
-    def _attachment_admin(
-        self,
-        action: str,
-        run_id: str | None,
-        request_id: str | None,
-        scope: str | None,
-        grant_id: str | None,
-        conversation_id: str | None,
-    ) -> dict[str, Any]:
-        """Answer the person's attachment decisions; none of these touches the agent tree's lifecycle."""
-        if self._closing.is_set():
-            return {"kind": "refused", "code": "service_stopping"}
-        releases = self._attachment_releases
-        if action == "attachment_grants":
-            return releases.grants()
-        if action == "attachment_grant_revoke" and grant_id is not None:
-            return releases.revoke(grant_id)
-        if action == "attachment_conversation_forget" and conversation_id is not None:
-            return releases.forget_conversation(conversation_id)
-        return self._attachment_request_admin(action, run_id, request_id, scope)
-
-    def _attachment_request_admin(
-        self, action: str, run_id: str | None, request_id: str | None, scope: str | None
-    ) -> dict[str, Any]:
-        releases = self._attachment_releases
-        if run_id is None or request_id is None:
-            return {"kind": "refused", "code": "invalid_request"}
-        if action == "attachment_card":
-            return releases.card(run_id, request_id)
-        if action == "attachment_release":
-            return releases.release(run_id, request_id, None if scope is None else ReleaseScope(scope))
-        return {"kind": "refused", "code": "invalid_request"}
 
     def _disclosure_session(self) -> object | None:
         """Identify the signed-in agent session; sign-out, lock, expiry and agent stop each change it."""

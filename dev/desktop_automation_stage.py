@@ -5,6 +5,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from .desktop_agent_live.freshness import stage_verdict
 from .desktop_agent_live.package import stage_lane_package
@@ -14,7 +15,8 @@ from .packaging.native.hashing import digest
 from .packaging.native.layout import load_layout
 
 
-def _automation_host(testing: Path, configuration: str) -> Path:
+def _automation_record(testing: Path, configuration: str) -> dict[str, Any]:
+    """Read the packaged host record, refusing one not built for this configuration with native automation."""
     record = require_enrolled_output(testing / "packaged" / "host.json")
     value = json.loads(record.read_text(encoding="utf-8"))
     if not isinstance(value, dict):
@@ -26,6 +28,11 @@ def _automation_host(testing: Path, configuration: str) -> Path:
         raise ValueError("The packaged host was not built with native-automation")
     if value.get("variant") != "packaged" or value.get("shell") is not None:
         raise ValueError("The automation host must use the embedded packaged shell")
+    return value
+
+
+def _automation_host(testing: Path, configuration: str) -> Path:
+    value = _automation_record(testing, configuration)
     executable = value.get("executable")
     if not isinstance(executable, str) or not Path(executable).is_absolute():
         raise ValueError("The packaged automation host must name an absolute executable")

@@ -60,6 +60,7 @@ from ..oss_ioss import (
     validate_oss_ioss_observation,
     validate_oss_ioss_observations,
 )
+from ..oss_ioss_wire_geometry import record_row_slots
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -82,7 +83,7 @@ def test_a_revision_missing_one_field_of_a_row_is_not_a_table_of_rows():
         }
     )
     with pytest.raises(AggregationValidationError):
-        oss_ioss_module._record_row_slots(revision, "modelo-369-exterior-t36901")
+        record_row_slots(revision, "modelo-369-exterior-t36901")
 
 
 # ---------------------------------------------------------------------------

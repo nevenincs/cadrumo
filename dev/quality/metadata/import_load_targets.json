@@ -548,6 +548,7 @@
         "cadrumo.application.aggregation.observation_key_component",
         "cadrumo.application.aggregation.observation_window",
         "cadrumo.application.aggregation.oss_ioss",
+        "cadrumo.application.aggregation.oss_ioss_wire_geometry",
         "cadrumo.application.aggregation.percepciones_observations_repository",
         "cadrumo.application.aggregation.prorrata_volume",
         "cadrumo.application.aggregation.renta_gasto_ledger",
@@ -3590,6 +3591,7 @@
         "cadrumo_agent_service.providers.persistence.store",
         "cadrumo_agent_service.service",
         "cadrumo_agent_service.service_administration",
+        "cadrumo_agent_service.service_attachment_admin",
         "cadrumo_agent_service.service_scheduling",
         "cadrumo_agent_service.service_startup",
         "cadrumo_agent_service.service_support"

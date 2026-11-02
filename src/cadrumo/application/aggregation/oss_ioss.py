@@ -26,7 +26,6 @@ from __future__ import annotations
 from collections.abc import Iterable, Sequence
 from datetime import date
 from decimal import Decimal
-from itertools import pairwise
 from typing import Annotated, ClassVar, NamedTuple
 
 from pydantic import BaseModel, Field, StringConstraints
@@ -51,8 +50,7 @@ from ...domain.calculations.registry.ledger_oss_bindings import (
 )
 from ...domain.calculations.registry.manual_input_selector import ManualInputProvider
 from ...domain.calculations.registry.schema import ModeloRevision
-from ...domain.calculations.registry.schema_base import CasillaDataType, DateAxis
-from ...domain.calculations.registry.schema_exports import ExportFieldDefinition
+from ...domain.calculations.registry.schema_base import DateAxis
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.currency.errors import ExchangeRateProviderError
 from ...domain.currency.models import EurRateLookupStatus
@@ -75,6 +73,7 @@ from .invoice_devengo import (
     invoice_devengo_in_period,
     resolve_invoice_devengo,
 )
+from .oss_ioss_wire_geometry import ROW_SHAPES, record_row_slots, require_slot_coverage, require_wire_geometry
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -353,7 +352,7 @@ def _detail_binding_values(
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
     for record_id, grouped in _group_detail_observations(revision, observations, operation=operation).items():
-        slots = _record_row_slots(revision, record_id)
+        slots = record_row_slots(revision, record_id)
         if len(grouped) > len(slots):
             # The design's continuation page has no slots here: the settlement
             # formulas read these slots alone. Refuse rather than export a prefix.
@@ -367,33 +366,7 @@ def _detail_binding_values(
 
 
 _MODELO_369_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
-_ROW_SHAPES: tuple[tuple[CasillaDataType, ...], ...] = (
-    (
-        CasillaDataType.TEXT,
-        CasillaDataType.DECIMAL,
-        CasillaDataType.TEXT,
-        CasillaDataType.MONEY,
-        CasillaDataType.MONEY,
-    ),
-    (
-        CasillaDataType.TEXT,
-        CasillaDataType.TEXT,
-        CasillaDataType.TEXT,
-        CasillaDataType.DECIMAL,
-        CasillaDataType.TEXT,
-        CasillaDataType.MONEY,
-        CasillaDataType.MONEY,
-    ),
-)
-"""The two line layouts of DR369's lists: destination first, or establishment first.
-
-Columns are told apart by data type and contiguity alone; each column's width is
-whatever the revision's own wire geometry declares.
-
-Only the first can be projected; the second names a permanent establishment or a
-dispatch state the invoice does not record, and is enumerated solely to close it.
-"""
-_PROJECTED_ROW_COLUMNS = len(_ROW_SHAPES[0])
+_PROJECTED_ROW_COLUMNS = len(ROW_SHAPES[0])
 
 
 def _projection_declarations(
@@ -612,64 +585,6 @@ def _refuse_rate_chosen_by_issue_date(
             )
 
 
-def _record_row_slots(revision: ModeloRevision, record_id: str) -> tuple[tuple[BindingId, ...], ...]:
-    """Read a record's list of rows from its bound wire geometry.
-
-    Bindings are generated from AEAT's positional workbook and their names are
-    truncated differently per page, so a slot is located by offset and shape.
-    Anything short of one unbroken run of rows is refused: a hole would otherwise
-    pass for a row that does not exist.
-    """
-    fields = _record_fields(revision, record_id)
-    if len({field[0] for field in fields}) != len(fields):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
-    rows: list[tuple[int, int, tuple[BindingId, ...]]] = []
-    index = 0
-    while index < len(fields):
-        width = next((len(shape) for shape in _ROW_SHAPES if _fields_match_shape(fields[index:], shape)), 0)
-        if width:
-            run = fields[index : index + width]
-            rows.append((run[0][0], run[-1][0] + run[-1][1], tuple(field[3] for field in run)))
-        index += width or 1
-    return _unbroken_rows(rows)
-
-
-def _record_fields(revision: ModeloRevision, record_id: str) -> list[tuple[int, int, CasillaDataType, BindingId]]:
-    """Return a record's positional manual-input bindings ordered by offset."""
-    return sorted(
-        (
-            (binding.provider.offset, binding.provider.length, binding.provider.data_type, binding.id)
-            for binding in revision.bindings
-            if isinstance(binding.provider, ManualInputProvider)
-            and binding.provider.record == record_id
-            and binding.provider.offset is not None
-            and binding.provider.length is not None
-        ),
-        key=lambda field: field[0],
-    )
-
-
-def _fields_match_shape(
-    fields: Sequence[tuple[int, int, CasillaDataType, BindingId]],
-    shape: tuple[CasillaDataType, ...],
-) -> bool:
-    """Say whether the leading fields are one contiguous line of this shape."""
-    if len(fields) < len(shape):
-        return False
-    offset = fields[0][0]
-    for (field_offset, length, data_type, _), expected in zip(fields, shape, strict=False):
-        if field_offset != offset or data_type is not expected:
-            return False
-        offset += length
-    return True
-
-
-def _unbroken_rows(rows: Sequence[tuple[int, int, tuple[BindingId, ...]]]) -> tuple[tuple[BindingId, ...], ...]:
-    if not rows or any(previous[1] != following[0] for previous, following in pairwise(rows)):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
-    return tuple(row[2] for row in rows)
-
-
 def _closable_records(
     revision: ModeloRevision,
     effective_date: date,
@@ -696,43 +611,6 @@ def _can_close_detail_rows(
         or projection.source_bucket_id != context.bucket_id
         or projection.catalogue_fingerprint is None
     )
-
-
-def _slot_matches_export_field(provider: object, field: ExportFieldDefinition | None) -> bool:
-    return (
-        field is not None
-        and isinstance(provider, ManualInputProvider)
-        and provider.offset == field.offset
-        and provider.length == field.length
-    )
-
-
-def _export_fields_by_binding(revision: ModeloRevision, record_id: str) -> dict[BindingId, ExportFieldDefinition]:
-    """Return the one pinned export record's bound fields, refusing an absent or repeated record."""
-    records = [record for layout in revision.export_layouts for record in layout.records if record.id == record_id]
-    if len(records) != 1:
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
-    return {field.binding: field for field in records[0].fields if field.binding is not None}
-
-
-def _require_wire_geometry(revision: ModeloRevision, record_id: str, slots: tuple[tuple[BindingId, ...], ...]) -> None:
-    """Require each slot to be the export field of the pinned record at the same position."""
-    fields = _export_fields_by_binding(revision, record_id)
-    bindings = {binding.id: binding for binding in revision.bindings}
-    if len(bindings) != len(revision.bindings):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
-    for binding_id in (binding for row in slots for binding in row):
-        if not _slot_matches_export_field(bindings[binding_id].provider, fields.get(binding_id)):
-            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
-
-
-def _require_slot_coverage(
-    slots: tuple[tuple[BindingId, ...], ...], supplied_binding_ids: frozenset[BindingId]
-) -> None:
-    if any(
-        bool(supplied_binding_ids.intersection(row)) and not set(row).issubset(supplied_binding_ids) for row in slots
-    ):
-        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
 
 
 def _layout_hydrated_revision(
@@ -777,11 +655,11 @@ def _closed_detail_record_rows(
     closed: list[ClosedRecordRowSet] = []
     covered: set[BindingId] = set()
     for record_id in _closable_records(revision, effective_date, operation=operation):
-        slots = _record_row_slots(revision, record_id)
+        slots = record_row_slots(revision, record_id)
         if len(slots) != capacity:
             raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
-        _require_wire_geometry(revision, record_id, slots)
-        _require_slot_coverage(slots, supplied_binding_ids)
+        require_wire_geometry(revision, record_id, slots)
+        require_slot_coverage(slots, supplied_binding_ids)
         covered.update(binding for row in slots for binding in row)
         closed.append(
             ClosedRecordRowSet(
