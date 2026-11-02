@@ -265,8 +265,8 @@ class InvoiceFiguresPreviewExecutionResult(BaseModel):
 
 
 __all__ = [
-    "INVOICE_CORRECTION_JUDGED_FIELDS",
     "INVALID_INVOICE_REFUSAL",
+    "INVOICE_CORRECTION_JUDGED_FIELDS",
     "INVOICE_FIGURES_PREVIEW_LABEL_PREFIX",
     "INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID",
     "InvoiceFiguresPreviewExecutionResult",
