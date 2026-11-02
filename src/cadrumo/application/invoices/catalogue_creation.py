@@ -64,7 +64,7 @@ from ...domain.invoices.models import INVOICE_WRITE_ADMISSION, Invoice, InvoiceL
 from ...domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ...domain.iva.errors import IvaRateNotFoundError
 from ...domain.iva.schema import InvoiceKind, IvaCategory
-from ..aggregation.counterpart import counterpart_operation_catalogue_entries
+from ..aggregation.counterpart import counterpart_catalogue_entry, counterpart_operation_catalogue_entries
 from .catalogue_creation_ports import (
     CatalogueCreationPorts,
     CatalogueInvoiceRateProviderPort,
@@ -158,22 +158,18 @@ def _registry_m349_operation_type_requirement(
         raise ValueError(f"Modelo 349 has no registry revision for {effective_date.isoformat()}")
     entries = counterpart_operation_catalogue_entries(effective_date, operation=operation)
 
-    def required(key: str) -> str:
-        value = entries.get(key)
-        if value is None or not value.strip():
-            raise ValueError(f"counterpart registry mapping is missing {key!r}")
-        return value.strip()
-
     try:
         category = require_iva_category(
-            required("modelo.349.operation_type_required_category"),
+            counterpart_catalogue_entry(entries, "modelo.349.operation_type_required_category"),
             effective_date=effective_date,
             authority=operation,
         )
     except (RegistryValidationError, ValueError) as exc:
         raise ValueError("counterpart registry declares an unknown operation-type category") from exc
     tokens = tuple(
-        token.strip() for token in required("modelo.349.operation_type_candidates").split(",") if token.strip()
+        token.strip()
+        for token in counterpart_catalogue_entry(entries, "modelo.349.operation_type_candidates").split(",")
+        if token.strip()
     )
     if not tokens or len(set(tokens)) != len(tokens):
         raise ValueError("counterpart registry declares an empty or duplicate operation-type candidate set")

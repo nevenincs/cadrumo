@@ -90,6 +90,14 @@ def counterpart_operation_catalogue_entries(
     return entries
 
 
+def counterpart_catalogue_entry(entries: Mapping[str, str], key: str) -> str:
+    """Return the stripped value the counterpart mapping declares for *key*, refusing an absent or blank one."""
+    value = entries.get(key)
+    if value is None or not value.strip():
+        raise ValueError(f"counterpart registry mapping is missing {key!r}")
+    return value.strip()
+
+
 def _active_counterpart_modelos(
     entries: Mapping[str, str],
     *,
@@ -120,25 +128,25 @@ def _registry_counterpart_catalogue(
         raise ValueError("counterpart registry mapping must name one form with readiness gates")
     readiness_modelo = readiness_modelos[0]
 
-    def required(key: str) -> str:
-        value = entries.get(key)
-        if value is None or not value.strip():
-            raise ValueError(f"counterpart registry mapping is missing {key!r}")
-        return value
-
     def tokens(key: str) -> frozenset[str]:
-        result = frozenset(token.strip() for token in required(key).split(",") if token.strip())
+        result = frozenset(
+            token.strip() for token in counterpart_catalogue_entry(entries, key).split(",") if token.strip()
+        )
         if not result:
             raise ValueError(f"counterpart registry mapping {key!r} has no tokens")
         return result
 
-    readiness = required(f"modelo.{readiness_modelo}.readiness.nif_iva_for_non_groi_country").casefold()
+    readiness = counterpart_catalogue_entry(
+        entries, f"modelo.{readiness_modelo}.readiness.nif_iva_for_non_groi_country"
+    ).casefold()
     if readiness not in {"true", "false"}:
         raise ValueError("counterpart registry readiness flag must be true or false")
     return _CounterpartRegistryCatalogue(
         model_kinds={modelo: tokens(f"modelo.{modelo}.operation_kinds") for modelo in modelos},
         readiness_modelo=readiness_modelo,
-        groi_countries=frozenset({required(f"modelo.{readiness_modelo}.readiness.groi_country").strip()}),
+        groi_countries=frozenset(
+            {counterpart_catalogue_entry(entries, f"modelo.{readiness_modelo}.readiness.groi_country")}
+        ),
         nif_iva_for_non_groi_country=readiness == "true",
     )
 
@@ -454,5 +462,6 @@ __all__ = [
     "CounterpartRollup",
     "aggregate_counterpart_347",
     "aggregate_counterpart_349",
+    "counterpart_catalogue_entry",
     "counterpart_operation_catalogue_entries",
 ]
