@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:57b854885b77d3274dda935c65854d08cbe80fcccc58d11679f9129741672b29'
+body_hash: 'sha256:dd9ee8f493b63d61585bceb61e6ba4e396de4822fdabbae865cd58cf8ae4269d'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -165,6 +165,15 @@ related:
 - `S16` `verify:` `just check-bindings` -> `pass`
 - `S16` `verify:` `just check-import-boundaries` -> `fail`
 - `S16` `by:` `implementation-engineer-high`
+- `S14` `M` `src/cadrumo/adapters/persistence/profile/tests/modelo_export_support.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_cross_period_clean_state_enforcement.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_cross_period_clean_state_gates.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_verification_substance_workflow.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_modelo_deductible_iva_verify_export_parity.py`
+- `S14` `verify:` `pytest the 32 profile_persistence tests the screen gate refused` -> `pass`
+- `S14` `verify:` `just check-types` -> `pass`
+- `S14` `verify:` `just check-bindings` -> `pass`
+- `S14` `by:` `vaultspec-high-executor`
 
 ## Notes
 
@@ -173,3 +182,4 @@ related:
 - `S16` Commit 5f0c2fe888 was made by another committer from in-progress S16 work; history was not rewritten.
 - `S16` check-import-boundaries fails only in its subordinate checker, which crashes because dev/quality/types.py shadows the stdlib types module; contracts kept and 5341/5341 modules load.
 - `S16` 31 sede/live tests fail because the worktree has no Chromium build; none touch filing-kind code.
+- `S14` post-close regression fix: fixtures seeded unstamped revisions outside the calculation producer; dirs went 36 failed to 4 failed, the 4 outside S14 (0599 proven-zero diagnostic, 0604 fold)
