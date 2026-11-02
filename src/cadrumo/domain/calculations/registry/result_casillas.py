@@ -51,6 +51,19 @@ def settlement_casilla_role(modelo: str) -> str | None:
     return resolve_form_codes(_RESULT_CASILLAS_FACT).entries.get(f"settlement_roles.{modelo}")
 
 
+def settlement_suspension_casilla_id(modelo: str) -> CasillaId | None:
+    """Return the box where ``modelo``'s record states the part of its result whose payment is suspended.
+
+    ``None`` when the modelo's result cannot be suspended in part. A positive part
+    leaves a remainder to pay that only a revision computing the settlement box
+    works out.
+    """
+    if not has_result_disposition_spec(modelo):
+        return None
+    token = resolve_form_codes(_RESULT_CASILLAS_FACT).entries.get(f"settlement_suspensions.{modelo}")
+    return None if token is None else validated_casilla_id(token, surface=_RESULT_CASILLAS_FACT)
+
+
 def canonical_result_amount(modelo: str, casilla_values: Mapping[CasillaId, Decimal]) -> Decimal | None:
     """Return the canonical final-result sum after rejecting unrelated casillas.
 
@@ -120,4 +133,5 @@ __all__ = [
     "derive_result_disposition",
     "result_disposition_casilla_ids",
     "settlement_casilla_role",
+    "settlement_suspension_casilla_id",
 ]

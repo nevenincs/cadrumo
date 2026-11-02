@@ -121,7 +121,6 @@ from .adapter_composition_work_ports import (
     modelo_reconciliation_persistence,
     modelo_record_catalogue_repository,
     resolve_column_roles,
-    save_usage_ratios,
     save_usage_ratios_with_secure_object_writes,
     statement_reader,
     transaction_catalogue_repository,
@@ -438,7 +437,6 @@ def profile_adapter_composition(
         composition.enter_context(
             bind_usage_ratio_profile_persistence(
                 loader=load_usage_ratios,
-                saver=save_usage_ratios,
                 co_saver=save_usage_ratios_with_secure_object_writes,
             )
         )

@@ -4,18 +4,180 @@
 # RD 439/2007 art. 62.2, under Ley 35/2006 art. 97.2 ("El ingreso del importe resultante de la
 # autoliquidación sólo se podrá fraccionar en la forma que se determine en el reglamento"):
 # 60 per cent when the return is filed and the remaining 40 per cent later. The Orden approving
-# the 2025 Modelo 100 and the Manual práctico de Renta 2025 restate it for the 2025 campaign, so
-# the variant starts with that ejercicio. None of these sources says how a part that is not a
-# whole number of cents is rounded, so the fact declares no rounding: a split worked to the
-# cent is Cadrumo's own and its consumers serve it as advisory.
+# the Modelo 100 of each ejercicio restates it, and so does the Manual práctico de Renta of that
+# ejercicio, so there is one variant per ejercicio from 2020, each citing its own year's Orden
+# and Manual; the last one has no end because a later ejercicio carries the newest revision
+# forward. None of these sources says how a part that is not a whole number of cents is
+# rounded, so the fact declares no rounding: a split worked to the cent is Cadrumo's own and
+# its consumers serve it as advisory. None of them states a smallest amount that may be split
+# either, so the fact declares none.
 #
 # Entries:
 # - modelos: the modelos whose positive result may be split.
 # - first_instalment_share: the share of the amount paid as the first instalment.
-
 [fact]
 fact_id = "payment-instalment-split"
 family = "mapping"
+
+[[fact.variants]]
+variant_id = "payment-instalment-split:irpf-2020"
+date_axis = "filing_period"
+valid_from = 2020-01-01
+valid_to = 2020-12-31
+legal_refs = ["ley-35-2006:art-97", "rd-439-2007:art-62"]
+source_refs = ["boe-modelo-100-2020-form", "aeat-renta-2020-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2020-form"
+required_text = [
+  "en dos partes: la primera, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "del 40 por 100 restante",
+  "No podrá fraccionarse, según el procedimiento establecido en este artículo, el ingreso de las autoliquidaciones complementarias.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2020-manual-parte1"
+required_text = [
+  "el primero, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "el resto de la deuda tributaria podrá fraccionarse",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelos", value = "100" },
+  { key = "first_instalment_share", value = "0.60" },
+]
+
+[[fact.variants]]
+variant_id = "payment-instalment-split:irpf-2021"
+date_axis = "filing_period"
+valid_from = 2021-01-01
+valid_to = 2021-12-31
+legal_refs = ["ley-35-2006:art-97", "rd-439-2007:art-62"]
+source_refs = ["boe-modelo-100-2021-form", "aeat-renta-2021-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2021-form"
+required_text = [
+  "en dos partes: la primera, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "del 40 por 100 restante",
+  "No podrá fraccionarse, según el procedimiento establecido en este artículo, el ingreso de las autoliquidaciones complementarias.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2021-manual-parte1"
+required_text = [
+  "el primero, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "el resto de la deuda tributaria podrá fraccionarse",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelos", value = "100" },
+  { key = "first_instalment_share", value = "0.60" },
+]
+
+[[fact.variants]]
+variant_id = "payment-instalment-split:irpf-2022"
+date_axis = "filing_period"
+valid_from = 2022-01-01
+valid_to = 2022-12-31
+legal_refs = ["ley-35-2006:art-97", "rd-439-2007:art-62"]
+source_refs = ["boe-modelo-100-2022-form", "aeat-renta-2022-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2022-form"
+required_text = [
+  "en dos partes: la primera, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "del 40 por 100 restante",
+  "No podrá fraccionarse, según el procedimiento establecido en este artículo, el ingreso de las autoliquidaciones complementarias.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = [
+  "el primero, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "el resto de la deuda tributaria podrá fraccionarse",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelos", value = "100" },
+  { key = "first_instalment_share", value = "0.60" },
+]
+
+[[fact.variants]]
+variant_id = "payment-instalment-split:irpf-2023"
+date_axis = "filing_period"
+valid_from = 2023-01-01
+valid_to = 2023-12-31
+legal_refs = ["ley-35-2006:art-97", "rd-439-2007:art-62"]
+source_refs = ["boe-modelo-100-2023-form", "aeat-renta-2023-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2023-form"
+required_text = [
+  "en dos partes: la primera, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "del 40 por 100 restante",
+  "No podrá fraccionarse, según el procedimiento establecido en este artículo, el ingreso de las autoliquidaciones complementarias.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2023-manual-parte1"
+required_text = [
+  "el primero, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "el resto de la deuda tributaria podrá fraccionarse",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelos", value = "100" },
+  { key = "first_instalment_share", value = "0.60" },
+]
+
+[[fact.variants]]
+variant_id = "payment-instalment-split:irpf-2024"
+date_axis = "filing_period"
+valid_from = 2024-01-01
+valid_to = 2024-12-31
+legal_refs = ["ley-35-2006:art-97", "rd-439-2007:art-62"]
+source_refs = ["boe-modelo-100-2024-form", "aeat-renta-2024-manual-parte1"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-100-2024-form"
+required_text = [
+  "en dos partes: la primera, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "del 40 por 100 restante",
+  "No podrá fraccionarse, según el procedimiento establecido en este artículo, el ingreso de las autoliquidaciones complementarias.",
+]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-renta-2024-manual-parte1"
+required_text = [
+  "el primero, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "el resto de la deuda tributaria podrá fraccionarse",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "modelos", value = "100" },
+  { key = "first_instalment_share", value = "0.60" },
+]
 
 [[fact.variants]]
 variant_id = "payment-instalment-split:irpf-2025"
@@ -29,7 +191,8 @@ ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "boe-modelo-100-2025-form"
 required_text = [
-  "en dos partes: la primera, del 60 por 100 de su importe, en el momento de presentar la declaración y la segunda, del 40 por 100 restante",
+  "en dos partes: la primera, del 60 por 100 de su importe, en el momento de presentar la declaración",
+  "del 40 por 100 restante",
   "No podrá fraccionarse, según el procedimiento establecido en este artículo, el ingreso de las autoliquidaciones complementarias.",
 ]
 

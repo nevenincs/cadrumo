@@ -9,11 +9,12 @@ import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 
-from ...application.modelo.projection import ModeloCompareNeedTwoYearsError
+from ...application.modelo.projection_compare import ModeloCompareNeedTwoYearsError
 from ...application.modelo.projection_operation import (
     CompareDeltaRowProjection,
     ModeloCompareOperationProjection,
     ModeloCompareOperationRequest,
+    ModeloProjectOperationProjection,
     ModeloProjectOperationRequest,
     ProjectionOverride,
 )
@@ -84,44 +85,9 @@ def _decimal_wire(value: Decimal) -> str:
     return rendered
 
 
-__all__ = ["modelo_compare", "modelo_project"]
-
-
-def modelo_project(
-    ctx: typer.Context, year: int, ccaa: str, casilla: list[str] | None = None, binding: list[str] | None = None
-) -> None:
-    """Emit :class:`ModeloProjectResult` from active-profile M130 filings.
-
-    The application service returns typed projection observations; this CLI
-    command maps each one to :class:`CasillaObservationPayload` so
-    ``formula_id``, ``legal_refs``, and ``source_refs`` remain attached
-    before :func:`emit_envelope` renders JSON or table output.
-    """
-    profile_id = UUID(active_bucket_id_or_refuse())
-    casilla_pairs, binding_pairs = _projection_override_pairs(casilla, binding)
-    try:
-        service_result = run_modelo_project(
-            ctx,
-            ModeloProjectOperationRequest(
-                profile_id=profile_id,
-                year=year,
-                ccaa=ccaa,
-                casilla_overrides=tuple(
-                    ProjectionOverride(key=key, value=value) for key, value in casilla_pairs.items()
-                ),
-                binding_overrides=tuple(
-                    ProjectionOverride(key=key, value=value) for key, value in binding_pairs.items()
-                ),
-            ),
-        )
-    except CliRefusedBoundaryError as exc:
-        key = _PROJECT_RECOVERY_LOCALE_KEYS.get(_recovery_code(exc) or "")
-        if key is None:
-            raise
-        context = dict(exc.context or {})
-        context["year"] = year
-        raise CliRefusedBoundaryError(tr(key, year=year), context=context) from exc
-    project_result = ModeloProjectResult(
+def _project_result_payload(service_result: ModeloProjectOperationProjection) -> ModeloProjectResult:
+    """Map the settled annual projection onto the CLI result contract, keeping each box's provenance."""
+    return ModeloProjectResult(
         year=service_result.year,
         ccaa=service_result.ccaa,
         quarters_filed=service_result.quarters_filed,
@@ -177,10 +143,17 @@ def modelo_project(
         ],
         words_language=service_result.words_language,
     )
+
+
+__all__ = ["modelo_compare", "modelo_project"]
+
+
+def _project_lines(service_result: ModeloProjectOperationProjection) -> list[str]:
+    """Render the tab-separated text lines of an annual projection."""
     extrapolation_note = (
         f" (extrapolated from {service_result.quarters_filed}Q)" if service_result.is_extrapolated else ""
     )
-    lines = [
+    return [
         "operation\tmodelo.project",
         f"year\t{service_result.year}",
         f"ccaa\t{service_result.ccaa}",
@@ -205,6 +178,44 @@ def modelo_project(
             for row in service_result.unresolved_casillas
         ),
     ]
+
+
+def modelo_project(
+    ctx: typer.Context, year: int, ccaa: str, casilla: list[str] | None = None, binding: list[str] | None = None
+) -> None:
+    """Emit :class:`ModeloProjectResult` from active-profile M130 filings.
+
+    The application service returns typed projection observations; this CLI
+    command maps each one to :class:`CasillaObservationPayload` so
+    ``formula_id``, ``legal_refs``, and ``source_refs`` remain attached
+    before :func:`emit_envelope` renders JSON or table output.
+    """
+    profile_id = UUID(active_bucket_id_or_refuse())
+    casilla_pairs, binding_pairs = _projection_override_pairs(casilla, binding)
+    try:
+        service_result = run_modelo_project(
+            ctx,
+            ModeloProjectOperationRequest(
+                profile_id=profile_id,
+                year=year,
+                ccaa=ccaa,
+                casilla_overrides=tuple(
+                    ProjectionOverride(key=key, value=value) for key, value in casilla_pairs.items()
+                ),
+                binding_overrides=tuple(
+                    ProjectionOverride(key=key, value=value) for key, value in binding_pairs.items()
+                ),
+            ),
+        )
+    except CliRefusedBoundaryError as exc:
+        key = _PROJECT_RECOVERY_LOCALE_KEYS.get(_recovery_code(exc) or "")
+        if key is None:
+            raise
+        context = dict(exc.context or {})
+        context["year"] = year
+        raise CliRefusedBoundaryError(tr(key, year=year), context=context) from exc
+    project_result = _project_result_payload(service_result)
+    lines = _project_lines(service_result)
     emit_envelope(ctx, command="modelo.project", result=project_result, lines=lines)
 
 

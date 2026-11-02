@@ -235,6 +235,48 @@ def _ascendant_leaves() -> tuple[ProfileFamilyLeaf, ...]:
     )
 
 
+def _group_state(
+    stored: Mapping[int, Mapping[str, str]], count: str | None, *, incomplete: bool
+) -> ProfileFamilyGroupState:
+    if incomplete:
+        return ProfileFamilyGroupState.INCOMPLETE
+    if stored:
+        return ProfileFamilyGroupState.ROWS
+    if count is not None and count.strip() == "0":
+        return ProfileFamilyGroupState.NONE_DECLARED
+    return ProfileFamilyGroupState.UNKNOWN
+
+
+def _row_items(
+    values: Mapping[str, str],
+    stored: Mapping[int, Mapping[str, str]],
+    *,
+    group_key: str,
+    leaves: tuple[ProfileFamilyLeaf, ...],
+    declared: ProfileFieldDefinition,
+) -> tuple[ProfileViewFamilyRowItem, ...]:
+    order = [leaf.leaf for leaf in leaves]
+    return tuple(
+        ProfileViewFamilyRowItem(
+            group_key=group_key,
+            row_index=str(index),
+            facts=tuple(
+                ProfileFamilyRowFact(
+                    leaf=leaf,
+                    path=row[leaf],
+                    value=values[row[leaf]],
+                    masked=mask_profile_field(
+                        path=row[leaf], label=declared.description, sensitivity=declared.sensitivity
+                    ),
+                )
+                for leaf in order
+                if leaf in row
+            ),
+        )
+        for index, row in sorted(stored.items())
+    )
+
+
 def _group_items(
     values: Mapping[str, str],
     schema: ProfileSchemaDefinition,
@@ -252,14 +294,7 @@ def _group_items(
     stated = values.get(count_path)
     count = stated if profile_value_is_present(stated) else None
     incomplete = _stated_exceeds_rows(count, len(stored))
-    if incomplete:
-        state = ProfileFamilyGroupState.INCOMPLETE
-    elif stored:
-        state = ProfileFamilyGroupState.ROWS
-    elif count is not None and count.strip() == "0":
-        state = ProfileFamilyGroupState.NONE_DECLARED
-    else:
-        state = ProfileFamilyGroupState.UNKNOWN
+    state = _group_state(stored, count, incomplete=incomplete)
     group = ProfileViewFamilyGroupItem(
         group_key=f"{_SECTION_KEY}.{field_key}",
         label=tr(profile_field_label_key(_SECTION_KEY, field_key)),
@@ -274,26 +309,7 @@ def _group_items(
         max_rows=declared_household_row_limit(operation, object_path=f"{_SECTION_KEY}.{field_key}"),
         leaves=leaves,
     )
-    order = [leaf.leaf for leaf in leaves]
-    rows = tuple(
-        ProfileViewFamilyRowItem(
-            group_key=group.group_key,
-            row_index=str(index),
-            facts=tuple(
-                ProfileFamilyRowFact(
-                    leaf=leaf,
-                    path=row[leaf],
-                    value=values[row[leaf]],
-                    masked=mask_profile_field(
-                        path=row[leaf], label=declared.description, sensitivity=declared.sensitivity
-                    ),
-                )
-                for leaf in order
-                if leaf in row
-            ),
-        )
-        for index, row in sorted(stored.items())
-    )
+    rows = _row_items(values, stored, group_key=group.group_key, leaves=leaves, declared=declared)
     return (group, *rows)
 
 
