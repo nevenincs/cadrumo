@@ -23,6 +23,7 @@ from ..operations.models import OperationRequest
 from .access_errors import ProfileAccessRefusedError
 from .imputation_election_contracts import ProfileImputationElectionReadRequest, ProfileImputationElectionSetRequest
 from .profile_operation_contracts import (
+    ProfileAscendantsOperationRequest,
     ProfileBundleExportOperationRequest,
     ProfileCompleteSetupOperationRequest,
     ProfileDescendantsOperationRequest,
@@ -49,6 +50,7 @@ def resolve_profile_mutation_access(
         | ProfilePatchOperationRequest
         | ProfilePlantillaMediaOperationRequest
         | ProfileDescendantsOperationRequest
+        | ProfileAscendantsOperationRequest
         | ProfileRepeatableRowMutationOperationRequest
         | ProfileRepeatableRowUpdateOperationRequest
         | ProfileRepeatableRowRemoveOperationRequest

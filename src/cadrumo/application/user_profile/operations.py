@@ -44,6 +44,8 @@ from .profile_operation_access import (
     resolve_profile_view_access,
 )
 from .profile_operation_contracts import (
+    PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
+    PROFILE_ASCENDANTS_PHASES,
     PROFILE_BUNDLE_EXPORT_INPUT_KIND,
     PROFILE_BUNDLE_EXPORT_OPERATION_DEFINITION_ID,
     PROFILE_BUNDLE_EXPORT_PHASES,
@@ -63,6 +65,9 @@ from .profile_operation_contracts import (
     PROFILE_REPEATABLE_ROW_REMOVE_PHASES,
     PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
     PROFILE_REPEATABLE_ROW_UPDATE_PHASES,
+    ProfileAscendantsOperationProjection,
+    ProfileAscendantsOperationRequest,
+    ProfileAscendantsOperationResult,
     ProfileBundleExportOperationProjection,
     ProfileBundleExportOperationRequest,
     ProfileCompleteSetupOperationProjection,
@@ -91,6 +96,7 @@ from .profile_operation_contracts import (
     project_profile_mutation_result,
 )
 from .profile_operation_execution import (
+    ProfileAscendantsOperationExecutor,
     ProfileBundleExportOperationExecutor,
     ProfileCompleteSetupOperationExecutor,
     ProfileDescendantsOperationExecutor,
@@ -122,6 +128,7 @@ def _definition(
     ephemeral_secret: OperationEphemeralSecretDeclaration | None = None,
     permitted_effects: frozenset[OperationEffect] = EFFECTS_WITHOUT_PARTIAL_COMMIT,
     capabilities: OperationCapabilities | None = None,
+    public_error_detail: bool = False,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -151,6 +158,7 @@ def _definition(
         ),
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
         ephemeral_secret=ephemeral_secret,
+        public_error_detail=public_error_detail,
     )
 
 
@@ -190,6 +198,14 @@ USER_PROFILE_OPERATION_DEFINITIONS = (
         result_type=ProfileDescendantsOperationResult,
         executor_type=ProfileDescendantsOperationExecutor,
         phase_codes=PROFILE_DESCENDANTS_PHASES,
+    ),
+    _definition(
+        definition_id=PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
+        request_type=ProfileAscendantsOperationRequest,
+        result_type=ProfileAscendantsOperationResult,
+        executor_type=ProfileAscendantsOperationExecutor,
+        phase_codes=PROFILE_ASCENDANTS_PHASES,
+        public_error_detail=True,
     ),
     _definition(
         definition_id=PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
@@ -244,6 +260,7 @@ _PROFILE_MUTATION_REGISTRATION_IDS = frozenset(
         PROFILE_PATCH_OPERATION_DEFINITION_ID,
         PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID,
         PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID,
+        PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
         PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID,
         PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID,
         PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID,
@@ -254,6 +271,7 @@ _PROFILE_MUTATION_PROJECTION_TYPES: dict[str, type[BaseModel]] = {
     PROFILE_PATCH_OPERATION_DEFINITION_ID: ProfilePatchOperationProjection,
     PROFILE_PLANTILLA_MEDIA_OPERATION_DEFINITION_ID: ProfilePlantillaMediaOperationProjection,
     PROFILE_DESCENDANTS_OPERATION_DEFINITION_ID: ProfileDescendantsOperationProjection,
+    PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID: ProfileAscendantsOperationProjection,
     PROFILE_REPEATABLE_ROW_MUTATION_OPERATION_DEFINITION_ID: ProfileRepeatableRowMutationOperationProjection,
     PROFILE_REPEATABLE_ROW_UPDATE_OPERATION_DEFINITION_ID: ProfileRepeatableRowChangeOperationProjection,
     PROFILE_REPEATABLE_ROW_REMOVE_OPERATION_DEFINITION_ID: ProfileRepeatableRowChangeOperationProjection,

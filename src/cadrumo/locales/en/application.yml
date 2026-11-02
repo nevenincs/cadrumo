@@ -1014,6 +1014,9 @@ application:
           again: %{bindings}.'
         binding_value_key_blank: The keys of borrador values must not be blank.
         bucket_id_blank: Borrador bucket id must not be blank.
+        printed_observations_unresolved: 'This stored borrador keeps printed values
+          for boxes the modelo definitions no longer identify, so it cannot be used;
+          import the document again: %{casillas}.'
         snapshot_id_blank: Borrador snapshot id must not be blank.
         snapshot_not_found: No borrador snapshot matches the requested id.
         snapshot_prefix_ambiguous: The borrador snapshot prefix matches multiple snapshots.
@@ -2839,6 +2842,24 @@ application:
             to a spreadsheet formula.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: The date of birth of ascendant %{row} is not a
+        valid date; write it as year-month-day.
+      ascendant_birth_date_required: Ascendant %{row} has no date of birth, and every
+        ascendant needs one.
+      ascendant_convivientes_invalid: The number of descendants that ascendant %{row}
+        lives with must be a whole number from 0 to %{limit}.
+      ascendant_death_before_birth: Ascendant %{row} has a date of death before their
+        date of birth.
+      ascendant_death_date_invalid: The date of death of ascendant %{row} is not a
+        valid date; write it as year-month-day.
+      ascendant_fact_unsupported: Ascendant %{row} states a fact that the profile
+        does not keep for an ascendant.
+      ascendant_limit_unknown: The declaration design states no limit for ascendants,
+        so the list cannot be checked or saved.
+      ascendant_nif_invalid: The NIF or NIE of ascendant %{row} is not valid; check
+        its letters and digits.
+      ascendant_rows_over_limit: A declaration lists at most %{limit} ascendants,
+        and %{count} were given.
       censal_read_identity_absent: The tax registration read contained no tax identity,
         so it cannot be confirmed to belong to this profile.
       censal_read_identity_cleared: This profile's tax ID was cleared, so a tax registration

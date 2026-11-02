@@ -206,6 +206,9 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "user-profile.descendants", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
         ),
         RegisteredExecutorConformanceCase(
+            "user-profile.ascendants", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        RegisteredExecutorConformanceCase(
             "user-profile.complete-setup",
             OperationTerminalCondition.REFUSED,
             OperationEffect.UNKNOWN,

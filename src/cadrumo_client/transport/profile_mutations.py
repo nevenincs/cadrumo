@@ -15,6 +15,8 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import (
+    ProfileAscendantsOperationProjection,
+    ProfileAscendantsOperationRequest,
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileDescendantsOperationProjection,
@@ -52,6 +54,7 @@ type ProfileMutationRequest = (
     | ProfilePatchOperationRequest
     | ProfilePlantillaMediaOperationRequest
     | ProfileDescendantsOperationRequest
+    | ProfileAscendantsOperationRequest
     | ProfileRepeatableRowMutationOperationRequest
     | ProfileRepeatableRowUpdateOperationRequest
     | ProfileRepeatableRowRemoveOperationRequest
@@ -63,6 +66,7 @@ type ProfileMutationProjection = (
     | ProfilePatchOperationProjection
     | ProfilePlantillaMediaOperationProjection
     | ProfileDescendantsOperationProjection
+    | ProfileAscendantsOperationProjection
     | ProfileRepeatableRowMutationOperationProjection
     | ProfileRepeatableRowChangeOperationProjection
     | ProfileCompleteSetupOperationProjection
@@ -73,6 +77,7 @@ _SUPPORTED_REQUEST_TYPES: tuple[type[BaseModel], ...] = (
     ProfilePatchOperationRequest,
     ProfilePlantillaMediaOperationRequest,
     ProfileDescendantsOperationRequest,
+    ProfileAscendantsOperationRequest,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
     ProfileRepeatableRowRemoveOperationRequest,

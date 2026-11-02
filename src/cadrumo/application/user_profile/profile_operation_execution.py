@@ -18,8 +18,10 @@ from ...core.operations import (
 )
 from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.time.clock import now
+from ...domain.user_profile.errors import UserProfileValidationError
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
+from .ascendant_rows import replace_profile_ascendants
 from .bundle_export import export_profile_bundle
 from .bundle_export_contracts import (
     ProfileBundleExportRequest,
@@ -30,6 +32,7 @@ from .descendant_rows import replace_profile_descendants
 from .fact_write import apply_manager_profile_field_mutation
 from .plantilla_media_rows import PlantillaMediaWriteSurface, remove_plantilla_media_year, set_plantilla_media_year
 from .profile_operation_contracts import (
+    PROFILE_ASCENDANTS_PHASES,
     PROFILE_BUNDLE_EXPORT_PHASES,
     PROFILE_COMPLETE_SETUP_PHASES,
     PROFILE_DESCENDANTS_PHASES,
@@ -39,6 +42,8 @@ from .profile_operation_contracts import (
     PROFILE_REPEATABLE_ROW_MUTATION_PHASES,
     PROFILE_REPEATABLE_ROW_REMOVE_PHASES,
     PROFILE_REPEATABLE_ROW_UPDATE_PHASES,
+    ProfileAscendantsOperationRequest,
+    ProfileAscendantsOperationResult,
     ProfileBundleExportOperationRequest,
     ProfileCompleteSetupOperationRequest,
     ProfileCompleteSetupOperationResult,
@@ -304,6 +309,57 @@ class ProfileDescendantsOperationExecutor:
 
         result_ref = await await_cancellation_complete(publish(), task_name="profile-descendants-publication")
         await context.events.phase(PROFILE_DESCENDANTS_PHASES[2])
+        return result_ref
+
+
+class ProfileAscendantsOperationExecutor:
+    """Retain one atomic ascendant publication through cancellation and settlement."""
+
+    async def execute(
+        self,
+        request: OperationRequest[ProfileAscendantsOperationRequest],
+        context: OperationExecutorContext,
+    ) -> str:
+        """Publish count, canonical rows and orphan clears through one guarded CAS.
+
+        A set the declaration does not hold is refused before anything is written,
+        so that refusal settles with no effect.
+        """
+        payload = request.payload
+        _require_active_profile_subject(request, payload.profile_id)
+        await context.events.phase(PROFILE_ASCENDANTS_PHASES[0])
+        await context.events.phase(PROFILE_ASCENDANTS_PHASES[1])
+
+        async def publish() -> str:
+            async with _profile_mutation_section(context):
+                await context.events.effect(OperationEffect.UNKNOWN)
+                try:
+                    mutation = await asyncio.to_thread(
+                        replace_profile_ascendants,
+                        profile_id=str(payload.profile_id),
+                        ascendants=payload.ascendants,
+                        expected_revision=payload.expected_revision,
+                        expected_content_digest=payload.expected_content_digest,
+                        operation=context.authority_operation,
+                    )
+                except UserProfileValidationError:
+                    await context.events.effect(OperationEffect.NONE)
+                    raise
+                result_ref = await _result_reference(
+                    ProfileAscendantsOperationResult(
+                        profile_id=payload.profile_id,
+                        record_revision=mutation.record.record_revision,
+                        content_digest=mutation.record.content_digest,
+                        total=mutation.total,
+                        changed=mutation.changed,
+                    ),
+                    context,
+                )
+                await context.events.effect(OperationEffect.UPDATED if mutation.changed else OperationEffect.NONE)
+                return result_ref
+
+        result_ref = await await_cancellation_complete(publish(), task_name="profile-ascendants-publication")
+        await context.events.phase(PROFILE_ASCENDANTS_PHASES[2])
         return result_ref
 
 

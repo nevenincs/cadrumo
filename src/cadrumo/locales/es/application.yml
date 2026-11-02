@@ -1077,6 +1077,9 @@ application:
         binding_value_key_blank: Las claves de los valores del borrador no pueden
           estar vacías.
         bucket_id_blank: El identificador del bucket del borrador no puede estar vacío.
+        printed_observations_unresolved: 'Este borrador guardado conserva valores
+          impresos de casillas que las definiciones del modelo ya no identifican,
+          así que no se puede usar; vuelve a importar el documento: %{casillas}.'
         snapshot_id_blank: El identificador del snapshot del borrador no puede estar
           vacío.
         snapshot_not_found: Ningún snapshot del borrador coincide con el identificador
@@ -2993,6 +2996,24 @@ application:
             traducir a una fórmula de hoja de cálculo.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: La fecha de nacimiento del ascendiente %{row}
+        no es una fecha válida; escríbela como año-mes-día.
+      ascendant_birth_date_required: El ascendiente %{row} no tiene fecha de nacimiento,
+        y cada ascendiente necesita una.
+      ascendant_convivientes_invalid: El número de descendientes con los que convive
+        el ascendiente %{row} debe ser un número entero de 0 a %{limit}.
+      ascendant_death_before_birth: El ascendiente %{row} tiene una fecha de fallecimiento
+        anterior a su fecha de nacimiento.
+      ascendant_death_date_invalid: La fecha de fallecimiento del ascendiente %{row}
+        no es una fecha válida; escríbela como año-mes-día.
+      ascendant_fact_unsupported: El ascendiente %{row} indica un dato que el perfil
+        no guarda para un ascendiente.
+      ascendant_limit_unknown: El diseño de la declaración no indica un límite de
+        ascendientes, así que la lista no se puede comprobar ni guardar.
+      ascendant_nif_invalid: El NIF o NIE del ascendiente %{row} no es válido; revisa
+        sus letras y cifras.
+      ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
+        y se han indicado %{count}.
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
         que no puede confirmarse que corresponda a este perfil.
       censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
