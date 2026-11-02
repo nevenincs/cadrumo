@@ -461,14 +461,15 @@ def test_each_rate_slot_in_and_out_of_force_through_the_real_authority(
         assert accepted.iva_total == Decimal(cuota)
 
 
-def test_a_date_the_registry_cannot_answer_raises_its_own_failure_and_invents_no_rate(
+def test_a_date_before_the_filing_years_still_has_its_ordinary_rates_and_no_temporary_ones(
     _authority_operation: PinnedAuthorityOperation,
 ) -> None:
     envelope = _authority_operation.supported_filing_years().date_envelope()
     before_floor = envelope.floor - timedelta(days=1)
     assert not envelope.admits_coordinate(before_floor)
-    with pytest.raises(RegistryValidationError):
-        dated_rate_slots(before_floor)
+    slots = {str(slot.slot): slot for slot in dated_rate_slots(before_floor)}
+    assert slots["RATE_21"].fraction == Decimal("0.21")
+    assert not slots["RATE_5"].in_force
 
 
 def test_a_finding_becomes_a_refusal_with_its_message_code_and_fields() -> None:
