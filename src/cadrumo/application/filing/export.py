@@ -58,6 +58,7 @@ from ...core.hashing import sha256_hex
 from ...core.modelo import Modelo
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.time.clock import now
+from ...domain.calculations.registry.export_shared_owner import canonical_export_layout
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -124,6 +125,7 @@ from .record_renderer import render_layout_records as _render_layout_records
 from .record_types import RecordRenderRow as _RecordRenderRow
 from .record_types import RenderedRecordOccurrence as _RenderedRecordOccurrence
 from .runtime import RegistryModeloSubview, RegistrySchemaAccessor, build_runtime_schema_provider
+from .shared_owner_refusal import refuse_written_shared_owners
 
 
 @dataclass(frozen=True, slots=True)
@@ -170,7 +172,9 @@ def _select_export_layout(
 ) -> ExportLayoutDefinition:
     if not subview.export_layout_ids:
         raise _export_layout_not_renderable_error(draft.modelo, None)
-    layout = sorted(registry_snapshot.revision.export_layouts, key=lambda item: item.id)[0]
+    layout = canonical_export_layout(registry_snapshot.revision.export_layouts)
+    if layout is None:
+        raise _export_layout_not_renderable_error(draft.modelo, None)
     _raise_if_export_layout_not_renderable(draft.modelo, layout)
     return layout
 
@@ -760,6 +764,7 @@ def _render_layout_occurrences(
     binding_values: dict[tuple[BindingId, int | None], object] = {
         (value.binding_id, value.row_index): value.value for value in draft.binding_values
     }
+    refuse_written_shared_owners(layout, registry_snapshot=registry_snapshot, casilla_values=casilla_values)
     return _render_layout_records(
         layout,
         registry_snapshot=registry_snapshot,

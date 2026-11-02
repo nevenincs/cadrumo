@@ -438,6 +438,10 @@ application:
         receipt_digest_mismatch: The exported file's digest does not match the export
           receipt.
         rendered_payload_empty: The export layout produced an empty declaration payload.
+        shared_casilla_cells_unadjudicated: 'The declaration file was not generated:
+          boxes %{casilla_ids} hold a value the official design would write into several
+          cells, and those cells have not been confirmed to mean the same thing. Writing
+          it would put these figures in concepts they do not belong to.'
         verify_draft_snapshot_stale: The check requires a draft built from the modelo
           definitions currently in use.
         xml_schema_unreadable: The official schema for this year could not be applied
@@ -2224,6 +2228,9 @@ application:
         in this field.
       selected_option_requires_zero: The selected option requires an explicit zero
         in this field.
+      shared_casilla_cells_unadjudicated: 'Box %{casilla_id} holds a value the export
+        would also write into cells that have not been confirmed to mean the same
+        thing: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: This declaration includes
         savings income from movable capital (rendimientos del capital mobiliario del
         ahorro), but no withholding (retención) is credited against it. Enter the
@@ -2422,6 +2429,9 @@ application:
           or income below the withholding threshold.
         settle_earlier_declaration: Settle the declaration of the earlier period first,
           then calculate again.
+        shared_box_awaits_review: 'Cadrumo can''t export this box yet. Don''t empty
+          it to get past this: file this declaration with another tool, or wait until
+          its cells have been reviewed.'
       inspection_heading: All boxes, in box-number order
       unnamed_box: Unnamed box
   operations:

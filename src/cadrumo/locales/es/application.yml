@@ -474,6 +474,10 @@ application:
           el recibo de exportación.
         rendered_payload_empty: El diseño de exportación produjo un contenido de declaración
           vacío.
+        shared_casilla_cells_unadjudicated: 'No se ha generado el fichero de la declaración:
+          las casillas %{casilla_ids} tienen un valor que el diseño oficial escribiría
+          en varias celdas, y aún no se ha confirmado que esas celdas signifiquen
+          lo mismo. Escribirlo llevaría esas cifras a conceptos que no les corresponden.'
         verify_draft_snapshot_stale: La comprobación requiere un borrador construido
           con las definiciones del modelo en uso.
         xml_schema_unreadable: No se ha podido aplicar el esquema oficial de este
@@ -2362,6 +2366,9 @@ application:
         de cero en este campo.
       selected_option_requires_zero: La opción seleccionada exige un cero explícito
         en este campo.
+      shared_casilla_cells_unadjudicated: 'La casilla %{casilla_id} tiene un valor
+        que la exportación escribiría también en celdas que aún no se ha confirmado
+        que signifiquen lo mismo: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: Esta declaración recoge rendimientos
         del capital mobiliario del ahorro, pero no consta ninguna retención soportada.
         Introduce el importe del certificado de retenciones e ingresos a cuenta de
@@ -2560,6 +2567,9 @@ application:
           rentas exentas o por debajo del umbral de retención.
         settle_earlier_declaration: Resuelve primero la declaración del periodo anterior
           y vuelve a calcular.
+        shared_box_awaits_review: 'Cadrumo aún no puede exportar esta casilla. No
+          la vacíes para continuar: presenta esta declaración con otra herramienta
+          o espera a que se revisen sus celdas.'
       inspection_heading: Todas las casillas, por número de casilla
       unnamed_box: Casilla sin nombre
   operations:
