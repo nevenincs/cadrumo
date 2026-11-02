@@ -155,7 +155,7 @@ test("what the calculation noted about a box is said beside it, at its level", a
   const read = JSON.parse(
     readFileSync(
       new URL(
-        "../../src/dev/fixtures/modelo/modelo-130-1T-stale-en.json",
+        "../../src/dev/fixtures/modelo/modelo-130-1T-income-en.json",
         import.meta.url,
       ),
       "utf8",
@@ -172,7 +172,7 @@ test("what the calculation noted about a box is said beside it, at its level", a
   )!;
   const casilla =
     noted.address?.kind === "casilla" ? noted.address.casilla_id : "";
-  await openDeclaration(target, "130", "stale");
+  await openDeclaration(target, "130", "income");
   await tab(target, "desktop.modelo.view.form").click();
   const notes = workspace(target)
     .locator(`[data-key="c:${casilla}"]`)
