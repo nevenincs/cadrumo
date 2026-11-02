@@ -13,6 +13,8 @@ import type {
   ModeloFormCounts,
   ModeloFormOutlineGroup,
   ModeloFormText,
+  PublicModeloFormField,
+  PublicModeloFormSection,
   PublicModeloWorkForm,
 } from "../../../shell/modeloContract";
 import { useStrings, type Translate } from "../../../shell/strings";
@@ -32,35 +34,68 @@ type OutlineSection = {
   applies: boolean | null;
 };
 
-/** One group with the sections the read places in it. */
+/** One group with the sections the read places in it, and whether any box
+ * of them is kept in the profile. */
 type OutlineGroup = {
   group: ModeloFormOutlineGroup;
   sections: OutlineSection[];
+  inProfile: boolean;
 };
+
+/** Every box a section draws. */
+function fieldsOf(section: PublicModeloFormSection): PublicModeloFormField[] {
+  return section.blocks.flatMap((block) => {
+    switch (block.kind) {
+      case "field":
+        return [block.field];
+      case "binding_inputs":
+        return block.fields;
+      case "grid":
+        return block.rows.flatMap((row) =>
+          row.cells.flatMap((cell) => (cell.field ? [cell.field] : [])),
+        );
+      default:
+        return [];
+    }
+  });
+}
 
 /** The outline's groups with their sections looked up on the pages; a
  * section id the pages do not hold is not drawn. */
 function outlineOf(form: PublicModeloWorkForm): OutlineGroup[] {
   const sections = new Map<string, OutlineSection>();
+  const kept = new Set<string>();
   for (const page of form.pages)
-    for (const section of page.sections)
+    for (const section of page.sections) {
       sections.set(section.id, {
         id: section.id,
         heading: section.heading,
         counts: section.counts,
         applies: section.applies,
       });
+      // A box says where its source is kept and corrected, as the form's own
+      // rows do when they offer the way there.
+      if (
+        fieldsOf(section).some(
+          (field) => field.bindings[0]?.policy.surface === "profile",
+        )
+      )
+        kept.add(section.id);
+    }
   return form.outline.map((group) => ({
     group,
     sections: group.section_ids.flatMap((id) => {
       const section = sections.get(id);
       return section ? [section] : [];
     }),
+    inProfile: group.section_ids.some((id) => kept.has(id)),
   }));
 }
 
-/** A treeitem's id, kept apart for groups and sections. */
-const itemId = (kind: "group" | "section", id: string) => `${kind}:${id}`;
+/** A treeitem's id, kept apart for groups, sections and the way to where a
+ * group's boxes are kept. */
+const itemId = (kind: "group" | "section" | "profile", id: string) =>
+  `${kind}:${id}`;
 
 /** What one row of the outline says, for the eye and for the reader. Each
  * state keeps its own mark: what needs the filer, what could not be
@@ -148,11 +183,15 @@ export function OutlineNavigator({
   form,
   currentSectionId,
   onJump,
+  onOpenProfile,
 }: {
   form: PublicModeloWorkForm;
   /** The section the form shows the filer at, marked as the current one. */
   currentSectionId: string | null;
   onJump(sectionId: string): void;
+  /** Opens the profile, where a group's profile-kept boxes are corrected;
+   * absent where the window has no profile page. */
+  onOpenProfile?: () => void;
 }) {
   const t = useStrings();
   const base = useId();
@@ -184,12 +223,15 @@ export function OutlineNavigator({
     : groups;
   // Every row the tree shows, in reading order, for the arrow keys.
   const visible: { id: string; parent: string | null }[] = [];
-  for (const { group, sections } of shownGroups) {
+  for (const { group, sections, inProfile } of shownGroups) {
     const groupItem = itemId("group", group.id);
     visible.push({ id: groupItem, parent: null });
-    if (open.has(group.id))
+    if (open.has(group.id)) {
       for (const section of sections)
         visible.push({ id: itemId("section", section.id), parent: groupItem });
+      if (inProfile && onOpenProfile)
+        visible.push({ id: itemId("profile", group.id), parent: groupItem });
+    }
   }
   const currentGroup = currentSectionId
     ? groups.find(({ group }) => group.section_ids.includes(currentSectionId))
@@ -269,6 +311,7 @@ export function OutlineNavigator({
         case "Enter":
         case " ":
           if (kind === "group") toggle(id);
+          else if (kind === "profile") onOpenProfile?.();
           else jump(id);
           return true;
         default:
@@ -329,7 +372,7 @@ export function OutlineNavigator({
         onKeyDown={onKeyDown}
         className="flex flex-col gap-0.5 p-2"
       >
-        {shownGroups.map(({ group, sections }) => {
+        {shownGroups.map(({ group, sections, inProfile }) => {
           const groupItem = itemId("group", group.id);
           const expanded = open.has(group.id);
           const childList = `${base}-${group.id}-sections`;
@@ -409,6 +452,34 @@ export function OutlineNavigator({
                       </li>
                     );
                   })}
+                  {inProfile && onOpenProfile && (
+                    <li role="none">
+                      <div
+                        ref={keep(itemId("profile", group.id))}
+                        role="treeitem"
+                        aria-level={2}
+                        data-outline-profile={group.id}
+                        tabIndex={
+                          tabStop === itemId("profile", group.id) ? 0 : -1
+                        }
+                        onFocus={() => setFocused(itemId("profile", group.id))}
+                        onClick={onOpenProfile}
+                        className={cn(
+                          row,
+                          "cursor-pointer pl-7 text-muted-foreground hover:text-foreground",
+                        )}
+                      >
+                        <span className="min-w-0 flex-1 truncate">
+                          {t("desktop.profile.open_from_form")}
+                        </span>
+                        <Icon
+                          name="forward"
+                          size="xs"
+                          className="shrink-0 text-faint"
+                        />
+                      </div>
+                    </li>
+                  )}
                 </ul>
               )}
             </li>

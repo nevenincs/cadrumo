@@ -4615,6 +4615,7 @@ desktop:
       missing_fields: Hiányzó kötelező adatok
       open_profile: Profil megnyitása
       show_details: Részletek megjelenítése
+    open_from_form: Nyisd meg a profilodat, ahol ezek vannak
     password:
       again: Új jelszó még egyszer
       changed: Jelszó módosítva

@@ -483,6 +483,11 @@ function Ready({
             envelope={envelope}
             session={session}
             onPicked={() => setView("form")}
+            onOpenProfile={
+              canOpenSurface("profile")
+                ? () => onOpenSurface("profile")
+                : undefined
+            }
           />
         ),
         details: (

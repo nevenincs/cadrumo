@@ -526,7 +526,8 @@ export function Household({
                     (entry) => entry.row_index === open.row?.row_index,
                   )
                 : null;
-              if (place === -1) return;
+              // The person is no longer recorded: nothing is sent for them.
+              if (place === -1) return setOpen(null);
               void write(household, replacement(current, place, person));
             }}
           />

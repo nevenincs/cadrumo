@@ -4572,6 +4572,7 @@ desktop:
       missing_fields: Missing required information
       open_profile: Open profile
       show_details: Show details
+    open_from_form: Open your profile, where these are kept
     password:
       again: Repeat the new password
       changed: Password changed
