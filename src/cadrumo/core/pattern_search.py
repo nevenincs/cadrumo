@@ -105,7 +105,9 @@ if sys.platform == "win32":
                 raise PatternSearchUnavailableError("the pattern search job could not be created")
             self._handle: int = int(handle)
             information = JobObjectExtendedLimitInformation()
-            information.BasicLimitInformation.PerProcessUserTimeLimit = _CHILD_CPU_SECONDS * JOB_OBJECT_TIME_UNITS_PER_SECOND
+            information.BasicLimitInformation.PerProcessUserTimeLimit = (
+                _CHILD_CPU_SECONDS * JOB_OBJECT_TIME_UNITS_PER_SECOND
+            )
             information.BasicLimitInformation.ActiveProcessLimit = 1
             information.BasicLimitInformation.LimitFlags = (
                 JOB_OBJECT_LIMIT_PROCESS_TIME
