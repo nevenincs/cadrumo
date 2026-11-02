@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+from cadrumo_client.commands.output import precondition_action_lines
 from cadrumo_client.commands.payloads import ConfigStatusResult
 
 if TYPE_CHECKING:
