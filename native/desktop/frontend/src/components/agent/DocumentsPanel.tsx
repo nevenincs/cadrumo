@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -28,6 +28,7 @@ export function DocumentsPanel({
   onRefresh,
   onUse,
   onRemove,
+  footer,
 }: {
   documents: readonly ConversationDocument[];
   locale: string;
@@ -40,6 +41,8 @@ export function DocumentsPanel({
   onUse?: (id: string) => void;
   /** Null removes every stored file. */
   onRemove?: (id: string | null) => void;
+  /** Shown above the list, whatever the list holds. */
+  footer?: ReactNode;
 }) {
   const t = useStrings();
   const section = useRef<HTMLElement>(null);
@@ -118,6 +121,7 @@ export function DocumentsPanel({
           </AgentTextAction>
         )}
       </div>
+      {footer}
       {documents.length === 0 ? (
         <EmptyState heading={t("desktop.agent.documents_empty")} />
       ) : (
@@ -206,6 +210,9 @@ export function DocumentsPanel({
         >
           <DialogHeader>
             <DialogTitle>{t("desktop.agent.delete")}</DialogTitle>
+            <p className="text-sm text-muted-foreground">
+              {t("desktop.agent.consent_recall")}
+            </p>
             <DialogDescription>
               {confirming?.id === null
                 ? t("desktop.agent.remove_documents_confirm", {

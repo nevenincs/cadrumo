@@ -20,6 +20,25 @@ desktop:
     archived_empty: No hay nada archivado
     archived_toggle: Archivadas ({count})
     attach_filter: Documentos
+    attachment_grant_document: '{name} a {model}'
+    attachment_grant_images: Imágenes de páginas a {model}
+    attachment_grant_revoke: Revocar
+    attachment_grants_title: Permisos recordados
+    attachment_refusal:
+      acknowledgement_missing: No has permitido esta lectura.
+      cloud_upload_not_permitted: Esta instalación no permite que los documentos salgan
+        de este ordenador.
+      document_removed: El archivo se ha eliminado.
+      file_changed_during_read: El archivo ha cambiado. Vuelve a añadirlo para leer
+        la nueva versión.
+      gestor_mode: El modo gestor nunca envía documentos fuera de este ordenador.
+      grant_revoked: Ese permiso ya se ha revocado.
+      not_signed_in: Inicia sesión para responder.
+      profile_not_eligible: Este perfil no puede enviar documentos fuera de este ordenador.
+      reference_unknown: El agente ya no está esperando este archivo.
+      service_failed: No se ha podido registrar el permiso, así que no se ha enviado
+        nada.
+    attachment_refused: Este archivo no se ha enviado. {reason}
     attachments: Archivos para el próximo mensaje
     attachments_refused: 'No aceptados: {count}'
     attachments_uploading: 'Subiendo: {count}'
@@ -43,12 +62,20 @@ desktop:
     condition_usage_exhausted: Has alcanzado el límite de uso del proveedor. Consulta
       tu cuenta del proveedor o elige otro.
     consent_allow: Enviar a {provider}
+    consent_allow_remember: Permite y recuerda
+    consent_allow_session: Permite durante esta sesión
     consent_decline: No enviar
+    consent_document_text: El texto leído de {name}
     consent_items: Lo que se enviaría
     consent_lead: Para responder, {model} necesita el contenido de abajo. Si lo envías,
       sale de este ordenador y va a {provider}.
     consent_note: No se envía nada hasta que elijas. Si no lo envías, se queda en
       este ordenador.
+    consent_page_images: Imágenes de las páginas de {name}
+    consent_page_images_warning: Las imágenes muestran todo lo que hay en la página
+      y salen de este ordenador. Si las permites para más adelante, cubren cualquier
+      documento que lea este modelo.
+    consent_recall: Lo que ya se ha enviado no se puede recuperar.
     consent_title: ¿Enviar esto a {provider}?
     conversation_deleting: Esta conversación se está eliminando, así que no admite
       archivos.

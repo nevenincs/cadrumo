@@ -8,8 +8,15 @@ import pytest
 
 from cadrumo.adapters.persistence.storage.namespace_registry import STORAGE_NAMESPACE_REGISTRY
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE,
+    ATTACHMENT_RELEASE_LEDGER_NAMESPACE,
     EXTENSION_SETTINGS_NAMESPACE,
     LOCAL_MODEL_LIST_NAMESPACE,
+)
+from cadrumo_agent_service.providers.persistence.attachment_disclosures import (
+    ATTACHMENT_GRANTS_CAPABILITY,
+    ATTACHMENT_GRANTS_KEY,
+    ATTACHMENT_LEDGER_CAPABILITY,
 )
 from cadrumo_agent_service.providers.persistence.store import (
     LOCAL_MODEL_LIST_CAPABILITY,
@@ -73,4 +80,23 @@ def test_agent_descriptor_keeps_model_role_selections_in_their_own_registered_na
     for stored in ("example_api", "e" * 36 + "_cli", "e" * 64 + "_api"):
         assert re.fullmatch(records.key_pattern, stored) is not None
     assert re.fullmatch(records.key_pattern, "e" * 65 + "_api") is None
+    assert holder.record_capabilities == ()
+
+
+def test_attachment_grants_and_their_ledger_are_registered_and_the_ledger_cannot_be_rewritten(tmp_path: Path) -> None:
+    service, holder = _staged_service_descriptors(tmp_path)
+    capabilities = {capability.capability: capability for capability in service.record_capabilities}
+
+    for name, definition in (
+        (ATTACHMENT_GRANTS_CAPABILITY, ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE),
+        (ATTACHMENT_LEDGER_CAPABILITY, ATTACHMENT_RELEASE_LEDGER_NAMESPACE),
+    ):
+        policy = capabilities[name]
+        assert STORAGE_NAMESPACE_REGISTRY.namespace_by_value(policy.namespace) == definition
+        assert policy.classification is definition.sensitivity
+    assert re.fullmatch(capabilities[ATTACHMENT_GRANTS_CAPABILITY].key_pattern, ATTACHMENT_GRANTS_KEY) is not None
+    ledger = capabilities[ATTACHMENT_LEDGER_CAPABILITY]
+    assert re.fullmatch(ledger.key_pattern, "release-" + "a" * 32) is not None
+    assert re.fullmatch(ledger.key_pattern, ATTACHMENT_GRANTS_KEY) is None
+    assert "delete" not in ledger.actions
     assert holder.record_capabilities == ()
