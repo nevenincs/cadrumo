@@ -351,8 +351,8 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff,
     )
-    source_issues = (
-        *source_issues,
+    revision_source_issues = (
+        *revision_source_issues,
         *credit_reconciliation_issues(
             snapshot,
             work_unit,
