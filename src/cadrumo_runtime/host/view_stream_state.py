@@ -7,12 +7,24 @@ from threading import Lock
 from uuid import UUID
 
 from cadrumo.application.operations.models import OperationId
+from cadrumo.core.diagnostic_log import diagnostic_event
+from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import ByteChannel, Peer
 from cadrumo_client.contracts.transport import ConnectionContext
 from cadrumo_client.contracts.view_stream import ViewState, ViewWorkerBind
 from cadrumo_client.transport.native_wake import NativeWake
 
 from ..adapters.worker_transport import WorkerChannel
+
+_LOGGER = get_logger(__name__)
+
+
+def close_view_leg_quietly(channel: ByteChannel) -> None:
+    """Close a leg's channel, logging only the failure's type: a close error must not mask the refusal being raised."""
+    try:
+        channel.close()
+    except Exception as error:
+        diagnostic_event(_LOGGER, "view_leg_close_failed", fields={"error_type": type(error).__name__}, level=30)
 
 
 @dataclass(frozen=True, slots=True)
