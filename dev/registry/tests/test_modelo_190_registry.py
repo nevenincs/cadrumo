@@ -198,14 +198,14 @@ def _assert_190_window_dates_and_grounding(
 
 def _assert_190_deadline_shift_and_calendar_citation(window, expected_shift: tuple[date, bool, str]) -> None:
     with bundled_indexed_authority().operation() as operation:
-        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
+        shift = shift_deadline(window.closes_on, modelo="190", operation=operation)
         assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
         # A year with no published calendar still refuses rather than guessing.
         with pytest.raises(
             DeadlineValidationError,
             match="holiday calendar publication for 2027 could not be resolved",
         ):
-            shift_deadline(date(2027, 1, 29), modelo="190", ccaa_code=None, operation=operation)
+            shift_deadline(date(2027, 1, 29), modelo="190", operation=operation)
     # A close date that is NOT the statutory month-end has been moved off a
     # non-working day, and the only sanctioned reason to move it is AEAT's own
     # published calendar -- so such a window must cite the calendar it was read

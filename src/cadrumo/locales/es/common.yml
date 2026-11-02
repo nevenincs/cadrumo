@@ -9369,11 +9369,9 @@ workspace:
       vigente: Presentación registrada vigente
     holiday_coverage:
       calendar_unavailable: Festivos sin comprobar
-      national_only: Festivos autonómicos sin comprobar
-      territory_unverified: Festivos autonómicos sin confirmar
     hub:
-      holidays_national_only: Los plazos tienen en cuenta los festivos nacionales;
-        los autonómicos no se comprueban.
+      holidays_unchecked: Algunos plazos no se han podido comprobar con el calendario
+        de días inhábiles.
     lifecycle:
       amended: Corrección iniciada
       calculated: Cálculo completado

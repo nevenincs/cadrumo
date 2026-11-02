@@ -376,7 +376,6 @@ class PublicDeclarationsCalendarEntryRefV1(BaseModel):
     adjusted_closes_on: date
     shift_reason: str
     holiday_coverage: DeadlineHolidayCoverage
-    holiday_territory: str | None
     payment_cutoff_on: date | None
     evaluated_on: date
     days_overdue: int | None

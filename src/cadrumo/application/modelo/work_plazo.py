@@ -38,7 +38,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import form_for_role
-from ...domain.deadlines.festivos import CalendarCCAA, DeadlineHolidayCoverage
+from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.deadlines.models import Recovery, TaxpayerProfile
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.work_unit import WorkUnit
@@ -175,7 +175,6 @@ def modelo_work_deadline_posture(
     *,
     reference_on: date | None = None,
     operation: PinnedAuthorityOperation | None = None,
-    holiday_territory: CalendarCCAA | None = None,
 ) -> ModeloWorkDeadlinePosture | None:
     """Return voluntary-deadline posture and rate-only preview, if known.
 
@@ -212,9 +211,6 @@ def modelo_work_deadline_posture(
         operation: Optional caller-pinned registry operation. When supplied, the
             deadline window, holiday calendar and recargo band use its
             governed-fact generation.
-        holiday_territory: The filer's autonomous community for the holiday
-            shift. ``None`` checks national holidays only, and the posture's
-            ``holiday_coverage`` says so.
 
     Returns:
         A :class:`ModeloWorkDeadlinePosture`, or ``None`` when the registry has
@@ -234,7 +230,6 @@ def modelo_work_deadline_posture(
             str(work_unit.modelo),
             work_unit.filing_year,
             work_unit.period,
-            holiday_territory=holiday_territory,
             operation=pinned,
         )
         if deadline is None:

@@ -398,14 +398,14 @@ def test_secure_generation_refuses_a_census_capture_changed_during_read(
         door.read_workbench_generation_inputs()
 
 
-def test_a_resident_s_holiday_territory_survives_the_registered_result_round_trip(
+def test_a_resident_s_calendar_survives_the_registered_result_round_trip(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """A resident's calendar names its territory and still crosses the operation boundary.
+    """A resident's calendar crosses the operation boundary with its meaning intact.
 
     The registered read projects the generation, stores it as JSON and the
-    frontend restores it with no pinned authority; a calendar row carrying the
-    territory must survive both legs with its meaning intact.
+    frontend restores it with no pinned authority; its calendar rows must
+    survive both legs unchanged.
     """
     from uuid import UUID
 
@@ -430,7 +430,7 @@ def test_a_resident_s_holiday_territory_survives_the_registered_result_round_tri
     )()
     calendar = generation.declarations_calendar.projection
     assert calendar is not None
-    assert "ES-MD" in {row.holiday_territory for row in calendar.entries}
+    assert calendar.entries
 
     public = project_workbench_generation(UUID(_PROFILE_ID), generation)
     decoded = WorkbenchGenerationOperationProjection.model_validate_json(public.model_dump_json(), strict=True)

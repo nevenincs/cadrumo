@@ -9181,11 +9181,9 @@ workspace:
       vigente: Current recorded filing
     holiday_coverage:
       calendar_unavailable: Holidays not checked
-      national_only: Regional holidays not checked
-      territory_unverified: Regional holidays not confirmed
     hub:
-      holidays_national_only: Deadlines count national holidays; regional ones are
-        not checked.
+      holidays_unchecked: Some deadlines could not be checked against the holiday
+        calendar.
     lifecycle:
       amended: Correction started
       calculated: Calculation completed

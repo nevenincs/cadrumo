@@ -114,30 +114,31 @@ def test_san_esteban_is_not_a_catalan_regional_day_because_aran_replaces_it() ->
     assert {date(2025, 4, 21), date(2025, 6, 24), date(2025, 9, 11)} <= catalonia
 
 
-def test_jueves_santo_moves_a_madrid_deadline_past_easter_but_not_a_catalan_one() -> None:
-    close_date = date(2025, 4, 17)
+def test_a_regional_inhabil_never_moves_a_filing_close_while_a_national_one_does() -> None:
+    year = _BOE_A_2024_26935_EXERCISE
+    jueves_santo = date(year, 4, 17)
+    viernes_santo = date(year, 4, 18)
+    lunes_de_pascua = date(year, 4, 21)
     with bundled_indexed_authority().operation() as operation:
-        madrid = shift_deadline(
-            close_date,
-            modelo="303",
-            ccaa_code=_territory(operation, "ES-MD"),
-            operation=operation,
-        )
-        catalonia = shift_deadline(
-            close_date,
-            modelo="303",
-            ccaa_code=_territory(operation, "ES-CT"),
-            operation=operation,
-        )
+        calendar = load_holiday_calendar(year, operation=operation)
+        madrid = _territory(operation, "ES-MD", year)
+        catalonia = _territory(operation, "ES-CT", year)
+        regional_close = shift_deadline(jueves_santo, modelo="303", operation=operation)
+        national_close = shift_deadline(viernes_santo, modelo="303", operation=operation)
 
-    # 18 April is Viernes Santo and 19-20 April are the weekend.
-    assert madrid.shifted is True
-    assert madrid.adjusted_close_date == date(2025, 4, 21)
-    assert madrid.coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
+    assert {madrid, catalonia} <= set(calendar.verified_territories)
+    assert jueves_santo in _regional_dates(calendar, madrid)
+    assert lunes_de_pascua in _regional_dates(calendar, catalonia)
+    assert {jueves_santo, lunes_de_pascua}.isdisjoint(holiday.holiday_date for holiday in calendar.national)
+    assert viernes_santo in {holiday.holiday_date for holiday in calendar.national}
 
-    assert catalonia.shifted is False
-    assert catalonia.adjusted_close_date == close_date
-    assert catalonia.coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
+    assert regional_close.shifted is False
+    assert regional_close.adjusted_close_date == jueves_santo
+    assert regional_close.coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
+
+    assert national_close.shifted is True
+    assert national_close.adjusted_close_date == lunes_de_pascua
+    assert national_close.coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
 
 
 def test_the_calendar_publication_cites_the_dias_inhabiles_resolution() -> None:

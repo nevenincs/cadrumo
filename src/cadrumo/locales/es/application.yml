@@ -2670,17 +2670,9 @@ application:
       holiday_coverage:
         calendar_unavailable: calendario de festivos no disponible; el plazo original
           no se ha comprobado
-        national_and_territory: festivos nacionales y de %{territory} comprobados;
-          festivos locales sin comprobar
-        national_and_territory_without_name: festivos nacionales y autonómicos aplicables
-          comprobados; festivos locales sin comprobar
-        national_only: solo festivos nacionales; festivos autonómicos y locales sin
-          comprobar
+        national_only: sábados, domingos y días inhábiles nacionales comprobados;
+          los festivos autonómicos y locales no mueven el plazo de presentación
         not_shifted: el plazo de este modelo no se traslada por días inhábiles
-        territory_unverified: solo festivos nacionales; los festivos autonómicos de
-          %{territory} de este año no se han comprobado y los locales no se comprueban
-        territory_unverified_without_name: solo festivos nacionales; el calendario
-          autonómico aplicable no está verificado; los festivos locales no se comprueban
       shift:
         business_day: Día hábil
         calendar_unavailable: Calendario no disponible

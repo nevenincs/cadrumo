@@ -2632,18 +2632,10 @@ application:
       holiday_coverage:
         calendar_unavailable: az ünnepnapi naptár nem érhető el; az eredeti határidő
           nincs ellenőrizve
-        national_and_territory: országos és %{territory} ünnepnapok ellenőrizve; helyi
-          ünnepnapok nincsenek ellenőrizve
-        national_and_territory_without_name: országos és az alkalmazandó regionális
-          ünnepnapok ellenőrizve; a helyi ünnepnapok nincsenek ellenőrizve
-        national_only: csak országos ünnepnapok; regionális és helyi ünnepnapok nincsenek
-          ellenőrizve
+        national_only: a hétvégék és az országos munkaszüneti napok ellenőrizve; a
+          regionális és helyi ünnepnapok nem tolják el a benyújtási határidőt
         not_shifted: ennél a nyomtatványnál a határidő munkaszüneti nap miatt nem
           tolódik
-        territory_unverified: csak országos ünnepnapok; %{territory} idei regionális
-          ünnepnapjai nincsenek ellenőrizve, a helyi ünnepnapok sem
-        territory_unverified_without_name: csak országos ünnepnapok; az alkalmazandó
-          regionális naptár nincs ellenőrizve; a helyi ünnepnapok sincsenek ellenőrizve
       shift:
         business_day: Munkanap
         calendar_unavailable: Naptár nem elérhető

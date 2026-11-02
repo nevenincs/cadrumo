@@ -329,7 +329,6 @@ def test_a_deadline_on_a_working_day_stands_and_counts_the_days_left(operation: 
         operation,
         ModeloCode("130"),
         Period.from_year_and_code(2026, "1T"),
-        holiday_territory=None,
         reference_on=date(2026, 4, 10),
     )
 
@@ -347,7 +346,6 @@ def test_a_deadline_on_a_saturday_moves_to_the_next_working_day(operation: Pinne
         operation,
         ModeloCode("136"),
         Period.from_year_and_code(2023, "4T"),
-        holiday_territory=None,
         reference_on=date(2024, 1, 25),
     )
 
@@ -364,7 +362,6 @@ def test_a_period_with_no_window_has_no_deadline(operation: PinnedAuthorityOpera
             operation,
             ModeloCode("130"),
             Period.from_year_and_code(2026, "0A"),
-            holiday_territory=None,
             reference_on=date(2026, 4, 10),
         )
         is None
