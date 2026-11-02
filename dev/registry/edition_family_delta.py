@@ -60,6 +60,7 @@ _REPRESENTATION_FIELDS = {
     "family_removals",
     "family_positions",
     "cleared_families",
+    "family_disposition_removals",
     "scoped_families",
     "restated_families",
     # An edition-level ``<family>_source_refs`` only defaults its members'

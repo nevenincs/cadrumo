@@ -25,6 +25,8 @@ review_status = "agent_reviewed"
 reviewed_by = "agent: complete 2016 AEAT design measured against the distinct two-record 500-byte layout; no 2023-era field is backdated"
 reviewed_at = 2026-08-26
 
+family_disposition_removals = ["deadline_windows"]
+
 [revisions."2016-2022".family_dispositions.applicability]
 reason = "Modelo 165's registered scope is established by the approving Orden and is consumed through its temporal selector. This informative emitter declaration has no taxpayer-profile predicate or alternative applicability branch to model, so no applicability rule can be authored without inventing one."
 legal_refs = ["orden-hap-2455-2013:art-1", "orden-hap-2455-2013:art-4", "ley-58-2003:art-93"]
