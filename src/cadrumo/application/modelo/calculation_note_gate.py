@@ -183,6 +183,30 @@ def calculation_screen_outdated(
     return _screen_outdated(revision, snapshot, operation)
 
 
+def saved_calculation_screen_outdated(
+    revision: CalculationRevision,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether a saved ``revision`` is shown as stale, read from the registry snapshot it was calculated under.
+
+    A revision that retained its rendering snapshot is compared with the stamp
+    that snapshot's declarations carry, so reviewing it never resolves a
+    current registry revision; the operation supplies only the governed facts
+    in force. A revision without one retained no snapshot, so it is read as the
+    gate reads it.
+    """
+    rendering = revision.rendering_snapshot
+    if rendering is None:
+        return calculation_screen_outdated(
+            revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
+        )
+    return _screen_outdated(revision, rendering.registry_snapshot, operation)
+
+
 def _filed_before_grade_cap(
     revision: CalculationRevision, snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
 ) -> CasillaId | None:
