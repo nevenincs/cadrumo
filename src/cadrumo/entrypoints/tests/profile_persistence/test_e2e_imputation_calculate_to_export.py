@@ -121,7 +121,6 @@ def bucket_id() -> str:
 
 def _seed_profile(criterion: str) -> None:
 
-
     dated = tuple(
         UserProfileFact.model_validate(
             {"path": path, "value": value, "valid_from": date(year, 1, 1), "valid_to": date(year, 12, 31)}

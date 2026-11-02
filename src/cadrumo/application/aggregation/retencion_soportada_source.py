@@ -310,7 +310,6 @@ class RetencionSoportadaSourceResolver:
                 # operand leaves its own box unresolved instead of failing on a missing value.
                 unresolved.append(binding.id)
                 diagnostics.append(self._unresolved_diagnostic(context.revision, binding.id, income_class, state))
-        contributing = tuple(record for record in records if record.income_class in consumed)
         # A class a credit casilla is cross-checked against is read by that comparison, so its
         # records are not unrouted even where no binding credits them.
         compared = consumed | _cross_checked_classes(context.revision)
