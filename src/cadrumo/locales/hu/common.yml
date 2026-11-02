@@ -173,8 +173,8 @@ aggregation:
         Modelo 369 oldalra fér, a kiegészítő oldalakat pedig itt még nem lehet elkészíteni.
         Semmi sem került exportálásra, így egyetlen sor sem marad ki.
       invoice_line_currency_unconverted: Egy OSS/IOSS számlasor külföldi pénznemben
-        van megadva, és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen
-        a nyomtatványon.
+        van, és az EKB nem tett közzé árfolyamot sem az időszak utolsó napjára, sem
+        az azt követő napra, ezért nem szerepeltethető ezen a nyomtatványon.
       invoice_line_rate_kind_unclassifiable: Egy OSS/IOSS számlasor olyan áfakulcsot
         tartalmaz, amely nem sorolható be egyetlen kulcssávba sem, ezért az adóösszege
         nem szerepeltethető ezen a nyomtatványon.

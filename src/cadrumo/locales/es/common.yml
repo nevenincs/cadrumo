@@ -181,9 +181,9 @@ aggregation:
       detail_rows_exceed_page: Este período necesita más filas de las que caben en
         una página del modelo 369, y las páginas complementarias todavía no se pueden
         preparar aquí. No se ha exportado nada, así que ninguna fila queda fuera.
-      invoice_line_currency_unconverted: Una línea de factura OSS/IOSS está denominada
-        en moneda extranjera sin tipo de cambio a euros resuelto, por lo que no puede
-        declararse en este modelo.
+      invoice_line_currency_unconverted: Una línea de factura OSS/IOSS está en moneda
+        extranjera y no hay tipo de cambio del BCE publicado para el último día del
+        período ni para el día siguiente, así que no puede declararse en este modelo.
       invoice_line_rate_kind_unclassifiable: Una línea de factura OSS/IOSS tiene un
         tipo de IVA que no puede clasificarse en ningún tramo, por lo que su cuota
         no puede declararse en este modelo.

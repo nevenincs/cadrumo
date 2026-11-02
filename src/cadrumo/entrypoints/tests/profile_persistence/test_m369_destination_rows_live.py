@@ -9,13 +9,14 @@ and cuota (17: fifteen integers and two decimals), with no decimal separator.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.outbound.fx.ecb_provider import EcbReferenceRateProvider
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -26,6 +27,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.aggregation.errors import AggregationValidationError
 from cadrumo.application.aggregation.tests.oss_rate_change_support import variant_pct
+from cadrumo.application.exchange_rate_provider import bind_exchange_rate_provider_factory
 from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -57,6 +59,7 @@ from cadrumo.domain.iva.classification import TransactionKind
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.rates import IVA_RATE_FACT_ID
 from cadrumo.domain.iva.schema import InvoiceKind, IvaRateKind
+from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
     _T0,
@@ -73,6 +76,7 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
+from cadrumo.tests.ecb_stub import ecb_csv_fetch
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 
@@ -91,7 +95,7 @@ def _profile() -> TaxpayerProfile:
 @dataclass(frozen=True)
 class _Scenario:
     revision_id: str
-    period_token: str
+    period_code: str
     regime: str
     kind: str
     fichero: str
@@ -174,43 +178,57 @@ def objects(_seeded_profile: SeededDurableProfile) -> Iterator[SecureObjectRepos
         yield profile.repository
 
 
-def _invoice(scenario: _Scenario, number: str, country: str, tier: str, base: str, cuota: str) -> Invoice:
+def _invoice(
+    scenario: _Scenario,
+    number: str,
+    country: str,
+    tier: str,
+    base: str,
+    cuota: str,
+    *,
+    currency: str = "EUR",
+    fx_stamp: dict[str, object] | None = None,
+    supply: date = _SUPPLY,
+) -> Invoice:
     amount, tax = Decimal(base), Decimal(cuota)
-    return Invoice(
-        invoice_id=derive_invoice_id(
-            kind=InvoiceKind.ISSUED,
-            invoice_number=number,
-            issued_at=_SUPPLY,
-            counterparty_tax_id=None,
-            currency="EUR",
-            grand_total=amount + tax,
-        ),
-        kind=InvoiceKind.ISSUED,
-        invoice_number=number,
-        issued_at=_SUPPLY,
-        operation_date=_SUPPLY,
-        operation_date_role=InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
-        counterparty_name="Consumidor ficticio",
-        invoice_class=invoice_class_simplificada(),
-        counterparty_country=country,
-        base_total=amount,
-        iva_total=tax,
-        grand_total=amount + tax,
-        currency="EUR",
-        lines=(
-            InvoiceLine(
-                description="Operación ficticia",
-                quantity=Decimal("1"),
-                unit_price=amount,
-                subtotal=amount,
-                iva_rate=IvaRate.from_registry("RATE_21"),
-                oss_rate_kind=IvaRateKind(tier),
-                iva_amount=tax,
+    return Invoice.model_validate(
+        {
+            "invoice_id": derive_invoice_id(
+                kind=InvoiceKind.ISSUED,
+                invoice_number=number,
+                issued_at=supply,
+                counterparty_tax_id=None,
+                currency=currency,
+                grand_total=amount + tax,
             ),
-        ),
-        payment_status=PaymentStatus.PAID,
-        oss_ioss_regime=OssIossRegime(scenario.regime),
-        oss_transaction_kind=TransactionKind(scenario.kind),
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": number,
+            "issued_at": supply,
+            "operation_date": supply,
+            "operation_date_role": InvoiceOperationDateRole.from_registry("OPERATION_PERFORMED"),
+            "counterparty_name": "Consumidor ficticio",
+            "invoice_class": invoice_class_simplificada(),
+            "counterparty_country": country,
+            "base_total": amount,
+            "iva_total": tax,
+            "grand_total": amount + tax,
+            "currency": currency,
+            "lines": (
+                InvoiceLine(
+                    description="Operación ficticia",
+                    quantity=Decimal("1"),
+                    unit_price=amount,
+                    subtotal=amount,
+                    iva_rate=IvaRate.from_registry("RATE_21"),
+                    oss_rate_kind=IvaRateKind(tier),
+                    iva_amount=tax,
+                ),
+            ),
+            "payment_status": PaymentStatus.PAID,
+            "oss_ioss_regime": OssIossRegime(scenario.regime),
+            "oss_transaction_kind": TransactionKind(scenario.kind),
+            **(fx_stamp or {}),
+        }
     )
 
 
@@ -229,7 +247,7 @@ def _calculate(
         bucket_id=_BUCKET,
         modelo="369",
         filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, scenario.period_token),
+        period=Period.from_year_and_code(_YEAR, scenario.period_code),
         revision_id=scenario.revision_id,
         ports=WorkLifecyclePorts(work_unit_repository=wu_repo, bucket_event_repository=events),
         clock=_T0,
@@ -266,7 +284,7 @@ def _cuota_bindings(scenario: _Scenario) -> list[str]:
     """Each line's cuota binding, in line order, found by the position DR369 prints."""
     revision = (
         published_authority_operation()
-        .snapshot("369", filing_year=_YEAR, period=scenario.period_token, revision_id=scenario.revision_id)
+        .snapshot("369", filing_year=_YEAR, period=scenario.period_code, revision_id=scenario.revision_id)
         .revision
     )
     by_position = {
@@ -344,40 +362,12 @@ def test_two_states_at_both_rates_agree_from_calculation_to_bytes(
     form_cuotas = [Decimal(str(form_values[("binding", binding_id)])) for binding_id in _cuota_bindings(scenario)[:4]]
     assert form_cuotas == [Decimal("200.00"), Decimal("20.00"), Decimal("23.00"), Decimal("4.00")]
 
-    with bundled_indexed_authority().operation() as verification_operation:
-        report = verify_modelo_revision_with_preconditions(
-            result.revision.calculation_revision_id,
-            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
-            verification_repositories=build_test_verification_repository_bundle(),
-            actor="m369-rows-reviewer",
-            workflow_profile=_profile(),
-            clock=_T1,
-            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            operation=verification_operation,
-        ).report
+    report = _verify(result)
     assert report.granted_verificado_completo is True, [
         (finding.message_locale_key, finding.message_facts) for finding in report.findings
     ]
 
-    output_path = tmp_path / f"modelo-369-{scenario.revision_id}.txt"
-    with bundled_indexed_authority().operation() as export_operation:
-        export_modelo_revision(
-            ModeloExportCommand(
-                calculation_revision_id=result.revision.calculation_revision_id,
-                output_path=output_path,
-                actor="m369-rows-exporter",
-            ),
-            workflow_profile=_profile(),
-            export_ports=modelo_export_ports_for_test(
-                bucket_id=_BUCKET,
-                secure_objects=objects,
-                work_unit=WorkUnitCatalogueRepository(objects=objects),
-                calculation=CalculationRevisionCatalogueRepository(objects=objects),
-            ),
-            operation=export_operation,
-        )
-
-    wire = output_path.read_bytes()
+    wire = _export(objects, tmp_path, scenario, result)
     start = wire.index(scenario.page_tag) + scenario.first_position - 1
     assert wire[start : start + 4 * 42] == (
         _line("FR", "02000", "S", "100000", "20000")
@@ -390,7 +380,7 @@ def test_two_states_at_both_rates_agree_from_calculation_to_bytes(
 
     revision = (
         published_authority_operation()
-        .snapshot("369", filing_year=_YEAR, period=scenario.period_token, revision_id=scenario.revision_id)
+        .snapshot("369", filing_year=_YEAR, period=scenario.period_code, revision_id=scenario.revision_id)
         .revision
     )
     cuota_bindings = _cuota_bindings(scenario)
@@ -416,6 +406,108 @@ def test_a_twenty_ninth_row_stops_the_calculation_before_any_byte(
     with pytest.raises(AggregationValidationError) as refused:
         _calculate(objects, scenario, invoices, operation)
     assert refused.value.translated_message == "aggregation.oss_ioss.errors.detail_rows_exceed_page"
+
+
+_CLOSE = date(_YEAR, 3, 31)
+_MARCH_SUPPLY = date(_YEAR, 3, 3)
+_STAMPED_AT_OPERATION_DATE: dict[str, object] = {
+    "fx_rate": Decimal("0.2"),
+    "fx_rate_date": _MARCH_SUPPLY,
+    "fx_rate_source": "ecb_reference",
+}
+
+
+def _march(scenario: _Scenario) -> _Scenario:
+    """Every regime's period that closes on 31 March, an ECB publication day."""
+    return replace(scenario, period_code="03", period_number="3") if scenario is _IMPORT else scenario
+
+
+def _zloty_invoice(scenario: _Scenario) -> Invoice:
+    return _invoice(
+        scenario,
+        "OSS-PLN",
+        "PL",
+        "general",
+        "400.00",
+        "92.00",
+        currency="PLN",
+        fx_stamp=_STAMPED_AT_OPERATION_DATE,
+        supply=_MARCH_SUPPLY,
+    )
+
+
+def _verify(result: BucketAggregationCalculationResult) -> VerificationReport:
+    with bundled_indexed_authority().operation() as verification_operation:
+        return verify_modelo_revision_with_preconditions(
+            result.revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=build_test_verification_repository_bundle(),
+            actor="m369-rows-reviewer",
+            workflow_profile=_profile(),
+            clock=_T1,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=verification_operation,
+        ).report
+
+
+def _export(
+    objects: SecureObjectRepository, tmp_path: Path, scenario: _Scenario, result: BucketAggregationCalculationResult
+) -> bytes:
+    output_path = tmp_path / f"modelo-369-{scenario.revision_id}.txt"
+    with bundled_indexed_authority().operation() as export_operation:
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=result.revision.calculation_revision_id,
+                output_path=output_path,
+                actor="m369-rows-exporter",
+            ),
+            workflow_profile=_profile(),
+            export_ports=modelo_export_ports_for_test(
+                bucket_id=_BUCKET,
+                secure_objects=objects,
+                work_unit=WorkUnitCatalogueRepository(objects=objects),
+                calculation=CalculationRevisionCatalogueRepository(objects=objects),
+            ),
+            operation=export_operation,
+        )
+    return output_path.read_bytes()
+
+
+@pytest.mark.parametrize("scenario", [_march(scenario) for scenario in _SCENARIOS], ids=_ids)
+def test_a_foreign_invoice_files_at_the_period_close_rate_not_its_stamp(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """LIVA art. 163 noniesdecies.Uno.c) and siblings: 1 EUR = 4 PLN on 31 March.
+
+    400.00 PLN is 100.00 EUR and 92.00 PLN is 23.00 EUR; the invoice's own stamp
+    of 0.20 would have filed 80.00 and 18.40.
+    """
+    provider = EcbReferenceRateProvider(fetch=ecb_csv_fetch({"PLN": {_CLOSE: Decimal("4")}}))
+    with bind_exchange_rate_provider_factory(lambda: provider):
+        result, _ = _calculate(objects, scenario, (_zloty_invoice(scenario),), operation)
+        assert Decimal(result.revision.casilla_values[scenario.total_casilla]) == Decimal("23.00")
+        assert _verify(result).granted_verificado_completo is True
+        wire = _export(objects, tmp_path, scenario, result)
+    start = wire.index(scenario.page_tag) + scenario.first_position - 1
+    assert wire[start : start + 42] == _line("PL", "02300", "S", "10000", "2300")
+
+
+@pytest.mark.parametrize("scenario", [_march(scenario) for scenario in _SCENARIOS], ids=_ids)
+def test_a_missing_period_close_rate_refuses_and_the_stamp_does_not_stand_in(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    provider = EcbReferenceRateProvider(fetch=ecb_csv_fetch({"PLN": {date(_YEAR, 3, 30): Decimal("4")}}))
+    with bind_exchange_rate_provider_factory(lambda: provider), pytest.raises(AggregationValidationError) as refused:
+        _calculate(objects, scenario, (_zloty_invoice(scenario),), operation)
+    assert refused.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_currency_unconverted"
+    assert refused.value.context["rate_date"] == _CLOSE.isoformat()
 
 
 def _published_rows(scenario: _Scenario, operation: PinnedAuthorityOperation) -> tuple[Invoice, ...]:
