@@ -209,3 +209,27 @@ async def test_a_declaration_opened_afresh_says_to_calculate_again_to_see_the_no
 
     assert "Calculate again to see the calculation's notes." not in held
     assert "Calculate again to see the calculation's notes." in afresh
+
+
+@pytest.mark.asyncio
+async def test_a_note_opened_in_place_reads_what_its_calculation_worded_after_its_sentence() -> None:
+    """The catalogue's sentence lists the note; opening it reads the account its resolver worded for the filer."""
+    written = "Liquidation 1T declared deductible input VAT, but the ledger holds none for it."
+    note = ModeloFormCalculationNote(reason="source_issue", attention=ModeloFormAttention.MISSING, message=written)
+    form = synthetic_form(needs_input=False).model_copy(update={"calculation_notes": (note,)})
+    with override_settings(cadrumo_output_language="en"):
+        screen = WorkbenchIssuesScreen(form)
+        app = ScreenHostApp(screen)
+        async with app.run_test(size=(120, 40)) as pilot:
+            await settle(pilot)
+            options = screen.query_one("#issues-list", OptionList)
+            closed = "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
+            await pilot.press("enter")
+            await settle(pilot)
+            opened = "\n".join(options.render_line(y).text.rstrip() for y in range(options.size.height))
+            app.exit(None)
+
+    sentence = "Some information this figure depends on is missing or could not be used."
+    assert sentence in re.sub(r"\s+", " ", closed)
+    assert written not in re.sub(r"\s+", " ", closed)
+    assert written in re.sub(r"\s+", " ", opened)

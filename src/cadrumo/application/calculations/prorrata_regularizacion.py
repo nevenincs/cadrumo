@@ -41,7 +41,8 @@ from pydantic import BaseModel
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
-from ...core.i18n.render import tr
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import normalise_supported_language, output_language, tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -202,6 +203,7 @@ def build_prorrata_declared_volume_advisory(
         reason=reason,
         source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
         message=message,
+        message_language=OutputLanguage.ES,
         asserted_legal_refs=("ley-37-1992:art-94", "ley-37-1992:art-104"),
     )
 
@@ -306,6 +308,7 @@ def build_prorrata_missing_provisional_advisory(
         reason="source_issue",
         source_kind=BindingSourceKind.PRORRATA_REGULARIZACION.value,
         message=message,
+        message_language=OutputLanguage.ES,
         casilla_id=target,
     )
 
@@ -556,6 +559,11 @@ def _resolve_prorrata_provisional_source(
     return _ProrrataProvisionalSource(percentage=None, provenance=(current_provenance,))
 
 
+def _catalogue_language() -> OutputLanguage:
+    """The language a finding rendered from the catalogue here is worded in: the one ``tr`` renders."""
+    return OutputLanguage(normalise_supported_language(output_language()) or OutputLanguage.EN.value)
+
+
 def _unresolved_resolution(
     *,
     revision: ModeloRevision,
@@ -565,7 +573,7 @@ def _unresolved_resolution(
     message: str,
     provenance: tuple[CalculationSourceProvenance, ...] = (),
 ) -> CalculationSourceResolution:
-    """Leave every declared regularisation binding unresolved with one named reason."""
+    """Leave every declared regularisation binding unresolved with one named reason, worded from the catalogue."""
     return CalculationSourceResolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
@@ -576,6 +584,7 @@ def _unresolved_resolution(
             binding_ids=declared_binding_ids,
             resolver_id=resolver_id,
             message=message,
+            message_language=_catalogue_language(),
         ),
         provenance=provenance,
     )
@@ -634,6 +643,7 @@ def _valued_prorrata_resolution(
             binding_ids=unresolved,
             resolver_id=resolver_id,
             message=tr("application.calculations.prorrata_regularizacion.unresolved.selector_unmapped"),
+            message_language=_catalogue_language(),
         ),
         provenance=provenance,
     )

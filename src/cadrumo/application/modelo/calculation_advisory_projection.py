@@ -11,6 +11,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
+from ...core.external_constants import OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, RelationId, SourceRefId
@@ -43,6 +44,7 @@ class CalculationSourceDiagnosticSnapshot(BaseModel):
     source_kind: str = Field(min_length=1, max_length=64)
     binding_source: BindingSourceKind | None = None
     message: str = Field(max_length=DIAGNOSTIC_MESSAGE_MAX_LENGTH)
+    message_language: OutputLanguage | None = None
     remedy: str | None = Field(default=None, min_length=1, max_length=DIAGNOSTIC_REMEDY_MAX_LENGTH)
     resolver_id: str | None = Field(default=None, min_length=1, max_length=128)
     source_ref: str | None = Field(default=None, min_length=1, max_length=256)

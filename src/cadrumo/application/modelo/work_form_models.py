@@ -61,7 +61,7 @@ from ...domain.calculations.registry.schema_form_layouts import (
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
-from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
+from ...domain.modelos.calculation_revision_sources import CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT, CalculationNoteFact
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
@@ -910,7 +910,11 @@ class ModeloFormCalculationNote(_FormModel):
     recording while such a note stands, whatever its attention says, so the
     editor withholds them too (:attr:`ModeloWorkForm.blocking_calculation_notes`),
     as it does for a note at the blocking level. ``fact`` is what this note says
-    about its own subject, when its reason alone does not.
+    about its own subject, when its reason alone does not. ``message`` is the
+    calculation's own account of this note, as its resolver worded it for the
+    filer and the calculate result carries it, in the form's language; ``None``
+    when it wrote none in that language, or when only the note that persists
+    with the calculation is known.
     """
 
     reason: str = Field(min_length=1, max_length=64)
@@ -920,6 +924,7 @@ class ModeloFormCalculationNote(_FormModel):
     withholds_filing: bool = False
     fact: CalculationNoteFact | None = None
     element_names: tuple[tuple[str, str], ...] = ()
+    message: str | None = Field(default=None, min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)
 
 
 class ModeloFormAeatData(_FormModel):

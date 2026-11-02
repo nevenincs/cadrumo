@@ -32,6 +32,8 @@ from .....application.calculations.prorrata_regularizacion import ProrrataRegula
 from .....application.prorrata_register.sector_lifecycle import settle_sector_definitive
 from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import CasillaId, validated_casilla_id
+from .....core.external_constants import OutputLanguage
+from .....core.i18n.render import output_language
 from .....core.i18n.render import tr as render_tr
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.modelo import Modelo
@@ -234,6 +236,8 @@ def _sole_unresolved_message(resolution: CalculationSourceResolution, binding_id
     assert diagnostic.reason == "unresolved_binding"
     assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
     assert diagnostic.binding_id == binding_id
+    # Rendered from the catalogue, so worded for the filer in the language the catalogue rendered it in.
+    assert diagnostic.message_language is OutputLanguage(output_language())
     return diagnostic.message
 
 

@@ -1,6 +1,6 @@
 {
   "result_version": 3,
-  "calculation_revision_id": "99a5c5a6d985df7fbf55cf579655bb936fae88f8a5fb112ef9f558fb5c630653",
+  "calculation_revision_id": "c284fdc0a95c248b48edbf564d395ca6be54489fc268660d4286cd210be46d58",
   "artefact": "fichero_boe",
   "export_format": "fichero-boe",
   "output_path": "modelo-165.txt",
@@ -10,7 +10,7 @@
   "evidence_status": "local_export_not_official_aeat_filing_evidence",
   "completeness": "unverified",
   "fichero_boe": {
-    "calculation_revision_id": "99a5c5a6d985df7fbf55cf579655bb936fae88f8a5fb112ef9f558fb5c630653",
+    "calculation_revision_id": "c284fdc0a95c248b48edbf564d395ca6be54489fc268660d4286cd210be46d58",
     "work_unit_id": "7858195b3c8521c124dc8095c9bf81a2f5f07340a4cc1532f401e5a16cc2593f",
     "bucket_id": "13000000-0000-4000-8000-000000000730",
     "modelo": "165",
@@ -20,9 +20,9 @@
     "byte_size": 1000,
     "file_sha256": "7929a6c08e9f84143154905c183f5961fcdb583d322cb222452342fd51620809",
     "format": "fichero-boe",
-    "exported_at": "2026-11-01T07:56:56.726331Z",
+    "exported_at": "2026-11-02T01:34:42.432199Z",
     "actor": "operator:desktop-modelo",
-    "bucket_event_id": "c4f89461fda290553f511b30cb6ca2fa230e4a983fc52f8c12b6d3999b292b52",
+    "bucket_event_id": "13a5b6f727bf56f0e8996c01bc2f81ed1b05dc96d3dc3e1143c968a9c09e46c5",
     "resolved_result_disposition": null,
     "payment_election": null,
     "refund_election": null,

@@ -227,6 +227,58 @@ def test_each_reason_takes_its_place_on_the_scale_most_urgent_first(operation: P
     ]
 
 
+def _worded(message: str, language: OutputLanguage | None = OutputLanguage.EN) -> CalculationSourceDiagnostic:
+    return CalculationSourceDiagnostic(
+        reason="source_issue",
+        source_kind="prorrata_regularizacion",
+        casilla_id="03",
+        message=message,
+        message_language=language,
+    )
+
+
+def test_each_note_carries_the_account_its_resolver_worded_in_the_forms_language(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The message a calculate result carries for a diagnostic is the one its note on the form carries."""
+    written = "Liquidation 1T declared deductible input VAT, but the ledger holds none for it."
+
+    (note,) = _form(operation, diagnostics=(_worded(written),)).calculation_notes
+
+    assert (note.reason, note.casilla_id, note.message) == ("source_issue", "03", written)
+
+
+@pytest.mark.parametrize("language", [OutputLanguage.ES, None])
+def test_an_account_not_worded_in_the_forms_language_is_left_to_the_catalogue(
+    operation: PinnedAuthorityOperation, language: OutputLanguage | None
+) -> None:
+    """Teeth for the rule above: Spanish prose, or a technical account in no language, never reaches an English form."""
+    (note,) = _form(operation, diagnostics=(_worded("La liquidación 1T no tiene base.", language),)).calculation_notes
+
+    assert note.reason == "source_issue"
+    assert note.message is None
+
+
+def test_two_accounts_of_one_reason_are_two_notes_and_one_account_twice_is_one(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Without facts of its own, a note is told apart by what its resolver wrote, so neither account is lost."""
+    first = "The gross deductible input VAT of the earlier liquidations is negative."
+    second = "The earlier liquidations this regularisation reads are missing."
+
+    def issue(message: str) -> CalculationSourceDiagnostic:
+        return CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="prorrata_regularizacion",
+            message=message,
+            message_language=OutputLanguage.EN,
+        )
+
+    notes = _form(operation, diagnostics=(issue(first), issue(second), issue(first))).calculation_notes
+
+    assert [note.message for note in notes] == [first, second]
+
+
 def _revision_with_issues(
     snapshot: RegistrySnapshot, issues: tuple[CalculationSourceIssue, ...]
 ) -> CalculationRevision:
@@ -269,8 +321,9 @@ def test_a_declaration_opened_afresh_knows_only_the_notes_that_persist_with_its_
     form = _form(operation, diagnostics=None, zero_at=_PRINTED, revision=revision)
 
     assert not form.calculation_notes_held
-    assert [(note.reason, note.box, note.attention) for note in form.calculation_notes] == [
-        ("unresolved_binding", _PRINTED, ModeloFormAttention.BLOCKS)
+    # The stored message is a technical account, so the reopened note is worded by its reason alone.
+    assert [(note.reason, note.box, note.attention, note.message) for note in form.calculation_notes] == [
+        ("unresolved_binding", _PRINTED, ModeloFormAttention.BLOCKS, None)
     ]
     assert _field(form, _PRINTED).value is None
 

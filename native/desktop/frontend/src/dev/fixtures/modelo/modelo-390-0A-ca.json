@@ -32871,11 +32871,11 @@
       ],
       "result": null,
       "deadline": {
-        "closes_on": "2027-01-30",
-        "nominal_closes_on": "2027-01-30",
+        "closes_on": "2027-02-01",
+        "nominal_closes_on": "2027-02-01",
         "holiday_coverage": "calendar_unavailable",
-        "reference_on": "2026-11-01",
-        "days_remaining": 90,
+        "reference_on": "2026-11-02",
+        "days_remaining": 91,
         "days_overdue": null
       },
       "aeat_data": null,
@@ -32912,8 +32912,8 @@
     "attention": [],
     "result": null,
     "deadline": {
-      "text": "Termini fins al 30 de gen. 2027 · dies restants: 90",
-      "short_text": "Termini fins al 30 de gen. 2027 · dies restants: 90",
+      "text": "Termini fins al 1 de febr. 2027 · dies restants: 91",
+      "short_text": "Termini fins al 1 de febr. 2027 · dies restants: 91",
       "tone": "normal",
       "help": null
     },

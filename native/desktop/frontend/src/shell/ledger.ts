@@ -94,6 +94,8 @@ import type {
   ProrrataSeedRequest,
   ProrrataSeedSectorRequest,
   ProrrataSettleSectorRequest,
+  ProrrataDeclareGrossRequest,
+  ProrrataRemoveGrossRequest,
 } from "./ledgerSetup";
 
 /** The definitions the host admits, mirroring its closed list. */
@@ -2103,6 +2105,8 @@ export interface LedgerRequests {
   "ledger.prorrata.revoke_especial": ProrrataRevokeEspecialRequest;
   "ledger.prorrata.seed_sector": ProrrataSeedSectorRequest;
   "ledger.prorrata.settle_sector": ProrrataSettleSectorRequest;
+  "ledger.prorrata.declare_gross": ProrrataDeclareGrossRequest;
+  "ledger.prorrata.remove_gross": ProrrataRemoveGrossRequest;
   "ledger.bienes_inversion.list": Record<string, never>;
   "ledger.bienes_inversion.declare": CapitalGoodDeclareRequest;
   "ledger.inventory.list": Record<string, never>;
@@ -2206,6 +2210,8 @@ export interface LedgerResults {
   "ledger.prorrata.revoke_especial": ProrrataMutationResult;
   "ledger.prorrata.seed_sector": ProrrataMutationResult;
   "ledger.prorrata.settle_sector": ProrrataMutationResult;
+  "ledger.prorrata.declare_gross": ProrrataMutationResult;
+  "ledger.prorrata.remove_gross": ProrrataMutationResult;
   "ledger.bienes_inversion.list": CapitalGoodsListResult;
   "ledger.bienes_inversion.declare": CapitalGoodDeclareResult;
   "ledger.inventory.list": InventoryListResult;
