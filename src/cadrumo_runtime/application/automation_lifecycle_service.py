@@ -97,6 +97,19 @@ def _denial_request(
     )
 
 
+def _require_denial_target(custody: AutomationLifecycleCustody, change: AutomationDenial) -> None:
+    """Refuse a key or grant denial that names nothing the profile holds, instead of acknowledging a no-op."""
+    if not change.kind.targets_a_record:
+        return
+    grants = custody.enrollment_state().grants
+    if change.kind is AutomationDenialKind.GRANT:
+        known = any(entry.grant.grant_id == change.target_id for entry in grants)
+    else:
+        known = any(item.key.key_id == change.target_id for entry in grants for item in entry.keys)
+    if not known:
+        raise AutomationCustodyError(AutomationCustodyCode.MISSING)
+
+
 def _deny_automation(
     *,
     custody: AutomationLifecycleCustody,
@@ -118,6 +131,7 @@ def _deny_automation(
         )
         if isinstance(decision, AccessDenied):
             raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
+        _require_denial_target(custody, change)
         if change.kind is AutomationDenialKind.PROFILE_LOCK:
             owner.set_profile_lock(generation=facts.profile.lock_generation + 1, locked=True)
         try:
