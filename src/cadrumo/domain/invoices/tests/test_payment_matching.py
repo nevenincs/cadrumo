@@ -25,8 +25,8 @@ from ..catalogue import InvoiceCatalogue
 from ..enums import IvaRate, PaymentStatus
 from ..models import Invoice, InvoiceLine
 from ..payment_matching import (
-    EARLY_PAYMENT_DAYS,
-    PICK_WINDOW_DAYS,
+    EARLY_RANK_GAP_DAYS,
+    PICK_HORIZON_DAYS,
     PaymentSuggestion,
     can_take_invoice,
     invoice_choices,
@@ -223,7 +223,7 @@ def test_the_number_in_the_description_outranks_the_gap_the_gap_the_counterparty
 
 
 def test_a_payment_up_to_three_days_before_the_invoice_ranks_by_its_gap_and_earlier_ranks_last() -> None:
-    assert EARLY_PAYMENT_DAYS == 3
+    assert EARLY_RANK_GAP_DAYS == 3
     row = _movement("p", on="2026-10-10")
     # Gaps: -3 (ranks 3), -4 (ranks after everything made after issue), +9 (ranks 9).
     three_before = _invoice("E-3", issued="2026-10-13")
@@ -331,7 +331,7 @@ def test_the_picker_sorts_invoices_by_whether_they_settle_and_shows_what_is_stag
 
 
 def test_an_invoice_no_movement_settles_is_offered_the_open_movements_near_its_day() -> None:
-    assert PICK_WINDOW_DAYS == 10
+    assert PICK_HORIZON_DAYS == 10
     ticket = _invoice("T-1", issued="2026-10-15", base="48.26")
     assert ticket.grand_total == Decimal("58.39")
 
@@ -339,12 +339,12 @@ def test_an_invoice_no_movement_settles_is_offered_the_open_movements_near_its_d
         return _movement(name, amount=amount, on=_day(offset, date(2026, 10, 15)), **facts)
 
     near = row("near", 2, "58.40")
-    exact = row("exact", PICK_WINDOW_DAYS)
+    exact = row("exact", PICK_HORIZON_DAYS)
     before = row("before", -9)
-    edge_before = row("edge_before", -PICK_WINDOW_DAYS, "20.00")
+    edge_before = row("edge_before", -PICK_HORIZON_DAYS, "20.00")
     far = row("far", 1, "12.00")
-    late = row("late", PICK_WINDOW_DAYS + 1)
-    early = row("early", -PICK_WINDOW_DAYS - 1)
+    late = row("late", PICK_HORIZON_DAYS + 1)
+    early = row("early", -PICK_HORIZON_DAYS - 1)
     income = row("income", 0, direction="INCOMING")
     linked = row("linked", 0, invoice_id="a" * 64)
     staged = row("staged", 0)

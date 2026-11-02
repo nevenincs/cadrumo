@@ -22,7 +22,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.payment_matching import (
-    PICK_WINDOW_DAYS,
+    PICK_HORIZON_DAYS,
     PaymentPair,
     PaymentSuggestion,
     invoice_choices,
@@ -197,7 +197,7 @@ class LedgerInvoiceMatchExecutor:
         )
         return LedgerInvoiceMatchResult(
             profile_id=payload.profile_id,
-            window_days=PICK_WINDOW_DAYS,
+            window_days=PICK_HORIZON_DAYS,
             suggestions=tuple(
                 _suggestion_out(suggestion)
                 for suggestion in found
