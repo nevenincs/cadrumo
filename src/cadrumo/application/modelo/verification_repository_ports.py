@@ -24,6 +24,7 @@ from ...domain.modelos.protocols import (
 )
 from ...domain.modelos.work_unit_repository import WorkUnitCatalogueRepositoryProtocol
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..calculations.observations_repository import (
@@ -72,6 +73,7 @@ class VerificationRepositoryBundle:
     draft_review_ports: DraftReviewPorts
     workflow_gate_ports: WorkflowGatePorts
     retencion_observation_ports: RetencionObservationPorts
+    percepcion_observation_ports: PercepcionObservationPorts
     ledger_membership_ports: LedgerMembershipPorts
 
 
