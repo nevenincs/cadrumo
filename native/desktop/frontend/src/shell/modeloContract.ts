@@ -913,6 +913,7 @@ export type CrossPeriodCleanStateBlocker =
   | "incomplete_group_member_coverage"
   | "missing_expected_group_member_roster"
   | "unexpected_group_member_source"
+  | "filing_kind_disagreement"
   | "registry_revision_divergence";
 
 /**
