@@ -180,7 +180,8 @@ async fn window_stop_cancels_a_person_preparation_open_before_supervisor_join() 
     let window = window(server.native());
     let preparing = window.clone();
     let prepare = tokio::task::spawn_blocking(move || {
-        preparing.connect(cadrumo_application::runtime_client::timeout::TimeoutWait::new().deadline())
+        preparing
+            .connect(cadrumo_application::runtime_client::timeout::TimeoutWait::new().deadline())
     });
     tokio::task::block_in_place(|| server.reached());
     window.request_stop();

@@ -12,7 +12,9 @@ use super::protocol::{
 use super::timestamps::utc_now;
 use super::transport::Held;
 use crate::canonical_json::compact_json;
-use crate::runtime_client::{session::Admitted, framing::MAXIMUM_SECRET_BYTES, connection::SessionExchange};
+use crate::runtime_client::{
+    connection::SessionExchange, framing::MAXIMUM_SECRET_BYTES, session::Admitted,
+};
 use serde_json::{Map, Value, json};
 use std::collections::BTreeSet;
 use std::time::{Duration, Instant};

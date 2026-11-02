@@ -310,7 +310,11 @@ fn supervise(inner: &Arc<Inner>, stopping: &mpsc::Receiver<()>) {
 /// served stretch starts its pauses over.
 fn run(inner: &Inner) -> Result<bool> {
     use cadrumo_application::runtime_client::{
-        handshake::Cohort, connection::Connection, endpoint::Endpoint, events::Event, endpoint::OpenCancellation, timeout::TimeoutWait,
+        connection::Connection,
+        endpoint::{Endpoint, OpenCancellation},
+        events::Event,
+        handshake::Cohort,
+        timeout::TimeoutWait,
     };
     let waiting = TimeoutWait::new();
 

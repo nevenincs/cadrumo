@@ -12,7 +12,10 @@
 
 #![cfg(all(windows, feature = "platform"))]
 
-use cadrumo_application::runtime_client::{session::Admitted, handshake::Cohort, connection::Connection, endpoint::Endpoint, refusal::Refusal};
+use cadrumo_application::runtime_client::{
+    connection::Connection, endpoint::Endpoint, handshake::Cohort, refusal::Refusal,
+    session::Admitted,
+};
 use cadrumo_application::value::Sha256Digest;
 use cadrumo_application::view_stream::attach::view_attach;
 use cadrumo_application::view_stream::chunks::AssembledImage;

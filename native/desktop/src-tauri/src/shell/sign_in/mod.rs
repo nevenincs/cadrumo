@@ -596,7 +596,9 @@ impl SignIn {
         ),
         cadrumo_application::runtime_client::refusal::Refusal,
     > {
-        use cadrumo_application::runtime_client::{handshake::Cohort, endpoint::Endpoint, refusal::Refusal};
+        use cadrumo_application::runtime_client::{
+            endpoint::Endpoint, handshake::Cohort, refusal::Refusal,
+        };
 
         let native = self.native.as_ref().map_err(|_| Refusal::Unavailable)?;
         let endpoint = Endpoint::of(&native.storage_root)?;
@@ -615,7 +617,9 @@ impl SignIn {
         Arc<cadrumo_application::runtime_client::connection::Connection>,
         cadrumo_application::runtime_client::refusal::Refusal,
     > {
-        use cadrumo_application::runtime_client::{connection::Connection, endpoint::OpenCancellation, refusal::Refusal};
+        use cadrumo_application::runtime_client::{
+            connection::Connection, endpoint::OpenCancellation, refusal::Refusal,
+        };
         let opening = Arc::new(OpenCancellation::new().map_err(Refusal::Io)?);
         {
             let mut owners = self.openings.lock().unwrap_or_else(|e| e.into_inner());

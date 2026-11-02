@@ -10,7 +10,7 @@ use super::protocol::{
 };
 use super::transport::{Held, remaining};
 use crate::canonical_json::json_string;
-use crate::runtime_client::{session::Admitted, refusal::Refusal, connection::SessionExchange};
+use crate::runtime_client::{connection::SessionExchange, refusal::Refusal, session::Admitted};
 use serde_json::{Value, json};
 use std::time::{Duration, Instant};
 

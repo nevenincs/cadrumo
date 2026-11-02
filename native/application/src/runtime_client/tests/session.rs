@@ -1,8 +1,9 @@
 use super::super::connection::SessionExchange;
 use super::super::events::{Event, Pushed};
-use super::super::framing::document;
 use super::super::refusal::{CUSTODY_RECOVERING, Refusal};
 use super::super::session::{Admitted, Standing, access_refusal, admitted};
+use super::super::session::{Frontend, present_login};
+use super::super::timeout::TimeoutWait;
 use serde_json::{Map, Value, json};
 use std::sync::{Mutex, mpsc};
 use std::time::Instant;
@@ -299,5 +300,31 @@ fn an_admitted_status_binds_the_profile_and_a_denial_is_the_runtimes_code() {
         .unwrap_err()
         .code(),
         "profile_locked"
+    );
+}
+
+#[test]
+fn pending_login_sends_one_proof_and_claims_after_its_cue_under_one_deadline() {
+    let deadline = TimeoutWait::new().deadline();
+    let exchange = PendingLogin {
+        sender: Mutex::new(None),
+        requests: Mutex::new(Vec::new()),
+        login_id: Mutex::new(String::new()),
+        deadline,
+    };
+    let admitted = present_login(
+        &exchange,
+        &held().profile_id,
+        Frontend::Desktop,
+        "password",
+        b"one-proof",
+        false,
+        deadline,
+    )
+    .unwrap();
+    assert_eq!(admitted.session_id, held().session_id);
+    assert_eq!(
+        *exchange.requests.lock().unwrap(),
+        ["proof", "status", "status"]
     );
 }

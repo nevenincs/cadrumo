@@ -9,7 +9,9 @@
 
 use super::{Custody, Reconnecting};
 use cadrumo_application::runtime_client::{
-    session::Admitted, session::Frontend, stored_proof::ResumeRefusal, connection::SessionExchange, session::Standing, session::rebind_receipt, session::session_standing,
+    connection::SessionExchange,
+    session::{Admitted, Frontend, Standing, rebind_receipt, session_standing},
+    stored_proof::ResumeRefusal,
 };
 use std::{
     path::PathBuf,

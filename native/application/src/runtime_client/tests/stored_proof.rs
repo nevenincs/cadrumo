@@ -1,12 +1,9 @@
 use super::super::refusal::Refusal;
-use super::super::session::{Frontend, present_login};
 use super::super::stored_proof::{
     KEYSTORE_DIRECTORY, ProofRefusal, RECEIPT_FILENAME, decode_stored_key, receipt_account,
     receipt_locator, receipt_refusal, stored_sign_in_proof,
 };
-use super::super::timeout::TimeoutWait;
 use serde_json::json;
-use std::sync::Mutex;
 
 #[test]
 fn a_refused_receipt_reads_as_its_receipt_reason_and_other_refusals_do_not() {
@@ -38,32 +35,6 @@ fn a_refused_receipt_reads_as_its_receipt_reason_and_other_refusals_do_not() {
     assert_eq!(receipt_refusal(&throttled), Some("tampered"));
     assert_eq!(receipt_refusal(&Refusal::denied("profile_locked")), None);
     assert_eq!(receipt_refusal(&Refusal::ConnectionClosed), None);
-}
-
-#[test]
-fn pending_login_sends_one_proof_and_claims_after_its_cue_under_one_deadline() {
-    let deadline = TimeoutWait::new().deadline();
-    let exchange = PendingLogin {
-        sender: Mutex::new(None),
-        requests: Mutex::new(Vec::new()),
-        login_id: Mutex::new(String::new()),
-        deadline,
-    };
-    let admitted = present_login(
-        &exchange,
-        &held().profile_id,
-        Frontend::Desktop,
-        "password",
-        b"one-proof",
-        false,
-        deadline,
-    )
-    .unwrap();
-    assert_eq!(admitted.session_id, held().session_id);
-    assert_eq!(
-        *exchange.requests.lock().unwrap(),
-        ["proof", "status", "status"]
-    );
 }
 
 #[test]
