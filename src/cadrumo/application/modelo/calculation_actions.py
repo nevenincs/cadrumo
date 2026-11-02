@@ -85,6 +85,7 @@ from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint, draft_contributor_identities
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
+from ..aggregation.renta_imputation import declared_imputation_criteria
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
 from ..user_profile.projections import profile_fact_index, record_to_path_values
 from ._calculation_helpers import (
@@ -184,6 +185,7 @@ def _draft_invoice_fingerprint(
     source_transaction_ids: tuple[str, ...],
     source_issues: tuple[CalculationSourceIssue, ...],
     ports: CalculationActionPorts,
+    profile: ModeloWorkProfile,
     captured_at: datetime,
 ) -> InvoiceFingerprintSnapshot | None:
     """Pin the invoices this draft read; an unreadable catalogue leaves it unknown.
@@ -196,6 +198,7 @@ def _draft_invoice_fingerprint(
             work_unit=work_unit,
             revision=ports.operation.revision(work_unit.modelo, work_unit.revision_id),
             contributors=draft_contributor_identities(source_transaction_ids, source_issues),
+            criteria=declared_imputation_criteria(profile.record),
             ports=ports.invoice_catalogue_read_ports,
             captured_at=captured_at,
         )
@@ -370,6 +373,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
             source_transaction_ids=source_transaction_ids,
             source_issues=revision_source_issues,
             ports=ports,
+            profile=prepared.profile,
             captured_at=now,
         ),
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},

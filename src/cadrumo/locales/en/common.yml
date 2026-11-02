@@ -9534,6 +9534,20 @@ workspace:
       save: Keep for review
       save_next: Keep and go to next
       unreadable: This value could not be read.
+    election:
+      clear: Clear {year}
+      contradictory: Your profile states more than one answer for {year}. Choose the
+        right one and save it, or clear the year.
+      other_years: Other years your profile states
+      reading: Reading what your profile states…
+      retry: Read again
+      save: Save for {year}
+      saved: Saved for {year}.
+      state:
+        contradictory: Stated more than once for {year}, with different answers
+        declared: Stated for {year}
+        undeclared: Not stated for {year}
+      title: Business income criterion for {year}
     export:
       account_choice: '%{label} (%{account})'
       confirm_first: 'Confirm the assumed values before creating the file or recording
@@ -9726,6 +9740,10 @@ workspace:
     in_spanish: (in Spanish)
     issues:
       action:
+        at_source: Add or correct the records or details it comes from, then calculate
+          again.
+        at_source_if_applies: No action is needed unless that figure applies to you.
+          If it does, add or correct the records it comes from, then calculate again.
         confirm: Open each box and confirm its value, or type the right one.
         confirm_by_section: Open each section and confirm its values, or type the
           right ones.

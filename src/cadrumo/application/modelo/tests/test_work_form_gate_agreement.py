@@ -30,9 +30,15 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from ....domain.modelos.calculation_revision_sources import DISAGREEMENT_REASONS, CalculationSourceIssue
 from ....domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.source_disagreement import (
+    DisagreementDecimalValue,
+    SourceDisagreementEntry,
+    SourceDisagreementFact,
+    SourceDisagreementRole,
+)
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
@@ -137,14 +143,44 @@ class _Note:
     binding_source: BindingSourceKind | None = None
 
     def issue(self) -> CalculationSourceIssue:
+        disagreement = {"disagreement": _disagreement()} if self.reason in DISAGREEMENT_REASONS else {}
         return CalculationSourceIssue.model_validate(
             {
                 "reason": self.reason,
                 "binding_source": self.binding_source,
                 "message": f"the calculation noticed {self.reason}",
                 "casilla_id": self.casilla_id,
+                **disagreement,
             }
         )
+
+
+def _disagreement() -> SourceDisagreementFact:
+    """An operator value over a different carried one, on a figure the filed return carries."""
+    return SourceDisagreementFact.of(
+        modelo="210",
+        filing_year=2025,
+        period="0A",
+        work_unit_id="e" * 64,
+        registry_revision_id="test",
+        inputs_digest="d" * 64,
+        key="test-carried-binding",
+        value_channel="decimal",
+        reached_casillas=(),
+        sources=(
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.BACKEND,
+                source_family="previous_filing",
+                value=DisagreementDecimalValue.of(Decimal("10.00")),
+            ),
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.CALLER,
+                source_family="operator_input",
+                value=DisagreementDecimalValue.of(Decimal("12.00")),
+            ),
+        ),
+        selected_role=SourceDisagreementRole.CALLER,
+    )
 
 
 def _every_note() -> list[_Note]:

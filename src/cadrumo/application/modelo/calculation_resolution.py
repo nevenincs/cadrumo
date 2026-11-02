@@ -40,7 +40,7 @@ from ...domain.calculations.registry.bindings import (
     resolve_bound_casilla_binding_value,
 )
 from ...domain.calculations.registry.casilla_membership import casillas_by_id, text_family_casilla_ids
-from ...domain.calculations.registry.filing_bound_reach import FilingBoundReach, filing_bound_reach
+from ...domain.calculations.registry.filing_bound_reach import FilingBoundReach, snapshot_filing_bound_reach
 from ...domain.calculations.registry.ids import (
     BindingId,
     RelationId,
@@ -244,7 +244,7 @@ def resolve_calculation_binding_channels(
         resolved_enum_bindings,
         resolved_boolean_bindings,
     )
-    screen = precedence_screen_context(work_unit, snapshot.revision)
+    screen = precedence_screen_context(work_unit, snapshot, operation=operation)
     casilla_divergences = _caller_casillas_over_tier_bound_values(
         snapshot.revision,
         casilla_inputs=casilla_inputs,
@@ -388,15 +388,18 @@ class PrecedenceScreenContext:
     declared_bindings: Mapping[BindingId, BindingDefinition]
 
 
-def precedence_screen_context(work_unit: WorkUnit, revision: ModeloRevision) -> PrecedenceScreenContext:
-    """Bind the precedence screen to ``work_unit`` and the filing-bound set of ``revision``."""
+def precedence_screen_context(
+    work_unit: WorkUnit, snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation
+) -> PrecedenceScreenContext:
+    """Bind the precedence screen to ``work_unit`` and the filing-bound set of ``snapshot``'s revision."""
+    revision = snapshot.revision
     return PrecedenceScreenContext(
         modelo=str(work_unit.modelo),
         filing_year=work_unit.filing_year,
         period=work_unit.period.registry_token,
         work_unit_id=work_unit.work_unit_id,
         revision=revision,
-        reach=filing_bound_reach(revision),
+        reach=snapshot_filing_bound_reach(snapshot, operation=operation),
         declared_bindings=MappingProxyType(dict(revision_bindings_by_id(revision))),
     )
 

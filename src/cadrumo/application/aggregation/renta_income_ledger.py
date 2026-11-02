@@ -42,6 +42,7 @@ from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from ..invoices.source_observations import is_rectificativa
 from . import _shared_issue_reasons, renta_income_evidence
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
@@ -54,14 +55,22 @@ from .renta_imputation import (
     ActivityImputationCriterion,
     ImputationCriteria,
     ImputationUnresolved,
+    accrual_entry_date,
     impute_ledger_row,
     linked_accrual_date,
     rows_left_out_summary,
     rows_touching_window,
 )
-from .renta_income_diagnostics import accrued_unpaid_income, accrued_without_eur_value, overpaid_invoice_issues
+from .renta_income_diagnostics import (
+    RectificativaReading,
+    accrued_unpaid_income,
+    accrued_without_eur_value,
+    overpaid_invoice_issues,
+    rectificativa_reading,
+)
 from .renta_income_models import (
     AccruedUnpaidIncome,
+    RectificativaCorrection,
     RentaIncomeLedgerAggregationIssue,
     RentaIncomeLedgerAggregationIssueReason,
     RentaIncomeObservation,
@@ -97,6 +106,9 @@ class RentaIncomeLedgerAggregation(
     accrued_unpaid: tuple[AccruedUnpaidIncome, ...] = ()
     accrued_without_eur_value: tuple[str, ...] = ()
     """The numbers of the issued invoices that accrue unsettled with no EUR value to count."""
+    rectificativa_corrections: tuple[RectificativaCorrection, ...] = ()
+    rectificativa_refused: tuple[str, ...] = ()
+    """Why each correction accruing in the window could not be placed."""
 
 
 def _load_income_invoices(
@@ -143,6 +155,7 @@ def aggregate_renta_income_ledger_from_repositories(
             invoice_id_of=lambda row: row.invoice_id,
             start=window.start,
             end=window.end,
+            criteria=criteria,
         )
         return aggregate_renta_income_ledger(
             touching,
@@ -250,7 +263,21 @@ def aggregate_renta_income_ledger(
         observations,
         modelo=modelo,
     )
+    corrected = (
+        RectificativaReading()
+        if criteria is None
+        else rectificativa_reading(
+            resolved_invoices,
+            bucket_id=bucket_id,
+            window_start=window.start,
+            window_end=window.end,
+            target_casilla_id=target_casilla_id,
+            criteria=criteria,
+        )
+    )
     return RentaIncomeLedgerAggregation(
+        rectificativa_corrections=corrected.corrections,
+        rectificativa_refused=corrected.refused,
         modelo=modelo,
         period=window.period,
         observations=tuple(observations),
@@ -319,6 +346,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             invoice_id_of=lambda row: row.invoice_id,
             start=date(period.filing_year, 1, 1),
             end=period.end_date,
+            criteria=criteria,
         )
         return aggregate_renta_m100_income_ledger(
             touching,
@@ -416,7 +444,21 @@ def aggregate_renta_m100_income_ledger(
         observations,
         modelo=modelo,
     )
+    corrected = (
+        RectificativaReading()
+        if criteria is None
+        else rectificativa_reading(
+            resolved_invoices,
+            bucket_id=bucket_id,
+            window_start=window_start,
+            window_end=window_end,
+            target_casilla_id=target_casilla_id,
+            criteria=criteria,
+        )
+    )
     return RentaIncomeLedgerAggregation(
+        rectificativa_corrections=corrected.corrections,
+        rectificativa_refused=corrected.refused,
         modelo=modelo,
         period=period,
         observations=tuple(observations),
@@ -899,14 +941,25 @@ def _imputed_income_date_or_issue(
     cash = transaction.raw.value_date or transaction.raw.booked_date
     invoice = None if transaction.invoice_id is None else invoices.get(transaction.invoice_id)
     accrual = linked_accrual_date(invoice, kind=InvoiceKind.ISSUED)
+    # A row the window has to account for, so a refusal must not read as nothing to place.
+    entry = None if accrual is None else accrual_entry_date(accrual, criteria, through_year=cumulative_end.year)
     in_window = any(
-        on is not None and cumulative_start <= on <= cumulative_end for on in (cash, accrual, transaction.accrual_date)
+        on is not None and cumulative_start <= on <= cumulative_end
+        for on in (cash, accrual, transaction.accrual_date, entry)
     )
     imputed = impute_ledger_row(transaction, invoice, kind=InvoiceKind.ISSUED, criteria=criteria)
     # A capital subsidy follows its asset's amortization under either criterion, and no
     # ledger row carries a schedule: AEAT Manual Renta, ch. 6, citing STS 398/2022.
     if str(transaction.concepto_ingreso) == _CAPITAL_SUBSIDY_CONCEPT:
         imputed = ImputationUnresolved.CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN
+    # Under accrual a correction reduces the year's income, so money coming in on one has no reading.
+    elif (
+        invoice is not None
+        and accrual is not None
+        and is_rectificativa(invoice)
+        and criteria.usable(accrual.year) is ActivityImputationCriterion.DEVENGO
+    ):
+        imputed = ImputationUnresolved.RECTIFICATIVA_WITH_RECEIPT
     # A shared receipt of an invoice whose figures cannot be shared out stands for nothing known.
     elif (
         invoice is not None

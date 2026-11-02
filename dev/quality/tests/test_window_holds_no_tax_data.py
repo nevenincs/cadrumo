@@ -96,6 +96,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import os
 import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
@@ -1760,7 +1761,46 @@ def test_every_module_spelling_is_scanned(
     assert list(scan_tree(tmp_path, facts, outputs)) == [f"a{suffix}"]
 
 
+def reached_sources(root: Path) -> list[Path]:
+    """The sources the scan reaches under ``root``, refusing a scan that reaches none or reads none."""
+    reached = list(window_sources(root))
+    assert reached, f"the scan reaches no source under {root}: it would pass without reading the window"
+    unread = [path for path in reached if not lex(path.read_text(encoding="utf-8"))]
+    assert unread == [], "a source the scan reaches yields no tokens, so no rule can see it"
+    return reached
+
+
+def _eligible_by_walk(root: Path) -> set[str]:
+    """Every module source outside ``dev``, stories and specs, found by walking directories."""
+    found: set[str] = set()
+    for directory, names, files in os.walk(root):
+        names[:] = [name for name in names if name != "node_modules"]
+        for name in files:
+            relative = (Path(directory) / name).relative_to(root)
+            if relative.suffix in _EXTENSIONS and relative.parts[0] != "dev" and not _EXCLUDED_NAME.search(name):
+                found.add(relative.as_posix())
+    return found
+
+
+def test_the_scan_reaches_every_window_source() -> None:
+    reached = {path.relative_to(_SOURCE).as_posix() for path in reached_sources(_SOURCE)}
+    assert reached == _eligible_by_walk(_SOURCE)
+
+
+def test_a_scan_that_reaches_no_source_fails(tmp_path: Path) -> None:
+    (tmp_path / "notes.md").write_text("export const t = 1;\n", encoding="utf-8")
+    with pytest.raises(AssertionError, match="reaches no source"):
+        reached_sources(tmp_path)
+
+
+def test_a_source_that_yields_no_tokens_fails(tmp_path: Path) -> None:
+    (tmp_path / "blank.ts").write_text("", encoding="utf-8")
+    with pytest.raises(AssertionError, match="yields no tokens"):
+        reached_sources(tmp_path)
+
+
 def test_the_window_holds_no_tax_data(facts: Facts, outputs: dict[str, tuple[str, ...]]) -> None:
+    reached_sources(_SOURCE)
     found = scan_tree(_SOURCE, facts, outputs)
     hit_keys = {(path, hit.rule) for path, hits in found.items() for hit in hits}
     unlisted = sorted(

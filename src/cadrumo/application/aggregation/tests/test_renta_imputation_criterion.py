@@ -381,6 +381,16 @@ def test_a_cash_election_three_years_old_may_end() -> None:
     assert criteria.usable(_LATER) is not None
 
 
+def test_the_minimum_binds_an_election_older_than_the_supported_years() -> None:
+    criteria = ImputationCriteria(facts=_declared((2017, _CASH), (2018, _DEVENGO)))
+    assert criteria.usable(2018) is None
+
+
+def test_a_year_before_the_reglamento_binds_no_election() -> None:
+    criteria = ImputationCriteria(facts=_declared((2005, _CASH), (2006, _DEVENGO)))
+    assert criteria.declared(2006) is criteria.usable(2006) is not None
+
+
 def test_cash_without_a_declared_accounting_state_is_not_usable() -> None:
     criteria = ImputationCriteria(facts=(_in_year(_CRITERION, _CASH, _LATER),))
     assert criteria.usable(_LATER) is None

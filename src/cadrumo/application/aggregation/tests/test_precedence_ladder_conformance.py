@@ -28,12 +28,20 @@ from cadrumo.domain.calculations.registry.tests.published_authority import publi
 
 from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import validated_casilla_id
+from ....domain.modelos.source_disagreement import SourceDisagreementRole
 from ...modelo.action_errors import ModeloAggregationBindingError
 from ...modelo.calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ...modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
 from ...modelo.edit_admission import permitted_binding_entry
 from ...modelo.edit_models import ModeloEditNonWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableReason
-from ..source_precedence import CALLER_OVERRIDE_PRECEDENCE_LADDER, CallerOverrideDisposition, precedence_ladder_sources
+from ..source_mesh import CalculationSourceResolution
+from ..source_precedence import (
+    CALLER_OVERRIDE_PRECEDENCE_LADDER,
+    PRECEDENCE_OVERLAY_ORDER,
+    CallerOverrideDisposition,
+    precedence_ladder_sources,
+)
+from ..source_resolution_operations import PrecedenceTier, merge_source_resolutions_by_precedence
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -147,3 +155,34 @@ def test_the_editor_reports_a_suffered_withholding_binding_as_source_locked() ->
 
     assert isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
     assert entry.reason is ModeloEditNonWritableReason.SOURCE_LOCKED
+
+
+def test_overlay_order_is_profile_then_backend_then_borrador_then_caller() -> None:
+    """The overlay order the screen admits is the ladder's later-tier-wins order, stated independently here."""
+    assert [role.value for role in PRECEDENCE_OVERLAY_ORDER] == ["profile", "backend", "borrador", "caller"]
+
+
+def test_a_caller_override_of_a_carry_source_reaches_the_overlay_as_the_caller_tier_over_the_backend() -> None:
+    """A CARRY source lets the caller through the guard, and the overlay then compares the two values."""
+    carried = "test-previous-filing-carry"
+    assert BindingSourceKind.PREVIOUS_FILING in precedence_ladder_sources(CallerOverrideDisposition.CARRY)
+    overlay = merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(
+                role=SourceDisagreementRole.BACKEND,
+                resolution=CalculationSourceResolution(
+                    resolver_id="previous_filing", binding_values={carried: Decimal("10")}
+                ),
+                source_family=BindingSourceKind.PREVIOUS_FILING.value,
+            ),
+            PrecedenceTier(
+                role=SourceDisagreementRole.CALLER,
+                resolution=CalculationSourceResolution(resolver_id="caller", binding_values={carried: Decimal("12")}),
+                source_family="operator_input",
+            ),
+        )
+    )
+
+    (divergence,) = overlay.divergences
+    assert divergence.selected_role is SourceDisagreementRole.CALLER
+    assert [source.source_family for source in divergence.sources] == ["previous_filing", "operator_input"]
