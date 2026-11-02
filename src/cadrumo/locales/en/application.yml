@@ -1271,6 +1271,12 @@ application:
           export it as it stands.
         what_to_do: Calculate the declaration again, check it and record it again;
           the new record replaces this one.
+      household_rows_incomplete:
+        what: Your profile states more people in this group than it records, so the
+          declaration uses only the people recorded and does not treat the group as
+          complete.
+        what_to_do: Add the missing people to your profile or correct the count, then
+          calculate again.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
@@ -1370,6 +1376,16 @@ application:
           Cadrumo did not work out that tax.
         what_to_do: No action is needed if you made no such sales. Otherwise enter
           the amounts yourself.
+      precedence_tier_divergence:
+        what: Two sources hold different values for a figure that reaches box {box},
+          and Cadrumo used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong, then calculate
+          again. Checking, exporting and recording wait until they agree.
+      precedence_tier_divergence_advisory:
+        what: Two sources hold different values for a working figure, and Cadrumo
+          used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong. No exported
+          box depends on this figure.
       prior_payment_minoracion_not_captured:
         what: The reduction that comes from earlier payments is not recorded in box
           {box}.
@@ -1577,6 +1593,7 @@ application:
       disposal_zero_result: '{element}: its sale on {date}, at {transmission_value}
         of transmission value against {net_value} of net value, neither gains nor
         loses, so no box carries it.'
+      household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
@@ -2936,6 +2953,7 @@ application:
           label: Date of death
         nif:
           label: Ascendant's NIF/NIE (leave blank if none)
+      incomplete: '{stated} stated, {recorded} recorded'
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'

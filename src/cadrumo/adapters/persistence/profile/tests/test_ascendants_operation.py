@@ -11,7 +11,6 @@ from __future__ import annotations
 
 from collections.abc import Iterator
 from pathlib import Path
-from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
@@ -35,7 +34,6 @@ from cadrumo.application.user_profile.family_rows import (
 )
 from cadrumo.application.user_profile.household_row_limit import declared_household_row_limit
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
-from cadrumo.application.user_profile.profile_operation_contracts import ProfileAscendantsOperationRequest
 from cadrumo.application.user_profile.profile_record_repository import ProfileRecordRepository
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.config import override_settings
@@ -334,22 +332,9 @@ def test_a_set_replaces_only_the_ascendants_and_leaves_the_descendants(world: _W
     assert stored["renta_family.descendiente.0.birth_date"] == "2015-04-03"
 
 
-def test_a_request_cannot_omit_its_set_or_repeat_a_leaf_and_hides_personal_values_in_its_repr() -> None:
-    profile_id = UUID(int=7)
-    with pytest.raises(ValidationError):
-        ProfileAscendantsOperationRequest.model_validate(
-            {"profile_id": profile_id, "expected_revision": 1, "expected_content_digest": "0" * 64}
-        )
+def test_a_row_cannot_repeat_a_leaf() -> None:
     with pytest.raises(ValidationError):
         _row_with_repeated_leaf()
-    request = ProfileAscendantsOperationRequest(
-        profile_id=profile_id,
-        expected_revision=1,
-        expected_content_digest="0" * 64,
-        ascendants=(_row(nif=_NIF, birth_date="1948-03-04"),),
-    )
-    assert _NIF not in repr(request)
-    assert ProfileAscendantsOperationRequest.model_validate_json(request.model_dump_json()) == request
 
 
 def _row_with_repeated_leaf() -> ProfileAscendantRow:

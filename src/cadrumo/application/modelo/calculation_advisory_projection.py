@@ -18,6 +18,7 @@ from ...domain.calculations.registry.ids import BindingId, LegalRefId, RelationI
 from ...domain.calculations.registry.modelo_rendering import modelo_rendering_value
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
+from ...domain.modelos.source_disagreement import SourceDisagreementFact
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
@@ -61,6 +62,7 @@ class CalculationSourceDiagnosticSnapshot(BaseModel):
     out_of_window_min_filing_date: date | None = None
     out_of_window_max_filing_date: date | None = None
     value_outcome: BindingValueOutcome | None = None
+    disagreement: SourceDisagreementFact | None = None
 
     @classmethod
     def from_diagnostic(cls, diagnostic: CalculationSourceDiagnostic) -> Self:

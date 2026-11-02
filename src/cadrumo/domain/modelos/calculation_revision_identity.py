@@ -322,8 +322,8 @@ def _source_issues_revision_id_payload(
     """Build the optional unresolved-source-issue payload key."""
     # A box, a fact and a stated outcome are appended only when an issue carries
     # one, so every issue stored before issues could carry them keeps the
-    # identity it was stored under. The outcome is tagged, so it can never read
-    # as a part of the fact before it.
+    # identity it was stored under. The outcome and the disagreement are tagged,
+    # so neither can read as a part of the fact before it.
     canonical_source_issues = tuple(
         sorted(
             (
@@ -335,6 +335,7 @@ def _source_issues_revision_id_payload(
                 *(() if issue.casilla_id is None else (issue.casilla_id,)),
                 *(() if issue.fact is None else issue.fact.identity()),
                 *(() if issue.value_outcome is None else (f"value_outcome={issue.value_outcome.value}",)),
+                *(() if issue.disagreement is None else (f"disagreement={issue.disagreement.finding_key}",)),
             )
             for issue in source_issues
         )

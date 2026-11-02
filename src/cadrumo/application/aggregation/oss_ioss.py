@@ -55,7 +55,7 @@ from ...domain.calculations.registry.schema_base import CasillaDataType, DateAxi
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.currency.errors import ExchangeRateProviderError
 from ...domain.currency.models import EurRateLookupStatus
-from ...domain.currency.service import published_eur_rate_on_day_or_next
+from ...domain.currency.service import published_eur_rate_on_day_or_next_publication
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import TransactionKind, require_transaction_kind
@@ -829,8 +829,9 @@ def _candidate_for_invoice_line(
         )
     # OSS/IOSS is cross-border B2C, where invoicing in the destination's own
     # currency is the ordinary case. Art. 163 noniesdecies, duovicies and
-    # septvicies fix one rate for the whole return, the period's last day, so the
-    # rate stamped on the invoice at its operation date does not apply here.
+    # septvicies fix one rate for the whole return, the period's last day (or the
+    # next day of publication when none is published that day), so the rate
+    # stamped on the invoice at its operation date does not apply here.
     rate = _period_close_rate(invoice, line_index=line_index, last_day=period_last_day)
     return OssIossLedgerCandidate(
         ledger_id=f"{invoice.invoice_id}:{line_index}",
@@ -857,7 +858,9 @@ def _period_close_rate(invoice: Invoice, *, line_index: int, last_day: date) -> 
         "rate_date": last_day.isoformat(),
     }
     try:
-        lookup = published_eur_rate_on_day_or_next(invoice.currency, last_day, rate_provider=exchange_rate_provider())
+        lookup = published_eur_rate_on_day_or_next_publication(
+            invoice.currency, last_day, rate_provider=exchange_rate_provider()
+        )
     except ExchangeRateProviderError as exc:
         # An unreachable authority answers nothing about the rate: the same refusal, never a default.
         raise AggregationValidationError(

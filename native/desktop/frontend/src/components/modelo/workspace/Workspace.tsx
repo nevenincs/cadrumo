@@ -181,6 +181,7 @@ export function ModeloWorkspace({
   stagedCount,
   detailsOpen,
   busy = false,
+  writeHeld = false,
   prerequisiteHeld = false,
   notice,
   slots,
@@ -200,6 +201,7 @@ export function ModeloWorkspace({
   detailsOpen: boolean;
   /** An operation the header started has not answered yet. */
   busy?: boolean;
+  writeHeld?: boolean;
   /** An apply was refused on a prerequisite that still stands. */
   prerequisiteHeld?: boolean;
   /** What the last operation answered, shown under the tabs. */
@@ -232,6 +234,8 @@ export function ModeloWorkspace({
         : (next?.action ?? null);
   const findingsLead = prerequisiteHeld || (next?.findings_lead ?? false);
   const target = action ? ACTION_VIEW[action] : undefined;
+  const writesNext =
+    action === "calculate" || action === "recalculate" || action === "verify";
   const levels = new Map(header.attention.map((a) => [a.level, a]));
   const day = (iso: string | null) =>
     iso ? formatInstantDay(locale, iso) : "";
@@ -269,9 +273,13 @@ export function ModeloWorkspace({
         recorded
       )
     ) : action && !(target && target === view && view !== "form") ? (
-      <Button onClick={runNext} disabled={busy} aria-busy={busy}>
+      <Button
+        onClick={runNext}
+        disabled={(busy || writeHeld) && writesNext}
+        aria-busy={busy && writesNext}
+      >
         {t(`workspace.modelo.next_button.${action}`)}
-        <Icon name={busy ? "loader" : "forward"} size="xs" />
+        <Icon name={busy && writesNext ? "loader" : "forward"} size="xs" />
       </Button>
     ) : null;
 

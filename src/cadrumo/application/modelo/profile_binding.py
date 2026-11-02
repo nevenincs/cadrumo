@@ -632,11 +632,14 @@ def resolve_profile_sourced_bindings(
         date_binding_values=date_values,
         boolean_binding_values=boolean_values,
         row_binding_values=rows.row_binding_values,
-        diagnostics=_derived_binding_diagnostics(
-            selection.bindings,
-            facts.fact_index,
-            resolved_schema,
-            bucket_id=bucket_id,
+        diagnostics=(
+            *_derived_binding_diagnostics(
+                selection.bindings,
+                facts.fact_index,
+                resolved_schema,
+                bucket_id=bucket_id,
+            ),
+            *rows.diagnostics,
         ),
         provenance=tuple(
             CalculationSourceProvenance(

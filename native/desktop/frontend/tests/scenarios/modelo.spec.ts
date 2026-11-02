@@ -1184,6 +1184,7 @@ test("an export whose settlement was not seen is unknown and holds", async ({
     }),
   ).toBeDisabled();
   await target
+    .locator(".declarations-workspace")
     .getByRole("button", {
       name: label("workspace.declarations.destination.overview"),
       exact: true,

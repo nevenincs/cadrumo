@@ -1,0 +1,87 @@
+"""Ascendant replacement cannot borrow filing scope or another profile's authority."""
+
+from __future__ import annotations
+
+from uuid import uuid4
+
+import pytest
+from pydantic import ValidationError
+
+from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.models import OperationRequest
+from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
+from cadrumo.application.user_profile.ascendant_rows import ProfileAscendantFact, ProfileAscendantRow
+from cadrumo.application.user_profile.operations import (
+    USER_PROFILE_OPERATION_DEFINITIONS,
+    build_user_profile_operation_registrations,
+)
+from cadrumo.application.user_profile.profile_operation_contracts import (
+    PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
+    ProfileAscendantsOperationRequest,
+)
+from cadrumo.core.operations import profile_operation_subject
+from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("authority_operation")]
+
+
+@pytest.mark.parametrize("action", [AccessAction.COMMIT, AccessAction.RESULT])
+def test_ascendant_replacement_requires_profile_wide_authority(action: AccessAction) -> None:
+    registry = OperationRegistry(
+        definitions=USER_PROFILE_OPERATION_DEFINITIONS,
+        public_registrations=build_user_profile_operation_registrations(USER_PROFILE_OPERATION_DEFINITIONS),
+    )
+    profile_id, destination = uuid4(), uuid4()
+    payload = ProfileAscendantsOperationRequest(
+        profile_id=profile_id, expected_revision=1, expected_content_digest="0" * 64, ascendants=()
+    )
+    request = OperationRequest(
+        definition_id=PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        payload=payload,
+    )
+    context = OperationAccessContext(
+        profile_id=profile_id,
+        destination_id=destination,
+        action=action,
+        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
+        contract=registry.lookup_public_contract(PROFILE_ASCENDANTS_OPERATION_DEFINITION_ID),
+        published_authority=Availability.AVAILABLE,
+    )
+    resolved = resolve_operation_access(registry=registry, request=request, context=context)
+    assert resolved.request.period_independent and not resolved.request.periods
+    assert resolved.policy.allow_period_independent
+    if action is AccessAction.RESULT:
+        assert len(resolved.policy.disclosures) == 1
+        disclosure = next(iter(resolved.policy.disclosures))
+        assert disclosure.destination_id == destination
+        assert disclosure.category is DisclosureCategory.PROFILE_VALUES
+    with pytest.raises(ProfileAccessRefusedError) as failure:
+        resolve_operation_access(
+            registry=registry,
+            request=request.model_copy(update={"subject_ref": profile_operation_subject(str(uuid4()))}),
+            context=context,
+        )
+    assert failure.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_ascendant_omission_cannot_clear_rows_and_payload_repr_hides_personal_values() -> None:
+    profile_id = uuid4()
+    with pytest.raises(ValidationError):
+        ProfileAscendantsOperationRequest.model_validate(
+            {"profile_id": profile_id, "expected_revision": 1, "expected_content_digest": "0" * 64}
+        )
+    ascendant = ProfileAscendantRow(
+        facts=(
+            ProfileAscendantFact(field_key="birth_date", value="1948-03-04"),
+            ProfileAscendantFact(field_key="nif", value="12345678Z"),
+        )
+    )
+    payload = ProfileAscendantsOperationRequest(
+        profile_id=profile_id, expected_revision=1, expected_content_digest="0" * 64, ascendants=(ascendant,)
+    )
+    assert "12345678Z" not in repr(payload)
+    restored = ProfileAscendantsOperationRequest.model_validate_json(payload.model_dump_json())
+    assert restored.ascendants == (ascendant,)

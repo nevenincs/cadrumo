@@ -392,7 +392,7 @@ def _declares_refund_or_carry(modelo: str) -> bool:
 
 
 def _instalment_share(modelo: str, period: Period) -> Decimal | None:
-    return first_instalment_share(modelo, period_day=period.end_date())
+    return first_instalment_share(modelo, period_day=period.end_date)
 
 
 def asks_export_elections(modelo: str, period: Period) -> bool:

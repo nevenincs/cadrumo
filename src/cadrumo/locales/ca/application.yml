@@ -1349,6 +1349,12 @@ application:
           comprovacions retenen, així que no pots exportar-la tal com està.
         what_to_do: Torna a calcular la declaració, comprova-la i registra-la una
           altra vegada; el nou registre substitueix aquest.
+      household_rows_incomplete:
+        what: El teu perfil indica més persones en aquest grup de les que registra,
+          així que la declaració només fa servir les persones registrades i no dona
+          el grup per complet.
+        what_to_do: Afegeix al teu perfil les persones que falten o corregeix el nombre,
+          i torna a calcular.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció
@@ -1449,6 +1455,17 @@ application:
           així que Cadrumo no ha calculat aquest impost.
         what_to_do: No has de fer res si no vas fer aquest tipus de vendes. Si en
           vas fer, escriu tu els imports.
+      precedence_tier_divergence:
+        what: Dues fonts tenen valors diferents per a una xifra que arriba a la casella
+          {box}, i Cadrumo ha fet servir la que té prioritat.
+        what_to_do: Compara les fonts i corregeix la que sigui incorrecta; després
+          torna a calcular. La comprovació, l'exportació i el registre esperen fins
+          que coincideixin.
+      precedence_tier_divergence_advisory:
+        what: Dues fonts tenen valors diferents per a una xifra de treball, i Cadrumo
+          ha fet servir la que té prioritat.
+        what_to_do: Compara les fonts i corregeix la que sigui incorrecta. Cap casella
+          exportada no depèn d'aquesta xifra.
       prior_payment_minoracion_not_captured:
         what: La minoració que ve de pagaments anteriors no està anotada a la casella
           {box}.
@@ -1665,6 +1682,7 @@ application:
       disposal_zero_result: '{element}: la seva venda el {date}, amb {transmission_value}
         de valor de transmissió i {net_value} de valor net, no dona ni guany ni pèrdua,
         així que cap casella no la recull.'
+      household_rows_incomplete: '{group}: {stated} indicades, {recorded} registrades.'
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
@@ -3097,6 +3115,7 @@ application:
           label: Data de defunció
         nif:
           label: NIF/NIE de l'ascendent (deixa'l en blanc si no en té)
+      incomplete: '{stated} indicades, {recorded} registrades'
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'

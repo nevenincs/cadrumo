@@ -16,7 +16,7 @@ related:
   - '[[2026-11-02-desktop-renta-renta-family-canonical-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:4a71f04fae6b5b873998ec8fae8bd790e493e93ec9d253afde701b81a984211b'
+body_hash: 'sha256:7ba08ef83fbc6ae9def7ad499cef8ff37a9af54a9002a618355ef2a8cda19c84'
 ---
 
 # `desktop-renta` plan
@@ -68,7 +68,7 @@ The application serves every word, grouping and state the Renta workspace draws,
 
 Generated contracts and the fixture generator carry Modelo 100 and the new reads, so the frontend types and stories track the served shapes.
 
-- [ ] `P02.S11` - [Sonnet high] regenerate the modelo contract for projection result version 2 and the new reads, and add Modelo 100 to the fixture generator declarations; `native/desktop/frontend/scripts/modelo_fixtures.py`.
+- [x] `P02.S11` - [Sonnet high] regenerate the modelo contract for projection result version 2 and the new reads, and add Modelo 100 to the fixture generator declarations; `native/desktop/frontend/scripts/modelo_fixtures.py`.
 
 ### Phase `P03` - relay admission
 
@@ -85,7 +85,7 @@ The window renders the outline, household, credits, election, comparison, settle
 - [ ] `P04.S15` - [Sonnet high] build the credits element with withholding routing and the projection estimate in served words; `native/desktop/frontend/src/components/modelo/workspace`.
 - [ ] `P04.S16` - [Sonnet high] build the imputation election element over the registered profile operation; `native/desktop/frontend/src/components/modelo/workspace`.
 - [ ] `P04.S17` - [Sonnet high] build the taxation comparison, settlement and borrador comparison elements by payload kind; `native/desktop/frontend/src/components/modelo/workspace`.
-- [ ] `P04.S18` - [Sonnet high] retire the Renta prototypes and their prototype-only locale keys now (operator ruling 2026-11-02: Storybook shows only real components over generated fixtures; no prototype copies), so every Renta element is built and reviewed in the real components; `native/desktop/frontend/src/dev/prototypes/renta`.
+- [x] `P04.S18` - [Sonnet high] retire the Renta prototypes and their prototype-only locale keys now (operator ruling 2026-11-02: Storybook shows only real components over generated fixtures; no prototype copies), so every Renta element is built and reviewed in the real components; `native/desktop/frontend/src/dev/prototypes/renta`.
 
 ### Phase `P05` - proof
 

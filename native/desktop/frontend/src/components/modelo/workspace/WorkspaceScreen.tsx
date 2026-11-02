@@ -116,6 +116,13 @@ function Ready({
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [reviewing, setReviewing] = useState(false);
   const [correcting, setCorrecting] = useState(false);
+  const correctionGeneration = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      ++correctionGeneration.current;
+    },
+    [correcting, envelope, port],
+  );
   const [atRisk, setAtRisk] = useState(false);
   const [prerequisiteHeld, setPrerequisiteHeld] = useState(false);
   const operation = useModeloOperation();
@@ -163,7 +170,7 @@ function Ready({
     alive.current = true;
     return () => {
       alive.current = false;
-      ++generation.current;
+      generation.current += 1;
     };
   }, [operation.holds, port, workUnit]);
   /** Sends one write once; whatever it came to, the form is read again
@@ -257,9 +264,10 @@ function Ready({
   const correct = async (
     answer: CorrectionAnswer,
   ): Promise<CorrectionResult> => {
-    // An earlier write's outcome was not seen: nothing is sent until the
-    // declaration is read again.
+    // No correction may bypass the declaration's shared write hold.
     if (held) return { kind: "unknown" };
+    const mine = correctionGeneration.current;
+    const version = operation.holds.version(operation.target);
     if (!baseline || !correction)
       return { kind: "not_sent", code: "not_admitted" };
     let parsed;
@@ -291,6 +299,12 @@ function Ready({
     } catch (error) {
       return { kind: "not_sent", code: ledgerFailure(error).code };
     }
+    if (
+      !alive.current ||
+      mine !== correctionGeneration.current ||
+      operation.holds.version(operation.target) !== version
+    )
+      return { kind: "not_sent", code: "not_admitted" };
     const refused: Record<string, string> = {};
     const overrides: { casilla_id: string; value: string }[] = [];
     for (const entry of parsed) {
@@ -410,7 +424,8 @@ function Ready({
       onViewChange={setView}
       stagedCount={session.stagedCount}
       detailsOpen={detailsOpen}
-      busy={held}
+      busy={busy}
+      writeHeld={held}
       prerequisiteHeld={prerequisiteHeld}
       notice={
         operation.hold && operation.hold.phase !== "running" ? (

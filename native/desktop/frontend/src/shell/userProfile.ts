@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { HouseholdPersonEdit } from "./profileHousehold";
 
 export type ProfileField = {
   path: string;
@@ -64,7 +65,15 @@ export type ProfileEdit =
    * Each fact is under a key of the product's family vocabulary. */
   | {
       kind: "descendants";
-      rows: { facts: { field_key: string; value: string }[] }[];
+      rows: HouseholdPersonEdit[];
+    }
+  /** The whole stated set of ascendants at once, with the same replacement as
+   * the descendants: every ascendant and the count are replaced with exactly
+   * these people. The product refuses more rows than the declaration's design
+   * holds and serves the reason in the person's language. */
+  | {
+      kind: "ascendants";
+      rows: HouseholdPersonEdit[];
     }
   /** What one ejercicio's imputation election states. Each answer is the
    * token a served choice carries: an empty token clears the ejercicio's

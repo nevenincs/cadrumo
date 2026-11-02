@@ -1,4 +1,8 @@
-"""The 60/40 split of a Modelo 100 result to pay, by RD 439/2007 art. 62.2."""
+"""The split of an amount to pay in two instalments at the share the registry declares.
+
+RD 439/2007 art. 62.2 sets the 60 per cent; no official rule states the cent
+rounding, which is Cadrumo's own and worked here by hand.
+"""
 
 from __future__ import annotations
 
@@ -6,9 +10,11 @@ from decimal import Decimal
 
 import pytest
 
-from ..payment_instalment_election import PaymentInstalmentElection, instalment_amounts, two_instalments_declared
+from ..payment_instalment_election import PaymentInstalmentElection, instalment_amounts
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
+
+_SIXTY: Decimal = Decimal("0.60")
 
 
 @pytest.mark.parametrize(
@@ -25,19 +31,14 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 def test_the_first_instalment_is_sixty_per_cent_to_the_cent_and_the_second_the_rest(
     amount: Decimal, first: Decimal, second: Decimal
 ) -> None:
-    assert instalment_amounts(amount) == (first, second)
-    assert sum(instalment_amounts(amount)) == amount
+    assert instalment_amounts(amount, first_share=_SIXTY) == (first, second)
+    assert sum(instalment_amounts(amount, first_share=_SIXTY)) == amount
 
 
 @pytest.mark.parametrize("amount", [Decimal("0.00"), Decimal("-10.00")])
 def test_only_an_amount_to_pay_is_split(amount: Decimal) -> None:
     with pytest.raises(ValueError, match="positive"):
-        instalment_amounts(amount)
-
-
-def test_only_modelo_100_declares_the_split() -> None:
-    assert two_instalments_declared("100")
-    assert not two_instalments_declared("303") and not two_instalments_declared("130")
+        instalment_amounts(amount, first_share=_SIXTY)
 
 
 def test_each_election_says_whether_it_splits_and_debits_the_second() -> None:

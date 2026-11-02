@@ -276,6 +276,7 @@ export function userProfileFixture(censoSetup?: CensoMode): ProfileFixture {
       } else if (edit.kind === "complete") data.setup_state = "complete";
       else if (
         edit.kind === "descendants" ||
+        edit.kind === "ascendants" ||
         edit.kind === "imputation_election"
       ) {
         // The profile fixture serves no household or election to edit.

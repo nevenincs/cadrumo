@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:1c4e2f709dff96027832b982066701b6a0726dc16c2f28509a5ff9a3a6a126bb'
+body_hash: 'sha256:c26ad0dcb0cc18f94bd0db9a8a8c160d173dee736c7623a06a7ef1e3c03802f3'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -184,6 +184,20 @@ related:
 - `S21` `verify:` `pytest resultado and unresolved outcome` -> `pass`
 - `S21` `verify:` `lint-imports` -> `pass`
 - `S21` `by:` `sonnet-high`
+- `S18` `D` `native/desktop/frontend/src/dev/prototypes/renta`
+- `S18` `D` `dev/locales/desktop_renta_keys.py`
+- `S18` `M` `dev/locales/desktop_chrome.py`
+- `S18` `M` `dev/quality/metadata/import_load_targets.json`
+- `S18` `verify:` `npx tsc --noEmit -p .` -> `pass`
+- `S18` `verify:` `npm run storybook:build` -> `pass`
+- `S18` `by:` `sonnet-high`
+- `S11` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S11` `M` `native/desktop/frontend/src/dev/modeloFixture.ts`
+- `S11` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S11` `A` `native/desktop/frontend/src/dev/fixtures/modelo`
+- `S11` `verify:` `modelo-fixtures.mjs --check` -> `pass`
+- `S11` `verify:` `test_window_holds_no_tax_data.py` -> `pass`
+- `S11` `by:` `sonnet-high`
 
 ## Notes
 
@@ -201,3 +215,5 @@ related:
 - `S23` Commit 2a52318aee; dated amendment, no devengo preselection
 - `S06` Review fix compare-taxation-caveat-words; landed inside another worker's commit e88563425e
 - `S21` Committed by sweeps df0021ab64 and e88563425e; new generic `unresolved_outcome` operator; contract lock released early during overlapping regeneration
+- `S18` Commit 834cae6331; 39 prototype-only keys retired in four locales
+- `S11` Landed in b9c6a40a04 plus a8cf3f7af1 and 8b9d4898ce; Modelo 100 envelopes are about 7 MB each

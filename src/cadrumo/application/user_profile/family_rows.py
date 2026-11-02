@@ -22,13 +22,18 @@ therefore reads as unknown, never as an empty household.
 
 A group says what is known about its rows, never more. ``unknown`` means nothing
 was stated and no row is stored; ``none_declared`` means the profile states a
-count of zero. The two must not be drawn alike.
+count of zero; ``incomplete`` means the profile states more people than it
+records (three stated, one recorded), so the stored rows are served but the group
+is not complete. ``stated_count`` and ``row_count`` stay visible beside it, and
+``incomplete_words`` says the two numbers in the output language. None of these
+may be drawn alike.
 """
 
 from __future__ import annotations
 
 import re
 from collections.abc import Mapping
+from decimal import Decimal, InvalidOperation
 from enum import StrEnum
 from typing import TYPE_CHECKING, Final, Literal
 
@@ -62,6 +67,7 @@ _ASCENDANT_FALLECIMIENTO_LABEL_LOCALE_KEY: Final = (
 )
 _ASCENDANT_FALLECIMIENTO_HELP_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.fallecimiento.help"
 _ASCENDANT_CONVIVIENTES_LABEL_LOCALE_KEY: Final = "application.user_profile.family_rows.ascendiente.convivientes.label"
+_INCOMPLETE_WORDS_LOCALE_KEY: Final = "application.user_profile.family_rows.incomplete"
 
 _WIDGET_FIELD_TYPES: Final[Mapping[FlowWidgetKind, ProfileFieldType]] = {
     FlowWidgetKind.DATE: ProfileFieldType.DATE,
@@ -77,6 +83,7 @@ class ProfileFamilyGroupState(StrEnum):
     """What the profile says about one group of household rows."""
 
     ROWS = "rows"
+    INCOMPLETE = "incomplete"
     NONE_DECLARED = "none_declared"
     UNKNOWN = "unknown"
     NOT_SERVED = "not_served"
@@ -117,6 +124,8 @@ class ProfileViewFamilyGroupItem(BaseModel):
     state: ProfileFamilyGroupState
     stated_count: str | None = None
     row_count: int = Field(ge=0)
+    #: "N stated, M recorded" in the output language; served only for an incomplete group.
+    incomplete_words: str | None = None
     leaves: tuple[ProfileFamilyLeaf, ...] = ()
 
 
@@ -174,6 +183,17 @@ def _stored_rows(values: Mapping[str, str], *, prefix: str, leaves: frozenset[st
     return rows
 
 
+def _stated_exceeds_rows(stated: str | None, rows: int) -> bool:
+    """Whether the stated count is a number larger than the rows stored."""
+    if stated is None:
+        return False
+    try:
+        count = Decimal(stated.strip())
+    except InvalidOperation:
+        return False
+    return count.is_finite() and count > rows
+
+
 def _ascendant_leaves() -> tuple[ProfileFamilyLeaf, ...]:
     return (
         ProfileFamilyLeaf(
@@ -226,7 +246,10 @@ def _group_items(
     stored = _stored_rows(values, prefix=prefix, leaves=frozenset(leaf.leaf for leaf in leaves))
     stated = values.get(count_path)
     count = stated if profile_value_is_present(stated) else None
-    if stored:
+    incomplete = _stated_exceeds_rows(count, len(stored))
+    if incomplete:
+        state = ProfileFamilyGroupState.INCOMPLETE
+    elif stored:
         state = ProfileFamilyGroupState.ROWS
     elif count is not None and count.strip() == "0":
         state = ProfileFamilyGroupState.NONE_DECLARED
@@ -238,6 +261,11 @@ def _group_items(
         state=state,
         stated_count=count,
         row_count=len(stored),
+        incomplete_words=(
+            tr(_INCOMPLETE_WORDS_LOCALE_KEY, stated=count.strip(), recorded=len(stored))
+            if incomplete and count is not None
+            else None
+        ),
         leaves=leaves,
     )
     order = [leaf.leaf for leaf in leaves]
