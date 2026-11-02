@@ -10,7 +10,7 @@ from datetime import date
 from typing import Final
 
 from .errors import RegistryValidationError
-from .facts.resolution import ResolvedScalarFact, ScalarFactQuery
+from .facts.resolution import ResolvedScalarFact, ScalarFactQuery, reading_dated_facts_below_support
 from .governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from .schema_base import DateAxis
 
@@ -21,15 +21,22 @@ _UNIT: Final = "years"
 def cash_election_minimum_years(*, filing_year: int, authority: GovernedFactSource | None = None) -> int:
     """Return the term in force for ``filing_year``'s ejercicio.
 
+    A taxpayer's election can date from before the years the product files for, so
+    the read reaches below the support floor as far as the fact itself reaches.
+
     Raises:
         InternalInvariantError: When no authority is supplied and no scope is active.
         GovernedFactNotApplicableError: When the fact does not reach that ejercicio.
         RegistryValidationError: When the fact is not a whole number of years.
     """
     selected = require_governed_fact_authority(authority, subject=_FACT_ID)
-    resolved = selected.resolve_governed_fact(
-        ScalarFactQuery(fact_id=_FACT_ID, date_axis=DateAxis.FILING_PERIOD, effective_date=date(filing_year, 12, 31)),
-    )
+    with reading_dated_facts_below_support():
+        query = ScalarFactQuery(
+            fact_id=_FACT_ID,
+            date_axis=DateAxis.FILING_PERIOD,
+            effective_date=date(filing_year, 12, 31),
+        )
+    resolved = selected.resolve_governed_fact(query)
     if not isinstance(resolved, ResolvedScalarFact) or resolved.payload.unit != _UNIT:
         raise RegistryValidationError(f"{_FACT_ID} must resolve as a scalar in {_UNIT}")
     value = resolved.payload.value

@@ -19,6 +19,7 @@ from ...core.aggregation import BindingValueOutcome
 from ...core.parsing.utils import parse_bool
 from ...core.period import Period
 from ...domain.calculations.registry.cash_election_minimum_years import cash_election_minimum_years
+from ...domain.calculations.registry.errors import GovernedFactNotApplicableError
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.models import Invoice
@@ -191,7 +192,11 @@ class ImputationCriteria:
     def _first_binding_cash_year(self, year: int) -> int | None:
         """Return the first year of the cash run reaching into the two years before ``year``, if any."""
         cash = ActivityImputationCriterion.COBROS_Y_PAGOS
-        for back in range(1, cash_election_minimum_years(filing_year=year)):
+        try:
+            minimum_years = cash_election_minimum_years(filing_year=year)
+        except GovernedFactNotApplicableError:
+            return None
+        for back in range(1, minimum_years):
             first = year - back
             if self._in_force(first) is cash:
                 while self._in_force(first - 1) is cash:
