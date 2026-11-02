@@ -258,7 +258,9 @@ def test_every_foreign_numerical_rate_occurs_in_its_official_source() -> None:
             if _EPRS_SOURCE in rate.source_refs:
                 _prove_against_eprs(rate, pct, texts)
                 initial_source_proven = True
-            if rate.effective_until is None and _prove_against_your_europe(rate, pct, texts):
+            # A national notice can state a rate the EU summary leaves out, as Estonia's 13 is.
+            cited_or_unproven = _YOUR_EUROPE_SOURCE in rate.source_refs or not initial_source_proven
+            if rate.effective_until is None and cited_or_unproven and _prove_against_your_europe(rate, pct, texts):
                 initial_source_proven = True
 
             assert initial_source_proven, f"no official source proves {key} at its effective start"

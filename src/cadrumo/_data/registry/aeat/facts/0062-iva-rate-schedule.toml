@@ -1795,14 +1795,11 @@ selectors = [
 ]
 date_axis = "devengo_date"
 valid_from = 2025-01-01
-source_refs = ["ee-emta-iva-rate-change-2025", "eu-your-europe-iva-rates-2026-07-13"]
+source_refs = ["ee-emta-iva-rate-change-2025"]
 review_status = "agent_reviewed"
 ownership = "authored"
 [[fact.variants.source_citations]]
 source_ref = "ee-emta-iva-rate-change-2025"
-required_text = ["13"]
-[[fact.variants.source_citations]]
-source_ref = "eu-your-europe-iva-rates-2026-07-13"
 required_text = ["13"]
 [fact.variants.payload]
 kind = "mapping"
