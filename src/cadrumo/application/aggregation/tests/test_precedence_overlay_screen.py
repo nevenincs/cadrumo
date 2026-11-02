@@ -286,3 +286,39 @@ def test_an_amount_at_three_fraction_digits_is_stated_at_its_own_scale() -> None
         _RELATION: [DisagreementRelationValue(amount="5.000"), DisagreementRelationValue(amount="5.001")],
         _CASILLA: [DisagreementDecimalValue(amount="10.001"), DisagreementDecimalValue(amount="10.002")],
     }
+
+
+def test_a_binding_the_lower_tier_settles_as_not_applying_is_filled_without_a_divergence() -> None:
+    """A not-applicable answer states no value, so a higher tier's value is a fill, not a contest."""
+    overlay = _overlay(
+        _tier(_BACKEND, inapplicable_binding_ids=(_BINDING,)),
+        _tier(_CALLER, binding_values={_BINDING: Decimal("40.00")}),
+    )
+
+    assert overlay.divergences == ()
+    assert overlay.resolution.binding_values[_BINDING] == Decimal("40.00")
+    assert overlay.selected_binding_roles[_BINDING] is _CALLER
+
+
+def test_a_binding_the_lower_tier_leaves_unresolved_is_filled_without_a_divergence() -> None:
+    overlay = _overlay(
+        _tier(_BACKEND, unresolved_binding_ids=(_BINDING,)),
+        _tier(_CALLER, binding_values={_BINDING: Decimal("-150.00")}),
+    )
+
+    assert overlay.divergences == ()
+    assert overlay.resolution.binding_values[_BINDING] == Decimal("-150.00")
+
+
+def test_a_row_fed_binding_holds_no_scalar_for_a_higher_scalar_to_contest() -> None:
+    """Row values settle a binding for formula operands without stating a scalar the overlay could compare.
+
+    A scalar for the same binding is a channel defect, which the registry's
+    channel check refuses; the overlay itself reports no divergence for it.
+    """
+    overlay = _overlay(
+        _tier(_BACKEND, row_binding_values={(_BINDING, 0): Decimal("0.00")}),
+        _tier(_CALLER, binding_values={_BINDING: Decimal("12.00")}),
+    )
+
+    assert overlay.divergences == ()

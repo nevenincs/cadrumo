@@ -81,6 +81,7 @@ from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, addres
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
 from cadrumo.core.external_constants import OutputLanguage
@@ -1322,6 +1323,16 @@ def test_a_register_prorrata_percentage_is_a_governed_source_and_raises_no_tier_
             iva_compensation_history_repository=IvaCompensationHistoryRepository(),
         )
     assert Decimal(result.revision.casilla_values[_CASILLA_44]) == _MANUAL_EXCESO_DE_DEDUCCION
+
+    # The annual summary of a general-regime filer declares the simplified-regime
+    # boxes, which their resolver settles as not applying rather than as zero.
+    annual_bindings = published_authority_operation().snapshot("390", filing_year=_YEAR, period="0A").revision.bindings
+    assert any(
+        binding.source is BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY for binding in annual_bindings
+    )
+    annual = _calculate_m390_annual(secure_objects, operation=operation)
+    assert {issue.reason for issue in annual.source_issues} & _TIER_SCREEN_REASONS == set()
+    assert Decimal(annual.casilla_values[_M390_PRORRATA_REGULARIZACION]) == _MANUAL_EXCESO_DE_DEDUCCION
 
 
 def test_an_operator_value_over_an_unresolved_regularisation_raises_no_tier_divergence(
