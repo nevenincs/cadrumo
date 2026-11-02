@@ -361,7 +361,7 @@ def test_executor_refuses_oversized_public_result_without_truncating(
     )
     monkeypatch.setattr(operation_module, "list_modelo_reconciliations", lambda **_kwargs: (entry,))
     if oversize_kind == "document":
-        monkeypatch.setattr(operation_module, "_RESULT_DOCUMENT_MAX_BYTES", 1)
+        monkeypatch.setattr(operation_module, "PROJECTION_RESULT_MAX_BYTES", 1)
     effects: list[OperationEffect] = []
 
     class Events:

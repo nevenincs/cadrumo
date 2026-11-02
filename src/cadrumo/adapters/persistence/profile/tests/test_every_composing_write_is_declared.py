@@ -91,14 +91,10 @@ _WRITES_WITHOUT_A_REVISION: dict[tuple[str, str], str] = {
         "save",
     ): "a repository-shaped save over its own parameter; the guarded path beside it composes with load_revisioned",
     (
-        "src/cadrumo/application/modelo/verification_actions.py",
-        "_build_participation_writes",
+        "src/cadrumo/application/modelo/participation_writes.py",
+        "build_participation_writes",
     ): "per-TRANSACTION participation rows, not a singleton catalogue, so the exposure narrows to two writers "
-    "touching the same transaction; unclassified beyond that",
-    (
-        "src/cadrumo/application/modelo/filing_revision_persistence.py",
-        "_build_filed_participation_writes",
-    ): "per-transaction participation rows, as above; unclassified beyond that",
+    "touching the same transaction (verify and file both build them here); unclassified beyond that",
     (
         "src/cadrumo/application/modelo/filed_revision_observation.py",
         "filed_revision_observation_writes",
