@@ -323,6 +323,8 @@ aggregation:
         megadnia a számot, a legkorábbi és a legkésőbbi benyújtási dátumot.
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
+      precedence_tier_out_of_order: A számítás forrásai nem az elsőbbségi sorrendjükben
+        kerültek egymásra.
       proven_zero_value_not_zero: Egy forrásfeloldó bizonyított nullát jelzett egy
         olyan kötéshez, amelynek értéke nem nulla.
       provenance_binding_source_mismatch: A származási soron megadott forrástípus

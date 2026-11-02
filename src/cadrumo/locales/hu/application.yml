@@ -1417,6 +1417,16 @@ application:
           nem számolta ki ezt az adót.
         what_to_do: Nincs teendőd, ha nem volt ilyen értékesítésed. Ha volt, írd be
           te magad az összegeket.
+      precedence_tier_divergence:
+        what: Két forrás eltérő értéket tartalmaz egy olyan számra, amely a(z) {box}
+          rovatba kerül, és a Cadrumo az elsőbbséget élvezőt használta.
+        what_to_do: Hasonlítsd össze a forrásokat, javítsd ki a hibásat, majd számolj
+          újra. Az ellenőrzés, az exportálás és a rögzítés megvárja, amíg egyeznek.
+      precedence_tier_divergence_advisory:
+        what: Két forrás eltérő értéket tartalmaz egy munkaszámra, és a Cadrumo az
+          elsőbbséget élvezőt használta.
+        what_to_do: Hasonlítsd össze a forrásokat, és javítsd ki a hibásat. Egyetlen
+          exportált rovat sem függ ettől a számtól.
       prior_payment_minoracion_not_captured:
         what: A korábbi befizetésekből adódó csökkentés nincs rögzítve a(z) {box}
           rovatban.
