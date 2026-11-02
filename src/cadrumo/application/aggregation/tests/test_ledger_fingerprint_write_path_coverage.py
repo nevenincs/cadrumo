@@ -159,6 +159,12 @@ def test_the_derivation_sees_the_fields_this_guard_exists_for() -> None:
     assert set(INTENTIONALLY_EXCLUDED) <= writable & iva_read
 
 
+def test_the_accrual_date_is_writable_and_no_iva_module_reads_it() -> None:
+    """The Renta accrual date moves no IVA period, so the IVA readers must not touch it."""
+    assert "accrual_date" in writable_transaction_fields()
+    assert "accrual_date" not in iva_read_fields(_IVA_AGGREGATION_MODULES)
+
+
 def test_the_guard_would_have_caught_the_v2_gap() -> None:
     """Against the V2 field set, the check names the V3 facts and the later V5 and V6 ones."""
     missing = unwatched_writable_iva_fields(

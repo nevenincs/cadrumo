@@ -2486,6 +2486,7 @@ desktop:
       without_staged: Export without them
     failed: Couldn't read the ledger.
     field:
+      accrual_date: Accrual date (Renta)
       art_104_tres_exclusion: Art. 104.Tres exclusion
       attachment_ids: Attachments
       booked_date: Booked date
@@ -4411,6 +4412,9 @@ desktop:
       details, and open the field again. Your draft has not been saved.
     dismiss: Dismiss
     edit_field: Edit {field}
+    ejercicio: Tax year
+    ejercicio_help: "The year this answer states. Other years keep theirs."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: No details match these filters. Try another search or section.
     entries_count: 'Entries: {count}'
     entries_none: No entries yet
@@ -7204,6 +7208,7 @@ tui:
         created: 'Added: {entry}. Review status: {status}.'
         edit_again: Edit again
         field:
+          accrual_date: Accrual date for Renta (YYYY-MM-DD)
           amount: Amount, without a sign
           art_104_tres_exclusion: Art. 104.Tres exclusion
           booked_date: Booked date (YYYY-MM-DD)
@@ -8200,6 +8205,7 @@ tui:
       totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Entry detail
       transaction_field:
+        accrual_date: Accrual date for Renta (YYYY-MM-DD, optional)
         amount: Amount (without sign)
         booked_date: Booking date (YYYY-MM-DD)
         counterparty: Counterparty (optional)

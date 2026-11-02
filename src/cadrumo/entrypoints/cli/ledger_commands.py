@@ -161,6 +161,7 @@ def ledger_add(
     description: str,
     value_date: str | None = None,
     operation_date: str | None = None,
+    accrual_date: str | None = None,
     currency: str = DEFAULT_CURRENCY,
     counterparty: str | None = None,
     business_classification: BusinessClassification = BusinessClassification.NOT_YET_PROCESSED,
@@ -205,6 +206,7 @@ def ledger_add(
             description=description,
             value_date=value_date,
             operation_date=operation_date,
+            accrual_date=accrual_date,
             currency=currency,
             counterparty=counterparty,
             business_classification=business_classification,
@@ -278,6 +280,7 @@ def ledger_update(
     booked_date: str | None = None,
     value_date: str | None = None,
     operation_date: str | None = None,
+    accrual_date: str | None = None,
     amount: str | None = None,
     direction: TransactionDirection | None = None,
     currency: str | None = None,
@@ -300,6 +303,7 @@ def ledger_update(
             operation_date=(
                 _parse_iso_date(operation_date, label="operation-date") if operation_date is not None else None
             ),
+            accrual_date=(_parse_iso_date(accrual_date, label="accrual-date") if accrual_date is not None else None),
             amount=parse_amount_magnitude(amount) if amount is not None else None,
             direction=direction,
             currency=currency,

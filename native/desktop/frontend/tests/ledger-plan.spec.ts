@@ -71,6 +71,8 @@ test("every field routes by the operation that accepts it, and by set or clear",
     ["value_date", "clear", true, "update"],
     ["operation_date", "set", true, "update"],
     ["operation_date", "clear", true, "update"],
+    ["accrual_date", "set", true, "update"],
+    ["accrual_date", "clear", true, "update"],
     ["direction", "set", true, "update"],
     ["currency", "set", true, "update"],
     ["counterparty", "clear", true, "update"],
@@ -316,6 +318,45 @@ test("a transfer is held from an operation date by the ledger's answer", () => {
   const T = hexId("t");
   const plan = planRecorded(
     staged({ [T]: { operation_date: set("2026-09-30") } }),
+    contextOf(movement(T, { direction: "INTERNAL_TRANSFER" })),
+  );
+  expect(blockersOf(plan, T)).toEqual(["transfer_with_tax"]);
+  expect(stepKinds(plan)).toEqual([]);
+});
+
+test("an accrual date is sent through the masked update, and cleared by a null", () => {
+  const O = hexId("c");
+  const setPlan = planRecorded(
+    staged({ [O]: { accrual_date: set("2026-09-29") } }),
+    contextOf(movement(O)),
+  );
+  expect(stepKinds(setPlan)).toEqual(["update"]);
+  const sent = setPlan.steps[0] as Extract<PlanStep, { kind: "update" }>;
+  expect(sent.newIdentity).toBe(false);
+  expect(sent.request).toEqual({
+    transaction_id: O,
+    patch: { accrual_date: "2026-09-29" },
+    patch_fields: ["accrual_date"],
+  });
+
+  const stored = movement(O, { accrual_date: "2026-09-29" });
+  const clearPlan = planRecorded(
+    staged({ [O]: { accrual_date: clear } }),
+    contextOf(stored),
+  );
+  expect(clearPlan.entries[0]!.clears).toEqual(["accrual_date"]);
+  const cleared = clearPlan.steps[0] as Extract<PlanStep, { kind: "update" }>;
+  expect(cleared.request).toEqual({
+    transaction_id: O,
+    patch: { accrual_date: null },
+    patch_fields: ["accrual_date"],
+  });
+});
+
+test("a transfer is held from an accrual date by the ledger's answer", () => {
+  const T = hexId("t");
+  const plan = planRecorded(
+    staged({ [T]: { accrual_date: set("2026-09-29") } }),
     contextOf(movement(T, { direction: "INTERNAL_TRANSFER" })),
   );
   expect(blockersOf(plan, T)).toEqual(["transfer_with_tax"]);

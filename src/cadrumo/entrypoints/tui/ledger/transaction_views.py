@@ -36,6 +36,7 @@ _TEXT_FIELDS: Final[tuple[LedgerUpdatePatchField, ...]] = (
     "booked_date",
     "value_date",
     "operation_date",
+    "accrual_date",
     "amount",
     "currency",
     "taxable_base",
@@ -45,7 +46,7 @@ _TEXT_FIELDS: Final[tuple[LedgerUpdatePatchField, ...]] = (
 )
 """Correctable text fields the projection carries, in the order the form shows them."""
 _OPTIONAL_FIELDS: Final = frozenset(
-    {"counterparty", "value_date", "operation_date", "taxable_base", "iva_rate", "iva_amount"}
+    {"counterparty", "value_date", "operation_date", "accrual_date", "taxable_base", "iva_rate", "iva_amount"}
 )
 """Fields a blank entry clears; the rest are facts every transaction keeps."""
 _DECIMAL_FIELDS: Final = frozenset({"amount", "taxable_base", "iva_rate", "iva_amount"})
@@ -56,6 +57,7 @@ _FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "booked_date": "tui.ledger.records.transaction_field.booked_date",
     "value_date": "tui.ledger.records.transaction_field.value_date",
     "operation_date": "tui.ledger.records.transaction_field.operation_date",
+    "accrual_date": "tui.ledger.records.transaction_field.accrual_date",
     "amount": "tui.ledger.records.transaction_field.amount",
     "currency": "tui.ledger.records.transaction_field.currency",
     "taxable_base": "tui.ledger.records.transaction_field.taxable_base",

@@ -69,7 +69,7 @@ from .completeness import (
     profile_section_rows,
     profile_value_is_present,
 )
-from .field_help import profile_field_help
+from .field_help import ProfileFieldEjercicioAnswer, profile_field_ejercicio_answers, profile_field_help
 from .projections import profile_schema_for_record, record_to_path_values
 
 if TYPE_CHECKING:
@@ -86,6 +86,9 @@ if TYPE_CHECKING:
 
 
 _NO_FIELD_HELP: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]]({})
+_NO_EJERCICIO_ANSWERS: Final[Mapping[str, ProfileFieldEjercicioAnswer]] = MappingProxyType[
+    str, ProfileFieldEjercicioAnswer
+]({})
 """The help of a projection built without a setup flow: no field has any."""
 
 MASKED_PLACEHOLDER: Final[str] = "••••••••"
@@ -282,6 +285,8 @@ class ProfileFieldView(BaseModel):
     :attr:`about` explains that field instead."""
     about: str = Field(default="")
     """The schema's own description of the field, the explanation of last resort."""
+    ejercicio_answer: ProfileFieldEjercicioAnswer | None = Field(default=None)
+    """How a field stated per ejercicio is answered, or ``None`` for a field holding one value."""
     row_index: str | None = Field(default=None)
     """Which instance of a repeated fact this row belongs to, if any.
 
@@ -777,6 +782,7 @@ def build_profile_overview(
     resolved_schema = profile_schema_for_record(record, schema=schema)
     values = record_to_path_values(record)
     field_help = _NO_FIELD_HELP if flow is None else profile_field_help(flow)
+    ejercicio_answers = _NO_EJERCICIO_ANSWERS if flow is None else profile_field_ejercicio_answers(flow, record.facts)
 
     sections: list[ProfileSectionView] = []
     # Row-aware, and it has to be: a repeatable section's rows live at
@@ -805,7 +811,8 @@ def build_profile_overview(
                 summary=profile_section_summary(section),
                 repeatable=section.repeatable,
                 fields=tuple(
-                    _section_field_views(
+                    view.model_copy(update={"ejercicio_answer": ejercicio_answers.get(view.path)})
+                    for view in _section_field_views(
                         section,
                         values,
                         present,
@@ -814,7 +821,7 @@ def build_profile_overview(
                         resolved_schema.derived_selectors,
                         conditionally_required,
                         code_lists,
-                    ),
+                    )
                 ),
             ),
         )

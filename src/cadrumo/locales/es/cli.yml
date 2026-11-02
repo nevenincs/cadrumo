@@ -3183,6 +3183,9 @@ cli:
     add:
       account_help: Cuenta bancaria propia a la que pertenece el movimiento, por su
         id (p. ej. acc-01).
+      accrual_date_help: Fecha en que el ingreso o el gasto se devenga en la Renta
+        según el art. 14 LIRPF y el art. 7 RIRPF (AAAA-MM-DD). No cambia el periodo
+        del IVA. Si la omites no se guarda ninguna.
       actor_help: Tu nombre, registrado en el evento del bucket
       amount_help: Importe de la transacción en la moneda de la transacción (decimal,
         p. ej. 1200.50).
@@ -3545,6 +3548,7 @@ cli:
       kind_help: Solo este tipo de valor; repítelo para varios. Sin él, todos los
         tipos.
     labels:
+      accrual_date: Fecha de devengo en Renta
       active: Activas
       amount: Importe
       archived: Archivadas
@@ -3749,6 +3753,8 @@ cli:
     update:
       account_help: Vincula la entrada a esta cuenta bancaria propia, por su id (p.
         ej. acc-01).
+      accrual_date_help: Nueva fecha en que el ingreso o el gasto se devenga en la
+        Renta según el art. 14 LIRPF y el art. 7 RIRPF (AAAA-MM-DD).
       amount_help: Nueva magnitud de importe no negativa de la transacción
       counterparty_help: Nueva descripción de la contraparte
       currency_help: Nuevo código de moneda ISO 4217

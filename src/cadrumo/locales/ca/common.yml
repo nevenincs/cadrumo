@@ -2531,6 +2531,7 @@ desktop:
       without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
     field:
+      accrual_date: Data de meritació (Renda)
       art_104_tres_exclusion: Exclusió de l'art. 104.Tres
       attachment_ids: Adjunts
       booked_date: Data comptable
@@ -4479,6 +4480,9 @@ desktop:
       revisa les dades actualitzades i torna a obrir el camp. No s’ha desat l’esborrany.
     dismiss: Descarta l’avís
     edit_field: Edita {field}
+    ejercicio: Exercici
+    ejercicio_help: "L'any que declara aquesta resposta. Els altres conserven la seva."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
     entries_count: 'Registres: {count}'
     entries_none: Encara no hi ha registres
@@ -7346,6 +7350,7 @@ tui:
         created: 'Afegit: {entry}. Estat de revisió: {status}.'
         edit_again: Torna a editar
         field:
+          accrual_date: Data de meritació a la Renda (AAAA-MM-DD)
           amount: Import, sense signe
           art_104_tres_exclusion: Exclusió de l'art. 104.Tres
           booked_date: Data d'operació (AAAA-MM-DD)
@@ -8360,6 +8365,7 @@ tui:
       totals: '{base} + {iva} = {total} {currency}'
       transaction_detail: Detall de l'apunt
       transaction_field:
+        accrual_date: Data de meritació a la Renda (AAAA-MM-DD, opcional)
         amount: Import (sense signe)
         booked_date: Data d'apunt (AAAA-MM-DD)
         counterparty: Contrapart (opcional)

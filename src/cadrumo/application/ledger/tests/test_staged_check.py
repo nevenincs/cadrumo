@@ -86,6 +86,10 @@ def _route_of(field: str, *, clear: bool = False, classified: bool = True) -> st
         ("operation_date", False, True, "update"),
         ("operation_date", True, True, "update"),
         ("operation_date", False, False, "update"),
+        # A stated Renta accrual date is an update's alone, and a blank clears it.
+        ("accrual_date", False, True, "update"),
+        ("accrual_date", True, True, "update"),
+        ("accrual_date", False, False, "update"),
         # The bulk takes a set on a classified row and never carries a clear.
         ("category_id", False, True, "bulk"),
         ("category_id", True, True, "classify"),
@@ -233,6 +237,18 @@ def test_a_transfer_is_held_back_for_each_tax_field_it_carries() -> None:
     assert "category_id" in plain.transfer_locked_fields
     assert "business_pct" in plain.transfer_locked_fields
     assert plain.tax_set_skip == "transfer"
+
+
+def test_an_accrual_date_is_read_back_held_back_on_a_transfer_and_needs_no_classification() -> None:
+    staged = check_stored_row(_row(("accrual_date", "2026-03-30")), _stored())
+    assert staged.blockers == ()
+    assert staged.classifying_fields == ()
+    held = check_stored_row(
+        _row(("direction", "INTERNAL_TRANSFER"), ("accrual_date", "2026-03-30")),
+        _stored(),
+    )
+    assert next(blocker for blocker in held.blockers if blocker.kind == "transfer_with_tax").fields == ("accrual_date",)
+    assert "accrual_date" in held.transfer_locked_fields
 
 
 def test_an_operation_date_is_read_back_held_back_on_a_transfer_and_needs_no_classification() -> None:

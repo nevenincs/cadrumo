@@ -41,6 +41,10 @@ def _decimal(value: str | None) -> Decimal | None:
     return None if value is None else Decimal(value)
 
 
+def _optional_date(value: str | None) -> date | None:
+    return None if value is None else date.fromisoformat(value)
+
+
 def _stored_transaction(question: dict[str, Any]) -> Transaction:
     stored = question["stored"]
     built = transaction_from_command(
@@ -67,6 +71,8 @@ def _stored_transaction(question: dict[str, Any]) -> Transaction:
         update={
             "raw": raw,
             "lifecycle_state": TransactionLifecycleState(question["lifecycle"]),
+            "operation_date": _optional_date(stored.get("operation_date")),
+            "accrual_date": _optional_date(stored.get("accrual_date")),
             "business_classification": BusinessClassification(stored["business_classification"]),
             "business_pct": _decimal(stored["business_pct"]),
             "category_id": stored["category_id"],

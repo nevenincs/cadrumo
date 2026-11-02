@@ -502,6 +502,7 @@ export function fixtureLedger(): FixtureLedger {
       booked_date: date,
       value_date: date,
       operation_date: null,
+      accrual_date: null,
       amount,
       currency: extra.currency ?? kind.currency ?? "EUR",
       direction: kind.direction,

@@ -23,6 +23,7 @@ export function movement(
     booked_date: "2026-10-05",
     value_date: null,
     operation_date: null,
+    accrual_date: null,
     amount: "36.30",
     currency: "EUR",
     direction: "OUTGOING",
