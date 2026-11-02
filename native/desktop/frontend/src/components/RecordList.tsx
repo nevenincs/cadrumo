@@ -189,15 +189,15 @@ export const RecordList = memo(function RecordList({
   // The record the keyboard is on, to notice when it leaves the drawn span.
   const focused = useRef<string | null>(null);
   const all = useMemo(() => records ?? [], [records]);
-  const counts = useMemo(
-    () => ({
-      errors: all.filter(
-        (record) => record.level === "ERROR" || record.level === "CRITICAL",
-      ).length,
-      warnings: all.filter((record) => record.level === "WARNING").length,
-    }),
-    [all],
-  );
+  const counts = useMemo(() => {
+    let errors = 0;
+    let warnings = 0;
+    for (const record of all) {
+      if (record.level === "ERROR" || record.level === "CRITICAL") errors++;
+      else if (record.level === "WARNING") warnings++;
+    }
+    return { errors, warnings };
+  }, [all]);
   const selected = useMemo(() => {
     const retained = new Set(all);
     return selectedRecords.filter((record) => retained.has(record));

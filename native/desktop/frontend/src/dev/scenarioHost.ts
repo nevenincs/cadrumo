@@ -24,7 +24,11 @@ import { modeloFixture, type ModeloShape } from "./modeloFixture";
 import { translator } from "../shell/strings";
 import { sedeViewFixture } from "./sedeViewFixture";
 import { SCENARIO_PASSWORD } from "./fixtures/password";
-import { userProfileFixture } from "./userProfileFixture";
+import {
+  imputationElectionFixture,
+  type ElectionScenario,
+} from "./imputationElectionFixture";
+import { userProfileFixture, type ProfileFixture } from "./userProfileFixture";
 import { aeatSyncFixture } from "./aeatSyncFixture";
 import { aeatSyncPrepareFixture } from "./aeatSyncPrepareFixture";
 import { aeatSyncResultsFixture } from "./aeatSyncResultsFixture";
@@ -49,6 +53,8 @@ import {
   type ProviderSignInFixtureControls,
 } from "./providerSettingsFixture";
 import {
+  ADVISED_CALENDAR,
+  ADVICE_ONLY_CALENDAR,
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
   CLOSE_UNKNOWN_CALENDAR,
@@ -117,6 +123,9 @@ export type ScenarioHostOptions = {
   ledger?: LedgerShape | null;
   /** How the made-up declarations answer. */
   modelo?: ModeloShape | null;
+  /** What the made-up profile states for the imputation election; where it
+   * is left out, nothing is stated. */
+  election?: ElectionScenario | null;
   /** Offer a made-up window port whose close is guarded as the native
    * host guards it, so a close the system raised can be played. */
   window?: boolean;
@@ -135,6 +144,8 @@ const EVIDENCE_CALENDAR: typeof FIXTURE_CALENDAR = {
   ],
 };
 export const CALENDAR_SHAPES = {
+  advice: ADVISED_CALENDAR,
+  advice_only: ADVICE_ONLY_CALENDAR,
   behind: BEHIND_CALENDAR,
   ahead: AHEAD_CALENDAR,
   straddling: STRADDLING_CALENDAR,
@@ -211,6 +222,21 @@ function closeWindow() {
  * `closed` only says the native window would have.
  */
 function windowFixture(): NonNullable<Host["window"]> {
+  let fullscreen = false;
+  let changed:
+    | ((state: {
+        maximized: boolean;
+        fullscreen: boolean;
+        chrome: "custom";
+        nativeControls: null;
+      }) => void)
+    | null = null;
+  const presentation = () => ({
+    maximized: false,
+    fullscreen,
+    chrome: "custom" as const,
+    nativeControls: null,
+  });
   window.__scenarioWindow = {
     systemClose: closeWindow,
     actions: () => [...windowActions],
@@ -219,6 +245,10 @@ function windowFixture(): NonNullable<Host["window"]> {
   return {
     action(action) {
       windowActions.push(action);
+      if (action === "toggle_fullscreen" || action === "leave_fullscreen") {
+        fullscreen = action === "toggle_fullscreen" ? !fullscreen : false;
+        changed?.(presentation());
+      }
       // `close` raises the same close the system does.
       if (action === "close") closeWindow();
       else if (action === "close_now") {
@@ -228,13 +258,11 @@ function windowFixture(): NonNullable<Host["window"]> {
       return Promise.resolve();
     },
     observe(listener) {
-      listener({
-        maximized: false,
-        fullscreen: false,
-        chrome: "custom",
-        nativeControls: null,
+      changed = listener;
+      listener(presentation());
+      return Promise.resolve(() => {
+        if (changed === listener) changed = null;
       });
-      return Promise.resolve(() => undefined);
     },
     guardClose(asking) {
       const listener = () => asking();
@@ -659,7 +687,27 @@ export function scenarioHost(
       completeLanguageSet = null;
     },
   };
-  const userProfile = userProfileFixture(scenario.censo);
+  const election = imputationElectionFixture(
+    options.election ?? "undeclared",
+    options.language,
+  );
+  // A Renta shape's filers live in Madrid, which the estimate asks the profile
+  // for.
+  const profile = userProfileFixture(
+    scenario.censo,
+    options.modelo?.startsWith("renta")
+      ? { "tax_residence.ccaa": "madrid" }
+      : undefined,
+  );
+  // The election has its own revision witness; every other edit is the
+  // profile fixture's.
+  const userProfile: ProfileFixture = {
+    ...profile,
+    change: (change) =>
+      change.edit.kind === "imputation_election"
+        ? election.change(change)
+        : profile.change(change),
+  };
   return {
     language: {
       read: () => {
@@ -707,6 +755,11 @@ export function scenarioHost(
       },
     },
     userProfile,
+    profileCompanions: {
+      // The household is another element's read, not played here.
+      household: () => Promise.reject({ code: "unavailable" }),
+      imputationElection: election.reads.imputationElection,
+    },
     censo: censoFixture(userProfile, scenario.censo),
     available: true,
     ...(options.window ? { window: windowFixture() } : {}),

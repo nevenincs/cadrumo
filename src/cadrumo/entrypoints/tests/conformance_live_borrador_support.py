@@ -12,6 +12,11 @@ from ...application.live.borrador_100 import (
     Borrador100SnapshotService,
     derive_borrador_100_snapshot_id,
 )
+from ...application.live.borrador_100_comparison import Borrador100ComparisonProjection, Borrador100ComparisonStatus
+from ...application.live.borrador_100_comparison_operation import (
+    BORRADOR_100_COMPARE_OPERATION_DEFINITION_ID,
+    Borrador100CompareRequest,
+)
 from ...application.live.borrador_100_contracts import (
     Borrador100ImportProjection,
     Borrador100ImportRequest,
@@ -30,6 +35,7 @@ from ...application.live.borrador_100_operation import (
 from ...application.live.snapshot_base import SnapshotLifecycleState
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.public_scalar import PublicDecimal, PublicNamedScalar
+from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...core.period import Period
@@ -197,16 +203,19 @@ def _prepare_import(context: ConformanceFamilyContext) -> ConformancePreparation
         assert result.artefact_kind == "BORRADOR"
         assert result.source_pdf_sha256 == digest
         assert result.blank_casillas == ()
-        assert result.unowned_casillas == _PRINTED_CASILLAS
+        assert result.observed_casillas == _PRINTED_CASILLAS
+        assert result.unowned_casillas == ()
         summary = result.snapshot
         assert summary.filing_year == year
         assert summary.period == PublicPeriod(filing_year=year, code=_ANNUAL)
         assert summary.binding_count == 0
+        assert summary.printed_observation_count == len(_PRINTED_CASILLAS)
         assert summary.state is SnapshotLifecycleState.ACTIVE
         assert summary.source_url == "file-import:sha256:" + digest
         (persisted,) = _service(context).list_snapshots(operation=context.operation)
         assert persisted.snapshot_id == summary.snapshot_id
         assert dict(persisted.binding_values) == {}
+        assert tuple(row.casilla_id for row in persisted.printed_observations) == _PRINTED_CASILLAS
 
     return ConformancePreparation(
         subject_ref=profile_operation_subject(str(profile_id)),
@@ -220,8 +229,30 @@ def _prepare_import(context: ConformanceFamilyContext) -> ConformancePreparation
     )
 
 
+def _prepare_compare(context: ConformanceFamilyContext) -> ConformancePreparation:
+    """An imported draft with no saved calculation is served as such, never as agreement."""
+    year = _filing_year()
+    active = _seed_superseded_pair(context, year)
+    profile_id = context.profile_id
+
+    def verify(outcome: ConformanceOutcome) -> None:
+        result = outcome.resolve_result(Borrador100ComparisonProjection)
+        assert result.profile_id == profile_id and result.filing_year == year
+        assert result.status.token == Borrador100ComparisonStatus.NO_CALCULATION and result.status.words
+        assert result.capture is not None and result.capture.snapshot_id == active.snapshot_id
+        assert result.calculation is None and result.rows == ()
+
+    return ConformancePreparation(
+        subject_ref=profile_operation_subject(str(profile_id)),
+        request=Borrador100CompareRequest(profile_id=profile_id, filing_year=year, output_language=OutputLanguage.EN),
+        verify=verify,
+    )
+
+
 def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     definition_id = context.definition.definition_id
+    if definition_id == BORRADOR_100_COMPARE_OPERATION_DEFINITION_ID:
+        return _prepare_compare(context)
     if definition_id == BORRADOR_100_READ_OPERATION_DEFINITION_ID:
         return _prepare_read(context)
     if definition_id == BORRADOR_100_QUERY_OPERATION_DEFINITION_ID:
@@ -233,6 +264,12 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
 
 LIVE_BORRADOR_CONFORMANCE_FAMILY = ConformanceFamily(
     cases=(
+        RegisteredExecutorConformanceCase(
+            BORRADOR_100_COMPARE_OPERATION_DEFINITION_ID,
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            (BORRADOR_100_COMPARE_OPERATION_DEFINITION_ID,),
+        ),
         RegisteredExecutorConformanceCase(
             BORRADOR_100_READ_OPERATION_DEFINITION_ID,
             OperationTerminalCondition.SUCCEEDED,
@@ -281,7 +318,8 @@ def _retained_borrador_prepare(context: ConformanceFamilyContext) -> Conformance
             )
             assert (
                 result.blank_casillas == ()
-                and result.unowned_casillas == _PRINTED_CASILLAS
+                and result.observed_casillas == _PRINTED_CASILLAS
+                and result.unowned_casillas == ()
                 and result.snapshot.source_url == f"file-import:sha256:{sha256_hex(payload)}"
             )
             stored = service.list_snapshots(operation=context.operation)

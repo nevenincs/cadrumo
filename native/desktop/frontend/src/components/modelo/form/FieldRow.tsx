@@ -11,7 +11,8 @@ import { BoxNoteList } from "./BoxNoteList";
 import { notesOf } from "./boxNotes";
 import { BoxNumber } from "./BoxNumber";
 import { readOnlyReason } from "./entryField";
-import { useForm } from "./formContext";
+import { FieldFacts, FieldHelp } from "./FieldFacts";
+import { openableSurface, useForm } from "./formContext";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
 import { confirmIntent, editKey, fieldKey, type StagedEdit } from "./session";
 import { ValueCell } from "./ValueCell";
@@ -89,8 +90,8 @@ export function useChosenFocus<E extends HTMLElement>(
   return ref;
 }
 
-/** One box on its own line: its printed number, its words, its value and
- * where the value comes from. */
+/** One box on its own line: its printed number, its words with the help the
+ * read serves for it, its value and where the value comes from. */
 export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const t = useStrings();
   const form = useForm();
@@ -104,6 +105,12 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const reason = readOnlyReason(field);
   const ref = useChosenFocus<HTMLDivElement>(selected, open !== null);
   const notes = notesOf(form.notes, field);
+  const surface = openableSurface(form, field);
+  // A box locked to its source is corrected there, never typed into here.
+  const correctAt =
+    surface && field.editability === "locked_source" && !staged
+      ? surface
+      : null;
   return (
     <div
       ref={ref}
@@ -124,8 +131,14 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       <span role="gridcell">
         <BoxNumber box={field.box} />
       </span>
-      <span role="gridcell" className="min-w-0 text-base leading-snug">
-        <Label text={field.label} />
+      <span role="gridcell" className="flex min-w-0 flex-col gap-0.5 py-1">
+        <span className="flex items-start gap-1 text-base leading-snug">
+          <span className="min-w-0">
+            <Label text={field.label} />
+          </span>
+          <FieldFacts field={field} className="-my-0.5 shrink-0" />
+        </span>
+        <FieldHelp field={field} full={selected} />
       </span>
       <span role="gridcell" className="flex justify-end">
         <ValueCell
@@ -139,7 +152,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
           }
           enter={session.enter}
           onDone={(how) => onDone(field, how)}
-          onOpenSurface={onOpenSurface}
+          onOpenSurface={surface ? onOpenSurface : undefined}
         />
       </span>
       <span
@@ -152,6 +165,20 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
             <Icon name="lock" size="xs" className="mt-0.5 shrink-0" />
             {reason}
           </span>
+        )}
+        {correctAt && onOpenSurface && (
+          <Button
+            size="xs"
+            variant="link"
+            className="h-auto p-0 text-sm"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenSurface(correctAt);
+            }}
+          >
+            {t(`workspace.modelo.surface.correct.${correctAt}`)}
+            <Icon name="forward" size="xs" />
+          </Button>
         )}
         {staged && (
           <span className="text-xs text-faint tabular-nums">

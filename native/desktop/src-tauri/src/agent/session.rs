@@ -12,7 +12,7 @@ use super::{
     gateway::{self, Client},
     sse,
     stream::{Mapping, Step, StreamEvent},
-    supervisor::{Gateway, State, Supervisor},
+    supervisor::{Supervisor, protocol::Gateway, protocol::State},
 };
 use serde::Deserialize;
 use serde_json::{Value, json};

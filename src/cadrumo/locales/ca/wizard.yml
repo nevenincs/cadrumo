@@ -321,8 +321,8 @@ wizard:
           LIS; per sota, totes dues modalitats són possibles. Opcional.
       irpf-activity-income-imputation-criterion:
         help: 'Criteri de l''art. 7 RIRPF per als ingressos i les despeses d''activitat
-          a l''exercici indicat amb --irpf-activity-income-imputation-year: devengo
-          (el més habitual) o cobros_y_pagos (es manté tres anys; no amb comptabilitat
+          a l''exercici indicat amb --irpf-activity-income-imputation-year: `devengo`
+          (el més habitual) o `cobros_y_pagos` (es manté tres anys; no amb comptabilitat
           ajustada al Código de Comercio).'
       irpf-activity-income-imputation-year:
         help: Exercici de quatre xifres per al qual s'indiquen el criteri d'imputació

@@ -11,7 +11,7 @@ JavaScript source under the frontend's ``src`` as tokens (stories, specs and
 Every list it compares against is read from an owner at run time: the
 vocabularies, dated rates, modelo numbers and filing years from the pinned
 registry, the figure names from the fields of the invoice request and result
-contracts, the classifications from their enum. Seven rules:
+contracts, the classifications from their enum. Ten rules:
 
 ``vocabulary``
     Two or more distinct tokens of one served vocabulary appear as string
@@ -46,6 +46,35 @@ contracts, the classifications from their enum. Seven rules:
 ``year_window``
     A year inside the registry's filing-year envelope used as a bound or label,
     or two of them in one literal or as constants.
+``field_route``
+    A ``new Set([...])`` holding three or more of the fields a movement's id is
+    worked out from, or of the fields a stored invoice's correction waits on, or
+    a record sending two or more readiness reasons to a field named as a string.
+    A list of readiness reasons counts under ``vocabulary``; a record from a
+    reason to the window's own layout passes.
+``direction_rule``
+    A movement direction chosen by a condition (``k ? "INCOMING" : "OUTGOING"``),
+    or tested inside a ``filter``, ``find``, ``some`` or ``every``: which way
+    money goes for what is the ledger's. A direction told apart to draw it passes.
+``text_limit``
+    A number given as the limit of ``parseLine`` or ``textField``: how long an entry may be is its
+    writer's, and a field states a limit it was served.
+``moved_rule``
+    A name of a rule the backend now answers (``checkSplit``), or a staged split
+    whose ``children`` are not read from the backend's ``answer``: whether parts
+    make a split is the split writer's. Likewise the names of the matching rules
+    (``EARLY_DAYS``, ``PICK_WINDOW_DAYS``, ``TOLERANCE_UNITS``, ``LEGAL_FORMS``) and a call or
+    declaration of ``settlement``, ``partyName``, ``party``, ``sameParty``, ``reconcile``,
+    ``linkPicker`` or ``movementPicker``: which invoice a payment settles, how
+    candidates rank and which movements are offered are the ledger's. A function
+    assigned to ``party`` or ``partyName`` (``const party = (text) => ...``) is a declaration, and
+    so is a pattern that alternates three or more of the legal forms the backend reads as
+    naming no party (read from its list at run time, under any name): which names are one
+    party, and what link differences a pair has, are the ledger's. Also, in a ``filter``, ``find``, ``some``
+    or ``every``, a ``counterparty_tax_id`` compared, or an ``invoice_number``
+    folded through a call and compared: whether two invoices are one is the
+    backend's. Finding the exact number just sent, to tell whether a write landed,
+    passes.
 
 Limits. The scan is lexical and per file. It does not follow a value across
 files or through a renamed import, does not see arithmetic on plain numbers
@@ -67,6 +96,7 @@ from __future__ import annotations
 
 import ast
 import inspect
+import os
 import re
 from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
@@ -84,14 +114,18 @@ from cadrumo.application.invoices.catalogue_add_contracts import InvoiceAddLine,
 from cadrumo.application.invoices.catalogue_read_projection import CatalogueInvoiceSnapshot, InvoiceLineSnapshot
 from cadrumo.application.invoices.catalogue_update_operation import InvoiceUpdateValues
 from cadrumo.application.invoices.figures_preview_contracts import (
+    INVOICE_CORRECTION_JUDGED_FIELDS,
     InvoiceFiguresPreviewLine,
     InvoiceFiguresPreviewRequest,
 )
 from cadrumo.application.ledger.entry_options_operation import ledger_entry_options
+from cadrumo.application.ledger.readiness_routes import READINESS_REASON_FIELDS
+from cadrumo.application.ledger.staged_identity import TRANSACTION_IDENTITY_FIELDS
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import iva_rate_percentage, iva_rate_slots_on
+from cadrumo.domain.invoices.service import BARE_LEGAL_FORMS
 from cadrumo.domain.iva.errors import IvaRateNotFoundError
-from cadrumo.domain.transactions.enums import CLASSIFIED_STATES
+from cadrumo.domain.transactions.enums import CLASSIFIED_STATES, TransactionDirection
 from dev._paths import REPO_ROOT
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
@@ -111,7 +145,34 @@ _RULES: Final = (
     "classification",
     "modelo_branch",
     "year_window",
+    "field_route",
+    "direction_rule",
+    "text_limit",
+    "moved_rule",
 )
+#: The names of rules the backend now answers, so a copy kept or brought back fails by name.
+_MOVED_RULE_NAMES: Final = frozenset(
+    {
+        "checkSplit",
+        "splitRemainder",
+        "centsOf",
+        "duplicateOf",
+        "EARLY_DAYS",
+        "LATE_RANK",
+        "PICK_WINDOW_DAYS",
+        "TOLERANCE_UNITS",
+        "numberInDescription",
+        "LEGAL_FORMS",
+    }
+)
+#: Rules the backend answers that a window might name as ordinary words, so they fail only when called or declared.
+_MOVED_RULE_CALLS: Final = frozenset(
+    {"settlement", "partyName", "party", "sameParty", "reconcile", "linkPicker", "movementPicker"}
+)
+#: The names a counterparty-name fold goes by; a function assigned to one is a copy of it.
+_MOVED_FOLD_NAMES: Final = frozenset({"party", "partyName"})
+#: Invoice facts a duplicate rests on; the window asks and never compares them.
+_DUPLICATE_FACTS: Final = frozenset({"invoice_number", "counterparty_tax_id"})
 #: The request and result contracts of an invoice whose decimal fields are the figures a form could compute.
 _INVOICE_CONTRACTS: Final[tuple[type[BaseModel], ...]] = (
     InvoiceAddLine,
@@ -143,12 +204,23 @@ class Facts:
     modelos: frozenset[str]
     years: frozenset[int]
     rate_words: frozenset[str]
+    identity_tokens: frozenset[str]
+    judged_fields: frozenset[str]
+    directions: frozenset[str]
+    legal_forms: frozenset[str]
 
 
 def _year_days(years: list[int]) -> Iterator[date]:
     for year in years:
         for month, day in ((1, 1), (7, 1), (12, 31)):
             yield date(year, month, day)
+
+
+def _identity_tokens() -> frozenset[str]:
+    """The identity fields, and the words a column of one is commonly named by (``date``, ``account``)."""
+    return frozenset(TRANSACTION_IDENTITY_FIELDS) | frozenset(
+        word for field in TRANSACTION_IDENTITY_FIELDS for word in _words(field) - {"own", "value", "booked"}
+    )
 
 
 def invoice_figure_keys() -> frozenset[str]:
@@ -164,7 +236,7 @@ def invoice_figure_keys() -> frozenset[str]:
 
 def read_facts() -> Facts:
     """Read every vocabulary, rate, modelo and year from the pinned authority, on each supported year."""
-    vocabularies: dict[str, set[str]] = {}
+    vocabularies: dict[str, set[str]] = {"readiness_reason": {str(reason.value) for reason in READINESS_REASON_FIELDS}}
     rates: set[Decimal] = set()
     with bundled_indexed_authority().operation() as operation:
         years = sorted(operation.supported_filing_years().years)
@@ -194,6 +266,10 @@ def read_facts() -> Facts:
             for token in vocabularies.get(family, ())
             for word in _words(token.replace(".", "_"))
         ),
+        _identity_tokens(),
+        INVOICE_CORRECTION_JUDGED_FIELDS,
+        frozenset(direction.value for direction in TransactionDirection),
+        BARE_LEGAL_FORMS,
     )
 
 
@@ -327,7 +403,7 @@ def lex(source: str) -> list[Token]:
             i = end
         elif char == "/" and (not tokens or tokens[-1].text in _REGEX_AFTER or tokens[-1].text == "return"):
             end = _skip_regex(source, i)
-            push("regex", "/regex/", i)
+            push("regex", source[i:end], i)
             i = max(end, i + 1)
         elif (match := _NUMBER.match(source, i)) and (char.isdigit() or (char == "." and match.group())):
             push("num", match.group(), i)
@@ -975,6 +1051,152 @@ def year_window_hits(tokens: list[Token], facts: Facts) -> list[Hit]:
     return list({(hit.line, hit.detail): hit for hit in hits}.values())
 
 
+_ROUTE_MINIMUM: Final = 3
+_ROUTED_REASONS: Final = 2
+_PREDICATES: Final = frozenset({"filter", "find", "some", "every", "findIndex"})
+
+
+def field_route_hits(tokens: list[Token], facts: Facts) -> list[Hit]:
+    """A hand-kept set of identity fields or of the fields a correction waits on."""
+    held: dict[tuple[str, int], dict[str, int]] = {}
+    for token in tokens:
+        if token.kind != "str" or token.parent < 1 or tokens[token.parent].text != "[":
+            continue
+        opening = token.parent
+        if tokens[opening - 1].text != "(" or opening < 2 or tokens[opening - 2].text != "Set":
+            continue
+        if token.text in facts.identity_tokens:
+            held.setdefault(("identity", opening), {}).setdefault(token.text, token.line)
+        if token.text in facts.judged_fields:
+            held.setdefault(("judged", opening), {}).setdefault(token.text, token.line)
+    reasons = facts.vocabularies["readiness_reason"]
+    routed: dict[int, dict[str, int]] = {}
+    for index, token in enumerate(tokens[:-2]):
+        if token.text in reasons and _record_key(tokens, index) and tokens[index + 2].kind == "str":
+            routed.setdefault(token.parent, {}).setdefault(token.text, token.line)
+    routes = [
+        Hit("field_route", min(seen.values()), f"readiness reasons routed: {', '.join(sorted(seen))}")
+        for seen in routed.values()
+        if len(seen) >= _ROUTED_REASONS
+    ]
+    return routes + [
+        Hit("field_route", min(seen.values()), f"{name} fields: {', '.join(sorted(seen))}")
+        for (name, _bracket), seen in held.items()
+        if len(seen) >= _ROUTE_MINIMUM
+    ]
+
+
+def _inside_predicate(tokens: list[Token], token: Token) -> bool:
+    """Whether the token sits in the arguments of a collection predicate."""
+    parent = token.parent
+    while parent >= 1:
+        if tokens[parent].text == "(" and tokens[parent - 1].text in _PREDICATES:
+            return True
+        parent = tokens[parent].parent
+    return False
+
+
+def direction_rule_hits(tokens: list[Token], facts: Facts) -> list[Hit]:
+    """A direction chosen by a condition, or tested to choose which rows a rule takes."""
+    hits: list[Hit] = []
+    for index, token in enumerate(tokens):
+        if token.kind != "str" or token.text not in facts.directions:
+            continue
+        before = tokens[index - 1].text if index > 0 else ""
+        after = tokens[index + 1].text if index + 1 < len(tokens) else ""
+        if before == "?" and after == ":":
+            hits.append(Hit("direction_rule", token.line, f"{token.text} chosen by a condition"))
+        elif _compared(tokens, index) and _inside_predicate(tokens, token):
+            hits.append(Hit("direction_rule", token.line, f"{token.text} tested in a predicate"))
+    return hits
+
+
+def text_limit_hits(tokens: list[Token]) -> list[Hit]:
+    """A number given as the limit ``parseLine`` or ``textField`` holds typed text to."""
+    return [
+        Hit("text_limit", token.line, f"{token.text} given a number as its limit")
+        for index, token in enumerate(tokens)
+        if token.text in {"parseLine", "textField"}
+        and any(
+            tokens[at].text == "," and tokens[at + 1].kind == "num"
+            for at in range(index + 2, min(index + 8, len(tokens) - 1))
+        )
+    ]
+
+
+#: How many of the backend's bare legal forms one pattern must alternate to be a copy of the list.
+_LEGAL_FORMS_IN_PATTERN: Final = 3
+_PATTERN_NOISE: Final = re.compile(r"\\[bB]|[\\^$()?.*+\s]")
+
+
+def _legal_form_alternatives(literal: str, facts: Facts) -> int:
+    """How many alternatives of a regex literal are a legal form the backend reads as naming no party."""
+    body = literal[1 : literal.rfind("/")].lower()
+    return sum(1 for part in body.split("|") if _PATTERN_NOISE.sub("", part) in facts.legal_forms)
+
+
+def _arrow_declared(tokens: list[Token], index: int) -> bool:
+    """Whether the name at ``index`` is assigned a function: ``name = (..) =>``, ``name = x =>`` or ``function``."""
+    if index + 2 >= len(tokens) or tokens[index + 1].text != "=":
+        return False
+    follow = tokens[index + 2]
+    if follow.text in {"function", "async"}:
+        return True
+    if follow.kind == "id":
+        return index + 3 < len(tokens) and tokens[index + 3].text == "=>"
+    if follow.text != "(":
+        return False
+    depth = 0
+    for at in range(index + 2, len(tokens)):
+        depth += (tokens[at].text == "(") - (tokens[at].text == ")")
+        if depth == 0:
+            return at + 1 < len(tokens) and tokens[at + 1].text == "=>"
+    return False
+
+
+def moved_rule_hits(tokens: list[Token], facts: Facts) -> list[Hit]:
+    """A moved rule's name, or a staged split's children that are not the backend's answer."""
+    hits = [
+        Hit("moved_rule", token.line, f"{token.text} is answered by the backend")
+        for token in tokens
+        if token.kind != "str" and token.text in _MOVED_RULE_NAMES
+    ]
+    hits += [
+        Hit("moved_rule", token.line, f"{token.text} is answered by the backend")
+        for index, token in enumerate(tokens)
+        if token.kind != "str"
+        and token.text in _MOVED_RULE_CALLS
+        and index + 1 < len(tokens)
+        and tokens[index + 1].text == "("
+    ]
+    hits += [
+        Hit("moved_rule", token.line, f"{token.text} is declared as a function, and is answered by the backend")
+        for index, token in enumerate(tokens)
+        if token.kind != "str" and token.text in _MOVED_FOLD_NAMES and _arrow_declared(tokens, index)
+    ]
+    hits += [
+        Hit("moved_rule", token.line, "a pattern of legal forms: which names are one party is the backend's")
+        for token in tokens
+        if token.kind == "regex" and _legal_form_alternatives(token.text, facts) >= _LEGAL_FORMS_IN_PATTERN
+    ]
+    for index, token in enumerate(tokens):
+        if token.kind != "str" and token.text in _DUPLICATE_FACTS and _inside_predicate(tokens, token):
+            window = tokens[max(index - 6, 0) : index + 5]
+            folded = tokens[index + 1].text == ")" if index + 1 < len(tokens) else False
+            if any(near.text in {"===", "!=="} for near in window) and (folded or token.text != "invoice_number"):
+                hits.append(Hit("moved_rule", token.line, f"{token.text} compared in the window"))
+        if token.kind != "str" or token.text != "split" or tokens[index - 1].text != ":":
+            continue
+        for at in range(index + 1, min(index + 16, len(tokens) - 2)):
+            if (
+                tokens[at].text == "children"
+                and tokens[at + 1].text == ":"
+                and tokens[at + 2].text not in {"answer", "{"}
+            ):
+                hits.append(Hit("moved_rule", tokens[at].line, "a split's children are not the backend's answer"))
+    return hits
+
+
 def scan_source(source: str, facts: Facts) -> list[Hit]:
     """Run every rule over one file's source."""
     tokens = lex(source)
@@ -986,6 +1208,10 @@ def scan_source(source: str, facts: Facts) -> list[Hit]:
         *classification_hits(tokens),
         *modelo_branch_hits(tokens, facts),
         *year_window_hits(tokens, facts),
+        *field_route_hits(tokens, facts),
+        *direction_rule_hits(tokens, facts),
+        *text_limit_hits(tokens),
+        *moved_rule_hits(tokens, facts),
     ]
 
 
@@ -1317,6 +1543,155 @@ def test_a_year_bound_in_the_support_window_fails_the_year_window_rule(facts: Fa
     assert "year_window" not in _fired("const wide = width >= 1000;\n", facts)
 
 
+# -- rules moved to the backend ----------------------------------------------
+
+
+def test_the_moved_rules_are_read_from_their_owners(facts: Facts) -> None:
+    assert {"amount", "description", "date", "account"} <= facts.identity_tokens
+    assert {"iva_category", "retention_rate"} <= facts.judged_fields
+    assert {"INCOMING", "OUTGOING"} <= facts.directions
+    assert "missing_iva_rate" in facts.vocabularies["readiness_reason"]
+
+
+def test_a_set_of_identity_columns_fails_the_field_route_rule(facts: Facts) -> None:
+    source = 'const IDENTITY = new Set(["date", "description", "amount", "account"]);\n'
+    assert "field_route" in _fired(source, facts)
+    assert "field_route" not in _fired('const WIDE = new Set(["amount", "notes"]);\n', facts)
+    assert "field_route" not in _fired('const ORDER = ["date", "description", "amount", "account"];\n', facts)
+
+
+def test_a_set_of_judged_correction_fields_fails_the_field_route_rule(facts: Facts) -> None:
+    first, second, third = sorted(facts.judged_fields)[:3]
+    assert "field_route" in _fired(f'const JUDGED = new Set(["{first}", "{second}", "{third}"]);\n', facts)
+
+
+def test_a_table_of_readiness_reasons_fails_the_vocabulary_rule(facts: Facts) -> None:
+    first, second = sorted(facts.vocabularies["readiness_reason"])[:2]
+    assert "vocabulary" in _fired(f'const ROUTE = {{ "{first}": "a", "{second}": "b" }};\n', facts)
+    assert "vocabulary" in _fired(f'const DERIVES = ["{first}", "{second}"];\n', facts)
+    assert "vocabulary" not in _fired(f'const lead = "{first}";\n', facts)
+
+
+def test_a_record_routing_reasons_to_fields_fails_the_field_route_rule(facts: Facts) -> None:
+    first, second = sorted(facts.vocabularies["readiness_reason"])[:2]
+    assert "field_route" in _fired(f'const ROUTE = {{ {first}: "a", {second}: "b" }};\n', facts)
+    layout = f'const FIX = {{ {first}: {{ preset: "p" }}, {second}: {{ preset: "q" }} }};\n'
+    assert "field_route" not in _fired(layout, facts)
+
+
+def test_a_direction_chosen_by_a_condition_fails_the_direction_rule(facts: Facts) -> None:
+    source = 'const flow = (i: Invoice) => i.kind === "issued" ? "INCOMING" : "OUTGOING";\n'
+    assert "direction_rule" in _fired(source, facts)
+
+
+def test_a_direction_tested_in_a_predicate_fails_the_direction_rule(facts: Facts) -> None:
+    source = 'const picks = rows.filter((row) => row.direction === "OUTGOING" && !used.has(row.id));\n'
+    assert "direction_rule" in _fired(source, facts)
+    assert "direction_rule" in _fired('const one = rows.find((r) => "INCOMING" === r.direction);\n', facts)
+
+
+def test_a_direction_told_apart_to_draw_it_passes(facts: Facts) -> None:
+    source = 'const icon = (d: string) => { if (d === "INTERNAL_TRANSFER") return "swap"; return "arrow"; };\n'
+    assert "direction_rule" not in _fired(source, facts)
+    assert "direction_rule" not in _fired('const word = { IN: "INCOMING" };\n', facts)
+
+
+def test_a_number_as_a_line_limit_fails_the_text_limit_rule(facts: Facts) -> None:
+    assert "text_limit" in _fired("const parsed = parseLine(raw, 64);\n", facts)
+    assert "text_limit" in _fired("const name = textField(draft.counterpartyName, 512);\n", facts)
+    assert "text_limit" not in _fired("const parsed = parseLine(raw, LINE_LIMIT);\n", facts)
+    assert "text_limit" not in _fired('const name = textField(raw, textLimit("name"));\n', facts)
+    assert "text_limit" not in _fired("const parsed = parseLine(raw, field.maxLength);\n", facts)
+
+
+def test_a_moved_rule_brought_back_fails_the_moved_rule_rule(facts: Facts) -> None:
+    assert "moved_rule" in _fired("const remainder = splitRemainder(total, others);\n", facts)
+    assert "moved_rule" in _fired("export function checkSplit(total, parts) { return parts; }\n", facts)
+    assert "moved_rule" not in _fired('const said = "checkSplit";\n', facts)
+
+
+def test_the_matching_rules_brought_back_fail_the_moved_rule_rule(facts: Facts) -> None:
+    assert "moved_rule" in _fired("const owed = settlement(invoice);\n", facts)
+    assert "moved_rule" in _fired("export function settlement(invoice) { return invoice.grand_total; }\n", facts)
+    assert "moved_rule" in _fired("export function partyName(text) { return text.toLowerCase(); }\n", facts)
+    assert "moved_rule" in _fired("const same = sameParty(row.counterparty, invoice.counterparty_name);\n", facts)
+    assert "moved_rule" in _fired("const found = reconcile(rows, invoices, actions);\n", facts)
+    assert "moved_rule" in _fired("const offered = movementPicker(invoice, rows);\n", facts)
+    assert "moved_rule" in _fired("const early = gap >= -EARLY_DAYS;\n", facts)
+    assert "moved_rule" in _fired("export const PICK_WINDOW_DAYS = 10;\n", facts)
+    assert "moved_rule" in _fired("const near = distance <= TOLERANCE_UNITS;\n", facts)
+    assert "moved_rule" in _fired("const named = numberInDescription(row, invoice);\n", facts)
+
+
+_PLANTED_LEGAL_FORMS = (
+    r"const LEGAL_FORMS = /\b(s\.?l\.?u?|s\.?a\.?|s\.?coop|sll|slp|cb|scp)\b\.?/g;"
+    "\n"
+    'const party = (text: string) => fold(text).replace(LEGAL_FORMS, " ").trim();\n'
+    "const differs = party(row.counterparty) !== party(invoice.counterparty_name);\n"
+)
+
+
+def _moved_messages(source: str, facts: Facts) -> str:
+    return "\n".join(hit.detail for hit in scan_source(source, facts) if hit.rule == "moved_rule")
+
+
+def test_a_copy_of_the_legal_form_fold_fails_the_moved_rule_rule_however_it_is_spelled(facts: Facts) -> None:
+    assert "moved_rule" in _fired(_PLANTED_LEGAL_FORMS, facts)
+    # Each part alone is enough: the name, the fold and its call, and the pattern under any name.
+    assert "LEGAL_FORMS" in _moved_messages("const forms = LEGAL_FORMS;\n", facts)
+    assert "declared as a function" in _moved_messages("const party = (text: string) => text.trim();\n", facts)
+    assert "declared as a function" in _moved_messages("const party = text => text.trim();\n", facts)
+    assert "declared as a function" in _moved_messages("const party = function (text) { return text; };\n", facts)
+    assert "party is answered" in _moved_messages("const same = party(row.counterparty);\n", facts)
+    renamed = r"const FORMS = /\b(sl|sa|slu|cb)\b/gi;" "\n"
+    assert "pattern of legal forms" in _moved_messages(renamed, facts)
+    spelled = r"const ENDINGS = /(s\.?l\.?u?|s\.?a\.?|s\.?coop)$/;" "\n"
+    assert "pattern of legal forms" in _moved_messages(spelled, facts)
+
+
+def test_a_name_called_party_and_a_pattern_of_other_words_do_not_fail_the_moved_rule_rule(facts: Facts) -> None:
+    for source in (
+        'const party = correctable("counterparty_name");\n',
+        "const party = (picked ? picked.fills : null);\n",
+        "const party = row.counterparty || row.description;\n",
+        "const sizes = /(sl|sa)/;\n",
+        "const words = /(red|green|blue|sl)/;\n",
+        r"const digits = /\d+|\s+|\w+/g;" "\n",
+    ):
+        assert "moved_rule" not in _fired(source, facts), source
+
+
+def test_the_legal_forms_are_read_from_the_backend(facts: Facts) -> None:
+    assert {"sl", "sa", "slu", "scoop", "cb", "scp"} <= facts.legal_forms
+
+
+def test_the_words_the_matching_rules_share_with_other_names_do_not_fail_the_moved_rule_rule(facts: Facts) -> None:
+    served = "const owed = invoice.settlement_amount.decimal;\n"
+    member = "type Revision = { settlement: ModeloSettlementSnapshot | null };\n"
+    local = 'const partyName = party.typed ?? party.read ?? "";\n'
+    said = 'const call = "settlement(";\n'
+    for source in (served, member, local, said):
+        assert "moved_rule" not in _fired(source, facts), source
+
+
+def test_invoice_identity_compared_in_the_window_fails_the_moved_rule_rule(facts: Facts) -> None:
+    planted = "const same = invoices.find((i) => folded(i.invoice_number) === number);\n"
+    assert "moved_rule" in _fired(planted, facts)
+    planted = "const same = invoices.find((i) => taxId === i.counterparty_tax_id);\n"
+    assert "moved_rule" in _fired(planted, facts)
+    assert "moved_rule" in _fired("const copy = duplicateOf(draft, kind, invoices);\n", facts)
+    assert "moved_rule" not in _fired("const number = invoice.invoice_number;\n", facts)
+    landed = "const saved = invoices.some((i) => i.invoice_number === sent.number);\n"
+    assert "moved_rule" not in _fired(landed, facts)
+
+
+def test_a_split_staged_from_the_windows_own_parts_fails_the_moved_rule_rule(facts: Facts) -> None:
+    held = 'const a = { id: x, kind: "split", transactionId: y, children: parts.map(toChild), reason: r };\n'
+    read = 'const a = { id: x, kind: "split", transactionId: y, children: answer.children.map(toChild), reason: r };\n'
+    assert "moved_rule" in _fired(held, facts)
+    assert "moved_rule" not in _fired(read, facts)
+
+
 # -- clean files and exclusions ----------------------------------------------
 
 
@@ -1386,7 +1761,46 @@ def test_every_module_spelling_is_scanned(
     assert list(scan_tree(tmp_path, facts, outputs)) == [f"a{suffix}"]
 
 
+def reached_sources(root: Path) -> list[Path]:
+    """The sources the scan reaches under ``root``, refusing a scan that reaches none or reads none."""
+    reached = list(window_sources(root))
+    assert reached, f"the scan reaches no source under {root}: it would pass without reading the window"
+    unread = [path for path in reached if not lex(path.read_text(encoding="utf-8"))]
+    assert unread == [], "a source the scan reaches yields no tokens, so no rule can see it"
+    return reached
+
+
+def _eligible_by_walk(root: Path) -> set[str]:
+    """Every module source outside ``dev``, stories and specs, found by walking directories."""
+    found: set[str] = set()
+    for directory, names, files in os.walk(root):
+        names[:] = [name for name in names if name != "node_modules"]
+        for name in files:
+            relative = (Path(directory) / name).relative_to(root)
+            if relative.suffix in _EXTENSIONS and relative.parts[0] != "dev" and not _EXCLUDED_NAME.search(name):
+                found.add(relative.as_posix())
+    return found
+
+
+def test_the_scan_reaches_every_window_source() -> None:
+    reached = {path.relative_to(_SOURCE).as_posix() for path in reached_sources(_SOURCE)}
+    assert reached == _eligible_by_walk(_SOURCE)
+
+
+def test_a_scan_that_reaches_no_source_fails(tmp_path: Path) -> None:
+    (tmp_path / "notes.md").write_text("export const t = 1;\n", encoding="utf-8")
+    with pytest.raises(AssertionError, match="reaches no source"):
+        reached_sources(tmp_path)
+
+
+def test_a_source_that_yields_no_tokens_fails(tmp_path: Path) -> None:
+    (tmp_path / "blank.ts").write_text("", encoding="utf-8")
+    with pytest.raises(AssertionError, match="yields no tokens"):
+        reached_sources(tmp_path)
+
+
 def test_the_window_holds_no_tax_data(facts: Facts, outputs: dict[str, tuple[str, ...]]) -> None:
+    reached_sources(_SOURCE)
     found = scan_tree(_SOURCE, facts, outputs)
     hit_keys = {(path, hit.rule) for path, hits in found.items() for hit in hits}
     unlisted = sorted(

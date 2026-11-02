@@ -1,6 +1,6 @@
 // The scenario ledger's answers to the withholding operations: the payers'
 // certificate records of an ejercicio and the statements that an income class
-// has none. A record is judged as the registered contract judges it, a
+// has none, listed whether active or withdrawn. A record is judged as the registered contract judges it, a
 // refusal settles with the operation's own result as its detail, and a row
 // never holds the payer's tax identifier, which is dropped once it has named
 // the payer's reference. Everything it answers is synthetic.
@@ -43,7 +43,10 @@ const SERVED_WORDS: Record<string, string> = {
     "The payment on account passed on to you cannot be more than the payment on account.",
 };
 /** The class the scenario serves a label for; the others are served bare. */
-const LABELLED = { [WITHHOLDING_INCOME_CLASSES[0]]: "Employment income" };
+const LABELLED = {
+  [WITHHOLDING_INCOME_CLASSES[0]]: "Employment income",
+  [WITHHOLDING_INCOME_CLASSES[4]]: "Economic activity income",
+};
 
 type Stored = {
   ejercicio: number;
@@ -88,8 +91,28 @@ export function withholdingOperations(tools: Tools) {
       revision: 1,
     },
   ];
-  const attestations: Attestation[] = [];
-  let revisions = 1;
+  // Two statements stand from the start: one active, one withdrawn since.
+  const attestations: Attestation[] = [
+    {
+      ejercicio: year,
+      income_class: WITHHOLDING_INCOME_CLASSES[4],
+      note: "No professional fees were withheld.",
+      state: "active",
+      attested_at: `${year}-02-10T09:00:00Z`,
+      withdrawn_at: null,
+      revision: 2,
+    },
+    {
+      ejercicio: year,
+      income_class: WITHHOLDING_INCOME_CLASSES[1],
+      note: "No dividends were paid.",
+      state: "withdrawn",
+      attested_at: `${year}-02-12T09:00:00Z`,
+      withdrawn_at: `${year}-03-01T09:00:00Z`,
+      revision: 3,
+    },
+  ];
+  let revisions = 3;
 
   const revisionOf = (revision: number) => `rev-${revision}`;
   const rowOf = (found: Stored): JsonObject => {
@@ -129,6 +152,17 @@ export function withholdingOperations(tools: Tools) {
     withdrawn_at: found.withdrawn_at,
     revision_id: revisionOf(found.revision),
   });
+  /** A listed attestation also words its income class, as the payers' rows
+   * do where a label is served. */
+  const attestationRowOf = (found: Attestation): JsonObject => {
+    const label = (LABELLED as Record<string, string | undefined>)[
+      found.income_class
+    ];
+    return {
+      ...attestationOf(found),
+      ...(label ? { income_class_label: label } : {}),
+    };
+  };
 
   const whole = (value: JsonValue | undefined): number =>
     typeof value === "number" && Number.isInteger(value) ? value : invalid();
@@ -199,6 +233,26 @@ export function withholdingOperations(tools: Tools) {
         rows: stored
           .filter((found) => found.ejercicio === ejercicio)
           .map(rowOf),
+      };
+    },
+    "ledger.retencion_soportada.list_absences": (request) => {
+      only(request, ["ejercicio"]);
+      const ejercicio = whole(request.ejercicio);
+      return {
+        profile_id: profileId,
+        ejercicio,
+        attestations: attestations
+          .filter((found) => found.ejercicio === ejercicio)
+          .sort(
+            (left, right) =>
+              WITHHOLDING_INCOME_CLASSES.indexOf(
+                left.income_class as (typeof WITHHOLDING_INCOME_CLASSES)[number],
+              ) -
+              WITHHOLDING_INCOME_CLASSES.indexOf(
+                right.income_class as (typeof WITHHOLDING_INCOME_CLASSES)[number],
+              ),
+          )
+          .map(attestationRowOf),
       };
     },
   };

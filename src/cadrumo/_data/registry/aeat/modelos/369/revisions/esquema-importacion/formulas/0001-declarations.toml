@@ -2,7 +2,34 @@
 id = "modelo-369-importacion-cuota-total"
 target_casilla_id = "iva.importacion.cuota-total"
 expression = { op = "add", args = [
-    { casilla_id = "iva.importacion.de.low-value-cuota" },
+    { casilla_id = "iva.importacion.resultado.at.importaciones" },
+    { casilla_id = "iva.importacion.resultado.be.importaciones" },
+    { casilla_id = "iva.importacion.resultado.bg.importaciones" },
+    { casilla_id = "iva.importacion.resultado.cy.importaciones" },
+    { casilla_id = "iva.importacion.resultado.cz.importaciones" },
+    { casilla_id = "iva.importacion.resultado.de.importaciones" },
+    { casilla_id = "iva.importacion.resultado.dk.importaciones" },
+    { casilla_id = "iva.importacion.resultado.ee.importaciones" },
+    { casilla_id = "iva.importacion.resultado.es.importaciones" },
+    { casilla_id = "iva.importacion.resultado.fi.importaciones" },
+    { casilla_id = "iva.importacion.resultado.fr.importaciones" },
+    { casilla_id = "iva.importacion.resultado.gr.importaciones" },
+    { casilla_id = "iva.importacion.resultado.hr.importaciones" },
+    { casilla_id = "iva.importacion.resultado.hu.importaciones" },
+    { casilla_id = "iva.importacion.resultado.ie.importaciones" },
+    { casilla_id = "iva.importacion.resultado.it.importaciones" },
+    { casilla_id = "iva.importacion.resultado.lt.importaciones" },
+    { casilla_id = "iva.importacion.resultado.lu.importaciones" },
+    { casilla_id = "iva.importacion.resultado.lv.importaciones" },
+    { casilla_id = "iva.importacion.resultado.mt.importaciones" },
+    { casilla_id = "iva.importacion.resultado.nl.importaciones" },
+    { casilla_id = "iva.importacion.resultado.pl.importaciones" },
+    { casilla_id = "iva.importacion.resultado.pt.importaciones" },
+    { casilla_id = "iva.importacion.resultado.ro.importaciones" },
+    { casilla_id = "iva.importacion.resultado.se.importaciones" },
+    { casilla_id = "iva.importacion.resultado.si.importaciones" },
+    { casilla_id = "iva.importacion.resultado.sk.importaciones" },
+    { casilla_id = "iva.importacion.resultado.xi.importaciones" },
 ] }
 rounding = "money-2"
 legal_refs = [

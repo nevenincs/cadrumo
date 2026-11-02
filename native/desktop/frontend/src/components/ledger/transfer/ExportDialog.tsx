@@ -170,6 +170,9 @@ export function ExportDialog({
   const [copied, setCopied] = useState<string | null>(null);
   /** The token of the file chosen, held for forgetting. */
   const held = useRef(new Set<PickedFile["token"]>());
+  const generation = useRef(0);
+  const sending = useRef(false);
+  const picking = useRef(false);
 
   const forgetHeld = () => {
     const tokens = [...held.current];
@@ -180,6 +183,7 @@ export function ExportDialog({
   useEffect(() => {
     const tokens = held.current;
     return () => {
+      generation.current += 1;
       if (tokens.size > 0) void port.forgetFiles([...tokens]).catch(() => {});
     };
   }, [port]);
@@ -190,12 +194,14 @@ export function ExportDialog({
   };
   // The file was chosen for one format and one period's export.
   const setFormat = (next: LedgerExportFormat) => {
+    if (sending.current || picking.current) return;
     if (next === format) return;
     destination(null);
     setFormatNow(next);
     onFormat(next);
   };
   const setPeriod = (next: LedgerPeriod | null) => {
+    if (sending.current || picking.current) return;
     destination(null);
     setPeriodNow(next);
   };
@@ -271,6 +277,9 @@ export function ExportDialog({
   );
 
   const choose = async () => {
+    if (sending.current || picking.current) return;
+    picking.current = true;
+    const mine = generation.current;
     setChoosing(true);
     setSaveRefused(false);
     try {
@@ -279,13 +288,20 @@ export function ExportDialog({
         t(`desktop.ledger.export.filter.${format}`),
         exportFileName(t, period, format),
       );
+      if (mine !== generation.current) {
+        void port
+          .forgetFiles(picks.files.map((file) => file.token))
+          .catch(() => {});
+        return;
+      }
       const file = picks.files[0] ?? null;
       if (file) destination(file);
       else if (picks.refused > 0) setSaveRefused(true);
     } catch {
-      setSaveRefused(true);
+      if (mine === generation.current) setSaveRefused(true);
     } finally {
-      setChoosing(false);
+      picking.current = false;
+      if (mine === generation.current) setChoosing(false);
     }
   };
 
@@ -328,7 +344,9 @@ export function ExportDialog({
     });
   };
   const send = async () => {
-    if (!target || pause.held !== null) return;
+    if (!target || pause.held !== null || sending.current || picking.current)
+      return;
+    sending.current = true;
     setSent({ kind: "sending" });
     try {
       const outcome = await port.submit("ledger.export", {
@@ -347,7 +365,12 @@ export function ExportDialog({
       if (failure.code === "unknown" || failure.code === "saved_unread")
         unseen(target);
       else setSent({ kind: "refused", reason: failure.reason ?? failure.code });
+    } finally {
+      sending.current = false;
     }
+  };
+  const close = () => {
+    if (!sending.current) onClose();
   };
 
   const copyInvoices = async () => {
@@ -409,10 +432,7 @@ export function ExportDialog({
   }, [done]);
 
   return (
-    <Dialog
-      open
-      onOpenChange={(open) => !open && sent.kind !== "sending" && onClose()}
-    >
+    <Dialog open onOpenChange={(open) => !open && close()}>
       <DialogContent
         placement="top"
         closeLabel={t("desktop.ledger.export.close")}
@@ -439,6 +459,7 @@ export function ExportDialog({
           </div>
         </DialogHeader>
         <h3
+          id={`${ids}-step`}
           ref={heading}
           tabIndex={-1}
           className="ledger-export-step font-medium text-foreground"
@@ -460,7 +481,11 @@ export function ExportDialog({
             </AlertDescription>
           </Alert>
         ) : (
-          <div className="ledger-export-body -mx-5 grid min-h-0 shrink gap-4 overflow-y-auto px-5">
+          <fieldset
+            disabled={sent.kind === "sending" || choosing}
+            aria-labelledby={`${ids}-step`}
+            className="ledger-export-body -mx-5 grid min-h-0 min-w-0 shrink gap-4 border-0 overflow-y-auto px-5"
+          >
             {selection && selection.length > 0 && (
               <Alert icon={<Icon name="info" />}>
                 <AlertTitle>
@@ -697,7 +722,7 @@ export function ExportDialog({
                 </AlertDescription>
               </Alert>
             )}
-          </div>
+          </fieldset>
         )}
         <DialogFooter>
           {done ? (
@@ -706,7 +731,11 @@ export function ExportDialog({
             </Button>
           ) : (
             <>
-              <Button variant="ghost" onClick={onClose}>
+              <Button
+                variant="ghost"
+                disabled={sent.kind === "sending"}
+                onClick={close}
+              >
                 {t("desktop.ledger.export.cancel")}
               </Button>
               <WriteHold>
@@ -715,6 +744,7 @@ export function ExportDialog({
                   pending={sent.kind === "sending"}
                   disabled={
                     !target ||
+                    choosing ||
                     blockedByStaged ||
                     sent.kind === "unknown" ||
                     exported === null

@@ -447,6 +447,7 @@ def test_invoice_inventory_evidence_and_rule_apply_lists_use_typed_rows() -> Non
                     "base_total": Decimal("100.00"),
                     "iva_total": Decimal("21.00"),
                     "grand_total": Decimal("121.00"),
+                    "settlement_amount": Decimal("121.00"),
                     "currency": "EUR",
                     "payment_status": PaymentStatus.PENDING,
                     "invoice_class": InvoiceClass.from_registry("ORDINARIA"),

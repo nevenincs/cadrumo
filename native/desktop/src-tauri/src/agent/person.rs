@@ -3,8 +3,10 @@
 use cadrumo_application::error::application::{
     ApplicationError, ChildRefusal, ErrorCode, Operation, Result,
 };
-use cadrumo_application::person_operations::{PROJECTION_DOCUMENT_MAX_BYTES, wipe};
-use cadrumo_application::{runtime_client::Refusal, view_stream::attach::ViewAttachGrant};
+use cadrumo_application::person_operations::{
+    protocol::PROJECTION_DOCUMENT_MAX_BYTES, sensitive::wipe,
+};
+use cadrumo_application::{runtime_client::refusal::Refusal, view_stream::attach::ViewAttachGrant};
 use serde_json::{Value, json};
 #[cfg(all(test, windows))]
 use std::time::Duration;
@@ -169,9 +171,9 @@ impl Person {
     }
     /// Holds the session the window's own connection admitted for its profile.
     pub(crate) fn native(
-        connection: Arc<dyn cadrumo_application::runtime_client::SessionExchange>,
-        pushed: std::sync::mpsc::Receiver<cadrumo_application::runtime_client::Pushed>,
-        admitted: cadrumo_application::runtime_client::Admitted,
+        connection: Arc<dyn cadrumo_application::runtime_client::connection::SessionExchange>,
+        pushed: std::sync::mpsc::Receiver<cadrumo_application::runtime_client::events::Pushed>,
+        admitted: cadrumo_application::runtime_client::session::Admitted,
         persisted: Option<bool>,
         recovery: super::recovery::rebind::Recovery,
     ) -> Result<Self> {

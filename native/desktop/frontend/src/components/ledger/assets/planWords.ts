@@ -1,18 +1,13 @@
-// The words the plan and the timeline add to the tab's shared ones: the keys
-// only they name, the tone each state is drawn in, and how a value the
-// backend states reads. Every figure and date arrives ready; here it is only
-// drawn. A token the catalogue has no word for reads as the generic word,
-// never raw.
-
-import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
+import { facts } from "../../../shell/compose";
 import { canonicalDecimal } from "../../../shell/ledgerGrammar";
 import type {
   Amount,
   PlanRow,
   TimelineChange,
 } from "../../../shell/ledgerSetup";
+import type { Translate } from "../../../shell/strings";
 import {
   ASSET_KEYS,
   reasonText,
@@ -20,6 +15,12 @@ import {
   unindexed,
   wordOfKey,
 } from "./assetsWords";
+
+// The words the plan and the timeline add to the tab's shared ones: the keys
+// only they name, the tone each state is drawn in, and how a value the
+// backend states reads. Every figure and date arrives ready; here it is only
+// drawn. A token the catalogue has no word for reads as the generic word,
+// never raw.
 
 /** The labels only the plan and the timeline name directly. */
 export const PLAN_KEYS = {
@@ -209,4 +210,17 @@ export function changeValueText(
   if (DATE.test(value)) return formatDay(locale, value);
   if (TEXT_FIELDS.has(path) && change.field_key !== null) return value;
   return looksInternal(value) ? unworded : value;
+}
+
+/** Why a year has no planned figure: the typed absence and the reason the
+ * backend gives for it where it gives one. */
+export function absentText(t: Translate, planned: PlanRow): string | null {
+  if (planned.absence === null) return null;
+  const word = tokenWord(t, "plan_absence", planned.absence);
+  const why = reasonText(
+    t,
+    planned.absence_reason_key,
+    planned.absence_reason_facts,
+  );
+  return facts(t, [word, why]);
 }

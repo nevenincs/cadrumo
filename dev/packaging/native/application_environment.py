@@ -38,6 +38,7 @@ from .environment_models import (
 from .environment_path import _external_path_defaults
 from .environment_profiles import _fixed, _invocations, _profiles
 from .environment_root import _root, _vectors
+from .operational_settings import parse_settings
 
 
 def _names(raw: object) -> dict[str, dict[str, str]]:
@@ -109,7 +110,7 @@ def parse(text: str) -> ApplicationEnvironment:
         "the declaration",
         {"schema", "names", "groups", "base", "pins", "path", "profiles", "host_classes", "native_host"}
         | {"components", "root"},
-        {"invocations", "launch_vectors", "agent", "package_fixed"},
+        {"invocations", "launch_vectors", "agent", "package_fixed", "settings"},
     )
     if document["schema"] != SCHEMA or isinstance(document["schema"], bool):
         raise _fail(f"schema must be {SCHEMA}")
@@ -162,6 +163,7 @@ def parse(text: str) -> ApplicationEnvironment:
         vectors=_vectors(root_table.get("vectors"), root),
         launch_vectors=_launch_vectors(document.get("launch_vectors", []), profiles, native_host),
         package_fixed=package_fixed,
+        settings=parse_settings(document.get("settings", {})),
     )
 
 

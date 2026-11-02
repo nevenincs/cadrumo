@@ -267,11 +267,14 @@ def test_iva_compensation_history_refuses_a_non_303_envelope() -> None:
 
 
 def test_iva_compensation_period_key_raises_localized_year_range_error() -> None:
+    # A period cannot be built outside four digits, so the guard is reached with one that was not validated.
+    unvalidated = Period.from_year_and_code(2026, "1T").model_copy(update={"filing_year": 999})
+
     with pytest.raises(IvaCompensationYearRangeError) as excinfo:
-        iva_compensation_period_key(Period.from_year_and_code(1999, "1T"))
+        iva_compensation_period_key(unvalidated)
 
     assert excinfo.value.translated_message == "errors.refused.refused_iva_compensation_year_range"
-    assert excinfo.value.context == {"filing_year": 1999, "min_year": 2000, "max_year": 2099}
+    assert excinfo.value.context == {"filing_year": 999, "min_year": 1000, "max_year": 9999}
 
 
 def test_iva_compensation_refuses_a_casilla_whose_declared_kind_is_not_numeric(

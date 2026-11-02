@@ -46,7 +46,8 @@ class ProfileFactWriteDoor(StrEnum):
     wizard: the command-line manager screens and the ``config profile`` verbs
     publish through this same writer, so their identities belong in the same
     closed set rather than in a second one beside it. Registered descendant
-    replacement uses :attr:`MANAGER_DESCENDANTS`. The registered operation records its
+    replacement uses :attr:`MANAGER_DESCENDANTS` and ascendant replacement
+    :attr:`MANAGER_ASCENDANTS`. The registered operation records its
     frontend separately from the fact writer's application policy.
     """
 
@@ -56,8 +57,10 @@ class ProfileFactWriteDoor(StrEnum):
     AUTH_CONFIGURE = "auth.configure"
     MANAGER_ROW = "manager.row"
     MANAGER_DESCENDANTS = "manager.descendants"
+    MANAGER_ASCENDANTS = "manager.ascendants"
     CLI_PLANTILLA_MEDIA = "cli.plantilla_media"
     MANAGER_PLANTILLA_MEDIA = "manager.plantilla_media"
+    MANAGER_IMPUTATION_ELECTION = "manager.imputation_election"
 
 
 def _effective(record: UserProfileRecord) -> dict[str, object]:

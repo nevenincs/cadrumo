@@ -474,6 +474,10 @@ application:
           el recibo de exportación.
         rendered_payload_empty: El diseño de exportación produjo un contenido de declaración
           vacío.
+        shared_casilla_cells_unadjudicated: 'No se ha generado el fichero de la declaración:
+          las casillas %{casilla_ids} tienen un valor que el diseño oficial escribiría
+          en varias celdas, y aún no se ha confirmado que esas celdas signifiquen
+          lo mismo. Escribirlo llevaría esas cifras a conceptos que no les corresponden.'
         verify_draft_snapshot_stale: La comprobación requiere un borrador construido
           con las definiciones del modelo en uso.
         xml_schema_unreadable: No se ha podido aplicar el esquema oficial de este
@@ -488,6 +492,8 @@ application:
           esquema oficial.
         xml_value_not_listed: La casilla %{box} contiene un valor fuera de las opciones
           que enumera el esquema oficial.
+        xml_value_required_missing: El esquema oficial exige la casilla %{box} y no
+          tiene valor. Indícala antes de exportar; no se ha escrito nada.
         xml_value_too_long: La casilla %{box} tiene %{observed} caracteres; el esquema
           oficial admite como máximo %{limit}.
         xml_value_too_many_decimals: La casilla %{box} tiene %{observed} decimales;
@@ -1011,6 +1017,59 @@ application:
           Rellénalos tú.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Coinciden
+          differ: Difieren
+          not_comparable: No se pueden comparar
+          only_in_borrador: Solo en el borrador de la AEAT
+          only_in_calculation: Solo en tu cálculo
+        evidence:
+          borrador: Lo imprimió la AEAT en su borrador y lo importaste aquí. Es una
+            observación, no una declaración autenticada.
+          calculation: Calculado en este equipo a partir de tus registros. Es local,
+            no una presentación ante la AEAT.
+        reason:
+          borrador_does_not_read_box: La importación del borrador no lee esta casilla,
+            así que la falta de un valor del borrador no dice nada sobre ella.
+          borrador_printed_no_value: Tu cálculo tiene un valor, pero el borrador de
+            la AEAT no imprime ninguno en esta casilla.
+          borrador_value_ambiguous: El borrador de la AEAT tiene más de un valor para
+            esta casilla, así que no se puede comparar.
+          borrador_value_not_kept: El borrador de la AEAT imprime esta casilla, pero
+            la importación no guarda su valor, así que no se puede comparar.
+          calculation_blocked: Tu cálculo no pudo resolver esta casilla, así que no
+            se puede comparar.
+          calculation_has_no_value: El borrador de la AEAT imprime un valor, pero
+            tu cálculo no tiene ninguno en esta casilla.
+          calculation_not_applicable: Tu cálculo muestra que esta casilla no te corresponde,
+            pero el borrador de la AEAT imprime un valor.
+          not_applicable_zero: El borrador de la AEAT imprime cero y tu cálculo muestra
+            que esta casilla no te corresponde.
+          same_value: El borrador de la AEAT y tu cálculo tienen el mismo valor.
+          taken_from_borrador: Tu cálculo tomó este valor del borrador de la AEAT,
+            así que la coincidencia no lo confirma de forma independiente.
+          value_kinds_differ: Un lado tiene un importe y el otro un texto, así que
+            no se pueden comparar.
+          values_differ: El borrador de la AEAT y tu cálculo tienen valores distintos.
+        stale:
+          calculation_outdated: Las reglas cambiaron después de guardar tu cálculo,
+            así que hay que recalcularlo.
+          calculation_used_other_capture: Tu cálculo se hizo a partir de un borrador
+            de la AEAT distinto del que se compara aquí.
+          newer_capture_refused: Hay guardado un borrador que importaste después,
+            pero no se puede leer, así que esta comparación usa uno anterior.
+        status:
+          capture_refused: Hay borradores de la AEAT guardados para este año, pero
+            ninguno se puede leer con las reglas actuales; vuelve a importar el borrador.
+          compared: Se han comparado casilla por casilla el borrador de la AEAT que
+            importaste y tu cálculo guardado.
+          no_calculation: Esta declaración aún no tiene un cálculo guardado, así que
+            el borrador no se puede comparar; calcúlala primero.
+          no_capture: No has importado ningún borrador de la AEAT para este año, así
+            que no hay nada que comparar.
+          stale: Se han leído los dos, pero ya no se corresponden; recalcula o vuelve
+            a importar el borrador antes de fiarte de esta comparación.
       errors:
         binding_keys_not_admitted: 'Este borrador guardado tiene valores con claves
           que las definiciones del modelo no admiten, así que no se puede usar; vuelve
@@ -1018,6 +1077,9 @@ application:
         binding_value_key_blank: Las claves de los valores del borrador no pueden
           estar vacías.
         bucket_id_blank: El identificador del bucket del borrador no puede estar vacío.
+        printed_observations_unresolved: 'Este borrador guardado conserva valores
+          impresos de casillas que las definiciones del modelo ya no identifican,
+          así que no se puede usar; vuelve a importar el documento: %{casillas}.'
         snapshot_id_blank: El identificador del snapshot del borrador no puede estar
           vacío.
         snapshot_not_found: Ningún snapshot del borrador coincide con el identificador
@@ -1164,8 +1226,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Las claves de los valores aportados no pueden estar
-          en blanco.
         decimal_value_invalid: El valor de borrador para el origen numérico %{binding_id}
           debe ser compatible con decimal.
         forbidden_bindings: 'El borrador contiene valores que las definiciones del
@@ -1303,6 +1363,12 @@ application:
           retienen, así que no puedes exportarla tal como está.
         what_to_do: Vuelve a calcular la declaración, compruébala y regístrala otra
           vez; el nuevo registro sustituye a este.
+      household_rows_incomplete:
+        what: Tu perfil indica más personas en este grupo de las que registra, así
+          que la declaración usa solo las personas registradas y no da el grupo por
+          completo.
+        what_to_do: Añade a tu perfil las personas que faltan o corrige el número,
+          y vuelve a calcular.
       inferred_retencion_excluded_from_credit:
         what: Parte de la retención de tus facturas emitidas se ha calculado a partir
           de lo que pagó el cliente, así que se ha dejado fuera de tu deducción y
@@ -1402,6 +1468,17 @@ application:
           periodo, así que Cadrumo no ha calculado ese impuesto.
         what_to_do: No tienes que hacer nada si no hiciste ese tipo de ventas. Si
           las hiciste, escribe tú los importes.
+      precedence_tier_divergence:
+        what: Dos fuentes tienen valores distintos para una cifra que llega a la casilla
+          {box}, y Cadrumo ha usado la que tiene prioridad.
+        what_to_do: Compara las fuentes y corrige la que esté mal; después vuelve
+          a calcular. La comprobación, la exportación y el registro esperan hasta
+          que coincidan.
+      precedence_tier_divergence_advisory:
+        what: Dos fuentes tienen valores distintos para una cifra de trabajo, y Cadrumo
+          ha usado la que tiene prioridad.
+        what_to_do: Compara las fuentes y corrige la que esté mal. Ninguna casilla
+          exportada depende de esta cifra.
       prior_payment_minoracion_not_captured:
         what: La minoración que viene de pagos anteriores no está anotada en la casilla
           {box}.
@@ -1617,6 +1694,7 @@ application:
       disposal_zero_result: '{element}: su venta el {date}, con {transmission_value}
         de valor de transmisión y {net_value} de valor neto, no da ganancia ni pérdida,
         así que ninguna casilla la recoge.'
+      household_rows_incomplete: '{group}: {stated} indicadas, {recorded} registradas.'
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'
@@ -1649,6 +1727,21 @@ application:
       row_unregistered_undated: Un movimiento registra un elemento que no consta en
         tu registro.
     calc_diagnostic_words:
+      income_class:
+        actividad_economica: actividades económicas
+        arrendamiento_inmueble_urbano: arrendamiento de inmueble urbano
+        arrendamiento_inmueble_urbano_actividad: arrendamiento de inmueble urbano
+          como actividad económica
+        atribucion_actividad_economica: rentas atribuidas de actividades económicas
+        atribucion_capital_inmobiliario: rentas atribuidas de capital inmobiliario
+        atribucion_capital_mobiliario: rentas atribuidas de capital mobiliario
+        atribucion_ganancia_patrimonial: rentas atribuidas de ganancias patrimoniales
+        capital_mobiliario: rendimientos del capital mobiliario
+        ganancia_patrimonial: ganancias patrimoniales
+        imputacion_aie_ute: imputación de AIE y UTE
+        imputacion_derechos_imagen: imputación de derechos de imagen
+        other: otra renta
+        trabajo: rendimientos del trabajo
       named_element: «{name}»
       unnamed_element: Un elemento sin nombre
     calculation_report:
@@ -1821,6 +1914,9 @@ application:
       amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind}
         no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year},
         período {period}. Tipos aceptados para este período: {accepted_kinds}.'
+      amendment_later_period_only: El modelo {modelo} del ejercicio {filing_year}
+        y periodo {period} no admite corregir una autoliquidación ya presentada. Practica
+        el ajuste en la autoliquidación de un periodo posterior.
       amendment_registry_root_missing: Falta la generación publicada de la autoridad
         %{missing_path}; no se pueden validar las sobrescrituras de rectificación.
       amendment_registry_snapshot_unresolved: No se pudieron resolver las definiciones
@@ -2267,6 +2363,10 @@ application:
         modelo %{modelo} %{filing_year}, %{period} (%{changed_count} modificadas,
         %{removed_count} eliminadas, %{added_count} añadidas). Vuelve a calcularlo
         antes de verificarlo.
+      invoice_fingerprint_narrower_scope: Este cálculo del modelo %{modelo} %{filing_year},
+        %{period} es anterior al seguimiento de las facturas devengadas sin movimiento
+        bancario, así que Cadrumo no puede saber si han cambiado desde entonces. Vuelve
+        a calcularlo para empezar a seguirlas.
       invoice_fingerprint_unavailable: Cadrumo no ha podido leer tus facturas para
         compararlas con el modelo %{modelo} %{filing_year}, %{period}, así que no
         se puede confirmar que este cálculo esté al día. Inténtalo de nuevo cuando
@@ -2274,6 +2374,10 @@ application:
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.
+      iva_cuota_disagrees_with_rate: La entrada de IVA con fecha %{transaction_date}
+        registra una cuota de %{recorded_cuota} EUR, pero su base de %{base_amount}
+        EUR al tipo del %{iva_rate_percent} % da %{expected_cuota} EUR. Corrige la
+        cuota, la base o el tipo y vuelve a calcular antes de comprobar esta declaración.
       iva_import_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
         %{transaction_currency} necesita la declaración aduanera de la importación.
         Cadrumo todavía no puede registrarla, por lo que esta declaración no puede
@@ -2344,6 +2448,8 @@ application:
         de la estimación objetiva (módulos).'
       oss_evidence_missing: Esta declaración incluye operaciones de ventanilla única
         (OSS), pero no hay justificantes guardados de ellas.
+      oss_no_activity_contradicted: Has declarado este periodo sin actividad, pero
+        hay facturas del régimen en él. Quita la declaración o revisa esas facturas.
       oss_source_unrouted: Algunas operaciones de ventanilla única (OSS) no se cuentan
         en ninguna casilla de este modelo.
       printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas
@@ -2360,10 +2466,16 @@ application:
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.
+      scheme_period_contradicted: El valor {entered} de {binding_id} contradice el
+        periodo de este trabajo, que es {expected}. Corrígelo o abre el trabajo del
+        periodo correcto.
       selected_option_requires_nonzero: La opción seleccionada exige un valor distinto
         de cero en este campo.
       selected_option_requires_zero: La opción seleccionada exige un cero explícito
         en este campo.
+      shared_casilla_cells_unadjudicated: 'La casilla %{casilla_id} tiene un valor
+        que la exportación escribiría también en celdas que aún no se ha confirmado
+        que signifiquen lo mismo: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: Esta declaración recoge rendimientos
         del capital mobiliario del ahorro, pero no consta ninguna retención soportada.
         Introduce el importe del certificado de retenciones e ingresos a cuenta de
@@ -2414,6 +2526,13 @@ application:
         para todos los periodos que no hubo retenciones. Registra las percepciones
         de cada perceptor en el detalle de este modelo, o confirma cada periodo en
         tu perfil.'
+      xml_required_content_missing: El esquema oficial exige la casilla %{box} y no
+        tiene valor, así que la exportación rechazaría esta declaración.
+      xml_return_not_rendered: No se puede generar el fichero de la declaración a
+        partir de este cálculo, así que la exportación lo rechazaría. Revisa tus datos
+        identificativos y las cifras de la declaración.
+      xml_value_refused: La casilla %{box} tiene un valor que el esquema oficial no
+        admite, así que la exportación rechazaría esta declaración.
     help:
       constraint:
         at_least: Como mínimo {minimum}.
@@ -2494,10 +2613,44 @@ application:
           canal decimal %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el origen de valor %{binding_id}
           resolvió a booleano; los booleanos no son claves válidas.
+    projection_words:
+      binding_unresolved: No se ha podido sacar ningún valor para esta cifra a partir
+        de tus registros, así que queda sin resolver en lugar de contar como cero.
+        Registra la evidencia que falta y vuelve a proyectar.
+      casilla_reason:
+        m210_baseline_tipo_deferred: Esta casilla necesita el tipo de gravamen general
+          de esta clase de renta, que aún no está fundamentado para el ejercicio,
+          así que no tiene valor.
+        m210_convenio_rate_missing: Esta casilla necesita el tipo del convenio para
+          evitar la doble imposición según el país y la clase de renta, que no está
+          disponible, así que no tiene valor.
+        other: Esta casilla no se ha podido calcular, así que no tiene valor. Nunca
+          se muestra como cero.
+        unresolved_operand: Esta casilla suma o lee una cifra que todavía no tiene
+          valor, así que tampoco lo tiene ella. Nunca se muestra como cero.
+        waived_refund_result_unsupported: Todavía no se admite el resultado cuando
+          renuncias a cobrar la devolución, así que esta casilla no tiene valor. Nunca
+          se muestra como cero.
     quickfile:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
+    taxation_comparison_words:
+      below_materiality: Los dos resultados difieren en {difference}, menos de {threshold},
+        así que da igual cuál de las dos modalidades elijas.
+      conjunta_lower_result: 'La tributación conjunta sale más barata: tu resultado
+        es {conjunta} en conjunta y {individual} en individual, una diferencia de
+        {difference}.'
+      individual_branch_caveat: La cifra individual es una única declaración calculada
+        con los datos conjuntos de toda tu unidad familiar, así que solo es fiable
+        cuando una sola persona aporta los ingresos del hogar. No calcula dos declaraciones
+        separadas, una con los ingresos de cada cónyuge, y esa comparación todavía
+        no está disponible. Si en tu unidad familiar hay dos personas con ingresos,
+        toma la cifra individual como una orientación aproximada, no como el importe
+        que debes presentar.
+      individual_lower_result: 'La tributación individual sale más barata: tu resultado
+        es {individual} en individual y {conjunta} en conjunta, una diferencia de
+        {difference}.'
     value_date:
       month_01: ene
       month_02: feb
@@ -2547,6 +2700,7 @@ application:
           el detalle de este modelo, o confirma cada periodo en tu perfil.
         enter_payee_payments: Introduce las percepciones de cada perceptor en el detalle
           de este modelo y vuelve a comprobar.
+        enter_required_statement: Rellena esta casilla y vuelve a calcular.
         enter_withholding_certificate: Introduce la retención que figura en el certificado
           de retenciones e ingresos a cuenta de tu pagador y vuelve a calcular.
         file_another_way: Cadrumo todavía no puede preparar esta declaración para
@@ -2562,6 +2716,9 @@ application:
           rentas exentas o por debajo del umbral de retención.
         settle_earlier_declaration: Resuelve primero la declaración del periodo anterior
           y vuelve a calcular.
+        shared_box_awaits_review: 'Cadrumo aún no puede exportar esta casilla. No
+          la vacíes para continuar: presenta esta declaración con otra herramienta
+          o espera a que se revisen sus celdas.'
       inspection_heading: Todas las casillas, por número de casilla
       unnamed_box: Casilla sin nombre
   operations:
@@ -2580,17 +2737,9 @@ application:
       holiday_coverage:
         calendar_unavailable: calendario de festivos no disponible; el plazo original
           no se ha comprobado
-        national_and_territory: festivos nacionales y de %{territory} comprobados;
-          festivos locales sin comprobar
-        national_and_territory_without_name: festivos nacionales y autonómicos aplicables
-          comprobados; festivos locales sin comprobar
-        national_only: solo festivos nacionales; festivos autonómicos y locales sin
-          comprobar
+        national_only: sábados, domingos y días inhábiles nacionales comprobados;
+          los festivos autonómicos y locales no mueven el plazo de presentación
         not_shifted: el plazo de este modelo no se traslada por días inhábiles
-        territory_unverified: solo festivos nacionales; los festivos autonómicos de
-          %{territory} de este año no se han comprobado y los locales no se comprueban
-        territory_unverified_without_name: solo festivos nacionales; el calendario
-          autonómico aplicable no está verificado; los festivos locales no se comprueban
       shift:
         business_day: Día hábil
         calendar_unavailable: Calendario no disponible
@@ -2891,6 +3040,24 @@ application:
             traducir a una fórmula de hoja de cálculo.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: La fecha de nacimiento del ascendiente %{row}
+        no es una fecha válida; escríbela como año-mes-día.
+      ascendant_birth_date_required: El ascendiente %{row} no tiene fecha de nacimiento,
+        y cada ascendiente necesita una.
+      ascendant_convivientes_invalid: El número de descendientes con los que convive
+        el ascendiente %{row} debe ser un número entero de 0 a %{limit}.
+      ascendant_death_before_birth: El ascendiente %{row} tiene una fecha de fallecimiento
+        anterior a su fecha de nacimiento.
+      ascendant_death_date_invalid: La fecha de fallecimiento del ascendiente %{row}
+        no es una fecha válida; escríbela como año-mes-día.
+      ascendant_fact_unsupported: El ascendiente %{row} indica un dato que el perfil
+        no guarda para un ascendiente.
+      ascendant_limit_unknown: El diseño de la declaración no indica un límite de
+        ascendientes, así que la lista no se puede comprobar ni guardar.
+      ascendant_nif_invalid: El NIF o NIE del ascendiente %{row} no es válido; revisa
+        sus letras y cifras.
+      ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
+        y se han indicado %{count}.
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
         que no puede confirmarse que corresponda a este perfil.
       censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
@@ -2958,6 +3125,18 @@ application:
         escribió nada.
       row_unknown_field: 'La sección ''%{section}'' no declara estos campos: %{unknown}.
         Campos disponibles: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Fecha de nacimiento
+        convivientes:
+          label: Número de descendientes con los que convive este ascendiente
+        fallecimiento:
+          help: Déjalo en blanco si este ascendiente no ha fallecido.
+          label: Fecha de fallecimiento
+        nif:
+          label: NIF/NIE del ascendiente (déjalo en blanco si no tiene)
+      incomplete: '{stated} indicadas, {recorded} registradas'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'

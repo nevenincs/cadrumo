@@ -350,21 +350,30 @@ def _identity_candidates(
         # printed token (the anchor was never offered, or the check refused it)
         # the heading is attached to nothing, and admitting it would let the
         # value stand as its own anchor.
-        anchor_is_printed = anchor is not None and bool(anchor.strip())
         candidates.append(
             IdentityCandidate(
                 value=value,
                 anchor=anchor,
-                role_evidence=(
-                    claimed
-                    if anchor_is_printed
-                    and (claimed is not None and claimed)
-                    and printed_excerpt_occurs(claimed, transcription=transcription)
-                    else ""
-                ),
+                role_evidence=_printed_role_evidence(anchor, claimed, transcription=transcription),
             ),
         )
     return tuple(candidates)
+
+
+def _printed_role_evidence(
+    anchor: str | None,
+    claimed: str | None,
+    *,
+    transcription: DocumentTranscription,
+) -> str:
+    """Return the claimed role evidence only when its anchor and excerpt are both printed."""
+    if anchor is None or not anchor.strip():
+        return ""
+    if claimed is None or not claimed:
+        return ""
+    if printed_excerpt_occurs(claimed, transcription=transcription):
+        return claimed
+    return ""
 
 
 def _reading_origin(envelopes: tuple[FieldProvenance, ...]) -> FieldOrigin:

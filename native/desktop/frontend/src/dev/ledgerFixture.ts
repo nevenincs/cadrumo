@@ -8,7 +8,10 @@
 // with the digest of the review the page read. What it answers is design and
 // test evidence only. Its call lines name a definition, never a value.
 
+import { answerInvoiceDuplicate } from "./ledgerDuplicateFixture";
 import { answerRuleTrial } from "./ledgerRuleTrialFixture";
+import { answerInvoiceMatch } from "./ledgerInvoiceMatchFixture";
+import { answerSplitCheck } from "./ledgerSplitCheckFixture";
 import { isClassification, isDirection } from "../shell/ledgerContract";
 import {
   isLedgerDefinition,
@@ -32,6 +35,9 @@ import {
   type LedgerSortField,
   type LedgerTransaction,
   type PublicPeriod,
+  type LedgerInvoiceDuplicateRequest,
+  type LedgerInvoiceMatchRequest,
+  type LedgerSplitCheckRequest,
   type LedgerStagedCheckRequest,
 } from "../shell/ledger";
 import {
@@ -134,6 +140,13 @@ const CANCEL_SETTLE_MS = 40;
 
 declare global {
   interface Window {
+    /** The active synthetic ledger port, for controlled transport delays. */
+    __fixtureLedger?: LedgerPort;
+    /** File transport hooks also reached through copied host methods. */
+    __fixtureLedgerFiles?: {
+      picked?: (picks: FilePicks) => Promise<FilePicks>;
+      forgotten?: (tokens: FileToken[]) => void;
+    };
     /** Controls for what the scenario's ledger cannot get from a person. */
     __scenarioLedger?: {
       /** Drops files with these names on the window. */
@@ -1975,6 +1988,30 @@ export function ledgerFixture(options: Options): LedgerPort {
       if (!answer) throw new Error("unrecorded rule trial");
       return answer as unknown as JsonObject;
     },
+    "ledger.invoice.duplicate": (request) =>
+      answerInvoiceDuplicate(
+        request as unknown as LedgerInvoiceDuplicateRequest,
+        ledger.invoices,
+        LEDGER_FIXTURE_PROFILE_ID,
+      ) as unknown as JsonObject,
+    "ledger.invoice.match": (request) =>
+      answerInvoiceMatch(
+        request as unknown as LedgerInvoiceMatchRequest,
+        ledger.movements,
+        ledger.invoices,
+        LEDGER_FIXTURE_PROFILE_ID,
+      ) as unknown as JsonObject,
+    "ledger.split.check": (request) => {
+      const movement = ledger.movements.find(
+        (each) => each.transaction.transaction_id === request.transaction_id,
+      );
+      if (!movement) throw new Error("no such movement to split");
+      return answerSplitCheck(
+        movement.transaction.amount,
+        request.parts as LedgerSplitCheckRequest["parts"],
+        LEDGER_FIXTURE_PROFILE_ID,
+      ) as unknown as JsonObject;
+    },
     "ledger.staged.check": (request) => {
       const answer = answerStagedCheck(
         request as unknown as LedgerStagedCheckRequest,
@@ -2327,8 +2364,9 @@ export function ledgerFixture(options: Options): LedgerPort {
     }
   }
 
-  return {
+  const port: LedgerPort = {
     async submit(definition, payload) {
+      window.__fixtureLedger = port;
       const outcome = await run(definition, payload);
       return outcome as LedgerOutcome<LedgerResult<typeof definition>>;
     },
@@ -2493,15 +2531,21 @@ export function ledgerFixture(options: Options): LedgerPort {
       say(`ledger pickFiles ${purpose} ${pick}`);
       await answer();
       const offered = PICKABLE[purpose];
-      return take(pick === "file" ? offered.slice(0, 1) : offered, purpose);
+      const picks = take(
+        pick === "file" ? offered.slice(0, 1) : offered,
+        purpose,
+      );
+      return window.__fixtureLedgerFiles?.picked?.(picks) ?? picks;
     },
     async saveFile(format, _filterLabel, suggestedName) {
       say(`ledger saveFile ${format}`);
       await answer();
       const name = suggestedName ?? `movimientos-2026.${format}`;
-      return name.split(".").pop() === format
-        ? take([name], "export")
-        : { files: [], refused: 1 };
+      const picks =
+        name.split(".").pop() === format
+          ? take([name], "export")
+          : { files: [], refused: 1 };
+      return window.__fixtureLedgerFiles?.picked?.(picks) ?? picks;
     },
     async revealFile(token) {
       say("ledger revealFile");
@@ -2513,6 +2557,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     },
     async forgetFiles(tokens) {
       say("ledger forgetFiles");
+      window.__fixtureLedgerFiles?.forgotten?.(tokens);
       tokens.forEach((token) => {
         files.delete(token);
         written.delete(token);
@@ -2561,6 +2606,7 @@ export function ledgerFixture(options: Options): LedgerPort {
       }
     },
   };
+  return port;
 }
 
 /** A blank imported movement the import fills in. */

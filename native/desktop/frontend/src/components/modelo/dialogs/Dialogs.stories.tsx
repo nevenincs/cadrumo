@@ -21,6 +21,7 @@ const READ_WAIT = 15_000;
 
 const M130 = "modelo-130-1T";
 const M303 = "modelo-303-1T";
+const M100 = "modelo-100-0A";
 
 const meta: Meta = {
   title: "Modelo/Review and filing",
@@ -243,4 +244,33 @@ export const FilingCutoffUnverified: Story = {
       { timeout: READ_WAIT },
     );
   },
+};
+
+export const FilingElectionsRenta: Story = {
+  name: "Export and record · 100 checked, result to pay, asking its elections",
+  render: (_, { globals }) => (
+    <Filing
+      locale={globals.locale}
+      declaration={`${M100}-pay`}
+      adjust={checked}
+    />
+  ),
+};
+
+export const FilingRentaToRefund: Story = {
+  name: "Export and record · 100 checked, result to refund, nothing to elect",
+  render: (_, { globals }) => (
+    <Filing
+      locale={globals.locale}
+      declaration={`${M100}-refund`}
+      adjust={checked}
+    />
+  ),
+};
+
+export const FilingRentaHeld: Story = {
+  name: "Export and record · 100 whose credits are unresolved",
+  render: (_, { globals }) => (
+    <Filing locale={globals.locale} declaration={M100} />
+  ),
 };

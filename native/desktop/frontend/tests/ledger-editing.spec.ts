@@ -8,10 +8,8 @@ import {
   clearRefusal,
   columnField,
   copyCell,
-  decimalDistance,
   draftField,
   heldUnits,
-  linkMismatches,
   linksReady,
   lockReason,
   outcomeTally,
@@ -24,7 +22,10 @@ import {
   type ChoiceLabels,
   type EditSubject,
 } from "../src/components/ledger/editing/editingModel";
-import type { CatalogueInvoice, LedgerRow } from "../src/shell/ledger";
+import type {
+  LedgerInvoiceMatchMismatch,
+  LedgerRow,
+} from "../src/shell/ledger";
 import type { StepReport } from "../src/shell/ledgerApply";
 import {
   EMPTY_STAGE,
@@ -474,50 +475,28 @@ test("a change elsewhere asks only when it touched a field the person changed", 
   ).toEqual([]);
 });
 
-test("a permanent link names how its sides differ and needs a second tick for it", () => {
-  const row = movement(A, {
-    amount: "72.60",
-    counterparty: "Arroyo Asesores SL",
-  });
-  const invoice = {
-    invoice_id: "inv",
-    invoice_number: "GT-2026-0917",
-    grand_total: { decimal: "1548.80" },
-    currency: "EUR",
-    counterparty_name: "Imprenta Gráficas Turia SL",
-    linked_transaction_ids: [B],
-  } as unknown as CatalogueInvoice;
-  const mismatches = linkMismatches(row, invoice);
-  expect(mismatches).toEqual([
-    { kind: "amount", difference: "1476.2" },
-    { kind: "counterparty" },
-    { kind: "linked_elsewhere", count: 1 },
-  ]);
-  const same = linkMismatches(
-    movement(A, { amount: "1548.8", counterparty: "Imprenta Graficas Turia" }),
-    { ...invoice, linked_transaction_ids: [A] },
-  );
-  expect(same).toEqual([]);
-  // A movement in another currency differs in its currency, not by an
-  // amount: the two numbers have no difference to state.
-  const foreign = linkMismatches(
-    movement(A, {
-      amount: "1548.80",
-      currency: "USD",
-      counterparty: "Imprenta Graficas Turia",
+test("a permanent link needs a second tick for what the ledger found against it, and waits for the ledger to say", () => {
+  const none = { difference: null, movement: null, invoice: null, count: null };
+  const found: LedgerInvoiceMatchMismatch[] = [
+    { ...none, kind: "amount", difference: { decimal: "1476.20" } },
+    { ...none, kind: "counterparty" },
+    { ...none, kind: "linked_elsewhere", count: 1 },
+  ];
+  const foreign: LedgerInvoiceMatchMismatch[] = [
+    { ...none, kind: "currency", movement: "USD", invoice: "EUR" },
+  ];
+  // With no judgement yet nothing is ready, however many ticks are given.
+  expect(
+    linksReady([{ id: "u", mismatches: null }], {
+      u: { sure: true, differ: true },
     }),
-    { ...invoice, linked_transaction_ids: [A] },
-  );
-  expect(foreign).toEqual([
-    { kind: "currency", movement: "USD", invoice: "EUR" },
-  ]);
+  ).toBe(false);
   expect(
     linksReady([{ id: "f", mismatches: foreign }], {
       f: { sure: true, differ: false },
     }),
   ).toBe(false);
-  expect(decimalDistance("10", "12.5")).toBe("2.5");
-  const links = [{ id: "l", mismatches }];
+  const links = [{ id: "l", mismatches: found }];
   expect(linksReady(links, {})).toBe(false);
   expect(linksReady(links, { l: { sure: true, differ: false } })).toBe(false);
   expect(linksReady(links, { l: { sure: true, differ: true } })).toBe(true);

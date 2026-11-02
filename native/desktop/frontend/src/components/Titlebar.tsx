@@ -18,17 +18,21 @@ export function Titlebar({
   children,
   onFailure,
   guardClose,
+  onPresentation,
 }: {
   host: Host;
   children: ReactNode;
   onFailure: () => void;
   /** Asks first where closing would drop the window's unsaved work. */
   guardClose?: (proceed: () => void) => void;
+  onPresentation?: (state: WindowPresentation) => void;
 }) {
   const t = useStrings();
   const [state, setState] = useState<WindowPresentation | null>(null);
   const fail = useRef(onFailure);
   fail.current = onFailure;
+  const present = useRef(onPresentation);
+  present.current = onPresentation;
   const native = host.window;
   useEffect(() => {
     if (!native) return;
@@ -36,7 +40,10 @@ export function Titlebar({
     let stop: (() => void) | undefined;
     void native
       .observe((next) => {
-        if (active) setState(next);
+        if (active) {
+          setState(next);
+          present.current?.(next);
+        }
       })
       .then(
         (close) => {

@@ -37,6 +37,8 @@ reviewed_at = 2026-08-16
 family_storage_baseline = "2022"
 scoped_families = ["workbook_parity_refs"]
 
+family_disposition_removals = ["bindings"]
+
 [revisions."2023-2024".family_dispositions.credit_reconciliation]
 reason = """
 The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This informative return states the withholding an entity in attribution of income bore, for attribution to its members. The entity credits nothing here; each member credits its share on the member's own Modelo 100."""

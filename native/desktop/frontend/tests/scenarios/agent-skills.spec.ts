@@ -1,6 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import {
   FIXTURE_SKILLS,
+  LONG_SKILL_PATH,
   MANY_FIXTURE_SKILLS,
 } from "../../src/dev/fixtures/agentSkills";
 import {
@@ -202,6 +203,11 @@ test("review shows a skill's description, when it applies, files and SKILL.md", 
     label("desktop.agent.skill_applies_profile_all"),
   );
   await expect(dialog).toContainText("references/casillas.md");
+  const path = dialog.getByText(LONG_SKILL_PATH, { exact: true });
+  await expect(path).toBeVisible();
+  expect(
+    await path.evaluate((node) => node.scrollWidth <= node.clientWidth + 1),
+  ).toBe(true);
   await expect(dialog.getByLabel("SKILL.md")).toContainText(
     "name: cadrumo-iva-trimestral",
   );

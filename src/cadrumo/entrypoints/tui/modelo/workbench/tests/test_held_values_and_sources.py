@@ -27,8 +27,8 @@ from textual.widgets import Static
 
 from ......application.modelo.source_policy import SourceFamily
 from ......application.modelo.value_presentation import absent_value_text
+from ......application.modelo.work_form_declaration_facts import ModeloFormAeatData
 from ......application.modelo.work_form_models import (
-    ModeloFormAeatData,
     ModeloFormEarlierFiling,
     ModeloFormEditability,
     ModeloFormField,

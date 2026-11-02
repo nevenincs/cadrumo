@@ -30,10 +30,15 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from ....domain.modelos.calculation_revision_sources import DISAGREEMENT_REASONS, CalculationSourceIssue
 from ....domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from ....domain.modelos.codes import ModeloCode
-from ....domain.modelos.tests.source_disagreement_support import sample_source_disagreement
+from ....domain.modelos.source_disagreement import (
+    DisagreementDecimalValue,
+    SourceDisagreementEntry,
+    SourceDisagreementFact,
+    SourceDisagreementRole,
+)
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
@@ -44,10 +49,11 @@ from ..declarations_list import DeclarationListGroup, DeclarationListNextStep, D
 from ..declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from ..edit_admission import RESPONSIBLE_OWNER
 from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
+from ..work_form_declaration_facts import ModeloFormCalculationNote
 from ..work_form_findings import ModeloFormAttention
 from ..work_form_header import ModeloFormExportHoldReason, export_hold
 from ..work_form_issue_lines import form_issue_lines
-from ..work_form_models import ModeloFormCalculationNote, ModeloFormCasillaAddressV1, ModeloWorkForm
+from ..work_form_models import ModeloFormCasillaAddressV1, ModeloWorkForm
 from ..work_form_next_step import ModeloFormNextAction, check_count, form_next_step, missing_count, result_fields
 from ..work_form_service import ModeloWorkFormLoadV1
 from ..workbench_projection import project_modelo_workbench_form
@@ -137,15 +143,44 @@ class _Note:
     binding_source: BindingSourceKind | None = None
 
     def issue(self) -> CalculationSourceIssue:
+        disagreement = {"disagreement": _disagreement()} if self.reason in DISAGREEMENT_REASONS else {}
         return CalculationSourceIssue.model_validate(
             {
                 "reason": self.reason,
                 "binding_source": self.binding_source,
                 "message": f"the calculation noticed {self.reason}",
                 "casilla_id": self.casilla_id,
-                "disagreement": sample_source_disagreement() if self.reason == "credit_source_disagreement" else None,
+                **disagreement,
             }
         )
+
+
+def _disagreement() -> SourceDisagreementFact:
+    """An operator value over a different carried one, on a figure the filed return carries."""
+    return SourceDisagreementFact.of(
+        modelo="210",
+        filing_year=2025,
+        period="0A",
+        work_unit_id="e" * 64,
+        registry_revision_id="test",
+        inputs_digest="d" * 64,
+        key="test-carried-binding",
+        value_channel="decimal",
+        reached_casillas=(),
+        sources=(
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.BACKEND,
+                source_family="previous_filing",
+                value=DisagreementDecimalValue.of(Decimal("10.00")),
+            ),
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.CALLER,
+                source_family="operator_input",
+                value=DisagreementDecimalValue.of(Decimal("12.00")),
+            ),
+        ),
+        selected_role=SourceDisagreementRole.CALLER,
+    )
 
 
 def _every_note() -> list[_Note]:

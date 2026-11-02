@@ -56,7 +56,6 @@ def test_the_header_names_the_calendar_rows_date_and_counts_its_days_from_the_sa
                 operation,
                 ModeloCode(entry.modelo),
                 entry.period,
-                holiday_territory=taxpayer.holiday_territory,
                 reference_on=_TODAY,
             )
             assert deadline is not None, f"the workbench reads no deadline for {entry.modelo} {entry.period}"

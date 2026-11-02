@@ -42,6 +42,7 @@ _REPRESENTATION_ONLY: Final = frozenset(
         "family_removals",
         "family_positions",
         "cleared_families",
+        "family_disposition_removals",
         "scoped_families",
     }
 )

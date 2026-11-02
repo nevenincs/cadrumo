@@ -7,10 +7,23 @@ calculation, and the file for the AEAT, like recording the filing, nothing
 that blocks filing or waits to be confirmed, as the header's hold says.
 Recording the filing also refuses while the latest file was made from an
 earlier calculation. Changes a frontend holds unapplied withhold both too; only
-that frontend knows them, so it adds that itself. The payment and refund elections are asked for a
-modelo whose official design declares both carrying a credit forward and
-asking for its refund, which is where the refund election exists; every other
-modelo exports with the neutral defaults. The file format is the one the
+that frontend knows them, so it adds that itself. Each election is asked where
+the modelo's official design declares what it chooses between: the refund and
+prior-domiciliation elections where it declares both carrying a credit forward
+and asking for its refund, the payment election and the account AEAT debits
+where it declares direct debit, the account AEAT pays a refund into where it
+declares a refund, and the two-instalment payment where the registry
+declares the law admits it for the declaration's period. Each question says
+whether the declaration's result makes it available, not applicable or
+unavailable, and why, in the filer's words; accounts are offered by their
+opaque register identity and named only by label and masked number. A result
+to pay or refund is settled from the box the declaration settles, so while that
+box holds no value, or settles another way than the result, the settlement
+questions say so instead of offering an answer. The two-instalment question
+states both instalments of the amount to pay, each marked advisory: the
+registry declares the first instalment's share, but no official rule says
+which instalment a rounded cent belongs to.
+Every other modelo exports with the neutral defaults. The file format is the one the
 revision's registry export layout declares. A declaration recorded as filed
 says whether the AEAT receipt of that filing (its :class:`ModeloRecord`) has been
 verified, and when; the export layout is read from the revision's
@@ -20,28 +33,43 @@ verified, and when; the export layout is read from the revision's
 from __future__ import annotations
 
 from collections.abc import Mapping
+from dataclasses import dataclass
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING, Final, Literal
 
 from pydantic import BaseModel, Field, model_validator
 
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.export_layout_format import ExportLayoutFormat
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
+from ...core.modelo import Modelo
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection
+from ...core.payment_instalment_election import PaymentInstalmentElection, instalment_amounts
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition, result_disposition_declares
+from ...core.time.clock import today_madrid
+from ...domain.calculations.registry.payment_instalment_split import first_instalment_share
+from ...domain.calculations.registry.schema_base import CasillaDataType
 from ...domain.modelos.filing_record import AeatConfirmationState, ModeloRecordStatus
+from ...domain.transactions.own_accounts import OwnAccountRegister, OwnAccountRole, OwnBankAccount
+from .export_settlement import SettlementRefusal, declared_settlement
+from .settlement_casilla import declaration_settlement_casilla_id
+from .value_presentation import format_casilla_value
+from .work_form_declaration_facts import ModeloFormResultDirection
 from .work_form_header import ModeloFormExportHoldReason, export_hold, form_recorded
-from .work_form_models import ModeloWorkForm
+from .work_form_models import ModeloFormCasillaAddressV1, ModeloFormOrigin, ModeloWorkForm
 from .work_form_wording import day_text
 
 if TYPE_CHECKING:
+    from ...core.casilla_id import CasillaId
+    from ...core.period import Period
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ...domain.modelos.filing_record import ModeloRecord
 
@@ -73,6 +101,17 @@ PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS: Final[Mapping[PriorDomiciliationElecti
         PriorDomiciliationElection.CANCEL_OR_MODIFY: "tui.modelo.export.prior_domiciliation_election.cancel_or_modify",
     }
 )
+INSTALMENT_ELECTION_LOCALE_KEYS: Final[Mapping[PaymentInstalmentElection, str]] = MappingProxyType(
+    {member: f"tui.modelo.export.instalment_election.{member.value}" for member in PaymentInstalmentElection}
+)
+_INSTALMENT_CONDITIONS_LOCALE_KEY: Final = "tui.modelo.export.instalment_election.conditions"
+_FIRST_INSTALMENT_LOCALE_KEY: Final = "workspace.modelo.export.instalment.first"
+_SECOND_INSTALMENT_LOCALE_KEY: Final = "workspace.modelo.export.instalment.second"
+_INSTALMENT_ADVISORY_LOCALE_KEY: Final = "workspace.modelo.export.instalment.advisory"
+_CHARGE_ACCOUNT_LOCALE_KEY: Final = "tui.modelo.export.account.charge_label"
+_REFUND_ACCOUNT_LOCALE_KEY: Final = "tui.modelo.export.account.refund_label"
+_ACCOUNT_CHOICE_LOCALE_KEY: Final = "workspace.modelo.export.account_choice"
+_DEBIT_ACCOUNT_COUNTRY: Final = "ES"
 _FILE_FORMAT_LOCALE_KEYS: Final[Mapping[ExportLayoutFormat, str]] = MappingProxyType(
     {
         layout_format: f"workspace.modelo.export.file_format.{layout_format.value}"
@@ -89,6 +128,76 @@ class ModeloFormElection(StrEnum):
     REFUND = "refund"
     PAYMENT = "payment"
     PRIOR_DOMICILIATION = "prior_domiciliation"
+    #: Whether a result to pay is paid at once or in two instalments, and how the second is paid.
+    INSTALMENT = "instalment"
+    #: Which own account AEAT debits for a direct-debited payment.
+    CHARGE_ACCOUNT = "charge_account"
+    #: Which own account AEAT pays a refund into.
+    REFUND_ACCOUNT = "refund_account"
+
+
+#: The export request field each election's answer is sent in.
+type ModeloExportRequestField = Literal[
+    "refund_election",
+    "payment_election",
+    "prior_domiciliation_election",
+    "instalment_election",
+    "charge_account_id",
+    "refund_account_id",
+]
+
+_REQUEST_FIELDS: Final[Mapping[ModeloFormElection, ModeloExportRequestField]] = MappingProxyType(
+    {
+        ModeloFormElection.REFUND: "refund_election",
+        ModeloFormElection.PAYMENT: "payment_election",
+        ModeloFormElection.PRIOR_DOMICILIATION: "prior_domiciliation_election",
+        ModeloFormElection.INSTALMENT: "instalment_election",
+        ModeloFormElection.CHARGE_ACCOUNT: "charge_account_id",
+        ModeloFormElection.REFUND_ACCOUNT: "refund_account_id",
+    }
+)
+
+
+class ModeloFormElectionState(StrEnum):
+    """Whether the filer can answer an election now."""
+
+    AVAILABLE = "available"
+    #: The declaration's result makes the election meaningless, so it is not sent.
+    NOT_APPLICABLE = "not_applicable"
+    #: The election would apply, but something stops it being answered now.
+    UNAVAILABLE = "unavailable"
+
+
+class ModeloFormElectionReason(StrEnum):
+    """Why an election is not applicable or cannot be answered now."""
+
+    #: Not applicable: the result is not an amount to pay.
+    NOTHING_TO_PAY = "nothing_to_pay"
+    #: Not applicable: the result is not a refund.
+    NOTHING_TO_REFUND = "nothing_to_refund"
+    #: Unavailable: the declaration has no calculated result yet.
+    RESULT_UNKNOWN = "result_unknown"
+    #: Unavailable: a corrective declaration cannot be paid in two instalments.
+    AMENDMENT = "amendment"
+    #: Unavailable: the filing period has ended, and two instalments need the return filed within it.
+    PAST_FILING_WINDOW = "past_filing_window"
+    #: Unavailable: the filing period is not known, so filing within it cannot be established.
+    FILING_WINDOW_UNKNOWN = "filing_window_unknown"
+    #: Unavailable: no own account is open to receive a refund.
+    NO_OPEN_ACCOUNT = "no_open_account"
+    #: Unavailable: no open Spanish own account can be debited.
+    NO_SPANISH_ACCOUNT = "no_spanish_account"
+    #: Unavailable: the amount the declaration settles goes another way than its result, such as a
+    #: result to pay of which nothing remains to pay, and the official design gives no settlement for it.
+    SETTLEMENT_UNSUPPORTED = "settlement_unsupported"
+
+
+_NOT_APPLICABLE_REASONS: Final = frozenset(
+    {ModeloFormElectionReason.NOTHING_TO_PAY, ModeloFormElectionReason.NOTHING_TO_REFUND},
+)
+_ELECTION_REASON_LOCALE_KEYS: Final[Mapping[ModeloFormElectionReason, str]] = MappingProxyType(
+    {reason: f"workspace.modelo.export.election.{reason.value}" for reason in ModeloFormElectionReason}
+)
 
 
 class ModeloFormUnavailable(StrEnum):
@@ -143,20 +252,82 @@ class ModeloFormElectionChoice(BaseModel):
     words: str = Field(min_length=1)
 
 
+class ModeloFormInstalment(StrEnum):
+    """One instalment of an amount to pay in two."""
+
+    FIRST = "first"
+    SECOND = "second"
+
+
+class ModeloFormElectionFigure(BaseModel):
+    """One amount an election states, in the filer's words, and whether it is advisory.
+
+    ``amount`` is the exact decimal text of a non-negative amount in cents, so
+    the served contract carries the figure as written rather than a number a
+    reader may round. An advisory figure is one Cadrumo works out where no
+    official rule fixes it; ``advisory_words`` then says why, and only then.
+    """
+
+    model_config = STRICT_FROZEN_CONFIG
+
+    instalment: ModeloFormInstalment
+    amount: str = Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)
+    words: str = Field(min_length=1)
+    advisory: bool
+    advisory_words: str | None = None
+
+    @model_validator(mode="after")
+    def _advisory_says_why(self) -> ModeloFormElectionFigure:
+        if try_parse_canonical_decimal(self.amount, signed=False, max_fraction_digits=2) is None:
+            raise ValueError("a figure's amount is the decimal text of a non-negative amount in cents")
+        if self.advisory is (self.advisory_words is None):
+            raise ValueError("an advisory figure carries its words, and only an advisory one")
+        return self
+
+
 class ModeloFormElectionQuestion(BaseModel):
-    """One election the export asks, pre-set to its neutral default and never blank."""
+    """One election the export asks, its state, and its answers pre-set to the neutral default.
+
+    An available question carries its choices; its ``default`` is one of them,
+    or ``None`` when no answer is neutral (an account nothing designates), and
+    the export then resolves the register's designation. A question that is not
+    applicable or unavailable carries its reason and its words instead, no
+    choices and no default, and is not sent. ``request_field`` is the export
+    request field an answer is sent in.
+    """
 
     model_config = STRICT_FROZEN_CONFIG
 
     election: ModeloFormElection
+    request_field: ModeloExportRequestField
     words: str = Field(min_length=1)
-    default: str = Field(min_length=1)
-    choices: tuple[ModeloFormElectionChoice, ...] = Field(min_length=1)
+    state: ModeloFormElectionState = ModeloFormElectionState.AVAILABLE
+    reason: ModeloFormElectionReason | None = None
+    #: Why the question is not applicable or unavailable, in the filer's words.
+    state_words: str | None = None
+    #: The conditions an answer carries, in the filer's words, where the law attaches any.
+    help: str | None = None
+    default: str | None = None
+    choices: tuple[ModeloFormElectionChoice, ...] = ()
+    #: The amounts an available answer states, such as the two instalments of a split payment.
+    figures: tuple[ModeloFormElectionFigure, ...] = ()
 
     @model_validator(mode="after")
-    def _default_is_a_choice(self) -> ModeloFormElectionQuestion:
-        if self.default not in {choice.value for choice in self.choices}:
-            raise ValueError("an election's default must be one of its choices")
+    def _state_shapes_the_question(self) -> ModeloFormElectionQuestion:
+        if self.request_field != _REQUEST_FIELDS[self.election]:
+            raise ValueError("an election is sent in its own request field")
+        if self.figures and self.state is not ModeloFormElectionState.AVAILABLE:
+            raise ValueError("only an available election states figures")
+        if self.state is ModeloFormElectionState.AVAILABLE:
+            if self.reason is not None or self.state_words is not None or not self.choices:
+                raise ValueError("an available election carries choices and no reason")
+            if self.default is not None and self.default not in {choice.value for choice in self.choices}:
+                raise ValueError("an election's default must be one of its choices")
+            return self
+        if self.reason is None or self.state_words is None or self.choices or self.default is not None:
+            raise ValueError("an election that cannot be answered carries its reason and words, and no choices")
+        if (self.reason in _NOT_APPLICABLE_REASONS) is not (self.state is ModeloFormElectionState.NOT_APPLICABLE):
+            raise ValueError("an election's reason matches its state")
         return self
 
 
@@ -219,15 +390,42 @@ class ModeloFormReceipt(BaseModel):
         return self
 
 
-def asks_export_elections(modelo: str) -> bool:
-    """Whether exporting ``modelo`` asks the payment and refund elections.
-
-    The refund election chooses between carrying a credit forward and asking
-    for its refund, so it exists where the official design declares both.
-    """
+def _declares_refund_or_carry(modelo: str) -> bool:
     return result_disposition_declares(modelo, ResultDisposition.COMPENSACION) and result_disposition_declares(
         modelo, ResultDisposition.DEVOLUCION
     )
+
+
+def _instalment_share(modelo: str, period: Period) -> Decimal | None:
+    return first_instalment_share(modelo, period_day=period.end_date)
+
+
+def asks_export_elections(modelo: str, period: Period) -> bool:
+    """Whether exporting ``modelo`` for ``period`` asks how its result settles.
+
+    The refund election chooses between carrying a credit forward and asking
+    for its refund, so it exists where the official design declares both; the
+    two-instalment payment exists where the registry declares the law admits
+    it for the period. Either makes the export ask its settlement elections.
+    """
+    return _declares_refund_or_carry(modelo) or _instalment_share(modelo, period) is not None
+
+
+def _asked_elections(modelo: str, period: Period) -> tuple[ModeloFormElection, ...]:
+    """The elections exporting ``modelo`` asks, each where its design declares what it chooses between."""
+    if not asks_export_elections(modelo, period):
+        return ()
+    carry = _declares_refund_or_carry(modelo)
+    debit = result_disposition_declares(modelo, ResultDisposition.DOMICILIACION)
+    asked = {
+        ModeloFormElection.REFUND: carry,
+        ModeloFormElection.PAYMENT: debit,
+        ModeloFormElection.PRIOR_DOMICILIATION: carry,
+        ModeloFormElection.INSTALMENT: _instalment_share(modelo, period) is not None,
+        ModeloFormElection.CHARGE_ACCOUNT: debit,
+        ModeloFormElection.REFUND_ACCOUNT: result_disposition_declares(modelo, ResultDisposition.DEVOLUCION),
+    }
+    return tuple(election for election, is_asked in asked.items() if is_asked)
 
 
 def revision_file_format(snapshot: RegistrySnapshot) -> ExportLayoutFormat | None:
@@ -241,16 +439,318 @@ def revision_file_format(snapshot: RegistrySnapshot) -> ExportLayoutFormat | Non
 
 
 def _question[ElectionT: StrEnum](
-    election: ModeloFormElection, keys: Mapping[ElectionT, str], default: ElectionT, locale: str
+    election: ModeloFormElection,
+    keys: Mapping[ElectionT, str],
+    default: ElectionT,
+    locale: str,
+    *,
+    held: ModeloFormElectionReason | None = None,
+    help_key: str | None = None,
+    figures: tuple[ModeloFormElectionFigure, ...] = (),
 ) -> ModeloFormElectionQuestion:
+    words = tr(f"tui.modelo.export.{election.value}_election.label", locale=locale)
+    help_words = None if help_key is None else tr(help_key, locale=locale)
+    if held is not None:
+        return _held_question(election, words, held, locale, help_words=help_words)
     return ModeloFormElectionQuestion(
         election=election,
-        words=tr(f"tui.modelo.export.{election.value}_election.label", locale=locale),
+        request_field=_REQUEST_FIELDS[election],
+        words=words,
+        help=help_words,
         default=default.value,
         choices=tuple(
             ModeloFormElectionChoice(value=member.value, words=tr(key, locale=locale)) for member, key in keys.items()
         ),
+        figures=figures,
     )
+
+
+def _held_question(
+    election: ModeloFormElection,
+    words: str,
+    reason: ModeloFormElectionReason,
+    locale: str,
+    *,
+    help_words: str | None = None,
+) -> ModeloFormElectionQuestion:
+    not_applicable = reason in _NOT_APPLICABLE_REASONS
+    return ModeloFormElectionQuestion(
+        election=election,
+        request_field=_REQUEST_FIELDS[election],
+        words=words,
+        state=ModeloFormElectionState.NOT_APPLICABLE if not_applicable else ModeloFormElectionState.UNAVAILABLE,
+        reason=reason,
+        state_words=tr(_ELECTION_REASON_LOCALE_KEYS[reason], locale=locale),
+        help=help_words,
+    )
+
+
+def _account_question(
+    election: ModeloFormElection,
+    accounts: tuple[OwnBankAccount, ...],
+    designated: OwnBankAccount | None,
+    locale: str,
+    *,
+    held: ModeloFormElectionReason | None,
+    none_open: ModeloFormElectionReason,
+) -> ModeloFormElectionQuestion:
+    """Offer the open own accounts by opaque identity, named by label and masked number only."""
+    label_key = (
+        _CHARGE_ACCOUNT_LOCALE_KEY if election is ModeloFormElection.CHARGE_ACCOUNT else _REFUND_ACCOUNT_LOCALE_KEY
+    )
+    words = tr(label_key, locale=locale)
+    reason = held if held is not None else (none_open if not accounts else None)
+    if reason is not None:
+        return _held_question(election, words, reason, locale)
+    choices = tuple(
+        ModeloFormElectionChoice(
+            value=account.own_account_id,
+            words=tr(_ACCOUNT_CHOICE_LOCALE_KEY, label=account.label, account=account.masked_iban, locale=locale),
+        )
+        for account in accounts
+    )
+    offered = {account.own_account_id for account in accounts}
+    default = designated.own_account_id if designated is not None and designated.own_account_id in offered else None
+    return ModeloFormElectionQuestion(
+        election=election, request_field=_REQUEST_FIELDS[election], words=words, default=default, choices=choices
+    )
+
+
+def _result_direction(form: ModeloWorkForm) -> ModeloFormResultDirection:
+    result = form.result
+    if form.calculation_revision_id is None or result is None:
+        return ModeloFormResultDirection.UNKNOWN
+    return result.direction
+
+
+_ABSENT_VALUE_ORIGINS: Final = frozenset(
+    {
+        ModeloFormOrigin.NOT_APPLICABLE,
+        ModeloFormOrigin.NOT_CALCULATED_YET,
+        ModeloFormOrigin.CALCULATION_FAILED,
+        ModeloFormOrigin.CLEARED,
+        ModeloFormOrigin.NOT_IMPORTED_YET,
+    }
+)
+_SETTLEMENT_REASONS: Final[Mapping[SettlementRefusal, ModeloFormElectionReason]] = MappingProxyType(
+    {
+        SettlementRefusal.RESULT_UNKNOWN: ModeloFormElectionReason.RESULT_UNKNOWN,
+        SettlementRefusal.SETTLEMENT_UNSUPPORTED: ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED,
+    }
+)
+
+
+@dataclass(frozen=True, slots=True)
+class _Settlement:
+    """The amount the declaration settles as its form shows it, or why the settlement cannot be answered."""
+
+    amount: Decimal | None
+    held: ModeloFormElectionReason | None
+
+
+def _form_values(form: ModeloWorkForm) -> dict[CasillaId, object]:
+    """Every box the form shows a value for; a box that could not be worked out holds none."""
+    return {
+        field.address.casilla_id: field.value
+        for field in form.fields()
+        if isinstance(field.address, ModeloFormCasillaAddressV1)
+        and field.value is not None
+        and field.origin not in _ABSENT_VALUE_ORIGINS
+    }
+
+
+def _settlement(modelo: str, snapshot: RegistrySnapshot, form: ModeloWorkForm) -> _Settlement:
+    """The settled amount, read as the export reads it, where the revision names a box it settles."""
+    result = form.result
+    if (
+        form.calculation_revision_id is None
+        or result is None
+        or declaration_settlement_casilla_id(modelo, snapshot.revision) is None
+    ):
+        return _Settlement(None, None)
+    settled = declared_settlement(modelo, snapshot.revision, _form_values(form), disposition=result.disposition)
+    if settled.refusal is not None:
+        return _Settlement(None, _SETTLEMENT_REASONS[settled.refusal])
+    return _Settlement(settled.amount, None)
+
+
+def _payable(form: ModeloWorkForm, settlement: _Settlement) -> ModeloFormElectionReason | None:
+    """Why the result is not one to pay, or its settlement cannot be answered, or ``None`` when it can."""
+    direction = _result_direction(form)
+    if direction is ModeloFormResultDirection.UNKNOWN:
+        return ModeloFormElectionReason.RESULT_UNKNOWN
+    if direction is ModeloFormResultDirection.TO_PAY:
+        return settlement.held
+    return ModeloFormElectionReason.NOTHING_TO_PAY
+
+
+def _refundable(form: ModeloWorkForm, settlement: _Settlement) -> ModeloFormElectionReason | None:
+    """Why AEAT would not pay the result out, or ``None`` when it would or the refund election can make it."""
+    direction = _result_direction(form)
+    if direction is ModeloFormResultDirection.UNKNOWN:
+        return ModeloFormElectionReason.RESULT_UNKNOWN
+    result = form.result
+    if direction is ModeloFormResultDirection.TO_REFUND:
+        return settlement.held
+    if result is not None and result.election_may_change:
+        return None
+    return ModeloFormElectionReason.NOTHING_TO_REFUND
+
+
+def _instalment_figures(
+    modelo: str, form: ModeloWorkForm, settlement: _Settlement, language: OutputLanguage
+) -> tuple[ModeloFormElectionFigure, ...]:
+    """Both instalments of the amount to pay, each advisory because no official rule rounds the cent."""
+    share = _instalment_share(modelo, form.period)
+    amount = settlement.amount
+    if share is None or amount is None or amount <= 0:
+        return ()
+    first, second = instalment_amounts(amount, first_share=share)
+    locale = language.value
+    advisory_words = tr(_INSTALMENT_ADVISORY_LOCALE_KEY, locale=locale)
+    first_percent = (share * 100).normalize()
+    second_percent = ((1 - share) * 100).normalize()
+    return tuple(
+        ModeloFormElectionFigure(
+            instalment=instalment,
+            amount=f"{figure:f}",
+            words=tr(
+                key,
+                share=f"{percent:f}",
+                amount=format_casilla_value(figure, data_type=CasillaDataType.MONEY, language=language),
+                locale=locale,
+            ),
+            advisory=True,
+            advisory_words=advisory_words,
+        )
+        for instalment, key, percent, figure in (
+            (ModeloFormInstalment.FIRST, _FIRST_INSTALMENT_LOCALE_KEY, first_percent, first),
+            (ModeloFormInstalment.SECOND, _SECOND_INSTALMENT_LOCALE_KEY, second_percent, second),
+        )
+    )
+
+
+def _splittable(form: ModeloWorkForm, settlement: _Settlement, *, amended: bool) -> ModeloFormElectionReason | None:
+    """Why the result may not be paid in two instalments, or ``None`` when it may.
+
+    RD 439/2007 art. 62.2, with the conditions the Manual práctico de Renta
+    2025 states: a result to pay, not a corrective declaration, filed within
+    its period.
+    """
+    payable = _payable(form, settlement)
+    if payable is not None:
+        return payable
+    if amended:
+        return ModeloFormElectionReason.AMENDMENT
+    deadline = form.deadline
+    if deadline is None:
+        return ModeloFormElectionReason.FILING_WINDOW_UNKNOWN
+    if deadline.days_overdue is not None:
+        return ModeloFormElectionReason.PAST_FILING_WINDOW
+    return None
+
+
+def _payment_keys(modelo: str) -> Mapping[PaymentElection, str]:
+    """The payment methods ``modelo``'s design declares: the tax current account only where it declares it."""
+    if result_disposition_declares(modelo, ResultDisposition.CUENTA_CORRIENTE_INGRESO):
+        return PAYMENT_ELECTION_LOCALE_KEYS
+    return MappingProxyType(
+        {
+            member: key
+            for member, key in PAYMENT_ELECTION_LOCALE_KEYS.items()
+            if member is not PaymentElection.CUENTA_CORRIENTE
+        }
+    )
+
+
+def _settlement_question(
+    election: ModeloFormElection,
+    modelo: str,
+    form: ModeloWorkForm,
+    language: OutputLanguage,
+    settlement: _Settlement,
+    *,
+    amended: bool,
+) -> ModeloFormElectionQuestion:
+    locale = language.value
+    if election is ModeloFormElection.REFUND:
+        return _question(election, REFUND_ELECTION_LOCALE_KEYS, RefundElection.COMPENSAR, locale)
+    if election is ModeloFormElection.PAYMENT:
+        return _question(
+            election, _payment_keys(modelo), PaymentElection.INGRESO, locale, held=_payable(form, settlement)
+        )
+    if election is ModeloFormElection.PRIOR_DOMICILIATION:
+        return _question(election, PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS, PriorDomiciliationElection.KEEP, locale)
+    held = _splittable(form, settlement, amended=amended)
+    return _question(
+        election,
+        INSTALMENT_ELECTION_LOCALE_KEYS,
+        PaymentInstalmentElection.SINGLE,
+        locale,
+        held=held,
+        help_key=_INSTALMENT_CONDITIONS_LOCALE_KEY,
+        figures=() if held is not None else _instalment_figures(modelo, form, settlement, language),
+    )
+
+
+def _own_account_question(
+    election: ModeloFormElection,
+    modelo: str,
+    form: ModeloWorkForm,
+    locale: str,
+    register: OwnAccountRegister,
+    settlement: _Settlement,
+) -> ModeloFormElectionQuestion:
+    today = today_madrid()
+    open_accounts = tuple(account for account in register.accounts if account.open_on(today))
+    if election is ModeloFormElection.CHARGE_ACCOUNT:
+        # AEAT admits a direct debit here only from a Spanish account.
+        spanish = tuple(account for account in open_accounts if account.country_code == _DEBIT_ACCOUNT_COUNTRY)
+        return _account_question(
+            election,
+            spanish,
+            register.designated(OwnAccountRole.CHARGE, Modelo(modelo)),
+            locale,
+            held=_payable(form, settlement),
+            none_open=ModeloFormElectionReason.NO_SPANISH_ACCOUNT,
+        )
+    return _account_question(
+        election,
+        open_accounts,
+        register.designated(OwnAccountRole.REFUND, Modelo(modelo)),
+        locale,
+        held=_refundable(form, settlement),
+        none_open=ModeloFormElectionReason.NO_OPEN_ACCOUNT,
+    )
+
+
+_ACCOUNT_ELECTIONS: Final = frozenset({ModeloFormElection.CHARGE_ACCOUNT, ModeloFormElection.REFUND_ACCOUNT})
+
+
+def _election_questions(
+    modelo: str,
+    snapshot: RegistrySnapshot,
+    form: ModeloWorkForm,
+    language: OutputLanguage,
+    *,
+    own_accounts: OwnAccountRegister | None,
+    amended: bool,
+) -> tuple[ModeloFormElectionQuestion, ...]:
+    """Every election exporting ``modelo`` asks, in a stable order, with its state for this declaration.
+
+    The account elections are asked only when the register was read.
+    """
+    asked = _asked_elections(modelo, form.period)
+    if not asked:
+        return ()
+    settlement = _settlement(modelo, snapshot, form)
+    questions: list[ModeloFormElectionQuestion] = []
+    for election in asked:
+        if election not in _ACCOUNT_ELECTIONS:
+            questions.append(_settlement_question(election, modelo, form, language, settlement, amended=amended))
+        elif own_accounts is not None:
+            questions.append(_own_account_question(election, modelo, form, language.value, own_accounts, settlement))
+    return tuple(questions)
 
 
 _AVAILABLE: Final = ModeloFormAvailability(available=True)
@@ -340,6 +840,8 @@ def form_export_offer(
     form: ModeloWorkForm,
     verified: bool,
     filed: bool,
+    own_accounts: OwnAccountRegister | None = None,
+    amended: bool = False,
 ) -> ModeloFormExportOffer:
     """What exporting the declaration offers, in ``language``, and what of it can be done now.
 
@@ -350,9 +852,11 @@ def form_export_offer(
         form: The declaration's form.
         verified: Whether the AEAT receipt of the filing is verified.
         filed: Whether the declaration is recorded as filed.
+        own_accounts: The taxpayer's :class:`OwnAccountRegister`; ``None`` asks no account election.
+        amended: Whether the current calculation corrects an earlier filing.
     """
     locale = language.value
-    asks = asks_export_elections(modelo)
+    asks = asks_export_elections(modelo, form.period)
     file_format = revision_file_format(snapshot)
     return ModeloFormExportOffer(
         artefacts=tuple(
@@ -369,20 +873,7 @@ def form_export_offer(
             availability=review_package_availability(form, language, verified=verified),
         ),
         asks_elections=asks,
-        elections=(
-            (
-                _question(ModeloFormElection.REFUND, REFUND_ELECTION_LOCALE_KEYS, RefundElection.COMPENSAR, locale),
-                _question(ModeloFormElection.PAYMENT, PAYMENT_ELECTION_LOCALE_KEYS, PaymentElection.INGRESO, locale),
-                _question(
-                    ModeloFormElection.PRIOR_DOMICILIATION,
-                    PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS,
-                    PriorDomiciliationElection.KEEP,
-                    locale,
-                ),
-            )
-            if asks
-            else ()
-        ),
+        elections=_election_questions(modelo, snapshot, form, language, own_accounts=own_accounts, amended=amended),
         file_format=file_format,
         file_format_words=None if file_format is None else tr(_FILE_FORMAT_LOCALE_KEYS[file_format], locale=locale),
     )
@@ -425,15 +916,21 @@ def form_receipt(
 
 __all__ = [
     "EXPORT_ARTEFACT_LOCALE_KEYS",
+    "INSTALMENT_ELECTION_LOCALE_KEYS",
     "PAYMENT_ELECTION_LOCALE_KEYS",
     "PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS",
     "REFUND_ELECTION_LOCALE_KEYS",
+    "ModeloExportRequestField",
     "ModeloFormArtefactOption",
     "ModeloFormAvailability",
     "ModeloFormElection",
     "ModeloFormElectionChoice",
+    "ModeloFormElectionFigure",
     "ModeloFormElectionQuestion",
+    "ModeloFormElectionReason",
+    "ModeloFormElectionState",
     "ModeloFormExportOffer",
+    "ModeloFormInstalment",
     "ModeloFormReceipt",
     "ModeloFormReviewPackageOffer",
     "ModeloFormUnavailable",

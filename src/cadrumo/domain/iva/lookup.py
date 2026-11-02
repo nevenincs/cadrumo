@@ -2,9 +2,13 @@
 
 :func:`lookup_rate` resolves :class:`EUMemberState` and :class:`IvaRateKind`
 queries into :class:`IvaRateRecord` records projected from governed-fact
-authority results; :func:`rate_table_covers`
-answers whether the table reaches a date at all; :func:`coexisting_tier_rates`
-and :func:`rate_kinds_for_declared_rate` report the tiers a date carries.
+authority results, always answering for a tier the member state has; a read from
+the nearest edition is marked :attr:`IvaRateRecord.published_on_date` ``False``.
+:func:`lookup_published_rate` refuses such a read, for a caller that checks a
+stated figure against the rate: a projected rate prices, it proves nothing.
+:func:`rate_table_covers` answers whether a published rate reaches a date;
+:func:`coexisting_tier_rates` and :func:`rate_kinds_for_declared_rate` report the
+tiers a date carries.
 """
 
 from __future__ import annotations
@@ -13,6 +17,7 @@ from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
+from ..calculations.registry.errors import GovernedFactNotApplicableError
 from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
@@ -37,6 +42,15 @@ if TYPE_CHECKING:
     from ..calculations.registry.facts.variants import GovernedFactVariant
 
 
+def rate_vocabulary_date(on_date: date, operation: PinnedAuthorityOperation) -> date:
+    """Return the coordinate a date's rate vocabulary is read at.
+
+    A rate can be asked for a date older than the filing years; the words naming
+    it are read at the nearest supported edge, never at that date.
+    """
+    return operation.supported_filing_years().date_envelope().clamp_coordinate(on_date)
+
+
 def resolve_iva_rate(
     member_state: EUMemberState,
     kind: IvaRateKind,
@@ -46,10 +60,11 @@ def resolve_iva_rate(
     operation: PinnedAuthorityOperation,
 ) -> ResolvedMappingFact:
     """Resolve one dated IVA rate fact and retain the complete authority provenance."""
-    resolved_member_state = require_eu_member_state(member_state, effective_date=on_date, authority=operation)
-    resolved_kind = require_iva_rate_kind(kind, effective_date=on_date, authority=operation)
+    vocabulary_date = rate_vocabulary_date(on_date, operation)
+    resolved_member_state = require_eu_member_state(member_state, effective_date=vocabulary_date, authority=operation)
+    resolved_kind = require_iva_rate_kind(kind, effective_date=vocabulary_date, authority=operation)
     resolved_role = resolve_iva_rate_role_catalogue(
-        effective_date=on_date,
+        effective_date=vocabulary_date,
         authority=operation,
     ).require(rate_role)
     resolved = operation.resolve_governed_fact(
@@ -91,7 +106,10 @@ def _rate_candidate_exists(
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Separate a genuine absence from an ambiguous authority resolution."""
-    role = resolve_iva_rate_role_catalogue(effective_date=on_date, authority=operation).require(rate_role)
+    role = resolve_iva_rate_role_catalogue(
+        effective_date=rate_vocabulary_date(on_date, operation),
+        authority=operation,
+    ).require(rate_role)
     fact = operation.governed_fact(IVA_RATE_FACT_ID)
     expected = {
         "member_state": member_state.value,
@@ -105,6 +123,25 @@ def _rate_candidate_exists(
         and (variant.valid_to is None or on_date <= variant.valid_to)
         and {selector.name: selector.value for selector in variant.selectors} == expected
         for variant in fact.variants
+    )
+
+
+def _rate_track_exists(
+    member_state: EUMemberState,
+    kind: IvaRateKind,
+    on_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Return whether the member state has this tier's ordinary rate at any date."""
+    role = resolve_iva_rate_role_catalogue(
+        effective_date=rate_vocabulary_date(on_date, operation),
+        authority=operation,
+    ).default_role
+    expected = {"member_state": member_state.value, "kind": kind.value, "rate_role": role.value}
+    return any(
+        {selector.name: selector.value for selector in variant.selectors} == expected
+        for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants
     )
 
 
@@ -154,7 +191,11 @@ def _resolved_rate_variant(
     operation: PinnedAuthorityOperation,
 ) -> ResolvedMappingFact:
     selectors = {selector.name: selector.value for selector in variant.selectors}
-    kind = require_iva_rate_kind(str(selectors["kind"]), effective_date=on_date, authority=operation)
+    kind = require_iva_rate_kind(
+        str(selectors["kind"]),
+        effective_date=rate_vocabulary_date(on_date, operation),
+        authority=operation,
+    )
     return resolve_iva_rate(
         member_state,
         kind,
@@ -175,7 +216,8 @@ def lookup_rate(
 
     Resolves the ordinary governed-fact variant for the exact member-state,
     tier, and devengo-date coordinates, then projects it onto the established
-    public record.
+    public record. A date no edition covers reads the nearest one, and the record
+    says so through ``published_on_date`` and ``projected_from_date``.
 
     Args:
         member_state: The EU member state whose rate is requested.
@@ -188,9 +230,10 @@ def lookup_rate(
         The matching :class:`cadrumo.domain.iva.schema.IvaRateRecord`.
 
     Raises:
-        IvaRateNotFoundError: If no registered rate satisfies the query.
+        IvaRateNotFoundError: If the member state is unregistered or has no such
+            tier at any date.
     """
-    kind = require_iva_rate_kind(kind, effective_date=on_date, authority=operation)
+    kind = require_iva_rate_kind(kind, effective_date=rate_vocabulary_date(on_date, operation), authority=operation)
     if not _member_state_is_registered(member_state, operation=operation):
         raise IvaRateNotFoundError(
             translated_message="errors.iva.rate_member_state_unregistered",
@@ -201,7 +244,7 @@ def lookup_rate(
                 "on_date": on_date.isoformat(),
             },
         )
-    if not _rate_candidate_exists(member_state, kind, on_date, operation=operation):
+    if not _rate_track_exists(member_state, kind, on_date, operation=operation):
         raise IvaRateNotFoundError(
             translated_message="errors.error.error_financial_iva_rate_not_found",
             context={
@@ -211,14 +254,50 @@ def lookup_rate(
                 "on_date": on_date.isoformat(),
             },
         )
-    return rate_record_from_fact(
-        resolve_iva_rate(
-            member_state,
-            kind,
-            on_date,
-            operation=operation,
-        ),
-        authority=operation,
+    try:
+        resolved = resolve_iva_rate(member_state, kind, on_date, operation=operation)
+    except GovernedFactNotApplicableError as exc:
+        # An authority published before the fact declared its standing rates.
+        raise IvaRateNotFoundError(
+            translated_message="errors.error.error_financial_iva_rate_not_found",
+            context={
+                "member_state": member_state.value,
+                "member_state_registered": True,
+                "rate_kind": kind.value,
+                "on_date": on_date.isoformat(),
+            },
+        ) from exc
+    return rate_record_from_fact(resolved, authority=operation)
+
+
+def lookup_published_rate(
+    member_state: EUMemberState,
+    kind: IvaRateKind,
+    on_date: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> IvaRateRecord:
+    """Return the rate :func:`lookup_rate` answers, only when it is published for the date.
+
+    For a caller that checks a stated figure against the rate. A projected rate
+    could confirm a figure the law never allowed or refute one it did, so the
+    answer stays a refusal on the registry's reach, not on the figure.
+
+    Raises:
+        IvaRateNotFoundError: If the rate is absent, or only projected, on ``on_date``.
+    """
+    record = lookup_rate(member_state, kind, on_date, operation=operation)
+    if record.published_on_date:
+        return record
+    raise IvaRateNotFoundError(
+        translated_message="errors.error.error_financial_iva_rate_not_found",
+        context={
+            "member_state": member_state.value,
+            "member_state_registered": True,
+            "rate_kind": record.kind.value,
+            "on_date": on_date.isoformat(),
+            "rate_registry_covers_date": False,
+        },
     )
 
 
@@ -229,7 +308,7 @@ def rate_table_covers(
     *,
     operation: PinnedAuthorityOperation,
 ) -> bool:
-    """Return whether a tier-defining rate for ``member_state`` reaches ``on_date``.
+    """Return whether a published tier-defining rate for ``member_state`` reaches ``on_date``.
 
     Coverage is PER TIER, and asking "any tier" answers a different question.
     The registry can hold a zero-tier record for a date while the general tier
@@ -240,19 +319,10 @@ def rate_table_covers(
     knows which tier it is asking about; ``None`` keeps the broad "can anything
     classify here" reading the ledger preflight wants.
 
-    Separates the two reasons a rate lookup fails, which are not the same fact
-    and must not produce the same message. The registry's ES coverage begins in
-    2023 for the RDL 20/2022 food windows and 2024 for the standing tiers, so a
-    2022 general-rate line fails not because its rate was unlawful -- Spain's
-    21 % has stood since 2012 -- but because the table does not reach back that
-    far. Whether the standing tiers' own start dates are correct is a separate
-    open question: they assert 2024 for rates in force well before it.
-
-    Telling a filer their rate "was not in force" when it plainly was sends
-    them to correct a figure that was right, and invites widening the table
-    with a guessed value. A regulatory value needs its own binding provision
-    cited and corpus-backed, so a truthful refusal is the correct behaviour
-    until those rows are authored.
+    Separates a rate the law had but the table only projects from one that was
+    not in force. Asserting that a rate "was not in force" where the table simply
+    has no edition for the tier would send a filer to correct a figure that was
+    right, so a caller checking a stated figure asks this first.
 
     Reads only TIER-DEFINING records, skipping the coexisting temporary ones,
     because a date covered solely by a temporary window would misreport as
@@ -275,7 +345,7 @@ def rate_table_covers(
         ``kind`` is ``None``) covers ``on_date``.
     """
     if kind is not None:
-        kind = require_iva_rate_kind(kind, effective_date=on_date, authority=operation)
+        kind = require_iva_rate_kind(kind, effective_date=rate_vocabulary_date(on_date, operation), authority=operation)
     rates = tuple(
         rate_record_from_fact(item, authority=operation)
         for item in _in_force_rate_facts(member_state, on_date, operation=operation)
@@ -320,8 +390,57 @@ def rate_table_covers_any_positive_tier(
     """
     return any(
         rate_table_covers(member_state, on_date, kind, operation=operation)
-        for kind in resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).positive_kinds
+        for kind in resolve_iva_rate_kind_catalogue(
+            effective_date=rate_vocabulary_date(on_date, operation),
+            authority=operation,
+        ).positive_kinds
     )
+
+
+def tier_rates_within(
+    member_state: EUMemberState,
+    kind: IvaRateKind,
+    start: date,
+    end: date,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[Decimal, ...]:
+    """Return the distinct ordinary rates of a tier in force during an inclusive span.
+
+    Asks what :func:`lookup_rate` answers, once for each date a variant starts
+    inside the span. Days the table does not cover contribute nothing, so an
+    empty result means no published rate rather than a rate of zero.
+
+    Args:
+        member_state: The member state whose rates are searched.
+        kind: The rate tier being interrogated.
+        start: First day of the span.
+        end: Last day of the span.
+        operation: Caller-owned pinned authority operation for the complete
+            query.
+
+    Returns:
+        The percentages in the order they came into force.
+    """
+    resolved_kind = require_iva_rate_kind(
+        kind, effective_date=rate_vocabulary_date(start, operation), authority=operation
+    )
+    starts = {
+        variant.valid_from
+        for variant in operation.governed_fact(IVA_RATE_FACT_ID).variants
+        if variant.date_axis is DateAxis.DEVENGO_DATE
+        and variant.valid_from is not None
+        and start < variant.valid_from <= end
+        and _rate_variant_matches_member_state(variant, member_state)
+    }
+    rates: list[Decimal] = []
+    for on_date in sorted({start, *starts}):
+        if not _rate_candidate_exists(member_state, resolved_kind, on_date, operation=operation):
+            continue
+        rate = lookup_rate(member_state, resolved_kind, on_date, operation=operation).pct
+        if rate not in rates:
+            rates.append(rate)
+    return tuple(rates)
 
 
 def coexisting_tier_rates(
@@ -358,7 +477,7 @@ def coexisting_tier_rates(
         The in-force coexisting records, in registry declaration order. Empty
         when the tier carries only its ordinary rate on that date.
     """
-    kind = require_iva_rate_kind(kind, effective_date=on_date, authority=operation)
+    kind = require_iva_rate_kind(kind, effective_date=rate_vocabulary_date(on_date, operation), authority=operation)
     records = tuple(
         rate_record_from_fact(rate, authority=operation)
         for rate in _in_force_rate_facts(member_state, on_date, operation=operation)
@@ -427,7 +546,10 @@ def rate_kinds_for_declared_rate(
         # ``DOMESTIC_ZERO`` from ``EXPORT_THIRD_COUNTRY_ZERO_RATED`` and the
         # rest; the rate axis structurally cannot express it.
         matched.append(
-            resolve_iva_rate_kind_catalogue(effective_date=on_date, authority=operation).zero_token,
+            resolve_iva_rate_kind_catalogue(
+                effective_date=rate_vocabulary_date(on_date, operation),
+                authority=operation,
+            ).zero_token,
         )
     for rate in (
         rate_record_from_fact(item, authority=operation)
@@ -467,8 +589,11 @@ def unique_rate_kind_for_declared_rate(
 
 __all__ = [
     "coexisting_tier_rates",
+    "lookup_published_rate",
     "lookup_rate",
     "rate_kinds_for_declared_rate",
+    "rate_vocabulary_date",
     "resolve_iva_rate",
+    "tier_rates_within",
     "unique_rate_kind_for_declared_rate",
 ]

@@ -17,7 +17,7 @@ from .. import _shared_issue_reasons
 from ..impatriado_income_ledger import ImpatriadoIncomeLedgerAggregationIssueReason
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssueReason
-from ..renta_income_ledger import RentaIncomeLedgerAggregationIssueReason
+from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
 from ..renta_ledger_models import RentaLedgerAggregationIssueReason
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]

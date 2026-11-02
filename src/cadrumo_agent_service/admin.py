@@ -32,6 +32,9 @@ ADMIN_BUSY_ANSWERS = 16
 ADMIN_BUSY_READ_SECONDS = 1.0
 """How long a connection answered ``busy`` has to send its two frames."""
 
+_AGENT_IDENTIFIER_PATTERN = r"^[A-Za-z0-9_.-]{1,128}$"
+"""A run or permission request as the agent names it; never a path."""
+
 type AdminAction = Literal[
     "catalog",
     "status",
@@ -52,6 +55,11 @@ type AdminAction = Literal[
     "local_model_remove",
     "local_models_reset",
     "reading_model_choose",
+    "attachment_card",
+    "attachment_release",
+    "attachment_grants",
+    "attachment_grant_revoke",
+    "attachment_conversation_forget",
 ]
 
 
@@ -70,6 +78,11 @@ class AdminTarget(Protocol):
         attempt_id: str | None = None,
         model: str | None = None,
         secret: bytearray | None = None,
+        run_id: str | None = None,
+        permission_request_id: str | None = None,
+        scope: Literal["once", "session", "remember"] | None = None,
+        grant_id: str | None = None,
+        conversation_id: str | None = None,
     ) -> JsonValue:
         """Apply validated metadata and separately framed secret bytes under service authority."""
         ...
@@ -90,6 +103,11 @@ class AdminRequest(BaseModel):
     attempt_id: UUID | None = None
     model: Annotated[str, Field(pattern=MODEL_RUN_MODEL_ID_PATTERN)] | None = None
     secret_bytes: Annotated[int, Field(ge=1, le=ADMIN_SECRET_MAX_BYTES)] | None = None
+    run_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
+    permission_request_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
+    scope: Literal["once", "session", "remember"] | None = None
+    grant_id: Annotated[str, Field(pattern=r"^[0-9a-f]{32}$")] | None = None
+    conversation_id: Annotated[str, Field(pattern=_AGENT_IDENTIFIER_PATTERN)] | None = None
 
 
 def _read_exact(stream: socket.socket, size: int, *, deadline: float) -> bytearray:
@@ -271,6 +289,11 @@ class AdminServer:
             attempt_id=str(request.attempt_id) if request.attempt_id is not None else None,
             model=request.model,
             secret=secret,
+            run_id=request.run_id,
+            permission_request_id=request.permission_request_id,
+            scope=request.scope,
+            grant_id=request.grant_id,
+            conversation_id=request.conversation_id,
         )
 
     def close(self) -> None:

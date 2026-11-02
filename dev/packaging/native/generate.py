@@ -20,6 +20,7 @@ from .identity import identity
 from .layout import bundled_image_files, distribution_target, entrypoint_files, load_layout
 from .linux_desktop_runtime import declaration as desktop_runtime_declaration
 from .linux_desktop_runtime import desktop_path
+from .operational_settings import defaults, rust_settings, typescript_settings
 from .runtime_exit_reasons import runtime_exit_section, rust_runtime_exit_reasons
 from .stable_output import write_text
 from .storage_vectors import (
@@ -254,6 +255,7 @@ def _build_contract(root: Path, layout: dict[str, Any], channel: str) -> tuple[d
         "root": dict(declaration.root),
         "runtime_transport": transport_section(),
         "environment": environment,
+        "settings": defaults(declaration.settings),
         "package": _package_section(layout),
         "path_vectors": [vector.as_contract() for vector in storage_path_vectors()],
         "invalid_native_path": {
@@ -370,6 +372,7 @@ def generate(
     # Declared entrypoint images live in NATIVE; the platform context maps them back to the package root.
     entrypoints = _entrypoint_names(layout)
     rust.append(f"pub const ENTRYPOINT_FILES: &[&str] = {_rust_strings(entrypoints)};")
+    rust.extend(rust_settings(declaration.settings))
     rust.extend(_rust_root_and_environment(contract))
     rust.extend(rust_transport(contract["runtime_transport"]))
     rust.extend(rust_runtime_exit_reasons(contract["runtime_exit"]))
@@ -383,6 +386,7 @@ def generate(
         + "".join(f"{line}\n" for line in environment_compile.c_lines(launch)),
     )
     write_text(destination / "contract.json", json.dumps(contract, indent=2) + "\n")
+    write_text(destination / "operational-settings.ts", typescript_settings(declaration.settings))
     root_vectors = [vector.as_contract() for vector in storage_root_vectors(root)]
     vectors = [
         *_rust_root_vectors(root_vectors),

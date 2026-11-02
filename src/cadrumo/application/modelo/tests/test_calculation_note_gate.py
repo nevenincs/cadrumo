@@ -10,11 +10,13 @@ blocking note passes.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import get_args
 
 import pytest
 
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import validated_casilla_id
 from ....core.config import override_settings
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -22,11 +24,19 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
-from ....domain.modelos.tests.source_disagreement_support import sample_source_disagreement
+from ....domain.modelos.calculation_revision_sources import DISAGREEMENT_REASONS, CalculationSourceIssue
+from ....domain.modelos.source_disagreement import (
+    DisagreementDecimalValue,
+    SourceDisagreementEntry,
+    SourceDisagreementFact,
+    SourceDisagreementRole,
+)
 from ..calculation_note_gate import (
+    NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
     ModeloCalculationBlockedError,
+    SourceDisagreementResolutions,
     blocking_calculation_issues,
+    gate_refuses,
     require_no_blocking_calculation_notes,
 )
 from ..calculation_notes import (
@@ -56,7 +66,7 @@ def _revision(*issues: CalculationSourceIssue) -> CalculationRevision:
             source_provenance=(),
         ),
         work_unit_id=_WORK_UNIT,
-        registry_snapshot_ref=RegistrySnapshotRef(modelo="130", revision_id="2026", modelo_year=2026, period="1T"),
+        registry_snapshot_ref=_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         casilla_values={},
         observations=(),
@@ -68,11 +78,48 @@ def _revision(*issues: CalculationSourceIssue) -> CalculationRevision:
     )
 
 
+_SNAPSHOT_REF = RegistrySnapshotRef(modelo="130", revision_id="2026", modelo_year=2026, period="1T")
+
+
+def _disagreement() -> SourceDisagreementFact:
+    """A carried value an operator's value replaced, on a box the filing reaches."""
+    casilla = validated_casilla_id("03")
+    return SourceDisagreementFact.of(
+        modelo=_SNAPSHOT_REF.modelo,
+        filing_year=_SNAPSHOT_REF.modelo_year,
+        period=_SNAPSHOT_REF.period,
+        work_unit_id=_WORK_UNIT,
+        registry_revision_id=_SNAPSHOT_REF.revision_id,
+        inputs_digest="d" * 64,
+        key=str(casilla),
+        value_channel="decimal",
+        reached_casillas=(casilla,),
+        sources=(
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.BACKEND,
+                source_family="ledger_renta_aggregation",
+                value=DisagreementDecimalValue.of(Decimal("120.00")),
+            ),
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.CALLER,
+                source_family="operator_input",
+                value=DisagreementDecimalValue.of(Decimal("125.00")),
+            ),
+        ),
+        selected_role=SourceDisagreementRole.CALLER,
+    )
+
+
 def _issue(reason: str, **fields: object) -> CalculationSourceIssue:
-    if reason == "credit_source_disagreement":
-        fields = {"disagreement": sample_source_disagreement(), **fields}
+    disagreement = {"disagreement": _disagreement()} if reason in DISAGREEMENT_REASONS else {}
     return CalculationSourceIssue.model_validate(
-        {"reason": reason, "binding_source": None, "message": f"the calculation noticed {reason}", **fields}
+        {
+            "reason": reason,
+            "binding_source": None,
+            "message": f"the calculation noticed {reason}",
+            **disagreement,
+            **fields,
+        }
     )
 
 
@@ -155,3 +202,45 @@ def test_the_editor_blocks_on_exactly_the_reasons_the_application_refuses() -> N
 
     assert blocking_level == BLOCKING_REASONS == GATE_REFUSED_REASONS | CHECK_REFUSED_REASONS | EXPORT_REFUSED_REASONS
     assert refused_by_the_gate == set(GATE_REFUSED_REASONS)
+
+
+@pytest.mark.parametrize("action", ["check", "export", "record"])
+def test_a_contested_filed_figure_refuses_every_action_with_its_own_sentence(action: str) -> None:
+    revision = _revision(_issue("precedence_tier_divergence"))
+
+    with override_settings(cadrumo_output_language="en"), pytest.raises(ModeloCalculationBlockedError) as refused:
+        require_no_blocking_calculation_notes(revision, action=action)
+
+    context = refused.value.context or {}
+    assert context["reason"] == "precedence_tier_divergence"
+    assert refused.value.translated_message == "application.modelo.calc_diagnostic.precedence_tier_divergence.what"
+
+
+def test_a_contested_working_figure_is_shown_but_never_refused() -> None:
+    assert not gate_refuses("precedence_tier_divergence_advisory", None)
+    assert blocking_calculation_issues(_revision(_issue("precedence_tier_divergence"))) != ()
+
+
+def test_only_a_resolution_of_the_exact_finding_releases_a_contested_figure() -> None:
+    finding_key = _disagreement().finding_key
+    covering = SourceDisagreementResolutions(finding_keys=frozenset({finding_key}))
+    other = SourceDisagreementResolutions(finding_keys=frozenset({"0" * 64}))
+
+    assert gate_refuses("precedence_tier_divergence", None, finding_key=finding_key)
+    assert gate_refuses(
+        "precedence_tier_divergence", None, finding_key=finding_key, resolutions=NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+    )
+    assert gate_refuses("precedence_tier_divergence", None, finding_key=finding_key, resolutions=other)
+    assert gate_refuses("precedence_tier_divergence", None, finding_key=None, resolutions=covering)
+    assert not gate_refuses("precedence_tier_divergence", None, finding_key=finding_key, resolutions=covering)
+
+
+def test_a_resolution_never_releases_a_note_that_states_no_disagreement() -> None:
+    covering = SourceDisagreementResolutions(finding_keys=frozenset({_disagreement().finding_key}))
+
+    assert gate_refuses(
+        "unresolved_binding",
+        BindingSourceKind.LEDGER_IVA_AGGREGATION,
+        finding_key=_disagreement().finding_key,
+        resolutions=covering,
+    )

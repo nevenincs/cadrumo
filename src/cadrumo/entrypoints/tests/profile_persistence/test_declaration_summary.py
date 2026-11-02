@@ -17,7 +17,7 @@ from ....application.modelo.declaration_summary import DeclarationSummaryState, 
 from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListNextStep, DeclarationListRow
 from ....application.modelo.declarations_list_projection import worded_list_row
 from ....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
-from ....application.modelo.work_form_models import ModeloFormResultDirection
+from ....application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from ....core.external_constants import OutputLanguage
 from ....domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ....domain.modelos.calculation_revision_amendment import (

@@ -118,9 +118,6 @@ class DeclarationsCalendarEntryRefV1(BaseModel):
     adjusted_closes_on: date
     shift_reason: str
     holiday_coverage: DeadlineHolidayCoverage
-    # Text of the already-projected calendar territory: a frontend restores this
-    # projection without a pinned authority, so it cannot re-project the token.
-    holiday_territory: str | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
@@ -371,7 +368,6 @@ def _project_calendar_row(
         adjusted_closes_on=entry.adjusted_closes_on,
         shift_reason=entry.shift_reason,
         holiday_coverage=entry.holiday_coverage,
-        holiday_territory=entry.holiday_territory,
         payment_cutoff_on=entry.payment_cutoff_on,
         evaluated_on=entry.evaluated_on,
         days_overdue=entry.days_overdue,

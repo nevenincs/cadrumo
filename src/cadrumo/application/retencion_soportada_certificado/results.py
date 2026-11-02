@@ -129,24 +129,30 @@ class RetencionSoportadaOperationExecutionResult(BaseModel):
     @model_validator(mode="after")
     def _arm_is_closed(self) -> RetencionSoportadaOperationExecutionResult:
         if self.outcome == "refused":
-            closed = (
-                self.operation_id != "list"
-                and self.rows is None
-                and self.row is None
-                and self.count is None
-                and self.refusal is not None
-            )
+            closed = self._refusal_arm_is_closed()
         elif self.refusal is not None:
             closed = False
-        elif self.operation_id == "list":
-            closed = self.rows is not None and self.row is None and self.count is None
-        elif self.operation_id == "record":
-            closed = self.rows is None and self.row is not None and self.count is not None
         else:
-            closed = self.rows is None and self.row is None and self.count is not None
+            closed = self._success_arm_is_closed()
         if not closed:
             raise ValueError("suffered-withholding execution result has an incompatible payload")
         return self
+
+    def _refusal_arm_is_closed(self) -> bool:
+        return (
+            self.operation_id != "list"
+            and self.rows is None
+            and self.row is None
+            and self.count is None
+            and self.refusal is not None
+        )
+
+    def _success_arm_is_closed(self) -> bool:
+        if self.operation_id == "list":
+            return self.rows is not None and self.row is None and self.count is None
+        if self.operation_id == "record":
+            return self.rows is None and self.row is not None and self.count is not None
+        return self.rows is None and self.row is None and self.count is not None
 
 
 __all__ = [

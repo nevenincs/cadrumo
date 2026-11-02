@@ -79,6 +79,7 @@ _SUPPORTED_OPS: Final[frozenset[str]] = frozenset(
         "cross_model_sum",
         "if_then_else",
         "require_condition",
+        "unresolved_outcome",
         "less_than",
         "less_equal",
         "greater_than",
@@ -162,6 +163,9 @@ def _translate_special_op(op: str, expression: FormulaExpression, *, layout: She
         return _translate_record_row_unused(expression, layout=layout)
     if op == "text_equal":
         return _translate_text_equal(expression, layout=layout)
+    if op == "unresolved_outcome":
+        # The registry leaves the box without a value; a workbook has no typed reason, so it reads as unknown.
+        return "NA()"
     return None
 
 

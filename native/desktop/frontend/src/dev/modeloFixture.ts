@@ -44,6 +44,7 @@ import {
 } from "../shell/modeloContract";
 import type { Translate } from "../shell/strings";
 import { ASSET_NOTES } from "./modeloAssetNotes";
+import { wholeEnvelopes } from "./modeloEnvelopePatch";
 import { hex64 } from "./fixtures/ledger";
 
 /** How the scenario's modelo family answers. `checked`, `filed`, `receipt`
@@ -88,7 +89,21 @@ import { hex64 } from "./fixtures/ledger";
  * offers to open them.
  * `list-notes` lists the first quarter's Modelo 130 with the sentences of the
  * asset notes as what its calculation noted that withholds nothing: the
- * application's list of these synthetic declarations notes none. */
+ * application's list of these synthetic declarations notes none.
+ *
+ * The `renta` shapes list the declarations of a synthetic filer whose 2025
+ * Modelo 100 is open, each read whole as the application served it.
+ * `renta` is a salaried filer with no withholding certificate in the
+ * register, so the credits and the totals that read them are unresolved;
+ * `renta-pay` and `renta-refund` are the same filer with a certificate that
+ * leaves a result to pay or to refund; `renta-activity` is a self-employed
+ * filer whose activity income the ledger books. `renta-projected` and
+ * `renta-credited` hold a calculated first-quarter Modelo 130 as well, so the
+ * estimate from the quarterly declarations is answered: the first without a
+ * certificate in the register, so the employment credit and the totals that
+ * read it stay unresolved in it, the second with one. The estimate of every
+ * other filer is refused as the application refused it, for want of a
+ * quarterly declaration. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
@@ -115,6 +130,12 @@ export const MODELO_SHAPES = [
   "moving",
   "read-only-boxes",
   "list-notes",
+  "renta",
+  "renta-pay",
+  "renta-refund",
+  "renta-activity",
+  "renta-projected",
+  "renta-credited",
   "refused",
   "unknown",
   "unavailable",
@@ -124,6 +145,16 @@ export type ModeloShape = (typeof MODELO_SHAPES)[number];
 
 /** The declaration whose later states the `checked` and `filed` shapes read. */
 const LATER_STATES = "130-1T";
+
+/** The 2025 Modelo 100, whose filer the `renta` shapes choose. */
+const RENTA = "100-0A";
+
+/** The filer's form a `renta` shape reads: the salaried filer without a
+ * certificate is the declaration itself. */
+const rentaForm = (shape: ModeloShape): string =>
+  shape.startsWith("renta-")
+    ? `${RENTA}-${shape.slice("renta-".length)}`
+    : RENTA;
 
 /** Every box a form's pages hold. */
 function fields(node: unknown): PublicModeloFormField[] {
@@ -313,9 +344,16 @@ const PURPOSE_FILES: Record<ModeloFilePurpose, string> = {
   envelope: "respuesta-asesoria.sealed",
 };
 
+declare global {
+  interface Window {
+    /** Active synthetic modelo port, for controlled operation observations. */
+    __fixtureModelo?: ModeloPort;
+  }
+}
+
 export function modeloFixture(options: Options): ModeloPort {
   const { say, signedIn, shape } = options;
-  const catalogue = options.envelopes ?? servedEnvelopes();
+  const catalogue = wholeEnvelopes(options.envelopes ?? servedEnvelopes());
   /** The envelope stored under `name`, or null where none was read. */
   async function envelope<Envelope>(name: string): Promise<Envelope | null> {
     const load = catalogue[name];
@@ -424,9 +462,18 @@ export function modeloFixture(options: Options): ModeloPort {
   };
   /** The written form each admitted baseline was read from. */
   const admittedBy = new Map<string, string>();
+  /** The language the window last read a form in, which the application
+   * words an estimate in. */
+  let spoken: OutputLanguage = "en";
   const readForm = async (workUnitId: string, language: OutputLanguage) => {
+    spoken = language;
     const name = await formName(workUnitId);
-    const read = name === LATER_STATES ? laterState() : name;
+    const read =
+      name === LATER_STATES
+        ? laterState()
+        : name === RENTA
+          ? rentaForm(shape)
+          : name;
     const form =
       read &&
       (await envelope<ModeloWorkbenchFormProjectionV1>(
@@ -591,10 +638,17 @@ export function modeloFixture(options: Options): ModeloPort {
 
   const port: ModeloPort = {
     async declarations(language) {
+      window.__fixtureModelo = port;
       say(`modelo declarations ${language}`);
       await answer();
       const list = await envelope<ModeloDeclarationsListProjectionV1>(
-        `declarations${shape === "incomplete" ? "-incomplete" : ""}-${language}`,
+        `declarations${
+          shape === "incomplete"
+            ? "-incomplete"
+            : shape.startsWith("renta")
+              ? "-renta"
+              : ""
+        }-${language}`,
       );
       if (!list) return reject("unavailable");
       const read = withStoredDefaults(list);
@@ -633,8 +687,18 @@ export function modeloFixture(options: Options): ModeloPort {
           request.report_language,
         )) as LedgerOutcome<ModeloResult<typeof definition>>;
       }
+      if (
+        definition === "modelo.project" &&
+        !catalogue[`project-${rentaForm(shape)}-${spoken}`]
+      )
+        return (await refusedWith(
+          "project-no-quarters",
+          spoken,
+        )) as LedgerOutcome<ModeloResult<typeof definition>>;
       const result = await (async (): Promise<unknown> => {
         switch (definition) {
+          case "modelo.project":
+            return written(`project-${rentaForm(shape)}-${spoken}`);
           case "modelo.declarations.list":
             return port.declarations(language);
           case "modelo.work.form":

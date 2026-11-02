@@ -139,6 +139,59 @@ def build_enrollment_section() -> WizardSection:
     )
 
 
+def _obligations_withholding_questions(
+    wizard_irpf_estimation_regime_choices: tuple[WizardChoice, ...],
+) -> tuple[WizardQuestion, ...]:
+    """Build the withholding and estimation-regime questions of the obligations section."""
+    return (
+        confirmation_question("has-employees", "withholding.has_employees", suffix="obligations"),
+        confirmation_question(
+            "pays-professionals-with-retencion",
+            "withholding.pays_professionals_with_retencion",
+            suffix="obligations",
+        ),
+        confirmation_question(
+            "art109-activity-income-withholding-ge-70pct",
+            "irpf.art109_activity_income_withholding_ge_70pct",
+            suffix="obligations",
+        ),
+        confirmation_question("pays-rent-with-retencion", "withholding.pays_rent_with_retencion", suffix="obligations"),
+        confirmation_question(
+            "pays-capital-income-with-retencion",
+            "withholding.pays_capital_income_with_retencion",
+            suffix="obligations",
+        ),
+        WizardQuestion(
+            id="modelo-111-no-retenciones-periods",
+            profile_key="withholding.modelo_111_no_retenciones_periods",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.modelo-111-no-retenciones-periods.prompt"),
+            help=tr("wizard.setup.obligations.modelo-111-no-retenciones-periods.help"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="modelo-115-no-relevant-payment-periods",
+            profile_key="withholding.modelo_115_no_relevant_payment_periods",
+            widget=WizardWidget.TEXT,
+            prompt=tr("wizard.setup.obligations.modelo-115-no-relevant-payment-periods.prompt"),
+            help=tr("wizard.setup.obligations.modelo-115-no-relevant-payment-periods.help"),
+            required=False,
+            answer_type=str,
+        ),
+        WizardQuestion(
+            id="irpf-estimation-regime",
+            profile_key="irpf.estimation_regime",
+            widget=WizardWidget.SELECT,
+            prompt=tr("wizard.setup.obligations.irpf-estimation-regime.prompt"),
+            help=tr("wizard.setup.obligations.irpf-estimation-regime.help"),
+            choices=wizard_irpf_estimation_regime_choices,
+            required=False,
+            answer_type=str,
+        ),
+    )
+
+
 def build_obligations_section(
     _impatriado_regime: WizardCondition,
     _natural_person: WizardCondition,
@@ -154,53 +207,7 @@ def build_obligations_section(
         id="obligations",
         title=tr("wizard.setup.obligations.title"),
         questions=(
-            confirmation_question("has-employees", "withholding.has_employees", suffix="obligations"),
-            confirmation_question(
-                "pays-professionals-with-retencion",
-                "withholding.pays_professionals_with_retencion",
-                suffix="obligations",
-            ),
-            confirmation_question(
-                "art109-activity-income-withholding-ge-70pct",
-                "irpf.art109_activity_income_withholding_ge_70pct",
-                suffix="obligations",
-            ),
-            confirmation_question(
-                "pays-rent-with-retencion", "withholding.pays_rent_with_retencion", suffix="obligations"
-            ),
-            confirmation_question(
-                "pays-capital-income-with-retencion",
-                "withholding.pays_capital_income_with_retencion",
-                suffix="obligations",
-            ),
-            WizardQuestion(
-                id="modelo-111-no-retenciones-periods",
-                profile_key="withholding.modelo_111_no_retenciones_periods",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.modelo-111-no-retenciones-periods.prompt"),
-                help=tr("wizard.setup.obligations.modelo-111-no-retenciones-periods.help"),
-                required=False,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="modelo-115-no-relevant-payment-periods",
-                profile_key="withholding.modelo_115_no_relevant_payment_periods",
-                widget=WizardWidget.TEXT,
-                prompt=tr("wizard.setup.obligations.modelo-115-no-relevant-payment-periods.prompt"),
-                help=tr("wizard.setup.obligations.modelo-115-no-relevant-payment-periods.help"),
-                required=False,
-                answer_type=str,
-            ),
-            WizardQuestion(
-                id="irpf-estimation-regime",
-                profile_key="irpf.estimation_regime",
-                widget=WizardWidget.SELECT,
-                prompt=tr("wizard.setup.obligations.irpf-estimation-regime.prompt"),
-                help=tr("wizard.setup.obligations.irpf-estimation-regime.help"),
-                choices=wizard_irpf_estimation_regime_choices,
-                required=False,
-                answer_type=str,
-            ),
+            *_obligations_withholding_questions(wizard_irpf_estimation_regime_choices),
             # No default on the three election questions: an unanswered criterion
             # stays absent, and absent means undeclared, never devengo.
             WizardQuestion(

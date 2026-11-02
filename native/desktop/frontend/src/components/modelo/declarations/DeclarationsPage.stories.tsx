@@ -203,3 +203,7 @@ export const CreateUnknown: Story = {
   args: { shape: "unknown" },
   play: create,
 };
+export const RentaOpen: Story = {
+  name: "A salaried filer's 2025 Renta among the declarations",
+  args: { shape: "renta" },
+};

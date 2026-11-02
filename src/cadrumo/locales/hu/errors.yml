@@ -1242,6 +1242,10 @@ errors:
       Modelo 303 helyesbítő bevalláshoz döntés szükséges a korábbi csoportos beszedésről
       (megtartás, illetve visszavonás vagy módosítás); ilyen nem érkezett, ezért semmi
       sem íródott ki. Válassz egyet, és exportálj újra.
+    refused_modelo_instalment_election: 'Ezt a bevallást nem fizetheted két részletben:
+      ehhez fizetendő eredmény kell, a bevallás nem lehet helyesbítő, határidőn belül
+      kell benyújtanod, és ha a második részletet csoportos beszedéssel fizeted, saját
+      spanyol számla is kell.'
     refused_modelo_ledger_evidence_recapture: A bevallás bizonyítékai nem csomagolhatók
       újra, mert a mögöttes főkönyvi tételek a lezárás óta megváltoztak. Számold újra
       a bevallást; az újrarögzítés csak a változatlan tételekhez csatolt bizonyítékot

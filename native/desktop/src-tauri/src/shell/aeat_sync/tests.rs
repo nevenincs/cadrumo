@@ -102,7 +102,10 @@ fn the_areas_submit_only_admitted_definitions_and_leave_none_unused() {
     let mut named: BTreeSet<&str> = BTreeSet::from([
         "auth.local-read",
         "auth.session.acquire",
+        "live.borrador.100.compare",
         "live.borrador.100.import",
+        "live.borrador.100.query",
+        "live.borrador.100.read",
         "live.notifications.latest",
         "live.notifications.show",
         "live.sync.status",
@@ -1211,6 +1214,16 @@ fn a_borrador_import_passes_the_served_outcome_through() {
         borrador_import_reply(&empty).unwrap(),
         BorradorImported {
             outcome: "nothing_found",
+            unowned: 0
+        }
+    );
+    let printed_only = json!({"outcome": "captured",
+        "snapshot": {"binding_count": 0, "printed_observation_count": 5},
+        "unowned_casillas": []});
+    assert_eq!(
+        borrador_import_reply(&printed_only).unwrap(),
+        BorradorImported {
+            outcome: "captured",
             unowned: 0
         }
     );

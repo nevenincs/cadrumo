@@ -25,11 +25,8 @@ import {
   classificationText,
   statusWord,
 } from "../src/components/ledger/movements/movementWords";
-import type {
-  LedgerPreflightReason,
-  LedgerRow,
-  LedgerStatusResult,
-} from "../src/shell/ledger";
+import type { LedgerRow, LedgerStatusResult } from "../src/shell/ledger";
+import type { LedgerPreflightReason } from "../src/shell/ledgerContract";
 import {
   categoryCells,
   categorySplit,

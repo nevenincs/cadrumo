@@ -38,7 +38,7 @@ from ...core.money.rounding import round_to_cents
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.binding_aggregation import binding_aggregation_op
 from ...domain.calculations.registry.binding_selector_utils import manual_input_record_field_selector
-from ...domain.calculations.registry.binding_targets import casillas_by_binding
+from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids, casillas_by_binding
 from ...domain.calculations.registry.bindings import CasillaObservation
 from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
 from ...domain.calculations.registry.ids import (
@@ -430,6 +430,64 @@ def _general_regime_figure_present(
     return False
 
 
+def _zero_rests_on_resolved_values(
+    casilla_id: CasillaId,
+    *,
+    observations_by_casilla: Mapping[CasillaId, CasillaObservation],
+    bound_binding_ids_by_casilla: Mapping[CasillaId, tuple[BindingId, ...]],
+    supplied_casilla_ids: frozenset[CasillaId],
+    answered_binding_ids: frozenset[BindingId],
+) -> bool:
+    """Whether every value a calculated casilla was folded from was actually supplied.
+
+    The engine reads an input nobody supplied as zero, and seeds a relation slot
+    with no prior filing to fold as a structural zero, so a calculated zero
+    alone does not say the figure is known. Walk the formula lineage to its
+    leaves: each must be a supplied input (an operator entry or a resolved
+    source's projection) or a bound casilla whose binding the source answered,
+    with a value or as settled (inapplicable or row-fed).
+    """
+    pending = [casilla_id]
+    visited: set[CasillaId] = set()
+    while pending:
+        current = pending.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        observation = observations_by_casilla.get(current)
+        if observation is None:
+            return False
+        if observation.formula_id is not None:
+            pending.extend(observation.operand_casilla_refs)
+            continue
+        if current in supplied_casilla_ids:
+            continue
+        if not answered_binding_ids.intersection(bound_binding_ids_by_casilla.get(current, ())):
+            return False
+    return True
+
+
+def _reconciliation_slot_grounded(
+    binding_id: BindingId,
+    annual_casilla: CasillaId,
+    *,
+    casilla_values: Mapping[CasillaId, Decimal],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+    resolved_annual_casillas: set[CasillaId],
+    proven_zero_annual_casillas: frozenset[CasillaId],
+    general_regime_not_applicable: bool,
+) -> bool:
+    """Whether a slot is resolved, proven zero, or not applicable and so needs no refusal."""
+    if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
+        return True
+    annual_value = casilla_values.get(annual_casilla)
+    if annual_value is not None and _calculated_decimal(annual_value) != ZERO:
+        return False
+    if annual_casilla in proven_zero_annual_casillas:
+        return True
+    return general_regime_not_applicable
+
+
 def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     *,
     work_unit: WorkUnit,
@@ -437,14 +495,20 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     casilla_values: Mapping[CasillaId, Decimal],
     resolved_binding_values: Mapping[BindingId, Decimal],
     general_regime_claimed: bool,
+    observations: tuple[CasillaObservation, ...],
+    supplied_casilla_ids: frozenset[CasillaId],
+    answered_binding_ids: frozenset[BindingId],
 ) -> None:
     """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence.
 
-    A calculated zero proves a slot has nothing to reconcile, and an absent
-    annual box is unknown, so it refuses. The exception is a filer claiming no
-    general regime with no figure on any general-regime box: those boxes do not
-    apply to them. One non-zero figure contradicts that, and every absent box
-    is unknown again.
+    A calculated zero proves a slot has nothing to reconcile only when every
+    value it was folded from was supplied: an operator entry, a resolved
+    source, or a binding its source settled as inapplicable or row-fed
+    (``answered_binding_ids``). A zero folded from inputs nobody supplied, and
+    an absent annual box, are unknown, so they refuse. The exception is a filer
+    claiming no general regime with no figure on any general-regime box: those
+    boxes do not apply to them. One non-zero figure contradicts that, and every
+    unknown box is unknown again.
     """
     targets = reconciliation_relation_targets(snapshot)
     if not targets:
@@ -462,18 +526,36 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
         for binding_id in resolved_binding_values
         for casilla_id in target_casillas_by_binding.get(binding_id, ())
     }
+    observations_by_casilla = {observation.casilla_id: observation for observation in observations}
+    bound_binding_ids_by_casilla = {
+        casilla.id: bound_casilla_binding_ids(casilla) for casilla in snapshot.revision.casillas
+    }
+    proven_zero_annual_casillas = frozenset(
+        annual_casilla
+        for *_slot, annual_casilla in targets
+        if annual_casilla in casilla_values
+        and _zero_rests_on_resolved_values(
+            annual_casilla,
+            observations_by_casilla=observations_by_casilla,
+            bound_binding_ids_by_casilla=bound_binding_ids_by_casilla,
+            supplied_casilla_ids=supplied_casilla_ids,
+            answered_binding_ids=answered_binding_ids,
+        )
+    )
     missing_relations: list[RelationId] = []
     missing_bindings: list[BindingId] = []
     missing_targets: list[CasillaId] = []
     missing_annuals: list[CasillaId] = []
     for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
-        if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
-            continue
-        annual_value = casilla_values.get(annual_casilla)
-        if annual_value is None:
-            if general_regime_not_applicable:
-                continue
-        elif _calculated_decimal(annual_value) == ZERO:
+        if _reconciliation_slot_grounded(
+            binding_id,
+            annual_casilla,
+            casilla_values=casilla_values,
+            resolved_binding_values=resolved_binding_values,
+            resolved_annual_casillas=resolved_annual_casillas,
+            proven_zero_annual_casillas=proven_zero_annual_casillas,
+            general_regime_not_applicable=general_regime_not_applicable,
+        ):
             continue
         missing_relations.append(relation_id)
         missing_bindings.append(binding_id)

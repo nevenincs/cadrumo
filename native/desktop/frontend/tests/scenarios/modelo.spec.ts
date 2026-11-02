@@ -9,6 +9,17 @@ import type {
 import { ASSET_NOTES } from "../../src/dev/modeloAssetNotes";
 import { label } from "../support/strings";
 
+declare global {
+  interface Window {
+    __modeloWorkRecovery?: { terminal: boolean; failReads: number };
+    __modeloFileGate?: {
+      release: () => void;
+      tokens: string[];
+      forgotten: string[];
+    };
+  }
+}
+
 // The Modelo workspace across its states, over the envelopes the
 // application read for a synthetic taxpayer (src/dev/fixtures/modelo/):
 // a modelo whose rules are incomplete, a filled Modelo 130 with held zeros,
@@ -311,6 +322,37 @@ test("a Modelo 130 recorded as filed shows its proven-zero quarter as zero", asy
   ).toBeVisible();
 });
 
+test("a box shows the help the read serves for it, and its details in words only", async ({
+  page: target,
+}) => {
+  const all = fields(form("130-1T").form.form.pages);
+  const helped = all.find((field) => field.box && field.help);
+  if (!helped?.help) throw new Error("the 130 serves no help for any box");
+  await openDeclaration(target, "130");
+  const row = boxRow(target, helped.box!);
+  // The help sits under the box's words on the form itself.
+  await expect(row).toContainText(helped.help);
+  await row
+    .getByRole("button", { name: label("workspace.modelo.field.details") })
+    .click();
+  const facts = target.getByRole("dialog", {
+    name: label("workspace.modelo.field.details"),
+  });
+  await expect(facts).toContainText(helped.label.text);
+  await expect(facts).toContainText(helped.help);
+  // Legal references and the formula are served as identifiers: never drawn.
+  for (const reference of helped.legal_refs)
+    await expect(facts).not.toContainText(reference);
+  const said = await facts.innerText();
+  expect(
+    RAW.flatMap(([kind, source]) =>
+      [...said.matchAll(new RegExp(source, "g"))].map(
+        (match) => `${kind}: ${match[0]}`,
+      ),
+    ),
+  ).toEqual([]);
+});
+
 test("a box whose kind of value cannot be typed says why on the form", async ({
   page: target,
 }) => {
@@ -350,7 +392,8 @@ test("a box whose kind of value cannot be typed says why on the form", async ({
     name: label("workspace.modelo.section.box", { box: inGrid.box }),
   });
   await expect(cell).not.toContainText(reason);
-  await cell.locator("button").hover();
+  // The box's own face, not the button beside it that opens its details.
+  await cell.locator("button:not([data-field-facts])").hover();
   await expect(target.getByRole("tooltip")).toContainText(reason);
 });
 
@@ -793,14 +836,46 @@ test("staged edits survive a renewal of a baseline that went stale", async ({
   );
 });
 
-test("an apply whose settlement was not seen holds every write until the declaration is read again", async ({
+test("an unknown apply stays held until terminal observation and a successful fresh form read", async ({
   page: target,
 }) => {
   const unknown = (where: Locator | Page) =>
     where.getByRole("alert").filter({
-      hasText: label("workspace.modelo.review.unknown"),
+      hasText: label("workspace.modelo.write_hold.unknown"),
     });
   await openDeclaration(target, "130", { shape: "unknown" });
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    const form = port.form;
+    const recovery = (window.__modeloWorkRecovery = {
+      terminal: false,
+      failReads: 0,
+    });
+    port.observe = async (operation) =>
+      recovery.terminal
+        ? {
+            kind: "refused",
+            operation_id: operation,
+            revision: 2,
+            reason: null,
+            detail: null,
+          }
+        : {
+            kind: "running",
+            operation_id: operation,
+            revision: 1,
+            cancellable: false,
+          };
+    port.form = async (...args) => {
+      if (recovery.failReads > 0) {
+        recovery.failReads--;
+        throw Object.assign(new Error("fixture read failure"), {
+          code: "unavailable",
+        });
+      }
+      return form(...args);
+    };
+  });
   await stage(target, "06", TYPED_06);
   const dialog = await review(target);
   await applyButton(dialog).click();
@@ -812,15 +887,32 @@ test("an apply whose settlement was not seen holds every write until the declara
     .last()
     .click();
   await review(target);
-  await expect(unknown(target)).toBeVisible();
+  await expect(unknown(dialog)).toBeVisible();
   expect(await calls(target, "modelo edit modelo.edit.apply")).toHaveLength(1);
   const preflights = (await calls(target, "modelo edit modelo.edit.preflight"))
     .length;
-  // Reading the declaration again releases the hold, and the edits are
-  // checked again before anything more is applied.
-  await target
-    .getByRole("button", { name: label("workspace.modelo.read_again") })
-    .click();
+  const check = dialog.getByRole("button", {
+    name: label("workspace.modelo.write_hold.check_status"),
+  });
+  await check.click();
+  await expect(check).toBeEnabled();
+  await expect(applyButton(dialog)).toBeDisabled();
+  await expect(
+    dialog.getByRole("button", { name: label("workspace.modelo.read_again") }),
+  ).toHaveCount(0);
+  await target.evaluate(() => {
+    window.__modeloWorkRecovery!.terminal = true;
+    window.__modeloWorkRecovery!.failReads = 1;
+  });
+  await check.click();
+  const reload = dialog.getByRole("button", {
+    name: label("workspace.modelo.read_again"),
+  });
+  await reload.click();
+  await expect(reload).toBeEnabled();
+  await expect(dialog.locator(".modelo-write-hold")).toBeVisible();
+  await expect(applyButton(dialog)).toBeDisabled();
+  await reload.click();
   await expect(unknown(target)).toHaveCount(0);
   await expect
     .poll(
@@ -1080,9 +1172,170 @@ test("an export whose settlement was not seen is unknown and holds", async ({
   });
   await exportAgain.click();
   await expect(
-    target.getByText(label("workspace.modelo.outcome.unknown")).first(),
+    target.getByText(label("workspace.modelo.write_hold.unknown")).first(),
   ).toBeVisible();
   await expect(exportAgain).toBeDisabled();
+  expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
+  await tab(target, "workspace.modelo.history.title").click();
+  await expect(
+    target.getByRole("button", {
+      name: label("workspace.modelo.history.rename"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  await target
+    .locator(".declarations-workspace")
+    .getByRole("button", {
+      name: label("workspace.declarations.destination.overview"),
+      exact: true,
+    })
+    .click();
+  const local = list().rows.find(
+    (row) => row.modelo === "130" && row.opens_local_work,
+  )!;
+  await rowsOf(declarations(target, "en"), "130")
+    .filter({ hasText: local.period_words ?? local.modelo_title })
+    .filter({ hasText: local.state_words })
+    .first()
+    .dblclick();
+  await expect(target.locator(".modelo-write-hold")).toBeVisible();
+  await tab(target, "workspace.modelo.filing.title").click();
+  await expect(exportAgain).toBeDisabled();
+  expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
+});
+
+for (const picker of ["saveFile", "pickFile"] as const) {
+  test(`a late ${picker} result releases its files without submitting after leaving filing`, async ({
+    page: target,
+  }) => {
+    await filing(target, picker === "saveFile" ? "exported" : "filed");
+    await target.evaluate((method) => {
+      const port = window.__fixtureModelo!;
+      let release!: () => void;
+      const waiting = new Promise<void>((done) => {
+        release = done;
+      });
+      const state = (window.__modeloFileGate = {
+        release,
+        tokens: [] as string[],
+        forgotten: [] as string[],
+      });
+      const forget = port.forgetFiles;
+      port.forgetFiles = async (tokens) => {
+        state.forgotten.push(...tokens);
+        return forget(tokens);
+      };
+      if (method === "saveFile") {
+        const pick = port.saveFile;
+        port.saveFile = async (...args) => {
+          const result = await pick(...args);
+          state.tokens.push(...result.files.map((file) => file.token));
+          await waiting;
+          return result;
+        };
+      } else {
+        const pick = port.pickFile;
+        port.pickFile = async (...args) => {
+          const result = await pick(...args);
+          state.tokens.push(...result.files.map((file) => file.token));
+          await waiting;
+          return result;
+        };
+      }
+    }, picker);
+    await target
+      .getByRole("button", {
+        name: label(
+          picker === "saveFile"
+            ? "workspace.modelo.filing.export_again"
+            : "workspace.modelo.filing.add_receipt_pdf",
+        ),
+      })
+      .click();
+    await expect
+      .poll(() => target.evaluate(() => window.__modeloFileGate!.tokens.length))
+      .toBe(1);
+    await tab(target, "desktop.modelo.view.form").click();
+    await target.evaluate(() => window.__modeloFileGate!.release());
+    await expect
+      .poll(() => target.evaluate(() => window.__modeloFileGate!.forgotten))
+      .toEqual(await target.evaluate(() => window.__modeloFileGate!.tokens));
+    expect(
+      await calls(
+        target,
+        picker === "saveFile"
+          ? "modelo submit modelo.export"
+          : "modelo submit modelo.reconcile.import",
+      ),
+    ).toHaveLength(0);
+    await tab(target, "workspace.modelo.filing.title").click();
+    await expect(
+      target.getByRole("button", {
+        name: label(
+          picker === "saveFile"
+            ? "workspace.modelo.filing.export_again"
+            : "workspace.modelo.filing.add_receipt_pdf",
+        ),
+      }),
+    ).toBeEnabled();
+  });
+}
+
+test("an export that settles after leaving filing releases its output token and retains the fresh-read hold", async ({
+  page: target,
+}) => {
+  await filing(target, "exported");
+  await target.evaluate(() => {
+    const port = window.__fixtureModelo!;
+    let release!: () => void;
+    const waiting = new Promise<void>((done) => {
+      release = done;
+    });
+    const state = (window.__modeloFileGate = {
+      release,
+      tokens: [] as string[],
+      forgotten: [] as string[],
+    });
+    const save = port.saveFile;
+    port.saveFile = async (...args) => {
+      const result = await save(...args);
+      state.tokens.push(...result.files.map((file) => file.token));
+      return result;
+    };
+    const forget = port.forgetFiles;
+    port.forgetFiles = async (tokens) => {
+      state.forgotten.push(...tokens);
+      return forget(tokens);
+    };
+    const submit = port.submit;
+    port.submit = async (...args) => {
+      const result = await submit(...args);
+      if (args[0] === "modelo.export") await waiting;
+      return result;
+    };
+  });
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+    })
+    .click();
+  await expect
+    .poll(
+      async () => (await calls(target, "modelo submit modelo.export")).length,
+    )
+    .toBe(1);
+  await tab(target, "desktop.modelo.view.form").click();
+  await target.evaluate(() => window.__modeloFileGate!.release());
+  await expect
+    .poll(() => target.evaluate(() => window.__modeloFileGate!.forgotten))
+    .toEqual(await target.evaluate(() => window.__modeloFileGate!.tokens));
+  await expect(target.locator(".modelo-write-hold")).toContainText(
+    label("workspace.modelo.write_hold.reload_needed"),
+  );
+  await target
+    .getByRole("button", { name: label("workspace.modelo.read_again") })
+    .click();
+  await expect(target.locator(".modelo-write-hold")).toHaveCount(0);
   expect(await calls(target, "modelo submit modelo.export")).toHaveLength(1);
 });
 
@@ -1215,7 +1468,9 @@ test("a correction whose settlement was not seen is unknown and sends nothing mo
   page: target,
 }) => {
   const dialog = await correct(target, "correction-unknown", "150");
-  await expect(dialog).toContainText(label("workspace.modelo.outcome.unknown"));
+  await expect(dialog).toContainText(
+    label("workspace.modelo.write_hold.unknown"),
+  );
   await expect(
     dialog.getByRole("button", {
       name: label("workspace.modelo.correction.confirm"),

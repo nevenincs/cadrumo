@@ -480,6 +480,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.iva_selected_scope_evidence.complete",
+        "modelo.work.verify.iva_selected_scope_evidence.cuota_disagrees_with_rate",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.iva_compensation_annual_source_evidence.complete",
         "modelo.work.verify.iva_compensation_annual_source_evidence.unresolved",
     ),
@@ -492,6 +497,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.oss_source.routed",
         "modelo.work.verify.oss_source.unrouted",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.scheme_period.matches",
+        "modelo.work.verify.scheme_period.contradicted",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.oss_no_activity.consistent",
+        "modelo.work.verify.oss_no_activity.contradicted",
     ),
     _profile(
         "modelo.work.verify",
@@ -538,6 +553,16 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         "modelo.work.verify",
         "modelo.work.verify.invoice_fingerprint.current",
         "modelo.work.verify.invoice_fingerprint.catalogue_unavailable",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.shared_casilla_cells.adjudicated",
+        "modelo.work.verify.shared_casilla_cells.unadjudicated",
+    ),
+    _profile(
+        "modelo.work.verify",
+        "modelo.work.verify.xml_return_content.accepted",
+        "modelo.work.verify.xml_return_content.refused",
     ),
     _profile(
         "modelo.work.verify",

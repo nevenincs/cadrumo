@@ -21,7 +21,6 @@ import {
   viewOf,
 } from "../src/components/ledger/assets/assetWrites";
 import {
-  answer,
   claimFields,
   claimSpans,
   factKey,
@@ -31,12 +30,15 @@ import {
   FURTHER_PURCHASE,
   FURTHER_SHAPE,
   initialOf,
-  parseField,
-  specOf,
   undrawableFacts,
   unlabelledFacts,
-  type FormField,
 } from "../src/components/ledger/assets/assetFields";
+import {
+  answer,
+  parseField,
+  specOf,
+  type FormField,
+} from "../src/components/ledger/assets/assetFormValues";
 import {
   type ActivityAssetListResult as AssetListResult,
   type AssetListRow,

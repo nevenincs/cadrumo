@@ -1,7 +1,8 @@
 """Exporting offers the same artefacts, elections and file format, and states the same receipt, for every frontend.
 
-The elections are asked exactly where the terminal workbench asked them, now
-read from each modelo's declared result codes rather than its name; the file
+The elections are asked where each modelo's declared result codes, or the
+law's two-instalment payment, give them something to choose, each with its
+state for the declaration's result; the file
 format is the one the revision's export layout declares; and the receipt is
 verified only by an in-force filing the AEAT is seen to hold. Forms are built
 by the real builder over the published registry; filing records are synthetic.
@@ -9,7 +10,7 @@ by the real builder over the published registry; filing records are synthetic.
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from uuid import UUID
 
@@ -19,10 +20,12 @@ from ....core.export_layout_format import ExportLayoutFormat
 from ....core.external_constants import OutputLanguage
 from ....core.modelo_export_artefact import ModeloExportArtefact
 from ....core.payment_election import PaymentElection
+from ....core.payment_instalment_election import PaymentInstalmentElection
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.refund_election import RefundElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.deadlines.festivos import DeadlineHolidayCoverage
 from ....domain.modelos.calculation_revision import CalculationRevisionState
 from ....domain.modelos.filing_record import (
     AeatConfirmationState,
@@ -35,11 +38,25 @@ from ....domain.modelos.filing_record import (
     derive_filing_record_id,
 )
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
+from ....domain.transactions.own_accounts import (
+    OwnAccountDesignation,
+    OwnAccountHolding,
+    OwnAccountRegister,
+    OwnAccountRole,
+    OwnBankAccountDetails,
+)
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
+from ..settlement_casilla import declaration_settlement_casilla_id
+from ..work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormDeadline, ModeloFormExport
 from ..work_form_export_offer import (
     EXPORT_ARTEFACT_LOCALE_KEYS,
     ModeloFormElection,
+    ModeloFormElectionFigure,
+    ModeloFormElectionQuestion,
+    ModeloFormElectionReason,
+    ModeloFormElectionState,
+    ModeloFormInstalment,
     ModeloFormUnavailable,
     asks_export_elections,
     form_export_offer,
@@ -49,9 +66,7 @@ from ..work_form_export_offer import (
 from ..work_form_header import export_hold
 from ..work_form_models import (
     TYPED_EDITABILITIES,
-    ModeloFormCalculationNote,
     ModeloFormEditability,
-    ModeloFormExport,
     ModeloFormOrigin,
     ModeloWorkForm,
     map_form_fields,
@@ -79,29 +94,299 @@ def _offer(operation: PinnedAuthorityOperation, modelo: str, year: int, code: st
     )
 
 
-def test_elections_are_asked_exactly_where_the_terminal_asked_them(operation: PinnedAuthorityOperation) -> None:
-    """The workbench asked the payment and refund elections for Modelo 303 and no other modelo."""
-    asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo)}
+def test_elections_are_asked_where_a_design_declares_a_carry_or_the_law_a_split(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Modelo 303 declares carrying a credit or refunding it; Modelo 100's 2025 result may be paid in two instalments.
 
-    assert asked == {"303"}
+    The split is a dated registry fact first stated for the 2025 ejercicio, so a
+    2024 Modelo 100 asks nothing.
+    """
+    renta_2025 = Period.from_year_and_code(2025, "0A")
+    asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo, renta_2025)}
+
+    assert asked == {"100", "303"}
+    assert not asks_export_elections("100", Period.from_year_and_code(2024, "0A"))
 
 
 def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
     operation: PinnedAuthorityOperation,
 ) -> None:
     offer = _offer(operation, "303", 2026, "1T")
+    payable = _calculated(operation, "303", 2026, "1T", Decimal("120.00"))
     other = _offer(operation, "130", 2026, "1T")
 
     questions = {question.election: question for question in offer.elections}
-    assert offer.asks_elections and set(questions) == set(ModeloFormElection)
-    assert questions[ModeloFormElection.REFUND].default == RefundElection.COMPENSAR.value
-    assert questions[ModeloFormElection.PAYMENT].default == PaymentElection.INGRESO.value
-    assert questions[ModeloFormElection.PRIOR_DOMICILIATION].default == PriorDomiciliationElection.KEEP.value
-    assert {choice.value for choice in questions[ModeloFormElection.PAYMENT].choices} == {
-        member.value for member in PaymentElection
+    assert offer.asks_elections and set(questions) == {
+        ModeloFormElection.REFUND,
+        ModeloFormElection.PAYMENT,
+        ModeloFormElection.PRIOR_DOMICILIATION,
     }
+    assert questions[ModeloFormElection.REFUND].default == RefundElection.COMPENSAR.value
+    assert questions[ModeloFormElection.PRIOR_DOMICILIATION].default == PriorDomiciliationElection.KEEP.value
+    unknown = questions[ModeloFormElection.PAYMENT]
+    assert unknown.state is ModeloFormElectionState.UNAVAILABLE
+    assert unknown.reason is ModeloFormElectionReason.RESULT_UNKNOWN and unknown.state_words
+    assert unknown.default is None and unknown.choices == ()
+    payment = _questions(operation, payable)[ModeloFormElection.PAYMENT]
+    assert payment.state is ModeloFormElectionState.AVAILABLE and payment.request_field == "payment_election"
+    assert payment.default == PaymentElection.INGRESO.value
+    assert {choice.value for choice in payment.choices} == {member.value for member in PaymentElection}
     assert all(choice.words != choice.value for question in offer.elections for choice in question.choices)
     assert not other.asks_elections and other.elections == ()
+
+
+_TODAY = date(2026, 5, 4)
+_SPANISH_IBAN = "ES9121000418450200051332"
+_GERMAN_IBAN = "DE89370400440532013000"
+
+
+def _deadline(days: int) -> ModeloFormDeadline:
+    closes = _TODAY + timedelta(days=days)
+    return ModeloFormDeadline(
+        closes_on=closes,
+        nominal_closes_on=closes,
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
+        reference_on=_TODAY,
+        days_remaining=days if days >= 0 else None,
+        days_overdue=-days if days < 0 else None,
+    )
+
+
+def _calculated(
+    operation: PinnedAuthorityOperation,
+    modelo: str,
+    year: int,
+    code: str,
+    result: Decimal,
+    *,
+    deadline: ModeloFormDeadline | None = None,
+    settled: Decimal | None = None,
+) -> ModeloWorkForm:
+    """A calculated form whose result box holds ``result``, built by the real builder.
+
+    The box the revision settles, where it names one apart from the result,
+    holds ``settled``, by default the result itself.
+    """
+    blank = built_form(operation, modelo, year, code, entered=frozenset())
+    assert blank.result is not None
+    held: dict[str, Decimal | str] = {str(blank.result.casilla_id): result}
+    settling = declaration_settlement_casilla_id(modelo, form_snapshot(operation, modelo, year, code).revision)
+    if settling is not None and settling != blank.result.casilla_id:
+        held[str(settling)] = result if settled is None else settled
+    form = built_form(operation, modelo, year, code, held=held, entered=frozenset())
+    return form.model_copy(update={"calculation_revision_id": "c" * 64, "deadline": deadline})
+
+
+def _register(*accounts: tuple[str, str], designate: str | None = None) -> OwnAccountRegister:
+    register = OwnAccountRegister()
+    for label, iban in accounts:
+        register = register.with_new_account(
+            OwnBankAccountDetails(
+                label=label,
+                holding=OwnAccountHolding.TITULAR,
+                iban=iban,
+                swift_bic="" if iban.startswith("ES") else "COBADEFFXXX",
+            )
+        )
+    if designate is not None:
+        for role in OwnAccountRole:
+            register = register.with_designation(OwnAccountDesignation(role=role, own_account_id=designate))
+    return register
+
+
+def _questions(
+    operation: PinnedAuthorityOperation,
+    form: ModeloWorkForm,
+    *,
+    own_accounts: OwnAccountRegister | None = None,
+    amended: bool = False,
+) -> dict[ModeloFormElection, ModeloFormElectionQuestion]:
+    modelo = str(form.modelo)
+    snapshot = form_snapshot(operation, modelo, form.filing_year, str(form.period.code))
+    offer = form_export_offer(
+        modelo, snapshot, _EN, form=form, verified=False, filed=False, own_accounts=own_accounts, amended=amended
+    )
+    return {question.election: question for question in offer.elections}
+
+
+def test_a_modelo_100_to_pay_within_its_period_offers_the_split_and_the_debit_account(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.00"), deadline=_deadline(30))
+    register = _register(("Nómina", _SPANISH_IBAN), ("Berlin", _GERMAN_IBAN), designate="acc-01")
+
+    questions = _questions(operation, form, own_accounts=register)
+
+    assert set(questions) == {
+        ModeloFormElection.PAYMENT,
+        ModeloFormElection.INSTALMENT,
+        ModeloFormElection.CHARGE_ACCOUNT,
+        ModeloFormElection.REFUND_ACCOUNT,
+    }
+    instalment = questions[ModeloFormElection.INSTALMENT]
+    assert instalment.state is ModeloFormElectionState.AVAILABLE
+    assert instalment.request_field == "instalment_election" and instalment.help is not None
+    assert instalment.default == PaymentInstalmentElection.SINGLE.value
+    assert {choice.value for choice in instalment.choices} == {member.value for member in PaymentInstalmentElection}
+    payment = questions[ModeloFormElection.PAYMENT]
+    # Modelo 100 declares no "cuenta corriente tributaria" code, so that method is not offered.
+    assert {choice.value for choice in payment.choices} == {
+        PaymentElection.INGRESO.value,
+        PaymentElection.DOMICILIACION.value,
+    }
+    charge = questions[ModeloFormElection.CHARGE_ACCOUNT]
+    assert charge.state is ModeloFormElectionState.AVAILABLE and charge.request_field == "charge_account_id"
+    assert [choice.value for choice in charge.choices] == ["acc-01"] and charge.default == "acc-01"
+    refund = questions[ModeloFormElection.REFUND_ACCOUNT]
+    assert refund.state is ModeloFormElectionState.NOT_APPLICABLE
+    assert refund.reason is ModeloFormElectionReason.NOTHING_TO_REFUND and refund.choices == ()
+
+
+def test_the_split_states_both_instalments_of_the_amount_left_to_pay_as_advisory(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """60 per cent of the remainder 0695 (1.000,01 of a 1.200,01 result, 200 suspended) is 600,006.
+
+    The registry declares the share; the cent goes to the first instalment by
+    Cadrumo's own rounding, which no official rule states, so both figures are
+    advisory and say why.
+    """
+    form = _calculated(
+        operation, "100", 2025, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
+    )
+
+    instalment = _questions(operation, form)[ModeloFormElection.INSTALMENT]
+
+    assert instalment.state is ModeloFormElectionState.AVAILABLE
+    first, second = instalment.figures
+    assert (first.instalment, first.amount) == (ModeloFormInstalment.FIRST, "600.01")
+    assert (second.instalment, second.amount) == (ModeloFormInstalment.SECOND, "400.00")
+    assert all(figure.advisory and figure.advisory_words for figure in instalment.figures)
+    assert "60%" in first.words and "600.01" in first.words
+    assert "40%" in second.words and "400.00" in second.words
+
+
+def test_an_advisory_figure_carries_its_reason_and_only_then() -> None:
+    with pytest.raises(ValueError, match="advisory"):
+        ModeloFormElectionFigure(
+            instalment=ModeloFormInstalment.FIRST, amount="1.00", words="x", advisory=True, advisory_words=None
+        )
+    with pytest.raises(ValueError, match="advisory"):
+        ModeloFormElectionFigure(
+            instalment=ModeloFormInstalment.FIRST, amount="1.00", words="x", advisory=False, advisory_words="y"
+        )
+
+
+@pytest.mark.parametrize("amount", ["-1.00", "1.001", "1,00", ""])
+def test_a_figure_amount_is_the_decimal_text_of_cents(amount: str) -> None:
+    with pytest.raises(ValueError):
+        ModeloFormElectionFigure(
+            instalment=ModeloFormInstalment.FIRST, amount=amount, words="x", advisory=True, advisory_words="y"
+        )
+
+
+def test_a_settled_box_without_a_value_withholds_the_settlement_as_unknown(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A waived refund leaves 0700 unresolved: the refund is not offered from the result 0670 instead."""
+    blank = built_form(operation, "100", 2025, "0A", entered=frozenset())
+    assert blank.result is not None
+    form = built_form(
+        operation, "100", 2025, "0A", held={str(blank.result.casilla_id): Decimal("-310.40")}, entered=frozenset()
+    ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
+
+    refund = _questions(operation, form, own_accounts=_register(("Nómina", _SPANISH_IBAN)))[
+        ModeloFormElection.REFUND_ACCOUNT
+    ]
+
+    assert refund.state is ModeloFormElectionState.UNAVAILABLE
+    assert refund.reason is ModeloFormElectionReason.RESULT_UNKNOWN and refund.choices == ()
+
+
+def test_a_result_to_pay_with_nothing_left_to_pay_offers_no_settlement(operation: PinnedAuthorityOperation) -> None:
+    """The whole result suspended against the spouse's refund leaves 0700 at zero, which no design block settles."""
+    form = _calculated(operation, "100", 2025, "0A", Decimal("500.00"), deadline=_deadline(30), settled=Decimal("0"))
+
+    questions = _questions(operation, form, own_accounts=_register(("Nómina", _SPANISH_IBAN)))
+
+    for election in (ModeloFormElection.PAYMENT, ModeloFormElection.INSTALMENT, ModeloFormElection.CHARGE_ACCOUNT):
+        assert questions[election].state is ModeloFormElectionState.UNAVAILABLE, election
+        assert questions[election].reason is ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED, election
+        assert questions[election].state_words is not None and questions[election].figures == ()
+
+
+def test_an_account_is_offered_by_its_label_and_mask_never_its_number(operation: PinnedAuthorityOperation) -> None:
+    form = _calculated(operation, "100", 2025, "0A", Decimal("-310.40"), deadline=_deadline(30))
+    register = _register(("Nómina", _SPANISH_IBAN), ("Berlin", _GERMAN_IBAN))
+
+    questions = _questions(operation, form, own_accounts=register)
+
+    refund = questions[ModeloFormElection.REFUND_ACCOUNT]
+    assert refund.state is ModeloFormElectionState.AVAILABLE and refund.request_field == "refund_account_id"
+    assert [choice.value for choice in refund.choices] == ["acc-01", "acc-02"]
+    assert refund.default is None
+    assert all(choice.words.startswith(("Nómina (ES", "Berlin (DE")) for choice in refund.choices)
+    served = repr(questions)
+    assert _SPANISH_IBAN not in served and _GERMAN_IBAN not in served
+    for election in (ModeloFormElection.PAYMENT, ModeloFormElection.INSTALMENT, ModeloFormElection.CHARGE_ACCOUNT):
+        assert questions[election].state is ModeloFormElectionState.NOT_APPLICABLE, election
+        assert questions[election].reason is ModeloFormElectionReason.NOTHING_TO_PAY, election
+
+
+@pytest.mark.parametrize(
+    ("deadline", "amended", "reason"),
+    [
+        (_deadline(-1), False, ModeloFormElectionReason.PAST_FILING_WINDOW),
+        (None, False, ModeloFormElectionReason.FILING_WINDOW_UNKNOWN),
+        (_deadline(30), True, ModeloFormElectionReason.AMENDMENT),
+    ],
+)
+def test_the_split_is_withheld_with_its_reason_where_the_law_refuses_it(
+    operation: PinnedAuthorityOperation,
+    deadline: ModeloFormDeadline | None,
+    amended: bool,
+    reason: ModeloFormElectionReason,
+) -> None:
+    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.00"), deadline=deadline)
+
+    questions = _questions(operation, form, amended=amended)
+
+    instalment = questions[ModeloFormElection.INSTALMENT]
+    assert instalment.state is ModeloFormElectionState.UNAVAILABLE and instalment.reason is reason
+    assert instalment.state_words is not None and instalment.default is None and instalment.choices == ()
+    assert questions[ModeloFormElection.PAYMENT].state is ModeloFormElectionState.AVAILABLE
+
+
+def test_a_nil_or_uncalculated_modelo_100_offers_no_settlement(operation: PinnedAuthorityOperation) -> None:
+    nil = _questions(operation, _calculated(operation, "100", 2025, "0A", Decimal("0.00"), deadline=_deadline(30)))
+    unknown = _questions(operation, built_form(operation, "100", 2025, "0A", entered=frozenset()))
+
+    assert {question.reason for question in nil.values()} == {ModeloFormElectionReason.NOTHING_TO_PAY}
+    assert {question.state for question in nil.values()} == {ModeloFormElectionState.NOT_APPLICABLE}
+    assert {question.reason for question in unknown.values()} == {ModeloFormElectionReason.RESULT_UNKNOWN}
+    assert {question.state for question in unknown.values()} == {ModeloFormElectionState.UNAVAILABLE}
+
+
+def test_without_an_open_spanish_account_the_debit_account_cannot_be_chosen(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    form = _calculated(operation, "100", 2025, "0A", Decimal("1000.00"), deadline=_deadline(30))
+    closed = _register(("Nómina", _SPANISH_IBAN), ("Berlin", _GERMAN_IBAN)).with_closed_account(
+        "acc-01", date(2020, 1, 31)
+    )
+
+    charge = _questions(operation, form, own_accounts=closed)[ModeloFormElection.CHARGE_ACCOUNT]
+    refund = _questions(
+        operation,
+        _calculated(operation, "100", 2025, "0A", Decimal("-5.00"), deadline=_deadline(30)),
+        own_accounts=_register(),
+    )[ModeloFormElection.REFUND_ACCOUNT]
+
+    assert charge.state is ModeloFormElectionState.UNAVAILABLE
+    assert charge.reason is ModeloFormElectionReason.NO_SPANISH_ACCOUNT
+    assert refund.state is ModeloFormElectionState.UNAVAILABLE
+    assert refund.reason is ModeloFormElectionReason.NO_OPEN_ACCOUNT
 
 
 def test_every_export_artefact_is_offered_in_order(operation: PinnedAuthorityOperation) -> None:

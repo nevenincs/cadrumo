@@ -186,6 +186,10 @@ def _user_profile_descendants(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(ctx.raw_profile_subject, {**_baselined(ctx), "descendants": ()})
 
 
+def _user_profile_ascendants(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(ctx.raw_profile_subject, {**_baselined(ctx), "ascendants": ()})
+
+
 def _user_profile_complete_setup(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(ctx.raw_profile_subject, _baselined(ctx))
 
@@ -195,6 +199,14 @@ def _user_profile_view(ctx: PayloadContext) -> PayloadResult:
         ctx.raw_profile_subject,
         {"profile_id": ctx.profile_id, "page_kind": ProfileViewPageKind.FACTS},
     )
+
+
+def _user_profile_imputation_election_read(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(ctx.raw_profile_subject, {"profile_id": ctx.profile_id, "tax_year": 2025})
+
+
+def _user_profile_imputation_election_set(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(ctx.raw_profile_subject, {**_baselined(ctx), "tax_year": 2025, "criterion": "devengo"})
 
 
 def _workbench_generation(ctx: PayloadContext) -> PayloadResult:
@@ -322,8 +334,11 @@ PROFILE_BUILDERS: dict[str, PayloadBuilder] = {
     "user-profile.patch": _user_profile_patch,
     "user-profile.plantilla-media": _user_profile_plantilla_media,
     "user-profile.descendants": _user_profile_descendants,
+    "user-profile.ascendants": _user_profile_ascendants,
     "user-profile.complete-setup": _user_profile_complete_setup,
     "user-profile.view": _user_profile_view,
+    "user-profile.imputation-election.read": _user_profile_imputation_election_read,
+    "user-profile.imputation-election.set": _user_profile_imputation_election_set,
     "workbench.generation": _workbench_generation,
     "user-profile.repeatable-row-mutation": _user_profile_repeatable_row_mutation,
     "user-profile.repeatable-row-update": _user_profile_repeatable_row_existing,

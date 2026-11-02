@@ -438,6 +438,10 @@ application:
         receipt_digest_mismatch: The exported file's digest does not match the export
           receipt.
         rendered_payload_empty: The export layout produced an empty declaration payload.
+        shared_casilla_cells_unadjudicated: 'The declaration file was not generated:
+          boxes %{casilla_ids} hold a value the official design would write into several
+          cells, and those cells have not been confirmed to mean the same thing. Writing
+          it would put these figures in concepts they do not belong to.'
         verify_draft_snapshot_stale: The check requires a draft built from the modelo
           definitions currently in use.
         xml_schema_unreadable: The official schema for this year could not be applied
@@ -451,6 +455,8 @@ application:
         xml_value_not_a_number: Box %{box} must hold a number under the official schema.
         xml_value_not_listed: Box %{box} holds a value outside the options the official
           schema lists.
+        xml_value_required_missing: Box %{box} is required by the official schema
+          and has no value. Enter it before exporting; nothing was written.
         xml_value_too_long: Box %{box} holds %{observed} characters; the official
           schema admits at most %{limit}.
         xml_value_too_many_decimals: Box %{box} holds %{observed} decimal places;
@@ -949,12 +955,68 @@ application:
           the labels did not cover stay empty: %{fields}. Fill them in yourself.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Agree
+          differ: Differ
+          not_comparable: Cannot be compared
+          only_in_borrador: Only in the AEAT draft
+          only_in_calculation: Only in your calculation
+        evidence:
+          borrador: Printed by the AEAT in its draft and imported here. It is an observation,
+            not an authenticated filing.
+          calculation: Worked out on this computer from your records. It is local,
+            not a filing with the AEAT.
+        reason:
+          borrador_does_not_read_box: The draft import does not read this box, so
+            a missing draft value says nothing about it.
+          borrador_printed_no_value: Your calculation holds a value, but the AEAT
+            draft prints none for this box.
+          borrador_value_ambiguous: The AEAT draft holds more than one value for this
+            box, so it cannot be compared.
+          borrador_value_not_kept: The AEAT draft prints this box, but the import
+            keeps no value for it, so it cannot be compared.
+          calculation_blocked: Your calculation could not settle this box, so it cannot
+            be compared.
+          calculation_has_no_value: The AEAT draft prints a value, but your calculation
+            holds none for this box.
+          calculation_not_applicable: Your calculation shows this box does not apply
+            to you, but the AEAT draft prints a value.
+          not_applicable_zero: The AEAT draft prints zero, and your calculation shows
+            this box does not apply to you.
+          same_value: The AEAT draft and your calculation hold the same value.
+          taken_from_borrador: Your calculation took this value from the AEAT draft,
+            so the agreement does not confirm it independently.
+          value_kinds_differ: One side holds an amount and the other a text, so they
+            cannot be compared.
+          values_differ: The AEAT draft and your calculation hold different values.
+        stale:
+          calculation_outdated: The rules changed after your calculation was saved,
+            so it needs recalculating.
+          calculation_used_other_capture: Your calculation was worked out from a different
+            AEAT draft than the one compared here.
+          newer_capture_refused: A draft you imported later is stored but cannot be
+            read, so this comparison uses an earlier one.
+        status:
+          capture_refused: AEAT drafts are stored for this year, but none can be read
+            under the current rules; import the draft again.
+          compared: Your imported AEAT draft and your saved calculation were compared
+            box by box.
+          no_calculation: This declaration has no saved calculation yet, so the draft
+            cannot be compared; calculate it first.
+          no_capture: You have not imported an AEAT draft for this year, so there
+            is nothing to compare.
+          stale: Both were read, but they no longer describe each other, so recalculate
+            or import the draft again before you rely on this comparison.
       errors:
         binding_keys_not_admitted: 'This stored borrador holds values under keys the
           modelo definitions do not admit, so it cannot be used; import the document
           again: %{bindings}.'
         binding_value_key_blank: The keys of borrador values must not be blank.
         bucket_id_blank: Borrador bucket id must not be blank.
+        printed_observations_unresolved: 'This stored borrador keeps printed values
+          for boxes the modelo definitions no longer identify, so it cannot be used;
+          import the document again: %{casillas}.'
         snapshot_id_blank: Borrador snapshot id must not be blank.
         snapshot_not_found: No borrador snapshot matches the requested id.
         snapshot_prefix_ambiguous: The borrador snapshot prefix matches multiple snapshots.
@@ -1082,7 +1144,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: The keys of the values supplied must not be blank.
         decimal_value_invalid: The borrador value for numeric source %{binding_id}
           must be decimal-compatible.
         forbidden_bindings: 'The borrador contains values that the modelo definitions
@@ -1219,6 +1280,12 @@ application:
           export it as it stands.
         what_to_do: Calculate the declaration again, check it and record it again;
           the new record replaces this one.
+      household_rows_incomplete:
+        what: Your profile states more people in this group than it records, so the
+          declaration uses only the people recorded and does not treat the group as
+          complete.
+        what_to_do: Add the missing people to your profile or correct the count, then
+          calculate again.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
@@ -1318,6 +1385,16 @@ application:
           Cadrumo did not work out that tax.
         what_to_do: No action is needed if you made no such sales. Otherwise enter
           the amounts yourself.
+      precedence_tier_divergence:
+        what: Two sources hold different values for a figure that reaches box {box},
+          and Cadrumo used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong, then calculate
+          again. Checking, exporting and recording wait until they agree.
+      precedence_tier_divergence_advisory:
+        what: Two sources hold different values for a working figure, and Cadrumo
+          used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong. No exported
+          box depends on this figure.
       prior_payment_minoracion_not_captured:
         what: The reduction that comes from earlier payments is not recorded in box
           {box}.
@@ -1529,6 +1606,7 @@ application:
       disposal_zero_result: '{element}: its sale on {date}, at {transmission_value}
         of transmission value against {net_value} of net value, neither gains nor
         loses, so no box carries it.'
+      household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
@@ -1561,6 +1639,21 @@ application:
       row_unregistered_undated: A ledger entry records an asset your register does
         not hold.
     calc_diagnostic_words:
+      income_class:
+        actividad_economica: economic activities
+        arrendamiento_inmueble_urbano: urban property rental
+        arrendamiento_inmueble_urbano_actividad: urban property rental run as an economic
+          activity
+        atribucion_actividad_economica: attributed economic activities
+        atribucion_capital_inmobiliario: attributed real estate income
+        atribucion_capital_mobiliario: attributed movable capital income
+        atribucion_ganancia_patrimonial: attributed capital gains
+        capital_mobiliario: movable capital income
+        ganancia_patrimonial: capital gains
+        imputacion_aie_ute: AIE and UTE imputation
+        imputacion_derechos_imagen: image-rights imputation
+        other: another income
+        trabajo: employment income
       named_element: '"{name}"'
       unnamed_element: An asset with no name
     calculation_report:
@@ -1728,6 +1821,9 @@ application:
       amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
         is not legally available for modelo {modelo} filing year {filing_year} period
         {period}. Accepted kinds for this period: {accepted_kinds}.'
+      amendment_later_period_only: Modelo {modelo} for year {filing_year} period {period}
+        cannot correct a return already filed. Make the adjustment in the return of
+        a later period.
       amendment_registry_root_missing: The published authority generation %{missing_path}
         is missing; amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: The modelo definitions for modelo %{modelo},
@@ -2137,12 +2233,20 @@ application:
       invoice_fingerprint_drift: Your invoices changed after modelo %{modelo} %{filing_year},
         %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
         %{added_count} added). Calculate it again before verifying.
+      invoice_fingerprint_narrower_scope: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates the tracking of invoices accrued with no bank movement,
+        so Cadrumo cannot say whether those have changed since. Calculate it again
+        to start tracking them.
       invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
         them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
         cannot be shown to be current. Try again once they can be read.
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.
+      iva_cuota_disagrees_with_rate: The VAT entry dated %{transaction_date} records
+        a cuota of %{recorded_cuota} EUR, but its base of %{base_amount} EUR at a
+        rate of %{iva_rate_percent}% gives %{expected_cuota} EUR. Correct the cuota,
+        the base or the rate, then calculate again before checking this declaration.
       iva_import_document_unrecordable: The entry dated %{transaction_date} for %{transaction_amount}
         %{transaction_currency} needs a customs declaration for the import. Cadrumo
         cannot yet record it, so this declaration cannot pass the check. File this
@@ -2207,6 +2311,9 @@ application:
         for estimación objetiva (módulos).'
       oss_evidence_missing: This declaration includes one-stop-shop (OSS) activity,
         but no supporting documents for it are saved.
+      oss_no_activity_contradicted: You declared this period without activity, but
+        it holds invoices under the regime. Remove the declaration or review those
+        invoices.
       oss_source_unrouted: Some one-stop-shop (OSS) entries are not counted in any
         box of this form.
       printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines
@@ -2222,10 +2329,16 @@ application:
         enough to file it.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
+      scheme_period_contradicted: The value {entered} in {binding_id} contradicts
+        this work's period, which is {expected}. Correct it or open the work for the
+        right period.
       selected_option_requires_nonzero: The selected option requires a nonzero value
         in this field.
       selected_option_requires_zero: The selected option requires an explicit zero
         in this field.
+      shared_casilla_cells_unadjudicated: 'Box %{casilla_id} holds a value the export
+        would also write into cells that have not been confirmed to mean the same
+        thing: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: This declaration includes
         savings income from movable capital (rendimientos del capital mobiliario del
         ahorro), but no withholding (retención) is credited against it. Enter the
@@ -2274,6 +2387,13 @@ application:
         for modelo %{source_modelo} is empty, and you have not confirmed for every
         period that nothing was withheld. Enter the payments for each payee in this
         modelo''s detail, or confirm each period in your profile.'
+      xml_required_content_missing: Box %{box} is required by the official schema
+        and has no value, so the export would refuse this declaration.
+      xml_return_not_rendered: The declaration file can't be built from this calculation,
+        so the export would refuse it. Check your identity details and the figures
+        in the declaration.
+      xml_value_refused: Box %{box} holds a value the official schema doesn't admit,
+        so the export would refuse this declaration.
     help:
       constraint:
         at_least: At least {minimum}.
@@ -2353,10 +2473,38 @@ application:
           %{binding_id} has unsupported value type %{value_type}.
         enum_boolean_invalid: The profile fact for value source %{binding_id} resolved
           to a boolean; boolean facts are not valid keys.
+    projection_words:
+      binding_unresolved: No value could be worked out for this figure from your records,
+        so it stays unresolved instead of counting as zero. Record the missing evidence,
+        then project again.
+      casilla_reason:
+        m210_baseline_tipo_deferred: This box needs the general rate for this kind
+          of income, which is not yet grounded for the year, so it has no value.
+        m210_convenio_rate_missing: This box needs the tax-treaty rate for the country
+          and the kind of income, which is not available, so it has no value.
+        other: This box could not be worked out, so it has no value. It is never shown
+          as zero.
+        unresolved_operand: This box adds up or reads a figure that has no value yet,
+          so it has none either. It is never shown as zero.
+        waived_refund_result_unsupported: The result when a refund is waived is not
+          supported yet, so this box has no value. It is never shown as zero.
     quickfile:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
+    taxation_comparison_words:
+      below_materiality: The two results differ by {difference}, less than {threshold},
+        so either filing mode is acceptable.
+      conjunta_lower_result: 'Joint filing comes out lower: your result is {conjunta}
+        jointly and {individual} individually, a difference of {difference}.'
+      individual_branch_caveat: The individual figure is a single return worked out
+        from your whole household's combined inputs, so it is only reliable when one
+        person earns the household's income. It does not work out two separate returns,
+        one on each spouse's own income, and that comparison is not available yet.
+        If two people in your household earn income, read the individual figure as
+        a rough guide, not as the amount to file.
+      individual_lower_result: 'Individual filing comes out lower: your result is
+        {individual} individually and {conjunta} jointly, a difference of {difference}.'
     value_date:
       month_01: Jan
       month_02: Feb
@@ -2408,6 +2556,7 @@ application:
           detail, or confirm each period in your profile.
         enter_payee_payments: Enter the payments for each payee in this modelo's detail,
           then check again.
+        enter_required_statement: Enter this box, then calculate again.
         enter_withholding_certificate: Enter the withholding shown on your payer's
           certificado de retenciones e ingresos a cuenta, then calculate again.
         file_another_way: Cadrumo cannot yet prepare this declaration for filing.
@@ -2424,6 +2573,9 @@ application:
           or income below the withholding threshold.
         settle_earlier_declaration: Settle the declaration of the earlier period first,
           then calculate again.
+        shared_box_awaits_review: 'Cadrumo can''t export this box yet. Don''t empty
+          it to get past this: file this declaration with another tool, or wait until
+          its cells have been reviewed.'
       inspection_heading: All boxes, in box-number order
       unnamed_box: Unnamed box
   operations:
@@ -2442,16 +2594,9 @@ application:
       holiday_coverage:
         calendar_unavailable: holiday calendar unavailable; the original deadline
           has not been checked
-        national_and_territory: national and %{territory} holidays checked; local
-          holidays not checked
-        national_and_territory_without_name: national and applicable regional holidays
-          checked; local holidays not checked
-        national_only: national holidays only; regional and local holidays not checked
+        national_only: weekends and national non-working days checked; regional and
+          local holidays do not move a filing deadline
         not_shifted: this modelo's deadline does not move for non-working days
-        territory_unverified: national holidays only; %{territory} regional holidays
-          for this year have not been checked, and local holidays are not checked
-        territory_unverified_without_name: national holidays only; the applicable
-          regional calendar is unverified; local holidays are not checked
       shift:
         business_day: Business day
         calendar_unavailable: Calendar unavailable
@@ -2741,6 +2886,24 @@ application:
             to a spreadsheet formula.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: The date of birth of ascendant %{row} is not a
+        valid date; write it as year-month-day.
+      ascendant_birth_date_required: Ascendant %{row} has no date of birth, and every
+        ascendant needs one.
+      ascendant_convivientes_invalid: The number of descendants that ascendant %{row}
+        lives with must be a whole number from 0 to %{limit}.
+      ascendant_death_before_birth: Ascendant %{row} has a date of death before their
+        date of birth.
+      ascendant_death_date_invalid: The date of death of ascendant %{row} is not a
+        valid date; write it as year-month-day.
+      ascendant_fact_unsupported: Ascendant %{row} states a fact that the profile
+        does not keep for an ascendant.
+      ascendant_limit_unknown: The declaration design states no limit for ascendants,
+        so the list cannot be checked or saved.
+      ascendant_nif_invalid: The NIF or NIE of ascendant %{row} is not valid; check
+        its letters and digits.
+      ascendant_rows_over_limit: A declaration lists at most %{limit} ascendants,
+        and %{count} were given.
       censal_read_identity_absent: The tax registration read contained no tax identity,
         so it cannot be confirmed to belong to this profile.
       censal_read_identity_cleared: This profile's tax ID was cleared, so a tax registration
@@ -2806,6 +2969,18 @@ application:
         was written.
       row_unknown_field: 'Section ''%{section}'' declares no such fields: %{unknown}.
         Available fields: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Date of birth
+        convivientes:
+          label: Number of descendants this ascendant lives with
+        fallecimiento:
+          help: Leave blank if this ascendant has not died.
+          label: Date of death
+        nif:
+          label: Ascendant's NIF/NIE (leave blank if none)
+      incomplete: '{stated} stated, {recorded} recorded'
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'

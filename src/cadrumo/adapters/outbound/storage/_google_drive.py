@@ -759,6 +759,23 @@ class GoogleDriveProvider:
                 ),
             )
         label_clean = sanitize_provider_object_label(label)
+        # A read refuses any stored hash that is not the payload's full SHA-256,
+        # so a write that records another value would be unreadable afterwards.
+        payload_digest = sha256_hex(payload)
+        require_full_sha256_content_hash(
+            content_hash,
+            message="drive content_hash is not a full SHA-256 digest",
+            context={"actual_sha256": payload_digest},
+            translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
+        )
+        verify_content_hash(
+            payload_digest,
+            content_hash,
+            message="drive content_hash does not describe the payload",
+            context={"stored_hash": content_hash, "actual_sha256": payload_digest},
+            translated_message="adapters.outbound.storage.google_drive.errors.content_hash_mismatch",
+            require_full_digest=True,
+        )
         content_hash_clean = content_hash
         service = self._get_service()
         namespace_folder_id = self._resolve_namespace_folder(namespace_clean)
@@ -1180,7 +1197,7 @@ class GoogleDriveProvider:
                 _PROBE_NAMESPACE,
                 "00000000probe",
                 b"",
-                content_hash="sha256-empty",
+                content_hash=f"sha256-{sha256_hex(b'')}",
                 label="sentinel",
             )
             self.delete(_PROBE_NAMESPACE, "00000000probe")

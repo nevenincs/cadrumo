@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import (
@@ -34,7 +35,9 @@ from .art20_advisory import art20_reduccion_advisory_finding
 from .art52_advisory import art52_reduccion_advisory_finding
 from .dt12_advisory import dt12_reduccion_advisory_finding
 from .dt12_antiquity_advisory import dt12_antiquity_advisory_finding
+from .export_content_findings import append_export_content_findings
 from .preconditions import ModeloPreconditionFailure
+from .shared_casilla_cells_findings import append_shared_casilla_cells_findings
 from .verification_finding_contracts import (
     REGISTRY_SNAPSHOT_GRADE_INSUFFICIENT_SCENARIO,
     REGISTRY_SNAPSHOT_UNAVAILABLE_SCENARIO,
@@ -43,7 +46,7 @@ from .verification_iva_evidence import (
     append_iva_compensation_annual_source_evidence_finding,
     append_iva_selected_scope_evidence_finding,
 )
-from .verification_oss_evidence import m369_unresolved_oss_source_finding
+from .verification_oss_evidence import NO_ACTIVITY_CONTRADICTED_KEY, m369_unresolved_oss_source_finding
 from .verification_preconditions import (
     build_verification_precondition_failure,
 )
@@ -224,6 +227,52 @@ def resolve_verification_snapshot(
         return None
 
 
+def append_scheme_period_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    """Block an entered period row that disagrees with the period the work unit files.
+
+    The export prints the work unit's period, so such a value could never reach
+    the file; it means the operator believes this return covers another period.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
+    for layout in snapshot.revision.export_layouts:
+        for record in layout.records:
+            for field in record.fields:
+                entered = None if field.binding is None else target.binding_overrides.get(field.binding)
+                if not contradicts_scheme_period(field, work_unit.period, entered):
+                    continue
+                finding = ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message_locale_key="application.modelo.findings.scheme_period_contradicted",
+                    message_facts={
+                        "binding_id": str(field.binding),
+                        "entered": str(entered),
+                        "expected": str(scheme_period_value(field, work_unit.period)),
+                    },
+                    legal_refs=tuple(field.legal_refs) or WORKFLOW_GATE_LEGAL_REFS,
+                    source_refs=tuple(field.source_refs),
+                )
+                findings.append(finding)
+                failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.scheme_period.matches",
+                    scenario_id="modelo.work.verify.scheme_period.contradicted",
+                    evidence_id="modelo.work.verify.scheme_period",
+                    evidence_values={"modelo": str(work_unit.modelo), "binding_id": str(field.binding)},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                )
+
+
 def append_oss_verification_finding(
     *,
     work_unit: WorkUnit,
@@ -251,6 +300,17 @@ def append_oss_verification_finding(
         if issue.binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION and issue.reason == "unrouted_observation"
     )
     is_unrouted = unrouted_issue_count > 0
+    if oss_source_finding.message_locale_key == NO_ACTIVITY_CONTRADICTED_KEY:
+        failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
+            calculation_revision_id=target.calculation_revision_id,
+            work_unit_id=target.work_unit_id,
+            condition_id="modelo.work.verify.oss_no_activity.consistent",
+            scenario_id="modelo.work.verify.oss_no_activity.contradicted",
+            evidence_id="modelo.work.verify.oss_no_activity",
+            evidence_values={"modelo": str(work_unit.modelo)},
+            provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+        )
+        return
     failures_by_finding_id[id(oss_source_finding)] = build_verification_precondition_failure(
         calculation_revision_id=target.calculation_revision_id,
         work_unit_id=target.work_unit_id,
@@ -412,6 +472,21 @@ def collect_revision_verification_findings(
         failures_by_finding_id=failures_by_finding_id,
         clave_scope=perceptor_clave_scope(work_unit, operation=operation),
     )
+    append_shared_casilla_cells_findings(
+        target=target,
+        snapshot=snapshot,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_export_content_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
+        profile=profile,
+        operation=operation,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
     append_iva_selected_scope_evidence_finding(
         work_unit=work_unit,
         target=target,
@@ -422,6 +497,13 @@ def collect_revision_verification_findings(
     append_iva_compensation_annual_source_evidence_finding(
         work_unit=work_unit,
         target=target,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_scheme_period_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
     )

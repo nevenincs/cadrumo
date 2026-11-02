@@ -22,6 +22,7 @@ from typing import Final
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.casilla_membership import text_family_casilla_ids
+from cadrumo.domain.calculations.registry.formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.manual_input_selector import ManualInputProvider
 from cadrumo.domain.calculations.registry.runtime_graph import formula_evaluation_order
@@ -115,6 +116,9 @@ def validate_record_row_operands(scope: str, formula: FormulaDefinition, *, revi
     return failures
 
 
+_UNRESOLVED_REASONS: Final[frozenset[str]] = frozenset(reason.value for reason in RegistryUnresolvedOutcomeReason)
+
+
 def validate_text_comparison_operands(scope: str, formula: FormulaDefinition, *, revision: ModeloRevision) -> list[str]:
     """Require declared text channels before a country or other code comparison."""
     text_bindings = {
@@ -126,8 +130,16 @@ def validate_text_comparison_operands(scope: str, formula: FormulaDefinition, *,
     failures: list[str] = []
 
     def visit(expression: FormulaExpression, parent_op: str | None = None) -> None:
-        if expression.text_literal is not None and parent_op != "text_equal":
-            failures.append(f"{scope}: formula {formula.id!r} text_literal may only be an operand of text_equal")
+        if expression.text_literal is not None and parent_op not in {"text_equal", "unresolved_outcome"}:
+            failures.append(
+                f"{scope}: formula {formula.id!r} text_literal may only be an operand of text_equal "
+                "or unresolved_outcome"
+            )
+        if expression.op == "unresolved_outcome" and expression.args[0].text_literal not in _UNRESOLVED_REASONS:
+            failures.append(
+                f"{scope}: formula {formula.id!r} unresolved_outcome names an unknown reason "
+                f"{expression.args[0].text_literal!r}"
+            )
         if expression.op == "text_equal":
             for arg in expression.args:
                 if (

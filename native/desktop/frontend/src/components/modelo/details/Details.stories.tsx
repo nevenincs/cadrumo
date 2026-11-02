@@ -12,6 +12,11 @@ import type {
 import { clearIntent, useFormSession, type FormSession } from "../form/session";
 import { Details } from "./Details";
 import { TodoRail } from "./TodoRail";
+import {
+  createModeloWriteHolds,
+  declarationWriteKey,
+} from "../../../shell/modeloWriteHolds";
+import { ModeloWriteScope, ScopedWriteHoldNotice } from "../WriteScope";
 
 // The details panel and the To do rail on the envelopes the application's
 // read path produced for the synthetic taxpayer, with the help cards it
@@ -94,6 +99,8 @@ function Session({
     [shape],
   );
   const [envelope, setEnvelope] = useState(initial);
+  const [holds] = useState(createModeloWriteHolds);
+  const target = declarationWriteKey(envelope.work_unit_id);
   const session = useFormSession({ envelope, port, language });
   const prepared = useRef(false);
   useEffect(() => {
@@ -112,15 +119,23 @@ function Session({
     if (choose) session.selectCasilla(choose);
   }, [session, edits, choose]);
   const reread = async () => {
+    const before = holds.get(target);
     // A new read of the same declaration: the same envelope as a new object.
     setEnvelope(structuredClone(envelope));
+    if (before) holds.readCompleted(before);
     return Promise.resolve(true);
   };
-  return <>{children({ envelope, port, language, session, reread })}</>;
+  return (
+    <ModeloWriteScope holds={holds} target={target} port={port} reload={reread}>
+      <ScopedWriteHoldNotice />
+      {children({ envelope, port, language, session, reread })}
+    </ModeloWriteScope>
+  );
 }
 
 const M130 = "modelo-130-1T";
 const M303 = "modelo-303-1T";
+const M100 = "modelo-100-0A";
 
 const meta: Meta = {
   title: "Modelo/Details",
@@ -254,5 +269,33 @@ export const TodoLocked: Story = {
   name: "130 · To do on a declaration that takes no edits",
   render: (_, { globals }) => (
     <Rail declaration={M130} adjust={withoutBaseline} locale={globals.locale} />
+  ),
+};
+
+export const RentaCreditUnresolved: Story = {
+  name: "100 · box 0596 the register has no certificate for",
+  render: (_, { globals }) => (
+    <Panel declaration={M100} choose="0596" locale={globals.locale} />
+  ),
+};
+
+export const RentaCreditSupplied: Story = {
+  name: "100 · box 0596 supplied by the register",
+  render: (_, { globals }) => (
+    <Panel declaration={`${M100}-pay`} choose="0596" locale={globals.locale} />
+  ),
+};
+
+export const RentaResultCard: Story = {
+  name: "100 · box 0670, the result of the return",
+  render: (_, { globals }) => (
+    <Panel declaration={`${M100}-pay`} choose="0670" locale={globals.locale} />
+  ),
+};
+
+export const TodoRenta: Story = {
+  name: "100 · To do with the credits and totals that could not be worked out",
+  render: (_, { globals }) => (
+    <Rail declaration={M100} locale={globals.locale} />
   ),
 };

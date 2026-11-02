@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { PaneHeaderFrame } from "@/components/ui/pane-header";
+import { useDockedPane } from "../docking/PaneChrome";
 import { described } from "../../shell/compose";
 import { useStrings } from "../../shell/strings";
 import type { OpenMenu } from "../ContextMenu";
@@ -57,6 +58,7 @@ export function AgentHeader({
   onToggleMaximize?: () => void;
 }) {
   const t = useStrings();
+  const docked = useDockedPane();
   const count = Math.max(0, documentCount);
   const documents = t("desktop.agent.documents");
   const attached =
@@ -65,7 +67,7 @@ export function AgentHeader({
   const [editing, setEditing] = useState(false);
   const renaming = editing && onRename !== undefined;
   return (
-    <PaneHeaderFrame onToggleMaximize={onToggleMaximize}>
+    <PaneHeaderFrame onToggleMaximize={docked ? undefined : onToggleMaximize}>
       <div className="grid min-w-0 flex-1">
         {renaming ? (
           <TitleEditor
@@ -160,7 +162,7 @@ export function AgentHeader({
         aria-pressed={settingsOpen}
         onAction={onToggleSettings}
       />
-      {trailing && (
+      {!docked && trailing && (
         <>
           <span aria-hidden="true" className="mx-1 h-4 w-px bg-border" />
           {trailing}

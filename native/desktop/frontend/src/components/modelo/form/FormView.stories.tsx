@@ -24,6 +24,7 @@ const UNITS = {
   "303": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
   "347": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
   "390": "af66ad3c64bd5b1a6d6670a20a645c9966136f578c4209d2eab1e83d69f16aa3",
+  "100": "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4",
 } as const;
 
 const language = (globals: Record<string, unknown>) =>
@@ -117,6 +118,21 @@ const meta: Meta = {
 export default meta;
 type Story = StoryObj;
 
+/** Opens what the read serves about the chosen box, once the form draws it. */
+export async function openChosenFacts(canvasElement: HTMLElement) {
+  const button = await waitFor(
+    () => {
+      const found = canvasElement.querySelector<HTMLButtonElement>(
+        '[aria-selected="true"] [data-field-facts]',
+      );
+      if (!found) throw new Error("the chosen box is not drawn yet");
+      return found;
+    },
+    { timeout: 15_000 },
+  );
+  button.click();
+}
+
 export const OnePage: Story = {
   name: "130 · one page, boxes that could not be calculated",
   render: (_, { globals }) => <Form modelo="130" locale={language(globals)} />,
@@ -136,6 +152,40 @@ export const BoxNotes: Story = {
       { timeout: 15_000 },
     );
   },
+};
+
+export const FieldHelp: Story = {
+  name: "130 · a box's help and details",
+  render: (_, { globals }) => (
+    <Form
+      modelo="130"
+      locale={language(globals)}
+      setup={(session) => {
+        session.selectBox("03");
+      }}
+    />
+  ),
+  play: ({ canvasElement }) => openChosenFacts(canvasElement),
+};
+
+export const FieldWithoutHelp: Story = {
+  name: "303 · a box the read gives no help",
+  render: (_, { globals }) => (
+    <Form
+      modelo="303"
+      locale={language(globals)}
+      setup={(session, envelope) => {
+        // A box on its own line, so its row is the one the story opens.
+        const bare = envelope.form.form.pages
+          .flatMap((page) => page.sections)
+          .flatMap((section) => section.blocks)
+          .flatMap((block) => (block.kind === "field" ? [block.field] : []))
+          .find((field) => field.help === null && field.box !== null);
+        if (bare) session.selectAddress(bare.address);
+      }}
+    />
+  ),
+  play: ({ canvasElement }) => openChosenFacts(canvasElement),
 };
 
 export const Staged: Story = {
@@ -201,4 +251,88 @@ export const Records: Story = {
 export const ReadOnly: Story = {
   name: "390 · editing not admitted, eight pages",
   render: (_, { globals }) => <Form modelo="390" locale={language(globals)} />,
+};
+
+export const RentaHeadings: Story = {
+  name: "100 · employment income under the heading the read serves",
+  render: (_, { globals }) => (
+    <Form
+      modelo="100"
+      locale={language(globals)}
+      setup={(session) => {
+        session.selectBox("0003");
+      }}
+    />
+  ),
+};
+
+export const RentaCreditsUnresolved: Story = {
+  name: "100 · withholding credits no certificate supplies, unresolved",
+  render: (_, { globals }) => (
+    <Form
+      modelo="100"
+      locale={language(globals)}
+      setup={(session) => {
+        session.selectBox("0596");
+      }}
+    />
+  ),
+  play: ({ canvasElement }) => openChosenFacts(canvasElement),
+};
+
+export const RentaCreditFromRegister: Story = {
+  name: "100 · a withholding credit the register supplies",
+  render: (_, { globals }) => (
+    <Form
+      modelo="100"
+      shape="renta-pay"
+      locale={language(globals)}
+      setup={(session) => {
+        session.selectBox("0596");
+      }}
+    />
+  ),
+  play: ({ canvasElement }) => openChosenFacts(canvasElement),
+};
+
+export const RentaResultToPay: Story = {
+  name: "100 · result of the return, to pay",
+  render: (_, { globals }) => (
+    <Form
+      modelo="100"
+      shape="renta-pay"
+      locale={language(globals)}
+      setup={(session) => {
+        session.selectBox("0670");
+      }}
+    />
+  ),
+};
+
+export const RentaResultToRefund: Story = {
+  name: "100 · result of the return, to refund",
+  render: (_, { globals }) => (
+    <Form
+      modelo="100"
+      shape="renta-refund"
+      locale={language(globals)}
+      setup={(session) => {
+        session.selectBox("0670");
+      }}
+    />
+  ),
+};
+
+export const RentaActivityIncome: Story = {
+  name: "100 · activity income from the ledger, result not calculated",
+  render: (_, { globals }) => (
+    <Form
+      modelo="100"
+      shape="renta-activity"
+      locale={language(globals)}
+      setup={(session) => {
+        session.selectBox("0171");
+      }}
+    />
+  ),
 };

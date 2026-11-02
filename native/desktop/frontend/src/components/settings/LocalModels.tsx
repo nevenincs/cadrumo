@@ -195,16 +195,21 @@ export function LocalModels({
   host,
   locale,
   onRemoved,
+  laneStatus = "ready",
+  onRetryLane,
 }: {
   lane: CatalogLane | null;
   host: LocalModelHost;
   locale: string;
   /** Told once a model is removed from this computer. */
   onRemoved?: () => void;
+  /** Whether the catalogue supplying this lane has answered. */
+  laneStatus?: "loading" | "failed" | "ready";
+  onRetryLane?: () => void;
 }) {
   const t = useStrings();
   const store = useProvisioning();
-  const { snapshot, busy, outcomes, change } = useLocalModels(host);
+  const { snapshot, retry, busy, outcomes, change } = useLocalModels(host);
   // Downloading and removing are setup's: offered only where this window
   // offers setup, and a download waits while the local AI sets up.
   const localAi = store.localAiRow;
@@ -272,7 +277,21 @@ export function LocalModels({
       <p className="text-sm text-muted-foreground">
         {t("desktop.providers.local_models_lead")}
       </p>
-      {!lane ? (
+      {laneStatus === "loading" ? (
+        <p role="status" className="text-sm text-muted-foreground">
+          {t("desktop.providers.local_models_loading")}
+        </p>
+      ) : laneStatus === "failed" ? (
+        <p role="alert" className="flex items-start gap-2 text-sm">
+          <Icon name="alert" className="mt-0.5 text-destructive" />
+          <span>{t("desktop.providers.load_failed")}</span>
+          {onRetryLane && (
+            <Button variant="outline" size="sm" onClick={onRetryLane}>
+              {t("desktop.agent.retry")}
+            </Button>
+          )}
+        </p>
+      ) : !lane ? (
         <p className="text-sm text-muted-foreground">
           {t("desktop.providers.local_models_none")}
         </p>
@@ -284,6 +303,9 @@ export function LocalModels({
         <p role="alert" className="flex items-start gap-2 text-sm">
           <Icon name="alert" className="mt-0.5 text-destructive" />
           <span>{t("desktop.providers.local_models_failed")}</span>
+          <Button variant="outline" size="sm" onClick={retry}>
+            {t("desktop.agent.retry")}
+          </Button>
         </p>
       ) : (
         <>

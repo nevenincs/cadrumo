@@ -7,11 +7,19 @@ from decimal import Decimal
 import pytest
 
 from ....core.casilla_id import CasillaId
+from ....core.errors.hierarchy import InternalInvariantError
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.tests.published_authority import published_snapshot
-from ..borrador_100_keys import borrador_admitted_bindings, project_printed_casillas
+from ..borrador_100_keys import (
+    BorradorPrintedBoxValue,
+    borrador_admitted_bindings,
+    printed_box_casilla,
+    project_printed_casillas,
+    require_printed_observations_resolve,
+    unresolved_printed_observations,
+)
 from ..errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
@@ -63,23 +71,64 @@ def test_published_revision_admits_only_the_bindings_marked_prefilled() -> None:
     assert tuple(borrador_admitted_bindings(_revision())) == _CREDIT_BINDINGS
 
 
-def test_a_printed_bound_casilla_is_stored_under_its_binding_and_a_computed_one_is_reported() -> None:
+def test_a_bound_casilla_is_stored_under_its_binding_a_computed_one_is_observed_and_an_undeclared_one_reported() -> (
+    None
+):
+    revision = _revision()
     projection = project_printed_casillas(
-        _revision(),
+        revision,
         {_BOUND_CASILLA: Decimal("1234.56"), _COMPUTED_CASILLA: Decimal("100.00"), "9999": Decimal("1.00")},
+        blank=("0545",),
     )
 
     assert dict(projection.binding_values) == {_CERTIFICATE: Decimal("1234.56")}
-    assert projection.unowned_casillas == ("0505", "9999")
+    continuity = {casilla.id: casilla.continuidad_id for casilla in revision.casillas}
+    assert projection.observed == (
+        BorradorPrintedBoxValue(_COMPUTED_CASILLA, continuity[_COMPUTED_CASILLA], Decimal("100.00")),
+        BorradorPrintedBoxValue("0545", continuity["0545"], None),
+    )
+    assert continuity[_COMPUTED_CASILLA] is not None
+    assert projection.unowned_casillas == ("9999",)
 
 
-def test_a_casilla_bound_only_to_an_unmarked_binding_is_reported_not_stored() -> None:
+def test_a_casilla_bound_only_to_an_unmarked_binding_is_observed_not_stored() -> None:
     revision = _rebind(_revision(), _BOUND_CASILLA, binding=_UNMARKED)
 
     projection = project_printed_casillas(revision, {_BOUND_CASILLA: Decimal("1234.56")})
 
     assert dict(projection.binding_values) == {}
-    assert projection.unowned_casillas == (_BOUND_CASILLA,)
+    assert tuple(box.casilla_id for box in projection.observed) == (_BOUND_CASILLA,)
+    assert projection.unowned_casillas == ()
+
+
+def test_a_printed_box_resolves_through_its_continuity_identity_across_revisions() -> None:
+    revision = _revision()
+    (computed,) = (casilla for casilla in revision.casillas if casilla.id == _COMPUTED_CASILLA)
+    renumbered = BorradorPrintedBoxValue("0999", computed.continuidad_id, Decimal("1.00"))
+    numbered_only = BorradorPrintedBoxValue(_COMPUTED_CASILLA, None, Decimal("1.00"))
+
+    resolved = printed_box_casilla(revision, renumbered, captured_revision_id="another-revision")
+
+    assert resolved is not None and resolved.id == _COMPUTED_CASILLA
+    assert printed_box_casilla(revision, numbered_only, captured_revision_id=revision.id) is not None
+    assert printed_box_casilla(revision, numbered_only, captured_revision_id="another-revision") is None
+    assert unresolved_printed_observations(revision, (numbered_only,), captured_revision_id="another-revision") == (
+        _COMPUTED_CASILLA,
+    )
+    with pytest.raises(LiveApplicationInputError) as refused:
+        require_printed_observations_resolve(revision, (numbered_only,), captured_revision_id="another-revision")
+    assert refused.value.translated_message == "application.live.borrador.errors.printed_observations_unresolved"
+
+
+def test_a_printed_observation_of_a_box_an_admitted_binding_owns_is_refused_at_capture() -> None:
+    revision = _revision()
+    owned = BorradorPrintedBoxValue(_BOUND_CASILLA, None, Decimal("1.00"))
+
+    require_printed_observations_resolve(revision, (owned,), captured_revision_id=revision.id)
+    with pytest.raises(InternalInvariantError):
+        require_printed_observations_resolve(
+            revision, (owned,), captured_revision_id=revision.id, refuse_owned_casillas=True
+        )
 
 
 def test_a_casilla_two_admitted_bindings_could_own_is_refused() -> None:

@@ -10,7 +10,7 @@ and no euro amount, so a caller can never read a zero into a filing.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Protocol
 
@@ -24,6 +24,10 @@ from .models import (
     MonetaryAmount,
     NormalizedAmount,
 )
+
+# The ECB's longest closure is Good Friday through Easter Monday (four days
+# without a publication); the bound adds margin so the walk cannot run unbounded.
+_MAX_DAYS_TO_NEXT_PUBLICATION = 7
 
 
 class ExchangeRateProvider(Protocol):
@@ -113,6 +117,44 @@ class CurrencyNormalizationService:
         )
 
 
+def published_eur_rate_on_day_or_next_publication(
+    currency: str,
+    day: date,
+    *,
+    rate_provider: ExchangeRateProvider,
+) -> EurRateLookup:
+    """Return the rate published for ``day`` or else for the next day of publication.
+
+    Directive 2006/112/EC arts. 366(2), 369h(2) and 369u(2) convert at the
+    exchange rate published by the European Central Bank for the last day of the
+    period, "or, if there is no publication on that day, on the next day of
+    publication". LIVA arts. 163 noniesdecies.Uno.c), duovicies.Uno.c) and
+    septvicies.Uno.c) say "o, si no hubiera publicación correspondiente a ese
+    día, del día siguiente". Read in conformity with the Directive, "del día
+    siguiente" means the next day on which a rate is published: taken as the next
+    calendar day alone, an unpublished next day would leave no rate at all, which
+    the Directive does not.
+
+    A provider's own fallback reaches back to the last prior publication, so its
+    answer counts only when its observation is the day asked for; a prior
+    publication is never used. The walk forward stops after
+    :data:`_MAX_DAYS_TO_NEXT_PUBLICATION` days, and a series with no later
+    publication yet is answered as a missing rate.
+    """
+    for offset in range(_MAX_DAYS_TO_NEXT_PUBLICATION + 1):
+        candidate = day + timedelta(days=offset)
+        lookup = rate_provider.lookup_eur_rate(currency, candidate)
+        if lookup.status is EurRateLookupStatus.UNSUPPORTED_CURRENCY:
+            return lookup
+        if lookup.status is EurRateLookupStatus.FOUND and lookup.observation_date == candidate:
+            return lookup
+    return EurRateLookup(
+        status=EurRateLookupStatus.MISSING_RATE,
+        rate_date=day,
+        source=rate_provider.rate_source_id,
+    )
+
+
 def resolve_fx_conversion_stamp(
     *,
     currency: str,
@@ -128,9 +170,14 @@ def resolve_fx_conversion_stamp(
     which had been hand-declared at two application call sites.
 
     Conversion happens at the record's own operation date — the issue or invoice
-    date — because that is the date Spanish law binds the official rate to (Ley
-    46/1998 art. 36), and because converting once at ingest keeps a stored euro
-    figure stable rather than drifting with every later read.
+    date — because that is the date Spanish law binds the rate to: for IVA, the
+    seller exchange rate fixed by the Banco de España in force at the moment of
+    chargeability (LIVA art. 79.Once), where Directive 2006/112 art. 91(2) requires
+    Member States to accept the latest ECB rate at chargeability; for the
+    income-tax and other filing forms, the official rate published by the ECB
+    directly or through the Banco de España (Ley 46/1998 art. 36). Converting once
+    at ingest also keeps a stored euro figure stable rather than drifting with
+    every later read.
 
     A euro record is left unstamped: there is nothing to convert, and a
     ``1``-valued stamp would assert a conversion that never happened. A foreign

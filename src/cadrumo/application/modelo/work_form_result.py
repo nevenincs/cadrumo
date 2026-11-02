@@ -36,7 +36,7 @@ from ...domain.calculations.registry.result_casillas import derive_result_dispos
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.filing.schema import ModeloValueKind
 from .settlement_casilla import declaration_result_casillas
-from .work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
 from .work_review import ModeloWorkReviewCasilla
 
 _DIRECTION_BY_DISPOSITION: Final[Mapping[ResultDisposition, ModeloFormResultDirection]] = {

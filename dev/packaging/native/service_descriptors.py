@@ -8,6 +8,8 @@ from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from cadrumo.adapters.persistence.storage.secure_object_namespaces import (
+    ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE,
+    ATTACHMENT_RELEASE_LEDGER_NAMESPACE,
     EXTENSION_SETTINGS_NAMESPACE,
     LOCAL_MODEL_LIST_NAMESPACE,
 )
@@ -80,6 +82,26 @@ def stage_service_descriptors(root: Path, layout: dict[str, Any], images: tuple[
                 "key_pattern": "^selections$",
                 "maximum_bytes": 32768,
                 "actions": ["read", "write", "delete", "generation"],
+            },
+            # The person's remembered attachment grants, and an append-only
+            # account of every release: its capability cannot delete a record.
+            {
+                "capability": "attachment-disclosure-grants",
+                "namespace": ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE.namespace,
+                "schema_version": ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE.schema_version,
+                "classification": ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE.sensitivity.value,
+                "key_pattern": "^remembered$",
+                "maximum_bytes": 32768,
+                "actions": ["read", "write", "delete", "generation"],
+            },
+            {
+                "capability": "attachment-release-ledger",
+                "namespace": ATTACHMENT_RELEASE_LEDGER_NAMESPACE.namespace,
+                "schema_version": ATTACHMENT_RELEASE_LEDGER_NAMESPACE.schema_version,
+                "classification": ATTACHMENT_RELEASE_LEDGER_NAMESPACE.sensitivity.value,
+                "key_pattern": "^release-[0-9a-f]{32}$",
+                "maximum_bytes": 2048,
+                "actions": ["read", "write"],
             },
         ],
         # Hosted MCP processes attend through this service's session. The runtime

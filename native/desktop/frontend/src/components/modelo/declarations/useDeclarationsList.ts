@@ -7,12 +7,17 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type RefObject,
 } from "react";
 import { ledgerFailure, type LedgerFailure } from "../../../shell/ledger";
 import type { ModeloPort } from "../../../shell/modelo";
+import {
+  isCreationWriteKey,
+  type ModeloWriteMemory,
+} from "../../../shell/modeloWriteHolds";
 import type {
   ModeloDeclarationsListProjectionV1,
   OutputLanguage,
@@ -24,7 +29,7 @@ export type DeclarationsRead =
   | { phase: "failed"; failure: LedgerFailure; list: null };
 
 /** The list as last read, and whether a write since has left it stale. */
-export type ListMemory = {
+export type ListMemory = ModeloWriteMemory & {
   list?: ModeloDeclarationsListProjectionV1;
   stale?: boolean;
 };
@@ -50,7 +55,15 @@ export function useDeclarationsList(
   const generation = useRef(0);
   const lastReader = useRef(reader);
   const [wanted, setWanted] = useState(0);
-  const lastWanted = useRef(wanted);
+  const lastWanted = useRef<number | null>(wanted);
+
+  // A reply cannot update shared list memory after its view has left.
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [port, reader, language, shown, wanted, memory],
+  );
 
   useEffect(() => {
     if (lastReader.current !== reader) {
@@ -64,6 +77,14 @@ export function useDeclarationsList(
     if (!asked && keptFor(memory.current, language)) return;
     generation.current += 1;
     const mine = generation.current;
+    let settled = false;
+    const writes = memory.current.writes;
+    const completed =
+      writes
+        ?.snapshot()
+        .filter(
+          (hold) => hold.phase === "refresh" && isCreationWriteKey(hold.key),
+        ) ?? [];
     setRead((held) => ({
       phase: "reading",
       list: held.phase === "failed" ? null : held.list,
@@ -72,18 +93,29 @@ export function useDeclarationsList(
       .declarations(language)
       .then((list) => {
         if (mine !== generation.current) return;
+        settled = true;
         memory.current.list = list;
         memory.current.stale = false;
         setRead({ phase: "ready", list });
+        completed.forEach((hold) => writes?.readCompleted(hold));
       })
       .catch((error: unknown) => {
         if (mine !== generation.current) return;
+        settled = true;
         delete memory.current.list;
         setRead({ phase: "failed", failure: ledgerFailure(error), list: null });
       });
+    return () => {
+      // A hidden view must resume a refresh that never completed.
+      if (!settled) lastWanted.current = null;
+    };
   }, [port, reader, language, shown, wanted, memory]);
 
   /** Reads the list again; what was read stays shown meanwhile. */
-  const reread = useCallback(() => setWanted((count) => count + 1), []);
+  const reread = useCallback(() => {
+    // Retire the old read as soon as a write requests fresh information.
+    generation.current += 1;
+    setWanted((count) => count + 1);
+  }, []);
   return { read, reread };
 }

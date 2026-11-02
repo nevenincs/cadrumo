@@ -12,11 +12,10 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ..renta_income_ledger import (
-    RentaIncomeLedgerAggregationIssueReason,
-    RentaIncomeObservation,
     aggregate_renta_income_ledger,
     aggregate_renta_income_ledger_from_repositories,
 )
+from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason, RentaIncomeObservation
 from .renta_income_aggregation_support import (
     _ANNUAL_2024,
     _Q1_2024,

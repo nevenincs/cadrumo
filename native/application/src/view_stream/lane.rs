@@ -47,7 +47,8 @@ use super::{
     chunks::{AssembledImage, KIND_CHUNK, KIND_DOCUMENT, MAXIMUM_FRAME_BYTES, encode_frame},
     decoder::{Downstream, DownstreamDecoder},
     documents::{
-        CREDIT_MAX_IMAGES, ViewClose, ViewClosedReason, ViewCredit, ViewDialog, ViewDownload,
+        CREDIT_MAX_IMAGES, ViewClipboard, ViewClipboardAction, ViewClipboardCommit,
+        ViewClipboardSelection, ViewClose, ViewClosedReason, ViewCredit, ViewDialog, ViewDownload,
         ViewDownloadAnswer, ViewDownloadOutcome, ViewDownstream, ViewFileChooser,
         ViewFileChooserAnswer, ViewFileChooserOutcome, ViewInput, ViewInputEvent, ViewNavigate,
         ViewNavigateVerb, ViewNotice, ViewResize, ViewState, ViewTransferCancel,
@@ -55,7 +56,11 @@ use super::{
     },
     transfer::{SenderControl, TransferChunk, TransferReceiver, TransferSender},
 };
-use crate::runtime_client::{Cohort, Endpoint, Refusal, RuntimeChannel};
+use crate::runtime_client::{
+    endpoint::{Endpoint, RuntimeChannel},
+    handshake::Cohort,
+    refusal::Refusal,
+};
 use std::{
     collections::VecDeque,
     fmt, io,
@@ -156,6 +161,7 @@ pub enum ViewEvent {
     Image(AssembledImage),
     State(ViewState),
     Notice(ViewNotice),
+    ClipboardSelection(ViewClipboardSelection),
     /// The runtime's last document, with the reason the view ended.
     Closed(ViewClosedReason),
     /// A download is offered: accept, decline or ignore it.
@@ -187,6 +193,7 @@ impl fmt::Debug for ViewEvent {
             Self::Image(_) => "ViewEvent::Image",
             Self::State(_) => "ViewEvent::State",
             Self::Notice(_) => "ViewEvent::Notice",
+            Self::ClipboardSelection(_) => "ViewEvent::ClipboardSelection",
             Self::Closed(_) => "ViewEvent::Closed",
             Self::Download(_) => "ViewEvent::Download",
             Self::FileChooser(_) => "ViewEvent::FileChooser",
@@ -678,6 +685,9 @@ impl Core {
         let event = match document {
             ViewDownstream::State(state) => ViewEvent::State(state),
             ViewDownstream::Notice(notice) => ViewEvent::Notice(notice),
+            ViewDownstream::ClipboardSelection(selection) => {
+                ViewEvent::ClipboardSelection(selection)
+            }
             ViewDownstream::Closed(closed) => ViewEvent::Closed(closed.reason),
             ViewDownstream::Download(download) => ViewEvent::Download(download),
             ViewDownstream::FileChooser(chooser) => ViewEvent::FileChooser(chooser),
@@ -921,6 +931,21 @@ impl ViewLane {
     /// Forwards one person input event to the page.
     pub fn input(&self, event: ViewInputEvent) -> Result<(), Refusal> {
         self.core.send(&ViewUpstream::Input(ViewInput { event }))
+    }
+
+    pub fn clipboard(&self, request_id: u32, action: ViewClipboardAction) -> Result<(), Refusal> {
+        self.core.send(&ViewUpstream::Clipboard(ViewClipboard {
+            request_id,
+            action,
+        }))
+    }
+
+    pub fn clipboard_commit(&self, request_id: u32, apply: bool) -> Result<(), Refusal> {
+        self.core
+            .send(&ViewUpstream::ClipboardCommit(ViewClipboardCommit {
+                request_id,
+                apply,
+            }))
     }
 
     /// Asks the page to go back, forward, reload or home.

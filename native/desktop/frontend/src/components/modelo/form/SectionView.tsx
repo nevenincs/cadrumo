@@ -166,7 +166,10 @@ export function SectionView({
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) setNear(true);
       },
-      { rootMargin: "1200px 0px" },
+      // The form scrolls inside its own panel; measured against the window,
+      // a section below the panel's edge is clipped and the margin never
+      // reaches it.
+      { root: element.closest("[data-modelo-form]"), rootMargin: "1200px 0px" },
     );
     observer.observe(element);
     return () => observer.disconnect();
@@ -175,7 +178,7 @@ export function SectionView({
   const body = drawn ? sectionBody(t, section, shown) : null;
   if (drawn && !body) return null;
   const counts = section.counts;
-  const todo = counts ? counts.needs_input + counts.blocked : 0;
+  const todo = counts?.needs_you ?? 0;
   const official =
     translated &&
     section.official_heading &&

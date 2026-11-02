@@ -71,15 +71,14 @@ test("the rail opens the Ledger page in the first pane, and closes it", async ({
 }) => {
   await openLedger(target);
   await expect(ledgerButton(target)).toHaveAttribute("aria-pressed", "true");
-  await expect(head(target).locator(".pane-title")).toHaveText(
+  await expect(target.locator("#tab-docs")).toHaveText(
     label("desktop.ledger.title"),
   );
-  // One header: the page's controls sit in the pane's own, beside its
-  // maximize control.
+  // The page toolbar retains its content actions; the dock strip owns layout.
   await expect(target.locator(".pane-docs .pane-head")).toHaveCount(1);
   await expect(
-    head(target).getByRole("button", {
-      name: label("desktop.ledger.maximize"),
+    target.locator('[data-dock-header="docs"]').getByRole("button", {
+      name: label("desktop.dock.expand"),
       exact: true,
     }),
   ).toBeVisible();
@@ -92,8 +91,9 @@ test("the rail opens the Ledger page in the first pane, and closes it", async ({
   await expect(page(target)).toBeHidden();
   await expect(ledgerButton(target)).toHaveAttribute("aria-pressed", "false");
   await ledgerButton(target).click();
-  await head(target)
-    .getByRole("button", { name: label("desktop.ledger.close"), exact: true })
+  await target
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.close"), exact: true })
     .click();
   await expect(page(target)).toBeHidden();
 });

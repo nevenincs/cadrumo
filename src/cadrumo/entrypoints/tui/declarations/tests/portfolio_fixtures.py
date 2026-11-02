@@ -25,7 +25,7 @@ from .....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneStateV1,
 )
-from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .....application.modelo.work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
 from .....application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewCalendarEntrySource,

@@ -91,7 +91,6 @@ _SHIFT_DEADLINE_CASES = (
         "plain-business-day",
         date(2025, 3, 4),
         "303",
-        "ES-MD",
         False,
         date(2025, 3, 4),
         0,
@@ -102,7 +101,6 @@ _SHIFT_DEADLINE_CASES = (
         "saturday-to-monday",
         date(2025, 3, 1),
         "303",
-        "ES-MD",
         True,
         date(2025, 3, 3),
         2,
@@ -113,7 +111,6 @@ _SHIFT_DEADLINE_CASES = (
         "national-holiday-weekday",
         date(2025, 4, 18),
         "303",
-        "ES-MD",
         True,
         date(2025, 4, 21),
         None,
@@ -124,7 +121,6 @@ _SHIFT_DEADLINE_CASES = (
         "modelo-369-oss-exception",
         date(2025, 3, 1),
         "369",
-        "ES-MD",
         False,
         date(2025, 3, 1),
         None,
@@ -214,7 +210,7 @@ def test_shift_deadline_walk_cases() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = load_holiday_calendar(2025, operation=operation)
         for case_id, probe, expected in _NEXT_BUSINESS_DAY_CASES:
-            shifted = shift_deadline(probe, modelo="303", ccaa_code=None, calendars=(calendar,), operation=operation)
+            shifted = shift_deadline(probe, modelo="303", calendars=(calendar,), operation=operation)
             assert shifted.adjusted_close_date == expected, case_id
 
 
@@ -231,20 +227,13 @@ def test_shift_deadline_basic_cases() -> None:
             case_id,
             close_date,
             modelo,
-            ccaa_code,
             expected_shifted,
             expected_adjusted,
             expected_shift_days,
             reason_fragments,
             expected_jurisdictions,
         ) in _SHIFT_DEADLINE_CASES:
-            selected_ccaa = _calendar_ccaa(operation, ccaa_code)
-            result = shift_deadline(
-                close_date,
-                modelo=modelo,
-                ccaa_code=selected_ccaa,
-                operation=operation,
-            )
+            result = shift_deadline(close_date, modelo=modelo, operation=operation)
             assert result.shifted is expected_shifted, case_id
             assert result.original_close_date == close_date, case_id
             assert result.adjusted_close_date == expected_adjusted, case_id
@@ -256,8 +245,8 @@ def test_shift_deadline_basic_cases() -> None:
                 assert jurisdiction in result.jurisdictions, case_id
 
 
-def _diada_calendar(operation: PinnedAuthorityOperation, *, verified: bool) -> HolidayCalendar:
-    """A synthetic 2025 calendar holding only the Diada, verified or not for Cataluna."""
+def _diada_calendar(operation: PinnedAuthorityOperation) -> HolidayCalendar:
+    """A synthetic 2025 calendar holding only the Diada, verified for Cataluna."""
     catalonia = _calendar_ccaa(operation, "ES-CT")
     return HolidayCalendar(
         year=2025,
@@ -270,68 +259,21 @@ def _diada_calendar(operation: PinnedAuthorityOperation, *, verified: bool) -> H
                 name="Diada",
             ),
         ),
-        verified_territories=(catalonia,) if verified else (),
+        verified_territories=(catalonia,),
     )
 
 
-def test_shift_deadline_handles_ccaa_holiday_when_residence_matches() -> None:
-    """A verified Catalan Diada (Thursday 2025-09-11) moves a Catalan
-    deadline to Friday 2025-09-12; a Madrid taxpayer with the same close
-    date does not shift."""
-
+def test_a_verified_regional_holiday_never_moves_a_filing_close() -> None:
+    """A Catalan Diada (Thursday 2025-09-11) is inhabil in Cataluna, yet the
+    electronic filing close stays on it: only national inhabiles count."""
     with bundled_indexed_authority().operation() as operation:
         diada = date(2025, 9, 11)
-        calendar = _diada_calendar(operation, verified=True)
-        catalan_result = shift_deadline(
-            diada,
-            modelo="303",
-            ccaa_code=_calendar_ccaa(operation, "ES-CT"),
-            calendars=(calendar,),
-            operation=operation,
-        )
-        assert catalan_result.shifted is True
-        assert catalan_result.adjusted_close_date == date(2025, 9, 12)
-        assert HolidayJurisdiction.CCAA in catalan_result.jurisdictions
-        assert "Diada" in catalan_result.shift_reason
-        assert catalan_result.coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
-
-        madrid_result = shift_deadline(
-            diada,
-            modelo="303",
-            ccaa_code=_calendar_ccaa(operation, "ES-MD"),
-            calendars=(calendar,),
-            operation=operation,
-        )
-        assert madrid_result.shifted is False
-        assert madrid_result.adjusted_close_date == diada
-        assert madrid_result.coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED
-
-
-def test_unverified_regional_holiday_never_extends_a_deadline() -> None:
-    """A regional holiday the registry has not verified keeps the earlier date and says so."""
-    with bundled_indexed_authority().operation() as operation:
-        result = shift_deadline(
-            date(2025, 9, 11),
-            modelo="303",
-            ccaa_code=_calendar_ccaa(operation, "ES-CT"),
-            calendars=(_diada_calendar(operation, verified=False),),
-            operation=operation,
-        )
+        calendar = _diada_calendar(operation)
+        assert not is_business_day(diada, calendar=calendar, ccaa_code=_calendar_ccaa(operation, "ES-CT"))
+        result = shift_deadline(diada, modelo="303", calendars=(calendar,), operation=operation)
     assert result.shifted is False
-    assert result.adjusted_close_date == date(2025, 9, 11)
-    assert result.coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED
-
-
-def test_unknown_territory_checks_national_holidays_only() -> None:
-    with bundled_indexed_authority().operation() as operation:
-        result = shift_deadline(
-            date(2025, 9, 11),
-            modelo="303",
-            ccaa_code=None,
-            calendars=(_diada_calendar(operation, verified=True),),
-            operation=operation,
-        )
-    assert result.shifted is False
+    assert result.adjusted_close_date == diada
+    assert result.jurisdictions == ()
     assert result.coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
 
 
@@ -341,8 +283,7 @@ def test_modelo_369_is_never_shifted_and_says_so() -> None:
         result = shift_deadline(
             date(2025, 10, 18),
             modelo="369",
-            ccaa_code=_calendar_ccaa(operation, "ES-CT"),
-            calendars=(_diada_calendar(operation, verified=True),),
+            calendars=(_diada_calendar(operation),),
             operation=operation,
         )
     assert result.adjusted_close_date == date(2025, 10, 18)
@@ -356,13 +297,7 @@ def test_shift_deadline_accepts_externally_supplied_calendar() -> None:
     with bundled_indexed_authority().operation() as operation:
         calendar = load_holiday_calendar(2025, operation=operation)
         tuesday = date(2025, 3, 4)
-        result = shift_deadline(
-            tuesday,
-            modelo="303",
-            ccaa_code=_calendar_ccaa(operation, "ES-MD"),
-            calendars=(calendar,),
-            operation=operation,
-        )
+        result = shift_deadline(tuesday, modelo="303", calendars=(calendar,), operation=operation)
         assert result.shifted is False
         assert result.adjusted_close_date == tuesday
 
@@ -375,7 +310,7 @@ def test_shift_deadline_rejects_empty_modelo_string() -> None:
             match=r"modelo|empty|blank",
         ),
     ):
-        shift_deadline(date(2025, 3, 4), modelo="", ccaa_code=None, operation=operation)
+        shift_deadline(date(2025, 3, 4), modelo="", operation=operation)
 
 
 def test_shift_deadline_records_holiday_refs_for_audit_trail() -> None:
@@ -383,15 +318,9 @@ def test_shift_deadline_records_holiday_refs_for_audit_trail() -> None:
     shift so operator-facing output can explain ``why``."""
 
     with bundled_indexed_authority().operation() as operation:
-        diada = date(2025, 9, 11)
-        result = shift_deadline(
-            diada,
-            modelo="303",
-            ccaa_code=_calendar_ccaa(operation, "ES-CT"),
-            calendars=(_diada_calendar(operation, verified=True),),
-            operation=operation,
-        )
-        assert "Diada" in result.holiday_refs
+        result = shift_deadline(date(2025, 4, 18), modelo="303", operation=operation)
+        assert "Viernes Santo" in result.holiday_refs
+        assert result.jurisdictions == (HolidayJurisdiction.NATIONAL,)
 
 
 def test_shift_deadline_handles_saturday_overlap_with_national_holiday() -> None:
@@ -399,12 +328,7 @@ def test_shift_deadline_handles_saturday_overlap_with_national_holiday() -> None
     cites both the weekend day and the national holiday."""
 
     with bundled_indexed_authority().operation() as operation:
-        result = shift_deadline(
-            date(2025, 11, 1),
-            modelo="303",
-            ccaa_code=_calendar_ccaa(operation, "ES-MD"),
-            operation=operation,
-        )
+        result = shift_deadline(date(2025, 11, 1), modelo="303", operation=operation)
         assert result.shifted is True
         # The reason carries both signals.
         assert "sabado" in result.shift_reason
@@ -431,7 +355,7 @@ def test_holiday_is_frozen_and_forbids_extras() -> None:
 
 def test_deadline_shift_is_frozen_and_immutable() -> None:
     with bundled_indexed_authority().operation() as operation:
-        shift = shift_deadline(date(2025, 3, 4), modelo="303", ccaa_code=None, operation=operation)
+        shift = shift_deadline(date(2025, 3, 4), modelo="303", operation=operation)
         assert isinstance(shift, DeadlineShift)
         with pytest.raises(ValidationError, match=r"frozen|Instance is frozen"):
             shift.shifted = True
@@ -561,11 +485,11 @@ _SATURDAY_YEAR_END = date(2022, 12, 31)
 _FIRST_MONDAY = date(2023, 1, 2)
 
 
-def _year_end_calendar(*, verified: tuple[CalendarCCAA, ...] = ()) -> HolidayCalendar:
-    return HolidayCalendar(year=2022, boe_ref="synthetic-2022", verified_territories=verified)
+def _year_end_calendar() -> HolidayCalendar:
+    return HolidayCalendar(year=2022, boe_ref="synthetic-2022")
 
 
-def _next_year_calendar(*, verified: tuple[CalendarCCAA, ...] = ()) -> HolidayCalendar:
+def _next_year_calendar() -> HolidayCalendar:
     return HolidayCalendar(
         year=2023,
         boe_ref="synthetic-2023",
@@ -573,7 +497,6 @@ def _next_year_calendar(*, verified: tuple[CalendarCCAA, ...] = ()) -> HolidayCa
             Holiday(holiday_date=date(2023, 1, 1), jurisdiction=HolidayJurisdiction.NATIONAL, name="Año Nuevo"),
             Holiday(holiday_date=_FIRST_MONDAY, jurisdiction=HolidayJurisdiction.NATIONAL, name="Lunes festivo"),
         ),
-        verified_territories=verified,
     )
 
 
@@ -583,7 +506,6 @@ def test_a_year_end_shift_is_judged_against_the_next_years_calendar() -> None:
         result = shift_deadline(
             _SATURDAY_YEAR_END,
             modelo="303",
-            ccaa_code=None,
             calendars=(_year_end_calendar(), _next_year_calendar()),
             operation=operation,
         )
@@ -601,24 +523,9 @@ def test_a_year_end_shift_into_an_unpublished_year_is_refused() -> None:
         shift_deadline(
             _SATURDAY_YEAR_END,
             modelo="303",
-            ccaa_code=None,
             calendars=(_year_end_calendar(),),
             operation=operation,
         )
-
-
-def test_a_year_end_shift_reports_a_territory_the_next_year_does_not_verify() -> None:
-    with bundled_indexed_authority().operation() as operation:
-        catalonia = _calendar_ccaa(operation, "ES-CT")
-        result = shift_deadline(
-            _SATURDAY_YEAR_END,
-            modelo="303",
-            ccaa_code=catalonia,
-            calendars=(_year_end_calendar(verified=(catalonia,)), _next_year_calendar()),
-            operation=operation,
-        )
-    assert result.adjusted_close_date == date(2023, 1, 3)
-    assert result.coverage is DeadlineHolidayCoverage.TERRITORY_UNVERIFIED
 
 
 def test_a_single_year_calendar_refuses_to_classify_another_year() -> None:
@@ -635,7 +542,6 @@ def test_supplying_two_calendars_for_one_year_is_refused() -> None:
         shift_deadline(
             _SATURDAY_YEAR_END,
             modelo="303",
-            ccaa_code=None,
             calendars=(_year_end_calendar(), _year_end_calendar()),
             operation=operation,
         )

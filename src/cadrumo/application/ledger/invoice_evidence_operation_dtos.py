@@ -663,6 +663,7 @@ class InvoiceConfirmationProjectionV1(BaseModel):
     created: bool
     total_discrepancy: PrintedTotalDiscrepancyProjectionV1 | None = None
     retention_discrepancy: RetentionReadingDiscrepancyProjectionV1 | None = None
+    likely_duplicate_invoice_id: str | None = None
     confirmation_id: Hex16Str | None = None
     confirmed_provenance: _ProvenanceRows = ()
     establishment: ConfirmedEstablishmentProjectionV1 | None = None
@@ -685,6 +686,7 @@ class InvoiceConfirmationProjectionV1(BaseModel):
                 if result.retention_discrepancy is None
                 else RetentionReadingDiscrepancyProjectionV1.from_discrepancy(result.retention_discrepancy)
             ),
+            likely_duplicate_invoice_id=result.likely_duplicate_invoice_id,
             confirmation_id=result.confirmation_id,
             confirmed_provenance=tuple(
                 FieldProvenanceProjectionV1.from_provenance(row) for row in result.confirmed_provenance

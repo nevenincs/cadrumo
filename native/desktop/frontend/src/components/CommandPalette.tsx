@@ -124,9 +124,11 @@ export function CommandPalette({
   const searchInput = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [docs, setDocs] = useState<{
-    state: "idle" | "searching" | "done" | "unavailable";
+    state: "searching" | "done" | "unavailable";
     results: DocsSearchResult[];
-  }>({ state: "idle", results: [] });
+    query: string;
+    source: DocsSearch;
+  } | null>(null);
   const trimmed = query.trim();
   // A pasted link is the whole answer: neither actions nor the
   // documentation are searched for it.
@@ -142,16 +144,28 @@ export function CommandPalette({
     if (!searching || !searchDocs) return;
     let current = true;
     const timer = window.setTimeout(() => {
-      setDocs((held) => ({ ...held, state: "searching" }));
+      const identity = { query: trimmed, source: searchDocs };
+      setDocs({ ...identity, state: "searching", results: [] });
       searchDocs(trimmed)
-        .then((results) => current && setDocs({ state: "done", results }))
-        .catch(() => current && setDocs({ state: "unavailable", results: [] }));
+        .then(
+          (results) =>
+            current && setDocs({ ...identity, state: "done", results }),
+        )
+        .catch(
+          () =>
+            current &&
+            setDocs({ ...identity, state: "unavailable", results: [] }),
+        );
     }, SEARCH_DEBOUNCE_MS);
     return () => {
       current = false;
       window.clearTimeout(timer);
     };
   }, [trimmed, searching, searchDocs]);
+  // A completed answer belongs to the query and provider that produced it,
+  // including the debounce interval before the next request starts.
+  const currentDocs =
+    docs?.query === trimmed && docs.source === searchDocs ? docs : null;
 
   const matched = useMemo(() => {
     if (pasted) return [];
@@ -170,8 +184,8 @@ export function CommandPalette({
   }, [actions, query, trimmed, pasted]);
   const found = useMemo(
     () =>
-      searching
-        ? docs.results
+      searching && currentDocs?.state === "done"
+        ? currentDocs.results
             .map((result, rank) => ({ result, rank }))
             .sort(
               (x, y) =>
@@ -180,7 +194,7 @@ export function CommandPalette({
             )
             .map(({ result }) => result)
         : [],
-    [searching, docs.results],
+    [searching, currentDocs],
   );
 
   const run = (action: () => void) => {
@@ -196,15 +210,21 @@ export function CommandPalette({
   // a listbox holds options and nothing else.
   const nothingFound = searching && found.length === 0;
   const awaited =
-    nothingFound && docs.state !== "done" && docs.state !== "unavailable";
+    nothingFound &&
+    currentDocs?.state !== "done" &&
+    currentDocs?.state !== "unavailable";
   const note = nothingFound
-    ? docs.state === "unavailable"
+    ? currentDocs?.state === "unavailable"
       ? t("desktop.palette.unavailable")
-      : docs.state === "done"
+      : currentDocs?.state === "done"
         ? t("desktop.palette.no_results", { query: trimmed })
         : t("desktop.palette.searching")
     : !searching && matched.length === 0 && pasted === null
-      ? t("desktop.palette.type_to_search")
+      ? t(
+          trimmed && searchDocs === null
+            ? "desktop.palette.unavailable"
+            : "desktop.palette.type_to_search",
+        )
       : null;
 
   return (
@@ -312,19 +332,7 @@ export function CommandPalette({
               {searching && (
                 <section>
                   {found.length > 0 && (
-                    <CommandGroup
-                      heading={
-                        <>
-                          {t("desktop.palette.documentation")}
-                          {docs.state === "searching" && (
-                            <span className="flex items-center gap-1.5 font-normal tracking-normal normal-case">
-                              <Spinner className="size-icon-xs" />
-                              {t("desktop.palette.searching")}
-                            </span>
-                          )}
-                        </>
-                      }
-                    >
+                    <CommandGroup heading={t("desktop.palette.documentation")}>
                       {found.map((result, index) => (
                         <CommandItem
                           key={`${result.url}#${index}`}

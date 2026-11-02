@@ -35,7 +35,7 @@ from .calculation_note_gate import (
     proven_zero_calculation_issues,
 )
 from .calculation_revision_gate import require_calculation_revision_coordinates_current
-from .work_form_models import ModeloFormResult
+from .work_form_declaration_facts import ModeloFormResult
 from .work_form_result import settlement_result_values
 from .work_form_service import modelo_form_snapshot
 

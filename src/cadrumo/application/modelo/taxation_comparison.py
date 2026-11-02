@@ -17,9 +17,9 @@ the unidad familiar and only flips ``declaration_type`` to 1, so it faithfully
 models a **single-earner** household. It does not compute two separate spouse
 returns; a genuine two-earner individual comparison requires a per-spouse
 income axis that does not yet exist. Every result therefore carries
-``individual_branch_single_earner_only`` and an
-``individual_branch_caveat`` so no surface presents the individual figure as
-authoritative for a two-earner couple.
+``individual_branch_single_earner_only``, and the surfaces serve its caveat in
+words so none presents the individual figure as authoritative for a two-earner
+couple.
 
 The comparison is snapshot-grounded. It resolves the result casillas by their
 declared semantic roles, refuses ambiguous role matches before choosing a
@@ -47,12 +47,11 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
-from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -82,6 +81,9 @@ if TYPE_CHECKING:
 # Output types
 # ---------------------------------------------------------------------------
 
+MATERIALITY_THRESHOLD: Final = Decimal(1)
+"""The difference in euros below which either filing mode is acceptable; not a tax-law limit."""
+
 _DECLARATION_TYPE_BINDING_SUFFIX = "profile-declaration-type"
 _CUOTA_RESULTANTE_ROLE = "irpf_cuota_resultante_autoliquidacion"  # casilla 0595
 _RESULTADO_ROLE = "irpf_cuota_diferencial"  # casilla 0610
@@ -97,24 +99,6 @@ def _select_taxation_work_unit(
     return select_modelo_work_resolution(request, catalogue=catalogue, bucket_id=bucket_id)
 
 
-#: Honesty scope caveat for the individual filing branch. The individual run
-#: reuses the *single* input set assembled for the unidad familiar and merely
-#: flips ``declaration_type`` to 1, so it faithfully models only a **single-earner**
-#: household. It does NOT compute two separate spouse returns (each on that
-#: spouse's own income); a genuine two-earner individual comparison requires a
-#: per-spouse income attribution axis that does not yet exist. Surfacing this
-#: statement keeps the comparator from presenting an unfaithful two-earner figure
-#: as authoritative.
-INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT = (
-    "The individual-mode figure is a single-return computation over the unidad "
-    "familiar's combined inputs and is faithful only for a single-earner household. "
-    "It does not model two separate spouse returns (each taxed on that spouse's own "
-    "income); for a genuine two-earner couple the individual comparison is not yet "
-    "available, pending a per-spouse income axis. Treat the individual figure as "
-    "directional, not authoritative, for two-earner households."
-)
-
-
 class TaxationRecommendation(StrEnum):
     """Recommended filing mode based on the computed cuota differential.
 
@@ -126,6 +110,18 @@ class TaxationRecommendation(StrEnum):
     CONJUNTA = "conjunta"
     INDIVIDUAL = "individual"
     INDIFFERENT = "indifferent"
+
+
+class TaxationRecommendationReason(StrEnum):
+    """Why the comparison recommends what it does, as a closed token.
+
+    The words for a reason, with the amounts it rests on, are served by
+    :mod:`~cadrumo.application.modelo.taxation_comparison_words`.
+    """
+
+    CONJUNTA_LOWER_RESULT = "conjunta_lower_result"
+    INDIVIDUAL_LOWER_RESULT = "individual_lower_result"
+    BELOW_MATERIALITY = "below_materiality"
 
 
 class TaxationComparisonResult(BaseModel):
@@ -160,17 +156,18 @@ class TaxationComparisonResult(BaseModel):
     delta_resultado: Decimal
 
     recommendation: TaxationRecommendation
-    recommendation_reason: str
+    recommendation_reason: TaxationRecommendationReason
 
     # Honesty scope: the individual branch reuses the unidad familiar's single
     # input set, so it is faithful only for a single-earner household.
     # ``individual_branch_single_earner_only`` is always True today; a genuine
     # two-earner individual comparison (two separate spouse returns) requires a
-    # per-spouse income axis that does not yet exist. ``individual_branch_caveat``
-    # carries the operator-facing disclosure so no surface presents the
-    # individual figure as authoritative for a two-earner couple.
+    # per-spouse income axis that does not yet exist. The operator-facing words
+    # of this disclosure are served by
+    # :func:`~cadrumo.application.modelo.taxation_comparison_words.individual_branch_caveat_words`
+    # so no surface presents the individual figure as authoritative for a
+    # two-earner couple.
     individual_branch_single_earner_only: bool = True
-    individual_branch_caveat: str = INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
 
 
 # ---------------------------------------------------------------------------
@@ -320,25 +317,16 @@ def compare_taxation_modes(
     # delta > 0 → conjunta is cheaper (individual is more expensive)
     delta = individual_resultado - conjunta_resultado
 
-    threshold = ONE  # application materiality identity; not a tax-law rate or limit
+    threshold = MATERIALITY_THRESHOLD
     if delta > threshold:
         recommendation = TaxationRecommendation.CONJUNTA
-        reason = (
-            f"conjunta saves {delta:.2f} € (resultado conjunta {conjunta_resultado:.2f} € "
-            f"vs individual {individual_resultado:.2f} €)"
-        )
+        reason = TaxationRecommendationReason.CONJUNTA_LOWER_RESULT
     elif delta < -threshold:
         recommendation = TaxationRecommendation.INDIVIDUAL
-        reason = (
-            f"individual saves {-delta:.2f} € (resultado individual {individual_resultado:.2f} € "
-            f"vs conjunta {conjunta_resultado:.2f} €)"
-        )
+        reason = TaxationRecommendationReason.INDIVIDUAL_LOWER_RESULT
     else:
         recommendation = TaxationRecommendation.INDIFFERENT
-        reason = (
-            f"difference is {delta:.2f} € (below the {threshold:.0f} € materiality threshold); "
-            "either filing mode is acceptable"
-        )
+        reason = TaxationRecommendationReason.BELOW_MATERIALITY
 
     return TaxationComparisonResult(
         filing_year=snapshot.filing_year,

@@ -1004,10 +1004,7 @@ def _renta_expense_fact_or_issue(
     evidence_payload = purchase_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,
-        transaction_id=transaction.transaction_id,
-        purchase_invoice_evidence_id=transaction.purchase_invoice_evidence_id,
-        category_id=transaction.category_id,
-        transaction_amount=eur_amount,
+        transaction=transaction,
     )
     if isinstance(evidence_payload, RentaLedgerAggregationIssue):
         return evidence_payload

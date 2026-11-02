@@ -648,9 +648,9 @@ test("full schema, collapsible sections, section index and browser autofill", as
     .last()
     .click();
   await page
-    .locator(".pane-docs")
+    .locator('[data-dock-header="docs"]')
     .getByRole("button", {
-      name: label("desktop.profile.maximize"),
+      name: label("desktop.dock.expand"),
       exact: true,
     })
     .click();

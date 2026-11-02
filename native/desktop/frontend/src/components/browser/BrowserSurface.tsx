@@ -4,6 +4,8 @@ import {
   useImperativeHandle,
   useRef,
   type ClipboardEvent,
+  type CompositionEvent,
+  type FormEvent,
   type KeyboardEvent,
   type MouseEvent,
   type Ref,
@@ -43,9 +45,11 @@ type Props = {
   isShellChord: (event: globalThis.KeyboardEvent) => boolean;
   onSize: (size: SedeViewSize) => void;
   onInput: (event: SedeViewInput) => void;
+  onCopy?: () => void;
+  onCut?: () => void;
 };
 
-type Held = { index: number; count: number };
+type Held = { index: number; count: number; x: number; y: number };
 
 /**
  * The page's canvas. It draws the images the view sends from bytes in memory
@@ -61,9 +65,17 @@ export function BrowserSurface({
   isShellChord,
   onSize,
   onInput,
+  onCopy,
+  onCut,
 }: Props) {
   const wrapper = useRef<HTMLDivElement>(null);
   const canvas = useRef<HTMLCanvasElement>(null);
+  // A real editable target is needed for the operating system's IME. Its
+  // value exists only while composing; committed text never stays in it.
+  const input = useRef<HTMLTextAreaElement>(null);
+  const composing = useRef(false);
+  const compositionTail = useRef<string | null>(null);
+  const compositionTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   // The page's own size in CSS pixels, from the last image it sent; until
   // then the size the view was asked for.
   const viewport = useRef<{ width: number; height: number } | null>(null);
@@ -77,8 +89,38 @@ export function BrowserSurface({
     null,
   );
   const frame = useRef(0);
-  const live = useRef({ shown, enabled, isShellChord, onSize, onInput });
-  live.current = { shown, enabled, isShellChord, onSize, onInput };
+  const live = useRef({
+    shown,
+    enabled,
+    isShellChord,
+    onSize,
+    onInput,
+    onCopy,
+    onCut,
+  });
+  live.current = {
+    shown,
+    enabled,
+    isShellChord,
+    onSize,
+    onInput,
+    onCopy,
+    onCut,
+  };
+
+  const forgetComposition = useCallback(() => {
+    composing.current = false;
+    compositionTail.current = null;
+    if (compositionTimer.current !== null)
+      clearTimeout(compositionTimer.current);
+    compositionTimer.current = null;
+    if (input.current) input.current.value = "";
+  }, []);
+
+  useEffect(() => {
+    if (!shown || !enabled) forgetComposition();
+    return forgetComposition;
+  }, [shown, enabled, forgetComposition]);
 
   const pointAt = useCallback((at: { clientX: number; clientY: number }) => {
     const target = canvas.current;
@@ -128,6 +170,7 @@ export function BrowserSurface({
         await paint(image, newest.current);
       },
       clear() {
+        forgetComposition();
         newest.current += 1;
         aside.current = null;
         viewport.current = null;
@@ -138,7 +181,7 @@ export function BrowserSurface({
       },
       element: () => wrapper.current,
     }),
-    [paint],
+    [paint, forgetComposition],
   );
 
   // Put back in view, the page shows the newest image it was sent meanwhile.
@@ -196,6 +239,10 @@ export function BrowserSurface({
     (event: globalThis.MouseEvent) => {
       const point = pointAt(event);
       if (!point) return;
+      if (pressed.current) {
+        pressed.current.x = point.x;
+        pressed.current.y = point.y;
+      }
       hover.current = { ...point, modifiers: modifiersOf(event) };
       if (!frame.current)
         frame.current = requestAnimationFrame(() => {
@@ -206,26 +253,33 @@ export function BrowserSurface({
     [pointAt, flushHover],
   );
 
-  const released = useCallback(
-    (event: globalThis.MouseEvent) => {
+  const releaseHeld = useCallback(
+    (point?: { x: number; y: number }, modifiers = 0) => {
       const held = pressed.current;
-      if (!held || event.button !== held.index) return;
+      if (!held) return;
       pressed.current = null;
       flushHover();
-      const point = pointAt(event);
       const button = pointerButton(held.index);
-      if (!point || !button) return;
+      if (!button) return;
       send({
         type: "pointer",
         action: "up",
-        x: point.x,
-        y: point.y,
+        x: point?.x ?? held.x,
+        y: point?.y ?? held.y,
         button,
         click_count: held.count,
-        modifiers: modifiersOf(event),
+        modifiers,
       });
     },
-    [pointAt, flushHover, send],
+    [flushHover, send],
+  );
+
+  const released = useCallback(
+    (event: globalThis.MouseEvent) => {
+      if (event.button !== pressed.current?.index) return;
+      releaseHeld(pointAt(event) ?? undefined, modifiersOf(event));
+    },
+    [pointAt, releaseHeld],
   );
 
   // A drag goes on outside the panel, and a release is seen wherever it is.
@@ -268,6 +322,17 @@ export function BrowserSurface({
   }, [pointAt, flushHover, send]);
 
   const pressKey = (event: KeyboardEvent) => {
+    // Do not cancel the native edit: it is what starts and updates the IME.
+    // 229 also covers the initiating key before compositionstart fires.
+    if (
+      composing.current ||
+      event.nativeEvent.isComposing ||
+      event.keyCode === 229
+    ) {
+      event.stopPropagation();
+      return;
+    }
+    compositionTail.current = null;
     if (live.current.isShellChord(event.nativeEvent)) return;
     // The paste event that follows carries the text; the key is not sent.
     if (
@@ -277,6 +342,22 @@ export function BrowserSurface({
       event.key.toLowerCase() === "v"
     )
       return;
+    if (
+      (IS_MAC
+        ? event.metaKey && !event.ctrlKey
+        : event.ctrlKey && !event.metaKey) &&
+      !event.altKey &&
+      !event.shiftKey &&
+      ["c", "x"].includes(event.key.toLowerCase())
+    ) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (live.current.enabled)
+        (event.key.toLowerCase() === "c"
+          ? live.current.onCopy
+          : live.current.onCut)?.();
+      return;
+    }
     const plan = keyPlan(
       {
         key: event.key,
@@ -286,6 +367,7 @@ export function BrowserSurface({
         metaKey: event.metaKey,
         shiftKey: event.shiftKey,
         isComposing: event.nativeEvent.isComposing,
+        keyCode: event.keyCode,
         altGraph: event.getModifierState("AltGraph"),
       },
       IS_MAC,
@@ -309,7 +391,15 @@ export function BrowserSurface({
   const releaseKey = (event: KeyboardEvent) => {
     const id = event.code || event.key;
     const plan = keys.current.get(id);
-    if (!plan) return;
+    if (!plan) {
+      if (
+        composing.current ||
+        event.nativeEvent.isComposing ||
+        event.keyCode === 229
+      )
+        event.stopPropagation();
+      return;
+    }
     keys.current.delete(id);
     event.preventDefault();
     event.stopPropagation();
@@ -322,8 +412,10 @@ export function BrowserSurface({
     });
   };
 
-  // Focus leaving lets go of what was held, so no key stays down in the page.
-  const letGo = () => {
+  // Focus leaving lets go of what was held, even if the native window loses
+  // the matching mouseup while a drag is outside it.
+  const letGo = useCallback(() => {
+    forgetComposition();
     for (const plan of keys.current.values())
       send({
         type: "key",
@@ -333,17 +425,23 @@ export function BrowserSurface({
         modifiers: 0,
       });
     keys.current.clear();
-  };
+    releaseHeld();
+  }, [releaseHeld, send, forgetComposition]);
+
+  useEffect(() => {
+    window.addEventListener("blur", letGo);
+    return () => window.removeEventListener("blur", letGo);
+  }, [letGo]);
 
   const pressMouse = (event: MouseEvent) => {
     event.preventDefault();
-    wrapper.current?.focus({ preventScroll: true });
+    input.current?.focus({ preventScroll: true });
     const button = pointerButton(event.button);
     const point = pointAt(event);
     if (!button || !point || !live.current.enabled) return;
     flushHover();
     const count = clickCount(event.detail);
-    pressed.current = { index: event.button, count };
+    pressed.current = { index: event.button, count, ...point };
     send({
       type: "pointer",
       action: "down",
@@ -357,8 +455,13 @@ export function BrowserSurface({
 
   const paste = (event: ClipboardEvent) => {
     event.preventDefault();
+    forgetComposition();
     if (!live.current.enabled) return;
-    for (const step of pasteSteps(event.clipboardData.getData("text/plain"))) {
+    commitText(event.clipboardData.getData("text/plain"));
+  };
+
+  const commitText = (text: string) => {
+    for (const step of pasteSteps(text)) {
       if (step.type === "text") send({ type: "text", text: step.text });
       else
         for (const action of ["down", "up"] as const)
@@ -372,6 +475,52 @@ export function BrowserSurface({
     }
   };
 
+  const compositionEnded = (event: CompositionEvent<HTMLTextAreaElement>) => {
+    if (!composing.current) {
+      event.currentTarget.value = "";
+      return;
+    }
+    composing.current = false;
+    const text = event.data;
+    event.currentTarget.value = "";
+    commitText(text);
+    // WebKit can deliver the committed input after compositionend, while
+    // Chromium delivers it before. Both must produce just one insertion.
+    compositionTail.current = text;
+    if (compositionTimer.current !== null)
+      clearTimeout(compositionTimer.current);
+    compositionTimer.current = setTimeout(() => {
+      compositionTail.current = null;
+      compositionTimer.current = null;
+    }, 0);
+  };
+
+  const textEntered = (event: FormEvent<HTMLTextAreaElement>) => {
+    const native = event.nativeEvent as InputEvent;
+    if (composing.current || native.isComposing) return;
+    const text = event.currentTarget.value;
+    event.currentTarget.value = "";
+    const tail = compositionTail.current;
+    compositionTail.current = null;
+    if (
+      native.inputType === "insertFromComposition" ||
+      native.inputType === "insertCompositionText" ||
+      (tail !== null && (native.data === tail || text === tail))
+    )
+      return;
+    // Native text input without a key (emoji, dictation, accessibility and
+    // keyboard APIs) follows the same bounded text protocol as a commit.
+    if (native.inputType?.startsWith("insert"))
+      commitText(text || native.data || "");
+  };
+
+  const clipboard = (event: ClipboardEvent, action: "copy" | "cut") => {
+    event.preventDefault();
+    event.stopPropagation();
+    if (live.current.enabled && !composing.current)
+      (action === "copy" ? live.current.onCopy : live.current.onCut)?.();
+  };
+
   return (
     <div
       ref={wrapper}
@@ -379,21 +528,47 @@ export function BrowserSurface({
       role="group"
       aria-label={label}
       data-browser-surface=""
-      className="relative min-h-0 flex-1 cursor-default overflow-hidden bg-card select-none focus-visible:-outline-offset-2"
+      className="relative min-h-0 flex-1 cursor-default overflow-hidden bg-card select-none has-[:focus-visible]:outline-(length:--focus-ring) has-[:focus-visible]:outline-offset-[calc(-1*var(--focus-ring))] has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-solid"
       onKeyDown={pressKey}
       onKeyUp={releaseKey}
-      onBlur={letGo}
+      onFocus={(event) => {
+        if (event.target === event.currentTarget)
+          input.current?.focus({ preventScroll: true });
+      }}
+      onBlur={(event) => {
+        if (!event.currentTarget.contains(event.relatedTarget)) letGo();
+      }}
       onMouseDown={pressMouse}
       onMouseMove={(event) => {
         if (!pressed.current) moved(event.nativeEvent);
       }}
       onContextMenu={(event) => event.preventDefault()}
       onPaste={paste}
+      onCopy={(event) => clipboard(event, "copy")}
+      onCut={(event) => clipboard(event, "cut")}
     >
       <canvas
         ref={canvas}
         aria-hidden="true"
         className="absolute inset-0 size-full"
+      />
+      <textarea
+        ref={input}
+        tabIndex={-1}
+        disabled={!shown || !enabled}
+        aria-label={label}
+        autoComplete="off"
+        autoCapitalize="off"
+        autoCorrect="off"
+        spellCheck={false}
+        data-browser-input=""
+        className="pointer-events-none absolute inset-0 size-full resize-none opacity-0"
+        onCompositionStart={() => {
+          forgetComposition();
+          composing.current = live.current.enabled && live.current.shown;
+        }}
+        onCompositionEnd={compositionEnded}
+        onInput={textEntered}
       />
     </div>
   );

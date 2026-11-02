@@ -175,6 +175,8 @@ class CalculationNoteSentence(StrEnum):
     """A credit casilla's value and one of its declared cross-check sources state different amounts."""
     CREDIT_CROSS_CHECK_ABSENT = "credit_cross_check_absent"
     """A declared cross-check source of a credit casilla holds nothing to compare."""
+    HOUSEHOLD_ROWS_INCOMPLETE = "household_rows_incomplete"
+    """A household group states more people than the profile records."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(
@@ -250,8 +252,8 @@ class RecordedCalculationNote(BaseModel):
     """What kind of note this is, in the same language."""
 
 
-DISAGREEMENT_REASONS: Final[frozenset[str]] = frozenset({"credit_source_disagreement"})
-"""The :class:`CalculationSourceIssue` reasons that carry a ``disagreement``, and the only ones that do."""
+DISAGREEMENT_REASONS: Final[frozenset[str]] = frozenset({"credit_source_disagreement", "precedence_tier_divergence"})
+"""The persisted reasons that carry a source disagreement, and only those."""
 
 
 class CalculationSourceIssue(BaseModel):
@@ -314,6 +316,16 @@ class CalculationSourceIssue(BaseModel):
     cross-checked", never agreement, and withholds nothing. ``fact`` states such a note's own row, element, interval and
     amount. ``binding_source`` is ``None`` only where the condition names no
     binding source kind.
+    outcome. ``household_rows_incomplete`` is a household group whose stated
+    count is larger than the rows the profile records: the recorded rows are
+    used and the group is not proven complete; it withholds nothing. ``fact``
+    states such a note's own row, element, interval and amount.
+    ``binding_source`` is ``None`` only where the condition names no binding
+    source kind. ``precedence_tier_divergence`` is a filed figure for
+    which a higher source tier replaced a different value a lower tier held;
+    ``disagreement`` states every tier's value and which one the calculation
+    used, and it withholds filing until the sources agree. ``disagreement`` is
+    carried by exactly the reasons in :data:`DISAGREEMENT_REASONS`.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -343,9 +355,11 @@ class CalculationSourceIssue(BaseModel):
         "register_acquisition_row_missing",
         "register_owned_capital_acquisition",
         "ledger_expense_may_be_durable",
+        "household_rows_incomplete",
         "advisory_binding_value",
         "credit_source_disagreement",
         "credit_cross_check_absent",
+        "precedence_tier_divergence",
     ]
     binding_source: BindingSourceKind | None
     message: str = Field(min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)
@@ -367,7 +381,7 @@ class CalculationSourceIssue(BaseModel):
     @pydantic_validation_boundary
     def _require_disagreement_on_disagreement_reasons_only(self) -> Self:
         if (self.disagreement is not None) != (self.reason in DISAGREEMENT_REASONS):
-            raise ModeloValidationError("a disagreement reason, and only such a reason, carries its sources")
+            raise ModeloValidationError("a source disagreement is carried by exactly the reasons that state one")
         return self
 
 

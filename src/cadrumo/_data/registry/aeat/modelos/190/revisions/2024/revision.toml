@@ -64,6 +64,8 @@ source_refs = ["aeat-dr-190-2024", "aeat-modelo-190-procedure"]
 family_storage_baseline = "2023"
 scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
+family_disposition_removals = ["extraction_profiles"]
+
 [revisions."2024".family_dispositions.credit_reconciliation]
 reason = """
 The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo is a withholding agent's return: its withholding boxes state what the declarant practised on others and paid in, never a credit of the declarant's own, so there is no credit casilla for an entry to name. The perceptor credits that withholding on the perceptor's own return."""

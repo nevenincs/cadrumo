@@ -1,13 +1,17 @@
-import { useMemo, useState, type ReactNode, type RefObject } from "react";
+import {
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+  type RefObject,
+} from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DataGrid,
-  DataGridText,
-  type GridColumn,
-  type GridRow,
-} from "@/components/ui/data-grid";
+import { DataGrid } from "@/components/ui/data-grid";
+import { DataGridText } from "@/components/ui/data-grid-text";
+import { type GridColumn, type GridRow } from "@/components/ui/dataGridTypes";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
@@ -24,6 +28,7 @@ import {
 import { cn } from "@/components/ui/cn";
 import { PaneHeader, type PaneControl } from "../../PaneHeader";
 import type { ModeloPort } from "../../../shell/modelo";
+import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
 import type {
   DeclarationListGroup,
   ModeloDeclarationListRowV1 as Row,
@@ -328,6 +333,17 @@ export function DeclarationsPage({
     shown,
     memory,
   );
+  const ownedMemory = memory.current;
+  const activeOwner = useRef<{
+    reader: string | null;
+    memory: DeclarationsMemory;
+  } | null>(null);
+  useLayoutEffect(() => {
+    activeOwner.current = { reader, memory: ownedMemory };
+    return () => {
+      activeOwner.current = null;
+    };
+  }, [reader, ownedMemory]);
   const [view, setView] = useKept(memory, "view", "todo" as View);
   const [sort, setSort] = useKept(memory, "sort", {
     key: "work_order",
@@ -637,14 +653,21 @@ export function DeclarationsPage({
           }}
           port={port}
           targets={list.creation_targets}
+          holds={modeloWritesFor(memory.current)}
+          onReload={reread}
+          refreshing={read.phase === "reading"}
           rows={rows}
           start={creating || null}
           onOpen={onOpen}
           onWritten={() => {
             // Stale even if the page goes before the read: the next one
             // reads again.
-            memory.current.stale = true;
-            reread();
+            ownedMemory.stale = true;
+            if (
+              activeOwner.current?.reader === reader &&
+              activeOwner.current.memory === ownedMemory
+            )
+              reread();
           }}
         />
       )}

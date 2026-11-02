@@ -36,6 +36,8 @@ from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalo
 from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
+from ....domain.calculations.registry.applicability import derive_modelo_applicability
+from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
@@ -50,6 +52,7 @@ from ...aggregation.source_mesh import CalculationSourceContext
 from ...invoices.source_resolver import InvoiceCatalogueSourceResolver
 from ...invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from ...modelo.work_profile import ModeloWorkProfile
+from ...user_profile.projections import projection_for_taxpayer
 from ..draft_construction import build_draft
 from ..export import export_draft
 from ..runtime import ModeloOperatorProfile, build_runtime_schema_provider
@@ -117,21 +120,36 @@ class _CatalogueReader:
         return self._catalogue
 
 
-def _profile(operation: PinnedAuthorityOperation) -> ModeloWorkProfile:
+def _profile(
+    operation: PinnedAuthorityOperation,
+    *,
+    iva_regime: str = "GENERAL",
+    estimation_regime: str | None = None,
+    voluntary_sii: bool = False,
+    threshold_declared: bool | None = None,
+) -> ModeloWorkProfile:
+    facts = [
+        UserProfileFact(path="identity.tax_id", value="12345678Z"),
+        UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+        UserProfileFact(path="iva.regime", value=iva_regime),
+        UserProfileFact(path="iva.m303_regime_composition", value="general"),
+        UserProfileFact(path="iva.redeme_enrolled", value=False),
+        UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
+        UserProfileFact(path="iva.voluntary_sii_enrolled", value=voluntary_sii),
+        UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
+    ]
+    if estimation_regime is not None:
+        facts.append(UserProfileFact(path="irpf.estimation_regime", value=estimation_regime))
+    if threshold_declared is not None:
+        facts.append(UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"))
+        facts.append(
+            UserProfileFact(path="obligations.third_party_transactions_above_347_threshold", value=threshold_declared)
+        )
     record = create_user_profile_record(
         context=profile_creation_context_for_test(),
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
-        facts=(
-            UserProfileFact(path="identity.tax_id", value="12345678Z"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-        ),
+        facts=tuple(facts),
     )
     return ModeloWorkProfile(record=record, profile_decode_context=operation.profile_decode_context())
 
@@ -147,6 +165,7 @@ def _ordinary_invoices() -> tuple[Invoice, ...]:
 def _resolved_inputs(
     operation: PinnedAuthorityOperation,
     invoices: tuple[Invoice, ...] | None = None,
+    profile: ModeloWorkProfile | None = None,
 ) -> dict[str, ModeloInputValue]:
     invoices = _ordinary_invoices() if invoices is None else invoices
     provider = build_runtime_schema_provider(
@@ -161,7 +180,7 @@ def _resolved_inputs(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
         revision=provider.get_snapshot("347").revision,
-        profile=_profile(operation),
+        profile=_profile(operation) if profile is None else profile,
         operation=operation,
     )
     resolution = InvoiceCatalogueSourceResolver(
@@ -227,7 +246,12 @@ def test_a_347_filer_without_leases_exports_a_fichero_that_reads_back(
     assert declarante[169:185] == " 000000000000000"
 
 
-def _exported_lines(operation: PinnedAuthorityOperation, tmp_path: Path, invoices: tuple[Invoice, ...]) -> list[str]:
+def _exported_lines(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+    invoices: tuple[Invoice, ...],
+    profile: ModeloWorkProfile | None = None,
+) -> list[str]:
     provider = build_runtime_schema_provider(
         filing_year=_YEAR,
         period=Period.from_year_and_code(_YEAR, "0A"),
@@ -238,7 +262,7 @@ def _exported_lines(operation: PinnedAuthorityOperation, tmp_path: Path, invoice
         modelo="347",
         period=Period.from_year_and_code(_YEAR, "0A"),
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="DECLARANTE PRUEBA"),
-        inputs=_resolved_inputs(operation, invoices),
+        inputs=_resolved_inputs(operation, invoices, profile),
         schema_provider=provider,
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
     output_path = tmp_path / "modelo-347-2025.txt"
@@ -380,3 +404,94 @@ def test_a_single_counterparty_row_carries_the_typed_cash_amount(
     assert len(declarados) == 1
     # 7000 euros in positions 101-115: 13 integer digits, then 2 decimal digits.
     assert declarados[0][100:115] == "000000000700000"
+
+
+def _declarados(lines: list[str]) -> tuple[str, list[str]]:
+    declarante, *type_2 = lines
+    return declarante, [line for line in type_2 if line[75] == "D"]
+
+
+@pytest.mark.parametrize(
+    ("iva_regime", "received_files"),
+    [
+        pytest.param("RECARGO_EQUIVALENCIA", False, id="modulos-recargo-issued-only"),
+        pytest.param("REAGP", False, id="modulos-reagp-issued-only"),
+        pytest.param("SIMPLIFICADO", True, id="modulos-simplificado-adds-libro-registro-received"),
+    ],
+)
+def test_a_modulos_filer_files_the_declarados_art_32_b_keeps(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+    iva_regime: str,
+    received_files: bool,
+) -> None:
+    """RGAT art. 32.b: invoices issued, plus the received ones of the simplificado's libro registro.
+
+    The ledger is the ordinary one: an 8,000 sale (9,680.00 with 21 % IVA), a
+    5,000 purchase from one supplier (6,050.00) and a 1,000 sale to a customer
+    below the 3,005.06 floor. The estimación objetiva filer under the recargo
+    de equivalencia or the REAGP files the customer alone; under the simplificado
+    the supplier joins.
+    """
+    profile = _profile(operation, iva_regime=iva_regime, estimation_regime="objetiva")
+
+    declarante, declarados = _declarados(_exported_lines(operation, tmp_path, _ordinary_invoices(), profile))
+
+    amounts = {line[35:75].rstrip(): line[82:98] for line in declarados}
+    if received_files:
+        assert amounts == {
+            "CLIENTE NACIONAL SL": " 000000000968000",
+            "PROVEEDOR NACIONAL SA": " 000000000605000",
+        }
+        assert declarante[135:144] == "000000002"
+        assert declarante[144:160] == " 000000001573000"
+    else:
+        assert amounts == {"CLIENTE NACIONAL SL": " 000000000968000"}
+        assert declarante[135:144] == "000000001"
+        assert declarante[144:160] == " 000000000968000"
+    assert len(declarados) == len(amounts)
+    assert declarante[:8] == "13472025"
+
+
+def test_a_filer_outside_estimacion_objetiva_files_both_directions_whatever_its_special_regime(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+) -> None:
+    """The art. 32.b scope needs estimación objetiva as well; recargo de equivalencia alone does not narrow it."""
+    profile = _profile(operation, iva_regime="RECARGO_EQUIVALENCIA", estimation_regime="directa_simplificada")
+
+    _declarante, declarados = _declarados(_exported_lines(operation, tmp_path, _ordinary_invoices(), profile))
+
+    assert {line[35:75].rstrip() for line in declarados} == {"CLIENTE NACIONAL SL", "PROVEEDOR NACIONAL SA"}
+
+
+@pytest.mark.parametrize(
+    ("voluntary_sii", "verdict"),
+    [
+        pytest.param(False, ApplicabilityVerdict.APPLICABLE, id="books-outside-sii-must-file"),
+        pytest.param(True, ApplicabilityVerdict.NOT_APPLICABLE, id="sii-filer-is-not-obliged"),
+    ],
+)
+def test_an_sii_filer_is_not_obliged_to_file_the_ledger_that_obliges_a_filer_outside_sii(
+    operation: PinnedAuthorityOperation,
+    voluntary_sii: bool,
+    verdict: ApplicabilityVerdict,
+) -> None:
+    """RGAT art. 32.e: a filer keeping its IVA books through the SII does not file, however large its ledger.
+
+    The profile states the threshold exceeded in both cases and differs only in
+    the SII enrolment, and the one applicability evaluator every surface reads
+    gives the opposite verdicts.
+    """
+    work_profile = _profile(operation, voluntary_sii=voluntary_sii, threshold_declared=True)
+    taxpayer = projection_for_taxpayer(
+        work_profile.record,
+        schema=work_profile.profile_decode_context.schema,
+        as_of=date(_YEAR, 12, 31),
+    )
+
+    result = derive_modelo_applicability(taxpayer, "347", today=date(_YEAR + 1, 1, 15), operation=operation)
+
+    assert result.verdict is verdict
+    if verdict is ApplicabilityVerdict.NOT_APPLICABLE:
+        assert "rd-1065-2007:art-32" in result.legal_refs

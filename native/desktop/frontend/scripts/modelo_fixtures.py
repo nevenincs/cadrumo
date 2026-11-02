@@ -11,7 +11,8 @@ for a synthetic taxpayer in a throwaway profile over the published authority.
 ``scripts/modelo-fixtures.mjs`` drives this module and formats what it writes;
 run that, not this. ``contract`` writes the unformatted module to standard
 output; ``bounds`` writes the unformatted relay bounds module; ``envelopes``
-writes the envelopes; ``validate`` fails when the host's admitted list differs
+writes the envelopes, stored compactly and the Modelo 100 forms as patches;
+``pack`` stores the envelopes already on disk that way; ``validate`` fails when the host's admitted list differs
 from the registered family or a stored envelope no longer validates against
 its model. The envelopes carry the day they were
 read, so they are validated rather than compared byte for byte.
@@ -59,6 +60,7 @@ RELAY_SOURCES: tuple[Path, ...] = (
     FRONTEND.parent / "src-tauri" / "src" / "shell" / "relay.rs",
     FRONTEND.parent / "src-tauri" / "src" / "agent" / "person.rs",
     FRONTEND.parents[1] / "application" / "src" / "person_operations.rs",
+    FRONTEND.parents[1] / "application" / "src" / "person_operations" / "protocol.rs",
 )
 
 #: The declarations the envelopes read: modelo, period, and whether it is calculated first.
@@ -127,7 +129,29 @@ UNREADABLE_ENTRY = "doce"
 CORRECTION_REASON = "A deductible expense was left out."
 #: A synthetic AEAT justificante for a Modelo 130 of the first quarter of 2026.
 JUSTIFICANTE_130 = ("tests", "fixtures", "justificantes", "modelo_130_2026Q1.pdf")
-HELP_BOXES: Mapping[str, tuple[str, ...]] = {"130": ("01", "03", "07", "19"), "303": ("27", "71")}
+HELP_BOXES: Mapping[str, tuple[str, ...]] = {
+    "130": ("01", "03", "07", "19"),
+    "303": ("27", "71"),
+    "100": ("0596", "0670"),
+}
+
+#: The tax year and period of the Renta the envelopes read.
+RENTA_YEAR = 2025
+RENTA_PERIOD = "0A"
+#: What the filer answers for the 2025 Renta: the earlier year's negative general base, and whether direct
+#: estimation is normal. The calculation refuses without both.
+RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
+    ("renta-base-liquidable-negativa-general-anterior", "0"),
+    ("renta-modelo-100-estimacion-directa-es-normal", "1"),
+)
+#: The boxes a salaried filer states: the cash remuneration and the Social Security contributions, as typed.
+RENTA_SALARY_BOXES: tuple[str, str] = ("0003", "0013")
+#: A synthetic payer whose withholding certificate the register holds.
+RENTA_PAYER_TAX_ID = "B12345674"
+#: The quarter whose calculated Modelo 130 a projected filer holds, and the region the projection is asked for: the
+#: one the filers' profiles state as their tax residence.
+RENTA_QUARTER = "1T"
+RENTA_CCAA = "madrid"
 
 
 # -- wire types ---------------------------------------------------------------
@@ -181,7 +205,8 @@ def relay_bound(name: str) -> int:
     constants: dict[str, str] = {}
     for source in RELAY_SOURCES:
         for constant, expression in _RUST_CONSTANT.findall(source.read_text("utf-8")):
-            constants.setdefault(constant, expression.strip())
+            # rustfmt wraps a long expression over lines, which Python cannot parse as one.
+            constants.setdefault(constant, " ".join(expression.split()))
     if name not in constants:
         raise SystemExit(f"no relay source declares {name}")
     return _usize(constants[name], constants)
@@ -858,6 +883,236 @@ def _write_list(directory: Path, work: Any, name: str) -> None:
         _write(directory, f"{name}-{language}.json", listed)
 
 
+# -- the Renta ------------------------------------------------------------------
+#
+# The 2025 Modelo 100 of synthetic filers, each its own profile, calculated with the two answers the calculation
+# refuses without. Nothing is cut: every form is read whole, and a box the application cannot work out stays
+# unresolved in it. The declarations are data: a change to what a filer states, or a new filer, is one line here.
+
+
+@dataclass(frozen=True, slots=True)
+class RentaFiler:
+    """One synthetic filer of the 2025 Renta and what the profile holds for the declaration."""
+
+    #: The envelope's name after ``modelo-100-0A``; empty for the declaration the scenarios open.
+    envelope: str
+    #: The IRPF income categories the profile declares, comma separated as the setup answer states them.
+    categories: str
+    #: The cash remuneration and the Social Security contributions typed into the form, where the filer is salaried.
+    salary: tuple[str, str] | None = None
+    #: The withholding the payer's certificate states and the register holds, where there is a certificate.
+    certified: Decimal | None = None
+    #: Activity income booked in the profile's ledger for the year.
+    ledger_income: Decimal | None = None
+    #: Whether the profile also holds the year's calculated first-quarter Modelo 130, which the projection of the
+    #: annual return from the quarters reads; the projection is read for the filer only then.
+    quarter_130: bool = False
+
+
+RENTA_FILERS: tuple[RentaFiler, ...] = (
+    # Salaried, with income from savings and a capital gain declared, and no certificate in the register:
+    # the three withholding credits and the totals that read them stay unresolved.
+    RentaFiler("", "trabajo,capital_mobiliario,ganancias_patrimoniales", salary=("30000", "1900")),
+    # Salaried, one certificate in the register: a credit smaller than the tax, so the result is to pay.
+    RentaFiler("pay", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00")),
+    # The same income with a certificate stating more than the tax: the result is to refund.
+    RentaFiler("refund", "trabajo", salary=("30000", "1900"), certified=Decimal("6000.00")),
+    # Self-employed, with the year's activity income booked in the ledger.
+    RentaFiler("activity", "actividad_economica", ledger_income=Decimal("40000.00")),
+    # Salaried and self-employed, the year's first quarter calculated, and no certificate in the register: the
+    # projection from the quarter names the employment credit and the totals that read it as unresolved.
+    RentaFiler(
+        "projected",
+        "trabajo,actividad_economica",
+        salary=("30000", "1900"),
+        ledger_income=Decimal("40000.00"),
+        quarter_130=True,
+    ),
+    # The same filer with a certificate in the register: the projection resolves the credit it states.
+    RentaFiler(
+        "credited",
+        "trabajo,actividad_economica",
+        salary=("30000", "1900"),
+        certified=Decimal("2000.00"),
+        ledger_income=Decimal("40000.00"),
+        quarter_130=True,
+    ),
+)
+
+
+@contextmanager
+def _renta_seeded(tmp: Path, filer: RentaFiler) -> Generator[Any]:
+    """One synthetic profile whose first declaration is the filer's 2025 Modelo 100, not yet calculated."""
+    from cadrumo.domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
+    from cadrumo.domain.user_profile.values import UserProfileFact
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
+
+    facts = (
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value=filer.categories),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        *RENTA_UNMARRIED_TAXPAYER_FACTS,
+    )
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(
+            tmp, modelo="100", filing_year=RENTA_YEAR, period_code=RENTA_PERIOD, extra_facts=facts
+        ) as work,
+    ):
+        yield work
+
+
+def _record_certificate(work: Any, filer: RentaFiler) -> None:
+    """Store the payer's withholding certificate in the register, as the register's one write door stores it."""
+    from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+    from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+
+    if filer.certified is None or filer.salary is None:
+        return
+    seed_payer_certificate(
+        operation=work.operation,
+        taxpayer_tax_id=MAIN_TAX_ID,
+        ejercicio=RENTA_YEAR,
+        payer_tax_id=RENTA_PAYER_TAX_ID,
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=filer.certified,
+        importe_integro_dinerario=Decimal(filer.salary[0]),
+    )
+
+
+def _calculate_renta(work: Any, filer: RentaFiler) -> None:
+    """Calculate the filer's declaration through the registered calculation, with the answers it refuses without."""
+    from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
+    from cadrumo.application.modelo.calculation_request_fields import (
+        ModeloCalculationInputFieldsV1,
+        ModeloCalculationOverride,
+    )
+    from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+    from cadrumo.application.modelo.work_calculation_contracts import (
+        ModeloWorkCalculateCallerContext,
+        ModeloWorkCalculateRequest,
+    )
+    from cadrumo.application.operations.models import OperationIdentity, OperationRequest
+    from cadrumo.entrypoints.adapter_composition_ports import build_attachment_store
+
+    executor = ModeloWorkCalculateExecutor(
+        calculation_action_ports_factory=lambda **_: work.ports,
+        attachment_store_factory=build_attachment_store,
+    )
+    stated = zip(RENTA_SALARY_BOXES, filer.salary, strict=True) if filer.salary is not None else ()
+    request = OperationRequest(
+        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        subject_ref=work.work_unit_id,
+        payload=ModeloWorkCalculateRequest(
+            work_unit_id=work.work_unit_id,
+            actor=ACTOR,
+            caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
+            inputs=ModeloCalculationInputFieldsV1(
+                binding_overrides=tuple(
+                    ModeloCalculationOverride(key=key, value=value) for key, value in RENTA_ANSWERS
+                ),
+                casilla_overrides=tuple(ModeloCalculationOverride(key=box, value=value) for box, value in stated),
+            ),
+        ),
+    )
+    identity = OperationIdentity(
+        operation_id="e" * 64,
+        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        subject_ref=work.work_unit_id,
+    )
+    context = _ReadContext(identity=identity, authority_operation=work.operation)
+    asyncio.run(executor.execute(request, cast(Any, context)))
+
+
+def _answer_quarter(work: Any) -> None:
+    """Calculate the first-quarter Modelo 130 with the answers to the earlier-filing figures it refuses without."""
+    from cadrumo.application.modelo.edit_models import (
+        ModeloBindingEditIntentV1,
+        ModeloEditBindingAddressV1,
+        ModeloEditBindingIntentKind,
+    )
+
+    applied = work.apply(
+        binding=tuple(
+            ModeloBindingEditIntentV1(
+                address=ModeloEditBindingAddressV1(binding_id=binding_id),
+                kind=ModeloEditBindingIntentKind.SET_OVERRIDE_VALUE,
+                value=value,
+            )
+            for binding_id, value in FILED_130_ANSWERS
+        )
+    )
+    if applied.refusal is not None:
+        raise SystemExit(f"the quarter's answers were refused: {applied.refusal!r}")
+    work.recalculate()
+
+
+def _write_projection(directory: Path, work: Any, name: str) -> None:
+    """Read the projection of the filer's annual return from the quarters, as the application words it in each language.
+
+    The application words the projection in the language it is run in, so each is run in its own.
+    """
+    from cadrumo.application.modelo.projection_operation import ModeloProjectOperationRequest
+    from cadrumo.core.config import override_settings
+
+    bucket_id = work.work_unit.bucket_id
+    request = ModeloProjectOperationRequest(profile_id=UUID(bucket_id), year=RENTA_YEAR, ccaa=RENTA_CCAA)
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            projected = _operate(work, "modelo.project", request, subject_ref=_profile_subject(work))
+        _write(directory, f"{name}-{language}.json", projected)
+
+
+def _write_projection_refusal(directory: Path, work: Any, name: str) -> None:
+    """Record why the application refuses to project a profile that holds no quarterly declaration, in each language.
+
+    The refusal is the one the projection's executor raises when it is run for the profile, recorded as a stopped
+    executor's detail is recorded.
+    """
+    from cadrumo.application.modelo.projection_operation import ModeloProjectOperationRequest
+    from cadrumo.application.operations.error_detail import build_operation_error_detail
+    from cadrumo.core.config import override_settings
+
+    request = ModeloProjectOperationRequest(profile_id=UUID(work.work_unit.bucket_id), year=RENTA_YEAR, ccaa=RENTA_CCAA)
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            try:
+                _operate(work, "modelo.project", request, subject_ref=_profile_subject(work))
+            except Exception as refusal:
+                detail = build_operation_error_detail(refusal)
+            else:
+                raise SystemExit("a profile with no quarterly declaration was projected")
+        if detail is None:
+            raise SystemExit("the projection's refusal records no error detail")
+        _write(directory, f"refusal-{name}-{language}.json", detail)
+
+
+def _write_renta(directory: Path) -> None:
+    """Read every filer's 2025 Modelo 100 in every language, and the declarations list of the first filer.
+
+    A filer with a calculated first quarter is also read for its projection of the annual return.
+    """
+    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
+
+    for number, filer in enumerate(RENTA_FILERS):
+        with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp, _renta_seeded(Path(tmp), filer) as work:
+            _record_certificate(work, filer)
+            if filer.ledger_income is not None:
+                seed_m130_income_transaction(
+                    amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta"
+                )
+            if filer.quarter_130:
+                _answer_quarter(_other_declaration(work, "130", RENTA_QUARTER))
+            _calculate_renta(work, filer)
+            suffix = f"-{filer.envelope}" if filer.envelope else ""
+            _write_form(directory, work, f"modelo-100-{RENTA_PERIOD}{suffix}", with_help=number == 0)
+            if filer.quarter_130:
+                _write_projection(directory, work, f"project-100-{RENTA_PERIOD}{suffix}")
+            if number == 0:
+                _write_list(directory, work, "declarations-renta")
+                _write_projection_refusal(directory, work, "project-no-quarters")
+
+
 # -- writes ---------------------------------------------------------------------
 
 
@@ -1484,7 +1739,7 @@ def _paths_in(path: Path) -> list[str]:
         elif isinstance(node, str) and _ABSOLUTE_PATH.search(node):
             found.append(node[:80])
 
-    walk(json.loads(path.read_text("utf-8")))
+    walk(stored_envelope(path.parent, path.stem))
     return found
 
 
@@ -1635,6 +1890,104 @@ def write_envelopes(directory: Path) -> None:
         _verify(stale)
         _write_form(directory, stale, "modelo-130-1T-stale")
         _write_rebase(directory, stale)
+    _write_renta(directory)
+    pack_envelopes(directory)
+
+
+# -- stored envelopes -----------------------------------------------------------
+#
+# The 2025 Modelo 100 forms are over three megabytes each, and the filers and languages read of it differ in
+# a few hundred words. They are stored as a patch of the form they differ from: the filer's form in the
+# language's words, or the first filer's form in another language. A patch is the envelope's name and the
+# values that differ, the way ``src/dev/modeloEnvelopePatch.ts`` reads it. Every other envelope is stored whole.
+
+#: The forms stored as patches, by modelo.
+PACKED_MODELOS: tuple[str, ...] = ("100",)
+#: A stored envelope that is a patch of another names it under this key.
+PATCH_OF = "patch_of"
+PATCH_CHANGES = "changes"
+_PACKED_NAME = re.compile(
+    r"^(?P<form>modelo-(?P<modelo>[0-9]+)-[0-9A-Z]+)(?P<filer>(?:-[a-z]+)?)-(?P<language>[a-z]{2})$"
+)
+
+
+def _compact(value: Any) -> str:
+    """An envelope as it is stored: no indentation, in the order the application served it."""
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def _differences(base: Any, target: Any) -> Any | None:
+    """What turns ``base`` into ``target``, or nothing where they are the same.
+
+    An object is the differences by key or by position, and a one-element array is the value that replaces
+    what stood there: whole where the two differ in kind, in keys or in length.
+    """
+    if isinstance(base, dict) and isinstance(target, dict) and list(base) == list(target):
+        pairs = {key: _differences(base[key], target[key]) for key in base}
+        changes = {key: found for key, found in pairs.items() if found is not None}
+        return changes or None
+    if isinstance(base, list) and isinstance(target, list) and len(base) == len(target):
+        pairs = {str(position): _differences(each, target[position]) for position, each in enumerate(base)}
+        changes = {key: found for key, found in pairs.items() if found is not None}
+        return changes or None
+    return None if type(base) is type(target) and base == target else [target]
+
+
+def _patched(base: Any, changes: Any) -> Any:
+    """``base`` with ``changes`` applied, as ``_differences`` states them; ``base`` itself is left as it is."""
+    if isinstance(changes, list):
+        return changes[0]
+    if isinstance(base, list):
+        copied = list(base)
+        for key, found in changes.items():
+            copied[int(key)] = _patched(copied[int(key)], found)
+        return copied
+    copied_object = dict(base)
+    for key, found in changes.items():
+        copied_object[key] = _patched(copied_object[key], found)
+    return copied_object
+
+
+def _is_patch(value: Any) -> bool:
+    return isinstance(value, dict) and set(value) == {PATCH_OF, PATCH_CHANGES}
+
+
+def stored_envelope(directory: Path, name: str) -> Any:
+    """The envelope stored as ``name``, whole, whether it is stored whole or as a patch."""
+    stored = json.loads((directory / f"{name}.json").read_text("utf-8"))
+    if not _is_patch(stored):
+        return stored
+    return _patched(stored_envelope(directory, stored[PATCH_OF]), stored[PATCH_CHANGES])
+
+
+def _patch_base(name: str) -> str | None:
+    """The form a Modelo 100 form is stored as a patch of, or none for the one that is stored whole."""
+    found = _PACKED_NAME.match(name)
+    if found is None or found["modelo"] not in PACKED_MODELOS:
+        return None
+    form, filer, language = found["form"], found["filer"], found["language"]
+    if filer:
+        return f"{form}-{language}"
+    return None if language == LANGUAGES[0] else f"{form}-{LANGUAGES[0]}"
+
+
+def pack_envelopes(directory: Path) -> None:
+    """Store every envelope in ``directory`` as the next regeneration stores it: compact, forms as patches.
+
+    It reads each envelope whole, so a directory already stored this way is left as it is.
+    """
+    names = sorted(path.stem for path in directory.glob("*.json"))
+    whole = {name: stored_envelope(directory, name) for name in names}
+    for name, value in whole.items():
+        base = _patch_base(name)
+        if base is None:
+            text = _compact(value)
+        else:
+            changes = _differences(whole[base], value) or {}
+            if _compact(_patched(whole[base], changes)) != _compact(value):
+                raise SystemExit(f"{name} is not what its patch of {base} makes")
+            text = _compact({PATCH_OF: base, PATCH_CHANGES: changes})
+        (directory / f"{name}.json").write_text(text, "utf-8", newline="\n")
 
 
 # -- check --------------------------------------------------------------------
@@ -1657,6 +2010,7 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
         ("declarations-*.json", ModeloDeclarationsListProjectionV1),
         ("preflight-*.json", ModeloEditPreflightProjectionV1),
         ("renew-*.json", ModeloEditRenewalProjectionV1),
+        ("project-*.json", _result_model("modelo.project")),
         *((pattern, _result_model(definition_id)) for pattern, definition_id in _WRITE_ENVELOPES),
     ]
 
@@ -1699,7 +2053,7 @@ def validate() -> int:
             failures.append(f"no fixture matches {pattern}")
         for path in paths:
             try:
-                model.model_validate_json(path.read_bytes())
+                model.model_validate_json(_compact(stored_envelope(path.parent, path.stem)))
             except ValueError as invalid:
                 failures.append(f"{path.name} no longer validates as {model.__name__}: {str(invalid)[:200]}")
             # The window is never handed a file's place; neither is an envelope.
@@ -1711,8 +2065,10 @@ def validate() -> int:
 def main() -> int:
     """Run one step for scripts/modelo-fixtures.mjs."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("step", choices=("contract", "bounds", "envelopes", "validate"))
-    parser.add_argument("directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes.")
+    parser.add_argument("step", choices=("contract", "bounds", "envelopes", "pack", "validate"))
+    parser.add_argument(
+        "directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes and `pack` stores."
+    )
     args = parser.parse_args()
     if args.step == "contract":
         sys.stdout.write(render_contract())
@@ -1722,6 +2078,9 @@ def main() -> int:
         return 0
     if args.step == "envelopes":
         write_envelopes(args.directory)
+        return 0
+    if args.step == "pack":
+        pack_envelopes(args.directory)
         return 0
     return validate()
 

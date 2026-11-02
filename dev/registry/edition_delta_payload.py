@@ -18,6 +18,7 @@ _STORAGE_REPRESENTATION_FIELDS: Final[frozenset[str]] = frozenset(
         "family_removals",
         "family_positions",
         "cleared_families",
+        "family_disposition_removals",
         "scoped_families",
         "restated_families",
     }

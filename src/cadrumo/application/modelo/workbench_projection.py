@@ -48,28 +48,31 @@ from .edit_apply_scalar_contracts import ModeloEditWireScalar
 from .edit_baseline_projection import ModeloEditApplyBaselineV1
 from .edit_models import ModeloEditAdmittedV1, ModeloEditRefusedV1
 from .source_policy import SourceFamily
+from .work_form_declaration_facts import (
+    ModeloFormAeatData,
+    ModeloFormCalculationNote,
+    ModeloFormDeadline,
+    ModeloFormEditClosure,
+    ModeloFormExport,
+    ModeloFormFiling,
+    ModeloFormResultDirection,
+)
 from .work_form_export_offer import ModeloFormExportOffer, ModeloFormReceipt
 from .work_form_findings import ModeloFormAttention
 from .work_form_header import ModeloFormHeader
 from .work_form_issue_lines import ModeloFormIssueLine, ModeloFormVerdict
 from .work_form_models import (
     ModeloFormAddressV1,
-    ModeloFormAeatData,
     ModeloFormBinding,
     ModeloFormBlocker,
-    ModeloFormCalculationNote,
     ModeloFormCounts,
-    ModeloFormDeadline,
     ModeloFormEditability,
-    ModeloFormEditClosure,
-    ModeloFormExport,
-    ModeloFormFiling,
     ModeloFormGridColumn,
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
     ModeloFormOrigin,
+    ModeloFormOutlineGroup,
     ModeloFormRateUnit,
-    ModeloFormResultDirection,
     ModeloFormSourceGroup,
     ModeloFormStanding,
     ModeloFormText,
@@ -198,6 +201,7 @@ class PublicModeloFormContextFieldBlock(BaseModel):
     kind: Literal["context_field"]
     id: str
     label: ModeloFormText
+    box_number: str | None
     value: PublicScalarValueV1 | None
     value_text: str | None
 
@@ -289,6 +293,7 @@ class PublicModeloFormSection(BaseModel):
     official_heading: str | None
     blocks: tuple[PublicModeloFormBlock, ...]
     counts: ModeloFormCounts
+    applies: bool | None
 
 
 class PublicModeloFormPage(BaseModel):
@@ -342,6 +347,7 @@ class PublicModeloWorkForm(BaseModel):
     inspection_reason: ModeloFormInspectionReason | None
     seed_source: FormLayoutSeedSource | None
     pages: tuple[PublicModeloFormPage, ...]
+    outline: tuple[ModeloFormOutlineGroup, ...]
     working_figures: tuple[PublicModeloFormField, ...]
     unplaced: tuple[PublicModeloFormUnplacedField, ...]
     result_addresses: tuple[CasillaId, ...]

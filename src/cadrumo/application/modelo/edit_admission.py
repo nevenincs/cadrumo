@@ -183,7 +183,9 @@ def _scalar_entry(
     )
 
 
-def _binding_entry(binding: BindingDefinition, *, revision: ModeloRevision) -> ModeloEditPermittedSurfaceEntryV1:
+def permitted_binding_entry(
+    binding: BindingDefinition, *, revision: ModeloRevision
+) -> ModeloEditPermittedSurfaceEntryV1:
     """Classify one binding's override by its source's grounded override policy.
 
     A manual-input binding and a carry source of the caller-override
@@ -223,7 +225,7 @@ def _permitted_surface(snapshot: RegistrySnapshot) -> tuple[ModeloEditPermittedS
     entries: list[ModeloEditPermittedSurfaceEntryV1] = [
         _scalar_entry(casilla, row_field_casilla_ids=row_field_casilla_ids) for casilla in revision.casillas
     ]
-    entries.extend(_binding_entry(binding, revision=revision) for binding in revision.bindings)
+    entries.extend(permitted_binding_entry(binding, revision=revision) for binding in revision.bindings)
 
     def address_key(entry: ModeloEditPermittedSurfaceEntryV1) -> tuple[str, str]:
         if isinstance(entry, (ModeloEditWritableScalarSurfaceEntryV1, ModeloEditNonWritableScalarSurfaceEntryV1)):
@@ -460,5 +462,6 @@ __all__ = [
     "ModeloEditRenewalResultV1",
     "ModeloEditRenewedV1",
     "admit_modelo_edit_baseline",
+    "permitted_binding_entry",
     "renew_modelo_edit_baseline",
 ]

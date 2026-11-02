@@ -58,7 +58,6 @@ from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
 from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
-from .desktop_renta_keys import RENTA_FAMILIES, RENTA_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
 from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
@@ -73,6 +72,7 @@ DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
 #: spelled out in :data:`DESKTOP_CHROME_KEYS`.
 DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType[str, tuple[str, ...]](
     {
+        "desktop.dock.": ("left", "right", "top", "bottom", "tab"),
         "desktop.aeat_sync.area.": (
             "census.about",
             "census.name",
@@ -203,6 +203,11 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.profile.view.status_": ("required", "unset", "filled"),
         "desktop.attendance.": ("network", "changes", "delegation", "period_independent"),
         "desktop.calendar.aeat.": ("accepted", "justificante_verified", "not_observed", "submitted_observed"),
+        "desktop.calendar.coverage.": (
+            "applicable_window_missing",
+            "applicability_undetermined",
+            "registry_unmodeled",
+        ),
         "desktop.calendar.event.": ("filing", "message"),
         "desktop.calendar.local.": ("external_baseline_imported", "not_ready_to_file", "ready_to_file"),
         "desktop.calendar.state.": ("due", "filed", "late", "unknown"),
@@ -622,6 +627,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "booked_date",
             "value_date",
             "operation_date",
+            "accrual_date",
             "currency",
             "business_pct",
             "usage_ratio_id",
@@ -839,7 +845,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         **ENTRY_OPTION_FAMILIES,
         **ENTRY_TOKEN_WORD_FAMILIES,
         **MODELO_CHOICE_FAMILIES,
-        **RENTA_FAMILIES,
     }
 )
 
@@ -854,7 +859,6 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | ENTRY_OPTION_KEYS
     | ENTRY_TOKEN_WORD_KEYS
     | MODELO_CHOICE_KEYS
-    | RENTA_KEYS
     | FINDING_KEYS
     | RULE_FINDING_KEYS
     | RATE_SLOT_KEYS

@@ -9,6 +9,7 @@ import type {
   PublicDecimal,
 } from "../../shell/ledger";
 import { exampleInvoices } from "./ledgerInvoices";
+import { settlementOf } from "../ledgerSettlement";
 
 /** The profile the fixture ledger belongs to: the profile fixture's own. */
 export const LEDGER_FIXTURE_PROFILE_ID = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
@@ -444,6 +445,10 @@ function receivedInvoice(
     iva_total_eur: null,
     grand_total_eur: null,
     referencia_catastral: null,
+    settlement_amount: settlementOf(
+      decimal(baseCents + ivaCents).decimal,
+      null,
+    ),
   };
 }
 
@@ -662,6 +667,10 @@ export function fixtureLedger(): FixtureLedger {
         iva_total_eur: null,
         grand_total_eur: null,
         referencia_catastral: null,
+        settlement_amount: settlementOf(
+          decimal(baseCents + ivaCents).decimal,
+          decimal(retentionCents).decimal,
+        ),
       });
     }
     // A client abroad pays in dollars every other month.

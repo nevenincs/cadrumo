@@ -31,7 +31,7 @@ use serde_json::Value;
 use session::{Answer, RequestRef, SendRequest, Session};
 use std::sync::Arc;
 use stream::StreamEvent;
-use supervisor::{Observation, Status, Supervisor};
+use supervisor::{Supervisor, protocol::Observation, protocol::Status};
 use tauri::{Manager, Runtime, State, ipc::Channel, plugin::TauriPlugin};
 
 /// A refusal the column words from its stable code.
@@ -59,7 +59,7 @@ pub struct AgentHost {
 impl AgentHost {
     fn new(sign_in: Arc<SignIn>, diagnostics: Arc<Diagnostics>) -> Self {
         let watched = sign_in.clone();
-        let changed: supervisor::Changed =
+        let changed: supervisor::protocol::Changed =
             Arc::new(move || Box::pin(watched.observation_changed()));
         let held = sign_in.clone();
         let observed = sign_in.clone();
@@ -75,12 +75,12 @@ impl AgentHost {
                 })
             }) as std::pin::Pin<Box<dyn Future<Output = Result<Observation>> + Send>>
         });
-        let launch: supervisor::Launch = Arc::new(move |_bearer: &str, profile: &str| {
+        let launch: supervisor::protocol::Launch = Arc::new(move |_bearer: &str, profile: &str| {
             let profile_id = sign_in.profile_id(profile)?;
             let person = sign_in.person(&profile_id)?;
             let mut command = sign_in.service()?.command();
             command.args(["serve", "--profile-id", &profile_id]);
-            Ok(supervisor::Prepared {
+            Ok(supervisor::protocol::Prepared {
                 command,
                 person: Some(person),
             })
@@ -198,12 +198,12 @@ impl AgentHost {
 /// Calls racing service admission are retryable; other failures keep their diagnostics.
 fn command_refusal(
     diagnostics: &Diagnostics,
-    state: &supervisor::State,
+    state: &supervisor::protocol::State,
     code: &str,
     error: cadrumo_application::error::application::ApplicationError,
 ) -> Refused {
     use cadrumo_application::error::application::ErrorCode;
-    let awaiting_admission = matches!(state, supervisor::State::Starting)
+    let awaiting_admission = matches!(state, supervisor::protocol::State::Starting)
         && matches!(
             (error.code, error.reason.as_deref()),
             (
@@ -261,6 +261,10 @@ pub fn commands<R: Runtime>() -> Commands<R> {
         agent_pending,
         agent_questions_answer,
         agent_approval_decide,
+        agent_attachment_card,
+        agent_attachment_release,
+        agent_attachment_grants,
+        agent_attachment_grant_revoke,
         agent_observe,
         agent_unobserve,
         agent_conversations,
@@ -735,7 +739,12 @@ async fn agent_conversation_delete(
     conversation_id: String,
 ) -> std::result::Result<(), Refused> {
     blocking(&host, move |host| {
-        host.session.delete(&host.supervisor, &conversation_id)
+        host.session.delete(&host.supervisor, &conversation_id)?;
+        // Its text grants name bytes that no longer exist, so one left behind
+        // covers nothing; the person still sees and can revoke it.
+        let forget = serde_json::json!({"action":"attachment_conversation_forget","conversation_id":conversation_id});
+        let _ = host.administer(forget, None);
+        Ok(())
     })
     .await
 }
@@ -833,6 +842,101 @@ async fn agent_approval_decide(
         host.session.decide(&host.supervisor, &approval, &option_id)
     })
     .await
+}
+
+/// What the service says the card shows for a read a run is parked on. The
+/// request's own words decide none of it.
+#[tauri::command]
+async fn agent_attachment_card(
+    host: State<'_, Arc<AgentHost>>,
+    approval: RequestRef,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        let request = attachment_read_request("attachment_card", &approval, None)?;
+        host.administer(request, None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))
+    })
+    .await
+}
+
+/// Puts the person's answer to the service, which records the release before the
+/// agent hears of it. The agent's request is answered only once the service has
+/// released the read: anything else leaves the read parked and nothing sent.
+#[tauri::command]
+async fn agent_attachment_release(
+    host: State<'_, Arc<AgentHost>>,
+    approval: RequestRef,
+    option_id: String,
+    scope: Option<String>,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        let request = attachment_read_request("attachment_release", &approval, scope.as_deref())?;
+        let answer = host
+            .administer(request, None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))?;
+        if answer["kind"] == "released" {
+            host.session
+                .decide(&host.supervisor, &approval, &option_id)?;
+        }
+        Ok(answer)
+    })
+    .await
+}
+
+/// The remembered attachment grants, for the agent panel's settings.
+#[tauri::command]
+async fn agent_attachment_grants(
+    host: State<'_, Arc<AgentHost>>,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, |host| {
+        host.administer(serde_json::json!({"action":"attachment_grants"}), None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))
+    })
+    .await
+}
+
+/// Revokes one remembered grant; the next read asks again.
+#[tauri::command]
+async fn agent_attachment_grant_revoke(
+    host: State<'_, Arc<AgentHost>>,
+    grant_id: String,
+) -> std::result::Result<Value, Refused> {
+    blocking(&host, move |host| {
+        if grant_id.len() != 32 || !grant_id.bytes().all(|byte| byte.is_ascii_hexdigit()) {
+            return refused("agent_invalid_request");
+        }
+        let request = serde_json::json!({"action":"attachment_grant_revoke","grant_id":grant_id});
+        host.administer(request, None)
+            .map_err(|error| host.refuse(admin_refusal(&error), error))
+    })
+    .await
+}
+
+/// The administration request about one parked read, once its names are shown to be names.
+fn attachment_read_request(
+    action: &str,
+    approval: &RequestRef,
+    scope: Option<&str>,
+) -> std::result::Result<Value, Refused> {
+    let plain = |value: &str| {
+        !value.is_empty()
+            && value.len() <= 128
+            && value
+                .bytes()
+                .all(|byte| byte.is_ascii_alphanumeric() || matches!(byte, b'_' | b'.' | b'-'))
+    };
+    if !plain(&approval.reply_id)
+        || !plain(&approval.request_id)
+        || !matches!(scope, None | Some("once" | "session" | "remember"))
+    {
+        return refused("agent_invalid_request");
+    }
+    Ok(serde_json::json!({
+        "action": action,
+        "run_id": approval.reply_id,
+        "permission_request_id": approval.request_id,
+        "scope": scope,
+    }))
 }
 
 #[tauri::command]
@@ -1031,18 +1135,27 @@ mod tests {
             (ErrorCode::ReadFailed, "agent_admin_unavailable"),
         ] {
             for (state, expected, failures) in [
-                (supervisor::State::Starting, "agent_service_busy", 0),
-                (supervisor::State::Stopped, "agent_service_failed", 1),
                 (
-                    supervisor::State::Ready {
+                    supervisor::protocol::State::Starting,
+                    "agent_service_busy",
+                    0,
+                ),
+                (
+                    supervisor::protocol::State::Stopped,
+                    "agent_service_failed",
+                    1,
+                ),
+                (
+                    supervisor::protocol::State::Ready {
                         agent_version: "synthetic".into(),
                     },
                     "agent_service_failed",
                     1,
                 ),
                 (
-                    supervisor::State::Refused {
-                        code: supervisor::Refusal::ServiceFailed,
+                    supervisor::protocol::State::Refused {
+                        code:
+                            cadrumo_application::diagnostics::service::AgentRefusal::ServiceFailed,
                     },
                     "agent_service_failed",
                     1,
@@ -1068,7 +1181,7 @@ mod tests {
             let error = ApplicationError::new(code, Operation::Cli).with_reason(reason);
             let refused = command_refusal(
                 &diagnostics,
-                &supervisor::State::Starting,
+                &supervisor::protocol::State::Starting,
                 "agent_service_failed",
                 error,
             );

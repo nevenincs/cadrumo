@@ -268,7 +268,7 @@ class DeclarationsCalendarScreen(AccountChromeScreen):
             ),
             tr(
                 "workspace.declarations.calendar.detail.holidays",
-                coverage=holiday_coverage_statement(row.holiday_coverage, row.holiday_territory),
+                coverage=holiday_coverage_statement(row.holiday_coverage),
             ),
             tr(
                 "workspace.declarations.calendar.detail.axes",

@@ -54,6 +54,7 @@ from ...domain.filing.schema import ModeloBindingValue, ModeloDraft
 from ._export_xml_dictionary_modelo100 import (
     modelo_100_sign_branch_value,
     modelo_100_unfiled_comunidad_paths,
+    refuse_family_minimum_without_its_rows,
     registry_modelo_100_xml_declarations,
 )
 from ._export_xml_dictionary_values import format_xml_dictionary_value, is_xml_dictionary_numeric_type
@@ -61,6 +62,8 @@ from .export_xml_value_limits import (
     XSD_NS,
     XmlValueSchema,
     canonical_xml_text,
+    prune_childless_negative_blocks,
+    refuse_xml_missing_required_content,
     refuse_xml_values_outside_schema,
     xml_value_schema,
     xsd_declared_children,
@@ -80,6 +83,12 @@ _AUX_TAG = "Aux"
 # than written from a dictionary row; its ``titular`` sibling IS declared and is
 # written by the walk like any other row.
 _TOMA_DATOS_TAG = "TomaDatosAmpliada"
+_DATOS_ECONOMICOS_TAG = "DatosEconomicos"
+_TAXATION_OPTION_ATTRIBUTE = "TIPOTRIBUTACION"
+_INDIVIDUAL_TAXATION = "1"
+_TITULAR_ATTRIBUTE = "titular"
+_HOLDER_DICTIONARY_TYPE = "TIT"
+_DECLARANTE_HOLDER = "declarante"
 
 
 def _modelo100_render_exclusions(
@@ -140,11 +149,17 @@ def _write_xml_dictionary_entries(
 
 
 def _finish_xml_dictionary_root(
-    root: ElementTree.Element[str], draft: ModeloDraft, *, optional_element_paths: frozenset[str]
+    root: ElementTree.Element[str],
+    draft: ModeloDraft,
+    *,
+    optional_element_paths: frozenset[str],
+    value_schema: XmlValueSchema,
 ) -> None:
     if draft.modelo == form_for_role("renta.annual"):
         _stamp_toma_datos_nif(root, draft)
+        _stamp_individual_return_titular(root)
         _prune_zero_only_xml_subtrees(root, optional_element_paths=optional_element_paths)
+        prune_childless_negative_blocks(root, schema=value_schema)
 
 
 def _serialize_xml_dictionary(root: ElementTree.Element[str]) -> bytes:
@@ -205,6 +220,7 @@ def render_xml_dictionary_layout(
     casilla_values: dict[CasillaId, object] = {value.casilla_id: value.value for value in draft.values}
     declarations, unfiled_paths = _modelo100_render_exclusions(draft, entries, casilla_values)
     repeated_rows = xml_dictionary_repeated_rows(layout, draft=draft, entries=entries, schema_provider=schema_provider)
+    value_schema = xml_dictionary_value_schema(layout, schema_provider=schema_provider)
     _write_xml_dictionary_entries(
         root,
         entries,
@@ -214,11 +230,11 @@ def render_xml_dictionary_layout(
         headers=headers,
         dictionary_values=dictionary_values or {},
         declarations=declarations,
-        value_schema=xml_dictionary_value_schema(layout, schema_provider=schema_provider),
+        value_schema=value_schema,
         element_order=element_order,
         repeated_rows=repeated_rows,
     )
-    _finish_xml_dictionary_root(root, draft, optional_element_paths=optional_element_paths)
+    _finish_xml_dictionary_root(root, draft, optional_element_paths=optional_element_paths, value_schema=value_schema)
     _refuse_values_outside_xsd(root, layout, entries=entries, schema_provider=schema_provider)
     return _serialize_xml_dictionary(root)
 
@@ -271,6 +287,41 @@ def refuse_xml_dictionary_payload_outside_xsd(
         ),
         schema_provider=schema_provider,
     )
+
+
+def refuse_incomplete_xml_dictionary_payload(
+    layout: ExportLayoutDefinition,
+    *,
+    draft: ModeloDraft,
+    payload: bytes,
+    schema_provider: RegistrySchemaAccessor,
+) -> None:
+    """Refuse a filer's rendered declaration that omits what its official XSD requires.
+
+    Args:
+        layout: The ``xml_dictionary`` layout the file was rendered through.
+        draft: The approved draft the file states.
+        payload: The rendered bytes.
+        schema_provider: Resolves the layout's dictionary and XSD sources.
+
+    Raises:
+        ModeloApplicationError: Required content is absent, or a family minimum the
+            file claims identifies nobody.
+    """
+    document = DefusedElementTree.fromstring(payload)
+    source = _xml_dictionary_xsd_source(layout, schema_provider.sources)
+    refuse_xml_missing_required_content(
+        document,
+        schema=_xml_dictionary_xsd_root(source, source_payloads=schema_provider.source_payloads),
+        source_id=source.id,
+        entries=xml_dictionary_entries(
+            layout,
+            sources=schema_provider.sources,
+            source_payloads=schema_provider.source_payloads,
+        ),
+    )
+    if draft.modelo == form_for_role("renta.annual"):
+        refuse_family_minimum_without_its_rows(document)
 
 
 def _refuse_values_outside_xsd(
@@ -433,7 +484,8 @@ def _stamp_toma_datos_nif(root: ElementTree.Element[str], draft: ModeloDraft) ->
     here would overwrite that: a declaración conjunta reports a spouse's income
     section under código 3, and a hardcoded declarante 2 would silently
     re-attribute it on a filed return. A blank ``titular`` means no titular
-    casilla carries a value, which is an input gap the completeness gate owns.
+    casilla carries a value: :func:`_stamp_individual_return_titular` answers it for an
+    individual return and the required-content check refuses it for a joint one.
 
     Runs AFTER the walk rather than before it, because unlike ``Aux`` the
     element being stamped is one the walk creates.
@@ -446,6 +498,40 @@ def _stamp_toma_datos_nif(root: ElementTree.Element[str], draft: ModeloDraft) ->
     """
     for block in root.iter(_TOMA_DATOS_TAG):
         block.set("nif", draft.profile_tax_id)
+
+
+def _stamp_individual_return_titular(root: ElementTree.Element[str]) -> None:
+    """Name the declarante as ``titular`` of an individual return's unstated block.
+
+    The attribute is required and comes from whichever titular box the return fills.
+    An individual return has one contributor, so a block with no such box can only be
+    the declarante's. A joint return may report a spouse's income, so its blank is left
+    for the required-content check to refuse rather than attributed here.
+    """
+    economic = root.find(_DATOS_ECONOMICOS_TAG)
+    if economic is None or economic.get(_TAXATION_OPTION_ATTRIBUTE) != _INDIVIDUAL_TAXATION:
+        return
+    for block in economic.iter(_TOMA_DATOS_TAG):
+        if block.get(_TITULAR_ATTRIBUTE) is None:
+            block.set(_TITULAR_ATTRIBUTE, format_xml_dictionary_value(_HOLDER_DICTIONARY_TYPE, _DECLARANTE_HOLDER))
+
+
+def stamped_individual_return_titular(entry: XmlDictionaryEntry, payload: bytes) -> str | None:
+    """Return the token the export stamps at ``entry``, when it has no box to be compared with.
+
+    Args:
+        entry: The dictionary row being verified.
+        payload: The file's bytes, already known to parse.
+
+    Returns:
+        The declarante token for a ``titular`` row of an individual return; otherwise ``None``.
+    """
+    if not entry.path.endswith(f"/{_TOMA_DATOS_TAG}/@{_TITULAR_ATTRIBUTE}"):
+        return None
+    economic = DefusedElementTree.fromstring(payload).find(_DATOS_ECONOMICOS_TAG)
+    if economic is None or economic.get(_TAXATION_OPTION_ATTRIBUTE) != _INDIVIDUAL_TAXATION:
+        return None
+    return format_xml_dictionary_value(_HOLDER_DICTIONARY_TYPE, _DECLARANTE_HOLDER)
 
 
 def _xml_dictionary_element_order(

@@ -313,6 +313,8 @@ test("a key that types sends its text; a shortcut, AltGr and a dead key do not",
   for (const key of ["Dead", "Process", "Unidentified", "AudioVolumeUp"])
     expect(keyPlan(press({ key }), false), key).toBeNull();
   expect(keyPlan(press({ isComposing: true }), false)).toBeNull();
+  // An IME can mark the initiating key before compositionstart arrives.
+  expect(keyPlan(press({ key: "a", keyCode: 229 }), false)).toBeNull();
   // A character outside the basic plane is one character.
   expect(keyPlan(press({ key: "😀", code: "" }), false)?.text).toBe("😀");
 });

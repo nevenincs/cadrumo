@@ -1,9 +1,3 @@
-// What the Assets tab's forms decide without drawing: how each act's request
-// is put together from the values a form states, how a read of the register
-// says whether a write held in doubt landed, and how a refusal is read. The
-// options a form shows, the units of a request and every verdict come from the
-// backend; nothing here lists a method, a reason or a year.
-
 import { listed } from "../../../shell/compose";
 import type {
   CatalogueInvoice,
@@ -27,15 +21,17 @@ import type {
   TimelineEvent,
 } from "../../../shell/ledgerSetup";
 import type { Translate } from "../../../shell/strings";
-import { setupCall, type SetupCall } from "../setup/setupModel";
 import type { Landing, LandingCheck } from "../WritePause";
-import {
-  formKeyOf,
-  type FormField,
-  type FormValue,
-  type FormValues,
-} from "./assetFields";
+import { setupCall, type SetupCall } from "../setup/setupModel";
+import { formKeyOf } from "./assetFields";
+import type { FormField, FormValue, FormValues } from "./assetFormValues";
 import { fieldWord, reasonText } from "./assetsWords";
+
+// What the Assets tab's forms decide without drawing: how each act's request
+// is put together from the values a form states, how a read of the register
+// says whether a write held in doubt landed, and how a refusal is read. The
+// options a form shows, the units of a request and every verdict come from the
+// backend; nothing here lists a method, a reason or a year.
 
 const textOf = (found: FormValue | undefined): string | null =>
   typeof found === "string" ? found : null;

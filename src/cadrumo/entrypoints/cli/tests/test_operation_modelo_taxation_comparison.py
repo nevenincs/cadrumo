@@ -14,12 +14,13 @@ import typer
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 
-from ....application.modelo.taxation_comparison import TaxationRecommendation
+from ....application.modelo.taxation_comparison import TaxationRecommendation, TaxationRecommendationReason
 from ....application.modelo.taxation_comparison_operation import (
     MODELO_TAXATION_COMPARISON_OPERATION_DEFINITION_ID,
     ModeloTaxationComparisonProjection,
     ModeloTaxationComparisonRequest,
 )
+from ....core.external_constants import OutputLanguage
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.period import Period
 from ....domain.modelos.work_unit import WorkUnit, WorkUnitState, derive_work_unit_id
@@ -83,7 +84,9 @@ def _projection(
         individual_resultado=str(Decimal("1450.00")),
         delta_resultado=str(Decimal("550.00")),
         recommendation=TaxationRecommendation.CONJUNTA,
-        recommendation_reason="conjunta saves 550.00 €",
+        recommendation_reason=TaxationRecommendationReason.CONJUNTA_LOWER_RESULT,
+        recommendation_reason_words="Joint filing comes out lower, by 550.00 €.",
+        words_language=OutputLanguage.EN,
         individual_branch_single_earner_only=True,
         individual_branch_caveat=(
             "The individual-mode figure is faithful only for a single-earner household; "

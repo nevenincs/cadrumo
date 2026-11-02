@@ -12,7 +12,7 @@ legal_refs = ["ley-37-1992:art-21", "rd-1624-1992:art-30-bis", "orden-eha-3786-2
 orden_aplicabilidad = ["orden-eha-3786-2008:art-2"]
 source_refs = ["aeat-dr-308-2019", "aeat-modelo-308-procedure", "boe-modelo-308-2008-form"]
 family_storage_baseline = "2016-2018"
-scoped_families = ["workbook_parity_refs", "completeness_manifest"]
+scoped_families = ["workbook_parity_refs", "completeness_manifest", "verification_expectations"]
 
 [revisions."2019-y-siguientes".family_dispositions.credit_reconciliation]
 reason = """
@@ -980,3 +980,16 @@ id = "papel-nif"
 [revisions.2019-y-siguientes.casilla_removals.selector]
 revision = "2016-2018"
 id = "papel-apellidos"
+
+[[revisions.2019-y-siguientes.family_overrides]]
+family = "verification_expectations"
+
+[revisions.2019-y-siguientes.family_overrides.selector]
+revision = "2016-2018"
+id = "modelo-308-reconcile-when-present"
+
+[revisions.2019-y-siguientes.family_overrides.sequence_additions]
+source_refs = ["aeat-dr-308-2019"]
+
+[revisions.2019-y-siguientes.family_overrides.sequence_order]
+source_refs = [1, 0]

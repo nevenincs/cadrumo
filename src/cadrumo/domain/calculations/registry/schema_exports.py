@@ -569,14 +569,14 @@ class ExportFieldDefinition(RegistryModel):
     minimum_year: FourDigitYear | None = None
     """An official lower bound on a four-digit filing-year value."""
     presence_marker: str | None = Field(default=None, min_length=1)
-    """The constant a mandatory slot prints when its boolean fact holds.
+    """The constant a mandatory slot prints when its boolean fact or computed marker holds.
 
     The design declares such a slot with exactly two contents, a blank or this
     constant (DR369 prints ``[blanco | constante "C"]``). The blank is the slot's
     populated negative answer, so an ordinary return is never a missing value.
     Carried by generated layouts from the design row they derive from.
     """
-    scheme_period_part: Literal["filing_year", "period_type", "quarter_ordinal"] | None = None
+    scheme_period_part: Literal["filing_year", "period_type", "quarter_ordinal", "month_ordinal"] | None = None
     """Which part of a scheme-qualified filing period this design row prints.
 
     The filing period is the one authority for these rows, so an export never asks

@@ -48,6 +48,8 @@ class _Build:
     ambiguous: set[str] = field(default_factory=set)
     binding_primary: dict[str, int] = field(default_factory=dict)
     design_sources: list[FormDesignSource] = field(default_factory=list)
+    repeats: dict[tuple[str, ...], int | None] = field(default_factory=dict)
+    """Official repeating elements, by element path below the root, mapped to their repeat limit."""
     used_design: bool = False
     used_export: bool = False
     used_dictionary: bool = False

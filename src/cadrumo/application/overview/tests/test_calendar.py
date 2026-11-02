@@ -10,13 +10,12 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.config import override_settings
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ....core.i18n.render import I18N_STRICT_MISSING_KEYS
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import derive_modelo_applicability
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
@@ -24,6 +23,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
+from ....domain.deadlines.filing_window_projection import AuthoredFilingWindow
 from ....domain.deadlines.models import (
     IrpfSpecialRegime,
     IVARegime,
@@ -152,14 +152,16 @@ def test_calendar_does_not_project_historic_annual_work_into_future_registry_win
     assert work_unit.work_unit_id not in placed
 
 
-def test_calendar_refuses_a_window_for_annual_work_below_the_supported_floor() -> None:
-    """A work unit below the supported floor is refused rather than given a later campaign."""
+def test_calendar_gives_annual_work_below_the_supported_floor_its_own_year_only() -> None:
+    """A work unit below the floor gets the window authored for its year or none, never a later campaign."""
     supported_years = published_supported_filing_years()
     assert supported_years is not None
-    work_unit = _annual_work_unit(modelo="100", filing_year=supported_years.floor - 1)
 
-    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        _registry_window_for_work_unit(work_unit)
+    for filing_year in (supported_years.floor - 1, FOUR_DIGIT_YEAR_FIRST):
+        answer = _registry_window_for_work_unit(_annual_work_unit(modelo="100", filing_year=filing_year))
+
+        assert answer is None or isinstance(answer, AuthoredFilingWindow)
+        assert answer is None or answer.window.filing_year == filing_year
 
 
 def test_calendar_censo_warning_requires_every_modelo_enrolment_key(
@@ -740,7 +742,6 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
     )
     on_effective_close = _calendar_entry_from_obligation(
         obligation,
-        holiday_territory=None,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
         today=date(2025, 4, 21),
@@ -754,7 +755,6 @@ def test_build_uses_adjusted_close_for_status_recovery_and_overdue_age(
 
     after_effective_close = _calendar_entry_from_obligation(
         obligation,
-        holiday_territory=None,
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
         today=date(2025, 4, 22),
@@ -778,16 +778,9 @@ def _obligation(modelo: str, closes_on: date) -> ModeloDeadline:
     )
 
 
-def _entry_for(obligation: ModeloDeadline, operation: PinnedAuthorityOperation, territory: str | None):
+def _entry_for(obligation: ModeloDeadline, operation: PinnedAuthorityOperation):
     return _calendar_entry_from_obligation(
         obligation,
-        holiday_territory=(
-            None
-            if territory is None
-            else resolve_calendar_ccaa_catalogue(effective_date=obligation.closes_on, authority=operation).require(
-                territory
-            )
-        ),
         filing_evidence=(),
         live_censo_verified_profile_keys=None,
         today=date(2025, 8, 1),
@@ -796,108 +789,50 @@ def _entry_for(obligation: ModeloDeadline, operation: PinnedAuthorityOperation, 
     )
 
 
-def test_regional_holiday_of_the_residence_moves_the_effective_close(
+def test_a_regional_holiday_never_moves_the_effective_close(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    """The 2025 Diada (Thursday 11 September) is inhábil only in Cataluna (BOE-A-2024-26935)."""
-    catalan = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, "ES-CT")
-    madrid = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, "ES-MD")
+    """The 2025 Diada (Thursday 11 September) is inhábil only in Cataluna (BOE-A-2024-26935).
 
-    assert catalan.adjusted_closes_on == date(2025, 9, 12)
-    assert catalan.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
-    assert str(catalan.holiday_territory) == "ES-CT"
-    assert "ES-CT" in holiday_coverage_statement(catalan.holiday_coverage, catalan.holiday_territory)
-    assert madrid.adjusted_closes_on == date(2025, 9, 11)
-    assert madrid.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY
+    An electronic filing counts days on the State's calendar (Ley 39/2015 art. 31.3),
+    so the close stays on the Diada for every filer.
+    """
+    entry = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation)
 
-
-def test_unresolved_territory_is_reported_as_national_only(
-    authority_operation: PinnedAuthorityOperation,
-) -> None:
-    entry = _entry_for(_obligation("303", date(2025, 9, 11)), authority_operation, None)
-
+    assert entry.adjusted_closes_on == date(2025, 9, 11)
+    assert entry.shift_reason == "business_day"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.NATIONAL_ONLY
-    assert entry.holiday_territory is None
 
 
 def test_modelo_369_entry_is_not_shifted_on_a_weekend(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    entry = _entry_for(_obligation("369", date(2025, 10, 18)), authority_operation, "ES-MD")
+    entry = _entry_for(_obligation("369", date(2025, 10, 18)), authority_operation)
 
     assert entry.adjusted_closes_on == date(2025, 10, 18)
     assert entry.shift_reason == "modelo_exception"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.NOT_SHIFTED
-    assert entry.holiday_territory is None
 
 
 def test_missing_holiday_calendar_keeps_the_original_close_visibly_unverified(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """No holiday publication exists for 2027 yet, so a Saturday close cannot be adjusted or certified."""
-    entry = _entry_for(_obligation("303", date(2027, 10, 16)), authority_operation, "ES-MD")
+    entry = _entry_for(_obligation("303", date(2027, 10, 16)), authority_operation)
 
     assert entry.adjusted_closes_on == entry.closes_on == date(2027, 10, 16)
     assert entry.shift_reason == "calendar_unavailable"
     assert entry.holiday_coverage is DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE
-    assert entry.holiday_territory is None
 
 
-@pytest.mark.parametrize(
-    ("language", "coverage", "expected"),
-    (
-        (
-            "en",
-            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
-            "national and applicable regional holidays checked; local holidays not checked",
-        ),
-        (
-            "en",
-            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
-            "national holidays only; the applicable regional calendar is unverified; local holidays are not checked",
-        ),
-        (
-            "es",
-            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
-            "festivos nacionales y autonómicos aplicables comprobados; festivos locales sin comprobar",
-        ),
-        (
-            "es",
-            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
-            "solo festivos nacionales; el calendario autonómico aplicable no está verificado; los festivos locales no se comprueban",
-        ),
-        (
-            "ca",
-            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
-            "festius nacionals i autonòmics aplicables comprovats; festius locals sense comprovar",
-        ),
-        (
-            "ca",
-            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
-            "només festius nacionals; el calendari autonòmic aplicable no està verificat; els festius locals no es comproven",
-        ),
-        (
-            "hu",
-            DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
-            "országos és az alkalmazandó regionális ünnepnapok ellenőrizve; a helyi ünnepnapok nincsenek ellenőrizve",
-        ),
-        (
-            "hu",
-            DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
-            "csak országos ünnepnapok; az alkalmazandó regionális naptár nincs ellenőrizve; a helyi ünnepnapok sincsenek ellenőrizve",
-        ),
-    ),
-)
-def test_generic_holiday_coverage_uses_literal_locale_copy_without_a_territory(
-    language: str,
-    coverage: DeadlineHolidayCoverage,
-    expected: str,
-) -> None:
+@pytest.mark.parametrize("language", ("en", "es", "ca", "hu"))
+@pytest.mark.parametrize("coverage", tuple(DeadlineHolidayCoverage))
+def test_every_holiday_coverage_has_a_complete_statement(language: str, coverage: DeadlineHolidayCoverage) -> None:
     with override_settings(cadrumo_output_language=language):
-        statement = holiday_coverage_statement(coverage, None)
+        statement = holiday_coverage_statement(coverage)
 
-    assert statement == expected
-    assert "None" not in statement
+    assert statement
+    assert not statement.startswith("application.overview.calendar.holiday_coverage.")
     assert "%{" not in statement
 
 
@@ -1115,12 +1050,10 @@ def test_registry_obligation_intersects_a_range_through_its_effective_deadline(
     assert _entry_intersects_range(
         obligation,
         _FEBRUARY_2026,
-        holiday_territory=None,
         operation=authority_operation,
     )
     assert not _entry_intersects_range(
         obligation,
         after_effective_close,
-        holiday_territory=None,
         operation=authority_operation,
     )

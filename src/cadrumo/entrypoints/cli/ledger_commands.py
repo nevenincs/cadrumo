@@ -15,6 +15,8 @@ with the registered ledger payload contracts.
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 import typer
 from pydantic import ValidationError
 
@@ -70,6 +72,9 @@ from .ledger_lifecycle_cli import (
     ledger_stash,
 )
 
+if TYPE_CHECKING:
+    from datetime import date
+
 __all__ = [
     "ledger_archive",
     "ledger_attach",
@@ -79,6 +84,10 @@ __all__ = [
     "ledger_split",
     "ledger_stash",
 ]
+
+
+def _parse_optional_iso_date(raw: str | None, *, label: str) -> date | None:
+    return _parse_iso_date(raw, label=label) if raw is not None else None
 
 
 def _patch_from_options(**values: object) -> ManualLedgerTransactionPatch:
@@ -298,12 +307,10 @@ def ledger_update(
     """Correct editable transaction facts through the exact-profile worker."""
     try:
         patch = _patch_from_options(
-            booked_date=_parse_iso_date(booked_date, label="date") if booked_date is not None else None,
-            value_date=_parse_iso_date(value_date, label="value-date") if value_date is not None else None,
-            operation_date=(
-                _parse_iso_date(operation_date, label="operation-date") if operation_date is not None else None
-            ),
-            accrual_date=(_parse_iso_date(accrual_date, label="accrual-date") if accrual_date is not None else None),
+            booked_date=_parse_optional_iso_date(booked_date, label="date"),
+            value_date=_parse_optional_iso_date(value_date, label="value-date"),
+            operation_date=_parse_optional_iso_date(operation_date, label="operation-date"),
+            accrual_date=_parse_optional_iso_date(accrual_date, label="accrual-date"),
             amount=parse_amount_magnitude(amount) if amount is not None else None,
             direction=direction,
             currency=currency,

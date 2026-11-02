@@ -33,6 +33,8 @@ source_refs = [
 family_storage_baseline = "2020"
 scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
+family_disposition_removals = ["extraction_profiles"]
+
 [revisions."2021".family_dispositions.credit_reconciliation]
 reason = """
 The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. Before the 2022 baseline the Modelo 100 credit casillas are keyed by the operator: no binding supplies them and no payer-record or ledger family is declared, so there is no value source for an entry to name and nothing to cross-check it against. The credit reconciliation begins with the 2022 revision."""

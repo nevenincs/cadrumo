@@ -21,7 +21,9 @@ from ..operations.access_resolution import (
 )
 from ..operations.models import OperationRequest
 from .access_errors import ProfileAccessRefusedError
+from .imputation_election_contracts import ProfileImputationElectionReadRequest, ProfileImputationElectionSetRequest
 from .profile_operation_contracts import (
+    ProfileAscendantsOperationRequest,
     ProfileBundleExportOperationRequest,
     ProfileCompleteSetupOperationRequest,
     ProfileDescendantsOperationRequest,
@@ -48,10 +50,12 @@ def resolve_profile_mutation_access(
         | ProfilePatchOperationRequest
         | ProfilePlantillaMediaOperationRequest
         | ProfileDescendantsOperationRequest
+        | ProfileAscendantsOperationRequest
         | ProfileRepeatableRowMutationOperationRequest
         | ProfileRepeatableRowUpdateOperationRequest
         | ProfileRepeatableRowRemoveOperationRequest
-        | ProfileCompleteSetupOperationRequest,
+        | ProfileCompleteSetupOperationRequest
+        | ProfileImputationElectionSetRequest,
     ):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _bind_exact_profile_access(
@@ -86,7 +90,7 @@ def resolve_profile_view_access(
     door and a session without one can still read the profile.
     """
     payload = request.payload
-    if not isinstance(payload, ProfileViewOperationRequest):
+    if not isinstance(payload, ProfileViewOperationRequest | ProfileImputationElectionReadRequest):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return _bind_exact_profile_access(
         request,

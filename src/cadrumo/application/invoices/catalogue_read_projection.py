@@ -20,6 +20,7 @@ from ...core.parsing.codes import normalise_iso_4217_currency
 from ...core.text_bounds import NonEmptyStr
 from ...domain.invoices.enums import PaymentStatus
 from ...domain.invoices.models import Invoice, InvoiceLine
+from ...domain.invoices.service import invoice_settlement
 from ...domain.iva.schema import InvoiceKind
 from ..operations.public_scalar import PublicDecimal
 
@@ -117,6 +118,8 @@ class CatalogueInvoiceSnapshot(BaseModel):
     iva_total_eur: PublicDecimal | None
     grand_total_eur: PublicDecimal | None
     referencia_catastral: str | None
+    #: The cash the invoice settles for: its total less the retención withheld at source.
+    settlement_amount: PublicDecimal
 
     @model_validator(mode="after")
     def _bounds(self) -> Self:
@@ -169,6 +172,7 @@ class CatalogueInvoiceSnapshot(BaseModel):
                 if invoice.business_premises_lease is not None
                 else None
             ),
+            settlement_amount=_decimal(invoice_settlement(invoice)),
         )
 
 

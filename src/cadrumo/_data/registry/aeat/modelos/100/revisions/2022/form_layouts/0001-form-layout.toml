@@ -1866,37 +1866,128 @@ placements = [
     { casilla_id = "1915", kind = "on_form", box_number = "1915" },
     { casilla_id = "1916", kind = "on_form", box_number = "1916" },
     { casilla_id = "AJ", kind = "unplaced", unplaced_reason = "no_official_anchor" },
-    { casilla_id = "ANOASDLG", kind = "working_figure" },
-    { casilla_id = "APENOMDLG", kind = "working_figure" },
-    { casilla_id = "APENOMDLG_ASC", kind = "working_figure" },
-    { casilla_id = "CONVASDLG", kind = "working_figure" },
-    { casilla_id = "DECFAL", kind = "working_figure" },
-    { casilla_id = "DNIASDLG", kind = "working_figure" },
-    { casilla_id = "DPFNAC_C", kind = "working_figure" },
-    { casilla_id = "DPFNAC_D", kind = "working_figure" },
-    { casilla_id = "DPGMIN_C", kind = "working_figure" },
-    { casilla_id = "DPGMIN_D", kind = "working_figure" },
-    { casilla_id = "DPNIF_C", kind = "working_figure" },
-    { casilla_id = "DPNIF_D", kind = "working_figure" },
-    { casilla_id = "DP_APENOM_C", kind = "working_figure" },
-    { casilla_id = "DP_APENOM_D", kind = "working_figure" },
-    { casilla_id = "ECIVIL", kind = "working_figure" },
-    { casilla_id = "FALLASDLG", kind = "working_figure" },
-    { casilla_id = "FALLDLG", kind = "working_figure" },
-    { casilla_id = "FNACDLG", kind = "working_figure" },
-    { casilla_id = "HIJOSUE", kind = "working_figure" },
-    { casilla_id = "MINUSDLG", kind = "working_figure" },
-    { casilla_id = "NIFDLG", kind = "working_figure" },
-    { casilla_id = "NORESIDENTE", kind = "working_figure" },
-    { casilla_id = "PCTMINASDLG", kind = "working_figure" },
+    { casilla_id = "ANOASDLG", kind = "on_form" },
+    { casilla_id = "APENOMDLG", kind = "on_form" },
+    { casilla_id = "APENOMDLG_ASC", kind = "on_form" },
+    { casilla_id = "CONVASDLG", kind = "on_form" },
+    { casilla_id = "DECFAL", kind = "on_form" },
+    { casilla_id = "DNIASDLG", kind = "on_form" },
+    { casilla_id = "DPFNAC_C", kind = "on_form" },
+    { casilla_id = "DPFNAC_D", kind = "on_form" },
+    { casilla_id = "DPGMIN_C", kind = "on_form" },
+    { casilla_id = "DPGMIN_D", kind = "on_form" },
+    { casilla_id = "DPNIF_C", kind = "on_form" },
+    { casilla_id = "DPNIF_D", kind = "on_form" },
+    { casilla_id = "DP_APENOM_C", kind = "on_form" },
+    { casilla_id = "DP_APENOM_D", kind = "on_form" },
+    { casilla_id = "ECIVIL", kind = "on_form" },
+    { casilla_id = "FALLASDLG", kind = "on_form" },
+    { casilla_id = "FALLDLG", kind = "on_form" },
+    { casilla_id = "FNACDLG", kind = "on_form" },
+    { casilla_id = "HIJOSUE", kind = "on_form" },
+    { casilla_id = "MINUSDLG", kind = "on_form" },
+    { casilla_id = "NIFDLG", kind = "on_form" },
+    { casilla_id = "NORESIDENTE", kind = "on_form" },
+    { casilla_id = "PCTMINASDLG", kind = "on_form" },
     { casilla_id = "PH18", kind = "working_figure" },
-    { casilla_id = "RESIDENTEUE", kind = "working_figure" },
-    { casilla_id = "SEXO_C", kind = "working_figure" },
-    { casilla_id = "SEXO_D", kind = "working_figure" },
-    { casilla_id = "TIPOTRIBUTACION", kind = "working_figure" },
-    { casilla_id = "ZCCAD", kind = "working_figure" },
-    { casilla_id = "ZRUE2", kind = "working_figure" },
+    { casilla_id = "RESIDENTEUE", kind = "on_form" },
+    { casilla_id = "SEXO_C", kind = "on_form" },
+    { casilla_id = "SEXO_D", kind = "on_form" },
+    { casilla_id = "TIPOTRIBUTACION", kind = "on_form" },
+    { casilla_id = "ZCCAD", kind = "on_form" },
+    { casilla_id = "ZRUE2", kind = "on_form" },
     { casilla_id = "eo-agraria-reduccion-irregularidad-base", kind = "unplaced", unplaced_reason = "no_official_anchor" },
+]
+
+[[revisions.2022.form_layouts.pages]]
+id = "datosidentificativos-declarante"
+official_ref = "DatosIdentificativos/Declarante"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-declarante.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DPNIF_D" },
+    { kind = "field", id = "field-2", casilla_id = "DP_APENOM_D" },
+    { kind = "field", id = "field-3", casilla_id = "SEXO_D" },
+    { kind = "field", id = "field-4", casilla_id = "ECIVIL" },
+    { kind = "field", id = "field-5", casilla_id = "DPFNAC_D" },
+    { kind = "field", id = "field-6", casilla_id = "DPGMIN_D" },
+    { kind = "field", id = "field-7", casilla_id = "DECFAL" },
+]
+
+[[revisions.2022.form_layouts.pages]]
+id = "datosidentificativos-conyuge"
+official_ref = "DatosIdentificativos/Conyuge"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-conyuge.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "DPNIF_C" },
+    { kind = "field", id = "field-2", casilla_id = "DP_APENOM_C" },
+    { kind = "field", id = "field-3", casilla_id = "DPFNAC_C" },
+    { kind = "field", id = "field-4", casilla_id = "DPGMIN_C" },
+    { kind = "field", id = "field-5", casilla_id = "SEXO_C" },
+    { kind = "field", id = "field-6", casilla_id = "RESIDENTEUE" },
+    { kind = "field", id = "field-7", casilla_id = "ZRUE2" },
+]
+
+[[revisions.2022.form_layouts.pages]]
+id = "datosidentificativos"
+official_ref = "DatosIdentificativos"
+heading_key = "modelo.schema.100.form.page.datosidentificativos.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "NORESIDENTE" },
+]
+
+[[revisions.2022.form_layouts.pages]]
+id = "declaracion"
+heading_key = "modelo.schema.100.form.page.declaracion.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "ZCCAD" },
+    { kind = "field", id = "field-2", casilla_id = "TIPOTRIBUTACION" },
+]
+
+[[revisions.2022.form_layouts.pages]]
+id = "datosidentificativos-hijos"
+official_ref = "DatosIdentificativos/Hijos"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-hijos.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "hijo"
+heading_key = "modelo.schema.100.form.section.hijo.heading"
+blocks = [
+    { kind = "repeating", id = "hijo-rows", row_source = "row_set_binding", binding_id = "renta-family-descendant-tax-id", max_rows = 15, columns = [{ key = "box-nifdlg", heading_key = "modelo.schema.100.form.column.box-nifdlg.heading", casilla_id = "NIFDLG", binding_id = "renta-family-descendant-tax-id" }, { key = "box-apenomdlg", heading_key = "modelo.schema.100.form.column.box-apenomdlg.heading", casilla_id = "APENOMDLG", binding_id = "renta-family-descendant-display-name" }, { key = "box-fnacdlg", heading_key = "modelo.schema.100.form.column.box-fnacdlg.heading", casilla_id = "FNACDLG", binding_id = "renta-family-descendant-birth-date" }, { key = "box-minusdlg", heading_key = "modelo.schema.100.form.column.box-minusdlg.heading", casilla_id = "MINUSDLG", binding_id = "renta-family-descendant-disability-grade" }, { key = "box-falldlg", heading_key = "modelo.schema.100.form.column.box-falldlg.heading", casilla_id = "FALLDLG", binding_id = "renta-family-descendant-death-date" }] },
+]
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "general"
+heading_key = "modelo.schema.100.form.section.general.heading"
+blocks = [
+    { kind = "field", id = "field", casilla_id = "HIJOSUE" },
+]
+
+[[revisions.2022.form_layouts.pages]]
+id = "datosidentificativos-ascendientes"
+official_ref = "DatosIdentificativos/Ascendientes"
+heading_key = "modelo.schema.100.form.page.datosidentificativos-ascendientes.heading"
+
+[[revisions.2022.form_layouts.pages.sections]]
+id = "ascendiente"
+heading_key = "modelo.schema.100.form.section.ascendiente.heading"
+blocks = [
+    { kind = "repeating", id = "ascendiente-rows", row_source = "row_set_binding", binding_id = "renta-family-ascendant-tax-id", max_rows = 4, columns = [{ key = "box-dniasdlg", heading_key = "modelo.schema.100.form.column.box-dniasdlg.heading", casilla_id = "DNIASDLG", binding_id = "renta-family-ascendant-tax-id" }, { key = "box-apenomdlg-asc", heading_key = "modelo.schema.100.form.column.box-apenomdlg-asc.heading", casilla_id = "APENOMDLG_ASC", binding_id = "renta-family-ascendant-display-name" }, { key = "box-anoasdlg", heading_key = "modelo.schema.100.form.column.box-anoasdlg.heading", casilla_id = "ANOASDLG", binding_id = "renta-family-ascendant-birth-date" }, { key = "box-pctminasdlg", heading_key = "modelo.schema.100.form.column.box-pctminasdlg.heading", casilla_id = "PCTMINASDLG", binding_id = "renta-family-ascendant-disability-grade" }, { key = "box-convasdlg", heading_key = "modelo.schema.100.form.column.box-convasdlg.heading", casilla_id = "CONVASDLG", binding_id = "renta-family-ascendant-cohabiting-descendant-count" }, { key = "box-fallasdlg", heading_key = "modelo.schema.100.form.column.box-fallasdlg.heading", casilla_id = "FALLASDLG", binding_id = "renta-family-ascendant-death-date" }] },
 ]
 
 [[revisions.2022.form_layouts.pages]]
@@ -2528,7 +2619,7 @@ blocks = [
     { kind = "field", id = "field-23", casilla_id = "1652" },
     { kind = "field", id = "field-24", casilla_id = "1653" },
     { kind = "field", id = "field-25", casilla_id = "1654" },
-    { kind = "repeating", id = "elemento-patrimonial-rows", row_source = "row_set_binding", binding_id = "renta-activity-asset-disposal-row-element-type-1626", columns = [{ key = "box-1626", heading_key = "modelo.schema.100.form.column.box-1626.heading", casilla_id = "1626", binding_id = "renta-activity-asset-disposal-row-element-type-1626" }, { key = "box-1612", heading_key = "modelo.schema.100.form.column.box-1612.heading", casilla_id = "1612", binding_id = "renta-activity-asset-disposal-row-onerous-transfer-1612" }, { key = "box-1631", heading_key = "modelo.schema.100.form.column.box-1631.heading", casilla_id = "1631", binding_id = "renta-activity-asset-disposal-row-transmission-date-1631" }, { key = "box-1632", heading_key = "modelo.schema.100.form.column.box-1632.heading", casilla_id = "1632", binding_id = "renta-activity-asset-disposal-row-acquisition-date-1632" }, { key = "box-1633", heading_key = "modelo.schema.100.form.column.box-1633.heading", casilla_id = "1633", binding_id = "renta-activity-asset-disposal-row-transmission-value-1633" }, { key = "box-1637", heading_key = "modelo.schema.100.form.column.box-1637.heading", casilla_id = "1637", binding_id = "renta-activity-asset-disposal-row-acquisition-value-1637" }, { key = "box-1638", heading_key = "modelo.schema.100.form.column.box-1638.heading", casilla_id = "1638", binding_id = "renta-activity-asset-disposal-row-loss-difference-1638" }, { key = "box-1639", heading_key = "modelo.schema.100.form.column.box-1639.heading", casilla_id = "1639", binding_id = "renta-activity-asset-disposal-row-loss-1639" }, { key = "box-1640", heading_key = "modelo.schema.100.form.column.box-1640.heading", casilla_id = "1640", binding_id = "renta-activity-asset-disposal-row-gain-difference-1640" }, { key = "box-1654", heading_key = "modelo.schema.100.form.column.box-1654.heading", casilla_id = "1654", binding_id = "renta-activity-asset-disposal-row-gain-1654" }] },
+    { kind = "repeating", id = "elemento-patrimonial-rows", row_source = "row_set_binding", binding_id = "renta-activity-asset-disposal-row-element-type-1626", max_rows = 80, columns = [{ key = "box-1626", heading_key = "modelo.schema.100.form.column.box-1626.heading", casilla_id = "1626", binding_id = "renta-activity-asset-disposal-row-element-type-1626" }, { key = "box-1612", heading_key = "modelo.schema.100.form.column.box-1612.heading", casilla_id = "1612", binding_id = "renta-activity-asset-disposal-row-onerous-transfer-1612" }, { key = "box-1631", heading_key = "modelo.schema.100.form.column.box-1631.heading", casilla_id = "1631", binding_id = "renta-activity-asset-disposal-row-transmission-date-1631" }, { key = "box-1632", heading_key = "modelo.schema.100.form.column.box-1632.heading", casilla_id = "1632", binding_id = "renta-activity-asset-disposal-row-acquisition-date-1632" }, { key = "box-1633", heading_key = "modelo.schema.100.form.column.box-1633.heading", casilla_id = "1633", binding_id = "renta-activity-asset-disposal-row-transmission-value-1633" }, { key = "box-1637", heading_key = "modelo.schema.100.form.column.box-1637.heading", casilla_id = "1637", binding_id = "renta-activity-asset-disposal-row-acquisition-value-1637" }, { key = "box-1638", heading_key = "modelo.schema.100.form.column.box-1638.heading", casilla_id = "1638", binding_id = "renta-activity-asset-disposal-row-loss-difference-1638" }, { key = "box-1639", heading_key = "modelo.schema.100.form.column.box-1639.heading", casilla_id = "1639", binding_id = "renta-activity-asset-disposal-row-loss-1639" }, { key = "box-1640", heading_key = "modelo.schema.100.form.column.box-1640.heading", casilla_id = "1640", binding_id = "renta-activity-asset-disposal-row-gain-difference-1640" }, { key = "box-1654", heading_key = "modelo.schema.100.form.column.box-1654.heading", casilla_id = "1654", binding_id = "renta-activity-asset-disposal-row-gain-1654" }] },
 ]
 
 [[revisions.2022.form_layouts.pages.sections]]

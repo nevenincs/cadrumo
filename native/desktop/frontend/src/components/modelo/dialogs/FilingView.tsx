@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
   type ReactNode,
@@ -18,7 +19,11 @@ import {
 import { Icon, type IconName } from "@/components/ui/icon";
 import { NativeSelect } from "@/components/ui/native-select";
 import { Spinner } from "@/components/ui/spinner";
-import type { FileToken, LedgerOutcome } from "../../../shell/ledger";
+import type {
+  FilePicks,
+  FileToken,
+  LedgerOutcome,
+} from "../../../shell/ledger";
 import {
   MODELO_ACTOR,
   type ModeloPort,
@@ -29,6 +34,7 @@ import type {
   ExportLayoutFormat,
   ModeloExportArtefact,
   ModeloExportRequest,
+  ModeloExportRequestField,
   ModeloFormArtefactOption,
   ModeloFormElection,
   ModeloWorkbenchFormProjectionV1,
@@ -40,7 +46,7 @@ import { AEAT_SEDE } from "../../../shell/links";
 import { useStrings } from "../../../shell/strings";
 import type { FormSession } from "../form/session";
 import { CalculationNotes } from "../workspace/CalculationNotes";
-import { runOperation, type OperationRun } from "./operationRun";
+import { useModeloOperation } from "../WriteScope";
 
 // Export and record: the official file written to a place the filer picks,
 // the filing recorded here, the AEAT's receipt added, and the other copies.
@@ -48,7 +54,7 @@ import { runOperation, type OperationRun } from "./operationRun";
 // uploads themselves, and recording the filing is local. Whether a step may
 // be taken is the read model's: its export hold, its file view and its
 // recorded filing. Each write is sent once; one whose outcome was not seen
-// holds every write here until the declaration is read again.
+// holds every write until completion is confirmed and the declaration is read again.
 
 type Write =
   | "export"
@@ -74,8 +80,7 @@ type Notice =
   | { kind: "receipt"; matches: boolean; narrative: string }
   /** `words` is why, as the backend served it; null when it served none. */
   | { kind: "refused"; write: Write; words: string | null }
-  | { kind: "not_sent"; write: Write }
-  | { kind: "unknown"; write: Write };
+  | { kind: "not_sent"; write: Write };
 
 type Stage = {
   word: string;
@@ -98,16 +103,6 @@ const STAGE_TONE: Record<Stage["state"], string> = {
 const FILING_FORMAT: Record<ExportLayoutFormat, ModeloSaveFormat> = {
   fixed_width: "boe",
   xml_dictionary: "xml",
-};
-
-/** The request field each election the export asks is sent in. */
-const ELECTION_FIELD: Record<
-  ModeloFormElection,
-  Extract<keyof ModeloExportRequest, `${ModeloFormElection}_election`>
-> = {
-  refund: "refund_election",
-  payment: "payment_election",
-  prior_domiciliation: "prior_domiciliation_election",
 };
 
 /** The save format each copy is written as. */
@@ -211,15 +206,21 @@ export function FilingView({
     Partial<Record<ModeloFormElection, string>>
   >({});
   const elections = offer?.asks_elections ? offer.elections : [];
+  // Only an answerable election is sent, in the request field the read model
+  // names; one with no answer and no default leaves the export to resolve it.
   const answered = Object.fromEntries(
-    elections.map((question) => [
-      ELECTION_FIELD[question.election],
-      answers[question.election] ?? question.default,
-    ]),
-  ) as Pick<
-    ModeloExportRequest,
-    "refund_election" | "payment_election" | "prior_domiciliation_election"
-  >;
+    elections.flatMap((question) => {
+      const answer = answers[question.election] ?? question.default;
+      return question.state === "available" && answer !== null
+        ? [[question.request_field, answer]]
+        : [];
+    }),
+  ) as Partial<Pick<ModeloExportRequest, ModeloExportRequestField>>;
+  // An election the result makes meaningless is not asked; one that applies
+  // but cannot be answered now says why.
+  const shown = elections.filter(
+    (question) => question.state !== "not_applicable",
+  );
   // The file this view last saved, while it is still shown here.
   const [saved, setSaved] = useState<{ token: FileToken; write: Write } | null>(
     null,
@@ -229,24 +230,26 @@ export function FilingView({
   // What the last filing file's calculation noted, kept beside the file
   // while this view shows it, whatever is done after.
   const [notes, setNotes] = useState<readonly RecordedCalculationNote[]>([]);
-  const [held, setHeld] = useState<ModeloWorkbenchFormProjectionV1 | null>(
-    null,
-  );
+  const {
+    holds,
+    target,
+    hold: writeHold,
+    run: runWrite,
+  } = useModeloOperation();
+  const picking = useRef(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const generation = useRef(0);
   const [confirming, setConfirming] = useState(false);
   const alive = useRef(true);
-  useEffect(() => {
+  useLayoutEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
+      generation.current += 1;
     };
-  }, []);
-  // A new read of the declaration releases the hold of an unknown write.
-  useEffect(() => {
-    if (held && held !== envelope) setHeld(null);
-  }, [held, envelope]);
-  const unknown = held === envelope;
+  }, [port, envelope, pending, holds, target]);
   const busy = notice?.kind === "busy";
-  const quiet = busy || unknown || pending;
+  const quiet = busy || writeHold !== undefined || pending || pickerOpen;
 
   const run = useCallback(
     async <Result,>(
@@ -256,21 +259,18 @@ export function FilingView({
       tokens: FileToken[],
       keep: FileToken | null = null,
     ) => {
+      const mine = generation.current;
       setNotice({ kind: "busy", write });
-      const outcome: OperationRun<Result> = await runOperation(
-        port,
-        start,
-        () => alive.current,
-      );
+      const outcome = await runWrite(start, () => alive.current);
+      if (!outcome || !alive.current || mine !== generation.current) {
+        void port.forgetFiles(tokens);
+        if (alive.current && mine === generation.current) setNotice(null);
+        return;
+      }
       // A file written here stays named so it can be shown in its folder.
       const written = outcome.kind === "settled" ? keep : null;
       void port.forgetFiles(tokens.filter((token) => token !== written));
-      if (!alive.current) return;
-      if (written)
-        setSaved((before) => {
-          if (before) void port.forgetFiles([before.token]);
-          return { token: written, write };
-        });
+      if (written) setSaved({ token: written, write });
       if (outcome.kind === "settled") setNotice(settled(outcome.result));
       else if (outcome.kind === "saved_unread") setNotice({ kind: "done" });
       else if (outcome.kind === "refused")
@@ -278,25 +278,46 @@ export function FilingView({
       else if (outcome.kind === "not_sent")
         setNotice({ kind: "not_sent", write });
       else {
-        setHeld(envelope);
-        setNotice({ kind: "unknown", write });
+        setNotice(null);
         return;
       }
       if (outcome.kind === "settled" || outcome.kind === "saved_unread")
         await onReread();
     },
-    [port, envelope, onReread],
+    [port, onReread, runWrite],
   );
 
   const stem = `modelo-${form.modelo}-${form.period.filing_year}-${form.period.code}`;
-  const save = async (format: ModeloSaveFormat, name: string) => {
-    const picks = await port.saveFile(
-      format,
-      t(`workspace.modelo.filing.filter.${format}`),
-      `${name}.${format}`,
-    );
-    return picks.files[0] ?? null;
+  const choose = async (write: Write, pick: () => Promise<FilePicks>) => {
+    if (picking.current || quiet || !alive.current) return null;
+    picking.current = true;
+    setPickerOpen(true);
+    const mine = generation.current;
+    try {
+      const picks = await pick();
+      if (!alive.current || mine !== generation.current || holds.get(target)) {
+        void port.forgetFiles(picks.files.map((file) => file.token));
+        return null;
+      }
+      void port.forgetFiles(picks.files.slice(1).map((file) => file.token));
+      return picks.files[0] ?? null;
+    } catch {
+      if (alive.current && mine === generation.current)
+        setNotice({ kind: "not_sent", write });
+      return null;
+    } finally {
+      picking.current = false;
+      if (alive.current) setPickerOpen(false);
+    }
   };
+  const save = (write: Write, format: ModeloSaveFormat, name: string) =>
+    choose(write, () =>
+      port.saveFile(
+        format,
+        t(`workspace.modelo.filing.filter.${format}`),
+        `${name}.${format}`,
+      ),
+    );
 
   const exportFile = async (
     write: "export" | Exclude<ModeloExportArtefact, "fichero_boe">,
@@ -310,7 +331,7 @@ export function FilingView({
       if (layout === null) return;
       format = FILING_FORMAT[layout];
     } else format = COPY_FORMAT[write];
-    const picked = await save(format, stem);
+    const picked = await save(write, format, stem);
     if (!picked) return;
     await run(
       write,
@@ -346,7 +367,7 @@ export function FilingView({
 
   const buildPackage = async () => {
     if (!calculation || quiet) return;
-    const picked = await save("zip", stem);
+    const picked = await save("package", "zip", stem);
     if (!picked) return;
     await run(
       "package",
@@ -397,11 +418,9 @@ export function FilingView({
 
   const addReceipt = async () => {
     if (quiet) return;
-    const picks = await port.pickFile(
-      "evidence",
-      t("workspace.modelo.filing.filter.receipt"),
+    const picked = await choose("receipt", () =>
+      port.pickFile("evidence", t("workspace.modelo.filing.filter.receipt")),
     );
-    const picked = picks.files[0];
     if (!picked) return;
     await run(
       "receipt",
@@ -524,14 +543,7 @@ export function FilingView({
         ))}
       </ol>
 
-      {notice && notice.kind !== "busy" && (
-        <FilingNotice
-          notice={notice}
-          onReread={() => {
-            void onReread();
-          }}
-        />
-      )}
+      {notice && notice.kind !== "busy" && <FilingNotice notice={notice} />}
       {pending && (
         <Alert tone="warning" icon={<Icon name="edit" />}>
           {t("workspace.modelo.next.apply", { count: session.stagedCount })}
@@ -571,33 +583,50 @@ export function FilingView({
             {file.words}
           </Alert>
         )}
-        {elections.length > 0 && !recorded && (
+        {shown.length > 0 && !recorded && (
           <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
-            {elections.map((question) => {
+            {shown.map((question) => {
               const id = `election-${question.election}`;
               return (
                 <div key={question.election} className="flex flex-col gap-1">
                   <label htmlFor={id} className="text-sm text-muted-foreground">
                     {question.words}
                   </label>
-                  <NativeSelect
-                    id={id}
-                    controlSize="sm"
-                    disabled={quiet}
-                    value={answers[question.election] ?? question.default}
-                    onChange={(event) =>
-                      setAnswers((now) => ({
-                        ...now,
-                        [question.election]: event.target.value,
-                      }))
-                    }
-                  >
-                    {question.choices.map((choice) => (
-                      <option key={choice.value} value={choice.value}>
-                        {choice.words}
-                      </option>
-                    ))}
-                  </NativeSelect>
+                  {question.state === "available" ? (
+                    <NativeSelect
+                      id={id}
+                      controlSize="sm"
+                      disabled={quiet}
+                      value={
+                        answers[question.election] ?? question.default ?? ""
+                      }
+                      onChange={(event) =>
+                        setAnswers((now) => ({
+                          ...now,
+                          [question.election]: event.target.value,
+                        }))
+                      }
+                    >
+                      {question.default === null &&
+                        answers[question.election] === undefined && (
+                          <option value="" disabled />
+                        )}
+                      {question.choices.map((choice) => (
+                        <option key={choice.value} value={choice.value}>
+                          {choice.words}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  ) : (
+                    <p id={id} className="text-sm">
+                      {question.state_words}
+                    </p>
+                  )}
+                  {question.state === "available" && question.help && (
+                    <p className="text-xs text-muted-foreground">
+                      {question.help}
+                    </p>
+                  )}
                 </div>
               );
             })}
@@ -773,10 +802,8 @@ export function FilingView({
 
 function FilingNotice({
   notice,
-  onReread,
 }: {
   notice: Exclude<Notice, { kind: "busy" }>;
-  onReread: () => void;
 }) {
   const t = useStrings();
   switch (notice.kind) {
@@ -838,17 +865,6 @@ function FilingNotice({
       return (
         <Alert tone="warning" icon={<Icon name="alert" />}>
           {t("workspace.modelo.outcome.not_done")}
-        </Alert>
-      );
-    case "unknown":
-      return (
-        <Alert tone="warning" icon={<Icon name="unknown" />} role="alert">
-          <span className="flex flex-col items-start gap-1">
-            <span>{t("workspace.modelo.outcome.unknown")}</span>
-            <Button size="xs" variant="link" className="p-0" onClick={onReread}>
-              {t("workspace.modelo.read_again")}
-            </Button>
-          </span>
         </Alert>
       );
   }

@@ -321,6 +321,8 @@ declare global {
     __fixtureAgentSession?: AgentSession;
     /** The same session's read projections, for controlled transport delays. */
     __fixtureAgentViews?: AgentViews;
+    /** Intercepts list reads inside the method, including bound host copies. */
+    __fixtureLocalModelsRead?: () => Promise<void>;
     __fixtureAgentDrop?: (signal: AgentDropSignal) => void;
     /** Every resolution of a questionnaire the page has handed the host, in
      * order, whether the agent took it or not. */
@@ -1152,6 +1154,7 @@ export function fixtureAgent({
     async localModels() {
       say("agentLocalModels");
       await check();
+      await window.__fixtureLocalModelsRead?.();
       return listSnapshot();
     },
     async addLocalModel(lane, model, expectedRevision) {
@@ -1539,6 +1542,13 @@ export function fixtureAgent({
       on.then(answer);
       return {};
     },
+    // The fixture's lanes stay on this computer, so its reads need no grant.
+    attachmentCard: () => Promise.resolve({ kind: "not_required" as const }),
+    attachmentRelease: () => Promise.resolve({ kind: "not_required" as const }),
+    attachmentGrants: () =>
+      Promise.resolve({ kind: "grants" as const, grants: [] }),
+    attachmentGrantRevoke: () =>
+      Promise.resolve({ kind: "refused" as const, code: "grant_revoked" }),
     async decideApproval(approval, optionId) {
       say(`agentDecideApproval ${approval.request_id} ${optionId}`);
       await check();

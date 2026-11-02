@@ -13,7 +13,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import date
 from enum import StrEnum
 from typing import TYPE_CHECKING
@@ -60,6 +60,11 @@ class AmendmentRegimePolicy:
     rectificativa_effective_from: Mapping[str, date]
     pre_rectificativa_kinds: frozenset[str]
     post_rectificativa_kinds: frozenset[str]
+    later_period_adjustment_from: Mapping[str, date] = field(default_factory=dict[str, date])
+    """Modelos whose filed return can never be amended, from the date their adjustment rule applies.
+
+    Their corrections belong to a later period's return, so no amendment kind exists.
+    """
 
 
 @dataclass(frozen=True)
@@ -70,8 +75,9 @@ class AmendmentKindRegime:
         permitted_kinds: The closed set of
             :class:`~CalculationRevisionAmendmentKind`
             string values legally available for this modelo and period.
-            ``"sustitutiva"`` is always permitted (a material restatement is
-            never barred by the rectificativa timeline); ``"rectificativa"``
+            Empty when the modelo adjusts a filed period only through a later
+            period's return. Otherwise ``"sustitutiva"`` is always permitted
+            (a material restatement is never barred by the rectificativa timeline); ``"rectificativa"``
             is permitted only once the modelo's own effective period is
             reached; ``"complementaria"`` is permitted only before that
             point (once rectificativa applies, it *replaces* complementaria
@@ -111,6 +117,9 @@ def resolve_amendment_kind_regime(
     caller that has already projected an alternate boundary mapping; it does
     not provide a default policy or a fallback vocabulary.
     """
+    adjustment_boundary = policy.later_period_adjustment_from.get(modelo)
+    if adjustment_boundary is not None and _period_reaches(period, adjustment_boundary):
+        return AmendmentKindRegime(permitted_kinds=frozenset(), rectificativa_effective=False)
     table = (
         policy.rectificativa_effective_from if rectificativa_effective_from is None else rectificativa_effective_from
     )
@@ -121,12 +130,7 @@ def resolve_amendment_kind_regime(
             rectificativa_effective=False,
         )
 
-    if period.has_date_span():
-        rectificativa_effective = period.end_date >= boundary
-    else:
-        rectificativa_effective = period.filing_year >= boundary.year
-
-    if rectificativa_effective:
+    if _period_reaches(period, boundary):
         return AmendmentKindRegime(
             permitted_kinds=policy.post_rectificativa_kinds,
             rectificativa_effective=True,
@@ -135,6 +139,12 @@ def resolve_amendment_kind_regime(
         permitted_kinds=policy.pre_rectificativa_kinds,
         rectificativa_effective=False,
     )
+
+
+def _period_reaches(period: Period, boundary: date) -> bool:
+    if period.has_date_span():
+        return period.end_date >= boundary
+    return period.filing_year >= boundary.year
 
 
 def classify_amendment_liability_direction(

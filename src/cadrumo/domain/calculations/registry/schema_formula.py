@@ -201,13 +201,17 @@ class FormulaExpression(RegistryModel):
             raise RegistryValidationError("record_row_unused requires one binding leaf")
 
     def _validate_text_operands(self) -> None:
-        """Restrict text operands to text_equal and require its admitted leaf sources."""
+        """Restrict text operands to text_equal and unresolved_outcome and require their admitted leaf sources."""
         if self.op == "text_equal" and any(
             arg.binding is None and arg.casilla_id is None and arg.text_literal is None for arg in self.args
         ):
             raise RegistryValidationError("text_equal requires binding, casilla, or text_literal leaves")
-        if self.op != "text_equal" and any(arg.text_literal is not None for arg in self.args):
-            raise RegistryValidationError("text_literal may only be an operand of text_equal")
+        if self.op == "unresolved_outcome" and self.args[0].text_literal is None:
+            raise RegistryValidationError("unresolved_outcome requires one text_literal leaf naming its reason")
+        if self.op not in {"text_equal", "unresolved_outcome"} and any(
+            arg.text_literal is not None for arg in self.args
+        ):
+            raise RegistryValidationError("text_literal may only be an operand of text_equal or unresolved_outcome")
 
 
 class DatedValue(RegistryModel):

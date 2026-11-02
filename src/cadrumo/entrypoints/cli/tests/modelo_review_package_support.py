@@ -23,6 +23,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.filing_report_support import seed_filing_gate_report
+from ....application.modelo.calculation_screen import calculation_screen_stamp
 from ....application.modelo.work_addressing import law_selected_revision_for_work_target
 from ....application.workflow.persistence import workflow_state_repository
 from ....core.casilla_id import CasillaId
@@ -91,6 +92,12 @@ def seed_exportable_modelo_revision(
     work_units.save(upsert_work_unit(work_units.load(), work_unit))
 
     inputs = dict(input_values_by_casilla_id)
+    # A seeded revision stands in for a calculation of this target, so it carries
+    # the screen stamp that calculation persists.
+    screen_stamp = calculation_screen_stamp(
+        operation.snapshot(modelo, filing_year=filing_year, period=filing_period.registry_token),
+        operation=operation,
+    )
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=inputs,
@@ -98,6 +105,7 @@ def seed_exportable_modelo_revision(
         casilla_values={},
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -116,6 +124,7 @@ def seed_exportable_modelo_revision(
         verified_by="operator",
         filing_instance_evidence=filing_instance_evidence,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revisions = CalculationRevisionCatalogueRepository()
     revisions.save(upsert_calculation_revision(revisions.load(), revision))

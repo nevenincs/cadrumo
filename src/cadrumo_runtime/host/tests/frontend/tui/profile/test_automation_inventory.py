@@ -37,6 +37,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     AuthorityState,
     Availability,
     EffectiveScopeSummary,
+    GrantUse,
     disclosure_digest,
 )
 from cadrumo_client.contracts.contracts import RefusalCode
@@ -145,6 +146,7 @@ def _inventory(profile_id: UUID) -> AutomationInventoryProjection:
                 expires_at=instant + timedelta(days=1),
                 unattended=True,
                 allow_os_lock=False,
+                use=GrantUse.OTHER,
             ),
         ),
         keys=(

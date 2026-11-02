@@ -48,8 +48,6 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
-from ...core.retencion_soportada import RetencionSoportadaClase
-from ...core.retencion_soportada_label import RETENCION_SOPORTADA_CLASE_LABEL_KEYS
 from ...domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
@@ -58,6 +56,7 @@ from ...domain.modelos.calculation_revision_sources import (
     element_names_of,
     recorded_calculation_notes,
 )
+from ...domain.user_profile.labels import profile_field_label_key
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ..aggregation.source_mesh import CalculationSourceDiagnostic
@@ -79,6 +78,7 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "source_domain_not_ready",
         "advisory_binding_value",
         "credit_source_disagreement",
+        "precedence_tier_divergence",
     }
 )
 """Reasons the calculation-note gate refuses checking, exporting and recording on.
@@ -121,6 +121,8 @@ DERIVED_GATE_REASONS: Final[frozenset[str]] = frozenset(
 CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingProxyType(
     {
         **dict.fromkeys(BLOCKING_REASONS, _B),
+        # A contested figure that reaches no exported box withholds nothing.
+        "precedence_tier_divergence_advisory": _C,
         # Persisted and shown, not refused: the route it reports may lack a terminal origin by design.
         "terminal_origin_mismatch": _C,
         # A credit no second source could confirm: worth checking, never agreement.
@@ -138,6 +140,7 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "prorrata_volume_divergence": _C,
         "missing_transaction_evidence": _M,
         "unclassified_declarant_role_fact": _M,
+        "household_rows_incomplete": _M,
         "unconverted_foreign_currency": _M,
         "aggregation_activity_undeclared": _M,
         # Worth checking. A value Cadrumo inferred or kept is among them: no box
@@ -181,6 +184,8 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "register_acquisition_partly_accounted": _C,
         "register_acquisition_row_missing": _C,
         "ledger_expense_may_be_durable": _C,
+        # Two sources hold different values for a figure that reaches no exported box.
+        "precedence_tier_divergence_advisory": _C,
         # For the filer's information.
         "deferred_binding_source": _I,
         "oss_no_live_source": _I,
@@ -236,12 +241,48 @@ RECORDS_REASONS: Final[frozenset[str]] = frozenset(
 )
 """Reasons whose cause is an entry in the filer's records, where the note sits and is put right."""
 
+PROFILE_REASONS: Final[frozenset[str]] = frozenset({"household_rows_incomplete"})
+"""Reasons whose cause is a fact the filer keeps in their profile, where the note is put right."""
+
 _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
 _FACT_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_fact"
 _ELEMENT_NAME_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.named_element"
 _UNNAMED_ELEMENT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.unnamed_element"
 _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
+_INCOME_CLASS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "trabajo": "application.modelo.calc_diagnostic_words.income_class.trabajo",
+        "capital_mobiliario": "application.modelo.calc_diagnostic_words.income_class.capital_mobiliario",
+        "arrendamiento_inmueble_urbano": (
+            "application.modelo.calc_diagnostic_words.income_class.arrendamiento_inmueble_urbano"
+        ),
+        "arrendamiento_inmueble_urbano_actividad": (
+            "application.modelo.calc_diagnostic_words.income_class.arrendamiento_inmueble_urbano_actividad"
+        ),
+        "actividad_economica": "application.modelo.calc_diagnostic_words.income_class.actividad_economica",
+        "ganancia_patrimonial": "application.modelo.calc_diagnostic_words.income_class.ganancia_patrimonial",
+        "atribucion_capital_mobiliario": (
+            "application.modelo.calc_diagnostic_words.income_class.atribucion_capital_mobiliario"
+        ),
+        "atribucion_capital_inmobiliario": (
+            "application.modelo.calc_diagnostic_words.income_class.atribucion_capital_inmobiliario"
+        ),
+        "atribucion_actividad_economica": (
+            "application.modelo.calc_diagnostic_words.income_class.atribucion_actividad_economica"
+        ),
+        "atribucion_ganancia_patrimonial": (
+            "application.modelo.calc_diagnostic_words.income_class.atribucion_ganancia_patrimonial"
+        ),
+        "imputacion_aie_ute": "application.modelo.calc_diagnostic_words.income_class.imputacion_aie_ute",
+        "imputacion_derechos_imagen": (
+            "application.modelo.calc_diagnostic_words.income_class.imputacion_derechos_imagen"
+        ),
+    }
+)
+"""The words of each suffered-withholding income class a note names, by the token the calculation stores."""
+_OTHER_INCOME_CLASS_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.income_class.other"
 _ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
+_PROFILE_GROUP_VALUE: Final[str] = "group"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
     {
@@ -354,7 +395,10 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
     if name in _AMOUNT_VALUES:
         return format_casilla_value(Decimal(value), data_type="money", language=language)
     if name == _INCOME_CLASS_VALUE:
-        return tr(RETENCION_SOPORTADA_CLASE_LABEL_KEYS[RetencionSoportadaClase(value)], locale=language.value)
+        return tr(_INCOME_CLASS_LOCALE_KEYS.get(value, _OTHER_INCOME_CLASS_LOCALE_KEY), locale=language.value)
+    if name == _PROFILE_GROUP_VALUE:
+        section, _, field = value.partition(".")
+        return tr(profile_field_label_key(section, field), locale=language.value)
     if name == _CROSS_CHECK_VALUE:
         return tr(_CROSS_CHECK_LABEL_LOCALE_KEYS[value], locale=language.value)
     return value
@@ -488,6 +532,7 @@ __all__ = [
     "FILED_BEFORE_GRADE_CAP_REASON",
     "GATE_REFUSED_REASONS",
     "PRINTED_BOX_REASONS",
+    "PROFILE_REASONS",
     "RECORDS_REASONS",
     "REOPEN_HINT_LOCALE_KEY",
     "STALE_LOCALE_KEY",

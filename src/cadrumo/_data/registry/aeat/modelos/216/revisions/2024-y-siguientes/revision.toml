@@ -35,7 +35,7 @@ source_refs = [
     "aeat-calendario-contribuyente-2025",
     "aeat-calendario-contribuyente-2026",
 ]
-scoped_families = ["completeness_manifest"]
+scoped_families = ["completeness_manifest", "verification_expectations"]
 review_status = "agent_reviewed"
 reviewed_by = "agent-review-pending-operator"
 reviewed_at = 2026-10-08
@@ -157,3 +157,15 @@ fields = {source_refs = ["aeat-modelo-216-procedure"]}
 family = "application_links"
 selector = {revision = "2020-2023", id = "modelo-216-snapshot-workflow"}
 fields = {source_refs = ["aeat-modelo-216-procedure"]}
+
+# Modelo 216 reconcile-when-present verification: the computed totals (10, 13, 21)
+# are value-reconciled against the engine WHEN the filing prints them, but are
+# EXCLUDED from the coverage denominator (min_coverage = 0, inherited), so
+# enrollment can never lower coverage or flip a legitimate filing's verdict.
+# Grounded in the casillas' own declared legal_refs/source_refs.
+[[revisions."2024-y-siguientes".family_overrides]]
+family = "verification_expectations"
+selector = {revision = "2020-2023", id = "modelo-216-reconcile-when-present"}
+fields = {reconcile_when_present_casilla_ids = ["07", "10", "13", "16", "19", "21"], tolerance = "0.01", source_refs = ["aeat-modelo-216-procedure", "boe-modelo-216-form-layout"]}
+sequence_removals = {legal_refs = [1]}
+sequence_order = {legal_refs = [1, 0]}

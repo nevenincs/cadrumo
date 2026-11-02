@@ -26,7 +26,8 @@ from ....domain.transactions.models import TransactionCatalogue
 from ....domain.transactions.retencion_facts import load_retencion_actividades_rates
 from ...actividad_asset.tests.register_support import MemoryRepository
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
-from ..renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
+from ..renta_income_ledger import aggregate_renta_income_ledger
+from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
 from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
 from .renta_income_aggregation_support import (
@@ -377,9 +378,10 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
         business_pct=Decimal("0.50"),
     )
 
-    # The invoice, not the affectation, is what reaches the casillas.
+    # The invoice, not the affectation, is what reaches the casillas, and the
+    # affectation changes neither figure of the pair.
     assert (business_income, business_retencion) == (invoiced_base, withheld)
-    assert (mixed_income, mixed_retencion) == (invoiced_base, withheld)
+    assert (mixed_income, mixed_retencion) == (business_income, business_retencion)
 
     # Coherent as a pair: 300,00 IS the art. 95.1 general 15 % of the income
     # declared beside it. Halving the income while claiming the whole
@@ -388,7 +390,6 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
         mixed_retencion
         == mixed_income * load_retencion_actividades_rates(effective_date=date(2026, 3, 15)).general_rate
     )
-    assert mixed_income != invoiced_base * Decimal("0.50"), "a receipt is not divided by affectation"
 
 
 def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() -> None:

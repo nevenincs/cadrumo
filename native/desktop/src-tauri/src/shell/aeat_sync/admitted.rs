@@ -1,6 +1,6 @@
 //! The registered operations the AEAT sync commands may submit: closed and
-//! owned by the host. Every one reads AEAT or the local profile; none submits
-//! a return. A definition outside this list is refused before it reaches the
+//! owned by the host. Every one reads AEAT or the local profile, or compares
+//! what the profile holds; none submits a return. A definition outside this list is refused before it reaches the
 //! relay, and adding one is a decision of its own.
 //!
 //! The tests pin the list to the shipped operation contract manifest.
@@ -60,10 +60,13 @@ impl Area {
 
 /// Every definition the commands may submit, with what it may do. Sorted, so
 /// a duplicate or a missing entry is visible.
-pub(super) const ADMITTED: [(&str, Kind); 12] = [
+pub(super) const ADMITTED: [(&str, Kind); 15] = [
     (READINESS, Kind::Readiness),
     ("auth.session.acquire", Kind::Session),
+    ("live.borrador.100.compare", Kind::Read),
     ("live.borrador.100.import", Kind::Capture),
+    ("live.borrador.100.query", Kind::Read),
+    ("live.borrador.100.read", Kind::Read),
     ("live.filed-capture.bulk", Kind::Capture),
     ("live.filed-discover", Kind::Capture),
     ("live.iva-wallet.history-capture", Kind::Capture),

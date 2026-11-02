@@ -34,15 +34,17 @@ from ..calculation_notes import (
     RECORDS_REASONS,
     note_attention,
     what_locale_key,
+    what_to_do_locale_key,
 )
 from ..finding_message_text import finding_message_text
 from ..source_policy import SourceSurface
+from ..work_form_declaration_facts import ModeloFormCalculationNote
 from ..work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ..work_form_header import attention_counts
-from ..work_form_issue_lines import DETAIL_LOCALE_KEYS, form_issue_lines, form_verdict
+from ..work_form_issue_lines import DETAIL_LOCALE_KEYS, ModeloFormIssueLine, form_issue_lines, form_verdict
 from ..work_form_models import (
-    ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
+    ModeloFormEditability,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloWorkForm,
@@ -375,3 +377,105 @@ def test_a_failed_result_a_blocking_finding_already_names_is_not_listed_twice(
 
     assert [line.level for line in lines] == [ModeloFormAttention.BLOCKS]
     assert blocking_count(form) == 1
+
+
+_AT_SOURCE_KEY = "workspace.modelo.issues.action.at_source"
+_AT_SOURCE_IF_APPLIES_KEY = "workspace.modelo.issues.action.at_source_if_applies"
+_ENTRY_NOTE_REASONS = (
+    ("unresolved_binding", _AT_SOURCE_KEY),
+    ("unhandled_binding_source", _AT_SOURCE_KEY),
+    ("prior_payment_not_deducted", _AT_SOURCE_KEY),
+    ("deferred_binding_source", _AT_SOURCE_IF_APPLIES_KEY),
+)
+_FILER_ENTRY_ACTION = "application.modelo.work_form.finding_action.enter_box_value"
+_WITHHOLDING_CREDIT = "0596"
+_TYPED_BOX = "0597"
+
+
+def _locked_beside_typed(
+    operation: PinnedAuthorityOperation, language: OutputLanguage
+) -> tuple[ModeloWorkForm, str, str]:
+    """The Modelo 100 form with the withholding credit as served (locked to its register) beside a box the filer types.
+
+    The built form carries no edit admission, so the second box is the form's own field
+    made typeable through the model's re-derivation rather than a hand-built copy.
+    """
+    built = built_form(operation, "100", 2025, "0A", language=language)
+
+    def typeable(field: ModeloFormField) -> ModeloFormField:
+        if field.box == _TYPED_BOX:
+            return revised_field(field, editability=ModeloFormEditability.EDITABLE_VALUE)
+        return field
+
+    form = map_form_fields(built, typeable)
+    by_box = {field.box: field for field in form.fields()}
+    assert by_box[_WITHHOLDING_CREDIT].editability is ModeloFormEditability.LOCKED_SOURCE
+    assert not by_box[_WITHHOLDING_CREDIT].takes_typed_value
+    assert by_box[_TYPED_BOX].takes_typed_value
+    return form, _WITHHOLDING_CREDIT, _TYPED_BOX
+
+
+def _line_of(lines: tuple[ModeloFormIssueLine, ...], form: ModeloWorkForm, box: str) -> ModeloFormIssueLine:
+    address = next(field.address for field in form.fields() if field.box == box)
+    return next(line for line in lines if line.address == address)
+
+
+@pytest.mark.parametrize("language", list(OutputLanguage))
+@pytest.mark.parametrize(("reason", "key"), _ENTRY_NOTE_REASONS)
+def test_a_note_about_a_box_that_takes_no_typed_value_never_offers_to_type_one(
+    operation: PinnedAuthorityOperation, language: OutputLanguage, reason: str, key: str
+) -> None:
+    say = _say(language)
+    form, locked, typed = _locked_beside_typed(operation, language)
+    notes = tuple(
+        ModeloFormCalculationNote(
+            reason=reason,
+            casilla_id=field.address.casilla_id,
+            box=field.box,
+            attention=note_attention(reason, box=field.box),
+        )
+        for field in form.fields()
+        if field.box in (locked, typed) and isinstance(field.address, ModeloFormCasillaAddressV1)
+    )
+    form = form.model_copy(update={"calculation_notes": notes})
+
+    lines = form_issue_lines(form, language)
+
+    on_locked, on_typed = _line_of(lines, form, locked), _line_of(lines, form, typed)
+    assert on_locked.action == say("workspace.modelo.issues.what_to_do", action=say(key))
+    assert on_typed.action == say(
+        "workspace.modelo.issues.what_to_do", action=say(what_to_do_locale_key(reason), box=typed)
+    )
+    assert on_locked.surface is SourceSurface.WITHHOLDING
+
+
+@pytest.mark.parametrize(
+    ("message_key", "entry_action", "at_source_key"),
+    [
+        (
+            "application.modelo.findings.xml_required_content_missing",
+            "application.modelo.work_form.finding_action.enter_required_statement",
+            _AT_SOURCE_KEY,
+        ),
+        (
+            "application.modelo.findings.art20_reduccion_possible",
+            "application.modelo.work_form.finding_action.check_possible_reduction",
+            _AT_SOURCE_IF_APPLIES_KEY,
+        ),
+    ],
+)
+def test_a_finding_about_a_box_that_takes_no_typed_value_never_offers_to_type_one(
+    operation: PinnedAuthorityOperation, message_key: str, entry_action: str, at_source_key: str
+) -> None:
+    say = _say(OutputLanguage.EN)
+    form, locked, typed = _locked_beside_typed(operation, OutputLanguage.EN)
+    findings = tuple(_finding(box).model_copy(update={"message_locale_key": message_key}) for box in (locked, typed))
+    flagged = _with_issues(form, *findings)
+    assert {issue.action_locale_key for issue in flagged.issues} == {entry_action}
+
+    lines = form_issue_lines(flagged, OutputLanguage.EN)
+
+    assert _line_of(lines, flagged, locked).action == say(
+        "workspace.modelo.issues.what_to_do", action=say(at_source_key)
+    )
+    assert _line_of(lines, flagged, typed).action == say("workspace.modelo.issues.what_to_do", action=say(entry_action))

@@ -48,6 +48,8 @@ LEDGER_COUNTERPARTY_TAX_ID_MAX = 256
 """The longest tax identifier a counterparty confirmation takes."""
 LEDGER_COUNTERPARTY_NOTE_MAX = 4096
 """The longest note a counterparty confirmation takes."""
+LEDGER_COUNTERPARTY_ASSERTED_BY_MAX = 256
+"""The longest attribution label a counterparty confirmation takes."""
 
 
 def _require_confirmation_action_fields(
@@ -101,7 +103,7 @@ class LedgerCounterpartyRequest(BaseModel):
     identification_state: CountryCodeAlpha2 | None = None
     evidenced_scope: str | None = Field(default=None, min_length=1, max_length=64)
     note: str = Field(default="", max_length=LEDGER_COUNTERPARTY_NOTE_MAX)
-    asserted_by: str | None = Field(default=None, max_length=256)
+    asserted_by: str | None = Field(default=None, max_length=LEDGER_COUNTERPARTY_ASSERTED_BY_MAX)
 
     @model_validator(mode="after")
     def _action_fields(self) -> LedgerCounterpartyRequest:

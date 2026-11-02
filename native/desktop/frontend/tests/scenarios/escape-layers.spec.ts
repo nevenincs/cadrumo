@@ -24,6 +24,72 @@ const open = async (page: Page, surface: "dialog" | "sheet" = "dialog") => {
   return { opener, layer };
 };
 
+for (const [key, reason] of [
+  ["Tab", "tab"],
+  ["Shift+Tab", "shift-tab"],
+])
+  test(`${key} closes an unmatched standalone combobox and returns to its trigger`, async ({
+    page,
+  }) => {
+    const { layer } = await open(page);
+    const trigger = layer.getByRole("button", { name: "Choice" });
+    await trigger.click();
+    await page
+      .getByRole("combobox", { name: "Choice", exact: true })
+      .fill("unmatched-zzzz-query");
+    await expect(page.getByRole("option")).toHaveCount(0);
+    await page.keyboard.press(key!);
+    await expect(page.locator('[data-slot="combobox"]')).toHaveCount(0);
+    await expect(trigger).toBeFocused();
+    await expect(layer.getByTestId("cancels")).toHaveText(reason!);
+    await expect(layer).toBeVisible();
+  });
+
+test("keyboard suggestions reveal wrapped options without scrolling their dialog", async ({
+  page,
+}) => {
+  await page.goto("/primitives.html?harness=layers&tallSuggestions");
+  await page.getByRole("button", { name: "Open dialog" }).click();
+  const layer = page.getByRole("dialog", { name: "Layers" });
+  const input = layer.getByLabel("Text", { exact: true });
+  await input.fill("Choice");
+  await page.keyboard.press("ArrowUp");
+  const list = page.getByRole("listbox");
+  await expect(list.getByRole("option")).toHaveCount(8);
+  const parentScroll = await layer.evaluate((element) => ({
+    page: window.scrollY,
+    dialog: element.scrollTop,
+  }));
+  const visible = async () => {
+    await expect
+      .poll(() =>
+        list.evaluate((element) => {
+          const selected = element.querySelector('[aria-selected="true"]');
+          if (!selected) return false;
+          const box = element.getBoundingClientRect();
+          const item = selected.getBoundingClientRect();
+          return item.top >= box.top - 1 && item.bottom <= box.bottom + 1;
+        }),
+      )
+      .toBe(true);
+    await expect(input).toBeFocused();
+  };
+  await visible();
+  await page.keyboard.press("ArrowDown");
+  await visible();
+  for (let at = 0; at < 7; at++) await page.keyboard.press("ArrowDown");
+  await visible();
+  expect(
+    await layer.evaluate((element) => ({
+      page: window.scrollY,
+      dialog: element.scrollTop,
+    })),
+  ).toEqual(parentScroll);
+  await page.keyboard.press("Enter");
+  await expect(input).toHaveValue("Choice 8");
+  await expect(list).toHaveCount(0);
+});
+
 /** Each layer that opens over the dialog, how it is opened, what shows it is
  * up, and what must hold focus once it has gone. */
 type Case = {

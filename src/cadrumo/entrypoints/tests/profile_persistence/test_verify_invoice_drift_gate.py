@@ -35,6 +35,7 @@ from cadrumo.application.aggregation.invoice_filing_fingerprint import (
     evaluate_invoice_fingerprint,
     invoice_row_fingerprint,
 )
+from cadrumo.application.aggregation.renta_imputation import declared_imputation_criteria
 from cadrumo.application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
     remove_catalogue_invoice,
@@ -575,6 +576,7 @@ def test_m130_scope_is_the_invoices_linked_to_a_contributor(tmp_path: Path) -> N
                 revision=revision,
                 contributors=frozenset({contributor}),
                 ports=ports,
+                criteria=declared_imputation_criteria(None),
                 captured_at=_T1,
             )
             assert snapshot is not None
@@ -589,6 +591,7 @@ def test_m130_scope_is_the_invoices_linked_to_a_contributor(tmp_path: Path) -> N
                 revision=revision,
                 contributors=frozenset({contributor}),
                 ports=ports,
+                criteria=declared_imputation_criteria(None),
             )
     assert verdict.changed == (linked.invoice_id,)
 
@@ -619,6 +622,7 @@ def test_m369_exterior_period_scope_has_no_issue_date_span(tmp_path: Path) -> No
                 revision=revision,
                 contributors=frozenset(),
                 ports=build_invoice_catalogue_read_ports(bucket_id=_BUCKET),
+                criteria=declared_imputation_criteria(None),
                 captured_at=_T1,
             )
     assert snapshot is not None
@@ -662,6 +666,7 @@ def _edited(update: dict[str, object]) -> Invoice:
         {"suplido_amount": Decimal("1")},
         {"collected_on_behalf_of_tax_id": "A58818501"},
         {"collected_on_behalf_of_name": "BENEFICIARIO"},
+        {"rectifies_invoice_number": "P-000"},
         {"line.subtotal": Decimal("2400.00")},
         {"line.iva_amount": Decimal("500.00")},
     ],
@@ -691,6 +696,17 @@ def test_every_calculation_fact_moves_the_row_digest(update: dict[str, object]) 
 )
 def test_display_facts_do_not_move_the_row_digest(update: dict[str, object]) -> None:
     assert invoice_row_fingerprint(_edited(update)) == invoice_row_fingerprint(_base_invoice())
+
+
+def test_a_stored_older_version_keeps_reading_its_own_fields() -> None:
+    """A version-1 digest is what a stored draft holds, so what version 2 adds must not move it."""
+    edited = _edited({"rectifies_invoice_number": "P-000"})
+    assert invoice_row_fingerprint(edited, field_set_version=1) == invoice_row_fingerprint(
+        _base_invoice(), field_set_version=1
+    )
+    assert invoice_row_fingerprint(edited, field_set_version=2) != invoice_row_fingerprint(
+        _base_invoice(), field_set_version=2
+    )
 
 
 def test_digest_is_canonical_over_decimal_scale_and_order() -> None:

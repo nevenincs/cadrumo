@@ -1,10 +1,3 @@
-// The requests that create an element, correct it and change its baja, built
-// from what a form states. A request carries a whole revision of the
-// register, so each form field names the path in the revision it states, and
-// the revision is put together from those paths. Nothing here judges a fact:
-// the backend validates the revision, and a refusal comes back with its
-// reason.
-
 import type {
   AcquisitionCandidate,
   ActivityAssetCorrectRequest,
@@ -22,9 +15,15 @@ import {
   revisionPathOf,
   requiresVehicle,
   factsOfOtherConditions,
-  type FormValue,
-  type FormValues,
 } from "./assetFields";
+import type { FormValue, FormValues } from "./assetFormValues";
+
+// The requests that create an element, correct it and change its baja, built
+// from what a form states. A request carries a whole revision of the
+// register, so each form field names the path in the revision it states, and
+// the revision is put together from those paths. Nothing here judges a fact:
+// the backend validates the revision, and a refusal comes back with its
+// reason.
 
 /** The revision a correction supersedes, with its identity. */
 export type RevisionBase = {

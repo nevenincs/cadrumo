@@ -80,6 +80,25 @@ required_text = [
     "más los intereses de demora",
 ]
 
+[legal."rd-439-2007:art-62"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-439-2007.html#a62"
+document_id = "BOE-A-2007-6820"
+article = "62"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2007-6820#a62"
+published_at = 2007-03-31
+effective_from = 2007-04-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-02
+reviewed_by = "agent-authored from bundled rd-439-2007.html#a62; operator to re-stamp"
+notes = "RIRPF art 62: autoliquidación e ingreso. Apartado 1 regulates the suspension of the amount payable against the spouse's refund (art. 97.6 LIRPF); apartado 2 lets the amount resulting from the return be paid in two parts, 60 per cent on filing and the remaining 40 per cent later, without interest or surcharge, when the return is filed within its period. It sets no rule for rounding a part to the cent."
+required_text = [
+    "Autoliquidación e ingreso.",
+    "en dos partes: la primera, del 60 por ciento de su importe, en el momento de presentar la declaración, y la segunda, del 40 por ciento restante",
+]
+
 [legal."rd-439-2007:art-72"]
 evidence_tier = "legal_authority"
 authority = "boe"

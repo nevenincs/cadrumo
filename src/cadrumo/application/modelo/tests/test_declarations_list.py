@@ -286,7 +286,7 @@ def test_each_row_names_its_step_and_keeps_the_aeats_facts_beside_its_own() -> N
     }
 
     fix = rows["a" * 64]
-    assert (fix.next_step, fix.blocking_count, fix.opens_local_work) == (DeclarationListNextStep.FIX, 2, False)
+    assert (fix.next_step, fix.blocking_count, fix.opens_local_work) == (DeclarationListNextStep.FIX, 2, True)
     assert fix.work_unit_id == "a" * 64
     assert fix.state_words.startswith("▲ ")
     ready = rows["b" * 64]
@@ -439,15 +439,15 @@ def test_the_list_says_what_it_could_read_and_never_passes_a_partial_read_for_ev
     assert source_notices(_workspace(), calendar, OutputLanguage.EN) == (aeat_read,)
 
 
-def test_a_deadline_short_of_the_regional_holidays_is_noted_and_a_final_one_is_not() -> None:
+def test_a_deadline_without_its_holiday_calendar_is_noted_and_a_national_one_is_final() -> None:
     national = _entry(external=False)
-    regional = national.model_copy(update={"holiday_coverage": DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY})
+    unverified = national.model_copy(update={"holiday_coverage": DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE})
 
-    noted = deadline_note_words(declaration_list_rows(_workspace(), _calendar(national)), OutputLanguage.ES)
-    final = deadline_note_words(declaration_list_rows(_workspace(), _calendar(regional)), OutputLanguage.ES)
+    noted = deadline_note_words(declaration_list_rows(_workspace(), _calendar(unverified)), OutputLanguage.ES)
+    final = deadline_note_words(declaration_list_rows(_workspace(), _calendar(national)), OutputLanguage.ES)
 
-    assert noted == holiday_coverage_statement(DeadlineHolidayCoverage.NATIONAL_ONLY, None, OutputLanguage.ES)
-    assert noted != holiday_coverage_statement(DeadlineHolidayCoverage.NATIONAL_ONLY, None, OutputLanguage.EN)
+    assert noted == holiday_coverage_statement(DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE, OutputLanguage.ES)
+    assert noted != holiday_coverage_statement(DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE, OutputLanguage.EN)
     assert final is None
 
 
@@ -459,7 +459,10 @@ def test_the_public_list_carries_what_it_could_read_and_the_dialogs_addresses_an
         profile_id=UUID("13000000-0000-4000-8000-000000000450"), output_language=OutputLanguage.EN
     )
 
-    projection = project_declarations_list(request, workspace, _calendar(_entry(external=False)))
+    unverified = _entry(external=False).model_copy(
+        update={"holiday_coverage": DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE}
+    )
+    projection = project_declarations_list(request, workspace, _calendar(unverified))
 
     assert [zone.zone for zone in projection.zones] == list(DeclarationsWorkspaceZone)
     assert {source.source for source in projection.sources} == set(DeclarationsCalendarSource)

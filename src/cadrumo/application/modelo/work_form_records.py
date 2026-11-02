@@ -232,8 +232,11 @@ def _saved_row_column_records(
 ) -> tuple[bool, tuple[ModeloFormRepeatingRow, ...]]:
     """Read a group whose columns each name the row binding they show.
 
-    A box total with no rows behind it comes from a calculation saved before the rows were
-    recorded, so those rows stay unknown rather than read as none.
+    Saved rows are known. A group with no saved rows is known-empty only when the
+    calculation persisted a source trace naming one of its boxes, which is the
+    source's positive statement that it enumerated the rows and found none (a
+    stated zero count, for instance). Without that trace the rows were never
+    supplied, so they stay unknown rather than read as none.
     """
     columns = _bound_row_columns(block)
     if not columns:
@@ -244,9 +247,14 @@ def _saved_row_column_records(
         for index, raw in revision.row_binding_values.get(str(column.binding_id), {}).items():
             target = str(column.casilla_id)
             _put_row_value(by_row, int(index), target, _saved_value(raw, data_types.get(target, "text")))
-    if not by_row and any(revision.casilla_values.get(str(column.casilla_id)) for column in columns):
+    if not by_row and not _source_enumerated(revision, columns):
         return False, ()
     return True, _rows_from_values(by_row, tuple(column.casilla_id for column in block.columns))
+
+
+def _source_enumerated(revision: CalculationRevision, columns: tuple[FormRepeatingColumn, ...]) -> bool:
+    boxes = {str(column.casilla_id) for column in columns}
+    return any(boxes.intersection(source.source_casilla_ids) for source in revision.source_provenance)
 
 
 def _bound_row_columns(block: FormRepeatingGroupBlock) -> tuple[FormRepeatingColumn, ...]:

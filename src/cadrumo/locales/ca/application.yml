@@ -472,6 +472,10 @@ application:
           rebut d'exportació.
         rendered_payload_empty: El disseny d'exportació ha produït un contingut de
           declaració buit.
+        shared_casilla_cells_unadjudicated: 'No s''ha generat el fitxer de la declaració:
+          les caselles %{casilla_ids} tenen un valor que el disseny oficial escriuria
+          en diverses cel·les, i encara no s''ha confirmat que aquestes cel·les signifiquin
+          el mateix. Escriure''l portaria aquestes xifres a conceptes que no els corresponen.'
         verify_draft_snapshot_stale: La comprovació requereix un esborrany construït
           amb les definicions del model en ús.
         xml_schema_unreadable: No s'ha pogut aplicar l'esquema oficial d'aquest exercici
@@ -486,6 +490,8 @@ application:
           l'esquema oficial.
         xml_value_not_listed: La casella %{box} conté un valor fora de les opcions
           que enumera l'esquema oficial.
+        xml_value_required_missing: L'esquema oficial exigeix la casella %{box} i
+          no té valor. Indica-la abans d'exportar; no s'ha escrit res.
         xml_value_too_long: La casella %{box} té %{observed} caràcters; l'esquema
           oficial n'admet com a màxim %{limit}.
         xml_value_too_many_decimals: La casella %{box} té %{observed} decimals; l'esquema
@@ -1007,6 +1013,59 @@ application:
           tu.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Coincideixen
+          differ: Difereixen
+          not_comparable: No es poden comparar
+          only_in_borrador: Només a l’esborrany de l’AEAT
+          only_in_calculation: Només al teu càlcul
+        evidence:
+          borrador: L’AEAT el va imprimir al seu esborrany i el vas importar aquí.
+            És una observació, no una declaració autenticada.
+          calculation: Calculat en aquest equip a partir dels teus registres. És local,
+            no una presentació davant l’AEAT.
+        reason:
+          borrador_does_not_read_box: La importació de l’esborrany no llegeix aquesta
+            casella, així que la manca d’un valor de l’esborrany no en diu res.
+          borrador_printed_no_value: El teu càlcul té un valor, però l’esborrany de
+            l’AEAT no n’imprimeix cap en aquesta casella.
+          borrador_value_ambiguous: L’esborrany de l’AEAT té més d’un valor per a
+            aquesta casella, així que no es pot comparar.
+          borrador_value_not_kept: L’esborrany de l’AEAT imprimeix aquesta casella,
+            però la importació no en desa el valor, així que no es pot comparar.
+          calculation_blocked: El teu càlcul no va poder resoldre aquesta casella,
+            així que no es pot comparar.
+          calculation_has_no_value: L’esborrany de l’AEAT imprimeix un valor, però
+            el teu càlcul no en té cap en aquesta casella.
+          calculation_not_applicable: El teu càlcul mostra que aquesta casella no
+            et correspon, però l’esborrany de l’AEAT imprimeix un valor.
+          not_applicable_zero: L’esborrany de l’AEAT imprimeix zero i el teu càlcul
+            mostra que aquesta casella no et correspon.
+          same_value: L’esborrany de l’AEAT i el teu càlcul tenen el mateix valor.
+          taken_from_borrador: El teu càlcul va prendre aquest valor de l’esborrany
+            de l’AEAT, així que la coincidència no el confirma de manera independent.
+          value_kinds_differ: Un costat té un import i l’altre un text, així que no
+            es poden comparar.
+          values_differ: L’esborrany de l’AEAT i el teu càlcul tenen valors diferents.
+        stale:
+          calculation_outdated: Les regles van canviar després de desar el teu càlcul,
+            així que cal recalcular-lo.
+          calculation_used_other_capture: El teu càlcul es va fer a partir d’un esborrany
+            de l’AEAT diferent del que es compara aquí.
+          newer_capture_refused: Hi ha desat un esborrany que vas importar més tard,
+            però no es pot llegir, així que aquesta comparació en fa servir un d’anterior.
+        status:
+          capture_refused: Hi ha esborranys de l’AEAT desats per a aquest any, però
+            cap no es pot llegir amb les regles actuals; torna a importar l’esborrany.
+          compared: S’han comparat casella per casella l’esborrany de l’AEAT que vas
+            importar i el teu càlcul desat.
+          no_calculation: Aquesta declaració encara no té cap càlcul desat, així que
+            l’esborrany no es pot comparar; calcula-la primer.
+          no_capture: No has importat cap esborrany de l’AEAT per a aquest any, així
+            que no hi ha res a comparar.
+          stale: S’han llegit tots dos, però ja no es corresponen; recalcula o torna
+            a importar l’esborrany abans de refiar-te d’aquesta comparació.
       errors:
         binding_keys_not_admitted: 'Aquest esborrany desat té valors amb claus que
           les definicions del model no admeten, així que no es pot fer servir; torna
@@ -1014,6 +1073,9 @@ application:
         binding_value_key_blank: Les claus dels valors de l'esborrany no poden estar
           buides.
         bucket_id_blank: L'identificador del bucket de l'esborrany no pot estar buit.
+        printed_observations_unresolved: 'Aquest esborrany desat conserva valors impresos
+          de caselles que les definicions del model ja no identifiquen, així que no
+          es pot fer servir; torna a importar el document: %{casillas}.'
         snapshot_id_blank: L'identificador del snapshot de l'esborrany no pot estar
           buit.
         snapshot_not_found: Cap snapshot de l'esborrany coincideix amb l'identificador
@@ -1160,8 +1222,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Les claus dels valors aportats no poden estar en
-          blanc.
         decimal_value_invalid: El valor d'esborrany per a l'origen numèric %{binding_id}
           ha de ser compatible amb decimal.
         forbidden_bindings: 'L''esborrany conté valors que les definicions del model
@@ -1298,6 +1358,12 @@ application:
           comprovacions retenen, així que no pots exportar-la tal com està.
         what_to_do: Torna a calcular la declaració, comprova-la i registra-la una
           altra vegada; el nou registre substitueix aquest.
+      household_rows_incomplete:
+        what: El teu perfil indica més persones en aquest grup de les que registra,
+          així que la declaració només fa servir les persones registrades i no dona
+          el grup per complet.
+        what_to_do: Afegeix al teu perfil les persones que falten o corregeix el nombre,
+          i torna a calcular.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció
@@ -1398,6 +1464,17 @@ application:
           així que Cadrumo no ha calculat aquest impost.
         what_to_do: No has de fer res si no vas fer aquest tipus de vendes. Si en
           vas fer, escriu tu els imports.
+      precedence_tier_divergence:
+        what: Dues fonts tenen valors diferents per a una xifra que arriba a la casella
+          {box}, i Cadrumo ha fet servir la que té prioritat.
+        what_to_do: Compara les fonts i corregeix la que sigui incorrecta; després
+          torna a calcular. La comprovació, l'exportació i el registre esperen fins
+          que coincideixin.
+      precedence_tier_divergence_advisory:
+        what: Dues fonts tenen valors diferents per a una xifra de treball, i Cadrumo
+          ha fet servir la que té prioritat.
+        what_to_do: Compara les fonts i corregeix la que sigui incorrecta. Cap casella
+          exportada no depèn d'aquesta xifra.
       prior_payment_minoracion_not_captured:
         what: La minoració que ve de pagaments anteriors no està anotada a la casella
           {box}.
@@ -1618,6 +1695,7 @@ application:
       disposal_zero_result: '{element}: la seva venda el {date}, amb {transmission_value}
         de valor de transmissió i {net_value} de valor net, no dona ni guany ni pèrdua,
         així que cap casella no la recull.'
+      household_rows_incomplete: '{group}: {stated} indicades, {recorded} registrades.'
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
@@ -1652,6 +1730,21 @@ application:
       row_unregistered_undated: Un moviment registra un element que no consta al teu
         registre.
     calc_diagnostic_words:
+      income_class:
+        actividad_economica: activitats econòmiques
+        arrendamiento_inmueble_urbano: arrendament d'immoble urbà
+        arrendamiento_inmueble_urbano_actividad: arrendament d'immoble urbà com a
+          activitat econòmica
+        atribucion_actividad_economica: rendes atribuïdes d'activitats econòmiques
+        atribucion_capital_inmobiliario: rendes atribuïdes de capital immobiliari
+        atribucion_capital_mobiliario: rendes atribuïdes de capital mobiliari
+        atribucion_ganancia_patrimonial: rendes atribuïdes de guanys patrimonials
+        capital_mobiliario: rendiments del capital mobiliari
+        ganancia_patrimonial: guanys patrimonials
+        imputacion_aie_ute: imputació d'AIE i UTE
+        imputacion_derechos_imagen: imputació de drets d'imatge
+        other: una altra renda
+        trabajo: rendiments del treball
       named_element: «{name}»
       unnamed_element: Un element sense nom
     calculation_report:
@@ -1825,6 +1918,9 @@ application:
       amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind}
         no està legalment disponible per al model {modelo}, exercici {filing_year},
         període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
+      amendment_later_period_only: El model {modelo} de l'exercici {filing_year} i
+        període {period} no admet corregir una autoliquidació ja presentada. Practica
+        l'ajust en l'autoliquidació d'un període posterior.
       amendment_registry_root_missing: La generació publicada de l'autoritat %{missing_path}
         no existeix; no es poden validar les sobreescriptures de la rectificació.
       amendment_registry_snapshot_unresolved: No s'han pogut resoldre les definicions
@@ -2271,6 +2367,10 @@ application:
         el model %{modelo} %{filing_year}, %{period} (%{changed_count} modificades,
         %{removed_count} eliminades, %{added_count} afegides). Torna a calcular-lo
         abans de verificar-lo.
+      invoice_fingerprint_narrower_scope: Aquest càlcul del model %{modelo} %{filing_year},
+        %{period} és anterior al seguiment de les factures meritades sense moviment
+        bancari, així que Cadrumo no pot saber si han canviat des d'aleshores. Torna
+        a calcular-lo per començar a seguir-les.
       invoice_fingerprint_unavailable: Cadrumo no ha pogut llegir les teves factures
         per comparar-les amb el model %{modelo} %{filing_year}, %{period}, així que
         no es pot confirmar que aquest càlcul estigui al dia. Torna-ho a provar quan
@@ -2279,6 +2379,11 @@ application:
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració
         no es pot completar.
+      iva_cuota_disagrees_with_rate: L'entrada d'IVA amb data %{transaction_date}
+        registra una quota de %{recorded_cuota} EUR, però la seva base de %{base_amount}
+        EUR al tipus del %{iva_rate_percent} % dona %{expected_cuota} EUR. Corregeix
+        la quota, la base o el tipus i torna a calcular abans de comprovar aquesta
+        declaració.
       iva_import_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
         %{transaction_currency} necessita la declaració duanera de la importació.
         Cadrumo encara no pot registrar-la, de manera que aquesta declaració no pot
@@ -2349,6 +2454,8 @@ application:
         de l''estimació objectiva (mòduls).'
       oss_evidence_missing: Aquesta declaració inclou operacions de finestreta única
         (OSS), però no hi ha justificants desats d'aquestes operacions.
+      oss_no_activity_contradicted: Has declarat aquest període sense activitat, però
+        hi ha factures del règim. Treu la declaració o revisa aquestes factures.
       oss_source_unrouted: Algunes operacions de finestreta única (OSS) no es compten
         a cap casella d'aquest model.
       printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
@@ -2364,10 +2471,16 @@ application:
         per presentar-lo.
       registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
         de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
+      scheme_period_contradicted: El valor {entered} de {binding_id} contradiu el
+        període d'aquest treball, que és {expected}. Corregeix-lo o obre el treball
+        del període correcte.
       selected_option_requires_nonzero: L’opció seleccionada exigeix un valor diferent
         de zero en aquest camp.
       selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit
         en aquest camp.
+      shared_casilla_cells_unadjudicated: 'La casella %{casilla_id} té un valor que
+        l''exportació escriuria també en cel·les que encara no s''ha confirmat que
+        signifiquin el mateix: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: Aquesta declaració recull
         rendiments del capital mobiliari de l'estalvi, però no hi consta cap retenció
         suportada. Introdueix l'import del certificat de retencions i ingressos a
@@ -2417,6 +2530,13 @@ application:
         tots els períodes que no hi va haver retencions. Registra les percepcions
         de cada perceptor al detall d''aquest model, o confirma cada període al teu
         perfil.'
+      xml_required_content_missing: L'esquema oficial exigeix la casella %{box} i
+        no té valor, així que l'exportació rebutjaria aquesta declaració.
+      xml_return_not_rendered: No es pot generar el fitxer de la declaració a partir
+        d'aquest càlcul, així que l'exportació el rebutjaria. Revisa les teves dades
+        identificatives i les xifres de la declaració.
+      xml_value_refused: La casella %{box} té un valor que l'esquema oficial no admet,
+        així que l'exportació rebutjaria aquesta declaració.
     help:
       constraint:
         at_least: Com a mínim {minimum}.
@@ -2497,10 +2617,44 @@ application:
           canal decimal %{binding_id} té un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per a l'origen de valor %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides.
+    projection_words:
+      binding_unresolved: No s'ha pogut treure cap valor per a aquesta xifra a partir
+        dels teus registres, així que queda sense resoldre en lloc de comptar com
+        a zero. Registra l'evidència que falta i torna a projectar.
+      casilla_reason:
+        m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
+          general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
+          així que no té valor.
+        m210_convenio_rate_missing: Aquesta casella necessita el tipus del conveni
+          per evitar la doble imposició segons el país i la classe de renda, que no
+          està disponible, així que no té valor.
+        other: Aquesta casella no s'ha pogut calcular, així que no té valor. Mai es
+          mostra com a zero.
+        unresolved_operand: Aquesta casella suma o llegeix una xifra que encara no
+          té valor, així que ella tampoc no en té. Mai es mostra com a zero.
+        waived_refund_result_unsupported: Encara no s'admet el resultat quan renuncies
+          a cobrar la devolució, així que aquesta casella no té valor. Mai es mostra
+          com a zero.
     quickfile:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha
         rebutjat amb %{error_code}.'
+    taxation_comparison_words:
+      below_materiality: Els dos resultats difereixen en {difference}, menys de {threshold},
+        així que tant se val quina de les dues modalitats triïs.
+      conjunta_lower_result: 'La tributació conjunta surt més barata: el teu resultat
+        és {conjunta} en conjunta i {individual} en individual, una diferència de
+        {difference}.'
+      individual_branch_caveat: La xifra individual és una única declaració calculada
+        amb les dades conjuntes de tota la teva unitat familiar, així que només és
+        fiable quan una sola persona aporta els ingressos de la llar. No calcula dues
+        declaracions separades, una amb els ingressos de cada cònjuge, i aquesta comparació
+        encara no està disponible. Si a la teva unitat familiar hi ha dues persones
+        amb ingressos, pren la xifra individual com una orientació aproximada, no
+        com l'import que has de presentar.
+      individual_lower_result: 'La tributació individual surt més barata: el teu resultat
+        és {individual} en individual i {conjunta} en conjunta, una diferència de
+        {difference}.'
     value_date:
       month_01: de gen.
       month_02: de febr.
@@ -2551,6 +2705,7 @@ application:
           detall d'aquest model, o confirma cada període al teu perfil.
         enter_payee_payments: Introdueix les percepcions de cada perceptor al detall
           d'aquest model i torna a comprovar.
+        enter_required_statement: Omple aquesta casella i torna a calcular.
         enter_withholding_certificate: Introdueix la retenció que figura al certificat
           de retencions i ingressos a compte del teu pagador i torna a calcular.
         file_another_way: Cadrumo encara no pot preparar aquesta declaració per presentar-la.
@@ -2566,6 +2721,9 @@ application:
           exemptes o per sota del llindar de retenció.
         settle_earlier_declaration: Resol primer la declaració del període anterior
           i torna a calcular.
+        shared_box_awaits_review: 'Cadrumo encara no pot exportar aquesta casella.
+          No la buidis per continuar: presenta aquesta declaració amb una altra eina
+          o espera que se''n revisin les cel·les.'
       inspection_heading: Totes les caselles, per número de casella
       unnamed_box: Casella sense nom
   operations:
@@ -2584,17 +2742,9 @@ application:
       holiday_coverage:
         calendar_unavailable: calendari de festius no disponible; el termini original
           no s'ha comprovat
-        national_and_territory: festius nacionals i de %{territory} comprovats; festius
-          locals sense comprovar
-        national_and_territory_without_name: festius nacionals i autonòmics aplicables
-          comprovats; festius locals sense comprovar
-        national_only: només festius nacionals; festius autonòmics i locals sense
-          comprovar
+        national_only: dissabtes, diumenges i dies inhàbils estatals comprovats; els
+          festius autonòmics i locals no mouen el termini de presentació
         not_shifted: el termini d'aquest model no es trasllada per dies inhàbils
-        territory_unverified: només festius nacionals; els festius autonòmics de %{territory}
-          d'aquest any no s'han comprovat i els locals no es comproven
-        territory_unverified_without_name: només festius nacionals; el calendari autonòmic
-          aplicable no està verificat; els festius locals no es comproven
       shift:
         business_day: Dia hàbil
         calendar_unavailable: Calendari no disponible
@@ -2894,6 +3044,24 @@ application:
             a una fórmula de full de càlcul.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: La data de naixement de l'ascendent %{row} no
+        és una data vàlida; escriu-la com any-mes-dia.
+      ascendant_birth_date_required: L'ascendent %{row} no té data de naixement, i
+        cada ascendent en necessita una.
+      ascendant_convivientes_invalid: El nombre de descendents amb qui conviu l'ascendent
+        %{row} ha de ser un nombre enter de 0 a %{limit}.
+      ascendant_death_before_birth: L'ascendent %{row} té una data de defunció anterior
+        a la data de naixement.
+      ascendant_death_date_invalid: La data de defunció de l'ascendent %{row} no és
+        una data vàlida; escriu-la com any-mes-dia.
+      ascendant_fact_unsupported: L'ascendent %{row} indica una dada que el perfil
+        no guarda per a un ascendent.
+      ascendant_limit_unknown: El disseny de la declaració no indica cap límit d'ascendents,
+        així que la llista no es pot comprovar ni desar.
+      ascendant_nif_invalid: El NIF o NIE de l'ascendent %{row} no és vàlid; revisa'n
+        les lletres i xifres.
+      ascendant_rows_over_limit: Una declaració inclou com a màxim %{limit} ascendents
+        i se n'han indicat %{count}.
       censal_read_identity_absent: La lectura censal no inclou cap NIF, de manera
         que no es pot confirmar que correspongui a aquest perfil.
       censal_read_identity_cleared: El NIF d'aquest perfil s'ha buidat, de manera
@@ -2962,6 +3130,18 @@ application:
         escrit res.
       row_unknown_field: 'La secció ''%{section}'' no declara aquests camps: %{unknown}.
         Camps disponibles: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Data de naixement
+        convivientes:
+          label: Nombre de descendents amb els quals conviu aquest ascendent
+        fallecimiento:
+          help: Deixa-ho en blanc si aquest ascendent no ha mort.
+          label: Data de defunció
+        nif:
+          label: NIF/NIE de l'ascendent (deixa'l en blanc si no en té)
+      incomplete: '{stated} indicades, {recorded} registrades'
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'

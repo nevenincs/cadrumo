@@ -11,6 +11,8 @@ from decimal import Decimal
 from typing import ClassVar
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import normalise_supported_language, output_language
 from ...core.period import Period
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
@@ -115,7 +117,8 @@ _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
 # a registry field and token, never a taxpayer figure, and without it the marker
 # could not say which stored value to correct.
 _DATED_ROW_SAMPLE_LIMIT = 3
-_DATED_ROW_PREFIX_LENGTH = 12
+# Hex characters of a ledger id named in a message; the ledger commands accept any prefix of it.
+_SAMPLED_LEDGER_ID_PREFIX_LENGTH = 12
 
 _IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
     {
@@ -126,7 +129,21 @@ _IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
 )
 
 
+# Reasons whose detail carries the row's own figures, worded in the filer's language. The figures reach the
+# operator in the live diagnostic only: the persisted issue replaces the message by a fixed marker.
+_IVA_SELECTED_SCOPE_FIGURE_REASONS = frozenset({IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE})
+
+
+def _selected_scope_iva_evidence_language(issue: IvaLedgerAggregationIssue) -> OutputLanguage | None:
+    """The language the message is worded in, for a reason whose message is the filer's own sentence."""
+    if issue.reason not in _IVA_SELECTED_SCOPE_FIGURE_REASONS:
+        return None
+    return OutputLanguage(normalise_supported_language(output_language()) or OutputLanguage.EN.value)
+
+
 def _selected_scope_iva_evidence_message(issue: IvaLedgerAggregationIssue) -> str:
+    if issue.reason in _IVA_SELECTED_SCOPE_FIGURE_REASONS:
+        return issue.detail
     marker = f"selected-scope IVA evidence failure: {issue.reason.value}"
     # A row dated by its bank movement carries the sentence too: without it the
     # marker blames the rate when the missing fact may be the operation date.
@@ -149,6 +166,7 @@ def _selected_scope_iva_evidence_diagnostics(
             resolver_id=resolver_id,
             source_ref=f"transaction:{issue.transaction_id}",
             message=_selected_scope_iva_evidence_message(issue),
+            message_language=_selected_scope_iva_evidence_language(issue),
         )
         for issue in issues
         if issue.reason in _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS
@@ -158,7 +176,7 @@ def _selected_scope_iva_evidence_diagnostics(
 def _ledger_row_sample(ledger_ids: Sequence[str]) -> str:
     """Name a few rows by the id prefix the ledger commands accept."""
     ordered = sorted(ledger_ids)
-    sample = ", ".join(ledger_id[:_DATED_ROW_PREFIX_LENGTH] for ledger_id in ordered[:_DATED_ROW_SAMPLE_LIMIT])
+    sample = ", ".join(ledger_id[:_SAMPLED_LEDGER_ID_PREFIX_LENGTH] for ledger_id in ordered[:_DATED_ROW_SAMPLE_LIMIT])
     elided = len(ordered) - _DATED_ROW_SAMPLE_LIMIT
     return f"{sample} and {elided} more" if elided > 0 else sample
 

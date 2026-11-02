@@ -511,7 +511,7 @@ pub fn install(path: &Path) -> MaintenanceResult {
         admitted_artifacts.push((&plan.registration_product, custody));
     }
     for (artifact, custody) in admitted_artifacts {
-        if let Err(refusal) = windows::verify_installation_destinations_for_scope(
+        if let Err(refusal) = windows::destinations::verify_installation_destinations_for_scope(
             &artifact.path,
             &plan.prefix,
             custody,
@@ -520,10 +520,12 @@ pub fn install(path: &Path) -> MaintenanceResult {
             return report(
                 Outcome::Refused,
                 match refusal {
-                    windows::DestinationRefusal::Inventory => {
+                    windows::destinations::DestinationRefusal::Inventory => {
                         "installation_destination_inventory_refused"
                     }
-                    windows::DestinationRefusal::TooLong => "installation_destination_too_long",
+                    windows::destinations::DestinationRefusal::TooLong => {
+                        "installation_destination_too_long"
+                    }
                 },
             );
         }
@@ -701,7 +703,10 @@ pub fn install(path: &Path) -> MaintenanceResult {
         .join(&plan.version);
     let idle = (|| -> Result<(), Error> {
         for files in recovery::existing_package_files(&package)?.chunks(256) {
-            if !windows::file_users(files).map_err(native_error)?.is_empty() {
+            if !windows::restart_manager::file_users(files)
+                .map_err(native_error)?
+                .is_empty()
+            {
                 return Err(Error::Busy);
             }
         }
@@ -771,9 +776,11 @@ pub fn install(path: &Path) -> MaintenanceResult {
                 .stop_service(&registration.owner, &mut service_restart)
                 .map_err(native_error)?;
         }
-        Ok(windows::file_users(std::slice::from_ref(&stable_manager))
-            .map_err(native_error)?
-            .is_empty())
+        Ok(
+            windows::restart_manager::file_users(std::slice::from_ref(&stable_manager))
+                .map_err(native_error)?
+                .is_empty(),
+        )
     })();
     if !matches!(stable_available, Ok(true)) {
         return rollback_prepared(

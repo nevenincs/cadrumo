@@ -1,12 +1,8 @@
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
-import { PercentEditor } from "@/components/editors/PercentEditor";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { cn } from "@/components/ui/cn";
-import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -15,72 +11,65 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Spinner } from "@/components/ui/spinner";
-import { useTableView, type ViewColumn } from "@/components/ui/table-view";
-import { facts, factsGap, labelled, listed } from "@/shell/compose";
+import { facts, factsGap, labelled } from "@/shell/compose";
 import type {
   CatalogueInvoice,
+  LedgerInvoiceMatchJudgement,
   LedgerPort,
   LedgerRow,
   OutputLanguage,
 } from "../../../shell/ledger";
-import type { StepOutcome, StepReport } from "../../../shell/ledgerApply";
-import { classifyCells } from "../../../shell/ledgerCommands";
-import { parsePercent } from "../../../shell/ledgerGrammar";
+import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
+import type { StepOutcome } from "../../../shell/ledgerApply";
 import {
-  checkOnce,
   stagedCheckRequest,
   useStagedCheck,
   type StagedCheck,
 } from "../../../shell/ledgerStagedCheck";
-import {
-  planApply,
-  type LedgerPlan,
-  type PlanBlocker,
-  type PlanStep,
-} from "../../../shell/ledgerPlan";
+import { planApply, type LedgerPlan } from "../../../shell/ledgerPlan";
 import {
   actionRows,
   storedFieldValue,
   type DraftField,
   type StageEvent,
-  type StageField,
   type StagedAction,
   type StagedContent,
 } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
 import {
   categoryLabel,
-  categoryOption,
   classificationText,
   ivaCategoryLabel,
-  vocabularyEmpty,
 } from "../movements/movementWords";
 import {
   changeGroups,
   heldUnits,
-  linkMismatches,
   linksReady,
-  pointsText,
   outcomeTally,
   type AskedConflict,
-  type ChangeGroup,
   type LinkTicks,
   type LinkMismatch,
   type StageTally,
 } from "./editingModel";
 import { fieldName, valueText } from "./editingWords";
-import type { LockProgress, useLedgerApply } from "./useLedgerApply";
+import type { useLedgerApply } from "./useLedgerApply";
 import { useWritePause } from "../WritePause";
-import {
-  useFieldSuggestions,
-  useVocabulary,
-} from "../suggestions/SuggestionsProvider";
 import { WindowedList } from "./WindowedList";
-import { formatCount, formatPercent } from "../../../shared/numbers";
+import { formatPercent } from "../../../shared/numbers";
+import { NeedsYouFirst } from "./ReviewBlockers";
+import {
+  changedElsewhere,
+  OUTCOME_ICONS,
+  outcomeItems,
+  outcomeTone,
+  Outcomes,
+  SummaryTable,
+} from "./ReviewOutcomes";
+import { lockProgress, titleOf } from "./reviewLabels";
 
 type Apply = ReturnType<typeof useLedgerApply>;
 
@@ -95,18 +84,6 @@ const WORST: readonly StepOutcome["kind"][] = [
 ];
 /** Outcomes that saved: the result lists only the rest. */
 const SAVED = new Set<StepOutcome["kind"]>(["applied", "settled"]);
-
-/** A movement as the review names it. */
-function titleOf(
-  t: Translate,
-  rows: ReadonlyMap<string, LedgerRow>,
-  id: string,
-): string {
-  return (
-    rows.get(id)?.transaction.description ??
-    t("desktop.ledger.apply.gone_movement")
-  );
-}
 
 /** The plan in plain words: "92 together · 40 one by one (about 2 min) ·
  * 2 new · 3 held". */
@@ -258,515 +235,37 @@ function incomeWithCategory(check: StagedCheck | null): string[] {
     .map((answer) => answer.transaction_id);
 }
 
-// ---- Needs you first -------------------------------------------------------
-
-type Held = { id: string; blocker: PlanBlocker; draft: boolean };
-
-/** What the review offers for one kind of problem, acting on every movement
- * it holds. */
-function BlockerFixes({
-  port,
-  kind,
-  held,
-  content,
-  rows,
-  onStage,
-  onShowRows,
-  onGoToDraft,
-  onRereadSealed,
-  checking,
-}: {
-  kind: PlanBlocker["kind"];
-  held: Held[];
-  content: StagedContent;
-  rows: ReadonlyMap<string, LedgerRow>;
-  onStage: (event: StageEvent) => void;
-  onShowRows: (ids: string[]) => void;
-  onGoToDraft: (key: string) => void;
-  /** Reads again the sealed state the review could not read. */
-  onRereadSealed: () => void;
-  /** That read is under way. */
-  checking: boolean;
-  port: LedgerPort;
-}) {
-  const t = useStrings();
-  const [share, setShare] = useState("");
-  const [shareError, setShareError] = useState<string | null>(null);
-  const [currency, setCurrency] = useState("");
-  const currencies = useFieldSuggestions("currency");
-  const ids = held.filter((entry) => !entry.draft).map((entry) => entry.id);
-  const vocabulary = useVocabulary();
-  const categories = useMemo<ComboboxOption[]>(
-    () =>
-      vocabulary.categoryFamilies.flatMap(([family, members]) =>
-        members.map((member) => categoryOption(t, family, member)),
-      ),
-    [t, vocabulary],
-  );
-  const button = (label: string, run: () => void, name?: string) => (
-    <Button
-      key={name ?? label}
-      variant="outline"
-      size="xs"
-      className={name ? `ledger-fix-${name}` : undefined}
-      onClick={run}
-    >
-      {label}
-    </Button>
-  );
-  const dropEdits = (keepActions: boolean) => () => {
-    for (const id of ids) onStage({ type: "revert_movement", id, keepActions });
-  };
-  const revertFields = (fields: (entry: Held) => StageField[]) => () => {
-    for (const entry of held)
-      for (const field of fields(entry))
-        if (content.rows[entry.id]?.[field])
-          onStage({ type: "revert_cell", id: entry.id, field });
-  };
-  const dropActions = (pick: (entry: Held) => string[]) => () => {
-    for (const entry of held)
-      for (const action of pick(entry))
-        onStage({ type: "drop_action", id: action });
-  };
-  const classifyAll = async (
-    kind: "business" | "personal",
-    category?: string,
-  ) => {
-    const check = await checkOnce(
-      port,
-      stagedCheckRequest(content, rows, {
-        ids,
-        categories: category ? [category] : [],
-      }),
-    );
-    if (!check) return;
-    const outcome = classifyCells({ kind, ids, category, check }, rows);
-    if (outcome.kind === "staged") onStage(outcome.event);
-  };
-  const show = ids.length
-    ? button(t("desktop.ledger.apply.fix.show"), () => onShowRows(ids), "show")
-    : null;
-  switch (kind) {
-    case "needs_classification":
-      return (
-        <>
-          <Combobox
-            label={t("desktop.ledger.classify.category")}
-            value={null}
-            options={categories}
-            emptyLabel={vocabularyEmpty(
-              t,
-              vocabulary,
-              t("desktop.ledger.classify.no_category_match"),
-              categories.length,
-            )}
-            placeholder={t("desktop.ledger.classify.search_category")}
-            onCommit={(category) => classifyAll("business", category)}
-          >
-            <Button variant="outline" size="xs" className="ledger-fix-business">
-              {t("desktop.ledger.apply.fix.business")}
-              <Icon name="chevronDown" size="xs" />
-            </Button>
-          </Combobox>
-          {button(
-            t("desktop.ledger.apply.fix.personal"),
-            () => classifyAll("personal"),
-            "personal",
-          )}
-          {show}
-        </>
-      );
-    case "mixed_needs_share":
-      return (
-        <form
-          className="flex flex-wrap items-center gap-2"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const parsed = parsePercent(pointsText(share));
-            if (parsed.kind !== "value") {
-              setShareError(
-                t("desktop.ledger.classify.share_refused", {
-                  raw: share,
-                }),
-              );
-              return;
-            }
-            for (const entry of held) {
-              if (entry.draft)
-                onStage({
-                  type: "edit_draft",
-                  key: entry.id,
-                  field: "business_pct",
-                  value: parsed.value,
-                });
-              else {
-                const row = rows.get(entry.id);
-                if (row)
-                  onStage({
-                    type: "stage",
-                    label: "set",
-                    cells: [
-                      {
-                        id: entry.id,
-                        field: "business_pct",
-                        value: { kind: "set", value: parsed.value },
-                        stored: storedFieldValue(row, "business_pct"),
-                      },
-                    ],
-                  });
-              }
-            }
-          }}
-        >
-          <PercentEditor
-            unit="points"
-            controlSize="sm"
-            className="w-24"
-            aria-label={t("desktop.ledger.classify.share")}
-            invalid={shareError ? true : undefined}
-            value={share}
-            onChange={(held) => {
-              setShare(held);
-              setShareError(null);
-            }}
-          />
-          <Button type="submit" variant="outline" size="xs">
-            {t("desktop.ledger.apply.fix.set_share")}
-          </Button>
-          {shareError && (
-            <span className="text-sm text-foreground">{shareError}</span>
-          )}
-        </form>
-      );
-    case "sealed_unread":
-      return (
-        <>
-          <Button
-            key="reread-sealed"
-            variant="outline"
-            size="xs"
-            className="ledger-fix-reread-sealed"
-            aria-disabled={checking || undefined}
-            onClick={() => !checking && onRereadSealed()}
-          >
-            {checking ? <Spinner /> : <Icon name="sync" />}
-            {t("desktop.ledger.paused.reread")}
-          </Button>
-          {button(
-            t("desktop.ledger.apply.fix.drop_changes"),
-            dropEdits(false),
-            "drop-changes",
-          )}
-        </>
-      );
-    case "share_needs_mixed":
-      return button(
-        t("desktop.ledger.apply.fix.drop_share"),
-        revertFields(() => ["business_pct"]),
-        "drop-share",
-      );
-    case "cannot_clear":
-      return button(
-        t("desktop.ledger.apply.fix.keep_stored"),
-        revertFields((entry) =>
-          entry.blocker.kind === "cannot_clear"
-            ? (entry.blocker.fields.filter(
-                (field) => field !== "m210_income_classification",
-              ) as StageField[])
-            : [],
-        ),
-        "keep-stored",
-      );
-    case "suggestion_and_edits":
-      return (
-        <>
-          {button(
-            t("desktop.ledger.apply.fix.drop_edits"),
-            dropEdits(true),
-            "drop-edits",
-          )}
-          {button(
-            t("desktop.ledger.apply.fix.drop_approval"),
-            dropActions((entry) =>
-              "action" in entry.blocker ? [entry.blocker.action] : [],
-            ),
-            "drop-approval",
-          )}
-        </>
-      );
-    case "suggestion_and_rules":
-      return (
-        <>
-          {button(
-            t("desktop.ledger.apply.fix.drop_rules"),
-            dropActions((entry) =>
-              entry.blocker.kind === "suggestion_and_rules"
-                ? entry.blocker.rules
-                : [],
-            ),
-            "drop-rules",
-          )}
-          {button(
-            t("desktop.ledger.apply.fix.drop_approval"),
-            dropActions((entry) =>
-              entry.blocker.kind === "suggestion_and_rules"
-                ? [entry.blocker.action]
-                : [],
-            ),
-            "drop-approval",
-          )}
-        </>
-      );
-    case "action_and_edits":
-    case "exclude_and_classification":
-      return (
-        <>
-          {button(
-            t("desktop.ledger.apply.fix.drop_edits"),
-            dropEdits(true),
-            "drop-edits",
-          )}
-          {button(
-            t("desktop.ledger.apply.fix.drop_action"),
-            dropActions((entry) =>
-              "action" in entry.blocker ? [entry.blocker.action] : [],
-            ),
-            "drop-action",
-          )}
-        </>
-      );
-    case "suggestion_needs_share":
-      return button(
-        t("desktop.ledger.apply.fix.drop_approval"),
-        dropActions((entry) =>
-          entry.blocker.kind === "suggestion_needs_share"
-            ? [entry.blocker.action]
-            : [],
-        ),
-        "drop-approval",
-      );
-    case "actions_conflict":
-      return button(
-        t("desktop.ledger.apply.fix.keep_first"),
-        dropActions((entry) =>
-          entry.blocker.kind === "actions_conflict"
-            ? entry.blocker.actions.slice(1)
-            : [],
-        ),
-        "keep-first",
-      );
-    case "draft_incomplete": {
-      const needsCurrency = held.some(
-        (entry) =>
-          entry.blocker.kind === "draft_incomplete" &&
-          entry.blocker.fields.includes("currency"),
-      );
-      return (
-        <>
-          {needsCurrency && (
-            <form
-              className="flex items-center gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const code = currency.trim().toUpperCase();
-                if (!/^[A-Z]{3}$/.test(code)) return;
-                for (const entry of held)
-                  onStage({
-                    type: "edit_draft",
-                    key: entry.id,
-                    field: "currency",
-                    value: code,
-                  });
-              }}
-            >
-              <CurrencyEditor
-                controlSize="sm"
-                className="w-24"
-                aria-label={t("desktop.ledger.field.currency")}
-                value={currency}
-                onChange={setCurrency}
-                {...currencies}
-              />
-              <Button type="submit" variant="outline" size="xs">
-                {t("desktop.ledger.apply.fix.set_currency")}
-              </Button>
-            </form>
-          )}
-          {held[0] &&
-            button(
-              t("desktop.ledger.apply.fix.go_to_draft"),
-              () => onGoToDraft(held[0]!.id),
-              "go-to-draft",
-            )}
-        </>
-      );
-    }
-    default:
-      return (
-        <>
-          {button(
-            t("desktop.ledger.apply.fix.drop_changes"),
-            dropEdits(false),
-            "drop-changes",
-          )}
-          {show}
-        </>
-      );
-  }
-}
-
-function blockerFields(t: Translate, blocker: PlanBlocker): string | null {
-  const fields =
-    "fields" in blocker
-      ? (blocker.fields as (StageField | DraftField | string)[])
-      : null;
-  if (!fields?.length) return null;
-  return listed(
-    t,
-    fields.map((field) =>
-      field === "m210_income_classification"
-        ? t("desktop.ledger.field.m210_income_classification")
-        : fieldName(t, field as StageField),
-    ),
-  );
-}
-
-function NeedsYouFirst({
-  port,
-  plan,
-  content,
-  rows,
-  onStage,
-  onShowRows,
-  onGoToDraft,
-  onRereadSealed,
-  locks,
-  locale,
-}: {
-  port: LedgerPort;
-  plan: LedgerPlan;
-  content: StagedContent;
-  rows: ReadonlyMap<string, LedgerRow>;
-  onStage: (event: StageEvent) => void;
-  onShowRows: (ids: string[]) => void;
-  onGoToDraft: (key: string) => void;
-  onRereadSealed: () => void;
-  /** While the locks not read are read again, how far it has got. */
-  locks: LockProgress | null;
-  locale: string;
-}) {
-  const t = useStrings();
-  const byKind = new Map<PlanBlocker["kind"], Held[]>();
-  for (const entry of plan.entries)
-    for (const blocker of entry.blockers)
-      byKind.set(blocker.kind, [
-        ...(byKind.get(blocker.kind) ?? []),
-        { id: entry.transactionId, blocker, draft: false },
-      ]);
-  for (const entry of plan.drafts)
-    for (const blocker of entry.blockers)
-      byKind.set(blocker.kind, [
-        ...(byKind.get(blocker.kind) ?? []),
-        { id: entry.key, blocker, draft: true },
-      ]);
-  if (byKind.size === 0) return null;
-  const draftTitle = (key: string) =>
-    content.drafts.find((draft) => draft.key === key)?.fields.description ??
-    t("desktop.ledger.draft.untitled");
-  return (
-    <section
-      className="ledger-blockers grid gap-3"
-      aria-labelledby="ledger-blockers-heading"
-    >
-      <h3
-        id="ledger-blockers-heading"
-        className="text-xs font-semibold tracking-wide text-muted-foreground uppercase"
-      >
-        {t("desktop.ledger.apply.needs_you")}
-      </h3>
-      {[...byKind].map(([kind, held]) => {
-        const fields = blockerFields(t, held[0]!.blocker);
-        return (
-          <div
-            key={kind}
-            data-blocker={kind}
-            className="grid gap-1.5 border-b border-border pb-3"
-          >
-            <div className="flex flex-wrap items-center gap-2">
-              <Icon name="alert" size="xs" className="text-warning" />
-              <span className="flex-1 font-medium">
-                {t(`desktop.ledger.apply.blocker.${kind}`, {
-                  count: held.length,
-                })}
-              </span>
-              <BlockerFixes
-                kind={kind}
-                held={held}
-                content={content}
-                rows={rows}
-                onStage={onStage}
-                onShowRows={onShowRows}
-                onGoToDraft={onGoToDraft}
-                onRereadSealed={onRereadSealed}
-                port={port}
-                checking={locks !== null}
-              />
-            </div>
-            {kind === "sealed_unread" && locks && (
-              <p
-                role="status"
-                className="ledger-locks-progress flex items-center gap-2 text-sm text-muted-foreground"
-              >
-                <Spinner />
-                {lockProgress(t, locale, locks)}
-              </p>
-            )}
-            {fields && (
-              <p className="text-sm text-muted-foreground">
-                {t("desktop.ledger.apply.blocker_fields", { fields })}
-              </p>
-            )}
-            <p className="text-sm text-muted-foreground">
-              {facts(t, [
-                ...held
-                  .slice(0, 4)
-                  .map((entry) =>
-                    entry.draft
-                      ? draftTitle(entry.id)
-                      : titleOf(t, rows, entry.id),
-                  ),
-                held.length > 4 &&
-                  t("desktop.ledger.apply.more", { count: held.length - 4 }),
-              ])}
-            </p>
-          </div>
-        );
-      })}
-    </section>
-  );
-}
-
 // ---- Permanent links -------------------------------------------------------
 
 function mismatchText(t: Translate, locale: string, mismatch: LinkMismatch) {
   switch (mismatch.kind) {
     case "amount":
       return t("desktop.ledger.apply.link.amount_differs", {
-        amount: valueText(t, locale, "amount", mismatch.difference),
+        amount: valueText(
+          t,
+          locale,
+          "amount",
+          mismatch.difference?.decimal ?? "",
+        ),
       });
     case "counterparty":
       return t("desktop.ledger.apply.link.counterparty_differs");
     case "currency":
       return t("desktop.ledger.apply.link.currency_differs", {
-        movement: mismatch.movement,
-        invoice: mismatch.invoice,
+        movement: mismatch.movement ?? "",
+        invoice: mismatch.invoice ?? "",
       });
     case "linked_elsewhere":
       return t("desktop.ledger.apply.link.linked_elsewhere", {
-        count: mismatch.count,
+        count: mismatch.count ?? 0,
       });
   }
 }
+
+/** The mismatches the ledger found against a link, or null where it has not
+ * judged it or the movement or invoice is gone. */
+const judgementOf = (judgement: LedgerInvoiceMatchJudgement | undefined) =>
+  judgement?.found ? judgement.mismatches : null;
 
 function PermanentLinks({
   links,
@@ -774,19 +273,23 @@ function PermanentLinks({
   ticks,
   onTicks,
   onRereadInvoices,
+  onRetryJudgement,
 }: {
   links: {
     id: string;
     row: LedgerRow | undefined;
     invoice: CatalogueInvoice | undefined;
     invoiceId: string;
-    mismatches: LinkMismatch[];
+    /** What the ledger found against the link; null until it has said. */
+    mismatches: readonly LinkMismatch[] | null;
   }[];
   locale: string;
   ticks: LinkTicks;
   onTicks: (ticks: LinkTicks) => void;
   /** Reads the catalogue again where an invoice could not be read. */
   onRereadInvoices: () => void;
+  /** Asks the ledger again to compare the links. */
+  onRetryJudgement: () => void;
 }) {
   const t = useStrings();
   if (!links.length) return null;
@@ -848,7 +351,24 @@ function PermanentLinks({
                 </Button>
               </p>
             )}
-            {link.mismatches.length > 0 && (
+            {link.invoice && link.mismatches === null && (
+              <p
+                role="status"
+                className="ledger-link-unjudged flex flex-wrap items-center gap-1.5 text-sm"
+              >
+                <Icon name="unknown" size="xs" className="text-warning" />
+                {t("desktop.ledger.apply.link.unjudged")}
+                <Button
+                  variant="link"
+                  size="xs"
+                  className="ledger-link-rejudge"
+                  onClick={onRetryJudgement}
+                >
+                  {t("desktop.ledger.retry")}
+                </Button>
+              </p>
+            )}
+            {link.mismatches && link.mismatches.length > 0 && (
               <ul className="flex flex-wrap gap-1.5">
                 {link.mismatches.map((mismatch) => (
                   <li key={mismatch.kind}>
@@ -863,7 +383,7 @@ function PermanentLinks({
               <Checkbox
                 className="ledger-link-sure"
                 checked={tick.sure}
-                disabled={!link.invoice}
+                disabled={!link.invoice || link.mismatches === null}
                 onChange={(event) =>
                   onTicks({
                     ...ticks,
@@ -873,7 +393,7 @@ function PermanentLinks({
               />
               {t("desktop.ledger.apply.link.sure")}
             </label>
-            {link.mismatches.length > 0 && (
+            {link.mismatches && link.mismatches.length > 0 && (
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
                   className="ledger-link-differ"
@@ -1154,322 +674,6 @@ function MovementList({
   );
 }
 
-// ---- Outcomes --------------------------------------------------------------
-
-const OUTCOME_ICONS: Record<StepOutcome["kind"], IconName> = {
-  applied: "check",
-  unchanged: "pending",
-  settled: "check",
-  refused: "refused",
-  unknown: "unknown",
-  saved_unread: "unknown",
-  not_sent: "pause",
-};
-
-/** The colour of an outcome's glyph. */
-function outcomeTone(kind: StepOutcome["kind"]): string | undefined {
-  if (kind === "refused") return "text-destructive";
-  if (kind === "unknown" || kind === "saved_unread") return "text-warning";
-  if (kind === "applied" || kind === "settled") return "text-success";
-  return undefined;
-}
-
-function stepTitle(
-  t: Translate,
-  step: PlanStep,
-  rows: ReadonlyMap<string, LedgerRow>,
-  content: StagedContent,
-): string {
-  switch (step.kind) {
-    case "bulk":
-      return t("desktop.ledger.apply.step.bulk", {
-        count: step.rows.length,
-        part: step.part,
-        parts: step.parts,
-      });
-    case "classify":
-    case "update":
-      return labelled(
-        t,
-        titleOf(t, rows, step.transactionId),
-        listed(
-          t,
-          step.fields.map((field) => fieldName(t, field)),
-        ),
-      );
-    case "add":
-      return t("desktop.ledger.apply.step.add", {
-        movement:
-          content.drafts.find((draft) => draft.key === step.draftKey)?.fields
-            .description ?? step.request.description,
-      });
-    case "action":
-    case "answer":
-      return step.action.kind === "rule_apply"
-        ? actionText(t, "", step.action)
-        : facts(t, [
-            actionText(t, "", step.action),
-            titleOf(t, rows, actionRows(step.action)[0] ?? ""),
-          ]);
-  }
-}
-
-/** How far a read of the staged movements' locks has got, in words. */
-const lockProgress = (t: Translate, locale: string, locks: LockProgress) => {
-  return t("desktop.ledger.apply.checking_locks", {
-    done: formatCount(locale, locks.done),
-    total: formatCount(locale, locks.total),
-  });
-};
-
-/** Why a change was refused, in words; its code is under Technical
- * details. */
-function refusalWords(
-  t: Translate,
-  outcome: Extract<StepOutcome, { kind: "refused" }>,
-): string {
-  if (outcome.reason === "precondition_failed")
-    return t("desktop.ledger.apply.refusal.changed_elsewhere");
-  return outcome.messages[0] ?? t("desktop.ledger.apply.refusal.other");
-}
-
-/** A refusal that a read of the ledger and a new review can resolve. */
-const changedElsewhere = (outcome: StepOutcome) =>
-  outcome.kind === "refused" && outcome.reason === "precondition_failed";
-
-function outcomeText(
-  t: Translate,
-  locale: string,
-  outcome: StepOutcome,
-  stored: { field: StageField; value: string | null } | null,
-): string {
-  switch (outcome.kind) {
-    case "applied":
-      return outcome.newId
-        ? t("desktop.ledger.apply.outcome.applied_new_id")
-        : t("desktop.ledger.apply.outcome.applied");
-    case "unchanged":
-      return stored
-        ? t("desktop.ledger.apply.outcome.unchanged_value", {
-            field: fieldName(t, stored.field),
-            value: valueText(t, locale, stored.field, stored.value),
-          })
-        : t("desktop.ledger.apply.outcome.unchanged");
-    case "settled":
-      return stored
-        ? t("desktop.ledger.apply.outcome.settled_value", {
-            field: fieldName(t, stored.field),
-            value: valueText(t, locale, stored.field, stored.value),
-          })
-        : t("desktop.ledger.apply.outcome.settled");
-    case "refused":
-      return t("desktop.ledger.apply.outcome.refused", {
-        reason: refusalWords(t, outcome),
-      });
-    case "unknown":
-      return t("desktop.ledger.apply.outcome.unknown");
-    case "saved_unread":
-      return t("desktop.ledger.apply.outcome.saved_unread");
-    case "not_sent":
-      return t(`desktop.ledger.apply.outcome.not_sent_${outcome.why}`);
-  }
-}
-
-type OutcomeItem = {
-  key: string;
-  title: string;
-  outcome: StepOutcome;
-  note: string;
-  head?: string;
-};
-
-/** Every step's outcome, a bulk part's row by row unless the part ended
- * whole. */
-function outcomeItems(
-  t: Translate,
-  locale: string,
-  reports: readonly StepReport[],
-  rows: ReadonlyMap<string, LedgerRow>,
-  fresh: ReadonlyMap<string, LedgerRow> | null,
-  content: StagedContent,
-): OutcomeItem[] {
-  const storedOf = (
-    id: string,
-    fields: StageField[],
-  ): { field: StageField; value: string | null } | null => {
-    const row = fresh?.get(id);
-    const field = fields[0];
-    if (!row || !field) return null;
-    return { field, value: storedFieldValue(row, field) ?? null };
-  };
-  const items: OutcomeItem[] = [];
-  for (const report of reports) {
-    const step = report.step;
-    if (step.kind === "bulk") {
-      const whole =
-        report.rows.length > 0 &&
-        report.rows.every((row) => row.outcome === report.outcome) &&
-        !["applied", "unchanged", "settled"].includes(report.outcome.kind);
-      if (whole)
-        items.push({
-          key: `${report.index}`,
-          title: stepTitle(t, step, rows, content),
-          outcome: report.outcome,
-          head: "part",
-          note:
-            report.outcome.kind === "refused"
-              ? t("desktop.ledger.apply.part_refused")
-              : report.outcome.kind === "unknown"
-                ? t("desktop.ledger.apply.part_unknown")
-                : outcomeText(t, locale, report.outcome, null),
-        });
-      else
-        step.rows.forEach((row, at) => {
-          const outcome = report.rows[at]?.outcome ?? report.outcome;
-          items.push({
-            key: `${report.index}:${row.transactionId}`,
-            title: titleOf(t, rows, row.transactionId),
-            outcome,
-            note: outcomeText(
-              t,
-              locale,
-              outcome,
-              storedOf(row.transactionId, row.fields),
-            ),
-          });
-        });
-      continue;
-    }
-    items.push({
-      key: `${report.index}`,
-      title: stepTitle(t, step, rows, content),
-      outcome: report.outcome,
-      note: outcomeText(
-        t,
-        locale,
-        report.outcome,
-        step.kind === "classify" || step.kind === "update"
-          ? storedOf(step.transactionId, step.fields)
-          : null,
-      ),
-    });
-  }
-  return items;
-}
-
-function Outcomes({ items }: { items: readonly OutcomeItem[] }) {
-  const t = useStrings();
-  if (!items.length) return null;
-  return (
-    <WindowedList
-      label={t("desktop.ledger.apply.outcomes")}
-      className="ledger-outcomes max-h-96 rounded-md border border-border"
-      items={items}
-      keyOf={(item) => item.key}
-      render={(item) => (
-        <div
-          data-outcome={item.outcome.kind}
-          data-part={item.head}
-          className="flex h-14 items-center gap-2 border-b border-border px-3"
-        >
-          <Icon
-            name={OUTCOME_ICONS[item.outcome.kind]}
-            size="xs"
-            className={cn("shrink-0", outcomeTone(item.outcome.kind))}
-          />
-          <span className="grid min-w-0 flex-1">
-            <span className="truncate">{item.title}</span>
-            <span className="truncate text-sm text-muted-foreground">
-              {item.note}
-            </span>
-          </span>
-        </div>
-      )}
-    />
-  );
-}
-
-/** The summary by kind of change: the field, what changes and on how many
- * movements, with its columns sortable by field and by count. */
-function SummaryTable({
-  groups,
-  locale,
-  onShowRows,
-}: {
-  groups: readonly ChangeGroup[];
-  locale: string;
-  onShowRows(ids: string[]): void;
-}) {
-  const t = useStrings();
-  const field = t("desktop.ledger.apply.summary_field");
-  const change = t("desktop.ledger.apply.summary_change");
-  const movements = t("desktop.ledger.apply.summary_movements");
-  const show = t("desktop.ledger.apply.fix.show");
-  const view = useTableView({
-    columns: [
-      {
-        id: "field",
-        label: field,
-        name: field,
-        sortValue: (group) => fieldName(t, group.field),
-      },
-      { id: "change", label: change, name: change },
-      {
-        id: "movements",
-        label: movements,
-        name: movements,
-        align: "end",
-        sortValue: (group) => group.ids.length,
-      },
-      {
-        id: "show",
-        label: show,
-        name: show,
-        hidden: true,
-        resizable: false,
-      },
-    ] satisfies ViewColumn<ChangeGroup>[],
-    rows: groups,
-    resizeLabel: (column) => t("desktop.table.resize_column", { column }),
-  });
-  return (
-    <table className="ledger-summary w-full text-base" {...view.tableProps}>
-      <thead className="text-sm text-muted-foreground">
-        <tr className="border-b border-border">{view.headers}</tr>
-      </thead>
-      <tbody>
-        {view.rows.map((group) => (
-          <tr
-            key={`${group.field}:${group.ids[0]}`}
-            className="border-b border-border"
-          >
-            <td className="py-1.5 pe-3">{fieldName(t, group.field)}</td>
-            <td className="py-1.5 pe-3">
-              <span className="text-muted-foreground">
-                {valueText(t, locale, group.field, group.from)}
-              </span>
-              {" → "}
-              {group.to.kind === "set"
-                ? valueText(t, locale, group.field, group.to.value)
-                : t("desktop.ledger.edit.cleared")}
-            </td>
-            <td className="py-1.5 text-end tabular-nums">{group.ids.length}</td>
-            <td className="py-1.5 text-end">
-              <Button
-                variant="link"
-                size="xs"
-                onClick={() => onShowRows(group.ids)}
-              >
-                {t("desktop.ledger.apply.show_rows")}
-              </Button>
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  );
-}
-
 // ---- The dialog ------------------------------------------------------------
 
 /**
@@ -1544,6 +748,36 @@ export function ReviewDialog({
           })
         : null,
     [state, content, locale, checked],
+  );
+  const linkSteps = useMemo(
+    () =>
+      plan
+        ? plan.steps.flatMap((step) =>
+            step.kind === "action" && step.action.kind === "link"
+              ? [step.action]
+              : [],
+          )
+        : [],
+    [plan],
+  );
+  // The ledger states where each link's two sides differ; the window judges
+  // nothing, and a link not yet judged is held.
+  const judging = useInvoiceMatches(
+    port,
+    useMemo(
+      () =>
+        linkSteps.length > 0
+          ? {
+              staged: [],
+              judge: linkSteps.map((action) => ({
+                transaction_id: action.transactionId,
+                invoice_id: action.invoiceId,
+              })),
+            }
+          : null,
+      [linkSteps],
+    ),
+    rows,
   );
   if (state.phase === "closed") return null;
   const busy = state.phase === "applying";
@@ -1643,10 +877,13 @@ export function ReviewDialog({
   } else if (state.phase === "ready" && plan && rows) {
     const held = heldUnits(content, plan);
     const savable = tally.units - held;
-    const linkSteps = plan.steps.flatMap((step) =>
-      step.kind === "action" && step.action.kind === "link"
-        ? [step.action]
-        : [],
+    const judgements = new Map(
+      (judging.kind === "answer" ? judging.result.judgements : []).map(
+        (judgement) => [
+          `${judgement.transaction_id}:${judgement.invoice_id}`,
+          judgement,
+        ],
+      ),
     );
     const links = linkSteps.map((action) => {
       const row = rows.get(action.transactionId);
@@ -1658,11 +895,14 @@ export function ReviewDialog({
         row,
         invoice,
         invoiceId: action.invoiceId,
-        mismatches: row && invoice ? linkMismatches(row, invoice) : [],
+        mismatches: judgementOf(
+          judgements.get(`${action.transactionId}:${action.invoiceId}`),
+        ),
       };
     });
     // A link whose invoice could not be read is held until it is read.
     const unread = links.some((link) => !link.invoice);
+    const unjudged = links.some((link) => link.mismatches === null);
     const ready = !unread && linksReady(links, ticks);
     const approvals = content.actions.filter(
       (action): action is Extract<StagedAction, { kind: "suggestion" }> =>
@@ -1715,6 +955,7 @@ export function ReviewDialog({
           ticks={ticks}
           onTicks={setTicks}
           onRereadInvoices={() => void apply.rereadInvoices()}
+          onRetryJudgement={judging.retry}
         />
         <Approvals approvals={approvals} rows={rows} locale={locale} />
         {groups.length > 0 && (
@@ -1770,11 +1011,13 @@ export function ReviewDialog({
             ? apply.paused
             : unread
               ? t("desktop.ledger.apply.link.unread")
-              : !ready
-                ? t("desktop.ledger.apply.tick_links")
-                : held
-                  ? t("desktop.ledger.apply.held_note", { count: held })
-                  : ""}
+              : unjudged
+                ? t("desktop.ledger.apply.link.unjudged")
+                : !ready
+                  ? t("desktop.ledger.apply.tick_links")
+                  : held
+                    ? t("desktop.ledger.apply.held_note", { count: held })
+                    : ""}
         </span>
         <Button variant="ghost" onClick={close}>
           {t("desktop.ledger.apply.keep_editing")}
@@ -1825,6 +1068,7 @@ export function ReviewDialog({
             state.rows,
             null,
             content,
+            actionText,
           )}
         />
       </div>
@@ -1855,6 +1099,7 @@ export function ReviewDialog({
       state.rows,
       state.fresh,
       content,
+      actionText,
     );
     const unsaved = items.filter((item) => !SAVED.has(item.outcome.kind));
     const kinds = Object.keys(counts).length;

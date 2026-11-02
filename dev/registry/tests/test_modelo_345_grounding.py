@@ -102,7 +102,7 @@ def test_modelo_345_current_registry_uses_current_edition_sources_without_fake_c
     # refusal a caller sees, and the reason underneath it, so a refusal raised
     # for some other reason still reds.
     with bundled_indexed_authority().operation() as operation:
-        shift = shift_deadline(window.closes_on, modelo="345", ccaa_code=None, operation=operation)
+        shift = shift_deadline(window.closes_on, modelo="345", operation=operation)
         assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == (
             date(_CURRENT_EDITION + 1, 2, 2),
             True,
@@ -114,7 +114,7 @@ def test_modelo_345_current_registry_uses_current_edition_sources_without_fake_c
         with pytest.raises(
             DeadlineValidationError, match=f"holiday calendar publication for {unpublished_year}"
         ) as refusal:
-            shift_deadline(date(unpublished_year, 1, 29), modelo="345", ccaa_code=None, operation=operation)
+            shift_deadline(date(unpublished_year, 1, 29), modelo="345", operation=operation)
     assert "no variant for the exact query context" in str(refusal.value.__cause__)
     assert {ref.workbook_source for ref in revision.workbook_parity_refs} == {f"aeat-dr-345-{_CURRENT_EDITION}"}
     # "export" joined the surfaces when the modelo's export layout was authored;

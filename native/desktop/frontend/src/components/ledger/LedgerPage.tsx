@@ -1,3 +1,4 @@
+import settings from "virtual:operational-settings";
 import {
   useCallback,
   useEffect,
@@ -80,10 +81,7 @@ import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import { HealthSection } from "./setup/HealthSection";
 import { AssetsSection } from "./assets/AssetsSection";
 import { StockPane } from "./assets/StockPane";
-import {
-  RegistersSection,
-  type RegistersArea,
-} from "./setup/RegistersSection";
+import { RegistersSection, type RegistersArea } from "./setup/RegistersSection";
 import { RuleDialog, type RuleDialogTarget } from "./setup/RuleDialog";
 import { RulesSection, type RulesArea } from "./setup/RulesSection";
 import type { SetupProps } from "./setup/setupProps";
@@ -107,8 +105,6 @@ import { PausedBanner, usePagePause, WritePauseContext } from "./WritePause";
 import { formatDay } from "../../shared/dateFormats";
 import { formatCount } from "../../shared/numbers";
 
-/** How long a page toast stays. */
-const TOAST_MS = 4000;
 /** What the page keeps of itself while it is put away, for one profile:
  * the period it showed and how its movements were looked at. Held in memory
  * only. */
@@ -398,7 +394,10 @@ export function LedgerPage({
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    const timer = window.setTimeout(
+      () => setToast(null),
+      settings.ledger_toast_ms,
+    );
     return () => window.clearTimeout(timer);
   }, [toast]);
   useEffect(() => setRuleTarget(null), [reader]);

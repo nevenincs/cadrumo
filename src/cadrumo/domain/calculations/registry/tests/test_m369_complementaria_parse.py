@@ -2,7 +2,6 @@
 
 import pytest
 
-from .....core.filing_producer_key import FilingProducerKey
 from ..errors import RegistryValidationError
 from ..export_parse import _parse_field_value
 from ..fixed_width_codec import render_fixed_width_export_field
@@ -18,7 +17,7 @@ def _marker_fields():
         for layout in snapshot.revision.export_layouts
         for record in layout.records
         for field in record.fields
-        if field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
+        if field.computed_key == "continuation_page_marker"
     ]
     assert len(fields) == 3
     assert all(field.required and field.data_type == "text" and field.length == 1 for field in fields)

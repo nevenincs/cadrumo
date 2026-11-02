@@ -82,7 +82,10 @@ fn compensate(
     )
     .map_err(native_error)?;
     for batch in recovery::existing_package_files(package)?.chunks(256) {
-        if !windows::file_users(batch).map_err(native_error)?.is_empty() {
+        if !windows::restart_manager::file_users(batch)
+            .map_err(native_error)?
+            .is_empty()
+        {
             return Err(Error::Busy);
         }
     }

@@ -18,6 +18,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
 import { Heading } from "./CheckView";
+import { ScopedWriteHoldNotice } from "../WriteScope";
 import {
   CorrectionDialog,
   Labelled,
@@ -61,17 +62,20 @@ function RenameDialog({
   onOpenChange,
   unit,
   onRename,
+  disabled,
 }: {
   open: boolean;
   onOpenChange(open: boolean): void;
   unit: HistoryUnit | null;
   onRename(name: string): Promise<boolean>;
+  disabled: boolean;
 }) {
   const t = useStrings();
   const [name, setName] = useState(unit?.name ?? "");
   const [busy, setBusy] = useState(false);
   const submit = async (event: FormEvent) => {
     event.preventDefault();
+    if (disabled || busy) return;
     setBusy(true);
     const done = await onRename(name.trim());
     setBusy(false);
@@ -89,6 +93,7 @@ function RenameDialog({
               <TextEditor id={id} value={name} onChange={setName} autoFocus />
             )}
           </Labelled>
+          <ScopedWriteHoldNotice />
           <DialogFooter>
             <Button
               type="button"
@@ -100,7 +105,11 @@ function RenameDialog({
             <Button
               type="submit"
               disabled={
-                busy || !unit || !name.trim() || name.trim() === unit.name
+                disabled ||
+                busy ||
+                !unit ||
+                !name.trim() ||
+                name.trim() === unit.name
               }
             >
               {t("desktop.modelo.rename.save")}
@@ -117,16 +126,19 @@ function DiscardDialog({
   onOpenChange,
   unit,
   onDiscard,
+  disabled,
 }: {
   open: boolean;
   onOpenChange(open: boolean): void;
   unit: HistoryUnit | null;
   onDiscard(reason: string): Promise<boolean>;
+  disabled: boolean;
 }) {
   const t = useStrings();
   const [reason, setReason] = useState("");
   const [busy, setBusy] = useState(false);
   const discard = async () => {
+    if (disabled || busy) return;
     setBusy(true);
     const done = await onDiscard(reason.trim());
     setBusy(false);
@@ -144,13 +156,14 @@ function DiscardDialog({
         <Labelled label={t("desktop.modelo.discard.reason")}>
           {(id) => <TextEditor id={id} value={reason} onChange={setReason} />}
         </Labelled>
+        <ScopedWriteHoldNotice />
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t("workspace.modelo.editor.cancel")}
           </Button>
           <Button
             variant="destructive"
-            disabled={busy || !unit}
+            disabled={disabled || busy || !unit}
             onClick={discard}
           >
             {t("desktop.modelo.discard.confirm")}
@@ -178,6 +191,7 @@ export function HistoryView({
   onRename,
   onDiscard,
   onCorrect,
+  disabled = false,
 }: {
   /** Null while the history has not been read. */
   entries: ModeloWorkHistoryEntryV1[] | null;
@@ -192,6 +206,7 @@ export function HistoryView({
   onRename(name: string): Promise<boolean>;
   onDiscard(reason: string): Promise<boolean>;
   onCorrect: ((answer: CorrectionAnswer) => Promise<CorrectionResult>) | null;
+  disabled?: boolean;
 }) {
   const t = useStrings();
   const [renaming, setRenaming] = useState(false);
@@ -237,7 +252,7 @@ export function HistoryView({
         <Button
           variant="ghost"
           size="sm"
-          disabled={!unit}
+          disabled={disabled || !unit}
           onClick={() => setRenaming(true)}
         >
           <Icon name="edit" size="xs" />
@@ -248,6 +263,7 @@ export function HistoryView({
             variant="ghost"
             size="sm"
             onClick={() => onCorrectingChange(true)}
+            disabled={disabled}
           >
             <Icon name="swap" size="xs" />
             {t("workspace.modelo.correction.title")}
@@ -257,7 +273,7 @@ export function HistoryView({
             variant="ghost"
             size="sm"
             className="text-destructive"
-            disabled={!unit}
+            disabled={disabled || !unit}
             onClick={() => setDiscarding(true)}
           >
             <Icon name="trash" size="xs" />
@@ -271,6 +287,7 @@ export function HistoryView({
           onOpenChange={setRenaming}
           unit={unit}
           onRename={onRename}
+          disabled={disabled}
         />
       )}
       {discarding && (
@@ -279,6 +296,7 @@ export function HistoryView({
           onOpenChange={setDiscarding}
           unit={unit}
           onDiscard={onDiscard}
+          disabled={disabled}
         />
       )}
       {correcting && (
@@ -287,6 +305,7 @@ export function HistoryView({
           onOpenChange={onCorrectingChange}
           context={correction}
           onCorrect={onCorrect}
+          disabled={disabled}
         />
       )}
     </div>

@@ -1,55 +1,42 @@
-"""DR369's mandatory Complementaria byte admits C or an ordinary-return blank."""
+"""DR369's mandatory Complementaria byte marks an extra page, never an amended return.
+
+The file description defines it: blank on the single page, ``C`` on a further page
+of the same type when a return holds more than 28 elements. Orden HAC/610/2021 art.
+7.5 forbids amending a filed return, so no amendment fact may reach this byte.
+"""
 
 from __future__ import annotations
 
 import pytest
 
-from cadrumo.core.filing_producer_key import FilingProducerKey
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-from cadrumo.domain.filing.errors import FilingExportValidationError
 
-from ..record_field_renderer import _header_field_value, format_field
+from ....domain.calculations.registry.schema_exports import ExportFieldDefinition
+from ..record_field_renderer import format_field
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
+_SCHEMES = (("esquema-exterior", "EXT-1T"), ("esquema-union", "1T"), ("esquema-importacion", "01"))
 
-def _fields():
-    snapshot = published_snapshot("369", filing_year=2026, period="EXT-1T", revision_id="esquema-exterior")
-    fields = [
-        field
-        for layout in snapshot.revision.export_layouts
-        for record in layout.records
-        for field in record.fields
-        if field.producer_key is FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA
-    ]
-    assert len(fields) == 3
+
+def _fields() -> list[ExportFieldDefinition]:
+    fields: list[ExportFieldDefinition] = []
+    for revision_id, period in _SCHEMES:
+        snapshot = published_snapshot("369", filing_year=2026, period=period, revision_id=revision_id)
+        fields.extend(
+            field
+            for layout in snapshot.revision.export_layouts
+            for record in layout.records
+            for field in record.fields
+            if field.computed_key == "continuation_page_marker"
+        )
+    assert len(fields) == 12
     assert all(field.required and field.data_type == "text" and field.length == 1 for field in fields)
+    assert all(field.producer_key is None and field.presence_marker == "C" for field in fields)
     return fields
 
 
-@pytest.mark.parametrize(("value", "expected"), [(None, " "), (False, " "), (True, "C")])
-def test_m369_mandatory_complementaria_slot_renders_ordinary_and_amended_returns(value: bool | None, expected: str):
+def test_every_m369_page_indicator_is_fed_by_the_page_and_writes_c_or_blank() -> None:
     for field in _fields():
-        rendered = _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: value})
-        assert format_field(field, rendered) == expected
-
-
-@pytest.mark.parametrize("value", [1, "C", "X", "false"])
-def test_m369_complementaria_refuses_untyped_amendment_values(value: object):
-    for field in _fields():
-        with pytest.raises(FilingExportValidationError, match="typed boolean producer fact"):
-            _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: value})
-
-
-def test_a_slot_declaring_no_marker_keeps_the_general_required_and_presence_rules():
-    [declared, *_] = _fields()
-    field = declared.model_copy(update={"presence_marker": None})
-    with pytest.raises(FilingExportValidationError, match="is required"):
-        _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: None})
-    assert _header_field_value(field, {FilingProducerKey.AMENDMENT_IS_COMPLEMENTARIA: True}) == "X"
-
-
-def test_m369_complementaria_refuses_a_missing_producer_fact():
-    for field in _fields():
-        with pytest.raises(FilingExportValidationError, match="requires its producer fact"):
-            _header_field_value(field, {})
+        assert format_field(field, " ") == " "
+        assert format_field(field, "C") == "C"

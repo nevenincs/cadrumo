@@ -1219,6 +1219,10 @@ errors:
       that states casilla 111 needs a choice for the earlier direct debit (keep it,
       or cancel or modify it); none was given, so nothing was written. Choose one
       and export again.
+    refused_modelo_instalment_election: 'This return cannot be paid in two instalments:
+      that needs a result to pay, a return that is not corrective and is filed within
+      its filing period, and, for a direct-debited second instalment, a Spanish account
+      of yours.'
     refused_modelo_ledger_evidence_recapture: The evidence behind this filing cannot
       be re-bundled because the contributing ledger rows have changed since it was
       sealed. Recalculate the return instead; recapture only picks up evidence attached

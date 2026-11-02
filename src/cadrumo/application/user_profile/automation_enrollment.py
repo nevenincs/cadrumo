@@ -23,11 +23,12 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosureCategoryGrant,
     DisclosurePage,
     DisclosureSummary,
+    GrantUse,
     disclosure_digest,
     ordered_disclosures,
     summarize_disclosures,
 )
-from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
+from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal, GrantLabel
 
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -249,6 +250,9 @@ class AutomationGrantProjection(BaseModel):
     expires_at: datetime
     unattended: bool
     allow_os_lock: bool
+    label: GrantLabel | None = None
+    use: GrantUse
+    """What the grant's key is for, so a frontend can list only the keys issued for an agent."""
 
 
 class AutomationProposalProjection(BaseModel):
@@ -264,6 +268,7 @@ class AutomationProposalProjection(BaseModel):
     allow_os_lock: bool
     target_grant_id: UUID | None
     target_key_id: UUID | None
+    label: GrantLabel | None = None
 
 
 class AutomationKeyProjection(BaseModel):

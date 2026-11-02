@@ -5,7 +5,7 @@ family = "mapping"
 [[fact.variants]]
 variant_id = "modelo-result-casillas:design"
 date_axis = "filing_period"
-source_refs = ["aeat-dr-303-2026", "aeat-modelo-130-instructions", "aeat-dr-131-2026-late", "aeat-dr-111-2019-v18", "aeat-modelo-111-instructions", "aeat-dr-115-2019-v13", "boe-modelo-123-2024-form-text", "aeat-dr-123-2019-2023-v13-form-text", "aeat-modelo-200-manual-2025", "aeat-modelo-202-instructions", "aeat-modelo-210-procedure"]
+source_refs = ["aeat-dr-303-2026", "aeat-modelo-130-instructions", "aeat-dr-131-2026-late", "aeat-dr-111-2019-v18", "aeat-modelo-111-instructions", "aeat-dr-115-2019-v13", "boe-modelo-123-2024-form-text", "aeat-dr-123-2019-2023-v13-form-text", "aeat-modelo-200-manual-2025", "aeat-modelo-202-instructions", "aeat-modelo-210-procedure", "aeat-dr-100-2025-dictionary", "aeat-dr-100-2025-xsd"]
 review_status = "agent_reviewed"
 ownership = "authored"
 
@@ -53,6 +53,23 @@ required_text = ["Clave [03]. A ingresar.", "Clave [34]. Cantidad a ingresar"]
 source_ref = "aeat-modelo-210-procedure"
 required_text = ["Cuota diferencial (31)"]
 
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-dictionary"
+required_text = ["CalculoImpuestoRes/RESULTADO", "[0670]", "DatosIngresoDevolucion/TIPODECLARACION"]
+
+# A modelo whose record states a separate amount to pay or refund names, under
+# settlement_roles, the semantic role of that box; the settlement reads the computed box of
+# that role in the revision instead of the result. Modelo 100 declares RESINGDEV, "Resultado a
+# ingresar o a devolver (casilla [0670] o casilla [0695])": the remainder 0695 once the spouse
+# compensation suspends part of the amount to pay.
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-dictionary"
+required_text = ["IngresoDevolucionRes/RESINGDEV", "Resultado a ingresar o a devolver (casilla [0670] o casilla [0695]"]
+
+[[fact.variants.source_citations]]
+source_ref = "aeat-dr-100-2025-xsd"
+required_text = ["tipo_TIA", "I|1|2|U|M|A|P|H|F|E|Z|J|N|D|R|X"]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -65,4 +82,6 @@ entries = [
   { key = "casillas.200", value = "DP200014B:00599" },
   { key = "casillas.202", value = "03,34" },
   { key = "casillas.210", value = "cuota_diferencial" },
+  { key = "casillas.100", value = "0670" },
+  { key = "settlement_roles.100", value = "resultado_ingresar_o_devolver_irpf" },
 ]

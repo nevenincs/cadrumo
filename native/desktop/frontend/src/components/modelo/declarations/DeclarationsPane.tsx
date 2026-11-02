@@ -2,8 +2,10 @@ import type { ReactNode, RefObject } from "react";
 import { PaneHeader, type PaneControl } from "../../PaneHeader";
 import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import type { OpenableSurface } from "../details/Details";
+import type { ProfileCompanionKit } from "../workspace/ProfileCompanions";
 import { WorkspaceScreen } from "../workspace/WorkspaceScreen";
 import type { ModeloPort } from "../../../shell/modelo";
+import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
 import type { OutputLanguage } from "../../../shell/modeloContract";
 import { DeclarationsPage, type DeclarationsMemory } from "./DeclarationsPage";
 
@@ -30,6 +32,8 @@ export function DeclarationsPane({
   shown,
   page,
   pane,
+  profileCompanions,
+  readRegion,
 }: {
   port: ModeloPort;
   /** Whose declarations, or null while the account withholds them. */
@@ -55,12 +59,19 @@ export function DeclarationsPane({
   locale: string;
   shown: boolean;
   page: RefObject<HTMLElement | null>;
+  /** The profile's reads and write door for the open declaration's profile
+   * elements; none are offered without it. */
+  profileCompanions?: ProfileCompanionKit;
+  /** Reads the region the profile states, which the open declaration's
+   * estimate is made for. */
+  readRegion?: () => Promise<string | null>;
   pane: {
     title: string;
     controls: PaneControl[];
     onToggleMaximize(): void;
   };
 }) {
+  const ownedMemory = memory.current;
   if (workUnitId === null || reader === null)
     return (
       <DeclarationsPage
@@ -93,6 +104,7 @@ export function DeclarationsPane({
           key={workUnitId}
           port={port}
           workUnitId={workUnitId}
+          holds={modeloWritesFor(ownedMemory)}
           language={language}
           locale={locale}
           onBack={onBack}
@@ -100,9 +112,11 @@ export function DeclarationsPane({
           canOpenSurface={canOpenSurface}
           openLink={openLink}
           onLeaveGuard={guardLeave}
+          profileCompanions={profileCompanions}
+          readRegion={readRegion}
           // The list is read again on return only after a write.
           onWritten={() => {
-            memory.current.stale = true;
+            ownedMemory.stale = true;
           }}
         />
       </section>

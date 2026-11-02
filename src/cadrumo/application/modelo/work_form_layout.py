@@ -12,6 +12,7 @@ from ...domain.calculations.registry.export_semantics import ExportDraftAttribut
 from ...domain.calculations.registry.form_context import form_context_choice, resolve_form_context_field
 from ...domain.calculations.registry.form_projection_fields import resolve_form_projection_fields
 from ...domain.calculations.registry.ids import BindingId
+from ...domain.calculations.registry.modelo_localization import form_heading_edition_locale_key
 from ...domain.calculations.registry.schema_form_layouts import (
     FormBindingInputsBlock,
     FormCellKind,
@@ -126,15 +127,25 @@ class LayoutWalker:
         )
 
     def page(self, page: FormPageDefinition) -> ModeloFormPage:
-        """Project one declared page and derive applicability from its fields and saved rows."""
+        """Project one declared page and derive its and its sections' applicability from fields and saved rows."""
         language = self.context.language
         sections = tuple(self.section(page.id, section) for section in page.sections)
         applies = page_applies_for_values(page, self.context, sections)
         if applies is False:
-            sections = tuple(_asking_nothing(section) for section in sections)
+            sections = tuple(self._recounted(_asking_nothing(section)) for section in sections)
+        sections = tuple(
+            section.model_copy(update={"applies": section_applies(section, page_applies=applies)})
+            for section in sections
+        )
         return ModeloFormPage(
             id=page.id,
-            heading=localized_heading(page.heading_key, page.official_heading, page.official_ref or page.id, language),
+            heading=localized_heading(
+                page.heading_key,
+                page.official_heading,
+                page.official_ref or page.id,
+                language,
+                edition_key=self._edition_key(page.heading_key),
+            ),
             official_ref=page.official_ref,
             condition=page.condition,
             applies=applies,
@@ -150,14 +161,27 @@ class LayoutWalker:
         blocks = tuple(self.block(block) for block in section.blocks)
         form_section = ModeloFormSection(
             id=f"{page_id}.{section.id}",
-            heading=localized_heading(section.heading_key, section.official_heading, section.id, self.context.language),
+            heading=localized_heading(
+                section.heading_key,
+                section.official_heading,
+                section.id,
+                self.context.language,
+                edition_key=self._edition_key(section.heading_key),
+            ),
             official_heading=section.official_heading,
             blocks=blocks,
             counts=count_work_form_fields((), filed=self.context.filed),
+            applies=None,
         )
-        return form_section.model_copy(
-            update={"counts": count_work_form_fields(section_fields(form_section), filed=self.context.filed)}
+        return self._recounted(form_section)
+
+    def _recounted(self, section: ModeloFormSection) -> ModeloFormSection:
+        return section.model_copy(
+            update={"counts": count_work_form_fields(section_fields(section), filed=self.context.filed)}
         )
+
+    def _edition_key(self, heading_key: str) -> str | None:
+        return form_heading_edition_locale_key(str(self.context.review.modelo), self.layout.revision_id, heading_key)
 
     def block(
         self,
@@ -185,8 +209,6 @@ class LayoutWalker:
         language = self.context.language
         owner = resolve_form_context_field(self.context.snapshot.revision, block)
         label = localized_heading(block.heading_key, block.official_heading, "Dato del formulario", language)
-        if block.box_number is not None:
-            label = label.model_copy(update={"text": f"[{block.box_number}] {label.text}"})
         value = (
             project_binding_field(owner.binding, self.context).value
             if owner.binding is not None
@@ -210,6 +232,7 @@ class LayoutWalker:
         return ModeloFormContextFieldBlock(
             id=block.id,
             label=label,
+            box_number=block.box_number,
             value=value,
             value_text=context_value_text(value, language, period=period if shows_period else None),
         )
@@ -339,6 +362,20 @@ class LayoutWalker:
         casilla = self.context.casillas.get(column.casilla_id)
         label = None if casilla is None else localized_text(casilla.localization_keys, language)
         return heading if label is None else label
+
+
+def section_applies(section: ModeloFormSection, *, page_applies: bool | None) -> bool | None:
+    """Whether a section applies: not on a page that does not, nor when every box on it is proven not to apply.
+
+    Otherwise the section answers as its page does, so a page that may not
+    apply leaves its sections undecided too.
+    """
+    if page_applies is False:
+        return False
+    fields = section_fields(section)
+    if fields and all(field.origin is ModeloFormOrigin.NOT_APPLICABLE for field in fields):
+        return False
+    return page_applies
 
 
 def _asking_no_value(field: ModeloFormField) -> ModeloFormField:

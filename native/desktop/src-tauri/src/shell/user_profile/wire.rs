@@ -1,4 +1,4 @@
-//! Assemble only a complete, consistently pinned overview stream.
+//! Assemble only a complete, consistently pinned profile page stream.
 use super::{Failure, Result, protocol};
 use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
@@ -9,6 +9,20 @@ pub struct Choice {
     value: String,
     label: String,
 }
+/// What one stored fact states for the ejercicio its window starts in.
+#[derive(Clone, Deserialize, Serialize)]
+pub struct EjercicioStatement {
+    ejercicio: i64,
+    value: String,
+}
+/// The wizard questions a field stated per ejercicio is answered through,
+/// and what it states so far.
+#[derive(Clone, Deserialize, Serialize)]
+pub struct EjercicioAnswer {
+    question_id: String,
+    year_question_id: String,
+    statements: Vec<EjercicioStatement>,
+}
 #[derive(Clone, Deserialize, Serialize)]
 pub struct Field {
     pub path: String,
@@ -17,9 +31,14 @@ pub struct Field {
     masked: bool,
     required: bool,
     field_type: String,
+    /// The country codes offered; any code of the field's shape stays allowed.
+    #[serde(default)]
+    country_options: Vec<String>,
     choices: Vec<Choice>,
     help: Option<Vec<String>>,
     about: String,
+    #[serde(default)]
+    ejercicio_answer: Option<EjercicioAnswer>,
     row_index: Option<String>,
 }
 #[derive(Serialize)]
@@ -68,8 +87,9 @@ enum Item {
         message: String,
     },
 }
+/// One page of a `user-profile.view` stream, as the product serves it.
 #[derive(Deserialize)]
-struct Page {
+pub(super) struct Page<I> {
     profile_id: String,
     page_kind: String,
     outcome: String,
@@ -82,49 +102,59 @@ struct Page {
     cursor: usize,
     next_cursor: Option<usize>,
     total_items: usize,
-    items: Vec<Item>,
+    pub(super) items: Vec<I>,
 }
-pub struct Pages {
-    overview: Overview,
+
+impl<I> Page<I> {
+    /// Whether no page follows this one.
+    pub(super) fn is_last(&self) -> bool {
+        self.next_cursor.is_none()
+    }
+}
+
+/// What the first page of a stream pins and every later page must repeat.
+struct Pinned {
+    record_revision: u64,
+    content_digest: String,
+    setup_state: String,
+    valid: bool,
+    schema_version: u64,
+    total_items: usize,
+}
+
+/// The pagination of one `user-profile.view` page stream over one profile
+/// revision: the request that asks for the next page, and the checks that a
+/// page is the one asked for and the stream stays on the revision it began on.
+/// What a page's items mean is the stream's own.
+pub(super) struct Pin {
+    kind: &'static str,
+    profile_id: String,
+    pinned: Option<Pinned>,
     cursor: usize,
-    total: Option<usize>,
-    schema: u64,
-    paths: BTreeSet<String>,
-    keys: BTreeSet<String>,
-    trailing: bool,
+    pages: usize,
 }
-impl Pages {
-    pub fn new(profile_id: String) -> Self {
+impl Pin {
+    pub(super) fn new(kind: &'static str, profile_id: String) -> Self {
         Self {
-            overview: Overview {
-                profile_id,
-                record_revision: 0,
-                content_digest: String::new(),
-                setup_state: String::new(),
-                valid: false,
-                sections: vec![],
-                missing_required: vec![],
-                notices: vec![],
-                pages: 0,
-            },
+            kind,
+            profile_id,
+            pinned: None,
             cursor: 0,
-            total: None,
-            schema: 0,
-            paths: BTreeSet::new(),
-            keys: BTreeSet::new(),
-            trailing: false,
+            pages: 0,
         }
     }
-    pub fn request(&self, language: &str) -> Value {
-        let mut request = json!({"profile_id":self.overview.profile_id,"page_kind":"overview","cursor":self.cursor,"limit":128,"output_language":language});
-        if self.total.is_some() {
-            request["expected_revision"] = self.overview.record_revision.into();
-            request["expected_content_digest"] = self.overview.content_digest.clone().into();
+    pub(super) fn request(&self, language: &str) -> Value {
+        let mut request = json!({"profile_id":self.profile_id,"page_kind":self.kind,"cursor":self.cursor,"limit":128,"output_language":language});
+        if let Some(pinned) = &self.pinned {
+            request["expected_revision"] = pinned.record_revision.into();
+            request["expected_content_digest"] = pinned.content_digest.clone().into();
         }
         request
     }
-    pub fn accept(&mut self, value: Value) -> Result<bool> {
-        let page: Page = serde_json::from_value(value).map_err(|_| protocol())?;
+    /// Checks `page` against the request and the pages before it, pins the
+    /// stream on its first page, and answers the cursor after it. The caller
+    /// takes the items, then calls [`Pin::advance`] with that cursor.
+    pub(super) fn check<I>(&mut self, page: &Page<I>) -> Result<usize> {
         if page.outcome == "refused" {
             return Err(Failure::new(
                 if page.refusal_code.as_deref() == Some("stale_revision") {
@@ -139,8 +169,8 @@ impl Pages {
             .checked_add(page.items.len())
             .ok_or_else(protocol)?;
         if page.outcome != "page"
-            || page.page_kind != "overview"
-            || page.profile_id != self.overview.profile_id
+            || page.page_kind != self.kind
+            || page.profile_id != self.profile_id
             || page.cursor != self.cursor
             || page.record_revision == 0
             || page.schema_version == 0
@@ -151,28 +181,98 @@ impl Pages {
             || next > page.total_items
             || (page.cursor < page.total_items && page.items.is_empty())
             || page.next_cursor != (next < page.total_items).then_some(next)
-            || self.overview.pages >= 256
+            || self.pages >= 256
         {
             return Err(protocol());
         }
-        if let Some(total) = self.total {
-            if page.record_revision != self.overview.record_revision
-                || page.content_digest != self.overview.content_digest
-                || page.setup_state != self.overview.setup_state
-                || page.valid != self.overview.valid
-                || page.schema_version != self.schema
-                || total != page.total_items
+        if let Some(pinned) = &self.pinned {
+            if page.record_revision != pinned.record_revision
+                || page.content_digest != pinned.content_digest
+                || page.setup_state != pinned.setup_state
+                || page.valid != pinned.valid
+                || page.schema_version != pinned.schema_version
+                || page.total_items != pinned.total_items
             {
                 return Err(protocol());
             }
         } else {
-            self.overview.record_revision = page.record_revision;
-            self.overview.content_digest = page.content_digest;
-            self.overview.setup_state = page.setup_state;
-            self.overview.valid = page.valid;
-            self.total = Some(page.total_items);
-            self.schema = page.schema_version;
+            self.pinned = Some(Pinned {
+                record_revision: page.record_revision,
+                content_digest: page.content_digest.clone(),
+                setup_state: page.setup_state.clone(),
+                valid: page.valid,
+                schema_version: page.schema_version,
+                total_items: page.total_items,
+            });
         }
+        Ok(next)
+    }
+    pub(super) fn advance(&mut self, next: usize) {
+        self.cursor = next;
+        self.pages += 1;
+    }
+    /// Whether every item the first page counted has been taken.
+    pub(super) fn complete(&self) -> bool {
+        self.pinned
+            .as_ref()
+            .is_some_and(|pinned| pinned.total_items == self.cursor)
+    }
+    pub(super) fn pages(&self) -> usize {
+        self.pages
+    }
+    pub(super) fn record_revision(&self) -> u64 {
+        self.pinned
+            .as_ref()
+            .map_or(0, |pinned| pinned.record_revision)
+    }
+    pub(super) fn content_digest(&self) -> String {
+        self.pinned
+            .as_ref()
+            .map_or_else(String::new, |pinned| pinned.content_digest.clone())
+    }
+    pub(super) fn setup_state(&self) -> String {
+        self.pinned
+            .as_ref()
+            .map_or_else(String::new, |pinned| pinned.setup_state.clone())
+    }
+    pub(super) fn valid(&self) -> bool {
+        self.pinned.as_ref().is_some_and(|pinned| pinned.valid)
+    }
+}
+pub struct Pages {
+    overview: Overview,
+    pin: Pin,
+    paths: BTreeSet<String>,
+    keys: BTreeSet<String>,
+    trailing: bool,
+}
+impl Pages {
+    pub fn new(profile_id: String) -> Self {
+        Self {
+            overview: Overview {
+                profile_id: profile_id.clone(),
+                record_revision: 0,
+                content_digest: String::new(),
+                setup_state: String::new(),
+                valid: false,
+                sections: vec![],
+                missing_required: vec![],
+                notices: vec![],
+                pages: 0,
+            },
+            pin: Pin::new("overview", profile_id),
+            paths: BTreeSet::new(),
+            keys: BTreeSet::new(),
+            trailing: false,
+        }
+    }
+    pub fn request(&self, language: &str) -> Value {
+        self.pin.request(language)
+    }
+    pub fn accept(&mut self, value: Value) -> Result<bool> {
+        let page: Page<Item> = serde_json::from_value(value).map_err(|_| protocol())?;
+        let next = self.pin.check(&page)?;
+        let last = page.is_last();
         for item in page.items {
             match item {
                 Item::Section {
@@ -215,12 +315,11 @@ impl Pages {
                 _ => return Err(protocol()),
             }
         }
-        self.cursor = next;
-        self.overview.pages += 1;
-        Ok(page.next_cursor.is_none())
+        self.pin.advance(next);
+        Ok(last)
     }
-    pub fn finish(self) -> Result<Overview> {
-        if self.total != Some(self.cursor)
+    pub fn finish(mut self) -> Result<Overview> {
+        if !self.pin.complete()
             || self.overview.sections.is_empty()
             || self
                 .overview
@@ -230,6 +329,11 @@ impl Pages {
         {
             return Err(protocol());
         }
+        self.overview.record_revision = self.pin.record_revision();
+        self.overview.content_digest = self.pin.content_digest();
+        self.overview.setup_state = self.pin.setup_state();
+        self.overview.valid = self.pin.valid();
+        self.overview.pages = self.pin.pages();
         Ok(self.overview)
     }
 }
@@ -246,9 +350,40 @@ pub(super) fn mutation_failure(projection: &serde_json::Value) -> &'static str {
     "refused"
 }
 
+/// The longest sentence a refusal is relayed with.
+const REFUSAL_WORDS_LIMIT: usize = 1024;
+
+/// The finished sentence a registered error detail carries for the refusal,
+/// where it carries one within the bound. The host words nothing itself.
+pub(super) fn refusal_words(detail: &serde_json::Value) -> Option<String> {
+    detail["refusal_words"]
+        .as_str()
+        .map(str::trim)
+        .filter(|words| !words.is_empty() && words.chars().count() <= REFUSAL_WORDS_LIMIT)
+        .map(str::to_owned)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn a_refusal_is_relayed_with_only_a_bounded_sentence_the_application_served() {
+        let served = json!({"detail_version":1,"kind":"registered_error","refusal_words":" Row 2 needs a date of birth. "});
+        assert_eq!(
+            refusal_words(&served).as_deref(),
+            Some("Row 2 needs a date of birth.")
+        );
+        for unserved in [
+            json!({"kind":"registered_error"}),
+            json!({"refusal_words":""}),
+            json!({"refusal_words":"   "}),
+            json!({"refusal_words":7}),
+            json!({"refusal_words":"a".repeat(REFUSAL_WORDS_LIMIT + 1)}),
+            json!(null),
+        ] {
+            assert_eq!(refusal_words(&unserved), None, "{unserved}");
+        }
+    }
     #[test]
     fn only_a_settled_no_effect_conflict_is_safe_to_correct() {
         let mut projection = json!({
@@ -265,6 +400,36 @@ mod tests {
     }
     fn page() -> Value {
         json!({"profile_id":"p","page_kind":"overview","outcome":"page","record_revision":1,"content_digest":"a".repeat(64),"setup_state":"incomplete","schema_version":1,"valid":true,"cursor":0,"next_cursor":null,"total_items":1,"items":[{"kind":"section","key":"identity","title":"Identity","summary":"","repeatable":false}]})
+    }
+    #[test]
+    fn a_field_keeps_the_country_codes_and_the_ejercicio_answer_it_is_served_with() {
+        let served = json!({
+            "path": "irpf.activity_income_imputation_criterion",
+            "label": "Criterion",
+            "value": null,
+            "masked": false,
+            "required": false,
+            "field_type": "code",
+            "country_options": ["ES", "PT"],
+            "choices": [],
+            "help": null,
+            "about": "",
+            "ejercicio_answer": {
+                "question_id": "q",
+                "year_question_id": "y",
+                "statements": [{"ejercicio": 2025, "value": "devengo"}]
+            },
+            "row_index": null
+        });
+        let field: Field = serde_json::from_value(served.clone()).unwrap();
+        assert_eq!(serde_json::to_value(&field).unwrap(), served);
+        let mut bare = served;
+        bare.as_object_mut().unwrap().remove("country_options");
+        bare.as_object_mut().unwrap().remove("ejercicio_answer");
+        let field: Field = serde_json::from_value(bare).unwrap();
+        let held = serde_json::to_value(&field).unwrap();
+        assert_eq!(held["country_options"], json!([]));
+        assert_eq!(held["ejercicio_answer"], Value::Null);
     }
     #[test]
     fn only_complete_pinned_streams_are_released() {

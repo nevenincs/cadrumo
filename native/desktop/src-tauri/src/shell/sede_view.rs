@@ -37,7 +37,7 @@ mod tests;
 use super::{
     blocking,
     channel::RawFetch,
-    external,
+    clipboard, external,
     relay::{self, Failure, Relayed, Result, lock},
     user_profile::ProfileHost,
 };
@@ -48,14 +48,14 @@ use cadrumo_application::{
         service::{FeatureRefusal, RefusedFeature, ServiceFact},
     },
     provisioning::items::ItemId,
-    runtime_client::Refusal,
+    runtime_client::refusal::Refusal,
     view_stream::{
         chunks::AssembledImage,
         documents::{
-            TRANSFER_CREDIT_MAX_CHUNKS, ViewClosedReason, ViewDialog, ViewDialogKind,
-            ViewDialogPrompt, ViewDownload, ViewDownloadOutcome, ViewFileChooser, ViewInputEvent,
-            ViewNavigateVerb, ViewNotice, ViewNoticeCode, ViewPageSecurity, ViewPhase, ViewResize,
-            ViewState, ViewTransferComplete,
+            TRANSFER_CREDIT_MAX_CHUNKS, ViewClipboardAction, ViewClosedReason, ViewDialog,
+            ViewDialogKind, ViewDialogPrompt, ViewDownload, ViewDownloadOutcome, ViewFileChooser,
+            ViewInputEvent, ViewNavigateVerb, ViewNotice, ViewNoticeCode, ViewPageSecurity,
+            ViewPhase, ViewResize, ViewState, ViewTransferComplete,
         },
         lane::{UploadFile, UploadOutcome, ViewEnd, ViewEvent, ViewLane},
         transfer::TransferChunk,
@@ -68,12 +68,13 @@ use std::{
     sync::{
         Arc, Condvar, Mutex, OnceLock,
         atomic::{AtomicBool, AtomicU32, Ordering},
+        mpsc,
     },
     thread,
     time::{Duration, Instant},
 };
 use tauri::{
-    Manager, State, Url, Webview,
+    AppHandle, Manager, State, Url, Webview,
     ipc::{Channel, InvokeResponseBody},
 };
 use transfer::{Dialogs, Download, NativeDialogs, upload_file};
@@ -100,6 +101,7 @@ const SETTLE_POLL: Duration = Duration::from_millis(500);
 const START_CREDIT: u8 = 2;
 /// How many offers, dialogs and choosers wait for the person at once.
 const PENDING_LIMIT: usize = 16;
+const CLIPBOARD_REPLY: Duration = Duration::from_secs(5);
 
 fn failure(code: &'static str) -> Failure {
     Failure::new(code)
@@ -116,6 +118,8 @@ trait Lane: Send + Sync {
     fn credit(&self, images: u8) -> Sent;
     fn input(&self, event: ViewInputEvent) -> Sent;
     fn navigate(&self, verb: ViewNavigateVerb) -> Sent;
+    fn clipboard(&self, request_id: u32, action: ViewClipboardAction) -> Sent;
+    fn clipboard_commit(&self, request_id: u32, apply: bool) -> Sent;
     fn resize(&self, css_width: u32, css_height: u32, scale: f64) -> Sent;
     fn dialog(&self, dialog_id: u32, accept: bool, prompt_text: Option<String>) -> Sent;
     fn accept_download(&self, transfer_id: u32, size: Option<u64>) -> Sent;
@@ -142,6 +146,12 @@ impl Lane for ViewLane {
     }
     fn navigate(&self, verb: ViewNavigateVerb) -> Sent {
         ViewLane::navigate(self, verb)
+    }
+    fn clipboard(&self, request_id: u32, action: ViewClipboardAction) -> Sent {
+        ViewLane::clipboard(self, request_id, action)
+    }
+    fn clipboard_commit(&self, request_id: u32, apply: bool) -> Sent {
+        ViewLane::clipboard_commit(self, request_id, apply)
     }
     fn resize(&self, css_width: u32, css_height: u32, scale: f64) -> Sent {
         ViewLane::resize(self, css_width, css_height, scale)
@@ -638,6 +648,9 @@ struct View {
     /// The downloads being written.
     transfers: Mutex<BTreeMap<u32, Download>>,
     upstream: Upstream,
+    clipboard_gate: Mutex<()>,
+    clipboard_wait: Mutex<Option<(u32, mpsc::SyncSender<Option<String>>)>>,
+    clipboard_issued: AtomicU32,
     diagnostics: Arc<Diagnostics>,
 }
 
@@ -660,6 +673,9 @@ impl View {
             held: Mutex::new(Held::default()),
             transfers: Mutex::new(BTreeMap::new()),
             upstream: Upstream::default(),
+            clipboard_gate: Mutex::new(()),
+            clipboard_wait: Mutex::new(None),
+            clipboard_issued: AtomicU32::new(0),
         }
     }
 
@@ -828,6 +844,7 @@ impl View {
             control.phase = Phase::Closing;
         }
         self.upstream.close();
+        lock(&self.clipboard_wait).take();
         if let Ok(writer) = writer {
             let _ = writer.join();
         }
@@ -943,6 +960,10 @@ impl View {
             let _ = match command {
                 Command::Input(event) => lane.input(event),
                 Command::Navigate(verb) => lane.navigate(verb),
+                Command::Clipboard { request_id, action } => lane.clipboard(request_id, action),
+                Command::ClipboardCommit { request_id, apply } => {
+                    lane.clipboard_commit(request_id, apply)
+                }
                 Command::Resize {
                     css_width,
                     css_height,
@@ -964,6 +985,17 @@ impl View {
             ViewEvent::Image(image) => self.image(image),
             ViewEvent::State(state) => self.page(state),
             ViewEvent::Notice(notice) => self.notice(notice),
+            ViewEvent::ClipboardSelection(selection) => {
+                let mut pending = lock(&self.clipboard_wait);
+                if pending
+                    .as_ref()
+                    .is_some_and(|(request_id, _)| *request_id == selection.request_id)
+                    && let Some((_, sender)) = pending.take()
+                {
+                    let _ = sender.send(selection.text);
+                }
+                true
+            }
             ViewEvent::Download(download) => self.offered(lane, download),
             ViewEvent::FileChooser(chooser) => self.chooser(lane, chooser),
             ViewEvent::DownloadChunk(chunk) => self.chunk(lane, &chunk),
@@ -1222,6 +1254,40 @@ impl View {
             Ok(())
         } else {
             Err(failure("unavailable"))
+        }
+    }
+
+    /// A private, bounded reply to an explicit desktop clipboard command.
+    fn selected_text(
+        &self,
+        action: ViewClipboardAction,
+        timeout: Duration,
+    ) -> Result<(u32, String)> {
+        let request_id = self
+            .clipboard_issued
+            .fetch_add(1, Ordering::AcqRel)
+            .wrapping_add(1);
+        if request_id == 0 {
+            return Err(failure("unavailable"));
+        }
+        let (sender, receiver) = mpsc::sync_channel(1);
+        *lock(&self.clipboard_wait) = Some((request_id, sender));
+        if let Err(error) = self.queue(Command::Clipboard { request_id, action }) {
+            lock(&self.clipboard_wait).take();
+            return Err(error);
+        }
+        let reply = receiver.recv_timeout(timeout);
+        lock(&self.clipboard_wait).take();
+        if reply.is_err() && action == ViewClipboardAction::Cut {
+            // The worker processes this after selection, releasing its held DOM handle.
+            let _ = self.queue(Command::ClipboardCommit {
+                request_id,
+                apply: false,
+            });
+        }
+        match reply {
+            Ok(Some(text)) => Ok((request_id, text)),
+            _ => Err(failure("unavailable")),
         }
     }
 }
@@ -1575,6 +1641,50 @@ impl SedeViewHost {
         self.view(id)?.queue(Command::Navigate(verb))
     }
 
+    fn clipboard<R: tauri::Runtime>(
+        &self,
+        id: u32,
+        action: ViewClipboardAction,
+        app: &AppHandle<R>,
+    ) -> Result<()> {
+        self.clipboard_with(id, action, |text| {
+            clipboard::write(app, text).map_err(|_| failure("unavailable"))
+        })
+    }
+
+    fn clipboard_with(
+        &self,
+        id: u32,
+        action: ViewClipboardAction,
+        write: impl FnOnce(String) -> Result<()>,
+    ) -> Result<()> {
+        let view = self.view(id)?;
+        let _gate = lock(&view.clipboard_gate);
+        if !view.runtime.held() {
+            return Err(failure("not_admitted"));
+        }
+        let (request_id, text) = view.selected_text(action, CLIPBOARD_REPLY)?;
+        // A view or session that changed while the worker selected text cannot write it.
+        let current = self.view(id)?;
+        if !Arc::ptr_eq(&current, &view) || !view.runtime.held() || view.phase() != Phase::Open {
+            if action == ViewClipboardAction::Cut {
+                let _ = view.queue(Command::ClipboardCommit {
+                    request_id,
+                    apply: false,
+                });
+            }
+            return Err(failure("not_admitted"));
+        }
+        let written = write(text);
+        if action == ViewClipboardAction::Cut {
+            view.queue(Command::ClipboardCommit {
+                request_id,
+                apply: written.is_ok(),
+            })?;
+        }
+        written
+    }
+
     fn resize(&self, id: u32, css_width: u32, css_height: u32, scale: f64) -> Result<()> {
         let size = Size::admit(css_width, css_height, scale)?;
         self.view(id)?.queue(Command::Resize {
@@ -1730,6 +1840,21 @@ fn sede_view_navigate(
     host.navigate(view, verb)
 }
 
+/// The person explicitly copied or cut the focused page selection. Text stays
+/// between the worker and the native clipboard, never in the webview channel.
+#[tauri::command]
+async fn sede_view_clipboard<R: tauri::Runtime>(
+    host: State<'_, Arc<SedeViewHost>>,
+    app: AppHandle<R>,
+    view: u32,
+    action: ViewClipboardAction,
+) -> Result<()> {
+    let owner = host.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || owner.clipboard(view, action, &app))
+        .await
+        .map_err(|_| failure("unavailable"))?
+}
+
 #[tauri::command]
 fn sede_view_resize(
     host: State<'_, Arc<SedeViewHost>>,
@@ -1808,6 +1933,7 @@ pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {
         sede_view_close,
         sede_view_input,
         sede_view_navigate,
+        sede_view_clipboard,
         sede_view_resize,
         sede_view_credit,
         sede_view_dialog,

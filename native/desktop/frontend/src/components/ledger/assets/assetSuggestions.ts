@@ -1,24 +1,20 @@
-// What the element forms offer as text is typed in, and what the descriptor
-// form starts from when the element's purchase has an invoice. Both are draft
-// text the person sees and the register still judges. A pick fills only the
-// fields beside it that are empty, and nothing here is a tax fact.
-
 import { useEffect, useRef } from "react";
 import type { SuggestionProps } from "@/components/editors/editorProps";
 import type { Suggestion } from "@/components/ui/suggestions";
 import type { AcquisitionCandidate } from "../../../shell/ledgerSetup";
-import { emptyFills } from "../suggestions/ledgerSuggestions";
 import {
   useFieldSuggestions,
   useHeldInvoices,
 } from "../suggestions/SuggestionsProvider";
-import {
-  statesReference,
-  type FieldKind,
-  type FormDraft,
-  type FormField,
-} from "./assetFields";
+import { emptyFills } from "../suggestions/ledgerSuggestions";
+import { statesReference, type FieldKind } from "./assetFields";
+import type { FormDraft, FormField } from "./assetFormValues";
 import { purchaseInvoiceFacts } from "./assetWrites";
+
+// What the element forms offer as text is typed in, and what the descriptor
+// form starts from when the element's purchase has an invoice. Both are draft
+// text the person sees and the register still judges. A pick fills only the
+// fields beside it that are empty, and nothing here is a tax fact.
 
 /** The sibling fields a supplier pick can fill, by what the pick offers. */
 const SUPPLIER_SIBLINGS = {

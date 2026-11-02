@@ -36,3 +36,20 @@ def test_context_is_a_note_not_an_editable_field_and_mirrors_losslessly(value):
     public = project_public_mirror(block, ModeloFormContextFieldBlock, PublicModeloFormContextFieldBlock)
     assert restore_public_mirror(public, ModeloFormContextFieldBlock, PublicModeloFormContextFieldBlock) == block
     assert "address" not in block.model_dump()
+
+
+def test_context_note_leads_with_the_printed_box_the_design_declares():
+    form = synthetic_form()
+    page = form.pages[0]
+    section = page.sections[0]
+    block = ModeloFormContextFieldBlock(
+        id="context",
+        label=section.heading.model_copy(update={"text": "Importe total"}),
+        box_number="02",
+        value="12",
+    )
+    changed = section.model_copy(update={"blocks": (block, *section.blocks)})
+    page = page.model_copy(update={"sections": (changed, *page.sections[1:])})
+    form = form.model_copy(update={"pages": (page, *form.pages[1:])})
+    notes = [item.text for item in page_items(workbench_pages(form)[0], staged={}) if isinstance(item, CasillaListNote)]
+    assert any(text.startswith("[02] Importe total:") for text in notes)
