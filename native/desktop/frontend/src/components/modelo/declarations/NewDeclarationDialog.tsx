@@ -200,7 +200,10 @@ function Chooser({
         }),
       () => alive.current && mine === generation.current,
     );
-    const current = () => alive.current && mine === generation.current && activeTarget.current === key;
+    const current = () =>
+      alive.current &&
+      mine === generation.current &&
+      activeTarget.current === key;
     if (outcome.kind === "settled") {
       const result = outcome.result.outcome;
       if (result.kind === "success") {

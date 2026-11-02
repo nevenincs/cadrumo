@@ -49,10 +49,7 @@ import {
   type MenuEntry,
 } from "./components/ContextMenu";
 import { Icon } from "@/components/ui/icon";
-import {
-  DocsFrame,
-  type DocsFrameApi,
-} from "./components/DocsFrame";
+import { DocsFrame, type DocsFrameApi } from "./components/DocsFrame";
 import type { DocsTheme } from "./ipc/contract";
 import { PaneHeader, type PaneControl } from "./components/PaneHeader";
 import { Rail, type RailItem } from "./components/Rail";
@@ -82,9 +79,7 @@ import {
   needsSetup,
   useSetup,
 } from "./shell/setup";
-import {
-  useProvisioningStore,
-} from "./shell/provisioning";
+import { useProvisioningStore } from "./shell/provisioning";
 import {
   provisionActionOf,
   routeCensoRefusals,
@@ -879,8 +874,6 @@ export function App({ host }: { host: Host }) {
       bundled.find((language) => language.code === locale) ?? bundled[0] ?? null
     );
   }, [environment, locale]);
-
-
 
   // The previous close ended changes before they reported: say once that
   // their outcome is unknown, so none is repeated blindly. The host gives the
@@ -2349,7 +2342,8 @@ export function App({ host }: { host: Host }) {
     actions,
     actionsRef,
     paletteOpen,
-    menu !== null || (signInAsked && !signInDismissed && account.status !== null),
+    menu !== null ||
+      (signInAsked && !signInDismissed && account.status !== null),
   );
 
   // Menus: the shell draws every one, in the Cadrumo theme, whichever host it
@@ -2360,8 +2354,16 @@ export function App({ host }: { host: Host }) {
   );
 
   const { docsMenu, aeatMenu, terminalMenu, recordMenu } = useShellMenus({
-    actionsRef, terminals, openMenu, t, copy, copyLogs, paste, runAction,
-    setFilters, selectLogLevel,
+    actionsRef,
+    terminals,
+    openMenu,
+    t,
+    copy,
+    copyLogs,
+    paste,
+    runAction,
+    setFilters,
+    selectLogLevel,
   });
 
   const searchDocs: DocsSearch = useMemo(

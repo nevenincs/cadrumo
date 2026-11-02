@@ -396,7 +396,9 @@ test("the review flags an expense category on income, which no expense reads", a
     cellOf(income, "category"),
     label("desktop.ledger.category.vehiculo_combustible"),
   );
-  // The same category on an expense is no mismatch.
+  // The same category on an expense is no mismatch. The grid draws the rows
+  // in view, so the expense is brought into it by the search, as a person does.
+  await find(target, "comision mantenimiento");
   await chooseIn(
     target,
     cellOf(rowOf(target, "COMISION MANTENIMIENTO CUENTA"), "category"),
