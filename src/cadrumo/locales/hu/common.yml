@@ -1141,6 +1141,8 @@ desktop:
     close: Bevallások bezárása
     loading: A bevallásaid beolvasása…
     maximize: Bevallások teljes méretben
+    notes:
+      label: Amit a legutóbbi számítás feljegyzett
     position: '{row}/{count}. bevallás'
     read_failed: A Cadrumo nem tudta beolvasni a bevallásaidat.
     retry: Próbáld újra
@@ -4109,6 +4111,8 @@ desktop:
     none_unread: A legutóbbi szinkronizáláskor nem volt olvasatlan
     unread: '{count} olvasatlan'
   modelo:
+    box_notes:
+      label: Amit a számítás erről a rovatról feljegyzett
     correction:
       kind_label: A helyesbítés fajtája
       motive_label: A helyesbítés oka

@@ -1159,6 +1159,8 @@ desktop:
     close: Tanca les declaracions
     loading: S'estan llegint les teves declaracions…
     maximize: Maximitza les declaracions
+    notes:
+      label: El que ha anotat l'últim càlcul
     position: Declaració {row} de {count}
     read_failed: Cadrumo no ha pogut llegir les teves declaracions.
     retry: Torna-ho a provar
@@ -4133,6 +4135,8 @@ desktop:
     none_unread: Cap sense llegir a l'última sincronització
     unread: '{count} sense llegir'
   modelo:
+    box_notes:
+      label: El que el càlcul ha anotat sobre aquesta casella
     correction:
       kind_label: Tipus de correcció
       motive_label: Motiu de la rectificació

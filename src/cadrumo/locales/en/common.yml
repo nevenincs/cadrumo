@@ -1125,6 +1125,8 @@ desktop:
     close: Close declarations
     loading: Reading your declarations…
     maximize: Maximize declarations
+    notes:
+      label: What the latest calculation noted
     position: Declaration {row} of {count}
     read_failed: Cadrumo could not read your declarations.
     retry: Try again
@@ -4072,6 +4074,8 @@ desktop:
     none_unread: None unread at the last sync
     unread: '{count} unread'
   modelo:
+    box_notes:
+      label: What the calculation noted about this box
     correction:
       kind_label: Kind of correction
       motive_label: Reason for the rectification
