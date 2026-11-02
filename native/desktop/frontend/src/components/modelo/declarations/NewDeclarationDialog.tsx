@@ -134,13 +134,15 @@ function Chooser({
   );
   const [attempt, setAttempt] = useState<Attempt>({ kind: "idle" });
   const alive = useRef(false);
+  const generation = useRef(0);
   const activeTarget = useRef("");
   useLayoutEffect(() => {
     alive.current = true;
     return () => {
       alive.current = false;
+      generation.current += 1;
     };
-  }, []);
+  }, [holds, port]);
 
   // The modelos offered, in the order the read model offers them.
   const modelos = useMemo(() => {
@@ -186,6 +188,7 @@ function Chooser({
     const key = creationWriteKey(target);
     const lease = holds.begin(key);
     if (!lease) return;
+    const mine = generation.current;
     setAttempt({ kind: "idle" });
     const outcome = await runOperation(
       port,
@@ -195,9 +198,9 @@ function Chooser({
           period: { filing_year: target.filing_year, code: target.period_code },
           actor: MODELO_ACTOR,
         }),
-      () => alive.current,
+      () => alive.current && mine === generation.current,
     );
-    const current = () => alive.current && activeTarget.current === key;
+    const current = () => alive.current && mine === generation.current && activeTarget.current === key;
     if (outcome.kind === "settled") {
       const result = outcome.result.outcome;
       if (result.kind === "success") {

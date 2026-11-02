@@ -313,6 +313,13 @@ const PURPOSE_FILES: Record<ModeloFilePurpose, string> = {
   envelope: "respuesta-asesoria.sealed",
 };
 
+declare global {
+  interface Window {
+    /** Active synthetic modelo port, for controlled operation observations. */
+    __fixtureModelo?: ModeloPort;
+  }
+}
+
 export function modeloFixture(options: Options): ModeloPort {
   const { say, signedIn, shape } = options;
   const catalogue = options.envelopes ?? servedEnvelopes();
@@ -591,6 +598,7 @@ export function modeloFixture(options: Options): ModeloPort {
 
   const port: ModeloPort = {
     async declarations(language) {
+      window.__fixtureModelo = port;
       say(`modelo declarations ${language}`);
       await answer();
       const list = await envelope<ModeloDeclarationsListProjectionV1>(
