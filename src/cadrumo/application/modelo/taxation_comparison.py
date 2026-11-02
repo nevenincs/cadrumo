@@ -52,7 +52,6 @@ from typing import TYPE_CHECKING, Final
 from pydantic import BaseModel
 
 from ...core.casilla_id import CasillaId
-from ...core.decimal.constants import ONE
 from ...core.errors.hierarchy import CoreError
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -82,7 +81,7 @@ if TYPE_CHECKING:
 # Output types
 # ---------------------------------------------------------------------------
 
-MATERIALITY_THRESHOLD: Final = ONE
+MATERIALITY_THRESHOLD: Final = Decimal(1)
 """The difference in euros below which either filing mode is acceptable; not a tax-law limit."""
 
 _DECLARATION_TYPE_BINDING_SUFFIX = "profile-declaration-type"

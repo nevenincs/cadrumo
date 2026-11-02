@@ -6123,7 +6123,9 @@ export type ModeloSpreadsheetExportRequest = {
  *
  * `recommendation_reason` is the closed token of why the mode is recommended;
  * `recommendation_reason_words` is the same reason in words naming the results
- * it compares, in `words_language`.
+ * it compares, in `words_language`; `individual_branch_caveat` states in the
+ * same language why the individual figure is reliable only for a single-earner
+ * household.
  */
 export type ModeloTaxationComparisonProjection = {
   result_version: 2;
