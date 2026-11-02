@@ -433,10 +433,11 @@ cli:
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         preview_help: 'Preview an invoice draft: the figures, findings and verdict
           the add operation would reach, without saving anything. The counterparty
-          tax id (counterparty_nif) and the draft lines (lines, a JSON array of line
-          objects with optional key, description, quantity, unit_price, iva_rate,
-          subtotal and iva_amount; a figure left out stays unknown; use it instead
-          of --taxable-base) arrive as one JSON object on --secrets-stdin or --secrets-fd.'
+          tax id (`counterparty_nif`) and the draft lines (`lines`, a JSON array of
+          line objects with optional `key`, `description`, `quantity`, `unit_price`,
+          `iva_rate`, `subtotal` and `iva_amount`; a figure left out stays unknown;
+          use it instead of --taxable-base) arrive as one JSON object on --secrets-stdin
+          or --secrets-fd.'
         preview_operation_date_role_help: Stored role of the operation date on the
           invoice a correction restates.
         preview_printed_total_help: The total printed on the document, compared with
@@ -593,11 +594,11 @@ cli:
           you are replacing. Leave it out for a first attestation.
         attest_absence_help: Attest that no payer withheld on an income class in an
           ejercicio. This is your own statement, not a payer certificate.
-        ejercicio_help: Ejercicio (year) the income is imputed to.
+        ejercicio_help: Tax year (`ejercicio`) the income is imputed to.
         evidence_sha256_help: SHA-256 of the certificate file; required for payer_certificate.
         group_help: Record the withholding your payers' certificates report.
         importe_integro_help: Money income the payer paid, before withholding.
-        income_class_help: Income class the payer withheld on, for example trabajo.
+        income_class_help: Income class the payer withheld on, for example `trabajo`.
         ingreso_a_cuenta_help: Ingreso a cuenta the payer made on income in kind.
           It counts in full as a credit.
         ingreso_a_cuenta_repercutido_help: Part of the ingreso a cuenta the payer
@@ -617,7 +618,8 @@ cli:
           remove.
         remove_help: Remove one stored payer record, guarded by the revision a list
           showed.
-        retencion_help: Retención the payer practised, in euros with at most two decimals.
+        retencion_help: Withholding the payer practised, in euros with at most two
+          decimals.
         valoracion_especie_help: Valuation of the payment in kind.
         withdraw_absence_expected_revision_help: Revision the attestation was stored
           at.
@@ -654,7 +656,7 @@ cli:
           pattern cannot be searched.
         remove_not_found: No stored rule has the id %{rule_id}. Nothing was changed.
         remove_rule_id_help: Full id of the rule to remove, as shown by the JSON output
-          of rule list.
+          of `rule list`.
         remove_stale: The stored rule %{rule_id} was saved again at %{created_at},
           which is not the time you gave. Nothing was removed; list the rules and
           check it.
@@ -3118,10 +3120,10 @@ cli:
       iva_rate_help: IVA rate as a decimal, for example 0.21
       iva_vehicle_use_help: 'What the row''s vehicle is used for, where LIVA art.
         95.Tres.2.ª treats it apart from the 50 per cent presumption: one of the six
-        uses presumed 100 per cent (mixed_vehicle_goods_transport, paid_passenger_transport,
-        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
-        surveillance) or outside_presumed_classes for a vehicle that rule does not
-        name.'
+        uses presumed 100 per cent (`mixed_vehicle_goods_transport`, `paid_passenger_transport`,
+        `paid_driver_or_pilot_training`, `manufacturer_testing_or_promotion`, `commercial_agent_travel`,
+        `surveillance`) or `outside_presumed_classes` for a vehicle that rule does
+        not name.'
       llm_classified_by_label: classified-by
       llm_confidence_label: confidence
       llm_exclusive: --llm cannot be combined with --classification or --file; the
@@ -3466,10 +3468,10 @@ cli:
         child transactions)
     staged_check_category_help: Repeatable spending category to judge against a classification.
     staged_check_help: Answer staged ledger work the way the writers would take it,
-      without saving anything. The staged rows (rows, a JSON array of objects with
-      transaction_id, cells and optional evidence_staged and m210_staged) and new
-      movements (drafts, a JSON array of objects with key and fields) arrive as one
-      JSON object on --secrets-stdin or --secrets-fd.
+      without saving anything. The staged rows (`rows`, a JSON array of objects with
+      `transaction_id`, `cells` and optional `evidence_staged` and `m210_staged`)
+      and new movements (`drafts`, a JSON array of objects with `key` and `fields`)
+      arrive as one JSON object on --secrets-stdin or --secrets-fd.
     staged_check_invalid: Each staged row and draft must be a JSON object of the expected
       shape.
     stash:
