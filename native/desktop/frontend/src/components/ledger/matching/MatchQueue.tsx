@@ -1,3 +1,4 @@
+import settings from "virtual:operational-settings";
 import { useEffect, useId, useMemo, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -37,7 +38,6 @@ import {
 } from "./matchingWords";
 import { useMatchingFacts, type Facts } from "./useMatchingFacts";
 
-const TOAST_MS = 4000;
 /** How many evidence chips a queue item shows; the rest are in its
  * accessible description. */
 const SHOWN_CHIPS = 2;
@@ -427,7 +427,10 @@ export function MatchQueue({
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    const timer = window.setTimeout(
+      () => setToast(null),
+      settings.ledger_toast_ms,
+    );
     return () => window.clearTimeout(timer);
   }, [toast]);
   const actions = stage.content.actions;

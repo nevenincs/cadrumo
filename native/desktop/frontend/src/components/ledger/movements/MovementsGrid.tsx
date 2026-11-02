@@ -5,15 +5,15 @@ import {
   type ReactNode,
   type Ref,
 } from "react";
+import { DataGrid } from "@/components/ui/data-grid";
+import { DataGridRowCheckbox } from "@/components/ui/data-grid-selection";
 import {
-  DataGrid,
-  DataGridRowCheckbox,
   type CellContext,
   type CellDescription,
   type DataGridHandle,
   type EditorContext,
   type GridColumn,
-} from "@/components/ui/data-grid";
+} from "@/components/ui/dataGridTypes";
 import { Icon } from "@/components/ui/icon";
 import { facts, listed } from "@/shell/compose";
 import type { LedgerRow } from "../../../shell/ledger";
