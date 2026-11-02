@@ -40,7 +40,7 @@ from .retencion_soportada_results import (
     RetencionSoportadaRowPayload,
 )
 
-_REFUSAL_MESSAGES = {
+_REFUSAL_MESSAGE_LOCALE_KEYS = {
     "own_tax_id": "aggregation.retencion_soportada.errors.own_tax_id",
     "ejercicio_unsupported": "aggregation.retencion_soportada.errors.ejercicio_unsupported",
     "family_not_declared": "aggregation.retencion_soportada.errors.family_not_declared",
@@ -86,7 +86,7 @@ def _raise_refusal(
     completed: RegisteredOperationCompletion[RetencionSoportadaMutationProjection],
     refusal: RetencionSoportadaRefusalProjection,
 ) -> Never:
-    message = _REFUSAL_MESSAGES.get(refusal.reason)
+    message = _REFUSAL_MESSAGE_LOCALE_KEYS.get(refusal.reason)
     if (
         message is None
         or completed.terminal_condition is not OperationTerminalCondition.REFUSED
