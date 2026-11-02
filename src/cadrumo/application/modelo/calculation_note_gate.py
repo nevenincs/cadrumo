@@ -317,7 +317,9 @@ def _refuse_filed_before_grade_cap(
 def require_work_unit_calculation_screen_current(
     *, work_unit: WorkUnit, revision: CalculationRevision, action: str, operation: PinnedAuthorityOperation
 ) -> None:
-    """Refuse ``action`` on ``work_unit`` while its ``revision`` is stale or filed with a capped figure, without reading its notes.
+    """Refuse ``action`` on ``work_unit`` while its ``revision`` is stale or filed with a capped figure.
+
+    Its notes are not read.
 
     The staleness is the one :func:`calculation_screen_outdated` answers: an
     absent or differing screen stamp refuses, and a revision already recorded
