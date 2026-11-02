@@ -2208,6 +2208,18 @@ application:
       inventory_register_drift: L'inventari d'aquest càlcul del model %{modelo} ha
         canviat des que es va calcular (%{rows_recorded} files registrades, %{rows_current}
         ara, %{rows_changed} canviades). Torna a calcular abans de fer-lo servir.
+      invoice_fingerprint_absent: Aquest càlcul del model %{modelo} %{filing_year},
+        %{period} és anterior al seguiment de factures, així que Cadrumo no pot saber
+        si les teves factures han canviat des d'aleshores. Torna a calcular-lo per
+        començar a seguir-les.
+      invoice_fingerprint_drift: Les teves factures han canviat després de calcular
+        el model %{modelo} %{filing_year}, %{period} (%{changed_count} modificades,
+        %{removed_count} eliminades, %{added_count} afegides). Torna a calcular-lo
+        abans de verificar-lo.
+      invoice_fingerprint_unavailable: Cadrumo no ha pogut llegir les teves factures
+        per comparar-les amb el model %{modelo} %{filing_year}, %{period}, així que
+        no es pot confirmar que aquest càlcul estigui al dia. Torna-ho a provar quan
+        es puguin llegir.
       iva_compensation_annual_source_evidence_failure: El model 390 necessita les
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració

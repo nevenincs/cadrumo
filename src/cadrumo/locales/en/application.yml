@@ -2080,6 +2080,15 @@ application:
       inventory_register_drift: The inventory behind this %{modelo} calculation changed
         since it was calculated (%{rows_recorded} rows recorded, %{rows_current} now,
         %{rows_changed} changed). Recalculate before relying on it.
+      invoice_fingerprint_absent: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates invoice tracking, so Cadrumo cannot say whether your
+        invoices have changed since. Calculate it again to start tracking them.
+      invoice_fingerprint_drift: Your invoices changed after modelo %{modelo} %{filing_year},
+        %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
+        %{added_count} added). Calculate it again before verifying.
+      invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
+        them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
+        cannot be shown to be current. Try again once they can be read.
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.
