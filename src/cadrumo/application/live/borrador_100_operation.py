@@ -169,6 +169,7 @@ class Borrador100ReadExecutor:
                         snapshot=detail,
                         filing_year=payload.filing_year,
                         refused_snapshots=refused,
+                        outdated_stored_snapshots=reading.outdated_stored_snapshots,
                     )
                 )
             human_detail = (
@@ -189,6 +190,7 @@ class Borrador100ReadExecutor:
                     snapshot=human_detail,
                     filing_year=payload.filing_year,
                     refused_snapshots=refused,
+                    outdated_stored_snapshots=reading.outdated_stored_snapshots,
                 )
             )
 
@@ -216,6 +218,9 @@ class _TrackedBorradorRepository:
 
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return self._repository.list_snapshots()
+
+    def outdated_stored_snapshot_count(self) -> int:
+        return self._repository.outdated_stored_snapshot_count()
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         return self._repository.resolve(snapshot_id)

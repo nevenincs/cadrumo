@@ -47,6 +47,7 @@ from pydantic import (
 
 from ...core.country_code import COUNTRY_CODE_LENGTH
 from ...core.errors.hierarchy import CadrumoError, pydantic_validation_boundary
+from ...core.filing_year import is_four_digit_year
 from ...core.irnr import M210PayerMode
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.time.clock import today_madrid
@@ -567,7 +568,7 @@ class Modelo349RectificacionRow(BaseModel):
     @field_validator("ejercicio")
     @classmethod
     def _ejercicio_four_digit_year(cls, value: str) -> str:
-        if not (value.isdigit() and 1000 <= int(value) <= 9999):
+        if not (value.isdigit() and is_four_digit_year(int(value))):
             raise ValueError("ejercicio must be a four-digit year")
         return value
 

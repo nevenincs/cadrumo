@@ -34,14 +34,12 @@ from .....domain.calculations.registry.remote_state_guard import RemoteStateGuar
 from .....domain.calculations.registry.schema_base import EvidenceTier
 from .._playwright import BrowserContext, Locator, Page, PlaywrightError
 from ._adapter_utils import assert_pdf_response as _assert_pdf_response
-from ._adapter_utils import assert_read_landing
+from ._adapter_utils import assert_query_browser_action_for, assert_read_http_for, assert_read_landing
 from ._adapter_utils import landed_origin as _landed_origin
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
 )
 from ._browser_constants import navigation_timeout_ms
-from .declarations_remote import assert_read_browser_action as _remote_assert_read_browser_action
-from .declarations_remote import assert_read_http as _remote_assert_read_http
 from .declarations_remote import extract_csv_from_url as _extract_csv_from_url
 from .errors import (
     JustificanteFetchError,
@@ -361,7 +359,7 @@ def assert_declarations_read_http(
     *,
     policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
-    _remote_assert_read_http(method, url, policy=policy)
+    assert_read_http_for(policy, method, url)
 
 
 def assert_declarations_read_browser_action(
@@ -369,4 +367,4 @@ def assert_declarations_read_browser_action(
     *,
     policy: RemoteStateGuardPolicy = READ_GUARD_POLICY,
 ) -> None:
-    _remote_assert_read_browser_action(action, policy=policy)
+    assert_query_browser_action_for(policy, action)

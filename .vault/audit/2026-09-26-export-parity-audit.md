@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:3f4c3f263e5ba648cae8ee173aa663b29b0bd10f1f08aa671a1c87354ce5e22a'
+body_hash: 'sha256:8aacf592da0867ed65e520d5d03323a6d9fdb645d46e664f07beab754c6e6c9c'
 related:
   - "[[2026-09-23-tuimodelo-export-paths-reference]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
@@ -90,3 +90,22 @@ With content identity independent of the capture instant, `snapshot_base.py:329`
 Consistent with the rulings. Whether operator input should clear it is a follow-on decision.
 
 Pending verification, not defects: installed borrador stdio acceptance on a disposable host; 31 Chromium sede and live tests; whether recorded results are re-validated on replay; publication and runtime adoption of the S05 and S16 registry edits; the ADR's stored-revision replay test and the sede-level Modelo 131 DPA disagreement test.
+
+## Re-review 2026-11-02: P02 fixes (`4e3833056c` to `2c8663b9c4`)
+
+Resolved: borrador per-snapshot refusal and capture-time key check, PRESENTADO exemption narrowed to the screen check, form and declarations-list agreement on recalculation, re-import outcome, routing fact read at the period date. Partly resolved: previews (the review workbook shows the note; the signed report stays sealed-only by orchestrator decision), public result contract (`unowned_casillas` defaulted; `outcome` stays required because a result recorded under an older contract is refused before re-validation, `src/cadrumo/application/operations/_projection_read.py:468-475`, and a default would assert an outcome that never happened). Open by decision: proven-zero persistence, operator-keyed casilla 06. 144 focused tests passed.
+
+### borrador support-envelope refusal | medium | a capture outside the support envelope still fails the status read
+`src/cadrumo/application/live/borrador_100.py:158` lets `FilingYearOutsideSupportEnvelopeError` escape the status guard at `src/cadrumo/application/aeat_sync/status_operation.py:81,169`. Recommendation: return a typed per-snapshot refusal.
+
+### signed report on stale sealed revisions | medium | the report omits the screen check that export applies
+`src/cadrumo/application/export/calculation_report_export.py:276` signs a sealed revision verified before the cap, with no stamp and no note, while export refuses it as stale. Recommendation: apply the screen check to non-filed sealed revisions.
+
+### review workbook omits notes without a casilla | low | unrouted blocking notes and stale revisions show no finding
+`src/cadrumo/application/export/review_snapshot_loader.py:333`.
+
+### summary gate outside the per-row guard | low | a stamp error can fail the whole declarations list
+`src/cadrumo/application/modelo/declaration_summary.py:98`.
+
+### build-time routing check date | low | checked at year end while calculation reads at period end
+`src/cadrumo/domain/renta/retenciones_routing_integrity.py:103`. No effect with one routing variant.

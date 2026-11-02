@@ -29,6 +29,8 @@ from cadrumo.adapters.persistence.profile.tests.modelo_export_support import iso
 from cadrumo.adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+from cadrumo.application.modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
 from cadrumo.application.modelo.calculation_report import (
     CalculationReportRowRole,
     CalculationReportValueState,
@@ -48,6 +50,7 @@ from cadrumo.application.modelo.calculation_report_export import (
     build_modelo_calculation_report_for_revision,
     export_modelo_calculation_report,
 )
+from cadrumo.application.modelo.calculation_screen import calculation_screen_outdated_message_key
 from cadrumo.application.modelo.export_ports import ModeloExportPorts
 from cadrumo.application.modelo.export_sink import ModeloExportOutputPathError
 from cadrumo.core.calculation_report_format import CalculationReportDocumentFormat
@@ -56,15 +59,22 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.filing.software_identity import AeatSoftwareIdentityGrade
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
+from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    CalculationRevisionState,
+    derive_calculation_revision_id_from_revision,
+)
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
     DEFAULT_130_BASELINE_INPUTS,
     DEFAULT_130_BINDING_VALUES,
     M130_INCOME_CASILLA,
     T1,
+    T2,
     Repos,
     calculation_ports_for_test,
+    file_revision,
     seed_work_unit,
     verify_revision,
 )
@@ -134,6 +144,17 @@ def _verified_130(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
     sealed = calculation_repo.load().revisions[revision.calculation_revision_id]
     assert sealed.state is CalculationRevisionState.VERIFICADO_COMPLETO
     return work_unit, sealed
+
+
+def _stored_unstamped(repos: Repos, revision: CalculationRevision) -> CalculationRevision:
+    """Store a copy of ``revision`` that was never screened, as one verified before the cap is."""
+    _, calculation_repo, _, _, _ = repos
+    unstamped = revision.model_copy(update={"screen_stamp": None})
+    unstamped = unstamped.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(unstamped)}
+    )
+    calculation_repo.save(upsert_calculation_revision(calculation_repo.load(), unstamped))
+    return calculation_repo.load().revisions[unstamped.calculation_revision_id]
 
 
 def _export_ports(repos: Repos, work_unit: WorkUnit) -> ModeloExportPorts:
@@ -221,6 +242,43 @@ def test_report_header_carries_every_traceability_coordinate(repos: Repos) -> No
     verified = verification_repo.load().for_calculation_revision(revision.calculation_revision_id)
     assert header.verification_report_id == verified[-1].verification_report_id
     assert header.verification_outcome is verified[-1].completeness_status
+
+
+def test_a_sealed_revision_screened_by_an_earlier_calculation_is_refused_as_export_refuses_it(repos: Repos) -> None:
+    """A sealed revision with no screen stamp is stale, so no signed report is built from it."""
+    work_unit, revision = _verified_130(repos)
+    stale = _stored_unstamped(repos, revision)
+
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        _report(repos, work_unit, stale)
+
+    assert (refused.value.context or {}).get("reason") == CALCULATION_SCREEN_OUTDATED_REASON
+    assert refused.value.translated_message == calculation_screen_outdated_message_key()
+    assert _report(repos, work_unit, revision).header.calculation_revision_id == revision.calculation_revision_id
+
+
+def test_a_filed_revision_without_a_screen_stamp_keeps_its_report(repos: Repos) -> None:
+    """A revision already recorded as filed is never stale, whatever it was screened against."""
+    work_unit, revision = _verified_130(repos)
+    work_repo, calculation_repo, filing_repo, _, event_repo = repos
+    file_revision(
+        revision.calculation_revision_id,
+        revision=revision,
+        work_unit=work_unit,
+        work_unit_repository=work_repo,
+        calculation_repository=calculation_repo,
+        filing_repository=filing_repo,
+        bucket_event_repository=event_repo,
+        clock=T2,
+    )
+    filed = calculation_repo.load().revisions[revision.calculation_revision_id]
+    assert filed.state is CalculationRevisionState.PRESENTADO
+    unstamped = _stored_unstamped(repos, filed)
+
+    report = _report(repos, work_unit, unstamped)
+
+    assert report.header.calculation_revision_id == unstamped.calculation_revision_id
+    assert report.header.calculation_revision_state is CalculationRevisionState.PRESENTADO
 
 
 def test_report_rows_follow_the_registry_order_of_the_pinned_snapshot(repos: Repos) -> None:

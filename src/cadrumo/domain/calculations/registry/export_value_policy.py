@@ -14,6 +14,7 @@ from typing import Annotated, Final
 
 from pydantic import BeforeValidator
 
+from ....core.filing_year import is_four_digit_year
 from .errors import RegistryValidationError
 
 
@@ -229,7 +230,7 @@ def _project_four_digit_year(value: object) -> str:
     if isinstance(value, bool):
         raise RegistryValidationError("short-year export value must be a four-digit year, not boolean")
     if isinstance(value, int):
-        if 1000 <= value <= 9999:
+        if is_four_digit_year(value):
             return str(value)[-2:]
         raise RegistryValidationError("short-year export integer must contain exactly four digits")
     if isinstance(value, str) and len(value) == 4 and value.isascii() and value.isdigit():
@@ -432,8 +433,8 @@ def _validate_short_year(raw: str) -> None:
 
 
 def _validate_full_year(raw: str) -> None:
-    if len(raw) != 4 or not raw.isascii() or not raw.isdigit() or not 1000 <= int(raw) <= 9999:
-        raise RegistryValidationError("four-digit-year export field must contain a year from 1000 through 9999")
+    if len(raw) != 4 or not raw.isascii() or not raw.isdigit() or not is_four_digit_year(int(raw)):
+        raise RegistryValidationError("four-digit-year export field must contain a four-digit year")
 
 
 def _validate_calendar_part(raw: str, *, label: str, minimum: int, maximum: int) -> None:

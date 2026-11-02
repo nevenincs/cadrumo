@@ -96,6 +96,7 @@ def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotS
         count=len(rows),
         rows=[Borrador100SnapshotSummaryPayload(**_borrador_row(row)) for row in rows],
         refused=_refused_payloads(projection.refused_snapshots),
+        outdated_stored_snapshots=projection.outdated_stored_snapshots,
     )
     lines = [f"bucket\t{bucket_id}", f"count\t{len(rows)}"]
     lines.extend(
@@ -104,6 +105,7 @@ def borrador_100_list(ctx: typer.Context, state: SnapshotStateFilter = SnapshotS
         for row in rows
     )
     lines.extend(_refused_lines(projection.refused_snapshots))
+    lines.extend(_outdated_lines(projection.outdated_stored_snapshots))
     emit_envelope(ctx, command="app.live.borrador.100.list", result=result, lines=lines)
 
 
@@ -144,7 +146,11 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
     refused = _refused_payloads(projection.refused_snapshots)
     if record is None:
         result = Borrador100LatestResult(
-            bucket_id=bucket_id, filing_year=filing_year, snapshot_id=None, refused=refused
+            bucket_id=bucket_id,
+            filing_year=filing_year,
+            snapshot_id=None,
+            refused=refused,
+            outdated_stored_snapshots=projection.outdated_stored_snapshots,
         )
         emit_envelope(
             ctx,
@@ -155,6 +161,7 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
                 f"filing_year\t{filing_year}",
                 "snapshot_id\t-",
                 *_refused_lines(projection.refused_snapshots),
+                *_outdated_lines(projection.outdated_stored_snapshots),
             ],
         )
         return
@@ -168,6 +175,7 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
         binding_count=record.binding_count,
         state=_active_borrador_state(record.state),
         refused=refused,
+        outdated_stored_snapshots=projection.outdated_stored_snapshots,
     )
     emit_envelope(
         ctx,
@@ -181,6 +189,7 @@ def borrador_100_latest(ctx: typer.Context, filing_year: int) -> None:
             f"captured_at\t{record.captured_at.isoformat()}",
             f"binding_count\t{record.binding_count}",
             *_refused_lines(projection.refused_snapshots),
+            *_outdated_lines(projection.outdated_stored_snapshots),
         ],
     )
 
@@ -205,6 +214,11 @@ def _refused_payloads(
 def _refused_lines(refused: tuple[Borrador100RefusedSnapshotSummary, ...]) -> list[str]:
     """Name each refused snapshot and its reason on its own text line."""
     return [f"refused\t{item.snapshot_id}\t{item.filing_year}\t{item.reason.value}" for item in refused]
+
+
+def _outdated_lines(count: int) -> list[str]:
+    """Tell the operator, when there are any, that stored rows of an older storage schema cannot be read."""
+    return [tr("cli.app.live.borrador.snapshot_schema_outdated", count=count)] if count else []
 
 
 def _borrador_row(snapshot: Borrador100SnapshotSummary) -> _BorradorRow:

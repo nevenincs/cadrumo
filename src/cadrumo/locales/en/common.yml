@@ -2428,15 +2428,21 @@ desktop:
       without_staged: Export without them
     failed: Couldn't read the ledger.
     field:
+      art_104_tres_exclusion: Art. 104.Tres exclusion
+      attachment_ids: Attachments
       booked_date: Booked date
       business_pct: Business share
       counterparty_country: Counterparty country
       counterparty_identification_state: VAT identification
       currency: Currency
       deduction_fact_kind: Deduction fact
+      input_classification: Input use
       investment_asset_id: Investment asset
       m210_income_classification: Modelo 210 income
       own_account_id: Account
+      prorrata_reference: Prorrata reference
+      prorrata_sector_id: Prorrata sector
+      purchase_invoice_evidence_id: Purchase document
       recargo_amount: Equivalence surcharge
       usage_ratio_id: Usage ratio
       value_date: Value date
@@ -3005,7 +3011,6 @@ desktop:
         sealed: locked
         sealed_unread: not known whether locked
         transfer: transfers
-        unclassified: not classified yet
       source_jurisdiction: Source jurisdiction
       split:
         add_part: Add a part
@@ -7829,6 +7834,8 @@ tui:
           be linked.
         missing_invoice: The invoice is no longer in the catalogue, so it cannot be
           linked.
+        transaction_takes_no_invoice: 'This movement cannot take an invoice: only
+          an active movement of money in or out can.'
     overview:
       affected_declarations: Affected declarations
       areas: Areas of Records
@@ -8976,6 +8983,7 @@ workspace:
         link_aeat: Link the AEAT filing
         none: Nothing to do
         open_local_draft: Open local draft
+        recalculate: Calculate again
         start: Start it
       no_match: No declaration matches “{query}”.
       none_listed: No declarations are listed.

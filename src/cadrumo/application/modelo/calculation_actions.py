@@ -77,10 +77,13 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
 from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
+from ...domain.modelos.invoice_fingerprint import InvoiceFingerprintSnapshot
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.row_models import ModeloDetailRow
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.invoice_filing_fingerprint import capture_invoice_fingerprint, draft_contributor_identities
+from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError
 from ..user_profile.projections import profile_fact_index
 from ._calculation_helpers import (
     build_typed_observations as _build_typed_observations,
@@ -260,6 +263,31 @@ def _draft_ledger_anchor(
     )
 
 
+def _draft_invoice_fingerprint(
+    *,
+    work_unit: WorkUnit,
+    source_transaction_ids: tuple[str, ...],
+    source_issues: tuple[CalculationSourceIssue, ...],
+    ports: CalculationActionPorts,
+    captured_at: datetime,
+) -> InvoiceFingerprintSnapshot | None:
+    """Pin the invoices this draft read; an unreadable catalogue leaves it unknown.
+
+    The source mesh already reported that catalogue as degraded, so the draft has
+    its own blocking source issue and a capture failure adds nothing to it.
+    """
+    try:
+        return capture_invoice_fingerprint(
+            work_unit=work_unit,
+            revision=ports.operation.revision(work_unit.modelo, work_unit.revision_id),
+            contributors=draft_contributor_identities(source_transaction_ids, source_issues),
+            ports=ports.invoice_catalogue_read_ports,
+            captured_at=captured_at,
+        )
+    except InvoiceCatalogueReadPersistenceError:
+        return None
+
+
 def _optional_mapping_as_dict[OptionalMappingKey, OptionalMappingValue](
     value: Mapping[OptionalMappingKey, OptionalMappingValue] | None,
 ) -> dict[OptionalMappingKey, OptionalMappingValue]:
@@ -397,6 +425,13 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
             transaction_repository=(
                 transaction_repository if transaction_repository is not None else ports.transaction_repository
             ),
+            captured_at=now,
+        ),
+        invoice_fingerprint=_draft_invoice_fingerprint(
+            work_unit=work_unit,
+            source_transaction_ids=source_transaction_ids,
+            source_issues=source_issues,
+            ports=ports,
             captured_at=now,
         ),
         input_values_by_casilla_id={**replay_payloads.input_values_by_casilla_id, **resolved_text_inputs},

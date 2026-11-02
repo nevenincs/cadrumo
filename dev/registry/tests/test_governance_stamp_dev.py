@@ -212,7 +212,10 @@ def test_the_blank_refusal_is_about_emptiness_not_the_whitespace_character(tmp_p
 
 def test_reviewed_at_beyond_the_signoff_horizon_is_refused(tmp_path: Path) -> None:
     """A sentinel date cannot denote a signoff any auditor could check."""
-    stamp = 'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = 3999-12-31\n'
+    stamp = (
+        'review_status = "operator_reviewed"\nreviewed_by = "operator"\n'
+        f"reviewed_at = {REVISION_REVIEW_DATE_CEILING.isoformat()}\n"
+    )
 
     with pytest.raises(RegistryLoadError, match="signoff horizon"):
         load_modelo_directory(_write_modelo(tmp_path, manifest_extra=stamp))
@@ -232,7 +235,7 @@ def test_a_date_below_the_signoff_horizon_still_loads(tmp_path: Path) -> None:
 
 
 def test_reviewed_at_before_the_signoff_floor_is_refused(tmp_path: Path) -> None:
-    """A sentinel date from before the year 2000 cannot denote a signoff anyone can verify."""
+    """The Unix epoch is a sentinel, not a signoff anyone can verify."""
     stamp = 'review_status = "operator_reviewed"\nreviewed_by = "operator"\nreviewed_at = 1970-01-01\n'
 
     with pytest.raises(RegistryLoadError, match="signoff floor"):

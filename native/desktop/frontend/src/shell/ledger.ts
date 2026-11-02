@@ -842,7 +842,7 @@ export type LedgerStagedRowAnswer = {
   takes_invoice: boolean;
   evidence_advised: boolean;
   lifecycle_actions: ("archive" | "stash" | "restore" | "exclude")[];
-  tax_set_skip: "transfer" | "personal" | "unclassified" | null;
+  tax_set_skip: "transfer" | "personal" | null;
   transfer_locked_fields: string[];
   classifying_fields: string[];
   identity_fields: string[];
@@ -1995,7 +1995,11 @@ export type LedgerLinkResult = {
     review_status: LedgerReviewStatus;
     transaction: LedgerTransaction;
   } | null;
-  reason?: "missing_invoice" | "cross_bucket_invoice" | null;
+  reason?:
+    | "missing_invoice"
+    | "cross_bucket_invoice"
+    | "transaction_takes_no_invoice"
+    | null;
 };
 /** Attaches evidence and attachments to one movement. */
 export type LedgerAttachRequest = {

@@ -19,6 +19,7 @@ from ....core.identity_check_verdict import IdentityCheckVerdict
 from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 from ....domain.modelos.work_unit import WorkUnit
 from ...live.borrador_100 import Borrador100Snapshot, Borrador100SnapshotReading, Borrador100SnapshotService
 from ...live.notification_ports import NotificationType, RemoteNotification
@@ -101,6 +102,7 @@ class _BorradorRepository:
     def __init__(self) -> None:
         self.bucket_id = _BUCKET
         self._snapshots: dict[str, Borrador100Snapshot] = {}
+        self.outdated = 0
 
     def exists(self, snapshot_id: str) -> bool:
         return snapshot_id in self._snapshots
@@ -113,6 +115,9 @@ class _BorradorRepository:
 
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return tuple(sorted(self._snapshots.values(), key=lambda item: (item.captured_at, item.snapshot_id)))
+
+    def outdated_stored_snapshot_count(self) -> int:
+        return self.outdated
 
     def save(self, snapshot: Borrador100Snapshot) -> None:
         self._snapshots[snapshot.snapshot_id] = snapshot
@@ -383,7 +388,7 @@ def test_year_choices_span_the_registry_declared_support_floor_to_horizon(
     status = _load(_ports(), authority_operation).status
 
     assert status.filed_declaration_years == status.iva_wallet_years
-    assert status.filed_declaration_years[0] == declared["floor"]
+    assert status.filed_declaration_years[0] == SupportedFilingYearsCatalogue.model_validate(declared).floor
     assert status.filed_declaration_years[-1] >= declared["horizon"]
     assert list(status.filed_declaration_years) == list(
         range(status.filed_declaration_years[0], status.filed_declaration_years[-1] + 1)

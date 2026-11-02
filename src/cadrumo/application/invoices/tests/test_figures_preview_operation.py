@@ -893,39 +893,59 @@ def test_rate_slots_follow_the_draft_date_through_the_real_authority(operation: 
     assert slots["RATE_7.5"].label_key == "application.invoices.figures_preview.rate_slot.rate_7_5"
 
 
-def test_a_date_before_the_registry_floor_is_a_typed_finding_and_invents_no_rate(
+def test_a_date_before_the_registry_floor_reads_the_nearest_rates_marked_as_a_projection(
     operation: PinnedAuthorityOperation,
 ) -> None:
     floor = operation.supported_filing_years().date_envelope().floor
     before = floor - timedelta(days=1)
-    draft = _draft(issued_at=before)
 
-    answer = preview_invoice_figures(draft, operation=operation)
+    answer = preview_invoice_figures(_draft(issued_at=before), operation=operation)
+
+    assert answer.verdict == "would_accept"
+    assert answer.refusal_code is None
+    projected = [item for item in answer.findings if item.code is FigureFindingCode.RATE_DATE_PROJECTED]
+    assert len(projected) == 1
+    assert projected[0].severity == "warning"
+    assert {item.key: item.value for item in projected[0].values} == {
+        "on_date": before.isoformat(),
+        "nearest": floor.isoformat(),
+    }
+    assert {slot.slot: slot for slot in answer.rate_slots}["RATE_21"].fraction == PublicDecimal(decimal="0.21")
+    assert answer.lines[0].iva_amount.computed == PublicDecimal(decimal="21.00")
+
+
+def test_a_date_inside_the_registry_support_carries_no_projection_finding(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    floor = operation.supported_filing_years().date_envelope().floor
+    answer = preview_invoice_figures(_draft(issued_at=floor), operation=operation)
+    assert FigureFindingCode.RATE_DATE_PROJECTED not in [item.code for item in answer.findings]
+
+
+@pytest.mark.parametrize("on_date", (date(2012, 8, 31), date(2012, 9, 1), date(2020, 12, 31)))
+def test_a_date_whose_vocabulary_the_registry_dates_later_states_no_rate(
+    operation: PinnedAuthorityOperation,
+    on_date: date,
+) -> None:
+    """The member-state catalogue starts with the Union of 2021-01-01, so nothing older projects across it.
+
+    That also keeps 2012-08-31 from answering 21 %: 18 % applied until RDL 20/2012 art. 23 took effect.
+    """
+    answer = preview_invoice_figures(_draft(_line(iva_amount="18.00"), issued_at=on_date), operation=operation)
 
     assert answer.verdict == "would_refuse"
     assert answer.refusal_code is FigureFindingCode.RATE_DATE_UNRESOLVED
     assert answer.rate_slots == ()
-    assert FigureFindingCode.RATE_DATE_UNRESOLVED in [finding.code for finding in answer.findings]
-    # The subtotal needs no rate; the cuota and everything summed from it stay unknown.
-    assert answer.lines[0].subtotal.computed == PublicDecimal(decimal="100.00")
     assert answer.lines[0].iva_amount.computed is None
-    assert answer.totals.iva is None
-    assert answer.totals.total is None
-    # Today's add path fails on the same date, so the refusal is true of acceptance.
-    with pytest.raises(RegistryValidationError):
-        _accepted_by_the_builder(draft, answer, operation)
-
-
-def test_a_stated_cuota_before_the_floor_is_not_treated_as_checked(operation: PinnedAuthorityOperation) -> None:
-    floor = operation.supported_filing_years().date_envelope().floor
-    answer = preview_invoice_figures(
-        _draft(_line(iva_amount="21.00"), issued_at=floor - timedelta(days=1)),
-        operation=operation,
-    )
-
-    assert answer.verdict == "would_refuse"
-    assert answer.lines[0].iva_amount.verdict is StatedFigureVerdict.NOT_CHECKED
     assert answer.lines[0].iva_amount.submitted is None
+    assert answer.totals.iva is None
+
+
+def test_the_earliest_projected_date_answers_the_grounded_rate(operation: PinnedAuthorityOperation) -> None:
+    answer = preview_invoice_figures(_draft(issued_at=date(2021, 1, 1)), operation=operation)
+
+    assert {slot.slot: slot for slot in answer.rate_slots}["RATE_21"].fraction == PublicDecimal(decimal="0.21")
+    assert FigureFindingCode.RATE_DATE_PROJECTED in [item.code for item in answer.findings]
 
 
 def test_a_registry_failure_inside_its_support_stays_a_failure(

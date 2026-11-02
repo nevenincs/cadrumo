@@ -6,8 +6,11 @@ from uuid import UUID
 
 import pytest
 
+from ....core.aggregation import BindingSourceKind
 from ....core.casilla_id import CasillaId
+from ....core.external_constants import OutputLanguage
 from ....core.period import Period
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.bindings import CasillaObservation, CasillaObservationValueKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -16,6 +19,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
+from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.ledger_filing_snapshot import (
     LedgerEvidenceRow,
     LedgerFilingEvidence,
@@ -23,8 +27,19 @@ from ....domain.modelos.ledger_filing_snapshot import (
     LedgerRowFingerprint,
 )
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from ..review_snapshot import CalculationReviewSelection, EvidenceDisposition, ReviewSourceKind, ReviewStatus
-from ..review_snapshot_loader import build_calculation_review_snapshot
+from ...modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
+from ...modelo.calculation_screen import calculation_screen_stamp
+from ...storage.calc_sheets.review_labels import ReviewWorkbookLabels
+from ...storage.calc_sheets.review_workbook import build_review_workbook
+from ...storage.calc_sheets.workbook_cells import plan_value_blocks
+from ..review_snapshot import (
+    CalculationReviewSelection,
+    EvidenceDisposition,
+    ReviewSnapshot,
+    ReviewSourceKind,
+    ReviewStatus,
+)
+from ..review_snapshot_loader import CALCULATION_NOTE_FINDING_PREFIX, build_calculation_review_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -248,3 +263,74 @@ def test_captured_row_fingerprint_mismatch_is_refused() -> None:
     revision = revision.model_copy(update={"ledger_filing_evidence": evidence.model_copy(update={"rows": (altered,)})})
     with pytest.raises(ValueError, match="fingerprints"):
         build_calculation_review_snapshot(selection=selection, revision=revision, work_unit=unit)
+
+
+def _unrouted_note() -> CalculationSourceIssue:
+    return CalculationSourceIssue.model_validate(
+        {
+            "reason": "unrouted_observation",
+            "binding_source": BindingSourceKind.LEDGER_TRANSACTION,
+            "message": "a row no binding consumes",
+        }
+    )
+
+
+def _workbook_texts(snapshot: ReviewSnapshot) -> list[str]:
+    plan = build_review_workbook(
+        snapshot,
+        publication_id=UUID(int=7),
+        exported_at=datetime(2026, 3, 10, 12, tzinfo=UTC),
+        label=ReviewWorkbookLabels(OutputLanguage.EN),
+    )
+    return [str(value) for block in plan_value_blocks(plan) for _address, value in block.addressed_values()]
+
+
+def test_a_blocking_note_naming_no_box_is_a_revision_level_finding_in_the_workbook() -> None:
+    selection, revision, unit = _saved()
+    revision = revision.model_copy(update={"source_issues": (_unrouted_note(),)})
+
+    snapshot = build_calculation_review_snapshot(selection=selection, revision=revision, work_unit=unit)
+
+    (finding,) = [item for item in snapshot.findings if item.code == "calculation_note.unrouted_observation"]
+    assert finding.related_ids == ()
+    assert any("calculation_note.unrouted_observation" in text for text in _workbook_texts(snapshot))
+
+
+def test_a_revision_without_a_blocking_note_adds_no_note_finding() -> None:
+    selection, revision, unit = _saved()
+
+    snapshot = build_calculation_review_snapshot(selection=selection, revision=revision, work_unit=unit)
+
+    assert not [item for item in snapshot.findings if item.code.startswith(CALCULATION_NOTE_FINDING_PREFIX)]
+
+
+def test_an_unstamped_revision_is_a_stale_screen_finding_under_the_pinned_authority(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    selection, revision, unit = _saved()
+    stale_code = CALCULATION_NOTE_FINDING_PREFIX + CALCULATION_SCREEN_OUTDATED_REASON
+
+    snapshot = build_calculation_review_snapshot(
+        selection=selection, revision=revision, work_unit=unit, operation=operation
+    )
+    unstated = build_calculation_review_snapshot(selection=selection, revision=revision, work_unit=unit)
+
+    assert revision.screen_stamp is None
+    (finding,) = [item for item in snapshot.findings if item.code == stale_code]
+    assert finding.related_ids == ()
+    assert any(stale_code in text for text in _workbook_texts(snapshot))
+    assert not [item for item in unstated.findings if item.code == stale_code]
+
+
+def test_a_revision_stamped_under_the_pinned_authority_has_no_stale_screen_finding(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    selection, revision, unit = _saved()
+    stamp = calculation_screen_stamp(operation.snapshot("303", filing_year=2026, period="1T"), operation=operation)
+    stamped = revision.model_copy(update={"screen_stamp": stamp})
+
+    snapshot = build_calculation_review_snapshot(
+        selection=selection, revision=stamped, work_unit=unit, operation=operation
+    )
+
+    assert not [item for item in snapshot.findings if item.code.endswith(CALCULATION_SCREEN_OUTDATED_REASON)]

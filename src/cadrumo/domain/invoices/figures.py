@@ -53,6 +53,7 @@ class FigureFindingCode(StrEnum):
     LINE_IVA_NOT_ZERO_FOR_NONNUMERIC = "line_iva_not_zero_for_nonnumeric"
     FIGURE_OUT_OF_RANGE = "figure_out_of_range"
     RATE_DATE_UNRESOLVED = "rate_date_unresolved"
+    RATE_DATE_PROJECTED = "rate_date_projected"
     TOTAL_NEGATIVE = "total_negative"
     BASE_TOTAL_NOT_LINE_SUM = "base_total_not_line_sum"
     IVA_TOTAL_NOT_LINE_SUM = "iva_total_not_line_sum"
