@@ -273,13 +273,16 @@ def test_a_correction_stating_a_retencion_refuses(operation: PinnedAuthorityOper
 
 
 def test_a_receipt_linked_to_a_rectificativa_refuses_under_accrual(operation: PinnedAuthorityOperation) -> None:
-    """Money coming in on a correction contradicts a reduction, and must not add its base as income."""
+    """Money coming in on a correction contradicts a reduction, so the year blocks and the receipt adds nothing.
+
+    F1 1000 less R1 200 is 800; the receipt of R1 stays out of the income it could not be read into.
+    """
     row, first = _paid_invoice(_F1_DATE, _F1_DATE)
     unlinked = _receipt(_R1_DATE, amount=Decimal("242.00"))
     corrected = _rectificativa(_R1_DATE, linked=(unlinked.transaction_id,))
     inbound = _receipt(_R1_DATE, invoice_id=corrected.invoice_id, amount=Decimal("242.00"))
     resolution = _resolve(operation, _ACCRUAL_YEAR, rows=(row, inbound), invoices=(first, corrected))
-    assert resolution.binding_values[_INCOME_0171] == Decimal("1000.00")
+    assert resolution.binding_values[_INCOME_0171] == Decimal("800.00")
     assert _blocked_because(resolution, "rectificativa_with_receipt")
 
 

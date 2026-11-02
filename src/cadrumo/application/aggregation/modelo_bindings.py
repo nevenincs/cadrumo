@@ -114,6 +114,7 @@ from .renta_imputation import (
 from .renta_income_diagnostics import (
     accrued_withholding_unpaid_diagnostics,
     part_payment_diagnostics,
+    rectificativa_netting_diagnostics,
     rectification_diagnostics,
 )
 from .renta_income_diagnostics import (
@@ -348,7 +349,12 @@ class LedgerRentaIncomeAggregationSourceResolver:
         declared_excess = _declared_disposal_excess(context, disposal_excess)
         binding_values = resolve_ledger_renta_income_aggregation_binding_values(
             context.revision,
-            (*aggregation.observations, *declared_excess, *aggregation.accrued_unpaid),
+            (
+                *aggregation.observations,
+                *declared_excess,
+                *aggregation.accrued_unpaid,
+                *aggregation.rectificativa_corrections,
+            ),
         )
         unresolved_rows = tuple(
             issue
@@ -409,7 +415,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             )
         )
         value_outcomes = _resolved_income_value_outcomes(
-            context, aggregation, binding_values, invoices=self._ports.invoice_reader.load()
+            context, aggregation, binding_values, invoices=self._ports.invoice_reader.load(), criteria=criteria
         )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
@@ -443,6 +449,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             )
             + accrued_withholding_unpaid_diagnostics(aggregation.accrued_unpaid, resolver_id=self.resolver_id)
             + part_payment_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + rectificativa_netting_diagnostics(aggregation.rectificativa_corrections, resolver_id=self.resolver_id)
             + rectification_diagnostics(
                 self._ports.transaction_reader.load(),
                 self._ports.invoice_reader.load(),
@@ -480,6 +487,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     bucket_id=context.bucket_id,
                     start=date(context.filing_year, 1, 1),
                     end=context.period.end_date,
+                    criteria=criteria,
                 )
             ),
             unresolved_details=(
@@ -489,6 +497,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     "EUR value; stamp its rate"
                     for number in aggregation.accrued_without_eur_value
                 ),
+                *aggregation.rectificativa_refused,
             ),
         )
 
@@ -551,7 +560,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     parent_source_ref=None,
                     terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 )
-                for accrued in aggregation.accrued_unpaid
+                for accrued in (*aggregation.accrued_unpaid, *aggregation.rectificativa_corrections)
             )
             + _provenance_for(
                 aggregation.observations,
@@ -608,6 +617,7 @@ def _resolved_income_value_outcomes(
     binding_values: Mapping[BindingId, Decimal],
     *,
     invoices: InvoiceCatalogue,
+    criteria: ImputationCriteria,
 ) -> dict[BindingId, BindingValueOutcome]:
     """State what each resolved income-source value rests on, withholding and income alike.
 
@@ -622,6 +632,7 @@ def _resolved_income_value_outcomes(
             bucket_id=context.bucket_id,
             start=date(aggregation.period.filing_year, 1, 1),
             end=aggregation.period.end_date,
+            criteria=criteria,
         )
     withholding = ledger_renta_withholding_value_outcomes(context.revision, aggregation.observations)
     bearing_invoice = any(invoice.retention_amount for invoice in accruing)

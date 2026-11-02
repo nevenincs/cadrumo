@@ -52,15 +52,28 @@ def invoice_accrual_date(invoice: Invoice) -> date | None:
 
 
 def accruing_invoices(
-    invoices: Iterable[Invoice], *, kind: InvoiceKind, bucket_id: str, start: date, end: date
+    invoices: Iterable[Invoice],
+    *,
+    kind: InvoiceKind,
+    bucket_id: str,
+    start: date,
+    end: date,
+    criteria: ImputationCriteria,
 ) -> tuple[Invoice, ...]:
-    """Return the bucket's invoices of ``kind`` that accrue in the window, an unknown accrual read at its issue date."""
+    """Return the bucket's invoices of ``kind`` accruing in the window, or carried into it by a change of criterion.
+
+    An unknown accrual is read at its issue date.
+    """
+
+    def reaches_window(invoice: Invoice) -> bool:
+        accrual = invoice_accrual_date(invoice) or invoice.issued_at
+        entry = accrual_entry_date(accrual, criteria, through_year=end.year)
+        return start <= accrual <= end or (entry is not None and start <= entry <= end)
+
     return tuple(
         invoice
         for invoice in invoices
-        if invoice.kind is kind
-        and invoice.bucket_id == bucket_id
-        and start <= (invoice_accrual_date(invoice) or invoice.issued_at) <= end
+        if invoice.kind is kind and invoice.bucket_id == bucket_id and reaches_window(invoice)
     )
 
 
@@ -104,6 +117,21 @@ class ImputationUnresolved(StrEnum):
 
     EUR_VALUE_UNKNOWN = "eur_value_unknown"
     """A foreign invoice accrues with no rate stamped on it, so what it adds to the box is not known."""
+
+    RECTIFICATIVA_ACROSS_YEARS = "rectificativa_across_years"
+    """A correction accrues outside the year of its invoice, and no source says which year it reduces."""
+
+    RECTIFICATIVA_TARGET_UNKNOWN = "rectificativa_target_unknown"
+    """The invoice a correction names is not recorded, so the year it corrects is not known."""
+
+    RECTIFICATIVA_ABOVE_INVOICE = "rectificativa_above_invoice"
+    """Corrections exceed the base they correct, so they state a result or a replacement rather than a reduction."""
+
+    RECTIFICATIVA_RETENCION_STATED = "rectificativa_retencion_stated"
+    """A correction states a retencion, and what that does to the credit already taken is not settled."""
+
+    RECTIFICATIVA_WITH_RECEIPT = "rectificativa_with_receipt"
+    """Money came in on a correction, which contradicts reading it as a reduction of accrued income."""
 
 
 _CRITERION_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
@@ -308,6 +336,29 @@ def imputation_filing_history(
     return ImputationFilingHistory(stated=stated, filed_on=filed_on)
 
 
+def accrual_entry_date(accrual: date, criteria: ImputationCriteria, *, through_year: int) -> date | None:
+    """Return when income accrued on ``accrual`` enters computation under accrual, looking up to ``through_year``.
+
+    Under accrual that is the accrual date. Accrued under cash and still uncollected when
+    accrual begins, RIRPF art. 7.4 forbids leaving it uncomputed, so it enters the first
+    accrual year on its first day: :func:`impute_row` places a banked row the same way. A
+    year that states no usable criterion, or a cash run reaching ``through_year``, gives
+    ``None``.
+    """
+    at_accrual = criteria.usable(accrual.year)
+    if at_accrual is ActivityImputationCriterion.DEVENGO:
+        return accrual
+    if at_accrual is None:
+        return None
+    for year in range(accrual.year + 1, through_year + 1):
+        between = criteria.usable(year)
+        if between is None:
+            return None
+        if between is ActivityImputationCriterion.DEVENGO:
+            return date(year, 1, 1)
+    return None
+
+
 def _quarter(on: date) -> int:
     return (on.month - 1) // 3
 
@@ -421,12 +472,19 @@ def rows_touching_window(
     invoice_id_of: Callable[[Transaction], str | None],
     start: date,
     end: date,
+    criteria: ImputationCriteria,
 ) -> TransactionCatalogue:
-    """Keep the rows banked in the window or linked to an invoice accruing in it.
+    """Keep the rows banked in the window or linked to an invoice accruing in it or carried into it.
 
     A date stated on the row counts as its invoice's does. Only these can land in
-    the window, so other years' rows raise no refusal here.
+    the window, so other years' rows raise no refusal here. Every receipt of a carried
+    invoice stays, including one banked in an earlier cash year, because what it settled
+    decides the rest the window computes.
     """
+
+    def carried_in(accrual: date | None) -> bool:
+        entry = None if accrual is None else accrual_entry_date(accrual, criteria, through_year=end.year)
+        return entry is not None and start <= entry <= end
 
     def touches(row: Transaction) -> bool:
         cash = row.raw.value_date or row.raw.booked_date
@@ -436,7 +494,7 @@ def rows_touching_window(
             return True
         invoice_id = invoice_id_of(row)
         accrual = linked_accrual_date(None if invoice_id is None else invoices.get(invoice_id), kind=kind)
-        return accrual is not None and start <= accrual <= end
+        return (accrual is not None and start <= accrual <= end) or carried_in(accrual) or carried_in(row.accrual_date)
 
     return TransactionCatalogue.from_transactions(tuple(row for row in transactions.values() if touches(row)))
 
@@ -501,6 +559,7 @@ __all__ = [
     "ImputationCriteria",
     "ImputationFilingHistory",
     "ImputationUnresolved",
+    "accrual_entry_date",
     "accruing_invoices",
     "declared_imputation_criteria",
     "imputation_blocking_diagnostics",
