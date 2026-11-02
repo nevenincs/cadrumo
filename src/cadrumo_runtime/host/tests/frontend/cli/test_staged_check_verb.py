@@ -98,8 +98,8 @@ def test_staged_cells_are_answered_and_nothing_is_written(tmp_path: Path) -> Non
         assert {item["kind"] for item in row["blockers"]} == {"cannot_clear", "mixed_needs_share"}
         assert row["identity_fields"] == ["amount"]
         assert row["takes_expense_category"] is True
-        # The row is still unclassified as stored, so no category can be set on it yet.
-        assert row["category_settable"] is False
+        # The row is unclassified as stored, but the Mixed staged travels in the same write, so a category can be set.
+        assert row["category_settable"] is True
         assert answer["drafts"][0]["blockers"][0]["fields"] == ["booked_date", "currency", "direction", "description"]
 
         listed = _invoke(profile, "app", "ledger", "list")
