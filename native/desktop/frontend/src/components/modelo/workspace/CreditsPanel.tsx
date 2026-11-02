@@ -7,9 +7,9 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
-import { Credits } from "./Credits";
+import { Credits } from "./CreditsView";
 import { creditFields, dependentFields } from "./credits";
-import { Estimate } from "./Estimate";
+import { Estimate } from "./EstimateView";
 import {
   estimateFigure,
   observedValue,

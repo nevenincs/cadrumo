@@ -4535,47 +4535,6 @@ export type ModeloFormElectionChoice = {
 };
 
 /**
- * One amount an election states, in the filer's words, and whether it is
- * advisory.
- *
- * `amount` is the exact decimal text of a non-negative amount in cents, so the
- * served contract carries the figure as written rather than a number a reader
- * may round. An advisory figure is one Cadrumo works out where no official
- * rule fixes it; `advisory_words` then says why, and only then.
- */
-export type ModeloFormElectionFigure = {
-  instalment: ModeloFormInstalment;
-  amount: string;
-  words: string;
-  advisory: boolean;
-  advisory_words: string | null;
-};
-
-/**
- * One election the export asks, its state, and its answers pre-set to the
- * neutral default.
- *
- * An available question carries its choices; its `default` is one of them, or
- * `None` when no answer is neutral (an account nothing designates), and the
- * export then resolves the register's designation. A question that is not
- * applicable or unavailable carries its reason and its words instead, no
- * choices and no default, and is not sent. `request_field` is the export
- * request field an answer is sent in.
- */
-export type ModeloFormElectionQuestion = {
-  election: ModeloFormElection;
-  request_field: ModeloExportRequestField;
-  words: string;
-  state: ModeloFormElectionState;
-  reason: ModeloFormElectionReason | null;
-  state_words: string | null;
-  help: string | null;
-  default: string | null;
-  choices: ModeloFormElectionChoice[];
-  figures: ModeloFormElectionFigure[];
-};
-
-/**
  * Why an election is not applicable or cannot be answered now.
  */
 export type ModeloFormElectionReason =

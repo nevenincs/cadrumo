@@ -235,8 +235,7 @@ test("a delayed approval cannot clear a newer conversation's pending decision", 
   await expect(approvalPrompt(target)).toBeVisible();
   await holdPrompt(target, "second", "decision", "before");
   const allow = approvalPrompt(target).getByRole("button", {
-    name: "Allow this read",
-    exact: true,
+    name: /^Allow this read/,
   });
   await allow.click();
   await expect
