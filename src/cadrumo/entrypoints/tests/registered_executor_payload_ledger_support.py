@@ -495,7 +495,11 @@ def _ledger_rule_trial(ctx: PayloadContext) -> PayloadResult:
 
 
 def _ledger_invoice_match(ctx: PayloadContext) -> PayloadResult:
-    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
+    # A link naming records the conformance profile does not hold is judged as not found.
+    return ctx.request(
+        ctx.profile_subject,
+        {"profile_id": ctx.profile_id, "judge": [{"transaction_id": "a" * 64, "invoice_id": "b" * 64}]},
+    )
 
 
 def _ledger_invoice_duplicate(ctx: PayloadContext) -> PayloadResult:

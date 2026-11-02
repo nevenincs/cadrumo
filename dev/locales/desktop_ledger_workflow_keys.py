@@ -282,6 +282,7 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.link.differ",
         "desktop.ledger.apply.link.linked_elsewhere",
         "desktop.ledger.apply.link.sure",
+        "desktop.ledger.apply.link.unjudged",
         "desktop.ledger.apply.link.unread",
         "desktop.ledger.apply.mine",
         "desktop.ledger.apply.more",

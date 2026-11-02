@@ -55,7 +55,7 @@ INVOICE_MATCH_TOLERANCE = Decimal("0.01")
 
 #: The legal forms a counterparty name may end in, folded as :func:`_names_no_party` folds. Thousands
 #: of unrelated companies share one, so a name that is only a legal form tells no party apart.
-_BARE_LEGAL_FORMS: Final[frozenset[str]] = frozenset(
+BARE_LEGAL_FORMS: Final[frozenset[str]] = frozenset(
     {
         "aie",
         "cb",
@@ -330,7 +330,7 @@ def counterparties_overlap(invoice_counterparty: str, transaction_counterparty: 
 
 def _names_no_party(name: str) -> bool:
     """Return whether a lowercase name is only a legal form, however it is punctuated or spaced."""
-    return _NOT_COMPARED_IN_LEGAL_FORM.sub("", fold_diacritics(name)) in _BARE_LEGAL_FORMS
+    return _NOT_COMPARED_IN_LEGAL_FORM.sub("", fold_diacritics(name)) in BARE_LEGAL_FORMS
 
 
 def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:

@@ -876,6 +876,31 @@ export type LedgerInvoiceMatchRequest = {
   staged: LedgerInvoiceMatchStagedLink[];
   invoice_id?: string | null;
   transaction_id?: string | null;
+  /** Links to state the differences of; they take nothing from the
+   * suggestions. */
+  judge?: LedgerInvoiceMatchStagedLink[];
+};
+/** One way a judged movement and invoice do not agree; the fields besides
+ * `kind` are the kind's own and null otherwise. */
+export type LedgerInvoiceMatchMismatch = {
+  kind: "amount" | "currency" | "counterparty" | "linked_elsewhere";
+  /** `amount`: the magnitude of the movement's amount less what the invoice
+   * settles for. */
+  difference: { decimal: string } | null;
+  /** `currency`: the movement's currency. */
+  movement: string | null;
+  /** `currency`: the invoice's currency. */
+  invoice: string | null;
+  /** `linked_elsewhere`: how many other movements already hold the invoice. */
+  count: number | null;
+};
+/** What stands against one named link; `found` is false when the movement or
+ * the invoice is gone. */
+export type LedgerInvoiceMatchJudgement = {
+  transaction_id: string;
+  invoice_id: string;
+  found: boolean;
+  mismatches: LedgerInvoiceMatchMismatch[];
 };
 /** One movement and one invoice that settle each other, and the evidence the
  * pair stands on. */
@@ -912,6 +937,8 @@ export type LedgerInvoiceMatchResult = {
       }[]
     | null;
   movement_choices: { transaction_id: string; settles: boolean }[] | null;
+  /** One judgement per link named in `judge`, in the order named. */
+  judgements: LedgerInvoiceMatchJudgement[];
 };
 /** Unsaved parts of a movement. No amount on the last asks what the others leave. */
 export type LedgerSplitCheckRequest = {

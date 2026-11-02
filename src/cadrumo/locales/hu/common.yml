@@ -1411,6 +1411,7 @@ desktop:
         differ: Tudom, hogy eltérnek
         linked_elsewhere: 'A számla már kapcsolódik · tételek: {count}'
         sure: Összekapcsolás · végleges
+        unjudged: A főkönyv még nem vetette össze ezt a kapcsolatot
         unread: A számla nem olvasható
       mine: Az enyém marad
       mismatch:

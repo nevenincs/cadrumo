@@ -464,6 +464,9 @@ cli:
           el de una factura como MOVIMIENTO:FACTURA, ambos completos.
         match_invoice_help: 'Id completo de una factura: pondera solo esa factura
           y lista los movimientos abiertos cercanos a su día de emisión.'
+        match_judge_help: Vínculo repetible que se compara antes de hacerlo permanente,
+          como MOVIMIENTO:FACTURA; cada uno vuelve con lo que no coincide entre sus
+          dos lados.
         match_staged_help: Vínculo preparado y sin guardar, repetible, como MOVIMIENTO:FACTURA;
           ninguno de los dos se ofrece a otra cosa.
         match_transaction_help: 'Id completo de un movimiento: devuelve solo su sugerencia
