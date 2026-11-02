@@ -320,24 +320,20 @@ async def test_a_page_the_provider_cannot_verify_publishes_nothing(
             assert stored_digest(kind) is None
 
 
-@pytest.mark.asyncio
-async def test_a_manual_login_as_another_taxpayer_publishes_nothing(
-    tmp_path: Path, operation: PinnedAuthorityOperation
+async def _assert_login_as_another_taxpayer_publishes_nothing(
+    tmp_path: Path, operation: PinnedAuthorityOperation, *, name: str, represented_nif: str | None = None
 ) -> None:
-    """The person signs in by hand as someone else: AEAT's consulta names that taxpayer, so nothing is stored.
-
-    The window is told who signed in is not the profile's taxpayer, apart
-    from any other refusal, and the close says so again.
-    """
     kind = AuthProviderKind.CLAVE_PERMANENTE
     with clave_permanente_profile(tmp_path, operation):
         async with opened_http_boundary() as boundary:
             host = OperationHost(kind=kind)
             boundary.configure("failure")
-            async with _panel(boundary, host, operation, name="view-other-taxpayer") as panel:
+            async with _panel(boundary, host, operation, name=name) as panel:
                 await panel.view.context.pages[0].wait_for_load_state("load")
                 boundary.configure("clave-permanente-success")
                 boundary.signed_in_nif = _OTHER_NIF
+                if represented_nif is not None:
+                    boundary.represented_nif = represented_nif
                 panel.start()
                 panel.sink.put(ViewNavigate(verb=ViewNavigateVerb.HOME))
                 await until(lambda: bool(panel.sink.of(ViewNotice)), timeout=_SIGN_IN_SECONDS)
@@ -351,6 +347,18 @@ async def test_a_manual_login_as_another_taxpayer_publishes_nothing(
             assert not panel.sign_in.signed_in
             assert host.effects == []
             assert stored_digest(kind) is None
+
+
+@pytest.mark.asyncio
+async def test_a_manual_login_as_another_taxpayer_publishes_nothing(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    """The person signs in by hand as someone else: AEAT's consulta names that taxpayer, so nothing is stored.
+
+    The window is told who signed in is not the profile's taxpayer, apart
+    from any other refusal, and the close says so again.
+    """
+    await _assert_login_as_another_taxpayer_publishes_nothing(tmp_path, operation, name="view-other-taxpayer")
 
 
 @pytest.mark.asyncio
@@ -363,29 +371,9 @@ async def test_a_representative_login_for_the_profiles_taxpayer_publishes_nothin
     session is the representative's own, and so is the data every later Sede
     read returns. Nothing is stored.
     """
-    kind = AuthProviderKind.CLAVE_PERMANENTE
-    with clave_permanente_profile(tmp_path, operation):
-        async with opened_http_boundary() as boundary:
-            host = OperationHost(kind=kind)
-            boundary.configure("failure")
-            async with _panel(boundary, host, operation, name="view-representative") as panel:
-                await panel.view.context.pages[0].wait_for_load_state("load")
-                boundary.configure("clave-permanente-success")
-                boundary.signed_in_nif = _OTHER_NIF
-                boundary.represented_nif = CERTIFICATE_NIF
-                panel.start()
-                panel.sink.put(ViewNavigate(verb=ViewNavigateVerb.HOME))
-                await until(lambda: bool(panel.sink.of(ViewNotice)), timeout=_SIGN_IN_SECONDS)
-                panel.sink.put(ViewClose())
-                assert panel.browsing is not None
-                assert await asyncio.wait_for(panel.browsing, timeout=_SIGN_IN_SECONDS) is SedeViewEnd.CLOSED
-                outcome = await panel.sign_in.close()
-
-            assert panel.sink.of(ViewNotice) == [ViewNotice(code=ViewNoticeCode.IDENTITY_MISMATCH)]
-            assert outcome is ViewSessionPublicationOutcome.IDENTITY_MISMATCH
-            assert not panel.sign_in.signed_in
-            assert host.effects == []
-            assert stored_digest(kind) is None
+    await _assert_login_as_another_taxpayer_publishes_nothing(
+        tmp_path, operation, name="view-representative", represented_nif=CERTIFICATE_NIF
+    )
 
 
 @pytest.mark.asyncio
