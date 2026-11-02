@@ -88,6 +88,11 @@ fn action_reason(action: &str) -> &'static str {
         "local_model_remove" => "admin_local_model_remove",
         "local_models_reset" => "admin_local_models_reset",
         "reading_model_choose" => "admin_reading_model_choose",
+        "attachment_card" => "admin_attachment_card",
+        "attachment_release" => "admin_attachment_release",
+        "attachment_grants" => "admin_attachment_grants",
+        "attachment_grant_revoke" => "admin_attachment_grant_revoke",
+        "attachment_conversation_forget" => "admin_attachment_conversation_forget",
         _ => "admin_undeclared_action",
     }
 }
@@ -445,6 +450,7 @@ mod tests {
             ("local_models", "admin_local_models"),
             ("local_model_add", "admin_local_model_add"),
             ("reading_model_choose", "admin_reading_model_choose"),
+            ("attachment_release", "admin_attachment_release"),
             ("unheard_of", "admin_undeclared_action"),
         ] {
             let error = endpoint(port)
