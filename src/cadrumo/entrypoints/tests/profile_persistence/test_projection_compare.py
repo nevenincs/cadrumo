@@ -13,11 +13,8 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
-from cadrumo.application.modelo.projection import (
-    ModeloCompareDeltaRow,
-    ModeloProjectionCasillaObservation,
-    compare_modelo_years,
-)
+from cadrumo.application.modelo.projection import ModeloProjectionCasillaObservation
+from cadrumo.application.modelo.projection_compare import ModeloCompareDeltaRow, compare_modelo_years
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period

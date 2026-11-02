@@ -14,7 +14,10 @@ The amount comes from the box the declaration settles
 (:func:`~.settlement_casilla.declaration_settlement_casilla_id`): for the
 Modelo 100 its computed "Resultado a ingresar o a devolver" (``RESINGDEV``),
 which is the remainder still to pay once the spouse compensation suspends part
-of the result, otherwise the result itself. The disposition is the one the
+of the result, otherwise the result itself. A revision that computes no such
+box settles from the result only while nothing is suspended: a positive
+suspended part leaves a remainder it does not compute, so that settlement is
+refused as unsupported, and an unstated suspended part leaves the result unknown. The disposition is the one the
 shared resolver derived from the result, and the settled amount must agree
 with it: the official design gives no settlement block for a result to pay of
 which nothing remains to pay, so such a settlement, like one whose amount is
@@ -39,12 +42,16 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from ...core.casilla_id import CasillaId
-from ...core.payment_instalment_election import PaymentInstalmentElection, instalment_amounts
+from ...core.payment_instalment_election import (
+    PaymentInstalmentElection,
+    instalment_amounts,
+    second_instalment_is_payable,
+)
 from ...core.result_disposition import ResultDisposition
 from ...domain.deadlines.models import ChargeAccount, RefundAccount
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
 from ...domain.modelos.errors import ModeloExportError
-from .settlement_casilla import declaration_settlement_casilla_id
+from .settlement_casilla import declaration_settlement_casilla_id, declaration_settlement_suspension_casilla_id
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.schema import ModeloRevision
@@ -135,6 +142,13 @@ def declared_settlement(
     amount = None if casilla_id is None else _decimal(casilla_values.get(casilla_id))
     if amount is None:
         return DeclaredSettlement(amount=None, refusal=SettlementRefusal.RESULT_UNKNOWN)
+    suspension = declaration_settlement_suspension_casilla_id(modelo, revision)
+    if suspension is not None:
+        suspended = _decimal(casilla_values.get(suspension))
+        if suspended is None:
+            return DeclaredSettlement(amount=None, refusal=SettlementRefusal.RESULT_UNKNOWN)
+        if suspended > 0:
+            return DeclaredSettlement(amount=None, refusal=SettlementRefusal.SETTLEMENT_UNSUPPORTED)
     if not _agrees(disposition, amount):
         return DeclaredSettlement(amount=None, refusal=SettlementRefusal.SETTLEMENT_UNSUPPORTED)
     return DeclaredSettlement(amount=amount, refusal=None)
@@ -206,6 +220,8 @@ def _payment_values(
         return {_SINGLE_AMOUNT_FIELD: amount, _SINGLE_ACCOUNT_FIELD: iban if debits_first else None}
     if first_share is None:
         raise _uncomposed(disposition, cause="instalment_split_undeclared")
+    if not second_instalment_is_payable(amount, first_share=first_share):
+        raise _uncomposed(disposition, cause="second_instalment_zero")
     first, second = instalment_amounts(amount, first_share=first_share)
     # The manual requires the second instalment to be debited from the same
     # account as the first when both are, so one charge account serves both.

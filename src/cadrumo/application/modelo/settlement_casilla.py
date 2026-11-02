@@ -27,7 +27,11 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING, Final, Protocol
 
 from ...core.errors.hierarchy import CadrumoError
-from ...domain.calculations.registry.result_casillas import result_disposition_casilla_ids, settlement_casilla_role
+from ...domain.calculations.registry.result_casillas import (
+    result_disposition_casilla_ids,
+    settlement_casilla_role,
+    settlement_suspension_casilla_id,
+)
 from ...domain.calculations.registry.schema_input_kind import InputKind
 
 if TYPE_CHECKING:
@@ -166,6 +170,25 @@ def declaration_result_casillas(modelo: str, revision: SettlementRevisionV1) -> 
     return None if role is None else DeclarationResultCasillas(casilla_ids=(role,), by_declared_type=False)
 
 
+def _computed_settlement_casilla(role: str, revision: ModeloRevision) -> CasillaId | None:
+    """Return the one casilla of ``role`` the revision computes, or ``None`` when it computes none.
+
+    Raises:
+        AmbiguousDeclarationResultError: Two computed casillas of the revision
+            claim the role.
+    """
+    settling = [
+        casilla.id
+        for casilla in revision.casillas
+        if casilla.semantic_role == role and casilla.input_kind is InputKind.COMPUTED
+    ]
+    if len(settling) > 1:
+        raise AmbiguousDeclarationResultError(
+            f"revision {revision.id!r} computes {len(settling)} casillas of the settlement role {role!r}"
+        )
+    return settling[0] if settling else None
+
+
 def declaration_settlement_casilla_id(modelo: str, revision: ModeloRevision) -> CasillaId | None:
     """Return the casilla whose value ``revision`` pays or refunds, or ``None`` when it names none.
 
@@ -174,28 +197,43 @@ def declaration_settlement_casilla_id(modelo: str, revision: ModeloRevision) -> 
     role settles it, but only where the revision computes it, because a box
     the filer may type is no declared amount. Otherwise the amount settled is
     the result itself: the one result box the "tipo de declaración" rule reads,
-    where the revision defines it.
+    where the revision defines it, which is the amount settled only while no
+    part of it is suspended (see :func:`declaration_settlement_suspension_casilla_id`).
 
     Raises:
         AmbiguousDeclarationResultError: Two computed casillas of the revision
             claim the settlement role.
     """
     role = settlement_casilla_role(modelo)
-    if role is not None:
-        settling = [
-            casilla.id
-            for casilla in revision.casillas
-            if casilla.semantic_role == role and casilla.input_kind is InputKind.COMPUTED
-        ]
-        if len(settling) > 1:
-            raise AmbiguousDeclarationResultError(
-                f"revision {revision.id!r} computes {len(settling)} casillas of the settlement role {role!r}"
-            )
-        if settling:
-            return settling[0]
+    computed = None if role is None else _computed_settlement_casilla(role, revision)
+    if computed is not None:
+        return computed
     defined = {casilla.id for casilla in revision.casillas}
     declared = [casilla_id for casilla_id in result_disposition_casilla_ids(modelo) or () if casilla_id in defined]
     return declared[0] if len(declared) == 1 else None
+
+
+def declaration_settlement_suspension_casilla_id(modelo: str, revision: ModeloRevision) -> CasillaId | None:
+    """Return the box that must hold no part of the result for the result to be the amount settled.
+
+    Set only when ``revision`` computes no box of the settlement role, so its
+    settlement reads the result, and the modelo's record lets part of the
+    result be suspended. Where that box holds a positive part the amount
+    settled is the remainder, which the revision does not compute, so the
+    result is not the amount to pay or refund. ``None`` where the revision
+    computes the settlement box or declares no such part.
+
+    Raises:
+        AmbiguousDeclarationResultError: Two computed casillas of the revision
+            claim the settlement role.
+    """
+    role = settlement_casilla_role(modelo)
+    if role is not None and _computed_settlement_casilla(role, revision) is not None:
+        return None
+    suspended = settlement_suspension_casilla_id(modelo)
+    if suspended is None or suspended not in {casilla.id for casilla in revision.casillas}:
+        return None
+    return suspended
 
 
 __all__ = [
@@ -206,4 +244,5 @@ __all__ = [
     "declaration_result_casilla_id",
     "declaration_result_casillas",
     "declaration_settlement_casilla_id",
+    "declaration_settlement_suspension_casilla_id",
 ]

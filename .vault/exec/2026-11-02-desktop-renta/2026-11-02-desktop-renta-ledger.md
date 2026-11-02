@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:44f9359f550e0315ccbf9873811e3d3def700a99fa018285dbcfe3d75ff8415e'
+body_hash: 'sha256:4ce683a3e1db3a23e570ebdb84007bf4150d3355d61ff98eb39e7887a324d091'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
@@ -254,6 +254,34 @@ related:
 - `S07` `A` `src/cadrumo/application/modelo/tests/test_export_settlement_through_export.py`
 - `S07` `verify:` `pytest export settlement through export offer` -> `pass`
 - `S07` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
+- `S16` `A` `native/desktop/frontend/src/components/modelo/workspace/ImputationElection.tsx`
+- `S16` `A` `native/desktop/frontend/src/components/modelo/workspace/ProfileCompanions.tsx`
+- `S16` `A` `native/desktop/frontend/src/components/modelo/workspace/ImputationElection.stories.tsx`
+- `S16` `A` `native/desktop/frontend/src/dev/imputationElectionFixture.ts`
+- `S16` `A` `native/desktop/frontend/src/dev/fixtures/imputationElection.json`
+- `S16` `A` `dev/desktop_imputation_election_fixture.py`
+- `S16` `A` `native/desktop/frontend/tests/scenarios/imputation-election.spec.ts`
+- `S16` `M` `native/desktop/frontend/src/components/modelo/workspace/SourcesView.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/modelo/workspace/WorkspaceScreen.tsx`
+- `S16` `M` `native/desktop/frontend/src/components/modelo/declarations/DeclarationsPane.tsx`
+- `S16` `M` `native/desktop/frontend/src/App.tsx`
+- `S16` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S16` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S16` `M` `dev/locales/desktop_workspace_keys.py`
+- `S16` `M` `src/cadrumo/locales/en/common.yml`
+- `S16` `M` `src/cadrumo/locales/es/common.yml`
+- `S16` `M` `src/cadrumo/locales/ca/common.yml`
+- `S16` `M` `src/cadrumo/locales/hu/common.yml`
+- `S16` `verify:` `tsc and eslint` -> `pass`
+- `S16` `verify:` `playwright scenarios imputation-election` -> `pass`
+- `S16` `verify:` `storybook:build` -> `pass`
+- `S16` `verify:` `test_window_holds_no_tax_data` -> `pass`
+- `S16` `verify:` `test_desktop_chrome` -> `fail`
+- `S16` `by:` `sonnet-high`
+- `S22` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S22` `verify:` `test_registered_executor_conformance -k borrador` -> `pass`
+- `S22` `verify:` `desktop-host-unit-test` -> `pass`
+- `S22` `by:` `orchestrator`
 
 ## Notes
 
@@ -279,3 +307,5 @@ related:
 - `S24` Commits 31574b0167, d8a5cd6edc, d295ec2d91 plus sweeps; host test failure is the known flaky manager `cancelled_ipc_caller` timeout, 833 others pass
 - `S05` Correction from P04.S13 findings, commit 92a3c0a516: blocked rows open their local work; non-typeable boxes never offer manual entry; fixtures need regenerating after another worker's `box_number` drift
 - `S07` Review fixes in e232347dcd, f12928bdb4, 987d72d1f9 and 3dbcaea611; settlement composes from 0700; split is a dated registry fact; instalment figures advisory; follow-ups in S25
+- `S16` Committed in ba312d12d8 and sweep c9d6d73b82; chrome catalogue blocked by unauthored workspace.modelo.filing.reconciliation keys from another worker; profile write refusal words not forwarded by the host (S26)
+- `S22` Rerun after the `calculation_notes` block cleared; first host run hit a flaky child-read failure in a credential-save relay test, rerun 837 passed

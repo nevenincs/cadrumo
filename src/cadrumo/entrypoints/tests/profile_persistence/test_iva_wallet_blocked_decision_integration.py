@@ -41,7 +41,7 @@ from cadrumo.domain.iva_compensation.reconciliation import (
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
 from cadrumo.domain.modelos.calculation_revision_m303_handoff import FilingInstanceEvidence
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
     _DECIDED_AT,
     _TARGET_PERIOD,
     _TARGET_YEAR,
@@ -52,8 +52,8 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _snapshot_303,
     _store_operator_profile,
     _store_prior_303_compensation,
-    _wallet_observation,
     _work_unit_repositories_with_modelo_303_work_unit,
+    wallet_observation,
 )
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
     M303_LEDGER_CUOTA,
@@ -199,7 +199,7 @@ def _blocked_wallet_decision(
         _store_prior_303_compensation(observation_repo, amount=prior_amount)
     snapshot = _snapshot_303()
     wallet = (
-        _wallet_observation(pending=wallet_amount, captured_at=_DECIDED_AT - timedelta(days=wallet_age_days))
+        wallet_observation(pending=wallet_amount, captured_at=_DECIDED_AT - timedelta(days=wallet_age_days))
         if wallet_amount is not None
         else None
     )
@@ -238,7 +238,7 @@ def test_unpersisted_wallet_decision_cannot_feed_modelo_303_engine(tmp_path: Pat
         report = _reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(pending=Decimal("1200.00")),
+            wallet=wallet_observation(pending=Decimal("1200.00")),
             repository=observation_repo,
             decided_at=_DECIDED_AT,
             max_wallet_age_days=DEFAULT_MAX_WALLET_AGE_DAYS,
@@ -346,7 +346,7 @@ def test_persisted_blocked_wallet_decision_is_replayed_by_modelo_303_calculation
         report = _reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(pending=Decimal("1200.00")),
+            wallet=wallet_observation(pending=Decimal("1200.00")),
             repository=observation_repo,
             decided_at=_DECIDED_AT,
             max_wallet_age_days=DEFAULT_MAX_WALLET_AGE_DAYS,

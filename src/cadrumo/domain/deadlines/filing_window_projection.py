@@ -548,33 +548,6 @@ def _scheduled_coordinate(
     return metadata, schedule
 
 
-def project_filing_window(
-    operation: PinnedAuthorityOperation,
-    *,
-    modelo: str,
-    period: Period,
-    calendars: tuple[HolidayCalendar, ...] = (),
-) -> ProjectedFilingWindowResolution | None:
-    """Project one coordinate's window from the governed rule, ignoring any authored window.
-
-    ``None`` means no window can be projected: the period has no date span, the
-    support envelope or the revisions do not admit the coordinate, the selected
-    revision's filing schedule does not declare the period, or no clause covers
-    it. ``calendars`` supplies holiday calendars ahead of the authority, year by
-    year, as :func:`~cadrumo.domain.deadlines.festivos.shift_deadline` accepts
-    them. Precedence over authored windows belongs to the caller.
-    """
-    if not period.has_date_span():
-        return None
-    scheduled = _scheduled_coordinate(
-        operation, modelo=modelo, filing_year=period.filing_year, token=period.registry_token
-    )
-    if scheduled is None:
-        return None
-    _metadata, schedule = scheduled
-    return _project_scheduled_window(operation, modelo=modelo, period=period, schedule=schedule, calendars=calendars)
-
-
 @dataclass(frozen=True, slots=True)
 class ProjectedWindowRow:
     """One unauthored coordinate's projection with the revision that owns its schedule."""
@@ -692,7 +665,6 @@ __all__ = (
     "ProjectedWindowRow",
     "filing_close_shift_from_fact",
     "filing_window_clause_from_fact",
-    "project_filing_window",
     "project_unauthored_filing_windows",
     "projected_window_id",
     "resolve_filing_window_clause",

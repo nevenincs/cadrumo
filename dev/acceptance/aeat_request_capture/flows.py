@@ -141,21 +141,26 @@ def _selectors(flow: ReadFlow) -> Iterable[str]:
     yield from flow.lane_tests
 
 
+def _named_flow_ids(selectors: tuple[str, ...]) -> set[str]:
+    wanted: set[str] = set()
+    for selector in selectors:
+        matches = [flow for flow in READ_FLOWS if selector in _selectors(flow)]
+        if not matches:
+            raise UnknownFlowSelectorError(f"Not a capture read flow: {selector!r}")
+        wanted.update(flow.flow_id for flow in matches)
+    return wanted
+
+
 def select_flows(selectors: Iterable[str] = ()) -> tuple[ReadFlow, ...]:
     """Resolve flow ids, CLI commands or lane test ids, adding the login a selected flow needs.
 
     No selector means the whole catalogue. The result keeps catalogue order, so
     the login always runs first.
     """
-    wanted: set[str] = set()
     named = tuple(selectors)
-    for selector in named:
-        matches = [flow for flow in READ_FLOWS if selector in _selectors(flow)]
-        if not matches:
-            raise UnknownFlowSelectorError(f"Not a capture read flow: {selector!r}")
-        wanted.update(flow.flow_id for flow in matches)
     if not named:
         return READ_FLOWS
+    wanted = _named_flow_ids(named)
     if any(flow.needs_session and flow.flow_id in wanted for flow in READ_FLOWS):
         wanted.add(LOGIN)
     return tuple(flow for flow in READ_FLOWS if flow.flow_id in wanted)

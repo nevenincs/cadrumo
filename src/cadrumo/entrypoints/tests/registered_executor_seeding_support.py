@@ -92,7 +92,7 @@ from .ledger_lifecycle_operation_test_support import (
     prepare_ledger_lifecycle_operation_conformance_case,
 )
 from .production_operation_registry import production_operation_registry
-from .profile_persistence._iva_wallet_engine_support import _wallet_observation
+from .profile_persistence.iva_wallet_engine_support import wallet_observation
 from .prorrata_operation_test_support import (
     ProrrataOperationConformanceCase,
     prepare_prorrata_operation_conformance_case,
@@ -273,7 +273,7 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
     decision = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=SEEDED_SOURCE_TAX_ID,
-        wallet=_wallet_observation(
+        wallet=wallet_observation(
             pending=pending,
             taxpayer_nif=SEEDED_SOURCE_TAX_ID,
             target_year=period.filing_year,

@@ -11,7 +11,7 @@ import pytest
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.authority_artifact import AuthorityGenerationPin
 from .. import engine as deadline_engine
-from ..engine import indexed_deadline_windows
+from ..engine import indexed_deadline_window_year
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -64,8 +64,8 @@ def test_the_same_generation_is_projected_once(
     operation: PinnedAuthorityOperation,
     projections: list[tuple[AuthorityGenerationPin, int]],
 ) -> None:
-    first = indexed_deadline_windows(operation, _YEAR)
-    second = indexed_deadline_windows(operation, _YEAR)
+    first = indexed_deadline_window_year(operation, _YEAR).dated
+    second = indexed_deadline_window_year(operation, _YEAR).dated
 
     assert first, "the bundled generation must carry deadline windows, or reuse proves nothing"
     assert second is first
@@ -77,13 +77,13 @@ def test_another_generation_is_projected_again(
     projections: list[tuple[AuthorityGenerationPin, int]],
 ) -> None:
     """TEETH: a different generation identity never reads the index of another."""
-    leased = indexed_deadline_windows(operation, _YEAR)
+    leased = indexed_deadline_window_year(operation, _YEAR).dated
     repinned = _RepinnedOperation(operation=operation, generation=_OTHER_GENERATION)
 
     # CAST-RATIONALE-REPINNED-OPERATION: the wrapper delegates every attribute
     # to the leased operation and overrides only the generation identity, which
     # is the axis under test; the parameter type names the concrete operation.
-    other = indexed_deadline_windows(cast("PinnedAuthorityOperation", repinned), _YEAR)
+    other = indexed_deadline_window_year(cast("PinnedAuthorityOperation", repinned), _YEAR).dated
 
     assert [pin for pin, _ in projections] == [operation.pin(), _OTHER_GENERATION]
     assert other is not leased
@@ -94,9 +94,9 @@ def test_another_year_is_projected_again(
     operation: PinnedAuthorityOperation,
     projections: list[tuple[AuthorityGenerationPin, int]],
 ) -> None:
-    indexed_deadline_windows(operation, _YEAR)
-    indexed_deadline_windows(operation, _YEAR - 1)
-    indexed_deadline_windows(operation, _YEAR)
+    indexed_deadline_window_year(operation, _YEAR)
+    indexed_deadline_window_year(operation, _YEAR - 1)
+    indexed_deadline_window_year(operation, _YEAR)
 
     assert [year for _, year in projections] == [_YEAR, _YEAR - 1]
 
@@ -111,7 +111,7 @@ def test_the_index_stays_bounded(
         generation = AuthorityGenerationPin(logical_generation=f"{index:064x}", reader_incarnation="c" * 64)
         repinned = _RepinnedOperation(operation=operation, generation=generation)
         # CAST-RATIONALE-REPINNED-OPERATION: as above; only the identity varies.
-        indexed_deadline_windows(cast("PinnedAuthorityOperation", repinned), _YEAR)
+        indexed_deadline_window_year(cast("PinnedAuthorityOperation", repinned), _YEAR)
 
     assert len(deadline_engine._DEADLINE_WINDOW_INDEX) == deadline_engine._DEADLINE_WINDOW_INDEX_LIMIT
 
@@ -139,7 +139,7 @@ def test_metadata_selection_owns_the_same_windows_as_hydrated_selection(
     operation: PinnedAuthorityOperation,
     year: int,
 ) -> None:
-    projected = indexed_deadline_windows(operation, year)
+    projected = indexed_deadline_window_year(operation, year).dated
     assert projected, f"the bundled generation must carry {year} deadline windows"
 
     assert {(modelo, str(revision.id), window) for modelo, revision, window in projected} == _hydrating_projection(
@@ -188,7 +188,7 @@ def test_each_window_carries_the_filing_schedules_of_its_hydrated_owner(operatio
     """
     compared = 0
     for year in range(2024, 2028):
-        projected = indexed_deadline_windows(operation, year)
+        projected = indexed_deadline_window_year(operation, year).dated
         assert {(modelo, str(metadata.id), window) for modelo, metadata, window in projected} == (
             _hydrating_projection(operation, year)
         )

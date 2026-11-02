@@ -7,8 +7,7 @@ new family therefore permutes the tuple without changing a single declaration.
 Four consumers read that tuple in ways that could survive such a permutation
 only by accident, and this gate holds each of them to it:
 
-* the prorrata regularisation source roles, which are read POSITIONALLY out of
-  the concatenated ``source_casilla_ids`` of every prorrata binding;
+* the prorrata regularisation binding, which a revision declares at most once;
 * export field derivation, which keeps the FIRST binding to claim a record's
   ``row_field`` and silently drops every later claimant;
 * the Modelo 303/4T simplified-regime annual summary, whose endpoints are held
@@ -60,7 +59,6 @@ from cadrumo.domain.calculations.registry.m303_regimen_simplificado_annual_summa
 )
 from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import (
     ProrrataRegularizacionProvider,
-    prorrata_source_casilla_ids,
 )
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 
@@ -122,7 +120,7 @@ def _revision_params() -> list[Any]:
 
 
 # --------------------------------------------------------------------------
-# Site 1: the positional prorrata source roles.
+# Site 1: the single prorrata regularisation binding.
 # --------------------------------------------------------------------------
 
 
@@ -131,52 +129,35 @@ def _prorrata_bindings(revision: ModeloRevision) -> tuple[BindingDefinition, ...
 
 
 @pytest.mark.parametrize(("modelo_id", "revision"), _revision_params())
-def test_prorrata_source_roles_do_not_move_with_binding_order(modelo_id: str, revision: ModeloRevision) -> None:
-    """The ordered source tuple the four role reads index is permutation-stable."""
-    baseline = prorrata_source_casilla_ids(revision.bindings)
-    for seed in _SEEDS:
-        assert prorrata_source_casilla_ids(_shuffled(revision, seed).bindings) == baseline, (
-            f"modelo {modelo_id}: permuting the binding fragments reordered the prorrata source casillas, "
-            f"so the cuota/volumen/porcentaje roles read at positions 0-3 now name different casillas"
-        )
+def test_a_revision_declares_at_most_one_prorrata_binding(modelo_id: str, revision: ModeloRevision) -> None:
+    """The prorrata regularisation is declared once, so no merge order can choose between declarations."""
     assert len(_prorrata_bindings(revision)) <= 1, (
-        f"modelo {modelo_id}: more than one prorrata_regularizacion binding is declared, so the positional "
-        f"role order comes from fragment merge order rather than from one reviewed declaration"
+        f"modelo {modelo_id}: more than one prorrata_regularizacion binding is declared, so the "
+        f"regularisation would depend on fragment merge order rather than on one reviewed declaration"
     )
 
 
 @pytest.mark.parametrize(("modelo_id", "revision"), _revision_params())
-def test_a_second_prorrata_binding_would_make_the_roles_order_dependent(
+def test_a_second_prorrata_binding_is_refused_by_the_registration_gate(
     modelo_id: str, revision: ModeloRevision
 ) -> None:
-    """Anti-tautology: a duplicate prorrata declaration IS visible to the comparison above.
+    """Anti-tautology: a duplicate prorrata declaration IS visible to the registration gate.
 
-    The source roles concatenate across prorrata bindings, so a second binding
-    contributing different casillas puts the role order at the mercy of merge
-    order. Planting one must break the invariance the first test asserts;
-    otherwise that test passes only because nothing it looks at can move.
+    Planting a second binding must produce the gate's refusal; otherwise the
+    singularity test above passes only because nothing it looks at can move.
     """
     declared = _prorrata_bindings(revision)
     if not declared:
         pytest.skip(f"modelo {modelo_id} declares no prorrata_regularizacion binding to duplicate")
 
     original = declared[0]
-    provider = original.provider
-    assert isinstance(provider, ProrrataRegularizacionProvider)
-    planted = original.model_copy(
-        update={
-            "id": f"{original.id}-planted-duplicate",
-            "provider": provider.model_copy(
-                update={"source_casilla_ids": tuple(reversed(provider.source_casilla_ids))},
-            ),
-        },
-    )
+    planted = original.model_copy(update={"id": f"{original.id}-planted-duplicate"})
     defective = _with_bindings(revision, (*revision.bindings, planted))
 
-    permuted = {prorrata_source_casilla_ids(_shuffled(defective, seed).bindings) for seed in _SEEDS}
-    assert len(permuted) > 1, (
-        f"modelo {modelo_id}: a second prorrata binding declaring a different source order left the derived "
-        f"role tuple identical under every permutation, so the invariance gate cannot see a duplicate at all"
+    failures = validate_binding_registration_section(prefix=f"modelo {modelo_id}", revision=defective)
+    assert any("prorrata_regularizacion bindings are declared" in failure for failure in failures), (
+        f"modelo {modelo_id}: a second prorrata binding was not refused by the registration gate, "
+        f"so the singularity gate cannot see a duplicate at all"
     )
 
 
