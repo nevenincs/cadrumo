@@ -2920,12 +2920,20 @@ export function App({ host }: { host: Host }) {
           onOpenSurface={(surface) => {
             if (surface === "declarations") guarded(() => openWorkUnit(null));
             else if (surface === "ledger") runAction("view.ledger");
+            else if (surface === "withholding")
+              // The Ledger page opens on the area asked for, once shown.
+              openView("ledger/registers", {}, null, {
+                opened: () => {
+                  ledgerKept.memory.current.registersArea = "withholding";
+                },
+              });
             else if (surface === "profile") setPage("profile");
           }}
           // Only an area this window has a page for is linked.
           canOpenSurface={(surface) =>
             surface === "declarations" ||
             (surface === "ledger" && host.ledger !== undefined) ||
+            (surface === "withholding" && host.ledger !== undefined) ||
             (surface === "profile" && host.userProfile !== undefined)
           }
           openLink={openLink}

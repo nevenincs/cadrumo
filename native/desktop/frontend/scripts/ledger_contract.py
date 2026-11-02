@@ -31,8 +31,10 @@ from cadrumo.application.ledger.update_contracts import LEDGER_UPDATE_REQUIRED_F
 from cadrumo.application.transactions.diagnostics import LedgerImportDiagnosticKind
 from cadrumo.core.aggregation import IntracomOperationType
 from cadrumo.core.period import Period, PeriodKind, StandardPeriodCode
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.invoices.enums import PaymentStatus
 from cadrumo.domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevisionState
+from cadrumo.domain.renta.retencion_soportada import RetencionSoportadaOrigen
 from cadrumo.domain.transactions.classification_effects import (
     awaits_invoice,
     fields_cleared_by_classification,
@@ -91,6 +93,20 @@ _ENUMS: tuple[tuple[str, str, str | None, str, type[StrEnum]], ...] = (
         None,
         "What an import marked on a movement, as the list filters it.",
         LedgerImportDiagnosticKind,
+    ),
+    (
+        "WITHHOLDING_INCOME_CLASSES",
+        "WithholdingIncomeClass",
+        "isWithholdingIncomeClass",
+        "The income classes a payer's withholding certificate is recorded under.",
+        RetencionSoportadaClase,
+    ),
+    (
+        "WITHHOLDING_ORIGINS",
+        "WithholdingOrigin",
+        "isWithholdingOrigin",
+        "Who states the figures of a recorded payer certificate.",
+        RetencionSoportadaOrigen,
     ),
 )
 

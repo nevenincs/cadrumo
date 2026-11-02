@@ -13,6 +13,10 @@ import type {
   OutputLanguage,
   PublicDecimal,
 } from "./ledger";
+import type {
+  WithholdingIncomeClass,
+  WithholdingOrigin,
+} from "./ledgerContract";
 
 // ---- Rules ---------------------------------------------------------------
 
@@ -446,6 +450,127 @@ export type ProrrataRemoveGrossRequest = {
   ejercicio: number;
   period: string;
   sector_id?: string | null;
+};
+
+// ---- Withholding certificates --------------------------------------------
+
+/** One payer's certificate figures for an ejercicio and income class. The
+ * payer is named by `payer_ref`, never by their tax identifier, which the
+ * backend does not give back. `income_class_label` is the class in the
+ * person's language where the backend serves it. */
+export type WithholdingRow = {
+  ejercicio: number;
+  income_class: WithholdingIncomeClass;
+  income_class_label?: string | null;
+  payer_ref: string;
+  payer_legal_name: string | null;
+  importe_integro_dinerario: PublicDecimal;
+  valoracion_especie: PublicDecimal;
+  retencion: PublicDecimal;
+  ingreso_a_cuenta: PublicDecimal;
+  ingreso_a_cuenta_repercutido: PublicDecimal;
+  pago_a_cuenta: PublicDecimal;
+  origin: WithholdingOrigin;
+  evidence_fingerprint: string | null;
+  revision_id: string;
+};
+export type WithholdingListRequest = { ejercicio: number };
+export type WithholdingListResult = {
+  profile_id: string;
+  ejercicio: number;
+  rows: WithholdingRow[];
+};
+/** Why a certificate change was refused before anything was stored. */
+export type WithholdingRefusalReason =
+  | "own_tax_id"
+  | "ejercicio_unsupported"
+  | "family_not_declared"
+  | "identity_mismatch"
+  | "stale_revision"
+  | "repercutido_exceeds_ingreso_a_cuenta"
+  | "certificate_fingerprint_required"
+  | "taxpayer_tax_id_unknown"
+  | "not_found"
+  | "validation";
+/** What a certificate change did; a refused one is the refusal's detail. */
+export type WithholdingMutationResult = {
+  outcome: "recorded" | "removed" | "refused";
+  profile_id: string;
+  ejercicio: number;
+  row: WithholdingRow | null;
+  count: number | null;
+  refusal: {
+    code:
+      | "REFUSED_RETENCION_SOPORTADA_WRITE"
+      | "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT";
+    reason: WithholdingRefusalReason;
+    ejercicio: number;
+  } | null;
+};
+/** Records a payer's certificate. `payer_tax_id` is private input: it goes
+ * in this request only and the backend never returns it. */
+export type WithholdingRecordRequest = {
+  ejercicio: number;
+  income_class: WithholdingIncomeClass;
+  payer_tax_id: string;
+  payer_legal_name?: string | null;
+  importe_integro_dinerario: PublicDecimal;
+  valoracion_especie: PublicDecimal;
+  retencion: PublicDecimal;
+  ingreso_a_cuenta: PublicDecimal;
+  ingreso_a_cuenta_repercutido: PublicDecimal;
+  origin: WithholdingOrigin;
+  evidence_fingerprint?: string | null;
+  expected_revision_id?: string | null;
+};
+export type WithholdingRemoveRequest = {
+  ejercicio: number;
+  income_class: WithholdingIncomeClass;
+  payer_ref: string;
+  expected_revision_id: string;
+};
+
+/** The person's attestation that no payer withheld on a class. */
+export type WithholdingAbsence = {
+  ejercicio: number;
+  income_class: WithholdingIncomeClass;
+  note: string;
+  state: "active" | "withdrawn";
+  attested_at: string;
+  withdrawn_at: string | null;
+  revision_id: string;
+};
+export type WithholdingAbsenceReason =
+  | "ejercicio_unsupported"
+  | "family_not_declared"
+  | "records_present"
+  | "already_attested"
+  | "not_attested"
+  | "stale_revision";
+export type WithholdingAbsenceResult = {
+  outcome: "attested" | "withdrawn" | "refused";
+  profile_id: string;
+  ejercicio: number;
+  attestation: WithholdingAbsence | null;
+  refusal: {
+    code:
+      | "REFUSED_RETENCION_SOPORTADA_ABSENCE"
+      | "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT";
+    reason: WithholdingAbsenceReason;
+    ejercicio: number;
+    income_class: WithholdingIncomeClass;
+  } | null;
+};
+export type WithholdingAttestRequest = {
+  ejercicio: number;
+  income_class: WithholdingIncomeClass;
+  note: string;
+  expected_revision_id?: string | null;
+};
+export type WithholdingWithdrawRequest = {
+  ejercicio: number;
+  income_class: WithholdingIncomeClass;
+  expected_revision_id: string;
 };
 
 // ---- Bienes de inversión -------------------------------------------------
