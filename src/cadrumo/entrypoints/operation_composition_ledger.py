@@ -162,13 +162,17 @@ def compose_invoices_catalogue_update_operation(inputs: OperationCompositionInpu
 
 def compose_invoice_figures_preview_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose the read that answers an invoice draft with the backend's own figures."""
+    from ..adapters.persistence.profile.catalogue_creation import CatalogueCreationRateProviderAdapter
+    from ..application.exchange_rate_provider import exchange_rate_provider
     from ..application.invoices.figures_preview_operation import (
         build_invoice_figures_preview_definition,
         build_invoice_figures_preview_registration,
     )
 
     del inputs
-    definition = build_invoice_figures_preview_definition()
+    definition = build_invoice_figures_preview_definition(
+        lambda: CatalogueCreationRateProviderAdapter(provider=exchange_rate_provider())
+    )
     return built((definition,), (build_invoice_figures_preview_registration(definition),))
 
 
