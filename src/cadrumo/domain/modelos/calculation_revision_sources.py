@@ -346,7 +346,7 @@ class CalculationSourceIssue(BaseModel):
     casilla_id: CasillaId | None = None
     fact: CalculationNoteFact | None = None
     value_outcome: BindingValueOutcome | None = None
-    disagreement: SourceDisagreementFact | None = Field(default=None, exclude_if=lambda value: value is None)
+    disagreement: SourceDisagreementFact | None = None
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

@@ -8,7 +8,9 @@ is the only thing that says which screen raised it.
 
 Every value keeps its own type. A comparison never narrows a date, a token or a
 row set to an amount, so equality is decided per member and a disagreement on a
-non-numeric channel is stated as what it is.
+non-numeric channel is stated as what it is. An amount is held as canonical
+decimal text, the one wire form a stored issue and a public result share, and
+read back as a ``Decimal``.
 
 ``finding_key`` is the digest of everything that identifies the disagreement and
 nothing that merely locates it: the work unit, an evidence fingerprint and a
@@ -25,9 +27,10 @@ from decimal import Decimal
 from enum import StrEnum
 from typing import Annotated, Literal, Self
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator, model_validator
 
 from ...core.casilla_id import CasillaId
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
@@ -67,11 +70,33 @@ class _DisagreementValueBase(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
 
-class DisagreementDecimalValue(_DisagreementValueBase):
+class _DisagreementAmountBase(_DisagreementValueBase):
+    amount: str = Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)
+
+    @field_validator("amount")
+    @classmethod
+    @pydantic_validation_boundary
+    def _amount_is_canonical_decimal(cls, value: str) -> str:
+        parsed = try_parse_canonical_decimal(value)
+        if parsed is None or value != format(parsed, "f"):
+            raise ModeloValidationError("a disagreement amount must be canonical decimal text")
+        return value
+
+    @classmethod
+    def of(cls, amount: Decimal) -> Self:
+        """Hold ``amount`` as its canonical decimal text, keeping its exponent."""
+        return cls(amount=format(amount, "f"))
+
+    @property
+    def decimal(self) -> Decimal:
+        """Return the amount as a ``Decimal``."""
+        return Decimal(self.amount)
+
+
+class DisagreementDecimalValue(_DisagreementAmountBase):
     """A money, decimal or integer figure."""
 
     kind: Literal["decimal"] = "decimal"
-    amount: Decimal
 
 
 class DisagreementEnumValue(_DisagreementValueBase):
@@ -102,11 +127,10 @@ class DisagreementTextValue(_DisagreementValueBase):
     value: str = Field(max_length=512)
 
 
-class DisagreementRelationValue(_DisagreementValueBase):
+class DisagreementRelationValue(_DisagreementAmountBase):
     """The value a registry relation resolved to."""
 
     kind: Literal["relation"] = "relation"
-    amount: Decimal
 
 
 DisagreementScalarValue = Annotated[
@@ -161,7 +185,7 @@ class SourceDisagreementEntry(BaseModel):
 
     def key_form(self) -> dict[str, object]:
         """Return the entry as it enters the finding key: everything but its evidence locator."""
-        return self.model_dump(mode="json", exclude={"evidence_ref"})
+        return dict[str, object](self.model_dump(mode="json", exclude={"evidence_ref"}))
 
 
 class SourceDisagreementFact(BaseModel):
