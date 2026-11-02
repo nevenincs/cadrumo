@@ -129,29 +129,36 @@ def validate_text_comparison_operands(scope: str, formula: FormulaDefinition, *,
     text_casillas = text_family_casilla_ids(revision.casillas)
     failures: list[str] = []
 
+    label = f"{scope}: formula {formula.id!r}"
+
     def visit(expression: FormulaExpression, parent_op: str | None = None) -> None:
-        if expression.text_literal is not None and parent_op not in {"text_equal", "unresolved_outcome"}:
-            failures.append(
-                f"{scope}: formula {formula.id!r} text_literal may only be an operand of text_equal "
-                "or unresolved_outcome"
-            )
-        if expression.op == "unresolved_outcome" and expression.args[0].text_literal not in _UNRESOLVED_REASONS:
-            failures.append(
-                f"{scope}: formula {formula.id!r} unresolved_outcome names an unknown reason "
-                f"{expression.args[0].text_literal!r}"
-            )
-        if expression.op == "text_equal":
-            for arg in expression.args:
-                if (
-                    arg.text_literal is None
-                    and arg.binding not in text_bindings
-                    and arg.casilla_id not in text_casillas
-                ):
-                    failures.append(f"{scope}: formula {formula.id!r} text_equal requires declared text operands")
+        failures.extend(_text_operand_failures(label, expression, parent_op, text_bindings, text_casillas))
         for arg in expression.args:
             visit(arg, expression.op)
 
     visit(formula.expression)
+    return failures
+
+
+def _text_operand_failures(
+    label: str,
+    expression: FormulaExpression,
+    parent_op: str | None,
+    text_bindings: set[BindingId],
+    text_casillas: frozenset[CasillaId],
+) -> list[str]:
+    """Return what is wrong with one expression's text operands, not its descendants'."""
+    failures: list[str] = []
+    if expression.text_literal is not None and parent_op not in {"text_equal", "unresolved_outcome"}:
+        failures.append(f"{label} text_literal may only be an operand of text_equal or unresolved_outcome")
+    if expression.op == "unresolved_outcome" and expression.args[0].text_literal not in _UNRESOLVED_REASONS:
+        failures.append(f"{label} unresolved_outcome names an unknown reason {expression.args[0].text_literal!r}")
+    if expression.op == "text_equal":
+        failures.extend(
+            f"{label} text_equal requires declared text operands"
+            for arg in expression.args
+            if arg.text_literal is None and arg.binding not in text_bindings and arg.casilla_id not in text_casillas
+        )
     return failures
 
 

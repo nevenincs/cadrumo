@@ -1,0 +1,289 @@
+import { expect, test, type Locator, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import { label } from "../support/strings";
+
+// The household element in the profile page. The groups, states, leaves,
+// limits and refusal sentences below are what the application served through
+// the `family_rows` stream of `user-profile.view` and the ascendants
+// replacement, not wording of the window.
+
+type Item = {
+  kind: "family_group" | "family_row";
+  group_key: string;
+  label?: string;
+  state?: string;
+  incomplete_words?: string | null;
+  max_rows?: number | null;
+  leaves?: { leaf: string; label: string }[];
+  facts?: { leaf: string; value: string; masked: boolean }[];
+};
+type Served = {
+  reads: Record<string, { items: Record<string, Item[]> }>;
+  refusals: Record<string, Record<string, { refusal_words: string }>>;
+};
+const served = JSON.parse(
+  readFileSync(
+    new URL("../../src/dev/fixtures/household.json", import.meta.url),
+    "utf8",
+  ),
+) as Served;
+
+const LANGUAGES = ["en", "es", "ca", "hu"] as const;
+type Language = (typeof LANGUAGES)[number];
+const DESCENDANTS = "renta_family.descendiente";
+const ASCENDANTS = "renta_family.ascendiente";
+
+const groupsOf = (scenario: string, language: Language) =>
+  served.reads[scenario]!.items[language]!.filter(
+    (item) => item.kind === "family_group",
+  );
+
+async function open(
+  page: Page,
+  household: string,
+  language: Language = "en",
+): Promise<Locator> {
+  await page.goto(
+    `/scenarios.html?scenario=user-profile&latency=0&bar=off&household=${household}&lang=${language}`,
+  );
+  await page
+    .locator(".rail")
+    .getByRole("button", {
+      name: label("desktop.profile.title", {}, language),
+      exact: true,
+    })
+    .click();
+  const profile = page.locator(".user-profile-page");
+  await expect(profile).toContainText("Soler Vidal");
+  return profile.locator("[data-household]");
+}
+
+const group = (household: Locator, key: string) =>
+  household.locator(`[data-household-group="${key}"]`);
+
+test.describe("the household in the profile page", () => {
+  for (const language of LANGUAGES) {
+    test(`each state of a group is told apart (${language})`, async ({
+      page,
+    }) => {
+      for (const [scenario, states] of [
+        ["unknown", ["unknown", "unknown"]],
+        ["none_declared", ["none_declared", "none_declared"]],
+        ["rows", ["rows", "rows"]],
+        ["incomplete", ["incomplete", "incomplete"]],
+      ] as const) {
+        const household = await open(page, scenario, language);
+        for (const [index, key] of [DESCENDANTS, ASCENDANTS].entries()) {
+          const shown = group(household, key);
+          await expect(shown).toHaveAttribute(
+            "data-household-state",
+            states[index]!,
+          );
+          // The heading is the product's own word for the group.
+          await expect(shown.getByRole("heading")).toHaveText(
+            groupsOf(scenario, language)[index]!.label!,
+          );
+        }
+      }
+    });
+  }
+
+  test("an unknown group is not drawn as none, and no person is invented", async ({
+    page,
+  }) => {
+    const household = await open(page, "unknown");
+    await expect(household.locator("[data-household-person]")).toHaveCount(0);
+    const unknown = group(household, DESCENDANTS);
+    await expect(unknown).toContainText(
+      label("desktop.profile.household.state.unknown"),
+    );
+    await expect(unknown).not.toContainText(
+      label("desktop.profile.household.state.none_declared"),
+    );
+    await expect(
+      unknown.getByRole("button", {
+        name: label("desktop.profile.household.declare_none"),
+      }),
+    ).toBeVisible();
+  });
+
+  test("an incomplete group shows the product's own stated and recorded words", async ({
+    page,
+  }) => {
+    for (const language of LANGUAGES) {
+      const household = await open(page, "incomplete", language);
+      const words = groupsOf("incomplete", language).map(
+        (item) => item.incomplete_words!,
+      );
+      await expect(
+        group(household, DESCENDANTS).locator("[data-household-incomplete]"),
+      ).toHaveText(words[0]!);
+      await expect(
+        group(household, ASCENDANTS).locator("[data-household-incomplete]"),
+      ).toHaveText(words[1]!);
+      // The recorded person is still there.
+      await expect(
+        group(household, DESCENDANTS).locator("[data-household-person]"),
+      ).toHaveCount(1);
+    }
+  });
+
+  test("a hidden value stays hidden and its group is not rewritten here", async ({
+    page,
+  }) => {
+    const household = await open(page, "masked");
+    const hidden = household.locator("[data-masked]");
+    await expect(hidden.first()).toContainText("••••");
+    const text = (await household.textContent()) ?? "";
+    // The child's NIF and birth date are hidden; the ascendant's are not.
+    expect(text).not.toContain("2012-01-01");
+    expect(text.split("12345678Z")).toHaveLength(2);
+    await expect(
+      group(household, DESCENDANTS).getByRole("button", {
+        name: label("desktop.profile.household.edit_person", { number: 1 }),
+      }),
+    ).toBeDisabled();
+    await expect(
+      group(household, ASCENDANTS).getByRole("button", {
+        name: label("desktop.profile.household.edit_person", { number: 1 }),
+      }),
+    ).toBeEnabled();
+  });
+
+  test("a group at the design's limit takes no more people", async ({
+    page,
+  }) => {
+    const household = await open(page, "at_cap");
+    for (const [index, key] of [DESCENDANTS, ASCENDANTS].entries()) {
+      const full = group(household, key);
+      await expect(
+        full.getByRole("button", {
+          name: label("desktop.profile.household.add"),
+        }),
+      ).toBeDisabled();
+      const cap = groupsOf("at_cap", "en")[index]!.max_rows!;
+      await expect(full).toContainText(
+        label("desktop.profile.household.limit", { count: cap, max: cap }),
+      );
+      await expect(full.locator("[data-household-person]")).toHaveCount(cap);
+    }
+  });
+
+  test("a person is added through the replacement against the revision read", async ({
+    page,
+  }) => {
+    const household = await open(page, "unknown");
+    const ascendants = group(household, ASCENDANTS);
+    await ascendants
+      .getByRole("button", { name: label("desktop.profile.household.add") })
+      .click();
+    const dialog = page.getByRole("dialog");
+    const born = groupsOf("unknown", "en")[1]!.leaves!.find(
+      (leaf) => leaf.leaf === "birth_date",
+    )!.label;
+    await dialog.getByRole("textbox", { name: born }).fill("1950-02-03");
+    await dialog.getByRole("textbox", { name: born }).blur();
+    await dialog
+      .getByRole("button", { name: label("desktop.profile.save") })
+      .click();
+    await expect(dialog).toHaveCount(0);
+    await expect(ascendants).toHaveAttribute("data-household-state", "rows");
+    await expect(ascendants.locator("[data-household-person]")).toHaveCount(1);
+    // The other group states nothing more than it did.
+    await expect(group(household, DESCENDANTS)).toHaveAttribute(
+      "data-household-state",
+      "unknown",
+    );
+    const writes = await page.evaluate(() =>
+      window.__scenarioHousehold!.writes(),
+    );
+    expect(writes).toHaveLength(1);
+    expect(writes[0]!.edit).toEqual({
+      kind: "ascendants",
+      rows: [{ facts: [{ field_key: "birth_date", value: "1950-02-03" }] }],
+    });
+    expect(writes[0]!.expected_revision).toBeGreaterThan(0);
+  });
+
+  test("declaring none states a zero, and removing the last person does too", async ({
+    page,
+  }) => {
+    const household = await open(page, "unknown");
+    await group(household, DESCENDANTS)
+      .getByRole("button", {
+        name: label("desktop.profile.household.declare_none"),
+      })
+      .click();
+    await expect(group(household, DESCENDANTS)).toHaveAttribute(
+      "data-household-state",
+      "none_declared",
+    );
+    const writes = await page.evaluate(() =>
+      window.__scenarioHousehold!.writes(),
+    );
+    expect(writes.map((write) => write.edit)).toEqual([
+      { kind: "descendants", rows: [] },
+    ]);
+  });
+
+  test("a refusal is the application's own sentence and the dialog stays open", async ({
+    page,
+  }) => {
+    for (const language of LANGUAGES) {
+      const household = await open(page, "rows", language);
+      await page.evaluate(() =>
+        window.__scenarioHousehold!.refuseNext("second_nif_invalid"),
+      );
+      await group(household, ASCENDANTS)
+        .getByRole("button", {
+          name: label(
+            "desktop.profile.household.edit_person",
+            { number: 1 },
+            language,
+          ),
+        })
+        .click();
+      const dialog = page.getByRole("dialog");
+      await dialog
+        .getByRole("button", {
+          name: label("desktop.profile.save", {}, language),
+        })
+        .click();
+      await expect(dialog.getByRole("alert")).toHaveText(
+        served.refusals.second_nif_invalid![language]!.refusal_words,
+      );
+      await expect(dialog).toBeVisible();
+    }
+  });
+
+  test("a write that may have landed blocks further writes until a refresh", async ({
+    page,
+  }) => {
+    const household = await open(page, "rows");
+    await page.evaluate(() => window.__scenarioHousehold!.loseNextAnswer());
+    await group(household, ASCENDANTS)
+      .getByRole("button", {
+        name: label("desktop.profile.household.remove_person", { number: 1 }),
+      })
+      .click();
+    await page
+      .getByRole("dialog")
+      .getByRole("button", { name: label("desktop.profile.household.remove") })
+      .click();
+    await expect(household.getByRole("alert")).toHaveText(
+      label("desktop.profile.unknown"),
+    );
+    for (const add of await household
+      .getByRole("button", { name: label("desktop.profile.household.add") })
+      .all())
+      await expect(add).toBeDisabled();
+    await household
+      .getByRole("button", { name: label("desktop.profile.refresh") })
+      .click();
+    await expect(
+      group(household, ASCENDANTS).getByRole("button", {
+        name: label("desktop.profile.household.add"),
+      }),
+    ).toBeEnabled();
+  });
+});
