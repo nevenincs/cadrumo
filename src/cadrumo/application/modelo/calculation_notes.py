@@ -48,6 +48,7 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
 from ...core.logging import get_logger
+from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.modelos.calculation_revision_sources import (
     CalculationNoteFact,
     CalculationNoteSentence,
@@ -235,6 +236,8 @@ _KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic"
 _FACT_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_fact"
 _ELEMENT_NAME_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.named_element"
 _UNNAMED_ELEMENT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.unnamed_element"
+_INCOME_CLASS_VALUE: Final[str] = "income_class"
+_INCOME_CLASS_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_words.income_class"
 _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
 _ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
@@ -287,6 +290,11 @@ def fact_locale_key(sentence: CalculationNoteSentence) -> str:
     return f"{_FACT_KEY_ROOT}.{sentence.value}"
 
 
+def income_class_word_key(income_class: RetencionSoportadaClase) -> str:
+    """The catalogue key of the words a suffered-withholding income class goes by."""
+    return f"{_INCOME_CLASS_KEY_ROOT}.{income_class.value}"
+
+
 def note_fact_text(
     fact: CalculationNoteFact,
     *,
@@ -325,6 +333,12 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         return format_casilla_value(date.fromisoformat(value), data_type="date", language=language)
     if name in _AMOUNT_VALUES:
         return format_casilla_value(Decimal(value), data_type="money", language=language)
+    if name == _INCOME_CLASS_VALUE:
+        try:
+            income_class = RetencionSoportadaClase(value)
+        except ValueError:
+            return value
+        return tr(income_class_word_key(income_class), locale=language.value)
     return value
 
 

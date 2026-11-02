@@ -385,7 +385,7 @@ def test_executor_preserves_typed_comparison_refusal_and_rejects_oversized_proje
     assert effects == []
 
     monkeypatch.setattr(operation_module, "compare_taxation_for_work_unit", lambda *_args, **_kwargs: _comparison())
-    monkeypatch.setattr(operation_module, "_MAX_RESULT_BYTES", 1)
+    monkeypatch.setattr(operation_module, "PROJECTION_RESULT_MAX_BYTES", 1)
     with override_settings(cadrumo_active_profile=str(_PROFILE)), pytest.raises(ProfileAccessRefusedError) as oversized:
         asyncio.run(definition.executor_factory.create().execute(request, context))
     assert oversized.value.reason is AccessDenialCode.OPERATION_DENIED

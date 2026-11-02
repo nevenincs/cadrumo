@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import UTC, datetime
+from datetime import UTC, datetime, time, timedelta
 from pathlib import Path
 
 import pytest
@@ -13,9 +13,13 @@ from ....core.errors.error_codes import (
     resolve_error_message,
 )
 from ....core.payment_election import PaymentElection
-from ....core.period import Period
+from ....core.period import Period, PeriodKind, accepted_filing_period_codes
 from ....core.result_disposition import ResultDisposition
+from ....core.time.clock import MADRID_TZ
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.tests.published_authority import published_supported_filing_years
+from ....domain.deadlines.domiciliation_cutoff import UnavailablePaymentCutoff, resolve_payment_cutoff
+from ....domain.deadlines.plazo import resolve_filing_window
 from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..action_errors import ModeloDomiciliationPastCutoffError
@@ -140,3 +144,90 @@ def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
             assert str(expected_context["payment_cutoff_rule"]) in message
     else:
         assert gate(ResultDisposition.DOMICILIACION) is (expected == "advisory")
+
+
+def _work_unit_for(period: Period, operation: PinnedAuthorityOperation) -> WorkUnit:
+    snapshot = operation.snapshot("303", filing_year=period.filing_year, period=period.registry_token)
+    return WorkUnit(
+        work_unit_id=derive_work_unit_id(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=period.filing_year,
+            period=period,
+            revision_id=snapshot.revision.id,
+        ),
+        bucket_id=_BUCKET_ID,
+        modelo=ModeloCode("303"),
+        filing_year=period.filing_year,
+        period=period,
+        revision_id=snapshot.revision.id,
+        name=f"303-{period.filing_year}-{period.registry_token}",
+        created_at=_CLOCK,
+        updated_at=_CLOCK,
+    )
+
+
+def _supported_quarterly_periods() -> tuple[Period, ...]:
+    support = published_supported_filing_years()
+    assert support is not None, "the published authority declares no support envelope"
+    first_year = support.years[0]
+    quarterly_codes = tuple(
+        code
+        for code in accepted_filing_period_codes()
+        if Period.from_year_and_code(first_year, code).kind is PeriodKind.QUARTERLY
+    )
+    return tuple(Period.from_year_and_code(year, code) for year in support.years for code in quarterly_codes)
+
+
+_QUARTERLY_PERIODS = _supported_quarterly_periods()
+
+
+@pytest.mark.parametrize("period", _QUARTERLY_PERIODS, ids=[str(period) for period in _QUARTERLY_PERIODS])
+def test_domiciliation_closes_at_the_resolved_cutoff_of_every_supported_quarter(
+    period: Period, operation: PinnedAuthorityOperation
+) -> None:
+    """Every quarterly 303 window refuses from the day after its cutoff, derived or authored alike.
+
+    The periods are the registry's: its supported filing years and the quarterly
+    codes it accepts. A quarter whose cutoff the registry cannot yet resolve must
+    advise rather than refuse, so a quarter that regains a cutoff is never left
+    ungated and none is silently skipped.
+    """
+    resolution = resolve_filing_window("303", period.filing_year, period, authority=operation)
+    assert resolution is not None, f"no 303 window for {period}"
+    window = resolution.dated_window
+    assert window is not None, f"the 303 window of {period} has no known close"
+    work_unit = _work_unit_for(period, operation)
+    command = ModeloExportCommand(
+        calculation_revision_id="a" * 64,
+        output_path=Path("unused.txt"),
+        actor="operator",
+        payment_election=PaymentElection.DOMICILIACION,
+    )
+
+    def gate(exported_on: datetime) -> bool:
+        return require_domiciliation_before_cutoff(
+            command,
+            work_unit=work_unit,
+            resolved_result_disposition=ResultDisposition.DOMICILIACION,
+            exported_at=exported_on,
+            operation=operation,
+        )
+
+    cutoff = resolve_payment_cutoff("303", window, operation=operation)
+    if isinstance(cutoff, UnavailablePaymentCutoff):
+        assert gate(datetime.combine(window.closes_on, time(12), tzinfo=MADRID_TZ)) is True
+        return
+
+    cutoff_on = cutoff.cutoff_on
+    assert window.opens_on <= cutoff_on < window.closes_on
+    assert gate(datetime.combine(cutoff_on, time(23, 59), tzinfo=MADRID_TZ)) is False
+    day_after = datetime.combine(cutoff_on + timedelta(days=1), time(0, 0), tzinfo=MADRID_TZ)
+    with pytest.raises(ModeloDomiciliationPastCutoffError) as refused:
+        gate(day_after)
+    context = refused.value.context
+    assert context is not None
+    assert context["payment_cutoff_on"] == cutoff_on.isoformat()
+    assert context["payment_cutoff_source"] == cutoff.source.value
+    assert context["period"] == period.registry_token
+    assert context["filing_year"] == str(period.filing_year)
