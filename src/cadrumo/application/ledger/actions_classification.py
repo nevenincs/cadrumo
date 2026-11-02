@@ -36,7 +36,8 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
 from ...core.pattern_search import PatternSearchOverrunError, PatternSearchUnreadableError, first_matching_patterns
 from ...domain.buckets.event import BucketEvent
-from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState, is_classified
+from ...domain.transactions.classification_effects import takes_changes
+from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .action_ports import LedgerActionPorts
@@ -245,7 +246,7 @@ def _apply_one_bulk_classify_row(
     try:
         resolved_transaction_id = resolve_transaction_id(row.transaction_id, working.transactions.keys())
         current = require_transaction(working, resolved_transaction_id)
-        if current.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+        if not takes_changes(current.lifecycle_state):
             raise TransactionValidationError(
                 "only active ledger transactions can be edited; archived, stashed, and split-parent rows are immutable",
                 context={
@@ -471,7 +472,7 @@ class ClassificationRulePlan(NamedTuple):
 
 def classification_rule_in_scope(transaction: Transaction, *, reaffirm: bool) -> bool:
     """Return whether one transaction belongs to the rule-engine scan."""
-    if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
+    if not takes_changes(transaction.lifecycle_state):
         return False
     if transaction.business_classification is BusinessClassification.NOT_YET_PROCESSED:
         return True
@@ -492,7 +493,7 @@ def _classification_rule_scope(
     skipped_already_classified = sum(
         1
         for transaction in catalogue.transactions.values()
-        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+        if takes_changes(transaction.lifecycle_state)
         and not classification_rule_in_scope(transaction, reaffirm=reaffirm)
         and transaction.business_classification is not BusinessClassification.NOT_YET_PROCESSED
     )
