@@ -9,9 +9,9 @@ related:
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-10-22-ledger-tui-doors-authenticated-stored-reads-adr]]'
   - '[[2026-08-22-secure-storage-performance-hardening-adr]]'
-modified: '2026-10-23'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:8506591869b8f1638fb0adba4cf778ce032c56dc02266a73ef0a37fb53db200b'
+body_hash: 'sha256:e3cada331f7e9f53534e812430cbf30b227d6104f915c1ec8abd593984e5c752'
 ---
 
 # `ledger-tui-doors` plan
@@ -81,7 +81,7 @@ The orchestrator applies locales, registers visual surfaces, runs every gate and
 - [x] `P03.S24` - give ledger.review and ledger.evidence.review.list dedicated Records doors so no ledger operation is reachable only through Ctrl+P, and name the eight remaining ledger locale key families in full; `src/cadrumo/entrypoints/tui/ledger/review.py, evidence.py and runtime_ledger_*.py`.
 - [x] `P03.S25` - make every Records body answer an area choice, so entries add, export and reset, the import flow, invoice entry and the categorisation tools no longer show a navigation table that does nothing; `src/cadrumo/entrypoints/tui/ledger/controller.py and the bodies that bypass handle_navigation_selection`.
 - [x] `P03.S26` - word a saved own-account write as saved when its re-read fails, treat a categorisation modal closed after Apply without an outcome as unknown, and fix the third re-review lows; `src/cadrumo/entrypoints/tui/ledger/own_accounts.py, categorisation_review.py, record_views.py, transaction_views.py, evidence_records.py and actividad_asset.py`.
-- [ ] `P03.S27` - keep every re-read continuation, retry a failed re-read on the next write, clear the unknown flag once a later re-read returns, and re-read the own-account register after an unknown write; `src/cadrumo/entrypoints/tui/ledger/controller.py, categorisation_review.py, categorisation_split.py, evidence_records.py and own_accounts.py`.
+- [x] `P03.S27` - keep every re-read continuation, retry a failed re-read on the next write, clear the unknown flag once a later re-read returns, and re-read the own-account register after an unknown write; `src/cadrumo/entrypoints/tui/ledger/controller.py, categorisation_review.py, categorisation_split.py, evidence_records.py and own_accounts.py`.
 
 ## Parallelization
 

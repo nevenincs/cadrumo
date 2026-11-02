@@ -10,9 +10,9 @@ related:
   - '[[2026-10-12-mcp-parity-agent-inside-the-signed-in-profile-adr]]'
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-13-provider-settings-reference]]'
-modified: '2026-10-19'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:a96f47a687ad87b8b8a1a66e2c6cf10cbf45b341cc81d4a1cb47dc1c1276e61b'
+body_hash: 'sha256:8f1404437b67e1f4e4a2d9ffc51ac6b4191b5d4ef042c1fdbe8dd27f2fb1a3de'
 ---
 
 # `provider-settings` plan
@@ -62,7 +62,7 @@ Delivers the provider catalog and a per-profile encrypted settings record, manag
 - [x] `P02.S07` - Enroll set, remove and reset as person acts in ACCESS_ADMINISTRATION_OPERATIONS or an equivalent declared set, since remove and reset carry no secret, so the runtime refuses all three on MCP and generic execute at dispatch with PERSON_ACT_REQUIRED, with a test per action; `src/cadrumo/application/operations/person_acts.py, src/cadrumo/entrypoints/runtime/profile_connection_operations.py`.
 - [x] `P02.S08` - Add the CLI commands with secrets on the protected standard-input channel and masked output; `src/cadrumo/entrypoints/cli/config/`.
 - [x] `P02.S09` - Desktop contract: published aeat command names, JSON output shapes and typed refusal codes for provider-settings status, set/replace, remove and reset, documented for the desktop sessions in 2026-10-13-provider-settings-desktop-contract-reference. Status is one read listing every provider with id, display_name (brand name, every locale), auth_kind (api_key, api_key_with_base_url, oauth_token_or_provider_sign_in, provider_sign_in_only), consumers (extraction, assistant), mode (key, oauth_token, provider_sign_in, disabled, unset), available, source (profile, environment, none), readiness (ready, not_verified, missing, disabled, sign_in_required, unusable), an optional closed reason code, default_base_url (absent where the catalog has none), base_url only when stored, and revision as the guard every action sends. Every field is a closed enumeration. Remove persists disabled, reset returns to unset, and set stores without remote validation, so readiness is not_verified until first use. Refusals are not_signed_in, profile_locked, invalid_key_format, base_url_rejected, revision_conflict, committed_readback_failed, person_act_required (a frontend that may not change credentials asked) and unknown. Status is read on demand only, with no push and no polling; `src/cadrumo/entrypoints/cli/config/, docs/`.
-- [ ] `P02.S10` - Add the TUI profile settings view for masked status and guarded set, replace, remove and reset; `src/cadrumo/entrypoints/tui/profile/`.
+- [x] `P02.S10` - Add the TUI profile settings view for masked status and guarded set, replace, remove and reset; `src/cadrumo/entrypoints/tui/profile/`.
 
 ### Phase `P03` - Shared resolver
 
@@ -75,27 +75,27 @@ Delivers one resolver bound to the exact profile, login and settings generations
 
 Delivers the app-owned controller that starts a contained cadrumo-agent tree and hands it credentials once on a bounded standard-input frame.
 
-- [ ] `P04.S13` - Host the agent tree in the runtime's profile host, bound to the requesting session, in a kill-on-close job, and launch its cadrumo-mcp relay as the bundle's executable by absolute path with the pinned storage root, never a bare name, so a lane agent can never resolve the per-user default root; test that the relay's root is the pinned one; `src/cadrumo/application/agent_host/, src/cadrumo/adapters/local_runtime/, src/cadrumo/entrypoints/runtime/`.
-- [ ] `P04.S14` - Write the credentials and the gateway bearer once on a bounded standard-input frame behind one seam, and keep keys out of environment blocks, argv, files and the cadrumo-mcp relay; the development-lane root guard (agent_root_unmarked, .cadrumo-agent-lane.json) is retired with source-checkout agent mode by operator ruling 2026-10-19; `src/cadrumo/application/agent_host/`.
-- [ ] `P04.S15` - Implement aeat app agent serve to the desktop-agent-host plan's Launcher protocol: no source argument (--agent-source is retired by operator ruling 2026-10-19), stdin {"bearer"} held open with EOF as stop, stdout agent_ready, agent_refused with its six codes and agent_stopped, ephemeral loopback ports; publish only for the current generation and restart from committed values on a credential change; `src/cadrumo/entrypoints/cli/, src/cadrumo/application/agent_host/`.
+- [x] `P04.S13` - Host the agent tree in the runtime's profile host, bound to the requesting session, in a kill-on-close job, and launch its cadrumo-mcp relay as the bundle's executable by absolute path with the pinned storage root, never a bare name, so a lane agent can never resolve the per-user default root; test that the relay's root is the pinned one; `src/cadrumo/application/agent_host/, src/cadrumo/adapters/local_runtime/, src/cadrumo/entrypoints/runtime/`.
+- [x] `P04.S14` - Write the credentials and the gateway bearer once on a bounded standard-input frame behind one seam, and keep keys out of environment blocks, argv, files and the cadrumo-mcp relay; the development-lane root guard (agent_root_unmarked, .cadrumo-agent-lane.json) is retired with source-checkout agent mode by operator ruling 2026-10-19; `src/cadrumo/application/agent_host/`.
+- [x] `P04.S15` - Implement aeat app agent serve to the desktop-agent-host plan's Launcher protocol: no source argument (--agent-source is retired by operator ruling 2026-10-19), stdin {"bearer"} held open with EOF as stop, stdout agent_ready, agent_refused with its six codes and agent_stopped, ephemeral loopback ports; publish only for the current generation and restart from committed values on a credential change; `src/cadrumo/entrypoints/cli/, src/cadrumo/application/agent_host/`.
 
 ### Phase `P05` - Lifecycle barrier
 
 Delivers the canonical cross-process barrier that stops profile work at promotion, logout, lock and expiry before another profile is published.
 
 - [ ] `P05.S16` - Reorder sign-in so that, after candidate B's authentication succeeds and before B is admitted or its receipt minted, every other profile's human sessions are retired and their agent trees stopped; a failed B keeps A; today _sign_out_other_profiles runs only after _finish_login admitted B and minted its receipt (profile_connection_sessions.py:113,196); `src/cadrumo/entrypoints/runtime/profile_connection_sessions.py, src/cadrumo/application/user_profile/`.
-- [ ] `P05.S17` - Observe the session without touching idle time, so background polling never extends a sign-in; `src/cadrumo/application/user_profile/, src/cadrumo/application/agent_host/`.
+- [x] `P05.S17` - Observe the session without touching idle time, so background polling never extends a sign-in; `src/cadrumo/application/user_profile/, src/cadrumo/application/agent_host/`.
 
 ### Phase `P06` - MCP contract and live proof
 
 Aligns cadrumo-agent's relay with the tui MCP surface and proves the whole path on real disposable profiles.
 
-- [ ] `P06.S18` - Align cadrumo-agent relay expectations with the cadrumo-mcp full surface tool list, coordinated with agent relay S05 and testbed S02; `src/cadrumo_harness/mcp/main.py, src/cadrumo/application/operations/mcp_surfaces.py`.
+- [x] `P06.S18` - Align cadrumo-agent relay expectations with the cadrumo-mcp full surface tool list, coordinated with agent relay S05 and testbed S02; `src/cadrumo_harness/mcp/main.py, src/cadrumo/application/operations/mcp_surfaces.py`.
 - [ ] `P06.S19` - Prove on real disposable profiles a provider turn, tool work, profile switch, logout, expiry, credential rotation and MCP refusal of credential management; `src/cadrumo/application/agent_host/tests/, src/cadrumo_harness/mcp/tests/`.
 - [ ] `P06.S20` - Coordinate the cross-session desktop work, not built by this session: the Tauri host commands and the webview, including the profile settings section and agent panel status, owned by the desktop design sessions UI-DESIGN1 and UI-DESIGN2; `native/desktop/src-tauri/src/shell/, native/desktop/frontend/src/`.
 - [x] `P06.S21` - Coordinate cadrumo-agent's side, owned by BUILD2: a bounded standard-input frame reader before any store or provider opens, keyed by agent_credential_id and carrying the gateway bearer; the worker's keys and internal token over its own stdin pipe instead of os.environ.copy; ephemeral gateway and worker ports reported in the ready line; ready and refused lines on stdout under hosting contract 1; and a hosted start that mounts the Cadrumo relay; `agent api/app.py, agent control/worker_management.py, agent worker/app.py, agent providers/provider_readiness.py`.
 - [ ] `P06.S22` - Coordinate the bundle, owned by BUILD1: regenerate the agent locks (native/agent/<target>.txt) against the CADRUMO_AGENT_SOURCE_DIR folder's revision that carries the frame reader and worker pipe, and add a bundle.agent smoke check of hosting contract 1, before any installed-build proof in S19; `native/agent/, dev/packaging/`.
-- [ ] `P06.S23` - Coordinate the desktop agent lane, owned by UI-DESIGN2: the lane harness stores the developer's key into its throwaway profile with aeat config provider set --secrets-stdin before a run, and reads aeat config provider status instead of its stored-key placeholder; `dev/desktop_agent_live/lane.py`.
+- [x] `P06.S23` - Coordinate the desktop agent lane, owned by UI-DESIGN2: the lane harness stores the developer's key into its throwaway profile with aeat config provider set --secrets-stdin before a run, and reads aeat config provider status instead of its stored-key placeholder; `dev/desktop_agent_live/lane.py`.
 
 ## Parallelization
 

@@ -8,9 +8,9 @@ related:
   - '[[2026-10-16-application-distribution-windows-package-identity-adr]]'
   - '[[2026-10-07-application-distribution-windows-versioned-msi-adr]]'
   - '[[2026-10-16-native-build-incremental-adr]]'
-modified: '2026-10-17'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:b69d0ee135275e89ce08505abeb5bbba325421041a218391ece9a4615a2725a7'
+body_hash: 'sha256:28ad83330529ef7bb93e8da723f5c2ca951c9d0c638b8498c2b46a9f6256d20a'
 ---
 
 # `windows-package-identity` plan
@@ -29,10 +29,10 @@ Decision coverage: 2026-10-16-application-distribution-windows-package-identity-
 - [x] `S02` - Render an identity-bearing process manifest for the C hosts, manager and agent image, keep the installer plain, and check each linked image against its role; `native/interpreter/windows/host.manifest`.
 - [x] `S03` - Embed Tauri's manifest content plus the identity element in the desktop image; `native/desktop/src-tauri/build.rs`.
 - [x] `S04` - Render the package manifest and its logo assets from the projection; `dev/packaging/native/package_identity.py`.
-- [ ] `S05` - Add the developer command that loosely registers and removes a built stage tree, and prove one Cadrumo entry on the real Debug application; `dev/packaging/native/package_identity.py`.
-- [ ] `S06` - Sign the package with the operator-chosen certificate source; `dev/packaging/native/package_identity.py`.
-- [ ] `S07` - Register and remove the package per scope in the native maintenance owner within the shared-registration feature; `native/installer`.
-- [ ] `S08` - Accept per-user and per-machine registration, removal and grouping on a disposable host; `native/installer`.
+- [x] `S05` - Add the developer command that loosely registers and removes a built stage tree, and prove one Cadrumo entry on the real Debug application; `dev/packaging/native/package_identity.py`.
+- [x] `S06` - Sign the package with the operator-chosen certificate source; `dev/packaging/native/package_identity.py`.
+- [x] `S07` - Register and remove the package per scope in the native maintenance owner within the shared-registration feature; `native/installer`.
+- [x] `S08` - Accept per-user and per-machine registration, removal and grouping on a disposable host; `native/installer`.
 
 ## Parallelization
 

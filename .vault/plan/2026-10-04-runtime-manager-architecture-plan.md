@@ -10,9 +10,9 @@ related:
   - '[[2026-10-04-canonical-environment-adr]]'
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-08-canonical-environment-darwin-transport-adr]]'
-modified: '2026-10-13'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:3ecaf2b5396d450e61c2bf6f5cbd789076a771037ee37b98dae1c176cb4b3a35'
+body_hash: 'sha256:3a1f41ae2e603821e6f236236fee054f57287bca1425b4a603c02147a1cea8c3'
 ---
 
 # `runtime-manager-architecture` plan
@@ -88,8 +88,8 @@ The cadrumo-manager native image: identity-derived names, canonical locations, s
 - [x] `P02.S09` - Implement the supervision core with fixture test mode: launch with allow-list environment, readiness ceiling, heartbeat hang escalation, restart classes with monotonic backoff, crash-loop ceiling, adoption by image, elevation and boot record, and foreign state; `native/manager/, fixture runtimes in isolated synthetic roots`.
 - [ ] `P02.S10` - Implement Windows stop delivery, the manager window procedure for session end with cancel restart and restart suppression, job escape, and elevation and session-0 refusal; `native/manager/ Windows modules`.
 - [x] `P02.S11` - Implement session ownership: per-session lock, per-user kernel-released start claim and Quit marker conformance-tested against the Python custody primitives, observe-only other sessions and active-session handoff; `native/manager/, contract generator conformance tests`.
-- [ ] `P02.S12` - Implement the manager IPC endpoint with owner and image verification and the closed reveal, retry and successor-readiness request set; `native/manager/`.
-- [ ] `P02.S13` - Implement the tray surface, manager log and per-user preference with strings from the canonical locale catalogues; `native/manager/, src/cadrumo/locales/ via the dev.locales workflow`.
+- [x] `P02.S12` - Implement the manager IPC endpoint with owner and image verification and the closed reveal, retry and successor-readiness request set; `native/manager/`.
+- [x] `P02.S13` - Implement the tray surface, manager log and per-user preference with strings from the canonical locale catalogues; `native/manager/, src/cadrumo/locales/ via the dev.locales workflow`.
 - [x] `P02.S23` - Gate supervisor restarts through the per-user start claim so an observing session cannot relaunch during the owner's backoff; `native/manager/src/supervision/supervisor.rs, native/manager/src/session/ownership.rs, owning tests`.
 - [x] `P02.S24` - Register the manager .runtime records, preference and log locations in the Python storage taxonomy and record the session lock, start claim and Quit marker grammar as a cross-version contract; `src/cadrumo/core/storage_taxonomy.py, storage_taxonomy_locations.py, native/CONTRACT.md, owning tests`.
 - [x] `P02.S28` - Preserve explicit Retry through manager activation, version redirection and job escape; verify native admission for Session 0 and arbitrary interactive session IDs without weakening user identity or supervision; `native/manager invocation, main, installation, Windows lifecycle, admission and entrypoint tests`.
@@ -102,7 +102,7 @@ Windows login registration in the installation scope and client remedies that na
 
 - [x] `P03.S27` - Resolve the audit's installed-version discovery blocker with a shared Windows versioned-prefix layout, complete-version catalogue and stable manager entry point consumed by packaging, manager startup and desktop dispatch; preserve root-level images, strict admission and existing process authority.; `dev/packaging/native installation/layout owners and tests, native/application shared discovery, native/manager startup, native/desktop manager target selection and owning tests`.
 - [ ] `P03.S14` - Generate Windows login registration and the manager Start-menu shortcut with AUMID in both installation scopes from the identity projection, gated on the versioned-install layout; `dev/packaging/native/installation.py, native/cmake/distribution/`.
-- [ ] `P03.S15` - Add localized UNAVAILABLE remedies naming the manager to CLI, TUI and MCP refusal output without automatic manager requests; `src/cadrumo/adapters/local_runtime/runtime_client.py consumers, src/cadrumo/locales/, src/cadrumo_harness/mcp/`.
+- [x] `P03.S15` - Add localized UNAVAILABLE remedies naming the manager to CLI, TUI and MCP refusal output without automatic manager requests; `src/cadrumo/adapters/local_runtime/runtime_client.py consumers, src/cadrumo/locales/, src/cadrumo_harness/mcp/`.
 - [x] `P03.S31` - Forward explicit desktop recovery as --retry while leaving startup and installation dispatch unchanged; verify the closed Explorer adapter grammar and real command construction; `native/desktop/src-tauri/src/manager.rs, manager/tests.rs, python/manager_dispatch.py, dev/packaging/native/tests/test_manager_dispatch.py`.
 
 ### Phase `P04` - Version cutover

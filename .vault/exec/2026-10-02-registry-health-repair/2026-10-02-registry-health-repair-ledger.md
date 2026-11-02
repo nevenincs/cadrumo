@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-health-repair'
 date: '2026-10-02'
-modified: '2026-10-14'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ecad8a434be5381d588cea84630bf0fde6097bbfabb6b41bf7ef75873d0684ad'
+body_hash: 'sha256:67e9ff6ab3f45734676d8ec36b6a7704ec2282c66405b9a6f5bf65e2119fc71f'
 related:
   - "[[2026-10-02-registry-health-repair-plan]]"
 ---
@@ -524,6 +524,10 @@ related:
 - `S07` `A` `src/cadrumo/application/filing/tests/test_modelo_232_page_marker_export.py`
 - `S07` `verify:` `python -m dev.registry.pipeline target-current 360/232x2/353x2` -> `pass`
 - `S07` `verify:` `pytest test_modelo_360_solicitud_export.py test_modelo_232_page_marker_export.py` -> `pass`
+- `S07` `verify:` `locator-check: generated_export_bootstrap_targets.toml:2 targets = []` -> `pass`
+- `S07` `by:` `plan-closure`
+- `S21` `verify:` `locator-check: modelo-131-2026-late-source.toml; modelos/131/revisions/2026-3t-4t` -> `pass`
+- `S21` `by:` `plan-closure`
 
 ## Notes
 

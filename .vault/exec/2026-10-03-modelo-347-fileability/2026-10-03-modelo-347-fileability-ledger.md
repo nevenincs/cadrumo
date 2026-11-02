@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#modelo-347-fileability'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ceea0075392b7a112e746299597c1deb3fec610096cb48a5159c7550cb680b25'
+body_hash: 'sha256:2a1eddd1adaec8805e4427c6904ec260aa25f8a7697164fbb2c7a6d152890f96'
 related:
   - "[[2026-10-03-modelo-347-fileability-plan]]"
 ---
@@ -351,6 +351,12 @@ related:
 - `S16` `verify:` `pytest S16 focused suite in HEAD export` -> `pass`
 - `S13` `M` `src/cadrumo/application/invoices/source_resolver.py`
 - `S13` `verify:` `pytest S13b focused suite in HEAD export` -> `pass`
+- `S10` `verify:` `locator-check: modelos/347 revisions/2011-2024 applicability 0001-declarations.toml:13-16` -> `pass`
+- `S10` `by:` `plan-closure`
+- `S11` `verify:` `locator-check: overview/applicability_evidence.py` -> `pass`
+- `S11` `by:` `plan-closure`
+- `S12` `verify:` `locator-check: overview/explain.py:171` -> `pass`
+- `S12` `by:` `plan-closure`
 
 ## Notes
 

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-core-packaging'
 date: '2026-10-03'
-modified: '2026-10-14'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:89f2be3ddb70124e378d3fb901353f4282ff2efad28d860462bf3bbb7e2dd02e'
+body_hash: 'sha256:84c248f1d4ea9238475339e883017154883098ec09a48adbb999af471a40a8a3'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -109,6 +109,14 @@ related:
 - `S10` `verify:` `Ruff check and format for six changed Python files` -> `pass`
 - `S10` `verify:` `Fresh process backend eagerly imports Windows verifier and leaf path helper` -> `pass`
 - `S10` `verify:` `CMake Release verify-package with development binary; Python native acceptance and Rust80distribution probe` -> `pass`
+- `S07` `verify:` `locator-check: native/platform/src/storage.rs:557` -> `pass`
+- `S07` `by:` `plan-closure`
+- `S08` `verify:` `locator-check: native/application/src/component.rs:402` -> `pass`
+- `S08` `by:` `plan-closure`
+- `S09` `verify:` `locator-check: native/component-pins` -> `pass`
+- `S09` `by:` `plan-closure`
+- `S10` `verify:` `locator-check: native/component-pins` -> `pass`
+- `S10` `by:` `plan-closure`
 
 ## Notes
 
@@ -136,3 +144,5 @@ related:
 - `S10` Removed dispatcher-adapter dependency cycle by moving `verification_destination` to a leaf module and eagerly loading Windows verification with its backend. This removes the observed late-import seam; it is not a general guarantee against edits to a shared checkout.
 - `S10` Both staged hosts report10.0.26200. A diagnostic equality assertion against `platform_version10.0.26100` was overly strict; Python documents that kernel32.dll-derived `platform_version` can differ from the OS build. Production acceptance still requires major>=10 without modifying Python version reporting.
 - `S10` Fresh ZIP SHA256 8a2955ff026da1e565526ded6054a48cf3ca48643ab48e43522ee4db9f986d8d; manifest SHA256 7f56cc65a43a182eb638efc9ddafbc11d5916360adef15f3d0ea60dc2b2a0f57. Reports in build/windows-x64/application-cmake/verification/Release/result.json and verification.json. CPython3.13.11;80 exact distributions; browserMissingDependency. Independent focused review found no concrete defects. Four-target acceptance remains open.
+- `S09` Superseded by the rust-component-provisioning ADR; native/component-pins
+- `S10` Superseded by the rust-component-provisioning ADR; native/component-pins

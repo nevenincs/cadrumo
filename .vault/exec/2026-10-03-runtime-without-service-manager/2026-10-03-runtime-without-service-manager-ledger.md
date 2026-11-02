@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#runtime-without-service-manager'
 date: '2026-10-03'
-modified: '2026-10-03'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b9adf10d25fb7ec3cc75e2f306bdc4dc0f35d06ee1e2367f97004cc9ad5de2a5'
+body_hash: 'sha256:e9cbc29e726de875c9817d7a92b6fa83cbd5fd7b7ad8d377dfb7948b8383f62b'
 related:
   - "[[2026-10-03-runtime-without-service-manager-plan]]"
 ---
@@ -147,6 +147,10 @@ related:
 - `S07` `verify:` `latest concurrent profile worker test 47.76s` -> `fail`
 - `S07` `verify:` `changed fixture lint format and type checks` -> `pass`
 - `S07` `verify:` `runtime feature vault checks` -> `pass`
+- `S02` `verify:` `locator-check: -` -> `pass`
+- `S02` `by:` `plan-closure`
+- `S06` `verify:` `locator-check: -` -> `pass`
+- `S06` `by:` `plan-closure`
 
 ## Notes
 
@@ -159,3 +163,5 @@ related:
 - `S07` Full entrypoint first execution was contaminated by a test binding ProfileWorkerCustody inside pytest; child-process isolation fixed and full rerun in progress. Added typed lease to outdated cancellation fault fixture and atomic PID publication to native approval fixture.
 - `S07` Actual installed cold-start measurement reached verified handshake after 27.186s; fixture setup and loser convergence now share a bounded 60s cold-start budget while request deadlines stay unchanged. Lightweight child fixtures no longer import profile fixture composition before publishing native process records.
 - `S07` Integration acceptance remains pending; exact run evidence and the changing import diagnosis are in VALIDATION-003 through VALIDATION-007. Set ignored local env/.env `CADRUMO_DEV_RUNTIME_SESSION_OVERRIDE=0` as explicitly requested; current implementation still treats 1 as override and 0 as strict. No commits.
+- `S02` Superseded by the runtime-manager ADR; manager supervision is the design
+- `S06` Superseded by the runtime-manager ADR; manager supervision is the design

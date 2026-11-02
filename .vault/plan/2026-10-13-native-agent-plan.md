@@ -6,10 +6,11 @@ date: '2026-10-13'
 tier: L1
 related:
   - '[[2026-10-13-native-agent-adr]]'
-modified: '2026-10-13'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:679a06a7c46a47f6280f46ee09748c56a5cc1ff73a0752073ee679571cfa1e66'
+body_hash: 'sha256:c78d56dce9acd49d5385525d0bda5a1b50af71f229958593144d784d5867dacb'
 ---
+
 # `native-agent` plan
 
 Complete native dependency integration, then standardize agent integration verification around the built custom environment.
@@ -21,12 +22,12 @@ Approved 2026-10-13. Authorization is the owner's direct CMake integration brief
 ## Steps
 
 - [ ] `S01` - Verify the native agent dependency lifecycle and the deployed package with its own interpreter; `native/cmake/Agent.cmake`.
-- [ ] `S02` - Review developer agent lanes with Luna max and persist the developer ruling report; `.tmp/agent-environment-review/dev-review.md`.
-- [ ] `S03` - Review runtime and entrypoint agent tests with Luna max and persist the runtime ruling report; `.tmp/agent-environment-review/runtime-review.md`.
-- [ ] `S04` - Review the MCP harness and agent environment contracts with Luna max and persist the harness ruling report; `.tmp/agent-environment-review/harness-review.md`.
-- [ ] `S05` - Consolidate the reviews and refine canonical environment corrections with Sol 6.1; `.tmp/agent-environment-review/action-plan.md`.
-- [ ] `S06` - Standardize developer agent execution and verification lanes through Sol 6.1 implementation; `dev/agent_eval/`.
-- [ ] `S07` - Standardize runtime and MCP agent tests through Sol 6.1 implementation; `src/cadrumo_harness/`.
+- [x] `S02` - Review developer agent lanes with Luna max and persist the developer ruling report; `.tmp/agent-environment-review/dev-review.md`.
+- [x] `S03` - Review runtime and entrypoint agent tests with Luna max and persist the runtime ruling report; `.tmp/agent-environment-review/runtime-review.md`.
+- [x] `S04` - Review the MCP harness and agent environment contracts with Luna max and persist the harness ruling report; `.tmp/agent-environment-review/harness-review.md`.
+- [x] `S05` - Consolidate the reviews and refine canonical environment corrections with Sol 6.1; `.tmp/agent-environment-review/action-plan.md`.
+- [x] `S06` - Standardize developer agent execution and verification lanes through Sol 6.1 implementation; `dev/agent_eval/`.
+- [x] `S07` - Standardize runtime and MCP agent tests through Sol 6.1 implementation; `src/cadrumo_harness/`.
 - [ ] `S08` - Rebuild and verify the canonical package, required gates and integrated review; `native/tests/agent_smoke.py`.
 
 ## Parallelization

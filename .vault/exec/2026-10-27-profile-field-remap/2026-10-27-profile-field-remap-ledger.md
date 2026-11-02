@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#profile-field-remap'
 date: '2026-10-27'
-modified: '2026-11-01'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:294e054b99fc8b296475b8031b78cb6ab8bad290905b9394f162f8af33db4da7'
+body_hash: 'sha256:87f2a9ea5e1c88389592dd855a5bf7d8cd41b06e834f9c5a390f4fa3ab86219a'
 related:
   - "[[2026-10-27-profile-field-remap-plan]]"
 ---
@@ -421,6 +421,10 @@ related:
 - `S07` `verify:` `test_entry_options.py` -> `pass`
 - `S07` `verify:` `desktop-frontend-check` -> `pass`
 - `S07` `verify:` `desktop-host-unit-test shell::ledger` -> `pass`
+- `S13` `verify:` `locator-check: shell/ledgerServedVocabulary.ts:86-101; commit 7398d803a4` -> `pass`
+- `S13` `by:` `plan-closure`
+- `S09` `verify:` `locator-check: invoiceModel.ts builds InvoicePreviewLine; shell/ledger.ts:178` -> `pass`
+- `S09` `by:` `plan-closure`
 
 ## Notes
 
