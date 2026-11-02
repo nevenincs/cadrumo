@@ -437,7 +437,17 @@ async fn settle(
     let result = tokio::time::timeout(relay::SETTLE_LIMIT, async {
         let p = relay::follow(events, &relayed, |_| false).await?;
         if p["terminal_condition"] != "succeeded" {
-            return Err(Failure::new(wire::mutation_failure(&p)));
+            let mut failed = Failure::new(wire::mutation_failure(&p));
+            if failed.code == "refused" {
+                // A refusal that settled without effect may carry the
+                // sentence the application worded for it; the read is
+                // refused when its definition serves none.
+                failed.refusal_words = relay::result(&relayed)
+                    .await
+                    .ok()
+                    .and_then(|document| wire::refusal_words(&document["projection"]));
+            }
+            return Err(failed);
         }
         let document = relay::result(&relayed).await.map_err(|_| {
             Failure::new(if mutation {

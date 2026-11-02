@@ -20,6 +20,7 @@ from typing import Protocol
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
@@ -256,14 +257,29 @@ _TEXT_VALUE_LIMIT = 512
 """The longest text a disagreement states; equality is always decided on the full text."""
 
 
+def _stated_amount(amount: Decimal) -> Decimal:
+    """The amount at a scale its canonical text states unambiguously; its value never changes.
+
+    Canonical decimal text refuses three fraction digits after one to three
+    integer digits (``12.500``), which also reads as a Spanish thousands
+    grouping. A value the overlay holds at that scale is stated with one more
+    fraction digit, so a divergence on a ratio or a quantity is reported rather
+    than refused. Equality is always decided on the value itself.
+    """
+    exponent = amount.as_tuple().exponent
+    if not isinstance(exponent, int) or try_parse_canonical_decimal(format(amount, "f")) is not None:
+        return amount
+    return amount.quantize(Decimal(1).scaleb(exponent - 1))
+
+
 def _scalar_disagreement_value(value: RowBindingValue) -> DisagreementScalarValue:
     """State one row cell in its own type; a truth value is tested before ``int``, its base class."""
     if isinstance(value, bool):
         return DisagreementBooleanValue(value=value)
     if isinstance(value, Decimal):
-        return DisagreementDecimalValue.of(value)
+        return DisagreementDecimalValue.of(_stated_amount(value))
     if isinstance(value, int):
-        return DisagreementDecimalValue.of(Decimal(value))
+        return DisagreementDecimalValue.of(_stated_amount(Decimal(value)))
     return DisagreementTextValue(value=value[:_TEXT_VALUE_LIMIT])
 
 
@@ -394,7 +410,10 @@ def _hold_tier_values(screen: _PrecedenceScreen, tier: PrecedenceTier) -> None:
     binding = PrecedenceKeyKind.BINDING
     for binding_id, amount in resolution.binding_values.items():
         screen.hold(
-            tier, key=(binding, binding_id, "decimal"), value=DisagreementDecimalValue.of(amount), comparable=amount
+            tier,
+            key=(binding, binding_id, "decimal"),
+            value=DisagreementDecimalValue.of(_stated_amount(amount)),
+            comparable=amount,
         )
     for binding_id, token in resolution.enum_binding_values.items():
         screen.hold(tier, key=(binding, binding_id, "enum"), value=DisagreementEnumValue(token=token), comparable=token)
@@ -408,14 +427,14 @@ def _hold_tier_values(screen: _PrecedenceScreen, tier: PrecedenceTier) -> None:
         screen.hold(
             tier,
             key=(PrecedenceKeyKind.RELATION, relation_id, "relation"),
-            value=DisagreementRelationValue.of(amount),
+            value=DisagreementRelationValue.of(_stated_amount(amount)),
             comparable=amount,
         )
     for casilla_id, amount in resolution.bound_inputs_by_casilla_id.items():
         screen.hold(
             tier,
             key=(PrecedenceKeyKind.CASILLA, casilla_id, "decimal"),
-            value=DisagreementDecimalValue.of(amount),
+            value=DisagreementDecimalValue.of(_stated_amount(amount)),
             comparable=amount,
         )
     screen.hold_rows(tier, resolution.row_binding_values)

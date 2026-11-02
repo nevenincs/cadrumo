@@ -1,5 +1,4 @@
 import { useId, useState } from "react";
-import { Badge } from "@/components/ui/badge";
 import { Icon } from "@/components/ui/icon";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
@@ -9,6 +8,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
+import { OutlineNavigator } from "../workspace/OutlineNavigator";
 import {
   editKey,
   editsAdmitted,
@@ -132,52 +132,13 @@ function TodoList({
   );
 }
 
-function Outline({
-  form,
-  session,
-  onPicked,
-}: {
-  form: PublicModeloWorkForm;
-  session: FormSession;
-  onPicked?: () => void;
-}) {
-  const t = useStrings();
-  return (
-    <nav
-      aria-label={t("desktop.modelo.outline.label")}
-      className="flex flex-col gap-4 p-3"
-    >
-      {form.pages.map((page) => (
-        <div key={page.id} className="flex flex-col gap-0.5">
-          <span className="truncate px-2 pb-1 text-xs font-medium text-faint uppercase">
-            {page.heading.text}
-          </span>
-          {page.sections.map((section) => {
-            const open = section.counts.needs_input + section.counts.blocked;
-            return (
-              <button
-                key={section.id}
-                type="button"
-                onClick={() => {
-                  session.goSection(section.id);
-                  onPicked?.();
-                }}
-                title={section.heading.text}
-                className="flex items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                <span className="min-w-0 flex-1 truncate">
-                  {section.heading.text}
-                </span>
-                {open > 0 && page.applies === true && (
-                  <Badge variant="warning">{open}</Badge>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      ))}
-    </nav>
-  );
+/** The section the form shows the filer at: the chosen box's, else the
+ * last one jumped to. */
+function currentSection(session: FormSession): string | null {
+  const chosen = session.selectedKey
+    ? session.placed.find((p) => p.key === session.selectedKey)
+    : undefined;
+  return chosen?.sectionId ?? session.reveal?.sectionId ?? null;
 }
 
 /** The rail beside the form: To do and the outline, as two tabs. The
@@ -218,10 +179,13 @@ export function TodoRail({
         {rail === "todo" ? (
           <TodoList envelope={envelope} session={session} onPicked={onPicked} />
         ) : (
-          <Outline
+          <OutlineNavigator
             form={envelope.form.form}
-            session={session}
-            onPicked={onPicked}
+            currentSectionId={currentSection(session)}
+            onJump={(sectionId) => {
+              session.goSection(sectionId);
+              onPicked?.();
+            }}
           />
         )}
       </div>

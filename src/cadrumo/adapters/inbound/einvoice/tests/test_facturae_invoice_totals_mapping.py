@@ -66,6 +66,7 @@ def _parsed(name: str):
     return parse_einvoice_document((_CORPUS / name).read_bytes())
 
 
+@pytest.mark.usefixtures("operation")
 class TestTheTotalIsDerivedRatherThanRead:
     """No Facturae element equals the identity's total, so it is assembled."""
 

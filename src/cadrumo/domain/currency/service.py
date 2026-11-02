@@ -170,9 +170,14 @@ def resolve_fx_conversion_stamp(
     which had been hand-declared at two application call sites.
 
     Conversion happens at the record's own operation date — the issue or invoice
-    date — because that is the date Spanish law binds the official rate to (Ley
-    46/1998 art. 36), and because converting once at ingest keeps a stored euro
-    figure stable rather than drifting with every later read.
+    date — because that is the date Spanish law binds the rate to: for IVA, the
+    seller exchange rate fixed by the Banco de España in force at the moment of
+    chargeability (LIVA art. 79.Once), where Directive 2006/112 art. 91(2) requires
+    Member States to accept the latest ECB rate at chargeability; for the
+    income-tax and other filing forms, the official rate published by the ECB
+    directly or through the Banco de España (Ley 46/1998 art. 36). Converting once
+    at ingest also keeps a stored euro figure stable rather than drifting with
+    every later read.
 
     A euro record is left unstamped: there is nothing to convert, and a
     ``1``-valued stamp would assert a conversion that never happened. A foreign

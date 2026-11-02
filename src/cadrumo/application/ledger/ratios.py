@@ -42,7 +42,6 @@ from ..bucket_event_repository import bucket_event_history_repository
 from .persistence_ports import LedgerPersistenceConflictError
 from .usage_ratio_repository import (
     load_usage_ratio_profile,
-    save_usage_ratio_profile,
     save_usage_ratio_profile_with_writes,
 )
 
@@ -247,56 +246,6 @@ def validate_ratios_for_bucket(
         operation=operation,
         require_overrides_for=require_overrides_for,
     )
-
-
-def set_usage_ratio(
-    *, bucket_id: str, category: SpendingCategory, ratio: Decimal, operation: PinnedAuthorityOperation
-) -> Decimal | None:
-    """Set or replace one per-category usage-ratio override on the bucket.
-
-    Loads the bucket's :class:`UsageRatioProfile`, applies the override through
-    the domain ``with_ratio`` validator, and persists the result. Returns the
-    prior override value for the category (``None`` when there was none) so the
-    caller can emit a before/after audit event. Application command boundary for
-    the CLI ``ledger ratios set`` verb; the CLI no longer calls the domain
-    load/save primitives directly.
-
-    The load-modify-save runs under the per-bucket
-    :func:`cadrumo.domain.usage_ratios.service.usage_ratio_bucket_lock` so two concurrent
-    writers cannot read the same snapshot and lose one another's override.
-    """
-    with usage_ratio_bucket_lock(bucket_id):
-        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
-        prior = profile.ratios.get(category)
-        with validating_governed_facts(operation):
-            save_usage_ratio_profile(profile.with_ratio(category, ratio), bucket_id=bucket_id)
-        return prior
-
-
-def unset_usage_ratio(
-    *, bucket_id: str, category: SpendingCategory, operation: PinnedAuthorityOperation
-) -> Decimal | None:
-    """Clear one per-category usage-ratio override on the bucket.
-
-    Returns the cleared value. Raises :class:`UsageRatioValidationError` when
-    the category carries no persisted override (so the caller can surface a
-    precise "nothing to clear" message). Application command boundary for the
-    CLI ``ledger ratios unset`` verb.
-
-    The load-modify-save runs under the per-bucket
-    :func:`cadrumo.domain.usage_ratios.service.usage_ratio_bucket_lock` so a concurrent
-    ``set`` on a sibling category cannot be lost by this clear.
-    """
-    with usage_ratio_bucket_lock(bucket_id):
-        profile = load_usage_ratio_profile(bucket_id=bucket_id, operation=operation)
-        prior = profile.ratios.get(category)
-        if prior is None:
-            raise UsageRatioValidationError(
-                f"no persisted usage-ratio override for category {category.value!r} on bucket {bucket_id!r}",
-            )
-        with validating_governed_facts(operation):
-            save_usage_ratio_profile(profile.without_ratio(category), bucket_id=bucket_id)
-        return prior
 
 
 class RatiosCensoOverrideWarning(BaseModel):
@@ -516,8 +465,6 @@ __all__ = [
     "eligible_ratio_categories",
     "list_eligible_ratios_for_bucket",
     "resolve_business_share_pct",
-    "set_usage_ratio",
-    "unset_usage_ratio",
     "validate_ratios_for_bucket",
     "validate_ratios_profile",
 ]

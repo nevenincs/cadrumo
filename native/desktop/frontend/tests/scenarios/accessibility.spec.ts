@@ -622,6 +622,44 @@ const SURFACES: {
       await expect(declarationViews(target)).toBeVisible();
     },
   },
+  {
+    name: "the outline beside a Modelo 303",
+    scenario: "ledger",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      await target
+        .getByRole("grid", {
+          name: label("workspace.declarations.destination.overview"),
+        })
+        .getByRole("row")
+        .filter({
+          has: target.getByRole("gridcell", { name: "303", exact: true }),
+        })
+        .first()
+        .dblclick();
+      await openOutline(target);
+    },
+  },
+  {
+    name: "the outline beside a Modelo 100",
+    scenario: "ledger",
+    extra: "&modelo=renta",
+    reach: async (target: Page) => {
+      await openDeclarations(target);
+      // The list's row opens no local work; the dialog opens the existing
+      // declaration.
+      await newDeclaration(target, "100");
+      const dialog = target.getByRole("dialog");
+      await dialog.getByRole("radio", { checked: false }).last().click();
+      await dialog
+        .getByRole("button", {
+          name: label("workspace.declarations.list.new.open_it"),
+        })
+        .click();
+      await expect(declarationViews(target)).toBeVisible({ timeout: 30_000 });
+      await openOutline(target);
+    },
+  },
   ...(
     [
       ["", "desktop.modelo.view.form"],
@@ -681,6 +719,15 @@ async function newDeclaration(target: Page, modelo: string) {
     .first()
     .click();
   await expect(dialog.getByRole("radio").first()).toBeVisible();
+}
+
+async function openOutline(target: Page) {
+  await target
+    .getByRole("tab", { name: label("desktop.modelo.side.outline") })
+    .click();
+  await expect(
+    target.getByRole("tree", { name: label("desktop.modelo.outline.label") }),
+  ).toBeVisible({ timeout: 15_000 });
 }
 
 const declarationViews = (target: Page) =>

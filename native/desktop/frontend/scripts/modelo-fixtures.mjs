@@ -1,7 +1,9 @@
 // Regenerates the desktop's Modelo wire types and scenario envelopes from the
 // Python models, and the relay bounds from the host's Rust sources, through
 // scripts/modelo_fixtures.py, and formats what it writes as the frontend's
-// formatter does. `--check` writes nothing: it fails when
+// formatter does. The envelopes are stored as the producer writes them,
+// compact and the Modelo 100 forms as patches; `--pack` stores the ones
+// already on disk that way. `--check` writes nothing: it fails when
 // src/shell/modeloContract.ts or src/shell/relayBounds.ts differs from fresh
 // output, when the host's
 // admitted list differs from the registered family, or when a stored
@@ -26,6 +28,7 @@ const { values } = parseArgs({
   options: {
     check: { type: "boolean", default: false },
     contract: { type: "boolean", default: false },
+    pack: { type: "boolean", default: false },
   },
 });
 
@@ -78,6 +81,10 @@ async function formatted(source, path) {
   return format(source, { ...options, filepath: path });
 }
 
+if (values.pack) {
+  process.exit(python("pack", fixtures).status);
+}
+
 const generated = python("contract");
 if (generated.status !== 0) process.exit(generated.status);
 const fresh = await formatted(generated.output, contract);
@@ -119,8 +126,10 @@ console.log("wrote src/shell/modeloContract.ts");
 writeFileSync(bounds, freshBounds);
 console.log("wrote src/shell/relayBounds.ts");
 if (!values.contract) {
-  // Read into a scratch directory, then write each envelope once, formatted:
-  // a development server watching the fixtures may hold one open briefly.
+  // Read into a scratch directory, then write each envelope once: a
+  // development server watching the fixtures may hold one open briefly. They
+  // are not formatted: indentation doubles their size, and a Modelo 100 form
+  // is stored as a patch of the form it differs from.
   const temporary = spawnSync(
     "uv",
     [
@@ -144,9 +153,10 @@ if (!values.contract) {
     if (read.status !== 0) process.exit(read.status);
     const names = readdirSync(scratch).filter((name) => ENVELOPE.test(name));
     for (const name of names) {
-      const path = resolve(fixtures, name);
-      const source = readFileSync(resolve(scratch, name), "utf8");
-      await written(path, await formatted(source, path));
+      await written(
+        resolve(fixtures, name),
+        readFileSync(resolve(scratch, name), "utf8"),
+      );
     }
     console.log(`wrote ${names.length} envelopes`);
   } finally {

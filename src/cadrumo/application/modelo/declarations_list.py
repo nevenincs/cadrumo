@@ -226,6 +226,8 @@ class DeclarationListNextStep(StrEnum):
 
 _LOCAL_STEPS: Final[frozenset[DeclarationListNextStep]] = frozenset(
     {
+        # What blocks a declaration is fixed inside its own local work, so fixing opens it.
+        DeclarationListNextStep.FIX,
         DeclarationListNextStep.OPEN_LOCAL_DRAFT,
         DeclarationListNextStep.CREATE_FILE,
         DeclarationListNextStep.RECALCULATE,
