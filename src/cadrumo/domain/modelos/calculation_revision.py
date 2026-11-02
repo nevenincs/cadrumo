@@ -128,6 +128,11 @@ superseded filing still occurred.
 This is NOT the same as the narrower "currently authoritative" set, which
 additionally excludes :attr:`CalculationRevisionState.PRESENTADO_SUPERSEDIDO`."""
 
+FILED_REVISION_STATES: frozenset[CalculationRevisionState] = frozenset(
+    {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO},
+)
+"""The lifecycle states of a calculation recorded as filed, superseded filings included."""
+
 
 CURRENT_SEALED_REVISION_STATES: frozenset[CalculationRevisionState] = frozenset(
     {
@@ -1183,11 +1188,8 @@ class CalculationRevisionCatalogue(BaseModel):
         caller holding only one of the two need not convert first; any other
         type is simply absent rather than an error.
         """
-        if isinstance(key, CalculationRevision):
-            return key.calculation_revision_id in self.revisions
-        if isinstance(key, str):
-            return key in self.revisions
-        return False
+        revision_id = key.calculation_revision_id if isinstance(key, CalculationRevision) else key
+        return isinstance(revision_id, str) and revision_id in self.revisions
 
 
 class LedgerFilingCoverageError(ModeloError):

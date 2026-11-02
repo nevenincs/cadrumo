@@ -53,6 +53,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'Los datos de criterio de caja de este
         apunte de IVA son incoherentes: %{refusal}. Corrige la fecha de la operación
         o la evidencia de cobro o pago del apunte.'
+      cuota_disagrees_with_rate: La cuota de IVA declarada %{declared} no coincide
+        con la base %{base} al tipo %{rate}, que da %{expected}. Corrige la cuota,
+        la base o el tipo de IVA.
       deduction_authority_on_non_deducible_row: Una fila de IVA que no soporta cuota
         deducible no puede llevar una clasificación de deducción; la categoría de
         IVA %{category} se liquida como %{flow_direction}. Elimina el tipo de deducción
@@ -65,6 +68,8 @@ aggregation:
         no tiene porcentaje provisional resuelto.
       domestic_identification_on_intra_community_transaction: Una identificación a
         efectos del IVA española no es válida para una operación intracomunitaria.
+      especial_missing_input_classification: 'La prorrata especial exige declarar
+        el uso de cada entrada deducible: hay una entrada deducible sin clasificación.'
       eu_member_state_on_export_transaction: Las operaciones de exportación o asimiladas
         no pueden llevar un Estado miembro de la UE; recibido %{member_state}.
       exemption_article_outside_domestic_exempt: El artículo de exención %{value}
@@ -78,6 +83,11 @@ aggregation:
       investment_observations_missing_bienes_inversion_authority: Las observaciones
         de IVA de inversión requieren el registro explícito de bienes de inversión
         y una autoridad de perfil coincidente.
+      iva_rate_date_outside_table_coverage_on_movement_date: No hay ningún tipo de
+        IVA registrado para el %{date}. Esa es la fecha del movimiento bancario, usada
+        como fecha de devengo porque este apunte no tiene fecha de operación. Registra
+        la fecha en que se hizo la entrega o se prestó el servicio; puede que eso
+        lo resuelva.
       missing_counterparty_establishment_on_export: Una exportación está exenta porque
         la operación sale de la Unión, por lo que depende de dónde esté ESTABLECIDA
         la contraparte. Registra el país de la contraparte; un código ausente o no
@@ -98,9 +108,16 @@ aggregation:
         aporta identidad de sector explícita.
       sectorized_input_unknown_sector: Una entrada de IVA sectorizada referencia un
         sector desconocido.
+      settlement_apportionment_sector_mismatch: Los porcentajes definitivos de la
+        última liquidación deben nombrar exactamente los sectores diferenciados que
+        declara tu registro de prorrata.
       unaccepted_registry_value: '%{field} figura como %{value}, un valor que la autoridad
         fijada del registro tributario no admite para %{effective_date}, así que el
         apunte no puede alimentar el cálculo del IVA. Corrige ese valor en el apunte.'
+      unsupported_iva_rate_on_movement_date: El tipo de IVA %{rate} no es válido el
+        %{date}. Esa es la fecha del movimiento bancario, usada como fecha de devengo
+        porque este apunte no tiene fecha de operación. Registra la fecha en que se
+        hizo la entrega o se prestó el servicio; puede que eso lo resuelva.
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: El registro de prorrata
@@ -138,6 +155,11 @@ aggregation:
         fechadas fuera del periodo de declaración solicitado.
   modelo_bindings:
     errors:
+      invoice_advance_payment_partially_collected: Una factura registra un pago anticipado
+        sobre un precio cobrado solo en parte. Un anticipo solo devenga IVA por el
+        importe cobrado, así que la factura no puede asignarse a un periodo de declaración
+        tal como está. Registra el anticipo como una factura propia, o marca esta
+        como pagada si el anticipo cubre todo el precio.
       invoice_line_currency_unconverted: Una línea de factura está denominada en moneda
         extranjera sin tipo de cambio a euros resuelto, por lo que no puede declararse
         en este modelo.
@@ -1069,6 +1091,7 @@ desktop:
       AEAT.
     close: Cerrar el calendario
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: No cierra antes del {date}
     empty: No hay obligaciones de presentación en este periodo.
     event:
       filing: Presentación
@@ -1196,7 +1219,6 @@ desktop:
       iban: IBAN
       iban_hint: Se envía una vez por un canal protegido y después se muestra enmascarado.
       iban_problem:
-        check: Los dígitos de control del IBAN no cuadran.
         shape: No es un IBAN.
       label: Nombre
       modelo: Modelo {modelo}
@@ -2302,7 +2324,8 @@ desktop:
         date_not_iso: '«{raw}»: escribe la fecha empezando por el año, {suggestion}.'
         exponent: '«{raw}» está en notación exponencial: escribe las cifras.'
         grouping: '«{raw}» separa los miles: escribe {suggestion}.'
-        iban_check: Este IBAN tiene un dígito incorrecto.
+        limits_unavailable: '«{raw}» aún no se puede comprobar: el libro no ha indicado
+          qué admite este campo.'
         line_break: '«{raw}» contiene un tabulador o un salto de línea: déjalo en
           una línea.'
         locked: No se edita aquí
@@ -2325,7 +2348,6 @@ desktop:
         unknown_choice: «{raw}» no es una de las opciones.
         use: Usar {suggestion}
         year_not_a_number: «{raw}» no es un año.
-        year_out_of_range: «{raw}» está fuera de los años que admite Cadrumo.
         zero: '«{raw}» es cero: un importe es mayor que cero.'
       revert_cell: Revertir celda
       revert_movement: Revertir movimiento
@@ -3024,6 +3046,8 @@ desktop:
         count: Una división tiene de 2 a {max} partes.
         description: Las partes suman {amount}. La última parte se queda con lo que
           falta.
+        description_long: La parte {part} admite una descripción de {max} caracteres
+          como máximo.
         description_needed: La parte {part} necesita una descripción.
         duplicate: 'La parte {part} es igual que otra: cambia su importe o descripción.'
         mixed_hint: ¿Lo usas en parte para trabajar? Usa Mixto con una parte.
@@ -3148,6 +3172,10 @@ desktop:
         retention_rate: Tipo de retención
         series: Serie
         situacion: Situación del inmueble
+      figures_retry: Vuelve a intentarlo
+      figures_unavailable: Cifras no disponibles. El libro no ha respondido y tu borrador
+        se conserva.
+      figures_updating: Actualizando las cifras…
       fixed: Forma parte de la identidad de la factura. Para cambiarlo, elimínala
         y vuelve a añadirla.
       from_lines: Según las líneas
@@ -3185,6 +3213,7 @@ desktop:
       line:
         actions: Acciones
         add: Añadir una línea
+        calculated: Calculado {amount}
         category: Categoría
         choose_rate: Elige un tipo
         description: Descripción
@@ -3199,7 +3228,8 @@ desktop:
       lines: Líneas
       lines_fixed: Fijas
       lines_note: Punto para los decimales, hasta seis, sin separador de miles. El
-        subtotal y el IVA se calculan al céntimo.
+        libro calcula el subtotal y el IVA; rellénalos solo para indicar lo que imprime
+        el documento.
       linked: Movimientos vinculados
       linked_count: 'Movimientos vinculados: {count}'
       links_permanent: 'Un vínculo es permanente: no se puede quitar.'
@@ -3210,11 +3240,11 @@ desktop:
       next_number: 'Siguiente de la serie {series}: {number}'
       next_number_series: Elige una serie para ver su siguiente número.
       none: Ninguno
+      not_available: No disponible
       not_met: pendiente
       not_saved: No se ha guardado. Tus cambios se conservan.
       not_stated: Sin indicar
       open_duplicate: Abrirla
-      operation_date_fixed: Solo se indica al añadir la factura
       operation_key: Clave {key}
       party: Contraparte
       payment:
@@ -3230,23 +3260,9 @@ desktop:
         choose_rate: Elige un tipo.
         country_letters: Dos letras, p. ej. ES.
         currency_letters: Tres letras, p. ej. EUR.
-        lease_reference_not_allowed: Sin referencia catastral en esta situación.
         missing: Obligatorio.
         no_line: Añade al menos una línea.
-        operation_date_fixed: Una vez añadida, se puede cambiar, pero no añadir ni
-          quitar.
         payment_id_shape: 64 caracteres hexadecimales.
-        printed_differs: Las líneas suman {total}.
-        recargo_above_iva: No puede superar el IVA.
-        rectifies_required: Indica la factura que rectifica.
-        retention_above_base: No puede superar la base imponible.
-        retention_differs: El tipo da {amount}.
-        retention_needs_amount: Un tipo necesita su importe.
-        series_required: Una rectificativa necesita serie.
-        tax_id_required: Obligatorio, salvo en una simplificada emitida.
-      rate:
-        exempt: Exento
-        not_subject: No sujeto
       read_failed: No se han podido leer las facturas.
       refusal:
         ambiguous_grouping: '"{raw}" se puede leer de dos maneras. Escribe 1500 o
@@ -3257,6 +3273,8 @@ desktop:
         date_not_iso: '"{raw}": escribe la fecha año-mes-día.'
         exponent: '"{raw}": escribe el número completo.'
         grouping: '"{raw}": sin separador de miles.'
+        limits_unavailable: '«{raw}»: no se puede comprobar hasta que el libro indique
+          qué admite este campo.'
         line_break: 'Una sola línea: sin tabuladores ni saltos de línea.'
         meant: ¿Querías decir {suggestion}?
         not_a_date: '"{raw}" no es una fecha.'
@@ -3278,7 +3296,7 @@ desktop:
       remove_question: ¿Eliminar esta factura?
       removed: Factura {number} eliminada
       retention: Retención, fuera del total
-      retention_presets: Tipos de retención habituales
+      retention_implied: El tipo da {amount}.
       review: Revisar
       review_changes: Revisar cambios ({count})
       save: Guardar
@@ -3305,6 +3323,8 @@ desktop:
       unmatched: Sin vincular
       use: Usar
       use_number: Usar {number}
+      would_refuse: El libro rechazaría esta factura tal como está. Revisa su NIF
+        y los campos del documento.
     irpf_category:
       actividad_economica: Actividad económica
       arrendamiento_local: Arrendamiento de local
@@ -3510,6 +3530,12 @@ desktop:
       reference: Referencia
       reference_hint: La autorización o propuesta en la que se basa
       refusal:
+        gross_declaration_absent: 'El registro ha rechazado la baja: este periodo
+          no tiene ninguna declaración bruta.'
+        gross_declaration_duplicate: 'El registro ha rechazado la declaración: este
+          periodo ya tiene una declaración bruta.'
+        gross_declaration_sector_unknown: 'El registro ha rechazado la declaración:
+          ese sector no es un sector diferenciado declarado.'
         provenance_not_electable: 'No aceptado: ese origen se calcula, no se elige.'
         provenance_required: 'No aceptado: indica de dónde sale el porcentaje.'
         reference_not_permitted: 'No aceptado: ese origen no tiene documento al que
@@ -3679,6 +3705,10 @@ desktop:
       expression: Expresión
       expression_hint: Se busca en cualquier parte de la descripción, sin distinguir
         mayúsculas.
+      expression_overrun: Esta expresión tarda demasiado en probarse con tus movimientos.
+        Simplifícala.
+      expression_too_long: Esta expresión es demasiado larga. Puede tener hasta {max}
+        caracteres.
       expression_unread: Esta ventana no puede leer esa expresión.
       from_selection: Crear regla a partir de la selección
       matches_split: Coincide con {count} · {pending} por clasificar
@@ -3702,6 +3732,9 @@ desktop:
         empty_pattern: Escribe las palabras que buscar.
         invalid_command: El libro no aceptó la regla.
         invalid_pattern: El libro no puede leer esa expresión.
+        pattern_overrun: Una regla guardada tarda demasiado en probarse con tus movimientos,
+          así que no se ha ejecutado nada.
+        pattern_too_long: La expresión es demasiado larga.
       run_note: La vista previa no cambia nada. Aplicarlas se añade a tus cambios,
         como cualquier otro.
       run_staged: 'Reglas añadidas a tus cambios · Movimientos: {count} · aún sin
@@ -3711,6 +3744,8 @@ desktop:
       saved_toast: Regla guardada · orden {place}
       stage_run: Añadir la aplicación a tus cambios
       title: Reglas de clasificación
+      trial_failed: No hay respuesta sobre esta expresión. Lo que has escrito se conserva.
+      trial_retry: Inténtalo de nuevo
       what: Busca palabras en la descripción del movimiento y decide su clasificación.
       words: La descripción contiene
       words_hint: Palabras en este orden; da igual mayúsculas o minúsculas.
@@ -4647,7 +4682,7 @@ entries:
     purpose: Consulta del estado de pagos y devoluciones tributarias.
   portal_dnie_sede_entry:
     label: Acceso con DNI electrónico
-    purpose: Punto de acceso a la Sede mediante DNIe.
+    purpose: Punto de acceso a la Sede mediante el DNI electrónico.
   portal_domiciliacion_bancaria:
     label: Domiciliación bancaria de pagos
     purpose: Domiciliación bancaria de autoliquidaciones y pagos tributarios.
@@ -6678,6 +6713,8 @@ tui:
       errors:
         amount_invalid: Escribe el importe solo con cifras y con punto para los decimales,
           por ejemplo 1500.00.
+        amount_required: Escribe un importe en «{field}». Si no hay ninguno, escribe
+          0.00.
         asset_id_required: Escribe primero el identificador del elemento.
         choice_invalid: 'Elige una de estas opciones: {options}.'
         date_invalid: Escribe la fecha como AAAA-MM-DD, por ejemplo 2025-06-30.
@@ -8916,6 +8953,7 @@ workspace:
         filed: Registrada como presentada
         not_applicable: No aplica
         overdue: Vencida
+        unknown: Cierre desconocido
         upcoming: Próxima
       local:
         external_baseline_imported: Presentación externa importada

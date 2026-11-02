@@ -59,7 +59,9 @@ import { hex64 } from "./fixtures/ledger";
  * filing it waits on;
  * `exported` is the checked declaration with its file made, which exports
  * and records, `export-unverified` exports a file whose design carries no
- * completeness manifest, `export-notes` exports a file whose calculation
+ * completeness manifest, `export-cutoff-unverified` exports a direct debit
+ * whose result says no direct-debit cutoff was checked, `export-notes`
+ * exports a file whose calculation
  * noted two gaps of one kind about two elements and one of another kind, and
  * `export-unknown` loses the export's settlement, and `check-notes` reads the
  * checked declaration with two durable notes of one kind about two elements;
@@ -85,6 +87,7 @@ export const MODELO_SHAPES = [
   "prerequisite",
   "exported",
   "export-unverified",
+  "export-cutoff-unverified",
   "export-notes",
   "check-notes",
   "export-unknown",
@@ -305,6 +308,7 @@ export function modeloFixture(options: Options): ModeloPort {
         return "130-1T-receipt";
       case "exported":
       case "export-unverified":
+      case "export-cutoff-unverified":
       case "export-notes":
       case "export-unknown":
         return recorded ? "130-1T-filed" : "130-1T-exported";
@@ -366,6 +370,22 @@ export function modeloFixture(options: Options): ModeloPort {
       fichero_boe: exported.fichero_boe && {
         ...exported.fichero_boe,
         calculation_notes: ASSET_NOTES,
+      },
+    };
+  };
+  /** The first quarter's export paid by direct debit, whose result says no
+   * direct-debit cutoff could be checked for it. */
+  const exportCutoffUnverified = async (): Promise<unknown> => {
+    const exported = (await written(
+      "export-130",
+    )) as ModeloExportPublicResultV3;
+    return {
+      ...exported,
+      fichero_boe: exported.fichero_boe && {
+        ...exported.fichero_boe,
+        resolved_result_disposition: "U",
+        payment_election: "domiciliacion",
+        domiciliation_cutoff_unverified: true,
       },
     };
   };
@@ -520,6 +540,8 @@ export function modeloFixture(options: Options): ModeloPort {
               reject("unknown", { operation_id: nextOperation() });
             if (shape === "export-unverified")
               return written("export-165-unverified");
+            if (shape === "export-cutoff-unverified")
+              return exportCutoffUnverified();
             if (shape === "export-notes") return exportWithNotes();
             return shape === "exported" ? written("export-130") : unserved();
           }

@@ -300,6 +300,74 @@ test("ratios are set and unset for the year chosen", async ({
   await expect(row).toContainText(label("desktop.ledger.ratios.not_set"));
 });
 
+test("an unsaved pattern is answered by the backend, and without an answer the save waits", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await dataRows(target)
+    .filter({ hasText: "PAPELERIA TRAZO" })
+    .first()
+    .locator("input[type=checkbox]")
+    .click();
+  await page(target).focus();
+  await target.keyboard.press("Control+KeyK");
+  await target
+    .locator(".palette")
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill(label("desktop.ledger.rules.from_selection"));
+  await target.keyboard.press("Enter");
+  const dialog = target.locator(".ledger-rule-dialog");
+  await expect(dialog).toBeVisible();
+  await dialog
+    .getByLabel(label("desktop.ledger.rules.classification"), { exact: true })
+    .selectOption("PERSONAL");
+  await dialog
+    .getByRole("switch", { name: label("desktop.ledger.rules.advanced") })
+    .click();
+  const expression = field(dialog, "desktop.ledger.rules.expression");
+  const save = dialog.locator(".ledger-rule-save");
+
+  await expression.fill("[unclosed");
+  await expect(dialog).toContainText(
+    label("desktop.ledger.rules.expression_unread"),
+  );
+  await expect(save).toHaveAttribute("aria-disabled", "true");
+
+  // The fixture has no answer for this one, as a ledger that did not reply.
+  await expression.fill("NOT RECORDED");
+  await expect(dialog.locator(".ledger-rule-matches")).toContainText(
+    label("desktop.ledger.rules.matches_unknown"),
+  );
+  await expect(save).toHaveAttribute("aria-disabled", "true");
+  await expect(expression).toHaveValue("NOT RECORDED");
+  // No answer is said, the draft stays, and it can be asked again.
+  const failed = dialog.locator(".ledger-rule-trial-failed");
+  await expect(failed).toContainText(
+    label("desktop.ledger.rules.trial_failed"),
+  );
+  await failed
+    .getByRole("button", { name: label("desktop.ledger.rules.trial_retry") })
+    .click();
+  await expect(failed).toBeVisible();
+  await expect(expression).toHaveValue("NOT RECORDED");
+
+  // The backend's own answers: one that could not compile, one too costly.
+  await expression.fill("a{99999999999}");
+  await expect(failed).toBeHidden();
+  await expect(dialog).toContainText(
+    label("desktop.ledger.rules.expression_unread"),
+  );
+  await expect(save).toHaveAttribute("aria-disabled", "true");
+  await expression.fill("(.+)+#");
+  await expect(dialog).toContainText(
+    label("desktop.ledger.rules.expression_overrun"),
+  );
+  await expect(save).toHaveAttribute("aria-disabled", "true");
+
+  await expression.fill(String.raw`PAPELERIA\s+TRAZO`);
+  await expect(save).not.toHaveAttribute("aria-disabled", "true");
+});
+
 test("an own account is added through the protected body and shown masked only", async ({
   page: target,
 }) => {
@@ -315,11 +383,18 @@ test("an own account is added through the protected body and shown masked only",
   await field(form, "desktop.ledger.accounts.opened").fill("2026-02-01");
   const number = field(form, "desktop.ledger.accounts.iban");
   await expect(number).toHaveAttribute("type", "password");
-  // A wrong check digit is caught before anything is sent.
-  await number.fill(IBAN.replace("91", "92"));
+  // How it is written is seen here; a wrong check digit is the backend's to
+  // refuse, and the number goes with the attempt.
+  await number.fill("ES91");
   await expect(form).toContainText(
-    label("desktop.ledger.accounts.iban_problem.check"),
+    label("desktop.ledger.accounts.iban_problem.shape"),
   );
+  await number.fill(IBAN.replace("91", "92"));
+  await button(form, "desktop.ledger.accounts.submit.add").click();
+  await expect(
+    target.getByText(label("desktop.ledger.accounts.refused")),
+  ).toBeVisible();
+  await expect(number).toHaveValue("");
   await number.fill(IBAN);
   await button(form, "desktop.ledger.accounts.submit.add").click();
   await expect(form).toBeHidden();

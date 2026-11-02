@@ -33,6 +33,7 @@ from .errors import (
     InvoiceNotFoundError,
     InvoiceValidationError,
 )
+from .figures import settlement_amount
 from .models import Invoice
 
 _LOGGER = get_logger(__name__)
@@ -273,12 +274,8 @@ def _reconciliation_amount_matches(
 
 
 def _reconciliation_settlement(invoice: Invoice) -> Decimal:
-    """Return the cash an invoice settles for.
-
-    A retención is withheld at source, so the cash that moves is the total less
-    the withheld figure; the total itself never reaches the bank.
-    """
-    return invoice.grand_total - (invoice.retention_amount or Decimal("0"))
+    """Return the cash an invoice settles for."""
+    return settlement_amount(invoice.grand_total, invoice.retention_amount)
 
 
 def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:

@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-016` · **Topic:** [External integrations and local runtime](../topics/external-integrations-and-local-runtime.md)
+**Topic:** [External integrations and local runtime](../topics/external-integrations-and-local-runtime.md)
 
 <!-- preserved:article -->
 ## Scope

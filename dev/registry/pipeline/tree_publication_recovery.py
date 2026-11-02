@@ -31,7 +31,6 @@ from .tree_publication_journal import (
     _journal_backup_path,
     _journal_staged_candidate_path,
     _matches_journal_candidate,
-    _retire_completed_legacy_orphan_journal,
     load_generated_export_publication_journal,
 )
 from .tree_publication_supersession import _delete_opaque_transaction_tree
@@ -67,14 +66,6 @@ def recover_interrupted_publication(
         )
 
     backup_export_root = _journal_backup_path(journal, target_export_root, publication_target_root)
-    if _retire_completed_legacy_orphan_journal(
-        context=context,
-        journal=journal,
-        journal_path=journal_path,
-        target_export_root=target_export_root,
-        backup_export_root=backup_export_root,
-    ):
-        return False
     staged_candidate_export_root = _journal_staged_candidate_path(journal, publication_target_root)
     candidate_is_verified = staged_candidate_export_root.exists() and _matches_journal_candidate(
         staged_candidate_export_root,

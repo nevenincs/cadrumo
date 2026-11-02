@@ -13,161 +13,161 @@ sign_policy = "unsigned"
 sheet = "DP200026G"
 source_row = 72
 source_cell = "A72"
-ordinal = 67
+ordinal = "67"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 73
 source_cell = "A73"
-ordinal = 68
+ordinal = "68"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 74
 source_cell = "A74"
-ordinal = 69
+ordinal = "69"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 75
 source_cell = "A75"
-ordinal = 70
+ordinal = "70"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 76
 source_cell = "A76"
-ordinal = 71
+ordinal = "71"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 77
 source_cell = "A77"
-ordinal = 72
+ordinal = "72"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 78
 source_cell = "A78"
-ordinal = 73
+ordinal = "73"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 79
 source_cell = "A79"
-ordinal = 74
+ordinal = "74"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 80
 source_cell = "A80"
-ordinal = 75
+ordinal = "75"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 81
 source_cell = "A81"
-ordinal = 76
+ordinal = "76"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 82
 source_cell = "A82"
-ordinal = 77
+ordinal = "77"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 83
 source_cell = "A83"
-ordinal = 78
+ordinal = "78"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 84
 source_cell = "A84"
-ordinal = 79
+ordinal = "79"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 85
 source_cell = "A85"
-ordinal = 80
+ordinal = "80"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 86
 source_cell = "A86"
-ordinal = 81
+ordinal = "81"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 87
 source_cell = "A87"
-ordinal = 82
+ordinal = "82"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 88
 source_cell = "A88"
-ordinal = 83
+ordinal = "83"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 89
 source_cell = "A89"
-ordinal = 84
+ordinal = "84"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 90
 source_cell = "A90"
-ordinal = 85
+ordinal = "85"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026G"
 source_row = 91
 source_cell = "A91"
-ordinal = 86
+ordinal = "86"
 record_identity = "DP200026G"
 
 [[width_17_rules.anchors]]
 sheet = "DP200DID"
 source_row = 29
 source_cell = "A29"
-ordinal = 24
+ordinal = "24"
 record_identity = "DP200DID"
 
 [[width_17_rules.anchors]]
 sheet = "DP200DID"
 source_row = 30
 source_cell = "A30"
-ordinal = 25
+ordinal = "25"
 record_identity = "DP200DID"
 
 [[width_17_rules.anchors]]
 sheet = "DP200DID"
 source_row = 39
 source_cell = "A39"
-ordinal = 34
+ordinal = "34"
 record_identity = "DP200DID"
 
 [width_17_rules.evidence]

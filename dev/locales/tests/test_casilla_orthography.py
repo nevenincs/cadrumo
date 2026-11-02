@@ -73,6 +73,18 @@ def test_quoted_identifiers_and_truncated_words_are_not_prose() -> None:
 
 @pytest.mark.integration
 @pytest.mark.external_tool
+def test_a_quoted_protocol_token_passes_while_unaccented_prose_is_still_reported() -> None:
+    values: Values = {"es": {_KEY: "TIPO es 'rectificacion'. Escribe la descripcion."}}
+
+    assert {item.word for item in unaccented_words(values, reviewed={"es": frozenset()})} == {
+        "rectificacion",
+        "descripcion",
+    }
+    assert {item.word for item in unaccented_words(values)} == {"descripcion"}
+
+
+@pytest.mark.integration
+@pytest.mark.external_tool
 def test_untranslated_spanish_words_are_reported_outside_quotations() -> None:
     values: Values = {
         "en": {

@@ -26,7 +26,6 @@ from ...application.export.google_review_operation_contracts import (
     GoogleReviewRequest,
     GoogleReviewResult,
 )
-from ...application.export.publication_receipt import ReadablePayloadCategory
 from ...application.operations.frontend_projection import OperationReviewProjectionReferenceV1
 from ...core.i18n.render import tr
 from ...core.json_contract import OutputSchema
@@ -61,13 +60,7 @@ def _review_matches_request(request: GoogleReviewRequest, review: GoogleReviewPr
 
 def accept_google_review(request: GoogleReviewRequest, review: GoogleReviewProjection) -> Literal["apply"]:
     """Accept only the requested calculation and the runtime's exact readable destination."""
-    if (
-        not _review_matches_request(request, review)
-        or not review.root_folder_id.strip()
-        or not review.readable_by_authorized_users
-        or ReadablePayloadCategory.CALCULATION not in review.payload_categories
-        or not set(review.payload_categories) <= {ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.LEDGER}
-    ):
+    if not _review_matches_request(request, review) or not review.discloses_a_readable_calculation:
         raise ValueError("review does not match the selected readable spreadsheet publication")
     return "apply"
 

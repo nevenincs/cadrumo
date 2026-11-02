@@ -18,6 +18,7 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -164,6 +165,12 @@ class InMemoryProrrataRegisterRepository:
         validate_entry: Callable[[ProrrataRegisterEntry], None],
     ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
         raise AssertionError("advisory diagnostics do not settle sector registers")
+
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        raise AssertionError("advisory diagnostics do not declare operator gross bases")
 
     def commit_whole_carried_seed(
         self,

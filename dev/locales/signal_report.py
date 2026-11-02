@@ -7,6 +7,30 @@ from collections.abc import Mapping
 from .signal_contracts import TranslationBacklogItem, TranslationMatrix
 from .signal_discovery import covered_by_namespace, is_catalogue_only_key
 
+ADVISORY_CLASSIFICATION = "advisory"
+
+OUTCOME_COMPLETE = "complete"
+OUTCOME_ADVISORY = "advisory"
+OUTCOME_BACKLOG = "backlog"
+NON_GATING_OUTCOMES = frozenset({OUTCOME_COMPLETE, OUTCOME_ADVISORY})
+
+
+def is_advisory_finding(finding: Mapping[str, object]) -> bool:
+    """Only an explicit advisory classification is non-gating; anything else blocks."""
+    return finding.get("classification") == ADVISORY_CLASSIFICATION
+
+
+def signal_outcome(findings: list[dict[str, object]], *, unsettled_inventory_or_cells: bool) -> str:
+    """Reduce findings and open counters to the gate outcome.
+
+    A finding with a missing or unrecognised classification gates, and so does
+    any open inventory counter or unready cell even when no finding names it,
+    so an uncounted tool or extraction failure cannot read as a pass.
+    """
+    if unsettled_inventory_or_cells or any(not is_advisory_finding(finding) for finding in findings):
+        return OUTCOME_BACKLOG
+    return OUTCOME_ADVISORY if findings else OUTCOME_COMPLETE
+
 
 def signal_finite_dynamic_keys(finite_families: dict[str, tuple[str, ...]]) -> set[str]:
     """Signal finite dynamic keys."""

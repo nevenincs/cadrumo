@@ -1,16 +1,10 @@
 """The closed union of value providers a binding declaration may name.
 
-A binding says where a form slot's value comes from. That "where" used to be a
-pair: an open ``source`` token beside an untyped ``selector`` mapping, hydrated
-into a per-family model by a lookup dict and re-validated by a second one. The
-pair could disagree, the serialised form carried no tag, and every consumer
-re-derived the member it was holding.
-
-:data:`BindingProvider` replaces the pair with one discriminated union. Each
-member is the family's own selector model, now carrying the ``kind`` literal
-that used to live in the sibling ``source`` field, so the declaration is
-self-describing: it validates to exactly one member, serialises with its own
-tag, and reads back to the same member without a second field to consult.
+A binding says where a form slot's value comes from. :data:`BindingProvider` is one
+discriminated union of those sources. Each member is the family's own selector
+model, carrying the ``kind`` literal that tags it, so the declaration is
+self-describing: it validates to exactly one member, serialises with its own tag,
+and reads back to the same member without a second field to consult.
 
 Membership is the authored set. :class:`~cadrumo.core.aggregation.BindingSourceKind`
 carries two mesh-only members -- ``borrador`` and ``iva_wallet_decision`` --

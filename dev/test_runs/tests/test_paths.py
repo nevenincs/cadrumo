@@ -56,13 +56,11 @@ def test_run_directory_rejects_traversal(tmp_path: Path, family: str, label: str
 def test_every_base_a_run_can_land_under_is_enumerated() -> None:
     """The reaper's population is defined here, and it must cover both writers.
 
-    New output follows the configured storage root. The checkout and OS temp
-    bases remain enumerable for old runs that predate storage-root routing.
+    Every run lands under the configured temporary root.
     """
     bases = run_log_bases()
 
     assert configured_test_log_root() in bases, "configured run families would be left unreaped"
-    assert REPO_ROOT in bases, "legacy repository run families would be left unreaped"
     assert configured_test_log_root() == TEMP_ROOT
     conftest = (REPO_ROOT / "conftest.py").read_text(encoding="utf-8")
     assert "prepare_environment(" in conftest
@@ -77,20 +75,12 @@ def test_a_family_root_is_reported_only_where_it_exists(tmp_path: Path) -> None:
     assert run_log_roots("never-written", bases=(tmp_path,)) == ()
 
 
-def test_legacy_log_roots_remain_discoverable(tmp_path: Path) -> None:
-    legacy = tmp_path / ".logs" / "audit-runs"
-    legacy.mkdir(parents=True)
-    assert run_log_roots("audit-runs", bases=(tmp_path,)) == (legacy,)
-    assert run_log_families(bases=(tmp_path,)) == ("audit-runs",)
-
-
-@pytest.mark.parametrize("stem", ["logs", ".logs"])
-def test_discovery_never_follows_linked_log_containers_or_families(tmp_path: Path, stem: str) -> None:
+def test_discovery_never_follows_linked_log_containers_or_families(tmp_path: Path) -> None:
     outside = tmp_path / "outside"
     (outside / "audit-runs").mkdir(parents=True)
     base = tmp_path / "base"
     base.mkdir()
-    link = base / stem
+    link = base / "logs"
     link.symlink_to(outside, target_is_directory=True)
     assert run_log_families(bases=(base,)) == ()
     assert run_log_roots("audit-runs", bases=(base,)) == ()

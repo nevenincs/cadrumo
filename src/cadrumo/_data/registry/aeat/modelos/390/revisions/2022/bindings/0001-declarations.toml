@@ -117,7 +117,7 @@ required_text = ["modelo 390"]
 
 [[revisions."2022".bindings]]
 id = "modelo-390-prorrata-regularizacion-anual"
-provider = { kind = "prorrata_regularizacion", source_modelo = "303", source_casilla_ids = ["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], regularizacion_output = "modelo_390_regularizacion_anual" }
+provider = { kind = "prorrata_regularizacion", source_modelo = "303", source_casilla_ids = ["iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", "iva.prorrata-porcentaje"], source_period_selection = "filer_liquidation_cadence", regularizacion_output = "modelo_390_regularizacion_anual" }
 value = { data_type = "money", channel = "decimal" }
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "ley-37-1992:art-92", "ley-37-1992:art-94", "ley-37-1992:art-95", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 additional_source_refs = ["aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]

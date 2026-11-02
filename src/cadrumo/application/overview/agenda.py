@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.time.clock import now
+from ...domain.deadlines.models import ObligationStatus
 from .calendar_models import (
     CalendarCompleteness,
     CalendarWarning,
@@ -69,6 +70,10 @@ class OverviewAgenda(BaseModel):
             and whose user_state is ``LATE`` (filed obligations are
             excluded — the engine's ``FILED`` flag suppresses them
             via the state mapping).
+
+            Entries whose close is unknown (``status`` ``UNKNOWN``) join no
+            cohort and are never ``next_due``: their nominal close is only a
+            lower bound, so no date claim is made for them.
         generated_at: UTC timestamp of when the aggregator ran.
         warnings: Calendar warnings inherited from the underlying
             calendar build (under-specified profile keys).
@@ -96,6 +101,43 @@ class OverviewAgenda(BaseModel):
     coverage: ObligationCoverageReport = Field(default_factory=ObligationCoverageReport)
     taxpayer_model_declared: bool = True
     incomplete_reason: str | None = None
+
+
+def _partition_cohorts(
+    dated_entries: tuple[OverviewCalendarEntry, ...],
+    *,
+    as_of: date,
+    horizon_end: date,
+) -> tuple[list[OverviewCalendarEntry], list[OverviewCalendarEntry], list[OverviewCalendarEntry]]:
+    """Split dated entries into the due-today, due-soon and overdue cohorts, preserving order."""
+    due_today: list[OverviewCalendarEntry] = []
+    due_soon: list[OverviewCalendarEntry] = []
+    overdue: list[OverviewCalendarEntry] = []
+    for entry in dated_entries:
+        deadline = entry.adjusted_closes_on
+        if deadline == as_of:
+            due_today.append(entry)
+        elif as_of < deadline <= horizon_end:
+            due_soon.append(entry)
+        elif deadline < as_of and entry.user_state is OverviewPeriodState.LATE:
+            overdue.append(entry)
+    return due_today, due_soon, overdue
+
+
+def _earliest_due(dated_entries: tuple[OverviewCalendarEntry, ...], *, as_of: date) -> OverviewCalendarEntry | None:
+    """Return the earliest entry closing on or after ``as_of``, or ``None``."""
+    future_or_today = [entry for entry in dated_entries if entry.adjusted_closes_on >= as_of]
+    if not future_or_today:
+        return None
+    return min(
+        future_or_today,
+        key=lambda entry: (
+            entry.adjusted_closes_on,
+            entry.modelo,
+            entry.period.filing_year,
+            entry.period.registry_token,
+        ),
+    )
 
 
 def build_overview_agenda(
@@ -161,31 +203,11 @@ def build_overview_agenda(
         applicability_evidence=applicability_evidence,
     )
 
-    horizon_end = as_of + timedelta(days=horizon_days)
-    due_today: list[OverviewCalendarEntry] = []
-    due_soon: list[OverviewCalendarEntry] = []
-    overdue: list[OverviewCalendarEntry] = []
-    next_due: OverviewCalendarEntry | None = None
-    for entry in calendar.entries:
-        deadline = entry.adjusted_closes_on
-        if deadline == as_of:
-            due_today.append(entry)
-        elif as_of < deadline <= horizon_end:
-            due_soon.append(entry)
-        elif deadline < as_of and entry.user_state is OverviewPeriodState.LATE:
-            overdue.append(entry)
-
-    future_or_today = [entry for entry in calendar.entries if entry.adjusted_closes_on >= as_of]
-    if future_or_today:
-        next_due = min(
-            future_or_today,
-            key=lambda entry: (
-                entry.adjusted_closes_on,
-                entry.modelo,
-                entry.period.filing_year,
-                entry.period.registry_token,
-            ),
-        )
+    dated_entries = tuple(entry for entry in calendar.entries if entry.status is not ObligationStatus.UNKNOWN)
+    due_today, due_soon, overdue = _partition_cohorts(
+        dated_entries, as_of=as_of, horizon_end=as_of + timedelta(days=horizon_days)
+    )
+    next_due = _earliest_due(dated_entries, as_of=as_of)
 
     return OverviewAgenda(
         as_of=as_of,

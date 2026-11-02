@@ -1,0 +1,620 @@
+{
+  "note": "The registry-served families of `ledger.entry-options`, in the shape `aeat app ledger entry-options --json` emits, read from the pinned authority through the operation's own projection. The country, currency and M210 families are trimmed in the fixture instead.",
+  "families": [
+    {
+      "family": "iva_category",
+      "options": [
+        {
+          "value": "domestic_general",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "domestic_reduced",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "domestic_super_reduced",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "domestic_zero",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "domestic_exempt",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "domestic_not_subject",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "operacion_no_sujeta",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "intra_community_supply",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "export_third_country_zero_rated",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "export_assimilated_zero_rated",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "intra_community_triangulation",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "domestic_reverse_charge",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "intra_community_service_supply",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "intra_community_service_acquisition_reverse_charge",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "intra_community_acquisition_reverse_charge",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "import_third_country",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "recargo_equivalencia",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "regimen_simplificado",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "reagp_compensation",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "erroneous_invoice",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "unknown",
+          "label_key": null,
+          "group": null
+        }
+      ]
+    },
+    {
+      "family": "irpf_category",
+      "options": [
+        {
+          "value": "actividad_economica",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "arrendamiento_local",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "arrendamiento_vivienda_afecto",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "trabajo",
+          "label_key": null,
+          "group": null
+        }
+      ]
+    },
+    {
+      "family": "spending_category",
+      "options": [
+        {
+          "value": "cuotas_colegiales",
+          "label_key": null,
+          "group": "social_security"
+        },
+        {
+          "value": "cuotas_autonomos_ss",
+          "label_key": null,
+          "group": "social_security"
+        },
+        {
+          "value": "mutualidad_alternativa",
+          "label_key": null,
+          "group": "social_security"
+        },
+        {
+          "value": "arrendamiento_local",
+          "label_key": null,
+          "group": "premises"
+        },
+        {
+          "value": "ibi_local_afecto",
+          "label_key": null,
+          "group": "premises"
+        },
+        {
+          "value": "suministros_local_afecto",
+          "label_key": null,
+          "group": "premises"
+        },
+        {
+          "value": "suministros_home_office_luz",
+          "label_key": null,
+          "group": "home_office_suministros"
+        },
+        {
+          "value": "suministros_home_office_agua",
+          "label_key": null,
+          "group": "home_office_suministros"
+        },
+        {
+          "value": "suministros_home_office_gas",
+          "label_key": null,
+          "group": "home_office_suministros"
+        },
+        {
+          "value": "suministros_home_office_internet",
+          "label_key": null,
+          "group": "home_office_suministros"
+        },
+        {
+          "value": "telefonia_fija",
+          "label_key": null,
+          "group": "home_office_suministros"
+        },
+        {
+          "value": "amortizacion_vivienda_afecto",
+          "label_key": null,
+          "group": "home_office_ownership"
+        },
+        {
+          "value": "ibi_vivienda_afecto",
+          "label_key": null,
+          "group": "home_office_ownership"
+        },
+        {
+          "value": "comunidad_vivienda_afecto",
+          "label_key": null,
+          "group": "home_office_ownership"
+        },
+        {
+          "value": "arrendamiento_vivienda_afecto",
+          "label_key": null,
+          "group": "home_office_ownership"
+        },
+        {
+          "value": "telefonia_movil",
+          "label_key": null,
+          "group": "telecoms"
+        },
+        {
+          "value": "material_oficina",
+          "label_key": null,
+          "group": "office"
+        },
+        {
+          "value": "software_suscripcion",
+          "label_key": null,
+          "group": "office"
+        },
+        {
+          "value": "hardware_amortizable",
+          "label_key": null,
+          "group": "office"
+        },
+        {
+          "value": "mobiliario_amortizable",
+          "label_key": null,
+          "group": "office"
+        },
+        {
+          "value": "reparaciones_conservacion",
+          "label_key": null,
+          "group": "office"
+        },
+        {
+          "value": "publicidad_marketing",
+          "label_key": null,
+          "group": "office"
+        },
+        {
+          "value": "formacion_profesional",
+          "label_key": null,
+          "group": "office"
+        },
+        {
+          "value": "vehiculo_combustible",
+          "label_key": null,
+          "group": "vehicle"
+        },
+        {
+          "value": "vehiculo_mantenimiento",
+          "label_key": null,
+          "group": "vehicle"
+        },
+        {
+          "value": "vehiculo_seguro",
+          "label_key": null,
+          "group": "vehicle"
+        },
+        {
+          "value": "vehiculo_peaje",
+          "label_key": null,
+          "group": "vehicle"
+        },
+        {
+          "value": "vehiculo_parking",
+          "label_key": null,
+          "group": "vehicle"
+        },
+        {
+          "value": "manutencion_dietas_nacional",
+          "label_key": null,
+          "group": "meals"
+        },
+        {
+          "value": "manutencion_dietas_extranjero",
+          "label_key": null,
+          "group": "meals"
+        },
+        {
+          "value": "asesoria_fiscal",
+          "label_key": null,
+          "group": "professional_services"
+        },
+        {
+          "value": "asesoria_juridica",
+          "label_key": null,
+          "group": "professional_services"
+        },
+        {
+          "value": "asesoria_contable",
+          "label_key": null,
+          "group": "professional_services"
+        },
+        {
+          "value": "viajes_transporte",
+          "label_key": null,
+          "group": "travel"
+        },
+        {
+          "value": "viajes_alojamiento",
+          "label_key": null,
+          "group": "travel"
+        },
+        {
+          "value": "seguros_responsabilidad_civil",
+          "label_key": null,
+          "group": "insurance"
+        },
+        {
+          "value": "seguros_salud_autonomo",
+          "label_key": null,
+          "group": "insurance"
+        },
+        {
+          "value": "gastos_bancarios",
+          "label_key": null,
+          "group": "financial"
+        },
+        {
+          "value": "gastos_financieros",
+          "label_key": null,
+          "group": "financial"
+        },
+        {
+          "value": "suministros_cliente_directos",
+          "label_key": null,
+          "group": "direct_costs"
+        },
+        {
+          "value": "subcontratacion",
+          "label_key": null,
+          "group": "direct_costs"
+        },
+        {
+          "value": "tributos_fiscalmente_deducibles",
+          "label_key": null,
+          "group": "taxes"
+        }
+      ]
+    },
+    {
+      "family": "usage_ratio_category",
+      "options": [
+        {
+          "value": "arrendamiento_vivienda_afecto",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "suministros_home_office_luz",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "suministros_home_office_agua",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "suministros_home_office_gas",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "suministros_home_office_internet",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "ibi_vivienda_afecto",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "comunidad_vivienda_afecto",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "telefonia_fija",
+          "label_key": null,
+          "group": null
+        }
+      ]
+    },
+    {
+      "family": "invoice_class",
+      "options": [
+        {
+          "value": "ORDINARIA",
+          "label_key": null,
+          "group": "default"
+        },
+        {
+          "value": "SIMPLIFICADA",
+          "label_key": null,
+          "group": "simplified"
+        },
+        {
+          "value": "RECTIFICATIVA",
+          "label_key": null,
+          "group": "corrective"
+        }
+      ]
+    },
+    {
+      "family": "premises_situation",
+      "options": [
+        {
+          "value": "1",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "2",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "3",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "4",
+          "label_key": null,
+          "group": null
+        }
+      ]
+    },
+    {
+      "family": "prorrata_provenance",
+      "options": [
+        {
+          "value": "aeat_autorizada",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "inicio_actividad",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "carried_prior_definitiva",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "interrumpida_tres_ultimos",
+          "label_key": null,
+          "group": null
+        }
+      ]
+    },
+    {
+      "family": "prorrata_sector_letter",
+      "options": [
+        {
+          "value": "a",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "b",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "c",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "d",
+          "label_key": null,
+          "group": null
+        }
+      ]
+    },
+    {
+      "family": "capital_good_kind",
+      "options": [
+        {
+          "value": "mueble",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "inmueble",
+          "label_key": null,
+          "group": null
+        }
+      ]
+    },
+    {
+      "family": "capital_good_disposal",
+      "options": [
+        {
+          "value": "sujeta_no_exenta",
+          "label_key": null,
+          "group": null
+        },
+        {
+          "value": "exenta_o_no_sujeta",
+          "label_key": null,
+          "group": null
+        }
+      ]
+    }
+  ],
+  "limits": {
+    "decimal_text_max": 128,
+    "two_way_decimal": "^[1-9][0-9]{0,2}\\.[0-9]{3}$",
+    "decimal_rules": [
+      {
+        "rule": "amount",
+        "decimals": 2,
+        "zero": false
+      },
+      {
+        "rule": "tax_amount",
+        "decimals": 2,
+        "zero": true
+      },
+      {
+        "rule": "quantity",
+        "decimals": 6,
+        "zero": false
+      },
+      {
+        "rule": "unit_price",
+        "decimals": 6,
+        "zero": true
+      }
+    ],
+    "percent_decimals": 4,
+    "percent_points_max": "100",
+    "percent_fraction_max": "1",
+    "percent_bare_fraction_ceiling": "1",
+    "document_percent_fields": [
+      {
+        "field": "iva_rate",
+        "unit": "points"
+      },
+      {
+        "field": "retention_rate",
+        "unit": "points"
+      }
+    ],
+    "rule_pattern_max": 2048,
+    "text_limits": [
+      {
+        "name": "split_parts",
+        "max": 128
+      },
+      {
+        "name": "split_part_description",
+        "max": 1024
+      },
+      {
+        "name": "entry_text",
+        "max": 4096
+      },
+      {
+        "name": "group_label",
+        "max": 64
+      },
+      {
+        "name": "classify_token",
+        "max": 128
+      },
+      {
+        "name": "usage_ratio_id",
+        "max": 128
+      },
+      {
+        "name": "event_payload_value",
+        "max": 500
+      },
+      {
+        "name": "evidence_label",
+        "max": 1024
+      },
+      {
+        "name": "evidence_note",
+        "max": 16384
+      },
+      {
+        "name": "own_account_iban",
+        "max": 64
+      },
+      {
+        "name": "own_account_swift_bic",
+        "max": 16
+      },
+      {
+        "name": "counterparty_tax_id",
+        "max": 256
+      },
+      {
+        "name": "counterparty_note",
+        "max": 4096
+      }
+    ]
+  }
+}

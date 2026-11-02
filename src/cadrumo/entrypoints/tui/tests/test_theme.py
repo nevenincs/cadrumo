@@ -254,7 +254,7 @@ async def test_the_outer_scrollbar_does_not_reserve_permanent_side_gutters() -> 
     """Only overflow may consume the single scrollbar cell.
 
     Read off a MOUNTED scroll container rather than the stylesheet text. The
-    measures now resolve from design tokens, so asserting a literal spelling
+    measures resolve from design tokens, so asserting a literal spelling
     would prove which token was named and not the width the operator gets --
     and it would break on every token rename while a genuinely reserved
     gutter slipped through.
@@ -335,12 +335,7 @@ async def _button_states(theme_name: str) -> dict[str, tuple[Color, Color]]:
 @pytest.mark.asyncio
 @pytest.mark.parametrize("theme_name", [CADRUMO_LIGHT_THEME_NAME, CADRUMO_DARK_THEME_NAME])
 async def test_every_button_state_has_its_own_legible_fill(monkeypatch: pytest.MonkeyPatch, theme_name: str) -> None:
-    """Focus must not look like the primary action, and no state may lose its fill.
-
-    A focused button once took the primary blue, so a focused secondary
-    button read as the recommended one, and the dark primary label resolved to
-    white on light blue.
-    """
+    """Focus must not look like the primary action, and no state may lose its fill."""
     monkeypatch.delenv("NO_COLOR", raising=False)
     states = await _button_states(theme_name)
     fills = {state: fill for state, (fill, _) in states.items()}
@@ -365,19 +360,7 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
     and ``width: 60%`` both waste or clip available terminal space; only a
     full ``100%`` declaration is admitted for percentage widths.
 
-    RECURSIVE, which it was not. `scan_directory` defaults `recursive` to
-    False, so this had only ever read the eight top-level modules and never
-    looked inside `ledger`, `declarations`, `aeat_sync`, `modelo`, `profile`,
-    `secret`, `components` or `operations` -- the two `max-width: 78` caps that
-    caused the table truncation sat outside its reach entirely, and the single
-    offender it did report was the one that was not real.
-
-    Turned on only after enumerating what it surfaces, because a population
-    discovered as a wall of failures is a population nobody measures. Measured
-    across the whole tree at the time: ZERO offenders. The caps are gone (S413
-    removed them rather than tokenising them) and the literal measures are on
-    the token table (S414), so recursion costs nothing today and holds every
-    subdirectory from here.
+    The scan is recursive, so every subdirectory is held to the same rule.
     """
     import re
     from pathlib import Path
@@ -389,7 +372,7 @@ def test_no_surface_pins_or_caps_its_content_width() -> None:
         # The lookbehind matters: without it `min-width: 0` matches as
         # `width: 0` and is reported as a pinned width, which is the opposite
         # of what it means -- `min-width: 0` REMOVES a floor rather than
-        # imposing a cap, and the false report buried the real offenders.
+        # imposing a cap.
         for match in re.finditer(r"(?<![-\w])(max-)?width:\s*(\d+)\s*;", source):
             offenders.append(f"{module.name}: {match.group(0)}")
         for match in re.finditer(r"(?<![-\w])(max-)?width:\s*(\d+)%\s*;", source):
@@ -409,22 +392,16 @@ _CSS_DECLARATION = re.compile(
 )
 """Every declaration that spends a measure the token table should own.
 
-The directional forms are named explicitly. Matching only the shorthands let
-`margin-top: 1` and `margin-bottom: 1` through, which is the exact form the
-heading-spacing drift took -- so this gate stayed green on a defect an operator
-later found by looking at rendered frames. The lookbehind stops `min-width: 0`
-matching as `width: 0`.
+Matching only the shorthands would let `margin-top: 1` and `margin-bottom: 1`
+through, so the directional forms are named explicitly. The lookbehind stops
+`min-width: 0` matching as `width: 0`.
 """
 _TUI_ROOT = Path(__file__).resolve().parents[1]
 
 _STRUCTURAL_VALUES = frozenset({"auto", "100%", "none", "hidden", "initial", "0"})
 
 _FRACTION = re.compile(r"^\d+fr$")
-"""Any ``Nfr`` is a proportion, not a measure.
-
-Pinning the whitelist to ``1fr`` alone reported ``2fr``/``3fr``/``4fr`` as
-drift and buried the real offenders under false ones.
-"""
+"""Any ``Nfr`` is a proportion, not a measure."""
 
 
 def _is_structural(word: str) -> bool:
@@ -473,9 +450,9 @@ def _stylesheets() -> list[tuple[Path, str]]:
         tree = ast.parse(path.read_text(encoding="utf-8"))
         for node in ast.walk(tree):
             # AnnAssign as well as Assign: `BASE_CSS: Final[str] = ...` is how
-            # the design system itself declares every stylesheet, so a
-            # collector that only matched bare assignment skipped the one file
-            # that matters most and passed vacuously.
+            # the design system declares every stylesheet, so a collector that
+            # only matched bare assignment would skip the one file that matters
+            # most.
             target = _css_target(node)
             if target is None or not isinstance(node, ast.AnnAssign | ast.Assign) or node.value is None:
                 continue

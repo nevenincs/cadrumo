@@ -7,31 +7,6 @@ application_link_source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure",
 binding_source_refs = ["aeat-dr-390-2025"]
 formula_source_refs = ["aeat-dr-390-2025", "aeat-modelo-390-procedure", "boe-modelo-390-2009-form"]
 reviewed_against = "2024"
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes this revision cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off.
-#
-# What the review established, by measurement:
-#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
-#     every cited source's corpus file is present on disk;
-#   - every formula targets a casilla of this revision;
-#   - every enrolled schema family resolves;
-#   - every cited source's applicability window overlaps this revision's own life;
-#   - and all 9 fixed-width record(s) of the DERIVED layout were paired to
-#     their design sheet and cover it: no design DATA position is left
-#     unaddressed, and none reaches past its declared record length.
-#
-# The coverage figure is measured on the layout AFTER binding derivation, which
-# is what the renderer and the completeness gate consume; the raw export_layouts
-# collection holds only inline fields and reading it understates coverage badly.
-#
-# This stamp claims no fresh-render reproduction evidence: that belongs to the
-# revisions enrolled in the generated-tree drift gate, and this one is not.
-#
-# What it does NOT establish: that the figures a filing produces are correct
-# against AEAT. That is a tax review against official sources, and it is what an
-# operator re-stamping this to 'operator_reviewed' would be attesting.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
@@ -126,26 +101,6 @@ origin = "grounded"
 evidence = "corpus/aeat_official/disenos_registro/modelo_390/files/16-390-ejercicio-2024-actualizado-18-12-24-544-kb-xlsx.xlsx.extracted.md:260 (sha256 8be79bacc860) box [693] (14 149 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...) continues as corpus/aeat_official/disenos_registro/modelo_390/files/01-390-ejercicio-2025-actualizado-05-12-2025-544-kb-xlsx.xlsx.extracted.md:261 (sha256 6d33d8a42459) box [693] (14 149 17 N 5. Operaciones Reg. Gral. - Base Imponible y cuota - Re...)."
 legal_refs = ["ley-37-1992:art-161", "rd-1624-1992:art-71", "orden-eha-3111-2009:art-1"]
 source_refs = ["aeat-dr-390-2025"]
-
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # Rate-specific box-layer casillas for the Recargo de equivalencia block. Each
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # carries the official AEAT box number read off the bundled 2024 Diseno de
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # Registros, apartado 5, "Operaciones Reg. Gral. - Base Imponible y cuota -
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # Recargo de equivalencia" rows, stated explicitly rather than left implied by an
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # export position. Every position in that apartado appears twice, once under Reg.
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # ordinario and once under Recargo de equivalencia, so a number matched on offset
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # alone would be ambiguous; these are segment-resolved.
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: #
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # The casilla is named for its RECARGO rate, matching the official box label,
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # while its binding narrows on the IVA rate that statute pairs with it. The three
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # rate-blind recargo tier casillas remain the TOTAL layer: they keep their
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # bindings, keep feeding the annual devengada total, and keep every row including
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # one whose IVA rate was never recorded. That layer therefore sums to MORE than
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # this one by exactly the rate-unrecorded amount.
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: #
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # These carry no export_refs yet. The record decomposition for this block is
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # being established separately, and writing a rate box into the record before the
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # shortfall refusal covers it would render an unpopulated money field as 0,00 --
-# Original casillas iva-anual-repercutido-recargo-tipo-1-base commentary: # turning a silence into a false nil.
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "iva.anual.deducible.aic-inversion.tipo-2.base" }

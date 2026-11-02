@@ -16,7 +16,7 @@ allowed_values = []
 sheet = "DP30301"
 source_row = 14
 source_cell = "A14"
-ordinal = 9
+ordinal = "9"
 record_identity = "DP30301"
 
 [singleton_rules.evidence]
@@ -29,7 +29,7 @@ justification = "The 2022 official design leaves this field's Contenido cell bla
 sheet = "DP30301"
 source_row = 14
 source_cell = "A14"
-ordinal = 9
+ordinal = "9"
 record_identity = "DP30301"
 
 [[singleton_rules]]
@@ -46,7 +46,7 @@ allowed_values = []
 sheet = "DP30302"
 source_row = 11
 source_cell = "A11"
-ordinal = 6
+ordinal = "6"
 record_identity = "DP30302"
 
 [singleton_rules.evidence]
@@ -59,7 +59,7 @@ justification = "The 2022 official design leaves this field's Contenido cell bla
 sheet = "DP30302"
 source_row = 11
 source_cell = "A11"
-ordinal = 6
+ordinal = "6"
 record_identity = "DP30302"
 
 [[singleton_rules]]
@@ -76,7 +76,7 @@ allowed_values = []
 sheet = "DP30302"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "DP30302"
 
 [singleton_rules.evidence]
@@ -89,7 +89,7 @@ justification = "The 2022 official design leaves this field's Contenido cell bla
 sheet = "DP30302"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "DP30302"
 
 [design_identity]

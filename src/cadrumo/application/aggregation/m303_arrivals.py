@@ -11,7 +11,7 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
 from ...core.prorrata_register import ProrrataEspecialTransitionKind
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.bindings_previous_filing import periodic_carry_bindings_for_period
 from ...domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
 from ...domain.calculations.registry.prorrata_register_catalogue import (
@@ -145,17 +145,14 @@ class M303ProrrataTransitionArrival(BaseModel):
     model_config = STRICT_FROZEN_CONFIG
 
     period: Period
+    is_applicable: bool
+    """Whether the caller's pinned registry revision applies the transition.
+
+    Resolved once from the pinned operation, so later readers never reopen an
+    authority generation of their own.
+    """
     transition: ProrrataEspecialTransitionKind | None
     register_evidence: tuple[ProrrataRegisterEntry, ...]
-
-    @property
-    def is_applicable(self) -> bool:
-        """Whether the selected registry revision applies the transition."""
-        with bundled_indexed_authority().operation() as operation:
-            return _transition_period_applicability_from_registry(
-                self.period,
-                operation=operation,
-            )
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -315,18 +312,16 @@ def resolve_m303_prorrata_transition_arrival(
     *,
     period: Period,
     prorrata_register: ProrrataRegister,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> M303ProrrataTransitionArrival:
     """Resolve a registry-selected prorrata transition from register evidence."""
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return resolve_m303_prorrata_transition_arrival(
-                period=period,
-                prorrata_register=prorrata_register,
-                operation=indexed_operation,
-            )
     if not _transition_period_applicability_from_registry(period, operation=operation):
-        return M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=())
+        return M303ProrrataTransitionArrival(
+            period=period,
+            is_applicable=False,
+            transition=None,
+            register_evidence=(),
+        )
     if not prorrata_register.has_complete_current_entry_coverage(period.filing_year):
         raise AggregationValidationError(
             tr("aggregation.m303_arrivals.errors.prorrata_register_incomplete_current_year_declaration"),
@@ -342,6 +337,7 @@ def resolve_m303_prorrata_transition_arrival(
         )
     return M303ProrrataTransitionArrival(
         period=period,
+        is_applicable=True,
         transition=transition,
         register_evidence=evidence,
     )

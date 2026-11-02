@@ -16,13 +16,19 @@ import type {
 import type { CellRange } from "@/components/ui/dataGridModel";
 import { chordMatches, type ChordKeys } from "@/shared/chords";
 import { REDO_CHORDS, REVIEW_CHORDS, UNDO_CHORD } from "../ledgerChords";
-import type { LedgerRow } from "../../../shell/ledger";
+import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
+import { classifyKindOf } from "../../../shell/ledgerCommands";
+import { isBusinessBearing } from "../../../shell/ledgerContract";
 import { percentOf, copyAmount } from "../../../shell/ledgerGrammar";
-import { planApply, routeChange } from "../../../shell/ledgerPlan";
+import { planApply } from "../../../shell/ledgerPlan";
+import {
+  checkOnce,
+  stagedCheckRequest,
+  useStagedCheck,
+} from "../../../shell/ledgerStagedCheck";
 import {
   effectiveFacts,
   actionRows,
-  changesIdentity,
   reduceStage,
   type Draft,
   type StageEvent,
@@ -78,7 +84,10 @@ import {
   type RefusedCell,
 } from "./editingModel";
 import { choiceLabels, fieldName, lockText, refusalText } from "./editingWords";
-import type { SuggestionKind } from "../suggestions/SuggestionsProvider";
+import {
+  useVocabulary,
+  type SuggestionKind,
+} from "../suggestions/SuggestionsProvider";
 import { CostDialog, PasteDialog } from "./PasteDialog";
 import {
   formatAmount,
@@ -120,6 +129,9 @@ function changedFields(
 }
 
 export const COST_WARNING_WRITES = 10;
+/** The most saves one at a time a movement can take: a classification and a
+ * correction. */
+const WRITES_PER_MOVEMENT = 2;
 
 /** Takes the active cell's staged change back: this grid runs it, and the
  * movement menu that offers it shows it. */
@@ -131,14 +143,14 @@ export const REVERT_CELL_CHORD: ChordKeys = {
 };
 
 const cellKey = (key: string, column: string) => `${key}\u0000${column}`;
-const TRANSFER = "INTERNAL_TRANSFER";
-const DECIDED = ["BUSINESS", "PERSONAL", "MIXED"];
 
 /** What staged editing needs from the movements section. */
 export type MovementEditingInput = {
   t: Translate;
   locale: string;
   grid: RefObject<DataGridHandle | null>;
+  /** The ledger, which answers for what is staged. */
+  port: LedgerPort;
   /** The stored movements shown, by id. */
   byId: ReadonlyMap<string, LedgerRow>;
   stage: StageState;
@@ -173,6 +185,7 @@ export function useMovementEditing(input: MovementEditingInput) {
     t,
     locale,
     grid,
+    port,
     byId,
     stage,
     onStage,
@@ -187,9 +200,10 @@ export function useMovementEditing(input: MovementEditingInput) {
     () => new Map(content.drafts.map((draft) => [draft.key, draft])),
     [content.drafts],
   );
+  const vocabulary = useVocabulary();
   const labels = useMemo(
-    () => choiceLabels(t, input.accounts),
-    [t, input.accounts],
+    () => choiceLabels(t, input.accounts, vocabulary),
+    [t, input.accounts, vocabulary],
   );
   const [refused, setRefused] = useState<ReadonlyMap<string, RefusedCell>>(
     () => new Map(),
@@ -241,29 +255,70 @@ export function useMovementEditing(input: MovementEditingInput) {
     });
   }, []);
 
-  /** Stages an event, asking first when it adds many saves one at a
-   * time. */
+  // What the ledger says about the staged cells as they stand, for what a cell
+  // shows. While it is awaited a cell shows no mark rather than a guess.
+  const checked = useStagedCheck(
+    port,
+    useMemo(() => stagedCheckRequest(content, byId), [content, byId]),
+  );
+
+  /** What an event would add in saves one at a time and new ids, as the ledger
+   * answers for the work before and after it; null if it did not answer. */
+  const weigh = useCallback(
+    async (event: Extract<StageEvent, { type: "stage" }>) => {
+      const next = reduceStage(stage, event).content;
+      const [now, then] = await Promise.all([
+        checkOnce(port, stagedCheckRequest(content, byId)),
+        checkOnce(port, stagedCheckRequest(next, byId)),
+      ]);
+      if (!now || !then) return null;
+      const before = planApply(content, { rows: byId, check: now }).summary;
+      const after = planApply(next, { rows: byId, check: then }).summary;
+      const newIdentity = [
+        ...new Set(event.cells.map((cell) => cell.id)),
+      ].filter(
+        (id) => (then.rows.get(id)?.identity_fields.length ?? 0) > 0,
+      ).length;
+      return {
+        singleWrites: after.oneAtATime - before.oneAtATime,
+        seconds: after.seconds - before.seconds,
+        newIdentity,
+      };
+    },
+    [port, stage, content, byId],
+  );
+
+  /** Stages an event, asking first when it adds many saves one at a time. A
+   * movement takes at most a classification and a correction, so a small event
+   * cannot reach the warning and is staged at once; a larger one waits for the
+   * ledger's answer and stays unstaged if there is none. */
   const stageChecked = useCallback(
     (event: Extract<StageEvent, { type: "stage" }>, then?: () => void) => {
-      const before = planApply(content, { rows: byId }).summary;
-      const after = planApply(reduceStage(stage, event).content, {
-        rows: byId,
-      }).summary;
-      const added = after.oneAtATime - before.oneAtATime;
-      if (added > COST_WARNING_WRITES) {
-        setCost({
-          event,
-          singleWrites: added,
-          seconds: after.seconds - before.seconds,
-          then,
-        });
-        return false;
+      const movements = new Set(event.cells.map((cell) => cell.id)).size;
+      if (movements * WRITES_PER_MOVEMENT <= COST_WARNING_WRITES) {
+        onStage(event);
+        then?.();
+        return;
       }
-      onStage(event);
-      then?.();
-      return true;
+      void weigh(event).then((weight) => {
+        if (!weight) {
+          say(t("desktop.ledger.apply.read_failed"));
+          return;
+        }
+        if (weight.singleWrites > COST_WARNING_WRITES) {
+          setCost({
+            event,
+            singleWrites: weight.singleWrites,
+            seconds: weight.seconds,
+            then,
+          });
+          return;
+        }
+        onStage(event);
+        then?.();
+      });
     },
-    [content, byId, stage, onStage],
+    [weigh, onStage, say, t],
   );
   const applyDrafts = useCallback(
     (edits: readonly DraftEdit[]) => {
@@ -365,17 +420,16 @@ export function useMovementEditing(input: MovementEditingInput) {
                 }}
               />
             );
-          const transfer =
+          const direction =
             subject.kind === "draft"
-              ? subject.draft.fields.direction === TRANSFER
-              : effectiveFacts(subject.row, subject.changes).direction ===
-                TRANSFER;
+              ? subject.draft.fields.direction
+              : effectiveFacts(subject.row, subject.changes).direction;
           return (
             <ChoiceEditor
               context={context}
               kind={kind}
               value={value}
-              transfer={transfer}
+              direction={direction ?? null}
               accounts={input.accounts}
             />
           );
@@ -421,13 +475,13 @@ export function useMovementEditing(input: MovementEditingInput) {
         if (!own && !share) return stored();
         const before = effectiveFacts(row, undefined);
         const after = effectiveFacts(row, changes);
+        const answer = checked.current?.rows.get(key);
         const identity =
           IDENTITY_COLUMNS.has(column) &&
-          changesIdentity(row, changes).length > 0;
-        const classified = DECIDED.includes(
-          after.business_classification ?? "",
-        );
-        const route = own ? routeChange(field, own, classified) : null;
+          (answer?.identity_fields.length ?? 0) > 0;
+        const refusal = own
+          ? answer?.routes.find((route) => route.field === field)?.refused
+          : null;
         return (
           <StagedValue
             stored={cellText(
@@ -442,9 +496,7 @@ export function useMovementEditing(input: MovementEditingInput) {
             )}
             identity={identity}
             cannot={
-              route && "refused" in route
-                ? t(`desktop.ledger.edit.held.${route.refused}`)
-                : undefined
+              refusal ? t(`desktop.ledger.edit.held.${refusal}`) : undefined
             }
           />
         );
@@ -497,6 +549,7 @@ export function useMovementEditing(input: MovementEditingInput) {
       );
     }
   }, [
+    checked,
     subjectOf,
     applyDrafts,
     drafts,
@@ -571,10 +624,13 @@ export function useMovementEditing(input: MovementEditingInput) {
       if (!field) return;
       if (
         field === "business_classification" &&
-        (value.value === "BUSINESS" || value.value === "MIXED") &&
+        isBusinessBearing(value.value) &&
         value.share === undefined
       ) {
-        input.askDraft(value.value === "BUSINESS" ? "business" : "mixed", key);
+        input.askDraft(
+          classifyKindOf(value.value) as "business" | "mixed",
+          key,
+        );
         return;
       }
       applyDrafts(draftEdits(key, field, value));
@@ -583,14 +639,7 @@ export function useMovementEditing(input: MovementEditingInput) {
     const field = columnField(column, subject.row);
     if (!field) return;
     if (field === "business_classification" && value.share === undefined) {
-      input.classify(
-        value.value === "BUSINESS"
-          ? "business"
-          : value.value === "MIXED"
-            ? "mixed"
-            : "personal",
-        [key],
-      );
+      input.classify(classifyKindOf(value.value), [key]);
       return;
     }
     stageChecked({
@@ -617,11 +666,6 @@ export function useMovementEditing(input: MovementEditingInput) {
   };
 
   // ---- Paste, fill and copy --------------------------------------------------
-  const singleWritesAdded = (cells: Extract<StageEvent, { type: "stage" }>) =>
-    cells.cells.length
-      ? planApply(reduceStage(stage, cells).content, { rows: byId }).summary
-          .oneAtATime - planApply(content, { rows: byId }).summary.oneAtATime
-      : 0;
   const stagePaste = (plan: PastePlan) => {
     if (plan.stage.length)
       onStage({ type: "stage", label: "paste", cells: plan.stage });
@@ -661,14 +705,22 @@ export function useMovementEditing(input: MovementEditingInput) {
       return;
     }
     if (plan.needsPreview) {
-      setPaste({
-        plan,
-        singleWrites: singleWritesAdded({
-          type: "stage",
-          label: "paste",
-          cells: plan.stage,
-        }),
-      });
+      if (!plan.stage.length) {
+        setPaste({ plan, singleWrites: 0 });
+        return;
+      }
+      void weigh({ type: "stage", label: "paste", cells: plan.stage }).then(
+        (weight) => {
+          if (!weight) {
+            say(t("desktop.ledger.apply.read_failed"));
+            return;
+          }
+          setPaste({
+            plan: { ...plan, newIdentity: weight.newIdentity },
+            singleWrites: weight.singleWrites,
+          });
+        },
+      );
       return;
     }
     stagePaste(plan);

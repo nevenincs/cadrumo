@@ -8,8 +8,9 @@
 // with the digest of the review the page read. What it answers is design and
 // test evidence only. Its call lines name a definition, never a value.
 
+import { answerRuleTrial } from "./ledgerRuleTrialFixture";
+import { isClassification, isDirection } from "../shell/ledgerContract";
 import {
-  LEDGER_UPDATE_FIELDS,
   isLedgerDefinition,
   type CatalogueInvoice,
   type FilePicks,
@@ -30,10 +31,15 @@ import {
   type LedgerRow,
   type LedgerSortField,
   type LedgerTransaction,
-  type LedgerUpdateField,
   type PublicPeriod,
+  type LedgerStagedCheckRequest,
 } from "../shell/ledger";
+import {
+  LEDGER_UPDATE_FIELDS,
+  type LedgerUpdateField,
+} from "../shell/ledgerContract";
 import { RELAY_PAYLOAD_LIMIT, RELAY_REQUEST_LIMIT } from "../shell/relayBounds";
+import { answerStagedCheck } from "./ledgerStagedCheckFixture";
 import {
   LEDGER_FIXTURE_PROFILE_ID,
   LEDGER_FIXTURE_TODAY,
@@ -273,16 +279,7 @@ const UPDATE_REQUIRED: readonly LedgerUpdateField[] = [
   "description",
   "notes",
 ];
-const DIRECTIONS = ["INCOMING", "OUTGOING", "INTERNAL_TRANSFER"];
 const DECIDED = ["BUSINESS", "PERSONAL", "MIXED"];
-const CLASSIFICATIONS = [
-  ...DECIDED,
-  "NOT_YET_PROCESSED",
-  "PROCESSED_UNCLASSIFIED",
-  "SKIPPED_BY_RULE",
-  "FAILED_VALIDATION",
-  "REVIEWED_EXCLUDED",
-];
 const BULK_COLUMNS = [
   "transaction_id",
   "classification",
@@ -296,6 +293,10 @@ const BULK_COLUMNS = [
   "irpf_category",
   "notes",
 ];
+/** A number with a wrong check digit, which the account register refuses; a test
+ * in the owning Python package holds the backend to that answer. */
+const IBAN_THE_BACKEND_REFUSES = "ES9221000418450200051332";
+
 const OWN_ACCOUNT_SECRETS = [
   "iban",
   "swift_bic",
@@ -430,7 +431,7 @@ function filterOf(clauses: JsonValue | undefined) {
       tests.push((m) => m.import_batch_id === value);
     } else if (key === "classification") {
       const wanted = value.toUpperCase();
-      if (!CLASSIFICATIONS.includes(wanted)) return invalid();
+      if (!isClassification(wanted)) return invalid();
       tests.push((m) => m.transaction.business_classification === wanted);
     } else if (key === "text") {
       if (value.length > 128) return invalid();
@@ -444,7 +445,7 @@ function filterOf(clauses: JsonValue | undefined) {
       );
     } else if (key === "direction") {
       const wanted = value.toUpperCase();
-      if (!DIRECTIONS.includes(wanted)) return invalid();
+      if (!isDirection(wanted)) return invalid();
       tests.push((m) => m.transaction.direction === wanted);
     } else if (key === "account") {
       if (!/^acc-[0-9]{2,}$/.test(value)) return invalid();
@@ -963,7 +964,7 @@ export function ledgerFixture(options: Options): LedgerPort {
           return refused("The date is not a calendar day.");
         next[field] = value as string;
       } else if (field === "direction") {
-        if (!value || !DIRECTIONS.includes(value.toUpperCase()))
+        if (!value || !isDirection(value.toUpperCase()))
           return refused("Unknown direction.");
         next.direction = value.toUpperCase();
       } else if (field === "currency") {
@@ -1218,7 +1219,7 @@ export function ledgerFixture(options: Options): LedgerPort {
     });
     if (!AMOUNT.test(amount))
       return refused("The amount is not a canonical decimal.");
-    if (!DIRECTIONS.includes(direction)) return refused("Unknown direction.");
+    if (!isDirection(direction)) return refused("Unknown direction.");
     const classification =
       text(request.business_classification) ?? "NOT_YET_PROCESSED";
     const key = text(request.idempotency_key);
@@ -1854,6 +1855,8 @@ export function ledgerFixture(options: Options): LedgerPort {
       (account) => account.own_account_id === id,
     );
     if (action === "add" && (!iban || !text(request.label))) return invalid();
+    if (iban === IBAN_THE_BACKEND_REFUSES)
+      throw new Stopped("REFUSED_LEDGER_OWN_ACCOUNT_REGISTER_VALIDATION");
     if (action === "update" && !existing)
       throw new Stopped("ERROR_TRANSACTION_VALIDATION");
     const masked = iban
@@ -1952,6 +1955,33 @@ export function ledgerFixture(options: Options): LedgerPort {
     ...movementWork.reads,
     ...setupWork.reads,
     "ledger.known-values": (request) => knownValues(ledger, request),
+    "ledger.rule.trial": (request) => {
+      const answer = answerRuleTrial(
+        request.description_pattern as string,
+        request.transaction_ids as string[],
+        (id) =>
+          ledger.movements.find(
+            (each) => each.transaction.transaction_id === id,
+          )?.transaction,
+        LEDGER_FIXTURE_PROFILE_ID,
+      );
+      if (!answer) throw new Error("unrecorded rule trial");
+      return answer as unknown as JsonObject;
+    },
+    "ledger.staged.check": (request) => {
+      const answer = answerStagedCheck(
+        request as unknown as LedgerStagedCheckRequest,
+        (id) => {
+          const movement = ledger.movements.find(
+            (each) => each.transaction.transaction_id === id,
+          );
+          return movement ? row(movement) : undefined;
+        },
+        LEDGER_FIXTURE_PROFILE_ID,
+      );
+      if (!answer) throw new Error("unrecorded staged check");
+      return answer as unknown as JsonObject;
+    },
     "ledger.list": (request) => list(ledger, request),
     "ledger.view": (request) => {
       const owned = OWNED_PURCHASES[request.transaction_prefix as string];

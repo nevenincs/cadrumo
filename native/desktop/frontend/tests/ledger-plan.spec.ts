@@ -1,3 +1,4 @@
+import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import type { LedgerRow } from "../src/shell/ledger";
 import { RELAY_PAYLOAD_LIMIT } from "../src/shell/relayBounds";
@@ -5,8 +6,6 @@ import { classifyCells, ratioCoverage } from "../src/shell/ledgerCommands";
 import {
   bulkCsv,
   payloadSize,
-  planApply,
-  routeChange,
   splitBulk,
   type BulkRow,
   type LedgerPlan,
@@ -25,6 +24,7 @@ import {
   type StagedRowChanges,
 } from "../src/shell/ledgerStage";
 import { hexId, movement } from "./support/ledger";
+import { planRecorded, recordedCheck } from "./support/stagedCheck";
 
 // How staged changes become operations. No page is opened.
 
@@ -109,20 +109,36 @@ test("every field routes by the operation that accepts it, and by set or clear",
     ["deduction_fact_kind", "clear", true, "classify"],
     ["investment_asset_id", "set", true, "classify"],
   ];
+  const A = hexId("a");
+  const U = hexId("u");
   for (const [field, kind, classified, expected] of cases) {
-    const decision = routeChange(
-      field,
-      kind === "set" ? set("x") : clear,
-      classified,
+    const row = classified ? business(A) : movement(U);
+    const id = row.transaction.transaction_id;
+    const check = recordedCheck(
+      staged({
+        [id]: {
+          // A classification that decides the row; the ledger reads what is staged.
+          [field]:
+            kind === "set"
+              ? set(
+                  field === "business_classification" && classified
+                    ? "BUSINESS"
+                    : "x",
+                )
+              : clear,
+        },
+      }),
+      contextOf(row).rows,
     );
-    const found = "route" in decision ? decision.route : decision.refused;
+    const route = check.rows.get(id)!.routes.find((r) => r.field === field)!;
+    const found = route.route ?? route.refused;
     expect(found, `${field} ${kind} classified=${classified}`).toBe(expected);
   }
 });
 
 test("the bulk never carries a clear: a cleared category goes through a masked single classification", () => {
   const A = hexId("a");
-  const plan = planApply(
+  const plan = planRecorded(
     staged({ [A]: { category_id: clear, notes: set("Revisado") } }),
     contextOf(business(A)),
   );
@@ -147,7 +163,7 @@ test("each bulk row names its classification, and a mixed row its share", () => 
   const A = hexId("a");
   const M = hexId("m");
   const U = hexId("u");
-  const plan = planApply(
+  const plan = planRecorded(
     staged({
       [A]: { category_id: set("telefono") },
       [M]: { iva_rate: set("0.21"), taxable_base: set("30.00") },
@@ -185,7 +201,7 @@ test("each bulk row names its classification, and a mixed row its share", () => 
 
 test("single classification carries its mask sorted, the current classification and a mixed share", () => {
   const M = hexId("m");
-  const plan = planApply(
+  const plan = planRecorded(
     staged(
       {
         [M]: {
@@ -228,7 +244,7 @@ test("single classification carries its mask sorted, the current classification 
 
 test("corrections go through a masked update; tax figures on an unclassified row too", () => {
   const U = hexId("u");
-  const plan = planApply(
+  const plan = planRecorded(
     staged({
       [U]: {
         description: set("TAXI AEROPUERTO"),
@@ -269,7 +285,7 @@ test("a transfer takes no tax field and no business classification", () => {
   const A = hexId("a");
   const T = hexId("t");
   const P = hexId("p");
-  const plan = planApply(
+  const plan = planRecorded(
     staged({
       // A business row turned into a transfer keeps its business facts.
       [A]: { direction: set("INTERNAL_TRANSFER") },
@@ -297,7 +313,7 @@ test("an action and an edit on the same row hold the row; exclude names the clas
   const A = hexId("a");
   const B = hexId("b");
   const C = hexId("c");
-  const plan = planApply(
+  const plan = planRecorded(
     staged(
       {
         [A]: { notes: set("x") },
@@ -333,7 +349,7 @@ test("sealed, inactive and vanished rows hold their changes", () => {
   const I = hexId("i");
   const G = hexId("g");
   const R = hexId("r");
-  const plan = planApply(
+  const plan = planRecorded(
     staged(
       {
         [S]: { category_id: set("telefono") },
@@ -364,7 +380,7 @@ test("what cannot be cleared or needs a classification first is held, never drop
   const U = hexId("u");
   const M = hexId("m");
   const P = hexId("p");
-  const plan = planApply(
+  const plan = planRecorded(
     staged({
       [A]: { notes: clear, usage_ratio_id: clear },
       [U]: { category_id: set("telefono"), counterparty_country: set("FR") },
@@ -411,7 +427,7 @@ test("a model suggestion is not combined with the person's own edits or a second
     decision: "apply",
     reason: "",
   });
-  const plan = planApply(
+  const plan = planRecorded(
     staged({ [A]: { category_id: set("telefono") } }, [
       suggestion("s1", A),
       suggestion("s2", B),
@@ -450,7 +466,7 @@ test("a model approval waits while the same movement has its own edits, and the 
     { description: set("OTRA DESCRIPCION") },
     { counterparty: clear },
   ]) {
-    const plan = planApply(
+    const plan = planRecorded(
       staged({ [A]: edit }, [approval]),
       contextOf(business(A, { counterparty: "ACME" })),
     );
@@ -461,7 +477,7 @@ test("a model approval waits while the same movement has its own edits, and the 
     expect(plan.held).toEqual({ rows: [A], drafts: [], actions: ["s1"] });
   }
   // Alone, it is answered.
-  const alone = planApply(staged({}, [approval]), contextOf(business(A)));
+  const alone = planRecorded(staged({}, [approval]), contextOf(business(A)));
   expect(stepKinds(alone)).toEqual(["answer"]);
 });
 
@@ -483,7 +499,7 @@ test("a model approval and a rules apply that names its movement hold each other
     reaffirm: false,
     transactionIds: ids,
   });
-  const plan = planApply(
+  const plan = planRecorded(
     staged({}, [rules("r1", [B, A]), approval]),
     contextOf(business(A), business(B)),
   );
@@ -495,7 +511,7 @@ test("a model approval and a rules apply that names its movement hold each other
   expect(plan.steps).toEqual([]);
   expect(plan.held.actions.sort()).toEqual(["r1", "s1"]);
   // Rules that do not name it leave the approval alone.
-  const apart = planApply(
+  const apart = planRecorded(
     staged({}, [rules("r2", [B]), approval]),
     contextOf(business(A), business(B)),
   );
@@ -510,7 +526,18 @@ test("reclassifying Mixed movements saves them together: the classification clea
     ["business", "material_oficina"],
     ["personal", undefined],
   ] as const) {
-    const outcome = classifyCells({ kind, ids, category }, rows.rows);
+    const outcome = classifyCells(
+      {
+        kind,
+        ids,
+        category,
+        check: recordedCheck(EMPTY_CONTENT, rows.rows, {
+          ids,
+          categories: category ? [category] : [],
+        }),
+      },
+      rows.rows,
+    );
     expect(outcome.kind).toBe("staged");
     if (outcome.kind !== "staged") return;
     // The share's clear is staged, so the grid shows no share on the row.
@@ -518,7 +545,7 @@ test("reclassifying Mixed movements saves them together: the classification clea
       outcome.event.cells.filter((cell) => cell.field === "business_pct"),
     ).toHaveLength(120);
     const content = reduceStage(EMPTY_STAGE, outcome.event).content;
-    const plan = planApply(content, rows);
+    const plan = planRecorded(content, rows);
     expect(stepKinds(plan)).toEqual(["bulk"]);
     expect(plan.summary).toMatchObject({
       together: 120,
@@ -540,7 +567,7 @@ test("reclassifying Mixed movements saves them together: the classification clea
   // A share cleared on a movement that stays Mixed still needs its own
   // write, and is held for the share Mixed needs.
   const M = hexId("m");
-  const kept = planApply(
+  const kept = planRecorded(
     staged({ [M]: { business_pct: clear } }),
     contextOf(mixed(M)),
   );
@@ -549,7 +576,7 @@ test("reclassifying Mixed movements saves them together: the classification clea
 
 test("the classification write also carries the clears of what it drops on a Personal movement", () => {
   const A = hexId("a");
-  const plan = planApply(
+  const plan = planRecorded(
     staged({
       [A]: {
         business_classification: set("PERSONAL"),
@@ -573,13 +600,13 @@ test("the classification write also carries the clears of what it drops on a Per
 test("bulk requests carry the window's language for their row refusals", () => {
   const A = hexId("a");
   const content = staged({ [A]: { notes: set("Revisado") } });
-  const worded = planApply(content, {
+  const worded = planRecorded(content, {
     ...contextOf(business(A)),
     outputLanguage: "hu",
   });
   const bulk = worded.steps[0] as Extract<PlanStep, { kind: "bulk" }>;
   expect(bulk.request.output_language).toBe("hu");
-  const plain = planApply(content, contextOf(business(A)));
+  const plain = planRecorded(content, contextOf(business(A)));
   expect(
     "output_language" in
       (plain.steps[0] as Extract<PlanStep, { kind: "bulk" }>).request,
@@ -617,7 +644,7 @@ test("new movements need their five facts and keep their key", () => {
     description: "X",
     iva_amount: "1",
   };
-  const plan = planApply(
+  const plan = planRecorded(
     { ...EMPTY_CONTENT, drafts: [ready, missing, mixedDraft, transfer] },
     contextOf(),
   );
@@ -668,7 +695,7 @@ test("the work is ordered: bulk, single classifications, corrections, adds, then
     direction: "INCOMING",
     description: "X",
   };
-  const plan = planApply(
+  const plan = planRecorded(
     staged(
       {
         [A]: { description: set("NUEVA"), category_id: set("telefono") },
@@ -781,14 +808,14 @@ test("the bulk is cut into parts that each fit the host's bound, in order", () =
         step.kind === "bulk",
     );
   // At the relay's own bound the whole bulk is one request.
-  const whole = bulkOf(planApply(content, rows));
+  const whole = bulkOf(planRecorded(content, rows));
   expect(whole).toHaveLength(1);
   expect(payloadSize(whole[0]!.request)).toBeLessThanOrEqual(
     RELAY_PAYLOAD_LIMIT,
   );
   // At a bound a fraction of it, the parts each fit, in order.
   const limit = 8 * 1024;
-  const plan = planApply(content, { ...rows, payloadLimit: limit });
+  const plan = planRecorded(content, { ...rows, payloadLimit: limit });
   const parts = bulkOf(plan);
   expect(parts.length).toBeGreaterThan(1);
   for (const part of parts) {
@@ -829,10 +856,13 @@ test("the bound counts bytes, and a row too large to send alone is held", () => 
   // Quotes are doubled in the CSV and escaped again in its JSON: 4,000 of
   // them are over 16,000 bytes.
   const A = hexId("a");
-  const plan = planApply(staged({ [A]: { notes: set('"'.repeat(4_000)) } }), {
-    ...contextOf(business(A)),
-    payloadLimit: 16_000,
-  });
+  const plan = planRecorded(
+    staged({ [A]: { notes: set('"'.repeat(4_000)) } }),
+    {
+      ...contextOf(business(A)),
+      payloadLimit: 16_000,
+    },
+  );
   expect(blockersOf(plan, A)).toEqual(["too_large"]);
   expect(plan.steps).toEqual([]);
 });
@@ -852,13 +882,20 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
     [2025, new Set(["suministros_home_office_luz"])],
     [2024, null],
   ]);
-  expect(ratioCoverage(ids, rows.rows, "telefonia_fija", ratios)).toEqual({
+  const check = recordedCheck(EMPTY_CONTENT, rows.rows, {
+    ids,
+    categories: ["telefonia_fija"],
+  });
+  expect(
+    ratioCoverage(ids, rows.rows, "telefonia_fija", ratios, check),
+  ).toEqual({
     staged: 1,
     missing: 1,
     unread: 1,
   });
   const outcome = classifyCells(
     {
+      check,
       kind: "mixed",
       ids,
       share: "30",
@@ -876,7 +913,10 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
     [phone.transaction.transaction_id, set("telefonia_fija")],
   ]);
   // The usage ratio goes in the bulk, beside the classification it needs.
-  const plan = planApply(reduceStage(EMPTY_STAGE, outcome.event).content, rows);
+  const plan = planRecorded(
+    reduceStage(EMPTY_STAGE, outcome.event).content,
+    rows,
+  );
   const bulk = plan.steps.find(
     (step): step is Extract<PlanStep, { kind: "bulk" }> => step.kind === "bulk",
   )!;
@@ -890,7 +930,13 @@ test("Mixed names the category's configured usage ratio, through the bulk, and s
   expect(named).toEqual([[phone.transaction.transaction_id, "telefonia_fija"]]);
   // Without the ratios read, Mixed names none and stages the rest.
   const unseen = classifyCells(
-    { kind: "mixed", ids, share: "30", category: "telefonia_fija" },
+    {
+      check,
+      kind: "mixed",
+      ids,
+      share: "30",
+      category: "telefonia_fija",
+    },
     rows.rows,
   );
   expect(
@@ -909,7 +955,7 @@ test("a movement whose sealed state was not read is held, neither sealed nor sav
     [id(unread)]: { notes: set("Unread") },
     [id(sealed)]: { notes: set("Sealed") },
   });
-  const plan = planApply(content, {
+  const plan = planRecorded(content, {
     ...contextOf(read, unread, sealed),
     sealed: new Set([id(sealed)]),
     unread: new Set([id(unread), id(sealed)]),

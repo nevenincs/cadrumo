@@ -1,12 +1,8 @@
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { LedgerParticipation } from "../../../shell/ledger";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
-import {
-  DIRECTIONS,
-  IRPF_CATEGORIES,
-  IVA_CATEGORIES,
-  SPENDING_CATEGORY_FAMILIES,
-} from "../../../shell/ledgerVocabulary";
+import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
+import { DIRECTIONS, sealsMovements } from "../../../shell/ledgerContract";
 import type { Translate } from "../../../shell/strings";
 import {
   categoryOption,
@@ -63,10 +59,8 @@ export function skipName(t: Translate, reason: SkipReason): string {
   }
 }
 
-/** The revision states that seal the movements a revision cites. */
-const SEALING = ["verificado_completo", "presentado"];
 export const seals = (participation: LedgerParticipation) =>
-  SEALING.includes(participation.revision_state);
+  sealsMovements(participation.revision_state);
 
 /** A declaration revision's state in its real words: a local filing is
  * not the AEAT's confirmation, a receipt is. */
@@ -167,14 +161,29 @@ export function modelFailureText(t: Translate, code: string): string {
 
 // ---- Choices -------------------------------------------------------------------
 
-export const categoryOptions = (t: Translate): ComboboxOption[] =>
-  SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+export const categoryOptions = (
+  t: Translate,
+  vocabulary: ServedVocabulary,
+): ComboboxOption[] =>
+  vocabulary.categoryFamilies.flatMap(([family, members]) =>
     members.map((member) => categoryOption(t, family, member)),
   );
-export const ivaCategoryOptions = (t: Translate): ComboboxOption[] =>
-  IVA_CATEGORIES.map((id) => ({ value: id, label: ivaCategoryLabel(t, id) }));
-export const irpfCategoryOptions = (t: Translate): ComboboxOption[] =>
-  IRPF_CATEGORIES.map((id) => ({ value: id, label: irpfCategoryLabel(t, id) }));
+export const ivaCategoryOptions = (
+  t: Translate,
+  vocabulary: ServedVocabulary,
+): ComboboxOption[] =>
+  vocabulary.ivaCategories.map((id) => ({
+    value: id,
+    label: ivaCategoryLabel(t, id),
+  }));
+export const irpfCategoryOptions = (
+  t: Translate,
+  vocabulary: ServedVocabulary,
+): ComboboxOption[] =>
+  vocabulary.irpfCategories.map((id) => ({
+    value: id,
+    label: irpfCategoryLabel(t, id),
+  }));
 export const directionOptions = (t: Translate): ComboboxOption[] =>
   DIRECTIONS.map((id) => ({ value: id, label: directionLabel(t, id) }));
 export const accountOptions = (

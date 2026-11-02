@@ -28,7 +28,7 @@ LEDGER_PARTICIPATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".participation_commands", "participation_rebuild", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".ledger_results", "LedgerParticipationRebuildResult", __package__),
+            target=DeferredTarget(".ledger_participation_results", "LedgerParticipationRebuildResult", __package__),
             identity="ledger.participation.rebuild",
         ),
     ),

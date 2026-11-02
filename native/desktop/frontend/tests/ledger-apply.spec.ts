@@ -1,3 +1,4 @@
+import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import type {
   JsonObject,
@@ -17,7 +18,7 @@ import {
   stageAfterApply,
   type ApplyReport,
 } from "../src/shell/ledgerApply";
-import { planApply, type LedgerPlan } from "../src/shell/ledgerPlan";
+import type { LedgerPlan } from "../src/shell/ledgerPlan";
 import {
   EMPTY_STAGE,
   newDraft,
@@ -34,6 +35,7 @@ import {
   type Call,
   type FakeAnswer,
 } from "./support/ledger";
+import { planRecorded } from "./support/stagedCheck";
 
 // The apply runner over a fake port: these check the order and the
 // outcomes of the orchestration, not the ledger's own answers.
@@ -128,7 +130,7 @@ async function apply(
   rows: Map<string, LedgerRow>,
   answers: Record<string, FakeAnswer[]>,
 ): Promise<{ plan: LedgerPlan; report: ApplyReport; calls: Call[] }> {
-  const plan = planApply(content, { rows });
+  const plan = planRecorded(content, { rows });
   const { port, calls } = fakePort((call) => {
     const queue = answers[definitionOf(call)];
     const next = queue?.shift();
@@ -400,7 +402,7 @@ test("a part refused whole saves nothing, keeps every row and stops the parts af
   };
   const rows = rowsOf(...ids.map((id) => business(id)));
   // A bound small enough for one row per part.
-  const plan = planApply(content, { rows, payloadLimit: 160 });
+  const plan = planRecorded(content, { rows, payloadLimit: 160 });
   expect(plan.steps.filter((step) => step.kind === "bulk")).toHaveLength(4);
   const { port, calls } = fakePort((_, at) =>
     at === 0 ? bulkResult(1, 1) : { refuse: "REFUSED_LEDGER_REVISION_CHANGED" },
@@ -563,7 +565,7 @@ test("a re-read tells whether an unknown write saved; an add is never told", () 
     drafts: [],
     actions: [],
   };
-  const plan = planApply(content, { rows: rowsOf(movement(A)) });
+  const plan = planRecorded(content, { rows: rowsOf(movement(A)) });
   const step = plan.steps[0]!;
   expect(
     resolveUnknown(step, content, rowsOf(movement(A, { notes: "Nota" }))),
@@ -580,7 +582,7 @@ test("a re-read tells whether an unknown write saved; an add is never told", () 
     transactionId: A,
     invoiceId: "inv",
   };
-  const linkPlan = planApply(
+  const linkPlan = planRecorded(
     { rows: {}, drafts: [], actions: [link] },
     { rows: rowsOf(movement(A)) },
   );
@@ -602,7 +604,7 @@ test("a re-read tells whether an unknown write saved; an add is never told", () 
     direction: "INCOMING",
     description: "X",
   };
-  const addPlan = planApply(
+  const addPlan = planRecorded(
     { rows: {}, drafts: [draft], actions: [] },
     { rows: rowsOf() },
   );
@@ -818,7 +820,9 @@ test("a rule apply whose outcome is unknown is reported by its action, never as 
     transactionIds: [A, B],
   };
   const content: StagedContent = { rows: {}, drafts: [], actions: [rules] };
-  const plan = planApply(content, { rows: rowsOf(movement(A), movement(B)) });
+  const plan = planRecorded(content, {
+    rows: rowsOf(movement(A), movement(B)),
+  });
   const step = plan.steps[0]!;
   // The rules decide their movements as they run: a classified movement
   // does not tell whether the rules or someone else classified it.

@@ -8,8 +8,15 @@
 import type {
   LedgerLlmSuggestion,
   LedgerRow,
+  LedgerStagedRowAnswer,
   LedgerTransaction,
 } from "../../../shell/ledger";
+import {
+  takesBusinessShare,
+  takesChanges,
+} from "../../../shell/ledgerContract";
+import { textLimit } from "../../../shell/ledgerLimits";
+import type { StagedCheck } from "../../../shell/ledgerStagedCheck";
 import {
   parseDecimal,
   periodOf,
@@ -23,7 +30,6 @@ import {
   type StageCell,
   type StageField,
   type StagedAction,
-  type StagedContent,
 } from "../../../shell/ledgerStage";
 import { statusWord, type StatusWord } from "../movements/movementWords";
 
@@ -128,26 +134,16 @@ export function selectionCounts(
   };
 }
 
-/** The classifications a person decides; the rest are counted by status. */
-export const DECIDED_CLASSIFICATIONS: ReadonlySet<string> = new Set([
-  "BUSINESS",
-  "PERSONAL",
-  "MIXED",
-]);
-
-/** Whether none of the movements is, or is staged to be, classified: the
- * tax fields take nothing until one is. */
+/** Whether the ledger answers that none of the movements is, or is staged to
+ * be, classified: the tax fields take nothing until one is. With no answer the
+ * tax fields wait too. */
 export function noneClassified(
   rows: readonly LedgerRow[],
-  content: StagedContent,
+  check: StagedCheck | null,
 ): boolean {
-  return rows.every((row) => {
-    const classification = effectiveFacts(
-      row,
-      content.rows[row.transaction.transaction_id],
-    ).business_classification;
-    return !classification || !DECIDED_CLASSIFICATIONS.has(classification);
-  });
+  return rows.every(
+    (row) => !check?.rows.get(row.transaction.transaction_id)?.classified,
+  );
 }
 
 /** The fields the selection inspector sets on every selected movement. */
@@ -174,29 +170,22 @@ const TAX_SETS: ReadonlySet<SetForAllField> = new Set([
   "iva_category",
   "irpf_category",
 ]);
-const DECIDED_WITH_TAX = ["BUSINESS", "MIXED"];
-
 /** Why `field` set on `row` would be skipped, judged on the movement as it
  * will be once what is staged on it is saved. */
 export function setSkip(
   field: SetForAllField,
   row: LedgerRow,
-  content: StagedContent,
+  check: StagedCheck,
   sealed: ReadonlySet<string>,
   /** Movements whose sealed state the page could not read. */
   unread?: ReadonlySet<string>,
 ): SkipReason | null {
   const id = row.transaction.transaction_id;
-  if (row.transaction.lifecycle_state !== "ACTIVE") return "not_active";
+  if (!takesChanges(row.transaction.lifecycle_state)) return "not_active";
   if (sealed.has(id)) return "sealed";
   if (unread?.has(id)) return "sealed_unread";
   if (!TAX_SETS.has(field)) return null;
-  const facts = effectiveFacts(row, content.rows[id]);
-  if (facts.direction === "INTERNAL_TRANSFER") return "transfer";
-  if (facts.business_classification === "PERSONAL") return "personal";
-  if (!DECIDED_WITH_TAX.includes(facts.business_classification ?? ""))
-    return "unclassified";
-  return null;
+  return check.rows.get(id)?.tax_set_skip ?? null;
 }
 
 export type SetForAll = {
@@ -215,7 +204,7 @@ export function setForAll(
   ids: readonly string[],
   rows: ReadonlyMap<string, LedgerRow>,
   context: {
-    content: StagedContent;
+    check: StagedCheck;
     sealed: ReadonlySet<string>;
     unread?: ReadonlySet<string>;
     visible: ReadonlySet<string>;
@@ -228,7 +217,7 @@ export function setForAll(
     const skip = setSkip(
       field,
       row,
-      context.content,
+      context.check,
       context.sealed,
       context.unread,
     );
@@ -257,20 +246,14 @@ export const LIFECYCLE_KINDS = [
 ] as const;
 export type LifecycleAction = (typeof LIFECYCLE_KINDS)[number];
 
-/** Whether a lifecycle action can be staged on `row`. */
+/** Whether a lifecycle action can be staged on a movement, as the ledger
+ * answers; with no answer it waits. */
 export function lifecycleTakes(
   kind: LifecycleAction,
-  row: LedgerRow,
-  sealed: ReadonlySet<string>,
+  answer: LedgerStagedRowAnswer | undefined,
+  sealed: boolean,
 ): boolean {
-  const t = row.transaction;
-  if (sealed.has(t.transaction_id)) return false;
-  if (kind === "restore")
-    return t.lifecycle_state === "ARCHIVED" || t.lifecycle_state === "STASHED";
-  if (t.lifecycle_state !== "ACTIVE") return false;
-  return !(
-    kind === "exclude" && t.business_classification === "REVIEWED_EXCLUDED"
-  );
+  return !sealed && (answer?.lifecycle_actions.includes(kind) ?? false);
 }
 
 /** The staged action of one lifecycle change, by a stable id, so staging
@@ -291,9 +274,10 @@ export function completeCohort(
   objectIds: readonly string[],
   rows: ReadonlyMap<string, LedgerRow>,
 ): boolean {
-  const parts = objectIds.filter(
-    (id) => rows.get(id)?.transaction.lifecycle_state === "ACTIVE",
-  );
+  const parts = objectIds.filter((id) => {
+    const state = rows.get(id)?.transaction.lifecycle_state;
+    return state !== undefined && takesChanges(state);
+  });
   return (
     parts.length >= 2 &&
     parts.length === selected.length &&
@@ -338,15 +322,15 @@ export function splitRemainder(
 
 export type SplitProblem =
   | { kind: "count" }
+  | { kind: "limits_unavailable" }
   | { kind: "amount"; index: number }
   | { kind: "description"; index: number }
+  | { kind: "description_long"; index: number; max: number }
   | { kind: "duplicate"; index: number }
   | { kind: "sum"; difference: string; over: boolean };
 
-/** The most parts one split makes. */
-export const SPLIT_PARTS_MAX = 128;
-
-/** Whether the parts make a split the ledger takes: two or more, each a
+/** Whether the parts make a split the ledger takes: two or more and no
+ * more than the ledger serves, each a
  * positive amount with a description, no two alike, adding up to the
  * movement's amount exactly. The amounts come back in shortest form. */
 export function checkSplit(
@@ -355,7 +339,11 @@ export function checkSplit(
 ):
   | { ok: true; children: { amount: string; description: string }[] }
   | { ok: false; problem: SplitProblem } {
-  if (parts.length < 2 || parts.length > SPLIT_PARTS_MAX)
+  const most = textLimit("split_parts");
+  const longest = textLimit("split_part_description");
+  if (most === null || longest === null)
+    return { ok: false, problem: { kind: "limits_unavailable" } };
+  if (parts.length < 2 || parts.length > most)
     return { ok: false, problem: { kind: "count" } };
   const whole = centsOf(total);
   let sum = 0n;
@@ -368,6 +356,11 @@ export function checkSplit(
     const description = part.description.trim();
     if (description === "")
       return { ok: false, problem: { kind: "description", index } };
+    if ([...description].length > longest)
+      return {
+        ok: false,
+        problem: { kind: "description_long", index, max: longest },
+      };
     const key = `${amount}␟${description}`;
     if (seen.has(key))
       return { ok: false, problem: { kind: "duplicate", index } };
@@ -414,7 +407,10 @@ export function suggestionWrites(
       field: "business_classification",
       value: suggestion.classification,
     });
-  if (suggestion.classification === "MIXED")
+  if (
+    suggestion.classification &&
+    takesBusinessShare(suggestion.classification)
+  )
     writes.push({ field: "business_pct", value: suggestion.business_pct });
   if (suggestion.category)
     writes.push({ field: "category_id", value: suggestion.category });
@@ -431,7 +427,8 @@ export function suggestionWrites(
  * share, which only a new review asked with it can carry. */
 export const needsShare = (suggestion: LedgerLlmSuggestion["suggestion"]) =>
   suggestion.kind !== "split" &&
-  suggestion.classification === "MIXED" &&
+  !!suggestion.classification &&
+  takesBusinessShare(suggestion.classification) &&
   suggestion.business_pct === null;
 
 // ---- Dates ---------------------------------------------------------------------

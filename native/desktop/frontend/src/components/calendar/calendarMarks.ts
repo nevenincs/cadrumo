@@ -1,5 +1,11 @@
 import type { IconName } from "@/components/ui/icon";
-import type { CalendarEvent, CalendarUserState } from "@/shell/views";
+import { closeUnknown } from "@/shell/calendarEntries";
+import type { Translate } from "@/shell/strings";
+import type {
+  CalendarEntry,
+  CalendarEvent,
+  CalendarUserState,
+} from "@/shell/views";
 
 export const STATE_TONE: Record<
   CalendarUserState,
@@ -27,3 +33,13 @@ export const STATE_MARK: Record<CalendarUserState, IconName | null> = {
   filed: "check",
   unknown: "info",
 };
+
+/**
+ * What an obligation's reading is called. A close the product does not know
+ * is called that, in the product's own words for it, rather than by the
+ * general reading it shares with what could not be placed at all.
+ */
+export const stateWords = (t: Translate, entry: CalendarEntry) =>
+  closeUnknown(entry)
+    ? t("workspace.declarations.calendar.legal.unknown")
+    : t(`desktop.calendar.state.${entry.user_state}`);

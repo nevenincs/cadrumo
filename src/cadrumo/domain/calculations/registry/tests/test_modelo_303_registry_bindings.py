@@ -22,14 +22,14 @@ from .modelo_303_registry_constants import (
     _M303_BIENES_INVERSION_REGULARIZACION_CASILLA,
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     _M303_CUOTA_DEVENGADA_TOTAL_CASILLA,
-    _M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
     _M303_PRORRATA_REGULARIZACION_BINDING,
     _M303_PRORRATA_REGULARIZACION_CASILLA,
     _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
-    _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS,
-    _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+    _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
     _WWW1_HOST,
     _WWW6_HOST,
+    M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
+    M303_RECORD_DESIGN_SOURCE_BY_REVISION,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -261,7 +261,7 @@ def test_modelo_303_construct_includes_iva_bindings() -> None:
     assert "modelo-303-iva-autorepercutido-intracomunitaria-cuota" in construct.bindings
 
 
-@pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     revision_id: str,
 ) -> None:
@@ -285,7 +285,7 @@ def test_modelo_303_bienes_inversion_regularizacion_binding_feeds_casilla_43(
     assert casilla_43.binding == _M303_BIENES_INVERSION_REGULARIZACION_BINDING
 
 
-@pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     revision_id: str,
 ) -> None:
@@ -302,13 +302,13 @@ def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     assert selector_as_dict(binding) == {
         "source_modelo": "303",
         "source_casilla_ids": _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS,
-        "source_periods": _M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS,
+        "source_period_selection": _M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION,
         "regularizacion_output": "modelo_303_casilla_44",
     }
     assert binding_aggregation_op(binding) is BindingAggregationOp.SUM
     assert {"ley-37-1992:art-104", "ley-37-1992:art-105"}.issubset(binding.legal_refs)
     assert binding.source_refs == (
-        _M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id],
+        M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id],
         "aeat-modelo-303-procedure",
         "boe-modelo-303-2008-form",
     )
@@ -316,7 +316,7 @@ def test_modelo_303_prorrata_regularizacion_binding_feeds_casilla_44(
     assert citations_by_source["aeat-modelo-303-procedure"].required_text == ("modelo 303",)
 
 
-@pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_id: str) -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -327,7 +327,7 @@ def test_modelo_303_construct_exposes_prorrata_regularizacion_binding(revision_i
     assert "ley-37-1992:art-105" in construct.legal_refs
 
 
-@pytest.mark.parametrize("revision_id", ["2022", *_M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
+@pytest.mark.parametrize("revision_id", ["2022", *M303_EXPLICIT_RECORD_DESIGN_REVISIONS])
 def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_id: str) -> None:
     modelo, _ = load_modelo_303()
     revision = modelo.revisions[revision_id]
@@ -349,6 +349,6 @@ def test_modelo_303_casilla_44_regularizacion_flows_to_total_deducible(revision_
         _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     }
 
-    if revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
+    if revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
         projection = next(formula for formula in revision.formulas if formula.id == "modelo-303-dr303-45-projection")
         assert projection.expression.casilla_id == _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA

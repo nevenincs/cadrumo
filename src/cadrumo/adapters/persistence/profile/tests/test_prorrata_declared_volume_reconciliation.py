@@ -21,7 +21,6 @@ from .....domain.calculations.registry.iva_legal_vocabulary import require_iva_e
 from .....domain.transactions.models import Transaction, TransactionCatalogue
 from ...storage.tests.secure_sql import isolated_runtime_profile
 from ..bienes_inversion import BienesInversionIvaRegisterRepository
-from ..calculation_observations import CalculationObservationRepository
 from ..prorrata_register import ProrrataRegisterRepository
 from ..transactions import TransactionCatalogueRepository
 from .test_iva_ledger_prorrata_apportionment import _fully_taxable_purchase, _fully_taxable_sale
@@ -112,7 +111,6 @@ def test_annual_volume_comparison_preserves_authority_and_marks_incomplete_evide
             period_token=_SETTLEMENT,
             filing_year=2026,
             bucket_id=_BUCKET,
-            observation_repository=CalculationObservationRepository(objects=profile.repository),
             prorrata_register_repository=prorrata,
             transaction_repository=transactions,
             bienes_inversion_repository=bienes,
@@ -161,7 +159,6 @@ def test_unreadable_register_keeps_its_degraded_storage_advisory(tmp_path: Path,
             period_token=period,
             filing_year=2026,
             bucket_id=_BUCKET,
-            observation_repository=CalculationObservationRepository(objects=profile.repository),
             prorrata_register_repository=prorrata,
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET, objects=profile.repository),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(

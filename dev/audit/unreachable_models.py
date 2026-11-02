@@ -192,6 +192,7 @@ class UnreachableCodeResult:
     tests: tuple[TestFinding, ...] = ()
     data_cleared: int = 0
     dev_cleared: int = 0
+    registry_cleared: int = 0
     reason: str = ""
 
     def __post_init__(self) -> None:
@@ -225,6 +226,7 @@ class UnreachableCodeResult:
         packages: tuple[str, ...] = (),
         data_cleared: int = 0,
         dev_cleared: int = 0,
+        registry_cleared: int = 0,
     ) -> UnreachableCodeResult:
         """A complete scan with no findings in its reported population."""
         return cls(
@@ -235,6 +237,7 @@ class UnreachableCodeResult:
             reachable_modules=reachable_modules,
             data_cleared=data_cleared,
             dev_cleared=dev_cleared,
+            registry_cleared=registry_cleared,
         )
 
     @classmethod
@@ -250,6 +253,7 @@ class UnreachableCodeResult:
         packages: tuple[str, ...] = (),
         data_cleared: int = 0,
         dev_cleared: int = 0,
+        registry_cleared: int = 0,
     ) -> UnreachableCodeResult:
         """A scan that found unreachable modules, unused symbols, or orphaned tests."""
         if not modules and not symbols:
@@ -266,6 +270,7 @@ class UnreachableCodeResult:
             tests=tests,
             data_cleared=data_cleared,
             dev_cleared=dev_cleared,
+            registry_cleared=registry_cleared,
         )
 
     @classmethod

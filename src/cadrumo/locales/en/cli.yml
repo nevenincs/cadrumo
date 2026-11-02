@@ -183,7 +183,8 @@ cli:
           For choose, name the reading by its value or by the digest review showed.
           Repeat once per issue; there is no bulk flag.'
         confirm_retention_amount_help: Income-tax withholding amount from the invoice.
-        confirm_retention_rate_help: Income-tax withholding rate from the invoice.
+        confirm_retention_rate_help: 'Income-tax withholding rate from the invoice,
+          as a fraction: 0.15 for 15%.'
         confirm_review_contradicted_regime_message: This document contradicts itself
           about how it is taxed. The detail below names what disagreed with what.
         confirm_review_undetermined_establishment_message: Where a party to this invoice
@@ -430,6 +431,19 @@ cli:
           after an exempt import, H the same via a fiscal representative, A acquisitions
           of goods, T triangular supplies, S services supplied, I services acquired,
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
+        preview_help: 'Preview an invoice draft: the figures, findings and verdict
+          the add operation would reach, without saving anything.'
+        preview_line_help: Repeatable JSON object for one draft line, with optional
+          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` and
+          `iva_amount`. A figure left out stays unknown. Use it instead of --taxable-base.
+        preview_operation_date_role_help: Stored role of the operation date on the
+          invoice a correction restates.
+        preview_printed_total_help: The total printed on the document, compared with
+          the calculated total.
+        preview_stored_grand_total_help: Stored grand total of the invoice a correction
+          restates, from which what is left to pay is worked out.
+        preview_stored_invoice_id_help: Id of the stored invoice a correction restates;
+          with it the verdict covers only the facts stated.
         recargo_help: Equivalence surcharge charged on top of the tax quota (LIVA
           art. 161). It is included in the invoice total, unlike withholding.
         rectifies_help: Number of the invoice this rectificativa corrects.
@@ -461,6 +475,10 @@ cli:
           at least one).
         con_derecho_volume_help: The sector's annual volume of operations with a right
           to deduct (LIVA art. 104, art. 104.Tres exclusions already applied).
+        declare_gross_help: Declare the gross deductible input VAT before prorrata
+          of an earlier liquidation period you entered by hand, so the annual regularisation
+          (LIVA art. 105.Cuatro) can use it when the ledger holds no input for that
+          period.
         declare_sector_help: 'Declare one differentiated sector (LIVA arts. 9.1.c
           / 101): your art. 9.1.c partition, never inferred from your records.'
         ejercicio_help: Filing year the election covers.
@@ -473,6 +491,20 @@ cli:
           option or revocation.
         general_percentage_help: Provisional deduction percentage 0-100 (LIVA art.
           104.Uno + 105.Uno).
+        gross_absent: No gross base is declared for that liquidation period of {ejercicio},
+          so there is nothing to remove.
+        gross_amount_help: Gross deductible input VAT before prorrata, in euros with
+          up to two decimals.
+        gross_duplicate: A gross base is already declared for that liquidation period
+          of {ejercicio}. Nothing was written; pass --replace to replace it.
+        gross_ejercicio_help: Filing year of the liquidation period.
+        gross_evidence_help: Reference to your own document that supports the amount.
+        gross_period_help: Modelo 303 liquidation period before the year's settlement
+          liquidation (a quarter such as 1T or a month such as 03).
+        gross_replace_help: Replace the gross base already declared for the same period
+          and sector.
+        gross_sector_unknown: Sector {sector_id} is not a declared differentiated
+          sector. Nothing was written; declare the sector first with declare-sector.
         group_help: 'Cross-period IVA prorrata register: elect the regime (general
           / especial) and declare differentiated sectors (LIVA arts. 101 / 103 / 105
           / 106).'
@@ -498,6 +530,8 @@ cli:
           or inicio_actividad origin.
         reference_required: Origin {provenance!r} (LIVA art. 105.Dos / 105.Tres) requires
           --reference.
+        remove_gross_help: Remove the gross deductible input VAT you declared for
+          an earlier liquidation period.
         revoke_especial_help: Revoke prorrata especial for an ejercicio after a prior-year
           especial state (LIVA art. 103.Dos.1).
         sector_help: Differentiated-sector id this entry covers; omit for the whole-entity
@@ -570,6 +604,10 @@ cli:
         list_header: "priority\tclassification\tpattern\trule_id"
         list_help: List stored classification rules ordered by priority.
         priority_help: Numeric priority; lower value is evaluated first (default 100).
+        trial_help: Try an unsaved pattern with the rule engine and say which of the
+          named movements it finds, without saving anything.
+        trial_transaction_id_help: Repeatable id of a movement to try the pattern
+          on.
     live:
       app_help: Read-only AEAT live observation commands
       borrador:
@@ -852,7 +890,7 @@ cli:
           ({period}): {suggestion}.'
         unscoped_revision_warning: The list of box sources is not scoped by %{missing_filters};
           it may include source ids from a version of the official form that does
-          not match the declaration used by `aeat app modelo work calculate`.
+          not match the declaration the calculation uses.
         year_help: Tax year of the modelo (e.g. 2026)
       casilla:
         casilla_help: Casilla id or printed casilla number to describe (e.g. 0596).
@@ -1584,7 +1622,7 @@ cli:
         list_no_active_work_summary: No active declaration is available to continue.
         list_selection_required_summary: Choose one declaration before continuing.
         list_single_status_summary: One declaration is available for inspection.
-        m184_socio_handoff_message: 'Régimen de atribución de rentas: socio %{nif}
+        m184_socio_handoff_message: 'Régimen de atribución de rentas: member %{nif}
           (%{nombre}) receives an attributed base of %{importe} EUR (%{porcentaje}%
           share). On the member''s own workspace, record it as attribution_received
           facts (entity_nif, entity_name, share_pct, base_imponible_attributed, filing_year),
@@ -3349,6 +3387,15 @@ cli:
         it to the --llm split proposer.
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
+    staged_check_category_help: Repeatable spending category to judge against a classification.
+    staged_check_draft_help: 'Repeatable JSON object for one new movement: `key` and
+      `fields`.'
+    staged_check_help: Answer staged ledger work the way the writers would take it,
+      without saving anything.
+    staged_check_invalid: Each staged row and draft must be a JSON object of the expected
+      shape.
+    staged_check_row_help: 'Repeatable JSON object for one movement: `transaction_id`,
+      `cells` and optional `evidence_staged` and `m210_staged`.'
     stash:
       help: Set aside (stash) one transaction from your records in the active profile
       id_help: Id of the transaction to set aside

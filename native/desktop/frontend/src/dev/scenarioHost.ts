@@ -51,6 +51,7 @@ import {
 import {
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
+  CLOSE_UNKNOWN_CALENDAR,
   EMPTY_CALENDAR,
   FIXTURE_CALENDAR,
   STRADDLING_CALENDAR,
@@ -139,6 +140,7 @@ export const CALENDAR_SHAPES = {
   straddling: STRADDLING_CALENDAR,
   busy: BUSY_CALENDAR,
   evidence: EVIDENCE_CALENDAR,
+  close_unknown: CLOSE_UNKNOWN_CALENDAR,
 } as const;
 export type CalendarShape = keyof typeof CALENDAR_SHAPES;
 

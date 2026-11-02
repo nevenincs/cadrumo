@@ -29,6 +29,7 @@ from .catalogue_read_projection import CatalogueInvoiceSnapshot
 
 INVOICE_ADD_OPERATION_DEFINITION_ID = "ledger.invoice.add"
 INVOICE_ADD_VALIDATION_REFUSAL_CODE = "REFUSED_INVOICE_ADD_VALIDATION"
+INVOICE_LINE_DESCRIPTION_MAX_LENGTH = 4096
 
 
 class InvoiceAddValidationRefusedError(CadrumoError):
@@ -45,7 +46,7 @@ class InvoiceAddLine(BaseModel):
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    description: str = Field(min_length=1, max_length=4096)
+    description: str = Field(min_length=1, max_length=INVOICE_LINE_DESCRIPTION_MAX_LENGTH)
     quantity: PublicDecimal
     unit_price: PublicDecimal
     subtotal: PublicDecimal
@@ -344,6 +345,7 @@ def _require_invoice_add_refusal_receipt(receipt: OperationTerminalReceipt, resu
 __all__ = [
     "INVOICE_ADD_OPERATION_DEFINITION_ID",
     "INVOICE_ADD_VALIDATION_REFUSAL_CODE",
+    "INVOICE_LINE_DESCRIPTION_MAX_LENGTH",
     "InvoiceAddBusinessPremisesLease",
     "InvoiceAddExecutionResult",
     "InvoiceAddLine",

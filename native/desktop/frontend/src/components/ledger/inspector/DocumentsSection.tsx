@@ -8,6 +8,7 @@ import type {
   EvidenceListResult,
   LedgerPort,
   LedgerRow,
+  LedgerStagedRowAnswer,
 } from "../../../shell/ledger";
 import {
   newIdempotencyKey,
@@ -33,6 +34,7 @@ type DocumentAction = Extract<
 export function DocumentsSection({
   port,
   row,
+  answer,
   evidence,
   actions,
   onStage,
@@ -41,6 +43,8 @@ export function DocumentsSection({
 }: {
   port: LedgerPort;
   row: LedgerRow;
+  /** The ledger's answer about the movement; absent until it has answered. */
+  answer: LedgerStagedRowAnswer | undefined;
   evidence: InspectorRead<EvidenceListResult> | null;
   actions: readonly StagedAction[];
   onStage: (event: StageEvent) => void;
@@ -58,8 +62,9 @@ export function DocumentsSection({
         (record) => record.evidence_id === tx.purchase_invoice_evidence_id,
       ) ?? null)
     : null;
-  const lock =
-    tx.lifecycle_state === "ACTIVE"
+  const lock = !answer
+    ? t("desktop.ledger.apply.reading")
+    : answer.takes_changes
       ? null
       : t("desktop.ledger.inspector.documents.active_only");
   const staged = actions.filter(
@@ -77,12 +82,7 @@ export function DocumentsSection({
     const record = records.find((found) => found.attachment_id === attachment);
     return record ? fileName(record.source_path) : attachment.slice(0, 12);
   };
-  const needsEvidence =
-    tx.lifecycle_state === "ACTIVE" &&
-    tx.direction === "OUTGOING" &&
-    (tx.business_classification === "BUSINESS" ||
-      tx.business_classification === "MIXED") &&
-    !tx.purchase_invoice_evidence_id;
+  const needsEvidence = answer?.evidence_advised ?? false;
 
   const attachable: ComboboxOption[] = records
     .filter(

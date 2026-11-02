@@ -42,7 +42,12 @@ export type LedgerRuleAddRequest = {
   actor?: string | null;
 };
 export type LedgerRuleValidation =
-  "empty_pattern" | "invalid_pattern" | "category" | "invalid_command";
+  | "empty_pattern"
+  | "invalid_pattern"
+  | "pattern_too_long"
+  | "pattern_overrun"
+  | "category"
+  | "invalid_command";
 export type LedgerRuleAddResult = {
   profile_id: string;
   outcome: "added" | "validation_error";
@@ -87,6 +92,7 @@ export type LedgerRuleApplyResult = {
   bucket_event_count: number;
   validation_code: LedgerRuleValidation | null;
   validation_messages: string[];
+  refused_rule_id: string | null;
 };
 
 // ---- Business-use ratios -------------------------------------------------
@@ -324,10 +330,22 @@ export type ProrrataListedEntry = ProrrataEntry & {
   reference_id: string | null;
   reference_kind: string | null;
 };
+/** A gross deductible cuota the operator declared for an earlier
+ * liquidation the ledger holds no input for, with the evidence it rests on. */
+export type ProrrataGrossDeclaration = {
+  ejercicio: number;
+  period: string;
+  sector_id: string | null;
+  gross_cuota: PublicDecimal;
+  evidence_reference: string;
+  provenance: "operator_declared";
+  declared_at: string;
+};
 export type ProrrataListResult = {
   profile_id: string;
   entries: ProrrataListedEntry[];
   sectors: ProrrataSector[];
+  gross_declarations: ProrrataGrossDeclaration[];
   count: number;
 };
 export type ProrrataFinding = {
@@ -351,7 +369,10 @@ export type ProrrataRefusalReason =
   | "seed_existing_blocked"
   | "regulated_override_standing"
   | "sector_prior_definitive_absent"
-  | "sector_settlement_entry_absent";
+  | "sector_settlement_entry_absent"
+  | "gross_declaration_duplicate"
+  | "gross_declaration_absent"
+  | "gross_declaration_sector_unknown";
 /** What a prorrata change did; a refused one is the refusal's detail. */
 export type ProrrataMutationResult = {
   operation_id: string;
@@ -359,6 +380,7 @@ export type ProrrataMutationResult = {
   outcome: "success" | "refused";
   entry: ProrrataEntry | null;
   sector_definition: ProrrataSector | null;
+  gross_declaration: ProrrataGrossDeclaration | null;
   seed_source: {
     modelo: string;
     filing_year: number;
@@ -409,6 +431,21 @@ export type ProrrataSettleSectorRequest = {
   sector_id: string;
   con_derecho_volume: PublicDecimal;
   sin_derecho_volume: PublicDecimal;
+};
+/** The gross deductible cuota of an earlier liquidation, before prorrata,
+ * where the ledger holds no input for it; `replace` swaps a standing one. */
+export type ProrrataDeclareGrossRequest = {
+  ejercicio: number;
+  period: string;
+  sector_id?: string | null;
+  gross_cuota: PublicDecimal;
+  evidence_reference: string;
+  replace?: boolean;
+};
+export type ProrrataRemoveGrossRequest = {
+  ejercicio: number;
+  period: string;
+  sector_id?: string | null;
 };
 
 // ---- Bienes de inversión -------------------------------------------------
@@ -741,14 +778,58 @@ export type InventoryOptionsResult = {
   }[];
 };
 /** What a ledger entry form offers. A code with no key is named by the window
- * with `Intl`; a code's list says what is known, not what is allowed. */
+ * with `Intl`; a code's list says what is known, not what is allowed. A
+ * `group` is the family a value is filed under, as the spending categories
+ * are. */
 export type LedgerEntryOptionsResult = {
   profile_id: string;
   families: {
     family: string;
-    options: { value: string; label_key: string | null }[];
+    options: {
+      value: string;
+      label_key: string | null;
+      group?: string | null;
+    }[];
   }[];
+  limits: LedgerEntryLimits;
 };
+/** The limits an entry form holds typed text to; `shell/ledgerLimits` holds
+ * them for the page. Figures are decimal text, unread here. */
+export type LedgerEntryLimits = {
+  decimal_text_max: number;
+  two_way_decimal: string;
+  decimal_rules: {
+    rule: "amount" | "tax_amount" | "quantity" | "unit_price";
+    decimals: number;
+    zero: boolean;
+  }[];
+  percent_decimals: number;
+  percent_points_max: string;
+  percent_fraction_max: string;
+  percent_bare_fraction_ceiling: string;
+  document_percent_fields: {
+    field: string;
+    unit: "points" | "fraction";
+  }[];
+  rule_pattern_max: number;
+  text_limits: { name: TextLimitName; max: number }[];
+};
+/** What a served text limit bounds: the characters one entry takes, or, for
+ * `split_parts`, the most parts one split makes. */
+export type TextLimitName =
+  | "split_parts"
+  | "split_part_description"
+  | "entry_text"
+  | "group_label"
+  | "classify_token"
+  | "usage_ratio_id"
+  | "event_payload_value"
+  | "evidence_label"
+  | "evidence_note"
+  | "own_account_iban"
+  | "own_account_swift_bic"
+  | "counterparty_tax_id"
+  | "counterparty_note";
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */
 export type InventoryEvidenceAddRequest = { source_path: FileToken };

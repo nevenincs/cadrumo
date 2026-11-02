@@ -89,6 +89,11 @@ class LedgerConfirmationFlowScreen(LedgerWorkspaceScreen):
         """A confirmed write is in flight from submission until it settles."""
         return self._flow_state is LedgerFlowState.SUBMITTING
 
+    @property
+    def can_cancel_flow(self) -> bool:
+        """Whether the transition table still lets this flow reach ``CANCELLED``."""
+        return LedgerFlowState.CANCELLED in ALLOWED_FLOW_TRANSITIONS.get(self._flow_state, frozenset())
+
     def _transition(self, target: LedgerFlowState) -> None:
         if target not in ALLOWED_FLOW_TRANSITIONS.get(self._flow_state, frozenset()):
             raise InternalInvariantError(f"invalid {self.FLOW_NAME} flow transition")

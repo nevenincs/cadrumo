@@ -75,6 +75,8 @@ class RecordingViewSink:
         self.streaming: list[int] = []
         #: When set, a download waits, its source open, for window credit that never comes, as a stalled window's does.
         self.stall_downloads = False
+        #: When set, the lane to the window refuses every image, as a connection lost mid-stream does.
+        self.fail_images = False
         self._changed = threading.Condition(self._lock)
 
     @property
@@ -86,6 +88,8 @@ class RecordingViewSink:
         return bool(self.closed)
 
     def offer_image(self, announcement: ViewImage, image: bytes) -> None:
+        if self.fail_images:
+            raise ConnectionResetError("lane closed")
         assert announcement.byte_length == len(image)
         with self._lock:
             self.images.append(announcement)

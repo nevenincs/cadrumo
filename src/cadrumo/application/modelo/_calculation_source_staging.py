@@ -34,6 +34,7 @@ from types import MappingProxyType
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import revision_bindings_by_id
 from ...domain.calculations.registry.casilla_membership import casillas_by_id
@@ -44,6 +45,11 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.iva_wallet_carry_targets import iva_wallet_owned_binding_ids_for_revision
+from ...domain.calculations.registry.prorrata_regularizacion_bindings import (
+    PRORRATA_SOURCE_CASILLA_BY_ROLE,
+    ProrrataSourceRole,
+    prorrata_source_casilla_id,
+)
 from ...domain.calculations.registry.schema import (
     ModeloRevision,
     RegistrySnapshot,
@@ -51,6 +57,7 @@ from ...domain.calculations.registry.schema import (
 from ...domain.calculations.registry.schema_input_kind import InputKind
 from ...domain.modelos.work_unit import WorkUnit
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
+from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..aggregation.source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -103,11 +110,8 @@ class _ProrrataRegularizacionInputChannels:
     relation_values: Mapping[RelationId, Decimal] | None
 
 
-_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = (
-    "iva.cuota-deducible-total",
-    "iva.prorrata-volumen-con-derecho",
-    "iva.prorrata-volumen-total",
-    "iva.prorrata-porcentaje",
+_PRORRATA_REGULARIZACION_CURRENT_YEAR_CASILLA_IDS: tuple[CasillaId, ...] = tuple(
+    PRORRATA_SOURCE_CASILLA_BY_ROLE[role] for role in ProrrataSourceRole
 )
 
 
@@ -128,6 +132,9 @@ def resolve_prorrata_regularizacion_sources(
     prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
     bienes_inversion_repository: BienesInversionIvaRegisterRepositoryProtocol,
     observation_repository: CalculationObservationRepositoryProtocol,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    investment_asset_register: BienesInversionIvaRegister | None,
+    investment_asset_profile_id: str | None,
 ) -> CalculationSourceResolution:
     """Resolve prorrata and dependent capital-goods staged mesh sources.
 
@@ -162,6 +169,12 @@ def resolve_prorrata_regularizacion_sources(
             capital-goods IVA register.
         observation_repository: Canonical repository for the work unit's
             persisted calculation observations.
+        transaction_repository: Bucket-bound transaction catalogue the
+            prorrata resolver re-derives earlier liquidations' gross cuotas
+            from.
+        investment_asset_register: Capital-goods authority the ledger
+            aggregation proves investment acquisitions against, when loaded.
+        investment_asset_profile_id: Profile owning that register.
 
     Returns:
         The source resolution unchanged when the revision declares no
@@ -190,8 +203,16 @@ def resolve_prorrata_regularizacion_sources(
         current_year_values=materialised.values,
         missing_current_year_casilla_ids=materialised.missing_casilla_ids,
         unresolved_current_year_casilla_ids=materialised.unresolved_casilla_ids,
+        undeclared_current_year_casilla_ids=undeclared_prorrata_volume_casilla_ids(
+            snapshot_revision,
+            casilla_inputs=casilla_inputs,
+            backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
+        ),
         prorrata_register_repository=prorrata_register_repository,
         observation_repository=observation_repository,
+        transaction_repository=transaction_repository,
+        investment_asset_register=investment_asset_register,
+        investment_asset_profile_id=investment_asset_profile_id,
         registry_snapshot=registry_snapshot,
         operation=operation,
     )
@@ -208,6 +229,77 @@ def resolve_prorrata_regularizacion_sources(
     prorrata_resolution = prorrata_resolver.resolve(context)
     bienes_resolution = bienes_resolver.resolve(context)
     return merge_source_resolutions((source_resolution, prorrata_resolution, bienes_resolution))
+
+
+def undeclared_prorrata_volume_casilla_ids(
+    revision: ModeloRevision,
+    *,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    backend_casilla_inputs: Mapping[CasillaId, Decimal] | None,
+) -> tuple[CasillaId, ...]:
+    """Return the annual prorrata volume casillas no caller or source supplied.
+
+    The registry engine gives an unsupplied volume its formula default, which
+    is not a declared fact: the definitive percentage it yields must not
+    settle a regularisation.
+    """
+    volume_ids = tuple(
+        casilla_id
+        for role in (ProrrataSourceRole.VOLUMEN_CON_DERECHO, ProrrataSourceRole.VOLUMEN_TOTAL)
+        if (casilla_id := prorrata_source_casilla_id(revision.bindings, role)) is not None
+    )
+    supplied = {**dict(backend_casilla_inputs or {}), **dict(casilla_inputs or {})}
+    return tuple(casilla_id for casilla_id in volume_ids if casilla_id not in supplied)
+
+
+def stage_prorrata_definitive_percentage(
+    *,
+    registry_snapshot: RegistrySnapshot,
+    work_unit: WorkUnit,
+    source_resolution: CalculationSourceResolution,
+    casilla_inputs: Mapping[CasillaId, Decimal] | None,
+    text_casilla_inputs: Mapping[CasillaId, str] | None,
+    binding_values: Mapping[BindingId, Decimal] | None,
+    enum_binding_values: Mapping[BindingId, str] | None,
+    date_binding_values: Mapping[BindingId, date] | None,
+    relation_values: Mapping[RelationId, Decimal] | None,
+    filing_period_date: date | None,
+) -> Decimal | None:
+    """Return the current calculation's definitive prorrata percentage, when declared.
+
+    Runs the staged registry pass over the already-merged source resolution and
+    reads the revision's definitive-percentage casilla. ``None`` when the
+    revision declares no prorrata regularisation, a volume casilla was never
+    supplied, or the percentage did not resolve -- a default percentage must
+    not deduct the settlement liquidation.
+    """
+    revision = registry_snapshot.revision
+    definitive_id = prorrata_source_casilla_id(revision.bindings, ProrrataSourceRole.PORCENTAJE_DEFINITIVO)
+    if definitive_id is None:
+        return None
+    if undeclared_prorrata_volume_casilla_ids(
+        revision,
+        casilla_inputs=casilla_inputs,
+        backend_casilla_inputs=source_resolution.bound_inputs_by_casilla_id,
+    ):
+        return None
+    materialised = _materialise_prorrata_regularizacion_source_values(
+        registry_snapshot=registry_snapshot,
+        work_unit=work_unit,
+        source_resolution=source_resolution,
+        input_channels=_ProrrataRegularizacionInputChannels(
+            casilla_inputs=casilla_inputs,
+            text_casilla_inputs=text_casilla_inputs,
+            binding_values=binding_values,
+            enum_binding_values=enum_binding_values,
+            date_binding_values=date_binding_values,
+            relation_values=relation_values,
+        ),
+        filing_period_date=filing_period_date,
+    )
+    if definitive_id in materialised.unresolved_casilla_ids:
+        return None
+    return materialised.values.get(definitive_id)
 
 
 def _materialise_prorrata_regularizacion_source_values(
@@ -251,6 +343,7 @@ def _materialise_prorrata_regularizacion_source_values(
             source_resolution.unresolved_binding_ids,
             caller_binding_values,
         ),
+        settled_binding_ids=settled_binding_ids(source_resolution),
         staging_binding_defaults=_iva_wallet_staging_defaults(
             registry_snapshot=registry_snapshot,
             effective_binding_values=effective_binding_values,
@@ -347,6 +440,7 @@ def _calculate_staged_registry_values(
     relation_values: Mapping[RelationId, Decimal] | None,
     unresolved_relation_ids: tuple[RelationId, ...],
     effective_unresolved_binding_ids: tuple[BindingId, ...],
+    settled_binding_ids: tuple[BindingId, ...],
     filing_period_date: date | None,
 ) -> SourceResolutionRegistryValues:
     """Run the registry engine and retain its staged values and diagnostics."""
@@ -369,6 +463,7 @@ def _calculate_staged_registry_values(
         relation_values=relation_values or {},
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=effective_unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids,
         date_binding_values=date_binding_values or None,
     )
     return SourceResolutionRegistryValues(
@@ -391,6 +486,7 @@ def materialise_registry_values_for_source_resolution(
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
     unresolved_binding_ids: tuple[BindingId, ...] = (),
+    settled_binding_ids: tuple[BindingId, ...] = (),
     staging_binding_defaults: Mapping[BindingId, Decimal] | None = None,
     filing_period_date: date | None = None,
 ) -> SourceResolutionRegistryValues:
@@ -424,7 +520,26 @@ def materialise_registry_values_for_source_resolution(
         relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
         effective_unresolved_binding_ids=effective_unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids,
         filing_period_date=filing_period_date,
+    )
+
+
+def settled_binding_ids(source_resolution: CalculationSourceResolution) -> tuple[BindingId, ...]:
+    """Return the bindings whose source answered without a scalar value.
+
+    A binding the owning resolver declared inapplicable to the filer, or
+    whose values arrived on the row channel, stays in the unresolved set for
+    formula operands; the registry engine must still not read its bound
+    casilla as a source that failed.
+    """
+    return tuple(
+        sorted(
+            {
+                *source_resolution.inapplicable_binding_ids,
+                *(binding_id for binding_id, _row_index in source_resolution.row_binding_values),
+            }
+        )
     )
 
 

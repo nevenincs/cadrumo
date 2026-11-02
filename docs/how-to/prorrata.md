@@ -30,6 +30,24 @@ Elect nothing and the tool keeps the whole-entity general treatment its own
 settlement already produces. Use this guide only when the taxpayer elects a
 percentage or splits the business into differentiated sectors.
 
+## Provisional and definitive percentage
+
+Prorrata works with two percentages for each year:
+
+- The **provisional percentage** is the one you elect or carry forward. The
+  periods before the last one deduct input VAT at this percentage (LIVA
+  art. 105.Uno and 105.Dos).
+- The **definitive percentage** is calculated at the end of the year from the
+  year's full-year volumes of operations with and without the right to deduct
+  (LIVA art. 104.Dos). It is never taken from a single quarter. The tool reads
+  those volumes from the annual volume casillas of the settlement period's
+  calculation; if they are not declared, it reports that instead of guessing.
+
+The register stores both. The provisional percentage is the election; the
+definitive one is recorded on the year's entry once it is settled. A year's
+definitive percentage seeds the next year's provisional one with `prorrata
+seed`.
+
 ## Elect general prorrata
 
 Elect the year's general percentage:
@@ -123,6 +141,57 @@ sector's annual volumes of operations with and without the right to deduct.
 especial state, and requires `--evidence-reference`. Run each with `--help` for
 its options.
 
+## Regularise in the last period (casilla 44)
+
+The settlement period of the year is the 4th quarter, or month 12 for a monthly
+filer. In that Modelo 303 the two percentages split the work in two:
+
+- The settlement period's own input VAT deducts at the **definitive**
+  percentage, through the ledger, like any other period's input VAT at its
+  percentage.
+- Casilla 44 (*Regularización prorrata por porcentaje definitivo*, LIVA
+  art. 105.Cuatro) regularises only the **earlier** periods of the year. For
+  each of them the tool takes the gross deductible input VAT, applies the
+  definitive percentage, and subtracts the deduction that period actually
+  practised at the provisional percentage. The difference, positive or
+  negative, goes into casilla 44.
+
+The tool re-derives each earlier period's gross input VAT from your ledger and
+reads the deduction it practised from that period's filed observation. The
+Modelo 390 regularisation field restates the filed settlement casilla 44.
+
+If a source is missing or contradicts another, casilla 44 stays unresolved and
+the calculation reports a finding that names the cause. Nothing defaults to
+zero. See [Unresolved findings](#unresolved-findings).
+
+## Declare a gross base for periods entered by hand
+
+An earlier period you filed outside Cadrumo, or entered by hand, may have no
+deductible input VAT in the ledger. The tool then cannot re-derive its gross
+base. Declare it yourself, per period and, where you declared sectors, per
+sector:
+
+```console
+aeat app ledger prorrata declare-gross --ejercicio <year> --period 1T --amount 400.00 --evidence <your-document-reference>
+```
+
+- `--amount` is the gross deductible input VAT of that period before prorrata,
+  in euros with at most two decimals.
+- `--evidence` names your own document that backs the amount. It is required.
+- `--sector` scopes the declaration to a declared differentiated sector; omit
+  it for the whole-activity entry.
+- `--replace` replaces a declaration already held for the same period and
+  sector. Without it, a second declaration for the same period is refused.
+
+A declaration is your own statement, recorded with the provenance
+`operator_declared`. It is not an AEAT observation. The regularisation uses it
+only for a period whose ledger holds no deductible input. Where the ledger does
+hold input, the ledger wins and must agree with your declaration; a
+disagreement becomes a finding.
+
+Remove a declaration with `aeat app ledger prorrata remove-gross --ejercicio
+<year> --period 1T`, adding `--sector` for a sector entry.
+
 ## Read the settlement advisories
 
 When you calculate the year-end Modelo 303 for the 4th quarter settlement, the tool may
@@ -147,11 +216,47 @@ filing](verification-reports.md).
 
 ## Review the register
 
-List every election and declared sector on the active profile:
+List every election, declared sector and declared gross base on the active
+profile:
 
 ```{cli-sequence} prorrata-list
 :verify: Confirm the register reads back the elections and declared sector.
 ```
+
+Each declared gross base shows its period, sector (if any), gross amount,
+provenance (`operator_declared`), evidence reference and declaration time. The
+text output prints one `gross` line per declaration, after the entries and
+sectors. `--format json` carries the same fields under `gross_declarations`.
+
+## Unresolved findings
+
+The regularisation never fills a gap with a guess. When it cannot calculate
+casilla 44 it leaves the box unresolved and reports a finding. The common ones
+mean:
+
+- **Annual volumes not declared** - declare the year's volumes of operations
+  with and without the right to deduct, so the definitive percentage can be
+  calculated.
+- **Provisional percentage missing** - elect or seed a percentage, or file the
+  prior year's settlement so it can be carried.
+- **Earlier liquidations not filed** - the regularisation covers the year's
+  earlier periods; each one must be filed in Cadrumo or have a declared gross
+  base.
+- **Gross base unknown or disagreeing** - the ledger holds no deductible input
+  for a period that declared some, or the ledger and your declaration differ.
+  Record the input, or declare or replace the gross base.
+- **Ledger and filed liquidation diverge** - the input VAT at the provisional
+  percentage does not reproduce what the period filed. Reconcile them first.
+- **Sector definitive percentage missing** - settle each sector with `prorrata
+  settle-sector` before regularising.
+
+Fix the named cause and recalculate. A finding that asks you to calculate the
+box yourself means the case is outside what the tool derives.
+
+Nothing here files or submits anything. The register, the percentages and the
+declared gross bases are stored locally with the profile, and the calculation
+only fills casilla 44 in a local draft. Filing and any AEAT submission stay
+with you.
 
 ## Next steps
 

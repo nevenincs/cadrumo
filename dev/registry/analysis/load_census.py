@@ -1,11 +1,9 @@
 """Census of the registry load closure: what a load imports, what it runs, and who runs the rest.
 
-Answers one question the campaign left open -- *of everything a sanctioned
-registry load reaches, what actually executes, and for the remainder, which
-entry point owns it?* Two prior design reviews each missed a registry module a
-keyword search did not surface, so the denominator here is derived from the
-import graph and the package directory rather than from whichever modules a
-search returned.
+Answers one question -- *of everything a sanctioned registry load reaches, what
+actually executes, and for the remainder, which entry point owns it?* The
+denominator here is derived from the import graph and the package directory
+rather than from whichever modules a keyword search returned.
 
 Three measurements, kept separate because they answer different questions:
 
@@ -393,9 +391,8 @@ def _with_ancestor_packages(modules: Iterable[str]) -> frozenset[str]:
     loads that parent all the same, and every ancestor above it, so a closure
     built from edges alone omits packages a running load certainly holds.
 
-    Measured before this was added: five modules a real load has in
-    ``sys.modules`` were absent from the universe, four of them packages, and
-    rules naming them were reported stale for naming something real.
+    Without them, a rule naming such a package would be reported stale for
+    naming something real.
 
     Args:
         modules: The modules whose ancestors are wanted, included in the result.
@@ -453,11 +450,11 @@ def _iter_source_files() -> Iterable[Path]:
 def _parse(source: str) -> ast.Module:
     """Parse one source file. Raises on any read, decode, or syntax failure.
 
-    Unlike the earlier swallowing form, the failure is not absorbed here: both
-    callers scan a REFERENCE_SCAN_ROOTS file that resolved to an in-scope
-    module name, and a file they cannot parse must be announced the same way
-    :func:`module_level_importers` announces an unreadable registry module,
-    not silently subtracted from the population they report.
+    The failure is not absorbed here: both callers scan a REFERENCE_SCAN_ROOTS
+    file that resolved to an in-scope module name, and a file they cannot parse
+    must be announced the same way :func:`module_level_importers` announces an
+    unreadable registry module, not silently subtracted from the population they
+    report.
     """
     return ast.parse(source)
 
@@ -581,12 +578,8 @@ def _loop_resolved_targets(
     Reading the tuple recovers targets an argument-only scan reports as
     unknowable, and the cross-domain snapshot checks are exactly this shape.
 
-    The tuple's CONSTRUCTION is deliberately not parsed. It was a literal when
-    this was written and is now built from another module's mapping values, and
-    a scan taught to read that shape would go blind again at the next one - the
-    failure this census already suffered once, silently, until the resolver
-    stopped following the snapshot checks and the loss surfaced as classification
-    rules that appeared stale. Unreadable constructions are handed to the
+    The tuple's CONSTRUCTION is deliberately not parsed, because a scan taught
+    one spelling goes blind at the next. Unreadable constructions are handed to the
     evaluating fallback, which asks the module what the name holds instead of
     deducing it from syntax.
     """
@@ -726,8 +719,8 @@ def _registry_import_targets(
         module: The dotted name of the module containing it.
         defining_modules: The registry package's modules, read once by the
             caller for its whole scan; rescanning the package directory per
-            import statement made the reference map several times slower
-            than parsing every file it reads.
+            import statement would make the reference map several times
+            slower than parsing every file it reads.
 
     Returns:
         Canonical registry module names, possibly empty.
@@ -799,10 +792,9 @@ def build_reference_map() -> ReferenceMap:
 def _reference_map_for(roots: tuple[Path, ...]) -> ReferenceMap:
     """Build the map for one set of scan roots, once per process.
 
-    The scan reads and AST-parses every source file under the roots -- 7,251
-    files, 77.3 MB, measured at 154s -- and the census asks for the map twice,
-    once directly and once inside :func:`run_census`, so a gate file paid for
-    two identical walks of an unchanged tree.
+    The scan reads and AST-parses every source file under the roots, and the
+    census asks for the map twice, once directly and once inside
+    :func:`run_census`, so the same tree would otherwise be walked twice.
 
     Keyed on the ROOTS rather than cached outright: the scan is a pure function
     of the tree they name, and the tests that redirect ``REFERENCE_SCAN_ROOTS``
@@ -945,7 +937,7 @@ def _trace_script(regime: str) -> str:
                         modelo,
                         authority.catalogues,
                         source_root=source_root,
-                        filing_year=FILING_YEAR,
+                        filing_year=authority.supported_filing_years().horizon,
                         period=period,
                     )
                 except Exception:
@@ -960,7 +952,6 @@ from pathlib import Path
 SOURCE = Path({str(SOURCE_ROOT)!r}).resolve()
 TOOL = sys.monitoring
 TOOL_ID = TOOL.PROFILER_ID
-FILING_YEAR = 2024
 
 
 def module_for(filename):
@@ -1150,4 +1141,9 @@ def main(argv: list[str] | None = None) -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    # Under ``-m`` this module is ``__main__``, so the shared graph would pickle as
+    # ``__main__.RuntimeImportGraph``, which the shared-scan reader refuses. Run the
+    # importable copy so its types carry their real module path.
+    from importlib import import_module
+
+    raise SystemExit(import_module("dev.registry.analysis.load_census").main())

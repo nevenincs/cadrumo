@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-110` · **Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
+**Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
 
 <!-- preserved:article -->
 ## Scope and method

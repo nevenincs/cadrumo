@@ -374,6 +374,9 @@ test("the check lists every finding under its level, in plain words only", async
     });
     const item = level.getByRole("listitem").filter({ hasText: line.message });
     await expect(item).toContainText(line.action);
+    // A calculation note's own account, worded for the filer, is drawn under
+    // its sentence, as a finding's kind is.
+    if (line.detail) await expect(item).toContainText(line.detail);
     await expect(item).not.toContainText(line.technical);
   }
 });
@@ -920,6 +923,53 @@ test("an export that cannot vouch for its completeness says so", async ({
   await expect(
     target.getByText(label("workspace.modelo.filing.completeness_unverified")),
   ).toBeVisible();
+});
+
+/** The warning an export states when its result says no direct-debit cutoff
+ * was checked. */
+const CUTOFF_UNVERIFIED = "tui.modelo.export.result.warning.cutoff_unverified";
+
+test("an export whose result says its direct-debit cutoff was checked states no cutoff warning", async ({
+  page: target,
+}) => {
+  const exported = envelope<{
+    fichero_boe: { domiciliation_cutoff_unverified: boolean };
+  }>("export-130");
+  expect(exported.fichero_boe.domiciliation_cutoff_unverified).toBe(false);
+  await filing(target, "exported");
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+    })
+    .click();
+  const saved = target.getByText(
+    label("workspace.modelo.filing.saved", { name: "modelo-130-2026-1T.boe" }),
+  );
+  await expect(saved).toBeVisible();
+  await expect(target.getByText(label(CUTOFF_UNVERIFIED))).toHaveCount(0);
+});
+
+test("an export whose result says no direct-debit cutoff was checked says so beside the saved file", async ({
+  page: target,
+}) => {
+  await filing(target, "export-cutoff-unverified");
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+    })
+    .click();
+  const notice = target.getByRole("status").filter({
+    hasText: label("workspace.modelo.filing.saved", {
+      name: "modelo-130-2026-1T.boe",
+    }),
+  });
+  await expect(notice).toBeVisible();
+  // The warning is the sentence the command line states for the same flag,
+  // in the notice that says the file is not proof of filing.
+  await expect(notice.getByText(label(CUTOFF_UNVERIFIED))).toBeVisible();
+  await expect(
+    notice.getByText(label("workspace.modelo.filing.completeness_unverified")),
+  ).toHaveCount(0);
 });
 
 test("an export whose settlement was not seen is unknown and holds", async ({

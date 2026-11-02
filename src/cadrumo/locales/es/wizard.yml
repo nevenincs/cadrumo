@@ -23,7 +23,7 @@ wizard:
     checkbox_required: Selecciona al menos una opción para %{prompt_key}.
     checkbox_unknown: 'Valor no reconocido para %{flag} (%{prompt_key}): %{raw}. Opciones
       válidas: %{choices}.'
-    checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para checkbox.
+    checkbox_without_choices: La pregunta %{prompt_key} no declara opciones para `checkbox`.
     eu_eea_country_required: '%{flag} es obligatorio cuando %{condition_flag} indica
       residencia en la UE o el EEE.'
     invalid_confirm: 'Respuesta booleana no válida para %{prompt_key}: %{raw}.'
@@ -36,7 +36,7 @@ wizard:
     invalid_tax_id: 'NIF/CIF/DNI/NIE no válido para %{prompt_key}: %{raw}. %{detail}'
     select_unknown: 'Valor no reconocido para %{flag} (%{prompt_key}): %{raw}. Opciones
       válidas: %{choices}.'
-    select_without_choices: La pregunta %{prompt_key} no declara opciones para select.
+    select_without_choices: La pregunta %{prompt_key} no declara opciones para `select`.
     spouse_tax_id_required_joint: '%{flag} es obligatorio cuando %{condition_flag}
       es tributación conjunta.'
     unsupported_console: "El asistente guiado necesita una terminal interactiva, y\

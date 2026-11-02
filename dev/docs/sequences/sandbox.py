@@ -297,12 +297,11 @@ def owned_scratch_directory(prefix: str) -> Generator[Path]:
     """Hold one scratch directory under the worktree's temporary root, removed by its owner.
 
     A sandbox's runtime child or database engine can still hold a handle when
-    its scope ends, which on Windows refuses the removal; ignoring that error
-    is how every interrupted or slow-to-release run left a whole sandbox behind.
-    The directory therefore names its owning process: a removal refused at the
-    end of the scope is retried when the process exits, and any directory of
-    the same prefix whose owner is no longer running is reaped before a new one
-    is made, so a run killed outright is cleaned up by the next one.
+    its scope ends, which on Windows refuses the removal. The directory therefore
+    names its owning process: a removal refused at the end of the scope is
+    retried when the process exits, and any directory of the same prefix whose
+    owner is no longer running is reaped before a new one is made, so a run
+    killed outright is cleaned up by the next one.
 
     Args:
         prefix: The scratch family, ending in ``-``; one per kind of sandbox.
@@ -341,12 +340,11 @@ def _sandbox_template() -> Path:
     """Return a sandbox state directory with the profile already published.
 
     Publishing the sandbox profile (capsule, facts, setup, retention and
-    legal-hold observations) is the same work for every sequence and was most
-    of each sandbox's cost. It is done once per process and per authority
-    generation and effective synthetic password, through the production writers,
-    then closed so every file is at rest before it is copied. The shared test
-    DEK depends only on the fixed profile identity, so it adds no settings input
-    to this cache identity.
+    legal-hold observations) is the same work for every sequence. It is done
+    once per process and per authority generation and effective synthetic
+    password, through the production writers, then closed so every file is at
+    rest before it is copied. The shared test DEK depends only on the fixed
+    profile identity, so it adds no settings input to this cache identity.
     """
     from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 
@@ -406,7 +404,7 @@ def _neutralized_ambient_env() -> Generator[None]:
     Settings resolution inside the sandbox re-reads the process environment on
     every :class:`Settings` instantiation, so any operator-exported variable
     would otherwise flow straight into sandboxed frame executions. Everything
-    removed is restored verbatim on exit. This is now the SOLE operator-state
+    removed is restored verbatim on exit. This is the SOLE operator-state
     channel this sandbox must close: production :class:`~cadrumo.core.config.Settings`
     carries no dotenv source of its own (``settings_customise_sources`` never
     returns one), so the only remaining route for a development ``env/.env``
@@ -509,15 +507,13 @@ def _absent_credential_vault() -> Generator[None]:
     unstable BY CONSTRUCTION — it encodes the capturing machine, and flips as
     soon as a differently-postured machine runs the gate.
 
-    Pinning absence resolves that without blocking ordinary frames: every host now
-    executes the documented path a machine with no usable vault takes, so the
-    frames stay executed truth and the golden is a property of the sandbox rather
-    than of the contributor's workstation. Absence is the default: a native vault-bearing path
-    WRITES a real wrapped session key into the operator's own credential store
-    (measured: a ``cadrumo:profile-session`` entry under a per-run sandbox bucket
-    id, surviving the run), which a hermetic docs sandbox must never do. The
-    explicit sign-out journeys layer an ephemeral synthetic shared receipt store
-    over this default; they never select the workstation's credential provider.
+    Pinning absence resolves that without blocking ordinary frames: every host executes the
+    documented path a machine with no usable vault takes, so the frames stay executed truth
+    and the golden is a property of the sandbox rather than of the contributor's workstation.
+    Absence is the default: a native vault-bearing path WRITES a real wrapped session key into
+    the operator's own credential store, which a hermetic docs sandbox must never do. The
+    explicit sign-out journeys layer an ephemeral synthetic shared receipt store over this
+    default; they never select the workstation's credential provider.
 
     Both resolution channels are closed, because both are live: the environment
     variable covers the subprocess execution paths, and
@@ -618,11 +614,11 @@ def sequence_sandbox(
         _neutralized_ambient_env(),
         _isolated_external_tool_env(sandbox_root),
         _absent_credential_vault(),
-        # The docs sandbox runs genuinely zero-auth: per the operator ruling,
-        # auth-provider readiness binds only live/AEAT-touching purposes, never
-        # the local build/calculate/verify/file/export flow the sequences drive.
-        # A taxpayer with no auth provider configured completes the whole local
-        # artefact flow, and the docs gates prove that ruled behaviour in CI.
+        # The docs sandbox runs genuinely zero-auth: auth-provider readiness binds
+        # only live/AEAT-touching purposes, never the local build/calculate/verify/
+        # file/export flow the sequences drive. A taxpayer with no auth provider
+        # configured completes the whole local artefact flow, and the docs gates
+        # prove that behaviour in CI.
         override_settings(
             cadrumo_output_language="en",
         ),

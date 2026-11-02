@@ -8,6 +8,10 @@
 # ten-natural-day rechazo tacito window is the value the DEHu service-state
 # axis depends on.
 #
+# - art-30.2, 30.5, 30.6, 31.3 and DA 1.2: computo de plazos. Ground which
+#   days are inhabiles, the extension of an inhabil last day, the calendar an
+#   electronic registry counts on, and the supletory reach of this Ley into
+#   tax procedures.
 # - art-43.2: regimen de notificaciones por medios electronicos. Grounds
 #   the diez-dias-naturales rechazo tacito window for a notification put
 #   at the taxpayer's disposal (DEHu) but not accessed.
@@ -46,6 +50,61 @@ reviewed_by = "agent-authored from bundled ley-39-2015.html#a30; operator to re-
 notes = "Grounds the taxpayer-residence territory whose non-working days extend a filing deadline."
 required_text = [
     "Cuando un día fuese hábil en el municipio o Comunidad Autónoma en que residiese el interesado, e inhábil en la sede del órgano administrativo, o a la inversa, se considerará inhábil en todo caso",
+]
+
+[legal."ley-39-2015:art-30.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-39-2015.html#a30"
+document_id = "BOE-A-2015-10565"
+article = "30.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a30"
+published_at = 2015-10-02
+effective_from = 2016-10-02
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled ley-39-2015.html#a30; operator to re-stamp"
+notes = "Grounds which days are inhábiles when a filing close is extended: Saturdays, Sundays and declared festivos."
+required_text = [
+    "excluyéndose del cómputo los sábados, los domingos y los declarados festivos",
+]
+
+[legal."ley-39-2015:art-31.3"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-39-2015.html#a31"
+document_id = "BOE-A-2015-10565"
+article = "31.3"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#a31"
+published_at = 2015-10-02
+effective_from = 2016-10-02
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled ley-39-2015.html#a31; operator to re-stamp"
+notes = "Grounds the calendar an electronic registry counts plazos on: the sede's own calendar under art. 30.7, without the art. 30.6 taxpayer-territory rule. Supports the national basis of a projected filing close for electronic filing."
+required_text = [
+    "Este será el único calendario de días inhábiles que se aplicará a efectos del cómputo de plazos en los registros electrónicos, sin que resulte de aplicación a los mismos lo dispuesto en el artículo 30.6.",
+]
+
+[legal."ley-39-2015:da-1.2"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "ley"
+corpus_ref = "corpus/normatives/html/ley-39-2015.html#daprimera"
+document_id = "BOE-A-2015-10565"
+article = "DA-1.2"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2015-10565#daprimera"
+published_at = 2015-10-02
+effective_from = 2016-10-02
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled ley-39-2015.html#daprimera; operator to re-stamp"
+notes = "Grounds the supletory application of Ley 39/2015 to tax procedures: their own rules first, then this Ley, which is how the art. 30.5 extension reaches a tax filing close."
+required_text = [
+    "Las siguientes actuaciones y procedimientos se regirán por su normativa específica y supletoriamente por lo dispuesto en esta Ley:",
+    "Las actuaciones y procedimientos de aplicación de los tributos en materia tributaria y aduanera, así como su revisión en vía administrativa.",
 ]
 
 [legal."ley-39-2015:art-43.2"]

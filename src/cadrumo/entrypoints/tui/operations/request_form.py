@@ -76,6 +76,16 @@ class RequestFieldV1:
         """Return the text each enumerated value is offered and entered as."""
         return tuple(_scalar_text(choice) for choice in self.choices)
 
+    @property
+    def is_selection(self) -> bool:
+        """Whether the field is picked from a fixed list rather than typed."""
+        return self.kind in {RequestFieldKind.BOOLEAN, RequestFieldKind.ENUM}
+
+    @property
+    def selection_labels(self) -> tuple[str, ...]:
+        """Return the entries a selection field offers; a boolean offers its two tokens."""
+        return ("true", "false") if self.kind is RequestFieldKind.BOOLEAN else self.choice_labels
+
 
 def _scalar_text(value: object) -> str:
     if value is None:

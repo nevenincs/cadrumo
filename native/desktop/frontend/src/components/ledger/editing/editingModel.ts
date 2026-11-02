@@ -21,14 +21,15 @@ import {
   type GrammarRefusalKey,
   type Parsed,
 } from "../../../shell/ledgerGrammar";
+import { textLimit } from "../../../shell/ledgerLimits";
 import type { LedgerPlan } from "../../../shell/ledgerPlan";
+import type { TextLimitName } from "../../../shell/ledgerSetup";
 import type {
   SinceReadConflict,
   StepOutcome,
   StepReport,
 } from "../../../shell/ledgerApply";
 import {
-  changesIdentity,
   effectiveFacts,
   storedFieldValue,
   unchangedBy,
@@ -42,11 +43,15 @@ import {
   type StagedValue,
 } from "../../../shell/ledgerStage";
 import {
+  DECIDED_CLASSIFICATIONS,
   DIRECTIONS,
-  IRPF_CATEGORIES,
-  IVA_CATEGORIES,
-  SPENDING_CATEGORIES,
-} from "../../../shell/ledgerVocabulary";
+  DRAFT_REQUIRED_FIELDS,
+  REQUIRED_FIELDS,
+  UNCLEARABLE_FIELDS,
+  lockedByDirection,
+  takesBusinessShare,
+  takesChanges,
+} from "../../../shell/ledgerContract";
 import type { ColumnId } from "../movements/movementsModel";
 
 // ---- Columns and fields --------------------------------------------------------
@@ -85,12 +90,10 @@ export const EDIT_KINDS: Partial<Record<ColumnId, EditKind>> = {
   notes: "text",
 };
 
-/** The longest text each one-line field takes, from the update contract. */
-const TEXT_LIMITS: Partial<Record<StageField, number>> = {
-  description: 4096,
-  counterparty: 4096,
-  notes: 4096,
-  group_label: 64,
+/** Which served limit bounds a one-line field: a correction's text, but for
+ * the group label, which has its own. */
+const TEXT_LIMITS: Partial<Record<StageField, TextLimitName>> = {
+  group_label: "group_label",
 };
 
 /** Points typed in a percentage field, said as the grammar reads a percent
@@ -103,19 +106,10 @@ export const pointsText = (held: string): string =>
 export const typedPoints = (said: string): string =>
   said.replace(/\s*%\s*$/, "");
 
-/** The most a text field takes. */
-export const textLimitOf = (field: StageField | DraftField): number =>
-  TEXT_LIMITS[field as StageField] ?? 4096;
-
-/** The columns whose value is a tax fact, which a transfer never takes. */
-const TAX_COLUMNS: ReadonlySet<ColumnId> = new Set([
-  "category",
-  "iva_category",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "irpf_category",
-]);
+/** The most a text field takes, as the ledger serves it, or null where it
+ * has served none. */
+export const textLimitOf = (field: StageField | DraftField): number | null =>
+  textLimit(TEXT_LIMITS[field as StageField] ?? "entry_text");
 
 /** The columns whose change gives a movement a new id. */
 export const IDENTITY_COLUMNS: ReadonlySet<ColumnId> = new Set([
@@ -175,10 +169,8 @@ export type LockReason =
   | { kind: "after_add" }
   | { kind: "derived" };
 
-const TRANSFER = "INTERNAL_TRANSFER";
-
-/** Why `column` of `subject` cannot be edited, or null where it can. A
- * transfer's tax fields are judged on the direction it will have. */
+/** Why `column` of `subject` cannot be edited, or null where it can. The
+ * fields a direction locks are judged on the direction it will have. */
 export function lockReason(
   column: ColumnId,
   subject: EditSubject,
@@ -187,17 +179,23 @@ export function lockReason(
   if (!EDIT_KINDS[column]) return { kind: "derived" };
   if (subject.kind === "draft") {
     if (column === "group_label") return { kind: "after_add" };
-    if (TAX_COLUMNS.has(column) && subject.draft.fields.direction === TRANSFER)
+    const field = draftField(column);
+    if (field && lockedByDirection(subject.draft.fields.direction, field))
       return { kind: "transfer" };
     return null;
   }
   const state = subject.row.transaction.lifecycle_state;
-  if (state !== "ACTIVE") return { kind: "not_active", lifecycle: state };
+  if (!takesChanges(state)) return { kind: "not_active", lifecycle: state };
   if (subject.sealed) return { kind: "sealed" };
-  if (TAX_COLUMNS.has(column)) {
-    const facts = effectiveFacts(subject.row, subject.changes);
-    if (facts.direction === TRANSFER) return { kind: "transfer" };
-  }
+  const field = columnField(column, subject.row);
+  if (
+    field &&
+    lockedByDirection(
+      effectiveFacts(subject.row, subject.changes).direction,
+      field,
+    )
+  )
+    return { kind: "transfer" };
   return null;
 }
 
@@ -226,6 +224,11 @@ export type ChoiceLabels = {
   category: (id: string) => string;
   ivaCategory: (id: string) => string;
   irpfCategory: (id: string) => string;
+  /** The lists the registry serves for the three category columns: empty
+   * until served, so nothing typed is taken for one. */
+  categories: readonly string[];
+  ivaCategories: readonly string[];
+  irpfCategories: readonly string[];
   /** An own account's label, and the ids the register holds. */
   account: (id: string) => string;
   accounts: readonly string[];
@@ -244,9 +247,8 @@ export type CellParse =
 const DIRECTION_ALIASES: Record<string, string> = {
   IN: "INCOMING",
   OUT: "OUTGOING",
-  TRANSFER: TRANSFER,
+  TRANSFER: "INTERNAL_TRANSFER",
 };
-const DECIDED = ["BUSINESS", "PERSONAL", "MIXED"] as const;
 
 const fold = (text: string) =>
   text.normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
@@ -301,11 +303,11 @@ export function parseCell(
     case "direction":
       return choose(raw, DIRECTIONS, labels.direction, DIRECTION_ALIASES);
     case "category":
-      return choose(raw, SPENDING_CATEGORIES, labels.category);
+      return choose(raw, labels.categories, labels.category);
     case "iva_category":
-      return choose(raw, IVA_CATEGORIES, labels.ivaCategory);
+      return choose(raw, labels.ivaCategories, labels.ivaCategory);
     case "irpf_category":
-      return choose(raw, IRPF_CATEGORIES, labels.irpfCategory);
+      return choose(raw, labels.irpfCategories, labels.irpfCategory);
     case "account": {
       if (raw.trim() !== "" && fold(raw) === fold(labels.noAccount))
         return { kind: "value", value: { value: NO_ACCOUNT } };
@@ -315,8 +317,12 @@ export function parseCell(
       // "Mixed 50%", as the grid writes and copies it.
       const shared = /^(.*\S)\s+(\d+(?:\.\d+)?\s*%)$/.exec(raw.trim());
       if (shared) {
-        const head = choose(shared[1]!, DECIDED, labels.classification);
-        if (head.kind !== "value" || head.value.value !== "MIXED")
+        const head = choose(
+          shared[1]!,
+          DECIDED_CLASSIFICATIONS,
+          labels.classification,
+        );
+        if (head.kind !== "value" || !takesBusinessShare(head.value.value))
           return head.kind === "refused"
             ? head
             : { kind: "refused", refusal: { key: "unknown_choice", raw } };
@@ -324,26 +330,20 @@ export function parseCell(
         if (share.kind === "refused") return share;
         if (share.kind === "empty")
           return { kind: "refused", refusal: { key: "needs_share", raw } };
-        return { kind: "value", value: { value: "MIXED", share: share.value } };
+        return {
+          kind: "value",
+          value: { value: head.value.value, share: share.value },
+        };
       }
-      return choose(raw, DECIDED, labels.classification);
+      return choose(raw, DECIDED_CLASSIFICATIONS, labels.classification);
     }
   }
 }
 
 /** The fields Delete never clears: the four facts every movement has, its
  * currency and classification, and notes, which no operation blanks. */
-const REQUIRED: ReadonlySet<string> = new Set([
-  "booked_date",
-  "amount",
-  "direction",
-  "description",
-  "currency",
-]);
-const NO_CLEAR: ReadonlySet<string> = new Set([
-  "business_classification",
-  "notes",
-]);
+const REQUIRED: ReadonlySet<string> = new Set(REQUIRED_FIELDS);
+const NO_CLEAR: ReadonlySet<string> = new Set(UNCLEARABLE_FIELDS);
 
 /** Why clearing `field` is refused, or null where a clear is staged. */
 export function clearRefusal(
@@ -378,7 +378,7 @@ export function rowCells(
       value: { kind: "set", value: input.share },
       stored: storedShare,
     });
-  else if (input.value !== "MIXED" && storedShare != null)
+  else if (!takesBusinessShare(input.value) && storedShare != null)
     cells.push({
       id,
       field: "business_pct",
@@ -404,7 +404,7 @@ export function draftEdits(
   if (field === "business_classification" && input) {
     if (input.share !== undefined)
       edits.push({ key, field: "business_pct", value: input.share });
-    else if (input.value !== "MIXED")
+    else if (!takesBusinessShare(input.value))
       edits.push({ key, field: "business_pct", value: null });
   }
   return edits;
@@ -455,7 +455,7 @@ export function copyCell(
     case "direction":
       return labels.direction(value);
     case "classification":
-      return value === "MIXED" && share !== null
+      return takesBusinessShare(value) && share !== null
         ? labels.mixedShare(copyPercent(share))
         : labels.classification(value);
     case "category":
@@ -669,8 +669,6 @@ export function planPaste(
     });
   }
   const columns: ColumnId[] = [];
-  const identity = new Set<string>();
-  const touched = new Map<string, StagedRowChanges>();
   let touchesIdentity = false;
   for (const { key, column, raw } of targets) {
     if (column === "select") continue;
@@ -691,19 +689,11 @@ export function planPaste(
         : raw.trim() === ""
           ? ({ kind: "empty" } as const)
           : ({ kind: "refused", refusal: { key: "locked", raw } } as const);
-    const before = out.stage.length;
     const placed = placeValue(key, column, subject, input, out, raw);
     if (placed === "blank") blanks += 1;
     if (placed === "staged") {
       changes += 1;
       if (IDENTITY_COLUMNS.has(column)) touchesIdentity = true;
-      if (subject.kind === "row") {
-        const merged = { ...(touched.get(key) ?? subject.changes) };
-        for (const cell of out.stage.slice(before))
-          merged[cell.field] = cell.value;
-        touched.set(key, merged);
-        if (changesIdentity(subject.row, merged).length) identity.add(key);
-      }
     }
   }
   const rows = new Set(targets.map((target) => target.key)).size;
@@ -714,7 +704,7 @@ export function planPaste(
     changes,
     dropped,
     blanks,
-    newIdentity: identity.size,
+    newIdentity: 0,
     needsPreview: block.length > 1 || rows > 1 || touchesIdentity,
   };
 }
@@ -763,7 +753,7 @@ export function planFill(
       }
       const input: CellValue =
         column === "classification" &&
-        source.value === "MIXED" &&
+        takesBusinessShare(source.value) &&
         source.share !== null
           ? { value: source.value, share: source.share }
           : { value: source.value };
@@ -1073,13 +1063,7 @@ export function draftRow(draft: Draft): LedgerRow {
 }
 
 /** The fields a new movement still needs before it can be added. */
-export const DRAFT_REQUIRED: readonly DraftField[] = [
-  "booked_date",
-  "amount",
-  "currency",
-  "direction",
-  "description",
-];
+export const DRAFT_REQUIRED: readonly DraftField[] = DRAFT_REQUIRED_FIELDS;
 export const draftMissing = (draft: Draft): DraftField[] =>
   DRAFT_REQUIRED.filter((field) => !draft.fields[field]);
 

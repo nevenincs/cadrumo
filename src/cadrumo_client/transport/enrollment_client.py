@@ -108,11 +108,7 @@ class NativeEnrollmentClient:
         offer = self._offer
         if offer is not None and _receipt_differs_from_offer(receipt, offer):
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
-        if (
-            earlier is not None
-            and earlier.stage in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}
-            and receipt.stage is not earlier.stage
-        ):
+        if earlier is not None and earlier.stage.is_terminal and receipt.stage is not earlier.stage:
             raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)
         self._receipt = receipt
         return receipt
@@ -224,7 +220,7 @@ class NativeEnrollmentClient:
         This only validates safe facts. The caller's reconciliation must have
         authenticated afresh; this method cannot confer that authority.
         """
-        if self._receipt is None or receipt.stage not in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+        if self._receipt is None or not receipt.stage.is_terminal:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         self._pin_receipt(receipt)
 
@@ -248,7 +244,7 @@ class NativeEnrollmentClient:
     def verified_terminal(self) -> ClientCredentialMetadata | None:
         """Verify terminal delivery against current native custody without exporting a key."""
         receipt = self._receipt
-        if receipt is None or receipt.stage not in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+        if receipt is None or not receipt.stage.is_terminal:
             raise AutomationCustodyError(AutomationCustodyCode.CREDENTIAL_REJECTED)
         if receipt.stage is EnrollmentStage.DECLINED:
             # A declined CANDIDATE retains its published key/reference as

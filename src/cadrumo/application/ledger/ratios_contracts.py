@@ -11,6 +11,7 @@ from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.period import WELL_FORMED_YEAR_FIRST, WELL_FORMED_YEAR_LAST
 from ...core.unit_proportion import is_unit_proportion
 from ..operations.models import CredentialFreeOperationRequest
 
@@ -22,7 +23,7 @@ LEDGER_RATIOS_VALIDATE_OPERATION_DEFINITION_ID = "ledger.ratios.validate"
 LEDGER_RATIOS_CENSO_MISMATCH_REFUSAL_CODE = "REFUSED_FINANCIAL_USAGE_RATIOS_CENSO_MISMATCH"
 LEDGER_RATIOS_NO_OVERRIDE_REFUSAL_CODE = "REFUSED_CLI_VALIDATION_BOUNDARY"
 
-_Year = Annotated[int, Field(ge=1900, le=9999)]
+_Year = Annotated[int, Field(ge=WELL_FORMED_YEAR_FIRST, le=WELL_FORMED_YEAR_LAST)]
 _CategoryToken = Annotated[str, Field(min_length=1, max_length=128)]
 _RatioText = Annotated[str, Field(min_length=1, max_length=128)]
 #: The registry's wording for one category: its label and its notes.

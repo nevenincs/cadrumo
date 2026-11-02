@@ -126,6 +126,11 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # 0 % box -- the return publishes both the rate and the cuota, so the
     # contradiction is checkable arithmetically without any other source.
     CUOTA_ON_ZERO_RATED_ROW = "cuota_on_zero_rated_row"
+    # The declared cuota is not base x the declared tipo within one cent, the
+    # same tolerance the invoice path applies to a line. The rate was already
+    # proven in force on the operation date, so the amount is what disagrees;
+    # routing the row would file a cuota its own base and tipo contradict.
+    CUOTA_DISAGREES_WITH_RATE = "cuota_disagrees_with_rate"
     # The mirror of the above, one field over. The operator declared a category
     # whose cuota is zero BY LAW for the side of the operation this row is on --
     # an issued inversión del sujeto pasivo supply, an exempt or not-subject
@@ -232,14 +237,33 @@ class IvaLedgerAggregationIssueReason(StrEnum):
 #: Shortening the sentence is strictly the lesser loss.
 
 
+class IvaLedgerRowDateSource(StrEnum):
+    """Which of a ledger row's dates stood as its LIVA art. 75 devengo date.
+
+    A row with no recorded ``operation_date`` is dated by its bank movement:
+    the value date, else the booked date. A refusal keyed on that date reads
+    as a fault in the rate or the year when the fact actually missing may be
+    the operation date, so the issue names which date was used.
+    """
+
+    OPERATION_DATE = "operation_date"
+    VALUE_DATE = "value_date"
+    BOOKED_DATE = "booked_date"
+
+
 class IvaLedgerAggregationIssue(BaseModel):
-    """Traceable exclusion emitted while projecting IVA ledger observations."""
+    """Traceable exclusion emitted while projecting IVA ledger observations.
+
+    ``operation_date_source`` is stated only by the refusals that judge the row
+    on its devengo date, and ``None`` elsewhere.
+    """
 
     model_config = _STRICT_FROZEN
 
     transaction_id: str = Field(min_length=1, max_length=128)
     reason: IvaLedgerAggregationIssueReason
     detail: IssueDetail
+    operation_date_source: IvaLedgerRowDateSource | None = None
 
 
 class ProrrataLedgerReference(BaseModel):
@@ -276,6 +300,49 @@ class IvaLedgerSectorApportionment(BaseModel):
     regime: ProrrataRegisterRegime = Field(default_factory=general_prorrata_register_regime)
 
 
+class IvaLedgerSettlementSectorPercentage(BaseModel):
+    """One differentiated sector's settled definitive percentage (LIVA arts. 101.Uno, 105.Cuatro)."""
+
+    model_config = _STRICT_FROZEN
+
+    sector_id: str = Field(min_length=1, max_length=64)
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
+
+
+class IvaLedgerSettlementApportionment(BaseModel):
+    """Definitive prorrata percentage for the year's annual settlement liquidation.
+
+    LIVA art. 105.Cuatro has the last liquidation of the year -- the fourth
+    quarter, or month 12 for a monthly filer -- deduct its own cuotas at the
+    year's definitive percentage, while the regularisation box corrects only
+    the earlier liquidations. Observations dated inside ``period`` are
+    apportioned at ``percentage``; every other observation keeps the
+    provisional percentage of the enclosing apportionment, so a Modelo 390
+    spanning the whole year reproduces each periodic liquidation.
+
+    Under differentiated sectors (LIVA art. 101.Uno) each declared sector
+    settles its own definitive percentage, carried in
+    ``sector_percentages``; ``percentage`` is then the definitive percentage
+    of the cross-sector common-use inputs. Under prorrata especial
+    ``percentage`` reaches only the common-use slice (art. 106.Uno regla 3.ª).
+    """
+
+    model_config = _STRICT_FROZEN
+
+    period: Period
+    percentage: Decimal = Field(..., ge=Decimal("0"), le=HUNDRED)
+    sector_percentages: tuple[IvaLedgerSettlementSectorPercentage, ...] = ()
+
+    @field_validator("sector_percentages")
+    @classmethod
+    def _sector_percentages_are_unique(
+        cls, value: tuple[IvaLedgerSettlementSectorPercentage, ...]
+    ) -> tuple[IvaLedgerSettlementSectorPercentage, ...]:
+        if len({item.sector_id for item in value}) != len(value):
+            raise ValueError("settlement sector percentages must name each sector once")
+        return value
+
+
 class IvaLedgerProrrataApportionment(BaseModel):
     """Prorrata percentage applied to deducible ledger IVA cuotas.
 
@@ -308,6 +375,14 @@ class IvaLedgerProrrataApportionment(BaseModel):
     source_observation_ref: str | None = Field(default=None, min_length=1)
     authorisation_reference: str | None = Field(default=None, min_length=1)
     sector_apportionments: tuple[IvaLedgerSectorApportionment, ...] = ()
+    settlement: IvaLedgerSettlementApportionment | None = None
+    """Definitive percentages for the settlement liquidation, once they are known.
+
+    A differentiated-sector apportionment carries one only when every declared
+    sector has settled its definitive percentage; otherwise the settlement
+    liquidation keeps the provisional percentages while the regularisation box
+    stays unresolved.
+    """
 
 
 class IvaDifferentiatedDeductionContribution(BaseModel):
@@ -340,12 +415,12 @@ class AnnualDeducibleTotalsByRegime(BaseModel):
     exceeds the deducción under the especial regime by ten percent or more.
     ``deduction_under_general`` is mechanically derivable for any bucket (art. 104
     applies one whole-entity percentage), so it is always honest; the especial
-    total (art. 106 per-input classification) is honest only when the register
-    regime is ESPECIAL, or when every deducible soportado row of the ejercicio
-    carries a declared ``input_classification`` — ``unclassified_deducible_count``
-    records how many deducible soportado observations are still unclassified, so
-    the caller can decide whether the especial total is honestly computable or the
-    filer must first classify.
+    total (art. 106 per-input classification) exists only when every deducible
+    soportado row of the ejercicio carries a declared ``input_classification``,
+    whatever the register regime, and is ``None`` otherwise.
+    ``unclassified_deducible_count`` records how many deducible soportado
+    observations are still unclassified, so the caller can tell the filer to
+    classify first.
 
     See Also:
         :func:`compute_annual_deducible_totals_by_regime`
@@ -356,7 +431,7 @@ class AnnualDeducibleTotalsByRegime(BaseModel):
     model_config = _STRICT_FROZEN
 
     deduction_under_general: Decimal = Field(..., ge=Decimal("0"))
-    deduction_under_especial: Decimal = Field(..., ge=Decimal("0"))
+    deduction_under_especial: Decimal | None = Field(..., ge=Decimal("0"))
     unclassified_deducible_count: int = Field(..., ge=0)
     regime: ProrrataRegisterRegime
 
@@ -865,14 +940,43 @@ def sector_scoped_apportionment(
     )
 
 
+def settled_sector_definitive_percentages(
+    register: ProrrataRegister,
+    ejercicio: int,
+) -> tuple[IvaLedgerSettlementSectorPercentage, ...] | None:
+    """Return every declared sector's settled definitive percentage for the ejercicio.
+
+    LIVA art. 101.Uno has each differentiated sector apply its own deduction
+    regime, so its settlement liquidation deducts at the sector's own
+    definitive percentage (art. 105.Cuatro), written on its
+    ``(ejercicio, sector_id)`` register entry when the sector is settled. A
+    whole-entity register returns an empty tuple; a sectorized register with
+    any sector not yet settled returns ``None`` so no sector is settled while
+    another keeps its provisional percentage.
+    """
+    percentages: list[IvaLedgerSettlementSectorPercentage] = []
+    for sector_id in register.sector_ids():
+        entry = register.entry_for(ejercicio, sector_id=sector_id)
+        if entry is None or entry.definitive_percentage is None:
+            return None
+        percentages.append(
+            IvaLedgerSettlementSectorPercentage(sector_id=sector_id, percentage=entry.definitive_percentage)
+        )
+    return tuple(percentages)
+
+
 __all__ = [
     "AnnualDeducibleTotalsByRegime",
     "IvaLedgerAggregation",
     "IvaLedgerAggregationIssue",
     "IvaLedgerAggregationIssueReason",
     "IvaLedgerProrrataApportionment",
+    "IvaLedgerRowDateSource",
     "IvaLedgerSectorApportionment",
+    "IvaLedgerSettlementApportionment",
+    "IvaLedgerSettlementSectorPercentage",
     "ProrrataLedgerReference",
     "aggregate_iva_ledger_observations",
     "aggregate_iva_ledger_observations_from_repositories",
+    "settled_sector_definitive_percentages",
 ]

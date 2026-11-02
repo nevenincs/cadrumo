@@ -32,7 +32,7 @@ See Also:
 from __future__ import annotations
 
 from datetime import date, datetime
-from typing import TYPE_CHECKING, Final
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -45,9 +45,10 @@ from ...domain.buckets.event import BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
 from ...domain.deadlines.festivos import CalendarCCAA
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
+    SEALED_REVISION_STATES,
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionState,
 )
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.protocols import (
@@ -79,17 +80,6 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..live.borrador_100 import Borrador100SnapshotRepository
-
-_VERIFIED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
-    {
-        CalculationRevisionState.VERIFICADO_COMPLETO,
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }
-)
-_FILED_STATES: Final[frozenset[CalculationRevisionState]] = frozenset(
-    {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
-)
 
 
 class ModeloWorkFormLoadV1(BaseModel):
@@ -185,13 +175,19 @@ def modelo_form_deadline(
     )
     if deadline is None:
         return None
+    days_remaining = deadline.days_remaining_on(reference_on)
+    days_overdue = deadline.days_overdue_on(reference_on)
+    if days_remaining is None and days_overdue is None:
+        # The window's close is unknown and its nominal close has passed, so
+        # neither posture can be stated.
+        return None
     return ModeloFormDeadline(
         closes_on=deadline.closes_on,
         nominal_closes_on=deadline.nominal_closes_on,
         holiday_coverage=deadline.holiday_coverage,
         reference_on=reference_on,
-        days_remaining=deadline.days_remaining_on(reference_on),
-        days_overdue=deadline.days_overdue_on(reference_on),
+        days_remaining=days_remaining,
+        days_overdue=days_overdue,
     )
 
 
@@ -294,7 +290,9 @@ def load_modelo_work_form(
         }
     )
     state = review.lifecycle_state
-    return ModeloWorkFormLoadV1(form=form, verified=state in _VERIFIED_STATES, filed=state in _FILED_STATES)
+    return ModeloWorkFormLoadV1(
+        form=form, verified=state in SEALED_REVISION_STATES, filed=state in FILED_REVISION_STATES
+    )
 
 
 def _last_export(

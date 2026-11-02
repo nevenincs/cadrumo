@@ -130,8 +130,8 @@ def test_build_recovery_uses_completed_months_not_day_bracket(operation: PinnedA
     """A filing ~1 completed month late carries 2%, not a coarse bracket midpoint.
 
     Deadline 2026-04-20, presented 2026-06-19 → 1 completed month (the June-20
-    anniversary is not yet reached) → 2% per Art. 27.2. The pre-fix day-bracket
-    table returned 3% for this case; the completed-month computation is exact.
+    anniversary is not yet reached) → 2% per Art. 27.2. The completed-month
+    computation is exact.
     """
     recovery = build_recovery_for_overdue(
         closes_on=date(2026, 4, 20),
@@ -190,12 +190,9 @@ def test_exact_twelve_month_anniversary_stays_in_graduated_band(
 ) -> None:
     """The exact twelve-month anniversary resolves to 13% graduated, NOT the 15% tail.
 
-    Regression for the cross-domain-continuity audit finding
-    ``articulo-27-exact-twelve-month-boundary``: the demonstrated runtime case
-    (plazo 2026-04-20, presented 2027-04-20 — exactly twelve months later) wrongly
-    resolved to the 15% + intereses tail. Per Art. 27.2 LGT the anniversary is the
-    ``término`` of the twelve-month period and still belongs to the graduated
-    1%-per-completed-month band: 12 completed months → 1% + 12% = 13%, no interest.
+    Per Art. 27.2 LGT the anniversary is the ``término`` of the twelve-month period
+    and still belongs to the graduated 1%-per-completed-month band: 12 completed
+    months → 1% + 12% = 13%, no interest.
     """
     recovery = build_recovery_for_overdue(
         closes_on=date(2026, 4, 20),
@@ -238,15 +235,10 @@ def test_recovery_cannot_carry_a_legal_ref_contradicting_its_band(
 ) -> None:
     """The grounding has exactly one home, so two copies cannot disagree.
 
-    ``Recovery`` used to mirror ``recargo_band.legal_ref`` onto a top-level
-    ``legal_ref`` with no equality invariant, so a payload could be built whose
-    top-level reference contradicted its nested one and both survived
-    ``model_dump()``. A renderer reading whichever slot it happened to know
-    about would then cite a different provision than the band it displays.
-
-    Removing the mirror makes the contradiction unconstructible rather than
-    merely discouraged: ``Recovery`` is ``extra="forbid"``, so supplying the
-    retired field is refused outright.
+    ``Recovery`` carries no top-level ``legal_ref`` beside ``recargo_band.legal_ref``.
+    A renderer reading whichever slot it knows about would otherwise cite a different
+    provision than the band it displays. ``Recovery`` is ``extra="forbid"``, so
+    supplying a top-level ``legal_ref`` is refused outright.
     """
     recovery = build_recovery_for_overdue(
         closes_on=date(2026, 4, 20),

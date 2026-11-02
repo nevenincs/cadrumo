@@ -49,6 +49,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'A pénzforgalmi elszámolás időzítési adatai
         ezen az IVA-tételen ellentmondásosak: %{refusal}. Javítsd a főkönyvi tétel
         ügyleti dátumát vagy fizetési bizonyítékát.'
+      cuota_disagrees_with_rate: A megadott %{declared} IVA-összeg nem egyezik a(z)
+        %{base} alap és a(z) %{rate} kulcs szorzatával, ami %{expected}. Javítsd az
+        IVA-összeget, az alapot vagy az IVA-kulcsot.
       deduction_authority_on_non_deducible_row: Az olyan IVA-sor, amely nem hordoz
         levonható adóösszeget, nem viselhet levonási osztályozást; a %{category} IVA-kategória
         %{flow_direction} irányban számol el. Töröld a megadott levonási típust, vagy
@@ -61,6 +64,8 @@ aggregation:
         nincs feloldott ideiglenes százalék.
       domestic_identification_on_intra_community_transaction: A spanyol héa-azonosító
         nem érvényes Közösségen belüli ügylethez.
+      especial_missing_input_classification: 'A különleges arányosításhoz minden levonható
+        tétel felhasználását meg kell adni: egy levonható tételnek nincs besorolása.'
       eu_member_state_on_export_transaction: 'Export vagy exporttal egy tekintet alá
         eső ügylet nem tartalmazhat EU-tagállamot; kapott érték: %{member_state}.'
       exemption_article_outside_domestic_exempt: A(z) %{value} mentességi cikk csak
@@ -72,6 +77,11 @@ aggregation:
         bizonyítékot.'
       investment_observations_missing_bienes_inversion_authority: A beruházási áfa-megfigyelésekhez
         kifejezett tárgyi eszköz nyilvántartás és egyező profiljogosultság szükséges.
+      iva_rate_date_outside_table_coverage_on_movement_date: 'Erre a napra nincs nyilvántartott
+        IVA-kulcs: %{date}. Ez a banki mozgás dátuma, amely az adófizetési kötelezettség
+        keletkezésének dátumaként szolgált, mert a tételen nincs teljesítési dátum.
+        Rögzítsd az értékesítés vagy a szolgáltatás teljesítésének dátumát; ez megoldhatja
+        a problémát.'
       missing_counterparty_establishment_on_export: Az export azért mentes, mert az
         ügylet elhagyja az Uniót, ezért az számít, hol van az ügyfél LETELEPEDVE.
         Rögzítsd az ügyfél országát; a hiányzó vagy ki nem osztott kód semmit sem
@@ -90,10 +100,18 @@ aggregation:
         kifejezett szektorazonosítót.
       sectorized_input_unknown_sector: Egy szektorizált áfa-tétel ismeretlen szektorra
         hivatkozik.
+      settlement_apportionment_sector_mismatch: Az utolsó bevallási időszak végleges
+        százalékainak pontosan az arányosítási nyilvántartásodban rögzített elkülönült
+        ágazatokat kell megnevezniük.
       unaccepted_registry_value: A(z) %{field} mező értéke %{value}, amelyet a rögzített
         adónyilvántartási jogosultság %{effective_date} dátumra nem fogad el, ezért
         a tétel nem kerülhet be az IVA-számításba. Javítsd ezt az értéket a főkönyvi
         tételen.
+      unsupported_iva_rate_on_movement_date: 'A(z) %{rate} IVA-kulcs nem érvényes
+        ezen a napon: %{date}. Ez a banki mozgás dátuma, amely az adófizetési kötelezettség
+        keletkezésének dátumaként szolgált, mert a tételen nincs teljesítési dátum.
+        Rögzítsd az értékesítés vagy a szolgáltatás teljesítésének dátumát; ez megoldhatja
+        a problémát.'
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: Az arányosítási nyilvántartás
@@ -130,6 +148,11 @@ aggregation:
         időszakon kívüli keltezésű megfigyeléseket tartalmaz.
   modelo_bindings:
     errors:
+      invoice_advance_payment_partially_collected: Egy számla előleget rögzít olyan
+        árra, amelyből csak egy rész folyt be. Az előleg után csak a befolyt összegre
+        keletkezik IVA, ezért a számla így nem sorolható bevallási időszakhoz. Rögzítsd
+        az előleget külön számlaként, vagy jelöld ezt fizetettnek, ha az előleg a
+        teljes árat fedezi.
       invoice_line_currency_unconverted: Egy számlasor külföldi pénznemben van megadva,
         és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen a nyomtatványon.
       unsupported_period: Nem támogatott nyomtatvány-időszak a nyilvántartásaidból
@@ -301,7 +324,7 @@ auth:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
       bármely elismert hatóság). Minden Sede-folyamatot támogat.
     certificate_label: Digitális tanúsítvány
-    clave_movil_description: 'Push-jóváhagyásos hitelesítés a Cl@ve-nél regisztrált
+    clave_movil_description: 'Értesítéssel jóváhagyott hitelesítés a Cl@ve-nél regisztrált
       telefon segítségével. Szükséges: DNI/NIE, Cl@ve-regisztráció és párosított eszköz.'
     clave_movil_label: Cl@ve Móvil
     clave_permanente_description: DNI/NIE- és jelszóalapú hitelesítés a Cl@ve Permanente
@@ -1044,6 +1067,7 @@ desktop:
       le az AEAT-től.
     close: Naptár bezárása
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: 'Legkorábbi zárás: {date}'
     empty: Ebben az időszakban nincs bevallási kötelezettség.
     event:
       filing: Bevallás
@@ -1171,7 +1195,6 @@ desktop:
       iban: IBAN
       iban_hint: Egyszer, védett csatornán megy el, utána csak takarva látszik.
       iban_problem:
-        check: Az IBAN ellenőrző számjegyei nem egyeznek.
         shape: Nem IBAN.
       label: Név
       modelo: '{modelo}-s nyomtatvány'
@@ -2289,7 +2312,8 @@ desktop:
         date_not_iso: '„{raw}”: évvel kezdve írd a dátumot: {suggestion}.'
         exponent: '„{raw}” hatványalakban van: írd ki a számjegyeket.'
         grouping: '„{raw}” ezreseket tagol: írd így: {suggestion}.'
-        iban_check: Ebben az IBAN-ban hibás egy számjegy.
+        limits_unavailable: '„{raw}” még nem ellenőrizhető: a főkönyv nem adta meg,
+          mit fogad el ez a mező.'
         line_break: '„{raw}” tabulátort vagy sortörést tartalmaz: maradjon egy sorban.'
         locked: Itt nem szerkeszthető
         needs_share: '„{raw}”: a Vegyes üzleti arányt kér, például Vegyes 50%.'
@@ -2309,7 +2333,6 @@ desktop:
         unknown_choice: „{raw}” nem a választható értékek egyike.
         use: '{suggestion} használata'
         year_not_a_number: „{raw}” nem évszám.
-        year_out_of_range: „{raw}” kívül esik a Cadrumo által kezelt éveken.
         zero: '„{raw}” nulla: az összeg nullánál nagyobb.'
       revert_cell: Cella visszaállítása
       revert_movement: Tétel visszaállítása
@@ -3007,6 +3030,7 @@ desktop:
         choose_category: Válassz kategóriát
         count: Egy felosztás 2–{max} részből áll.
         description: A részek összege {amount}. Az utolsó rész kapja a maradékot.
+        description_long: A(z) {part}. rész leírása legfeljebb {max} karakter lehet.
         description_needed: A(z) {part}. résznek leírás kell.
         duplicate: 'A(z) {part}. rész megegyezik egy másikkal: módosítsd az összegét
           vagy a leírását.'
@@ -3132,6 +3156,10 @@ desktop:
         retention_rate: Retención mértéke
         series: Sorozat
         situacion: Ingatlan helyzete
+      figures_retry: Próbáld újra
+      figures_unavailable: A számok nem érhetők el. A főkönyv nem válaszolt, a piszkozatod
+        megmaradt.
+      figures_updating: A számok frissülnek…
       fixed: A számla azonosítójának része. Módosításhoz töröld, majd add hozzá újra.
       from_lines: A tételsorok szerint
       gone: Ez a számla már nincs a katalógusban.
@@ -3168,6 +3196,7 @@ desktop:
       line:
         actions: Műveletek
         add: Tételsor hozzáadása
+        calculated: 'Számított: {amount}'
         category: Kategória
         choose_rate: Válassz kulcsot
         description: Leírás
@@ -3182,7 +3211,8 @@ desktop:
       lines: Tételsorok
       lines_fixed: Rögzített
       lines_note: Tizedespont, legfeljebb hat tizedes, ezres elválasztó nélkül. A
-        részösszeg és az IVA centre pontosan számolódik.
+        részösszeget és az IVA-t a főkönyv számolja; csak akkor töltsd ki, ha a bizonylaton
+        nyomtatott értéket adod meg.
       linked: Kapcsolt tételek
       linked_count: 'Kapcsolt tételek: {count}'
       links_permanent: 'A kapcsolat végleges: nem távolítható el.'
@@ -3193,11 +3223,11 @@ desktop:
       next_number: 'A(z) {series} sorozat következő száma: {number}'
       next_number_series: Válassz sorozatot a következő szám megjelenítéséhez.
       none: Nincs
+      not_available: Nem érhető el
       not_met: nem teljesül
       not_saved: Nem lett mentve. A módosításaid megmaradtak.
       not_stated: Nincs megadva
       open_duplicate: Megnyitás
-      operation_date_fixed: Csak a számla hozzáadásakor adható meg
       operation_key: '{key} kulcs'
       party: Partner
       payment:
@@ -3213,23 +3243,9 @@ desktop:
         choose_rate: Válassz kulcsot.
         country_letters: Két betű, pl. ES.
         currency_letters: Három betű, pl. EUR.
-        lease_reference_not_allowed: Ennél a helyzetnél nincs kataszteri hivatkozás.
         missing: Kötelező.
         no_line: Adj hozzá legalább egy tételsort.
-        operation_date_fixed: Hozzáadás után módosítható, de nem adható hozzá és nem
-          törölhető.
         payment_id_shape: 64 hexadecimális karakter.
-        printed_differs: A tételsorok összege {total}.
-        recargo_above_iva: Nem haladhatja meg az IVA-t.
-        rectifies_required: Add meg a helyesbített számlát.
-        retention_above_base: Nem haladhatja meg az adóalapot.
-        retention_differs: A mérték alapján {amount}.
-        retention_needs_amount: A mértékhez összeg is kell.
-        series_required: Helyesbítő számlához sorozat szükséges.
-        tax_id_required: Kötelező, kivéve kiállított egyszerűsített számla esetén.
-      rate:
-        exempt: Mentes
-        not_subject: Nem tárgya
       read_failed: A számlák nem olvashatók be.
       refusal:
         ambiguous_grouping: '"{raw}" kétféleképpen érthető. Írd így: 1500 vagy 1,5.'
@@ -3239,6 +3255,8 @@ desktop:
         date_not_iso: '"{raw}": év-hónap-nap alakban írd.'
         exponent: '"{raw}": írd ki a számot teljesen.'
         grouping: '"{raw}": ezres elválasztó nélkül.'
+        limits_unavailable: '„{raw}”: nem ellenőrizhető, amíg a főkönyv meg nem adja,
+          mit fogad el ez a mező.'
         line_break: 'Csak egy sor: tabulátor és sortörés nélkül.'
         meant: 'Erre gondoltál: {suggestion}?'
         not_a_date: '"{raw}" nem dátum.'
@@ -3260,7 +3278,7 @@ desktop:
       remove_question: Törlöd ezt a számlát?
       removed: '{number} számla törölve'
       retention: Retención, a végösszegen kívül
-      retention_presets: Gyakori retención-mértékek
+      retention_implied: A kulcs szerint {amount}.
       review: Áttekintés
       review_changes: Módosítások áttekintése ({count})
       save: Mentés
@@ -3286,6 +3304,8 @@ desktop:
       unmatched: Párosítatlan
       use: Használat
       use_number: '{number} használata'
+      would_refuse: A főkönyv ebben a formában elutasítaná ezt a számlát. Ellenőrizd
+        az adószámát és a bizonylat mezőit.
     irpf_category:
       actividad_economica: Gazdasági tevékenység
       arrendamiento_local: Üzlethelyiség bérlete
@@ -3490,6 +3510,12 @@ desktop:
       reference: Hivatkozás
       reference_hint: Az engedély vagy javaslat, amelyen alapul
       refusal:
+        gross_declaration_absent: 'A nyilvántartás elutasította a törlést: erre az
+          időszakra nincs bruttó bejelentés.'
+        gross_declaration_duplicate: 'A nyilvántartás elutasította a bejelentést:
+          erre az időszakra már van bruttó bejelentés.'
+        gross_declaration_sector_unknown: 'A nyilvántartás elutasította a bejelentést:
+          ez az ágazat nem bejelentett megkülönböztetett ágazat.'
         provenance_not_electable: 'Nem elfogadva: ez a forrás számított, nem választható.'
         provenance_required: 'Nem elfogadva: add meg, honnan származik a százalék.'
         reference_not_permitted: 'Nem elfogadva: ennek a forrásnak nincs hivatkozható
@@ -3655,6 +3681,9 @@ desktop:
       empty: Még nincs szabály.
       expression: Kifejezés
       expression_hint: A leírás bármely részén, kis- és nagybetűtől függetlenül.
+      expression_overrun: Ennek a kifejezésnek a kipróbálása túl sokáig tart a tételeiden.
+        Egyszerűsítsd.
+      expression_too_long: Ez a kifejezés túl hosszú. Legfeljebb {max} karakter lehet.
       expression_unread: Ez az ablak nem tudja értelmezni a kifejezést.
       from_selection: Szabály a kijelölésből
       matches_split: 'Egyezés: {count} · besorolandó: {pending}'
@@ -3677,6 +3706,9 @@ desktop:
         empty_pattern: Írd be a keresendő szavakat.
         invalid_command: A napló nem fogadta el a szabályt.
         invalid_pattern: A napló nem tudja értelmezni a kifejezést.
+        pattern_overrun: Egy mentett szabály kipróbálása túl sokáig tart a tételeiden,
+          ezért semmi sem futott le.
+        pattern_too_long: A kifejezés túl hosszú.
       run_note: Az előnézet nem változtat semmit. A futtatás a többi változtatáshoz
         hasonlóan a változtatásaid közé kerül.
       run_staged: 'Szabályok hozzáadva a változtatásaidhoz · Tételek: {count} · még
@@ -3686,6 +3718,8 @@ desktop:
       saved_toast: 'Szabály mentve · sorrend: {place}'
       stage_run: Futtatás hozzáadása a változtatásaidhoz
       title: Besorolási szabályok
+      trial_failed: Nem érkezett válasz erről a kifejezésről. Amit írtál, megmarad.
+      trial_retry: Próbáld újra
       what: Szavakat keres a tétel leírásában, és eldönti a besorolását.
       words: A leírás tartalmazza
       words_hint: Szavak ebben a sorrendben; a kis- és nagybetű mindegy.
@@ -5984,7 +6018,7 @@ sheets:
       startup_fund_rendimientos_clave: Alapkezelési jövedelem
       street_name: Közterület neve
       street_type: Közterület jellege
-      subclave: Alkulcs
+      subclave: Részkulcs
       supplier_tax_id: Szállító adóazonosítója
       taxable_base: Visszatartási alap
       territorial_deduction_clave: Ceuta vagy Melilla / La Palma
@@ -6653,6 +6687,8 @@ tui:
       errors:
         amount_invalid: Az összeget csak számjegyekkel, tizedesponttal add meg, például
           1500.00.
+        amount_required: 'Add meg az összeget itt: „{field}”. Ha nincs ilyen, írj
+          0.00-t.'
         asset_id_required: Először add meg az elem azonosítóját.
         choice_invalid: 'Válassz az alábbiak közül: {options}.'
         date_invalid: Add meg a dátumot ÉÉÉÉ-HH-NN alakban, például 2025-06-30.
@@ -8870,6 +8906,7 @@ workspace:
         filed: Benyújtottként rögzítve
         not_applicable: Nem alkalmazandó
         overdue: Lejárt
+        unknown: Ismeretlen határidő
         upcoming: Közelgő
       local:
         external_baseline_imported: Külső benyújtás importálva

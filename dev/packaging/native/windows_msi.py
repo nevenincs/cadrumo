@@ -73,7 +73,7 @@ def _staged_manifest(build: Path) -> tuple[Path, dict[str, str], Path, dict[str,
 
 
 def reject_combined_manager_msi(build: Path) -> None:
-    """Prevent the legacy CPack product from owning a manager version and shared entry."""
+    """Refuse CPack's WIX product: a manager version and its shared entry belong to the release MSI."""
     _, _, _, manifest = _staged_manifest(build)
     if any(image.target == "rust_manager" for image in application_images(cast(dict[str, object], manifest["layout"]))):
         raise ValueError("Manager payloads require the authenticated release MSI. " + MAINTENANCE_GATE)

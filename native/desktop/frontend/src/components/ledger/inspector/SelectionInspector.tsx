@@ -35,10 +35,21 @@ import { parseFractionPercent, percentOf } from "../../../shell/ledgerGrammar";
 import { askReview, releaseReview } from "../../../shell/ledgerApply";
 import { planApply, SINGLE_WRITE_SECONDS } from "../../../shell/ledgerPlan";
 import {
+  isDecidedClassification,
+  takesChanges,
+} from "../../../shell/ledgerContract";
+import {
+  checkOnce,
+  NOTHING_CHECKED,
+  stagedCheckRequest,
+  useStagedCheck,
+} from "../../../shell/ledgerStagedCheck";
+import {
   reduceStage,
   type StageEvent,
   type StageState,
 } from "../../../shell/ledgerStage";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { COST_WARNING_WRITES } from "../editing/MovementEditing";
 import { fieldName, valueText } from "../editing/editingWords";
@@ -47,6 +58,7 @@ import {
   classificationLabel,
   directionLabel,
   statusLabel,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import { currencySums } from "../movements/movementsModel";
 import { STATUS_ICONS } from "../movements/MovementCells";
@@ -54,7 +66,6 @@ import { MOVEMENT_TSV_COLUMNS, movementsTsv } from "../transfer/tsv";
 import type { ActionRequest } from "./ActionDialog";
 import type { SectionInspectorContext } from "./inspectorContext";
 import {
-  DECIDED_CLASSIFICATIONS,
   LIFECYCLE_KINDS,
   commonValue,
   completeCohort,
@@ -75,7 +86,10 @@ import {
   skipName,
 } from "./inspectorWords";
 import { useLedgerRead } from "./useInspectorReads";
-import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  useFieldSuggestions,
+  useVocabulary,
+} from "../suggestions/SuggestionsProvider";
 import { useWritePause, WriteHold } from "../WritePause";
 import { formatAmount } from "../../../shared/numbers";
 
@@ -174,6 +188,7 @@ export function SelectionInspector({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const shareId = useId();
   const selected = useMemo(
     () => ids.flatMap((id) => (rows.has(id) ? [rows.get(id)!] : [])),
@@ -192,7 +207,17 @@ export function SelectionInspector({
   const content = stage.content;
   // While none of them is classified, or staged to be, the tax fields take
   // nothing yet.
-  const undecided = noneClassified(selected, content);
+  const checked = useStagedCheck(
+    port,
+    useMemo(
+      () =>
+        stagedCheckRequest(content, rows, {
+          ids: selected.map((row) => row.transaction.transaction_id),
+        }),
+      [content, rows, selected],
+    ),
+  );
+  const undecided = noneClassified(selected, checked.current);
   const sums = currencySums(selected);
   const [share, setShare] = useState("");
   const [group, setGroup] = useState("");
@@ -211,6 +236,9 @@ export function SelectionInspector({
   const holding = useRef<Asked[]>([]);
   const stagedReviews = useRef<ReadonlySet<string>>(new Set());
   const askTurn = useRef(0);
+  const mostParts = useTextLimit("split_parts");
+  const groupLimit = useTextLimit("group_label");
+  const textLimit = useTextLimit("entry_text");
   useEffect(() => {
     portRef.current = port;
   }, [port]);
@@ -260,7 +288,7 @@ export function SelectionInspector({
     "ledger.history.typed",
     { transaction_prefix: first, include_split_siblings: true },
     `${first}:${generation}`,
-    ids.length >= 2 && ids.length <= 128,
+    mostParts !== null && ids.length >= 2 && ids.length <= mostParts,
   );
   const cohort =
     history?.kind === "ready" &&
@@ -287,9 +315,22 @@ export function SelectionInspector({
           count: visibleCount,
         });
 
-  const stageSet = (field: SetForAllField, value: string, force = false) => {
+  const stageSet = async (
+    field: SetForAllField,
+    value: string,
+    force = false,
+  ) => {
+    // The movements may reach beyond those selected and drawn.
+    const check = await checkOnce(
+      port,
+      stagedCheckRequest(content, rows, { ids }),
+    );
+    if (!check) {
+      say(t("desktop.ledger.apply.read_failed"));
+      return;
+    }
     const found = setForAll(field, value, ids, rows, {
-      content,
+      check,
       sealed,
       unread,
       visible,
@@ -320,9 +361,24 @@ export function SelectionInspector({
       skipped,
     ]);
     if (!force) {
-      const before = planApply(content, { rows, sealed, unread }).summary;
-      const after = planApply(reduceStage(stage, event).content, {
+      const next = reduceStage(stage, event).content;
+      const after_ = await checkOnce(
+        port,
+        stagedCheckRequest(next, rows, { ids }),
+      );
+      if (!after_) {
+        say(t("desktop.ledger.apply.read_failed"));
+        return;
+      }
+      const before = planApply(content, {
         rows,
+        check,
+        sealed,
+        unread,
+      }).summary;
+      const after = planApply(next, {
+        rows,
+        check: after_,
         sealed,
         unread,
       }).summary;
@@ -351,7 +407,7 @@ export function SelectionInspector({
     options: ComboboxOption[],
   ) => {
     const preview = setForAll(field, "x", ids, rows, {
-      content,
+      check: checked.current ?? NOTHING_CHECKED,
       sealed,
       unread,
       visible,
@@ -375,7 +431,12 @@ export function SelectionInspector({
           label={label}
           value={null}
           options={options}
-          emptyLabel={t("desktop.ledger.inspector.no_match")}
+          emptyLabel={vocabularyEmpty(
+            t,
+            vocabulary,
+            t("desktop.ledger.inspector.no_match"),
+            options.length,
+          )}
           onCommit={(value) => stageSet(field, value)}
         >
           <Button
@@ -409,7 +470,10 @@ export function SelectionInspector({
     );
     const targets = ids
       .filter((id) => visible.has(id))
-      .filter((id) => rows.get(id)?.transaction.lifecycle_state === "ACTIVE")
+      .filter((id) => {
+        const state = rows.get(id)?.transaction.lifecycle_state;
+        return state !== undefined && takesChanges(state);
+      })
       .filter((id) => !answered.has(id))
       .slice(0, ASK_EACH_MAX);
     setAsking(true);
@@ -574,7 +638,7 @@ export function SelectionInspector({
             })}
             {counts.classifications
               .filter(([classification]) =>
-                DECIDED_CLASSIFICATIONS.has(classification),
+                isDecidedClassification(classification),
               )
               .map(([classification, count]) => (
                 <li key={classification}>
@@ -692,28 +756,28 @@ export function SelectionInspector({
               {choice(
                 "category_id",
                 fieldName(t, "category_id"),
-                categoryOptions(t),
+                categoryOptions(t, vocabulary),
               )}
               {choice(
                 "iva_category",
                 fieldName(t, "iva_category"),
-                ivaCategoryOptions(t),
+                ivaCategoryOptions(t, vocabulary),
               )}
               {choice(
                 "irpf_category",
                 fieldName(t, "irpf_category"),
-                irpfCategoryOptions(t),
+                irpfCategoryOptions(t, vocabulary),
               )}
             </>
           )}
           {(
             [
-              ["group_label", group, setGroup, 64],
-              ["notes", notes, setNotes, 4096],
+              ["group_label", group, setGroup, groupLimit],
+              ["notes", notes, setNotes, textLimit],
             ] as const
           ).map(([field, value, setValue, max]) => {
             const preview = setForAll(field, value || "x", ids, rows, {
-              content,
+              check: checked.current ?? NOTHING_CHECKED,
               sealed,
               unread,
               visible,
@@ -737,7 +801,7 @@ export function SelectionInspector({
                   <TextEditor
                     id={`${shareId}-${field}`}
                     controlSize="sm"
-                    maxLength={max}
+                    maxLength={max ?? undefined}
                     value={value}
                     disabled={blocked}
                     onChange={setValue}

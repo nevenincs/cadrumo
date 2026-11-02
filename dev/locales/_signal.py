@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections import defaultdict
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence, Sized
 from pathlib import Path
 
 from dev._paths import REPO_ROOT
@@ -21,10 +21,13 @@ from .signal_discovery import (
 from .signal_domain_summary import domain_summaries, headline, largest_domain_locale, locale_summaries, next_action
 from .signal_parallel_inventory import parallel_localization_inventory
 from .signal_report import (
+    OUTCOME_ADVISORY,
+    is_advisory_finding,
     signal_catalogue_only_cells,
     signal_dynamic_family_details,
     signal_findings,
     signal_finite_dynamic_keys,
+    signal_outcome,
     signal_translation_backlog,
 )
 from .signal_source_inventory import collect_source_inventory
@@ -80,12 +83,8 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> Local
         finding.get("kind") in {"reserved_placeholder", "translation_invalid_placeholder"}
         for finding in matrix_findings
     )
-    inventory_open = bool(
-        discovery_findings
-        or _source_signal_inventory_open(source_inventory)
-        or _parallel_signal_inventory_open(parallel_inventory)
-        or _spelling_signal_inventory_open(spelling_inventory)
-        or unresolved_families
+    inventory_open = _signal_inventory_open(
+        discovery_findings, source_inventory, parallel_inventory, spelling_inventory, unresolved_families
     )
     domains = domain_summaries(
         required_keys,
@@ -163,12 +162,49 @@ def locale_signal(manager: LocaleManager, repository: Path = REPO_ROOT) -> Local
         "required_keys": sorted(required_keys),
         "dynamic_key_families": dynamic_key_families,
     }
+    advisory_count = sum(1 for finding in findings if is_advisory_finding(finding))
+    cells = matrix["cells"]
+    unready_cells = cells["missing"] + cells["needs_value"] + cells["needs_repair"] + cells["needs_review"]
+    outcome = signal_outcome(findings, unsettled_inventory_or_cells=inventory_open or bool(unready_cells))
+    summary["findings"] = {
+        "blocking": len(findings) - advisory_count,
+        "advisory": advisory_count,
+        "total": len(findings),
+    }
     return {
-        "outcome": "backlog" if findings else "complete",
-        "headline": headline(translation_backlog, locales, largest, inventory_items),
+        "outcome": outcome,
+        "headline": _headline_with_findings(
+            headline(translation_backlog, locales, largest, inventory_items), outcome, advisory_count
+        ),
         "summary": summary,
         "details": details,
     }
+
+
+def _headline_with_findings(base: str, outcome: str, advisory_count: int) -> str:
+    """Keep advisory findings visible in the headline without presenting them as a gate."""
+    if not advisory_count:
+        return base
+    if outcome == OUTCOME_ADVISORY:
+        return f"No blocking locale findings; {advisory_count} advisory findings retained for review."
+    return f"{base} {advisory_count} advisory findings are retained separately and do not gate."
+
+
+def _signal_inventory_open(
+    discovery_findings: Sequence[object],
+    source_inventory: Mapping[str, object],
+    parallel_inventory: Mapping[str, object],
+    spelling_inventory: Mapping[str, object],
+    unresolved_families: Sized,
+) -> bool:
+    """Report whether any inventory authority is unsettled, checking discovery failures first."""
+    return bool(
+        discovery_findings
+        or _source_signal_inventory_open(source_inventory)
+        or _parallel_signal_inventory_open(parallel_inventory)
+        or _spelling_signal_inventory_open(spelling_inventory)
+        or unresolved_families
+    )
 
 
 def _source_signal_inventory_open(source_inventory: Mapping[str, object]) -> bool:

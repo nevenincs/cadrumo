@@ -48,21 +48,21 @@ The strongest controls across this family are exact bucket binding, revision gua
 
 ## Detailed articles
 
-- [Invoice intake, catalogue lifecycle, and operation boundaries](../articles/049-invoice-intake-catalogue-lifecycle-and-operation-boundaries.md) — `STAGE-2-049`
-- [Invoice profile advisories, source-mesh resolution, and linking](../articles/050-invoice-profile-advisories-source-mesh-resolution-and-linking.md) — `STAGE-2-050`
-- [Ledger classification, import/export, and lifecycle services](../articles/051-ledger-classification-import-export-and-lifecycle-services.md) — `STAGE-2-051`
-- [Manual ledger services, evidence operations, and batch ingestion](../articles/052-manual-ledger-services-evidence-operations-and-batch-ingestion.md) — `STAGE-2-052`
-- [IVA classification assembly, confirmation checks, and readiness](../articles/053-iva-classification-assembly-confirmation-checks-and-readiness.md) — `STAGE-2-053`
-- [Confirmation gate, counterparty establishment, and evidence provenance](../articles/054-confirmation-gate-counterparty-establishment-and-evidence-provenance.md) — `STAGE-2-054`
-- [Evidence custody, review, and ingestion operations](../articles/055-evidence-custody-review-and-ingestion-operations.md) — `STAGE-2-055`
-- [Document grounding, evidence routing, history, and import/export](../articles/056-document-grounding-evidence-routing-history-and-import-export.md) — `STAGE-2-056`
-- [Invoice evidence extraction and reviewed confirmation](../articles/057-invoice-evidence-extraction-and-reviewed-confirmation.md) — `STAGE-2-057`
-- [Deterministic invoice labels and core ledger surfaces](../articles/058-deterministic-invoice-labels-and-core-ledger-surfaces.md) — `STAGE-2-058`
-- [LLM ledger review, diagnostics, and merge](../articles/059-llm-ledger-review-diagnostics-and-merge.md) — `STAGE-2-059`
-- [Ledger contracts, attribution, readiness, and ratios](../articles/060-ledger-contracts-attribution-readiness-and-ratios.md) — `STAGE-2-060`
-- [Ledger operations, rule application, and filing readiness](../articles/061-ledger-operations-rule-application-and-filing-readiness.md) — `STAGE-2-061`
-- [Ledger workspace projection and read boundaries](../articles/062-ledger-workspace-projection-and-read-boundaries.md) — `STAGE-2-062`
-- [Profile-scoped IVA prorrata register operations](../articles/095-profile-scoped-iva-prorrata-register-operations.md) — `STAGE-2-095`
+- [Invoice intake, catalogue lifecycle, and operation boundaries](../articles/049-invoice-intake-catalogue-lifecycle-and-operation-boundaries.md)
+- [Invoice profile advisories, source-mesh resolution, and linking](../articles/050-invoice-profile-advisories-source-mesh-resolution-and-linking.md)
+- [Ledger classification, import/export, and lifecycle services](../articles/051-ledger-classification-import-export-and-lifecycle-services.md)
+- [Manual ledger services, evidence operations, and batch ingestion](../articles/052-manual-ledger-services-evidence-operations-and-batch-ingestion.md)
+- [IVA classification assembly, confirmation checks, and readiness](../articles/053-iva-classification-assembly-confirmation-checks-and-readiness.md)
+- [Confirmation gate, counterparty establishment, and evidence provenance](../articles/054-confirmation-gate-counterparty-establishment-and-evidence-provenance.md)
+- [Evidence custody, review, and ingestion operations](../articles/055-evidence-custody-review-and-ingestion-operations.md)
+- [Document grounding, evidence routing, history, and import/export](../articles/056-document-grounding-evidence-routing-history-and-import-export.md)
+- [Invoice evidence extraction and reviewed confirmation](../articles/057-invoice-evidence-extraction-and-reviewed-confirmation.md)
+- [Deterministic invoice labels and core ledger surfaces](../articles/058-deterministic-invoice-labels-and-core-ledger-surfaces.md)
+- [LLM ledger review, diagnostics, and merge](../articles/059-llm-ledger-review-diagnostics-and-merge.md)
+- [Ledger contracts, attribution, readiness, and ratios](../articles/060-ledger-contracts-attribution-readiness-and-ratios.md)
+- [Ledger operations, rule application, and filing readiness](../articles/061-ledger-operations-rule-application-and-filing-readiness.md)
+- [Ledger workspace projection and read boundaries](../articles/062-ledger-workspace-projection-and-read-boundaries.md)
+- [Profile-scoped IVA prorrata register operations](../articles/095-profile-scoped-iva-prorrata-register-operations.md)
 
 
 ```{toctree}

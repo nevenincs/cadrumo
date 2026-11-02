@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 from typing import Literal
 
 from pydantic import BaseModel, ValidationError
@@ -13,10 +13,11 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import InternalInvariantError
+from ...core.errors.hierarchy import CoreValidationError, InternalInvariantError
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.invoice_legal_classification import (
     InvoiceLegalClassificationCatalogue,
@@ -30,6 +31,7 @@ from ...domain.calculations.registry.iva_rate_kind_catalogue import (
     IvaRateKindCatalogue,
     resolve_iva_rate_kind_catalogue,
 )
+from ...domain.invoices.business_premises import BusinessPremisesLease
 from ...domain.invoices.enums import InvoiceClass, IvaRate, iva_rate_slots_on
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceLine
@@ -60,7 +62,11 @@ from .catalogue_creation import (
     build_catalogue_invoice,
     create_catalogue_invoice,
 )
-from .catalogue_creation_ports import CatalogueCreationPorts, CatalogueCreationPortsFactory
+from .catalogue_creation_ports import (
+    CatalogueCreationPorts,
+    CatalogueCreationPortsFactory,
+    CatalogueInvoiceRateProviderPort,
+)
 from .catalogue_read_projection import CatalogueInvoiceSnapshot
 from .simplificada_advisory import SimplificadaTaxIdAdvisory, resolve_simplificada_tax_id_advisory
 
@@ -106,6 +112,18 @@ class InvoiceAddExecutor:
                 authority_operation=authority_operation,
             )
         except (InvoiceValidationError, ValidationError):
+            async with context.cancellation.irreversible_section():
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
+        except RegistryValidationError:
+            if not invoice_date_outside_registry_support(
+                payload.operation_date or payload.issued_at,
+                authority_operation,
+            ):
+                raise
+            async with context.cancellation.irreversible_section():
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
+        except (CoreValidationError, DecimalException):
+            # After the registry clause: RegistryValidationError is a CoreValidationError too.
             async with context.cancellation.irreversible_section():
                 return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
         return await await_cancellation_complete(
@@ -271,19 +289,55 @@ def _invoice_add_lines(
     )
 
 
-def _prepare_invoice_add(
+def declared_invoice_category(
+    category_input: str | None,
     *,
-    factory: CatalogueCreationPortsFactory,
+    effective_date: date,
+    authority_operation: PinnedAuthorityOperation,
+) -> IvaCategory | None:
+    """Read a stated IVA category as add reads it, under the governed scope the caller holds."""
+    return _invoice_add_category(
+        category_input,
+        _resolve_invoice_add_category_catalogue(
+            category_input,
+            effective_date=effective_date,
+            authority_operation=authority_operation,
+        ),
+    )
+
+
+def declared_invoice_class(class_input: str | None) -> InvoiceClass | None:
+    """Read a stated invoice class as add reads it, under the governed scope the caller holds."""
+    return _invoice_add_class(class_input, _resolve_invoice_add_class_catalogue(class_input))
+
+
+def invoice_date_outside_registry_support(on_date: date, operation: PinnedAuthorityOperation) -> bool:
+    """Tell a date the registry does not serve from a registry failure on one it does."""
+    return not operation.supported_filing_years().date_envelope().admits_coordinate(on_date)
+
+
+def invoice_add_lease(
     payload: InvoiceAddRequest,
+    *,
+    authority_operation: PinnedAuthorityOperation,
+) -> BusinessPremisesLease | None:
+    """Re-enter the domain owner for the lease the transport carries as plain text."""
+    with validating_governed_facts(authority_operation):
+        return None if payload.business_premises_lease is None else payload.business_premises_lease.to_domain()
+
+
+def build_invoice_from_add_request(
+    *,
+    payload: InvoiceAddRequest,
+    business_premises_lease: BusinessPremisesLease | None,
     profile: str,
     authority_operation: PinnedAuthorityOperation,
-) -> tuple[CatalogueCreationPorts, Invoice, bool]:
-    # The transport carries plain text; re-enter the domain owner before port creation.
-    with validating_governed_facts(authority_operation):
-        business_premises_lease = (
-            None if payload.business_premises_lease is None else payload.business_premises_lease.to_domain()
-        )
-    ports = factory(bucket_id=profile)
+    rate_provider: CatalogueInvoiceRateProviderPort,
+) -> tuple[Invoice, bool]:
+    """Construct the validated invoice an add request names, and whether its advisory applies.
+
+    This is the whole of acceptance short of the commit, and it touches no repository.
+    """
     effective_date = payload.operation_date or payload.issued_at
     with validating_governed_facts(authority_operation):
         # Resolve required vocabularies before validating request membership so
@@ -330,11 +384,31 @@ def _prepare_invoice_add(
         recargo_amount=(None if payload.recargo_amount is None else Decimal(payload.recargo_amount.decimal)),
         business_premises_lease=business_premises_lease,
         lines=lines or None,
-        rate_provider=ports.rate_provider,
+        rate_provider=rate_provider,
         operation=authority_operation,
     )
     _require_prepared_invoice_profile(invoice, profile)
     advisory_required = resolve_simplificada_tax_id_advisory(invoice=invoice) is SimplificadaTaxIdAdvisory.REQUIRED
+    return invoice, advisory_required
+
+
+def _prepare_invoice_add(
+    *,
+    factory: CatalogueCreationPortsFactory,
+    payload: InvoiceAddRequest,
+    profile: str,
+    authority_operation: PinnedAuthorityOperation,
+) -> tuple[CatalogueCreationPorts, Invoice, bool]:
+    # The transport carries plain text; re-enter the domain owner before port creation.
+    business_premises_lease = invoice_add_lease(payload, authority_operation=authority_operation)
+    ports = factory(bucket_id=profile)
+    invoice, advisory_required = build_invoice_from_add_request(
+        payload=payload,
+        business_premises_lease=business_premises_lease,
+        profile=profile,
+        authority_operation=authority_operation,
+        rate_provider=ports.rate_provider,
+    )
     return ports, invoice, advisory_required
 
 
@@ -392,5 +466,10 @@ __all__ = [
     "InvoiceAddExecutor",
     "build_invoice_add_definition",
     "build_invoice_add_registration",
+    "build_invoice_from_add_request",
+    "declared_invoice_category",
+    "declared_invoice_class",
+    "invoice_add_lease",
+    "invoice_date_outside_registry_support",
     "resolve_invoice_add_access",
 ]

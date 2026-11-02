@@ -23,7 +23,7 @@ See Also:
         shipped extraction profiles.
     :func:`~adapters.inbound.borrador.parser.parse_borrador`
         Borrador parser entrypoint allowed as a sanctioned parser authority.
-    :mod:`~domain.calculations.registry.tests.test_registry_schema_part2`
+    :mod:`~domain.calculations.registry.tests.test_registry_schema_extraction_links`
         Domain-layer regression proving only dotted-callable shape is checked.
 """
 

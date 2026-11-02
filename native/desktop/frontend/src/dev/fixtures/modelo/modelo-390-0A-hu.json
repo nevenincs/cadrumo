@@ -32928,11 +32928,11 @@
       ],
       "result": null,
       "deadline": {
-        "closes_on": "2027-01-30",
-        "nominal_closes_on": "2027-01-30",
+        "closes_on": "2027-02-01",
+        "nominal_closes_on": "2027-02-01",
         "holiday_coverage": "calendar_unavailable",
-        "reference_on": "2026-11-01",
-        "days_remaining": 90,
+        "reference_on": "2026-11-02",
+        "days_remaining": 91,
         "days_overdue": null
       },
       "aeat_data": null,
@@ -32969,8 +32969,8 @@
     "attention": [],
     "result": null,
     "deadline": {
-      "text": "Határidő: 2027. jan. 30. · hátralévő napok: 90",
-      "short_text": "Határidő: 2027. jan. 30. · hátralévő napok: 90",
+      "text": "Határidő: 2027. febr. 1. · hátralévő napok: 91",
+      "short_text": "Határidő: 2027. febr. 1. · hátralévő napok: 91",
       "tone": "normal",
       "help": null
     },

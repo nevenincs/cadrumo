@@ -9,8 +9,16 @@ from uuid import UUID
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry, SectorDefinition
+from ...domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
+    ProrrataRegister,
+    ProrrataRegisterEntry,
+    SectorDefinition,
+)
 from . import operation_requests as _requests
+from .projection_contracts import (
+    GROSS_DECLARATION_OPERATION_IDS as _GROSS_DECLARATION_OPERATION_IDS,
+)
 from .projection_contracts import (
     PRORRATA_ELECTION_REFUSAL_CODE as _PRORRATA_ELECTION_REFUSAL_CODE,
 )
@@ -61,6 +69,7 @@ class ProrrataOperationExecutionResult(BaseModel):
     listed_references: tuple[ProrrataListedReference | None, ...] = ()
     entry: ProrrataRegisterEntry | None = None
     sector_definition: SectorDefinition | None = None
+    gross_declaration: ProrrataOperatorGrossDeclaration | None = None
     seed_source: _ProrrataSeedSourceProjection | None = None
     findings: tuple[_ProrrataFindingProjection, ...] = ()
     prior_ejercicio: int | None = None
@@ -81,6 +90,7 @@ def _validate_refused_execution_result(result: ProrrataOperationExecutionResult)
         result.register_snapshot,
         result.entry,
         result.sector_definition,
+        result.gross_declaration,
         result.seed_source,
         result.prior_ejercicio,
         result.count,
@@ -97,8 +107,14 @@ def _validate_refused_execution_result(result: ProrrataOperationExecutionResult)
 def _validate_successful_execution_result(result: ProrrataOperationExecutionResult) -> None:
     if result.refusal is not None or result.register_snapshot is None or result.count is None:
         raise ValueError("prorrata success result is incomplete")
+    if result.operation_id != "list" and (result.gross_declaration is not None) != (
+        result.operation_id in _GROSS_DECLARATION_OPERATION_IDS
+    ):
+        raise ValueError("prorrata gross declaration differs from its operation")
     if result.operation_id == "list":
         _validate_list_execution_result(result)
+    elif result.operation_id in _GROSS_DECLARATION_OPERATION_IDS:
+        _validate_gross_declaration_execution_result(result)
     elif result.operation_id == "declare_sector":
         _validate_sector_declaration_execution_result(result)
     else:
@@ -106,7 +122,10 @@ def _validate_successful_execution_result(result: ProrrataOperationExecutionResu
 
 
 def _validate_list_execution_result(result: ProrrataOperationExecutionResult) -> None:
-    if any(value is not None for value in (result.entry, result.sector_definition, result.seed_source)):
+    if any(
+        value is not None
+        for value in (result.entry, result.sector_definition, result.gross_declaration, result.seed_source)
+    ):
         raise ValueError("prorrata list result contains mutation details")
     if result.register_snapshot is None or len(result.listed_references) != len(result.register_snapshot.entries):
         raise ValueError("prorrata list result names a reference per entry")
@@ -117,6 +136,32 @@ def _validate_sector_declaration_execution_result(result: ProrrataOperationExecu
         value is not None for value in (result.entry, result.seed_source, result.prior_ejercicio)
     ):
         raise ValueError("prorrata sector declaration result is incomplete")
+
+
+def _require_complete_gross_result(
+    result: ProrrataOperationExecutionResult,
+) -> tuple[ProrrataRegister, ProrrataOperatorGrossDeclaration]:
+    register = result.register_snapshot
+    declaration = result.gross_declaration
+    if (
+        register is None
+        or declaration is None
+        or any(value is not None for value in (result.entry, result.sector_definition, result.seed_source))
+        or result.prior_ejercicio is not None
+        or result.findings
+        or result.count != len(register.gross_declarations)
+    ):
+        raise ValueError("prorrata gross declaration result is incomplete")
+    return register, declaration
+
+
+def _validate_gross_declaration_execution_result(result: ProrrataOperationExecutionResult) -> None:
+    register, declaration = _require_complete_gross_result(result)
+    held = register.gross_declaration_for(declaration.period, sector_id=declaration.sector_id)
+    if (result.operation_id == "declare_gross") != (held == declaration):
+        raise ValueError("prorrata gross declaration result contradicts its committed register")
+    if result.operation_id == "remove_gross" and held is not None:
+        raise ValueError("prorrata gross removal result still holds the removed declaration")
 
 
 def _validate_entry_execution_result(result: ProrrataOperationExecutionResult) -> None:
@@ -199,6 +244,20 @@ _SHAPES: dict[str, ProrrataOperationContract] = {
         projection_type=_ProrrataMutationProjection,
         mutation=True,
         refusal_codes=_SECTOR_LIFECYCLE_REFUSALS,
+    ),
+    _requests.PRORRATA_DECLARE_GROSS_OPERATION_DEFINITION_ID: ProrrataOperationContract(
+        operation_id="declare_gross",
+        request_type=_requests.ProrrataDeclareGrossRequest,
+        projection_type=_ProrrataMutationProjection,
+        mutation=True,
+        refusal_codes=_MUTATION_REFUSALS,
+    ),
+    _requests.PRORRATA_REMOVE_GROSS_OPERATION_DEFINITION_ID: ProrrataOperationContract(
+        operation_id="remove_gross",
+        request_type=_requests.ProrrataRemoveGrossRequest,
+        projection_type=_ProrrataMutationProjection,
+        mutation=True,
+        refusal_codes=_MUTATION_REFUSALS,
     ),
 }
 

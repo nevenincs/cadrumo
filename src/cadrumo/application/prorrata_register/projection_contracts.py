@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
@@ -9,7 +10,11 @@ from uuid import UUID
 from pydantic import BaseModel, NonNegativeInt, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...domain.prorrata_register.register import ProrrataRegisterEntry, SectorDefinition
+from ...domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
+    ProrrataRegisterEntry,
+    SectorDefinition,
+)
 from ..operations.public_scalar import PublicDecimal
 from . import operation_requests as _requests
 from .seed import ProrrataPriorDefinitivaSeed, ProrrataSeedFinding
@@ -26,6 +31,9 @@ type ProrrataRefusalReason = Literal[
     "regulated_override_standing",
     "sector_prior_definitive_absent",
     "sector_settlement_entry_absent",
+    "gross_declaration_duplicate",
+    "gross_declaration_absent",
+    "gross_declaration_sector_unknown",
 ]
 
 type ProrrataRefusalCode = Literal[
@@ -42,6 +50,9 @@ PRORRATA_ELECTION_REFUSAL_CODE = "REFUSED_PRORRATA_ELECTION"
 PRORRATA_WHOLE_SEED_REFUSAL_CODE = "REFUSED_PROFILE_PRORRATA_WHOLE_SEED"
 
 PRORRATA_SECTOR_LIFECYCLE_REFUSAL_CODE = "REFUSED_PROFILE_PRORRATA_SECTOR_LIFECYCLE"
+
+GROSS_DECLARATION_OPERATION_IDS: frozenset[_requests.ProrrataOperationId] = frozenset({"declare_gross", "remove_gross"})
+"""Operations whose result arm is one operator gross declaration."""
 
 
 class ProrrataSnapshotRefProjection(BaseModel):
@@ -155,6 +166,33 @@ class ProrrataSectorDefinitionProjection(BaseModel):
         )
 
 
+class ProrrataGrossDeclarationProjection(BaseModel):
+    """Complete projection of one operator-declared earlier-period gross cuota."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    ejercicio: int
+    period: str
+    sector_id: str | None
+    gross_cuota: PublicDecimal
+    evidence_reference: str
+    provenance: Literal["operator_declared"]
+    declared_at: datetime
+
+    @classmethod
+    def from_declaration(cls, declaration: ProrrataOperatorGrossDeclaration) -> ProrrataGrossDeclarationProjection:
+        """Project every persisted declaration field."""
+        return cls(
+            ejercicio=declaration.ejercicio,
+            period=declaration.period.registry_token,
+            sector_id=declaration.sector_id,
+            gross_cuota=PublicDecimal(decimal=str(declaration.gross_cuota)),
+            evidence_reference=declaration.evidence_reference,
+            provenance=declaration.provenance,
+            declared_at=declaration.declared_at,
+        )
+
+
 class ProrrataFindingProjection(BaseModel):
     """Complete source-finding details for seed advisory and refusal surfaces."""
 
@@ -230,13 +268,14 @@ class ProrrataRefusalProjection(BaseModel):
 
 
 class ProrrataListProjection(BaseModel):
-    """Complete all-period list result for the profile's prorrata singleton."""
+    """Complete all-period list result for the profile's prorrata singleton, with its declared gross cuotas."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
     entries: tuple[ProrrataListedEntryProjection, ...]
     sectors: tuple[ProrrataSectorDefinitionProjection, ...]
+    gross_declarations: tuple[ProrrataGrossDeclarationProjection, ...]
     count: NonNegativeInt
 
     @model_validator(mode="after")
@@ -256,6 +295,7 @@ class ProrrataMutationProjection(BaseModel):
     outcome: Literal["success", "refused"]
     entry: ProrrataEntryProjection | None = None
     sector_definition: ProrrataSectorDefinitionProjection | None = None
+    gross_declaration: ProrrataGrossDeclarationProjection | None = None
     seed_source: ProrrataSeedSourceProjection | None = None
     findings: tuple[ProrrataFindingProjection, ...] = ()
     prior_ejercicio: int | None = None
@@ -289,6 +329,7 @@ def _validate_refused_mutation_projection(projection: ProrrataMutationProjection
             for value in (
                 projection.entry,
                 projection.sector_definition,
+                projection.gross_declaration,
                 projection.seed_source,
                 projection.prior_ejercicio,
                 projection.count,
@@ -310,8 +351,17 @@ def _require_success_projection_completion(projection: ProrrataMutationProjectio
         raise ValueError("prorrata success projection is incomplete")
 
 
+def _require_gross_projection_payload(projection: ProrrataMutationProjection) -> None:
+    if projection.gross_declaration is None or projection.entry is not None or projection.sector_definition is not None:
+        raise ValueError("prorrata gross declaration projection has an incompatible payload")
+
+
 def _validate_mutation_projection_arm(projection: ProrrataMutationProjection) -> None:
-    if projection.operation_id == "declare_sector":
+    if projection.operation_id in GROSS_DECLARATION_OPERATION_IDS:
+        _require_gross_projection_payload(projection)
+    elif projection.gross_declaration is not None:
+        raise ValueError("prorrata projection carries a gross declaration outside its operations")
+    elif projection.operation_id == "declare_sector":
         if projection.sector_definition is None or projection.entry is not None:
             raise ValueError("prorrata sector projection has an incompatible payload")
     elif projection.entry is None or projection.sector_definition is not None:
@@ -328,6 +378,7 @@ def _validate_mutation_projection_seed_metadata(projection: ProrrataMutationProj
 
 
 __all__ = [
+    "GROSS_DECLARATION_OPERATION_IDS",
     "PRORRATA_ELECTION_REFUSAL_CODE",
     "PRORRATA_SECTOR_LIFECYCLE_REFUSAL_CODE",
     "PRORRATA_VALIDATION_REFUSAL_CODE",
@@ -335,6 +386,7 @@ __all__ = [
     "ProrrataEntryProjection",
     "ProrrataEspecialTransitionProjection",
     "ProrrataFindingProjection",
+    "ProrrataGrossDeclarationProjection",
     "ProrrataListProjection",
     "ProrrataListedEntryProjection",
     "ProrrataMutationProjection",

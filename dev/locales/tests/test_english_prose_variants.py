@@ -8,17 +8,20 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 @pytest.mark.parametrize(
-    "word,typo",
+    "word,typo,case_miss",
     [
-        ("advisor", "advsior"),
-        ("adapter", "adaptr"),
-        ("adapters", "adpaters"),
-        ("artifact", "artifcat"),
-        ("amortization", "amortizaton"),
-        ("proration", "proraton"),
-        ("formalization", "formalizaton"),
-        ("formalized", "formalizd"),
+        ("advisor", "advsior", "Advisor"),
+        ("adapter", "adaptr", "Adapter"),
+        # "Adapters" is enrolled separately: it opens a sentence in the architecture docs.
+        ("adapters", "adpaters", "AdApters"),
+        ("artifact", "artifcat", "Artifact"),
+        ("amortization", "amortizaton", "Amortization"),
+        ("proration", "proraton", "Proration"),
+        ("formalization", "formalizaton", "Formalization"),
+        ("formalized", "formalizd", "Formalized"),
     ],
 )
-def test_exact_english_variant_does_not_admit_near_misses_casing_or_other_locales(word: str, typo: str) -> None:
-    assert_exact_english_spelling(word, typo, (typo, word.capitalize(), word.upper(), word + "x"))
+def test_exact_english_variant_does_not_admit_near_misses_casing_or_other_locales(
+    word: str, typo: str, case_miss: str
+) -> None:
+    assert_exact_english_spelling(word, typo, (typo, case_miss, word.upper(), word + "x"))

@@ -31,7 +31,6 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import MONEY_ZERO
 from ...core.i18n.render import tr
-from ...core.period import Period
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     BienInversionRecordError,
@@ -46,7 +45,6 @@ from ...domain.bienes_inversion.regularizacion_parameters import (
     resolve_bienes_inversion_regularizacion_parameters,
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.form_codes import form_for_role, forms_for_role
 from ...domain.calculations.registry.ids import BindingId, LegalRefId, SourceRefId
@@ -60,10 +58,13 @@ from ..aggregation.source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..aggregation.source_resolution_operations import (
+    storage_degradation_resolution,
+    unresolved_binding_diagnostics,
+)
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
+from .m303_settlement_observation import m303_annual_settlement_observation
 from .observations_repository import CalculationObservationRepositoryProtocol
-from .revision_carry_gate import revision_carry_outcome
 
 #: Distinct advisory source-kind label for the art-110 disposal path, so an
 #: operator (and a future mesh-binding promotion) can tell the annual comparison
@@ -156,36 +157,6 @@ def _casilla_legal_refs(revision: ModeloRevision, casilla_id: CasillaId | None) 
     return tuple(dict.fromkeys((*casilla.legal_refs, *binding_refs)))
 
 
-def _settlement_period_tokens(revision: ModeloRevision) -> tuple[str, ...]:
-    tokens: list[str] = []
-    for binding in revision.bindings:
-        provider = getattr(binding, "provider", None)
-        values = getattr(provider, "source_periods", ())
-        tokens.extend(str(value) for value in values)
-    return tuple(dict.fromkeys(tokens))
-
-
-def _unresolved_binding_diagnostics(
-    *,
-    revision: ModeloRevision,
-    binding_ids: tuple[BindingId, ...],
-    resolver_id: str,
-    message: str,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one."""
-    return tuple(
-        CalculationSourceDiagnostic(
-            reason="unresolved_binding",
-            source_kind=_REGISTER_SOURCE.value,
-            binding_id=binding_id,
-            casilla_id=sole_bound_casilla(revision, binding_id),
-            resolver_id=resolver_id,
-            message=message,
-        )
-        for binding_id in binding_ids
-    )
-
-
 def _target_inputs(
     revision: ModeloRevision,
     *,
@@ -219,21 +190,10 @@ def _current_year_prorrata_from_m303_observation(
     prorrata_id = prorrata_definitive_percentage_source_casilla_id(revision.bindings)
     if prorrata_id is None:
         return None
-    for token in reversed(_settlement_period_tokens(revision)):
-        payload = repository.load_observation(
-            form_for_role("iva.periodic"),
-            Period.from_year_and_code(filing_year, token),
-        )
-        if payload is None:
-            continue
-        observation = payload.observation
-        refused = revision_carry_outcome(payload.registry_snapshot_ref, operation=operation).refused
-        if refused:
-            continue
-        percentage = observation.casilla_values.get(prorrata_id)
-        if percentage is not None:
-            return percentage
-    return None
+    settlement = m303_annual_settlement_observation(repository, filing_year=filing_year, operation=operation)
+    if settlement.payload is None:
+        return None
+    return settlement.payload.observation.casilla_values.get(prorrata_id)
 
 
 def _resolve_regularizacion_parameters(
@@ -263,7 +223,8 @@ def _resolve_regularizacion_parameters(
             resolver_id=resolver_id,
             owned_sources=owned_sources,
             unresolved_binding_ids=binding_ids,
-            diagnostics=_unresolved_binding_diagnostics(
+            diagnostics=unresolved_binding_diagnostics(
+                source_kind=_REGISTER_SOURCE.value,
                 revision=context.revision,
                 binding_ids=binding_ids,
                 resolver_id=resolver_id,
@@ -345,7 +306,8 @@ def _pending_prorrata_resolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
         unresolved_binding_ids=binding_ids,
-        diagnostics=_unresolved_binding_diagnostics(
+        diagnostics=unresolved_binding_diagnostics(
+            source_kind=_REGISTER_SOURCE.value,
             revision=revision,
             binding_ids=binding_ids,
             resolver_id=resolver_id,
@@ -444,7 +406,8 @@ def _resolved_regularizacion_resolution(
             modelo=context.modelo,
         ),
         unresolved_binding_ids=unresolved,
-        diagnostics=_unresolved_binding_diagnostics(
+        diagnostics=unresolved_binding_diagnostics(
+            source_kind=_REGISTER_SOURCE.value,
             revision=context.revision,
             binding_ids=unresolved,
             resolver_id=resolver_id,
@@ -641,7 +604,8 @@ class BienesInversionRegularizacionSourceResolver:
                 resolver_id=self.resolver_id,
                 owned_sources=self.owned_sources,
                 unresolved_binding_ids=declared_binding_ids,
-                diagnostics=_unresolved_binding_diagnostics(
+                diagnostics=unresolved_binding_diagnostics(
+                    source_kind=_REGISTER_SOURCE.value,
                     revision=context.revision,
                     binding_ids=declared_binding_ids,
                     resolver_id=self.resolver_id,

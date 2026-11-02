@@ -80,7 +80,7 @@ application:
           por lo que solo desbloquear ese perfil, con aeat config login, la revoca.
         scope_conflict: Elige --provider o --all, pero no ambos.
         unreadable_active_profile: 'El perfil activo ''%{active_profile}'' tiene un
-          manifiesto de bucket pero no tiene un registro de perfil legible (status=%{status}).
+          manifiesto de bucket pero no tiene un registro de perfil legible (estado=%{status}).
           Siguiente acción: %{next_action}.'
       login:
         refused_certificate_file_missing: 'No se puede iniciar sesión: el fichero
@@ -341,14 +341,81 @@ application:
         taxpayer_nif_blank: El NIF del contribuyente no puede estar en blanco cuando
           forma la clave de decisión de la cartera de IVA.
     prorrata_regularizacion:
-      advisory: 'Regularización de prorrata por porcentaje definitivo (LIVA arts.
-        104-105) para %{year}: prorrata provisional %{provisional}% → definitiva %{definitiva}%
-        (%{sentido}). Regularización propuesta para %{target}: %{value}. Confirma
-        el valor antes de presentar.'
-      sentido_deduccion: deducción complementaria
-      sentido_ingreso: ingreso
       target_casilla: casilla %{number}
       target_declared: la casilla de regularización declarada
+      unresolved:
+        current_year_inputs: 'La regularización de prorrata necesita estos valores
+          del ejercicio antes de calcularse: %{casillas}.'
+        gross_negative: Las cuotas soportadas deducibles brutas de las liquidaciones
+          anteriores son negativas (%{amount}) tras las rectificaciones. La ley no
+          prevé una regularización sobre una base negativa, así que rectifica las
+          deducciones en las liquidaciones afectadas y calcula tú la casilla.
+        provisional_missing: La regularización de prorrata de %{year} necesita el
+          porcentaje provisional, de tu registro de prorrata o de la última liquidación
+          presentada del ejercicio anterior.
+        regime_not_derived: 'La regularización de %{year} de las cuotas soportadas
+          de uso común en varios sectores diferenciados no se calcula automáticamente:
+          su porcentaje solo computa las operaciones de los sectores que comparten
+          el uso y trata como sin derecho a deducción las operaciones de los regímenes
+          de agricultura y de recargo de equivalencia, algo que los volúmenes declarados
+          no muestran. Calcula tú la casilla antes de presentar.'
+        register_regime_not_apportioning: Tu registro de prorrata no recoge un régimen
+          que reparta la deducción en %{year}, pero los volúmenes declarados muestran
+          operaciones sin derecho a deducción; corrige el registro o los volúmenes
+          antes de regularizar.
+        sector_definitive_missing: 'Estos sectores diferenciados no tienen porcentaje
+          definitivo liquidado para %{year}: %{sectors}; liquida cada sector antes
+          de regularizar.'
+        selector_unmapped: La vinculación de la regularización de prorrata no corresponde
+          a ninguna salida del resolutor.
+        settlement_observation_ambiguous: Consta más de una última liquidación del
+          modelo 303 (%{periods}); conserva solo la periodicidad que presentaste.
+        settlement_observation_missing: La regularización anual de prorrata reproduce
+          la última liquidación presentada del modelo 303, y no consta ninguna para
+          %{periods}.
+        settlement_observation_refused: La última liquidación presentada del modelo
+          303 %{periods} lleva una revisión del formulario que ya no coincide con
+          la que fija la ley; vuelve a calcularla y presentarla.
+        settlement_observation_without_regularizacion: La última liquidación presentada
+          del modelo 303 %{periods} no incluye valor de regularización de prorrata.
+        sin_derecho_volume_absent: Tu registro aplica prorrata en %{year}, pero los
+          volúmenes declarados no muestran operaciones sin derecho a deducción; la
+          regularización de ese caso no se calcula automáticamente. Revisa los volúmenes
+          o calcula tú la casilla.
+        source_period_cuotas_missing: 'La liquidación %{period} se presentó sin las
+          casillas deducibles que necesita la regularización: %{casillas}.'
+        source_period_gross_disagreement: La liquidación %{period} tiene cuotas soportadas
+          deducibles en el libro con una base bruta de %{ledger}, pero declaraste
+          una base bruta de %{declared}; corrige el libro o sustituye la declaración
+          antes de regularizar.
+        source_period_gross_unavailable: La liquidación %{period} declaró cuotas soportadas
+          deducibles, pero el libro no contiene ninguna cuota deducible de ese periodo,
+          así que se desconocen sus cuotas brutas antes de la prorrata; registra en
+          el libro las cuotas soportadas de ese periodo, o declara sus cuotas brutas
+          con 'aeat app ledger prorrata declare-gross', antes de regularizar.
+        source_period_ledger_divergence: La liquidación %{period} declaró %{filed}
+          en %{casilla}, pero sus cuotas del libro a tus porcentajes provisionales
+          de prorrata dan %{expected}; concilia el libro con la liquidación presentada
+          antes de regularizar.
+        source_period_ledger_refused: Las cuotas soportadas del libro de la liquidación
+          %{period} no se pueden repartir con tu registro de prorrata; resuelve ese
+          rechazo del libro antes de regularizar.
+        source_period_operator_divergence: La liquidación %{period} declaró %{filed}
+          de cuotas soportadas deducibles, pero la base bruta que declaraste a tus
+          porcentajes provisionales de prorrata da %{expected}; concilia la declaración
+          con la liquidación presentada antes de regularizar.
+        source_period_sector_gross_disagreement: La liquidación %{period} tiene cuotas
+          soportadas deducibles en el libro para el sector %{sector} con una base
+          bruta de %{ledger}, pero declaraste una base bruta de %{declared} para ese
+          sector; corrige el libro o sustituye la declaración antes de regularizar.
+        source_periods_missing: 'La regularización abarca las liquidaciones anteriores
+          del ejercicio, y estas no constan presentadas: %{periods}.'
+        source_periods_refused: 'Estas liquidaciones anteriores llevan una revisión
+          del formulario que ya no coincide con la que fija la ley: %{periods}; vuelve
+          a calcularlas y presentarlas.'
+        volumes_undeclared: La prorrata se aplica en %{year}, pero no constan los
+          volúmenes anuales de operaciones (%{casillas}); decláralos para poder calcular
+          el porcentaje definitivo.
   filing:
     build_draft:
       errors:
@@ -703,6 +770,109 @@ application:
           a una importación exenta (clave M, o H mediante representante fiscal).'
         unsupported_iva_rate: 'El tipo de IVA %{iva_rate} no se reconoce; usa uno
           de: %{accepted}.'
+    figures_preview:
+      finding:
+        base_total_not_line_sum: La base total no coincide con la suma de los subtotales
+          de las líneas.
+        figure_out_of_range: Una cifra es demasiado grande para calcularla al céntimo.
+        grand_total_identity: El total no coincide con la base más el IVA más el recargo.
+        iva_total_not_line_sum: El IVA total no coincide con la suma de las cuotas
+          de las líneas.
+        line_amount_negative: Un precio, un subtotal o una cuota de IVA no puede ser
+          negativo.
+        line_iva_mismatch: La cuota indicada, %{stated}, difiere en más de un céntimo
+          del subtotal por el tipo, %{expected}.
+        line_iva_not_zero_for_nonnumeric: Una línea exenta o no sujeta no lleva cuota
+          de IVA, pero esta indica %{stated}.
+        line_quantity_not_positive: La cantidad debe ser mayor que cero.
+        line_rate_coverage_gap: Cadrumo no tiene tipos registrados para %{slot} el
+          %{on_date}, así que no puede aplicarlo.
+        line_rate_not_in_force: El tipo de IVA %{slot} no estaba vigente el %{on_date}.
+        line_rate_undeclared: El tipo de IVA %{slot} no figura entre los que declara
+          el registro.
+        line_subtotal_mismatch: El subtotal indicado, %{stated}, difiere en más de
+          un céntimo de cantidad por precio unitario, %{expected}.
+        nonnumeric_grand_total_identity: Si todas las líneas son exentas o no sujetas,
+          el total debe ser igual a la base.
+        nonnumeric_iva_total_not_zero: Si todas las líneas son exentas o no sujetas,
+          el IVA total debe ser cero.
+        nonnumeric_recargo_not_zero: Si todas las líneas son exentas o no sujetas,
+          el recargo debe ser cero.
+        printed_total_differs: El total impreso, %{printed}, difiere del total calculado,
+          %{computed}.
+        rate_date_unresolved: El registro no declara tipos de IVA para el %{on_date},
+          así que no se puede calcular el IVA.
+        recargo_above_iva_total: El recargo, %{stated}, no puede superar el IVA total,
+          %{iva_total}.
+        recargo_negative: El recargo no puede ser negativo.
+        retention_amount_above_base: La retención, %{stated}, no puede superar la
+          base, %{base_total}.
+        retention_amount_mismatch: La retención indicada, %{stated}, difiere en más
+          de un céntimo de la base por el tipo, %{expected}.
+        retention_amount_negative: El importe de la retención no puede ser negativo.
+        retention_rate_out_of_range: El tipo de retención es una fracción entre 0
+          y 1, por ejemplo 0.15 para un 15 %, no un porcentaje.
+        retention_rate_without_amount: Un tipo de retención necesita el importe retenido;
+          el tipo solo no declara ninguna retención.
+        suplido_negative: El importe del suplido no puede ser negativo.
+        total_negative: El total de una factura no puede ser negativo.
+      rate_slot:
+        exempt: Exenta
+        not_subject: No sujeta
+        rate_0: IVA 0 %
+        rate_10: IVA 10 %
+        rate_2: IVA 2 %
+        rate_21: IVA 21 %
+        rate_4: IVA 4 %
+        rate_5: IVA 5 %
+        rate_7_5: IVA 7,5 %
+      rule_finding:
+        advance_payment_not_fully_collected: Un pago anticipado solo devenga IVA por
+          el importe cobrado, así que una factura solo puede llevar la fecha del anticipo
+          si has cobrado todo el precio. Registra el anticipo como una factura propia,
+          o marca esta como pagada si el anticipo cubre todo el precio.
+        counterparty_country_invalid: No es un código de país de dos letras que el
+          libro reconozca.
+        counterparty_name_blank: El nombre de la contraparte no puede quedar en blanco.
+        counterparty_tax_id_invalid: Este NIF no es válido para el país de la contraparte.
+        counterparty_tax_id_required: Esta factura necesita el NIF de la contraparte.
+          Solo una factura simplificada emitida puede prescindir de él.
+        counterparty_tax_id_required_by_category: Una factura simplificada de esta
+          categoría de IVA necesita el NIF de la contraparte.
+        currency_invalid: No es un código de moneda ISO 4217 de tres letras.
+        intra_community_spanish_identification: Una entrega intracomunitaria exenta
+          no puede indicar un adquirente que compra con un NIF-IVA español.
+        invoice_class_undeclared: El registro no declara esa clase de factura.
+        invoice_number_blank: El número de factura no puede quedar en blanco.
+        iva_category_undeclared: El registro no declara esa categoría de IVA en esta
+          fecha.
+        lease_only_on_issued: Solo una factura emitida registra un arrendamiento de
+          local de negocio.
+        lease_reference_not_allowed: Un inmueble en esta situación no tiene referencia
+          catastral.
+        lease_reference_too_long: El Modelo 347 admite una referencia catastral de
+          hasta {limit} caracteres.
+        lease_situation_undeclared: No es una situación del inmueble que declare el
+          Modelo 347.
+        line_description_blank: La descripción de una línea no puede quedar en blanco.
+        line_description_too_long: La descripción de una línea admite hasta {limit}
+          caracteres.
+        line_oss_rate_kind_refused: Este tipo de OSS no está disponible para esta
+          línea.
+        operation_date_role_mismatch: 'La fecha de operación va unida a su función
+          guardada: en una factura guardada puedes moverla, pero no añadirla ni quitarla.'
+        operation_type_required: Esta categoría de IVA necesita una clave de operación
+          del Modelo 349.
+        other_invoice_rule: El libro rechazaría esta factura por otra regla. Comprueba
+          sus datos con el documento.
+        rectified_invoice_not_allowed: Solo una factura rectificativa indica la factura
+          que rectifica.
+        rectified_invoice_required: Una factura rectificativa debe indicar la factura
+          que rectifica.
+        series_required_for_rectificativa: Una factura rectificativa debe emitirse
+          en una serie propia.
+        simplificada_not_for_intra_community: No se puede emitir una factura simplificada
+          por una entrega intracomunitaria exenta.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefijo de identificador de factura %{invoice_id}
@@ -795,6 +965,9 @@ application:
         al menos un id de adjunto.
       evidence_detachment_unknown_attachment: La transacción de tus registros no lleva
         los adjuntos %{attachment_ids}.
+      fx_value_inconsistent: El valor en euros %{value_in_eur} no coincide con el
+        importe en %{currency} convertido al tipo %{fx_rate}, que da %{expected_value_in_eur}.
+        Corrige el valor en euros o el tipo e inténtalo de nuevo.
       idempotency_key_conflict: La clave de idempotencia ya identifica una transacción
         almacenada con datos distintos. Usa una clave de idempotencia nueva para un
         movimiento diferente, u omite la clave para añadir un duplicado deliberado.
@@ -2414,15 +2587,15 @@ application:
           concept: Concepto
           fixed_quota: Cuota fija
           formula: Fórmula
-          legal_refs: Ref. legales
+          legal_refs: Referencias legales
           marginal_rate: Tipo marginal
           maximum_base: Base máxima
           minimum_base: Base mínima
-          number: Nº
+          number: Número
           rounding: Redondeo
           section: Sección
           source: Origen
-          source_refs: Ref. fuentes
+          source_refs: Referencias de fuentes
           value: Valor
         protected:
           calculos: Cálculos derivados - protegido para preservar paridad
@@ -2717,8 +2890,8 @@ application:
         Añade estos flags al mismo comando y vuelve a ejecutarlo: %{missing_flags}.'
       persist_patch_unknown_question_id: El parche del asistente referencia un id
         de pregunta desconocido.
-      profile_flag_required: El asistente requiere --profile NAME (sin valor por defecto
-        'default' implícito).
+      profile_flag_required: El asistente requiere --profile NAME (sin alternativa
+        `default` implícita).
       profile_label_taken: Ya existe un perfil llamado %{label}. Elige otro nombre
         o ejecuta el flujo de edición para modificar ese perfil.
       quiet_missing_flags: 'A esta ejecución con --quiet le faltan datos obligatorios.
@@ -2747,8 +2920,8 @@ application:
         missing_tax_id: 'El perfil activo no ha indicado: %{requirements}.'
         no_active_profile: No hay perfil activo configurado.
         projection_failed: El perfil activo no supera la proyección del asistente.
-        unexpected_projection_type: Las respuestas del flujo de setup no se proyectaron
-          como SetupAnswers.
+        unexpected_projection_type: Las respuestas del flujo de configuración no se
+          proyectaron como SetupAnswers.
   workflow:
     errors:
       no_active_profile_bucket: No hay un perfil activo.

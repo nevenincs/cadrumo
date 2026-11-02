@@ -1,22 +1,22 @@
 """Adapter-layer :class:`~core.errors.error_codes.ErrorCode` registry aggregator.
 
-Combines the ordered adapter shards into the tuple consumed by
-:mod:`core.errors.error_codes`.
+Combines the inbound, outbound and persistence adapter registrations into the
+tuple consumed by :mod:`core.errors.error_codes`.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._adapters_part1 import DECLARED_ERROR_CODES as _ADAPTERS_PART1_CODES
-from ._adapters_part2 import DECLARED_ERROR_CODES as _ADAPTERS_PART2_CODES
-from ._adapters_part3 import DECLARED_ERROR_CODES as _ADAPTERS_PART3_CODES
+from ._adapters_inbound import DECLARED_ERROR_CODES as _INBOUND_CODES
+from ._adapters_outbound import DECLARED_ERROR_CODES as _OUTBOUND_CODES
+from ._adapters_persistence import DECLARED_ERROR_CODES as _PERSISTENCE_CODES
 
 if TYPE_CHECKING:
     from ..error_codes import ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
-    *_ADAPTERS_PART1_CODES,
-    *_ADAPTERS_PART2_CODES,
-    *_ADAPTERS_PART3_CODES,
+    *_INBOUND_CODES,
+    *_OUTBOUND_CODES,
+    *_PERSISTENCE_CODES,
 )

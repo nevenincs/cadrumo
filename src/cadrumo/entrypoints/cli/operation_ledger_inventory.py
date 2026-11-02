@@ -361,7 +361,7 @@ def apply_inventory_ledger_change(
             raise invalid_completion_error(completed)
         _raise_registered_refusal(completed, projection.refusal)
     ledger = projection.ledger
-    expected_effect = OperationEffect.UPDATED if projection.outcome == "applied" else OperationEffect.NONE
+    expected_effect = projection.settled_effect
     if (
         ledger is None
         or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED

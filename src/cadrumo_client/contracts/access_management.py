@@ -31,7 +31,7 @@ class AutomationDeny(BaseModel):
 
     @model_validator(mode="after")
     def _target(self) -> AutomationDeny:
-        if (self.kind in {AutomationDenialKind.KEY, AutomationDenialKind.GRANT}) != (self.target_id is not None):
+        if self.kind.targets_a_record != (self.target_id is not None):
             raise ValueError("denial target does not match action")
         return self
 

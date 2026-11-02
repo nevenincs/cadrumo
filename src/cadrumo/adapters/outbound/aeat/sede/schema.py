@@ -7,15 +7,11 @@ malformed or unsupported AEAT response shapes fail during parsing.
 Every boundary-crossing record carries ``mode: Literal["read"]``. That
 field is a DOCUMENTATION AND TEST marker, not a runtime guard: nothing
 in production reads it, so it constrains a record's declared shape and
-nothing else. It was previously described here as "part of the
-structural write-guard", which credited it with protection it does not
-provide.
+nothing else.
 
 The package does not mutate AEAT state, but that is a property the
 guards below MAINTAIN rather than one the type system makes impossible.
-Stating it as a structural incapability is what this note exists to
-stop, because a reader asking whether this boundary can write is asking
-the right question and deserves the real answer:
+The guards are:
 
 * A forbidden-verb scan over the package's own source text
   (``_no_write_surface_fixture.txt``, enforced by
@@ -39,12 +35,10 @@ the right question and deserves the real answer:
   forbids outright, so one shared list cannot serve every surface. The
   shared runtime rule is ``_adapter_utils.assert_read_landing``.
 
-The residual this note previously named -- a ``page.click`` on a filing
-control in a module with no landing refusal, passing the verb scan
-(``click`` is allowed), ``_assert_read_http`` (never consulted for a
-browser POST) and this ``mode`` marker (never read) -- is now a
-mechanism rather than a matter of review: adding such a click to an
-unenrolled module fails the enrollment gate.
+A ``page.click`` on a filing control in a module with no landing refusal
+passes the verb scan (``click`` is allowed), ``_assert_read_http`` (never
+consulted for a browser POST) and this ``mode`` marker (never read).
+Adding such a click to an unenrolled module fails the enrollment gate.
 
 What remains true, and is stated so nobody mistakes the above for more
 than it is: the enrollment gate is a SOURCE scan, so it establishes that

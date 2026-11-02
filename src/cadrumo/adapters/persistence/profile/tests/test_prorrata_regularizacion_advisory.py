@@ -2,14 +2,12 @@
 
 Exercises :func:`~application.modelo.prorrata_regularizacion_advisory.collect_prorrata_regularizacion_diagnostics`
 against a REAL registry-loaded Modelo 303 revision and a REAL encrypted
-:class:`~application.calculations.CalculationObservationRepository` inside
-a genuine bucket runtime (``isolated_runtime_profile``) — no mocks, no stubs.
-The pure LIVA arts. 104-105 math itself is proven in
-``domain/iva/tests/test_prorrata_regularizacion.py`` and the pure advisory
-projection in ``application/calculations/tests/test_prorrata_regularizacion.py``;
-this module proves the projection is actually WIRED into the calculate-path
-advisory fan-out, which was the gap the review found (the builder shipped with
-zero production callers).
+:class:`~application.calculations.CalculationObservationRepository` inside a genuine bucket
+runtime (``isolated_runtime_profile``) — no mocks, no stubs. The pure LIVA arts. 104-105 math
+itself is proven in ``domain/iva/tests/test_prorrata_regularizacion.py`` and the pure advisory
+projection in ``application/calculations/tests/test_prorrata_regularizacion.py``; this module
+proves the collector's advisories are wired into the calculate-path fan-out and that it no
+longer computes a regularisation of its own beside the source resolver.
 
 See Also:
     :mod:`~application.modelo.prorrata_regularizacion_advisory`
@@ -38,11 +36,9 @@ from .....core.aggregation import BindingSourceKind
 from .....core.casilla_id import validated_casilla_id
 from .....core.modelo import Modelo
 from .....core.observed_header_fact import ObservedHeaderFact
-from .....core.period import Period
 from .....core.prorrata_register import ProrrataRegisterRegime
 from .....domain.calculations.registry.authority import IndexedRegistryAuthority, bundled_indexed_authority
 from .....domain.calculations.registry.binding_targets import casillas_by_binding
-from .....domain.calculations.registry.errors import RegistrySnapshotError
 from .....domain.calculations.registry.iva_compensation_annual_partition_bindings import (
     M303_COMPENSATION_RESULTADO_CASILLA as M303_RESULTADO_CASILLA,
 )
@@ -64,7 +60,7 @@ from .published_authority_support import published_authority_operation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
-_BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"  # was 'prorrata-advisory-bucket'
+_BUCKET = "108e9631-8e8f-4a81-840f-39ba3e07a70b"
 _YEAR = 2026
 _PRIOR_YEAR = 2025
 _SETTLEMENT_PERIOD_CODE = "4T"
@@ -105,141 +101,79 @@ def _seed_prior_year_percentage(obs_repo: CalculationObservationRepository, *, p
     )
 
 
-def _collect_settlement_diagnostics(obs_repo: CalculationObservationRepository):
+_SETTLEMENT_VALUES = {
+    _VOLUMEN_TOTAL_ID: Decimal("100000"),
+    _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
+    _PORCENTAJE_ID: Decimal("80"),
+    _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
+}
+
+
+def _collect_settlement_diagnostics():
     """Collect the settlement-period diagnostics for an 80 percent definitive ratio over 100000 of volume."""
-    casilla_values = {
-        _VOLUMEN_TOTAL_ID: Decimal("100000"),
-        _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
-        _PORCENTAJE_ID: Decimal("80"),
-        _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
-    }
     return collect_prorrata_regularizacion_diagnostics(
         _revision(),
-        casilla_values,
+        _SETTLEMENT_VALUES,
         modelo=Modelo("303").value,
         period_token=_SETTLEMENT_PERIOD_CODE,
         filing_year=_YEAR,
-        observation_repository=obs_repo,
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
     )
 
 
-def test_advisory_fires_when_prior_year_percentage_available_and_differs(tmp_path: Path) -> None:
-    """A real prior-year percentage lets the pure builder run and surface the delta.
+def test_settlement_collector_does_not_recompute_the_regularisation(tmp_path: Path) -> None:
+    """The regularisation box belongs to the source resolver; the collector adds no second figure.
 
-    Volumen total 100.000, con derecho 80.000 -> sin-derecho 20.000 (prorrata
-    applies). Prior-year (2025) definitiva percentage 90%; current year (2026)
-    definitiva percentage 80% -> an ``ingreso`` regularización is due on
-    casilla 44.
+    Volumen total 100.000, con derecho 80.000 (prorrata applies) and a prior
+    definitive 90% against the current 80% once produced a casilla-44 advisory
+    computed from the year's NET deducible total -- a second, divergent value.
+    The resolver now owns the box and refuses visibly, so the collector stays
+    silent here.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        obs_repo = CalculationObservationRepository(objects=profile.repository)
-        _seed_prior_year_percentage(obs_repo, percentage=Decimal("90"))
-
-        diagnostics = _collect_settlement_diagnostics(obs_repo)
-
-    assert len(diagnostics) == 1
-    diagnostic = diagnostics[0]
-    assert diagnostic.binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-    assert "44" in diagnostic.message
-    assert "ingreso" in diagnostic.message
-
-
-def test_advisory_uses_supplied_pinned_authority_for_real_m303_carry(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
-) -> None:
-    """A calculate-path collector does not lease a second authority generation."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        obs_repo = CalculationObservationRepository(objects=profile.repository)
-        _seed_prior_year_percentage(obs_repo, percentage=Decimal("90"))
-        with bundled_indexed_authority().operation() as operation:
-            revision = operation.snapshot(Modelo("303").value, filing_year=_YEAR, period="4T").revision
-
-            def unexpected_authority(_authority: IndexedRegistryAuthority) -> None:
-                raise AssertionError("prorrata advisory opened another registry authority")
-
-            with monkeypatch.context() as patch:
-                patch.setattr(IndexedRegistryAuthority, "operation", unexpected_authority)
-                diagnostics = collect_prorrata_regularizacion_diagnostics(
-                    revision,
-                    {
-                        _VOLUMEN_TOTAL_ID: Decimal("100000"),
-                        _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
-                        _PORCENTAJE_ID: Decimal("80"),
-                        _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
-                    },
-                    modelo="303",
-                    period_token=_SETTLEMENT_PERIOD_CODE,
-                    filing_year=_YEAR,
-                    observation_repository=obs_repo,
-                    prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
-                    transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
-                    bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
-                    operation=operation,
-                )
-
-    assert len(diagnostics) == 1
-    assert diagnostics[0].binding_source is BindingSourceKind.PRORRATA_REGULARIZACION
-
-
-def test_advisory_refuses_prior_year_observation_with_stale_registry_stamp(tmp_path: Path) -> None:
-    """The direct prorrata advisory reader re-confirms its persisted coordinate."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        obs_repo = CalculationObservationRepository(objects=profile.repository)
-        _seed_prior_year_percentage(obs_repo, percentage=Decimal("90"))
-        persisted = obs_repo.load_observation(
-            Modelo("303").value,
-            Period.from_year_and_code(_PRIOR_YEAR, "4T"),
+        _seed_prior_year_percentage(
+            CalculationObservationRepository(objects=profile.repository),
+            percentage=Decimal("90"),
         )
-        assert persisted is not None
-        obs_repo.save(persisted.model_copy(update={"stamped_revision_id": "persisted-stale-revision"}))
 
-        with pytest.raises(RegistrySnapshotError, match="cannot be re-confirmed"):
-            collect_prorrata_regularizacion_diagnostics(
-                _revision(),
-                {
-                    _VOLUMEN_TOTAL_ID: Decimal("100000"),
-                    _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
-                    _PORCENTAJE_ID: Decimal("80"),
-                    _CUOTA_DEDUCIBLE_TOTAL_ID: Decimal("20000.00"),
-                },
-                modelo=Modelo("303").value,
+        diagnostics = _collect_settlement_diagnostics()
+
+    assert diagnostics == ()
+
+
+def test_collector_uses_the_supplied_pinned_authority(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """A calculate-path collector does not lease a second authority generation."""
+    with (
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET),
+        bundled_indexed_authority().operation() as operation,
+    ):
+        revision = operation.snapshot(Modelo("303").value, filing_year=_YEAR, period="4T").revision
+
+        def unexpected_authority(_authority: IndexedRegistryAuthority) -> None:
+            raise AssertionError("prorrata advisory opened another registry authority")
+
+        with monkeypatch.context() as patch:
+            patch.setattr(IndexedRegistryAuthority, "operation", unexpected_authority)
+            diagnostics = collect_prorrata_regularizacion_diagnostics(
+                revision,
+                _SETTLEMENT_VALUES,
+                modelo="303",
                 period_token=_SETTLEMENT_PERIOD_CODE,
                 filing_year=_YEAR,
-                observation_repository=obs_repo,
                 prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
                 transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
                 bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
+                operation=operation,
             )
 
-
-def test_advisory_fires_pending_when_no_prior_year_observation_exists(tmp_path: Path) -> None:
-    """No-silent-under-declaration: prorrata applies but the prior-year carry is absent.
-
-    The operator has no stored 2025 M303 observation on this machine, so the
-    provisional percentage cannot be sourced honestly; the collector alerts
-    that casilla 44 must be checked manually rather than fabricating a figure
-    or staying silent.
-    """
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        obs_repo = CalculationObservationRepository(objects=profile.repository)
-
-        diagnostics = _collect_settlement_diagnostics(obs_repo)
-
-    assert len(diagnostics) == 1
-    diagnostic = diagnostics[0]
-    assert diagnostic.casilla_id == _PORCENTAJE_ID
-    assert "44" in diagnostic.message
-    assert str(_PRIOR_YEAR) in diagnostic.message
+    assert diagnostics == ()
 
 
 def test_no_advisory_when_no_sin_derecho_operations(tmp_path: Path) -> None:
     """Prorrata does not apply (100% con-derecho) -> no advisory noise."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        obs_repo = CalculationObservationRepository(objects=profile.repository)
-
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET):
         casilla_values = {
             _VOLUMEN_TOTAL_ID: Decimal("100000"),
             _VOLUMEN_CON_DERECHO_ID: Decimal("100000"),
@@ -252,7 +186,6 @@ def test_no_advisory_when_no_sin_derecho_operations(tmp_path: Path) -> None:
             modelo=Modelo("303").value,
             period_token=_SETTLEMENT_PERIOD_CODE,
             filing_year=_YEAR,
-            observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
@@ -263,9 +196,7 @@ def test_no_advisory_when_no_sin_derecho_operations(tmp_path: Path) -> None:
 
 def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
     """A mid-year quarter (1T) is never a regularisation event (LIVA art. 105.Cuatro)."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        obs_repo = CalculationObservationRepository(objects=profile.repository)
-
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET):
         casilla_values = {
             _VOLUMEN_TOTAL_ID: Decimal("100000"),
             _VOLUMEN_CON_DERECHO_ID: Decimal("80000"),
@@ -278,7 +209,6 @@ def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
             modelo=Modelo("303").value,
             period_token=_FIRST_PERIOD_CODE,
             filing_year=_YEAR,
-            observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
@@ -290,7 +220,6 @@ def test_no_advisory_on_mid_year_quarter(tmp_path: Path) -> None:
 def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_path: Path) -> None:
     """An active general-prorrata register entry with no ladder value is visible in 1T."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        obs_repo = CalculationObservationRepository(objects=profile.repository)
         ProrrataRegisterRepository(bucket_id=_BUCKET, objects=profile.repository).save(
             ProrrataRegister(
                 entries=(
@@ -311,7 +240,6 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
             period_token=_FIRST_PERIOD_CODE,
             filing_year=_YEAR,
             bucket_id=_BUCKET,
-            observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
@@ -335,16 +263,13 @@ def test_mid_year_active_prorrata_without_provisional_emits_missing_carry(tmp_pa
 
 def test_no_advisory_for_non_m303_modelo(tmp_path: Path) -> None:
     """Only Modelo 303 declares the prorrata semantic roles; every other modelo is silent."""
-    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
-        obs_repo = CalculationObservationRepository(objects=profile.repository)
-
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET):
         diagnostics = collect_prorrata_regularizacion_diagnostics(
             _revision(),
             {},
             modelo=Modelo("130").value,
             period_token=_SETTLEMENT_PERIOD_CODE,
             filing_year=_YEAR,
-            observation_repository=obs_repo,
             prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
             transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
             bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),

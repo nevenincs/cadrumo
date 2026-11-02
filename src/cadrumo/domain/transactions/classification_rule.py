@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import re
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Final
 
 from pydantic import BaseModel, Field, StringConstraints, field_validator
 
@@ -20,6 +20,7 @@ from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.hashing import sha256_hex
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.pattern_search_worker import PATTERN_COMPILE_FAILURES, PATTERN_FLAGS
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
 from .enums import BusinessClassification
@@ -33,6 +34,22 @@ RulePriority = Annotated[int, Field(ge=1)]
 
 RuleActor = Annotated[str, StringConstraints(min_length=1)]
 """Who authored the rule, as recorded on it."""
+
+
+RULE_PATTERN_ENTRY_MAX_LENGTH: Final = 2048
+"""The longest pattern taken at entry: reading one holds the interpreter lock, here a few tens of milliseconds.
+
+It holds a new pattern only. A stored rule longer than this is still read and still runs.
+"""
+
+
+def description_pattern_error(description_pattern: str) -> Exception | None:
+    """Return why the rule engine cannot read a pattern, or ``None`` where it can."""
+    try:
+        re.compile(description_pattern, PATTERN_FLAGS)
+    except PATTERN_COMPILE_FAILURES as exc:
+        return exc
+    return None
 
 
 def _compute_rule_id(
@@ -67,10 +84,9 @@ class LedgerClassificationRule(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _validate_regex(cls, value: str) -> str:
-        try:
-            re.compile(value)
-        except re.error as exc:
-            raise ClassificationRuleError(f"description_pattern is not a valid regex: {exc}") from exc
+        error = description_pattern_error(value)
+        if error is not None:
+            raise ClassificationRuleError(f"description_pattern is not a valid regex: {error}") from error
         return value
 
     @classmethod
@@ -96,12 +112,10 @@ class LedgerClassificationRule(BaseModel):
             actor=actor,
         )
 
-    def matches(self, description: str) -> bool:
-        """Return ``True`` when this rule's pattern matches ``description`` (case-insensitive)."""
-        return bool(re.search(self.description_pattern, description, re.IGNORECASE))
-
 
 __all__ = [
+    "RULE_PATTERN_ENTRY_MAX_LENGTH",
     "LedgerClassificationRule",
     "_compute_rule_id",
+    "description_pattern_error",
 ]

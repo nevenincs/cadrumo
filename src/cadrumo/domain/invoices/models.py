@@ -37,7 +37,7 @@ from ...core.identity.bucket import BucketId
 from ...core.identity.hex_ids import InvoiceId
 from ...core.identity.tax_id import TaxIdIdentityToken
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ...core.money.rounding import CENT, round_to_cents
+from ...core.money.rounding import round_to_cents
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_adapters import OBJECT_TUPLE_ADAPTER, STR_KEYED_MAPPING_ADAPTER
 from ..calculations.registry.errors import RegistryValidationError
@@ -71,6 +71,32 @@ from .enums import (
     resolve_iva_rate_token,
 )
 from .errors import InvoiceValidationError
+from .figures import (
+    figure_refusal,
+    invoice_total_findings,
+    line_amount_finding,
+    line_iva_finding,
+    line_rate_refusal_finding,
+    line_subtotal_finding,
+    nonnumeric_invoice_findings,
+    quantity_finding,
+    raise_first_figure_finding,
+    recargo_ceiling_finding,
+    recargo_sign_finding,
+    retention_findings,
+    suplido_finding,
+    total_sign_finding,
+)
+from .rule_findings import (
+    InvoiceRuleFinding,
+    InvoiceRuleFindingCode,
+    advance_payment_collection_finding,
+    invoice_class_rule_findings,
+    invoice_rule_refusal,
+    lease_kind_finding,
+    operation_date_role_finding,
+    raise_first_rule_finding,
+)
 
 if TYPE_CHECKING:
     pass
@@ -79,17 +105,6 @@ from ...core.time.clock import today_madrid
 from .validators import (
     is_eu_member_state_code,
 )
-
-"""Rounding slack allowed between a declared retención amount and rate.
-
-The invoice-level totals are compared *exactly* because each is a sum of
-line figures that were themselves already rounded to the cent. A retención
-amount is not a sum: it is a rate applied to the base, so the recorded figure
-legitimately differs from the recomputed product in the last cent depending on
-where the issuer rounded. One cent is the same slack
-:data:`~core.money.rounding.CENT` grants the line-level ``subtotal * iva_rate``
-product, for the same reason.
-"""
 
 _SIMPLIFICADA_MANDATORY_TAX_ID_FACT_ID = "invoice-simplificada-counterparty-tax-id-applicability"
 
@@ -120,6 +135,31 @@ AUTHENTICATED_STORED_READ: Final = _AuthenticatedStoredRead()
 def _reads_authenticated_record(info: ValidationInfo) -> bool:
     """Return whether this validation decodes a record the store authenticated."""
     return info.context is AUTHENTICATED_STORED_READ
+
+
+@final
+class _InvoiceWriteAdmission:
+    """Validation context naming an invoice a write path is about to persist.
+
+    Passed only where an operator's facts become a stored invoice: the
+    catalogue's construction authority and its edit. Under it the rules that
+    were tightened after records could already be stored are asked as well.
+    Every other validation -- a catalogue decoded from the store on any read
+    or write path, a link update that changes no invoice fact -- hydrates a
+    record written under the earlier rule, so the operator can still open it,
+    and the edit that corrects it, rather than finding the catalogue locked.
+    Downstream consumers refuse such a record where its facts would be used.
+    """
+
+    __slots__ = ()
+
+
+INVOICE_WRITE_ADMISSION: Final = _InvoiceWriteAdmission()
+
+
+def _admits_written_record(info: ValidationInfo) -> bool:
+    """Return whether this validation admits facts a write path is about to persist."""
+    return info.context is INVOICE_WRITE_ADMISSION
 
 
 def _simplificada_mandatory_tax_id_categories(
@@ -154,6 +194,29 @@ def _simplificada_mandatory_tax_id_categories(
         )
     except ValueError as exc:
         raise RegistryValidationError("invoice applicability contains an unknown IVA category") from exc
+
+
+def invoice_class_findings(
+    *,
+    invoice_class: InvoiceClass,
+    kind: InvoiceKind | None,
+    series: str | None,
+    rectifies_invoice_number: str | None,
+    category: IvaCategory | None,
+    tax_id_missing: bool,
+) -> tuple[InvoiceRuleFinding, ...]:
+    """Answer the invoice-class axis under the authority in scope, as the invoice itself is refused."""
+    return invoice_class_rule_findings(
+        rectificativa=invoice_class == answer_once(invoice_class_rectificativa),
+        simplificada=invoice_class == answer_once(invoice_class_simplificada),
+        issued=None if kind is None else kind is InvoiceKind.ISSUED,
+        series=series,
+        rectifies_invoice_number=rectifies_invoice_number,
+        intra_community_supply=category == answer_once(require_iva_category, "intra_community_supply"),
+        tax_id_missing=tax_id_missing,
+        category_mandates_tax_id=category in answer_once(_simplificada_mandatory_tax_id_categories),
+        category_value=getattr(category, "value", ""),
+    )
 
 
 _COLLECTED_PAYMENT_STATUSES: Final[frozenset[PaymentStatus]] = frozenset(
@@ -283,24 +346,20 @@ class InvoiceLine(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_positive_quantity(cls, value: Decimal) -> Decimal:
-        if value <= Decimal("0"):
-            raise InvoiceValidationError("quantity must be strictly positive")
+        raise_first_figure_finding((quantity_finding(value),))
         return value
 
     @field_validator("unit_price", "subtotal", "iva_amount")
     @classmethod
     @pydantic_validation_boundary
     def _require_non_negative(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0"):
-            raise InvoiceValidationError("monetary value must be non-negative")
+        raise_first_figure_finding((line_amount_finding(value),))
         return value
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_arithmetic(self) -> Self:
-        expected_subtotal = (self.quantity * self.unit_price).quantize(Decimal("0.0001"))
-        if abs(self.subtotal - expected_subtotal) > CENT:
-            raise InvoiceValidationError("subtotal must equal quantity * unit_price within 1 cent")
+        raise_first_figure_finding((line_subtotal_finding(self.quantity, self.unit_price, self.subtotal),))
         # IVA-rate arithmetic has an explicit devengo-date dependency.  A line
         # deliberately has no date of its own, so the enclosing Invoice checks
         # it once its operation/issue date is available rather than parsing a
@@ -639,8 +698,7 @@ class Invoice(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _require_non_negative_totals(cls, value: Decimal) -> Decimal:
-        if value < Decimal("0"):
-            raise InvoiceValidationError("invoice totals must be non-negative")
+        raise_first_figure_finding((total_sign_finding(value),))
         return value
 
     @field_validator("lines")
@@ -719,70 +777,39 @@ class Invoice(BaseModel):
             try:
                 rate = answer_once(iva_rate_percentage, line.iva_rate, devengo_date)
             except IvaRateNotFoundError as exc:
-                raise InvoiceValidationError(
-                    f"line rate {line.iva_rate.name} was not in force on {devengo_date.isoformat()}: {exc}",
-                ) from exc
+                raise figure_refusal(line_rate_refusal_finding(line.iva_rate, devengo_date, exc)) from exc
             if line.oss_rate_kind is not None:
                 continue
-            if rate is None:
-                if line.iva_amount != Decimal("0"):
-                    raise InvoiceValidationError("iva_amount must be zero for nonnumeric IVA lines")
-                continue
-            expected_iva = (line.subtotal * rate).quantize(Decimal("0.0001"))
-            if abs(line.iva_amount - expected_iva) > CENT:
-                raise InvoiceValidationError("iva_amount must equal subtotal * iva_rate within 1 cent")
+            raise_first_figure_finding((line_iva_finding(line.subtotal, line.iva_amount, rate),))
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_totals_and_exempt_invariants(self) -> Self:
-        line_subtotal_sum = sum((line.subtotal for line in self.lines), start=Decimal("0"))
-        line_iva_sum = sum((line.iva_amount for line in self.lines), start=Decimal("0"))
-        _normalization.require_equal(
-            self.base_total,
-            line_subtotal_sum,
-            "base_total must equal the exact sum of line subtotals",
-        )
-        _normalization.require_equal(
-            self.iva_total,
-            line_iva_sum,
-            "iva_total must equal the exact sum of line iva amounts",
-        )
-        recargo = self.recargo_amount or Decimal("0")
-        suplido = self.suplido_amount or Decimal("0")
-        _normalization.require_equal(
-            self.grand_total,
-            self.base_total + self.iva_total + recargo + suplido,
-            "grand_total must equal base_total + iva_total + recargo_amount + suplido_amount exactly",
+        raise_first_figure_finding(
+            invoice_total_findings(
+                base_total=self.base_total,
+                iva_total=self.iva_total,
+                grand_total=self.grand_total,
+                line_subtotals=[line.subtotal for line in self.lines],
+                line_iva_amounts=[line.iva_amount for line in self.lines],
+                recargo=self.recargo_amount,
+                suplido=self.suplido_amount,
+            )
         )
         devengo_date = self.operation_date or self.issued_at
         all_non_numeric = all(
             answer_once(iva_rate_percentage, line.iva_rate, devengo_date) is None for line in self.lines
         )
         if all_non_numeric:
-            # Checked before the grand-total equality below so the operator is
-            # told which component is impossible, rather than being handed a
-            # totals mismatch they would have to decompose themselves. The
-            # recargo rides on the cuota of a taxable supply (LIVA art. 161),
-            # so a supply bearing no cuota by law bears no recargo either. A
-            # suplido is unrelated to whether the underlying supply is taxable
-            # -- it is a disbursement made in the client's name (LIVA
-            # art. 78.Tres.3.º) -- so it stays permitted here.
-            _normalization.raise_first_invoice_violation(
-                (
-                    (
-                        self.iva_total != Decimal("0"),
-                        "iva_total must be zero when every line is nonnumeric",
-                    ),
-                    (
-                        recargo != Decimal("0"),
-                        "recargo_amount must be zero when every line is nonnumeric",
-                    ),
-                    (
-                        self.grand_total != self.base_total + suplido,
-                        "grand_total must equal base_total + suplido_amount when every line is nonnumeric",
-                    ),
-                ),
+            raise_first_figure_finding(
+                nonnumeric_invoice_findings(
+                    base_total=self.base_total,
+                    iva_total=self.iva_total,
+                    grand_total=self.grand_total,
+                    recargo=self.recargo_amount,
+                    suplido=self.suplido_amount,
+                )
             )
         return self
 
@@ -822,10 +849,7 @@ class Invoice(BaseModel):
         proportion of nothing, and inferring the amount from it would
         manufacture a figure the document never stated.
         """
-        _require_non_negative_retention_amount(self.retention_amount)
-        _validate_retention_rate_shape(self.retention_rate, self.retention_amount)
-        _require_retention_amount_within_base(self.retention_amount, self.base_total)
-        _validate_retention_rate_amount(self.retention_rate, self.retention_amount, self.base_total)
+        raise_first_figure_finding(retention_findings(self.retention_rate, self.retention_amount, self.base_total))
         return self
 
     @model_validator(mode="after")
@@ -862,14 +886,9 @@ class Invoice(BaseModel):
         published pairing when one cuota-bearing tier is identifiable; a
         multi-tier invoice remains unattributed rather than guessed.
         """
-        if self.recargo_amount is None:
-            return self
-        _normalization.require_optional_non_negative(self.recargo_amount, "recargo_amount must be non-negative")
-        if self.recargo_amount > self.iva_total:
-            raise InvoiceValidationError(
-                "recargo_amount must not exceed iva_total; every recargo tier is a smaller "
-                "percentage than the IVA rate it accompanies (LIVA art. 161)",
-            )
+        raise_first_figure_finding(
+            (recargo_sign_finding(self.recargo_amount), recargo_ceiling_finding(self.recargo_amount, self.iva_total))
+        )
         return self
 
     @model_validator(mode="after")
@@ -895,9 +914,7 @@ class Invoice(BaseModel):
         statement about a suplido"; an explicit zero is "one was considered
         and none arose".
         """
-        if self.suplido_amount is None:
-            return self
-        _normalization.require_optional_non_negative(self.suplido_amount, "suplido_amount must be non-negative")
+        raise_first_figure_finding((suplido_finding(self.suplido_amount),))
         return self
 
     @model_validator(mode="after")
@@ -946,49 +963,15 @@ class Invoice(BaseModel):
         record nor any field on it can express; that axis is a declared,
         documented gap, not modelled here or anywhere on this class.
         """
-        category = self.iva_category
-        missing_tax_id = self.counterparty_tax_id is None
-        category_value = getattr(category, "value", "")
-        simplificada = answer_once(invoice_class_simplificada)
-        rectificativa = answer_once(invoice_class_rectificativa)
-        intra_community_supply = answer_once(require_iva_category, "intra_community_supply")
-        relief_case = (self.invoice_class, self.kind) == (simplificada, InvoiceKind.ISSUED)
-        _normalization.raise_first_invoice_violation(
-            (
-                (
-                    (self.invoice_class == rectificativa, not (self.series is not None and self.series))
-                    == (True, True),
-                    "a factura rectificativa must be issued in a specific series (RD 1619/2012 art. 6.1.a.2.º)",
-                ),
-                (
-                    (
-                        self.invoice_class == rectificativa,
-                        not (self.rectifies_invoice_number is not None and self.rectifies_invoice_number),
-                    )
-                    == (True, True),
-                    "a factura rectificativa must name the invoice it rectifies (LIVA art. 89)",
-                ),
-                (
-                    (self.invoice_class != rectificativa, self.rectifies_invoice_number is not None) == (True, True),
-                    "rectifies_invoice_number only applies to a factura rectificativa",
-                ),
-                (
-                    (self.invoice_class, category) == (simplificada, intra_community_supply),
-                    "a factura simplificada must not be issued for an entrega intracomunitaria exenta "
-                    "(RD 1619/2012 art. 4.4.a); issue an ordinaria or rectificativa instead",
-                ),
-                (
-                    (missing_tax_id, not relief_case) == (True, True),
-                    "counterparty_tax_id is required unless the invoice is simplified and kind is ISSUED; "
-                    "on a RECEIVED invoice it names the issuer's own identity, which stays mandatory",
-                ),
-                (
-                    (missing_tax_id, category in answer_once(_simplificada_mandatory_tax_id_categories))
-                    == (True, True),
-                    "counterparty_tax_id is required on a factura simplificada whose iva_category is "
-                    f"{category_value!r} (RD 1619/2012 art. 6.1.d)",
-                ),
-            ),
+        raise_first_rule_finding(
+            invoice_class_findings(
+                invoice_class=self.invoice_class,
+                kind=self.kind,
+                series=self.series,
+                rectifies_invoice_number=self.rectifies_invoice_number,
+                category=self.iva_category,
+                tax_id_missing=self.counterparty_tax_id is None,
+            )
         )
         return self
 
@@ -996,8 +979,14 @@ class Invoice(BaseModel):
     @pydantic_validation_boundary
     def _validate_business_premises_lease_kind(self) -> Self:
         """The lessor records a business-premises lease on an issued invoice."""
-        if self.business_premises_lease is not None and self.kind is not InvoiceKind.ISSUED:
-            raise InvoiceValidationError("a business-premises lease only applies to an issued invoice")
+        raise_first_rule_finding(
+            (
+                lease_kind_finding(
+                    lease_stated=self.business_premises_lease is not None,
+                    issued=self.kind is InvoiceKind.ISSUED,
+                ),
+            )
+        )
         return self
 
     @model_validator(mode="after")
@@ -1035,16 +1024,20 @@ class Invoice(BaseModel):
         if self.iva_category == intra_community_supply and (
             self.counterparty_identification_state == answer_once(spanish_eu_member_state)
         ):
-            raise InvoiceValidationError(
-                "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
-                "Spanish IVA identification (LIVA art. 25); its country of establishment does not "
-                "change that",
+            raise invoice_rule_refusal(
+                InvoiceRuleFinding(
+                    InvoiceRuleFindingCode.INTRA_COMMUNITY_SPANISH_IDENTIFICATION,
+                    "an entrega intracomunitaria exenta cannot name an acquirer purchasing under a "
+                    "Spanish IVA identification (LIVA art. 25); its country of establishment does not "
+                    "change that",
+                    ("counterparty_tax_id", "iva_category"),
+                )
             )
         return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _validate_operation_date_consistency(self) -> Self:
+    def _validate_operation_date_consistency(self, info: ValidationInfo) -> Self:
         """Enforce the LIVA art. 75 devengo-date axis art. 6.1.i lets an invoice state.
 
         ``operation_date`` and ``operation_date_role`` travel together: a date
@@ -1059,9 +1052,23 @@ class Invoice(BaseModel):
         "las entregas de bienes comprendidas en el artículo 25" from the
         pagos-anticipados rule, so that category always devengues under
         art. 75.Uno.8.º regardless of any advance received.
+
+        Write admission (:data:`INVOICE_WRITE_ADMISSION`) further requires
+        the price to be collected in full. The advance devengues only "por
+        los importes efectivamente percibidos", and one invoice carries one
+        devengo date, so a partly collected price would file the whole base
+        in the advance's period. A record stored before this rule still
+        hydrates, so the operator can open and correct it; aggregation
+        refuses to attribute it.
         """
-        if (self.operation_date is None) != (self.operation_date_role is None):
-            raise InvoiceValidationError("operation_date and operation_date_role must be set together")
+        raise_first_rule_finding(
+            (
+                operation_date_role_finding(
+                    date_stated=self.operation_date is not None,
+                    role_stated=self.operation_date_role is not None,
+                ),
+            )
+        )
         advance_payment_role = answer_once(advance_payment_received_role)
         if self.operation_date_role == advance_payment_role:
             if self.iva_category == answer_once(require_iva_category, "intra_community_supply"):
@@ -1074,6 +1081,15 @@ class Invoice(BaseModel):
                     f"operation_date_role {advance_payment_role.value} requires a collected payment_status "
                     "(PAID or PARTIALLY_PAID); LIVA art. 75.Dos devengues on actual cobro",
                 )
+            if _admits_written_record(info):
+                raise_first_rule_finding(
+                    (
+                        advance_payment_collection_finding(
+                            advance_role=True,
+                            fully_collected=self.payment_status is PaymentStatus.PAID,
+                        ),
+                    )
+                )
         return self
 
     @model_validator(mode="after")
@@ -1083,12 +1099,16 @@ class Invoice(BaseModel):
         has_oss_line_rate = any(line.oss_rate_kind is not None for line in self.lines)
         axis_flags = (self.oss_ioss_regime is None, self.oss_transaction_kind is None)
         if axis_flags != (False, False):
+            if (axis_flags, has_oss_line_rate) == ((True, True), True):
+                raise invoice_rule_refusal(
+                    InvoiceRuleFinding(
+                        InvoiceRuleFindingCode.LINE_OSS_RATE_KIND_REFUSED,
+                        "oss_rate_kind requires invoice-level OSS/IOSS axes",
+                        ("lines",),
+                    )
+                )
             _normalization.raise_first_invoice_violation(
                 (
-                    (
-                        (axis_flags, has_oss_line_rate) == ((True, True), True),
-                        "oss_rate_kind requires invoice-level OSS/IOSS axes",
-                    ),
                     (
                         axis_flags not in ((True, True), (False, False)),
                         "oss_ioss_regime and oss_transaction_kind must be supplied together",
@@ -1190,44 +1210,3 @@ def _normalise_linked_transaction_ids(value: object) -> tuple[str, ...]:
 
 def _is_hex_digest(value: str, *, length: int) -> bool:
     return len(value) == length and all(char in "0123456789abcdef" for char in value)
-
-
-def _require_non_negative_retention_amount(amount: Decimal | None) -> None:
-    if amount is not None and amount < Decimal("0"):
-        raise InvoiceValidationError(
-            "retention_amount must be non-negative",
-            context={"fields": ("retention_amount",)},
-        )
-
-
-def _validate_retention_rate_shape(rate: Decimal | None, amount: Decimal | None) -> None:
-    if rate is not None:
-        if rate < Decimal("0") or rate > Decimal("1"):
-            raise InvoiceValidationError(
-                "retention_rate must be a fraction between 0 and 1 (0.15 for a 15 % retención), not a percentage",
-                context={"fields": ("retention_rate",)},
-            )
-        if amount is None:
-            raise InvoiceValidationError(
-                "retention_rate requires retention_amount; a rate alone declares no withheld figure",
-                context={"fields": ("retention_rate", "retention_amount")},
-            )
-
-
-def _require_retention_amount_within_base(amount: Decimal | None, base: Decimal) -> None:
-    if amount is not None and amount > base:
-        raise InvoiceValidationError(
-            "retention_amount must not exceed base_total; the retención base is the "
-            "base imponible (ingresos íntegros), not the IVA-inclusive total",
-            context={"fields": ("retention_amount", "base_total")},
-        )
-
-
-def _validate_retention_rate_amount(rate: Decimal | None, amount: Decimal | None, base: Decimal) -> None:
-    if rate is not None and amount is not None:
-        expected_retencion = (base * rate).quantize(Decimal("0.0001"))
-        if abs(amount - expected_retencion) > CENT:
-            raise InvoiceValidationError(
-                "retention_amount must equal base_total * retention_rate within 1 cent",
-                context={"fields": ("retention_rate", "retention_amount", "base_total")},
-            )

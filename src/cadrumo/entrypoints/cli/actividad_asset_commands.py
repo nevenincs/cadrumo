@@ -322,6 +322,40 @@ def actividad_asset_dispose(
     )
 
 
+def _stated_disposal(
+    disposal_date: str | None,
+    reason: str | None,
+    proceeds: str | None,
+    transmission_costs: str | None,
+    market_value: str | None,
+    prior_free_depreciation_regime: str | None,
+    later_affectation_on: str | None,
+) -> ActivityAssetDisposalSnapshot | None:
+    """Build the preview these options state, or ``None`` to read the recorded baja.
+
+    A preview states its proceeds and costs as a baja does; an omitted one is
+    refused rather than shown as a zero nobody entered.
+    """
+    if disposal_date is None:
+        return None
+    absent = [
+        InitErrorDetails(type="missing", loc=(name,), input={})
+        for name, value in (("proceeds", proceeds), ("transmission_costs", transmission_costs))
+        if value is None
+    ]
+    if absent:
+        raise ValidationError.from_exception_data(ActivityAssetDisposalSnapshot.__name__, absent)
+    return _disposal(
+        disposal_date,
+        reason or "",
+        str(proceeds),
+        str(transmission_costs),
+        market_value,
+        prior_free_depreciation_regime,
+        later_affectation_on,
+    )
+
+
 def actividad_asset_disposal_calculate(
     ctx: typer.Context,
     asset_id: str,
@@ -334,18 +368,14 @@ def actividad_asset_disposal_calculate(
     later_affectation_on: str | None = None,
 ) -> None:
     """Work out a baja's figures: the one these options state as a preview, or else the recorded one."""
-    stated = (
-        None
-        if disposal_date is None
-        else _disposal(
-            disposal_date,
-            reason or "",
-            proceeds or "0.00",
-            transmission_costs or "0.00",
-            market_value,
-            prior_free_depreciation_regime,
-            later_affectation_on,
-        )
+    stated = _stated_disposal(
+        disposal_date,
+        reason,
+        proceeds,
+        transmission_costs,
+        market_value,
+        prior_free_depreciation_regime,
+        later_affectation_on,
     )
     result = calculate_activity_asset_disposal(ctx, asset_id=asset_id, disposal=stated)
     calculation = result.calculation

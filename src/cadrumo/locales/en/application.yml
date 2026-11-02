@@ -125,7 +125,7 @@ application:
     sessions:
       errors:
         clave_contraste_missing: Cl@ve Móvil signs in by default with an approval
-          request to the Cl@ve app, which needs the contraste printed on your document.
+          request to the Cl@ve app, which needs the `contraste` printed on your document.
           Record %{nie_field} on the active profile for a NIE, or %{dni_field} for
           a DNI. To scan a QR code in a visible browser instead, run `cadrumo-runtime
           config auth configure --provider clave_movil --clave-movil-route qr`.
@@ -313,14 +313,78 @@ application:
         taxpayer_nif_blank: The taxpayer NIF must not be blank when it forms the IVA
           wallet decision key.
     prorrata_regularizacion:
-      advisory: 'Prorrata regularisation by definitive percentage (LIVA arts. 104-105)
-        for %{year}: provisional prorrata %{provisional}% → definitive %{definitiva}%
-        (%{sentido}). Regularisation proposed for %{target}: %{value}. Confirm the
-        value before filing.'
-      sentido_deduccion: additional deduction
-      sentido_ingreso: payment due
       target_casilla: box %{number}
       target_declared: the declared regularisation box
+      unresolved:
+        current_year_inputs: 'The prorrata regularisation needs these current-year
+          values before it can be calculated: %{casillas}.'
+        gross_negative: The gross deductible input VAT of the earlier liquidations
+          is negative (%{amount}) after rectifications. The law gives no regularisation
+          on a negative base, so rectify the deductions in the liquidations concerned
+          and calculate the box yourself.
+        provisional_missing: The %{year} prorrata regularisation needs the provisional
+          percentage, from your prorrata register or from the prior year's filed settlement
+          liquidation.
+        regime_not_derived: 'The %{year} regularisation of input VAT used in common
+          across differentiated sectors is not derived automatically: its percentage
+          counts only the operations of the sectors that share the use and treats
+          agriculture and equivalence-surcharge operations as without the right to
+          deduct, which the declared volumes do not show. Calculate the box yourself
+          before filing.'
+        register_regime_not_apportioning: Your prorrata register records no apportioning
+          regime for %{year}, but the declared volumes show operations without the
+          right to deduct; correct the register or the volumes before regularising.
+        sector_definitive_missing: 'These differentiated sectors have no settled definitive
+          percentage for %{year}: %{sectors}; settle each sector before regularising.'
+        selector_unmapped: The prorrata regularisation binding does not map to a resolver
+          output.
+        settlement_observation_ambiguous: More than one Modelo 303 settlement liquidation
+          is filed (%{periods}); keep only the cadence you actually filed.
+        settlement_observation_missing: The annual prorrata regularisation restates
+          the filed Modelo 303 settlement liquidation, and none is filed for %{periods}.
+        settlement_observation_refused: The filed Modelo 303 settlement liquidation
+          %{periods} carries a form revision that no longer matches the one the law
+          selects; recalculate and file it again.
+        settlement_observation_without_regularizacion: The filed Modelo 303 settlement
+          liquidation %{periods} carries no prorrata regularisation value.
+        sin_derecho_volume_absent: Your register applies prorrata in %{year}, but
+          the declared volumes show no operations without the right to deduct; the
+          regularisation for that case is not derived automatically. Check the volumes
+          or calculate the box yourself.
+        source_period_cuotas_missing: 'Liquidation %{period} was filed without the
+          deductible boxes the regularisation needs: %{casillas}.'
+        source_period_gross_disagreement: Liquidation %{period} has deductible input
+          VAT in the ledger with a gross base of %{ledger}, but you declared a gross
+          base of %{declared} for it; correct the ledger or replace the declaration
+          before regularising.
+        source_period_gross_unavailable: Liquidation %{period} declared deductible
+          input VAT, but the ledger holds no deductible input for it, so its gross
+          input VAT before prorrata is unknown; record that period's input VAT in
+          the ledger, or declare its gross input VAT with 'aeat app ledger prorrata
+          declare-gross', before regularising.
+        source_period_ledger_divergence: Liquidation %{period} declared %{filed} in
+          %{casilla}, but its ledger input VAT at your provisional prorrata percentages
+          gives %{expected}; reconcile the ledger with the filed liquidation before
+          regularising.
+        source_period_ledger_refused: The ledger input VAT of liquidation %{period}
+          cannot be apportioned under your prorrata register; resolve that ledger
+          refusal before regularising.
+        source_period_operator_divergence: Liquidation %{period} declared %{filed}
+          of deductible input VAT, but the gross base you declared for it at your
+          provisional prorrata percentages gives %{expected}; reconcile the declaration
+          with the filed liquidation before regularising.
+        source_period_sector_gross_disagreement: Liquidation %{period} has deductible
+          input VAT in the ledger for sector %{sector} with a gross base of %{ledger},
+          but you declared a gross base of %{declared} for that sector; correct the
+          ledger or replace the declaration before regularising.
+        source_periods_missing: 'The regularisation covers the year''s earlier liquidations,
+          and these are not filed: %{periods}.'
+        source_periods_refused: 'These earlier liquidations carry a form revision
+          that no longer matches the one the law selects: %{periods}; recalculate
+          and file them again.'
+        volumes_undeclared: Prorrata applies in %{year}, but the annual operation
+          volumes are not declared (%{casillas}); declare them so the definitive percentage
+          can be calculated.
   filing:
     build_draft:
       errors:
@@ -503,8 +567,8 @@ application:
   inventory:
     advisories:
       retired_book_leaves_year_unresolved: This inventory was retired but still holds
-        entries, so the %{year} Anexo D stays unresolved. Restore it, or remove its
-        entries.
+        entries, so the %{year} `Anexo D` stays unresolved. Restore it, or remove
+        its entries.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Cost check
@@ -654,6 +718,104 @@ application:
           H via a fiscal representative).'
         unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
           %{accepted}.'
+    figures_preview:
+      finding:
+        base_total_not_line_sum: The base total is not the sum of the line subtotals.
+        figure_out_of_range: A figure is too large to be calculated to the cent.
+        grand_total_identity: The total is not the base plus the IVA plus the recargo
+          de equivalencia.
+        iva_total_not_line_sum: The IVA total is not the sum of the line IVA amounts.
+        line_amount_negative: A price, a subtotal or an IVA amount cannot be negative.
+        line_iva_mismatch: The stated IVA amount, %{stated}, differs by more than
+          a cent from the subtotal times the rate, %{expected}.
+        line_iva_not_zero_for_nonnumeric: An exempt or not-subject line carries no
+          IVA, but this one states %{stated}.
+        line_quantity_not_positive: The quantity must be greater than zero.
+        line_rate_coverage_gap: Cadrumo has no rates on record for %{slot} on %{on_date},
+          so it cannot apply it.
+        line_rate_not_in_force: The IVA rate %{slot} was not in force on %{on_date}.
+        line_rate_undeclared: The IVA rate %{slot} is not one the registry declares.
+        line_subtotal_mismatch: The stated subtotal, %{stated}, differs by more than
+          a cent from quantity times unit price, %{expected}.
+        nonnumeric_grand_total_identity: When every line is exempt or not subject,
+          the total must equal the base.
+        nonnumeric_iva_total_not_zero: When every line is exempt or not subject, the
+          IVA total must be zero.
+        nonnumeric_recargo_not_zero: When every line is exempt or not subject, the
+          recargo de equivalencia must be zero.
+        printed_total_differs: The printed total, %{printed}, differs from the calculated
+          total, %{computed}.
+        rate_date_unresolved: The registry declares no IVA rates for %{on_date}, so
+          no IVA can be worked out.
+        recargo_above_iva_total: The recargo de equivalencia, %{stated}, cannot exceed
+          the IVA total, %{iva_total}.
+        recargo_negative: The recargo de equivalencia cannot be negative.
+        retention_amount_above_base: The withholding, %{stated}, cannot exceed the
+          base, %{base_total}.
+        retention_amount_mismatch: The stated withholding, %{stated}, differs by more
+          than a cent from the base times the rate, %{expected}.
+        retention_amount_negative: The withholding amount cannot be negative.
+        retention_rate_out_of_range: The withholding rate is a fraction between 0
+          and 1, such as 0.15 for 15 %, not a percentage.
+        retention_rate_without_amount: A withholding rate needs the withheld amount;
+          a rate alone states nothing withheld.
+        suplido_negative: The amount of expenses paid on the client's behalf cannot
+          be negative.
+        total_negative: An invoice total cannot be negative.
+      rate_slot:
+        exempt: Exempt
+        not_subject: Not subject
+        rate_0: IVA 0 %
+        rate_10: IVA 10 %
+        rate_2: IVA 2 %
+        rate_21: IVA 21 %
+        rate_4: IVA 4 %
+        rate_5: IVA 5 %
+        rate_7_5: IVA 7.5 %
+      rule_finding:
+        advance_payment_not_fully_collected: An advance payment is taxed only on the
+          amount collected, so an invoice can carry the advance's date only when its
+          whole price is collected. Record the advance as its own invoice, or mark
+          this one paid if the advance covers the whole price.
+        counterparty_country_invalid: This is not a two-letter country code the ledger
+          recognises.
+        counterparty_name_blank: The counterparty's name cannot be blank.
+        counterparty_tax_id_invalid: This tax ID is not valid for the counterparty's
+          country.
+        counterparty_tax_id_required: This invoice needs the counterparty's tax ID.
+          Only an issued factura simplificada can go without it.
+        counterparty_tax_id_required_by_category: A factura simplificada in this IVA
+          category needs the counterparty's tax ID.
+        currency_invalid: This is not a three-letter ISO 4217 currency code.
+        intra_community_spanish_identification: An exempt intra-community supply cannot
+          name an acquirer buying under a Spanish IVA number.
+        invoice_class_undeclared: The registry declares no such invoice class.
+        invoice_number_blank: The invoice number cannot be blank.
+        iva_category_undeclared: The registry declares no such IVA category on this
+          date.
+        lease_only_on_issued: Only an issued invoice records a business-premises lease.
+        lease_reference_not_allowed: Premises in this situation have no cadastral
+          reference.
+        lease_reference_too_long: The Modelo 347 holds a cadastral reference of up
+          to {limit} characters.
+        lease_situation_undeclared: This is not a premises situation the Modelo 347
+          declares.
+        line_description_blank: A line's description cannot be blank.
+        line_description_too_long: A line's description holds up to {limit} characters.
+        line_oss_rate_kind_refused: This OSS rate kind is not available for this line.
+        operation_date_role_mismatch: The operation date travels with its stored role,
+          so on a stored invoice it can be moved but not added or removed.
+        operation_type_required: This IVA category needs a Modelo 349 operation key.
+        other_invoice_rule: The ledger would refuse this invoice under another rule.
+          Check its facts against the document.
+        rectified_invoice_not_allowed: Only a factura rectificativa names an invoice
+          it rectifies.
+        rectified_invoice_required: A factura rectificativa must name the invoice
+          it rectifies.
+        series_required_for_rectificativa: A factura rectificativa must be issued
+          in its own series.
+        simplificada_not_for_intra_community: A factura simplificada cannot be issued
+          for an exempt intra-community supply.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;
@@ -745,6 +907,9 @@ application:
         records requires at least one attachment id.
       evidence_detachment_unknown_attachment: The transaction in your records does
         not carry attachment(s) %{attachment_ids}.
+      fx_value_inconsistent: The euro value %{value_in_eur} does not match the %{currency}
+        amount converted at rate %{fx_rate}, which gives %{expected_value_in_eur}.
+        Correct the euro value or the rate and try again.
       idempotency_key_conflict: The idempotency key already identifies a stored transaction
         with different details. Use a new idempotency key for a different movement,
         or omit the key to append a deliberate duplicate.
@@ -2391,7 +2556,7 @@ application:
           exact_iva_rate: Exact IVA rate (text)
           exact_m210_applicable_rate: Exact Modelo 210 rate (text)
           exact_m210_gross_income_amount: Exact Modelo 210 gross income (text)
-          exact_recargo_amount: Exact recargo amount (text)
+          exact_recargo_amount: Exact recargo de equivalencia amount (text)
           exact_taxable_base: Exact taxable base (text)
           exact_value: Exact decimal value (text)
           exported_at: Exported at

@@ -24,6 +24,11 @@ class ManagedArtifactKind(StrEnum):
     MIRROR_MANIFEST = "mirror_manifest"
     PROBE = "probe"
 
+    @property
+    def is_container(self) -> bool:
+        """Whether children may be created beneath this kind."""
+        return self in {ManagedArtifactKind.ROOT, ManagedArtifactKind.FOLDER}
+
 
 class ManagedArtifactPurpose(StrEnum):
     """Technical purposes that cannot produce business input records."""

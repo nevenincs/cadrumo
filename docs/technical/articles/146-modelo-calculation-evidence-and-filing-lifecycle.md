@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-146` · **Topic:** [Business and taxpayer domain](../topics/business-and-taxpayer-domain.md)
+**Topic:** [Business and taxpayer domain](../topics/business-and-taxpayer-domain.md)
 
 <!-- preserved:article -->
 ## Scope

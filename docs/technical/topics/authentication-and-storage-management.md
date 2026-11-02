@@ -44,13 +44,13 @@ The strongest general pattern is exact-profile custody plus typed effect and evi
 
 ## Detailed articles
 
-- [Authentication, certificate sources, and diagnostic privacy](../articles/037-authentication-certificate-sources-and-diagnostic-privacy.md) — `STAGE-2-037`
-- [Operator authentication, session custody, and access contracts](../articles/038-operator-authentication-session-custody-and-access-contracts.md) — `STAGE-2-038`
-- [Authenticated session lifecycle and identity binding](../articles/039-authenticated-session-lifecycle-and-identity-binding.md) — `STAGE-2-039`
-- [Capital-goods register and bucket deletion assessment](../articles/040-capital-goods-register-and-bucket-deletion-assessment.md) — `STAGE-2-040`
-- [Registry-backed calculation workbook plans and parity](../articles/098-registry-backed-calculation-workbook-plans-and-parity.md) — `STAGE-2-098`
-- [Workbook materialization and sync-run provenance](../articles/099-workbook-materialization-and-sync-run-provenance.md) — `STAGE-2-099`
-- [Storage lifecycle management and ledger-import diagnostics](../articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md) — `STAGE-2-100`
+- [Authentication, certificate sources, and diagnostic privacy](../articles/037-authentication-certificate-sources-and-diagnostic-privacy.md)
+- [Operator authentication, session custody, and access contracts](../articles/038-operator-authentication-session-custody-and-access-contracts.md)
+- [Authenticated session lifecycle and identity binding](../articles/039-authenticated-session-lifecycle-and-identity-binding.md)
+- [Capital-goods register and bucket deletion assessment](../articles/040-capital-goods-register-and-bucket-deletion-assessment.md)
+- [Registry-backed calculation workbook plans and parity](../articles/098-registry-backed-calculation-workbook-plans-and-parity.md)
+- [Workbook materialization and sync-run provenance](../articles/099-workbook-materialization-and-sync-run-provenance.md)
+- [Storage lifecycle management and ledger-import diagnostics](../articles/100-storage-lifecycle-management-and-ledger-import-diagnostics.md)
 
 
 ```{toctree}

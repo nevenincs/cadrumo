@@ -16,7 +16,6 @@ from pydantic import BaseModel, ConfigDict, Field, TypeAdapter, ValidationError,
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.models import STRICT_FROZEN_CONFIG
-from cadrumo.core.period import Period
 from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.errors import (
     RegistrySnapshotError,
@@ -26,7 +25,6 @@ from cadrumo.domain.calculations.registry.ids import (
     RelationId,
     WorkbookOutputId,
 )
-from cadrumo.domain.calculations.registry.period_selector_match import selector_period_matches_request
 
 from ..compiler.authority import compile_validated_authority
 from .workbook_parity_models import (
@@ -47,25 +45,6 @@ _JSON_OBJECT_ADAPTER: TypeAdapter[dict[str, object]] = TypeAdapter(
 _JSON_ARRAY_ADAPTER: TypeAdapter[list[object]] = TypeAdapter(list[object], config=ConfigDict(strict=True))
 
 
-def _hydrate_scenario_filing_period(data: object) -> object:
-    """Hydrate the parity-tape period coordinate from its legacy split fields."""
-    if not isinstance(data, dict) or "filing_period" in data:
-        return data
-    try:
-        payload = _JSON_OBJECT_ADAPTER.validate_python(data)
-    except ValidationError:
-        return data
-    filing_year = payload.get("filing_year")
-    period = payload.get("period")
-    if not isinstance(filing_year, int) or not isinstance(period, str):
-        return data
-    try:
-        filing_period = Period.from_year_and_code(filing_year, period)
-    except ValueError:
-        return data
-    return {**payload, "filing_period": filing_period}
-
-
 class ParityTapeModel(BaseModel):
     """Strict frozen base for parity tape records."""
 
@@ -78,7 +57,6 @@ class ParityScenario(ParityTapeModel):
     id: str
     modelo: str
     revision: str
-    filing_period: Period | None = None
     filing_year: int = Field(ge=2000, le=2099)
     period: str
     workbook_path: Path
@@ -95,11 +73,6 @@ class ParityScenario(ParityTapeModel):
     tolerance: Decimal = Field(default=Decimal("0"), ge=Decimal("0"))
     notes: tuple[str, ...] = ()
 
-    @model_validator(mode="before")
-    @classmethod
-    def _hydrate_filing_period(cls, data: object) -> object:
-        return _hydrate_scenario_filing_period(data)
-
     @model_validator(mode="after")
     def _validate_scenario(self) -> ParityScenario:
         if self.synthetic_input.modelo != self.modelo:
@@ -114,11 +87,6 @@ class ParityScenario(ParityTapeModel):
             raise RegistryValidationError("scenario registry outputs must target unique casillas")
         if self.period.strip() != self.period:
             raise RegistryValidationError("scenario period must not include leading or trailing whitespace")
-        if self.filing_period is not None and (
-            self.filing_period.filing_year != self.filing_year
-            or not selector_period_matches_request(self.period, self.filing_period.registry_token)
-        ):
-            raise RegistryValidationError("scenario filing_period must match filing_year and period")
         return self
 
 

@@ -384,21 +384,6 @@ class GoogleSheetsExportService:
         self._snapshot_resolver = snapshot_resolver
         self._plan_builder = plan_builder
 
-    def execute(self, payload: GoogleSheetsExportOperationRequest) -> GoogleSheetsExportOperationResult:
-        """Perform the synchronous application service for a frontend consumer.
-
-        The registered executor below owns supervision, durability, and effect
-        truth. This service is deliberately the one reusable business path for
-        legacy synchronous frontends while they are migrated to the supervisor;
-        it never imports an adapter or constructs a concrete transport.
-        """
-        active_bucket_id = self.admit(payload)
-        snapshot = self.snapshot(payload)
-        plan = self.plan(snapshot, prefill_relations=payload.prefill_relations)
-        prepared = self.prepare(active_bucket_id)
-        remote = self.remote(prepared, plan, dry_run=payload.dry_run)
-        return self.result(payload, snapshot, plan, remote)
-
     def admit(self, payload: GoogleSheetsExportOperationRequest) -> str:
         """Apply the active-profile and egress-capability admissions once."""
         if not resolve_active_capability(ServiceCapability.GOOGLE_EXPORT).enabled:

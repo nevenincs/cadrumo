@@ -7,7 +7,7 @@ review-derived filters.
 List and view commands delegate row projection to
 :func:`~cadrumo.entrypoints.cli._ledger_list.project_ledger_list` and emit typed
 payloads such as :class:`~cadrumo.entrypoints.cli.ledger_results.LedgerViewResult`
-and :class:`~cadrumo.entrypoints.cli.ledger_results.LedgerTrackResult`.
+and :class:`~cadrumo.entrypoints.cli.ledger_participation_results.LedgerTrackResult`.
 """
 
 from __future__ import annotations
@@ -625,7 +625,7 @@ def ledger_status(ctx: typer.Context, period: str | None = None, year: int | Non
 def ledger_track(ctx: typer.Context, transaction_id: str) -> None:
     """Render admitted audit lineage without opening frontend profile custody."""
     from .common import emit_envelope
-    from .ledger_results import LedgerTrackResult
+    from .ledger_participation_results import LedgerTrackResult
     from .operation_ledger_track import read_ledger_track_for_cli
 
     projection = read_ledger_track_for_cli(ctx, transaction_id=transaction_id)

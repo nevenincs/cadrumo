@@ -68,11 +68,11 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.calculations.cross_period_clean_state import (
-    CrossPeriodCleanStateVerdict,
     evaluate_cross_period_clean_state,
 )
 from cadrumo.application.calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
+    CrossPeriodCleanStateVerdict,
     CrossPeriodExpectedMemberSet,
 )
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision

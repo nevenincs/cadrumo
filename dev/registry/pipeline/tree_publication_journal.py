@@ -18,7 +18,6 @@ from .tree_publication_artifacts import verify_generated_export_package
 from .tree_publication_contracts import (
     GeneratedExportPublicationJournal,
     GeneratedExportTransactionPaths,
-    GeneratedExportTreePublicationContext,
     export_provenance_file_sha256,
 )
 
@@ -72,40 +71,6 @@ def _journal_backup_path(
     if not backup.name.startswith(backup_prefix):
         raise RegistryValidationError("generated publication journal backup name is not transaction-scoped")
     return backup
-
-
-def _retire_completed_legacy_orphan_journal(
-    *,
-    context: GeneratedExportTreePublicationContext,
-    journal: GeneratedExportPublicationJournal,
-    journal_path: Path,
-    target_export_root: Path,
-    backup_export_root: Path,
-) -> bool:
-    """Forget exactly one pre-staging transaction that provably changed nothing.
-
-    Before same-volume staging, an ``intent`` journal could point at a system
-    temporary candidate on another volume.  A failed replace may have already
-    restored (or never displaced) the target and removed both temporary
-    candidates before this process sees the journal.  This narrow shape has no
-    remaining mutation to recover.  Every live candidate, backup, target, or
-    different transaction state stays fail-closed for normal recovery.
-    """
-    expected = context.expected_target_state
-    recorded_candidate = context.target_root / journal.candidate_export
-    if not (
-        journal.state == "intent"
-        and expected is not None
-        and expected.manifest_sha256 is None
-        and expected.output_files == ()
-        and not target_export_root.exists()
-        and not backup_export_root.exists()
-        and not recorded_candidate.exists()
-        and not is_link_like(recorded_candidate)
-    ):
-        return False
-    _delete_journal(journal_path)
-    return True
 
 
 def _journal_staged_candidate_path(journal: GeneratedExportPublicationJournal, target_root: Path) -> Path:

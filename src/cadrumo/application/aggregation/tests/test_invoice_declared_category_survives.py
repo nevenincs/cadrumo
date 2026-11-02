@@ -39,6 +39,10 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.ledger_iva_bindings import IvaLedgerObservation
+from ....domain.calculations.registry.ledger_iva_screen_bindings import (
+    IvaLedgerScreenBinding,
+    invoice_ledger_screen_bindings,
+)
 from ....domain.invoices.enums import IvaRate
 from ....domain.invoices.models import Invoice
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
@@ -50,6 +54,7 @@ from .._modelo_bindings_invoice_iva import (
     _screened_invoice_iva_result,
 )
 from .._modelo_bindings_invoice_iva_refusal import _uncovered_withheld_invoice_cuota
+from ..errors import AggregationValidationError
 from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -264,6 +269,47 @@ def test_a_linked_ledger_authority_is_copied_onto_the_projection_not_reinvented(
     assert observation.deduction_provenance == authority.deduction_provenance
 
 
+_INPUT_CUOTA = "modelo-303-iva-soportado-interiores-cuota"
+_OUTPUT_GENERAL_CUOTA = "modelo-303-iva-repercutido-general-cuota"
+
+
+def _screen_bindings() -> tuple[IvaLedgerScreenBinding, ...]:
+    """The M303 screen's typed bindings, selected from the pinned revision."""
+    revision = published_snapshot("303", filing_year=2025, period="1T").revision
+    return invoice_ledger_screen_bindings(revision, modelo="303")
+
+
+def _unlinked_purchase(*, currency: str = "EUR", fx_rate: str | None = None) -> Invoice:
+    """A received invoice: base 2000.00 plus 420.00 cuota, in ``currency``."""
+    payload: dict[str, object] = {
+        "bucket_id": "29292929-2929-4929-8929-292929292929",
+        "kind": InvoiceKind.RECEIVED.value,
+        "invoice_number": "F-2026-0078",
+        "issued_at": _DAY.isoformat(),
+        "counterparty_name": "Proveedor Ejemplo SL",
+        "counterparty_tax_id": "ESB12345674",
+        "counterparty_country": "ES",
+        "base_total": "2000.00",
+        "iva_total": "420.00",
+        "grand_total": "2420.00",
+        "currency": currency,
+        "payment_status": "PENDING",
+        "lines": [
+            {
+                "description": "Servicio",
+                "quantity": "1",
+                "unit_price": "2000.00",
+                "subtotal": "2000.00",
+                "iva_rate": IvaRate.from_registry("RATE_21").value,
+                "iva_amount": "420.00",
+            },
+        ],
+    }
+    if fx_rate is not None:
+        payload.update(fx_rate=fx_rate, fx_rate_date=_DAY.isoformat(), fx_rate_source="synthetic-fixture")
+    return Invoice.model_validate(payload)
+
+
 def test_a_withheld_invoice_the_ledger_already_carries_is_not_counted_as_uncovered() -> None:
     """Withholding the row is unconditional; refusing the whole filing is not.
 
@@ -277,8 +323,8 @@ def test_a_withheld_invoice_the_ledger_already_carries_is_not_counted_as_uncover
 
     uncovered = _uncovered_withheld_invoice_cuota(
         (rated,),
-        screened_bindings=("modelo-303-iva-soportado-interiores-cuota",),
-        transaction_binding_values={"modelo-303-iva-soportado-interiores-cuota": Decimal("420.00")},
+        screen_bindings=_screen_bindings(),
+        transaction_binding_values={_INPUT_CUOTA: Decimal("420.00")},
     )
 
     assert uncovered == Decimal("0")
@@ -297,8 +343,64 @@ def test_a_withheld_invoice_absent_from_the_ledger_is_counted_as_uncovered() -> 
 
     uncovered = _uncovered_withheld_invoice_cuota(
         (rated,),
-        screened_bindings=("modelo-303-iva-soportado-interiores-cuota",),
-        transaction_binding_values={"modelo-303-iva-soportado-interiores-cuota": Decimal("100.00")},
+        screen_bindings=_screen_bindings(),
+        transaction_binding_values={_INPUT_CUOTA: Decimal("100.00")},
     )
 
     assert uncovered == Decimal("320.00")
+
+
+def test_output_iva_cannot_cover_a_missing_purchase_cuota() -> None:
+    """A received invoice is weighed against the input slots only.
+
+    Sales IVA of 1000.00 sits in the output slot and the input slot is empty:
+    the 420.00 purchase cuota is entirely uncovered. Summing every slot would
+    have judged it covered (1000.00 >= 420.00).
+    """
+    uncovered = _uncovered_withheld_invoice_cuota(
+        (_unlinked_purchase(),),
+        screen_bindings=_screen_bindings(),
+        transaction_binding_values={_OUTPUT_GENERAL_CUOTA: Decimal("1000.00")},
+    )
+
+    assert uncovered == Decimal("420.00")
+
+
+def test_an_unconverted_foreign_invoice_refuses_instead_of_being_compared() -> None:
+    """USD 420.00 without a rate has no EUR value; comparing it would be a currency mix."""
+    with pytest.raises(AggregationValidationError) as exc_info:
+        _uncovered_withheld_invoice_cuota(
+            (_unlinked_purchase(currency="USD"),),
+            screen_bindings=_screen_bindings(),
+            transaction_binding_values={_INPUT_CUOTA: Decimal("420.00")},
+        )
+
+    assert exc_info.value.translated_message == "aggregation.modelo_bindings.errors.invoice_line_currency_unconverted"
+    context = exc_info.value.context
+    assert context is not None
+    assert context["currency"] == "USD"
+    assert context["line_index"] == "0"
+
+
+def test_a_converted_foreign_invoice_is_compared_in_euro() -> None:
+    """USD 420.00 at 0.80 EUR/USD is 336.00 EUR (420 * 0.8), not 420.
+
+    Ledger input 400.00 EUR covers 336.00; the raw native comparison would have
+    reported 20.00 uncovered. Ledger input 300.00 leaves 36.00 uncovered.
+    """
+    invoice = _unlinked_purchase(currency="USD", fx_rate="0.80")
+    bindings = _screen_bindings()
+
+    covered = _uncovered_withheld_invoice_cuota(
+        (invoice,),
+        screen_bindings=bindings,
+        transaction_binding_values={_INPUT_CUOTA: Decimal("400.00")},
+    )
+    short = _uncovered_withheld_invoice_cuota(
+        (invoice,),
+        screen_bindings=bindings,
+        transaction_binding_values={_INPUT_CUOTA: Decimal("300.00")},
+    )
+
+    assert covered == Decimal("0")
+    assert short == Decimal("36.00")

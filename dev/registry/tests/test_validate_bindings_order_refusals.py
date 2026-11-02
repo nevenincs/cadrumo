@@ -1,4 +1,4 @@
-"""Detector teeth for the two binding-order refusals.
+"""Detector teeth for the binding-order refusals.
 
 Binding declaration order is a merge artefact of the fragment filenames, so a
 consumer that reads the binding tuple positionally or takes a first match is
@@ -8,6 +8,8 @@ refused at load:
 * a second ``prorrata_regularizacion`` binding, because the annual
   regularisation reads its four source roles positionally out of the
   concatenated source casillas of every prorrata binding;
+* a second ``bienes_inversion_regularizacion`` binding for one output, because
+  the consumer keeps the last binding per output without saying so;
 * two row bindings claiming one ``row_field`` of one record, because export
   field derivation keeps the first claimant and silently drops the rest.
 
@@ -51,8 +53,8 @@ _M303_PRORRATA_BLOCK = f'''
 [[revisions.{_M303_REVISION}.bindings]]
 id = "{_M303_PRORRATA_ID}-planted-duplicate"
 provider = {{ kind = "prorrata_regularizacion", source_modelo = "303", source_casilla_ids = \
-["iva.cuota-deducible-total", "iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", \
-"iva.prorrata-porcentaje"], source_periods = ["1T", "2T", "3T", "4T"], \
+["iva.prorrata-volumen-con-derecho", "iva.prorrata-volumen-total", \
+"iva.prorrata-porcentaje"], source_period_selection = "filer_liquidation_cadence", \
 regularizacion_output = "modelo_303_casilla_44" }}
 value = {{ data_type = "money", channel = "decimal" }}
 legal_refs = ["ley-37-1992:art-104", "ley-37-1992:art-105", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
@@ -62,6 +64,25 @@ source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-
 source_ref = "aeat-modelo-303-procedure"
 required_text = ["modelo 303"]
 '''
+
+_M303_BIENES_ID = "modelo-303-bienes-inversion-regularizacion-casilla-43"
+_M303_BIENES_DUPLICATE_ID = f"{_M303_BIENES_ID}-planted-duplicate"
+
+
+def _bienes_block(*, binding_id: str, output: str) -> str:
+    return f'''
+[[revisions.{_M303_REVISION}.bindings]]
+id = "{binding_id}"
+provider = {{ kind = "bienes_inversion_regularizacion", source_modelo = "303", regularizacion_output = "{output}" }}
+value = {{ data_type = "money", channel = "decimal" }}
+legal_refs = ["ley-37-1992:art-107", "ley-37-1992:art-108", "rd-1624-1992:art-71", "orden-eha-3786-2008:art-1"]
+source_refs = ["aeat-dr-303-2025", "aeat-modelo-303-procedure", "boe-modelo-303-2008-form"]
+
+[[revisions.{_M303_REVISION}.bindings.source_citations]]
+source_ref = "aeat-modelo-303-procedure"
+required_text = ["modelo 303"]
+'''
+
 
 _M720_REVISION = "2013-y-siguientes"
 _M720_ROW_FIELD = "asset_class_code"
@@ -136,6 +157,38 @@ def test_a_second_prorrata_regularizacion_binding_is_refused(tmp_path: Path) -> 
     assert _M303_PRORRATA_ID in refusals[0]
     assert f"{_M303_PRORRATA_ID}-planted-duplicate" in refusals[0]
     assert all(f"modelo 303 revision {_M303_REVISION}" in failure for failure in failures)
+
+
+def test_a_second_bienes_regularizacion_binding_for_one_output_is_refused(tmp_path: Path) -> None:
+    """Two bindings for one output leave the surviving one to binding merge order."""
+    tree = _copy_modelo(tmp_path, "303")
+    _plant_binding(
+        tree,
+        _M303_REVISION,
+        _bienes_block(binding_id=_M303_BIENES_DUPLICATE_ID, output="modelo_303_casilla_43"),
+    )
+
+    failures = _failures(tree, _M303_REVISION)
+
+    refusals = [f for f in failures if "bienes_inversion_regularizacion bindings" in f]
+    assert len(refusals) == 1, f"a duplicate bienes output was not refused exactly once; failures were {failures}"
+    assert _M303_BIENES_ID in refusals[0]
+    assert _M303_BIENES_DUPLICATE_ID in refusals[0]
+    assert "modelo_303_casilla_43" in refusals[0]
+
+
+def test_a_bienes_regularizacion_binding_for_a_distinct_output_is_not_a_duplicate(tmp_path: Path) -> None:
+    """The control: a different output is a different declaration, not an ambiguity."""
+    tree = _copy_modelo(tmp_path, "303")
+    _plant_binding(
+        tree,
+        _M303_REVISION,
+        _bienes_block(binding_id=_M303_BIENES_DUPLICATE_ID, output="modelo_390_casilla_63"),
+    )
+
+    failures = _failures(tree, _M303_REVISION)
+
+    assert [f for f in failures if "bienes_inversion_regularizacion bindings" in f] == []
 
 
 def test_the_live_modelo_720_revision_passes_the_order_refusals(tmp_path: Path) -> None:

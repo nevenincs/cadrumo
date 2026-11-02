@@ -511,6 +511,27 @@ required_text = [
     "6.010.121,04 euros",
 ]
 
+[legal."rd-1624-1992:art-71.4"]
+evidence_tier = "legal_authority"
+authority = "boe"
+kind = "real_decreto"
+corpus_ref = "corpus/normatives/html/rd-1624-1992.html#a71"
+document_id = "BOE-A-1992-28925"
+article = "71.4"
+permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-1992-28925#a71"
+published_at = 1992-12-31
+effective_from = 1993-01-01
+review_status = "agent_reviewed"
+reviewed_at = 2026-11-01
+reviewed_by = "agent-authored from bundled rd-1624-1992.html#a71; operator to re-stamp"
+notes = "Reglamento del IVA art. 71.4: plazo de presentación de la declaración-liquidación. Trimestral: veinte primeros días naturales del mes siguiente; último período del año: treinta primeros días naturales de enero; sujetos del art. 62.6 (SII, liquidación mensual): treinta primeros días naturales del mes siguiente o hasta el último día de febrero para enero. El Ministro puede ampliar el plazo de presentación electrónica, por lo que una ampliación administrativa no se deriva de esta regla. Grounds the filing-window clause of Modelo 303."
+required_text = [
+    "presentarse durante los veinte primeros días naturales del mes siguiente al correspondiente período de liquidación trimestral",
+    "la declaración-liquidación correspondiente al último período del año deberá presentarse durante los treinta primeros días naturales del mes de enero",
+    "deberán presentarse durante los treinta primeros días naturales del mes siguiente al correspondiente período de liquidación mensual, o hasta el último día del mes de febrero en el caso de la declaración-liquidación correspondiente al mes de enero",
+    "podrá ampliar el plazo correspondiente a las declaraciones que puedan presentarse por vía electrónica",
+]
+
 [legal."rd-1624-1992:art-79"]
 evidence_tier = "legal_authority"
 authority = "boe"

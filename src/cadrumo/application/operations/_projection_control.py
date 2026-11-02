@@ -29,10 +29,10 @@ from .frontend_requests import (
     OperationResponseControlVersionHeader,
 )
 from .interactions import (
+    REVIEW_RESPONSE_INTENTS,
     OperationApplyResponse,
     OperationPendingInteraction,
     OperationRejectResponse,
-    OperationResponseIntent,
     OperationResponseToken,
 )
 from .models import OperationId
@@ -142,7 +142,7 @@ async def _inspect_response_authority(
     """Project only the supported intents authorized by the bound bearer."""
     try:
         intents = await authority.permitted_intents(context.request, context.pending)
-        if not intents <= frozenset({OperationResponseIntent.APPLY, OperationResponseIntent.REJECT}):
+        if not intents <= REVIEW_RESPONSE_INTENTS:
             raise ValueError("secure response authority returned an unknown intent")
         return OperationResponseControlSuccessV1(
             operation_id=context.request.operation_id,

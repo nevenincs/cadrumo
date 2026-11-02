@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from enum import StrEnum
+from typing import assert_never
 
 from pydantic import BaseModel, model_validator
 
@@ -79,6 +80,7 @@ def declaration_kind_for_amendment_kind(kind: CalculationRevisionAmendmentKind) 
             return FilingDeclarationKind.SUSTITUTIVA
         case CalculationRevisionAmendmentKind.RECTIFICATIVA:
             return FilingDeclarationKind.RECTIFICATIVA
+    assert_never(kind)
 
 
 def filing_declaration_kind_for_amendment(

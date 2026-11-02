@@ -2,6 +2,7 @@
 // filters, search or a folded group. Each is named exactly, so showing the
 // movement clears only what hides it and leaves the rest of the view alone.
 
+import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type { LedgerRow } from "../../../shell/ledger";
 import {
   NO_FILTERS,
@@ -46,6 +47,7 @@ export function movementHiding(
     readonly search: SearchContext;
     readonly grouping: GroupingId | null;
     readonly collapsed: ReadonlySet<string>;
+    readonly vocabulary: ServedVocabulary;
   },
 ): MovementHiding | null {
   const { filters } = view;
@@ -67,6 +69,7 @@ export function movementHiding(
           label: () => "",
           pendingFirst: false,
           descending: false,
+          vocabulary: view.vocabulary,
         })[0]?.key ?? null);
   const folded = group !== null && view.collapsed.has(group) ? group : null;
   return hiding.length > 0 || search || folded !== null

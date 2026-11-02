@@ -5,16 +5,23 @@
 // refusal carrying its validation code. A correction or removal the ledger
 // refuses after it began to write ends with its effect unknown, as the
 // runtime reports it: the page must read the catalogue again to learn what
-// happened. Everything it answers is synthetic.
+// happened. Everything it answers is synthetic. A preview is answered from
+// outputs recorded from the real backend, and works out no figure: a draft
+// that was not recorded is answered as incomplete.
 
 import {
-  INVOICE_UPDATE_FIELDS,
   type CatalogueInvoice,
   type CatalogueInvoiceLine,
   type JsonObject,
   type JsonValue,
 } from "../shell/ledger";
+import {
+  INVOICE_UPDATE_FIELDS,
+  OPERATION_TYPES,
+  isPaymentStatus,
+} from "../shell/ledgerContract";
 import type { FixtureLedger } from "./fixtures/ledger";
+import recorded from "./fixtures/ledgerInvoicePreview.json" with { type: "json" };
 
 /** A request its registered contract would not decode. */
 export class InvoiceRequestInvalid extends Error {}
@@ -50,8 +57,6 @@ const SLOTS: Record<string, bigint | null> = {
   NOT_SUBJECT: null,
 };
 const CLASSES = ["ORDINARIA", "SIMPLIFICADA", "RECTIFICATIVA"];
-const PAYMENTS = ["PAID", "PENDING", "PARTIALLY_PAID", "OVERDUE", "CANCELLED"];
-const OPERATION_TYPES = ["E", "H", "M", "S", "T", "R", "A", "I", "D", "C"];
 const ADD_FIELDS = new Set([
   "kind",
   "counterparty_name",
@@ -125,8 +130,146 @@ const textOf = (value: bigint) => {
   return `${digits.slice(0, -2)}.${digits.slice(-2)}`;
 };
 
+/** A decimal without the trailing zeros that do not change it. */
+const sameNumber = (value: JsonValue | undefined) =>
+  typeof value === "string" && value.includes(".")
+    ? value.replace(/\.?0+$/, "")
+    : value;
+
+/** A value with blanks left out and object keys in one order, which is how
+ * a draft is matched to its recording. A line's own key names no fact. */
+function bare(value: JsonValue | undefined): JsonValue | undefined {
+  if (value === null || value === "" || value === undefined) return undefined;
+  if (Array.isArray(value)) {
+    const items = value.flatMap((item) => bare(item) ?? []);
+    return items.length > 0 ? items : undefined;
+  }
+  if (typeof value !== "object") return value;
+  const entries = Object.keys(value)
+    .filter((key) => key !== "key")
+    .sort()
+    .flatMap((key) => {
+      const item =
+        key === "decimal" ? sameNumber(value[key]) : bare(value[key]);
+      return item === undefined ? [] : [[key, item] as const];
+    });
+  return entries.length > 0 ? Object.fromEntries(entries) : undefined;
+}
+
+type Recording = { request: JsonValue; result: JsonObject };
+const RECORDINGS = Object.values(
+  recorded.recordings as unknown as Record<string, Recording>,
+);
+const recordingOf = (request: JsonObject) => {
+  const asked = JSON.stringify(bare(request) ?? {});
+  return RECORDINGS.find(
+    (recording) => JSON.stringify(bare(recording.request) ?? {}) === asked,
+  );
+};
+
 export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
   const { profileId, events, hex64 } = tools;
+  // The id a recorded answer gave a draft is the id its add stores it under.
+  const previewedIds = new Map<string, string>();
+  const identity = (kind: unknown, number: unknown, issued: unknown) =>
+    JSON.stringify([kind, number, issued]);
+
+  /** The recorded answer to a draft, its lines keyed as the draft keys them. */
+  function preview(request: JsonObject): JsonObject {
+    const keys = (Array.isArray(request.lines) ? request.lines : []).map(
+      (line) => (line as JsonObject).key as string,
+    );
+    const found = recordingOf(request);
+    if (!found) return unrecordedPreview(request);
+    const rekey = (key: JsonValue | undefined) =>
+      keys[Number(String(key).replace("line-", "")) - 1] ?? key ?? null;
+    const result = found.result;
+    if (result.invoice_id)
+      previewedIds.set(
+        identity(request.kind, request.invoice_number, request.issued_at),
+        result.invoice_id as string,
+      );
+    return {
+      ...result,
+      profile_id: profileId,
+      lines: (result.lines as JsonObject[]).map((line) => ({
+        ...line,
+        key: rekey(line.key),
+      })),
+      findings: (result.findings as JsonObject[]).map((finding) => ({
+        ...finding,
+        line_key: finding.line_key === null ? null : rekey(finding.line_key),
+      })),
+      rule_findings: (result.rule_findings as JsonObject[]).map((finding) => ({
+        ...finding,
+        line_key: finding.line_key === null ? null : rekey(finding.line_key),
+      })),
+    };
+  }
+
+  /** What is known of a draft nobody recorded: the rate slots of its date as
+   * far as a recording has them, which facts it lacks, and no figure. */
+  function unrecordedPreview(request: JsonObject): JsonObject {
+    const lines = (
+      Array.isArray(request.lines) ? request.lines : []
+    ) as JsonObject[];
+    const onDate = (request.operation_date ?? request.issued_at) as
+      string | null | undefined;
+    const results = RECORDINGS.map(({ result }) => result);
+    const table =
+      results.find((result) => result.on_date === onDate) ?? results[0]!;
+    const absent = [
+      "kind",
+      "invoice_number",
+      "counterparty_name",
+      "counterparty_country",
+      "issued_at",
+      "currency",
+    ].filter((field) => !bare(request[field]));
+    if (lines.length === 0) absent.push("lines");
+    for (const line of lines)
+      for (const field of ["description", "quantity", "unit_price", "iva_rate"])
+        if (!bare(line[field]))
+          absent.push(`lines.${String(line.key)}.${field}`);
+    const figure = {
+      computed: null,
+      stated: null,
+      verdict: null,
+      submitted: null,
+    };
+    return {
+      profile_id: profileId,
+      input_digest: hex64(JSON.stringify(bare(request) ?? {})),
+      on_date: onDate ?? (table.on_date as string),
+      on_date_source: request.operation_date
+        ? "operation_date"
+        : request.issued_at
+          ? "issued_at"
+          : "today",
+      rate_slots: table.rate_slots!,
+      lines: lines.map((line) => ({
+        key: line.key as string,
+        subtotal: figure,
+        iva_amount: figure,
+      })),
+      totals: {
+        base: null,
+        iva: null,
+        recargo: null,
+        total: null,
+        net_of_retention: null,
+      },
+      retention: { rate: null, amount: null, implied: null },
+      findings: [],
+      missing_fields: absent.length > 0 ? absent : ["unrecorded"],
+      verdict: "incomplete",
+      refusal_code: null,
+      invoice_id: null,
+      rule_findings: [],
+      verdict_scope: request.stored ? "correction_facts" : "whole_draft",
+    };
+  }
+
   const refuseAdd = (
     code: "invalid_invoice" | "duplicate_invoice",
     invoiceId: string | null = null,
@@ -213,7 +356,10 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     const operationDate = text(request.operation_date);
     if (operationDate !== null && !DATE.test(operationDate)) invalid();
     const operationType = text(request.operation_type);
-    if (operationType !== null && !OPERATION_TYPES.includes(operationType))
+    if (
+      operationType !== null &&
+      !(OPERATION_TYPES as readonly string[]).includes(operationType)
+    )
       invalid();
     const lines = request.lines ?? [];
     if (!Array.isArray(lines)) invalid();
@@ -274,16 +420,18 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
       ? text(lease.referencia_catastral)?.trim().toUpperCase()
       : undefined;
     const invoice: CatalogueInvoice = {
-      invoice_id: hex64(
-        JSON.stringify([
-          kind,
-          number,
-          issued,
-          (taxId ?? "").toUpperCase(),
-          currency.toUpperCase(),
-          textOf(total),
-        ]),
-      ),
+      invoice_id:
+        previewedIds.get(identity(kind, number, issued)) ??
+        hex64(
+          JSON.stringify([
+            kind,
+            number,
+            issued,
+            (taxId ?? "").toUpperCase(),
+            currency.toUpperCase(),
+            textOf(total),
+          ]),
+        ),
       bucket_id: profileId,
       kind: kind as CatalogueInvoice["kind"],
       invoice_number: number,
@@ -381,7 +529,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
     for (const field of ["retention_rate", "retention_amount"] as const)
       if (fields.includes(field)) decimal(values[field]);
     const status = text(values.payment_status);
-    if (status !== null && !PAYMENTS.includes(status)) invalid();
+    if (status !== null && !isPaymentStatus(status)) invalid();
     // From here on the runtime has said its effect may be unknown.
     const found = lookup(selector);
     if (found.kind !== "found") throw new InvoiceUnsettled();
@@ -461,7 +609,7 @@ export function invoiceOperations(ledger: FixtureLedger, tools: Tools) {
   }
 
   return {
-    reads: { "ledger.invoice.view": view },
+    reads: { "ledger.invoice.view": view, "ledger.invoice.preview": preview },
     writes: {
       "ledger.invoice.add": add,
       "ledger.invoice.update": update,

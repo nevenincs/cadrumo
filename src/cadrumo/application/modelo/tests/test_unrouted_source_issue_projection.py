@@ -17,7 +17,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...aggregation.source_diagnostic_reason import CalculationSourceDiagnosticReason
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
-from ..calculation_bucket_actions import _unrouted_source_issues
+from ..calculation_bucket_actions import unrouted_source_issues
 from ..printed_boxes import snapshot_printed_boxes
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -28,7 +28,7 @@ def _project(
 ) -> tuple[CalculationSourceIssue, ...]:
     """Project diagnostics against the Modelo 130 first-quarter revision, whose box 01 the form prints."""
     snapshot = operation.snapshot("130", filing_year=2026, period="1T")
-    return _unrouted_source_issues(diagnostics, snapshot_printed_boxes(operation, snapshot))
+    return unrouted_source_issues(diagnostics, snapshot_printed_boxes(operation, snapshot))
 
 
 def _diagnostic(reason: CalculationSourceDiagnosticReason, message: str) -> CalculationSourceDiagnostic:
@@ -121,6 +121,7 @@ def test_a_diagnostic_with_no_binding_source_is_not_persisted(operation: PinnedA
         "unsupported_iva_rate",
         "missing_deduction_classification",
         "cuota_on_zero_rated_row",
+        "cuota_disagrees_with_rate",
         "non_zero_rate_on_zero_cuota_category",
         "non_arising_category_for_invoice_side",
         "missing_counterparty_identification_state",

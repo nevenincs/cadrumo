@@ -31,10 +31,9 @@
   unicode-range: U+0100-02BA, U+02BD-02C5, U+02C7-02CC, U+02CE-02D7, U+02DD-02FF, U+0304, U+0308, U+0329, U+1D00-1DBF, U+1E00-1E9F, U+1EF2-1EFF, U+2020, U+20A0-20AB, U+20AD-20C0, U+2113, U+2C60-2C7F, U+A720-A7FF;
 }
 
-/* The display face. Newsreader replaces Instrument Serif here so the
- * documentation and the product site set their headings in the same voice;
- * Instrument Serif's fitting is loose and uneven at display sizes, which is
- * why it was retired there.
+/* The display face. Newsreader sets the headings of both the documentation and
+ * the product site, so the two share one voice; Instrument Serif's fitting is
+ * loose and uneven at display sizes.
  *
  * The optical-size axis is pinned at 40 rather than shipped live. That is a
  * deliberate match: the product site pins the same axis at the same value to
@@ -120,14 +119,10 @@
   --cadrumo-radius-m: 0.625rem;
   --cadrumo-radius-l: 0.875rem;
   --cadrumo-page-max: 100rem;
-  /* Semantic ink, at the product site's values. The light pair was #a16a1b
-     and #55876b, which measure 3.95:1 and 3.58:1 against the secondary
-     surface these sit on -- both under the 4.5 that semantic TEXT needs. The
-     product site had already been through this: its caution token carries a
-     comment explaining that a semantic colour has to clear AA against every
-     ground in the ladder it can legally appear on, and landed on #7a4f0f for
-     exactly that reason. Reusing those values fixes the contrast and removes
-     a fork in the palette in the same edit. */
+  /* Semantic ink, at the product site's values. A semantic colour has to clear
+     AA against every ground in the ladder it can legally appear on, and the
+     product site's caution token lands on #7a4f0f for exactly that reason.
+     Reusing those values removes a fork in the palette. */
   --cadrumo-accent-warning: light-dark(#7a4f0f, #d9a441);
   --cadrumo-accent-success: light-dark(#3a6249, #7fb494);
   --cadrumo-accent-danger: light-dark(#b3362a, #e08376);
@@ -802,10 +797,8 @@ html.cadrumo-broadcast-dismissed .cadrumo-broadcast {
 }
 
 /* Each on-this-page entry is its own target and has to be big enough to hit.
-   At 0.8rem the anchors were inline boxes roughly 19px tall with nothing
-   between two stacked entries, which is WCAG 2.5.8 (24px minimum) and reads
-   on a phone as a list you keep mis-tapping. Made block with vertical
-   padding: the text position is unchanged, the hit area is not. */
+   Each entry is block-level with vertical padding, so its hit area clears
+   WCAG 2.5.8 (24px minimum) and the text position is unchanged. */
 .toc-tree .reference {
   display: block;
   padding-block: 0.25rem;
@@ -872,13 +865,10 @@ html.cadrumo-broadcast-dismissed .cadrumo-broadcast {
  * marketing hero and section titles. Smaller headings stay on the grotesk
  * text stack.
  *
- * Tracking is in em, not rem. It was authored in rem against a clamp()ed
- * font-size, which means the tracking stayed the same absolute length while
- * the type it tracks grew: -0.0425rem reads as -1.9% at the clamp's 2.25rem
- * floor and -1.3% at its 3.25rem ceiling, so the heading got progressively
- * looser as it got bigger, which is the opposite of what display type wants.
- * -0.02em is the product site's --tracking-display, and in em it holds at
- * every step of the clamp. */
+ * Tracking is in em, not rem. A rem value keeps the same absolute length while
+ * the type it tracks grows, so the heading gets looser as it gets bigger, which
+ * is the opposite of what display type wants. -0.02em is the product site's
+ * --tracking-display, and in em it holds at every step of the clamp. */
 .content h1 {
   font-size: clamp(2.25rem, 1.6rem + 2.2vw, 3.25rem);
   font-weight: 400;
@@ -1546,7 +1536,7 @@ a.sd-card:any-link,
   text-decoration: none;
 }
 
-/* Per-class result icon (ADR 2026-07-15 D7): a fixed leading column carrying the
+/* Per-class result icon: a fixed leading column carrying the
  * hand-authored inline SVG selected by the shipped `display_class`. The text
  * column (`--body`) flexes beside it; `min-width: 0` lets the excerpt ellipsis
  * clip inside the flex row. Rows with no shipped class render no icon and the
@@ -1601,8 +1591,7 @@ a.sd-card:any-link,
 }
 
 /* Pagefind term-card tiers: a one-line excerpt of the matched description. The
- * surface is distinguished by the leading per-class icon (D7) rather than the
- * former crumb dot the icon supersedes. */
+ * surface is distinguished by the leading per-class icon rather than a crumb dot. */
 .cadrumo-palette-item-excerpt {
   color: var(--color-foreground-muted);
   display: block;
@@ -1630,7 +1619,7 @@ a.sd-card:any-link,
 
 /* Search page (inline host) ─────────────────────────────────────────────
  * The shipped search.html mounts the same controller that drives the Ctrl-K
- * modal (ADR 2026-07-15 D5). It reuses the `.cadrumo-palette-item*` result
+ * modal. It reuses the `.cadrumo-palette-item*` result
  * styling verbatim (those rules are unscoped) so cards look identical across
  * the two hosts; only the frame differs — a bordered search box and a list
  * that flows with the page instead of the modal's clamped scroll area. */
@@ -1796,8 +1785,7 @@ a.sd-card:any-link,
 }
 
 /* ── 11. CLI sequence playhead ─────────────────────────────────────────
- * The server-rendered `cli-sequence` transcript (ADR D5; presentation revised
- * per operator review): a minimal command rundown that cadrumo-docs.js
+ * The server-rendered `cli-sequence` transcript: a minimal command rundown that cadrumo-docs.js
  * enhances into a playhead. Every command stays visible at all times; the
  * active command is highlighted with its output shown beneath, commands after
  * the playhead are dimmed with highlighting and output suppressed. No frame is
@@ -1869,7 +1857,7 @@ a.sd-card:any-link,
 
 /* Command line: a bold JetBrains Mono row led by a prompt affordance, so the
  * command reads instantly as the instruction (distinct from its output). The
- * playhead highlight now lives on the step card itself. */
+ * playhead highlight lives on the step card itself. */
 .cadrumo-frame-command {
   min-width: 0;
   padding: 0.1rem 0;
@@ -1996,10 +1984,8 @@ a.sd-card:any-link,
 }
 
 /* The option token reads the semantic success token rather than declaring
-   its own green. It carried light-dark(#55876b, #9dc2ac) -- the same #55876b
-   the palette above used to hold, hardcoded a second time, and axe reported
-   17 of these failing 1.4.3 against the frame ground. Two copies of one
-   colour is also how the first one gets fixed and the second one does not. */
+   its own green. Two copies of one colour is how the first one gets fixed and
+   the second one does not. */
 .cadrumo-sequence .cli-tok-option {
   color: var(--cadrumo-accent-success);
 }

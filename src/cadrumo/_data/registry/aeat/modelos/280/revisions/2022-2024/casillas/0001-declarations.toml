@@ -5,13 +5,13 @@
 #
 # 17 casillas.
 #
-# THE DESIGN DOES NOT TILE AS THE READER RETURNS IT, and this wave declares why
+# THE DESIGN DOES NOT TILE AS THE READER RETURNS IT, and this declaration states why
 # rather than working around it silently. AEAT writes "Este campo se subdivide en
 # dos" over positions 176-186, which is really THREE parts -- 176 SIGNO,
 # 177-184 ENTERO, 185-186 DECIMAL. The PDF reader's desglose nester has a count
 # clause that refuses to make three where AEAT says two, correctly, so 177-184
 # and 185-186 surface beside their own grandparent and the record sums 510
-# against a declared 500. This wave declares that one group; every other
+# against a declared 500. Only that one group is declared; every other
 # containment in this or any record still refuses.
 #
 # POSITIONS 5 AND 9 ARE ECHOES OF TIPO 1 -- the design says of the ejercicio
@@ -209,9 +209,9 @@ legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 #
 # 10 casillas. THIS MODELO PRINTS NO BOX NUMBERS AT ALL -- not one bracket token
 # appears anywhere in either record -- so every id is either a position range or
-# a name the authoring edition chose. The four named ones (ejercicio,
+# a name chosen in this declaration. The four named ones (ejercicio,
 # nif-declarante on this record; nif-declarado and apellidos-nombre-declarado on
-# Tipo 2) are declared aliases in this wave, because no positional rule can
+# Tipo 2) are declared aliases, because no positional rule can
 # produce a name and resemblance is not evidence.
 #
 # THE SEMANTIC PAYLOAD IS IN THE CONTENIDO COLUMN, not the caption. The
@@ -222,9 +222,7 @@ legal_refs = ["orden-hap-2118-2015:art-1", "orden-hfp-1822-2016:art-sexto"]
 # compared as its own channel.
 #
 # POSITION 58, TIPO DE SOPORTE, IS DELIBERATELY NOT DECLARED. It exists in the
-# design and in the export layout, and the prior edition declares no casilla for
-# it. This edition holds that line rather than widening scope inside a
-# carry-forward run.
+# design and in the export layout, and the prior edition declares no casilla for it.
 #
 # Tipo 1 tiles 1..500 exactly once with NO gap and NO overlap, asserted at
 # generation.

@@ -60,7 +60,7 @@ from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 from cadrumo_client.transport.operation_controller import OperationController, await_terminal_projection
-from cadrumo_client.transport.operation_reads import read_operation as read_operation
+from cadrumo_client.transport.operation_reads import read_operation
 
 _ATTESTATION_ACTOR = "operator:tui-modelo"
 _ATTESTATION_TIMEOUT_SECONDS = 60.0
@@ -328,7 +328,7 @@ def compose_runtime_modelo_lifecycle_door(
         edit_renewal=bindings.renew,
         edit_preflight=bindings.preflight,
         apply_prerequisite=bindings.prerequisite,
-        m303_exonerado_390_attestation_admission=(bindings.admit if str(declaration.modelo) == "303" else None),
+        m303_exonerado_390_attestation_admission=bindings.admit,
         asks_modelo_390=asks_modelo_390,
         submit_operation=bindings.submit,
         read_export_result=bindings.read_export_result,

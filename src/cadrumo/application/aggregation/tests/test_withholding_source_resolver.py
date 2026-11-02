@@ -14,6 +14,7 @@ from __future__ import annotations
 from collections.abc import Iterator, Mapping, Sequence
 from datetime import date, datetime
 from decimal import Decimal
+from typing import NoReturn
 
 import pytest
 
@@ -26,12 +27,14 @@ from ....core.aggregation import (
 )
 from ....core.modelo import Modelo
 from ....core.period import Period
+from ....domain.calculations.registry import authority as registry_authority
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from ....domain.calculations.registry.schema_references import PeriodSelector
 from ....domain.calculations.registry.withholding_bindings import WithholdingObservation
 from ....domain.user_profile.values import UserProfileFact
 from ...modelo.work_profile import ModeloWorkProfile
+from .. import source_resolution_operations, withholding_source
 from ..percepciones_observations_repository import PercepcionObservationPorts
 from ..retencion_observations_repository import RetencionObservationPorts
 from ..retenciones import RetencionObservation
@@ -183,8 +186,14 @@ def _non_withholding_revision() -> ModeloRevision:
     )
 
 
-def _context(revision: ModeloRevision, profile: ModeloWorkProfile | None) -> CalculationSourceContext:
+def _context(
+    revision: ModeloRevision,
+    profile: ModeloWorkProfile | None,
+    *,
+    operation: PinnedAuthorityOperation | None = None,
+) -> CalculationSourceContext:
     return CalculationSourceContext(
+        operation=operation,
         bucket_id="operator",
         modelo="190",
         filing_year=2024,
@@ -352,3 +361,64 @@ def test_resolver_silent_when_revision_declares_no_withholding_binding() -> None
 
     assert resolution.binding_values == {}
     assert resolution.diagnostics == ()
+
+
+def _forbid_default_authority(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make any default-generation opening fail, wherever the name is looked up."""
+
+    def refuse() -> NoReturn:
+        pytest.fail("a withholding helper opened the bundled default authority instead of the caller's pinned one")
+
+    monkeypatch.setattr(registry_authority, "bundled_indexed_authority", refuse)
+    monkeypatch.setattr(source_resolution_operations, "bundled_indexed_authority", refuse)
+
+
+def test_withholding_helpers_do_not_name_the_default_authority() -> None:
+    """The helper module has no handle on the shared default authority at all."""
+    assert not hasattr(withholding_source, "bundled_indexed_authority")
+
+
+def test_resolve_decides_cadence_and_disclosure_years_from_the_supplied_operation(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Both withholding authority reads receive the context's own pinned operation."""
+    seen: list[tuple[str, object]] = []
+    real_cadence = withholding_source.withholding_filer_cadence_for_work_profile
+    real_years = withholding_source.modelo_193_pending_disclosure_years
+
+    def cadence_spy(profile: ModeloWorkProfile | None, *, filing_year: int, operation: PinnedAuthorityOperation):
+        seen.append(("cadence", operation))
+        return real_cadence(profile, filing_year=filing_year, operation=operation)
+
+    def years_spy(operation: PinnedAuthorityOperation):
+        seen.append(("disclosure_years", operation))
+        return real_years(operation)
+
+    monkeypatch.setattr(withholding_source, "withholding_filer_cadence_for_work_profile", cadence_spy)
+    monkeypatch.setattr(withholding_source, "modelo_193_pending_disclosure_years", years_spy)
+    _forbid_default_authority(monkeypatch)
+    profile = withholding_work_profile(authority_operation)
+
+    binding = _percepcion_binding()
+    resolution = _resolver(_two_quarter_repository()).resolve(
+        _context(_revision_with(binding), profile, operation=authority_operation)
+    )
+    assert resolution.binding_values == {binding.id: Decimal(2)}
+
+    resolver = _resolver(_InMemoryPercepcionObservationRepository())
+    cadence = withholding_source.withholding_filer_cadence_for_work_profile(
+        profile, filing_year=2024, operation=authority_operation
+    )
+    detail = resolver.load_calculation_detail(
+        modelo="193",
+        period=Period.from_year_and_code(2024, "0A"),
+        revision=_revision_with(binding),
+        cadence=lambda: cadence,
+        operation=authority_operation,
+    )
+    assert detail is not None
+
+    assert [name for name, _ in seen].count("cadence") >= 1
+    assert "disclosure_years" in [name for name, _ in seen]
+    assert all(operation is authority_operation for _, operation in seen)

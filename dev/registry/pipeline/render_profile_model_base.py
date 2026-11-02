@@ -2,9 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated
-
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from cadrumo.domain.calculations.registry.ids import (
     ModeloId,
@@ -27,23 +25,6 @@ class RenderProfileDesignIdentity(_StrictModel):
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
 
 
-def _coerce_ordinal(value: object) -> object:
-    """Accept a legacy authored int literal alongside the parser's printed str label.
-
-    Committed render-profile authoring data predates the parser's widened
-    ``str | None`` ordinal and still writes bare integers (``ordinal = 14``).
-    Coercing here lets that authored data hydrate unchanged.
-    """
-    if value is None or isinstance(value, str):
-        return value
-    if isinstance(value, int) and not isinstance(value, bool):
-        return str(value)
-    raise ValueError("ordinal must be a printed str label, a legacy int literal, or None")
-
-
-type _AnchorOrdinal = Annotated[str | None, BeforeValidator(_coerce_ordinal)]
-
-
 class RenderProfileAnchor(_StrictModel):
     """Complete parser-owned field identity; no selector or wildcard exists."""
 
@@ -60,7 +41,7 @@ class RenderProfileAnchor(_StrictModel):
     #: The ordinal AEAT printed, verbatim -- a str because it is a printed LABEL,
     #: never an arithmetic value. Mirrors
     #: :attr:`domain.calculations.registry.RecordDesignField.ordinal`.
-    ordinal: _AnchorOrdinal | None = Field(default=None, min_length=1)
+    ordinal: str | None = Field(default=None, min_length=1)
     #: Declares that AEAT printed this row with NO ordinal, mirroring
     #: :attr:`SemanticMapAnchor.ordinal_absent` for the same reason: a row whose
     #: naturaleza AEAT omitted is admitted by a gap fill that cannot invent the

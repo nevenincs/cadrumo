@@ -16,7 +16,7 @@ allowed_values = ["0", "1", "2", "3"]
 sheet = "DP200001B"
 source_row = 21
 source_cell = "A21"
-ordinal = 16
+ordinal = "16"
 record_identity = "DP200001B"
 
 [singleton_rules.evidence]
@@ -40,7 +40,7 @@ allowed_values = ["0", "1"]
 sheet = "DP200001B"
 source_row = 22
 source_cell = "A22"
-ordinal = 17
+ordinal = "17"
 record_identity = "DP200001B"
 
 [singleton_rules.evidence]
@@ -53,7 +53,7 @@ justification = "Reviewed exact-anchor policy for DP200001B source row 22; it is
 sheet = "DP200001B"
 source_row = 22
 source_cell = "A22"
-ordinal = 17
+ordinal = "17"
 record_identity = "DP200001B"
 
 [[singleton_rules]]
@@ -70,7 +70,7 @@ allowed_values = ["0", "1"]
 sheet = "DP200001B"
 source_row = 23
 source_cell = "A23"
-ordinal = 18
+ordinal = "18"
 record_identity = "DP200001B"
 
 [singleton_rules.evidence]
@@ -83,7 +83,7 @@ justification = "Reviewed exact-anchor policy for DP200001B source row 23; it is
 sheet = "DP200001B"
 source_row = 23
 source_cell = "A23"
-ordinal = 18
+ordinal = "18"
 record_identity = "DP200001B"
 
 [[singleton_rules]]
@@ -100,7 +100,7 @@ allowed_values = []
 sheet = "DP200002"
 source_row = 111
 source_cell = "A111"
-ordinal = 106
+ordinal = "106"
 record_identity = "DP200002"
 
 [singleton_rules.evidence]
@@ -124,7 +124,7 @@ allowed_values = []
 sheet = "DP200002"
 source_row = 118
 source_cell = "A118"
-ordinal = 113
+ordinal = "113"
 record_identity = "DP200002"
 
 [singleton_rules.evidence]
@@ -148,7 +148,7 @@ allowed_values = []
 sheet = "DP200002"
 source_row = 125
 source_cell = "A125"
-ordinal = 120
+ordinal = "120"
 record_identity = "DP200002"
 
 [singleton_rules.evidence]
@@ -172,7 +172,7 @@ allowed_values = []
 sheet = "DP200002"
 source_row = 132
 source_cell = "A132"
-ordinal = 127
+ordinal = "127"
 record_identity = "DP200002"
 
 [singleton_rules.evidence]
@@ -196,7 +196,7 @@ allowed_values = []
 sheet = "DP200002"
 source_row = 139
 source_cell = "A139"
-ordinal = 134
+ordinal = "134"
 record_identity = "DP200002"
 
 [singleton_rules.evidence]

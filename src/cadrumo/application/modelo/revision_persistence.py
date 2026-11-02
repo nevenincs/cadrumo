@@ -474,8 +474,11 @@ def _publish_new_calculation_revision(
     )
 
 
-def _derive_revision_identity_and_handoff(
+def _validate_scope_and_derive_revision_identity(
     *,
+    operation: PinnedAuthorityOperation,
+    work_unit: WorkUnit,
+    registry_snapshot_ref: RegistrySnapshotRef,
     work_unit_id: str,
     input_values_by_casilla_id: dict[CasillaId, str],
     binding_overrides: dict[BindingId, str],
@@ -501,7 +504,17 @@ def _derive_revision_identity_and_handoff(
     rendering_snapshot: CalculationRenderingSnapshot | None,
     screen_stamp: CalculationScreenStamp | None,
 ) -> tuple[str, M303RegimenSimplificadoAnnualSummaryHandoff | None]:
-    """Derive the content identity before stamping its annual handoff."""
+    """Validate the publication scope, then derive the content identity before stamping its annual handoff."""
+    _validate_calculation_publication_scope(
+        operation=operation,
+        work_unit=work_unit,
+        work_unit_id=work_unit_id,
+        registry_snapshot_ref=registry_snapshot_ref,
+        row_casilla_provenance=row_casilla_provenance,
+        filing_instance_evidence=filing_instance_evidence,
+        rendering_snapshot=rendering_snapshot,
+        closed_record_row_sets=closed_record_row_sets,
+    )
     revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
@@ -613,17 +626,10 @@ def persist_calculation_revision(
 
     Takes ``observations`` as :class:`CasillaObservation` records.
     """
-    _validate_calculation_publication_scope(
+    revision_id, stamped_annual_summary_handoff = _validate_scope_and_derive_revision_identity(
         operation=operation,
         work_unit=work_unit,
-        work_unit_id=work_unit_id,
         registry_snapshot_ref=registry_snapshot_ref,
-        row_casilla_provenance=row_casilla_provenance,
-        filing_instance_evidence=filing_instance_evidence,
-        rendering_snapshot=rendering_snapshot,
-        closed_record_row_sets=closed_record_row_sets,
-    )
-    revision_id, stamped_annual_summary_handoff = _derive_revision_identity_and_handoff(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=input_values_by_casilla_id,
         binding_overrides=binding_overrides,

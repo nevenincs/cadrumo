@@ -32,8 +32,8 @@ errors:
       észlelte, és megtagadja annak olvasását, áthelyezését, újrakulcsolását, törlését
       vagy átvételét.
     auth_google: Google-hitelesítési hiba történt.
-    auth_google_client_revoked: A Google már nem fogadja el ennek a telepítésnek a
-      Desktop OAuth-kliensét. Frissítsd az alkalmazást egy aktuális kiadásra.
+    auth_google_client_revoked: A Google már nem fogadja el ennek a telepítésnek az
+      asztali OAuth-kliensét. Frissítsd az alkalmazást egy aktuális kiadásra.
     auth_google_scope_insufficient: A megadott Google hatókörök nem tartalmazzák a
       művelethez szükséges összes hatókört. Engedélyezd újra, megadva az összes kért
       hatókört.
@@ -41,8 +41,8 @@ errors:
       az ehhez a tárolási művelethez szükséges jogosultsággal.
     auth_session_corrupt: A tárolt munkamenet metaadatai nem elemezhetők. Hitelesítsd
       magad újra egy friss munkamenet létrehozásához.
-    auth_session_deserialization: A tárolt hitelesítési munkamenet-adatok nem deszerializálhatók.
-      Hitelesítsen újra egy új munkamenet létrehozásához.
+    auth_session_deserialization: A tárolt hitelesítési munkamenet-adatokat nem sikerült
+      visszaolvasni. Hitelesítsd magad újra egy új munkamenet létrehozásához.
     auth_session_unavailable: Nincs elérhető ellenőrzött aktív AEAT-munkamenet. Hitelesítsd
       magad a folytatás előtt.
     auth_storage_keyring_unavailable: Az operációs rendszer kulcstára nem elérhető.
@@ -241,7 +241,7 @@ errors:
       típus esetén.
     error_financial_iva_rate_overlap: Két IVA-kulcs azonos hatályossági ablakot oszt.
     error_financial_provider: Hiba történt a pénzügyi dokumentum importálása során.
-    error_financial_provider_config: Egy pénzügyi szolgáltató alosztályának corpus-attribútum
+    error_financial_provider_config: Egy pénzügyi szolgáltató alosztályának korpusz-attribútum
       deklarációi hiányoznak vagy érvénytelenek.
     error_financial_transactions_transaction: Tranzakció-katalógus hiba történt.
     error_financial_usage_ratios_usage_ratio: Használati arány hiba történt.
@@ -493,7 +493,7 @@ errors:
     fail_storage_persistence: Perzisztenciahiba történt a biztonságos tárolóban.
     fail_storage_profile_custody: A profilőrzés nem fejezhető be.
     fail_storage_repository: Egy adattár-művelet meghiúsult.
-    fail_storage_repository_setup: Egy repository alosztályból hiányzik egy szükséges
+    fail_storage_repository_setup: Egy adattár-alosztályból hiányzik egy szükséges
       osztályattribútum, így nem hozható létre példány.
     fail_storage_secret_not_found: A kért kulcshoz nem található titkos adat.
     fail_storage_secret_store: Bemeneti/kimeneti hiba történt a titkos adatok tárolójában.
@@ -621,7 +621,7 @@ errors:
     integrity_observability_run_trace_validation: A tárolt futási nyomkövetés nem
       ment át a szigorú érvényesítésen.
     integrity_outbound_storage: A letöltött tartalom nem ment át az integritás-ellenőrzésen
-      (hash, méret vagy etag).
+      (hash, méret vagy `etag`).
     integrity_outbound_storage_corruption: Egy mellékadatok fájl váratlan típusú mezőt
       tartalmaz; a tárolási objektum sérült.
     integrity_period: 'Belső hiba: nem sikerült érvényes időszakot létrehozni a megadott
@@ -637,8 +637,8 @@ errors:
       az aktuális vetítéssel.
     integrity_profile_snapshot_not_found: Nem létezik profil-pillanatkép a megadott
       azonosítóval.
-    integrity_storage_blob: Egy tárolt objektum SHA-256 hashje eltér a manifeszttől.
-    integrity_storage_bucket_validation: Egy gyűjtőparaméter vagy manifestmező nem
+    integrity_storage_blob: Egy tárolt objektum SHA-256 hashje eltér a jegyzéktől.
+    integrity_storage_bucket_validation: Egy gyűjtőparaméter vagy jegyzékmező nem
       teljesítette az érvényesítést.
     integrity_storage_classification: Egy rekord deklarált érzékenységi osztálya nem
       kompatibilis az adattárával.
@@ -658,7 +658,8 @@ errors:
       tárolóban.
     integrity_storage_namespace_registry: Egy névtér-nyilvántartás kulcs vagy definíció
       megsértett egy indítási idejű invariánst.
-    integrity_storage_nonce_collision: Nonce-ütközés észlelve a biztonságos tárolóban.
+    integrity_storage_nonce_collision: Egyszer használatos értékek ütközését észlelte
+      a rendszer a biztonságos tárolóban.
     integrity_storage_path_containment: Egy számított útvonal kiszökik a konfigurált
       gyökérkönyvtárból.
     integrity_storage_profile_custody_record: A profilőrzési rekord hibás vagy módosították.
@@ -908,7 +909,7 @@ errors:
       egyetlen jogszerű csoportot kell alkotniuk (egy kód, egy kulcs, egy azonosított
       ingatlan, és egy kifizető, kivéve a több kifizetős kivételt).
     modelo_349_country_prefix_context: 'A Modelo 349 elutasítja a(z) {country_code}
-      országprefixet a(z) {clave_operacion} műveletkulcshoz {filing_year}/{period}
+      országelőtagot a(z) {clave_operacion} műveletkulcshoz {filing_year}/{period}
       időszakban: {reason}. Jogalap: AEAT Brexit IVA NIF-IVA / Modelo 349 útmutató.'
     modelo_ambiguous_semantic_role_casilla: Több rovat használja a(z) %{semantic_role}
       szemantikus szerepet; használd a pontos kanonikus casilla.id értékét.
@@ -1106,7 +1107,7 @@ errors:
     refused_google_client_metadata_unavailable: Ez a telepítés nem tartalmazza a bejelentkezéshez
       szükséges Google-klienst. A Google-funkciók nem érhetők el.
     refused_google_non_interactive: A Google bejelentkezéshez interaktív terminál
-      és böngésző szükséges; futtasd interaktív shellből.
+      és böngésző szükséges; futtasd interaktív parancssorból.
     refused_google_profile_unbound: Nincs aktív profil kötve. Válassz profilt, vagy
       használd a --profile kapcsolót.
     refused_google_sign_in_required: 'A profil Google-hozzáférése lejárt vagy visszavonták.
@@ -1217,8 +1218,14 @@ errors:
     refused_modelo_charge_account_missing: Csoportos beszedési bevallást választottak,
       de nincs rögzített terhelési számla.
     refused_modelo_domiciliation_past_cutoff: Ennél a bevallásnál a csoportos beszedés
-      {payment_cutoff_on} napon lezárult; {export_on} napon az eredményt csak más
-      módon fizetheted meg.
+      {payment_cutoff_on} napon lezárult, ezt a napot maga a benyújtási időszak rögzíti
+      ({payment_cutoff_legal_refs}); {export_on} napon az eredményt csak más módon
+      fizetheted meg.
+    refused_modelo_domiciliation_past_cutoff_derived: Ennél a bevallásnál a csoportos
+      beszedés {payment_cutoff_on} napon lezárult; ez a nap a csoportos beszedés szabályából
+      ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) származik, mert a benyújtási
+      időszak nem rögzít napot; {export_on} napon az eredményt csak más módon fizetheted
+      meg.
     refused_modelo_edit_parse: Ez a bejegyzés nem olvasható.
     refused_modelo_export_prior_domiciliation_election_required: A 111-es mezőt kitöltő
       Modelo 303 helyesbítő bevalláshoz döntés szükséges a korábbi csoportos beszedésről
@@ -1431,7 +1438,7 @@ errors:
         %{details}'
     stored_data_validation_boundary: Egy tárolt profil vagy munkafolyamat-rekord már
       nem egyezik a várt sémával; a lemezen lévő adatok eltértek a jelenlegi formátumtól.
-      Diagnosztikához és helyreállításhoz futtasd aeat config repair.
+      Diagnosztikához és helyreállításhoz futtasd az `aeat config repair` parancsot.
   transaction:
     import_source_invalid: A forrás nem érvényes főkönyvi dokumentum
     ledger_import_failed: 'A főkönyvi fájl nem importálható: {reason}'

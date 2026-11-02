@@ -42,7 +42,7 @@ errors:
     auth_session_corrupt: Les metadades de la sessió desada no es poden llegir. Torna
       a autenticar-te per crear una sessió nova.
     auth_session_deserialization: Les dades de sessió d'autenticació emmagatzemades
-      no s'han pogut deserialitzar. Torna a autenticar-te per crear una sessió nova.
+      no s'han pogut interpretar. Torna a autenticar-te per crear una sessió nova.
     auth_session_unavailable: No hi ha cap sessió activa verificada amb l'AEAT disponible.
       Autentica't abans de continuar.
     auth_storage_keyring_unavailable: L'anell de claus del sistema operatiu no està
@@ -187,7 +187,7 @@ errors:
     error_calc_sheets_engine: El motor d'exportació de fulls de càlcul ha trobat un
       estat irresoluble en generar el pla d'exportació.
     error_calc_sheets_record: Una operació de registre de full de càlcul ha fallat
-      per un índex de columna invàlid o una adreça A1 malformada.
+      per un índex de columna invàlid o una adreça A1 amb un format incorrecte.
     error_calculations_registry: S'ha produït un error en carregar, resoldre o validar
       el registre de càlcul.
     error_calculations_registry_load: Els fitxers del registre de càlcul no s'han
@@ -291,7 +291,7 @@ errors:
     error_modelo_filing_record_not_found: No s'ha trobat la declaració registrada
       sol·licitada.
     error_modelo_iva_wallet_reconciliation_blocked: 'El càlcul del Model 303 està
-      bloquejat: cal la reconciliació del wallet d''IVA'
+      bloquejat: cal la reconciliació de la cartera d''IVA'
     error_modelo_metadata_run: L’operació sobre les metadades del treball no ha retornat
       cap resultat confirmat. Consulta’n l’identificador abans de tornar-ho a provar.
     error_modelo_verification_outcome_incomplete: 'La verificació d''aquesta revisió
@@ -550,8 +550,8 @@ errors:
       fixa.
     ledger_check: Una comprovació de consistència del llibre ha detectat un problema
       que impedeix continuar.
-    ledger_link: No s'ha pogut vincular una transacció del llibre a un binding de
-      model.
+    ledger_link: No s'ha pogut vincular una transacció del llibre a una vinculació
+      de model.
     missing_exchange_rate: Falta el tipus de canvi per a la data i la moneda indicades.
     modelo_036_lifecycle: S'ha produït un error en el cicle de vida del Model 036
       (alta, modificació o baixa).
@@ -698,9 +698,9 @@ errors:
       ni verificar.
     integrity_storage_corpus_manifest: El manifest del corpus no s'ha pogut llegir
       o validar.
-    integrity_storage_corpus_manifest_tamper: El resum autoverificable del manifest
-      del corpus no coincideix amb el seu contingut. El manifest pot estar malmès
-      o manipulat.
+    integrity_storage_corpus_manifest_tamper: El resum que el manifest del corpus
+      declara sobre si mateix no coincideix amb el seu contingut. El manifest pot
+      estar malmès o manipulat.
     integrity_storage_decryption: El desxifratge d'un objecte emmagatzemat ha fallat.
       Les dades poden estar malmeses o la clau no és correcta.
     integrity_storage_encryption: S'ha produït un error de xifratge o desxifratge
@@ -711,8 +711,8 @@ errors:
       segur.
     integrity_storage_namespace_registry: Una clau o definició del registre d'espais
       de noms ha violat un invariant d'inicialització.
-    integrity_storage_nonce_collision: S'ha detectat una col·lisió de nonce en l'emmagatzematge
-      segur.
+    integrity_storage_nonce_collision: S'ha detectat una col·lisió de valors d'un
+      sol ús en l'emmagatzematge segur.
     integrity_storage_path_containment: Una ruta calculada se surt del directori arrel
       configurat.
     integrity_storage_profile_custody_record: El registre de custòdia del perfil no
@@ -905,7 +905,7 @@ errors:
       trobat una selecció de treball no resolta.
     canonical_operation_financial_operand: No s’han pogut acceptar les dades financeres.
     canonical_operation_observation_cursor_ahead: El cursor d'observació sol·licitat
-      supera l'àncora autoritativa.
+      supera l'àncora de referència.
     canonical_operation_observation_unknown_operation: No existeix cap diari d'observacions
       per a l'operació sol·licitada.
     canonical_operation_subject_busy: Una altra operació sobre aquesta declaració
@@ -1017,7 +1017,7 @@ errors:
       perfil actiu. L'exportació només opera dins el bucket del perfil actiu.
     modelo_export_no_active_bucket: L'exportació necessita un perfil actiu. Crea o
       selecciona un perfil i torna-ho a provar.
-    modelo_project_invalid_decimal_override: Una sobrescriptura de projecció no és
+    modelo_project_invalid_decimal_override: Una sobreescriptura de projecció no és
       un import decimal vàlid.
     modelo_revision_pick: No s'ha pogut seleccionar la revisió de càlcul indicada.
     modelo_work_capture_not_current: La selecció de treball ja no es actual. Torna
@@ -1299,8 +1299,13 @@ errors:
     refused_modelo_charge_account_missing: S’ha triat la domiciliació, però no hi
       ha cap compte de càrrec registrat.
     refused_modelo_domiciliation_past_cutoff: La domiciliació d'aquesta declaració
-      es va tancar el {payment_cutoff_on}; el {export_on} només pots pagar el resultat
-      d'una altra manera.
+      es va tancar el {payment_cutoff_on}, data que fixa la mateixa finestra de presentació
+      ({payment_cutoff_legal_refs}); el {export_on} només pots pagar el resultat d'una
+      altra manera.
+    refused_modelo_domiciliation_past_cutoff_derived: La domiciliació d'aquesta declaració
+      es va tancar el {payment_cutoff_on}, data calculada amb la regla de domiciliació
+      ({payment_cutoff_rule}; {payment_cutoff_legal_refs}) perquè la finestra de presentació
+      no en fixa cap; el {export_on} només pots pagar el resultat d'una altra manera.
     refused_modelo_edit_parse: No s'ha pogut llegir aquesta dada.
     refused_modelo_export_prior_domiciliation_election_required: Una autoliquidació
       rectificativa del model 303 amb la casella 111 necessita una elecció sobre la

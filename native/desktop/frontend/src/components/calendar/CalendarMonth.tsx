@@ -13,11 +13,16 @@ import {
 } from "@/shell/calendarGrid";
 import { evaluatedLabel } from "@/shell/calendar";
 import { labelled, listed, noted } from "@/shell/compose";
-import { entryKey, entrySpan } from "@/shell/calendarEntries";
+import { closeUnknown, entryKey, entrySpan } from "@/shell/calendarEntries";
 import { isoDay as day } from "@/shared/dates";
 import { dateFormats, weekdayLetters } from "@/shared/dateFormats";
 import { useStrings } from "@/shell/strings";
-import { EVENT_MARK, STATE_MARK, STATE_TONE } from "./calendarMarks";
+import {
+  EVENT_MARK,
+  STATE_MARK,
+  STATE_TONE,
+  stateWords,
+} from "./calendarMarks";
 
 export function CalendarMonth({
   month,
@@ -50,11 +55,20 @@ export function CalendarMonth({
   const formats = dateFormats(locale);
   const weekdays = weekdayLetters(locale, weekStart);
   // What a window says for itself: its Modelo and period, the days it is
-  // open, and where it stands.
+  // open, and where it stands. A close that is not known is said only as
+  // the earliest it can be, never as the window's last day.
   const describe = (bar: GridBar) => {
     const span = entrySpan(bar.entry);
-    const days =
-      bar.entry.opens_on === null
+    const earliest = t("desktop.calendar.earliest_close", {
+      date: formats.short.format(day(span.to)),
+    });
+    const days = closeUnknown(bar.entry)
+      ? bar.entry.opens_on === null
+        ? noted(t, earliest, t("desktop.calendar.window_unknown"))
+        : span.from === span.to
+          ? earliest
+          : noted(t, formats.short.format(day(span.from)), earliest)
+      : bar.entry.opens_on === null
         ? noted(
             t,
             formats.short.format(day(span.to)),
@@ -65,7 +79,7 @@ export function CalendarMonth({
       modelo: t("desktop.calendar.modelo", { modelo: bar.entry.modelo }),
       period: bar.entry.period,
       days,
-      state: t(`desktop.calendar.state.${bar.entry.user_state}`),
+      state: stateWords(t, bar.entry),
     });
   };
   const title = formats.month.format(new Date(month.year, month.month - 1, 1));

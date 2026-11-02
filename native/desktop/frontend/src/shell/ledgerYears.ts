@@ -6,16 +6,8 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { LedgerPort } from "./ledger";
-import {
-  LEDGER_YEAR_MAX,
-  LEDGER_YEAR_MIN,
-  periodFilters,
-  yearAdmitted,
-} from "./ledgerGrammar";
+import { periodFilters, yearAdmitted } from "./ledgerGrammar";
 import { readPage } from "./ledgerWindow";
-
-/** The most years the walk reads before it stops: the grammar's own span. */
-const YEARS_MAX = LEDGER_YEAR_MAX - LEDGER_YEAR_MIN + 1;
 
 /** The years with movements, in order, or null where they could not be
  * read whole. A partial list is never offered as the whole one. */
@@ -25,7 +17,8 @@ export async function readLedgerYears(
 ): Promise<number[] | null> {
   const years: number[] = [];
   let offset = 0;
-  while (years.length < YEARS_MAX) {
+  // Each turn names a later year than the last, or ends the walk unread.
+  for (;;) {
     if (!stillWanted()) return null;
     const first = await readPage(port, {
       filters: [],
@@ -50,7 +43,6 @@ export async function readLedgerYears(
     years.push(year);
     offset += count.result.total;
   }
-  return null;
 }
 
 /**

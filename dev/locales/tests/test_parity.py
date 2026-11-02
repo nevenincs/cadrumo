@@ -311,8 +311,8 @@ def test_spanish_catalogue_distinguishes_product_prose_cli_and_identity_headings
     data = manager.load_locale(_committed_catalogues(manager)["es"])
 
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
-        "La carpeta vault de Google Drive {vault_folder_name} pertenece al producto anterior y no se puede usar; "
-        "usa la carpeta vault de Cadrumo."
+        "La carpeta de Google Drive {vault_folder_name} pertenece al producto anterior y no se puede usar; "
+        "usa la carpeta de Cadrumo."
     )
     assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
         "La clasificación '%{value}' la asigna Cadrumo automáticamente y no puede establecerse a mano. "
@@ -371,8 +371,8 @@ def test_catalan_catalogue_distinguishes_product_prose_cli_and_identity_headings
         "No hi ha cap perfil Cadrumo actiu enllaçat per a Google OAuth."
     )
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
-        "La carpeta vault de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
-        "usa la carpeta vault de Cadrumo."
+        "La carpeta de Google Drive {vault_folder_name} pertany al producte anterior i no es pot utilitzar; "
+        "usa la carpeta de Cadrumo."
     )
     _assert_unmounted_catalogue_strings(
         data,
@@ -422,8 +422,8 @@ def test_hungarian_catalogue_distinguishes_product_prose_cli_and_identity_headin
     data = manager.load_locale(_committed_catalogues(manager)["hu"])
 
     assert _leaf(data, "adapters", "outbound", "storage", "google_drive", "errors", "former_vault_folder") == (
-        "A Google Drive vault mappa {vault_folder_name} az előző termékhez tartozik és nem használható; "
-        "használd a Cadrumo vault mappát."
+        "A Google Drive {vault_folder_name} mappája az előző termékhez tartozik és nem használható; "
+        "használd a Cadrumo mappát."
     )
     assert _leaf(data, "cli", "ledger", "add", "system_state_not_assignable") == (
         "A(z) '%{value}' besorolást a Cadrumo automatikusan állítja be, kézzel nem adható meg. "

@@ -52,6 +52,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'Les dades de criteri de caixa d''aquest
         apunt d''IVA són incoherents: %{refusal}. Corregeix la data de l''operació
         o l''evidència de cobrament o pagament de l''apunt.'
+      cuota_disagrees_with_rate: La quota d'IVA declarada %{declared} no coincideix
+        amb la base %{base} al tipus %{rate}, que dona %{expected}. Corregeix la quota,
+        la base o el tipus d'IVA.
       deduction_authority_on_non_deducible_row: Una fila d'IVA que no suporta quota
         deduïble no pot portar una classificació de deducció; la categoria d'IVA %{category}
         es liquida com %{flow_direction}. Elimina el tipus de deducció declarat o
@@ -64,6 +67,8 @@ aggregation:
         no té percentatge provisional resolt.
       domestic_identification_on_intra_community_transaction: Una identificació a
         efectes de l'IVA espanyola no és vàlida per a una operació intracomunitària.
+      especial_missing_input_classification: 'La prorrata especial exigeix declarar
+        l''ús de cada entrada deduïble: hi ha una entrada deduïble sense classificació.'
       eu_member_state_on_export_transaction: Les operacions d'exportació o assimilades
         no poden portar un Estat membre de la UE; rebut %{member_state}.
       exemption_article_outside_domestic_exempt: L'article d'exempció %{value} només
@@ -77,6 +82,11 @@ aggregation:
       investment_observations_missing_bienes_inversion_authority: Les observacions
         d'IVA d'inversió requereixen el registre explícit de béns d'inversió i una
         autoritat de perfil coincident.
+      iva_rate_date_outside_table_coverage_on_movement_date: No hi ha cap tipus d'IVA
+        registrat per al %{date}. Aquesta és la data del moviment bancari, usada com
+        a data de meritació perquè aquest apunt no té data d'operació. Registra la
+        data en què es va fer el lliurament o es va prestar el servei; potser així
+        es resol.
       missing_counterparty_establishment_on_export: Una exportació està exempta perquè
         l'operació surt de la Unió, de manera que depèn d'on estigui ESTABLERTA la
         contrapart. Registra el país de la contrapart; un codi absent o no assignat
@@ -95,9 +105,16 @@ aggregation:
         aporta identitat de sector explícita.
       sectorized_input_unknown_sector: Una entrada d'IVA sectoritzada referencia un
         sector desconegut.
+      settlement_apportionment_sector_mismatch: Els percentatges definitius de l'última
+        liquidació han d'anomenar exactament els sectors diferenciats que declara
+        el teu registre de prorrata.
       unaccepted_registry_value: '%{field} consta com a %{value}, un valor que l''autoritat
         fixada del registre tributari no admet per a %{effective_date}, així que l''apunt
         no pot alimentar el càlcul de l''IVA. Corregeix aquest valor a l''apunt.'
+      unsupported_iva_rate_on_movement_date: El tipus d'IVA %{rate} no és vàlid el
+        %{date}. Aquesta és la data del moviment bancari, usada com a data de meritació
+        perquè aquest apunt no té data d'operació. Registra la data en què es va fer
+        el lliurament o es va prestar el servei; potser així es resol.
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: El registre de prorrata
@@ -134,6 +151,11 @@ aggregation:
         datades fora del període de declaració sol·licitat.
   modelo_bindings:
     errors:
+      invoice_advance_payment_partially_collected: Una factura registra un pagament
+        anticipat sobre un preu cobrat només en part. Una bestreta només merita IVA
+        per l'import cobrat, així que la factura no es pot assignar a un període de
+        declaració tal com està. Registra la bestreta com una factura pròpia, o marca
+        aquesta com a pagada si la bestreta cobreix tot el preu.
       invoice_line_currency_unconverted: Una línia de factura està denominada en moneda
         estrangera sense tipus de canvi a euros resolt, per la qual cosa no es pot
         declarar en aquest model.
@@ -1063,6 +1085,7 @@ desktop:
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
     close: Tanca el calendari
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: No tanca abans del {date}
     empty: No hi ha obligacions de presentació en aquest període.
     event:
       filing: Presentació
@@ -1190,7 +1213,6 @@ desktop:
       iban: IBAN
       iban_hint: S'envia una vegada per un canal protegit i després es mostra emmascarat.
       iban_problem:
-        check: Els dígits de control de l'IBAN no quadren.
         shape: No és un IBAN.
       label: Nom
       modelo: Model {modelo}
@@ -2307,7 +2329,8 @@ desktop:
         date_not_iso: '«{raw}»: escriu la data començant per l''any, {suggestion}.'
         exponent: '«{raw}» està en notació exponencial: escriu les xifres.'
         grouping: '«{raw}» separa els milers: escriu {suggestion}.'
-        iban_check: Aquest IBAN té un dígit incorrecte.
+        limits_unavailable: '«{raw}» encara no es pot comprovar: el llibre no ha indicat
+          què admet aquest camp.'
         line_break: '«{raw}» conté un tabulador o un salt de línia: deixa-ho en una
           línia.'
         locked: No s'edita aquí
@@ -2329,7 +2352,6 @@ desktop:
         unknown_choice: «{raw}» no és una de les opcions.
         use: Fes servir {suggestion}
         year_not_a_number: «{raw}» no és un any.
-        year_out_of_range: «{raw}» és fora dels anys que admet Cadrumo.
         zero: '«{raw}» és zero: un import és més gran que zero.'
       revert_cell: Reverteix la cel·la
       revert_movement: Reverteix el moviment
@@ -3024,6 +3046,8 @@ desktop:
         choose_category: Tria una categoria
         count: Una divisió té de 2 a {max} parts.
         description: Les parts sumen {amount}. L'última part es queda el que falta.
+        description_long: La part {part} admet una descripció de {max} caràcters com
+          a màxim.
         description_needed: La part {part} necessita una descripció.
         duplicate: 'La part {part} és igual que una altra: canvia''n l''import o la
           descripció.'
@@ -3149,6 +3173,10 @@ desktop:
         retention_rate: Tipus de retenció
         series: Sèrie
         situacion: Situació de l'immoble
+      figures_retry: Torna-ho a provar
+      figures_unavailable: Xifres no disponibles. El llibre no ha respost i el teu
+        esborrany es conserva.
+      figures_updating: S'estan actualitzant les xifres…
       fixed: Forma part de la identitat de la factura. Per canviar-ho, elimina-la
         i torna-la a afegir.
       from_lines: Segons les línies
@@ -3186,6 +3214,7 @@ desktop:
       line:
         actions: Accions
         add: Afegeix una línia
+        calculated: Calculat {amount}
         category: Categoria
         choose_rate: Tria un tipus
         description: Descripció
@@ -3200,7 +3229,8 @@ desktop:
       lines: Línies
       lines_fixed: Fixes
       lines_note: Punt per als decimals, fins a sis, sense separador de milers. El
-        subtotal i l'IVA es calculen al cèntim.
+        llibre calcula el subtotal i l'IVA; omple'ls només per indicar el que imprimeix
+        el document.
       linked: Moviments vinculats
       linked_count: 'Moviments vinculats: {count}'
       links_permanent: 'Un vincle és permanent: no es pot treure.'
@@ -3211,11 +3241,11 @@ desktop:
       next_number: 'Següent de la sèrie {series}: {number}'
       next_number_series: Tria una sèrie per veure'n el número següent.
       none: Cap
+      not_available: No disponible
       not_met: pendent
       not_saved: No s'ha desat. Els teus canvis es conserven.
       not_stated: Sense indicar
       open_duplicate: Obre-la
-      operation_date_fixed: Només s'indica en afegir la factura
       operation_key: Clau {key}
       party: Contrapart
       payment:
@@ -3231,22 +3261,9 @@ desktop:
         choose_rate: Tria un tipus.
         country_letters: Dues lletres, p. ex. ES.
         currency_letters: Tres lletres, p. ex. EUR.
-        lease_reference_not_allowed: Sense referència cadastral en aquesta situació.
         missing: Obligatori.
         no_line: Afegeix almenys una línia.
-        operation_date_fixed: Un cop afegida, es pot canviar, però no afegir ni treure.
         payment_id_shape: 64 caràcters hexadecimals.
-        printed_differs: Les línies sumen {total}.
-        recargo_above_iva: No pot superar l'IVA.
-        rectifies_required: Indica la factura que rectifica.
-        retention_above_base: No pot superar la base imposable.
-        retention_differs: El tipus dona {amount}.
-        retention_needs_amount: Un tipus necessita el seu import.
-        series_required: Una rectificativa necessita sèrie.
-        tax_id_required: Obligatori, excepte en una simplificada emesa.
-      rate:
-        exempt: Exempt
-        not_subject: No subjecte
       read_failed: No s'han pogut llegir les factures.
       refusal:
         ambiguous_grouping: '"{raw}" es pot llegir de dues maneres. Escriu 1500 o
@@ -3257,6 +3274,8 @@ desktop:
         date_not_iso: '"{raw}": escriu la data any-mes-dia.'
         exponent: '"{raw}": escriu el número sencer.'
         grouping: '"{raw}": sense separador de milers.'
+        limits_unavailable: '«{raw}»: no es pot comprovar fins que el llibre indiqui
+          què admet aquest camp.'
         line_break: 'Una sola línia: sense tabuladors ni salts de línia.'
         meant: Volies dir {suggestion}?
         not_a_date: '"{raw}" no és una data.'
@@ -3278,7 +3297,7 @@ desktop:
       remove_question: Vols eliminar aquesta factura?
       removed: Factura {number} eliminada
       retention: Retenció, fora del total
-      retention_presets: Tipus de retenció habituals
+      retention_implied: El tipus dona {amount}.
       review: Revisa
       review_changes: Revisa els canvis ({count})
       save: Desa
@@ -3305,6 +3324,8 @@ desktop:
       unmatched: Sense vincular
       use: Fes-lo servir
       use_number: Fes servir {number}
+      would_refuse: El llibre rebutjaria aquesta factura tal com està. Revisa'n el
+        NIF i els camps del document.
     irpf_category:
       actividad_economica: Activitat econòmica
       arrendamiento_local: Arrendament de local
@@ -3510,6 +3531,12 @@ desktop:
       reference: Referència
       reference_hint: L'autorització o proposta en què es basa
       refusal:
+        gross_declaration_absent: 'El registre ha rebutjat la baixa: aquest període
+          no té cap declaració bruta.'
+        gross_declaration_duplicate: 'El registre ha rebutjat la declaració: aquest
+          període ja té una declaració bruta.'
+        gross_declaration_sector_unknown: 'El registre ha rebutjat la declaració:
+          aquest sector no és un sector diferenciat declarat.'
         provenance_not_electable: 'No acceptat: aquest origen es calcula, no es tria.'
         provenance_required: 'No acceptat: indica d''on surt el percentatge.'
         reference_not_permitted: 'No acceptat: aquest origen no té cap document a
@@ -3679,6 +3706,10 @@ desktop:
       expression: Expressió
       expression_hint: Es cerca a qualsevol part de la descripció, sense distingir
         majúscules.
+      expression_overrun: Aquesta expressió triga massa a provar-se amb els teus moviments.
+        Simplifica-la.
+      expression_too_long: Aquesta expressió és massa llarga. Pot tenir fins a {max}
+        caràcters.
       expression_unread: Aquesta finestra no pot llegir aquesta expressió.
       from_selection: Crea una regla a partir de la selecció
       matches_split: Coincideix amb {count} · {pending} per classificar
@@ -3702,6 +3733,9 @@ desktop:
         empty_pattern: Escriu les paraules que cal cercar.
         invalid_command: El llibre no ha acceptat la regla.
         invalid_pattern: El llibre no pot llegir aquesta expressió.
+        pattern_overrun: Una regla desada triga massa a provar-se amb els teus moviments,
+          així que no s'ha executat res.
+        pattern_too_long: L'expressió és massa llarga.
       run_note: La previsualització no canvia res. Aplicar-les s'afegeix als teus
         canvis, com qualsevol altre.
       run_staged: 'Regles afegides als teus canvis · Moviments: {count} · encara sense
@@ -3711,6 +3745,9 @@ desktop:
       saved_toast: Regla desada · ordre {place}
       stage_run: Afegeix l'aplicació als teus canvis
       title: Regles de classificació
+      trial_failed: No hi ha resposta sobre aquesta expressió. El que has escrit es
+        conserva.
+      trial_retry: Torna-ho a provar
       what: Cerca paraules a la descripció del moviment i decideix la seva classificació.
       words: La descripció conté
       words_hint: Paraules en aquest ordre; tant és majúscules o minúscules.
@@ -4647,7 +4684,7 @@ entries:
     purpose: Consulta de l'estat de pagaments i devolucions tributàries.
   portal_dnie_sede_entry:
     label: Accés amb DNI electrònic
-    purpose: Punt d'accés a la Seu mitjançant el DNIe.
+    purpose: Punt d'accés a la Seu mitjançant el DNI electrònic.
   portal_domiciliacion_bancaria:
     label: Domiciliació bancària de pagaments
     purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
@@ -4726,7 +4763,7 @@ entries:
     purpose: Àrea personal autenticada del contribuent a la Seu.
   portal_mis_documentos_pendientes_firma:
     label: Documents pendents de signatura
-    purpose: Portasignatures amb els documents pendents de signatura electrònica.
+    purpose: Portafirmes amb els documents pendents de signatura electrònica.
   portal_mis_expedientes:
     label: Els meus expedients
     purpose: Consulta de l'estat dels expedients i tràmits del contribuent.
@@ -6033,7 +6070,8 @@ topic:
     title: Calendari d'obligacions
   casilla:
     body: Una casella és un camp numerat d'un model. Les caselles poden ser manuals,
-      calculades o derivades de bindings. 'aeat app modelo casillas <model>' les llista.
+      calculades o derivades de vinculacions. 'aeat app modelo casillas <model>' les
+      llista.
     title: Caselles
   formats:
     body: La CLI emet sortida en `text` o `json` segons `--format`. JSON és recomanat
@@ -6674,6 +6712,7 @@ tui:
       errors:
         amount_invalid: Escriu l'import només amb xifres i amb punt per als decimals,
           per exemple 1500.00.
+        amount_required: Escriu un import a «{field}». Si no n'hi ha cap, escriu 0.00.
         asset_id_required: Escriu primer l'identificador de l'element.
         choice_invalid: 'Tria una d''aquestes opcions: {options}.'
         date_invalid: Escriu la data com AAAA-MM-DD, per exemple 2025-06-30.
@@ -8899,6 +8938,7 @@ workspace:
         filed: Registrada com a presentada
         not_applicable: No s'aplica
         overdue: Vençuda
+        unknown: Tancament desconegut
         upcoming: Propera
       local:
         external_baseline_imported: Presentació externa importada

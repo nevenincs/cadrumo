@@ -587,32 +587,6 @@ export function effectiveFacts(
   return facts;
 }
 
-/** The fields whose change gives a movement a new id: its amount, its
- * description, its effective date and its own account. A booked date
- * behind a value date is not its effective date. */
-export function changesIdentity(
-  row: LedgerRow,
-  changes: StagedRowChanges | undefined,
-): StageField[] {
-  if (!changes) return [];
-  const before = effectiveFacts(row, undefined);
-  const after = effectiveFacts(row, changes);
-  const found: StageField[] = [];
-  if (changes.amount && !sameDecimal(after.amount ?? "", before.amount ?? ""))
-    found.push("amount");
-  if (changes.description && after.description !== before.description)
-    found.push("description");
-  const effective = (facts: MovementFacts) =>
-    facts.value_date ?? facts.booked_date ?? null;
-  if (
-    (changes.booked_date || changes.value_date) &&
-    effective(after) !== effective(before)
-  )
-    found.push(changes.value_date ? "value_date" : "booked_date");
-  if (changes.own_account_id) found.push("own_account_id");
-  return found;
-}
-
 /** A fresh, unguessable idempotency key for a new movement. */
 export function newIdempotencyKey(
   random: (bytes: Uint8Array<ArrayBuffer>) => Uint8Array = (bytes) =>

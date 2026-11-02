@@ -1,8 +1,8 @@
-"""Write already-planned restatement drops to a caller-owned staged registry tree."""
+"""Apply already-planned restatement drops to a staged registry tree."""
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
+from collections.abc import Mapping
 from pathlib import Path
 
 from . import edition_delta_drop_scope as _edition_delta_drop_scope
@@ -10,9 +10,7 @@ from . import edition_delta_errors as _edition_delta_errors
 from . import edition_delta_fields as _edition_delta_fields
 from . import edition_delta_manifest_writer as _edition_delta_manifest_writer
 from .edition_delta_drop_planning import _identity_of, _read_family_fragments
-from .edition_delta_drop_types import EditionDrop, FamilyDrop, _MemberFragment
-
-__all__ = ("stage_declaration_drop",)
+from .edition_delta_drop_types import EditionDrop, _MemberFragment
 
 
 def _rewrite_family_fragment(
@@ -60,61 +58,3 @@ def _write_drop(
         section_dir = edition_dir / drop.section
         if section_dir.is_dir() and not any(section_dir.iterdir()):
             section_dir.rmdir()
-
-
-def _family_drop_comments(
-    modelo_dir: Path,
-    edition: EditionDrop,
-    drop: FamilyDrop,
-    family: _edition_delta_drop_scope._DroppableFamily,
-) -> list[str]:
-    from .source_tree_installation import toml_comments
-
-    comments: list[str] = []
-    dropped = frozenset(drop.dropped)
-    for fragment in _read_family_fragments(modelo_dir / "revisions" / edition.revision_id, drop.section):
-        for block in fragment.blocks:
-            identity = _identity_of(block.row, family)
-            if identity in dropped:
-                comments.extend(
-                    f"# Original {drop.section} {identity} commentary: {comment}"
-                    for comment in toml_comments(block.text)
-                )
-        if fragment.blocks and all(_identity_of(block.row, family) in dropped for block in fragment.blocks):
-            comments.extend(
-                f"# Original {drop.section} fragment {fragment.path.name}: {comment}"
-                for comment in toml_comments(fragment.preamble)
-            )
-    return comments
-
-
-def _preserve_drop_comments(
-    modelo_dir: Path,
-    edition: EditionDrop,
-    families: Mapping[str, _edition_delta_drop_scope._DroppableFamily],
-) -> list[str]:
-    return [
-        comment
-        for drop in edition.families
-        for comment in _family_drop_comments(modelo_dir, edition, drop, families[drop.section])
-    ]
-
-
-def _append_drop_comments(manifest: Path, comments: Sequence[str]) -> None:
-    if not comments:
-        return
-    text = manifest.read_text(encoding="utf-8")
-    manifest.write_text(text.rstrip() + "\n\n" + "\n".join(comments) + "\n", encoding="utf-8", newline="\n")
-
-
-def stage_declaration_drop(modelo_dir: Path, edition: EditionDrop) -> None:
-    """Write a planned drop to a caller-owned staging tree, retaining row commentary.
-
-    This does not publish source or attest authority. The caller must compare
-    complete materialised definitions before accepting the staged representation.
-    """
-    families = {family.section: family for family in _edition_delta_drop_scope._DROPPABLE_FAMILIES}
-    comments = _preserve_drop_comments(modelo_dir, edition, families)
-    _write_drop(modelo_dir, edition, families)
-    manifest = modelo_dir / "revisions" / edition.revision_id / _edition_delta_fields._MANIFEST
-    _append_drop_comments(manifest, comments)

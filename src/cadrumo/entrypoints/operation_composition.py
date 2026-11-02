@@ -115,6 +115,7 @@ from .operation_composition_general import (
 )
 from .operation_composition_inputs import OperationCompositionInputs
 from .operation_composition_ledger import (
+    compose_invoice_figures_preview_operation,
     compose_invoices_catalogue_add_operation,
     compose_invoices_catalogue_intake_operation,
     compose_invoices_catalogue_read_operation,
@@ -156,7 +157,9 @@ from .operation_composition_ledger import (
     compose_ledger_reset_operation,
     compose_ledger_review_operation,
     compose_ledger_rule_operation,
+    compose_ledger_rule_trial_operation,
     compose_ledger_split_operation,
+    compose_ledger_staged_check_operation,
     compose_ledger_status_operation,
     compose_ledger_track_operation,
     compose_ledger_update_operation,
@@ -271,6 +274,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.invoices.catalogue_read_operation": compose_invoices_catalogue_read_operation,
     "application.invoices.catalogue_remove_operation": compose_invoices_catalogue_remove_operation,
     "application.invoices.catalogue_update_operation": compose_invoices_catalogue_update_operation,
+    "application.invoices.figures_preview_operation": compose_invoice_figures_preview_operation,
     "application.ledger.add_operation": compose_ledger_add_operation,
     "application.ledger.allocate_operation": compose_ledger_allocate_operation,
     "application.ledger.attachment_mutation_operation": compose_ledger_attachment_mutation_operation,
@@ -279,6 +283,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.ledger.classify_operation": compose_ledger_classify_operation,
     "application.ledger.counterparty_operation": compose_ledger_counterparty_operation,
     "application.ledger.entry_options_operation": compose_ledger_entry_options_operation,
+    "application.ledger.staged_check_operation": compose_ledger_staged_check_operation,
     "application.ledger.evidence_add_operation": compose_ledger_evidence_add_operation,
     "application.ledger.evidence_followup_registration": compose_ledger_evidence_followup_registration,
     "application.ledger.evidence_ingestion_operation": compose_ledger_evidence_ingestion_operation,
@@ -307,6 +312,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.ledger.reset_operation": compose_ledger_reset_operation,
     "application.ledger.review_operation": compose_ledger_review_operation,
     "application.ledger.rule_operation": compose_ledger_rule_operation,
+    "application.ledger.rule_trial_operation": compose_ledger_rule_trial_operation,
     "application.ledger.split_operation": compose_ledger_split_operation,
     "application.ledger.status_operation": compose_ledger_status_operation,
     "application.ledger.track_operation": compose_ledger_track_operation,

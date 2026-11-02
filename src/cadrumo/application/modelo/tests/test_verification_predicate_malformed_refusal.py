@@ -140,7 +140,9 @@ def _evaluate(case: _RefusalCase) -> object:
 
 def test_every_refusal_kind_has_a_case_on_every_route() -> None:
     covered = {(case.refusal, case.route) for case in _CASES}
-    assert covered == set(itertools.product(VerificationPredicateRefusal, VerificationPredicateRoute))
+    # Undeclared-casilla refusal needs the revision's casilla set, which only the dispatcher receives.
+    refusals = set(VerificationPredicateRefusal) - {VerificationPredicateRefusal.UNDECLARED_CASILLA}
+    assert covered == set(itertools.product(refusals, VerificationPredicateRoute))
 
 
 @pytest.mark.parametrize("case", _CASES, ids=lambda case: case.id)

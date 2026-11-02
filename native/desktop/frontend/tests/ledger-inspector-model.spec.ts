@@ -1,6 +1,11 @@
+import { servedLimits } from "./support/servedLimits";
+import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
-import type { LedgerLlmSuggestion } from "../src/shell/ledger";
-import { planApply } from "../src/shell/ledgerPlan";
+import type {
+  LedgerLlmSuggestion,
+  LedgerRow,
+  LedgerStagedRowAnswer,
+} from "../src/shell/ledger";
 import { EMPTY_CONTENT, type StagedContent } from "../src/shell/ledgerStage";
 import {
   checkSplit,
@@ -20,11 +25,20 @@ import {
 import { sameInspectorContext } from "../src/components/ledger/inspector/inspectorContext";
 import { effectiveFacts } from "../src/shell/ledgerStage";
 import { hexId, movement } from "./support/ledger";
+import { planRecorded, recordedCheck } from "./support/stagedCheck";
 
 // What the movement inspector works out without drawing. No page is
 // opened.
 
 const NONE: ReadonlySet<string> = new Set();
+
+/** The recorded answer about every one of `rows` with `content` staged. */
+const checkOf = (content: StagedContent, rows: readonly LedgerRow[]) =>
+  recordedCheck(
+    content,
+    new Map(rows.map((row) => [row.transaction.transaction_id, row])),
+    { ids: rows.map((row) => row.transaction.transaction_id) },
+  );
 
 test("the jump index shows every entry that fits and keeps room for More", () => {
   expect(fittingEntries([60, 70, 50, 60, 60], 40, 400, 4)).toBe(5);
@@ -97,7 +111,7 @@ test("while readiness is not measured, a reviewed movement counts as not measure
 
 test("the selection's tax fields wait for a classification, stored or staged", () => {
   const rows = [movement(hexId("a")), movement(hexId("b"))];
-  expect(noneClassified(rows, EMPTY_CONTENT)).toBe(true);
+  expect(noneClassified(rows, checkOf(EMPTY_CONTENT, rows))).toBe(true);
   const staged: StagedContent = {
     ...EMPTY_CONTENT,
     rows: {
@@ -106,15 +120,23 @@ test("the selection's tax fields wait for a classification, stored or staged", (
       },
     },
   };
-  expect(noneClassified(rows, staged)).toBe(false);
+  expect(noneClassified(rows, checkOf(staged, rows))).toBe(false);
   // A classification staged to be cleared leaves the movement undecided.
   const stored = [movement(hexId("c"), { business_classification: "MIXED" })];
-  expect(noneClassified(stored, EMPTY_CONTENT)).toBe(false);
+  expect(noneClassified(stored, checkOf(EMPTY_CONTENT, stored))).toBe(false);
   expect(
-    noneClassified(stored, {
-      ...EMPTY_CONTENT,
-      rows: { [hexId("c")]: { business_classification: { kind: "clear" } } },
-    }),
+    noneClassified(
+      stored,
+      checkOf(
+        {
+          ...EMPTY_CONTENT,
+          rows: {
+            [hexId("c")]: { business_classification: { kind: "clear" } },
+          },
+        },
+        stored,
+      ),
+    ),
   ).toBe(true);
 });
 
@@ -128,7 +150,7 @@ test("set for all skips a movement whose sealed state was not read, and counts i
   );
   const ids = [...rows.keys()];
   const found = setForAll("notes", "x", ids, rows, {
-    content: EMPTY_CONTENT,
+    check: checkOf(EMPTY_CONTENT, [read, unread]),
     sealed: NONE,
     unread: new Set([unread.transaction.transaction_id]),
     visible: new Set(ids),
@@ -170,7 +192,7 @@ test("set for all skips what cannot take it, and counts hidden movements apart",
     ids.filter((id) => id !== hidden.transaction.transaction_id),
   );
   const found = setForAll("iva_category", "domestic_general", ids, rows, {
-    content: EMPTY_CONTENT,
+    check: checkOf(EMPTY_CONTENT, [...rows.values()]),
     sealed: NONE,
     visible,
   });
@@ -188,7 +210,7 @@ test("set for all skips what cannot take it, and counts hidden movements apart",
   });
   // A group label is no tax fact: Personal and unclassified rows take it.
   const labels = setForAll("group_label", "Oficina", ids, rows, {
-    content: EMPTY_CONTENT,
+    check: checkOf(EMPTY_CONTENT, [...rows.values()]),
     sealed: new Set([business.transaction.transaction_id]),
     visible,
   });
@@ -211,7 +233,7 @@ test("set for all judges a movement as staged: a staged Personal skips tax field
     [id],
     new Map([[id, row]]),
     {
-      content,
+      check: checkOf(content, [row]),
       sealed: NONE,
       visible: new Set([id]),
     },
@@ -233,7 +255,7 @@ test("set-for-all cells plan as one bulk save", () => {
     [...byId.keys()],
     byId,
     {
-      content: EMPTY_CONTENT,
+      check: checkOf(EMPTY_CONTENT, rows),
       sealed: NONE,
       visible: new Set(byId.keys()),
     },
@@ -241,23 +263,19 @@ test("set-for-all cells plan as one bulk save", () => {
   const content: StagedContent = { ...EMPTY_CONTENT, rows: {} };
   for (const cell of found.cells)
     content.rows[cell.id] = { [cell.field]: cell.value };
-  const plan = planApply(content, { rows: byId });
+  const plan = planRecorded(content, { rows: byId });
   expect(plan.summary.together).toBe(12);
   expect(plan.summary.oneAtATime).toBe(0);
 });
 
-test("a lifecycle action is offered only where it can run", () => {
-  const active = movement(hexId("a"));
-  const archived = movement(hexId("b"), { lifecycle_state: "ARCHIVED" });
-  const excluded = movement(hexId("c"), {
-    business_classification: "REVIEWED_EXCLUDED",
-  });
-  expect(lifecycleTakes("archive", active, NONE)).toBe(true);
-  expect(lifecycleTakes("archive", active, new Set([hexId("a")]))).toBe(false);
-  expect(lifecycleTakes("restore", active, NONE)).toBe(false);
-  expect(lifecycleTakes("restore", archived, NONE)).toBe(true);
-  expect(lifecycleTakes("stash", archived, NONE)).toBe(false);
-  expect(lifecycleTakes("exclude", excluded, NONE)).toBe(false);
+test("a lifecycle action waits for the ledger's answer and the seal", () => {
+  const offers = (
+    ...lifecycle_actions: LedgerStagedRowAnswer["lifecycle_actions"]
+  ) => ({ lifecycle_actions }) as LedgerStagedRowAnswer;
+  expect(lifecycleTakes("archive", offers("archive"), false)).toBe(true);
+  expect(lifecycleTakes("archive", offers("archive"), true)).toBe(false);
+  expect(lifecycleTakes("restore", offers("archive"), false)).toBe(false);
+  expect(lifecycleTakes("archive", undefined, false)).toBe(false);
 });
 
 test("a merge needs every active part of the split, and nothing else", () => {
@@ -284,6 +302,68 @@ test("a split's last part takes what the others leave, in its shortest form", ()
   expect(splitRemainder("10", ["11"])).toBeNull();
   expect(splitRemainder("10", ["1.000"])).toBeNull();
   expect(splitRemainder("10", [""])).toBeNull();
+});
+
+test("a split part's description is refused over the length the ledger serves, and while it serves none", () => {
+  const parts = (description: string) => [
+    { amount: "1", description },
+    { amount: "2", description: "otra" },
+  ];
+  holdLedgerLimits({
+    ...servedLimits,
+    text_limits: [
+      { name: "split_parts", max: 3 },
+      { name: "split_part_description", max: 5 },
+    ],
+  });
+  try {
+    expect(checkSplit("3", parts("12345"))).toMatchObject({ ok: true });
+    expect(checkSplit("3", parts("áéíóú"))).toMatchObject({ ok: true });
+    expect(checkSplit("3", parts("  12345  "))).toMatchObject({ ok: true });
+    expect(checkSplit("3", parts("123456"))).toEqual({
+      ok: false,
+      problem: { kind: "description_long", index: 0, max: 5 },
+    });
+    holdLedgerLimits({
+      ...servedLimits,
+      text_limits: [{ name: "split_parts", max: 3 }],
+    });
+    expect(checkSplit("3", parts("a"))).toEqual({
+      ok: false,
+      problem: { kind: "limits_unavailable" },
+    });
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
+});
+
+test("a split takes no more parts than the ledger serves, and none while it serves nothing", () => {
+  const parts = (count: number) =>
+    Array.from({ length: count }, (_, at) => ({
+      amount: "1",
+      description: `parte ${at}`,
+    }));
+  holdLedgerLimits({
+    ...servedLimits,
+    text_limits: [
+      { name: "split_parts", max: 3 },
+      { name: "split_part_description", max: 64 },
+    ],
+  });
+  try {
+    expect(checkSplit("3", parts(3))).toMatchObject({ ok: true });
+    expect(checkSplit("4", parts(4))).toEqual({
+      ok: false,
+      problem: { kind: "count" },
+    });
+    holdLedgerLimits(null);
+    expect(checkSplit("3", parts(3))).toEqual({
+      ok: false,
+      problem: { kind: "limits_unavailable" },
+    });
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
 });
 
 test("a split is refused unless its parts add up exactly and differ", () => {
@@ -404,7 +484,7 @@ test("a Mixed proposal with no share is held", () => {
   expect(needsShare(suggestion({}))).toBe(false);
   // The plan holds the same approval back.
   const row = movement(hexId("a"));
-  const plan = planApply(
+  const plan = planRecorded(
     {
       ...EMPTY_CONTENT,
       actions: [

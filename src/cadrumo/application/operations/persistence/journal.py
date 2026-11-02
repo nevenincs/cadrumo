@@ -103,6 +103,11 @@ class OperationPersistedSnapshot(BaseModel):
         """Return the filename identity consumed by the journal substrate."""
         return self.identity.operation_id
 
+    @property
+    def interruption_effect(self) -> OperationEffect:
+        """What an interruption can have done: nothing before the executor ran, otherwise unknown."""
+        return OperationEffect.NONE if self.executor_entered_at is None else OperationEffect.UNKNOWN
+
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _validate_persisted_snapshot(self) -> OperationPersistedSnapshot:

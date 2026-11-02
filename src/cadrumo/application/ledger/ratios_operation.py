@@ -423,11 +423,7 @@ def _definition(
     effects = frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
     if mutation:
         effects = effects | {OperationEffect.UPDATED}
-    storage = (
-        OperationRequestStoragePolicy.SECURE_REFERENCE
-        if sensitive_input
-        else OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
-    )
+    storage = OperationRequestStoragePolicy.for_private_request(sensitive_input)
     return build_single_phase_definition(
         definition_id=definition_id,
         request_type=request_type,

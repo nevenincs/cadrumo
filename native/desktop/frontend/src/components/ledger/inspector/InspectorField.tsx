@@ -1,3 +1,4 @@
+import { vocabularyEmpty } from "../movements/movementWords";
 import {
   useId,
   useRef,
@@ -23,6 +24,7 @@ import {
 import { useStrings } from "../../../shell/strings";
 import {
   useFieldSuggestions,
+  useVocabulary,
   type SuggestionKind,
 } from "../suggestions/SuggestionsProvider";
 
@@ -151,6 +153,7 @@ export function InspectorField({
   onCommit?: (value: string | null) => void;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const id = useId();
   const button = useRef<HTMLButtonElement>(null);
   const [typing, setTyping] = useState<string | null>(null);
@@ -322,7 +325,12 @@ export function InspectorField({
             ? [{ value: CLEAR, label: editor.clear }, ...editor.options]
             : editor.options
         }
-        emptyLabel={t("desktop.ledger.inspector.no_match")}
+        emptyLabel={vocabularyEmpty(
+          t,
+          vocabulary,
+          t("desktop.ledger.inspector.no_match"),
+          editor.options.length,
+        )}
         onCommit={(chosen) => {
           const next = chosen === CLEAR ? null : chosen;
           if (next !== editor.value) onCommit!(next);

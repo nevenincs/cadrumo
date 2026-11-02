@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-201` · **Topic:** [Bundled knowledge and localization](../topics/bundled-knowledge-and-localization.md)
+**Topic:** [Bundled knowledge and localization](../topics/bundled-knowledge-and-localization.md)
 
 <!-- preserved:article -->
 ## Scope
@@ -19,7 +19,7 @@ There is explicit regional Renta material: the 2024 part-2 volume lists deductio
 
 The historical versions are not interchangeable with those recent manuals. The 2020 IVA text itself says the edition closed in September 2020 on the law published up to that date and that subsequent changes applicable to the exercise must be considered. Older manual content can explain a past period, but it is not evidence of a current rule. In the newer manuals, the front matter explicitly says the publication has merely informational effect. Those caveats should remain attached to any derived guidance (IVA 2020 manual (`src/cadrumo/_data/manual_corpus_text/manuals/iva/2020/source.pdf.corpus_text.json`), IVA 2025 manual (`src/cadrumo/_data/manual_corpus_text/manuals/iva/2025/source.pdf.corpus_text.json`)).
 
-A useful cross-inventory detail: the Renta 2024 autonomous-deduction volume is present here as a 1,369,693-byte normalized-text record. The separate source/extraction inventory in STAGE-2-196 noted that this volume lacked its `.extracted.json`/`.extracted.md` sidecars there. Thus the sidecar gap does not mean the project has no machine-readable text for the volume; it has this separate `manual_corpus_text` representation. It still does not establish that all of the normal source-extraction metadata and page structure are available for that part (Renta 2024 part 2 normalized text (`src/cadrumo/_data/manual_corpus_text/manuals/renta/2024/part2-deducciones-autonomicas/source.pdf.corpus_text.json`), [related source/extraction inventory report](196-aeat-practical-manual-corpus.md)).
+A useful cross-inventory detail: the Renta 2024 autonomous-deduction volume is present here as a 1,369,693-byte normalized-text record. The separate source/extraction inventory in [AEAT practical-manual corpus](196-aeat-practical-manual-corpus.md) noted that this volume lacked its `.extracted.json`/`.extracted.md` sidecars there. Thus the sidecar gap does not mean the project has no machine-readable text for the volume; it has this separate `manual_corpus_text` representation. It still does not establish that all of the normal source-extraction metadata and page structure are available for that part (Renta 2024 part 2 normalized text (`src/cadrumo/_data/manual_corpus_text/manuals/renta/2024/part2-deducciones-autonomicas/source.pdf.corpus_text.json`), [related source/extraction inventory report](196-aeat-practical-manual-corpus.md)).
 
 ## Data shape and quality
 

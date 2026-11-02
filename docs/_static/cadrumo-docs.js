@@ -304,14 +304,14 @@
 
   /* ── Search controller ─────────────────────────────────────────────────
    * The full search behaviour (Pagefind loading, the two-pass card/page
-   * search, the ADR-D5 compose ladder, the PERF-003 relevance tie-break,
-   * dedupe, painting, keyboard selection, and the busy-state machine) is
+   * search, the compose ladder, the relevance tie-break, dedupe, painting,
+   * keyboard selection, and the busy-state machine) is
    * host-agnostic. It is parameterised on a node set — a `root` for the busy
    * class, an `input`, a result `list`, and a screen-reader `status` node —
    * plus small behavioural flags, so the exact same core drives two surfaces:
    * the Ctrl-K modal palette (`initPalette`) and the inline search page
    * (`initSearchPage`). Nothing here reaches for a dialog-scoped variable;
-   * every host node arrives through `opts` (ADR D5).
+   * every host node arrives through `opts`.
    *
    * opts:
    *   root          element the busy `is-busy` class toggles on
@@ -405,7 +405,7 @@
      * absolute specifier: a bare/relative one (e.g. "pagefind/pagefind.js")
      * is treated as a package name and fails. The index is at the site's apex,
      * above every language root, so it resolves against SITE_PATH -- not
-     * against this root, which is where each language once kept its own copy. */
+     * against this root. */
     var pagefindBase = new URL(SITE_PATH + "pagefind/", document.baseURI).href;
 
     /* Narrow every search to the language of the page it runs on. The one index
@@ -542,20 +542,20 @@
         });
     }
 
-    /* Result iconography + ranking authority (ADR 2026-07-15 D7/D8). The Python
+    /* Result iconography + ranking authority. The Python
      * injection seam ships a closed `display_class` on every injected record
      * (`casilla`/`modelo`/`cli`/`technical`/`doc`) plus a `weight` already
      * placed on the one user-first ladder (doc 1.0 > modelo 0.9 > casilla 0.8 >
      * cli 0.7 > technical 0.5). This renderer READS that class verbatim for the
      * icon and RANKS on that shipped weight; it NEVER re-derives the class from
-     * kind/URL heuristics (the exact duplicated-structural-fact failure that
-     * silently rotted the CLI targets — ADR Axis-6 O6b/O6c).
+     * kind/URL heuristics, which would duplicate a structural fact the injection
+     * seam already owns.
      *
      * Hand-authored inline SVG, one per display class, matching the file's
      * existing 16×16 stroke/viewBox idiom (magnifier, chevron, copy). No
      * icon-font, no external asset (`aeat-documentation`). Full-text
-     * page hits carry a path-derived class too (build-side page-meta stamping,
-     * ADR D8); a record with no shipped class (a nav title, or an older index)
+     * page hits carry a path-derived class too (build-side page-meta stamping);
+     * a record with no shipped class (a nav title, or an older index)
      * degrades to no icon rather than a guessed one. */
     var DISPLAY_CLASS_ICONS = {
       casilla:
@@ -598,9 +598,9 @@
     };
 
     /* Intra-band rank for a full-text PAGE hit, keyed on its shipped
-     * `display_class` (ADR D8). A page carries NO `weight` meta (Trap 1: that
-     * would pollute the weight-sorted card pass), so this JS-side map is how a
-     * user-doc page (`doc`) floats above a dev-machinery page (`technical`)
+     * `display_class`. A page carries NO `weight` meta (that would pollute the
+     * weight-sorted card pass), so this JS-side map is how a user-doc page
+     * (`doc`) floats above a dev-machinery page (`technical`)
      * WITHIN the full-text band. Every value sits in (0, 1) — comfortably below
      * the card band (tierRank 1 + weight, ≥ 1.7) — so cards always lead; the
      * order mirrors the shipped weight ladder (doc > modelo > casilla > legal >
@@ -638,7 +638,7 @@
       if (meta && meta.modelo && meta.number) {
         /* Casilla crumb: modelo + official number, plus the segmento the Python
          * seam now ships so sibling casillas of a segmented modelo (M200
-         * `DP200014:00562`) read apart at a glance (ADR D6). */
+         * `DP200014:00562`) read apart at a glance. */
         var casillaCrumb =
           chromeText("class_label_modelo", "Modelo") + " " + meta.modelo + " · " + meta.number;
         if (meta.segmento) casillaCrumb += " · " + meta.segmento;
@@ -648,30 +648,28 @@
       } else if (meta && meta.domain) {
         crumbParts.push(meta.domain);
       }
-      /* Rank on the shipped user-first weight (D8): the Python ladder already
-       * encodes doc>modelo>casilla>cli>technical, so consuming `weight` keeps a
-       * single ranking authority instead of the retired local KIND_TIER (which
-       * re-keyed on kind and still ordered cli above casilla). An injected card
-       * carries a weight (0.7–1.0); a full-text page hit carries none, so it
-       * sits below every card — the retained RankingTier coarse axis (term/nav
-       * cards first, full text last) is the +1 card band; PERF-003's relevance
-       * tie-break within a band is preserved in compose(). */
+      /* Rank on the shipped user-first weight: the Python ladder already encodes
+       * doc>modelo>casilla>cli>technical, so consuming `weight` keeps a single
+       * ranking authority. An injected card carries a weight (0.7–1.0); a
+       * full-text page hit carries none, so it sits below every card — the
+       * RankingTier coarse axis (term/nav cards first, full text last) is the +1
+       * card band. The relevance tie-break within a band is applied in compose(). */
       var weight = meta && meta.weight ? parseFloat(meta.weight) : 0;
       if (isNaN(weight)) weight = 0;
-      /* `isCard` is PASS-ORIGIN, not class-presence (Trap 2): the weight-sorted
-       * card pass yields only injected records, the relevance pass yields
-       * full-text pages. Since pages now ALSO carry a `display_class`, keying
-       * `isCard` on `displayClass !== ""` would wrongly promote every page into
-       * the card band. Threading which pass produced the row keeps cards above
-       * pages while pages still carry a class for their intra-band order + icon. */
+      /* `isCard` is PASS-ORIGIN, not class-presence: the weight-sorted card pass
+       * yields only injected records, the relevance pass yields full-text pages.
+       * Pages also carry a `display_class`, so keying `isCard` on
+       * `displayClass !== ""` would wrongly promote every page into the card band.
+       * Threading which pass produced the row keeps cards above pages while pages
+       * still carry a class for their intra-band order + icon. */
       var isCard = !!fromCardPass;
       /* Injected term/casilla/CLI records carry a clean one-line summary per
        * language; show the one for the language being read, never Pagefind's
        * auto-excerpt of the record, which is the cross-lingual token blob
-       * (title + every alias + all four descriptions). One record now stands
-       * for every language, so the language is chosen HERE rather than being
-       * fixed when the record was injected. Full-text page hits carry no
-       * summary, so they keep their real Pagefind snippet. */
+       * (title + every alias + all four descriptions). One record stands for
+       * every language, so the language is chosen HERE, when the card is read.
+       * Full-text page hits carry no summary, so they keep their real Pagefind
+       * snippet. */
       var summary = summaryFor(meta);
       return {
         title: title,
@@ -722,17 +720,17 @@
      * language share ONE index (each record injected once with combined
      * multilingual content, so a Spanish term is found from an English page,
      * every language's filter value on it, and a `weight` sort key). Both
-     * passes narrow to the page's own language. Two passes compose the
-     * ADR-D5 ladder reliably:
+     * passes narrow to the page's own language. Two passes compose the ladder
+     * reliably:
      *   1. a search SORTED by `weight` returns ONLY the injected records (the
      *      docs pages carry no `weight` key, so Pagefind drops them) ordered by
-     *      the D8 display-class ladder (doc 1.0 > modelo 0.9 > casilla 0.8 > cli
+     *      the display-class ladder (doc 1.0 > modelo 0.9 > casilla 0.8 > cli
      *      0.7) - these are the term/navigation card tiers, guaranteed above the
      *      full text;
      *   2. a normal relevance search yields the full-text page hits (third
      *      tier). Each page carries a path-derived `display_class` (but NO
      *      `weight` key, so pass 1 still drops it), which orders pages within
-     *      the full-text band (user docs above dev machinery; ADR D8). A page
+     *      the full-text band (user docs above dev machinery). A page
      *      that is also a card is deduped away in compose(). */
     function searchPagefind(query) {
       return loadPagefind()
@@ -823,7 +821,7 @@
         });
     }
 
-    /* Compose the ADR-D5 progressive ladder: Pagefind term/casilla/CLI cards
+    /* Compose the progressive ladder: Pagefind term/casilla/CLI cards
      * first (ordered by injected tier+weight), navigation titles second, the
      * full-text handoff third. Dedupe by href across tiers: a hit that is both
      * a term card and a nav/full-text result shows once, in its higher tier. */
@@ -852,12 +850,7 @@
          * returned by Pagefind) orders ahead of a weaker match. The card-pass
          * marker is deliberately not identity: a description hit is lexical
          * provenance, not a direct answer. Display-class bands rank first, then
-         * direct-match strength, then Pagefind's own relevance order.
-         *
-         * The semantic tie-breaks that once sat between these steps were
-         * removed with the static-embedding tier. They were unreachable
-         * without a card carrying a semanticScore, so their removal is a
-         * subtraction: this comparator orders lexical cards exactly as before. */
+         * direct-match strength, then Pagefind's own relevance order. */
         var ma = typeof a.directMatchStrength === "number" ? a.directMatchStrength : titleMatch(a.title, query);
         var mb = typeof b.directMatchStrength === "number" ? b.directMatchStrength : titleMatch(b.title, query);
         if (b.tierRank !== a.tierRank) return b.tierRank - a.tierRank;
@@ -889,9 +882,9 @@
         item.setAttribute("role", "option");
         var link = document.createElement("a");
         link.href = entry.href;
-        /* Per-class result icon (ADR D7/D8): the shipped `display_class`, read
-         * verbatim, selects one hand-authored inline SVG. Full-text page hits
-         * now also ship a class (build-side page-meta stamping), so they render
+        /* Per-class result icon: the shipped `display_class`, read verbatim,
+         * selects one hand-authored inline SVG. Full-text page hits also ship a
+         * class (build-side page-meta stamping), so they render
          * an icon too; a row with no shipped class (nav title, handoff) gets no
          * icon rather than a guessed one — never re-derive the class here. */
         if (entry.displayClass && DISPLAY_CLASS_ICONS[entry.displayClass]) {
@@ -949,10 +942,9 @@
         return;
       }
       /* Keep the current results painted until the new query resolves, then
-       * swap - so a keystroke never blanks the palette to the bare fallback
-       * (the old eager repaint did, and on a transiently-empty Pagefind pass it
-       * stuck there). The busy signal is what tells the reader those rows are
-       * the OLD answer and a newer one is on its way. */
+       * swap - so a keystroke never blanks the palette to the bare fallback.
+       * The busy signal is what tells the reader those rows are the OLD answer
+       * and a newer one is on its way. */
       beginBusy();
       searchPagefind(query)
         .then(function (cards) {
@@ -1148,10 +1140,9 @@
   /* ── Search page (inline host) ─────────────────────────────────────────
    * The shipped search page (docs/_templates/search.html) is a bare
    * `#pagefind-search` mount; the same controller that drives the Ctrl-K modal
-   * renders inline here so the page inherits the D5 tier ladder, the PERF-003
-   * tie-break, and dedupe instead of a second, divergent implementation (the
-   * retired PagefindUI drop). The page reads `?q=` to seed a shareable search
-   * and rewrites the URL as the query changes. */
+   * renders inline here so the page inherits the tier ladder, the tie-break,
+   * and dedupe instead of a second, divergent implementation. The page reads
+   * `?q=` to seed a shareable search and rewrites the URL as the query changes. */
 
   function initSearchPage() {
     var mount = document.getElementById("pagefind-search");
@@ -1251,9 +1242,9 @@
 
   /* ── CLI sequence playhead ─────────────────────────────────────────────
    * Progressive enhancement over the server-rendered div.cadrumo-sequence
-   * transcript (ADR D5; presentation revised per operator review). The frames
-   * are already in the DOM as div.cadrumo-frame with full token highlighting;
-   * without this script the reader sees the complete highlighted transcript.
+   * transcript. The frames are already in the DOM as div.cadrumo-frame with full
+   * token highlighting; without this script the reader sees the complete
+   * highlighted transcript.
    *
    * When it runs, the widget is a PLAYHEAD over a rundown: every command line
    * stays visible at all times. Exactly one command is active — highlighted,
@@ -1533,8 +1524,7 @@
   function setupCopyButtons(root) {
     var frames = root.querySelectorAll(".cadrumo-frame[data-command-line]");
     Array.prototype.forEach.call(frames, function (frame) {
-      // Every frame is a visible command the reader can copy (setup frames are
-      // no longer folded away).
+      // Every frame is a visible command the reader can copy.
       var button = document.createElement("button");
       button.type = "button";
       button.className = "cadrumo-copy-btn";
@@ -1624,7 +1614,7 @@
 
   /* ── CLI token hover help ───────────────────────────────────────────────
    * A verb/option token in a sequence carries a data-command-path key that
-   * indexes the build-emitted cli-tree.json help projection (ADR D5). On hover
+   * indexes the build-emitted cli-tree.json help projection. On hover
    * or focus the token opens a popover with that command's live help, usage,
    * and parameters. The projection is fetched once per page, lazily on the
    * first hover intent, over a same-origin relative URL derived from this

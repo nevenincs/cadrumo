@@ -22,7 +22,7 @@ allowed_values = []
 sheet = "DP200023"
 source_row = 56
 source_cell = "A56"
-ordinal = 51
+ordinal = "51"
 record_identity = "DP200023"
 
 [singleton_rules.evidence]
@@ -35,7 +35,7 @@ justification = "The 2024 diseno states no format annotation for this field: AEA
 sheet = "DP200023"
 source_row = 56
 source_cell = "A56"
-ordinal = 51
+ordinal = "51"
 record_identity = "DP200023"
 
 [[singleton_rules]]
@@ -52,7 +52,7 @@ allowed_values = []
 sheet = "DP200023"
 source_row = 57
 source_cell = "A57"
-ordinal = 52
+ordinal = "52"
 record_identity = "DP200023"
 
 [singleton_rules.evidence]
@@ -65,7 +65,7 @@ justification = "The 2024 diseno states no format annotation for this field: AEA
 sheet = "DP200023"
 source_row = 57
 source_cell = "A57"
-ordinal = 52
+ordinal = "52"
 record_identity = "DP200023"
 
 [[singleton_rules]]
@@ -82,7 +82,7 @@ allowed_values = []
 sheet = "DP200024"
 source_row = 31
 source_cell = "A31"
-ordinal = 26
+ordinal = "26"
 record_identity = "DP200024"
 
 [singleton_rules.evidence]
@@ -106,7 +106,7 @@ allowed_values = []
 sheet = "DP200024"
 source_row = 34
 source_cell = "A34"
-ordinal = 29
+ordinal = "29"
 record_identity = "DP200024"
 
 [singleton_rules.evidence]
@@ -130,7 +130,7 @@ allowed_values = []
 sheet = "DP200DID"
 source_row = 12
 source_cell = "A12"
-ordinal = 7
+ordinal = "7"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -154,7 +154,7 @@ allowed_values = ["1", "2", "3"]
 sheet = "DP200DID"
 source_row = 13
 source_cell = "A13"
-ordinal = 8
+ordinal = "8"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -178,7 +178,7 @@ allowed_values = []
 sheet = "DP200DID"
 source_row = 15
 source_cell = "A15"
-ordinal = 10
+ordinal = "10"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -202,7 +202,7 @@ allowed_values = []
 sheet = "DP200DID"
 source_row = 16
 source_cell = "A16"
-ordinal = 11
+ordinal = "11"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -226,7 +226,7 @@ allowed_values = []
 sheet = "DP200DID"
 source_row = 17
 source_cell = "A17"
-ordinal = 12
+ordinal = "12"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -239,7 +239,7 @@ justification = "Reviewed exact-anchor policy for DP200DID source row 17; it is 
 sheet = "DP200DID"
 source_row = 17
 source_cell = "A17"
-ordinal = 12
+ordinal = "12"
 record_identity = "DP200DID"
 
 [[singleton_rules]]
@@ -256,7 +256,7 @@ allowed_values = []
 sheet = "DP200DID"
 source_row = 18
 source_cell = "A18"
-ordinal = 13
+ordinal = "13"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -280,7 +280,7 @@ allowed_values = []
 sheet = "DP200DID"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -304,7 +304,7 @@ allowed_values = []
 sheet = "DP200DID"
 source_row = 20
 source_cell = "A20"
-ordinal = 15
+ordinal = "15"
 record_identity = "DP200DID"
 
 [singleton_rules.evidence]
@@ -317,5 +317,5 @@ justification = "Reviewed exact-anchor policy for DP200DID source row 20; it is 
 sheet = "DP200DID"
 source_row = 20
 source_cell = "A20"
-ordinal = 15
+ordinal = "15"
 record_identity = "DP200DID"

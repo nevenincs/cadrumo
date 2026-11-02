@@ -43,7 +43,6 @@ from dataclasses import replace
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import Literal
 
 import pytest
 
@@ -52,13 +51,13 @@ from cadrumo.adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
     IvaWalletDecisionRepository,
 )
-from cadrumo.adapters.persistence.profile.catalogue_creation import build_catalogue_creation_ports
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_verification_reports import VerificationReportCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
@@ -66,26 +65,31 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.calculations.tests.filing_evidence import general_m303_filing_evidence
-from cadrumo.application.invoices.catalogue_creation import build_catalogue_invoice
-from cadrumo.application.modelo.action_errors import ModeloCrossPeriodCleanStateError
+from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloCrossPeriodCleanStateError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.filing_action_ports import FilingActionPorts
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.verification_repository_ports import VerificationRepositoryBundle
+from cadrumo.application.modelo.work_form_models import ModeloFormOrigin, address_key
+from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.hierarchy import CadrumoError
-from cadrumo.core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
+from cadrumo.core.external_constants import OutputLanguage
+from cadrumo.core.i18n.render import tr as render_tr
 from cadrumo.core.period import Period
 from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
+from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
@@ -96,26 +100,36 @@ from cadrumo.domain.deadlines.models import (
     ModeloIVAProfile,
     TaxpayerProfile,
 )
-from cadrumo.domain.filing.software_identity import AeatProductSoftwareEvidence, AeatProductSoftwareIdentity
-from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
-from cadrumo.domain.iva.deduction_facts import IvaDeductionClassificationProvenance
-from cadrumo.domain.iva.schema import EUMemberState, IvaCategory, require_eu_member_state
 from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    derive_calculation_revision_id_from_revision,
+)
+from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_calculation_action_ports,
     build_filing_action_ports,
     build_verification_repository_bundle,
+)
+from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
+    _BUCKET_ID,
+    _T0,
+    _YEAR,
+    IRENE_ANNUAL_EXPECTED,
+    IRENE_QUARTER_FACTS,
+    LAURA_ANNUAL_EXPECTED,
+    PRORRATA_QUARTER_FACTS,
+    persist_year_of_invoices,
+    product_software_identity,
 )
 from cadrumo.entrypoints.tests.profile_persistence.modelo_303_export_support import (
     _MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS,
@@ -127,28 +141,11 @@ from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
-from ....domain.iva.schema import InvoiceKind
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
 
-def _product_software_identity() -> AeatProductSoftwareIdentity:
-    """Test product identity supplied to every export in this module."""
-    return AeatProductSoftwareIdentity(
-        program_identifier="C303",
-        developer_tax_id="Y0000001S",
-        evidence=(
-            AeatProductSoftwareEvidence(
-                reference="aeat-software-registration:e2e-ledger-m303-m390",
-                digest="a" * 64,
-            ),
-        ),
-    )
-
-
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
-
-_BUCKET_ID = "30330303-3030-4303-8303-303303303303"
 
 
 __all__ = ["secure_objects"]
@@ -159,21 +156,16 @@ def bucket_id() -> str:
     return _BUCKET_ID
 
 
-_YEAR = 2025
 _TAX_ID = "12345678Z"
 # Irene SL files the exercise whose Modelo 303 design the registry splits mid-year, so
 # the annual Modelo 390 folds quarters calculated under both designs.
 _IRENE_YEAR = split_exercise_revisions("303", early_period="2T", late_period="3T")[0].valid_from.year
 _IRENE_TAX_ID = "B12345674"
-_T0 = datetime(2025, 1, 10, 10, 0, tzinfo=UTC)
 _FILE_AT = datetime(2025, 4, 10, 12, 0, tzinfo=UTC)
 # Her local filings land well after every quarter and the annual summary fell due.
 _IRENE_FILE_AT = datetime(_IRENE_YEAR + 2, 7, 1, 12, 0, tzinfo=UTC)
 
 _QUARTER_ORDER = ("1T", "2T", "3T", "4T")
-_IVA_RATE = Decimal("0.21")
-type StoredIvaAxis = Literal["devengada", "deducible", "casilla_59", "resultado"]
-type StoredIvaByPeriod = dict[str, dict[StoredIvaAxis, Decimal]]
 type ComputedM303CasillasByPeriod = dict[str, dict[CasillaId, Decimal]]
 
 
@@ -187,73 +179,6 @@ _CASILLA_59: CasillaId = validated_casilla_id("59")
 _M390_DEVENGADA: CasillaId = validated_casilla_id("iva.anual.reconciliacion.devengada-303")
 _M390_DEDUCIBLE: CasillaId = validated_casilla_id("iva.anual.reconciliacion.deducible-303")
 _M390_RESULTADO: CasillaId = validated_casilla_id("iva.anual.reconciliacion.resultado-303")
-
-# Laura / Taller Sol annual IVA scenario. Domestic 21% issued and received
-# invoice rows drive the normal M303 cuota totals. Q2 additionally carries an
-# exempt intra-Community supply base into casilla 59, and Q3 carries a domestic
-# reverse-charge operation that books the same self-assessed cuota on both
-# devengada and deducible axes.
-_LAURA_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
-    "1T": {
-        "issued_base": Decimal("10000.00"),
-        "issued_iva": Decimal("2100.00"),
-        "received_base": Decimal("3000.00"),
-        "received_iva": Decimal("630.00"),
-        "eu_supply_base": Decimal("0.00"),
-        "reverse_charge_base": Decimal("0.00"),
-        "reverse_charge_iva": Decimal("0.00"),
-    },
-    "2T": {
-        "issued_base": Decimal("12000.00"),
-        "issued_iva": Decimal("2520.00"),
-        "received_base": Decimal("2500.00"),
-        "received_iva": Decimal("525.00"),
-        "eu_supply_base": Decimal("1500.00"),
-        "reverse_charge_base": Decimal("0.00"),
-        "reverse_charge_iva": Decimal("0.00"),
-    },
-    "3T": {
-        "issued_base": Decimal("9000.00"),
-        "issued_iva": Decimal("1890.00"),
-        "received_base": Decimal("2200.00"),
-        "received_iva": Decimal("462.00"),
-        "eu_supply_base": Decimal("0.00"),
-        "reverse_charge_base": Decimal("800.00"),
-        "reverse_charge_iva": Decimal("168.00"),
-    },
-    "4T": {
-        "issued_base": Decimal("15000.00"),
-        "issued_iva": Decimal("3150.00"),
-        "received_base": Decimal("1800.00"),
-        "received_iva": Decimal("378.00"),
-        "eu_supply_base": Decimal("0.00"),
-        "reverse_charge_base": Decimal("0.00"),
-        "reverse_charge_iva": Decimal("0.00"),
-    },
-}
-_LAURA_ANNUAL_EXPECTED = {
-    "devengada": Decimal("9828.00"),
-    "deducible": Decimal("2163.00"),
-    "resultado": Decimal("7665.00"),
-}
-_IRENE_QUARTER_FACTS: dict[str, dict[str, Decimal]] = {
-    period: {
-        "issued_base": Decimal("10000.00"),
-        "issued_iva": Decimal("2100.00"),
-        "received_base": Decimal("3000.00"),
-        "received_iva": Decimal("630.00"),
-        "eu_supply_base": Decimal("0.00"),
-        "reverse_charge_base": Decimal("0.00"),
-        "reverse_charge_iva": Decimal("0.00"),
-    }
-    for period in _QUARTER_ORDER
-}
-_IRENE_ANNUAL_EXPECTED = {
-    "devengada": Decimal("8400.00"),
-    "deducible": Decimal("2520.00"),
-    "resultado": Decimal("5880.00"),
-}
-_QUARTER_MONTH: dict[str, int] = {"1T": 2, "2T": 5, "3T": 8, "4T": 11}
 
 
 def _verification_ports(
@@ -304,196 +229,6 @@ def _filing_ports(
             objects=observation_repo.secure_object_repository,
         ),
     )
-
-
-def _iva_transaction(
-    provider_id: str,
-    *,
-    direction: TransactionDirection,
-    taxable_base: Decimal,
-    iva_amount: Decimal,
-    period: str,
-    filing_year: int = _YEAR,
-    iva_rate: Decimal = _IVA_RATE,
-    amount: Decimal | None = None,
-    iva_category: IvaCategory | None = None,
-    counterparty_country: str | None = None,
-    counterparty_identification_state: EUMemberState | None = None,
-    purchase_invoice_evidence_id: str | None = None,
-    deduction_fact_kind: IvaDeductionFactKind | None = None,
-    deduction_provenance: IvaDeductionClassificationProvenance | None = None,
-) -> Transaction:
-    booked = date(filing_year, _QUARTER_MONTH[period], 10)
-    payload: dict[str, object] = {
-        "raw": RawTransaction(
-            provider_transaction_id=provider_id,
-            booked_date=booked,
-            value_date=booked,
-            amount=amount if amount is not None else taxable_base + iva_amount,
-            currency="EUR",
-            counterparty="Cliente o proveedor",
-            description=f"factura IVA {provider_id}",
-            provenance=RawProvenance(
-                source_path=Path(__file__),
-                source_sha256="c" * 64,
-                source_row_index=1,
-                source_format=SourceFormat.MANUAL,
-                ingested_at=_T0,
-                provider_name="manual-ledger",
-            ),
-            raw_fields={"source_kind": "ledger_transaction"},
-        ),
-        "direction": direction,
-        "business_classification": BusinessClassification.BUSINESS,
-        "source_jurisdiction": "ES",
-        "group_label": None,
-        "category_id": "material_oficina",
-        "taxable_base": taxable_base,
-        "iva_rate": iva_rate,
-        "iva_amount": iva_amount,
-        "classified_at": _T0,
-        "classified_by": "manual",
-    }
-    if iva_category is not None:
-        payload["iva_category"] = iva_category
-    if counterparty_country is not None:
-        payload["counterparty_country"] = counterparty_country
-    if counterparty_identification_state is not None:
-        payload["counterparty_identification_state"] = counterparty_identification_state
-    if purchase_invoice_evidence_id is not None:
-        payload["purchase_invoice_evidence_id"] = purchase_invoice_evidence_id
-    if deduction_fact_kind is not None:
-        payload["deduction_fact_kind"] = deduction_fact_kind
-    if deduction_provenance is not None:
-        payload["deduction_provenance"] = deduction_provenance
-    return Transaction.model_validate(payload)
-
-
-def _persist_year_of_invoices(
-    secure_objects: SecureObjectRepository,
-    *,
-    filing_year: int = _YEAR,
-    facts_by_period: dict[str, dict[str, Decimal]] = _LAURA_QUARTER_FACTS,
-) -> StoredIvaByPeriod:
-    """Persist all four quarters' issued + received IVA operations once upfront.
-
-    Each M303 quarter's bucket aggregation selects only its own period's
-    operations by date (IVA is declared per period, not cumulative-YTD), so the
-    whole year is persisted once and the per-quarter window does the slicing.
-
-    Returns, per period, the IVA amounts actually STORED on the persisted
-    transactions (``devengada`` = issued invoice's ``iva_amount``, ``deducible``
-    = received invoice's ``iva_amount``). The caller asserts the engine-computed
-    M303 totals against these stored field values — proving the aggregator
-    transports the stored ``iva_amount`` rather than re-deriving base×rate, and
-    avoiding a shared-literal between the seed and the expectation.
-    """
-    transactions: list[Transaction] = []
-    purchase_invoices = []
-    stored: StoredIvaByPeriod = {}
-    catalogue_ports = build_catalogue_creation_ports(bucket_id=_BUCKET_ID)
-    for period, facts in facts_by_period.items():
-        purchase_invoice = build_catalogue_invoice(
-            bucket_id=_BUCKET_ID,
-            kind=InvoiceKind.RECEIVED,
-            counterparty_name="Proveedor Taller SL",
-            counterparty_tax_id="A58818501",
-            counterparty_country="ES",
-            invoice_number=f"REC-{filing_year}-{period}",
-            issued_at=date(filing_year, _QUARTER_MONTH[period], 10),
-            taxable_base=facts["received_base"],
-            iva_rate=Decimal("21"),
-            currency="EUR",
-            rate_provider=catalogue_ports.rate_provider,
-        )
-        purchase_invoices.append(purchase_invoice)
-        issued = _iva_transaction(
-            f"sale-{period}",
-            direction=TransactionDirection.INCOMING,
-            taxable_base=facts["issued_base"],
-            iva_amount=facts["issued_iva"],
-            period=period,
-            filing_year=filing_year,
-        )
-        received = _iva_transaction(
-            f"purchase-{period}",
-            direction=TransactionDirection.OUTGOING,
-            taxable_base=facts["received_base"],
-            iva_amount=facts["received_iva"],
-            period=period,
-            filing_year=filing_year,
-            purchase_invoice_evidence_id=purchase_invoice.invoice_id,
-            # Domestic purchase from an ES supplier: cuota soportada established
-            # by that supplier's invoice (LIVA art. 97.Uno.1).
-            deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-            deduction_provenance=IvaDeductionClassificationProvenance(
-                authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
-                source_locator=f"invoice:{purchase_invoice.invoice_id}",
-                evidence_digest="a" * 64,
-            ),
-        )
-        transactions.extend((issued, received))
-        devengada = facts["issued_iva"]
-        deducible = facts["received_iva"]
-        if facts["eu_supply_base"] > Decimal("0"):
-            transactions.append(
-                _iva_transaction(
-                    f"eu-supply-{period}",
-                    direction=TransactionDirection.INCOMING,
-                    taxable_base=facts["eu_supply_base"],
-                    iva_amount=Decimal("0.00"),
-                    iva_rate=Decimal("0.00"),
-                    period=period,
-                    filing_year=filing_year,
-                    iva_category=IvaCategory("intra_community_supply"),
-                    # Established in Germany AND IVA-identified there. Art. 25
-                    # exempts an intra-community supply on the acquirer's
-                    # IDENTIFICATION, not on establishment, so declaring only the
-                    # country leaves the ledger preflight correctly refusing:
-                    # "requiere el Estado miembro en el que la contraparte esta
-                    # identificada a efectos del IVA". The two are separate facts
-                    # and a real filer supplies the second via
-                    # `aeat app ledger classify --counterparty-identification-state`.
-                    counterparty_country="DE",
-                    counterparty_identification_state=require_eu_member_state("DE"),
-                ),
-            )
-        if facts["reverse_charge_base"] > Decimal("0"):
-            transactions.append(
-                _iva_transaction(
-                    f"reverse-charge-{period}",
-                    direction=TransactionDirection.OUTGOING,
-                    taxable_base=facts["reverse_charge_base"],
-                    iva_amount=facts["reverse_charge_iva"],
-                    amount=facts["reverse_charge_base"],
-                    period=period,
-                    filing_year=filing_year,
-                    iva_category=IvaCategory("domestic_reverse_charge"),
-                    # Inversion del sujeto pasivo on a DOMESTIC supply (LIVA
-                    # art. 84.Uno.2): the recipient self-repercutes, but the
-                    # deduction family stays domestic and the establishing
-                    # evidence is the supplier's invoice, NOT an intra-EU
-                    # self-assessment.
-                    deduction_fact_kind=IvaDeductionFactKind.from_registry("domestic_current"),
-                    deduction_provenance=IvaDeductionClassificationProvenance(
-                        authority=IvaDeductionEvidenceAuthority.from_registry("invoice_evidence"),
-                        source_locator=f"invoice:reverse-charge-{filing_year}-{period}",
-                        evidence_digest="b" * 64,
-                    ),
-                ),
-            )
-            devengada += facts["reverse_charge_iva"]
-            deducible += facts["reverse_charge_iva"]
-        stored[period] = {
-            "devengada": devengada,
-            "deducible": deducible,
-            "casilla_59": facts["eu_supply_base"],
-            "resultado": devengada - deducible,
-        }
-    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
-    tx_repo.save(TransactionCatalogue.from_transactions(tuple(transactions)))
-    InvoiceCatalogueRepository(objects=secure_objects).save(build_invoice_catalogue(tuple(purchase_invoices)))
-    return stored
 
 
 def _wallet_decision(
@@ -648,6 +383,7 @@ def _calculate_m303_quarter_revision(
     filing_year: int = _YEAR,
     taxpayer_nif: str = _TAX_ID,
     calculated_at: datetime = _FILE_AT,
+    extra_casilla_inputs: dict[CasillaId, Decimal] | None = None,
     operation: PinnedAuthorityOperation,
 ) -> tuple[WorkUnit, CalculationRevision]:
     """Run the live bucket-aggregation M303 calc for one quarter without projecting filed observations."""
@@ -691,7 +427,7 @@ def _calculate_m303_quarter_revision(
             # Manual, formula-operand "resultado" casillas (58/68/70/76/77/109/18)
             # the fichero-BOE completeness manifest requires but the engine never
             # auto-zero-fills; see ``_MODELO_303_MANUAL_RESULTADO_CASILLA_ZEROS``.
-            casilla_inputs=manual_zeros,
+            casilla_inputs={**manual_zeros, **(extra_casilla_inputs or {})},
             binding_values={
                 # No prior-period compensación carry in this scenario (each quarter
                 # is net-positive); autoconsumo del promotor is nil for this filer.
@@ -710,10 +446,16 @@ def _calculate_m303_quarter_revision(
 
 
 def _calculate_and_file_m303_quarter(
-    secure_objects: SecureObjectRepository, *, period: str, operation: PinnedAuthorityOperation
+    secure_objects: SecureObjectRepository,
+    *,
+    period: str,
+    extra_casilla_inputs: dict[CasillaId, Decimal] | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> CalculationRevision:
     """Run the live bucket-aggregation M303 calc for one quarter and project its filed observation."""
-    work_unit, revision = _calculate_m303_quarter_revision(secure_objects, period=period, operation=operation)
+    work_unit, revision = _calculate_m303_quarter_revision(
+        secure_objects, period=period, extra_casilla_inputs=extra_casilla_inputs, operation=operation
+    )
     persist_filed_revision_observation(
         revision=revision,
         work_unit=work_unit,
@@ -730,7 +472,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
 ) -> None:
     """Persona-like persisted ledger input verifies under the live revision and exports its fichero."""
     _store_profile(secure_objects)
-    stored = _persist_year_of_invoices(secure_objects)
+    stored = persist_year_of_invoices(secure_objects)
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
     filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
@@ -781,7 +523,7 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
             ),
             workflow_profile=workflow_profile(),
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_TAX_ID,
                 secure_objects=secure_objects,
@@ -854,10 +596,10 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
     dependent periods surface the non-official-local-chain advisory.
     """
     _store_irene_sl_profile(secure_objects)
-    stored = _persist_year_of_invoices(
+    stored = persist_year_of_invoices(
         secure_objects,
         filing_year=_IRENE_YEAR,
-        facts_by_period=_IRENE_QUARTER_FACTS,
+        facts_by_period=IRENE_QUARTER_FACTS,
     )
     workflow_profile = _ireneworkflow_profile()
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -945,9 +687,9 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
     ):
         expected = sum((computed[p][m303_output] for p in _QUARTER_ORDER), Decimal("0"))
         assert Decimal(annual.casilla_values[m390_casilla]) == expected
-    assert Decimal(annual.casilla_values[_M390_DEVENGADA]) == _IRENE_ANNUAL_EXPECTED["devengada"]
-    assert Decimal(annual.casilla_values[_M390_DEDUCIBLE]) == _IRENE_ANNUAL_EXPECTED["deducible"]
-    assert Decimal(annual.casilla_values[_M390_RESULTADO]) == _IRENE_ANNUAL_EXPECTED["resultado"]
+    assert Decimal(annual.casilla_values[_M390_DEVENGADA]) == IRENE_ANNUAL_EXPECTED["devengada"]
+    assert Decimal(annual.casilla_values[_M390_DEDUCIBLE]) == IRENE_ANNUAL_EXPECTED["deducible"]
+    assert Decimal(annual.casilla_values[_M390_RESULTADO]) == IRENE_ANNUAL_EXPECTED["resultado"]
 
     with bundled_indexed_authority().operation() as operation:
         annual_report = verify_modelo_revision_with_preconditions(
@@ -983,7 +725,7 @@ def test_irene_sl_local_m303_files_support_m390_verify_and_annual_export(
             ),
             workflow_profile=workflow_profile,
             export_ports=modelo_export_ports_for_test(
-                product_software_identity=_product_software_identity(),
+                product_software_identity=product_software_identity(),
                 bucket_id=_BUCKET_ID,
                 taxpayer_tax_id=_IRENE_TAX_ID,
                 secure_objects=secure_objects,
@@ -1005,7 +747,7 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
 ) -> None:
     """The full yearly IVA cadence: persisted ledger → 4×M303 → M390 reconciliation."""
     _store_profile(secure_objects)
-    stored = _persist_year_of_invoices(secure_objects)
+    stored = persist_year_of_invoices(secure_objects)
 
     computed: ComputedM303CasillasByPeriod = {}
     for period in _QUARTER_ORDER:
@@ -1058,9 +800,9 @@ def test_ledger_drives_m303_quarters_and_folds_into_m390_annual(
         assert Decimal(casillas[m390_casilla]) == expected, (
             f"M390 {m390_casilla} must fold sum(1T-4T {m303_output})={expected}; got {casillas.get(m390_casilla)}"
         )
-    assert Decimal(casillas[_M390_DEVENGADA]) == _LAURA_ANNUAL_EXPECTED["devengada"]
-    assert Decimal(casillas[_M390_DEDUCIBLE]) == _LAURA_ANNUAL_EXPECTED["deducible"]
-    assert Decimal(casillas[_M390_RESULTADO]) == _LAURA_ANNUAL_EXPECTED["resultado"]
+    assert Decimal(casillas[_M390_DEVENGADA]) == LAURA_ANNUAL_EXPECTED["devengada"]
+    assert Decimal(casillas[_M390_DEDUCIBLE]) == LAURA_ANNUAL_EXPECTED["deducible"]
+    assert Decimal(casillas[_M390_RESULTADO]) == LAURA_ANNUAL_EXPECTED["resultado"]
 
 
 def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_missing(
@@ -1068,7 +810,7 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
 ) -> None:
     """Laura regression: calculated nonzero 303 quarters must not become zero M390 reconciliation slots."""
     _store_profile(secure_objects)
-    _persist_year_of_invoices(secure_objects)
+    persist_year_of_invoices(secure_objects)
 
     computed: ComputedM303CasillasByPeriod = {}
     for period in _QUARTER_ORDER:
@@ -1095,8 +837,367 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
     context = exc_info.value.context or {}
     assert context["reason"] == "missing_clean_cross_period_303_filings_or_observations"
     assert context["missing_303_periods"] == ("1T", "2T", "3T", "4T")
-    assert context["zero_reconciliation_casillas_at_risk"] == (
-        _M390_DEVENGADA,
-        _M390_DEDUCIBLE,
-        _M390_RESULTADO,
+    # Without a filed fourth quarter the annual prorrata regularisation is
+    # unresolved, so the annual deduction total and result that sum it hold no
+    # figure to set a zero slot against; the output-IVA total does, and refuses.
+    assert context["zero_reconciliation_casillas_at_risk"] == (_M390_DEVENGADA,)
+
+
+# The seeded year is the AEAT prorrata general example (see PRORRATA_QUARTER_FACTS).
+_PRORRATA_PROVISIONAL_PERCENTAGE = Decimal("73")
+_PRORRATA_VOLUMEN_CON_DERECHO: CasillaId = validated_casilla_id("iva.prorrata-volumen-con-derecho")
+_PRORRATA_VOLUMEN_TOTAL: CasillaId = validated_casilla_id("iva.prorrata-volumen-total")
+_SOPORTADO_INTERIORES: CasillaId = validated_casilla_id("iva.soportado.interiores")
+_CASILLA_44: CasillaId = validated_casilla_id("44")
+_CASILLA_45: CasillaId = validated_casilla_id("45")
+_M390_PRORRATA_REGULARIZACION: CasillaId = validated_casilla_id("iva.anual.regularizacion-prorrata-definitiva")
+_M390_INTERIORES_CORRIENTES_CUOTA: CasillaId = validated_casilla_id(
+    "iva.anual.deducible.interiores-corrientes.soportado.cuota"
+)
+# The manual's printed figures, independent of the engine.
+_MANUAL_PRACTISED_DEDUCTIONS_1T_3T = {"1T": Decimal("292.00"), "2T": Decimal("306.60"), "3T": Decimal("335.80")}
+_MANUAL_4T_DEFINITIVE_DEDUCTION = Decimal("89.60")
+_MANUAL_EXCESO_DE_DEDUCCION = Decimal("-217.60")
+_MANUAL_4T_CASILLA_45 = Decimal("-128.00")
+_MANUAL_YEAR_DEDUCTIONS = Decimal("806.40")
+_MANUAL_YEAR_INTERIORES_CORRIENTES_CUOTA = Decimal("1024.00")
+
+
+def _save_general_prorrata_register(secure_objects: SecureObjectRepository) -> None:
+    """Declare the general prorrata with the provisional percentage carried from the prior year."""
+    prior_year = _YEAR - 1
+    ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        ProrrataRegister(
+            entries=(
+                ProrrataRegisterEntry(
+                    ejercicio=_YEAR,
+                    regime=ProrrataRegisterRegime.from_registry("general"),
+                    especial_transition=None,
+                    provisional_percentage=_PRORRATA_PROVISIONAL_PERCENTAGE,
+                    provisional_provenance=ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva"),
+                    source_observation_ref=f"303:{prior_year}:4T",
+                    source_registry_snapshot_refs=(
+                        published_authority_operation()
+                        .snapshot("303", filing_year=prior_year, period="4T")
+                        .snapshot_ref,
+                    ),
+                ),
+            ),
+        )
     )
+
+
+def test_general_prorrata_settles_in_the_fourth_quarter_and_folds_into_m390(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """Ledger to M303 to M390 reproduces the AEAT manual's general prorrata regularisation.
+
+    The first three quarters deduct at the provisional 73 %; the fourth quarter
+    deducts its own cuotas at the definitive 56 % and regularises only the
+    earlier quarters in casilla 44 (LIVA art. 105.Seis). The annual summary
+    restates the settlement box and sums the per-period deductions.
+    """
+    _store_profile(secure_objects)
+    _save_general_prorrata_register(secure_objects)
+    persist_year_of_invoices(
+        secure_objects,
+        facts_by_period=PRORRATA_QUARTER_FACTS,
+        received_rate_percent=Decimal("10"),
+    )
+
+    filed: dict[str, CalculationRevision] = {}
+    for period in ("1T", "2T", "3T"):
+        filed[period] = _calculate_and_file_m303_quarter(secure_objects, period=period, operation=operation)
+        casillas = filed[period].casilla_values
+        assert Decimal(casillas[_SOPORTADO_INTERIORES]) == _MANUAL_PRACTISED_DEDUCTIONS_1T_3T[period]
+        assert Decimal(casillas[_CASILLA_44]) == Decimal("0.00")
+    filed["4T"] = _calculate_and_file_m303_quarter(
+        secure_objects,
+        period="4T",
+        extra_casilla_inputs={
+            _PRORRATA_VOLUMEN_CON_DERECHO: Decimal("25000.00"),
+            _PRORRATA_VOLUMEN_TOTAL: Decimal("45000.00"),
+        },
+        operation=operation,
+    )
+    settlement = filed["4T"].casilla_values
+    assert Decimal(settlement[_SOPORTADO_INTERIORES]) == _MANUAL_4T_DEFINITIVE_DEDUCTION
+    assert Decimal(settlement[_CASILLA_44]) == _MANUAL_EXCESO_DE_DEDUCCION
+    assert Decimal(settlement[_CASILLA_45]) == _MANUAL_4T_CASILLA_45
+
+    year_deductions = sum((Decimal(filed[p].casilla_values[_CASILLA_45]) for p in _QUARTER_ORDER), Decimal("0"))
+    assert year_deductions == _MANUAL_YEAR_DEDUCTIONS
+
+    annual = _calculate_m390_annual(secure_objects, operation=operation)
+    assert Decimal(annual.casilla_values[_M390_PRORRATA_REGULARIZACION]) == _MANUAL_EXCESO_DE_DEDUCCION
+    assert Decimal(annual.casilla_values[_M390_INTERIORES_CORRIENTES_CUOTA]) == (
+        _MANUAL_YEAR_INTERIORES_CORRIENTES_CUOTA
+    )
+    assert Decimal(annual.casilla_values[_M390_DEDUCIBLE]) == _MANUAL_YEAR_DEDUCTIONS
+
+
+def test_settlement_quarter_without_filed_earlier_quarter_leaves_casilla_44_unresolved(
+    secure_objects: SecureObjectRepository, tmp_path: Path, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A missing first-quarter liquidation keeps the regularisation unresolved, never zero.
+
+    The saved revision holds no figure for 44, nor for the deduction total [45]
+    and the general-regime result [46] that sum it, and the unresolved-binding
+    note refuses checking, exporting and recording the declaration.
+    """
+    _store_profile(secure_objects)
+    _save_general_prorrata_register(secure_objects)
+    persist_year_of_invoices(
+        secure_objects,
+        facts_by_period=PRORRATA_QUARTER_FACTS,
+        received_rate_percent=Decimal("10"),
+    )
+    for period in ("2T", "3T"):
+        _calculate_and_file_m303_quarter(secure_objects, period=period, operation=operation)
+
+    _work_unit, revision = _calculate_m303_quarter_revision(
+        secure_objects,
+        period="4T",
+        extra_casilla_inputs={
+            _PRORRATA_VOLUMEN_CON_DERECHO: Decimal("25000.00"),
+            _PRORRATA_VOLUMEN_TOTAL: Decimal("45000.00"),
+        },
+        operation=operation,
+    )
+
+    # The persisted unresolved-binding issue is what blocks verification and
+    # filing of the box until a recalculation clears it.
+    casilla_44_issues = tuple(
+        issue
+        for issue in revision.source_issues
+        if issue.reason == "unresolved_binding" and issue.casilla_id == _CASILLA_44
+    )
+    assert tuple(issue.message for issue in casilla_44_issues) == (
+        render_tr("application.calculations.prorrata_regularizacion.unresolved.source_periods_missing", periods="1T"),
+    )
+
+    stored = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(revision.calculation_revision_id)
+    assert stored is not None
+    observed = {observation.casilla_id for observation in stored.observations}
+    for casilla_id in (_CASILLA_44, _CASILLA_45, _DEDUCIBLE_TOTAL, _RESULTADO):
+        assert casilla_id not in stored.casilla_values
+        assert casilla_id not in observed
+    # The quarter's own deduction is still worked out at the definitive 56 %.
+    assert Decimal(stored.casilla_values[_SOPORTADO_INTERIORES]) == _MANUAL_4T_DEFINITIVE_DEDUCTION
+    _assert_form_states_no_figure(secure_objects, (_CASILLA_44, _CASILLA_45), operation=operation)
+    _assert_verify_export_and_file_refused(secure_objects, revision, tmp_path, operation=operation)
+
+
+def test_a_revision_saved_with_the_unresolved_44_as_zero_still_loads_unchanged(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A draft saved before unresolved bound boxes were left absent keeps its stored zero and still opens.
+
+    Such a draft holds 44 as an ordinary zero beside its unresolved-binding
+    note. Loading neither rejects nor rewrites it, its note still refuses the
+    check, and the form still reads the box as not worked out.
+    """
+    _store_profile(secure_objects)
+    _save_general_prorrata_register(secure_objects)
+    persist_year_of_invoices(
+        secure_objects,
+        facts_by_period=PRORRATA_QUARTER_FACTS,
+        received_rate_percent=Decimal("10"),
+    )
+    for period in ("2T", "3T"):
+        _calculate_and_file_m303_quarter(secure_objects, period=period, operation=operation)
+    work_unit, current = _calculate_m303_quarter_revision(
+        secure_objects,
+        period="4T",
+        extra_casilla_inputs={
+            _PRORRATA_VOLUMEN_CON_DERECHO: Decimal("25000.00"),
+            _PRORRATA_VOLUMEN_TOTAL: Decimal("45000.00"),
+        },
+        operation=operation,
+    )
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
+    casilla_44 = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _CASILLA_44)
+    stored_zero = current.model_copy(
+        update={
+            "casilla_values": {**current.casilla_values, _CASILLA_44: Decimal("0.00")},
+            "observations": (
+                *current.observations,
+                CasillaObservation(
+                    casilla_id=_CASILLA_44,
+                    value=Decimal("0.00"),
+                    legal_refs=casilla_44.legal_refs,
+                    source_refs=casilla_44.source_refs,
+                ),
+            ),
+        }
+    )
+    legacy = stored_zero.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(stored_zero)}
+    )
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    catalogue = cr_repo.load()
+    cr_repo.save(
+        catalogue.model_copy(update={"revisions": {**catalogue.revisions, legacy.calculation_revision_id: legacy}})
+    )
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    current_unit = wu_repo.load().get(work_unit.work_unit_id)
+    assert current_unit is not None
+    wu_repo.save(
+        upsert_work_unit(
+            wu_repo.load(),
+            current_unit.model_copy(update={"current_calculation_revision_id": legacy.calculation_revision_id}),
+        )
+    )
+
+    reloaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(legacy.calculation_revision_id)
+    assert reloaded is not None
+    assert reloaded.casilla_values[_CASILLA_44] == Decimal("0.00")
+    assert reloaded.source_issues == current.source_issues
+    _assert_form_states_no_figure(secure_objects, (_CASILLA_44,), operation=operation)
+    with (
+        bundled_indexed_authority().operation() as verify_operation,
+        pytest.raises(ModeloCalculationBlockedError) as refusal,
+    ):
+        verify_modelo_revision_with_preconditions(
+            legacy.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_ports(
+                operation=verify_operation,
+                work_repo=wu_repo,
+                calc_repo=CalculationRevisionCatalogueRepository(objects=secure_objects),
+                filing_repo=ModeloRecordCatalogueRepository(objects=secure_objects),
+                verification_repo=VerificationReportCatalogueRepository(objects=secure_objects),
+                event_repo=BucketEventHistoryRepository(objects=secure_objects),
+                tx_repo=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            ),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings(_TAX_ID),
+            clock=_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=verify_operation,
+        )
+    assert (refusal.value.context or {})["reason"] == "unresolved_binding"
+
+
+def _assert_form_states_no_figure(
+    secure_objects: SecureObjectRepository,
+    casilla_ids: tuple[CasillaId, ...],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """The editor form shows each box as not worked out, with no value, rather than an imported or summed zero."""
+    with bundled_indexed_authority().operation() as form_operation:
+        form = load_modelo_work_form(
+            _BUCKET_ID,
+            ModeloCode("303"),
+            _YEAR,
+            Period.from_year_and_code(_YEAR, "4T"),
+            operation=form_operation,
+            work_unit_repository=WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=secure_objects),
+            verification_repository=VerificationReportCatalogueRepository(objects=secure_objects),
+            admission=None,
+            language=OutputLanguage.EN,
+        ).form
+    fields = {address_key(field.address): field for field in form.fields()}
+    for casilla_id in casilla_ids:
+        field = fields[("casilla", casilla_id)]
+        assert field.origin is ModeloFormOrigin.CALCULATION_FAILED
+        assert field.value is None
+
+
+def _assert_verify_export_and_file_refused(
+    secure_objects: SecureObjectRepository,
+    revision: CalculationRevision,
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Verify refuses on the unresolved-binding note; export and local filing refuse the unverified draft."""
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    filing_repo = ModeloRecordCatalogueRepository(objects=secure_objects)
+    vr_repo = VerificationReportCatalogueRepository(objects=secure_objects)
+    event_repo = BucketEventHistoryRepository(objects=secure_objects)
+    tx_repo = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+
+    with (
+        bundled_indexed_authority().operation() as verify_operation,
+        pytest.raises(ModeloCalculationBlockedError) as verify_refusal,
+    ):
+        verify_modelo_revision_with_preconditions(
+            revision.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_ports(
+                operation=verify_operation,
+                work_repo=wu_repo,
+                calc_repo=cr_repo,
+                filing_repo=filing_repo,
+                verification_repo=vr_repo,
+                event_repo=event_repo,
+                tx_repo=tx_repo,
+            ),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings(_TAX_ID),
+            clock=_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=verify_operation,
+        )
+    assert (verify_refusal.value.context or {})["reason"] == "unresolved_binding"
+
+    # The refused check leaves the draft unverified, so export and local filing
+    # refuse it on state before their own calculation-note gates are reached.
+    output_path = tmp_path / f"modelo-303-{_YEAR}-4T.boe"
+    with (
+        bundled_indexed_authority().operation() as export_operation,
+        pytest.raises(CalculationRevisionStateError) as export_refusal,
+    ):
+        export_modelo_revision(
+            ModeloExportCommand(
+                calculation_revision_id=revision.calculation_revision_id,
+                output_path=output_path,
+                actor="operator",
+                prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+            ),
+            workflow_profile=workflow_profile(),
+            export_ports=modelo_export_ports_for_test(
+                product_software_identity=product_software_identity(),
+                bucket_id=_BUCKET_ID,
+                taxpayer_tax_id=_TAX_ID,
+                secure_objects=secure_objects,
+                work_unit=wu_repo,
+                calculation=cr_repo,
+                filing=filing_repo,
+                verification=vr_repo,
+                bucket_event=event_repo,
+            ),
+            operation=export_operation,
+            clock=_FILE_AT,
+        )
+    assert export_refusal.value.translated_message == "application.modelo.errors.export_revision_state_refused"
+    assert not output_path.exists()
+
+    with bundled_indexed_authority().operation() as file_operation, pytest.raises(CalculationRevisionStateError):
+        file_modelo_revision(
+            revision.calculation_revision_id,
+            approved_verification_report_id="verification-report-never-granted",
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            ports=_filing_ports(
+                work_repo=wu_repo,
+                calc_repo=cr_repo,
+                filing_repo=filing_repo,
+                verification_repo=vr_repo,
+                event_repo=event_repo,
+                wallet_repo=IvaWalletDecisionRepository(objects=secure_objects),
+                observation_repo=CalculationObservationRepository(objects=secure_objects),
+                operation=file_operation,
+            ),
+            clock=_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=file_operation,
+        )
+    assert not filing_repo.load().records

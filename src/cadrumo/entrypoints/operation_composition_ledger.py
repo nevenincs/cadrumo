@@ -160,6 +160,18 @@ def compose_invoices_catalogue_update_operation(inputs: OperationCompositionInpu
     return built((definition,), (build_invoice_update_registration(definition),))
 
 
+def compose_invoice_figures_preview_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read that answers an invoice draft with the backend's own figures."""
+    from ..application.invoices.figures_preview_operation import (
+        build_invoice_figures_preview_definition,
+        build_invoice_figures_preview_registration,
+    )
+
+    del inputs
+    definition = build_invoice_figures_preview_definition()
+    return built((definition,), (build_invoice_figures_preview_registration(definition),))
+
+
 # -- ledger ------------------------------------------------------------------------------------------------------------
 
 
@@ -198,6 +210,30 @@ def compose_ledger_evidence_ingestion_operation(inputs: OperationCompositionInpu
     del inputs
     definitions = build_ledger_evidence_ingestion_definitions(build_ledger_evidence_ingestion_operation_ports)
     return built(definitions, build_ledger_evidence_ingestion_registrations(definitions))
+
+
+def compose_ledger_rule_trial_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read that tries an unsaved rule pattern with the rule engine."""
+    from ..application.ledger.rule_trial_operation import (
+        build_ledger_rule_trial_definition,
+        build_ledger_rule_trial_registration,
+    )
+
+    del inputs
+    definition = build_ledger_rule_trial_definition()
+    return built((definition,), (build_ledger_rule_trial_registration(definition),))
+
+
+def compose_ledger_staged_check_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read that answers staged ledger work the way the writers would take it."""
+    from ..application.ledger.staged_check_operation import (
+        build_ledger_staged_check_definition,
+        build_ledger_staged_check_registration,
+    )
+
+    del inputs
+    definition = build_ledger_staged_check_definition()
+    return built((definition,), (build_ledger_staged_check_registration(definition),))
 
 
 def compose_ledger_entry_options_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

@@ -26,14 +26,11 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import (
-    ROW_SET_GROUPING_FOR_BINDING_SOURCE,
-    BindingAggregation,
-    BindingAggregationOp,
-    BindingSourceKind,
-)
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..binding_aggregation import _ROWS_DEFAULT_SOURCE_KINDS, binding_aggregation_op, default_binding_aggregation_op
+from ..binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
+from ..binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
+from ..errors import RegistryValidationError
 from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -41,10 +38,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 _MINIMAL_LEGAL_REF_ID = "rd-439-2007:art-110"
 _MINIMAL_SOURCE_REF_ID = "aeat-modelo-130-instructions"
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01", surface="_M130_INGRESOS_CASILLA")
-_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA: CasillaId = validated_casilla_id(
-    "iva.cuota-deducible-total",
-    surface="_M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA",
-)
 _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA: CasillaId = validated_casilla_id(
     "iva.prorrata-volumen-con-derecho",
     surface="_M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA",
@@ -58,7 +51,6 @@ _M303_PRORRATA_PORCENTAJE_CASILLA: CasillaId = validated_casilla_id(
     surface="_M303_PRORRATA_PORCENTAJE_CASILLA",
 )
 _PRORRATA_REGULARIZACION_SOURCE_IDS: tuple[CasillaId, ...] = (
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
     _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA,
     _M303_PRORRATA_PORCENTAJE_CASILLA,
@@ -113,7 +105,7 @@ _WELL_SHAPED_SELECTORS: dict[str, dict[str, object]] = {
     "prorrata_regularizacion": {
         "source_modelo": "303",
         "source_casilla_ids": _PRORRATA_REGULARIZACION_SOURCE_IDS,
-        "source_periods": ("1T", "2T", "3T", "4T"),
+        "source_period_selection": "filer_liquidation_cadence",
         "regularizacion_output": "modelo_303_casilla_44",
     },
     "bienes_inversion_regularizacion": {
@@ -169,14 +161,11 @@ def test_binding_aggregation_op_member_set_matches_registry_declarations() -> No
     assert {member.value for member in BindingAggregationOp} == set(_REGISTRY_DECLARED_OPS)
 
 
-def test_rows_default_source_kinds_derive_from_canonical_row_set_source_map() -> None:
-    """Rows-default binding sources come from the canonical detail-record source map."""
-    expected = frozenset(
-        source for source in ROW_SET_GROUPING_FOR_BINDING_SOURCE if source is not BindingSourceKind.WITHHOLDING
-    )
-
-    assert expected == _ROWS_DEFAULT_SOURCE_KINDS
-    assert all(isinstance(source, BindingSourceKind) for source in _ROWS_DEFAULT_SOURCE_KINDS)
+def test_default_op_is_derived_from_the_registrations_permitted_operations() -> None:
+    """Every kind's default is a member of the operations its own registration permits."""
+    for kind, registration in BINDING_PROVIDER_REGISTRATIONS.items():
+        default = default_binding_aggregation_op(kind.value)
+        assert default in registration.permitted_aggregation_ops, kind
 
 
 def test_binding_aggregation_round_trips_through_strict_model() -> None:
@@ -210,12 +199,10 @@ _SUM_DEFAULT_SOURCES: tuple[str, ...] = (
     "withholding",
     "payable_invoice",
     "collectible_invoice",
-    "ledger_transaction",
     "ledger_oss_aggregation",
     "ledger_iva_aggregation",
     "ledger_renta_gastos_estimacion_directa_aggregation",
     "ledger_renta_income_aggregation",
-    "profile",
     "prorrata_regularizacion",
 )
 
@@ -232,6 +219,31 @@ def test_scalar_folding_family_defaults_to_sum() -> None:
     for source in _SUM_DEFAULT_SOURCES:
         assert default_binding_aggregation_op(source) is BindingAggregationOp.SUM, source
         assert binding_aggregation_op(_binding(source=source, op=None)) is BindingAggregationOp.SUM, source
+
+
+# Kinds whose registration permits exactly one operation, enumerated by hand
+# from the registrations' declared shape rather than read back from them.
+_COPY_ONLY_SOURCES: tuple[str, ...] = ("manual_input", "design_constant")
+_ROWS_ONLY_SOURCES: tuple[str, ...] = ("inventory", "ledger_transaction", "afiliado_cotizacion")
+
+
+def test_copy_only_family_defaults_to_copy() -> None:
+    """A kind that can only copy never defaults to a ``sum`` it cannot run."""
+    for source in (*_COPY_ONLY_SOURCES, "profile"):
+        assert default_binding_aggregation_op(source) is BindingAggregationOp.COPY, source
+
+
+def test_rows_only_family_defaults_to_rows() -> None:
+    """A kind permitting only rows defaults to rows."""
+    for source in _ROWS_ONLY_SOURCES:
+        assert default_binding_aggregation_op(source) is BindingAggregationOp.ROWS, source
+
+
+@pytest.mark.parametrize("source", ["borrador", "bogus_kind", ""])
+def test_unregistered_kind_has_no_default_and_raises(source: str) -> None:
+    """An unregistered kind is refused instead of falling back to ``sum``."""
+    with pytest.raises(RegistryValidationError, match="no registration"):
+        default_binding_aggregation_op(source)
 
 
 def test_explicit_op_overrides_family_default() -> None:

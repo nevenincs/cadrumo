@@ -689,10 +689,8 @@ def _candidate_for_invoice_line(
     operation at all -- correctly silent, nothing to declare. A line that
     passes both IS a real, declarable OSS/IOSS operation, so a missing
     rate_kind or a missing euro conversion from that point on REFUSES rather
-    than silently drops it: by operator ruling ("aim for explicit red
-    signals... until schema and api converges"), a would-be-silently-dropped
-    declarable line is a hard stop, not an advisory beside a smaller-but-green
-    figure.
+    than silently drops it. A would-be-silently-dropped declarable line is a
+    hard stop, not an advisory beside a smaller-but-green figure.
     """
     if invoice.oss_ioss_regime is None or invoice.oss_transaction_kind is None:
         return None

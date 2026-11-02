@@ -63,6 +63,7 @@ from .actions_common import (
     resolve_transaction_repository,
     save_transaction_catalogue_and_events,
 )
+from .fx_value_consistency import require_consistent_fx_value
 from .import_ports import LedgerImportPorts, LedgerImportReaderUnavailableError, LedgerParsedRow
 from .models import (
     LedgerImportDiagnosticReport,
@@ -269,6 +270,7 @@ def evaluate_import_rows(
                 "modified_at": stamped_at,
             },
         )
+        require_consistent_fx_value(transaction)
         batch_transaction_ids.add(transaction_id)
         imported.append(transaction)
         # Two same-day, same-amount rows in one statement both import, but the

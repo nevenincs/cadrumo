@@ -48,7 +48,6 @@ from ....application.operations.persistence.leases import (
     OperationLeaseObservationDisposition,
     OperationLeaseResult,
     OperationOwnerLease,
-    operation_conflict_scope_reference,
 )
 from ....application.operations.persistence.replay import (
     OperationReplayLimit,
@@ -60,7 +59,7 @@ from ....core.identity.digest import ContentDigest
 from ....core.operations import OperationLifecycle
 from ....core.time.utc import validate_utc_aware
 from ..storage.errors import RepositoryError
-from ._journal_validation import OperationJournalRecord, validate_advance
+from ._journal_validation import OperationJournalRecord, validate_advance, validate_lease
 from .journal import OperationReplayRequest, observation_materialization_from_record, replay_page_from_record
 
 EPHEMERAL_SETTLED_RETENTION = 256
@@ -143,7 +142,7 @@ class EphemeralOperationStore(
 
     @override
     async def create(self, snapshot: OperationPersistedSnapshot, *, lease: OperationOwnerLease) -> OperationId:
-        _require_lease_matches(snapshot, lease)
+        validate_lease(snapshot, lease)
         with self._lock:
             self._require_live_exact(lease, observed_at=snapshot.updated_at)
             if snapshot.operation_id in self._records:
@@ -167,7 +166,7 @@ class EphemeralOperationStore(
     ) -> None:
         if snapshot.lifecycle is OperationLifecycle.TERMINAL:
             raise RepositoryError("a terminal operation snapshot is committed only with its lease release")
-        _require_lease_matches(snapshot, lease)
+        validate_lease(snapshot, lease)
         with self._lock:
             self._advance(snapshot, expected_revision=expected_revision, lease=lease)
 
@@ -181,7 +180,7 @@ class EphemeralOperationStore(
     ) -> None:
         if snapshot.lifecycle is not OperationLifecycle.TERMINAL:
             raise RepositoryError("operation settlement commit requires a terminal snapshot")
-        _require_lease_matches(snapshot, lease)
+        validate_lease(snapshot, lease)
         with self._lock:
             self._advance(snapshot, expected_revision=expected_revision, lease=lease)
             del self._leases[snapshot.operation_id]
@@ -270,9 +269,7 @@ class EphemeralOperationStore(
         return OperationLeaseObservation(
             scope_ref=scope_ref,
             operation_id=operation_id,
-            disposition=OperationLeaseObservationDisposition.ACTIVE
-            if current.expires_at > observed_at
-            else OperationLeaseObservationDisposition.EXPIRED,
+            disposition=current.observation_at(observed_at),
             observed_at=observed_at,
             current=current,
         )
@@ -333,9 +330,7 @@ class EphemeralOperationStore(
         return OperationLeaseResult(
             scope_ref=predecessor.scope_ref,
             operation_id=successor.operation_id,
-            disposition=OperationLeaseDisposition.RENEWED
-            if current.expires_at > observed_at
-            else OperationLeaseDisposition.TAKEN_OVER,
+            disposition=current.succession_at(observed_at),
             observed_at=observed_at,
             predecessor=predecessor,
             current=successor,
@@ -499,17 +494,6 @@ def _record(snapshot: OperationPersistedSnapshot, history: tuple[object, ...]) -
         return OperationJournalRecord.model_validate({"snapshot": snapshot, "history": history})
     except ValidationError as exc:
         raise RepositoryError("operation journal record is invalid") from exc
-
-
-def _require_lease_matches(snapshot: OperationPersistedSnapshot, lease: OperationOwnerLease) -> None:
-    if lease.operation_id != snapshot.operation_id:
-        raise RepositoryError("operation lease does not match the persisted snapshot identity")
-    expected_scope_ref = operation_conflict_scope_reference(
-        definition_id=snapshot.identity.definition_id,
-        subject_ref=snapshot.identity.subject_ref,
-    )
-    if lease.scope_ref != expected_scope_ref:
-        raise RepositoryError("operation lease does not match the persisted snapshot conflict scope")
 
 
 __all__ = ["EPHEMERAL_SETTLED_LIFETIME", "EPHEMERAL_SETTLED_RETENTION", "EphemeralOperationStore"]

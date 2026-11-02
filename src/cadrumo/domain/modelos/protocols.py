@@ -47,6 +47,13 @@ class CalculationRevisionCatalogueRepositoryProtocol(Protocol):
         """Return whether a calculation-revision catalogue object has been persisted."""
         ...
 
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        """Return whether the stored catalogue is already known to hold no relation override.
+
+        ``False`` means unknown: the caller must read the catalogue to find out.
+        """
+        ...
+
     def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         """Return the persisted catalogue or an empty catalogue if absent.
 

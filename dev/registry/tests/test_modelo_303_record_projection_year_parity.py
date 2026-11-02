@@ -48,7 +48,7 @@ from cadrumo.domain.calculations.registry.ledger_iva_bindings import (
 )
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
-    _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+    M303_RECORD_DESIGN_SOURCE_BY_REVISION,
 )
 from cadrumo.domain.period import calculation_filing_date
 
@@ -62,7 +62,7 @@ pytestmark = [
     pytest.mark.usefixtures("governed_fact_scope"),
 ]
 
-_REVISIONS = tuple(_M303_RECORD_DESIGN_SOURCE_BY_REVISION)
+_REVISIONS = tuple(M303_RECORD_DESIGN_SOURCE_BY_REVISION)
 
 #: The boxes this module requires every edition to derive, and the carrier or
 #: binding each one restates.
@@ -93,7 +93,7 @@ def _revision(revision_id: str) -> ModeloRevision:
 
 
 def _design_text(revision_id: str) -> str:
-    source = compiled_bundled_authority().catalogues.sources[_M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]]
+    source = compiled_bundled_authority().catalogues.sources[M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]]
     return (bundled_path() / f"{source.corpus_path}.extracted.md").read_text(encoding="utf-8")
 
 

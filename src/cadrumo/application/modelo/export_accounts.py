@@ -51,6 +51,11 @@ from ...core.time.clock import MADRID_TZ
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
+from ...domain.deadlines.domiciliation_cutoff import (
+    DerivedPaymentCutoff,
+    UnavailablePaymentCutoff,
+    resolve_payment_cutoff,
+)
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.modelos.calculation_revision import (
@@ -300,36 +305,47 @@ def require_domiciliation_before_cutoff(
 ) -> bool:
     """Refuse a domiciliación dated after the filing window's payment cutoff.
 
-    The cutoff is compared with the export's Europe/Madrid civil date, since
-    AEAT's direct-debit deadline is a Spanish-calendar day. Returns whether the
-    export is a domiciliación the registry gives no cutoff for, which is an
-    advisory rather than a refusal: an undeclared cutoff is unknown, not open.
+    The cutoff is the window's authored date or, where none is authored, the one
+    derived from the governed domiciliación rule; both refuse alike, and the
+    refusal names which it was. It is compared with the export's Europe/Madrid
+    civil date, since AEAT's direct-debit deadline is a Spanish-calendar day.
+    Returns whether the export is a domiciliación no cutoff could be resolved
+    for, which is an advisory rather than a refusal: an unknown cutoff is not
+    an open one. A window whose close is unknown has no cutoff either.
     """
     if resolved_result_disposition is not ResultDisposition.DOMICILIACION:
         return False
-    window = resolve_filing_window(
+    resolved_window = resolve_filing_window(
         str(work_unit.modelo),
         work_unit.filing_year,
         work_unit.period,
         authority=operation,
     )
-    cutoff = None if window is None else window.payment_cutoff_on
-    if cutoff is None:
+    window = None if resolved_window is None else resolved_window.dated_window
+    if window is None:
         return True
+    resolution = resolve_payment_cutoff(str(work_unit.modelo), window, operation=operation)
+    if isinstance(resolution, UnavailablePaymentCutoff):
+        return True
+    cutoff = resolution.cutoff_on
     export_on = exported_at.astimezone(MADRID_TZ).date()
     if export_on <= cutoff:
         return False
-    raise ModeloDomiciliationPastCutoffError(
-        translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff",
-        context={
-            "calculation_revision_id": command.calculation_revision_id,
-            "modelo": str(work_unit.modelo),
-            "filing_year": str(work_unit.filing_year),
-            "period": work_unit.period.registry_token,
-            "payment_cutoff_on": cutoff.isoformat(),
-            "export_on": export_on.isoformat(),
-        },
-    )
+    context = {
+        "calculation_revision_id": command.calculation_revision_id,
+        "modelo": str(work_unit.modelo),
+        "filing_year": str(work_unit.filing_year),
+        "period": work_unit.period.registry_token,
+        "payment_cutoff_on": cutoff.isoformat(),
+        "payment_cutoff_source": resolution.source.value,
+        "payment_cutoff_legal_refs": ", ".join(resolution.legal_refs),
+        "export_on": export_on.isoformat(),
+    }
+    message_key = "errors.refused.refused_modelo_domiciliation_past_cutoff"
+    if isinstance(resolution, DerivedPaymentCutoff):
+        context["payment_cutoff_rule"] = f"{resolution.clause.variant_id}, {resolution.procedure.variant_id}"
+        message_key = "errors.refused.refused_modelo_domiciliation_past_cutoff_derived"
+    raise ModeloDomiciliationPastCutoffError(translated_message=message_key, context=context)
 
 
 def _charge_account_projection(resolved: _ResolvedOwnAccount) -> ChargeAccount | None:

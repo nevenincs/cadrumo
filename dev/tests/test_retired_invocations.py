@@ -84,7 +84,7 @@ CITATION_EXCLUDED: frozenset[str] = frozenset(
         "scratch",
         "scratchpad",
         "var",
-        ".logs",
+        ".tmp",
         "__pycache__",
         "_build",
         "locales",

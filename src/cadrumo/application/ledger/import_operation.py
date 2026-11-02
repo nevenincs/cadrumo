@@ -248,6 +248,11 @@ class LedgerImportResultProjection(BaseModel):
     refused_files: tuple[LedgerImportFileRefusal, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_REFUSALS)
     source_digests: tuple[LedgerImportSourceDigest, ...] = Field(default=(), max_length=MAX_LEDGER_IMPORT_FILES)
 
+    @property
+    def settled_effect(self) -> OperationEffect:
+        """The mutation effect a receipt must carry: a dry run and an import of nothing write nothing."""
+        return OperationEffect.UPDATED if not self.dry_run and self.imported > 0 else OperationEffect.NONE
+
     @model_validator(mode="after")
     def _exact_profile(self) -> LedgerImportResultProjection:
         if self.bucket_id != str(self.profile_id):

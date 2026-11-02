@@ -1,3 +1,5 @@
+import { servedLimits } from "./support/servedLimits";
+import { holdLedgerLimits, textLimit } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
 import {
   AMOUNT_RULE,
@@ -6,10 +8,9 @@ import {
   copyAmount,
   copyPercent,
   decadeYears,
-  LEDGER_YEAR_MAX,
-  LEDGER_YEAR_MIN,
   parseAmount,
   parseDecimal,
+  parseFractionPercent,
   parseIsoDate,
   parseLine,
   parsePercent,
@@ -219,13 +220,42 @@ test("one-line text refuses tabs and line breaks rather than flattening them", (
   expect(verdict(parseLine("   ", 64))).toBe(null);
 });
 
-test("years run from 1980 to 2200 and period tokens are the product's", () => {
+test("one-line text is held to the limit it is handed, and refused while none is served", () => {
+  expect(verdict(parseLine("x".repeat(65), null))).toBe("limits_unavailable");
+  expect(verdict(parseLine("  ", null))).toBe(null);
+  // Left out, the text has no bound of its own.
+  expect(verdict(parseLine("x".repeat(5000)))).toBe("x".repeat(5000));
+});
+
+test("a text limit is the one served, and none is assumed", () => {
+  const served = (name: string) =>
+    servedLimits.text_limits.find((found) => found.name === name)?.max;
+  expect(textLimit("split_parts")).toBe(served("split_parts"));
+  expect(textLimit("evidence_note")).toBe(served("evidence_note"));
+  holdLedgerLimits({
+    ...servedLimits,
+    text_limits: [{ name: "split_parts", max: 3 }],
+  });
+  try {
+    expect(textLimit("split_parts")).toBe(3);
+    // A limit the backend did not serve is not assumed.
+    expect(textLimit("entry_text")).toBeNull();
+  } finally {
+    holdLedgerLimits(null);
+    expect(textLimit("split_parts")).toBeNull();
+    holdLedgerLimits(servedLimits);
+  }
+});
+
+test("a year is four digits, whichever it is, and period tokens are the product's", () => {
   const years: [string, Expected][] = [
     ["2026", "2026"],
-    ["1980", "1980"],
-    ["2200", "2200"],
-    ["1979", "year_out_of_range"],
-    ["2201", "year_out_of_range"],
+    ["1000", "1000"],
+    ["1979", "1979"],
+    ["2201", "2201"],
+    ["9999", "9999"],
+    ["0999", "year_not_a_number"],
+    ["10000", "year_not_a_number"],
     ["26", "year_not_a_number"],
     ["twenty", "year_not_a_number"],
   ];
@@ -262,23 +292,28 @@ test("stepping a period crosses year ends by its own size", () => {
   expect(stepPeriod(at(2019, "3T"), 6)).toEqual(at(2021, "1T"));
   expect(stepPeriod(at(2003, "02"), -14)).toEqual(at(2001, "12"));
   // Nothing before 1980 or after 2200.
-  expect(stepPeriod(at(1980, "1T"), -1)).toBeNull();
-  expect(stepPeriod(at(1980, "01"), -1)).toBeNull();
-  expect(stepPeriod(at(2200, "4T"), 1)).toBeNull();
-  expect(stepPeriod(at(2200, "0A"), 1)).toBeNull();
-  expect(stepPeriod(at(1981, "1T"), -4)).toEqual(at(1980, "1T"));
+  expect(stepPeriod(at(1000, "1T"), -1)).toBeNull();
+  expect(stepPeriod(at(1000, "01"), -1)).toBeNull();
+  expect(stepPeriod(at(9999, "4T"), 1)).toBeNull();
+  expect(stepPeriod(at(9999, "0A"), 1)).toBeNull();
+  expect(stepPeriod(at(1980, "1T"), -1)).toEqual(at(1979, "4T"));
+  expect(stepPeriod(at(2200, "4T"), 1)).toEqual(at(2201, "1T"));
 });
 
-test("the year field steps by one and by ten within the admitted years", () => {
+test("the year field steps by one and by ten and stays on years that can be written", () => {
   expect(stepYear(2026, 1)).toBe(2027);
   expect(stepYear(2026, -10)).toBe(2016);
-  expect(stepYear(1985, -10)).toBe(LEDGER_YEAR_MIN);
-  expect(stepYear(2195, 10)).toBe(LEDGER_YEAR_MAX);
+  expect(stepYear(1985, -10)).toBe(1975);
+  expect(stepYear(2195, 10)).toBe(2205);
+  expect(stepYear(1005, -10)).toBe(1005);
+  expect(stepYear(9995, 10)).toBe(9995);
   expect(decadeYears(2026)).toEqual([
     2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027, 2028, 2029,
   ]);
   expect(decadeYears(2003)[0]).toBe(2000);
-  expect(decadeYears(2200)).toEqual([2200]);
+  expect(decadeYears(9995).at(-1)).toBe(9999);
+  expect(decadeYears(1000)[0]).toBe(1000);
+  expect(decadeYears(2200)).toHaveLength(10);
   expect(decadeYears(1985)).toEqual([
     1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989,
   ]);
@@ -307,7 +342,8 @@ test("a period's span, the period a day falls in, and its list clauses", () => {
   });
   expect(periodOf("2026-07-01", "quarter")).toEqual({ year: 2026, code: "3T" });
   expect(periodOf("2026-07-01", "month")).toEqual({ year: 2026, code: "07" });
-  expect(periodOf("1975-07-01", "year")).toBeNull();
+  expect(periodOf("1975-07-01", "year")).toEqual({ year: 1975, code: "0A" });
+  expect(periodOf("0999-07-01", "year")).toBeNull();
   expect(periodFilters({ year: 2026, code: "3T" })).toEqual([
     "period=3T",
     "year=2026",
@@ -326,4 +362,54 @@ test("a refusal's example amount is written with the language's own decimal mark
       expect(text, `${locale} ${key}`).not.toMatch(/\d\.\d/);
       expect(text, `${locale} ${key}`).toMatch(/\d,\d/);
     }
+});
+
+test("with no limits served a typed number is not taken and what it says is kept", () => {
+  holdLedgerLimits(null);
+  try {
+    for (const parsed of [
+      parseDecimal("12.50", AMOUNT_RULE),
+      parsePercent("21"),
+      parseFractionPercent("0.21"),
+    ])
+      expect(parsed).toMatchObject({
+        kind: "refused",
+        refusal: { key: "limits_unavailable" },
+      });
+    expect(parseDecimal("12.50", AMOUNT_RULE)).toMatchObject({
+      refusal: { raw: "12.50" },
+    });
+    // Nothing typed needs no limit, and a date none.
+    expect(parseDecimal("", AMOUNT_RULE)).toEqual({ kind: "empty" });
+    expect(parsePercent("").kind).toBe("empty");
+    expect(parseIsoDate("2026-02-01").kind).toBe("value");
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
+});
+
+test("a limit is the one served, not one of the window's", () => {
+  holdLedgerLimits({
+    ...servedLimits,
+    percent_decimals: 1,
+    decimal_rules: [{ rule: "amount", decimals: 3, zero: true }],
+  });
+  try {
+    expect(parseDecimal("0", AMOUNT_RULE)).toEqual({
+      kind: "value",
+      value: "0",
+    });
+    expect(parseDecimal("1.2345", AMOUNT_RULE)).toMatchObject({
+      refusal: { key: "too_many_decimals", limit: 3 },
+    });
+    expect(parsePercent("21.25")).toMatchObject({
+      refusal: { key: "too_many_decimals", limit: 1 },
+    });
+    // A rule the backend did not serve is not assumed.
+    expect(parseDecimal("1", TAX_AMOUNT_RULE)).toMatchObject({
+      refusal: { key: "limits_unavailable" },
+    });
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
 });

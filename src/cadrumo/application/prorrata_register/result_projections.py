@@ -13,7 +13,13 @@ from ..operations.models import OperationTerminalReceipt
 from . import operation_requests as _requests
 from . import result_contracts as _contracts
 from .projection_contracts import (
+    GROSS_DECLARATION_OPERATION_IDS as _GROSS_DECLARATION_OPERATION_IDS,
+)
+from .projection_contracts import (
     ProrrataEntryProjection as _ProrrataEntryProjection,
+)
+from .projection_contracts import (
+    ProrrataGrossDeclarationProjection as _ProrrataGrossDeclarationProjection,
 )
 from .projection_contracts import (
     ProrrataListedEntryProjection as _ProrrataListedEntryProjection,
@@ -127,6 +133,7 @@ def _list_result_payload_is_closed(private: _contracts.ProrrataOperationExecutio
         and private.count == len(register.entries)
         and private.entry is None
         and private.sector_definition is None
+        and private.gross_declaration is None
         and private.seed_source is None
         and not private.findings
         and private.refusal is None
@@ -164,6 +171,10 @@ def project_prorrata_list_result(
         ),
         sectors=tuple(
             _ProrrataSectorDefinitionProjection.from_definition(sector) for sector in register.sector_definitions
+        ),
+        gross_declarations=tuple(
+            _ProrrataGrossDeclarationProjection.from_declaration(declaration)
+            for declaration in register.gross_declarations
         ),
         count=len(register.entries),
     )
@@ -256,6 +267,30 @@ def _project_sector_declaration_result(
     )
 
 
+def _project_gross_declaration_result(
+    private: _contracts.ProrrataOperationExecutionResult,
+    *,
+    profile_id: UUID,
+    operation_id: _requests.ProrrataOperationId,
+    register: ProrrataRegister,
+    count: int,
+) -> _ProrrataMutationProjection:
+    declaration = private.gross_declaration
+    if declaration is None or private.entry is not None or private.sector_definition is not None:
+        raise ValueError("prorrata gross declaration result has an incompatible payload")
+    held = register.gross_declaration_for(declaration.period, sector_id=declaration.sector_id)
+    committed = held == declaration if operation_id == "declare_gross" else held is None
+    if count != len(register.gross_declarations) or not committed:
+        raise ValueError("prorrata gross declaration result contradicts the committed register")
+    return _ProrrataMutationProjection(
+        operation_id=operation_id,
+        profile_id=profile_id,
+        outcome="success",
+        gross_declaration=_ProrrataGrossDeclarationProjection.from_declaration(declaration),
+        count=count,
+    )
+
+
 def _project_entry_mutation_result(
     private: _contracts.ProrrataOperationExecutionResult,
     *,
@@ -311,6 +346,14 @@ def project_prorrata_mutation_result(
         profile_id=profile_id,
         operation_id=operation_id,
     )
+    if operation_id in _GROSS_DECLARATION_OPERATION_IDS:
+        return _project_gross_declaration_result(
+            private,
+            profile_id=profile_id,
+            operation_id=operation_id,
+            register=register,
+            count=count,
+        )
     if operation_id == "declare_sector":
         return _project_sector_declaration_result(
             private,

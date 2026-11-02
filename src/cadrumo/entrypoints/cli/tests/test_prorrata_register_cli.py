@@ -39,10 +39,12 @@ from cadrumo.domain.prorrata_register.register import (
 )
 from cadrumo.entrypoints.cli.prorrata_register_commands import _entry_payload
 from cadrumo.entrypoints.cli.prorrata_register_results import (
+    ProrrataDeclareGrossResult,
     ProrrataDeclareSectorResult,
     ProrrataElectGeneralResult,
     ProrrataEntryPayload,
     ProrrataListResult,
+    ProrrataRemoveGrossResult,
     ProrrataSeedResult,
     ProrrataSeedSectorResult,
     ProrrataSeedSourcePayload,
@@ -93,7 +95,7 @@ def native_prorrata_profile(tmp_path: Path) -> Iterator[RegisteredCliProfile]:
         yield profile
 
 
-def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
+def _invoke(profile: RegisteredCliProfile, *command: str, output_format: str = "json") -> Result:
     if profile.label is None:
         raise AssertionError("native prorrata profile must be registered before invocation")
     close_active_bucket_session()
@@ -102,7 +104,7 @@ def _invoke(profile: RegisteredCliProfile, *command: str) -> Result:
             "--language",
             "en",
             "--format",
-            "json",
+            output_format,
             "--profile",
             profile.label,
             "--profile-secrets-stdin",
@@ -172,6 +174,139 @@ def _store_prior_settlement_observation() -> None:
     )
 
 
+_GROSS_YEAR = 2026
+
+
+def _declare_gross(profile: RegisteredCliProfile, amount: str, *extra: str) -> Result:
+    return _invoke(
+        profile,
+        "app",
+        "ledger",
+        "prorrata",
+        "declare-gross",
+        "--ejercicio",
+        str(_GROSS_YEAR),
+        "--period",
+        "1T",
+        "--amount",
+        amount,
+        "--evidence",
+        "operator-evidence:303-1T",
+        *extra,
+    )
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_native_gross_declaration_declares_replaces_refuses_and_removes(
+    native_prorrata_profile: RegisteredCliProfile,
+) -> None:
+    started = datetime.now(UTC)
+    declared = ProrrataDeclareGrossResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_declare_gross(native_prorrata_profile, "400.00")))
+    )
+    assert declared.count == 1
+    assert declared.declaration.ejercicio == _GROSS_YEAR
+    assert declared.declaration.period == "1T"
+    assert declared.declaration.sector_id is None
+    assert declared.declaration.gross_cuota == "400.00"
+    assert declared.declaration.evidence_reference == "operator-evidence:303-1T"
+    assert declared.declaration.provenance == "operator_declared"
+    assert started <= datetime.fromisoformat(declared.declaration.declared_at) <= datetime.now(UTC)
+
+    duplicate_context = _error_context(_declare_gross(native_prorrata_profile, "410.00"))
+    _assert_registered_refusal(
+        duplicate_context,
+        definition_id="ledger.prorrata.declare_gross",
+        reason="gross_declaration_duplicate",
+        refusal_code="REFUSED_PROFILE_PRORRATA_REGISTER_VALIDATION",
+    )
+    assert duplicate_context["ejercicio"] == str(_GROSS_YEAR)
+
+    negative = _declare_gross(native_prorrata_profile, "-1", "--replace")
+    assert negative.exit_code != 0, negative.output
+    negative_error = STR_KEYED_MAPPING_ADAPTER.validate_python(
+        STR_KEYED_MAPPING_ADAPTER.validate_python(json.loads(negative.output))["error"]
+    )
+    negative_context = negative_error.get("context")
+    assert negative_context is None or "operation_id" not in STR_KEYED_MAPPING_ADAPTER.validate_python(negative_context)
+
+    replaced = ProrrataDeclareGrossResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_declare_gross(native_prorrata_profile, "410.00", "--replace")))
+    )
+    assert replaced.count == 1
+    assert replaced.declaration.gross_cuota == "410.00"
+
+    removed = ProrrataRemoveGrossResult.model_validate_json(
+        json.dumps(
+            unwrap_cli_result(
+                _invoke(
+                    native_prorrata_profile,
+                    "app",
+                    "ledger",
+                    "prorrata",
+                    "remove-gross",
+                    "--ejercicio",
+                    str(_GROSS_YEAR),
+                    "--period",
+                    "1T",
+                )
+            )
+        )
+    )
+    assert removed.count == 0
+    assert removed.declaration.gross_cuota == "410.00"
+
+    absent_context = _error_context(
+        _invoke(
+            native_prorrata_profile,
+            "app",
+            "ledger",
+            "prorrata",
+            "remove-gross",
+            "--ejercicio",
+            str(_GROSS_YEAR),
+            "--period",
+            "1T",
+        )
+    )
+    _assert_registered_refusal(
+        absent_context,
+        definition_id="ledger.prorrata.remove_gross",
+        reason="gross_declaration_absent",
+        refusal_code="REFUSED_PROFILE_PRORRATA_REGISTER_VALIDATION",
+    )
+
+
+@pytest.mark.windows_only
+@pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
+def test_native_list_shows_the_declared_gross_cuotas_in_json_and_text(
+    native_prorrata_profile: RegisteredCliProfile,
+) -> None:
+    empty = ProrrataListResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")))
+    )
+    assert empty.gross_declarations == []
+
+    declared = ProrrataDeclareGrossResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_declare_gross(native_prorrata_profile, "400.00")))
+    ).declaration
+    listed = ProrrataListResult.model_validate_json(
+        json.dumps(unwrap_cli_result(_invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list")))
+    )
+    assert listed.gross_declarations == [declared]
+    assert declared.gross_cuota == "400.00"
+    assert declared.provenance == "operator_declared"
+
+    text = _invoke(native_prorrata_profile, "app", "ledger", "prorrata", "list", output_format="text")
+    assert text.exit_code == 0, text.output
+    expected_line = (
+        f"gross	{_GROSS_YEAR}	1T	sector=	gross_cuota=400.00	provenance=operator_declared	"
+        f"evidence_reference=operator-evidence:303-1T	declared_at={declared.declared_at}"
+    )
+    assert expected_line in text.output.splitlines()
+
+
 @pytest.mark.windows_only
 @pytest.mark.skipif(sys.platform != "win32", reason="requires native Windows profile workers")
 def test_native_whole_seed_projects_stamped_source_and_refuses_without_source(
@@ -210,7 +345,7 @@ def test_native_whole_seed_projects_stamped_source_and_refuses_without_source(
         definitive_volume_sin_derecho=None,
         source_observation_ref=f"303:{_WHOLE_SEED_PRIOR_YEAR}:{_SETTLEMENT_PERIOD}",
         source_registry_snapshot_refs=(expected_snapshot,),
-        schema_version="2",
+        schema_version="3",
     )
     expected_source = ProrrataSeedSourcePayload(
         modelo=Modelo("303").value,
@@ -357,7 +492,7 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
         definitive_volume_sin_derecho=None,
         source_observation_ref=None,
         source_registry_snapshot_refs=(),
-        schema_version="2",
+        schema_version="3",
     )
     assert elected.entry == expected_election_entry
     assert elected.count == 1
@@ -421,7 +556,7 @@ def test_native_sector_election_settlement_seed_and_list_preserve_full_register(
         definitive_volume_sin_derecho=None,
         source_observation_ref=f"prorrata-register:{_SECTOR_PRIOR_YEAR}:{_SECTOR_ID}",
         source_registry_snapshot_refs=(settlement_snapshot,),
-        schema_version="2",
+        schema_version="3",
     )
     assert seeded.entry == expected_seeded_entry
     assert seeded.prior_ejercicio == _SECTOR_PRIOR_YEAR

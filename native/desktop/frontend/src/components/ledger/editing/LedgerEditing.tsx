@@ -239,6 +239,7 @@ export function useLedgerEditing({
       {apply.state.phase !== "closed" && (
         <ReviewDialog
           apply={apply}
+          port={port}
           content={content}
           tally={tally}
           locale={locale}

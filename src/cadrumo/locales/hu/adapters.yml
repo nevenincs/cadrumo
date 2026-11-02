@@ -287,7 +287,7 @@ adapters:
         megváltozhatott.
       playwright_alert_modal_failed: Nem sikerült továbblépni az AEAT figyelmeztető
         párbeszédablakában.
-      playwright_buscar_click_failed: Hiba a Buscar gombra való kattintáskor a Sede
+      playwright_buscar_click_failed: Hiba a `Buscar` gombra való kattintáskor a Sede
         oldalon.
       playwright_combobox_open_failed: Hiba a Sede legördülő lista megnyitásakor.
       playwright_combobox_select_failed: Hiba a Sede legördülő lista opciójának kiválasztásakor.

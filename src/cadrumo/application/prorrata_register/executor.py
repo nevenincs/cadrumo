@@ -32,36 +32,24 @@ from .mutation_steps import (
     CommittedProrrataMutation as _CommittedProrrataMutation,
 )
 from .mutation_steps import (
-    ProrrataPreflightRefusalError as ProrrataPreflightRefusalError,
-)
-from .mutation_steps import (
     ProrrataPreflightRefusalError as _ProrrataPreflightRefusalError,
 )
 from .mutation_steps import (
     build_prorrata_refusal_projection as _build_prorrata_refusal_projection,
 )
 from .mutation_steps import (
-    build_prorrata_refusal_projection as build_prorrata_refusal_projection,
-)
-from .mutation_steps import (
     perform_prorrata_mutation as _perform_prorrata_mutation,
-)
-from .mutation_steps import (
-    perform_prorrata_mutation as perform_prorrata_mutation,
 )
 from .mutation_steps import (
     preflight_prorrata_operation as _preflight_prorrata_operation,
 )
 from .mutation_steps import (
-    preflight_prorrata_operation as preflight_prorrata_operation,
-)
-from .mutation_steps import (
     whole_seed_refusal_reason as _whole_seed_refusal_reason,
 )
-from .mutation_steps import (
-    whole_seed_refusal_reason as whole_seed_refusal_reason,
-)
 from .ports import ProrrataRegisterRepositoryFactory
+from .projection_contracts import (
+    GROSS_DECLARATION_OPERATION_IDS as _GROSS_DECLARATION_OPERATION_IDS,
+)
 from .projection_contracts import (
     PRORRATA_ELECTION_REFUSAL_CODE as _PRORRATA_ELECTION_REFUSAL_CODE,
 )
@@ -355,6 +343,7 @@ async def _commit_prorrata_mutation(
                 ProrrataWholeSeedUnavailableError,
                 ProrrataSectorLifecycleUnavailableError,
                 ProrrataRegisterValidationError,
+                _ProrrataPreflightRefusalError,
             ) as exc:
                 return await _persist_prorrata_refusal(
                     context,
@@ -396,6 +385,9 @@ def _committed_mutation_refusal_projection(
         return _whole_seed_refusal_projection(payload, error)
     if isinstance(error, ProrrataSectorLifecycleUnavailableError):
         return _sector_lifecycle_refusal_projection(operation_id, payload, error)
+    if isinstance(error, _ProrrataPreflightRefusalError):
+        # A gross-declaration CAS candidate refused against the latest register.
+        return _preflight_refusal_projection(operation_id, payload, error)
     # Repository singleton validation runs while rebuilding the latest candidate,
     # before its revision-guarded write.
     return _validation_refusal_projection(payload, str(error))
@@ -433,6 +425,15 @@ def _sector_lifecycle_refusal_projection(
     )
 
 
+def _committed_count(operation_id: _requests.ProrrataOperationId, register: ProrrataRegister) -> int:
+    """Count the register collection the operation wrote."""
+    if operation_id == "declare_sector":
+        return len(register.sector_definitions)
+    if operation_id in _GROSS_DECLARATION_OPERATION_IDS:
+        return len(register.gross_declarations)
+    return len(register.entries)
+
+
 async def _persist_prorrata_mutation_success(
     operation_id: _requests.ProrrataOperationId,
     profile_id: UUID,
@@ -446,14 +447,11 @@ async def _persist_prorrata_mutation_success(
         register_snapshot=committed.register,
         entry=committed.entry,
         sector_definition=committed.sector_definition,
+        gross_declaration=committed.gross_declaration,
         seed_source=(_ProrrataSeedSourceProjection.from_seed(committed.seed) if committed.seed is not None else None),
         findings=tuple(_ProrrataFindingProjection.from_finding(item) for item in committed.findings),
         prior_ejercicio=committed.prior_ejercicio,
-        count=(
-            len(committed.register.sector_definitions)
-            if operation_id == "declare_sector"
-            else len(committed.register.entries)
-        ),
+        count=_committed_count(operation_id, committed.register),
     )
     reference = await context.operands.put(result, written_at=now())
     await context.events.effect(OperationEffect.UPDATED)

@@ -117,6 +117,11 @@ PERSON_ACT_REMEDY: Final = (
 )
 """What a call refused as the person's own act tells the agent to do."""
 
+PERSON_ACT_DENIAL_CODES: Final = frozenset(
+    {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}
+)
+"""Denial codes that mean only the person's own act can proceed, and so share one remedy."""
+
 PROFILE_CHANGED_REMEDY: Final = (
     "The person is now signed in to another profile than the one this agent session served, so this session is "
     "over and nothing of either profile is reachable through it. Ask the person to start a new agent session "
@@ -139,7 +144,7 @@ def sign_in_remedy(code: str, facts: Mapping[str, Any] | None = None) -> str | N
     """
     if code == AccessDenialCode.PROFILE_MISMATCH.value:
         return PROFILE_CHANGED_REMEDY
-    if code in {AccessDenialCode.PERSON_ACT_REQUIRED.value, AccessDenialCode.HUMAN_AUTHORITY_REQUIRED.value}:
+    if code in PERSON_ACT_DENIAL_CODES:
         return PERSON_ACT_REMEDY
     if code == AccessDenialCode.PRIVILEGE_EXPANSION.value:
         return (

@@ -55,9 +55,9 @@ msgid ""
 "Install the latest release with `pip` or `uv`. Record the installed "
 "version before preparing any filing records."
 msgstr ""
-"Telepítsd a legfrissebb kiadást `pip`-pel vagy `uv`-vel. Jegyezd fel a "
-"telepített verziót, mielőtt bármilyen benyújtási nyilvántartást "
-"előkészítesz."
+"Telepítsd a legfrissebb kiadást a `pip` vagy az `uv` segítségével. "
+"Jegyezd fel a telepített verziót, mielőtt bármilyen benyújtási "
+"nyilvántartást előkészítesz."
 
 #: ../../updates.md:27 ../../updates.md:64
 msgid "Critical updates"

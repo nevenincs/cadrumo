@@ -79,7 +79,7 @@ from .....domain.calculations.registry.remote_state_guard import (
     assert_remote_operation_allowed,
 )
 from .._playwright import PlaywrightTimeoutError
-from . import session_store as session_store
+from . import session_store
 from ._clave_provider_common import (
     close_clave_browser_session,
     close_clave_context,

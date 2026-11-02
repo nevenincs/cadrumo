@@ -1,0 +1,282 @@
+{
+  "descriptions": [
+    "ARROYO ASESORES CUOTA OCT",
+    "ARROYO ASESORES SEPT",
+    "BAZAR EL FARO COMPRA",
+    "CINES ESTRELLA POLAR",
+    "COMISION MANTENIMIENTO CUENTA",
+    "COPISTERIA CENTRO",
+    "CORREOS ENVIO PAQUETE",
+    "COWORKING RIBERA PUESTO FIJO",
+    "CUOTA AUTONOMOS TGSS",
+    "DOMESTIKA CURSO LETTERING",
+    "ELECTRICA COSTA CLARA FACTURA LUZ",
+    "FARMACIA NUBE BLANCA",
+    "FIBRA HOGAR ALBOR",
+    "GASOLINERA RUTA 7",
+    "HOTEL PUERTO LEVANTE ESTANCIA",
+    "NORTE DIGITAL PAGO",
+    "PAGO AEAT MODELO 130",
+    "PAGO AEAT MODELO 303",
+    "PAPELERIA TRAZO",
+    "PAPELERIA TRAZO 0412",
+    "PARKING CENTRO MUNICIPAL",
+    "RECIBO TELEFONIA ALBOR MOVIL",
+    "RESTAURANTE LA ALACENA",
+    "SOFTNUBE IRELAND SUSCRIPCION",
+    "SUPERMERCADO HOJA VERDE",
+    "SWIFT BRIGHT HARBOR LTD",
+    "TRANSF IMPRENTA TURIA FRA GT-2026-0917",
+    "TRANSFERENCIA BODEGAS PEÑA RUBIA, S.L. FRA 2026-003",
+    "TRANSFERENCIA BODEGAS PEÑA RUBIA, S.L. FRA 2026-015",
+    "TRANSFERENCIA BODEGAS PEÑA RUBIA, S.L. FRA 2026-024",
+    "TRANSFERENCIA BODEGAS PEÑA RUBIA, S.L. FRA 2026-030",
+    "TRANSFERENCIA BODEGAS PEÑA RUBIA, S.L. FRA 2026-042",
+    "TRANSFERENCIA BODEGAS PEÑA RUBIA, S.L. FRA 2026-052",
+    "TRANSFERENCIA BODEGAS PEÑA RUBIA, S.L. FRA 2026-059",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-002",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-004",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-007",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-019",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-020",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-021",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-022",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-027",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-028",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-031",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-041",
+    "TRANSFERENCIA CLÍNICA DENTAL ARRECIFE, S.L.P. FRA 2026-051",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-001",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-006",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-012",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-017",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-026",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-034",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-037",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-039",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-043",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-055",
+    "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-058",
+    "TRANSFERENCIA EDITORIAL BRISA NORTE, S.A. FRA 2026-008",
+    "TRANSFERENCIA EDITORIAL BRISA NORTE, S.A. FRA 2026-013",
+    "TRANSFERENCIA EDITORIAL BRISA NORTE, S.A. FRA 2026-016",
+    "TRANSFERENCIA EDITORIAL BRISA NORTE, S.A. FRA 2026-025",
+    "TRANSFERENCIA EDITORIAL BRISA NORTE, S.A. FRA 2026-032",
+    "TRANSFERENCIA EDITORIAL BRISA NORTE, S.A. FRA 2026-033",
+    "TRANSFERENCIA EDITORIAL BRISA NORTE, S.A. FRA 2026-038",
+    "TRANSFERENCIA EDITORIAL BRISA NORTE, S.A. FRA 2026-050",
+    "TRANSFERENCIA HOTEL MIRADOR AZUL, S.L. FRA 2026-009",
+    "TRANSFERENCIA HOTEL MIRADOR AZUL, S.L. FRA 2026-010",
+    "TRANSFERENCIA HOTEL MIRADOR AZUL, S.L. FRA 2026-014",
+    "TRANSFERENCIA HOTEL MIRADOR AZUL, S.L. FRA 2026-045",
+    "TRANSFERENCIA HOTEL MIRADOR AZUL, S.L. FRA 2026-057",
+    "TRANSFERENCIA TALLERES ONDARA, S.L. FRA 2026-036",
+    "TRANSFERENCIA TALLERES ONDARA, S.L. FRA 2026-044",
+    "TRANSFERENCIA TALLERES ONDARA, S.L. FRA 2026-046",
+    "TRANSFERENCIA TALLERES ONDARA, S.L. FRA 2026-048",
+    "TRANSFERENCIA TALLERES ONDARA, S.L. FRA 2026-049",
+    "TRANSFERENCIA TALLERES ONDARA, S.L. FRA 2026-053",
+    "TRANSFERENCIA TALLERES ONDARA, S.L. FRA 2026-056",
+    "TRASPASO A CUENTA PERSONAL",
+    "TREN ALTA VELOCIDAD BILLETE"
+  ],
+  "answers": [
+    {
+      "description_pattern": "ARROYO\\s+ASESORES\\s+CUOTA\\s+OCT",
+      "outcome": "matched",
+      "matches": ["ARROYO ASESORES CUOTA OCT"]
+    },
+    {
+      "description_pattern": "ARROYO\\s+ASESORES\\s+SEPT",
+      "outcome": "matched",
+      "matches": ["ARROYO ASESORES SEPT"]
+    },
+    {
+      "description_pattern": "BAZAR\\s+EL\\s+FARO\\s+COMPRA",
+      "outcome": "matched",
+      "matches": ["BAZAR EL FARO COMPRA"]
+    },
+    {
+      "description_pattern": "CINES\\s+ESTRELLA\\s+POLAR",
+      "outcome": "matched",
+      "matches": ["CINES ESTRELLA POLAR"]
+    },
+    {
+      "description_pattern": "COMISION\\s+MANTENIMIENTO\\s+CUENTA",
+      "outcome": "matched",
+      "matches": ["COMISION MANTENIMIENTO CUENTA"]
+    },
+    {
+      "description_pattern": "COPISTERIA\\s+CENTRO",
+      "outcome": "matched",
+      "matches": ["COPISTERIA CENTRO"]
+    },
+    {
+      "description_pattern": "CORREOS\\s+ENVIO\\s+PAQUETE",
+      "outcome": "matched",
+      "matches": ["CORREOS ENVIO PAQUETE"]
+    },
+    {
+      "description_pattern": "COWORKING\\s+RIBERA\\s+PUESTO\\s+FIJO",
+      "outcome": "matched",
+      "matches": ["COWORKING RIBERA PUESTO FIJO"]
+    },
+    {
+      "description_pattern": "CUOTA\\s+AUTONOMOS\\s+TGSS",
+      "outcome": "matched",
+      "matches": ["CUOTA AUTONOMOS TGSS"]
+    },
+    {
+      "description_pattern": "DOMESTIKA\\s+CURSO\\s+LETTERING",
+      "outcome": "matched",
+      "matches": ["DOMESTIKA CURSO LETTERING"]
+    },
+    {
+      "description_pattern": "ELECTRICA\\s+COSTA\\s+CLARA\\s+FACTURA\\s+LUZ",
+      "outcome": "matched",
+      "matches": ["ELECTRICA COSTA CLARA FACTURA LUZ"]
+    },
+    {
+      "description_pattern": "FARMACIA\\s+NUBE\\s+BLANCA",
+      "outcome": "matched",
+      "matches": ["FARMACIA NUBE BLANCA"]
+    },
+    {
+      "description_pattern": "FIBRA\\s+HOGAR\\s+ALBOR",
+      "outcome": "matched",
+      "matches": ["FIBRA HOGAR ALBOR"]
+    },
+    {
+      "description_pattern": "GASOLINERA\\s+RUTA",
+      "outcome": "matched",
+      "matches": ["GASOLINERA RUTA 7"]
+    },
+    {
+      "description_pattern": "HOTEL\\s+PUERTO\\s+LEVANTE\\s+ESTANCIA",
+      "outcome": "matched",
+      "matches": ["HOTEL PUERTO LEVANTE ESTANCIA"]
+    },
+    {
+      "description_pattern": "LIBRERIA\\s+CENTRAL",
+      "outcome": "matched",
+      "matches": []
+    },
+    {
+      "description_pattern": "NORTE\\s+DIGITAL\\s+PAGO",
+      "outcome": "matched",
+      "matches": ["NORTE DIGITAL PAGO"]
+    },
+    {
+      "description_pattern": "PAGO\\s+AEAT\\s+MODELO",
+      "outcome": "matched",
+      "matches": ["PAGO AEAT MODELO 130", "PAGO AEAT MODELO 303"]
+    },
+    {
+      "description_pattern": "PAPELERIA\\s+TRAZO",
+      "outcome": "matched",
+      "matches": ["PAPELERIA TRAZO", "PAPELERIA TRAZO 0412"]
+    },
+    {
+      "description_pattern": "PARKING\\s+CENTRO\\s+MUNICIPAL",
+      "outcome": "matched",
+      "matches": ["PARKING CENTRO MUNICIPAL"]
+    },
+    {
+      "description_pattern": "RECIBO\\s+TELEFONIA\\s+ALBOR\\s+MOVIL",
+      "outcome": "matched",
+      "matches": ["RECIBO TELEFONIA ALBOR MOVIL"]
+    },
+    {
+      "description_pattern": "RESTAURANTE\\s+LA\\s+ALACENA",
+      "outcome": "matched",
+      "matches": ["RESTAURANTE LA ALACENA"]
+    },
+    {
+      "description_pattern": "SOFTNUBE\\s+IRELAND\\s+SUSCRIPCION",
+      "outcome": "matched",
+      "matches": ["SOFTNUBE IRELAND SUSCRIPCION"]
+    },
+    {
+      "description_pattern": "SUPERMERCADO\\s+HOJA\\s+VERDE",
+      "outcome": "matched",
+      "matches": ["SUPERMERCADO HOJA VERDE"]
+    },
+    {
+      "description_pattern": "SWIFT\\s+BRIGHT\\s+HARBOR\\s+LTD",
+      "outcome": "matched",
+      "matches": ["SWIFT BRIGHT HARBOR LTD"]
+    },
+    {
+      "description_pattern": "TRANSFERENCIA\\s+BODEGAS\\s+PEÑA\\s+RUBIA\\s+FRA",
+      "outcome": "matched",
+      "matches": []
+    },
+    {
+      "description_pattern": "TRANSFERENCIA\\s+CLÍNICA\\s+DENTAL\\s+ARRECIFE\\s+FRA",
+      "outcome": "matched",
+      "matches": []
+    },
+    {
+      "description_pattern": "TRANSFERENCIA\\s+COOPERATIVA\\s+OLIVAR\\s+DEL\\s+SUR\\s+FRA",
+      "outcome": "matched",
+      "matches": [
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-001",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-006",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-012",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-017",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-026",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-034",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-037",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-039",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-043",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-055",
+        "TRANSFERENCIA COOPERATIVA OLIVAR DEL SUR FRA 2026-058"
+      ]
+    },
+    {
+      "description_pattern": "TRANSFERENCIA\\s+EDITORIAL\\s+BRISA\\s+NORTE\\s+FRA",
+      "outcome": "matched",
+      "matches": []
+    },
+    {
+      "description_pattern": "TRANSFERENCIA\\s+HOTEL\\s+MIRADOR\\s+AZUL\\s+FRA",
+      "outcome": "matched",
+      "matches": []
+    },
+    {
+      "description_pattern": "TRANSFERENCIA\\s+TALLERES\\s+ONDARA\\s+FRA",
+      "outcome": "matched",
+      "matches": []
+    },
+    {
+      "description_pattern": "TRANSF\\s+IMPRENTA\\s+TURIA\\s+FRA\\s+GT",
+      "outcome": "matched",
+      "matches": ["TRANSF IMPRENTA TURIA FRA GT-2026-0917"]
+    },
+    {
+      "description_pattern": "TRASPASO\\s+CUENTA\\s+PERSONAL",
+      "outcome": "matched",
+      "matches": []
+    },
+    {
+      "description_pattern": "TREN\\s+ALTA\\s+VELOCIDAD\\s+BILLETE",
+      "outcome": "matched",
+      "matches": ["TREN ALTA VELOCIDAD BILLETE"]
+    },
+    {
+      "description_pattern": "[unclosed",
+      "outcome": "invalid_pattern",
+      "matches": []
+    },
+    {
+      "description_pattern": "a{99999999999}",
+      "outcome": "invalid_pattern",
+      "matches": []
+    },
+    {
+      "description_pattern": "(.+)+#",
+      "outcome": "overrun",
+      "matches": []
+    }
+  ]
+}

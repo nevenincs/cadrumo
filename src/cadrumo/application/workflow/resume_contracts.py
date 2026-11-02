@@ -158,7 +158,7 @@ class WorkflowResumeRefusal(BaseModel):
 
     @model_validator(mode="after")
     def _canonical_reason(self) -> Self:
-        if self.final_stage not in {WorkflowStage.DONE, WorkflowStage.ABORTED}:
+        if not self.final_stage.is_terminal:
             raise ValueError("resume refusal requires terminal facts")
         if self.final_stage is WorkflowStage.DONE and self.aborted_reason is not None:
             raise ValueError("completed run cannot carry an abort reason")
@@ -187,7 +187,7 @@ class WorkflowResumeCandidateSnapshot(BaseModel):
 
     @model_validator(mode="after")
     def _terminal(self) -> Self:
-        if self.final_stage not in {WorkflowStage.DONE, WorkflowStage.ABORTED}:
+        if not self.final_stage.is_terminal:
             raise ValueError("resume candidate requires terminal facts")
         if (self.final_stage is WorkflowStage.ABORTED) != (self.aborted_reason is not None):
             raise ValueError("resume candidate has contradictory abort facts")

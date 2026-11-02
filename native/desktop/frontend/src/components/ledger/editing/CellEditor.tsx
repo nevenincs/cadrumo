@@ -24,11 +24,10 @@ import type { FieldSpec } from "@/shared/fieldKind";
 import { formatDecimal } from "@/shared/numbers";
 import type { DraftField, StageField } from "../../../shell/ledgerStage";
 import {
+  DECIDED_CLASSIFICATIONS,
   DIRECTIONS,
-  IRPF_CATEGORIES,
-  IVA_CATEGORIES,
-  SPENDING_CATEGORY_FAMILIES,
-} from "../../../shell/ledgerVocabulary";
+  takesClassification,
+} from "../../../shell/ledgerContract";
 import { useStrings } from "../../../shell/strings";
 import {
   categoryOption,
@@ -36,6 +35,7 @@ import {
   directionLabel,
   irpfCategoryLabel,
   ivaCategoryLabel,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
 import {
@@ -51,6 +51,7 @@ import {
 import { choiceLabels, refusalText } from "./editingWords";
 import {
   useFieldSuggestions,
+  useVocabulary,
   type SuggestionKind,
 } from "../suggestions/SuggestionsProvider";
 
@@ -144,7 +145,11 @@ export function TypedEditor({
   const [lift, setLift] = useState(0);
   const done = useRef(false);
   const floating = kind === "date";
-  const labels = useMemo(() => choiceLabels(t, null), [t]);
+  const vocabulary = useVocabulary();
+  const labels = useMemo(
+    () => choiceLabels(t, null, vocabulary),
+    [t, vocabulary],
+  );
   const offered = useFieldSuggestions(offers);
   useLayoutEffect(() => {
     if (floating) setLift(anchor.current?.offsetHeight ?? 0);
@@ -316,10 +321,11 @@ export function TypedEditor({
 /** The options a choice column offers, grouped and labelled. */
 function useChoices(
   kind: EditKind,
-  transfer: boolean,
+  direction: string | null,
   accounts: readonly OwnAccountChoice[] | null,
 ): { options: ComboboxOption[]; label: string } {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   return useMemo(() => {
     switch (kind) {
       case "account":
@@ -344,30 +350,28 @@ function useChoices(
       case "classification":
         return {
           label: t("desktop.ledger.column.classification"),
-          options: (["BUSINESS", "PERSONAL", "MIXED"] as const).map(
-            (value) => ({
-              value,
-              label: classificationLabel(t, value),
-              ...(transfer && value !== "PERSONAL"
-                ? {
-                    disabled: true,
-                    reason: t("desktop.ledger.classify.transfers_only"),
-                  }
-                : {}),
-            }),
-          ),
+          options: DECIDED_CLASSIFICATIONS.map((value) => ({
+            value,
+            label: classificationLabel(t, value),
+            ...(takesClassification(direction, value)
+              ? {}
+              : {
+                  disabled: true,
+                  reason: t("desktop.ledger.classify.transfers_only"),
+                }),
+          })),
         };
       case "category":
         return {
           label: t("desktop.ledger.column.category"),
-          options: SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+          options: vocabulary.categoryFamilies.flatMap(([family, members]) =>
             members.map((value) => categoryOption(t, family, value)),
           ),
         };
       case "iva_category":
         return {
           label: t("desktop.ledger.column.iva_category"),
-          options: IVA_CATEGORIES.map((value) => ({
+          options: vocabulary.ivaCategories.map((value) => ({
             value,
             label: ivaCategoryLabel(t, value),
           })),
@@ -375,13 +379,13 @@ function useChoices(
       default:
         return {
           label: t("desktop.ledger.column.irpf_category"),
-          options: IRPF_CATEGORIES.map((value) => ({
+          options: vocabulary.irpfCategories.map((value) => ({
             value,
             label: irpfCategoryLabel(t, value),
           })),
         };
     }
-  }, [kind, transfer, accounts, t]);
+  }, [kind, direction, accounts, t, vocabulary]);
 }
 
 /** A choice cell editor: a searchable list, grouped where the vocabulary
@@ -390,26 +394,32 @@ export function ChoiceEditor({
   context,
   kind,
   value,
-  transfer = false,
+  direction = null,
   accounts = null,
 }: {
   context: EditorContext;
   kind: EditKind;
   value: string | null;
-  /** The movement is a transfer, which is Personal or unclassified only. */
-  transfer?: boolean;
+  /** The way the movement goes, on which what it may be classified as rests. */
+  direction?: string | null;
   /** The register's own accounts, for the account column. */
   accounts?: readonly OwnAccountChoice[] | null;
 }) {
   const t = useStrings();
-  const { options, label } = useChoices(kind, transfer, accounts);
+  const { options, label } = useChoices(kind, direction, accounts);
+  const vocabulary = useVocabulary();
   return (
     <Combobox
       label={label}
       value={kind === "account" && value === null ? NO_ACCOUNT : value}
       options={options}
       initialQuery={context.initial}
-      emptyLabel={t("desktop.ledger.edit.no_match")}
+      emptyLabel={vocabularyEmpty(
+        t,
+        vocabulary,
+        t("desktop.ledger.edit.no_match"),
+        options.length,
+      )}
       placeholder={t("desktop.ledger.edit.search")}
       className="ledger-cell-choice"
       onCommit={(chosen, via) =>

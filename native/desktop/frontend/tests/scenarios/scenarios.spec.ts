@@ -2729,6 +2729,82 @@ test("the calendar's mark stands where the past ends in each shape of range, and
   await expect(found.page.locator('[data-today="true"]')).toHaveCount(0);
 });
 
+test("a close the product does not know is listed and drawn as unknown, with its earliest close and no countdown", async ({
+  page: target,
+}) => {
+  await target.clock.setFixedTime(FIXTURE_DAY);
+  await open(target, "signed-in", "&calendar=close_unknown");
+  await showCalendar(target);
+  const page = target.getByRole("region", {
+    name: label("desktop.calendar.title"),
+  });
+  await page
+    .getByRole("radio", { name: label("desktop.calendar.view_list") })
+    .click();
+  const short = new Intl.DateTimeFormat("en", {
+    day: "numeric",
+    month: "short",
+  });
+  const earliest = (on: Date) =>
+    label("desktop.calendar.earliest_close", { date: short.format(on) });
+  const ahead = page.locator('.calendar-list li[data-entry="123:2026-3T"]');
+  const passed = page.locator('.calendar-list li[data-entry="115:2026-2T"]');
+  for (const [row, on] of [
+    [ahead, new Date(2026, 9, 20)],
+    [passed, new Date(2026, 6, 20)],
+  ] as const) {
+    // Kept in the list, called by the product's own words for it.
+    await expect(row).toBeVisible();
+    await expect(row.locator("[data-slot=badge]")).toHaveText(
+      label("workspace.declarations.calendar.legal.unknown"),
+    );
+    // Its date is said only as the earliest close, never drawn as the day
+    // a deadline falls on, and nothing is counted to or from it.
+    await expect(row).toContainText(earliest(on));
+    await expect(row.locator("time")).toHaveCount(0);
+    await expect(row.locator(".calendar-distance")).toHaveCount(0);
+    await expect(row).not.toContainText(label("desktop.calendar.state.late"));
+  }
+  // In the month of its earliest close, after that month's known closes,
+  // and after the mark for today only where even its earliest close is
+  // ahead of it.
+  const order = await page.evaluate((element) =>
+    [...element.querySelectorAll(".calendar-today, li[data-entry]")].map(
+      (node) =>
+        node.classList.contains("calendar-today")
+          ? "today"
+          : (node.getAttribute("data-entry") ?? ""),
+    ),
+  );
+  const at = (key: string) => order.indexOf(key);
+  expect(at("115:2026-2T")).toBeGreaterThan(at("130:2026-2T"));
+  expect(at("115:2026-2T")).toBeGreaterThan(at("303:2026-2T"));
+  expect(at("115:2026-2T")).toBeLessThan(at("today"));
+  expect(at("123:2026-3T")).toBeGreaterThan(at("today"));
+  for (const known of ["303:2026-3T", "130:2026-3T", "111:2026-3T"])
+    expect(at("123:2026-3T")).toBeGreaterThan(at(known));
+  expect(at("123:2026-3T")).toBeLessThan(at("303:2026-4T"));
+
+  // Among the months the window says the same, and is not drawn closing.
+  await page
+    .getByRole("radio", { name: label("desktop.calendar.view_months") })
+    .click();
+  const bar = page.locator(
+    '.calendar-bar[data-entry="123:2026-3T"]:not([tabindex="-1"])',
+  );
+  await expect(bar).toHaveAccessibleName(
+    new RegExp(
+      `${earliest(new Date(2026, 9, 20))}.*${label("workspace.declarations.calendar.legal.unknown")}$`,
+    ),
+  );
+  await expect(
+    page.locator('.calendar-bar[data-entry="123:2026-3T"].rounded-r-full'),
+  ).toHaveCount(0);
+  await expect(
+    page.locator('.calendar-bar[data-entry="130:2026-3T"].rounded-r-full'),
+  ).toHaveCount(1);
+});
+
 test("the calendar says what its marks are, and has a way back to where it stands", async ({
   page: target,
 }) => {

@@ -7,7 +7,7 @@ from uuid import UUID
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import CENT_FRACTION_DIGITS, DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -43,7 +43,9 @@ LEDGER_UPDATE_FIELD_NAMES = frozenset(
     }
 )
 # Facts every transaction carries: an update may replace them but never blank or remove them.
-_REQUIRED_FIELD_NAMES = frozenset({"booked_date", "amount", "currency", "direction", "description", "notes"})
+LEDGER_UPDATE_REQUIRED_FIELD_NAMES = frozenset(
+    {"booked_date", "amount", "currency", "direction", "description", "notes"}
+)
 LedgerUpdatePatchField = Literal[
     "booked_date",
     "value_date",
@@ -61,8 +63,12 @@ LedgerUpdatePatchField = Literal[
     "own_account_id",
 ]
 _UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=16)]
-_UpdateText = Annotated[str, Field(max_length=4096)]
-_DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+LEDGER_UPDATE_TEXT_MAX = 4096
+"""The longest description, counterparty or notes a ledger correction takes."""
+LEDGER_GROUP_LABEL_MAX = 64
+"""The longest group label a ledger correction takes."""
+_UpdateText = Annotated[str, Field(max_length=LEDGER_UPDATE_TEXT_MAX)]
+_DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _IsoDateText = Annotated[str, Field(pattern=r"^\d{4}-\d{2}-\d{2}$")]
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
 _ValidationMessage = Annotated[str, Field(min_length=1, max_length=2048)]
@@ -88,7 +94,7 @@ class LedgerUpdatePatch(BaseModel):
     iva_amount: _DecimalText | None = None
     irpf_category: _UpdateText | None = None
     notes: _UpdateText | None = None
-    group_label: Annotated[str, Field(max_length=64)] | None = None
+    group_label: Annotated[str, Field(max_length=LEDGER_GROUP_LABEL_MAX)] | None = None
     own_account_id: OwnAccountId | None = None
 
     @field_validator("booked_date", "value_date")
@@ -113,10 +119,10 @@ class LedgerUpdatePatch(BaseModel):
         is_amount = field_name == "amount"
         # Only euro amounts are held to cents; a rate keeps the fraction digits it has (0.052).
         parsed = try_parse_canonical_decimal(
-            value, signed=not is_amount, max_fraction_digits=None if field_name == "iva_rate" else 2
+            value, signed=not is_amount, max_fraction_digits=None if field_name == "iva_rate" else CENT_FRACTION_DIGITS
         )
         if parsed is None:
-            if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=2) is not None:
+            if is_amount and try_parse_canonical_decimal(value, max_fraction_digits=CENT_FRACTION_DIGITS) is not None:
                 raise ValueError(
                     "ledger update amount must be a non-negative magnitude; "
                     "set the flow with direction (OUTGOING / INCOMING / INTERNAL_TRANSFER), not a negative amount"
@@ -184,7 +190,7 @@ class LedgerUpdateRequest(BaseModel):
 
     @model_validator(mode="after")
     def _required_facts_are_not_cleared(self) -> LedgerUpdateRequest:
-        for field_name in sorted(_REQUIRED_FIELD_NAMES & set(self.patch_fields)):
+        for field_name in sorted(LEDGER_UPDATE_REQUIRED_FIELD_NAMES & set(self.patch_fields)):
             value = getattr(self.patch, field_name)
             if value is None or (isinstance(value, str) and not value.strip()):
                 raise ValueError(f"ledger update cannot clear {field_name}; omit it to leave it unchanged")
@@ -202,7 +208,7 @@ class LedgerUpdateOperationResult(BaseModel):
     transaction: LedgerTransactionProjection | None = None
     review_status: LedgerReviewStatus | None = None
     bucket_event_ids: Annotated[tuple[str, ...], Field(max_length=_MAX_UPDATE_EVENT_IDS)] = ()
-    group_label: Annotated[str, Field(max_length=64)] | None = None
+    group_label: Annotated[str, Field(max_length=LEDGER_GROUP_LABEL_MAX)] | None = None
     own_account_id: OwnAccountId | None = None
     validation_messages: LedgerUpdateValidationMessages = ()
 
@@ -267,6 +273,7 @@ __all__ = [
     "LEDGER_UPDATE_MAX_VALIDATION_MESSAGES",
     "LEDGER_UPDATE_OPERATION_DEFINITION_ID",
     "LEDGER_UPDATE_PHASE",
+    "LEDGER_UPDATE_REQUIRED_FIELD_NAMES",
     "LEDGER_UPDATE_VALIDATION_REFUSAL_CODE",
     "LedgerUpdateExecutionResult",
     "LedgerUpdateOperationResult",

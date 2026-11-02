@@ -1,9 +1,5 @@
 """Real-behavior tests for the guarded IVA wallet correction path.
 
-Authority: the operator-surface decision D7 (read-back /
-correction baseline); CRUD-matrix audit finding F-05 (IVA wallet seed-once, no
-correction path).
-
 ``iva-wallet seed`` is one-shot — it refuses to overwrite an existing record —
 so a wrong opening compensation balance is otherwise unrecoverable.
 ``correct_iva_compensation_period_for_bucket`` is the deliberate correction

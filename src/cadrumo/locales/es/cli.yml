@@ -196,7 +196,8 @@ cli:
           Para `choose`, indica la lectura por su valor o por el resumen que mostró
           `review`. Repite una vez por incidencia; no hay opción masiva.'
         confirm_retention_amount_help: Importe de retención de IRPF de la factura.
-        confirm_retention_rate_help: Porcentaje de retención de IRPF de la factura.
+        confirm_retention_rate_help: 'Retención de IRPF de la factura como fracción:
+          0.15 para el 15 %.'
         confirm_review_contradicted_regime_message: Este documento se contradice a
           sí mismo sobre cómo tributa. El detalle siguiente nombra qué discrepaba
           con qué.
@@ -460,6 +461,20 @@ cli:
           T entregas triangulares, S servicios prestados, I servicios adquiridos,
           R transferencias de bienes en consigna, D devoluciones de bienes en consigna,
           C sustituciones del destinatario en consigna'
+        preview_help: 'Previsualiza un borrador de factura: las cifras, los avisos
+          y el veredicto que alcanzaría la operación de alta, sin guardar nada.'
+        preview_line_help: Objeto JSON repetible para una línea del borrador, con
+          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` e
+          `iva_amount` opcionales. Una cifra que omitas queda sin conocer. Úsalo en
+          lugar de --taxable-base.
+        preview_operation_date_role_help: Función guardada de la fecha de operación
+          de la factura que repite una corrección.
+        preview_printed_total_help: El total impreso en el documento, que se compara
+          con el total calculado.
+        preview_stored_grand_total_help: Total guardado de la factura que repite una
+          corrección, del que sale lo que queda por pagar.
+        preview_stored_invoice_id_help: Id de la factura guardada que repite una corrección;
+          con él, el veredicto cubre solo los datos indicados.
         recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
           161). Va incluido en el total de la factura, a diferencia de una retención.
         rectifies_help: Número de la factura que corrige esta rectificativa.
@@ -493,6 +508,10 @@ cli:
           (repetible, al menos uno).
         con_derecho_volume_help: Volumen anual de operaciones con derecho a deducción
           del sector (LIVA art. 104, con las exclusiones del art. 104.Tres ya aplicadas).
+        declare_gross_help: Declara las cuotas soportadas deducibles brutas antes
+          de la prorrata de una liquidación anterior que introdujiste a mano, para
+          que la regularización anual (LIVA art. 105.Cuatro) pueda usarlas cuando
+          el libro no tenga cuotas de ese periodo.
         declare_sector_help: 'Declara un sector diferenciado (LIVA arts. 9.1.c / 101):
           tu partición del art. 9.1.c, nunca inferida de tus registros.'
         ejercicio_help: Ejercicio (año) que cubre la elección.
@@ -505,6 +524,20 @@ cli:
           de la prorrata especial del período actual.
         general_percentage_help: Porcentaje de deducción provisional 0-100 (LIVA art.
           104.Uno + 105.Uno).
+        gross_absent: No hay ninguna base bruta declarada para esa liquidación de
+          {ejercicio}, así que no hay nada que eliminar.
+        gross_amount_help: Cuotas soportadas deducibles brutas antes de la prorrata,
+          en euros con dos decimales como máximo.
+        gross_duplicate: Ya hay una base bruta declarada para esa liquidación de {ejercicio}.
+          No se ha guardado nada; usa --replace para sustituirla.
+        gross_ejercicio_help: Ejercicio de la liquidación.
+        gross_evidence_help: Referencia a tu propio documento que respalda el importe.
+        gross_period_help: Periodo de liquidación del Modelo 303 anterior a la liquidación
+          final del ejercicio (un trimestre como 1T o un mes como 03).
+        gross_replace_help: Sustituye la base bruta ya declarada para el mismo periodo
+          y sector.
+        gross_sector_unknown: El sector {sector_id} no es un sector diferenciado declarado.
+          No se ha guardado nada; declara antes el sector con declare-sector.
         group_help: 'Registro de prorrata de IVA entre ejercicios: elige el régimen
           (general / especial) y declara sectores diferenciados (LIVA arts. 101 /
           103 / 105 / 106).'
@@ -531,6 +564,8 @@ cli:
           o inicio_actividad.
         reference_required: El origen {provenance!r} (LIVA art. 105.Dos / 105.Tres)
           requiere --reference.
+        remove_gross_help: Elimina las cuotas soportadas deducibles brutas que declaraste
+          para una liquidación anterior.
         revoke_especial_help: Revoca la prorrata especial para un ejercicio tras un
           estado especial del ejercicio anterior (LIVA art. 103.Dos.1).
         sector_help: Identificador del sector diferenciado que cubre esta entrada;
@@ -611,6 +646,10 @@ cli:
         list_help: Lista las reglas de clasificación almacenadas ordenadas por prioridad.
         priority_help: Prioridad numérica; un valor menor se evalúa primero (por defecto
           100).
+        trial_help: Prueba un patrón sin guardar con el motor de reglas e indica qué
+          movimientos de los indicados encuentra, sin guardar nada.
+        trial_transaction_id_help: Identificador repetible de un movimiento en el
+          que probar el patrón.
     live:
       app_help: Comandos de observación AEAT en vivo de solo lectura
       borrador:
@@ -920,7 +959,7 @@ cli:
           conocidos para {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La lista de orígenes no está acotada por %{missing_filters};
           puede incluir ids de orígenes de una versión del modelo oficial que no coincide
-          con la declaración usada por `aeat app modelo work calculate`.
+          con la declaración que usa el cálculo.
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casilla:
         casilla_help: Id de casilla o número impreso de casilla que se debe describir
@@ -2128,7 +2167,7 @@ cli:
         guardadas. Vuelve a ejecutar el comando con --yes para confirmar.
       reset_yes_help: Confirmar el restablecimiento destructivo de la autenticación
       route_help: 'Vía de aprobación de Cl@ve Móvil: app_request (por defecto, funciona
-        sin navegador visible) o qr (abre un navegador visible). Requiere --provider
+        sin navegador visible) o `qr` (abre un navegador visible). Requiere --provider
         clave_movil.'
       status_help: Mostrar el estado de autenticación configurado
       status_summary_configured: La autenticación está configurada pero aún no hay
@@ -2310,7 +2349,7 @@ cli:
         help: Muestra la carpeta de Google Drive creada para el perfil activo
         organize_help: Organiza la carpeta del perfil dentro de Cadrumo
         view_help: Muestra la carpeta de Google Drive creada para el perfil activo.
-      help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
+      help: Gestionar la integración OAuth de escritorio de Google para Drive y Sheets
       login_help: Ejecutar el flujo de consentimiento OAuth
       logout_help: Limpiar el token de refresco y los metadatos
       probe_help: Comprueba el acceso a la carpeta de Google Drive del perfil
@@ -2730,9 +2769,9 @@ cli:
           usa `base` para la fila sin índice.
         section_help: Clave de la sección repetible del perfil.
       sandbox:
-        active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
-          perfil real; todos los comandos se ejecutan contra este bucket aislado y
-          descartable.
+        active_indicator_info: Estás operando dentro del entorno de pruebas %{label},
+          no en un perfil real; todos los comandos se ejecutan contra este bucket
+          aislado y descartable.
       sessions:
         help: Enumera las sesiones actuales de este perfil en el entorno local.
       show:
@@ -3141,7 +3180,7 @@ cli:
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
-        no uses ledger allocate para una fila totalmente BUSINESS.
+        no uses `ledger allocate` para una fila totalmente BUSINESS.
       help: Registrar proporcionalidad profesional/personal para un movimiento de
         tus registros
       id_help: Id del movimiento a asignar
@@ -3602,6 +3641,16 @@ cli:
       read_evidence_help: Lee la factura adjunta de la transacción en local y aliméntala
         al proponente de división --llm.
       yes_help: Confirma la división de la transacción
+    staged_check_category_help: Categoría de gasto repetible que se contrasta con
+      una clasificación.
+    staged_check_draft_help: 'Objeto JSON repetible para un movimiento nuevo: `key`
+      y `fields`.'
+    staged_check_help: Responde al trabajo preparado del libro como lo tomarían las
+      escrituras, sin guardar nada.
+    staged_check_invalid: Cada fila y borrador preparados deben ser un objeto JSON
+      con la forma esperada.
+    staged_check_row_help: 'Objeto JSON repetible para un movimiento: `transaction_id`,
+      `cells` y, si procede, `evidence_staged` y `m210_staged`.'
     stash:
       help: Apartar un movimiento de tus registros en el perfil activo
       id_help: Id del movimiento a apartar
@@ -3718,7 +3767,7 @@ cli:
         certificate_secret_remove: Elimina el secreto del certificado almacenado.
         certificate_secret_set: Guarda el secreto del certificado en el almacenamiento
           seguro.
-        diagnostics_logs: Mostrar la ruta del log configurada y sus últimas líneas.
+        diagnostics_logs: Mostrar la ruta del registro configurada y sus últimas líneas.
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
           la aplicación.
@@ -3761,7 +3810,7 @@ cli:
           reconstruir
         storage_view: Consulta el detalle de una ubicación de almacenamiento concreta
       root:
-        diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
+        diagnostics_logs: Muestra la ruta del registro y sus últimas líneas.
         diagnostics_overview_verbose: Muestra el estado general con más detalle.
         diagnostics_repair_json: Devuelve en JSON el informe completo de salud local.
         diagnostics_version: Muestra la identidad del paquete instalado.

@@ -185,7 +185,7 @@ profile:
         situacion_inmueble:
           label: Az ingatlan elhelyezkedési státusza
         subclave:
-          label: A jövedelemtétel alkódja (Modelo 184)
+          label: A jövedelemtétel részkódja (Modelo 184)
       attribution_received:
         base_imponible_attributed:
           label: Tagra jutó hozzárendelt adóalap

@@ -4,14 +4,12 @@ An operator addresses their profile by the display label they chose at
 ``profile create`` — the immutable UUIDv4 bucket id is never surfaced to them.
 The in-process active-profile override (written by ``--profile``) is the
 highest-precedence rung of the active-profile precedence chain, and the canonical
-``core.config`` storage-route resolver keys directly on ``buckets/<value>``. Before
-the entrypoint name→UUID normalization, a label-valued override made
-every profile-bound command hard-miss with a "no registered bucket manifest"
-refusal. This module pins the fixed behaviour by driving the REAL CLI root
-callback (the normalization site) against a REAL profile created through the real
-``config profile create`` flow: exactly the operator path that previously
-broke. The fixed contract feeds a UUID into the single canonical route
-resolver after normalizing the operator-facing display label.
+``core.config`` storage-route resolver keys directly on ``buckets/<value>``.
+This module pins the behaviour by driving the REAL CLI root callback (the
+normalization site) against a REAL profile created through the real
+``config profile create`` flow, the path an operator takes. The contract feeds a
+UUID into the single canonical route resolver after normalizing the
+operator-facing display label.
 """
 
 from __future__ import annotations
@@ -89,13 +87,12 @@ def _create_profile_and_resolve_uuid() -> str:
 
 
 def test_env_override_by_display_label_resolves_the_profile_bucket() -> None:
-    """``--profile <label>`` resolves the operator's bucket (the fixed bug).
+    """``--profile <label>`` resolves the operator's bucket.
 
     The real operator path: a fresh resolution whose active profile comes from
     the active-profile override set to the LABEL the operator chose.
-    Before the entrypoint normalization this refused with "no registered bucket
-    manifest at buckets/<label>"; the root callback now normalizes the label to
-    its UUID via the single profile resolver, so a profile-bound command resolves.
+    The root callback normalizes the label to its UUID via the single profile
+    resolver, so a profile-bound command resolves.
     """
     uuid = _create_profile_and_resolve_uuid()
     assert uuid != _LABEL, "the bucket id must be a minted UUID, not the label"
@@ -155,9 +152,9 @@ def _write_second_live_bucket_sharing_label(label: str) -> None:
 
 
 # English rendering of the DEDICATED ambiguity refusal key
-# ``errors.refused.refused_profile_label_ambiguous`` (en.yml:3910). The fix
-# routes BOTH entrypoint resolution sites (the env-override normalizer and the
-# ``--profile`` override) to THIS message.
+# ``errors.refused.refused_profile_label_ambiguous`` (en.yml:3910). BOTH entrypoint
+# resolution sites (the env-override normalizer and the ``--profile`` override)
+# route to THIS message.
 _DEDICATED_AMBIGUITY_FRAGMENT = "Use the profile UUID to disambiguate"
 
 # English rendering of the GENERIC ``cli.config.profile.unknown_profile`` key
@@ -202,10 +199,10 @@ def test_env_override_ambiguous_label_refuses_cleanly_not_traceback() -> None:
     # traceback escaping the catch.
     assert "Traceback" not in combined, combined
     assert "ProfileLabelAmbiguousError" not in combined, combined
-    # The DEDICATED ambiguity key must render (GREEN only after the key swap).
+    # The DEDICATED ambiguity key must render.
     assert _DEDICATED_AMBIGUITY_FRAGMENT in combined, combined
     # The GENERIC unknown-profile phrasing must NOT render — the profile is
-    # ambiguous, not unknown (RED before the key swap).
+    # ambiguous, not unknown.
     assert _GENERIC_UNKNOWN_FRAGMENT not in combined, combined
 
     with (

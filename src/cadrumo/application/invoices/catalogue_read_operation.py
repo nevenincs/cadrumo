@@ -310,9 +310,7 @@ def _definition(
             deadline=OperationDeadline.ABSENT,
             replay=OperationReplayPolicy.IDEMPOTENT_SUBMIT,
             baseline=OperationBaselinePolicy.NONE,
-            request_storage=OperationRequestStoragePolicy.SECURE_REFERENCE
-            if private_request
-            else OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL,
+            request_storage=OperationRequestStoragePolicy.for_private_request(private_request),
             sensitive_input=OperationSensitiveInputPolicy.SECURE_REFERENCE
             if private_request
             else OperationSensitiveInputPolicy.NONE,

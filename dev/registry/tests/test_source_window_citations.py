@@ -14,18 +14,25 @@ that matters under a pile of correct declarations. So there is one tooth per
 role: each test plants a citation of one role and asserts it lands in that role
 and not another.
 
-The registry trees here are constructed. A screen only reachable through the
-live corpus cannot be handed a planted defect, and the live corpus changes under
-a test that asserts counts against it.
+The registries here are constructed and hydrated through the real loader. A
+screen only reachable through the live corpus cannot be handed a planted defect,
+and the live corpus changes under a test that asserts counts against it. They
+are hydrated, not read raw, because a revision authored as a delta cites through
+inheritance what none of its own files state.
 """
 
 from __future__ import annotations
 
+from datetime import date
 from pathlib import Path
+from typing import Final
 
 import pytest
 
-from dev.registry.analysis.source_window_citations import (
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
+from cadrumo.domain.calculations.registry.schema_catalogues import RegistryCatalogues
+
+from ..analysis.source_window_citations import (
     ROLES,
     classify,
     family_stem,
@@ -35,176 +42,318 @@ from dev.registry.analysis.source_window_citations import (
     tally,
     trailing_year,
 )
+from ..compiler.loader import load_catalogue_file, load_modelo_directory
+from ..conformance.loader_directory_mode_support import write_standard_manifest
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
+_LEGAL_REF: Final = "ley-58-2003:art-29"
 
-def build_catalogue(legal: Path, entries: dict[str, tuple[str | None, str | None]]) -> None:
-    """Write one legal catalogue declaring each source's window."""
-    legal.mkdir(parents=True, exist_ok=True)
+#: ``(applies_from, applies_to)`` per planted source; ``None`` leaves that side open.
+type SourceWindows = dict[str, tuple[str | None, str | None]]
+
+
+def build_catalogue(
+    root: Path,
+    sources: SourceWindows | None = None,
+    legal: dict[str, dict[str, str]] | None = None,
+) -> RegistryCatalogues:
+    """Plant one catalogue file and compile it through the real catalogue loader."""
     blocks = []
-    for source_id, (applies_from, applies_to) in entries.items():
-        lines = [f'[sources."{source_id}"]', 'evidence_tier = "layout_authority"']
-        if applies_from is not None and applies_from:
+    for source_id, (applies_from, applies_to) in (sources or {}).items():
+        lines = [
+            f'[sources."{source_id}"]',
+            'evidence_tier = "layout_authority"',
+            'authority = "boe"',
+            'kind = "form_spec"',
+            'corpus_path = "corpus/normatives/pdf/planted.pdf"',
+            f'sha256 = "{"ab" * 32}"',
+            "bytes = 10",
+            "retrieved_at = 2026-06-28",
+            'source_url = "https://www.boe.es/planted.pdf"',
+            'review_status = "pending_review"',
+        ]
+        if applies_from is not None:
             lines.append(f"applies_from = {applies_from}")
-        if applies_to is not None and applies_to:
+        if applies_to is not None:
             lines.append(f"applies_to = {applies_to}")
         blocks.append("\n".join(lines))
-    (legal / "planted.toml").write_text("\n\n".join(blocks) + "\n", encoding="utf-8")
+    for ref_id, fields in (legal or {}).items():
+        lines = [
+            f'[legal."{ref_id}"]',
+            'evidence_tier = "legal_authority"',
+            'authority = "boe"',
+            'kind = "orden"',
+            'corpus_ref = "corpus/normatives/html/planted.html#a1"',
+            'document_id = "BOE-A-2023-17429"',
+            'permalink = "https://www.boe.es/buscar/act.php?id=BOE-A-2023-17429#a1"',
+            'review_status = "agent_reviewed"',
+            "reviewed_at = 2026-06-28",
+            'reviewed_by = "agent-review"',
+            'required_text = ["planted"]',
+        ]
+        lines += [f"{key} = {value}" for key, value in fields.items()]
+        blocks.append("\n".join(lines))
+    root.mkdir(parents=True, exist_ok=True)
+    path = root / "planted.toml"
+    path.write_text("\n\n".join(blocks) + "\n", encoding="utf-8")
+    return load_catalogue_file(path)
 
 
-def build_revision(
-    modelos: Path,
-    *,
-    modelo: str,
+def _listed(refs: list[str]) -> str:
+    return "[" + ", ".join(f'"{ref}"' for ref in refs) + "]"
+
+
+def write_revision(
+    modelo_dir: Path,
     revision: str,
+    *,
     valid_from: str,
     valid_to: str | None,
-    citations: dict[str, str],
+    source_refs: list[str] | None = None,
+    legal_refs: list[str] | None = None,
+    predecessor: str | None = None,
+    deadline_source_refs: list[str] | None = None,
+    deadline_legal_refs: list[str] | None = None,
+    casilla_source_refs: list[str] | None = None,
+    formula_source_refs: list[str] | None = None,
 ) -> None:
-    """Write one revision citing each source from the file path given."""
-    root = modelos / modelo / "revisions" / revision
-    root.mkdir(parents=True, exist_ok=True)
-    body = [f'[revisions."{revision}"]', f"valid_from = {valid_from}"]
-    if valid_to is not None and valid_to:
-        body.append(f"valid_to = {valid_to}")
-    (root / "revision.toml").write_text("\n".join(body) + "\n", encoding="utf-8")
-    by_file: dict[str, list[str]] = {}
-    for source_id, relative in citations.items():
-        by_file.setdefault(relative, []).append(source_id)
-    for relative, source_ids in by_file.items():
-        target = root / relative
-        target.parent.mkdir(parents=True, exist_ok=True)
-        listed = ", ".join(f'"{source_id}"' for source_id in source_ids)
-        existing = target.read_text(encoding="utf-8") if target.exists() else ""
-        target.write_text(existing + f"source_refs = [{listed}]\n", encoding="utf-8")
+    """Write one authored revision; only what it states is in its files, the rest inherits."""
+    root = modelo_dir / "revisions" / revision
+    root.mkdir(parents=True)
+    first, last = int(valid_from[:4]), int((valid_to or valid_from)[:4])
+    years = ", ".join(str(year) for year in range(first, last + 1))
+    lines = [f'[revisions."{revision}"]', f"valid_from = {valid_from}"]
+    if valid_to is not None:
+        lines.append(f"valid_to = {valid_to}")
+    lines.append(f'period_selector = {{ years = [{years}], periods = ["0A"] }}')
+    lines.append(f"legal_refs = {_listed(legal_refs or [_LEGAL_REF])}")
+    lines.append(f"source_refs = {_listed(source_refs or ['aeat-manual'])}")
+    if predecessor is not None:
+        lines.append(f'predecessor = "{predecessor}"')
+    (root / "revision.toml").write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+    sections: dict[str, str] = {}
+    if casilla_source_refs is not None:
+        sections["casillas"] = (
+            f'[[revisions."{revision}".casillas]]\nid = "0001"\nnumber = "1"\nsection = ["liquidacion"]\n'
+            f'data_type = "money"\ncontinuidad_id = "linaje-1"\nlegal_refs = ["{_LEGAL_REF}"]\n'
+            f"source_refs = {_listed(casilla_source_refs)}\n"
+        )
+    if formula_source_refs is not None:
+        sections["formulas"] = (
+            f'[[revisions."{revision}".formulas]]\nid = "modelo-999-a"\ntarget_casilla_id = "0001"\n'
+            f'expression = {{ literal = "0" }}\nlegal_refs = ["{_LEGAL_REF}"]\n'
+            f"source_refs = {_listed(formula_source_refs)}\n"
+        )
+    if deadline_source_refs is not None or deadline_legal_refs is not None:
+        sections["deadline_windows"] = (
+            f'[[revisions."{revision}".deadline_windows]]\nid = "modelo-999-{first}-0a"\nfiling_year = {first}\n'
+            f'period = "{first} 0A"\nperiod_kind = "annual"\nopens_on = {first + 1}-01-01\n'
+            f"closes_on = {first + 1}-01-31\nlegal_refs = {_listed(deadline_legal_refs or [_LEGAL_REF])}\n"
+            f"source_refs = {_listed(deadline_source_refs or ['aeat-manual'])}\n"
+        )
+    for section, text in sections.items():
+        (root / section).mkdir()
+        (root / section / "0001-declarations.toml").write_text(text, encoding="utf-8", newline="\n")
+
+
+def hydrate(modelo_dir: Path) -> ModeloDefinition:
+    """Hydrate the written modelo through the real directory loader."""
+    return load_modelo_directory(modelo_dir)
 
 
 @pytest.fixture
-def tree(tmp_path: Path) -> tuple[Path, Path]:
-    return tmp_path / "legal", tmp_path / "modelos"
+def modelo_dir(tmp_path: Path) -> Path:
+    path = tmp_path / "modelos" / "999"
+    path.mkdir(parents=True)
+    write_standard_manifest(path, "Planted")
+    return path
 
 
 class TestOneToothPerRole:
     """Each role is planted on its own and must classify as itself."""
 
-    def test_a_governing_citation_outside_its_window_is_flagged(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-base-order": ("2023-01-01", None)})
-        build_revision(
-            modelos,
-            modelo="999",
-            revision="2022",
-            valid_from="2022-01-01",
-            valid_to="2022-12-31",
-            citations={"planted-base-order": "revision.toml"},
+    def test_a_governing_citation_outside_its_window_is_flagged(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-base-order": ("2023-01-01", None)})
+        write_revision(
+            modelo_dir, "2022", valid_from="2022-01-01", valid_to="2022-12-31", source_refs=["planted-base-order"]
         )
-        findings, revisions, citations = scan(legal, modelos)
+        findings, revisions, citations = scan([hydrate(modelo_dir)], catalogues)
         assert revisions == 1
         assert citations == 1
         assert [f["role"] for f in findings] == ["governing_non_overlap"]
         assert findings[0]["source"] == "planted-base-order"
+        assert findings[0]["cited_in"] == ["revision#source_refs"]
 
-    def test_an_evolution_record_citing_the_prior_design_is_not_a_defect(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-dr-2022": ("2022-01-01", "2022-12-31")})
-        build_revision(
-            modelos,
-            modelo="999",
-            revision="2023",
-            valid_from="2023-01-01",
-            valid_to="2023-12-31",
-            citations={"planted-dr-2022": "casilla_continuidad_evolutions/0001-carried.toml"},
-        )
-        findings, _, _ = scan(legal, modelos)
-        assert [f["role"] for f in findings] == ["evolution_origin"]
+    def test_an_evolution_record_citing_the_prior_design_is_not_a_defect(self) -> None:
+        assert classify(["casilla_continuidad_evolutions#source_refs"]) == "evolution_origin"
+        assert classify(["identifier_evolutions#source_refs"]) == "evolution_origin"
 
-    def test_a_deadline_window_citing_the_filing_year_calendar_is_not_a_defect(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-calendario-2023": ("2023-01-01", "2023-12-31")})
-        build_revision(
-            modelos,
-            modelo="999",
-            revision="2022",
+    def test_the_families_a_role_names_are_families_of_the_hydrated_revision(self) -> None:
+        # A citation's role is read from the revision attribute that holds it, so
+        # every family a role names must still be one the hydrated revision has.
+        for family in (
+            "casilla_continuidad_evolutions",
+            "identifier_evolutions",
+            "deadline_windows",
+            "filing_schedules",
+            "constructs",
+            "application_links",
+        ):
+            assert family in ModeloRevision.model_fields
+
+    def test_a_deadline_window_citing_the_filing_year_calendar_is_not_a_defect(
+        self, tmp_path: Path, modelo_dir: Path
+    ) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-calendario-2023": ("2023-01-01", "2023-12-31")})
+        write_revision(
+            modelo_dir,
+            "2022",
             valid_from="2022-01-01",
             valid_to="2022-12-31",
-            citations={"planted-calendario-2023": "deadline_windows/0001-windows.toml"},
+            deadline_source_refs=["planted-calendario-2023"],
         )
-        findings, _, _ = scan(legal, modelos)
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["presentation_calendar"]
+        assert findings[0]["cited_in"] == ["deadline_windows#source_refs"]
 
 
 class TestGoverningWins:
     """A source cited in several roles is judged by the strictest one."""
 
-    def test_a_source_cited_both_in_an_evolution_and_in_a_casilla_is_governing(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-dr": ("2024-01-01", "2024-12-31")})
-        root = modelos / "999" / "revisions" / "2023"
-        build_revision(
-            modelos,
-            modelo="999",
-            revision="2023",
+    def test_a_source_cited_both_in_a_deadline_window_and_in_a_casilla_is_governing(
+        self, tmp_path: Path, modelo_dir: Path
+    ) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-dr": ("2024-01-01", "2024-12-31")})
+        write_revision(
+            modelo_dir,
+            "2023",
             valid_from="2023-01-01",
             valid_to="2023-12-31",
-            citations={"planted-dr": "casilla_continuidad_evolutions/0001-carried.toml"},
+            deadline_source_refs=["planted-dr"],
+            casilla_source_refs=["planted-dr"],
         )
-        (root / "casillas").mkdir(parents=True, exist_ok=True)
-        (root / "casillas" / "c01.toml").write_text('source_refs = ["planted-dr"]\n', encoding="utf-8")
-        findings, _, _ = scan(legal, modelos)
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["governing_non_overlap"]
+        assert sorted(findings[0]["cited_in"]) == ["casillas#source_refs", "deadline_windows#source_refs"]
 
     def test_classify_prefers_governing_over_either_by_design_role(self) -> None:
-        assert classify(["casilla_continuidad_evolutions/x.toml", "casillas/c01.toml"]) == ("governing_non_overlap")
-        assert classify(["deadline_windows/x.toml", "revision.toml"]) == "governing_non_overlap"
+        assert classify(["casilla_continuidad_evolutions#source_refs", "casillas#source_refs"]) == (
+            "governing_non_overlap"
+        )
+        assert classify(["deadline_windows#source_refs", "revision#source_refs"]) == "governing_non_overlap"
 
 
 class TestNoFalsePositives:
     """A window that covers its citing revision produces nothing."""
 
-    def test_an_overlapping_window_is_silent(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-ok": ("2022-01-01", None)})
-        build_revision(
-            modelos,
-            modelo="999",
-            revision="2022",
-            valid_from="2022-01-01",
-            valid_to="2022-12-31",
-            citations={"planted-ok": "revision.toml"},
-        )
-        findings, _, citations = scan(legal, modelos)
+    def test_an_overlapping_window_is_silent(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-ok": ("2022-01-01", None)})
+        write_revision(modelo_dir, "2022", valid_from="2022-01-01", valid_to="2022-12-31", source_refs=["planted-ok"])
+        findings, _, citations = scan([hydrate(modelo_dir)], catalogues)
         assert citations == 1
         assert findings == []
 
-    def test_an_undeclared_window_makes_no_claim_to_contradict(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-unwindowed": (None, None)})
-        build_revision(
-            modelos,
-            modelo="999",
-            revision="2022",
-            valid_from="2022-01-01",
-            valid_to="2022-12-31",
-            citations={"planted-unwindowed": "revision.toml"},
+    def test_an_undeclared_window_makes_no_claim_to_contradict(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-unwindowed": (None, None)})
+        write_revision(
+            modelo_dir, "2022", valid_from="2022-01-01", valid_to="2022-12-31", source_refs=["planted-unwindowed"]
         )
-        findings, _, citations = scan(legal, modelos)
+        findings, _, citations = scan([hydrate(modelo_dir)], catalogues)
         assert citations == 0, "a source with no window must not be counted as checked"
         assert findings == []
 
-    def test_an_open_ended_revision_is_covered_by_an_open_ended_source(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-open": ("2020-01-01", None)})
-        build_revision(
-            modelos,
-            modelo="999",
-            revision="2025-y-siguientes",
-            valid_from="2025-01-01",
-            valid_to=None,
-            citations={"planted-open": "revision.toml"},
-        )
-        findings, _, _ = scan(legal, modelos)
+    def test_an_open_ended_revision_is_covered_by_an_open_ended_source(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-open": ("2020-01-01", None)})
+        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to=None, source_refs=["planted-open"])
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert findings == []
+
+
+class TestInheritedCitations:
+    """A revision authored as a delta still stands on what it inherits."""
+
+    def test_a_citation_only_on_the_base_is_judged_against_the_inheriting_revisions_own_window(
+        self, tmp_path: Path, modelo_dir: Path
+    ) -> None:
+        # The base cites a design that covers 2024 and the successor's files say
+        # nothing: it inherits the casilla, and with it the citation.
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-design-2024": ("2024-01-01", "2024-12-31")})
+        write_revision(
+            modelo_dir,
+            "2024",
+            valid_from="2024-01-01",
+            valid_to="2024-12-31",
+            casilla_source_refs=["planted-design-2024"],
+        )
+        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to="2025-12-31", predecessor="2024")
+        modelo = hydrate(modelo_dir)
+        assert modelo.revisions["2025"].casillas[0].source_refs == ("planted-design-2024",)
+
+        findings, revisions, citations = scan([modelo], catalogues)
+
+        assert revisions == 2
+        assert citations == 2, "the base's own citation and the successor's inherited one are both measured"
+        assert [(f["revision"], f["source"], f["role"]) for f in findings] == [
+            ("2025", "planted-design-2024", "governing_non_overlap")
+        ]
+        assert findings[0]["revision_span"] == ["2025-01-01", "2025-12-31"]
+        assert findings[0]["cited_in"] == ["casillas#source_refs"]
+
+    def test_an_inherited_citation_whose_window_covers_the_inheritor_is_silent(
+        self, tmp_path: Path, modelo_dir: Path
+    ) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-design": ("2024-01-01", None)})
+        write_revision(
+            modelo_dir, "2024", valid_from="2024-01-01", valid_to="2024-12-31", casilla_source_refs=["planted-design"]
+        )
+        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to="2025-12-31", predecessor="2024")
+
+        findings, revisions, citations = scan([hydrate(modelo_dir)], catalogues)
+
+        assert (revisions, citations) == (2, 2)
+        assert findings == []
+
+    def test_one_physical_declaration_is_one_finding_per_revision_holding_it(
+        self, tmp_path: Path, modelo_dir: Path
+    ) -> None:
+        # The same casilla row is inherited by two later editions. Each edition
+        # has its own span to cover, so each is reported once; a source also
+        # cited from a second family in one edition is still one finding there,
+        # listing both families.
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-design-2022": ("2022-01-01", "2022-12-31")})
+        write_revision(
+            modelo_dir,
+            "2022",
+            valid_from="2022-01-01",
+            valid_to="2022-12-31",
+            casilla_source_refs=["planted-design-2022"],
+        )
+        write_revision(
+            modelo_dir,
+            "2023",
+            valid_from="2023-01-01",
+            valid_to="2023-12-31",
+            predecessor="2022",
+            formula_source_refs=["planted-design-2022"],
+        )
+        write_revision(modelo_dir, "2024", valid_from="2024-01-01", valid_to="2024-12-31", predecessor="2023")
+
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
+
+        assert [f["revision"] for f in findings] == ["2023", "2024"]
+        by_revision = {f["revision"]: sorted(f["cited_in"]) for f in findings}
+        assert by_revision["2023"] == ["casillas#source_refs", "formulas#source_refs"]
+        assert by_revision["2024"] == ["casillas#source_refs", "formulas#source_refs"]
+
+    def test_only_modelo_selects_by_modelo_id(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"planted-base-order": ("2023-01-01", None)})
+        write_revision(
+            modelo_dir, "2022", valid_from="2022-01-01", valid_to="2022-12-31", source_refs=["planted-base-order"]
+        )
+        modelo = hydrate(modelo_dir)
+        assert scan([modelo], catalogues, only_modelo="123")[1:] == (0, 0)
+        assert len(scan([modelo], catalogues, only_modelo="999")[0]) == 1
 
 
 class TestScreenLine:
@@ -218,81 +367,61 @@ class TestScreenLine:
         assert "revisions=7" in line
         assert "citations=9" in line
 
-    def test_counts_are_per_role(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(
-            legal,
+    def test_counts_are_per_role(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(
+            tmp_path / "legal",
             {
                 "planted-governing": ("2024-01-01", None),
-                "planted-evolution": ("2021-01-01", "2021-12-31"),
                 "planted-calendar": ("2023-01-01", "2023-12-31"),
             },
         )
-        build_revision(
-            modelos,
-            modelo="999",
-            revision="2022",
+        write_revision(
+            modelo_dir,
+            "2022",
             valid_from="2022-01-01",
             valid_to="2022-12-31",
-            citations={
-                "planted-governing": "revision.toml",
-                "planted-evolution": "identifier_evolutions/0001-x.toml",
-                "planted-calendar": "filing_schedules/0001-x.toml",
-            },
+            source_refs=["planted-governing"],
+            deadline_source_refs=["planted-calendar"],
         )
-        findings, revisions, citations = scan(legal, modelos)
+        findings, revisions, citations = scan([hydrate(modelo_dir)], catalogues)
         assert tally(findings) == {
             "governing_non_overlap": 1,
             "legal_window_non_overlap": 0,
             "superseded_alongside_current": 0,
-            "evolution_origin": 1,
+            "evolution_origin": 0,
             "presentation_calendar": 1,
         }
         assert screen_line(findings, revisions, citations) == (
             "source_windows governing_non_overlap=1 legal_window_non_overlap=0 "
-            "superseded_alongside_current=0 evolution_origin=1 presentation_calendar=1 "
-            "revisions=1 citations=3"
+            "superseded_alongside_current=0 evolution_origin=0 presentation_calendar=1 "
+            "revisions=1 citations=2"
         )
 
 
 class TestSupersededAlongsideCurrent:
     """An earlier source cited beside the current one is a hand-off, not a defect."""
 
-    def test_an_earlier_design_cited_beside_a_covering_sibling_is_reclassified(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(
-            legal,
-            {
-                "aeat-dr-190-2024": ("2024-01-01", "2024-12-31"),
-                "aeat-dr-190-2025": ("2025-01-01", None),
-            },
+    def test_an_earlier_design_cited_beside_a_covering_sibling_is_reclassified(
+        self, tmp_path: Path, modelo_dir: Path
+    ) -> None:
+        catalogues = build_catalogue(
+            tmp_path / "legal",
+            {"aeat-dr-190-2024": ("2024-01-01", "2024-12-31"), "aeat-dr-190-2025": ("2025-01-01", None)},
         )
-        build_revision(
-            modelos,
-            modelo="190",
-            revision="2025-y-siguientes",
+        write_revision(
+            modelo_dir,
+            "2025",
             valid_from="2025-01-01",
             valid_to=None,
-            citations={
-                "aeat-dr-190-2024": "revision.toml",
-                "aeat-dr-190-2025": "revision.toml",
-            },
+            source_refs=["aeat-dr-190-2024", "aeat-dr-190-2025"],
         )
-        findings, _, _ = scan(legal, modelos)
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["superseded_alongside_current"]
 
-    def test_an_earlier_design_cited_alone_stays_a_governing_defect(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"aeat-dr-190-2024": ("2024-01-01", "2024-12-31")})
-        build_revision(
-            modelos,
-            modelo="190",
-            revision="2025-y-siguientes",
-            valid_from="2025-01-01",
-            valid_to=None,
-            citations={"aeat-dr-190-2024": "revision.toml"},
-        )
-        findings, _, _ = scan(legal, modelos)
+    def test_an_earlier_design_cited_alone_stays_a_governing_defect(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", {"aeat-dr-190-2024": ("2024-01-01", "2024-12-31")})
+        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to=None, source_refs=["aeat-dr-190-2024"])
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["governing_non_overlap"], (
             "with no covering sibling the revision really does rest on a stale design"
         )
@@ -307,33 +436,33 @@ class TestSupersededAlongsideCurrent:
 class TestSupersessionHasADirection:
     """Only an EARLIER source beside a covering one is superseded."""
 
-    def test_a_later_sibling_beside_covering_earlier_ones_is_not_supersession(self, tree: tuple[Path, Path]) -> None:
+    def test_a_later_sibling_beside_covering_earlier_ones_is_not_supersession(
+        self, tmp_path: Path, modelo_dir: Path
+    ) -> None:
         # Modelo 280's deadline windows cite the calendario of each filing
         # year's PRESENTATION year, so the newest of the three sits outside the
         # revision's span on purpose. Reading that as a hand-off would hide a
         # whole class of forward citation behind a role that means the opposite.
-        legal, modelos = tree
-        build_catalogue(
-            legal,
+        catalogues = build_catalogue(
+            tmp_path / "legal",
             {
                 "aeat-calendario-contribuyente-2023": ("2023-01-01", "2023-12-31"),
                 "aeat-calendario-contribuyente-2024": ("2024-01-01", "2024-12-31"),
                 "aeat-calendario-contribuyente-2025": ("2025-01-01", "2025-12-31"),
             },
         )
-        build_revision(
-            modelos,
-            modelo="280",
-            revision="2022-2024",
+        write_revision(
+            modelo_dir,
+            "2022",
             valid_from="2022-01-01",
             valid_to="2024-12-31",
-            citations={
-                "aeat-calendario-contribuyente-2023": "deadline_windows/0001-w.toml",
-                "aeat-calendario-contribuyente-2024": "deadline_windows/0001-w.toml",
-                "aeat-calendario-contribuyente-2025": "deadline_windows/0001-w.toml",
-            },
+            deadline_source_refs=[
+                "aeat-calendario-contribuyente-2023",
+                "aeat-calendario-contribuyente-2024",
+                "aeat-calendario-contribuyente-2025",
+            ],
         )
-        findings, _, _ = scan(legal, modelos)
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["presentation_calendar"]
         assert findings[0]["source"] == "aeat-calendario-contribuyente-2025"
 
@@ -346,157 +475,84 @@ class TestSupersessionHasADirection:
         assert trailing_year("aeat-modelo-190-procedure") is None
 
 
-def build_legal(legal: Path, entries: dict[str, dict[str, str]]) -> None:
-    """Write one legal catalogue; each entry declares whichever axis it names."""
-    legal.mkdir(parents=True, exist_ok=True)
-    blocks = []
-    for ref_id, fields in entries.items():
-        lines = [f'[legal."{ref_id}"]', 'evidence_tier = "legal_authority"']
-        lines += [f"{key} = {value}" for key, value in fields.items()]
-        blocks.append("\n".join(lines))
-    (legal / "planted-legal.toml").write_text("\n\n".join(blocks) + "\n", encoding="utf-8")
-
-
 class TestLegalWindowRole:
     """Legal references carry a period window too, and it was never checked."""
 
-    def test_a_legal_ref_governing_other_periods_is_flagged(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_legal(
-            legal, {"orden-planted:art-1": {"governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}}
-        )
-        build_revision(
-            modelos,
-            modelo="200",
-            revision="2025-y-siguientes",
-            valid_from="2025-01-01",
-            valid_to=None,
-            citations={"orden-planted:art-1": "revision.toml"},
-        )
-        findings, _, _ = scan(legal, modelos)
-        assert [f["role"] for f in findings] == ["legal_window_non_overlap"]
+    _GOVERNS_2024: Final = {"effective_from": "2025-07-01", "governs_periods_from": "2024-01-01"}
 
-    def test_an_entry_declaring_only_effectiveness_makes_no_period_claim(self, tree: tuple[Path, Path]) -> None:
-        # 719 of 724 legal entries are in this state. effective_from says when the
-        # text came into force; an orden published after the ejercicio it governs
-        # is effective LATER than the periods it reaches. Reading effectiveness as
-        # a period window produced 59 findings, none of them a defect.
-        legal, modelos = tree
-        build_legal(legal, {"orden-planted:art-1": {"effective_from": "2025-07-01"}})
-        build_revision(
-            modelos,
-            modelo="200",
-            revision="2024",
-            valid_from="2024-01-01",
-            valid_to="2024-12-31",
-            citations={"orden-planted:art-1": "revision.toml"},
+    def test_a_legal_ref_governing_other_periods_is_flagged(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(
+            tmp_path / "legal",
+            legal={"orden-planted:art-1": {**self._GOVERNS_2024, "governs_periods_to": "2024-12-31"}},
         )
-        findings, _, citations = scan(legal, modelos)
+        write_revision(modelo_dir, "2025", valid_from="2025-01-01", valid_to=None, legal_refs=["orden-planted:art-1"])
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
+        assert [f["role"] for f in findings] == ["legal_window_non_overlap"]
+        assert findings[0]["source_window"] == ["2024-01-01", "2024-12-31"]
+
+    def test_an_entry_declaring_only_effectiveness_makes_no_period_claim(
+        self, tmp_path: Path, modelo_dir: Path
+    ) -> None:
+        # Most legal entries are in this state. effective_from says when the text
+        # came into force; an orden published after the ejercicio it governs is
+        # effective LATER than the periods it reaches.
+        catalogues = build_catalogue(
+            tmp_path / "legal", legal={"orden-planted:art-1": {"effective_from": "2025-07-01"}}
+        )
+        write_revision(
+            modelo_dir, "2024", valid_from="2024-01-01", valid_to="2024-12-31", legal_refs=["orden-planted:art-1"]
+        )
+        findings, _, citations = scan([hydrate(modelo_dir)], catalogues)
         assert findings == []
         assert citations == 0, "an entry with no period claim is not even counted as checked"
 
-    def test_a_legal_ref_whose_periods_cover_the_revision_is_silent(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_legal(
-            legal, {"orden-planted:art-1": {"governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}}
+    def test_a_legal_ref_whose_periods_cover_the_revision_is_silent(self, tmp_path: Path, modelo_dir: Path) -> None:
+        catalogues = build_catalogue(
+            tmp_path / "legal",
+            legal={"orden-planted:art-1": {**self._GOVERNS_2024, "governs_periods_to": "2024-12-31"}},
         )
-        build_revision(
-            modelos,
-            modelo="200",
-            revision="2024",
-            valid_from="2024-01-01",
-            valid_to="2024-12-31",
-            citations={"orden-planted:art-1": "revision.toml"},
+        write_revision(
+            modelo_dir, "2024", valid_from="2024-01-01", valid_to="2024-12-31", legal_refs=["orden-planted:art-1"]
         )
-        findings, _, _ = scan(legal, modelos)
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert findings == []
 
-    def test_a_legal_role_is_never_reclassified_as_a_source_role(self, tree: tuple[Path, Path]) -> None:
+    def test_a_legal_role_is_never_reclassified_as_a_source_role(self, tmp_path: Path, modelo_dir: Path) -> None:
         # The superseded/evolution/calendar roles describe SOURCE citations; a
-        # legal reference outside its period window is its own finding.
-        legal, modelos = tree
-        build_legal(
-            legal, {"orden-planted:art-1": {"governs_periods_from": "2024-01-01", "governs_periods_to": "2024-12-31"}}
+        # legal reference outside its period window is its own finding, whichever
+        # family cites it.
+        catalogues = build_catalogue(
+            tmp_path / "legal",
+            legal={"orden-planted:art-1": {**self._GOVERNS_2024, "governs_periods_to": "2024-12-31"}},
         )
-        build_revision(
-            modelos,
-            modelo="200",
-            revision="2025",
+        write_revision(
+            modelo_dir,
+            "2025",
             valid_from="2025-01-01",
             valid_to="2025-12-31",
-            citations={"orden-planted:art-1": "deadline_windows/0001-w.toml"},
+            deadline_legal_refs=["orden-planted:art-1"],
         )
-        findings, _, _ = scan(legal, modelos)
+        findings, _, _ = scan([hydrate(modelo_dir)], catalogues)
         assert [f["role"] for f in findings] == ["legal_window_non_overlap"]
+
+    def test_the_governed_window_comes_from_the_hydrated_catalogue_entry(self, tmp_path: Path) -> None:
+        catalogues = build_catalogue(tmp_path / "legal", legal={"orden-planted:art-1": {**self._GOVERNS_2024}})
+        entry = catalogues.legal["orden-planted:art-1"]
+        assert (entry.governs_periods_from, entry.governs_periods_to) == (date(2024, 1, 1), None)
 
 
 class TestConstructsNeedCalendarCorroboration:
     """A construct is an aggregate, not a filing calendar."""
 
-    def test_a_construct_citing_a_source_no_deadline_window_cites_is_governing(self, tree: tuple[Path, Path]) -> None:
+    def test_a_construct_citing_a_source_no_deadline_window_cites_is_governing(self) -> None:
         # Modelo 131's 2024 and 2025 editions name a Sede help page only from
         # constructs. Treating constructs as calendar evidence classified the SAME
         # source two different ways on two editions of one modelo, depending on
-        # which other files happened to cite it.
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-help-page": ("2026-01-01", None)})
-        build_revision(
-            modelos,
-            modelo="131",
-            revision="2024",
-            valid_from="2024-01-01",
-            valid_to="2024-12-31",
-            citations={"planted-help-page": "constructs/0001-constructs.toml"},
-        )
-        findings, _, _ = scan(legal, modelos)
-        assert [f["role"] for f in findings] == ["governing_non_overlap"]
+        # which other families happened to cite it.
+        assert classify(["constructs#source_refs"], calendar_evidence=False) == "governing_non_overlap"
 
-    def test_a_construct_citing_what_a_deadline_window_also_cites_is_calendar(self, tree: tuple[Path, Path]) -> None:
-        legal, modelos = tree
-        build_catalogue(legal, {"planted-calendario-2023": ("2023-01-01", "2023-12-31")})
-        root = modelos / "322" / "revisions" / "2022"
-        build_revision(
-            modelos,
-            modelo="322",
-            revision="2022",
-            valid_from="2022-01-01",
-            valid_to="2022-12-31",
-            citations={"planted-calendario-2023": "deadline_windows/0001-windows.toml"},
-        )
-        (root / "constructs").mkdir(parents=True, exist_ok=True)
-        (root / "constructs" / "0001-constructs.toml").write_text(
-            'source_refs = ["planted-calendario-2023"]\n', encoding="utf-8"
-        )
-        findings, _, _ = scan(legal, modelos)
-        assert [f["role"] for f in findings] == ["presentation_calendar"], (
-            "the construct references the deadline window's own evidence"
-        )
-
-    def test_the_corroboration_is_per_source_not_per_revision(self, tree: tuple[Path, Path]) -> None:
-        # A revision having SOME deadline window must not launder an unrelated
-        # source cited only from constructs.
-        legal, modelos = tree
-        build_catalogue(
-            legal,
-            {
-                "planted-calendario-2023": ("2023-01-01", "2023-12-31"),
-                "planted-help-page": ("2026-01-01", None),
-            },
-        )
-        root = modelos / "131" / "revisions" / "2022"
-        build_revision(
-            modelos,
-            modelo="131",
-            revision="2022",
-            valid_from="2022-01-01",
-            valid_to="2022-12-31",
-            citations={"planted-calendario-2023": "deadline_windows/0001-windows.toml"},
-        )
-        (root / "constructs").mkdir(parents=True, exist_ok=True)
-        (root / "constructs" / "0001-constructs.toml").write_text(
-            'source_refs = ["planted-help-page"]\n', encoding="utf-8"
-        )
-        findings, _, _ = scan(legal, modelos)
-        roles = {f["source"]: f["role"] for f in findings}
-        assert roles["planted-calendario-2023"] == "presentation_calendar"
-        assert roles["planted-help-page"] == "governing_non_overlap"
+    def test_a_construct_citing_what_a_deadline_window_also_cites_is_calendar(self) -> None:
+        assert (
+            classify(["deadline_windows#source_refs", "constructs#source_refs"], calendar_evidence=True)
+            == "presentation_calendar"
+        ), "the construct references the deadline window's own evidence"

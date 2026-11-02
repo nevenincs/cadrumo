@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
+      "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1474,7 +1474,8 @@
           "box": null,
           "withholds_filing": false,
           "fact": null,
-          "element_names": []
+          "element_names": [],
+          "message": null
         }
       ],
       "calculation_notes_held": true,
@@ -1565,12 +1566,12 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-11-01",
+        "reference_on": "2026-11-02",
         "days_remaining": null,
-        "days_overdue": 195
+        "days_overdue": 196
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-11-01T07:57:11.801100Z" },
+      "filing": { "recorded_at": "2026-11-02T01:35:15.579783Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF pagament fraccionat estimació directa",
@@ -1586,9 +1587,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "0cfdbf479b0370dd1d78530f6ba5948664006054c534d2a99409964b9dd23c28",
+      "contract_set_digest": "0919302f638829c8c7bf4483f355b3af7845fdee3860cb70f9508fc4a1bb7c8f",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "073e2a8d43e20d60d4f5c71d2739448725074872eafc33f8b13786f0821f82b9",
+      "definition_contract_digest": "57d9ab030b9861527117df250660488031eb2fc941547097d945db79feb547eb",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1612,7 +1613,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "b552091b3c6b35e5a2693c8dccb54641eb5a8406ba2128d99bfb36cbe07cc5fb"
+        "schema_fingerprint": "c2de1e743c21145b11a0d8d342617f90404b240711fcfadd721600d8163ac565"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1621,9 +1622,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "b08712f7c8020f381b72988e246bdafef303549a517d0877b1eb09d052770a7b",
-    "calculation_head_digest": "919e08ffc0cde70a3f3e2f0dfae91231e70939706f152a796623c1506b519192",
-    "current_calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
+    "work_unit_record_digest": "18288453972b89d0ade4bb6520cb95e9c0c02ff47d22c01839a47583cb261114",
+    "calculation_head_digest": "7967c2ca82e07afae1f098af2cae1ad7f4be857cb24949fefa7fcefd156f9a82",
+    "current_calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1926,9 +1927,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-01T07:57:24.112539Z",
-    "expires_at": "2026-11-01T08:02:24.112539Z",
-    "baseline_id": "a958ea485c9a44e139613f03889de1b4773a28edf925b1dc77a9957c4f5013f6"
+    "issued_at": "2026-11-02T01:35:34.786733Z",
+    "expires_at": "2026-11-02T01:40:34.786733Z",
+    "baseline_id": "00d003b85f9453173984c49d3580de462f0910c840085affe3e526b69542016c"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1937,7 +1938,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-11-01T07:57:11.801100Z",
+    "recorded_at": "2026-11-02T01:35:15.579783Z",
     "file_created_at": null,
     "receipt_to_add": false
   },
@@ -1982,8 +1983,8 @@
     "words": "La comprovació és correcta.",
     "unapplied_words": "El càlcul desat ha superat la comprovació; els teus canvis no s'han aplicat."
   },
-  "calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
-  "verification_report_id": "8d986f7041e31ecce495e9a21e1dd3cff5ec258ecf0f7a6fc79c1dd10d6ea308",
+  "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+  "verification_report_id": "b29ec25dc957c2c55a4728929db4b3c224283a1ee3b764d1e5f96e117f0a9cbe",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -2045,7 +2046,7 @@
     "file_format_words": "Fitxer de l'AEAT amb el disseny de registre BOE d'amplada fixa"
   },
   "receipt": {
-    "recorded_at": "2026-11-01T07:57:11.801100Z",
+    "recorded_at": "2026-11-02T01:35:15.579783Z",
     "verified": true,
     "verified_at": "2026-04-21T09:30:00Z",
     "words": "Justificant de l'AEAT verificat el 21 d’abr. 2026."

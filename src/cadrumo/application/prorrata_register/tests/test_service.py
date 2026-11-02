@@ -20,6 +20,7 @@ from cadrumo.core.secure_object_write import SecureObjectWrite
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
 from cadrumo.domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -99,6 +100,12 @@ class _InMemoryProrrataRegisterRepository:
         validate_entry: Callable[[ProrrataRegisterEntry], None],
     ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
         raise AssertionError("sector settlement is outside these policy tests")
+
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        raise AssertionError("operator gross declarations are outside these policy tests")
 
     def commit_whole_carried_seed(
         self,

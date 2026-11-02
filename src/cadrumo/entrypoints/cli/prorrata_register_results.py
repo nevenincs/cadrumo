@@ -148,23 +148,64 @@ class ProrrataSettleSectorResult(OutputSchema):
     count: int
 
 
+class ProrrataGrossDeclarationPayload(OutputSchema):
+    """One operator-declared gross deducible cuota of an earlier liquidation period.
+
+    The amount is the operator's own statement backed by ``evidence_reference``;
+    it is used by the annual regularisation only for a period whose ledger holds
+    no deducible input.
+    """
+
+    ejercicio: int
+    period: str
+    sector_id: str | None = None
+    gross_cuota: str
+    evidence_reference: str
+    provenance: str
+    declared_at: str
+
+
+class ProrrataDeclareGrossResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger prorrata declare-gross``."""
+
+    bucket_id: BucketId
+    declaration: ProrrataGrossDeclarationPayload
+    count: int
+
+
+class ProrrataRemoveGrossResult(OutputSchema):
+    """JSON envelope for ``aeat app ledger prorrata remove-gross``."""
+
+    bucket_id: BucketId
+    declaration: ProrrataGrossDeclarationPayload
+    count: int
+
+
 class ProrrataListResult(OutputSchema):
-    """JSON envelope for ``aeat app ledger prorrata list``."""
+    """JSON envelope for ``aeat app ledger prorrata list``.
+
+    ``gross_declarations`` are the operator's own earlier-period gross cuota
+    statements; they are not ledger facts or AEAT observations.
+    """
 
     bucket_id: BucketId
     entries: list[ProrrataEntryPayload]
     sectors: list[SectorDefinitionPayload]
+    gross_declarations: list[ProrrataGrossDeclarationPayload]
     count: int
 
 
 __all__ = [
+    "ProrrataDeclareGrossResult",
     "ProrrataDeclareSectorResult",
     "ProrrataElectEspecialResult",
     "ProrrataElectGeneralResult",
     "ProrrataElectResult",
     "ProrrataEntryPayload",
     "ProrrataEspecialTransitionPayload",
+    "ProrrataGrossDeclarationPayload",
     "ProrrataListResult",
+    "ProrrataRemoveGrossResult",
     "ProrrataRevokeEspecialResult",
     "ProrrataSeedFindingPayload",
     "ProrrataSeedResult",

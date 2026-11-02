@@ -27,6 +27,7 @@ See Also:
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -35,6 +36,7 @@ import pytest
 
 from .....core.external_constants import UTF_8_ENCODING
 from .....core.modelo import Modelo
+from .....core.period import Period
 from .....core.prorrata_register import (
     ProrrataActivityRowType,
     ProrrataEspecialTransitionKind,
@@ -49,6 +51,7 @@ from .....domain.prorrata_register.register import (
     PRORRATA_REGISTER_SCHEMA_VERSION,
     ProrrataActivityRow,
     ProrrataEspecialTransitionEvidence,
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     ProrrataRegisterError,
@@ -116,9 +119,25 @@ def _populated_register() -> ProrrataRegister:
         letra=SectorDiferenciadoLetra.from_registry("a"),
         member_activity_codes=("6820",),
     )
+    whole_gross = ProrrataOperatorGrossDeclaration(
+        ejercicio=2024,
+        period=Period.from_year_and_code(2024, "1T"),
+        gross_cuota=Decimal("400.00"),
+        evidence_reference="operator-evidence:303-2024-1T",
+        declared_at=datetime(2024, 11, 4, 9, 30, tzinfo=UTC),
+    )
+    sector_gross = ProrrataOperatorGrossDeclaration(
+        ejercicio=2024,
+        period=Period.from_year_and_code(2024, "2T"),
+        sector_id="arrendamiento",
+        gross_cuota=Decimal("420.15"),
+        evidence_reference="operator-evidence:303-2024-2T-arrendamiento",
+        declared_at=datetime(2024, 11, 4, 9, 45, tzinfo=UTC),
+    )
     return ProrrataRegister(
         entries=(carried_settled, authorised_sector, interrupted),
         sector_definitions=(sector_definition,),
+        gross_declarations=(whole_gross, sector_gross),
     )
 
 
@@ -136,6 +155,51 @@ def _activity_row(*, activity_id: str, slot: int) -> ProrrataActivityRow:
     )
 
 
+def _assert_carried_settled_entry(loaded: ProrrataRegister) -> None:
+    carried = loaded.entries[0]
+    assert carried.regime == ProrrataRegisterRegime.from_registry("general")
+    assert carried.provisional_percentage == Decimal("80")
+    assert carried.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
+    assert carried.source_observation_ref == "303:2023:4T"
+    assert carried.source_registry_snapshot_refs == (_m303_snapshot_ref(2023),)
+    assert carried.definitive_percentage == Decimal("77")
+    assert carried.definitive_volume_con_derecho == Decimal("154000.00")
+    assert carried.definitive_volume_sin_derecho == Decimal("46000.00")
+
+
+def _assert_authorised_sector_entry(loaded: ProrrataRegister) -> None:
+    authorised = loaded.entries[1]
+    assert authorised.regime == ProrrataRegisterRegime.from_registry("especial")
+    assert authorised.sector_id == "arrendamiento"
+    assert authorised.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
+    assert authorised.especial_transition is not None
+    assert authorised.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
+    assert authorised.especial_transition.evidence_reference == "modelo-303-2024-prorrata-opcion"
+    assert loaded.is_sectorized is True
+    sector_definition = loaded.sector_definition_for("arrendamiento")
+    assert sector_definition is not None
+    assert sector_definition.letra == SectorDiferenciadoLetra.from_registry("a")
+    assert sector_definition.member_activity_codes == ("6820",)
+
+
+def _assert_interrupted_and_gross_declarations(loaded: ProrrataRegister) -> None:
+    # The art. 105.Cinco interrupted (sin operaciones) marker crosses the
+    # encrypted boundary: an inactive ejercicio carries no percentage/volume.
+    interrupted = loaded.entry_for(2023)
+    assert interrupted is not None
+    assert interrupted.interrupted is True
+    assert interrupted.provisional_percentage is None
+    assert interrupted.definitive_percentage is None
+    sector_gross = loaded.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id="arrendamiento")
+    assert sector_gross is not None
+    assert sector_gross.gross_cuota == Decimal("420.15")
+    assert sector_gross.evidence_reference == "operator-evidence:303-2024-2T-arrendamiento"
+    assert sector_gross.provenance == "operator_declared"
+    assert sector_gross.declared_at == datetime(2024, 11, 4, 9, 45, tzinfo=UTC)
+    assert loaded.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id=None) is None
+
+
 def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """ProrrataRegister roundtrips through encrypted SQL, field-for-field."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="49a879c9-dab5-473a-a049-15d04aa31404"):
@@ -145,39 +209,13 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         loaded = repo.load()
 
         assert loaded == original
-        carried = loaded.entries[0]
-        assert carried.regime == ProrrataRegisterRegime.from_registry("general")
-        assert carried.provisional_percentage == Decimal("80")
-        assert carried.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
-        assert carried.source_observation_ref == "303:2023:4T"
-        assert carried.source_registry_snapshot_refs == (_m303_snapshot_ref(2023),)
-        assert carried.definitive_percentage == Decimal("77")
-        assert carried.definitive_volume_con_derecho == Decimal("154000.00")
-        assert carried.definitive_volume_sin_derecho == Decimal("46000.00")
-        authorised = loaded.entries[1]
-        assert authorised.regime == ProrrataRegisterRegime.from_registry("especial")
-        assert authorised.sector_id == "arrendamiento"
-        assert authorised.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
-        assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
-        assert authorised.especial_transition is not None
-        assert authorised.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
-        assert authorised.especial_transition.evidence_reference == "modelo-303-2024-prorrata-opcion"
-        assert loaded.is_sectorized is True
-        sector_definition = loaded.sector_definition_for("arrendamiento")
-        assert sector_definition is not None
-        assert sector_definition.letra == SectorDiferenciadoLetra.from_registry("a")
-        assert sector_definition.member_activity_codes == ("6820",)
-        # The art. 105.Cinco interrupted (sin operaciones) marker crosses the
-        # encrypted boundary: an inactive ejercicio carries no percentage/volume.
-        interrupted = loaded.entry_for(2023)
-        assert interrupted is not None
-        assert interrupted.interrupted is True
-        assert interrupted.provisional_percentage is None
-        assert interrupted.definitive_percentage is None
+        _assert_carried_settled_entry(loaded)
+        _assert_authorised_sector_entry(loaded)
+        _assert_interrupted_and_gross_declarations(loaded)
 
 
-def test_register_outer_secure_schema_matches_the_v2_document(tmp_path: Path) -> None:
-    """A real save binds the SQL row and bare document to the same v2 contract."""
+def test_register_outer_v2_row_carries_the_v3_document(tmp_path: Path) -> None:
+    """A real save keeps the v2 secure-object row and writes the v3 register document."""
     import json as _json
 
     from sqlalchemy import select
@@ -209,7 +247,58 @@ def test_register_outer_secure_schema_matches_the_v2_document(tmp_path: Path) ->
             )
 
         document = _json.loads(plaintext.decode(UTF_8_ENCODING))
-        assert document["schema_version"] == PRORRATA_REGISTER_SCHEMA_VERSION == "2"
+        assert document["schema_version"] == PRORRATA_REGISTER_SCHEMA_VERSION == "3"
+        assert {entry["schema_version"] for entry in document["entries"]} == {"3"}
+        assert len(document["gross_declarations"]) == 2
+
+
+def test_register_v2_document_reads_unchanged_and_resaves_as_v3(tmp_path: Path) -> None:
+    """A durable v2 document, which predates operator gross declarations, loads and re-persists as v3."""
+    import json as _json
+
+    from sqlalchemy import select
+
+    from ...storage.crypto.encrypted_columns import decrypt_secure_object_payload, secure_object_payload_aad
+    from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE
+    from ...storage.sql.orm import SecureObjectRow
+    from ...storage.sql.session import session_scope
+
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="0c1f8a52-6b0e-4f7e-9d43-5e2a7c91b3d8") as profile:
+        engine = get_engine(profile.settings)
+        repo = ProrrataRegisterRepository()
+        written = _populated_register()
+        repo.save(written)
+        stmt = select(SecureObjectRow).where(
+            SecureObjectRow.namespace == PROFILE_PRORRATA_REGISTER_NAMESPACE.namespace,
+            SecureObjectRow.object_key == PROFILE_PRORRATA_REGISTER_NAMESPACE.require_default_object_key(),
+        )
+
+        def as_v2(document):
+            document["schema_version"] = "2"
+            for entry in document["entries"]:
+                entry["schema_version"] = "2"
+            del document["gross_declarations"]
+
+        mutate_encrypted_secure_object_json(engine, row_statement=stmt, mutate=as_v2)
+
+        legacy = repo.load()
+        assert legacy.schema_version == "3"
+        assert legacy.gross_declarations == ()
+        assert legacy.entries == written.entries
+        assert legacy.sector_definitions == written.sector_definitions
+
+        repo.save(legacy)
+        assert repo.load() == legacy
+        with session_scope(engine) as session:
+            row = session.execute(stmt).scalar_one()
+            plaintext = decrypt_secure_object_payload(
+                bytes(row.payload),
+                associated_data=secure_object_payload_aad(row.namespace, bytes(row.object_key), row.schema_version),
+            )
+        document = _json.loads(plaintext.decode(UTF_8_ENCODING))
+        assert document["schema_version"] == "3"
+        assert {entry["schema_version"] for entry in document["entries"]} == {"3"}
+        assert document["gross_declarations"] == []
 
 
 def test_register_outer_v1_row_refuses_without_a_tolerant_read(tmp_path: Path) -> None:
@@ -390,7 +479,7 @@ def test_register_missing_regime_surfaces_at_load(tmp_path: Path) -> None:
 
 
 def test_register_v1_document_refuses_at_encrypted_load(tmp_path: Path) -> None:
-    """A v1 durable document is not upgraded or silently re-persisted as v2."""
+    """A v1 durable document is not upgraded or silently re-persisted as v3."""
     from sqlalchemy import select
 
     from ...storage.secure_object_namespaces import PROFILE_PRORRATA_REGISTER_NAMESPACE

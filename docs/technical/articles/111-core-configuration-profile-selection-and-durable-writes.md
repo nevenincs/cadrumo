@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-111` · **Topic:** [Core authority and shared controls](../topics/core-authority-and-shared-controls.md)
+**Topic:** [Core authority and shared controls](../topics/core-authority-and-shared-controls.md)
 
 <!-- preserved:article -->
 ## Scope and method

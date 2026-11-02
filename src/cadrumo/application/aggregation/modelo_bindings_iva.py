@@ -55,6 +55,8 @@ from .iva_ledger import (
     IvaLedgerAggregationIssue,
     IvaLedgerAggregationIssueReason,
     IvaLedgerProrrataApportionment,
+    IvaLedgerRowDateSource,
+    IvaLedgerSettlementApportionment,
     aggregate_iva_ledger_observations_from_repositories,
 )
 from .iva_ledger_apportionment import resolve_iva_ledger_binding_values
@@ -96,6 +98,7 @@ _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.MISSING_DEDUCTION_CLASSIFICATION,
         IvaLedgerAggregationIssueReason.INADMISSIBLE_DEDUCTION_CLASSIFICATION,
         IvaLedgerAggregationIssueReason.CUOTA_ON_ZERO_RATED_ROW,
+        IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
         IvaLedgerAggregationIssueReason.NON_ZERO_RATE_ON_ZERO_CUOTA_CATEGORY,
         IvaLedgerAggregationIssueReason.NON_ARISING_CATEGORY_FOR_INVOICE_SIDE,
         IvaLedgerAggregationIssueReason.MISSING_COUNTERPARTY_IDENTIFICATION_STATE,
@@ -120,7 +123,10 @@ _IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
 
 def _selected_scope_iva_evidence_message(issue: IvaLedgerAggregationIssue) -> str:
     marker = f"selected-scope IVA evidence failure: {issue.reason.value}"
-    if issue.reason in _IVA_SELECTED_SCOPE_DETAILED_REASONS:
+    # A row dated by its bank movement carries the sentence too: without it the
+    # marker blames the rate when the missing fact may be the operation date.
+    movement_dated = issue.operation_date_source not in (None, IvaLedgerRowDateSource.OPERATION_DATE)
+    if issue.reason in _IVA_SELECTED_SCOPE_DETAILED_REASONS or movement_dated:
         return f"{marker}: {issue.detail}"
     return marker
 
@@ -152,7 +158,7 @@ def _residue_categories(observations: Sequence[IvaLedgerObservation]) -> str:
     the domestic tiers while import and the two reverse-charge categories carry it
     undrawn. Reporting only the fact would tell an operator that base is missing
     without saying where, which is the reading that makes a partially-closed gap
-    look wholly open (or, once the domestic half landed, wholly closed).
+    look wholly open.
 
     Naming the categories is what makes the residue attributable: it states which
     set is still open, so a later reader can tell a genuine remainder from a
@@ -182,8 +188,16 @@ class LedgerIvaAggregationSourceResolver:
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         investment_asset_register: BienesInversionIvaRegister | None = None,
         investment_asset_profile_id: str | None = None,
+        settlement: IvaLedgerSettlementApportionment | None = None,
     ) -> None:
-        """Bind repositories used to resolve IVA ledger sources."""
+        """Bind repositories used to resolve IVA ledger sources.
+
+        ``settlement`` carries the year's definitive prorrata percentages for
+        the annual settlement liquidation once they are derivable. A
+        sectorized apportionment takes it only when it settles every declared
+        sector.
+        """
+        self._settlement = settlement
         self._transaction_repository = transaction_repository
         self._invoice_catalogue_read_ports = invoice_catalogue_read_ports
         self._prorrata_register_repository = prorrata_register_repository
@@ -217,6 +231,7 @@ class LedgerIvaAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
+            aggregation = _with_settlement_apportionment(aggregation, self._settlement)
             transaction_ids = {observation.ledger_id for observation in aggregation.observations}
             transaction_ids.update(reference.transaction_id for reference in aggregation.prorrata_references)
             binding_values = resolve_iva_ledger_binding_values(
@@ -403,6 +418,28 @@ def _present_unroutable_iva_categories(
     )
 
 
+def _with_settlement_apportionment(
+    aggregation: IvaLedgerAggregation,
+    settlement: IvaLedgerSettlementApportionment | None,
+) -> IvaLedgerAggregation:
+    """Attach the settlement percentages when they cover the apportionment's declared sectors.
+
+    A sectorized apportionment is settled only when the settlement names
+    exactly its declared sectors; otherwise the settlement liquidation keeps
+    its provisional percentages and the regularisation box reports the
+    unsettled sector.
+    """
+    apportionment = aggregation.prorrata_apportionment
+    if settlement is None or apportionment is None:
+        return aggregation
+    declared = {sector.sector_id for sector in apportionment.sector_apportionments}
+    if {item.sector_id for item in settlement.sector_percentages} != declared:
+        return aggregation
+    return aggregation.model_copy(
+        update={"prorrata_apportionment": apportionment.model_copy(update={"settlement": settlement})}
+    )
+
+
 def _iva_prorrata_apportionment_provenance(
     revision: ModeloRevision,
     period: Period,
@@ -437,6 +474,13 @@ def _iva_prorrata_apportionment_source_ref(
     )
     if apportionment.source_observation_ref is not None:
         source_ref = f"{source_ref}:source-observation:{apportionment.source_observation_ref}"
+    if apportionment.settlement is not None:
+        source_ref = (
+            f"{source_ref}:settlement:{apportionment.settlement.period.registry_token}:"
+            f"definitive:{apportionment.settlement.percentage}"
+        )
+        for sector in apportionment.settlement.sector_percentages:
+            source_ref = f"{source_ref}:sector:{sector.sector_id}:definitive:{sector.percentage}"
     return source_ref
 
 

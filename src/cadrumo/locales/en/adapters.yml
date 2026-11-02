@@ -281,8 +281,8 @@ adapters:
       parse_failed: Failed to parse the AEAT declarations response; the page structure
         may have changed.
       playwright_alert_modal_failed: Continuing the AEAT alert modal failed.
-      playwright_buscar_click_failed: Clicking the Buscar (Search) button on the AEAT
-        electronic office page failed.
+      playwright_buscar_click_failed: Clicking the `Buscar` (Search) button on the
+        AEAT electronic office page failed.
       playwright_combobox_open_failed: Opening the AEAT drop-down list failed.
       playwright_combobox_select_failed: Selecting an option from the AEAT drop-down
         list failed.

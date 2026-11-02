@@ -54,7 +54,7 @@ from .config import load_settings
 from .decimal.grammar import (
     DecimalSeparator,
     DecimalSeparatorValue,
-    european_thousands_reading_is_ambiguous,
+    decimal_separator_proved_by,
 )
 from .errors.hierarchy import CoreValidationError
 from .external_constants import CSV_ENCODING_FALLBACK_CHAIN
@@ -511,17 +511,7 @@ def _decimal_evidence(cell: str) -> DecimalSeparatorValue | None:
     condensed = _numeric_body(cell)
     if condensed is None:
         return None
-    has_comma = "," in condensed
-    has_dot = "." in condensed
-    if has_comma and has_dot:
-        return DecimalSeparator.COMMA if condensed.rfind(",") > condensed.rfind(".") else DecimalSeparator.PERIOD
-    if has_comma:
-        return DecimalSeparator.COMMA
-    if has_dot:
-        # ``1.234`` reads both ways with nothing in it to choose by, so it is
-        # not evidence of anything. Everything else with a dot is a decimal.
-        return None if european_thousands_reading_is_ambiguous(condensed) else DecimalSeparator.PERIOD
-    return None
+    return decimal_separator_proved_by(condensed)
 
 
 def _detect_decimal_separator(

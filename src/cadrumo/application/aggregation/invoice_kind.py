@@ -2,11 +2,7 @@
 
 Every ledger surface that needs to know whether a bank movement represents an
 invoice the taxpayer *issued* or one they *received* asks this module, so the
-answer is decided once. Three private copies of the mapping previously lived in
-:mod:`~application.aggregation.iva_ledger`,
-:mod:`~application.aggregation.evidence_advisory` and
-:mod:`~application.modelo._ledger_evidence_gate`, byte-identical and
-independently maintained.
+answer is decided once.
 
 Home
 ----
@@ -25,9 +21,7 @@ A known limit, stated rather than hidden
 The mapping is a function of direction ALONE, and that is not sufficient for
 every real row. A supplier refund or credit note on a returned purchase is an
 ``INCOMING`` movement, so it resolves here to ``ISSUED`` and is settled as
-output IVA, where the correct treatment corrects input IVA. Consolidating the
-three copies does NOT fix that; it makes the fix land in one place instead of
-three.
+output IVA, where the correct treatment corrects input IVA.
 
 The reason the fix is not simply "consult the purchase-evidence id here" is that
 ``InvoiceKind`` cannot express the answer. It is a two-member unsigned axis, and

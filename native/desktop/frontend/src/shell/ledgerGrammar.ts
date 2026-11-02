@@ -2,12 +2,22 @@
 // through, before it is staged. It follows the product's own: a dot decimal
 // with no grouping, no exponent and no sign, refused rather than guessed when
 // it could be read two ways. A refusal is a key and the raw text, never a
-// sentence: the page says it in the person's language.
+// sentence: the page says it in the person's language. How the text is written
+// is judged here; every limit on what it may say is served by the backend, and
+// with none served a typed value is refused as not yet checkable.
 
-import { isTwoWayDecimal } from "../shared/numbers";
 import type { PublicPeriod } from "./ledger";
+import {
+  LEDGER_PERIOD_SPANS,
+  MONTH_CODES,
+  QUARTER_CODES,
+  type LedgerPeriodCode,
+} from "./ledgerContract";
+import { ledgerLimits } from "./ledgerLimits";
+import type { LedgerEntryLimits } from "./ledgerSetup";
 
 export type GrammarRefusalKey =
+  | "limits_unavailable"
   | "too_long"
   | "signed"
   | "exponent"
@@ -24,11 +34,9 @@ export type GrammarRefusalKey =
   | "date_not_in_calendar"
   | "not_a_date"
   | "year_not_a_number"
-  | "year_out_of_range"
   | "period_unknown"
   | "line_break"
   | "not_an_iban"
-  | "iban_check"
   | "not_a_bic"
   | "not_a_country"
   | "not_a_currency";
@@ -57,8 +65,6 @@ const refuse = <T>(
 ): Parsed<T> => ({ kind: "refused", refusal: { key, raw, ...extra } });
 const value = <T>(found: T): Parsed<T> => ({ kind: "value", value: found });
 
-/** The longest decimal text the product's contracts take. */
-const DECIMAL_TEXT_MAX = 128;
 const PLAIN = /^\d+(\.\d+)?$/;
 
 // ---- Exact decimal arithmetic over canonical text ------------------------
@@ -131,16 +137,36 @@ export function shiftDecimal(text: string, places: number): string | null {
 
 // ---- Numbers --------------------------------------------------------------
 
-/** How many fraction digits a field takes and whether zero is a value. */
-export type DecimalRule = { decimals: number; zero: boolean };
-/** A movement's amount: a magnitude above zero, to the cent. */
-export const AMOUNT_RULE: DecimalRule = { decimals: 2, zero: false };
-/** A taxable base, an IVA or recargo amount: to the cent, zero allowed. */
-export const TAX_AMOUNT_RULE: DecimalRule = { decimals: 2, zero: true };
-/** An invoice line's quantity: above zero, up to six decimals. */
-export const QUANTITY_RULE: DecimalRule = { decimals: 6, zero: false };
-/** An invoice line's unit price: up to six decimals. */
-export const UNIT_PRICE_RULE: DecimalRule = { decimals: 6, zero: true };
+/** A kind of figure the backend serves a rule for, or a rule served by a field
+ * itself: how many fraction digits it takes and whether zero is a value. */
+export type DecimalRule =
+  | LedgerEntryLimits["decimal_rules"][number]["rule"]
+  | typeof PERCENT_POINTS_RULE
+  | { decimals: number; zero: boolean };
+/** A movement's amount. */
+export const AMOUNT_RULE = "amount";
+/** A taxable base, an IVA or recargo amount. */
+export const TAX_AMOUNT_RULE = "tax_amount";
+/** An invoice line's quantity. */
+export const QUANTITY_RULE = "quantity";
+/** An invoice line's unit price. */
+export const UNIT_PRICE_RULE = "unit_price";
+/** A percentage in points: its served decimals, and zero is a value. */
+export const PERCENT_POINTS_RULE = "percent_points";
+
+function ruleOf(
+  rule: DecimalRule,
+  limits: LedgerEntryLimits,
+): { decimals: number; zero: boolean } | null {
+  if (typeof rule !== "string") return rule;
+  if (rule === PERCENT_POINTS_RULE)
+    return { decimals: limits.percent_decimals, zero: true };
+  return limits.decimal_rules.find((found) => found.rule === rule) ?? null;
+}
+
+/** Whether plain text has the shape the backend reads two ways. */
+const twoWay = (limits: LedgerEntryLimits, text: string) =>
+  new RegExp(limits.two_way_decimal).test(text);
 
 /** Why text that is not a plain decimal was refused, and what it most
  * likely meant where one reading is certain. */
@@ -189,13 +215,16 @@ function shapeRefusal(text: string, raw: string): Parsed<string> {
 }
 
 /** A decimal in the canonical grammar, as its canonical text. */
-export function parseDecimal(raw: string, rule: DecimalRule): Parsed<string> {
+export function parseDecimal(raw: string, asked: DecimalRule): Parsed<string> {
   const text = raw.trim();
   if (text === "") return { kind: "empty" };
-  if (text.length > DECIMAL_TEXT_MAX)
-    return refuse("too_long", raw, { limit: DECIMAL_TEXT_MAX });
+  const limits = ledgerLimits();
+  const rule = limits && ruleOf(asked, limits);
+  if (!limits || !rule) return refuse("limits_unavailable", raw);
+  if (text.length > limits.decimal_text_max)
+    return refuse("too_long", raw, { limit: limits.decimal_text_max });
   if (!PLAIN.test(text)) return shapeRefusal(text, raw);
-  if (isTwoWayDecimal(text)) return refuse("ambiguous_grouping", raw);
+  if (twoWay(limits, text)) return refuse("ambiguous_grouping", raw);
   const decimals = text.split(".")[1]?.length ?? 0;
   if (decimals > rule.decimals)
     return refuse("too_many_decimals", raw, { limit: rule.decimals });
@@ -205,10 +234,6 @@ export function parseDecimal(raw: string, rule: DecimalRule): Parsed<string> {
 }
 
 export const parseAmount = (raw: string) => parseDecimal(raw, AMOUNT_RULE);
-
-/** The most decimals a percentage takes: a governed rate such as 1.75% or
- * 5.2% has two at most, a usage ratio a little more. */
-export const PERCENT_DECIMALS = 4;
 
 /**
  * One grammar for every percentage: an IVA rate, a business share, a usage
@@ -223,8 +248,10 @@ export function parsePercent(raw: string): Parsed<string> {
   if (explicit) text = text.replace(/\s*%$/, "");
   if (text === "")
     return explicit ? refuse("not_a_number", raw) : { kind: "empty" };
-  if (text.length > DECIMAL_TEXT_MAX)
-    return refuse("too_long", raw, { limit: DECIMAL_TEXT_MAX });
+  const limits = ledgerLimits();
+  if (!limits) return refuse("limits_unavailable", raw);
+  if (text.length > limits.decimal_text_max)
+    return refuse("too_long", raw, { limit: limits.decimal_text_max });
   if (!PLAIN.test(text)) {
     if (/^\d+,\d+$/.test(text))
       return refuse("comma_decimal", raw, {
@@ -233,13 +260,14 @@ export function parsePercent(raw: string): Parsed<string> {
     return shapeRefusal(text, raw);
   }
   const decimals = text.split(".")[1]?.length ?? 0;
-  if (decimals > PERCENT_DECIMALS)
-    return refuse("too_many_decimals", raw, { limit: PERCENT_DECIMALS });
-  if (compareDecimal(text, "100") > 0) return refuse("percent_above_100", raw);
+  if (decimals > limits.percent_decimals)
+    return refuse("too_many_decimals", raw, { limit: limits.percent_decimals });
+  if (compareDecimal(text, limits.percent_points_max) > 0)
+    return refuse("percent_above_100", raw);
   if (
     !explicit &&
     compareDecimal(text, "0") > 0 &&
-    compareDecimal(text, "1") < 0
+    compareDecimal(text, limits.percent_bare_fraction_ceiling) < 0
   )
     return refuse("percent_as_fraction", raw, {
       suggestion: shiftDecimal(text, 2)!,
@@ -253,12 +281,15 @@ export function parsePercent(raw: string): Parsed<string> {
 export function parseFractionPercent(raw: string): Parsed<string> {
   const text = raw.trim();
   if (text === "") return { kind: "empty" };
-  if (isTwoWayDecimal(text)) return refuse("ambiguous_grouping", raw);
+  const limits = ledgerLimits();
+  if (!limits) return refuse("limits_unavailable", raw);
+  if (twoWay(limits, text.replace(/^-/, "")))
+    return refuse("ambiguous_grouping", raw);
   if (!PLAIN.test(text)) return parsePercent(raw);
   const canonical = canonicalDecimal(text)!;
-  if ((canonical.split(".")[1]?.length ?? 0) > PERCENT_DECIMALS + 2)
-    return refuse("too_many_decimals", raw, { limit: PERCENT_DECIMALS });
-  if (compareDecimal(canonical, "1") > 0)
+  if ((canonical.split(".")[1]?.length ?? 0) > limits.percent_decimals + 2)
+    return refuse("too_many_decimals", raw, { limit: limits.percent_decimals });
+  if (compareDecimal(canonical, limits.percent_fraction_max) > 0)
     return refuse("percent_above_100", raw);
   return value(canonical);
 }
@@ -337,62 +368,41 @@ export function parseIsoDate(raw: string): Parsed<string> {
 // ---- Single-line text -------------------------------------------------------
 
 /** A one-line text such as a description or a counterparty. Tabs and line
- * breaks are refused rather than flattened. */
-export function parseLine(raw: string, max = Infinity): Parsed<string> {
+ * breaks are refused rather than flattened. `max` is a limit the backend
+ * served, or null where it has served none, which refuses what is typed as
+ * not yet checkable; leave it out for a text with no bound. */
+export function parseLine(raw: string, max?: number | null): Parsed<string> {
   if (/[\t\r\n]/.test(raw)) return refuse("line_break", raw);
   const text = raw.trim();
   if (text === "") return { kind: "empty" };
-  if (text.length > max) return refuse("too_long", raw, { limit: max });
+  if (max === null) return refuse("limits_unavailable", raw);
+  if (max !== undefined && text.length > max)
+    return refuse("too_long", raw, { limit: max });
   return value(text);
 }
 
 // ---- Periods ---------------------------------------------------------------
 
-/** The filing years the product's period grammar admits. */
-export const LEDGER_YEAR_MIN = 1980;
-export const LEDGER_YEAR_MAX = 2200;
-export const QUARTER_CODES = ["1T", "2T", "3T", "4T"] as const;
-export const MONTH_CODES = [
-  "01",
-  "02",
-  "03",
-  "04",
-  "05",
-  "06",
-  "07",
-  "08",
-  "09",
-  "10",
-  "11",
-  "12",
-] as const;
-export type LedgerPeriodCode =
-  "0A" | (typeof QUARTER_CODES)[number] | (typeof MONTH_CODES)[number];
+export { MONTH_CODES, QUARTER_CODES, type LedgerPeriodCode };
 /** A filing period: the whole year, a quarter or a month of it. */
 export type LedgerPeriod = { year: number; code: LedgerPeriodCode };
 export type PeriodGranularity = "year" | "quarter" | "month";
 
-export function isPeriodCode(code: string): code is LedgerPeriodCode {
-  return (
-    code === "0A" ||
-    (QUARTER_CODES as readonly string[]).includes(code) ||
-    (MONTH_CODES as readonly string[]).includes(code)
-  );
-}
+export const isPeriodCode = (code: string): code is LedgerPeriodCode =>
+  Object.hasOwn(LEDGER_PERIOD_SPANS, code);
+/** Whether a number is written as a year is: four digits. Which years exist is
+ * the registry's, and no limit on them is held here. */
 export const yearAdmitted = (year: number) =>
-  Number.isInteger(year) && year >= LEDGER_YEAR_MIN && year <= LEDGER_YEAR_MAX;
+  Number.isInteger(year) && String(year).length === 4 && year > 0;
 
 /** A typed filing year. */
 export function parseYear(raw: string): Parsed<number> {
   const text = raw.trim();
   if (text === "") return { kind: "empty" };
-  if (!/^\d{4}$/.test(text)) return refuse("year_not_a_number", raw);
   const year = Number(text);
-  return yearAdmitted(year)
+  return /^\d{4}$/.test(text) && yearAdmitted(year)
     ? value(year)
-    : refuse("year_out_of_range", raw, {
-        limit: year < LEDGER_YEAR_MIN ? LEDGER_YEAR_MIN : LEDGER_YEAR_MAX,
-      });
+    : refuse("year_not_a_number", raw);
 }
 
 /** A typed period token: `0A`, `1T` to `4T` or `01` to `12`. */
@@ -404,12 +414,11 @@ export function parsePeriodCode(raw: string): Parsed<LedgerPeriodCode> {
   return refuse("period_unknown", raw);
 }
 
-export function periodGranularity(code: LedgerPeriodCode): PeriodGranularity {
-  return code === "0A" ? "year" : code.endsWith("T") ? "quarter" : "month";
-}
+export const periodGranularity = (code: LedgerPeriodCode): PeriodGranularity =>
+  LEDGER_PERIOD_SPANS[code].granularity;
 
 /** The period `by` steps of its own size away, across year ends: the
- * quarter before 1T 2026 is 4T 2025. Null outside the admitted years. */
+ * quarter before 1T 2026 is 4T 2025. Null where no year can be written. */
 export function stepPeriod(
   period: LedgerPeriod,
   by: number,
@@ -432,13 +441,13 @@ export function stepPeriod(
   return yearAdmitted(year) ? { year, code } : null;
 }
 
-/** A year field's stepper: by one or by ten, held within the admitted
- * years. */
+/** A year field's stepper: by one or by ten, staying put where the step would
+ * leave a year that can be written. */
 export function stepYear(year: number, by: number): number {
-  return Math.min(LEDGER_YEAR_MAX, Math.max(LEDGER_YEAR_MIN, year + by));
+  return yearAdmitted(year + by) ? year + by : year;
 }
 
-/** The years of `year`'s decade that the grammar admits. */
+/** The years of `year`'s decade that can be written. */
 export function decadeYears(year: number): number[] {
   const first = Math.floor(year / 10) * 10;
   return Array.from({ length: 10 }, (_, at) => first + at).filter(yearAdmitted);
@@ -446,15 +455,7 @@ export function decadeYears(year: number): number[] {
 
 /** The first and last day of a period. */
 export function periodSpan(period: LedgerPeriod): { from: string; to: string } {
-  const granularity = periodGranularity(period.code);
-  const first =
-    granularity === "year"
-      ? 1
-      : granularity === "quarter"
-        ? (Number(period.code[0]) - 1) * 3 + 1
-        : Number(period.code);
-  const last =
-    granularity === "year" ? 12 : granularity === "quarter" ? first + 2 : first;
+  const { first, last } = LEDGER_PERIOD_SPANS[period.code];
   const lastDay = new Date(Date.UTC(2000, last, 0));
   lastDay.setUTCFullYear(period.year, last, 0);
   return {

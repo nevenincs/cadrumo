@@ -12,7 +12,7 @@ from textual.widgets import Button, Static
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.operation_controller import OperationController
-from cadrumo_client.transport.operation_reads import read_operation as read_operation
+from cadrumo_client.transport.operation_reads import read_operation
 
 from ...application.export.calculation_review_xlsx_operation import (
     CALCULATION_REVIEW_XLSX_OPERATION_DEFINITION_ID,

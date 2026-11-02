@@ -222,7 +222,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".ledger_read_commands", "ledger_track", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".ledger_results", "LedgerTrackResult", __package__),
+            target=DeferredTarget(".ledger_participation_results", "LedgerTrackResult", __package__),
             identity="ledger.track",
         ),
     ),

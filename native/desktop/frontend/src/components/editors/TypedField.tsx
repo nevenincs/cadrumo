@@ -67,11 +67,19 @@ export function TypedField({
   switch (field.kind) {
     case "text":
       return (
-        <TextEditor {...editor} mono={field.mono} maxLength={field.maxLength} />
+        <TextEditor
+          {...editor}
+          mono={field.mono}
+          maxLength={field.maxLength ?? undefined}
+        />
       );
     case "notes":
       return (
-        <NotesEditor {...common} onBlur={blur} maxLength={field.maxLength} />
+        <NotesEditor
+          {...common}
+          onBlur={blur}
+          maxLength={field.maxLength ?? undefined}
+        />
       );
     case "date":
       return (

@@ -134,7 +134,7 @@ def test_calendar_autonomo_without_declared_regime_shows_range_intersecting_m130
         date(2026, 4, 20),
         date(2026, 7, 20),
         date(2026, 10, 20),
-        date(2027, 1, 30),
+        date(2027, 2, 1),
     ]
     # The business-day-adjusted close is never earlier than the legal close.
     for entry in m130_entries:

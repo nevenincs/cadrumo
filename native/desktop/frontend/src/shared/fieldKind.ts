@@ -15,10 +15,11 @@ export type FieldKind =
   | "currency"
   | "choice";
 
-/** A field's kind with what that kind must be told. */
+/** A field's kind with what that kind must be told. A `maxLength` of null
+ * is a limit the owner has not served: what is typed is not yet checkable. */
 export type FieldSpec =
-  | { kind: "text"; mono?: boolean; maxLength?: number }
-  | { kind: "notes"; maxLength?: number }
+  | { kind: "text"; mono?: boolean; maxLength?: number | null }
+  | { kind: "notes"; maxLength?: number | null }
   | { kind: "date"; min?: string; max?: string }
   | { kind: "year" }
   | { kind: "money"; decimals?: number; zero?: boolean; currency?: string }

@@ -69,10 +69,7 @@ class CalendarEvidenceReadOutcome[SourcesT]:
 
     def __post_init__(self) -> None:
         """Keep source values consistent with their declared availability."""
-        observable = self.state.availability in {
-            HomeAvailability.AVAILABLE,
-            HomeAvailability.STALE,
-        }
+        observable = self.state.availability.is_observable
         if observable and self.value is None:
             raise ValueError("an available or stale evidence read requires its loaded source bundle")
         if not observable and self.value is not None:
@@ -160,14 +157,14 @@ def _mask_unobservable_axes(
 ) -> OverviewCalendarFilingEvidence:
     """Prevent one unavailable axis from erasing or overstating the other."""
     updates: dict[str, object] = {}
-    if local_state.availability not in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}:
+    if not local_state.availability.is_observable:
         updates.update(
             local_filing_state=OverviewLocalFilingState.NOT_READY_TO_FILE,
             local_filing_record_id=None,
             local_calculation_revision_id=None,
             local_filed_at=None,
         )
-    if aeat_state.availability not in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}:
+    if not aeat_state.availability.is_observable:
         updates.update(
             aeat_submission_state=OverviewAeatSubmissionState.NOT_OBSERVED,
             aeat_submitted_at=None,

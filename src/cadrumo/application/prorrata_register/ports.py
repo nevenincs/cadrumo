@@ -17,6 +17,7 @@ from typing import Protocol, override
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import (
+    ProrrataOperatorGrossDeclaration,
     ProrrataRegister,
     ProrrataRegisterEntry,
     SectorDefinition,
@@ -56,6 +57,13 @@ class ProrrataRegisterServiceRepositoryProtocol(ProrrataRegisterRepositoryProtoc
         validate_entry: Callable[[ProrrataRegisterEntry], None],
     ) -> tuple[ProrrataRegister, ProrrataRegisterEntry]:
         """Derive definitive sector values from each current CAS candidate."""
+        ...
+
+    def rewrite_gross_declarations(
+        self,
+        rewrite: Callable[[ProrrataRegister], tuple[ProrrataOperatorGrossDeclaration, ...]],
+    ) -> ProrrataRegister:
+        """Replace the gross declarations derived from each current CAS candidate."""
         ...
 
     @override

@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-135` · **Topic:** [Tax calculation domain](../topics/tax-calculation-domain.md)
+**Topic:** [Tax calculation domain](../topics/tax-calculation-domain.md)
 
 <!-- preserved:article -->
 ## Scope and method

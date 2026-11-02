@@ -30,7 +30,12 @@ import {
   evaluatedWord,
   type CalendarState,
 } from "../shell/calendar";
-import { entryKey, STATE_ORDER } from "../shell/calendarEntries";
+import {
+  closeUnknown,
+  compareListedEntries,
+  entryKey,
+  STATE_ORDER,
+} from "../shell/calendarEntries";
 import { factsGap, listed } from "../shell/compose";
 import { useMetric } from "../shell/metrics";
 import { useStrings } from "../shell/strings";
@@ -577,12 +582,13 @@ export function FilingCalendarView({
         entries: CalendarEntry[];
         events: CalendarEvent[];
         ahead: number;
+        behind: number;
       }
     >();
+    // A close that is not known is listed in the month of its earliest
+    // close, after the month's known closes: a steady place, not a date.
     for (const entry of [...(calendar?.entries ?? [])].sort(
-      (a, b) =>
-        a.adjusted_closes_on.localeCompare(b.adjusted_closes_on) ||
-        a.modelo.localeCompare(b.modelo),
+      compareListedEntries,
     )) {
       const key = entry.adjusted_closes_on.slice(0, 7);
       const group = groups.get(key) ?? {
@@ -590,11 +596,15 @@ export function FilingCalendarView({
         entries: [],
         events: [],
         ahead: 0,
+        behind: 0,
       };
-      // How many of the month's obligations bind on or after the day the
-      // product evaluated: they are listed last, being sorted by date.
+      // How many of the month's known closes fall before the day the
+      // product evaluated: they are listed first, being sorted by date.
+      // What is ahead of it is what closes on or after that day; a close
+      // that is not known is ahead only where even its earliest close is.
       if (evaluatedOn !== null && entry.adjusted_closes_on >= evaluatedOn)
         group.ahead += 1;
+      else if (evaluatedOn !== null && !closeUnknown(entry)) group.behind += 1;
       group.entries.push(entry);
       groups.set(key, group);
     }
@@ -609,6 +619,7 @@ export function FilingCalendarView({
         entries: [],
         events: [],
         ahead: 0,
+        behind: 0,
       };
       group.events.push(event);
       groups.set(key, group);
@@ -681,12 +692,10 @@ export function FilingCalendarView({
       <div className="calendar-list @container">
         {months.map(([key, month]) => (
           <section key={key} aria-labelledby={`${heading}-${key}`}>
-            {/* Before the month's heading where the whole month is ahead. */}
-            {today &&
-              key === turning &&
-              month.ahead === month.entries.length && (
-                <CalendarTodayMarker on={today} today={here} locale={locale} />
-              )}
+            {/* Before the month's heading where nothing of it is behind. */}
+            {today && key === turning && month.behind === 0 && (
+              <CalendarTodayMarker on={today} today={here} locale={locale} />
+            )}
             <h2
               id={`${heading}-${key}`}
               className={cn(
@@ -698,10 +707,10 @@ export function FilingCalendarView({
             </h2>
             {/* Within the month where today falls between its dates: the
                 month is then two lists with the mark between them. */}
-            {(today && key === turning && month.ahead < month.entries.length
+            {(today && key === turning && month.behind > 0
               ? [
-                  month.entries.slice(0, month.entries.length - month.ahead),
-                  month.entries.slice(month.entries.length - month.ahead),
+                  month.entries.slice(0, month.behind),
+                  month.entries.slice(month.behind),
                 ]
               : [month.entries]
             ).map((entries, part) => (

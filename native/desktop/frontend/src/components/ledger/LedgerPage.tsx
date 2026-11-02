@@ -62,6 +62,7 @@ import {
 } from "./ledgerWords";
 import { DocumentsSection } from "./documents/DocumentsSection";
 import { InvoicesSection } from "./invoices/InvoicesSection";
+import { useLedgerLimits } from "../../shell/ledgerLimits";
 import { LedgerSuggestions } from "./suggestions/SuggestionsProvider";
 import type { EditorTarget } from "./invoices/InvoiceEditor";
 import { MovementsSection } from "./movements/MovementsSection";
@@ -164,6 +165,8 @@ export function LedgerPage({
   onFloor?(width: number | null): void;
 }) {
   const t = useStrings();
+  // What was typed before the limits arrived is read again when they do.
+  useLedgerLimits();
   const panel = useId();
   const today = localDay();
   const [period, setPeriodNow] = useState<LedgerPeriod | null>(() =>

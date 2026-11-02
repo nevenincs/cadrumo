@@ -1,3 +1,8 @@
+import {
+  isRuleClassification,
+  RULE_CLASSIFICATIONS,
+  ruleNamesCategory,
+} from "../../../shell/ledgerContract";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
@@ -18,23 +23,23 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
+import { useLedgerLimits } from "../../../shell/ledgerLimits";
+import { useRuleTrial } from "../../../shell/ledgerRuleTrial";
 import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
 import type { StageEvent } from "../../../shell/ledgerStage";
-import { SPENDING_CATEGORY_FAMILIES } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   categoryLabel,
   categoryOption,
   classificationLabel,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import { descriptionWords, listOptions } from "../suggestions/setupSuggestions";
 import { EditorField } from "./EditorField";
 import { CallLine, ChoiceField, useSetupRead } from "./SetupParts";
 import {
-  patternHits,
-  patternMatcher,
-  patternMatches,
   patternWords,
   priorityAt,
   ruleOrder,
@@ -45,13 +50,6 @@ import {
   type SetupCall,
 } from "./setupModel";
 import { ruleName } from "./setupWords";
-
-/** What a rule decides: a classification for the business, or none. */
-export const RULE_CLASSIFICATIONS = [
-  "BUSINESS",
-  "PERSONAL",
-  "SKIPPED_BY_RULE",
-] as const;
 
 /** Where the dialog opens from: a selection or a group, a stored rule, or
  * nothing. */
@@ -87,10 +85,7 @@ function firstValues(
     expression: "",
     advanced: false,
     classification:
-      prefill.classification &&
-      (RULE_CLASSIFICATIONS as readonly string[]).includes(
-        prefill.classification,
-      )
+      prefill.classification && isRuleClassification(prefill.classification)
         ? prefill.classification
         : "",
     category: prefill.categoryId ?? "",
@@ -171,17 +166,37 @@ export function RuleDialog({
   const [saved, setSaved] = useState<SetupCall<unknown> | null>(null);
 
   const pattern = advanced ? expression.trim() : wordsPattern(words);
-  const patternBroken = advanced && pattern !== "" && !patternMatcher(pattern);
-  const hits = rows && pattern ? patternHits(pattern, rows) : null;
-  const matches = rows && pattern ? patternMatches(pattern, rows) : null;
+  const trial = useRuleTrial(port, pattern, rows);
+  const answered = trial.kind === "answer" && pattern !== "";
+  const limits = useLedgerLimits();
+  const refusedOutcome = answered ? trial.result.outcome : null;
+  const patternRefusal =
+    refusedOutcome === "invalid_pattern"
+      ? t("desktop.ledger.rules.expression_unread")
+      : refusedOutcome === "overrun"
+        ? t("desktop.ledger.rules.expression_overrun")
+        : refusedOutcome === "too_long"
+          ? limits
+            ? t("desktop.ledger.rules.expression_too_long", {
+                max: limits.rule_pattern_max,
+              })
+            : t("desktop.ledger.rules.expression_unread")
+          : null;
+  const found =
+    answered && rows && trial.result.outcome === "matched"
+      ? trial.result
+      : null;
+  const hits = found?.hits ?? null;
+  const matches = found?.pending ?? null;
+  const vocabulary = useVocabulary();
   const categories = useMemo<ComboboxOption[]>(
     () => [
       { value: "", label: t("desktop.ledger.rules.no_category") },
-      ...SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+      ...vocabulary.categoryFamilies.flatMap(([family, members]) =>
         members.map((member) => categoryOption(t, family, member)),
       ),
     ],
-    [t],
+    [t, vocabulary],
   );
   const priority = priorityAt(ordered, position);
   const changesRule =
@@ -189,7 +204,7 @@ export function RuleDialog({
     (pattern !== target.rule.description_pattern ||
       classification !== target.rule.classification ||
       (category || null) !== target.rule.category_id);
-  const takesCategory = classification === "BUSINESS";
+  const takesCategory = ruleNamesCategory(classification);
   const { hold, held } = useWritePause();
   // A save the page settles after this dialog closed says nothing here.
   const mounted = useRef(true);
@@ -203,7 +218,8 @@ export function RuleDialog({
     held === null &&
     rules !== null &&
     pattern !== "" &&
-    !patternBroken &&
+    answered &&
+    trial.result.outcome === "matched" &&
     classification !== "" &&
     priority !== null &&
     !saving;
@@ -320,11 +336,7 @@ export function RuleDialog({
             <EditorField
               label={t("desktop.ledger.rules.expression")}
               hint={t("desktop.ledger.rules.expression_hint")}
-              error={
-                patternBroken
-                  ? t("desktop.ledger.rules.expression_unread")
-                  : null
-              }
+              error={patternRefusal}
             >
               {(control) => (
                 <TextEditor
@@ -342,6 +354,7 @@ export function RuleDialog({
             <EditorField
               label={t("desktop.ledger.rules.words")}
               hint={t("desktop.ledger.rules.words_hint")}
+              error={patternRefusal}
             >
               {(control) => (
                 <TextEditor
@@ -377,7 +390,12 @@ export function RuleDialog({
                 label={t("desktop.ledger.rules.category")}
                 value={takesCategory ? category : ""}
                 options={categories}
-                emptyLabel={t("desktop.ledger.classify.no_category_match")}
+                emptyLabel={vocabularyEmpty(
+                  t,
+                  vocabulary,
+                  t("desktop.ledger.classify.no_category_match"),
+                  vocabulary.categories.length,
+                )}
                 placeholder={t("desktop.ledger.classify.search_category")}
                 onCommit={(value) => setCategory(value)}
               >
@@ -439,6 +457,19 @@ export function RuleDialog({
               </Label>
             </span>
           </div>
+          {trial.kind === "failed" && pattern !== "" && (
+            <Alert
+              tone="warning"
+              role="alert"
+              icon={<Icon name="unknown" />}
+              className="ledger-rule-trial-failed"
+            >
+              <span>{t("desktop.ledger.rules.trial_failed")}</span>{" "}
+              <Button variant="ghost" onClick={trial.retry}>
+                {t("desktop.ledger.rules.trial_retry")}
+              </Button>
+            </Alert>
+          )}
           <CallLine call={saved} refusal={refusal} />
         </div>
         <DialogFooter>

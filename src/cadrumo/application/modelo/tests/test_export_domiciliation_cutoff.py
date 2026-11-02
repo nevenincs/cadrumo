@@ -7,7 +7,11 @@ from pathlib import Path
 
 import pytest
 
-from ....core.errors.error_codes import get_registered_error_code
+from ....core.errors.error_codes import (
+    build_error_envelope,
+    get_registered_error_code,
+    resolve_error_message,
+)
 from ....core.payment_election import PaymentElection
 from ....core.period import Period
 from ....core.result_disposition import ResultDisposition
@@ -24,17 +28,29 @@ _CLOCK = datetime(2026, 1, 1, tzinfo=UTC)
 _BUCKET_ID = "6e84e19e-58f8-4241-b2d1-6ab9bcc3dd7b"
 
 
-# Modelo 303 2026 monthly period 01 declares payment_cutoff_on 2026-02-25; the
-# 2026 quarterly 1T window declares none. Clocks are UTC; the gate compares the
-# Europe/Madrid civil date (UTC+1 in February).
+# Modelo 303 2026 monthly period 01 authors payment_cutoff_on 2026-02-25. The 2026
+# quarterly 3T window authors none, and the rule derives Thursday 15 October 2026:
+# the Anexo II day of Orden EHA/1658/2009 for the third quarter, a business day in
+# Madrid that leaves Friday 16, Monday 19 and Tuesday 20 before the close. The 4T
+# window closes in February 2027, whose días inhábiles are unpublished, so its
+# cutoff is unknown. Clocks are UTC; the gate compares the Europe/Madrid civil
+# date (UTC+1 in February, UTC+2 in October, UTC+1 in January).
 @pytest.mark.parametrize(
     ("period_code", "exported_at", "expected"),
     (
         ("01", datetime(2026, 2, 25, 22, 59, tzinfo=UTC), "admitted"),
         ("01", datetime(2026, 2, 25, 23, 0, tzinfo=UTC), "refused"),
-        ("1T", datetime(2026, 7, 1, 12, 0, tzinfo=UTC), "advisory"),
+        ("3T", datetime(2026, 10, 15, 21, 59, tzinfo=UTC), "admitted"),
+        ("3T", datetime(2026, 10, 15, 22, 0, tzinfo=UTC), "refused"),
+        ("4T", datetime(2027, 1, 10, 12, 0, tzinfo=UTC), "advisory"),
     ),
-    ids=("on-the-madrid-cutoff-day", "after-the-madrid-cutoff-day", "no-declared-cutoff"),
+    ids=(
+        "on-the-authored-madrid-cutoff-day",
+        "after-the-authored-madrid-cutoff-day",
+        "on-the-derived-madrid-cutoff-day",
+        "after-the-derived-madrid-cutoff-day",
+        "unavailable-cutoff",
+    ),
 )
 def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
     period_code: str,
@@ -42,7 +58,7 @@ def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
     expected: str,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """U closes on the registry's payment_cutoff_on; an undeclared cutoff advises instead of refusing."""
+    """U closes on the authored or derived cutoff alike; an unavailable cutoff advises instead of refusing."""
     period = Period.from_year_and_code(2026, period_code)
     snapshot = operation.snapshot("303", filing_year=period.filing_year, period=period.registry_token)
     work_unit = WorkUnit(
@@ -83,13 +99,44 @@ def test_domiciliation_is_refused_after_the_window_payment_cutoff_in_madrid(
         with pytest.raises(ModeloDomiciliationPastCutoffError) as refused:
             gate(ResultDisposition.DOMICILIACION)
         assert get_registered_error_code(refused.value).code == "REFUSED_MODELO_DOMICILIATION_PAST_CUTOFF"
-        assert refused.value.context == {
+        expected_context = {
             "calculation_revision_id": "a" * 64,
             "modelo": "303",
             "filing_year": "2026",
-            "period": "01",
-            "payment_cutoff_on": "2026-02-25",
-            "export_on": "2026-02-26",
+            "period": period_code,
         }
+        if period_code == "01":
+            expected_context |= {
+                "payment_cutoff_on": "2026-02-25",
+                "payment_cutoff_source": "authored",
+                "payment_cutoff_legal_refs": "rd-1624-1992:art-71",
+                "export_on": "2026-02-26",
+            }
+        else:
+            expected_context |= {
+                "payment_cutoff_on": "2026-10-15",
+                "payment_cutoff_source": "derived",
+                "export_on": "2026-10-16",
+                "payment_cutoff_rule": (
+                    "domiciliation-cutoff-clause:303:quarterly:1t-3t, domiciliation-procedure:aeat-practice-2026"
+                ),
+                "payment_cutoff_legal_refs": (
+                    "orden-eha-1658-2009:anexo-ii, rd-1624-1992:art-71, "
+                    "orden-eha-1658-2009:art-3, orden-hac-241-2025:art-2"
+                ),
+            }
+        assert refused.value.context == expected_context
+        envelope = build_error_envelope(refused.value)
+        assert envelope.context is not None
+        assert dict(envelope.context) == expected_context
+        message = resolve_error_message(refused.value, locale="en")
+        assert f"closed on {expected_context['payment_cutoff_on']}" in message
+        assert str(expected_context["payment_cutoff_legal_refs"]) in message
+        if period_code == "01":
+            assert "the filing window itself sets" in message
+            assert "derived" not in message
+        else:
+            assert "derived from the direct-debit rule" in message
+            assert str(expected_context["payment_cutoff_rule"]) in message
     else:
         assert gate(ResultDisposition.DOMICILIACION) is (expected == "advisory")

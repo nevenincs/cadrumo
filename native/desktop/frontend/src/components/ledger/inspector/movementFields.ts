@@ -7,7 +7,9 @@
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { Suggestion } from "@/components/ui/suggestions";
 import type { LedgerRow } from "../../../shell/ledger";
+import { takesChanges } from "../../../shell/ledgerContract";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
+import { textLimit } from "../../../shell/ledgerLimits";
 import {
   effectiveFacts,
   storedFieldValue,
@@ -33,6 +35,7 @@ import {
   valueText,
 } from "../editing/editingWords";
 import { accountLabel } from "../movements/movementWords";
+import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type {
   FieldControl,
   FieldEditor,
@@ -51,17 +54,6 @@ import {
  * classification facts the grid has no column for. */
 export type FieldKind = EditKind | "country" | "token" | "currency";
 
-const TAX_FIELDS: ReadonlySet<StageField> = new Set([
-  "category_id",
-  "iva_category",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "irpf_category",
-  "deduction_fact_kind",
-  "investment_asset_id",
-  "counterparty_identification_state",
-]);
 const CONTROL_OF: Partial<Record<FieldKind, FieldControl>> = {
   date: "date",
   amount: "money",
@@ -114,7 +106,12 @@ export type FieldScope = {
   changes: StagedRowChanges | undefined;
   /** A finalized declaration cites the movement. */
   sealed: boolean;
+  /** What the ledger answers cannot change on the movement as staged; null
+   * until it has answered about this movement. */
+  transferLocked: readonly string[] | null;
   accounts: readonly OwnAccountChoice[] | null;
+  /** The registry's lists, once served; empty until then. */
+  vocabulary: ServedVocabulary;
   onStage: (event: StageEvent) => void;
 };
 
@@ -130,16 +127,13 @@ export type InspectorFieldProps = {
 
 /** Why `field` cannot change on the movement, or null. */
 export function fieldLock(scope: FieldScope, field: StageField): string | null {
-  const { t, row, changes, sealed } = scope;
+  const { t, row, sealed, transferLocked } = scope;
   const state = row.transaction.lifecycle_state;
-  if (state !== "ACTIVE")
+  if (!takesChanges(state))
     return lockText(t, { kind: "not_active", lifecycle: state });
   if (sealed) return lockText(t, { kind: "sealed" });
-  if (
-    TAX_FIELDS.has(field) &&
-    effectiveFacts(row, changes).direction === "INTERNAL_TRANSFER"
-  )
-    return lockText(t, { kind: "transfer" });
+  if (transferLocked === null) return t("desktop.ledger.apply.reading");
+  if (transferLocked.includes(field)) return lockText(t, { kind: "transfer" });
   return null;
 }
 
@@ -210,7 +204,7 @@ export function stagedField(
   kind: FieldKind,
   onPick?: (picked: Suggestion) => void,
 ): InspectorFieldProps {
-  const { t, row, changes, accounts, onStage } = scope;
+  const { t, row, changes, accounts, vocabulary, onStage } = scope;
   const id = row.transaction.transaction_id;
   const stored = storedFieldValue(row, field);
   const facts = effectiveFacts(row, changes);
@@ -235,13 +229,13 @@ export function stagedField(
       editor = choice(directionOptions(t));
       break;
     case "category":
-      editor = choice(categoryOptions(t), clear);
+      editor = choice(categoryOptions(t, vocabulary), clear);
       break;
     case "iva_category":
-      editor = choice(ivaCategoryOptions(t), clear);
+      editor = choice(ivaCategoryOptions(t, vocabulary), clear);
       break;
     case "irpf_category":
-      editor = choice(irpfCategoryOptions(t), clear);
+      editor = choice(irpfCategoryOptions(t, vocabulary), clear);
       break;
     case "account":
       editor = choice(
@@ -250,7 +244,7 @@ export function stagedField(
       );
       break;
     default: {
-      const labels = choiceLabels(t, accounts);
+      const labels = choiceLabels(t, accounts, vocabulary);
       const parse = (raw: string): FieldParse => {
         const text = raw.trim();
         if (text === "") {
@@ -271,17 +265,24 @@ export function stagedField(
                     : t("desktop.ledger.inspector.refused.currency"),
               };
         }
-        if (kind === "token")
-          return text.length <= 128
+        if (kind === "token") {
+          const most = textLimit("classify_token");
+          if (most === null)
+            return {
+              kind: "refused",
+              message: refusalText(t, { key: "limits_unavailable", raw }),
+            };
+          return text.length <= most
             ? { kind: "value", value: text }
             : {
                 kind: "refused",
                 message: refusalText(t, {
                   key: "too_long",
                   raw,
-                  limit: 128,
+                  limit: most,
                 }),
               };
+        }
         const parsed = parseEntry(kind, field, raw, labels);
         if (parsed.kind === "refused")
           return {

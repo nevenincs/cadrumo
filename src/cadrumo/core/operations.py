@@ -76,6 +76,11 @@ class OperationTerminalCondition(StrEnum):
     INTERRUPTED = "interrupted"
 
 
+TERMINAL_CONDITIONS_WITH_ERROR_DETAIL: frozenset[OperationTerminalCondition] = frozenset(
+    {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}
+)
+
+
 class OperationEffect(StrEnum):
     """Authoritative extent of committed effect, independent of terminal condition."""
 
@@ -83,6 +88,13 @@ class OperationEffect(StrEnum):
     UPDATED = "updated"
     PARTIAL = "partial"
     UNKNOWN = "unknown"
+
+    @classmethod
+    def of_confirmed_writes(cls, *, wrote: bool, incomplete: bool) -> OperationEffect:
+        """Extent of an operation with no uncertain write: partial when earlier writes stand but work is incomplete."""
+        if not wrote:
+            return cls.NONE
+        return cls.PARTIAL if incomplete else cls.UPDATED
 
 
 EFFECTS_WITHOUT_PARTIAL_COMMIT: frozenset[OperationEffect] = frozenset(
@@ -102,6 +114,12 @@ using this set. See
 :mod:`cadrumo.application.live.filed_history_operation`, whose replay
 operation returns :attr:`OperationEffect.PARTIAL` when some sub-operations
 fail, for the contrasting case."""
+
+
+EFFECTS_OF_A_SUCCEEDED_RECEIPT: frozenset[OperationEffect] = EFFECTS_WITHOUT_PARTIAL_COMMIT - {OperationEffect.UNKNOWN}
+"""Effects a ``SUCCEEDED`` receipt may carry when the result it releases is only valid
+for a settled outcome: nothing changed, or everything applied, never an ambiguous or
+partial extent."""
 
 
 class OperationDurability(StrEnum):

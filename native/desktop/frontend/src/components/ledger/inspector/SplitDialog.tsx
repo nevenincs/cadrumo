@@ -18,28 +18,41 @@ import { IconButton } from "@/components/ui/icon-button";
 import { Label } from "@/components/ui/label";
 import { NativeSelect } from "@/components/ui/native-select";
 import type { LedgerRow } from "../../../shell/ledger";
+import {
+  DECIDED_CLASSIFICATIONS,
+  isBusinessBearing,
+  splitPartNeedsCategory,
+  takesBusinessShare,
+} from "../../../shell/ledgerContract";
 import { parseFractionPercent } from "../../../shell/ledgerGrammar";
 import type {
   SplitPartClassification,
   StageEvent,
 } from "../../../shell/ledgerStage";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { useStrings } from "../../../shell/strings";
 import { refusalText } from "../editing/editingWords";
-import { categoryLabel, classificationLabel } from "../movements/movementWords";
 import {
-  SPLIT_PARTS_MAX,
+  categoryLabel,
+  classificationLabel,
+  vocabularyEmpty,
+} from "../movements/movementWords";
+import {
   checkSplit,
   splitRemainder,
   type SplitProblem,
 } from "./inspectorModel";
 import { categoryOptions } from "./inspectorWords";
-import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  useFieldSuggestions,
+  useVocabulary,
+} from "../suggestions/SuggestionsProvider";
 import { formatAmount } from "../../../shared/numbers";
 
 type Part = {
   amount: string;
   description: string;
-  classification: "" | "BUSINESS" | "PERSONAL" | "MIXED";
+  classification: "" | (typeof DECIDED_CLASSIFICATIONS)[number];
   category: string | null;
   share: string;
 };
@@ -71,11 +84,15 @@ export function SplitDialog({
   say: (text: string) => void;
 }) {
   const t = useStrings();
+  const mostParts = useTextLimit("split_parts");
+  const longestDescription = useTextLimit("split_part_description");
+  const reasonLimit = useTextLimit("event_payload_value");
   const reasonId = useId();
   const partId = useId();
   const tx = row.transaction;
   // A part's words: the movement's own first, then the ledger's.
   const described = useFieldSuggestions("description");
+  const vocabulary = useVocabulary();
   const partWords = useMemo(
     () =>
       described.suggestions && [
@@ -108,9 +125,11 @@ export function SplitDialog({
   };
   const problemText = (found: SplitProblem): string => {
     switch (found.kind) {
+      case "limits_unavailable":
+        return refusalText(t, { key: "limits_unavailable", raw: "" });
       case "count":
         return t("desktop.ledger.inspector.split.count", {
-          max: SPLIT_PARTS_MAX,
+          max: mostParts ?? "",
         });
       case "amount":
         return t("desktop.ledger.inspector.split.amount", {
@@ -119,6 +138,11 @@ export function SplitDialog({
       case "description":
         return t("desktop.ledger.inspector.split.description_needed", {
           part: found.index + 1,
+        });
+      case "description_long":
+        return t("desktop.ledger.inspector.split.description_long", {
+          part: found.index + 1,
+          max: found.max,
         });
       case "duplicate":
         return t("desktop.ledger.inspector.split.duplicate", {
@@ -154,7 +178,7 @@ export function SplitDialog({
         continue;
       }
       let share: string | null = null;
-      if (part.classification === "MIXED") {
+      if (takesBusinessShare(part.classification)) {
         const parsed = parseFractionPercent(part.share);
         if (parsed.kind !== "value") {
           setProblem(
@@ -168,7 +192,7 @@ export function SplitDialog({
         }
         share = parsed.value;
       }
-      if (part.classification === "BUSINESS" && part.category === null) {
+      if (splitPartNeedsCategory(part.classification) && !part.category) {
         setProblem(
           t("desktop.ledger.inspector.split.category_needed", { part: at + 1 }),
         );
@@ -176,7 +200,7 @@ export function SplitDialog({
       }
       classes.push({
         classification: part.classification,
-        ...(part.category && part.classification !== "PERSONAL"
+        ...(part.category && isBusinessBearing(part.classification)
           ? { category_id: part.category }
           : {}),
         ...(share ? { business_pct: share } : {}),
@@ -273,7 +297,7 @@ export function SplitDialog({
                       id={`${partId}-${at}-description`}
                       controlSize="sm"
                       className="ledger-split-description"
-                      maxLength={4096}
+                      maxLength={longestDescription ?? undefined}
                       value={part.description}
                       onChange={(description) => update(at, { description })}
                       suggestions={partWords}
@@ -316,24 +340,26 @@ export function SplitDialog({
                       <option value="">
                         {t("desktop.ledger.inspector.split.unclassified")}
                       </option>
-                      {(["BUSINESS", "PERSONAL", "MIXED"] as const).map(
-                        (value) => (
-                          <option key={value} value={value}>
-                            {classificationLabel(t, value)}
-                          </option>
-                        ),
-                      )}
+                      {DECIDED_CLASSIFICATIONS.map((value) => (
+                        <option key={value} value={value}>
+                          {classificationLabel(t, value)}
+                        </option>
+                      ))}
                     </NativeSelect>
                   </label>
-                  {(part.classification === "BUSINESS" ||
-                    part.classification === "MIXED") && (
+                  {isBusinessBearing(part.classification) && (
                     <Combobox
                       label={t("desktop.ledger.inspector.split.part_category", {
                         part: at + 1,
                       })}
                       value={part.category}
-                      options={categoryOptions(t)}
-                      emptyLabel={t("desktop.ledger.inspector.no_match")}
+                      options={categoryOptions(t, vocabulary)}
+                      emptyLabel={vocabularyEmpty(
+                        t,
+                        vocabulary,
+                        t("desktop.ledger.inspector.no_match"),
+                        vocabulary.categories.length,
+                      )}
                       onCommit={(chosen) => update(at, { category: chosen })}
                     >
                       <Button variant="outline" size="sm">
@@ -344,7 +370,7 @@ export function SplitDialog({
                       </Button>
                     </Combobox>
                   )}
-                  {part.classification === "MIXED" && (
+                  {takesBusinessShare(part.classification) && (
                     <div className="grid w-fit gap-0.5 text-sm">
                       <Label
                         htmlFor={`${partId}-${at}-share`}
@@ -372,7 +398,7 @@ export function SplitDialog({
             variant="outline"
             size="sm"
             className="w-fit"
-            disabled={parts.length >= SPLIT_PARTS_MAX}
+            disabled={mostParts === null || parts.length >= mostParts}
             onClick={() => {
               setProblem(null);
               setParts((held) => [
@@ -391,7 +417,7 @@ export function SplitDialog({
             </label>
             <TextEditor
               id={reasonId}
-              maxLength={500}
+              maxLength={reasonLimit ?? undefined}
               value={reason}
               onChange={setReason}
             />

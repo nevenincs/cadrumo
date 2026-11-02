@@ -7,13 +7,12 @@ create`` → ``work calculate`` (with real registry bindings) → ``work verify`
 whose verify gate genuinely refuses without clean cross-period evidence, so the
 terminal ``@result`` frame exercises a real declared non-zero exit.
 
-Determinism observation (formalised by this anti-tautology gate): two
-executions of the chain in fresh sandboxes produced ZERO pre-mask differing
-JSON paths and byte-identical raw outputs — with the clock frozen and the
-profile id injected, the work-unit and calculation-revision ids are
-content-addressed and every timestamp is pinned, so the residual
-non-deterministic surface of this chain is empty (trivially within the central
-``GOLDEN_MASK_FIELDS``). The test pins that observation.
+Determinism observation: two executions of the chain in fresh sandboxes
+produced ZERO pre-mask differing JSON paths and byte-identical raw outputs —
+with the clock frozen and the profile id injected, the work-unit and
+calculation-revision ids are content-addressed and every timestamp is pinned,
+so the residual non-deterministic surface of this chain is empty (trivially
+within the central ``GOLDEN_MASK_FIELDS``). The test pins that observation.
 """
 
 from __future__ import annotations
@@ -372,8 +371,8 @@ def test_logout_and_failed_login_preserve_deletion_preflight_and_require_unlocke
 ) -> None:
     """Sessionless deletion still requires confirmation and an unlocked OS login.
 
-    The custody rollup ADR's deletion transaction clears selection itself;
-    a replacement profile login is no longer a deletion prerequisite.
+    The deletion transaction clears selection itself, so a replacement profile
+    login is not a deletion prerequisite.
     """
     from cadrumo.application.user_profile.access_contracts import OsLockState, OsLoginContext
     from cadrumo_client.contracts.access_vocabulary import Availability
@@ -674,8 +673,7 @@ class TestSandboxIsolationAndDeterminism:
             residual_paths |= differing_paths(first.envelope, second.envelope)
             residual_names |= differing_field_names(first.envelope, second.envelope)
             assert first.exit_code == second.exit_code
-            # The raw outputs are byte-identical for this chain (observed and
-            # pinned; this gate formalises the mask-honesty proof).
+            # The raw outputs are byte-identical for this chain.
             assert first.output == second.output
 
         assert residual_paths == frozenset(), sorted(residual_paths)
@@ -711,7 +709,7 @@ class TestSandboxEvictsBoundBucketSession:
 
             # Anti-vacuity: the fixture really bound a session, and for a bucket
             # that is NOT this sandbox's injected profile — exactly the binding
-            # that used to poison the next sandbox. Without this assertion the
+            # that would poison the next sandbox. Without this assertion the
             # post-teardown check below would pass on a run where nothing bound.
             bound = current_active_bucket_session()
             assert bound is not None
@@ -780,7 +778,7 @@ class TestLiveAeatRefusal:
 
     def test_option_value_spelled_like_a_pull_verb_is_not_flagged(self) -> None:
         """The scan skips option VALUES: '--file pull-history.csv' is a local
-        file input, not a live verb (the reviewer-named false positive)."""
+        file input, not a live verb."""
         from ..runner import live_aeat_tokens
 
         benign = _result_sequence(
@@ -992,10 +990,8 @@ class TestAmbientEnvNeutralisation:
         ``config login`` custodies its session key through :mod:`keyring`, so on a
         vault-bearing workstation it reports ``session_persisted: true`` while a
         headless CI runner emits the ``session_not_persisted`` warning and a
-        ``warning`` spine status. That made four committed goldens encode the
-        CAPTURING MACHINE, flipping red whenever a differently-postured machine
-        ran the gate. Pinning absence is what makes them stable, so this probe
-        guards the pin from both sides.
+        ``warning`` spine status. Pinning absence keeps that output independent of
+        the capturing machine, so this probe guards the pin from both sides.
 
         BOTH resolution channels are asserted because both are load-bearing and
         they fail differently: the environment variable is what subprocess
@@ -1053,20 +1049,17 @@ class TestAmbientEnvNeutralisation:
         self,
         tmp_path: Path,
     ) -> None:
-        """The historical second operator-state channel — the project dotenv
-        (``env/.env``, once loaded by pydantic-settings via an ABSOLUTE path
-        independent of ``os.environ``) — no longer exists in production:
-        ``Settings.settings_customise_sources`` never returns a dotenv source,
-        regardless of ``model_config["env_file"]``. The one surviving route for
-        an ``env/.env``-declared value to reach a process is the repo-root
-        ``conftest.py`` bridge (:func:`cadrumo.tests.env_loader.bridge_env_file_into_environ`),
-        which parses a real dotenv file and applies each pair to ``os.environ``
-        via ``setdefault`` before any test runs. This drives that REAL bridge
-        function against a synthetic dotenv file (anti-vacuity: the bridge is
-        proven to genuinely land the pair in ``os.environ``, not assumed), then
-        proves the bridged value — now indistinguishable from a genuinely
-        ambient ``CADRUMO_*`` variable — is scrubbed by the same
-        ``_neutralized_ambient_env`` seam :class:`TestAmbientEnvNeutralisation`'s
+        """The project dotenv (``env/.env``) is not a production operator-state channel:
+        ``Settings.settings_customise_sources`` never returns a dotenv source, regardless of
+        ``model_config["env_file"]``. The only route for an ``env/.env``-declared value to
+        reach a process is the repo-root ``conftest.py`` bridge
+        (:func:`cadrumo.tests.env_loader.bridge_env_file_into_environ`), which parses a real
+        dotenv file and applies each pair to ``os.environ`` via ``setdefault`` before any test
+        runs. This drives that REAL bridge function against a synthetic dotenv file
+        (anti-vacuity: the bridge is proven to genuinely land the pair in ``os.environ``, not
+        assumed), then proves the bridged value — now indistinguishable from a genuinely
+        ambient ``CADRUMO_*`` variable — is scrubbed by the same ``_neutralized_ambient_env``
+        seam :class:`TestAmbientEnvNeutralisation`'s
         other probes exercise directly, end to end through a real sequence run."""
         import os
 

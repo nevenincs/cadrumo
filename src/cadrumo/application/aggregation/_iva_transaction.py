@@ -12,6 +12,7 @@ from datetime import date
 from decimal import Decimal
 
 from ...core.i18n.render import tr as render_tr
+from ...core.money.rounding import CENT, round_to_cents
 from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
@@ -61,7 +62,12 @@ from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
 from .currency_predicates import is_non_eur_without_conversion
 from .invoice_kind import invoice_kind_for_direction
-from .iva_ledger import IvaLedgerAggregationIssue, IvaLedgerAggregationIssueReason, ProrrataLedgerReference
+from .iva_ledger import (
+    IvaLedgerAggregationIssue,
+    IvaLedgerAggregationIssueReason,
+    IvaLedgerRowDateSource,
+    ProrrataLedgerReference,
+)
 from .iva_ledger_classification import (
     business_proportionality_for,
     has_converted_non_eur_amount,
@@ -587,6 +593,15 @@ def _resolved_iva_transaction_amounts(
     )
 
 
+def _operation_date_source(transaction: Transaction) -> IvaLedgerRowDateSource:
+    """Name the date :func:`_resolve_iva_transaction_context` takes as the row's devengo date."""
+    if transaction.operation_date is not None:
+        return IvaLedgerRowDateSource.OPERATION_DATE
+    if transaction.raw.value_date is not None:
+        return IvaLedgerRowDateSource.VALUE_DATE
+    return IvaLedgerRowDateSource.BOOKED_DATE
+
+
 def _canonical_iva_rate_kind(
     transaction: Transaction,
     *,
@@ -594,9 +609,17 @@ def _canonical_iva_rate_kind(
     operation_date: date,
     operation: PinnedAuthorityOperation,
 ) -> IvaRateKind | _IvaTransactionOutcome:
-    """Resolve a declared rate against the legal table available on its date."""
+    """Resolve a declared rate against the legal table available on its date.
+
+    When the row records no operation date, the date judged is its bank
+    movement's, so each refusal says so: the fact to correct may then be the
+    missing operation date (LIVA arts. 75.Uno and 90.Dos) rather than the rate
+    or the year.
+    """
     rate_kind = iva_rate_kind_for(iva_rate, on_date=operation_date, operation=operation)
     if rate_kind is None:
+        date_source = _operation_date_source(transaction)
+        movement_dated = date_source is not IvaLedgerRowDateSource.OPERATION_DATE
         member_state = spanish_eu_member_state(effective_date=operation_date, authority=operation)
         if rate_table_covers_any_positive_tier(member_state, operation_date, operation=operation):
             return _IvaTransactionOutcome(
@@ -604,8 +627,18 @@ def _canonical_iva_rate_kind(
                     transaction_id=transaction.transaction_id,
                     reason=IvaLedgerAggregationIssueReason.UNSUPPORTED_IVA_RATE,
                     detail=(
-                        f"IVA rate {iva_rate} is not a canonical substrate IVA rate for {operation_date.isoformat()}"
+                        render_tr(
+                            "aggregation.iva_ledger.errors.unsupported_iva_rate_on_movement_date",
+                            rate=str(iva_rate),
+                            date=operation_date.isoformat(),
+                        )
+                        if movement_dated
+                        else (
+                            f"IVA rate {iva_rate} is not a canonical substrate IVA rate for "
+                            f"{operation_date.isoformat()}"
+                        )
                     ),
+                    operation_date_source=date_source,
                 ),
             )
         return _IvaTransactionOutcome(
@@ -613,11 +646,19 @@ def _canonical_iva_rate_kind(
                 transaction_id=transaction.transaction_id,
                 reason=IvaLedgerAggregationIssueReason.IVA_RATE_DATE_OUTSIDE_TABLE_COVERAGE,
                 detail=(
-                    f"no IVA rate is on record for {operation_date.isoformat()}: the rate table "
-                    "reaches no tier bearing a positive rate on that date, so a transaction dated "
-                    f"there cannot be classified whatever rate it carries. The rate {iva_rate} is "
-                    "not what needs correcting -- the filing year is outside the supported window"
+                    render_tr(
+                        "aggregation.iva_ledger.errors.iva_rate_date_outside_table_coverage_on_movement_date",
+                        date=operation_date.isoformat(),
+                    )
+                    if movement_dated
+                    else (
+                        f"no IVA rate is on record for {operation_date.isoformat()}: the rate table "
+                        "reaches no tier bearing a positive rate on that date, so a transaction dated "
+                        f"there cannot be classified whatever rate it carries. The rate {iva_rate} is "
+                        "not what needs correcting -- the filing year is outside the supported window"
+                    )
                 ),
+                operation_date_source=date_source,
             ),
         )
     return rate_kind
@@ -904,6 +945,35 @@ def iva_transaction_gate_issue(
     return None
 
 
+def _cuota_disagrees_with_rate_issue(transaction: Transaction) -> IvaLedgerAggregationIssue | None:
+    """Refuse a row whose declared cuota is not its base at its declared tipo.
+
+    Runs after category classification, so a category's own refusal (a cuota
+    that is zero by law, a combination that describes no operation) names the
+    real fault first. Recargo de equivalencia is left out: its own tipo is not
+    carried on the row, only its amount, so only the IVA cuota is recomputed.
+    """
+    taxable_base = transaction.taxable_base
+    iva_amount = transaction.iva_amount
+    iva_rate = transaction.iva_rate
+    if taxable_base is None or iva_amount is None or iva_rate is None:
+        return None
+    expected_cuota = (taxable_base * iva_rate).quantize(Decimal("0.0001"))
+    if abs(iva_amount - expected_cuota) <= CENT:
+        return None
+    return IvaLedgerAggregationIssue(
+        transaction_id=transaction.transaction_id,
+        reason=IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE,
+        detail=render_tr(
+            "aggregation.iva_ledger.errors.cuota_disagrees_with_rate",
+            base=str(taxable_base),
+            rate=str(iva_rate),
+            declared=str(iva_amount),
+            expected=str(round_to_cents(expected_cuota)),
+        ),
+    )
+
+
 def _admit_iva_transaction(
     transaction: Transaction,
     *,
@@ -932,6 +1002,9 @@ def _admit_iva_transaction(
     )
     if isinstance(classification, _IvaTransactionOutcome):
         return classification
+    cuota_issue = _cuota_disagrees_with_rate_issue(transaction)
+    if cuota_issue is not None:
+        return _IvaTransactionOutcome(gate_issue=cuota_issue)
     return _IvaTransactionAdmission(context=context, amounts=amounts, classification=classification)
 
 

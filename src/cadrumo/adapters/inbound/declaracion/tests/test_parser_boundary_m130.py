@@ -79,10 +79,7 @@ def test_parser_fails_when_modelo_130_registry_profile_targets_are_missing() -> 
 def test_modelo_130_synthetic_fixture_extracts_partial_casillas() -> None:
     """The synthetic M130 2024-1T corpus PDF extracts casillas via bbox_anchored.
 
-    The fixture is ``synthetic_generated``, and the test name now says so. It
-    was previously named for a real redacted declaration copy while this
-    docstring already said "synthetic" -- the name asserted an external
-    grounding no M130 fixture in the repository carries.
+    The fixture is ``synthetic_generated``.
     """
     filing = parse_declaracion(
         _MODELO_130_SYNTHETIC_FIXTURE,

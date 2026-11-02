@@ -6,7 +6,7 @@ rather than the project's transcription of it. A declaration lets one
 *self-contradictory* cell be read the way the document's own surviving half
 supports -- and must not become a general tolerance.
 
-These tests pin the three properties the governing ADR relies on:
+These tests pin the three properties this mechanism relies on:
 
 * the declaration applies only to the exact published bytes it was adjudicated
   against, so a reissued or re-parsed file falls back to refusal;
@@ -333,12 +333,11 @@ class TestTheAdjudicationCannotLaunderGeometry:
 class TestTheValidatorMatchesWhatTheRendererPassesIt:
     """The wiring, not just the pieces.
 
-    Every other test here calls the validator directly, and that is exactly how
-    a real defect survived: the renderer passed ``joined.source`` -- already a
-    RecordDesignIntermediateSource -- while the validator reached one level
-    deeper for ``.source``, so the pieces each worked and the seam raised
-    AttributeError the moment a declaration was supplied through the entry
-    point. A unit test per function cannot see a mismatch between them.
+    Every other test here calls the validator directly. A unit test per function
+    cannot see a mismatch between them: the renderer passes ``joined.source`` --
+    already a RecordDesignIntermediateSource -- while the validator reaches one
+    level deeper for ``.source``, so each piece works alone and the seam raises
+    AttributeError the moment a declaration is supplied through the entry point.
     """
 
     def test_the_renderer_passes_the_type_the_validator_declares(self) -> None:
@@ -466,10 +465,10 @@ class TestNoteGovernedAmountAdjudication:
     def test_the_mandated_value_reaches_the_field_and_closes_its_domain(self) -> None:
         """The note mandates zero, so the layout refuses anything else at the boundary.
 
-        Scale alone left the mandate unenforced: a nonzero would have been
-        emitted at the right scale, which is a silent under-declaration of what
-        the design states. The domain travels from the declaration onto the
-        field and the codec settles every value against it, in both directions.
+        A nonzero would be emitted at the right scale and still silently
+        under-declare what the design states. The domain travels from the
+        declaration onto the field and the codec settles every value against it,
+        in both directions.
         """
         derived = _numeric_derivation(
             self._joined_amount_field(),
@@ -915,8 +914,8 @@ class TestNoteStatedApplicabilityAdmission:
     same amount family -- empty. The note reads "Solo para periodos 02 y
     siguientes." in full: it names the periods the slot applies to and states no
     scale, decimal count, sign or alignment. The siblings reach the reviewed
-    width-17 render profile; this one alone fell through to an unscaled integer,
-    emitting euros into a run that emits cents.
+    width-17 render profile. Without a declaration this one would fall through to
+    an unscaled integer, emitting euros into a run that emits cents.
 
     A declaration admits the field to that same reviewed profile. It adjudicates
     NO representation -- the model carries no digit counts to adjudicate one

@@ -1,13 +1,8 @@
 """Scan the repository working tree for checksum-valid Spanish tax identifiers.
 
-WHY THIS EXISTS. A security review found a live operator identity sitting in an
-environment file in the working tree, and the project had no identity or secret
-scanner at all -- there is still none in the pre-commit config. The file that
-carried it was gitignored, which is not protection: an ignored file is one
-force-add away from history, and the exposure that motivated this reached the
-tree exactly that way. So the sweep covers both VISIBLE and IGNORED files. A
-scanner that honoured ``.gitignore`` alone would have been blind to the very
-file it was built for.
+WHY THIS EXISTS. A gitignored file is not protection: it is one force-add away from
+history. So the sweep covers both VISIBLE and IGNORED files. A scanner that honoured
+``.gitignore`` alone would be blind to exactly that case.
 
 DETECTION IS NOT IMPLEMENTED HERE. The pattern, the checksum and the value-free
 finding shape all come from the sanitiser's identity detection, reached through
@@ -34,20 +29,17 @@ Worse, a value allowlist is precisely where a real leak would be silenced by
 whoever hit the red gate. Scope is therefore decided BY PATH AND FILE KIND, each
 exclusion carrying its reason.
 
-WHY THE BLOCKING SCOPE IS DATA PAYLOADS ONLY, and what that deliberately gives
-up. Measured over the whole tree, pattern-plus-checksum reports thousands of
-occurrences, essentially all of them deliberate: synthetic fixture identities,
-format examples in docstrings and operator help text, and demo values in
-READMEs. Nothing in the repository distinguishes a deliberate example from a real
-leak -- the convention is real but undeclared -- so a whole-tree gate would be
-noise, and noise trains every reader to ignore it.
+WHY THE BLOCKING SCOPE IS DATA PAYLOADS ONLY, and what that deliberately gives up.
+Pattern-plus-checksum matches are essentially all deliberate: synthetic fixture identities,
+format examples in docstrings and operator help text, and demo values in READMEs. Nothing in
+the repository distinguishes a deliberate example from a real leak -- the convention is real
+but undeclared -- so a whole-tree gate would be noise, and noise trains every reader to ignore
+it.
 
-A payload is different. A ``.json``, ``.csv``, ``.toml`` or ``.yml`` file outside
-the fixture corpus carries data, not prose, and this project has no legitimate
-reason to ship a taxpayer identity as data. That is also the shape the motivating
-exposure took: a captured artefact dropped into the tree, not a sentence someone
-wrote. So the blocking scope is data payloads, where the tree is provably clean
-today, and the narrative surfaces are reported by :func:`advisory_findings`
+A payload is different. A ``.json``, ``.csv``, ``.toml`` or ``.yml`` file outside the
+fixture corpus carries data, not prose, and this project has no legitimate reason to ship
+a taxpayer identity as data. So the blocking scope is data payloads, where the tree is
+provably clean today, and the narrative surfaces are reported by :func:`advisory_findings`
 instead of gated. Extending the gate to source and prose needs a declared
 synthetic-identity convention first; that is an open item, not a solved one.
 
@@ -119,11 +111,7 @@ DATA_SUFFIXES: frozenset[str] = frozenset(
 
 #: The environment-file family, matched by NAME because it has no suffix to
 #: match on: ``Path(".env").suffix`` is the empty string, since a leading-dot
-#: filename is all stem. A suffix set alone therefore selected ``production.env``
-#: and missed every ``.env``, ``.env.local`` and ``.env.example`` in the tree --
-#: which is the exact shape of the file the motivating exposure arrived in, so
-#: the one file class this canary was built for was the one class it could not
-#: see.
+#: filename is all stem.
 ENVIRONMENT_FILE_STEM: Final[str] = ".env"
 
 #: Suffixes carrying prose or source. Reported as advisory, never blocking: every
@@ -131,11 +119,7 @@ ENVIRONMENT_FILE_STEM: Final[str] = ".env"
 #: demo command, and no declared convention separates those from a real leak.
 #:
 #: ``.po`` catalogues carry translated prose and ``.xsd`` schemas carry example
-#: values, so both belong here rather than in the blocking set. They were in
-#: NEITHER set before: 202 tracked plain-text files were not read at all, not even
-#: advisorily, which is the same shape as the exposure this canary was built for.
-#: All 202 were measured clean when they were admitted, so admitting them recorded
-#: a fact rather than accepting a backlog.
+#: values, so both belong here rather than in the blocking set.
 NARRATIVE_SUFFIXES: frozenset[str] = frozenset({".py", ".md", ".rst", ".html", ".sh", ".ps1", ".j2", ".po", ".xsd"})
 
 #: Binaries are a different problem with a different detector: the sanitiser owns
@@ -188,8 +172,7 @@ EXCLUDED_PATH_FRAGMENTS: dict[str, str] = {
 #: tree.
 #:
 #: They apply to the ignored sweep alone. The visible sweep stays unfiltered, so
-#: nothing that was in scope before this pass existed can fall out of scope
-#: because of it.
+#: no file in scope can fall out of scope because of these entries.
 UNENUMERATED_PATH_FRAGMENTS: dict[str, str] = {
     "/.git/": "git's own object, index and log store, written by git rather than authored here",
     "/__pycache__/": "compiled Python bytecode, regenerated from the sources beside it",
@@ -199,7 +182,6 @@ UNENUMERATED_PATH_FRAGMENTS: dict[str, str] = {
     "/dist/": "packaged build output, rebuilt from the sources beside it",
     "/.state/": "local application state recorded while exercising a harness against a demo profile",
     "/.vault/data/": "generated search and dependency-graph indexes for the development harness",
-    "/.logs/": "per-run test and audit scratch output, rewritten by every local test run",
     "/.cache/": (
         "local build caches, rebuilt from the sources beside them; the corpus-text cache alone "
         "reaches several gigabytes, so reading it stalls the sweep on machine-local bytes"
@@ -268,11 +250,11 @@ class FileTracking(StrEnum):
 #: the Cl@ve Movil settings MUST carry the operator's own DNI or NIE to
 #: authenticate against AEAT, and gitignore is the correct handling for them.
 #:
-#: The tier is by visibility and NEVER by path, because a path exclusion for
-#: the environment file is exactly the blindness this canary was rebuilt to
-#: remove. The ignored sweep keeps its full value under the tier: it is what
-#: proves the operator's own identity has not ALSO landed in the visible set,
-#: and that cross-check only exists because ignored files are enumerated.
+#: The tier is by visibility and NEVER by path, because a path exclusion for the
+#: environment file would take it out of the gate. The ignored sweep keeps its
+#: full value under the tier: it is what proves the operator's own identity has
+#: not ALSO landed in the visible set, and that cross-check only exists because
+#: ignored files are enumerated.
 BLOCKING_TRACKING: frozenset[FileTracking] = frozenset({FileTracking.VISIBLE})
 
 
@@ -390,8 +372,7 @@ def _raw_relative_paths(repo_root: Path) -> list[str]:
     A nested repository -- a linked worktree or clone that a tool parked inside
     this checkout -- is pruned as well. Its files are another repository's
     content: git refuses to stage anything inside it, so none of them is one
-    force-add from this repository's history, and walking a whole second
-    checkout doubled the sweep on a machine that had two.
+    force-add from this repository's history.
     """
     found: list[str] = []
 
@@ -530,8 +511,8 @@ def _ordered(findings: list[TreeFinding]) -> tuple[TreeFinding, ...]:
 #: company's identity in a shipped payload is the same leak.
 #:
 #: The bank-account class is checksum-verified too and is deliberately NOT here:
-#: gating it is a scope decision this canary has not taken, and leaving it
-#: unstated would be the false capability claim this constant already made once.
+#: gating it is a scope decision this canary has not taken, and it is stated here
+#: so the scope is not read as wider than it is.
 BLOCKING_KINDS: frozenset[ResidualKind] = frozenset({ResidualKind.NIF_NIE, ResidualKind.CIF, ResidualKind.NIF_IVA})
 
 

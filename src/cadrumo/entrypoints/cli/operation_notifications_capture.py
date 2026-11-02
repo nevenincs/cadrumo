@@ -18,7 +18,11 @@ from ...application.live.notifications_capture_operation import (
     NotificationsCapturePublicResultV1,
     NotificationsCaptureRequest,
 )
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -53,7 +57,7 @@ def read_notifications_capture_for_cli(ctx: typer.Context, *, profile_id: UUID) 
         if (
             completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
             or completed.refusal_code is not None
-            or completed.effect not in {OperationEffect.UPDATED, OperationEffect.NONE}
+            or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         ):
             raise ValueError("notification capture result disagrees with its settled receipt")
     except Exception:

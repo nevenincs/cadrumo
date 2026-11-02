@@ -1,13 +1,11 @@
 """Gate: vaultspec-rag is a dev-box tool, never a docs-work dependency.
 
-Operator directive (2026-07-13, docs-terminology-search): a non-dev
-environment must execute all docs work — the Sphinx build, the Pagefind
-record injection, the generated reference surfaces, the preprocess hook —
-without vaultspec-rag installed. The rag package lives in the
-contributor-only dependency group and is reached from dev tooling ONLY
-through function-local imports (the sweep's reindex helper, the extractor
-tests' chunking probes) or external CLI invocations, so importing the
-docs-work modules must never pull it in.
+A non-dev environment must execute all docs work — the Sphinx build, the Pagefind
+record injection, the generated reference surfaces, the preprocess hook — without
+vaultspec-rag installed. The rag package lives in the contributor-only dependency
+group and is reached from dev tooling ONLY through function-local imports (the
+sweep's reindex helper, the extractor tests' chunking probes) or external CLI
+invocations, so importing the docs-work modules must never pull it in.
 
 The gate runs a child interpreter with a meta-path blocker that makes any
 ``vaultspec_rag`` import raise, then imports every module on the docs-work
@@ -96,10 +94,10 @@ def test_production_package_never_imports_vaultspec_rag() -> None:
         try:
             # Read strictly. With errors="ignore" an undecodable byte is dropped
             # before the search runs, so a reference straddling one is simply not
-            # there and this gate reports the package clean over text it never
-            # saw - on a policy that decides what ships in the wheel. All 5,851
-            # production modules decode strictly, so one that does not is a
-            # broken tracked file and is named.
+            # there and this gate reports the package clean over text it never saw
+            # - on a policy that decides what ships in the wheel. A production
+            # module that does not decode strictly is a broken tracked file and is
+            # named.
             body = path.read_text(encoding="utf-8")
         except UnicodeDecodeError as refusal:
             undecodable.append(f"{path.relative_to(_REPO_ROOT)}: {refusal}")

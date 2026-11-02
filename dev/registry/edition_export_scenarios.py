@@ -84,8 +84,8 @@ from cadrumo.application.aggregation.iva_ledger import (
     IvaDifferentiatedDeductionContribution,
 )
 from cadrumo.application.aggregation.m303_arrivals import (
-    M303ProrrataTransitionArrival,
     M303SupplierRegimeArrival,
+    resolve_m303_prorrata_transition_arrival,
 )
 from cadrumo.application.calculations.m303_regimen_simplificado import calculate_m303_regimen_simplificado_result
 from cadrumo.application.filing.producer_snapshot import (
@@ -234,10 +234,6 @@ __all__ = [
     "m390_export_scenario",
     "supported_scenario_periods",
 ]
-
-#: The first filing year of Modelo 322's BOE fichero layout, which stamps no
-#: filing envelope where the editions before it do.
-_M322_BOE_LAYOUT_FROM_YEAR: Final = 2026
 
 
 @cache
@@ -487,6 +483,7 @@ def _m303_filing_facts(
     parameters = resolve_bienes_inversion_regularizacion_parameters(
         registry_snapshot.revision, modelo_id=str(Modelo("303")), filing_period_date=period.end_date
     )
+    prorrata_register = _m303_prorrata_register(period, operation=operation)
     return M303FilingFacts(
         joint_return_elected=False,
         annual_volume_nonzero=False,
@@ -514,8 +511,10 @@ def _m303_filing_facts(
         supplier_regime=M303SupplierRegimeArrival(
             period=period, recipient_of_cash_accounting_operations=False, source_ledger_ids=()
         ),
-        prorrata_transition=M303ProrrataTransitionArrival(period=period, transition=None, register_evidence=()),
-        prorrata_register=_m303_prorrata_register(period, operation=operation),
+        prorrata_transition=resolve_m303_prorrata_transition_arrival(
+            period=period, prorrata_register=prorrata_register, operation=operation
+        ),
+        prorrata_register=prorrata_register,
         differentiated_contributions=_m303_differentiated_contributions(period=period, operation=operation),
         bienes_register=BienesInversionIvaRegister(),
         regularisation_result=RegistroRegularizacionResult(
@@ -1092,15 +1091,19 @@ def _general_producer_snapshot(
 def m322_export_scenario(period: Period) -> EditionExportScenario:
     """A synthetic complementaria carrying the envelope evidence only the editions that stamp one need.
 
-    The 2008-2022, 2023 and 2024-2025 editions render a filing envelope, which
-    the canonical export path refuses without BOTH an explicit
-    product/software identity and an explicit prior-domiciliation election. The
-    2026-y-siguientes edition replaces that layout with the BOE fichero, which
-    declares no envelope prefix, and the same path refuses a product/software
-    identity no layout stamps. The envelope facts therefore follow the layout,
-    not the modelo.
+    An edition whose layout declares a filing envelope is refused by the
+    canonical export path without BOTH an explicit product/software identity
+    and an explicit prior-domiciliation election, and the same path refuses a
+    product/software identity no layout stamps. The envelope facts therefore
+    follow the layout the selected edition declares, not the modelo or the year.
     """
-    stamps_envelope = period.filing_year < _M322_BOE_LAYOUT_FROM_YEAR
+    revision = select_revision(
+        _bundled_modelo("322"),
+        filing_year=period.filing_year,
+        period=period.registry_token,
+        support=_bundled_support(),
+    )
+    stamps_envelope = any(layout.filing_envelope is not None for layout in revision.export_layouts)
     return EditionExportScenario(
         period=period,
         inputs={},

@@ -424,11 +424,7 @@ def modelo_query_read_capabilities(*, sensitive: bool = False) -> OperationCapab
         deadline=OperationDeadline.ABSENT,
         replay=OperationReplayPolicy.NONE,
         baseline=OperationBaselinePolicy.NONE,
-        request_storage=(
-            OperationRequestStoragePolicy.SECURE_REFERENCE
-            if sensitive
-            else OperationRequestStoragePolicy.CREDENTIAL_FREE_JOURNAL
-        ),
+        request_storage=(OperationRequestStoragePolicy.for_private_request(sensitive)),
         sensitive_input=(
             OperationSensitiveInputPolicy.SECURE_REFERENCE if sensitive else OperationSensitiveInputPolicy.NONE
         ),

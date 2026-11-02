@@ -1,6 +1,7 @@
+import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
 import type { LedgerRuleRow } from "../src/shell/ledgerSetup";
-import { planApply, ruleApplyClashes } from "../src/shell/ledgerPlan";
+import { ruleApplyClashes } from "../src/shell/ledgerPlan";
 import {
   actionRows,
   EMPTY_STAGE,
@@ -14,9 +15,6 @@ import {
   correctionOf,
   parseObject,
   parsePoints,
-  patternHits,
-  patternMatcher,
-  patternMatches,
   patternWords,
   priorityAt,
   reorderWrites,
@@ -25,8 +23,9 @@ import {
   wholeYear,
   wordsPattern,
 } from "../src/components/ledger/setup/setupModel";
-import { ibanProblem } from "../src/shared/iban";
+import { ibanMalformed } from "../src/shared/iban";
 import { hexId, movement } from "./support/ledger";
+import { planRecorded, recordedCheck } from "./support/stagedCheck";
 
 // The Setup sections' pure decisions and the staged rule run. No page is
 // opened.
@@ -50,37 +49,11 @@ test("plain words become a pattern that finds them and nothing else, and back", 
   const pattern = wordsPattern("  Papelería  (Trazo) 1.5+ ");
   expect(pattern).toBe("Papelería\\s+\\(Trazo\\)\\s+1\\.5\\+");
   expect(patternWords(pattern)).toBe("Papelería (Trazo) 1.5+");
-  const matcher = patternMatcher(pattern)!;
-  expect(matcher.test("COMPRA PAPELERÍA   (TRAZO) 1.5+ CENTRO")).toBe(true);
-  // The dot is a dot, not any character.
-  expect(matcher.test("PAPELERÍA (TRAZO) 1x5+")).toBe(false);
   // A rule typed by hand with plain spaces is plain words too.
   expect(patternWords("CUOTA AUTONOMOS")).toBe("CUOTA AUTONOMOS");
   // One written in the expression grammar is not.
   expect(patternWords("^CUOTA.*TGSS$")).toBeNull();
   expect(patternWords("A\\dB")).toBeNull();
-  // Grammar this window reads differently is not tried here.
-  expect(patternMatcher("(?P<name>X)")).toBeNull();
-  expect(patternMatcher("(?i)x")).toBeNull();
-  expect(patternMatcher("[unclosed")).toBeNull();
-});
-
-test("a pattern matches the loaded active movements still to classify", () => {
-  const rows = [
-    movement("a", { description: "RECIBO ALBOR MOVIL" }),
-    movement("b", {
-      description: "FIBRA ALBOR",
-      business_classification: "BUSINESS",
-    }),
-    movement("c", { description: "ALBOR", lifecycle_state: "ARCHIVED" }),
-    movement("d", { description: "OTRA COSA" }),
-  ];
-  expect(patternMatches(wordsPattern("albor"), rows)).toEqual(["a"]);
-  expect(patternMatches("(?P<x>albor)", rows)).toBeNull();
-  // What it matches, classified or not, is counted apart from what it
-  // would classify now.
-  expect(patternHits(wordsPattern("albor"), rows)).toEqual(["a", "b"]);
-  expect(patternHits("(?P<x>albor)", rows)).toBeNull();
 });
 
 test("a rule from a selection starts from what the movements share", () => {
@@ -160,12 +133,13 @@ test("moving a rule writes it once where a number fits, and numbers all again wh
   ]);
 });
 
-test("an account number's shape and control digits are checked before it is sent", () => {
-  expect(ibanProblem("ES91 2100 0418 4502 0005 1332")).toBeNull();
-  expect(ibanProblem("ES9221000418450200051332")).toBe("check");
-  expect(ibanProblem("ES91")).toBe("shape");
-  expect(ibanProblem("not an iban")).toBe("shape");
-  expect(ibanProblem("GB82WEST12345698765432")).toBeNull();
+test("how an account number is written is seen here and its digits are not judged", () => {
+  expect(ibanMalformed("ES91 2100 0418 4502 0005 1332")).toBe(false);
+  // A wrong control digit is written like any other: the backend refuses it.
+  expect(ibanMalformed("ES9221000418450200051332")).toBe(false);
+  expect(ibanMalformed("ES91")).toBe(true);
+  expect(ibanMalformed("not an iban")).toBe(true);
+  expect(ibanMalformed("GB82WEST12345698765432")).toBe(false);
 });
 
 test("register numbers and documents keep the product's grammar", () => {
@@ -246,7 +220,7 @@ test("a staged rule run names no row, follows a new id, and is held while a list
     ["a2", movement("a2")],
     ["b", movement("b")],
   ]);
-  const plan = planApply(state.content, { rows });
+  const plan = planRecorded(state.content, { rows });
   expect(plan.steps).toEqual([
     {
       kind: "action",
@@ -255,7 +229,9 @@ test("a staged rule run names no row, follows a new id, and is held while a list
       request: { reaffirm: true, dry_run: false },
     },
   ]);
-  expect(ruleApplyClashes(run, state.content)).toBe(false);
+  expect(
+    ruleApplyClashes(run, state.content, recordedCheck(state.content, rows)),
+  ).toBe(false);
 
   // A classification the person staged on a listed movement holds it back;
   // a correction does not.
@@ -271,7 +247,7 @@ test("a staged rule run names no row, follows a new id, and is held while a list
       },
     ],
   });
-  const held = planApply(classified.content, { rows });
+  const held = planRecorded(classified.content, { rows });
   expect(held.held.actions).toEqual(["run"]);
   expect(
     held.steps.some(
@@ -291,5 +267,5 @@ test("a staged rule run names no row, follows a new id, and is held while a list
       },
     ],
   });
-  expect(planApply(noted.content, { rows }).held.actions).toEqual([]);
+  expect(planRecorded(noted.content, { rows }).held.actions).toEqual([]);
 });

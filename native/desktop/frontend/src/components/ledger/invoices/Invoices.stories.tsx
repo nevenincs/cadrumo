@@ -175,7 +175,7 @@ const added: NonNullable<Story["play"]> = async ({
     }),
   );
   await typed("counterparty_name", "Norte Digital S. Coop.");
-  await typed("counterparty_tax_id", "F00000022");
+  await typed("counterparty_tax_id", "A58818501");
   await typed("counterparty_country", "ES");
   await typed("series", "F");
   await typed("invoice_number", "F-2026-021");
@@ -192,10 +192,13 @@ const added: NonNullable<Story["play"]> = async ({
     cells[2]!.querySelector<HTMLInputElement>("input")!,
     "550",
   );
-  await userEvent.selectOptions(
-    cells[4]!.querySelector<HTMLSelectElement>("select")!,
-    "RATE_21",
-  );
+  const rates = cells[4]!.querySelector<HTMLSelectElement>("select")!;
+  // The rates are the ledger's to offer, once it has answered.
+  await waitFor(() => {
+    if (!rates.querySelector("option[value=RATE_21]"))
+      throw new Error("the ledger has not offered its rates yet");
+  });
+  await userEvent.selectOptions(rates, "RATE_21");
   await pressIn(editor, t("desktop.ledger.invoices.review"));
   await pressIn(editor, t("desktop.ledger.invoices.add"));
 };

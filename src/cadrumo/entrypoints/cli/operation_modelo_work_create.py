@@ -22,6 +22,7 @@ from ...application.modelo.work_create_operation import (
     ModeloWorkCreateRefusal,
     ModeloWorkCreateRequest,
     ModeloWorkCreateSuccess,
+    modelo_work_create_effect,
 )
 from ...application.operations.public_period import PublicPeriod
 from ...core.bucket_pointer import resolve_active_bucket_id
@@ -165,9 +166,7 @@ def _correlate_work_creation(
     invalid: bool,
 ) -> ModeloWorkCreation | None:
     """Return creation only after all successful receipt and coordinate checks."""
-    expected_effect = (
-        OperationEffect.UPDATED if not outcome.reused or outcome.name_applied is not None else OperationEffect.NONE
-    )
+    expected_effect = modelo_work_create_effect(reused=outcome.reused, name_applied=outcome.name_applied)
     invalid = (
         invalid
         or _work_creation_terminal_invalid(completed, expected_effect)

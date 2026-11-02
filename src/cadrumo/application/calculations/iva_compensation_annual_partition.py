@@ -151,6 +151,24 @@ def period_state_from_303_envelope(
     )
 
 
+def _filed_period_states(
+    envelopes: tuple[ObservationEnvelopePayload, ...],
+    *,
+    filing_year: int,
+    operation: PinnedAuthorityOperation,
+) -> tuple[IvaCompensationPeriodState, ...]:
+    return tuple(
+        period_state_from_303_envelope(envelope, operation=operation)
+        for envelope in envelopes
+        if envelope.observation.modelo == form_for_role("iva.periodic")
+        and envelope.observation.filing_year == filing_year
+    )
+
+
+def _year_applies_compensation(states: tuple[IvaCompensationPeriodState, ...], *, filing_year: int) -> bool:
+    return any(state.filing_year == filing_year and (state.applied_amount or ZERO) > ZERO for state in states)
+
+
 def resolve_iva_compensation_annual_partition_binding_values(
     revision: ModeloRevision,
     envelopes: tuple[ObservationEnvelopePayload, ...],
@@ -174,12 +192,7 @@ def resolve_iva_compensation_annual_partition_binding_values(
     requirement = iva_compensation_annual_partition_requirement(revision)
     if requirement is None:
         return {}
-    states = tuple(
-        period_state_from_303_envelope(envelope, operation=operation)
-        for envelope in envelopes
-        if envelope.observation.modelo == form_for_role("iva.periodic")
-        and envelope.observation.filing_year == filing_year
-    )
+    states = _filed_period_states(envelopes, filing_year=filing_year, operation=operation)
     if not states:
         return {}
     # The credit of earlier ejercicios is the oldest in the FIFO, so it is
@@ -187,6 +200,12 @@ def resolve_iva_compensation_annual_partition_binding_values(
     # four states do not state directly; an unknown opening leaves box 85
     # unresolved rather than read as zero.
     opening_balance = iva_compensation_year_opening_balance(states, filing_year=filing_year)
+    if opening_balance is None and _year_applies_compensation(states, filing_year=filing_year):
+        # An unknown opening is charged first by the FIFO, so any application in
+        # the year may have consumed it rather than the year's own credit. The
+        # year-end remainders (boxes 97 and 662) are then unknown too; without an
+        # application they cannot depend on the opening.
+        return {}
     report = build_iva_compensation_carry_forward_report(
         states,
         as_of_year=filing_year,
@@ -247,7 +266,7 @@ def _unresolved_diagnostics(
     binding_ids: tuple[BindingId, ...],
     source_periods: tuple[str, ...],
     resolver_id: str,
-    opening_unknown_binding_id: BindingId | None = None,
+    opening_unknown_binding_ids: tuple[BindingId, ...] = (),
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     periods = ",".join(source_periods) if source_periods else "(none)"
     return tuple(
@@ -260,7 +279,7 @@ def _unresolved_diagnostics(
                 f"binding {binding_id!r} needs the credit pending from earlier ejercicios when the "
                 "year opened, read from the first period's Modelo 303 box 110 or from its boxes 87 "
                 "and 78; the filed first period states neither, so the amount is unknown, not zero"
-                if binding_id == opening_unknown_binding_id
+                if binding_id in opening_unknown_binding_ids
                 else f"binding {binding_id!r} requires filed Modelo 303 compensation states "
                 f"for periods {periods}; the source filing history is missing or incomplete"
             ),
@@ -440,9 +459,7 @@ class IvaCompensationAnnualPartitionSourceResolver:
                 binding_ids=unresolved,
                 source_periods=requirement.source_periods,
                 resolver_id=self.resolver_id,
-                opening_unknown_binding_id=(
-                    requirement.prior_year_applied_amount_binding_id if periods_complete else None
-                ),
+                opening_unknown_binding_ids=unresolved if periods_complete else (),
             )
             + _annual_source_evidence_diagnostics(
                 binding_ids=unresolved,

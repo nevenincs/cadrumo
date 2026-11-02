@@ -27,42 +27,42 @@ sign_policy = "unsigned"
 sheet = "DP200026C"
 source_row = 81
 source_cell = "A81"
-ordinal = 76
+ordinal = "76"
 record_identity = "DP200026C"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026C"
 source_row = 82
 source_cell = "A82"
-ordinal = 77
+ordinal = "77"
 record_identity = "DP200026C"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026C"
 source_row = 84
 source_cell = "A84"
-ordinal = 79
+ordinal = "79"
 record_identity = "DP200026C"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026C"
 source_row = 85
 source_cell = "A85"
-ordinal = 80
+ordinal = "80"
 record_identity = "DP200026C"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026C"
 source_row = 86
 source_cell = "A86"
-ordinal = 81
+ordinal = "81"
 record_identity = "DP200026C"
 
 [[width_17_rules.anchors]]
 sheet = "DP200026C"
 source_row = 88
 source_cell = "A88"
-ordinal = 83
+ordinal = "83"
 record_identity = "DP200026C"
 
 [width_17_rules.evidence]

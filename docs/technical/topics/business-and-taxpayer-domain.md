@@ -50,23 +50,23 @@ Submission-domain preflight checks a locally approved draft, blocking findings, 
 
 ## Detailed articles
 
-- [Domain evidence, filing periods, and capital-goods registers](../articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md) — `STAGE-2-123`
-- [Spending categories, proportionality, and census projections](../articles/138-spending-categories-proportionality-and-census-projections.md) — `STAGE-2-138`
-- [taxpayer and family domain records](../articles/139-taxpayer-and-family-domain-records.md) — `STAGE-2-139`
-- [inventory valuation and taxpayer-profile mechanics](../articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md) — `STAGE-2-140`
-- [deadline, currency, and evidence-consent domain](../articles/141-deadline-currency-and-evidence-consent-domain.md) — `STAGE-2-141`
-- [filing drafts and invoice records](../articles/142-filing-drafts-and-invoice-records.md) — `STAGE-2-142`
-- [IVA classification and evidence substrate](../articles/143-iva-classification-and-evidence-substrate.md) — `STAGE-2-143`
-- [IVA rates, settlement and statutory projections](../articles/144-iva-rates-settlement-and-statutory-projections.md) — `STAGE-2-144`
-- [IVA compensation carry-forward and filing receipts](../articles/145-iva-compensation-carry-forward-and-filing-receipts.md) — `STAGE-2-145`
-- [modelo calculation, evidence and filing lifecycle](../articles/146-modelo-calculation-evidence-and-filing-lifecycle.md) — `STAGE-2-146`
-- [ledger evidence, detail rows and modelo verification](../articles/147-ledger-evidence-detail-rows-and-modelo-verification.md) — `STAGE-2-147`
-- [portal catalogue and annual prorrata register](../articles/148-portal-catalogue-and-annual-prorrata-register.md) — `STAGE-2-148`
-- [Renta expense rules and activity-asset amortization](../articles/149-renta-expense-rules-and-activity-asset-amortization.md) — `STAGE-2-149`
-- [Local submission preflight and audit records](../articles/150-local-submission-preflight-and-audit-records.md) — `STAGE-2-150`
-- [Transaction ledger domain and classifier contracts](../articles/151-transaction-ledger-domain-and-classifier-contracts.md) — `STAGE-2-151`
-- [Transaction mutations and registry-backed income predicates](../articles/152-transaction-mutations-and-registry-backed-income-predicates.md) — `STAGE-2-152`
-- [Usage ratios and user-profile domain](../articles/153-usage-ratios-and-user-profile-domain.md) — `STAGE-2-153`
+- [Domain evidence, filing periods, and capital-goods registers](../articles/123-domain-evidence-filing-periods-and-capital-goods-registers.md)
+- [Spending categories, proportionality, and census projections](../articles/138-spending-categories-proportionality-and-census-projections.md)
+- [taxpayer and family domain records](../articles/139-taxpayer-and-family-domain-records.md)
+- [inventory valuation and taxpayer-profile mechanics](../articles/140-inventory-valuation-and-taxpayer-profile-mechanics.md)
+- [deadline, currency, and evidence-consent domain](../articles/141-deadline-currency-and-evidence-consent-domain.md)
+- [filing drafts and invoice records](../articles/142-filing-drafts-and-invoice-records.md)
+- [IVA classification and evidence substrate](../articles/143-iva-classification-and-evidence-substrate.md)
+- [IVA rates, settlement and statutory projections](../articles/144-iva-rates-settlement-and-statutory-projections.md)
+- [IVA compensation carry-forward and filing receipts](../articles/145-iva-compensation-carry-forward-and-filing-receipts.md)
+- [modelo calculation, evidence and filing lifecycle](../articles/146-modelo-calculation-evidence-and-filing-lifecycle.md)
+- [ledger evidence, detail rows and modelo verification](../articles/147-ledger-evidence-detail-rows-and-modelo-verification.md)
+- [portal catalogue and annual prorrata register](../articles/148-portal-catalogue-and-annual-prorrata-register.md)
+- [Renta expense rules and activity-asset amortization](../articles/149-renta-expense-rules-and-activity-asset-amortization.md)
+- [Local submission preflight and audit records](../articles/150-local-submission-preflight-and-audit-records.md)
+- [Transaction ledger domain and classifier contracts](../articles/151-transaction-ledger-domain-and-classifier-contracts.md)
+- [Transaction mutations and registry-backed income predicates](../articles/152-transaction-mutations-and-registry-backed-income-predicates.md)
+- [Usage ratios and user-profile domain](../articles/153-usage-ratios-and-user-profile-domain.md)
 
 
 ```{toctree}

@@ -188,10 +188,9 @@ class Modelo184MemberRow(BaseModel):
     """One (member, clave, subclave) atribución row for Modelo 184.
 
     The socio record's own diseño repeats per clave or subclave with an
-    importe declared, not per member alone (see the accepted row-shape ADR),
-    so this row's identity is ``(nif, clave, subclave)`` rather than ``nif``
-    alone -- the same shape 349's ``operador`` row already carries via its
-    ``clave_operacion`` axis.
+    importe declared, not per member alone, so this row's identity is
+    ``(nif, clave, subclave)`` rather than ``nif`` alone -- the same shape 349's
+    ``operador`` row already carries via its ``clave_operacion`` axis.
 
     Fields mirror the per-record Tipo-2 layout declared in the M184
     ``bindings/0001-bindings.toml`` atribucion_member source block.
@@ -208,11 +207,10 @@ class Modelo184MemberRow(BaseModel):
     * every clave/subclave-conditional field below mirrors its own
       ``modelo-184-member-row-<field>`` binding.
 
-    Deliberately excluded (see the accepted row-shape ADR): the clave-A
-    reducción (its governing article is unresolved), provisiones-gastos-
-    dificil-justificacion (computed from the entity's own régimen fact, not
-    an operator-declared value), and any clave-E eligibility fact (a tracked
-    gap, no representation in this tree yet).
+    Deliberately excluded: the clave-A reducción (its governing article is
+    unresolved), provisiones-gastos-dificil-justificacion (computed from the
+    entity's own régimen fact, not an operator-declared value), and any clave-E
+    eligibility fact (a tracked gap, with no representation in this tree).
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -221,8 +219,8 @@ class Modelo184MemberRow(BaseModel):
     nif: _NifStr
     nombre: _NameStr = Field(default="")
     # Optional, and deliberately not defaulted to Spain. A default is an
-    # INFERENCE about a fact nobody stated, and it inferred the one value that
-    # makes the member domestic -- a foreign member silently declared as
+    # INFERENCE about a fact nobody stated, and the inferred value would be the
+    # one that makes the member domestic -- a foreign member silently declared as
     # Spanish is the direction AEAT reconciles against what that member itself
     # declared.
     #
@@ -230,8 +228,7 @@ class Modelo184MemberRow(BaseModel):
     # country to supply: the atribucion socio facts carry nif, name, share and
     # base and no territory at all. Demanding one here would refuse every
     # profile-resolved row while naming a fact no surface records, which is a
-    # refusal nobody can answer. Recording the socio's country on the profile
-    # is the fix that would let this be required.
+    # refusal nobody can answer.
     pais: _IsoCountryCode | None = None
     porcentaje: Decimal = Field(description="Share percentage in the entity [0, 100]")
     importe: Decimal = Field(description="Attributed income/base imponible in EUR")
@@ -277,9 +274,7 @@ class Modelo184MemberRow(BaseModel):
         # ``pais`` is optional on THIS row for the reason recorded on the field
         # above: the profile-driven producer has no country to supply, so a
         # missing one is a declared state rather than a malformed value. The
-        # shape check therefore applies to a present value only -- calling
-        # ``.upper()`` on the absent case raised AttributeError instead of
-        # validating anything, which is a crash rather than a refusal.
+        # shape check therefore applies to a present value only.
         if value is None:
             return value
         if value != value.upper() or not value.replace(" ", "").isalpha():
@@ -391,8 +386,8 @@ class Modelo232VinculadaRow(BaseModel):
     nombre: _NameStr = Field(default="")
     # Required, and deliberately not defaulted to Spain. The row is built from
     # operator-supplied key-value pairs, so a default is an INFERENCE about a
-    # fact the operator did not state -- and it inferred the one value that
-    # makes the row domestic. A foreign member or a cross-border related-party
+    # fact the operator did not state -- and the inferred value would be the one
+    # that makes the row domestic. A foreign member or a cross-border related-party
     # operation silently declared as Spanish is the direction AEAT reconciles
     # against what the counterparty itself declared.
     pais: _IsoCountryCode

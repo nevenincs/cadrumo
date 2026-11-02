@@ -94,8 +94,8 @@ required_text = ["Ingresos íntegros", "Ingresos"]
 # income casilla) regardless of which fact a binding reads off it. Retargeting this
 # selector to "06" does not redirect the aggregate to casilla 06 -- it empties the
 # match entirely (no observation is ever built with target_casilla_id="06"),
-# silently resolving this binding to 0. Measured directly: retargeting to "06"
-# also fails registry-build validation outright, since `_RENTA_130_INCOME_CASILLAS`
+# silently resolving this binding to 0. Retargeting to "06" also fails registry-build
+# validation outright, since `_RENTA_130_INCOME_CASILLAS`
 # (the allowed-target set for this whole binding family) is {"01", "03"} and does
 # not include "06".
 #
@@ -103,12 +103,12 @@ required_text = ["Ingresos íntegros", "Ingresos"]
 # application code: `_m130_retenciones_backend_inputs` in
 # application/aggregation/_modelo_bindings.py reads this binding's resolved value by
 # id and writes it to casilla 06 directly, bypassing the registry's normal
-# casilla-to-binding wiring. That function now also asserts casilla 06 is a real
-# casilla on the M130 revision before writing to it (a snapshot cross-check, T-05
-# pattern) rather than trusting the hardcoded constant blindly. A schema field
-# expressing "match on X's observations, output to Y's casilla" honestly was tried
-# and reverted: it reopens the cross-domain routing-table design T-05 governs, and
-# that needs a superseding ADR, not an implementation-choice workaround.
+# casilla-to-binding wiring. That function asserts casilla 06 is a real
+# casilla on the M130 revision before writing to it (a snapshot cross-check) rather
+# than trusting the hardcoded constant blindly. A schema field expressing "match on
+# X's observations, output to Y's casilla" would reopen the cross-domain
+# routing-table design, which needs a superseding decision, not an
+# implementation-choice workaround.
 [[revisions."2019-y-siguientes".bindings]]
 id = "modelo-130-actividad-economica-retenciones-cumulative"
 provider = { kind = "ledger_renta_income_aggregation", modelo = "130", target_casilla_id = "01", fact = "declared_withheld_amount_sum" }

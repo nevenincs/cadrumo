@@ -31,6 +31,7 @@ from ...application.modelo.work_verification_contracts import ModeloWorkVerifyPu
 from ...application.operations.public_period import PublicPeriod
 from ...core.bucket_pointer import resolve_active_bucket_id
 from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationEffect,
     profile_operation_subject,
 )
@@ -134,7 +135,7 @@ def run_modelo_work_verification(
         or projection.calculation_revision_id != request.calculation_revision_id
         or projection.advisories.work_unit_id != work_unit_id
         or projection.advisories.calculation_revision_id != request.calculation_revision_id
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
     ):
         raise invalid_completion_error(completed)
     return completed
@@ -169,7 +170,7 @@ def run_modelo_work_filing(
         or projection.advisories.work_unit_id != work_unit_id
         or projection.advisories.calculation_revision_id != request.approval.calculation_revision_id
         or not projection.handoff_required
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
     ):
         raise invalid_completion_error(completed)
     return completed

@@ -1,19 +1,14 @@
 """Typed ``--json`` payload schemas for ``aeat config profile history``.
 
-The former shared ``config_payloads`` module was split into focused siblings.
 The adjacent :mod:`cadrumo.entrypoints.cli._config_descendiente_payloads` owns
 the declared-descendant contract, leaving this module to carry append-only
 bucket history without coupling the payload families.
 
-The nested event row previously crossed the envelope as a bare
-``dict[str, object]``, so an empty row, a bogus event type, or an unparseable
-timestamp reached the operator unchallenged even though the encrypted
-:class:`~cadrumo.domain.buckets.event.BucketEventHistoryCatalogue` that produced it
-refuses all three. :class:`BucketHistoryEventPayload` re-uses the canonical
+:class:`BucketHistoryEventPayload` re-uses the canonical
 identity aliases and closed enums from :mod:`cadrumo.domain.buckets` rather than
 re-declaring their shape, following the projection pattern
 :class:`~cadrumo.entrypoints.cli.modelo_aux_payloads.WorkUnitHistoryEventPayload`
-already established for the work-unit history surface.
+used for the work-unit history surface.
 
 The content-addressed ``event_id`` derivation is deliberately *not* re-run here:
 this is a read-only presentation projection of an event the catalogue already
@@ -45,12 +40,11 @@ class BucketHistoryEventPayload(OutputSchema):
     """One append-only bucket event row in the profile-history envelope.
 
     Mirrors :class:`~cadrumo.domain.buckets.event.BucketEvent`'s operator-facing
-    projection. Enum members and ``datetime`` values render to the same JSON the
-    former hand-built mapping emitted, so the wire form is unchanged.
+    projection.
     ``payload_version`` is the discriminator a consumer needs to interpret the
     free-form ``payload`` mapping; the adjacent
     :class:`~cadrumo.entrypoints.cli.ledger_results.LedgerHistoryEventPayload`
-    projection already carries it, so this row now stays at parity.
+    projection already carries it, so this row stays at parity.
     """
 
     event_id: BucketEventId
@@ -66,9 +60,7 @@ class BucketHistoryEventPayload(OutputSchema):
 class BucketHistoryResult(OutputSchema):
     """JSON envelope for ``aeat config profile history``.
 
-    The envelope token ``config.bucket.history`` is a stable machine API and
-    is intentionally retained after the operator-facing verb moved from
-    ``config bucket history`` to ``config profile history`` (D1 family).
+    The envelope token ``config.bucket.history`` is a stable machine API.
     """
 
     operation: str

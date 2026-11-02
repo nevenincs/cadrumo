@@ -211,7 +211,7 @@ flows:
           reconciliation_mismatch: Discrepancia de conciliación
           stale_calculation: Cálculo desactualizado
         finding_severity:
-          blocking: Bloqueante
+          blocking: Bloqueo
           warning: Advertencia
         input_kind:
           bound: Vinculada

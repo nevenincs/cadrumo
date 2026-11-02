@@ -48,12 +48,6 @@ def _read_invoice_import_source(source_path: str) -> LedgerInvoiceImportSourceV1
     )
 
 
-def _import_effect(result: InvoiceImportProjection) -> OperationEffect:
-    if result.created == 0:
-        return OperationEffect.NONE
-    return OperationEffect.PARTIAL if result.refused else OperationEffect.UPDATED
-
-
 class RuntimeLedgerInvoiceImportTuiDoorV1:
     """Review and import invoice books for the exact TUI profile and session."""
 
@@ -93,7 +87,7 @@ class RuntimeLedgerInvoiceImportTuiDoorV1:
                 condition is OperationTerminalCondition.SUCCEEDED
                 and terminal.refusal_ref is None
                 and terminal.failure_error_code is None
-                and terminal.effect is _import_effect(result)
+                and terminal.effect is result.settled_effect
                 and result.profile_id == request.profile_id
                 and result.source_sha256 == request.source_sha256
             ):

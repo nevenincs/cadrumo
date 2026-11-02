@@ -451,9 +451,8 @@ class ModeloEditSchemaIdentityV1(EditModel):
     commit. The Workspace type's ``field_manifest_digest`` digests a
     structurally unrelated concept -- the field-CLASSIFICATION manifest,
     a deterministic walk over the public registry TYPE denominator for
-    display rendering. Reusing one field name for both silently made two
-    genuinely different values compare unequal under one name; see the
-    edit-contract ADR amendment this type was added by.
+    display rendering. Sharing one field name would make two genuinely
+    different values compare unequal under one name.
     """
 
     schema_id: _BoundedCode

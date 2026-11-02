@@ -11,11 +11,8 @@ rows and an object field's instances live under an index the schema never
 mentions, so the record decides how many there are while the schema
 decides what each holds; both are expanded here.
 
-That inversion is the point. The surface this replaces enumerated the
-*steps of a setup wizard*: a list of questions with a status glyph, which
-told the operator where they were in a process but never what their
-profile held. A profile is data, not a process, and the operator should
-be looking at the data.
+A profile is data, not a process, and the operator should be looking at
+the data.
 
 Completeness rides along as a count rather than a gate. Every field is
 editable at any time; ``missing_required`` names what filing will
@@ -113,10 +110,10 @@ surface under a path no schema field declares still masks if it is named
 like a credential.
 
 They are not consulted for a field the schema HAS classified. Reading
-them over a declared field let authored prose override an explicit
-declaration, which is how ``auth.provider`` came to mask: its
-description mentions a password only to say that no password is stored
-there, and the heuristic could not tell the difference. A heuristic
+them over a declared field would let authored prose override an explicit
+declaration: a description that mentions a password only to say that no
+password is stored there would be masked, since the heuristic cannot tell
+the difference. A heuristic
 pointed at text this project writes is answerable to an editorial
 change nobody would review as a security change -- in both directions,
 since deleting a word would equally have unmasked a real credential.
@@ -134,12 +131,8 @@ addition and must NOT be promoted to the shared base, where it would
 match ``header_key``, ``producer_key`` and ``casilla_key`` tree-wide.
 
 The set composes :data:`cadrumo.core.redaction.rules.ALWAYS_REDACT_KEY_TERMS`
-rather than redeclaring terms beside it. It previously did not, and was
-missing eight base terms -- ``nif``, ``tax_id``, ``nie``, ``bearer``,
-``certificate``, ``cookie``, ``authorization``, ``pkcs12`` -- so an
-undeclared fact named like a NIF rendered in the clear on this surface
-while the logging and live-diagnostic predicates both redacted it. Only
-the additions above are declared here; a term that must never diverge
+rather than redeclaring terms beside it. Only the additions above are
+declared here; a term that must never diverge
 belongs in the base.
 """
 
@@ -152,10 +145,7 @@ An ``object`` or ``array`` field is written as indexed instances under its
 path -- ``censo.divergencia.{n}.{axis,artefact_value,source}``,
 ``renta_family.descendiente.{n}.*`` -- and never at the bare path itself.
 So the bare path is not a blank waiting to be filled in; it is not a slot
-at all, and a row offered for it can only ever be empty. The manager
-offered exactly that: one permanently blank ``censo.divergencia`` row,
-which counted against the profile's own progress line and accepted a typed
-value that no reader in the system ever looks at.
+at all, and a row offered for it can only ever be empty.
 
 Their instances are therefore discovered from the record. The leaf names
 are not declared anywhere -- the writing family chooses them -- which is
@@ -196,12 +186,7 @@ def profile_field_choices(
 
     THE authority on "may this field be answered by picking rather than by
     typing", so the manager's edit dialog and the add-row form offer the same
-    editor for the same declaration instead of each deciding alone. They did
-    decide alone, and disagreed: the add-row form had always offered a boolean
-    as Yes/No, while the manager gave it a text box -- so the same field was a
-    two-item list on one surface and a guess-the-vocabulary prompt on the
-    other, and the manager stored whatever spelling of yes the operator
-    happened to reach for.
+    editor for the same declaration instead of each deciding alone.
 
     A BOOLEAN is a closed set of two, which is why it belongs here rather than
     in a checkbox: a page of mixed fields reads better with two named options
@@ -438,15 +423,9 @@ def mask_profile_field(*, path: str, label: str, sensitivity: SensitivityClass |
     which is what "defence in depth" means here -- a net under the
     unclassified, not a second opinion on the classified.
 
-    That fall-through used to run for every non-``SECRET`` field, which
-    is the opposite of what this docstring promised and let a field's
-    own description decide its confidentiality. It masked
-    ``auth.provider`` -- a closed enum naming the authentication mode,
-    no more secret than a username -- because the description says a
-    password is *not* stored there, while no field in the schema
-    declared ``SECRET`` at all. Prose documenting the absence of a
-    credential is not evidence of one, and a declaration the schema
-    makes explicitly must not be silently overridden by wording.
+    Prose documenting the absence of a credential is not evidence of one,
+    and a declaration the schema makes explicitly must not be silently
+    overridden by wording.
 
     Args:
         path: Dotted schema path of the field, e.g. ``auth.dni_nie``.
@@ -530,14 +509,13 @@ def _repeatable_section_views(
     A section with three socios yields three groups of the same declared
     fields, addressed at ``section.INDEX.field`` — which is both where the
     values live and where the completeness check already names its missing
-    entries, so the two now speak about the same rows.
+    entries, so the two speak about the same rows.
 
-    A section holding NO rows keeps the single unindexed group, which is
-    what the page has always shown. That is the honest answer to "you have
-    no socios": the fields a socio would carry, blank. Rendering nothing
-    would say the section does not exist, and rendering one blank group
-    beside three filled ones — the defect this replaces — says the taxpayer
-    has none while they have three.
+    A section holding NO rows keeps the single unindexed group. That is the
+    honest answer to "you have no socios": the fields a socio would carry,
+    blank. Rendering nothing would say the section does not exist, and
+    rendering one blank group beside three filled ones says the taxpayer has
+    none while they have three.
     """
     rows = tuple(profile_section_rows(section.key, present)) or ("",)
     return [
@@ -725,9 +703,7 @@ def _section_field_views(
     A path the engine derives yields no row at all. The write door refuses it,
     so rendering it would offer the operator a box whose value the record then
     rejects -- the two-surfaces-disagreeing failure the write-door refusal
-    exists to prevent, reintroduced at the point of entry. The declarations
-    themselves are retired in a later change, at which point this filter
-    becomes vacuous rather than wrong.
+    exists to prevent, reintroduced at the point of entry.
     """
     if section.repeatable:
         return _repeatable_section_views(section, values, present, field_help, code_lists)

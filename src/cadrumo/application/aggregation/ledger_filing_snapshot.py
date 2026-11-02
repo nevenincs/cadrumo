@@ -6,10 +6,7 @@ listing, and :mod:`application.modelo.verification_actions` for the Modelo 303
 deductible-evidence verify gate.
 
 That list names the callers as they stand and is not a guarantee that no other
-site reaches these functions; grep before relying on it. It previously named two
-modules that call nothing here at all, which is worse than naming none: a reader
-auditing the staleness refusal went looking in the wrong package, found nothing,
-and had every reason to conclude the enforcement did not exist.
+site reaches these functions; grep before relying on it.
 
 The pure records live in :mod:`domain.modelos.ledger_filing_snapshot`.
 This application module holds the Transaction-aware halves:
@@ -23,7 +20,8 @@ The fingerprint covers exactly the transaction facts that can move a casilla --
 dates, amount magnitude, currency, direction, business classification and
 proportionality, the IVA base/rate/amount/category, the spending and IRPF
 categories, the M210 source-jurisdiction/classification facts, the EU member
-state, the FX conversion, and the lifecycle state.
+state, the FX conversion, the lifecycle state, and (from field-set version 3)
+the bienes de inversion link and the customer's identifying Member State.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
@@ -79,15 +77,14 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 # (``art_104_tres_exclusion``, ``input_classification``, ``prorrata_sector_id``,
 # ``prorrata_reference``).
 #
-# The six declaration fields are where the gap was REACHABLE, and that is worth
-# stating precisely because it is narrower than it first looks. ``Transaction``
+# The declaration fields are narrower in effect than they first look. ``Transaction``
 # enforces ``taxable_base + iva_amount + recargo_amount == gross``, so a
 # surcharge cannot move without moving an amount V1 already covered; a
 # recargo-only drift is invisible to a V1 hash but cannot exist in a valid
 # catalogue. The declarations carry no such identity: reclassifying a row's
 # ``input_classification`` changes what it deducts while every amount stays put,
-# so a V1 comparison filed it under ``unchanged`` and the verdict reported that
-# a filed return still matched a ledger whose deduction had since changed.
+# so a V1 comparison would file it under ``unchanged``, reporting that a filed
+# return still matched a ledger whose deduction had changed.
 #
 # A V1 snapshot is NOT upgraded by recomputation. Rehashing it under V2 would
 # assert that the wider facts were checked when the filing was sealed, which
@@ -131,13 +128,37 @@ _FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
     ("prorrata_reference", "prorrata_reference"),
 )
 
+# V3 adds the two IVA facts an operator can still change through the manual
+# ledger edit path without moving anything V2 watches. ``investment_asset_id``
+# links a row to the bienes de inversion register, and the deduction admission
+# checks that link; ``counterparty_identification_state`` is the Member State
+# that identified the customer, and an intra-community supply is admitted only
+# when it validates. Neither moves an amount, so an edit to either on a
+# BORRADOR contributor left a V2 anchor unchanged and verify sealed values
+# computed under the old admission outcome.
+#
+# Both are scalars (an opaque identifier and a registry token whose canonical
+# text is its ``value``), so ``_normalise`` already renders them
+# deterministically and without a repr.
+#
+# The non-writable facts the IVA resolvers also read (``operation_date``, the
+# criterio de caja fields, ``exemption_article``, ``rectifies_ledger_id``) stay
+# out until a write path can change them; the write-path coverage test fails
+# the moment one can, which forces the next version rather than a silent gap.
+_FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V2,
+    ("investment_asset_id", "investment_asset_id"),
+    ("counterparty_identification_state", "counterparty_identification_state"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: _FINGERPRINT_FIELDS_V1,
     2: _FINGERPRINT_FIELDS_V2,
+    3: _FINGERPRINT_FIELDS_V3,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 2
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 3
 
 
 def _fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
@@ -319,6 +340,8 @@ def _evidence_row(
         m210_payer_id=m210_classification.payer_id if m210_classification is not None else None,
         m210_asset_or_right_id=(m210_classification.asset_or_right_id if m210_classification is not None else None),
         counterparty_country=transaction.counterparty_country,
+        investment_asset_id=transaction.investment_asset_id,
+        counterparty_identification_state=_enum_value(transaction.counterparty_identification_state),
         fx_rate=transaction.fx_rate,
         value_in_eur=transaction.value_in_eur,
         lifecycle_state=transaction.lifecycle_state.value,

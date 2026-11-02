@@ -377,13 +377,14 @@ def test_register_owned_acquisition_deducts_the_charge_and_keeps_its_input_iva(t
     assert Decimal(_BASE) not in {Decimal(value) for value in annual.values()}
 
 
-def test_a_separate_depreciation_row_is_withheld_with_a_blocking_note(tmp_path: Path) -> None:
+def test_a_separate_depreciation_row_is_withheld_with_a_check_note(tmp_path: Path) -> None:
     """The collision the register exists to prevent is never a sum.
 
     The same store gains a second ledger row tagged with an amortization
     category, which no element owns. Declaring its amount as well would deduct
     depreciation the register does not know about, so the row reaches no casilla
-    and the calculation carries a blocking note naming it and the remedy.
+    and the calculation carries a note to check, naming it and the remedy; it never
+    counts as missing or refuses the return.
     """
     with runtime_cli_profile(tmp_path=tmp_path, label="asset collision") as profile:
         _seed_ready_profile(profile.storage_root, profile.bucket_id)
@@ -435,7 +436,7 @@ def test_a_separate_depreciation_row_is_withheld_with_a_blocking_note(tmp_path: 
         for notice in envelope["notices"]
         if (notice.get("context") or {}).get("reason") == "ledger_amortization_row_unregistered"
     )
-    assert note["level"] == "missing"
+    assert note["level"] == "check"
     assert note["remedy"]
     assert persisted["current_calculation_revision_id"] == envelope["result"]["calculation_revision_id"]
     assert persisted["filed_calculation_revision_id"] is None

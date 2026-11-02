@@ -18,11 +18,13 @@ from typing import Protocol
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
+from ...core.external_constants import OutputLanguage
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_provider_registration import registration_for
+from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -84,6 +86,33 @@ def source_diagnostics_for[T](
             fact=fact(item),
         )
         for item in items
+    )
+
+
+def unresolved_binding_diagnostics(
+    *,
+    revision: ModeloRevision,
+    source_kind: str,
+    binding_ids: tuple[BindingId, ...],
+    resolver_id: str,
+    message: str,
+    message_language: OutputLanguage | None = None,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one.
+
+    ``message_language`` is the language ``message`` was worded in for the filer, when it was.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=source_kind,
+            resolver_id=resolver_id,
+            binding_id=binding_id,
+            casilla_id=sole_bound_casilla(revision, binding_id),
+            message=message,
+            message_language=message_language,
+        )
+        for binding_id in binding_ids
     )
 
 
@@ -544,4 +573,5 @@ __all__ = [
     "source_issue_diagnostics",
     "source_provenance_for",
     "storage_degradation_resolution",
+    "unresolved_binding_diagnostics",
 ]

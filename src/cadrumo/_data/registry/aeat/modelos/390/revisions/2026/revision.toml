@@ -83,12 +83,14 @@ source_refs = ["boe-modelo-390-2026-form", "aeat-modelo-390-procedure"]
 
 # Ejercicio 2026 is filed in January 2027 under the same plazo, Orden
 # EHA/3111/2009 art. 8: the thirty first natural days of January. AEAT's 2027
-# taxpayer calendar is not published, so no weekend displacement is asserted.
+# taxpayer calendar is not published; the thirtieth day, Saturday 30 January
+# 2027, is a non-working day, so Ley 39/2015 art. 30.5 moves the close to
+# Monday 1 February 2027.
 [[revisions."2026".family_overrides]]
 family = "deadline_windows"
 selector = {revision = "2025", id = "modelo-390-2025-0a"}
 replacement_id = "modelo-390-2026-0a"
-fields = {closes_on = 2027-01-30, filing_year = 2026, opens_on = 2027-01-01, period = "2026 0A"}
+fields = {closes_on = 2027-02-01, filing_year = 2026, opens_on = 2027-01-01, period = "2026 0A"}
 
 [[revisions."2026".family_overrides]]
 family = "constructs"

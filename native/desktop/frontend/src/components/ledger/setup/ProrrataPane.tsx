@@ -15,6 +15,8 @@ import type {
   ProrrataEntry,
   ProrrataMutationResult,
 } from "../../../shell/ledgerSetup";
+import { vocabularyEmpty } from "../movements/movementWords";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { useStrings } from "../../../shell/strings";
 import { WriteHold, type Landing, type LandingCheck } from "../WritePause";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
@@ -50,16 +52,6 @@ const ACTIONS = [
 ] as const;
 type Action = (typeof ACTIONS)[number];
 
-/** The provisional provenances the registry names; the register decides
- * which of them an election may declare. */
-const PROVENANCES = [
-  "aeat_autorizada",
-  "inicio_actividad",
-  "carried_prior_definitiva",
-  "interrumpida_tres_ultimos",
-] as const;
-const LETTERS = ["a", "b", "c", "d"] as const;
-
 /**
  * The prorrata register by ejercicio: the regime, the provisional
  * percentage and where it comes from, the definitive one once settled, and
@@ -74,6 +66,7 @@ export function ProrrataPane({
   fallbackYear,
 }: SetupProps) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const [ejercicio, setEjercicio] = useState(fallbackYear);
   const { read, reload } = useSetupRead(
     port,
@@ -439,7 +432,13 @@ export function ProrrataPane({
         value={provenance}
         onValue={setProvenance}
         placeholder={t("desktop.ledger.form.choose")}
-        options={PROVENANCES.map((value) => ({
+        unserved={vocabularyEmpty(
+          t,
+          vocabulary,
+          "",
+          vocabulary.prorrataProvenances.length,
+        )}
+        options={vocabulary.prorrataProvenances.map((value) => ({
           value,
           label: tokenText(t, "prorrata.provenance", value),
         }))}
@@ -568,7 +567,13 @@ export function ProrrataPane({
                   value={letra}
                   onValue={setLetra}
                   placeholder={t("desktop.ledger.form.choose")}
-                  options={LETTERS.map((value) => ({
+                  unserved={vocabularyEmpty(
+                    t,
+                    vocabulary,
+                    "",
+                    vocabulary.sectorLetters.length,
+                  )}
+                  options={vocabulary.sectorLetters.map((value) => ({
                     value,
                     label: tokenText(t, "prorrata.letra", value),
                   }))}

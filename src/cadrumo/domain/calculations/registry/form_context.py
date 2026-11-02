@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Final
+
 from ....core.filing_projection_ref import (
     M303Exonerado390ActivityProjectionRef,
     M303Exonerado390OperacionesTercerosProjectionRef,
@@ -14,6 +16,15 @@ from .export_semantics import ExportDraftAttribute
 from .schema import ModeloRevision
 from .schema_exports import ExportFieldDefinition
 from .schema_form_layouts import FormContextFieldBlock, FormFieldChoice
+
+FORM_CONTEXT_DRAFT_ATTRIBUTES: Final = frozenset(
+    {
+        ExportDraftAttribute.FILING_YEAR,
+        ExportDraftAttribute.PERIOD_CODE,
+        ExportDraftAttribute.PERIOD_START_DATE,
+        ExportDraftAttribute.PERIOD_END_DATE,
+    }
+)
 
 
 def resolve_form_context_field(revision: ModeloRevision, block: FormContextFieldBlock) -> ExportFieldDefinition:
@@ -74,12 +85,7 @@ def _supported_context_field(field: ExportFieldDefinition) -> bool:
         (M303Exonerado390ActivityProjectionRef, M303Exonerado390OperacionesTercerosProjectionRef),
     ):
         return True
-    return field.kind is CasillaFieldKind.DRAFT and field.draft_attribute in (
-        ExportDraftAttribute.FILING_YEAR,
-        ExportDraftAttribute.PERIOD_CODE,
-        ExportDraftAttribute.PERIOD_START_DATE,
-        ExportDraftAttribute.PERIOD_END_DATE,
-    )
+    return field.kind is CasillaFieldKind.DRAFT and field.draft_attribute in FORM_CONTEXT_DRAFT_ATTRIBUTES
 
 
 def form_context_choice(block: FormContextFieldBlock, value: object) -> FormFieldChoice | None:

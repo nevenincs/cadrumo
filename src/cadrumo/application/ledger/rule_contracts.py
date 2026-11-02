@@ -22,7 +22,9 @@ from ...domain.transactions.enums import BusinessClassification
 MAX_RULE_VALIDATION_MESSAGES = 32
 _VALIDATION_MESSAGE = Annotated[str, Field(min_length=1, max_length=2048)]
 RuleValidationMessages = Annotated[tuple[_VALIDATION_MESSAGE, ...], Field(max_length=MAX_RULE_VALIDATION_MESSAGES)]
-RuleValidationCode = Literal["empty_pattern", "invalid_pattern", "category", "invalid_command"]
+RuleValidationCode = Literal[
+    "empty_pattern", "invalid_pattern", "pattern_too_long", "pattern_overrun", "category", "invalid_command"
+]
 
 
 class LedgerRuleRowProjection(BaseModel):
@@ -193,9 +195,12 @@ class LedgerRuleApplyProjection(BaseModel):
     bucket_event_count: NonNegativeInt = 0
     validation_code: RuleValidationCode | None = None
     validation_messages: RuleValidationMessages = ()
+    refused_rule_id: Hex64Str | None = None
 
     @model_validator(mode="after")
     def _complete_outcome(self) -> LedgerRuleApplyProjection:
+        if self.refused_rule_id is not None and self.outcome != "validation_error":
+            raise ValueError("only a refusal names the rule it refused over")
         if self.outcome == "dry_run":
             _validate_rule_apply_preview(self)
         elif self.outcome == "applied":

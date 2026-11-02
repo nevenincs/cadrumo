@@ -28,8 +28,8 @@ from .renta_income_aggregation_support import (
     M130_INGRESOS_CASILLA,
     M130_MODELO,
     _actividad_transaction_with_source,
-    _catalogue_read_ports,
     _income_transaction,
+    catalogue_read_ports,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
@@ -197,7 +197,7 @@ def test_partitioned_m100_aggregation_reports_out_of_period_catalogue_transactio
         target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
         ),
@@ -230,7 +230,7 @@ def test_partitioned_m100_aggregation_matches_full_scan() -> None:
         target_casilla_id=_M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,
         activity_category_matcher=m130_activity_category_matcher,
         employment_category_matcher=m130_employment_category_matcher,
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
         ),

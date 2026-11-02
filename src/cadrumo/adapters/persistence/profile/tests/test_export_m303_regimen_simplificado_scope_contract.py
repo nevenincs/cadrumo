@@ -90,6 +90,7 @@ def _general_m303_filing_facts(*, operation: PinnedAuthorityOperation):
         prorrata_transition=resolve_m303_prorrata_transition_arrival(
             period=period,
             prorrata_register=prorrata_register,
+            operation=operation,
         ),
         prorrata_register=prorrata_register,
         differentiated_contributions=(),

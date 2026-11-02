@@ -119,6 +119,11 @@ class ModeloWorkCreateRefusal(BaseModel):
     reason: Annotated[str, Field(min_length=1, max_length=2048)]
 
 
+def modelo_work_create_effect(*, reused: bool, name_applied: str | None) -> OperationEffect:
+    """Creating a unit, or renaming a reused one, writes; reusing it unchanged does not."""
+    return OperationEffect.UPDATED if not reused or name_applied is not None else OperationEffect.NONE
+
+
 def _require_outcome_for_profile_period(
     outcome: ModeloWorkCreateSuccess | ModeloWorkCreateRefusal,
     *,
@@ -206,9 +211,7 @@ def project_modelo_work_create_result(result: BaseModel, receipt: OperationTermi
             definition_id=MODELO_WORK_CREATE_OPERATION_DEFINITION_ID,
             subject_ref=subject_ref,
             condition=OperationTerminalCondition.SUCCEEDED,
-            effect=OperationEffect.UPDATED
-            if not outcome.reused or outcome.name_applied is not None
-            else OperationEffect.NONE,
+            effect=modelo_work_create_effect(reused=outcome.reused, name_applied=outcome.name_applied),
             message="work create success has an incompatible terminal receipt",
         )
     return ModeloWorkCreateProjection(profile_id=private.profile_id, period=private.period, outcome=outcome)
@@ -348,9 +351,7 @@ class ModeloWorkCreateExecutor:
 
                 ensured = await asyncio.to_thread(ensure)
                 await context.events.effect(
-                    OperationEffect.UPDATED
-                    if not ensured.reused or ensured.name_applied is not None
-                    else OperationEffect.NONE
+                    modelo_work_create_effect(reused=ensured.reused, name_applied=ensured.name_applied)
                 )
                 unit = ensured.work_unit
                 if unit.bucket_id != profile_id or unit.period != period:

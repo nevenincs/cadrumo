@@ -9,7 +9,6 @@ from dataclasses import asdict
 from pathlib import Path
 
 import pytest
-from defusedxml import ElementTree
 
 from dev.packaging.native import installation, installation_filesystem
 from dev.packaging.native.distribution_prepare import refresh
@@ -91,6 +90,7 @@ def bundle_for(tmp_path: Path, target: str) -> BundleInputs | None:
 
 
 def payload_fixture(tmp_path: Path, target: str, *, manager: bool = False) -> tuple[Path, Path]:
+    """Build a synthetic payload; a Windows payload always carries its manager image."""
     value = asdict(identity(target))
     identity_file = tmp_path / "identity.json"
     identity_file.write_text(json.dumps(value), encoding="utf-8")
@@ -129,7 +129,7 @@ def payload_fixture(tmp_path: Path, target: str, *, manager: bool = False) -> tu
             ],
         },
     }
-    if manager:
+    if manager or target.startswith("windows-"):
         layout = load_layout("windows-x64")
         manifest["layout"].update({key: layout[key] for key in ("abi", "platform", "installation")})
         manager_image = next(image for image in layout["application_images"] if image["target"] == "rust_manager")
@@ -177,16 +177,8 @@ def test_native_layout_projects_registration(tmp_path: Path, target: str) -> Non
         assert (contents / "Resources/app/cadrumo").read_bytes() == (payload / "cadrumo").read_bytes()
         assert (contents / "Resources/app/data/package-manifest.json").is_file()
     else:
-        assert (root / "app/cadrumo").is_file()
-        wix = ElementTree.parse(tmp_path / "build/installation/metadata/Desktop.wxs")
-        namespaces = {"w": "http://wixtoolset.org/schemas/v4/wxs"}
-        shortcut_identity = wix.find(".//w:ShortcutProperty", namespaces)
-        assert shortcut_identity is not None
-        assert shortcut_identity.attrib == {"Key": "System.AppUserModel.ID", "Value": "md.neve.cadrumo"}
-        registry = wix.find(".//w:RegistryValue", namespaces)
-        assert registry is not None
-        assert registry.attrib["Root"] == "HKLM"
-        assert registry.attrib["Key"] == "Software\\md.neve.cadrumo"
+        assert (root / f"versions/{identity('windows-x86-64').version}" / "cadrumo").is_file()
+        assert not (tmp_path / "build/installation/metadata/Desktop.wxs").exists()
 
 
 def test_macos_bundle_refuses_missing_wrapper_inputs(tmp_path: Path) -> None:
@@ -235,7 +227,7 @@ def test_macos_bundle_seal_is_the_last_write_and_binds_the_receipt(tmp_path: Pat
 
 @pytest.mark.parametrize("desktop", [True, False])
 def test_windows_manager_stage_has_stable_entry_and_unmodified_version_inventory(tmp_path: Path, desktop: bool) -> None:
-    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64", manager=True)
+    payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
     desktop_entry = "cadrumo" if desktop else None
     root = prepare(payload, identity_file, tmp_path / "build", desktop_entry)
     version = json.loads(identity_file.read_text(encoding="utf-8"))["version"]
@@ -358,10 +350,12 @@ def test_install_refuses_staged_content_changed_after_configure(tmp_path: Path) 
 def test_uninstall_refuses_a_different_installation(tmp_path: Path) -> None:
     payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
     root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
-    (root / "app/data/package-manifest.json").write_text("another version", encoding="utf-8")
+    (root / f"versions/{identity('windows-x86-64').version}" / "data/package-manifest.json").write_text(
+        "another version", encoding="utf-8"
+    )
     with pytest.raises(ValueError, match="does not contain"):
         uninstall(root, tmp_path / "build/installation/metadata/installation.json")
-    assert (root / "app/cadrumo").exists()
+    assert (root / f"versions/{identity('windows-x86-64').version}" / "cadrumo").exists()
 
 
 def test_symlinked_prefix_is_refused(tmp_path: Path) -> None:
@@ -391,7 +385,11 @@ def test_prepare_refuses_a_preexisting_unowned_stage_without_deleting_it(tmp_pat
 def test_prepare_preserves_intervening_stage_changes(tmp_path: Path, change: str) -> None:
     payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
     root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
-    path = root / ("app/cadrumo" if change == "modified" else "user-owned")
+    path = (
+        root / f"versions/{identity('windows-x86-64').version}" / "cadrumo"
+        if change == "modified"
+        else root / "user-owned"
+    )
     path.write_text("preserve me", encoding="utf-8")
     with pytest.raises(ValueError, match="changed"):
         prepare(payload, identity_file, tmp_path / "build", "cadrumo")
@@ -401,16 +399,16 @@ def test_prepare_preserves_intervening_stage_changes(tmp_path: Path, change: str
 def test_prepare_reuses_an_identical_owned_stage_without_replacing_files(tmp_path: Path) -> None:
     payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
     root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
-    before = (root / "app/cadrumo").stat()
+    before = (root / f"versions/{identity('windows-x86-64').version}" / "cadrumo").stat()
     assert prepare(payload, identity_file, tmp_path / "build", "cadrumo") == root
-    after = (root / "app/cadrumo").stat()
+    after = (root / f"versions/{identity('windows-x86-64').version}" / "cadrumo").stat()
     assert (after.st_dev, after.st_ino, after.st_mtime_ns) == (before.st_dev, before.st_ino, before.st_mtime_ns)
 
 
 def test_prepare_refuses_a_different_requested_payload_without_erasing_old_stage(tmp_path: Path) -> None:
     payload, identity_file = payload_fixture(tmp_path, "windows-x86-64")
     root = prepare(payload, identity_file, tmp_path / "build", "cadrumo")
-    before = (root / "app/cadrumo").read_bytes()
+    before = (root / f"versions/{identity('windows-x86-64').version}" / "cadrumo").read_bytes()
     (payload / "cadrumo").write_text("new release", encoding="utf-8")
     manifest_path = payload / "data/package-manifest.json"
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -418,7 +416,7 @@ def test_prepare_refuses_a_different_requested_payload_without_erasing_old_stage
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="differs from the requested payload"):
         prepare(payload, identity_file, tmp_path / "build", "cadrumo")
-    assert (root / "app/cadrumo").read_bytes() == before
+    assert (root / f"versions/{identity('windows-x86-64').version}" / "cadrumo").read_bytes() == before
 
 
 def test_uninstall_preserves_a_file_changed_after_preflight(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

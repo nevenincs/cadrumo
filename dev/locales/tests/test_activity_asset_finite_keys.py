@@ -21,7 +21,23 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
         (
             "entrypoints/tui/ledger/actividad_asset.py",
             "tui.ledger.activity_asset.",
-            ("list", "plan", "timeline", "acquisition_candidates"),
+            (
+                "errors.entry_unreadable",
+                "errors.unexpected",
+                "errors.forecast_first",
+                "errors.year_invalid",
+                "errors.quarter_invalid",
+                "errors.asset_id_required",
+                "errors.json_invalid",
+                "plan_minimum",
+                "plan_minimum_incomplete",
+                "superseding_claims",
+            ),
+        ),
+        (
+            "entrypoints/tui/ledger/actividad_asset.py",
+            "desktop.ledger.assets.",
+            ("timeline.empty", "list.empty", "plan.empty", "filing.choose_year"),
         ),
     ],
 )

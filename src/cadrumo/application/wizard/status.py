@@ -271,11 +271,8 @@ def _require_active_profile_tax_id(
 def _grounded_tax_id_requirement(*, schema: ProfileSchemaDefinition) -> str:
     """Render the tax-identifier field as its operator label with legal grounding.
 
-    The refusal previously named the field by baking a selector token into its
-    sentence, which meant the operator read an identifier that appears nowhere
-    in the profile editor and that no translator could keep in step with the
-    schema. Reading the label from the schema is also what every other missing
-    profile fact refusal in this codebase does.
+    Reading the label from the schema, as every other missing profile fact
+    refusal does, keeps the name in step with the profile editor.
     """
     from ..user_profile.preflight import build_profile_preflight_requirement, format_profile_preflight_requirement
 

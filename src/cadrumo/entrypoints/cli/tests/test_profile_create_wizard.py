@@ -10,11 +10,6 @@ boundary of a naked ``create`` -- it reaches its own refusal without a
 missing-argument error and without being pre-empted by the storage
 runtime's no-active-session refusal -- plus the verb-path preference and
 the pinned question inventory the flags are derived from.
-
-Two interactive-run tests were retired with the wizard: their premise --
-that a console-less ``create`` is refused -- died when the scripted arm
-landed, and their refusal and JSON-parseability shapes are asserted by
-the scripted-creation module.
 """
 
 from __future__ import annotations
@@ -89,8 +84,7 @@ def test_partial_click_path_cannot_mask_the_profile_create_leaf() -> None:
     )
 
 
-# The pinned profile-create prompted-question inventory (see the question-count
-# decision note in the cli-authority-quality-backlog plan): the full declared question set
+# The pinned profile-create prompted-question inventory: the full declared question set
 # of the setup flow, which is exactly the ``supplied_question_ids`` frozenset the
 # ``create`` path writes to the payload. This is the single place the inventory is
 # pinned; a legitimate add or drop updates this set here, and any silent change
@@ -102,21 +96,10 @@ _EXPECTED_SETUP_QUESTION_IDS = frozenset(
         "address-postcode",
         "art109-activity-income-withholding-ge-70pct",
         "bienes-extranjero-above-threshold",
-        # NOT "cloud-evidence-upload". It was a setup question and was deliberately
-        # retired with the off-host read path (04561ef0f6, which names "the setup-wizard
-        # question that asked the operator to opt in" among what it deleted). That commit
-        # did not update this pin, so the entry outlived the question it named and this
-        # gate has been red ever since -- reported as a moved COUNT rather than a named
-        # id until the tally was removed.
-        #
-        # The capability's later return (069e0f5a96, 1ba2eb3633) did not reverse that.
-        # Both are scoped to the ELIGIBILITY BAR and say so: the enum member and its
-        # profile-schema field, restored because the enum/schema parity gate was red, and
-        # a per-locale label because the translation-honesty ratchet refuses a
-        # placeholder. Neither touches the wizard catalogue or this file. The operator
-        # sets it through --cloud-evidence-upload/--no-cloud-evidence-upload, which is a
-        # deliberate posture for a capability governing off-host transmission: settable,
-        # but not offered in the interactive walk-through.
+        # NOT "cloud-evidence-upload": that capability is not a setup question. The
+        # operator sets it through --cloud-evidence-upload/--no-cloud-evidence-upload,
+        # a deliberate posture for a capability governing off-host transmission:
+        # settable, but not offered in the interactive walk-through.
         "country-of-fiscal-residence",
         "declaration-roles",
         "does-intracomunitario",
@@ -199,9 +182,7 @@ def test_profile_create_prompted_question_inventory_is_pinned(*, registry_setup_
     property: it trains everyone to bump the constant, and once bumped it detects
     nothing the set does not already catch. It is also strictly worse at
     reporting — a count answers "something moved", the set answers WHICH question
-    moved, which is the fact a reader needs. This gate previously failed with
-    ``assert 75 == 76`` while the id naming the real defect sat one assertion
-    below, unreached.
+    moved, which is the fact a reader needs.
 
     Duplicates are still refused, as a property of the declaration rather than a
     size: the list being longer than the set means an id appears twice, and that

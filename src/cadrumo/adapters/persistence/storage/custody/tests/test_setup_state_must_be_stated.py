@@ -145,10 +145,9 @@ def test_model_copy_preserves_the_statement_so_the_guard_is_not_defeated(tmp_pat
 
     assert "setup_state" in carried.model_fields_set
 
-    # The statement is now demanded a step EARLIER than the writer: the field
-    # is required, so an unstated record cannot be built through validation at
-    # all. That is the same guard enforced sooner, not a weaker one -- the
-    # writer backstop below still refuses a record that evades construction.
+    # The field is required, so an unstated record cannot be built through
+    # validation at all; the writer backstop below still refuses a record that
+    # evades construction.
     context = _profile_creation_context_for_test()
     with pytest.raises(ValidationError):
         UserProfileRecord.model_validate(

@@ -7,19 +7,30 @@
 // a refusal whose detail is the operation's own result, as the host passes
 // it on. Everything it answers is synthetic.
 
+import { isClassification } from "../shell/ledgerContract";
 import type {
   JsonObject,
   JsonValue,
   LedgerDefinitionId,
 } from "../shell/ledger";
-import { isSpendingCategory } from "../shell/ledgerVocabulary";
+import servedEntryOptions from "./fixtures/ledgerEntryOptions.json" with { type: "json" };
 
 const entryWord = (family: string, value: string, word = value) => ({
   value,
   label_key: `application.ledger.entry_options.${family}.${word}`,
 });
-/** A trimmed copy of what `ledger.entry-options` serves. */
+const served = (family: string) =>
+  servedEntryOptions.families.find((found) => found.family === family)!.options;
+const SPENDING_CATEGORIES = new Set(
+  served("spending_category").map((option) => option.value),
+);
+const isSpendingCategory = (id: string) => SPENDING_CATEGORIES.has(id);
+/** What `ledger.entry-options` serves: the registry's families as recorded,
+ * and a trimmed copy of the country, currency and Modelo 210 ones. */
 const ENTRY_OPTION_FAMILIES = {
+  ...Object.fromEntries(
+    servedEntryOptions.families.map(({ family, options }) => [family, options]),
+  ),
   country: ["DE", "ES", "FR", "PT"].map((value) => ({
     value,
     label_key: null,
@@ -90,22 +101,15 @@ const decimalOf = (value: JsonValue | undefined): string => {
 };
 const decimal = (value: string) => ({ decimal: value });
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const DECIDED = ["BUSINESS", "PERSONAL", "MIXED"];
-const CLASSIFICATIONS = [
-  ...DECIDED,
-  "NOT_YET_PROCESSED",
-  "PROCESSED_UNCLASSIFIED",
-  "SKIPPED_BY_RULE",
-  "FAILED_VALIDATION",
-  "REVIEWED_EXCLUDED",
-];
 const fromKeys = (request: JsonObject, allowed: readonly string[]) => {
   if (Object.keys(request).some((key) => !allowed.includes(key))) invalid();
 };
 
 const PROVENANCES = ["aeat_autorizada", "inicio_actividad"];
 const CARRIED = "carried_prior_definitiva";
-const SECTOR_LETTERS = ["a", "b", "c", "d"];
+const SECTOR_LETTERS = served("prorrata_sector_letter").map(
+  (option) => option.value,
+);
 /** Reasons the catalogue names otherwise than the typed reason is. */
 const REASON_KEY_NAMES: Record<string, string> = {
   activity_conflict: "actividad_conflict",
@@ -518,7 +522,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     const pattern = request.description_pattern;
     if (typeof pattern !== "string") return invalid();
     const classification = required(request.classification);
-    if (!CLASSIFICATIONS.includes(classification)) invalid();
+    if (!isClassification(classification)) invalid();
     const priority = request.priority ?? 100;
     if (
       typeof priority !== "number" ||
@@ -2277,6 +2281,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         families: Object.entries(ENTRY_OPTION_FAMILIES).map(
           ([family, options]) => ({ family, options }),
         ),
+        limits: servedEntryOptions.limits,
       };
     },
     "ledger.inventory.options": (request) => {

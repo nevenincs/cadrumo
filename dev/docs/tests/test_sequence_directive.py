@@ -519,9 +519,7 @@ def test_directive_refuses_a_payload_less_result_frame(tmp_path: Path, _isolated
 
     This proves the WIRING, not just the refusal: the editorial payload contract
     is only worth anything if the directive — the boundary that admits a sequence
-    as published documentation — actually calls it. The contract previously lived
-    only in a predicate whose sole caller was a test reading a committed baseline,
-    so when that baseline was deleted it stopped protecting anything silently.
+    as published documentation — actually calls it.
 
     Like the live-AEAT refusal above, it fires before the golden lookup, so the
     author sees the real fault rather than a missing-golden error.

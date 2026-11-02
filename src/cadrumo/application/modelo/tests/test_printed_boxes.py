@@ -30,7 +30,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.codes import ModeloCode
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
-from ..calculation_bucket_actions import _unrouted_source_issues
+from ..calculation_bucket_actions import unrouted_source_issues
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_no_blocking_calculation_notes
 from ..calculation_notes import note_attention
 from ..printed_boxes import PrintedBoxes, printed_boxes, snapshot_printed_boxes
@@ -138,7 +138,7 @@ def test_an_unresolved_390_imports_box_blocks_is_stored_and_named_by_its_printed
 ) -> None:
     snapshot, form, boxes = _m390_form_and_boxes(operation)
     note = next(note for note in form.calculation_notes if note.casilla_id == _IMPORTS)
-    issues = _unrouted_source_issues((_unresolved_imports(),), boxes)
+    issues = unrouted_source_issues((_unresolved_imports(),), boxes)
     revision = _revision_with(snapshot.revision.id, issues)
 
     with pytest.raises(ModeloCalculationBlockedError) as refused:
@@ -159,7 +159,7 @@ def test_a_working_figure_the_390_form_does_not_number_is_neither_stored_nor_blo
     working = next(str(casilla.id) for casilla in snapshot.revision.casillas if not boxes.prints(str(casilla.id)))
     diagnostic = _unresolved_imports().model_copy(update={"casilla_id": working})
 
-    assert _unrouted_source_issues((diagnostic,), boxes) == ()
+    assert unrouted_source_issues((diagnostic,), boxes) == ()
     assert note_attention("unresolved_binding", box=boxes.number(working)) is ModeloFormAttention.CHECK
 
 

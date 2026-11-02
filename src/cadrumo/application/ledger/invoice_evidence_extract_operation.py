@@ -15,6 +15,7 @@ from ...core.config_support import LLMProvider
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationEffect,
 )
 from ...core.time.clock import now
@@ -264,7 +265,7 @@ def _project_extract(result: BaseModel, receipt: OperationTerminalReceipt, /) ->
         effects=frozenset({projection.consent_audit_effect}),
     )
     if (
-        projection.consent_audit_effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        projection.consent_audit_effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or (projection.profile_id != result.profile_id)
         or (projection.off_host_provider is None and projection.consent_audit_effect is not OperationEffect.NONE)
     ):

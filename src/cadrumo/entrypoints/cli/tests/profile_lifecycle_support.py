@@ -9,14 +9,11 @@ subtleties (key material, active-pointer clearing) across two test files. The
 storage fixtures themselves stay local to each test module so they cannot leak
 into the wider CLI test package.
 
-A prior ``stage_bucket_manifest`` helper staged a retired plaintext
-``manifest.toml`` stub with no committed custody capsule behind it, to
-simulate a ``missing_profile_record`` torn bucket. Listing and every
-resolution path (``list_profile_buckets``, ``resolve_profile_bucket``,
-``login_profile``) now project committed capsules exclusively and never
-read the manifest, so a manifest-only, capsule-less bucket is invisible to
-every operator-facing verb -- unreachable, not merely awkward -- and the
-helper was retired along with the tests it staged for.
+Listing and every resolution path (``list_profile_buckets``,
+``resolve_profile_bucket``, ``login_profile``) project committed capsules
+exclusively and never read the manifest, so a manifest-only, capsule-less
+bucket is invisible to every operator-facing verb -- unreachable, not merely
+awkward.
 """
 
 from __future__ import annotations

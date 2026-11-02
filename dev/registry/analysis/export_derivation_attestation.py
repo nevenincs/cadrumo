@@ -22,13 +22,15 @@ The screen exits 0 whatever it finds. It reports; it does not gate.
 from __future__ import annotations
 
 import json
-from collections.abc import Iterator, Sequence
+from collections.abc import Iterable, Iterator, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from pathlib import Path
 
 from cadrumo.core.resources.bundled_data import bundled_path
+from cadrumo.domain.calculations.registry.schema import ModeloDefinition, ModeloRevision
 
+from ..compiler.authority import compiled_bundled_authority
 from ..compiler.export_fragment_grammar import (
     EXPORT_FRAGMENT_PROVENANCE_FILENAME,
     GENERATED_EXPORT_DIRECTORY_NAME,
@@ -60,33 +62,53 @@ class RevisionAttestation:
         return self.attestation is DerivationAttestation.ATTESTED
 
 
-def _count_authored_fields(export_layouts: Path) -> int:
-    total = 0
-    for fragment in sorted(export_layouts.glob("*.toml")):
-        text = fragment.read_text(encoding="utf-8", errors="replace")
-        total += text.count("offset =")
-    return total
+def _count_authored_fields(revision: ModeloRevision) -> int:
+    """Positioned fields across the revision's effective export layouts, inherited ones included."""
+    return sum(
+        1
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.offset is not None
+    )
 
 
-def shipped_export_attestation(modelos_root: Path | None = None) -> Iterator[RevisionAttestation]:
-    """Yield one row per shipped export revision, attested or merely cited."""
+def shipped_export_attestation(
+    modelos: Iterable[ModeloDefinition] | None = None,
+    modelos_root: Path | None = None,
+) -> Iterator[RevisionAttestation]:
+    """Yield one row per shipped export revision, attested or merely cited.
+
+    A revision is shipped when it has a generation manifest or declares export
+    layouts. The layouts are read from the hydrated revision, so a revision that
+    inherits its predecessor's hand-authored layout without a directory of its
+    own is counted rather than omitted. Manifests are per-revision artefacts and
+    are read from ``modelos_root``.
+    """
     root = modelos_root if modelos_root is not None else bundled_path("registry", "aeat", "modelos")
-    for revision_root in sorted(root.glob("*/revisions/*")):
-        modelo = revision_root.parts[-3]
-        revision = revision_root.name
-        manifest = revision_root / GENERATED_EXPORT_DIRECTORY_NAME / EXPORT_FRAGMENT_PROVENANCE_FILENAME
-        if manifest.is_file():
-            derivations = json.loads(manifest.read_text(encoding="utf-8")).get("field_derivations") or []
-            yield RevisionAttestation(modelo, revision, DerivationAttestation.ATTESTED, len(derivations))
-            continue
-        authored = revision_root / "export_layouts"
-        if authored.is_dir():
-            yield RevisionAttestation(
-                modelo,
-                revision,
-                DerivationAttestation.CITED_ONLY,
-                _count_authored_fields(authored),
+    definitions = modelos if modelos is not None else compiled_bundled_authority().modelos
+    for modelo in sorted(definitions, key=lambda definition: str(definition.id)):
+        for revision in sorted(modelo.revisions.values(), key=lambda candidate: str(candidate.id)):
+            manifest = (
+                root
+                / str(modelo.id)
+                / "revisions"
+                / str(revision.id)
+                / GENERATED_EXPORT_DIRECTORY_NAME
+                / EXPORT_FRAGMENT_PROVENANCE_FILENAME
             )
+            if manifest.is_file():
+                derivations = json.loads(manifest.read_text(encoding="utf-8")).get("field_derivations") or []
+                yield RevisionAttestation(
+                    str(modelo.id), str(revision.id), DerivationAttestation.ATTESTED, len(derivations)
+                )
+            elif revision.export_layouts:
+                yield RevisionAttestation(
+                    str(modelo.id),
+                    str(revision.id),
+                    DerivationAttestation.CITED_ONLY,
+                    _count_authored_fields(revision),
+                )
 
 
 def screen_authority(_authority: object = None, _modelo_ids: Sequence[str] = ()) -> Sequence[RevisionAttestation]:

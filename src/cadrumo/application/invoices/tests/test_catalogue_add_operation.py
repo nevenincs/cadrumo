@@ -6,7 +6,7 @@ import asyncio
 import json
 from contextlib import asynccontextmanager
 from dataclasses import replace
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from types import SimpleNamespace
 from typing import Never, cast
 from uuid import UUID, uuid4
@@ -162,6 +162,37 @@ def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str,
     assert context.operands.value is not None
     assert context.operands.value.result.outcome == "validation_error"
     assert context.operands.value.result.validation_code == "invalid_invoice"
+    assert len(ports.invoice_repository.load()) == 0
+
+
+def test_a_date_the_registry_does_not_serve_is_a_typed_refusal_and_writes_nothing(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    ports = in_memory_catalogue_creation_ports()
+    line = InvoiceAddLine(
+        description="Service",
+        quantity=PublicDecimal(decimal="1"),
+        unit_price=PublicDecimal(decimal="100.00"),
+        subtotal=PublicDecimal(decimal="100.00"),
+        iva_rate="RATE_21",
+        iva_amount=PublicDecimal(decimal="21.00"),
+    )
+
+    with private_authority_lease() as authority_operation:
+        floor = authority_operation.supported_filing_years().date_envelope().floor
+        context = _Context(authority_operation)
+        request = OperationRequest[InvoiceAddRequest](
+            definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+            payload=_request(taxable_base=None, iva_rate=None, lines=(line,), issued_at=floor - timedelta(days=1)),
+        )
+        result = asyncio.run(InvoiceAddExecutor(lambda *, bucket_id: ports).execute(request, context))
+
+    assert isinstance(result, OperationRefusalEvidence)
+    assert result.refusal_code == INVOICE_ADD_VALIDATION_REFUSAL_CODE
+    assert context.operands.value is not None
+    assert context.operands.value.result.validation_code == "invalid_invoice"
+    assert context.events.effects == []
     assert len(ports.invoice_repository.load()) == 0
 
 
@@ -519,6 +550,42 @@ def test_invalid_invoice_is_a_typed_refusal_with_no_effect_or_write(monkeypatch)
         refusal_detail_ref=refusal.detail_ref,
     )
     assert project_invoice_add_result(context.operands.value, receipt) == result
+
+
+@pytest.mark.parametrize(
+    "overrides",
+    (
+        pytest.param({"currency": "E1"}, id="malformed-currency"),
+        pytest.param(
+            {
+                "taxable_base": None,
+                "iva_rate": None,
+                "lines": (
+                    InvoiceAddLine(
+                        description="Service",
+                        quantity=PublicDecimal(decimal="1E+30"),
+                        unit_price=PublicDecimal(decimal="100.00"),
+                        subtotal=PublicDecimal(decimal="100.00"),
+                        iva_rate="RATE_21",
+                        iva_amount=PublicDecimal(decimal="21.00"),
+                    ),
+                ),
+            },
+            id="magnitude-beyond-decimal-arithmetic",
+        ),
+    ),
+)
+def test_a_value_the_domain_cannot_carry_is_the_same_typed_refusal_as_any_invalid_invoice(
+    overrides: dict[str, object], monkeypatch: pytest.MonkeyPatch
+) -> None:
+    context, ports = _execute_add(_request(**overrides), monkeypatch)
+
+    assert context.events.effects == []
+    assert context.operands.value is not None
+    result = context.operands.value.result
+    assert result.outcome == "validation_error"
+    assert result.validation_code == "invalid_invoice"
+    assert len(ports.invoice_repository.load()) == 0
 
 
 def _execute_add(

@@ -223,6 +223,7 @@ def _build_prorrata_settlement_write(
             entries=(*retained, entry),
             sector_definitions=register.sector_definitions,
             activity_rows=register.activity_rows,
+            gross_declarations=register.gross_declarations,
         ),
         expected_revision_id=register_revision_id,
     )
@@ -382,12 +383,13 @@ def _new_local_m303_settlement_snapshot(
     )
 
 
-def _filed_calculation_revision(
+def filed_calculation_revision(
     *,
     target: CalculationRevision,
     actor: str,
     now: datetime,
 ) -> CalculationRevision:
+    """Move a verified revision to the local ``PRESENTADO`` state; AEAT status stays pending."""
     return target.model_copy(
         update={
             "state": CalculationRevisionState.PRESENTADO,
@@ -738,7 +740,7 @@ def _prepare_filing_catalogues_and_writes(
         )
 
     updated_filing_catalogue = upsert_filing_record(updated_filing_catalogue, new_filing)
-    filed_target = _filed_calculation_revision(target=target, actor=actor, now=now)
+    filed_target = filed_calculation_revision(target=target, actor=actor, now=now)
     revisions = upsert_calculation_revision(
         revisions,
         filed_target,

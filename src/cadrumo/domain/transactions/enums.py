@@ -137,6 +137,45 @@ personal-only transaction has been classified, but nothing about it belongs
 in a business calculation."""
 
 
+RULE_DECIDED_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.BUSINESS,
+        BusinessClassification.PERSONAL,
+        BusinessClassification.SKIPPED_BY_RULE,
+    },
+)
+"""What a person is offered to have a rule decide. The rule's contract accepts any
+classification; this narrower offer is what a frontend puts in front of a person."""
+
+
+TRANSFER_ALLOWED_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.NOT_YET_PROCESSED,
+        BusinessClassification.PERSONAL,
+        BusinessClassification.PROCESSED_UNCLASSIFIED,
+        BusinessClassification.SKIPPED_BY_RULE,
+    },
+)
+"""What an internal transfer may be classified as: never a tax-relevant business row."""
+
+
+RULE_CATEGORY_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.BUSINESS,
+    },
+)
+"""What a person's new rule names a spending category with. The rule's contract accepts one
+on any classification; this narrower offer is what a frontend puts in front of a person."""
+
+
+SPLIT_PART_CATEGORY_REQUIRED_STATES: frozenset[BusinessClassification] = frozenset(
+    {
+        BusinessClassification.BUSINESS,
+    },
+)
+"""What a split part cannot be staged as without naming a spending category."""
+
+
 SHARE_BEARING_STATES: frozenset[BusinessClassification] = frozenset(
     {
         BusinessClassification.MIXED,
@@ -153,6 +192,14 @@ dispositions have no economic role to apportion at all.
 Named because two surfaces ask it -- the write-path coupling check and the
 command that offers ``--business-pct`` -- and a membership test spelled out at
 each is the same rule declared twice."""
+
+
+CHANGEABLE_LIFECYCLE_STATES: frozenset[TransactionLifecycleState] = frozenset(
+    {
+        TransactionLifecycleState.ACTIVE,
+    },
+)
+"""The lifecycle states in which a row takes a change to its facts."""
 
 
 def takes_business_share(state: BusinessClassification) -> bool:

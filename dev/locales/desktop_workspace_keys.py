@@ -156,9 +156,12 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.side.outline",
         "desktop.modelo.view.form",
         "desktop.modelo.views.label",
+        # The export warning the command line and the terminal workbench state.
+        "tui.modelo.export.result.warning.cutoff_unverified",
         "workspace.declarations.calendar.aeat.justificante_verified",
         "workspace.declarations.calendar.evidence.disagrees",
         "workspace.declarations.calendar.legal.due_today",
+        "workspace.declarations.calendar.legal.unknown",
         "workspace.declarations.destination.overview",
         "workspace.declarations.due.days_late",
         "workspace.declarations.due.days_left",

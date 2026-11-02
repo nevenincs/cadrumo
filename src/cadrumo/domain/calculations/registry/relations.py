@@ -54,7 +54,7 @@ __all__ = [
     "relation_requirement_index",
     "relation_source_requirements",
     "source_presence_gaps",
-    "validate_relation_prefill_binding",
+    "validate_relation_prefill_fold_arity",
 ]
 
 #: The folds an observation-backed requirement can perform. A binding may
@@ -345,7 +345,7 @@ def _validate_relation_prefill_invariants(binding: BindingDefinition) -> None:
     _fold_source_casillas(binding, provider, _fold_op(binding))
 
 
-def validate_relation_prefill_binding(binding: BindingDefinition) -> list[str]:
+def validate_relation_prefill_fold_arity(binding: BindingDefinition) -> list[str]:
     """Validate a relation_prefill binding's fold op and source-casilla arity at build time.
 
     The provider member already validates its own shape; what it cannot see is

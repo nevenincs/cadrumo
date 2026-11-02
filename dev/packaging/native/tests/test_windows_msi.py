@@ -553,10 +553,10 @@ def test_registration_description_matches_authored_resources(tmp_path: Path, des
     assert tree.find(".//w:Property[@Id='CadrumoRegistration']", NS) is None
 
 
-def _prepared(tmp_path: Path, *, manager: bool = True, desktop: bool = True) -> tuple[Path, Path]:
+def _prepared(tmp_path: Path, *, desktop: bool = True) -> tuple[Path, Path]:
     temporary = tmp_path / "relocated ü space"
     temporary.mkdir()
-    payload, identity = payload_fixture(temporary, "windows-x86-64", manager=manager)
+    payload, identity = payload_fixture(temporary, "windows-x86-64")
     build = temporary / "build"
     build.mkdir()
     paths = {f"installation_{name}": f"installation/{name}" for name in ("stage", "metadata", "work", "receipts")}
@@ -594,13 +594,9 @@ def test_authoring_separates_file_ownership_and_scoped_registration(tmp_path: Pa
     assert descriptor["maintenance"]["products"] == {"application": package.attrib["ProductCode"]}
 
 
-@pytest.mark.parametrize("manager", [False, True])
-def test_legacy_msi_guard_refuses_only_manager_payloads(tmp_path: Path, manager: bool) -> None:
-    build, _ = _prepared(tmp_path, manager=manager)
-    if manager:
-        with pytest.raises(ValueError, match="authenticated release MSI"):
-            reject_combined_manager_msi(build)
-    else:
+def test_cpack_msi_guard_refuses_manager_payloads(tmp_path: Path) -> None:
+    build, _ = _prepared(tmp_path)
+    with pytest.raises(ValueError, match="authenticated release MSI"):
         reject_combined_manager_msi(build)
 
 

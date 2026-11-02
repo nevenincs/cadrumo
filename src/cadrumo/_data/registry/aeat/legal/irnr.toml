@@ -576,8 +576,8 @@ required_text = [
 # rentas-imputadas (for the 2025 devengo schedule, presentation throughout the
 # following natural year, 1 January-31 December) are RESULTADO/TIPO-dependent.
 # Payment domiciliacion is a narrower payment-modality interval and never defines
-# the presentation window. These cases require the qualified deadline identity
-# decided by the M210 plazo-keying ADR; they cannot be collapsed into one annual row.
+# the presentation window. These cases require a qualified deadline identity;
+# they cannot be collapsed into one annual row.
 [legal."orden-eha-3316-2010:art-5"]
 evidence_tier = "legal_authority"
 authority = "boe"
@@ -745,21 +745,15 @@ applies_from = 2011-01-01
 # Closed on the artefact's OWN declared extent, not on its successor's start.
 # AEAT titles this exact URL "210 - Orden EHA/3316/2010 (Devengos desde el
 # 01-01-2011 al 31-12-2017)", and the declared 48190 bytes match the 47 KB the
-# index advertises for it. Closing it at the day before "aeat-dr-210-2022"
-# opens would have stretched it over 2018-2022, which AEAT governs with two
-# further editions this registry does not enrol ("Devengos entre del 01-01-2018
-# y 31/12/2021" and "Devengos entre 01-01-2022 y 01-06-2022"). Narrowing to the
-# artefact's real extent turns a silent over-claim into a visible era gap for
-# 2018-01-01..2022-05-31, which is the honest state until those two are bundled.
+# index advertises for it. AEAT governs 2018-2022 with two further editions, which
+# this registry does not enrol, so 2018-01-01..2022-05-31 is a visible era gap.
 applies_to = 2017-12-31
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos/dr210_2011.pdf"
 review_status = "pending_review"
 
 # Modelo 210 diseño de registro for accruals (devengos) between 01/06/2022 and
-# 01/01/2026, backing the orden-hac-56-2024 layout amendment. Acquired,
-# manifested and on disk since 2026-07-21 but previously unregistered, so no
-# record_design source covered the window. Re-fetched from the live AEAT URL
-# on 2026-08-15 and confirmed byte-identical (sha256 match) before registering.
+# 01/01/2026, backing the orden-hac-56-2024 layout amendment.
+# Verified byte-identical (sha256) against the live AEAT URL on 2026-08-15.
 [sources."aeat-dr-210-2022"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -770,14 +764,13 @@ sha256 = "dce167991abaf547f31b38d7a5e51892ff6e8bd49a27a539432ab504891a0c00"
 bytes = 308224
 retrieved_at = 2026-07-21
 applies_from = 2022-06-01
-# Was 2026-01-01, which double-claimed a day with "aeat-dr-210-2026". AEAT
-# titles that successor "Devengos a partir del 01-01-2026" -- explicitly
-# inclusive of 01-01-2026 -- so the two could not both hold it. AEAT's own
-# boundary convention across its consecutive 210 editions settles the direction:
-# "Devengos desde el 01-01-2011 al 31-12-2017" and "Devengos entre del
-# 01-01-2018 y 31/12/2021" both close on 31 December, and this edition's own
-# title ("entre 01-06-2022 y 01-01-2026") states its upper bound as the
-# SUCCESSOR'S START, not as its own last day. Closed the day before.
+# The successor, "Devengos a partir del 01-01-2026", is inclusive of 01-01-2026, so
+# the two cannot both hold that day. AEAT's own boundary convention across its
+# consecutive 210 editions settles the direction: "Devengos desde el 01-01-2011 al
+# 31-12-2017" and "Devengos entre del 01-01-2018 y 31/12/2021" both close on 31
+# December, and this edition's own title ("entre 01-06-2022 y 01-01-2026") states its
+# upper bound as the SUCCESSOR'S START, not as its own last day. It closes the day
+# before.
 applies_to = 2025-12-31
 period_selector = { year_from = 2022, year_to = 2025, periods = ["EVENT-N", "0A"] }
 source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_registro/DR_200_299/archivos_22/dr210e22.xls"
@@ -807,8 +800,8 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "pending_review"
 
 # Modelo 210 diseño de registro for accruals (devengos) from 01/01/2026
-# onward, backing the orden-hac-623-2026 layout amendment. Same acquisition
-# and re-verification history as aeat-dr-210-2022 above.
+# onward, backing the orden-hac-623-2026 layout amendment.
+# Verified byte-identical (sha256) against the live AEAT URL on 2026-08-15.
 [sources."aeat-dr-210-2026"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -865,10 +858,8 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "pending_review"
 
 # Historical Modelo 216 design, pre-2024, outside the current declared span.
-# Already acquired and manifested (2026-07-21) but previously unregistered --
-# registration, not acquisition. Records historical inventory; asserts no
-# coverage claim. Re-fetched from the live AEAT URL on 2026-08-15 and
-# confirmed byte-identical (sha256 match) before registering.
+# Records historical inventory; asserts no coverage claim.
+# Verified byte-identical (sha256) against the live AEAT URL on 2026-08-15.
 [sources."aeat-dr-216-2020-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"
@@ -893,19 +884,17 @@ corpus_path = "corpus/aeat_official/instructions/modelo_296/files/modelo-296-pro
 sha256 = "1acee493b408c9aa4d6300847c7561268fc41bdc704d36349468f67678012c54"
 bytes = 54093
 retrieved_at = 2026-07-01
-# applies_from corrected to 2020-01-01. The bundled page contradicts the
-# previous date with the same evidence the modelo-190 correction was recorded
-# on (see aeat-modelo-190-procedure in irpf.toml): it carries the link title
+# applies_from is 2020-01-01. The bundled page carries the link title
 # "Modelo 296. Ejercicio 2020 y siguientes. Consultas y bajas de
 # declaraciones." -- the same sentence, in the same link, in the same position
-# as on 190, with only the modelo number changed. Leaving it at 2024-02-01 while 190
-# sits at 2020-01-01 on that identical string is an inconsistency in the corpus
-# rather than a difference between the documents.
+# as on 190, with only the modelo number changed. An identical string on 190 at
+# 2020-01-01 makes a different date here an inconsistency in the corpus, not a
+# difference between the documents.
 #
 # WHAT IS INFERRED HERE, stated so a reviewer can weigh it: the link scopes a
 # consultas-y-bajas SERVICE to ejercicio 2020 onward. Treating that as the
 # PROCEDURE DOCUMENT's own applicability window is an inference, and it is the
-# one the 190 correction already made rather than a new one. Anyone who thinks
+# same one the 190 window rests on. Anyone who thinks
 # it reasons too freely from a service scope to a document window should
 # revisit 190 first; these five stand or fall with it.
 applies_from = 2020-01-01
@@ -939,10 +928,8 @@ source_url = "https://sede.agenciatributaria.gob.es/static_files/Sede/Disenyo_re
 review_status = "pending_review"
 
 # Historical Modelo 296 design, pre-2024, outside the current declared span.
-# Already acquired and manifested (2026-07-21) but previously unregistered --
-# registration, not acquisition. Records historical inventory; asserts no
-# coverage claim. Re-fetched from the live AEAT URL on 2026-08-15 and
-# confirmed byte-identical (sha256 match) before registering.
+# Records historical inventory; asserts no coverage claim.
+# Verified byte-identical (sha256) against the live AEAT URL on 2026-08-15.
 [sources."aeat-dr-296-2023"]
 evidence_tier = "layout_authority"
 authority = "aeat"

@@ -61,6 +61,7 @@ from .flow import (
 # ``_enums`` ban (clause 5 of the structural enum-import placement check).
 # At runtime the helpers are called only after the invoices package init
 # finishes, so the public-package import resolves cleanly.
+from .prorrata import InputClassification
 from .schema import InvoiceKind, IvaCategory, IvaLedgerObservationRole, IvaRateKind
 
 if TYPE_CHECKING:
@@ -191,9 +192,7 @@ def classify_invoice_line_for_iva(
         )
 
     # One canonical rate-kind to domestic-category table, composed with the
-    # public rate-kind accessor. A local IvaRate-keyed copy used to live here
-    # and was exactly this composition, so it could drift without any symbol
-    # search relating the two.
+    # public rate-kind accessor.
     category = domestic_categories_by_rate_kind(_scoped_rate_categories(on_date or today_madrid()))[rate_kind]
     flow_direction = flow_direction_for_invoice_kind(invoice_kind)
     return IvaInvoiceClassification(
@@ -217,6 +216,8 @@ def invoice_line_to_iva_observation(
     recargo_amount: Decimal = ZERO,
     investment_asset_id: str | None = None,
     rectifies_ledger_id: str | None = None,
+    input_classification: InputClassification | None = None,
+    prorrata_sector_id: str | None = None,
 ) -> IvaLedgerObservation:
     """Build an :class:`IvaLedgerObservation` from invoice line metadata.
 
@@ -259,6 +260,10 @@ def invoice_line_to_iva_observation(
         investment_asset_id: Reciprocal investment-register identity when the
             deduction family is an investment acquisition.
         rectifies_ledger_id: Corrected ledger identity for a rectification.
+        input_classification: Art. 106 input classification carried from the
+            linked ledger deduction authority, or ``None`` when unclassified.
+        prorrata_sector_id: Sector identity carried from the linked ledger
+            deduction authority, or ``None`` when the input has no sector.
 
     Returns:
         An :class:`IvaLedgerObservation` with the full classification
@@ -292,19 +297,13 @@ def invoice_line_to_iva_observation(
         deduction_provenance=deduction_provenance,
         investment_asset_id=investment_asset_id,
         rectifies_ledger_id=rectifies_ledger_id,
-        # applied_rate was previously left unset, on the reasoning that an
-        # invoice line carries a rate SLOT rather than a number, so filling it
-        # would mean re-deriving the rate from the TIER -- answering "what does
-        # this tier mean" instead of "what was this line charged", and inventing
-        # agreement with a tier default the line may not have carried.
-        #
-        # That reasoning does not survive registry slots that name a rate of
-        # their own. Transitional food slots can coexist with an ordinary
-        # tier, so iva_rate_percentage reads the selected slot's own authority
-        # record and confirms it was in force on issued_at rather than
-        # consulting the tier default. The rate is measured, not inferred, so
-        # withholding it would drop the line out of its rate-specific return
-        # bucket.
+        input_classification=input_classification,
+        prorrata_sector_id=prorrata_sector_id,
+        # The applied rate is measured, not inferred. Transitional food slots can
+        # coexist with an ordinary tier, so iva_rate_percentage reads the selected
+        # slot's own authority record and confirms it was in force on issued_at
+        # rather than consulting the tier default. Withholding the rate would drop
+        # the line out of its rate-specific return bucket.
         applied_rate=iva_rate_percentage(iva_rate, issued_at),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )

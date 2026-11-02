@@ -62,24 +62,24 @@ Assigned reports: [089](../articles/089-durable-operation-execution-access-and-p
 
 ## Detailed articles
 
-- [Durable operation execution, access and public projections](../articles/089-durable-operation-execution-access-and-public-projections.md) — `STAGE-2-089`
-- [Operation contracts, observation and transient operands](../articles/090-operation-contracts-observation-and-transient-operands.md) — `STAGE-2-090`
-- [Operation authority, registry and private input custody](../articles/091-operation-authority-registry-and-private-input-custody.md) — `STAGE-2-091`
-- [Operator action and command-surface contracts](../articles/092-operator-action-and-command-surface-contracts.md) — `STAGE-2-092`
-- [Overview calendar, filing evidence, and readiness views](../articles/093-overview-calendar-filing-evidence-and-readiness-views.md) — `STAGE-2-093`
-- [Overview explain, Home, pipeline, and registered read projections](../articles/094-overview-explain-home-pipeline-and-registered-read-projections.md) — `STAGE-2-094`
-- [Unified review queue and local runtime contracts](../articles/096-unified-review-queue-and-local-runtime-contracts.md) — `STAGE-2-096`
-- [Ephemeral cross-workbench search](../articles/097-ephemeral-cross-workbench-search.md) — `STAGE-2-097`
-- [Profile access, automation custody, and portable exports](../articles/101-profile-access-automation-custody-and-portable-exports.md) — `STAGE-2-101`
-- [Encrypted profile custody and censal workflows](../articles/102-encrypted-profile-custody-and-censal-workflows.md) — `STAGE-2-102`
-- [Profile custody transactions and connected configuration](../articles/103-profile-custody-transactions-and-connected-configuration.md) — `STAGE-2-103`
-- [Profile login, maintenance operations, and history](../articles/104-profile-login-maintenance-operations-and-history.md) — `STAGE-2-104`
-- [Profile facts, registration, recovery, and session selection](../articles/105-profile-facts-registration-recovery-and-session-selection.md) — `STAGE-2-105`
-- [Profile session authority, access leases, and delegation](../articles/106-profile-session-authority-access-leases-and-delegation.md) — `STAGE-2-106`
-- [Setup wizard, profile editing, and command construction](../articles/107-setup-wizard-profile-editing-and-command-construction.md) — `STAGE-2-107`
-- [Wizard contracts and validation](../articles/108-wizard-contracts-and-validation.md) — `STAGE-2-108`
-- [Workflow execution and local filing orchestration](../articles/109-workflow-execution-and-local-filing-orchestration.md) — `STAGE-2-109`
-- [Workflow results, snapshots, and history disclosure](../articles/110-workflow-results-snapshots-and-history-disclosure.md) — `STAGE-2-110`
+- [Durable operation execution, access and public projections](../articles/089-durable-operation-execution-access-and-public-projections.md)
+- [Operation contracts, observation and transient operands](../articles/090-operation-contracts-observation-and-transient-operands.md)
+- [Operation authority, registry and private input custody](../articles/091-operation-authority-registry-and-private-input-custody.md)
+- [Operator action and command-surface contracts](../articles/092-operator-action-and-command-surface-contracts.md)
+- [Overview calendar, filing evidence, and readiness views](../articles/093-overview-calendar-filing-evidence-and-readiness-views.md)
+- [Overview explain, Home, pipeline, and registered read projections](../articles/094-overview-explain-home-pipeline-and-registered-read-projections.md)
+- [Unified review queue and local runtime contracts](../articles/096-unified-review-queue-and-local-runtime-contracts.md)
+- [Ephemeral cross-workbench search](../articles/097-ephemeral-cross-workbench-search.md)
+- [Profile access, automation custody, and portable exports](../articles/101-profile-access-automation-custody-and-portable-exports.md)
+- [Encrypted profile custody and censal workflows](../articles/102-encrypted-profile-custody-and-censal-workflows.md)
+- [Profile custody transactions and connected configuration](../articles/103-profile-custody-transactions-and-connected-configuration.md)
+- [Profile login, maintenance operations, and history](../articles/104-profile-login-maintenance-operations-and-history.md)
+- [Profile facts, registration, recovery, and session selection](../articles/105-profile-facts-registration-recovery-and-session-selection.md)
+- [Profile session authority, access leases, and delegation](../articles/106-profile-session-authority-access-leases-and-delegation.md)
+- [Setup wizard, profile editing, and command construction](../articles/107-setup-wizard-profile-editing-and-command-construction.md)
+- [Wizard contracts and validation](../articles/108-wizard-contracts-and-validation.md)
+- [Workflow execution and local filing orchestration](../articles/109-workflow-execution-and-local-filing-orchestration.md)
+- [Workflow results, snapshots, and history disclosure](../articles/110-workflow-results-snapshots-and-history-disclosure.md)
 
 
 ```{toctree}

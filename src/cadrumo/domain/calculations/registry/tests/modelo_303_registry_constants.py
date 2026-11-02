@@ -27,20 +27,19 @@ _M303_BIENES_INVERSION_REGULARIZACION_BINDING = "modelo-303-bienes-inversion-reg
 _M303_PRORRATA_REGULARIZACION_CASILLA: CasillaId = validated_casilla_id("44")
 _M303_PRORRATA_REGULARIZACION_BINDING = "modelo-303-prorrata-regularizacion-casilla-44"
 _M303_PRORRATA_REGULARIZACION_SOURCE_CASILLAS: tuple[CasillaId, ...] = (
-    _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
     _M303_PRORRATA_VOLUMEN_CON_DERECHO_CASILLA,
     _M303_PRORRATA_VOLUMEN_TOTAL_CASILLA,
     _M303_PRORRATA_PORCENTAJE_CASILLA,
 )
-_M303_PRORRATA_REGULARIZACION_SOURCE_PERIODS = ("1T", "2T", "3T", "4T")
-_M303_EXPLICIT_RECORD_DESIGN_REVISIONS = (
+_M303_PRORRATA_REGULARIZACION_SOURCE_PERIOD_SELECTION = "filer_liquidation_cadence"
+M303_EXPLICIT_RECORD_DESIGN_REVISIONS = (
     "2023",
     "2024-hasta-08-y-2t",
     "2024-desde-09-y-3t",
     "2025",
     "2026-y-siguientes",
 )
-_M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
+M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
     # `aeat-dr-303-2022`, not 2025. The 2022 revision borrowed a later design
     # while it was still the open-ended 2009-2022 span with none of its own;
     # it now cites the 2022 diseno, which is the one that governs its year.
@@ -51,14 +50,14 @@ _M303_RECORD_DESIGN_SOURCE_BY_REVISION = {
     "2025": "aeat-dr-303-2025",
     "2026-y-siguientes": "aeat-dr-303-2026",
 }
-_M303_ANNUAL_ORDEN_SOURCE_BY_REVISION = {
+M303_ANNUAL_ORDEN_SOURCE_BY_REVISION = {
     "2023": "boe-orden-hfp-1172-2022-iva-authority",
     "2024-hasta-08-y-2t": "boe-orden-hfp-1359-2023-iva-authority",
     "2024-desde-09-y-3t": "boe-orden-hfp-1359-2023-iva-authority",
     "2025": "boe-orden-hac-1347-2024-iva-authority",
     "2026-y-siguientes": "boe-orden-hac-1425-2025-iva-authority",
 }
-_M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
+M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION = {
     "2022": frozenset(
         {
             "ley-37-1992:art-88",
@@ -92,6 +91,6 @@ _M303_CURRENT_RECORD_DESIGN_LEGAL_REFS = frozenset(
         "rd-1624-1992:art-71",
     }
 )
-_M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF = "orden-hac-819-2024:art-unico"
-for _revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
-    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION[_revision_id] = _M303_CURRENT_RECORD_DESIGN_LEGAL_REFS
+M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF = "orden-hac-819-2024:art-unico"
+for _revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
+    M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION[_revision_id] = _M303_CURRENT_RECORD_DESIGN_LEGAL_REFS

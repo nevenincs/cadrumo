@@ -9,7 +9,8 @@ from pathlib import Path
 from cadrumo.core.toml import TomlDecodeError
 from dev._paths import REPO_ROOT
 
-from .unreachable_findings import _module_findings, _symbol_findings, _test_findings
+from .unreachable_findings import _FormCodes, _module_findings, _symbol_findings, _test_findings
+from .unreachable_form_codes import coded_enum_sources, declared_form_codes
 from .unreachable_graph import _shipped_importers, _spawn_edges, module_edges, reachable_closure
 from .unreachable_memo import shared_scan_memo
 from .unreachable_models import Confidence, ShippedModule, UnreachableCodeOutcome, UnreachableCodeResult
@@ -88,8 +89,15 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
     module_findings = _module_findings(
         spec, modules, script_reach, runtime_reach, full_reach, outside, shipped_importers, full_edges
     )
-    symbol_findings, data_cleared, dev_cleared = _symbol_findings(
-        spec, modules, runtime_reach, full_reach, outside, data_tokens, declared_values
+    symbol_findings, data_cleared, dev_cleared, registry_cleared = _symbol_findings(
+        spec,
+        modules,
+        runtime_reach,
+        full_reach,
+        outside,
+        data_tokens,
+        declared_values,
+        _FormCodes(coded_enum_sources(modules), declared_form_codes(spec)),
     )
 
     if not module_findings and not symbol_findings:
@@ -100,6 +108,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
             reachable_modules=len(runtime_reach & audited_names),
             data_cleared=data_cleared,
             dev_cleared=dev_cleared,
+            registry_cleared=registry_cleared,
         )
     return UnreachableCodeResult.from_findings(
         roots=roots,
@@ -111,6 +120,7 @@ def _scan_with_memo(spec: ShippedTreeSpec) -> UnreachableCodeResult:
         tests=_test_findings(spec, known, module_findings, symbol_findings),
         data_cleared=data_cleared,
         dev_cleared=dev_cleared,
+        registry_cleared=registry_cleared,
     )
 
 

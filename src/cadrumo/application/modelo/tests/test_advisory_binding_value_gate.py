@@ -44,13 +44,13 @@ from ...actividad_asset.tests.register_support import MemoryRepository
 from ...aggregation.modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from ...aggregation.tests.ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
-from ...aggregation.tests.renta_income_aggregation_support import _actividad_transaction, _catalogue_read_ports
+from ...aggregation.tests.renta_income_aggregation_support import actividad_transaction, catalogue_read_ports
 from ...aggregation.tests.test_actividad_retencion_declared_credit import (
-    _BUCKET,
-    _declared_pair,
+    BUCKET,
+    declared_pair,
 )
 from ..advisory_binding_value import add_advisory_binding_value_diagnostics
-from ..calculation_bucket_actions import _unrouted_source_issues
+from ..calculation_bucket_actions import unrouted_source_issues
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
 from ..calculation_notes import GATE_REFUSED_REASONS
 from ..calculation_screen import CALCULATION_SCREEN_OUTDATED_REASON, calculation_screen_stamp
@@ -83,9 +83,9 @@ def _work_unit(snapshot: RegistrySnapshot) -> WorkUnit:
     revision_id = str(snapshot.revision.id)
     return WorkUnit(
         work_unit_id=derive_work_unit_id(
-            bucket_id=_BUCKET, modelo="130", filing_year=_YEAR, period=period, revision_id=revision_id
+            bucket_id=BUCKET, modelo="130", filing_year=_YEAR, period=period, revision_id=revision_id
         ),
-        bucket_id=_BUCKET,
+        bucket_id=BUCKET,
         modelo=ModeloCode("130"),
         filing_year=_YEAR,
         period=period,
@@ -99,16 +99,16 @@ def _work_unit(snapshot: RegistrySnapshot) -> WorkUnit:
 def _resolve(
     snapshot: RegistrySnapshot, transactions: TransactionCatalogue, invoices: InvoiceCatalogue
 ) -> CalculationSourceResolution:
-    repository = InMemoryTransactionCatalogueRepository(bucket_id=_BUCKET)
+    repository = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET)
     repository.save(transactions)
     resolver = LedgerRentaIncomeAggregationSourceResolver(
         activity_asset_history_repository=MemoryRepository(),
         transaction_repository=repository,
-        ports=_catalogue_read_ports(invoices=invoices, transactions=transactions),
+        ports=catalogue_read_ports(invoices=invoices, transactions=transactions),
     )
     return resolver.resolve(
         CalculationSourceContext(
-            bucket_id=_BUCKET,
+            bucket_id=BUCKET,
             modelo="130",
             filing_year=_YEAR,
             period=Period.from_year_and_code(_YEAR, _QUARTER),
@@ -121,7 +121,7 @@ def _receipt(provider_id: str, cash: Decimal) -> TransactionCatalogue:
     """One activity receipt whose own record states a 2.000,00 base and 420,00 IVA at 21 %."""
     return TransactionCatalogue.from_transactions(
         (
-            _actividad_transaction(
+            actividad_transaction(
                 provider_id,
                 value_date=date(2026, 2, 10),
                 amount=cash,
@@ -192,7 +192,7 @@ def _calculated(
     """Run the post-merge emission and the durable projection a calculation persists."""
     snapshot = _snapshot(operation)
     emitted = add_advisory_binding_value_diagnostics(snapshot, resolution, operation=operation)
-    persisted = _unrouted_source_issues(emitted.diagnostics, snapshot_printed_boxes(operation, snapshot))
+    persisted = unrouted_source_issues(emitted.diagnostics, snapshot_printed_boxes(operation, snapshot))
     return emitted, persisted
 
 
@@ -258,7 +258,7 @@ def test_a_declared_credit_is_calculated_shown_and_refused_at_check_export_and_r
     operation: PinnedAuthorityOperation,
 ) -> None:
     snapshot = _snapshot(operation)
-    resolution = _resolve(snapshot, *_declared_pair())
+    resolution = _resolve(snapshot, *declared_pair())
 
     assert resolution.binding_values[_CAPPED_BINDING] == _DECLARED_CREDIT
     emitted, persisted = _calculated(operation, resolution)

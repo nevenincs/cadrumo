@@ -81,6 +81,11 @@ class WorkflowStage(StrEnum):
     DONE = "DONE"
     ABORTED = "ABORTED"
 
+    @property
+    def is_terminal(self) -> bool:
+        """Whether the run has ended, completed or refused."""
+        return self in {WorkflowStage.DONE, WorkflowStage.ABORTED}
+
 
 class WorkflowPurpose(StrEnum):
     """Why the workflow engine is being driven.
@@ -635,7 +640,7 @@ class WorkflowResult(BaseModel):
     def _check_terminal_consistency(self) -> WorkflowResult:
         if self.ended_at < self.started_at:
             raise ValueError("ended_at precedes started_at")
-        if self.final_stage not in {WorkflowStage.DONE, WorkflowStage.ABORTED}:
+        if not self.final_stage.is_terminal:
             raise ValueError(f"final_stage must be DONE or ABORTED; got {self.final_stage.value}")
         if self.final_stage is WorkflowStage.DONE:
             if self.aborted_reason is not None:

@@ -25,7 +25,12 @@ from ...application.ledger.invoice_evidence_extract_operation import (
     LedgerEvidenceExtractRequest,
 )
 from ...core.errors.hierarchy import InternalInvariantError
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationEffect,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from .common import active_bucket_id_or_refuse
 
 
@@ -85,7 +90,7 @@ def submit_invoice_evidence_extract(
         or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.effect is not projection.consent_audit_effect
         or completed.refusal_code is not None
-        or projection.consent_audit_effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or projection.consent_audit_effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
     ):
         raise invalid_completion_error(completed)
     return completed

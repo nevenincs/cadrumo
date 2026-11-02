@@ -50,6 +50,9 @@ aggregation:
       cash_accounting_evidence_incoherent: 'The cash accounting timing on this IVA
         row is inconsistent: %{refusal}. Correct the operation date or the payment
         evidence on the ledger entry.'
+      cuota_disagrees_with_rate: Declared IVA cuota %{declared} does not match base
+        %{base} at rate %{rate}, which gives %{expected}. Correct the cuota, the base
+        or the IVA rate.
       deduction_authority_on_non_deducible_row: An IVA row that bears no deductible
         cuota cannot carry a deduction classification; IVA category %{category} settles
         as %{flow_direction}. Remove the declared deduction kind, or correct the category.
@@ -61,6 +64,8 @@ aggregation:
         has no resolved provisional percentage.
       domestic_identification_on_intra_community_transaction: A Spanish VAT identification
         is not valid for an intra-community transaction.
+      especial_missing_input_classification: 'Prorrata especial needs the use of every
+        deductible input declared: a deductible input has no input classification.'
       eu_member_state_on_export_transaction: Export or export-assimilated operations
         must not carry an EU member state; got %{member_state}.
       exemption_article_outside_domestic_exempt: Exemption article %{value} applies
@@ -71,6 +76,10 @@ aggregation:
         the declared deduction kind, the IVA category, or the linked evidence.'
       investment_observations_missing_bienes_inversion_authority: Investment IVA observations
         require the explicit bienes de inversión register and a matching profile authority.
+      iva_rate_date_outside_table_coverage_on_movement_date: No IVA rate is on record
+        for %{date}. That is the bank movement date, used as the devengo date because
+        this entry records no operation date. Record the date the delivery or service
+        took place; that may resolve it.
       missing_counterparty_establishment_on_export: An export is exempt because the
         operation leaves the Union, so it turns on where the counterparty is ESTABLISHED.
         Record the counterparty's country; an absent or unassigned code establishes
@@ -89,9 +98,16 @@ aggregation:
         explicit sector identity.
       sectorized_input_unknown_sector: A sectorised IVA input references an unknown
         sector.
+      settlement_apportionment_sector_mismatch: The definitive percentages of the
+        settlement liquidation must name exactly the differentiated sectors your prorrata
+        register declares.
       unaccepted_registry_value: '%{field} is recorded as %{value}, which the pinned
         tax registry authority does not accept for %{effective_date}, so the row cannot
         feed the IVA calculation. Correct that value on the ledger entry.'
+      unsupported_iva_rate_on_movement_date: IVA rate %{rate} is not a valid rate
+        on %{date}. That is the bank movement date, used as the devengo date because
+        this entry records no operation date. Record the date the delivery or service
+        took place; that may resolve it.
   m303_arrivals:
     errors:
       prorrata_register_contradictory_transition_evidence: The prorrata register records
@@ -127,6 +143,11 @@ aggregation:
         dated outside the requested filing period.
   modelo_bindings:
     errors:
+      invoice_advance_payment_partially_collected: An invoice records an advance payment
+        on a price that is only partly collected. An advance is taxed only on the
+        amount collected, so the invoice cannot be placed in a filing period as recorded.
+        Record the advance as its own invoice, or mark this one paid if the advance
+        covers the whole price.
       invoice_line_currency_unconverted: An invoice line is denominated in a foreign
         currency with no resolved euro rate, so it cannot be declared on this modelo.
       unsupported_period: Unsupported modelo period for totals from your records.
@@ -433,8 +454,9 @@ categories:
     mutualidad_alternativa:
       label: Alternative mutual-insurance contribution
       notes: Deductible up to the RETA maximum quota for common contingencies of each
-        year, and only for the part that covers RETA contingencies, when the mutualidad
-        replaces your RETA membership (Ley 35/2006 art. 30.2, rule 1, second paragraph).
+        year, and only for the part that covers RETA contingencies, when the alternative
+        mutual-insurance scheme replaces your RETA membership (Ley 35/2006 art. 30.2,
+        rule 1, second paragraph).
     publicidad_marketing:
       label: Advertising and marketing
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
@@ -1030,6 +1052,7 @@ desktop:
     as_of: From local records as of {date}. Nothing here was asked of the tax agency.
     close: Close the calendar
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: Closes no earlier than {date}
     empty: No filing obligations in this period.
     event:
       filing: Filing
@@ -1157,7 +1180,6 @@ desktop:
       iban: IBAN
       iban_hint: Sent once through a protected channel and shown masked afterwards.
       iban_problem:
-        check: The IBAN's check digits don't match.
         shape: Not an IBAN.
       label: Name
       modelo: Modelo {modelo}
@@ -2266,7 +2288,8 @@ desktop:
         date_not_iso: '“{raw}”: write the date year first, {suggestion}.'
         exponent: '“{raw}” is written as a power of ten: write the digits.'
         grouping: '“{raw}” groups thousands: write {suggestion}.'
-        iban_check: This IBAN has a wrong digit.
+        limits_unavailable: '“{raw}” cannot be checked yet: the ledger has not said
+          what this field takes.'
         line_break: '“{raw}” holds a tab or line break: keep it on one line.'
         locked: Not editable here
         needs_share: '“{raw}”: Mixed needs a business share, such as Mixed 50%.'
@@ -2287,7 +2310,6 @@ desktop:
         unknown_choice: “{raw}” is not one of the choices.
         use: Use {suggestion}
         year_not_a_number: “{raw}” is not a year.
-        year_out_of_range: “{raw}” is outside the years Cadrumo takes.
         zero: '“{raw}” is zero: an amount is above zero.'
       revert_cell: Revert cell
       revert_movement: Revert movement
@@ -2982,6 +3004,7 @@ desktop:
         choose_category: Choose a category
         count: A split has 2 to {max} parts.
         description: The parts add up to {amount}. The last part takes what is left.
+        description_long: Part {part} takes a description of at most {max} characters.
         description_needed: Part {part} needs a description.
         duplicate: 'Part {part} is the same as another: change its amount or description.'
         mixed_hint: Partly used for work? Use Mixed with a share instead.
@@ -3105,6 +3128,10 @@ desktop:
         retention_rate: Withholding tax rate
         series: Series
         situacion: Property situation
+      figures_retry: Try again
+      figures_unavailable: Figures not available. The ledger did not answer, and your
+        draft is kept.
+      figures_updating: Updating the figures…
       fixed: Part of the invoice's identity. Remove it and add it again to change
         it.
       from_lines: From the lines
@@ -3142,6 +3169,7 @@ desktop:
       line:
         actions: Actions
         add: Add a line
+        calculated: Calculated {amount}
         category: Category
         choose_rate: Choose a rate
         description: Description
@@ -3155,8 +3183,9 @@ desktop:
         unit_price: Unit price
       lines: Lines
       lines_fixed: Fixed
-      lines_note: A dot for decimals, up to six places, no thousands separator. Subtotal
-        and IVA are worked out to the cent.
+      lines_note: A dot for decimals, up to six places, no thousands separator. The
+        ledger works out subtotal and IVA; fill them in only to state what the document
+        prints.
       linked: Linked movements
       linked_count: 'Linked movements: {count}'
       links_permanent: 'A link is permanent: it can''t be removed.'
@@ -3167,11 +3196,11 @@ desktop:
       next_number: 'Next in series {series}: {number}'
       next_number_series: Choose a series to see its next number.
       none: None
+      not_available: Not available
       not_met: not met
       not_saved: It wasn't saved. Your edits are kept.
       not_stated: Not stated
       open_duplicate: Open it
-      operation_date_fixed: Set only when the invoice is added
       operation_key: Key {key}
       party: Counterparty
       payment:
@@ -3187,22 +3216,9 @@ desktop:
         choose_rate: Choose a rate.
         country_letters: Two letters, e.g. ES.
         currency_letters: Three letters, e.g. EUR.
-        lease_reference_not_allowed: No cadastral reference for this situation.
         missing: Required.
         no_line: Add at least one line.
-        operation_date_fixed: Once added, it can move but not be added or removed.
         payment_id_shape: 64 hexadecimal characters.
-        printed_differs: The lines add up to {total}.
-        recargo_above_iva: Can't exceed the IVA.
-        rectifies_required: Name the invoice it rectifies.
-        retention_above_base: Can't exceed the taxable base.
-        retention_differs: The rate gives {amount}.
-        retention_needs_amount: A rate needs its amount.
-        series_required: A rectificativa needs a series.
-        tax_id_required: Required, except on an issued simplified invoice.
-      rate:
-        exempt: Exempt
-        not_subject: Not subject
       read_failed: Couldn't read the invoices.
       refusal:
         ambiguous_grouping: '"{raw}" can be read two ways. Write 1500 or 1.5.'
@@ -3212,6 +3228,8 @@ desktop:
         date_not_iso: '"{raw}": write the date year-month-day.'
         exponent: '"{raw}": write the number out in full.'
         grouping: '"{raw}": no thousands separator.'
+        limits_unavailable: '“{raw}”: cannot be checked until the ledger says what
+          this field takes.'
         line_break: 'One line only: no tabs or line breaks.'
         meant: Did you mean {suggestion}?
         not_a_date: '"{raw}" isn''t a date.'
@@ -3233,7 +3251,7 @@ desktop:
       remove_question: Remove this invoice?
       removed: Invoice {number} removed
       retention: Withholding tax, outside the total
-      retention_presets: Common withholding tax rates
+      retention_implied: The rate gives {amount}.
       review: Review
       review_changes: Review changes ({count})
       save: Save
@@ -3259,6 +3277,8 @@ desktop:
       unmatched: Unmatched
       use: Use
       use_number: Use {number}
+      would_refuse: The ledger would refuse this invoice as it stands. Check its tax
+        ID and document fields.
     irpf_category:
       actividad_economica: Economic activity
       arrendamiento_local: Rent of business premises
@@ -3463,6 +3483,12 @@ desktop:
       reference: Reference
       reference_hint: The authorisation or proposal it stands on
       refusal:
+        gross_declaration_absent: 'The register refused the removal: this period has
+          no gross declaration.'
+        gross_declaration_duplicate: 'The register refused the declaration: this period
+          already has a gross declaration.'
+        gross_declaration_sector_unknown: 'The register refused the declaration: that
+          sector is not a declared differentiated sector.'
         provenance_not_electable: 'Not accepted: that source is calculated, not chosen.'
         provenance_required: 'Not accepted: say where the percentage comes from.'
         reference_not_permitted: 'Not accepted: that source has no document to reference.'
@@ -3626,6 +3652,9 @@ desktop:
       empty: No rules yet.
       expression: Expression
       expression_hint: Matched anywhere in the description, ignoring case.
+      expression_overrun: This expression takes too long to try on your movements.
+        Simplify it.
+      expression_too_long: This expression is too long. It can have up to {max} characters.
       expression_unread: This window can't read that expression.
       from_selection: Make a rule from the selection
       matches_split: Matches {count} · {pending} to classify
@@ -3649,6 +3678,9 @@ desktop:
         empty_pattern: Write the words to match.
         invalid_command: The ledger didn't accept the rule.
         invalid_pattern: The ledger can't read that expression.
+        pattern_overrun: A stored rule takes too long to try on your movements, so
+          nothing was run.
+        pattern_too_long: The expression is too long.
       run_note: A preview changes nothing. Running them is added to your changes,
         like any other change.
       run_staged: 'Rules added to your changes · Movements: {count} · not saved yet'
@@ -3657,6 +3689,9 @@ desktop:
       saved_toast: Rule saved · order {place}
       stage_run: Add the run to your changes
       title: Classification rules
+      trial_failed: The ledger didn't answer about this expression. What you wrote
+        is kept.
+      trial_retry: Try again
       what: Matches words in a movement's description and decides its classification.
       words: Description contains
       words_hint: Words in this order; capitals don't matter.
@@ -5892,7 +5927,7 @@ sheets:
       startup_fund_rendimientos_clave: Fund-management income
       street_name: Street name
       street_type: Street type
-      subclave: Subclave
+      subclave: Subcode
       supplier_tax_id: Supplier tax id
       taxable_base: Withholding base
       territorial_deduction_clave: Ceuta or Melilla / La Palma
@@ -5949,7 +5984,7 @@ topic:
     title: IRPF advance payment
   profile:
     body: The local profile carries your tax identifier (NIF/CIF/DNI/NIE), main activity,
-      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario).
+      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intra-community).
       Edit it with 'aeat config profile edit NAME'.
     title: Taxpayer profile
   providers:
@@ -6548,6 +6583,7 @@ tui:
       errors:
         amount_invalid: Write the amount in digits only, with a point for the decimals,
           for example 1500.00.
+        amount_required: Write an amount in “{field}”. If there is none, write 0.00.
         asset_id_required: Write the asset identifier first.
         choice_invalid: 'Choose one of these: {options}.'
         date_invalid: Write the date as YYYY-MM-DD, for example 2025-06-30.
@@ -8740,6 +8776,7 @@ workspace:
         filed: Recorded as filed
         not_applicable: Not applicable
         overdue: Overdue
+        unknown: Close unknown
         upcoming: Upcoming
       local:
         external_baseline_imported: External filing imported

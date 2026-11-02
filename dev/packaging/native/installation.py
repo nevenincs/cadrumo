@@ -253,10 +253,6 @@ def _prepare_fresh(
     shutil.copytree(payload, destination, dirs_exist_ok=True, copy_function=copy_file or shutil.copy2)
     validate_payload(destination, identity_file, desktop)
     _write_projected_stage(root, plan)
-    for name, contents in plan.metadata.items():
-        output = member(build, name)
-        output.write_bytes(contents)
-        output.chmod(0o644)
     value = json.loads(identity_file.read_text(encoding="utf-8"))
     inventory(root, build / "installation.json", value["application_id"], staging_generation=1)
     receipt_file = build / "installation.json"

@@ -12,7 +12,7 @@ from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.period import FilingPeriodCode, StandardPeriodCode
-from .binding_selector_utils import provider_member
+from .binding_selector_utils import computed_money_binding_failures, provider_member
 from .binding_targets import bound_casilla_binding_ids
 from .binding_temporal import BindingTemporalSelector, FiledCurrentPeriod
 from .errors import RegistryValidationError
@@ -38,6 +38,7 @@ __all__ = [
     "M303RegimenSimplificadoAnnualSummaryProvider",
     "M303RegimenSimplificadoAnnualSummaryRequirement",
     "m303_regimen_simplificado_annual_summary_requirement",
+    "validate_m303_regimen_simplificado_annual_summary_binding",
     "validate_m303_regimen_simplificado_annual_summary_revision",
 ]
 
@@ -64,6 +65,15 @@ M390_SUMMARY_SOURCE_READ_ENDPOINTS: tuple[CasillaId, ...] = (
     M390_SUMMARY_SUMA_DEDUCCIONES,
     M390_SUMMARY_RESULTADO,
 )
+
+_SUMMARY_ENDPOINTS: frozenset[CasillaId] = frozenset(
+    (
+        M390_SUMMARY_NON_AGRICULTURAL_RESULT,
+        M390_SUMMARY_AGRICULTURAL_RESULT,
+        *M390_SUMMARY_SOURCE_READ_ENDPOINTS,
+    ),
+)
+"""Every annual box the assembler places: the two computed results and the eight source reads."""
 
 
 class M303RegimenSimplificadoAnnualSummaryProvider(BaseModel):
@@ -130,11 +140,9 @@ def m303_regimen_simplificado_annual_summary_requirement(
     if not bindings:
         return None
     first_selector = provider_member(bindings[0], M303RegimenSimplificadoAnnualSummaryProvider)
-    if len(first_selector.source_casilla_ids) != len(M390_SUMMARY_SOURCE_READ_ENDPOINTS):
-        raise RegistryValidationError(
-            "m303_regimen_simplificado_annual_summary selector must name one source casilla for each "
-            f"source-read endpoint; found {len(first_selector.source_casilla_ids)}",
-        )
+    count_failure = _source_read_count_failure(first_selector)
+    if count_failure is not None:
+        raise RegistryValidationError(count_failure)
     if not isinstance(first_selector.temporal, FiledCurrentPeriod):
         raise RegistryValidationError("m303_regimen_simplificado_annual_summary temporal must be a filed period")
     binding_ids_by_summary_casilla_id, legal_refs, source_refs = _collect_bindings(bindings, first_selector)
@@ -147,6 +155,44 @@ def m303_regimen_simplificado_annual_summary_requirement(
         legal_refs=tuple(sorted(legal_refs)),
         source_refs=tuple(sorted(source_refs)),
     )
+
+
+def _source_read_count_failure(selector: M303RegimenSimplificadoAnnualSummaryProvider) -> str | None:
+    """Return the failure for a selector that does not name one source casilla per read endpoint.
+
+    The assembler pairs the declared source casillas with the source-read
+    endpoints one to one, so a selector of any other length cannot be placed.
+    """
+    if len(selector.source_casilla_ids) == len(M390_SUMMARY_SOURCE_READ_ENDPOINTS):
+        return None
+    return (
+        "m303_regimen_simplificado_annual_summary selector must name one source casilla for each "
+        f"source-read endpoint; found {len(selector.source_casilla_ids)}"
+    )
+
+
+def validate_m303_regimen_simplificado_annual_summary_binding(binding: BindingDefinition) -> list[str]:
+    """Return the build-time diagnostics for one annual-summary binding.
+
+    Each binding is held to the selector length the assembler pairs against the
+    source-read endpoints, to the endpoint vocabulary it places, and to the
+    monetary, unaggregated value contract of a computed amount.
+    """
+    selector = provider_member(binding, M303RegimenSimplificadoAnnualSummaryProvider)
+    label = "m303-regimen-simplificado-annual-summary"
+    failures: list[str] = []
+    count_failure = _source_read_count_failure(selector)
+    if count_failure is not None:
+        failures.append(
+            f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: {count_failure}",
+        )
+    if selector.summary_casilla_id not in _SUMMARY_ENDPOINTS:
+        failures.append(
+            f"binding {binding.id!r} (source={binding.source!r}) {label} invariants violated: "
+            f"summary casilla {selector.summary_casilla_id!r} is not an endpoint the assembler places",
+        )
+    failures.extend(computed_money_binding_failures(binding, label))
+    return failures
 
 
 def validate_m303_regimen_simplificado_annual_summary_revision(revision: ModeloRevision) -> list[str]:

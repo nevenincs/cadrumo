@@ -43,6 +43,7 @@ from .....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from .....application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .....application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 from .....application.prorrata_register.service import ProrrataRegisterService
+from .....core.external_constants import OutputLanguage
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.modelo import Modelo
 from .....core.prorrata_register import (
@@ -173,7 +174,6 @@ def _collect(period_token: str = _SETTLEMENT_PERIOD) -> tuple[CalculationSourceD
         period_token=period_token,
         filing_year=_EJERCICIO,
         bucket_id=_BUCKET,
-        observation_repository=CalculationObservationRepository(),
         prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET),
         transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET),
         bienes_inversion_repository=BienesInversionIvaRegisterRepository(bucket_id=_BUCKET),
@@ -233,6 +233,8 @@ def test_fires_for_fully_classified_general_bucket_with_breach(
     assert diagnostic.reason == "prorrata_especial_obligatoria"
     assert diagnostic.source_kind == "prorrata_especial_mandatory"
     assert str(_EJERCICIO) in diagnostic.message
+    # The message is Spanish prose for the filer, so a Spanish form shows it beside the catalogue's sentence.
+    assert diagnostic.message_language is OutputLanguage.ES
     # Both regime totals ride in the verbatim message, and the general total
     # genuinely exceeds the especial total (a real breach, law-derived).
     amounts = _parenthesised_amounts(diagnostic.message)
@@ -306,7 +308,38 @@ def test_prompt_for_general_bucket_with_unclassified_row(
     assert "--input-classification" in diagnostic.message
     assert "elect-especial" in diagnostic.message
     assert "1 operaciones sin clasificar" in diagnostic.message
+    assert diagnostic.message_language is OutputLanguage.ES
     # No fabricated amount: the prompt carries no monetary figure.
+    assert not _parenthesised_amounts(diagnostic.message)
+
+
+def test_prompt_for_especial_bucket_with_unclassified_row(
+    tmp_path: Path,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """An ESPECIAL bucket with an unclassified deducible row prompts rather than fires.
+
+    The unclassified row has no art. 106 rule, so the especial deduction is
+    not derivable: it is never counted as common use to produce an amount.
+    """
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET) as profile:
+        _save_txns(
+            profile,
+            (
+                _purchase(
+                    "buy-common", cuota=Decimal("210.00"), classification=InputClassification.from_registry("common")
+                ),
+                _purchase("buy-unclassified", cuota=Decimal("210.00"), classification=None),
+            ),
+        )
+        _declare(ProrrataRegisterRegime.from_registry("especial"), operation=operation, percentage=_GENERAL_PCT)
+        especial = _especial_diagnostics(_collect())
+
+    assert len(especial) == 1
+    diagnostic = especial[0]
+    assert diagnostic.reason == "prorrata_especial_check_unavailable"
+    assert "1 operaciones sin clasificar" in diagnostic.message
     assert not _parenthesised_amounts(diagnostic.message)
 
 

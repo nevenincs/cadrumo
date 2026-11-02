@@ -122,7 +122,7 @@ class SupervisorReconciliationMixin(SupervisorHost):
             identity=snapshot.identity,
             revision=snapshot.revision + 1,
             condition=OperationTerminalCondition.INTERRUPTED,
-            effect=OperationEffect.NONE if snapshot.executor_entered_at is None else OperationEffect.UNKNOWN,
+            effect=snapshot.interruption_effect,
             settled_at=now,
         )
         events = (

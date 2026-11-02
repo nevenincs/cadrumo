@@ -7,7 +7,7 @@ diff is what a reviewer looks at, and losing it loses work. The other is RUN
 OUTPUT: a coverage report, a findings dump, a captured stderr. It is written by
 a run and read back by nothing, and losing it costs one re-run.
 
-Run output has one home in this repository -- `.logs/<family>/<date>/<run>/`,
+Run output has one home in this repository -- `.tmp/logs/<family>/<date>/<run>/`,
 allocated by `dev.test_runs.paths.allocate_run_directory` and reclaimed whole
 by the next `just clean-apply`. Output that lands beside its own harness under
 `dev/` instead gets none of that: no clean reclaims it, no run identity
@@ -68,7 +68,7 @@ _RESOLUTION_DEPTH: Final[int] = 6
 #: is a source rather than run output. A path here is read, or is a reviewed
 #: file whose diff is the artefact; NONE of them is a measurement a run mints.
 #: Adding a run's output to this mapping is the mistake the gate exists to stop
-#: -- send it to `.logs/` through `allocate_run_directory` instead.
+#: -- send it to `.tmp/logs/` through `allocate_run_directory` instead.
 _CURATED_DEV_DESTINATIONS: Final[dict[str, str]] = {
     "dev/ci/python-runtime-matrix.json": "the pinned interpreter matrix the runtime gates read",
     "dev/docs/terminology/evaluation/held-out-queries.json": "the committed query set a sweep is measured against",
@@ -227,7 +227,7 @@ def test_every_dev_internal_destination_is_a_declared_source() -> None:
 
     The failure is not "you wrote a file". It is "you resolved a path inside
     the harness and did not say why it is a source". If the answer is that it
-    is a measurement, the fix is `allocate_run_directory` and `.logs/`, not a
+    is a measurement, the fix is `allocate_run_directory` and `.tmp/logs/`, not a
     new line in the mapping.
     """
     undeclared: list[str] = []
@@ -239,7 +239,7 @@ def test_every_dev_internal_destination_is_a_declared_source() -> None:
                 undeclared.append(f"{relative_module}:{line} -> {destination}")
 
     assert not undeclared, (
-        "undeclared path inside dev/. Run output belongs in .logs/ through "
+        "undeclared path inside dev/. Run output belongs in .tmp/logs/ through "
         "dev.test_runs.paths.allocate_run_directory; a curated source belongs in "
         "_CURATED_DEV_DESTINATIONS with the reason it is a source:\n  " + "\n  ".join(undeclared)
     )

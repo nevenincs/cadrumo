@@ -125,10 +125,9 @@ for _storage_variable in (
         os.environ[_storage_variable] = str(
             storage_directory(_storage_variable, "development", root=_BASE_STORAGE_ROOT)
         )
-for _report_variable in ("CADRUMO_CI_REPORTS_DIR", "VAULTSPEC_CI_REPORTS"):
-    _report_destination = os.environ.get(_report_variable, "").strip()
-    if _report_destination:
-        os.environ[_report_variable] = str(resolve_storage_path(_report_destination, root=_BASE_STORAGE_ROOT))
+_report_destination = os.environ.get("CADRUMO_CI_REPORTS_DIR", "").strip()
+if _report_destination:
+    os.environ["CADRUMO_CI_REPORTS_DIR"] = str(resolve_storage_path(_report_destination, root=_BASE_STORAGE_ROOT))
 
 # Keep Python bytecode separate from the interpreter's ambient cache setting
 # without rebinding environment variables used by machine-managed tools.
@@ -201,7 +200,7 @@ if TYPE_CHECKING:
 
 # Loaded as a plugin, not inlined here: this module's own `pytest_configure` is
 # `trylast`, and the JUnit option has to be set before the junitxml plugin reads
-# it. Unset `VAULTSPEC_CI_REPORTS` - every local run - and it does nothing,
+# it. Unset `CADRUMO_CI_REPORTS_DIR` - every local run - and it does nothing,
 # which is what keeps this repository's zero-artifact posture intact.
 pytest_plugins = (
     "dev.ci_reports",

@@ -32,7 +32,7 @@ def ledger_export(
         period=_optional_canonical_period(period, year=year),
         actor=actor,
     )
-    from .ledger_results import LedgerExportPayload
+    from .ledger_interchange_results import LedgerExportPayload
 
     result = LedgerExportPayload.model_validate(
         {

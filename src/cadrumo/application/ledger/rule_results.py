@@ -11,7 +11,7 @@ from ...core.time.clock import now
 from ..operations.models import OperationTerminalReceipt
 from ..operations.owner import OperationExecutorContext
 from ..operations.refusal_evidence import OperationRefusalEvidence
-from .actions_classification import ClassificationRulePlan
+from .actions_classification import ClassificationRulePlan, ClassificationRuleSearchRefusedError
 from .models import ApplyRulesAppliedRow, ApplyRulesResult
 from .rule_contracts import (
     MAX_RULE_VALIDATION_MESSAGES,
@@ -117,6 +117,21 @@ def build_rule_apply_validation_projection(profile_id: UUID, error: Exception) -
         outcome="validation_error",
         validation_code="invalid_command",
         validation_messages=build_rule_validation_messages(error),
+    )
+
+
+def build_rule_apply_search_refusal(
+    profile_id: UUID, error: ClassificationRuleSearchRefusedError
+) -> LedgerRuleApplyProjection:
+    """Name the stored rule the scan could not finish with; the scan comes before any write."""
+    return LedgerRuleApplyProjection(
+        profile_id=profile_id,
+        outcome="validation_error",
+        validation_code=error.code,
+        validation_messages=(
+            f"classification rule {error.rule_id} could not be searched with within its bound; nothing was changed",
+        ),
+        refused_rule_id=error.rule_id,
     )
 
 

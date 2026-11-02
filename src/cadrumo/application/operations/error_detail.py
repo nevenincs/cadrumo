@@ -39,7 +39,7 @@ from ...core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from ...core.errors.record_fault import internal_record_fault_context
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationLifecycle, OperationTerminalCondition
+from ...core.operations import TERMINAL_CONDITIONS_WITH_ERROR_DETAIL, OperationLifecycle
 from ..cli_exception_preconditions import cli_exception_envelope_view, nested_terminal_precondition_verdict
 from ..operator_actions.models import PreconditionVerdict
 from .frontend_requests import (
@@ -298,10 +298,7 @@ def _detail_shape_refusal(
 ) -> ContentDigest | OperationResultProjectionRefusalV1:
     if request.result_schema != operation_error_detail_schema():
         return _refusal(OperationResultProjectionRefusalCode.RESULT_SCHEMA_MISMATCH)
-    if (
-        receipt.condition not in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}
-        or receipt.error_detail_ref is None
-    ):
+    if receipt.condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL or receipt.error_detail_ref is None:
         return _refusal(OperationResultProjectionRefusalCode.RESULT_PROJECTION_UNAVAILABLE)
     return receipt.error_detail_ref
 

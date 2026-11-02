@@ -1,23 +1,10 @@
 """CLI behavior tests for profile-owned output language.
 
 Profiles are seeded through the credential registration door: the wizard
-``create`` arm refuses unconditionally, so a profile can no longer be minted
-from the command line. What each test is about -- where the preference is
-stored, that ``edit`` patches instead of rewriting, that ``--language``
-overrides for one invocation, that ``config repair`` speaks the profile's
-language -- is unchanged by that, so the seed moved and the subjects stayed.
-
-Two tests were retired rather than moved, because their subject was a code
-path the retirement made unreachable rather than merely unseedable:
-
-- create_error_renders_in_command_line_output_language: it drove the
-  missing-required-flags refusal, which no live surface can reach --
-  ``create`` refuses above it, and a non-interactive ``edit`` is a patch that
-  never checks required flags.
-- env_output_language_honored_when_creating_profile_with_accept_defaults:
-  the environment seeding it asserted runs only on the full-flow path, which
-  ``create`` no longer reaches and a non-interactive ``edit`` bypasses,
-  writing only explicitly-supplied flags.
+``create`` arm refuses unconditionally, so a profile cannot be minted from the
+command line. Each test covers where the preference is stored, that ``edit``
+patches instead of rewriting, that ``--language`` overrides for one invocation,
+and that ``config repair`` speaks the profile's language.
 """
 
 from __future__ import annotations
@@ -78,12 +65,7 @@ def test_registration_writes_profile_output_language() -> None:
     the ``profile view`` projection and the encrypted profile record the
     workflow state resolves.
 
-    The wizard-create bucket-event assertions this test also carried
-    (``profile.created`` plus a ``keys:``-scoped ``profile.values.updated``)
-    were dropped rather than moved: the registration door emits no
-    workflow-state bucket events at all, so there was nothing to re-point
-    them at and asserting the wizard's events here would assert a path the
-    product no longer runs.
+    The registration door emits no workflow-state bucket events.
     """
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
     from cadrumo.application.user_profile.projections import fact_value
@@ -112,8 +94,8 @@ def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
     """An unknown output-language token is refused, and the stored value survives.
 
     The refusal is the subject; the profile is seeded through the
-    registration door and then patched, because ``edit`` is the surviving
-    surface that takes an ``--output-language`` flag.
+    registration door and then patched, because ``edit`` is the surface that
+    takes an ``--output-language`` flag.
     """
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
     from cadrumo.application.user_profile.projections import fact_value
@@ -145,12 +127,8 @@ def test_config_profile_edit_quiet_validates_profile_output_language() -> None:
 def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
     """`profile edit --quiet` writes only the supplied flags.
 
-    The wizard `--quiet` path used to seed descriptor defaults for
-    every unsupplied question and persist the full answer set, so
-    editing one field silently reverted every other field to its
-    default (`output_language` flipped en->es). `edit` must be a true
-    patch: a field the operator did not name on the command line is
-    left exactly as stored.
+    `edit` is a true patch: a field the operator did not name on the
+    command line is left exactly as stored.
     """
 
     from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import open_test_profile_session
@@ -185,8 +163,7 @@ def test_config_profile_edit_quiet_is_a_patch_not_a_full_rewrite() -> None:
         assert record is not None
         # The supplied field is patched.
         assert fact_value(record, "contact.postcode") == "28010"
-        # Every other field the operator did NOT supply is unchanged —
-        # the wizard must not have rewritten them to descriptor defaults.
+        # Every other field the operator did NOT supply is unchanged.
         assert fact_value(record, PROFILE_OUTPUT_LANGUAGE_PATH) == "en"
         assert fact_value(record, "identity.tax_id") == "00000000T"
         assert fact_value(record, "activities.description") == "Servicios"

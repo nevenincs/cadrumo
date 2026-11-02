@@ -133,9 +133,15 @@ def test_carry_forward_report_consumes_the_opening_balance_before_the_years_own_
     assert lot.remaining_amount == Decimal("55.00")
 
 
-def test_carry_forward_report_without_an_opening_balance_charges_the_years_own_credit(
+def test_carry_forward_report_with_no_opening_balance_supplied_models_none_and_is_not_sound_for_an_unknown_one(
     operation: PinnedAuthorityOperation,
 ) -> None:
+    """An omitted opening is modelled as no earlier credit, so the lot's 0.00 is only true for a proven zero.
+
+    The same states with a 1000.00 opening leave 55.00; a caller whose opening is
+    unknown must therefore not publish the lot remainder (boxes 97 and 662) and
+    the annual partition resolver withholds them instead.
+    """
     report = build_iva_compensation_carry_forward_report(
         _year_with_opening_credit(),
         as_of_year=2025,

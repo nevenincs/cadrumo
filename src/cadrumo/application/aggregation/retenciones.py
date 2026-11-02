@@ -39,7 +39,7 @@ from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.dates import IsoDateString
 from ...core.period import Period
 from ...core.spanish_postcode import SPANISH_MUNICIPALITY_CODE_PATTERN, SpanishPostcode, SpanishProvinceCode
-from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.form_codes import form_codes_in_scope, form_for_role, require_form_fit
 from ...domain.calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
@@ -595,7 +595,7 @@ def aggregate_retenciones_111(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate per (perceptor_nif, scheme) into a Modelo 111 payload.
 
@@ -605,9 +605,6 @@ def aggregate_retenciones_111(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_111(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("111").value, period=period, operation=operation)
 
 
@@ -615,7 +612,7 @@ def aggregate_retenciones_115(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 115 (retenciones sobre arrendamiento urbano).
 
@@ -624,9 +621,6 @@ def aggregate_retenciones_115(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for Modelo 115.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_115(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("115").value, period=period, operation=operation)
 
 
@@ -634,15 +628,12 @@ def aggregate_retenciones_123(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 123 retenciones into a :class:`RetencionesAggregation`.
 
     Covers the capital-income schemes selected by the registry.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_123(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("123").value, period=period, operation=operation)
 
 
@@ -650,7 +641,7 @@ def aggregate_retenciones_180(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 180 (resumen anual de retenciones sobre arrendamiento urbano).
 
@@ -662,9 +653,6 @@ def aggregate_retenciones_180(
 
     Returns a :class:`RetencionesAggregation`.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_180(observations, period=period, operation=indexed_operation)
     aggregation = _aggregate_for_modelo(
         observations,
         modelo=Modelo("180").value,
@@ -777,7 +765,7 @@ def aggregate_retenciones_190(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 190 (resumen anual de retenciones IRPF de Modelo 111).
 
@@ -786,9 +774,6 @@ def aggregate_retenciones_190(
     Returns a :class:`RetencionesAggregation` with per-perceptor rollups
     and grand totals for the annual summary.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_190(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("190").value, period=period, operation=operation)
 
 
@@ -796,16 +781,13 @@ def aggregate_retenciones_193(
     observations: tuple[RetencionObservation, ...],
     *,
     period: Period,
-    operation: PinnedAuthorityOperation | None = None,
+    operation: PinnedAuthorityOperation,
 ) -> RetencionesAggregation:
     """Aggregate Modelo 193 retenciones into a :class:`RetencionesAggregation`.
 
     Resumen anual de retenciones sobre capital mobiliario.
     Shares the 123 scheme catalogue.
     """
-    if operation is None:
-        with bundled_indexed_authority().operation() as indexed_operation:
-            return aggregate_retenciones_193(observations, period=period, operation=indexed_operation)
     return _aggregate_for_modelo(observations, modelo=Modelo("193").value, period=period, operation=operation)
 
 
