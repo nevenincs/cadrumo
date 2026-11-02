@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:39acbb21fd8314a7e886b57239d544c28833b3b2b81939e4d4d07b2c7cf487c9'
+body_hash: 'sha256:1869fd01f487bd392e89592dc40d8766e8f1741249c7705d92d32c05b58d37c2'
 ---
 
 # `frontend-polish` plan
@@ -41,7 +41,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 
 - [x] `S01` - Harden document and register reads against changed payloads, hidden views and late replies; `native/desktop/frontend/src/components/ledger/documents/useLedgerRead.ts, native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`.
 - [x] `S22` - Restore a single main landmark around the dock workspace and verify full-window accessibility; `native/desktop/frontend/src/components/docking/DockWorkspace.tsx, native/desktop/frontend/tests/scenarios/docking.spec.ts, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`.
-- [ ] `S02` - Prevent obsolete declarations-list reads from overwriting shared workspace cache invalidation; `native/desktop/frontend/src/components/modelo/declarations/`.
+- [x] `S02` - Prevent obsolete declarations-list reads from overwriting shared workspace cache invalidation; `native/desktop/frontend/src/components/modelo/declarations/`.
 - [ ] `S03` - Retire stale provider mutation results and prevent old reads from replacing newly accepted settings; `native/desktop/frontend/src/shell/providerSettings.ts, native/desktop/frontend/src/shell/agentViews.ts`.
 - [ ] `S04` - Bind reading-model selections and agent observations to the current reader lifecycle; `native/desktop/frontend/src/shell/readingModel.ts, native/desktop/frontend/src/shell/agentLive.ts, native/desktop/frontend/src/components/AgentColumn.tsx`.
 - [ ] `S05` - Show every available matching-evidence chip without extra disclosure controls; `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`.

@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c621c94f90974750d17d013321340db875d73c52c6f7d69d6a13e36fb255c9c1'
+body_hash: 'sha256:712b7f95bbe46e2db9229f7ded121f0db6d59a3bdb2518b1e287962691be0abb'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -58,7 +58,10 @@ related:
 - `S22` `M` `native/desktop/frontend/tests/scenarios/docking.spec.ts`
 - `S22` `verify:` `targeted DockWorkspace and docking spec ESLint` -> `pass`
 - `S22` `verify:` `Playwright docking tabs/splits/floating plus setup light/dark accessibility (3 cases)` -> `pass`
+- `S02` `verify:` `final declarations deferred-response cases including interrupted refresh (2)` -> `pass`
+- `S02` `verify:` `final npx tsc --noEmit and scoped Prettier` -> `pass`
 
 ## Notes
 
 - `S01` Initial implementation was included by concurrent commit e6a39bc125; this checkpoint retains final generation and harness corrections. Full npm check formatting fails on four unrelated files recorded in audit.
+- `S02` Terra corrective review resolved interrupted hidden refresh; final callback guard precedes marking settled.

@@ -82,6 +82,10 @@ REVISION REQUIRED from Terra review of S02 after its first 13 passing cases: can
 
 PASS for S22 semantic scope: the existing dock container now supplies one main landmark without DOM reparenting, geometry or focus changes. Three focused browser cases pass: tab/split/float keyboard movement with preserved instance, and full-window Setup accessibility across light/dark themes. The test asserts a single visible main and that floating pane controls remain inside it. Targeted ESLint passed and the test was formatted. Broader app review remains open.
 
+### s02-corrective-review | low | Interrupted refresh correction passes
+
+PASS for corrected S02. Terra rereview confirms interrupted requests are retried while completed cache entries remain reusable; the completion guard runs before marking a request settled. Both final deferred-response tests pass, including same-mounted hide/show, workspace unmount with late success/failure, mounted write invalidation and no-write cache reuse. The earlier 11 UI declaration scenarios passed and their affected behavior is unchanged. Final TypeScript and scoped formatting pass; scoped ESLint passed. No new high/critical findings remain in this Step.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.
