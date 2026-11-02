@@ -14,7 +14,6 @@ from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BY
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.errors.hierarchy import CadrumoError
 from ...core.filing_year import FilingYear
-from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import CalculationRevisionId, WorkUnitId
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -56,6 +55,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
 from ..operations.refusal_evidence import OperationRefusalEvidence
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..review.filter import LedgerReviewStatus
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -480,8 +480,7 @@ def _validation_result(
 
 def _check_result_size(result: LedgerAttachmentExecutionResult) -> None:
     """Keep encrypted receipts within the bounded operation-result budget."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES - 128:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, _MAX_RESULT_BYTES - 128)
 
 
 def _attachment_refusal_receipt_matches(

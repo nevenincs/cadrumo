@@ -1339,6 +1339,7 @@
         "cadrumo.application.modelo.operator_inputs",
         "cadrumo.application.modelo.participation_index_rebuild",
         "cadrumo.application.modelo.participation_index_rebuild_ports",
+        "cadrumo.application.modelo.participation_writes",
         "cadrumo.application.modelo.preconditions",
         "cadrumo.application.modelo.printed_boxes",
         "cadrumo.application.modelo.prior_domiciliation",

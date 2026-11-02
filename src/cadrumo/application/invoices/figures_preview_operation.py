@@ -47,6 +47,7 @@ from ...domain.invoices.figures import (
     compute_invoice_figures,
     compute_line_figures,
     dated_rate_slots,
+    rate_refusal_finding,
 )
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -177,15 +178,6 @@ def _rate_undeclared_finding(token: str) -> FigureFinding:
     )
 
 
-def _slot_refusal_finding(line: InvoiceFiguresPreviewLine, slot: DatedRateSlot, on_date: date) -> FigureFinding:
-    return FigureFinding(
-        FigureFindingCode.LINE_RATE_COVERAGE_GAP if slot.coverage_gap else FigureFindingCode.LINE_RATE_NOT_IN_FORCE,
-        f"line rate {line.iva_rate} is not available on {on_date.isoformat()}",
-        ("iva_rate",),
-        values={"slot": str(slot.slot), "on_date": on_date.isoformat()},
-    )
-
-
 def _line_figures(
     line: InvoiceFiguresPreviewLine,
     slots: tuple[DatedRateSlot, ...] | None,
@@ -205,7 +197,7 @@ def _line_figures(
         if slot is None:
             rate_findings = (_rate_undeclared_finding(line.iva_rate),)
         elif not slot.in_force:
-            rate_findings = (_slot_refusal_finding(line, slot, on_date),)
+            rate_findings = (rate_refusal_finding(slot.slot, on_date, coverage_gap=slot.coverage_gap),)
     if not rate_findings:
         return figures
     return LineFigures(

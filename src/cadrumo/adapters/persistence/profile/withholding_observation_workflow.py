@@ -6,7 +6,6 @@ Core types:
 
 from __future__ import annotations
 
-import json
 from collections.abc import Callable, Iterable
 from decimal import Decimal
 
@@ -26,6 +25,7 @@ from ....application.aggregation.withholding_observation_service import (
     WithholdingWindowBaseline,
     WithholdingWindowScope,
     WithholdingWindowState,
+    withholding_canonical_json,
 )
 from ....core.aggregation import AggregationCaptureKind
 from ....core.external_constants import UTF_8_ENCODING
@@ -452,13 +452,9 @@ class WithholdingObservationWorkflowAdapter:
 def _entries_digest(entries: Iterable[WithholdingProjectionEntry]) -> str:
     values = sorted(
         (entry.model_dump(mode="json") for entry in entries),
-        key=lambda value: _canonical_json(value["identity"]),
+        key=lambda value: withholding_canonical_json(value["identity"]),
     )
-    return sha256_hex(_canonical_json(values).encode(UTF_8_ENCODING))
-
-
-def _canonical_json(value: object) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=True)
+    return sha256_hex(withholding_canonical_json(values).encode(UTF_8_ENCODING))
 
 
 def _digest(value: str) -> str:

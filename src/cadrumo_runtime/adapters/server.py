@@ -14,6 +14,7 @@ from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.startup_phase_log import startup_phase
 from cadrumo_client.contracts.contracts import (
+    ACCEPT_REFUSALS_THAT_KEEP_LISTENING,
     ByteChannel,
     ChannelWake,
     RefusalCode,
@@ -289,11 +290,7 @@ class RuntimeTransportServer(RuntimeConnectionHandling):
             self._failed.set()
             self.stop.set()
             return False
-        return error.reason in {
-            RefusalCode.TIMEOUT,
-            RefusalCode.PEER_UNTRUSTED,
-            RefusalCode.CONNECTION_CLOSED,
-        }
+        return error.reason in ACCEPT_REFUSALS_THAT_KEEP_LISTENING
 
     def _submit_connection_worker(self, workers: ThreadPoolExecutor, channel: ByteChannel) -> Future[None]:
         """Transfer a reserved slot to its worker or complete the original failure cleanup."""

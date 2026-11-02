@@ -22,7 +22,12 @@ from cadrumo_client.commands.errors import (
     CliRefusedBoundaryError,
     CliUnexpectedBoundaryError,
 )
-from cadrumo_client.contracts.contracts import EndpointPresence, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import (
+    SENT_ACT_UNKNOWN_OUTCOME_REFUSALS,
+    EndpointPresence,
+    RefusalCode,
+    RefusalError,
+)
 from cadrumo_client.contracts.installation_requests import (
     INSTALLATION_ACT_CONTRACTS,
     InstallationAct,
@@ -37,9 +42,6 @@ from ...core.errors.hierarchy import CadrumoError
 
 if TYPE_CHECKING:
     from cadrumo_client.transport.installation_client import InstallationClient, InstallationSecretHolder
-
-_SENT_ACT_REFUSALS: Final = frozenset({RefusalCode.TIMEOUT, RefusalCode.CONNECTION_CLOSED})
-"""The transport outcomes that arise only after an act was sent, so what it did is not known."""
 
 _UNANSWERED_REFUSALS: Final = frozenset({RefusalCode.UNAVAILABLE, RefusalCode.TIMEOUT})
 """The outcomes of opening a connection that a later attempt can cure: busy, timed out, or unreadable."""
@@ -159,7 +161,7 @@ def _unknown_outcome(request: InstallationActRequest, refusal: RefusalError) -> 
     """
     contract = INSTALLATION_ACT_CONTRACTS[installation_act_of(request)]
     reader = contract.outcome_read_by
-    if reader is None or refusal.reason not in _SENT_ACT_REFUSALS:
+    if reader is None or refusal.reason not in SENT_ACT_UNKNOWN_OUTCOME_REFUSALS:
         return refusal
     return CliOperationStillRunningError(
         operation_id=str(request.request_id), effect="unknown", check_command=_OUTCOME_READERS[reader]

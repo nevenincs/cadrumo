@@ -30,6 +30,7 @@ from __future__ import annotations
 from typing import Final
 
 from ...domain.renta.ledger_expenses import RentaDeductibilityRefusal
+from ...domain.transactions.enums import BusinessClassification
 
 UNSUPPORTED_DIRECTION: Final[str] = "unsupported_direction"
 UNSUPPORTED_CURRENCY: Final[str] = "unsupported_currency"
@@ -45,6 +46,13 @@ EXCLUSIVE_USE_REQUIRED: Final[str] = RentaDeductibilityRefusal.EXCLUSIVE_USE_REQ
 MISSING_OWNERSHIP_SHARE: Final[str] = RentaDeductibilityRefusal.MISSING_OWNERSHIP_SHARE.value
 
 
+def business_state_issue_reason(classification: BusinessClassification) -> str:
+    """Return the shared rejection for a row with no business attribution to read."""
+    if classification is BusinessClassification.PERSONAL:
+        return PERSONAL_TRANSACTION
+    return UNCLASSIFIED_BUSINESS_STATE
+
+
 __all__ = [
     "EXCLUSIVE_USE_REQUIRED",
     "INELIGIBLE_DEDUCTIBILITY",
@@ -58,4 +66,5 @@ __all__ = [
     "UNKNOWN_CATEGORY",
     "UNSUPPORTED_CURRENCY",
     "UNSUPPORTED_DIRECTION",
+    "business_state_issue_reason",
 ]
