@@ -292,11 +292,15 @@ export function InvoicesSection({
       })),
     [t, locale],
   );
-  const gridRows: GridRow<CatalogueInvoice>[] = rows.map((invoice) => ({
-    kind: "data",
-    key: invoice.invoice_id,
-    data: invoice,
-  }));
+  const gridRows = useMemo<GridRow<CatalogueInvoice>[]>(
+    () =>
+      rows.map((invoice) => ({
+        kind: "data",
+        key: invoice.invoice_id,
+        data: invoice,
+      })),
+    [rows],
+  );
   // A link that selects an invoice reveals it once the grid draws it; one
   // the person's own view hides is announced with what shows it.
   const grid = useRef<DataGridHandle>(null);

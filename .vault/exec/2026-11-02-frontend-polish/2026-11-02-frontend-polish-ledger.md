@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d270a9ac9c8bc4e559aae77a73d6b74cd7b414a75d77a43430e5997d836567e0'
+body_hash: 'sha256:a016dad47c4fb537750e6d83c0bcb2ec5ad9c5b92e75f09be1a12e732b860ff3'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -53,6 +53,9 @@ related:
 - `S05` `M` `native/desktop/frontend/tests/scenarios/ledger-matching.spec.ts`
 - `S05` `verify:` `TypeScript and matching/invoice targeted ESLint` -> `pass`
 - `S05` `verify:` `ledger-matching and ledger-invoices scenarios (25)` -> `pass`
+- `S07` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
+- `S07` `verify:` `TypeScript and matching/invoice targeted ESLint` -> `pass`
+- `S07` `verify:` `ledger-invoices and ledger-matching scenarios (25)` -> `pass`
 
 ## Notes
 
