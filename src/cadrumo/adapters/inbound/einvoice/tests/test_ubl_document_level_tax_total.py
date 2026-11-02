@@ -44,9 +44,8 @@ def _line(identifier: str, base: str, tax: str | None) -> str:
 
 
 def _document(*, line_level: bool) -> bytes:
-    lines = (
-        _line("1", "600.00", _tax_total("600.00", "126.00") if line_level else None)
-        + _line("2", "400.00", _tax_total("400.00", "84.00") if line_level else None)
+    lines = _line("1", "600.00", _tax_total("600.00", "126.00") if line_level else None) + _line(
+        "2", "400.00", _tax_total("400.00", "84.00") if line_level else None
     )
     return (
         f'<?xml version="1.0" encoding="UTF-8"?><Invoice {_NS}>'

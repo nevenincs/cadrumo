@@ -53,8 +53,8 @@ from ...core.hex import Hex64Str
 from ...core.legacy_workbook import read_legacy_workbook
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
-from ...core.percentage import fraction_of_percentage
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.percentage import fraction_of_percentage
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column

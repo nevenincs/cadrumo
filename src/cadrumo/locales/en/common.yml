@@ -2221,6 +2221,10 @@ desktop:
       remove_attached: Detach it from its movement first
       remove_note: The record and its stored copy leave the ledger.
       remove_title: Remove this record?
+      retention_differs: The document states {read} withheld; the invoice records
+        {recorded}.
+      retention_unrecorded: The document states {read} withheld; the invoice records
+        no retention.
       save: Save
       say_direction: Say whether you received or issued them
       source:

@@ -2245,6 +2245,10 @@ desktop:
       remove_attached: Előbb válaszd le a tételéről
       remove_note: A bejegyzés és tárolt másolata törlődik a nyilvántartásból.
       remove_title: Törlöd ezt a bejegyzést?
+      retention_differs: A dokumentum {read} levont összeget jelez; a számla {recorded}
+        összeget rögzít.
+      retention_unrecorded: A dokumentum {read} levont összeget jelez; a számla nem
+        rögzít levonást.
       save: Mentés
       say_direction: Add meg, hogy kaptad vagy kiállítottad őket
       source:

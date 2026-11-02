@@ -1912,6 +1912,13 @@ export type EvidenceConfirmResult = {
       recorded_total: PublicDecimal;
       difference: PublicDecimal;
     } | null;
+    /** A withheld figure the document reads that the record does not hold. */
+    retention_discrepancy?: {
+      read_rate?: PublicDecimal | null;
+      read_amount: PublicDecimal;
+      recorded_rate?: PublicDecimal | null;
+      recorded_amount?: PublicDecimal | null;
+    } | null;
     confirmation_id?: string | null;
     confirmed_provenance?: FieldProvenance[];
     establishment?: JsonObject | null;
