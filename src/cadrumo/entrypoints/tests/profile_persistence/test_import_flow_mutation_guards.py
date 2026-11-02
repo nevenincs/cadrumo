@@ -7,6 +7,12 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+from cadrumo.adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+from cadrumo.application.aggregation.retenciones import RetencionObservation
+from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
+
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
@@ -22,7 +28,9 @@ from ....application.modelo.action_errors import (
     WorkUnitNotFoundError,
 )
 from ....application.modelo.amendment_actions import amend_modelo_revision
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.calculation_revision_queries import get_calculation_revision
 from ....application.modelo.external_import_actions import import_external_filing_evidence
 from ....application.modelo.work_lifecycle import (
@@ -48,17 +56,7 @@ from ...adapter_composition_work_ports import build_amendment_action_ports, buil
 from .file_flow_test_support import calculation_ports_for_test
 from .import_flow_support import (
     _IMPORT_INCOME_CASILLA,
-    _M111_ACTIVITY_AMOUNT_CASILLA,
-    _M111_ACTIVITY_COUNT_CASILLA,
-    _M111_ACTIVITY_WITHHELD_CASILLA,
     _M111_AMENDMENT_CASILLA,
-    _M111_EMPLOYMENT_WITHHELD_CASILLA,
-    _M111_FORESTRY_WITHHELD_CASILLA,
-    _M111_IMAGE_RIGHTS_WITHHELD_CASILLA,
-    _M111_IMPUTED_INCOME_WITHHELD_CASILLA,
-    _M111_PRIZE_WITHHELD_CASILLA,
-    _M111_PROFESSIONAL_WITHHELD_CASILLA,
-    _M111_TOTAL_WITHHELD_CASILLA,
     _PROFILE_ID,
     _T0,
     _T1,
@@ -169,30 +167,39 @@ def test_amend_locally_filed_still_refused_after_import_path_exists(
         clock=_T0,
         operation=operation,
     )
+    # One professional retención paid in the quarter: the Modelo 111 boxes come from it.
+    replace_retencion_observations(
+        RetencionObservationRepositoryAdapter(objects=secure_object_repository_for_bucket(_PROFILE_ID)),
+        modelo="111",
+        filing_year=2026,
+        period=work_unit.period,
+        observations=[
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id="professional-payment-001",
+                perceptor_nif="12345678Z",
+                perceptor_name="Profesional Ejemplo",
+                scheme=RetencionScheme("actividades_profesionales"),
+                taxable_base=Decimal("1000.00"),
+                retencion_amount=Decimal("150.00"),
+                accrued_on="2026-03-15",
+            )
+        ],
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+    )
     with calculation_ports_for_test(
         bucket_id=_PROFILE_ID,
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
         bucket_event_repository=bv_repo,
     ) as _calculation_ports_180:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
-            casilla_inputs={
-                _M111_EMPLOYMENT_WITHHELD_CASILLA: Decimal("180.25"),
-                _M111_PROFESSIONAL_WITHHELD_CASILLA: Decimal("12.10"),
-                _M111_PRIZE_WITHHELD_CASILLA: Decimal("300.00"),
-                _M111_IMAGE_RIGHTS_WITHHELD_CASILLA: Decimal("14.40"),
-                _M111_FORESTRY_WITHHELD_CASILLA: Decimal("25.00"),
-                _M111_IMPUTED_INCOME_WITHHELD_CASILLA: Decimal("0.50"),
-                _M111_ACTIVITY_COUNT_CASILLA: Decimal("7.00"),
-                _M111_ACTIVITY_AMOUNT_CASILLA: Decimal("8.00"),
-                _M111_ACTIVITY_WITHHELD_CASILLA: Decimal("9.00"),
-                _M111_TOTAL_WITHHELD_CASILLA: Decimal("40.00"),
-            },
+            casilla_inputs={},
             ports=_calculation_ports_180,
             clock=_T1,
-        )
+        ).revision
     verified_revision = revision.model_copy(
         update={
             "state": CalculationRevisionState.VERIFICADO_COMPLETO,
@@ -297,12 +304,10 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
                 bucket_event_repository=bv_repo,
             ) as _calculation_ports_295,
         ):
-            calculate_modelo_revision(
+            calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 foreign.work_unit_id,
                 actor="operator-A",
                 casilla_inputs={
-                    _GUARD_INCOME_CASILLA: Decimal("1000"),
-                    _GUARD_EXPENSE_CASILLA: Decimal("0"),
                     _GUARD_WITHHELD_CASILLA: Decimal("0"),
                     _GUARD_PREVIOUS_PAYMENT_CASILLA: Decimal("0"),
                     _GUARD_AGRARIAN_VOLUME_CASILLA: Decimal("0"),

@@ -10,6 +10,7 @@ the published registry and the encrypted profile repositories.
 
 from __future__ import annotations
 
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
@@ -17,10 +18,20 @@ import pytest
 from cadrumo.adapters.persistence.profile.tests.calculation_catalogue_tamper_support import (
     plant_calculation_revision_unchecked,
 )
+from cadrumo.adapters.persistence.profile.tests.retencion_observation_authoring import replace_retencion_observations
+from cadrumo.application.aggregation.retenciones import (
+    Modelo180PropertyEvidence,
+    Modelo180StructuredAddress,
+    RetencionObservation,
+)
 from cadrumo.application.modelo.action_errors import StoredRowFieldScalarInputError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
+from cadrumo.application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from cadrumo.application.modelo.stored_row_field_input_gate import refuse_stored_row_field_scalar_inputs
+from cadrumo.core.aggregation import AggregationCaptureKind, BindingSourceKind, RetencionScheme
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.period import Period
 from cadrumo.domain.buckets.event import BucketEventType
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
@@ -31,9 +42,8 @@ from cadrumo.domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from cadrumo.domain.modelos.work_unit import WorkUnit
+from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import (
-    DEFAULT_180_BINDING_VALUES,
-    DEFAULT_180_RELATION_VALUES,
     T1,
     T2,
     Repos,
@@ -53,12 +63,6 @@ _M180_RETENCIONES: CasillaId = validated_casilla_id("perc.retenciones")
 _M180_PERCEPTOR_NIF: CasillaId = validated_casilla_id("perc.nif")
 _M349_OPERADOR_BASE: CasillaId = validated_casilla_id("op.base-imponible")
 _M349_COUNTRY: CasillaId = validated_casilla_id("op.codigo-pais")
-_M349_DECLARANTE_BINDING_VALUES = {
-    "iva-349-declarante-numero-operadores": Decimal("1"),
-    "iva-349-declarante-importe-operaciones": Decimal("100"),
-    "iva-349-declarante-numero-rectificaciones": Decimal("0"),
-    "iva-349-declarante-importe-rectificaciones": Decimal("0"),
-}
 
 
 def _row_field_records(work_unit: WorkUnit, casilla_id: CasillaId) -> tuple[str, ...]:
@@ -80,23 +84,71 @@ def _assert_nothing_persisted(repos: Repos, work_unit: WorkUnit) -> None:
     )
 
 
+def _seed_lease_withholding(work_unit: WorkUnit) -> None:
+    """Record one urban-lease retención in the year's first Modelo 115 quarter.
+
+    Modelo 180 reads its perceptor rows from the year's Modelo 115 windows, so
+    the summary has a perceptor to aggregate before any caller input is judged.
+    """
+    year = work_unit.filing_year
+    replace_retencion_observations(
+        build_retencion_observation_ports(bucket_id=work_unit.bucket_id).repository,
+        modelo="115",
+        filing_year=year,
+        period=Period.from_year_and_code(year, "1T"),
+        observations=(
+            RetencionObservation(
+                source_kind=BindingSourceKind.LEDGER_TRANSACTION,
+                source_object_id="retencion-lease-1t",
+                perceptor_nif="B12345674",
+                perceptor_name="Arrendador Ejemplo SL",
+                scheme=RetencionScheme("arrendamiento_urbano"),
+                taxable_base=Decimal("1000.00"),
+                retencion_amount=Decimal("190.00"),
+                accrued_on=f"{year}-03-15",
+                modelo_180_property=Modelo180PropertyEvidence(
+                    property_key="property-lease-1t",
+                    situation="1",
+                    cadastral_reference="B12345674PROPERTY",
+                    recipient_province_code="28",
+                    modality="1",
+                    accrual_year=year,
+                    withholding_percentage=Decimal("19.00"),
+                    address=Modelo180StructuredAddress(
+                        province_code="28",
+                        municipality_code="28079",
+                        municipality="Madrid",
+                        locality="Madrid",
+                        postal_code="28001",
+                        street_type="CL",
+                        street_name="Ejemplo",
+                        number_type="NUM",
+                        house_number="1",
+                    ),
+                ),
+            ),
+        ),
+        source_kind=AggregationCaptureKind.AGGREGATE_PULL,
+        captured_at=datetime(year, 4, 1, 9, 0, tzinfo=UTC),
+    )
+
+
 def test_m180_scalar_retenciones_input_is_refused_before_anything_is_persisted(repos: Repos) -> None:
     """``perc.retenciones`` belongs to each perceptor row, so a scalar value for it is refused."""
     wu_repo, *_ = repos
     work_unit = seed_modelo_180_work_unit(wu_repo)
+    _seed_lease_withholding(work_unit)
     assert _row_field_records(work_unit, _M180_RETENCIONES) == (_M180_PERCEPTOR_RECORD,)
 
     with (
         pytest.raises(RegistryValidationError) as refusal,
         calculation_ports_for_test(bucket_id=work_unit.bucket_id) as ports,
     ):
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
             casilla_inputs={_M180_RETENCIONES: Decimal("150")},
-            binding_values=DEFAULT_180_BINDING_VALUES,
-            relation_values=DEFAULT_180_RELATION_VALUES,
             clock=T1,
         )
 
@@ -109,19 +161,18 @@ def test_m180_scalar_text_input_for_a_perceptor_field_is_refused(repos: Repos) -
     """The text channel is a scalar channel too; a perceptor NIF typed once names no row."""
     wu_repo, *_ = repos
     work_unit = seed_modelo_180_work_unit(wu_repo)
+    _seed_lease_withholding(work_unit)
 
     with (
         pytest.raises(RegistryValidationError) as refusal,
         calculation_ports_for_test(bucket_id=work_unit.bucket_id) as ports,
     ):
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
             casilla_inputs={},
             text_casilla_inputs={_M180_PERCEPTOR_NIF: "00098765Z"},
-            binding_values=DEFAULT_180_BINDING_VALUES,
-            relation_values=DEFAULT_180_RELATION_VALUES,
             clock=T1,
         )
 
@@ -153,13 +204,12 @@ def test_m349_scalar_operador_inputs_are_refused_naming_every_record_that_carrie
         pytest.raises(RegistryValidationError) as refusal,
         calculation_ports_for_test(bucket_id=work_unit.bucket_id) as ports,
     ):
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
             casilla_inputs={_M349_OPERADOR_BASE: Decimal("100")},
             text_casilla_inputs={_M349_COUNTRY: "FR"},
-            binding_values=_M349_DECLARANTE_BINDING_VALUES,
             clock=T1,
         )
 
@@ -193,13 +243,13 @@ def test_a_scalar_input_outside_every_row_field_template_still_calculates(repos:
     )
 
     with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
             casilla_inputs={declarant_casilla: Decimal("250")},
             clock=T1,
-        )
+        ).revision
 
     assert declarant_casilla in revision.input_values_by_casilla_id
     observation = next(obs for obs in revision.observations if obs.casilla_id == declarant_casilla)
@@ -227,16 +277,15 @@ def _saved_before_the_refusal(
 def _calculate_clean_180(repos: Repos) -> tuple[WorkUnit, CalculationRevision]:
     wu_repo, *_ = repos
     work_unit = seed_modelo_180_work_unit(wu_repo)
+    _seed_lease_withholding(work_unit)
     with calculation_ports_for_test(bucket_id=work_unit.bucket_id) as ports:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
             actor="operator-A",
             casilla_inputs={},
-            binding_values=DEFAULT_180_BINDING_VALUES,
-            relation_values=DEFAULT_180_RELATION_VALUES,
             clock=T1,
-        )
+        ).revision
     return work_unit, revision
 
 

@@ -24,6 +24,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
@@ -31,13 +32,14 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from ....adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from ....adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....core.casilla_id import CasillaId, validated_casilla_id
 from ....core.period import Period
@@ -97,8 +99,13 @@ def _seed_taxpayer_unit_profile() -> None:
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Operator"),
-            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-            UserProfileFact(path="activities.description", value="economic activity"),
+            # A salaried taxpayer: the work income below is this unit's only income.
+            *(
+                fact
+                for fact in GENERAL_REGIME_NATURAL_PERSON_FACTS
+                if fact.path not in {"taxpayer_type.irpf_income_categories", "irpf.estimation_regime"}
+            ),
+            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="trabajo"),
             *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
         ),
         created_at=_CLOCK,
@@ -127,8 +134,17 @@ def _seed_prior_negative_base(*, saldo: Decimal, obs_repo: CalculationObservatio
     )
 
 
+_PRIOR_NEGATIVE_BASE_BINDING = "renta-base-liquidable-negativa-general-anterior"
+
+
 def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decimal], dict[RelationId, Decimal]]:
-    binding_values = {binding.id: Decimal("0") for binding in snapshot.revision.bindings if binding.source != "profile"}
+    binding_values = {
+        binding.id: Decimal("0")
+        for binding in snapshot.revision.bindings
+        if binding.source != "profile"
+        and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
+        and binding.provider.kind not in {"retencion_soportada", "previous_filing"}
+    }
     relation_values = {
         binding.id: Decimal("0")
         for binding, _provider in relation_prefill_bindings_for_period(snapshot.revision, period=snapshot.period)
@@ -136,20 +152,22 @@ def _zeroed_channels(snapshot: RegistrySnapshot) -> tuple[dict[BindingId, Decima
     return binding_values, relation_values
 
 
-def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: CalculationObservationRepository):
-    """Run the REAL M100 ``calculate_modelo_revision`` for filing year 2025."""
-    snapshot = _snapshot()
-    from ....application.calculations.binding_prefill import resolve_bindings_from_local_store
+def _calculate(
+    *,
+    casilla_inputs: dict[CasillaId, Decimal],
+    obs_repo: CalculationObservationRepository,
+    binding_overrides: dict[BindingId, Decimal] | None = None,
+):
+    """Run the bucket M100 calculation for filing year 2025.
 
+    The bucket resolves the prior-year carry from the observation store in
+    ``obs_repo``; the caller supplies the operator-owned zeros and any
+    ``binding_overrides``.
+    """
+    snapshot = _snapshot()
     with bundled_indexed_authority().operation() as operation:
-        carry = resolve_bindings_from_local_store(
-            snapshot,
-            repository=obs_repo,
-            iva_history_repository=IvaCompensationHistoryRepository(),
-            operation=operation,
-        ).binding_values
         binding_values, relation_values = _zeroed_channels(snapshot)
-        binding_values.update(carry)
+        binding_values.update(binding_overrides or {})
 
         work_repo = WorkUnitCatalogueRepository()
         calc_repo = CalculationRevisionCatalogueRepository()
@@ -170,7 +188,7 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
             calculation_repository=calc_repo,
             bucket_event_repository=event_repo,
         ) as _calculation_ports_198:
-            revision = calculate_modelo_revision(
+            revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit.work_unit_id,
                 actor=_BUCKET_ID,
                 casilla_inputs=casilla_inputs,
@@ -178,7 +196,7 @@ def _calculate(*, casilla_inputs: dict[CasillaId, Decimal], obs_repo: Calculatio
                 relation_values=relation_values,
                 ports=_calculation_ports_198,
                 clock=_CLOCK,
-            )
+            ).revision
     return revision
 
 
@@ -289,10 +307,12 @@ def test_no_prior_negative_base_leaves_result_unchanged(tmp_path: Path) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         obs_repo = CalculationObservationRepository()
         _seed_taxpayer_unit_profile()
-        # No prior-year 1391 seeded → carry resolves to zero.
+        # No prior-year 1391 is recorded, so the carry stays unresolved until the
+        # operator states the prior pending negative base was zero.
         result = _calculate(
             casilla_inputs={_TRABAJO_INGRESO: ingreso, _APLICADO: Decimal("0")},
             obs_repo=obs_repo,
+            binding_overrides={_PRIOR_NEGATIVE_BASE_BINDING: Decimal("0")},
         )
 
     assert _v(result, _PENDIENTE_INICIO) == Decimal("0")

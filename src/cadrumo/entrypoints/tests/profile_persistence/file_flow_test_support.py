@@ -260,8 +260,6 @@ def calculation_ports_for_test(
 __all__ = [
     "DEFAULT_130_BASELINE_INPUTS",
     "DEFAULT_130_BINDING_VALUES",
-    "DEFAULT_180_BINDING_VALUES",
-    "DEFAULT_180_RELATION_VALUES",
     "M111_ACTIVITY_AMOUNT_CASILLA",
     "M111_ACTIVITY_COUNT_CASILLA",
     "M111_ACTIVITY_WITHHELD_CASILLA",
@@ -351,17 +349,6 @@ def _registry_required_manual_casillas(*, modelo: str, filing_year: int, period:
         for c in revision.casillas
         if c.required and c.input_kind == InputKind.MANUAL and c.id not in row_field_casilla_ids
     )
-
-
-_DEFAULT_180_RELATION_VALUES: dict[str, Decimal] = {
-    "modelo-180-115-base-anual": Decimal("0"),
-    "modelo-180-115-retenciones-anual": Decimal("0"),
-}
-_DEFAULT_180_BINDING_VALUES: dict[str, Decimal] = {
-    "modelo-180-115-perceptores-anual": Decimal("0"),
-    "modelo-180-115-base-anual": Decimal("0"),
-    "modelo-180-115-retenciones-anual": Decimal("0"),
-}
 
 
 _Repos = tuple[
@@ -764,8 +751,6 @@ DEFAULT_130_BASELINE_EXPENSE = _DEFAULT_130_BASELINE_EXPENSE
 DEFAULT_130_BASELINE_INCOME = _DEFAULT_130_BASELINE_INCOME
 DEFAULT_130_BASELINE_INPUTS = _DEFAULT_130_BASELINE_INPUTS
 DEFAULT_130_BINDING_VALUES = _DEFAULT_130_BINDING_VALUES
-DEFAULT_180_BINDING_VALUES = _DEFAULT_180_BINDING_VALUES
-DEFAULT_180_RELATION_VALUES = _DEFAULT_180_RELATION_VALUES
 M111_ACTIVITY_AMOUNT_CASILLA = _M111_ACTIVITY_AMOUNT_CASILLA
 M111_ACTIVITY_COUNT_CASILLA = _M111_ACTIVITY_COUNT_CASILLA
 M111_ACTIVITY_WITHHELD_CASILLA = _M111_ACTIVITY_WITHHELD_CASILLA

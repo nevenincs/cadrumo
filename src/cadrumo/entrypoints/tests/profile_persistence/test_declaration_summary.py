@@ -10,7 +10,9 @@ import pytest
 
 from cadrumo.entrypoints.tests.modelo_operator_work_storage import SEEDED_AT, SeededOperatorWork, seeded_operator_work
 
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
 from ....application.modelo.declaration_summary import DeclarationSummaryState, declaration_summary
 from ....application.modelo.declarations_list import DeclarationListGroup, DeclarationListNextStep, DeclarationListRow
 from ....application.modelo.declarations_list_projection import worded_list_row
@@ -40,14 +42,11 @@ pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 @pytest.fixture(scope="module", params=["13000", "0"])
 def persisted(request: pytest.FixtureRequest, tmp_path_factory: pytest.TempPathFactory) -> Iterator[SeededOperatorWork]:
     with seeded_operator_work(tmp_path_factory.mktemp(f"summary-{request.param}")) as work:
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work.work_unit_id,
             ports=work.ports,
             clock=SEEDED_AT,
             casilla_inputs={
-                "01": Decimal(0),
-                "02": Decimal(0),
-                "06": Decimal(0),
                 "08": Decimal(0),
                 "10": Decimal(0),
                 "16": Decimal(0),
