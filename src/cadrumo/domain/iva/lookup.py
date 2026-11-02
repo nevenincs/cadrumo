@@ -18,6 +18,7 @@ from decimal import Decimal
 from typing import TYPE_CHECKING
 
 from ..calculations.registry.eu_member_state_catalogue import require_eu_member_state
+from ..calculations.registry.errors import GovernedFactNotApplicableError
 from ..calculations.registry.facts.resolution import (
     MappingFactQuery,
     ResolvedMappingFact,
@@ -253,15 +254,20 @@ def lookup_rate(
                 "on_date": on_date.isoformat(),
             },
         )
-    return rate_record_from_fact(
-        resolve_iva_rate(
-            member_state,
-            kind,
-            on_date,
-            operation=operation,
-        ),
-        authority=operation,
-    )
+    try:
+        resolved = resolve_iva_rate(member_state, kind, on_date, operation=operation)
+    except GovernedFactNotApplicableError as exc:
+        # An authority published before the fact declared its standing rates.
+        raise IvaRateNotFoundError(
+            translated_message="errors.error.error_financial_iva_rate_not_found",
+            context={
+                "member_state": member_state.value,
+                "member_state_registered": True,
+                "rate_kind": kind.value,
+                "on_date": on_date.isoformat(),
+            },
+        ) from exc
+    return rate_record_from_fact(resolved, authority=operation)
 
 
 def lookup_published_rate(
