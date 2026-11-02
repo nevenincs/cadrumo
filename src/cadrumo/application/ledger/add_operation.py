@@ -47,7 +47,7 @@ from .ledger_add_results import (
     project_ledger_add_result,
 )
 from .own_account_ports import OwnAccountRepositoryFactory
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_ADD_PHASE = "ledger.add"
 
@@ -203,9 +203,9 @@ def resolve_ledger_add_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Admit only the submitted manual add bound to its exact profile."""
-    if request.definition_id != LEDGER_ADD_OPERATION_DEFINITION_ID or not isinstance(request.payload, LedgerAddRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_ADD_OPERATION_DEFINITION_ID, request_type=LedgerAddRequest
+    )
 
 
 def build_ledger_add_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

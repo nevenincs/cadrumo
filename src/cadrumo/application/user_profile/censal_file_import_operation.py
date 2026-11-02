@@ -17,7 +17,7 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.external_constants import PROVENANCE_SOURCE_CENSO_ARTEFACT
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.user_profile.values import UserProfileFact
 from ..operations.access_resolution import (
@@ -29,7 +29,7 @@ from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDAT
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -225,24 +225,15 @@ def resolve_censal_file_import_operation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve one whole-profile import with an explicit local COMMIT action."""
-    _validated_censal_import_request(request, context)
+    require_access_request_profile_payload(
+        request,
+        definition_id=CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID,
+        payload_type=CensalFileImportOperationRequest,
+        access_profile_id=context.profile_id,
+    )
     return bind_whole_profile_censal_access(
         request, context, actions=COMMITTING_OPERATION_LIFECYCLE_ACTIONS, provider=Availability.NOT_REQUIRED
     )
-
-
-def _validated_censal_import_request(
-    request: OperationRequest[BaseModel], context: OperationAccessContext
-) -> CensalFileImportOperationRequest:
-    payload = request.payload
-    if request.definition_id != CENSAL_FILE_IMPORT_OPERATION_DEFINITION_ID or not isinstance(
-        payload, CensalFileImportOperationRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    profile_id = str(payload.profile_id)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(profile_id):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return payload
 
 
 def build_censal_file_import_operation_definition() -> OperationDefinition:

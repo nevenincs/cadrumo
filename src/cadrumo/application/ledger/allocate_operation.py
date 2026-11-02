@@ -39,7 +39,7 @@ from .id_resolution import resolve_transaction_id
 from .manual_read import ledger_transaction_result_payload
 from .manual_update import update_manual_transaction_fields
 from .models import LedgerTransactionResultPayload, ManualLedgerTransactionPatch, ManualLedgerTransactionResult
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_ALLOCATE_OPERATION_DEFINITION_ID = "ledger.allocate"
@@ -206,11 +206,9 @@ def resolve_ledger_allocate_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile disclosure and COMMIT for every allocation."""
-    if request.definition_id != LEDGER_ALLOCATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerAllocateRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_ALLOCATE_OPERATION_DEFINITION_ID, request_type=LedgerAllocateRequest
+    )
 
 
 def build_ledger_allocate_registration(

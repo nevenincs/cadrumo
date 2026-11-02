@@ -54,7 +54,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from .evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from .evidence_ports import LedgerEvidencePortsFactory
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 
 LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID = "ledger.evidence.list"
 LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID = "ledger.evidence.view"
@@ -692,45 +692,33 @@ def build_ledger_evidence_query_definition(ports_factory: LedgerEvidencePortsFac
 def _resolve_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceListRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceListRequest,
     )
 
 
 def _resolve_view_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceViewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceViewRequest,
     )
 
 
 def _resolve_query_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceQueryRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceQueryRequest,
     )
 
 

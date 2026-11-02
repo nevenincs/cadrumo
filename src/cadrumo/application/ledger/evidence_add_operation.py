@@ -51,7 +51,7 @@ from .evidence import (
 from .evidence_port_identity import require_exact_evidence_ports
 from .evidence_ports import LedgerEvidencePortsFactory
 from .evidence_read_operation import LedgerEvidenceRecordProjection
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID = "ledger.evidence.add"
 LEDGER_EVIDENCE_ADD_PHASE = LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
@@ -417,11 +417,12 @@ def resolve_ledger_evidence_add_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax-value disclosure and COMMIT for evidence add."""
-    if request.definition_id != LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceAddRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceAddRequest,
+    )
 
 
 def build_ledger_evidence_add_registration(

@@ -64,7 +64,7 @@ from .id_resolution import resolve_transaction_id
 from .manual_read import ledger_transaction_result_payload
 from .manual_update import attach_manual_transaction_evidence, detach_manual_transaction_attachments
 from .models import LedgerRemovalBlocker, ManualLedgerTransactionResult
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_ATTACH_OPERATION_DEFINITION_ID = "ledger.attach"
@@ -596,32 +596,12 @@ def build_ledger_detach_definition(
     )
 
 
-def _resolve_attachment_access(
-    request: OperationRequest[BaseModel],
-    context: OperationAccessContext,
-    *,
-    operation_id: LedgerAttachmentOperationId,
-    request_type: type[BaseModel],
-    profile_id: UUID,
-) -> ResolvedOperationAccess:
-    """Require full-profile read access and COMMIT for the canonical mutation."""
-    if request.definition_id != operation_id or not isinstance(request.payload, request_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=profile_id, periods=frozenset())
-
-
 def resolve_ledger_attach_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve whole-profile access plus COMMIT for attach."""
-    if not isinstance(request.payload, LedgerAttachRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return _resolve_attachment_access(
-        request,
-        context,
-        operation_id=LEDGER_ATTACH_OPERATION_DEFINITION_ID,
-        request_type=LedgerAttachRequest,
-        profile_id=request.payload.profile_id,
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_ATTACH_OPERATION_DEFINITION_ID, request_type=LedgerAttachRequest
     )
 
 
@@ -629,14 +609,8 @@ def resolve_ledger_detach_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve whole-profile access plus COMMIT for detach."""
-    if not isinstance(request.payload, LedgerDetachRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return _resolve_attachment_access(
-        request,
-        context,
-        operation_id=LEDGER_DETACH_OPERATION_DEFINITION_ID,
-        request_type=LedgerDetachRequest,
-        profile_id=request.payload.profile_id,
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_DETACH_OPERATION_DEFINITION_ID, request_type=LedgerDetachRequest
     )
 
 

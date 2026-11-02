@@ -16,7 +16,7 @@ from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BY
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-from ...core.operations import OperationEffect, profile_operation_subject
+from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ..operations.access_resolution import (
     OPERATION_LIFECYCLE_ACTIONS,
@@ -27,7 +27,7 @@ from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABIL
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_operation_profile
+from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -194,25 +194,15 @@ def resolve_censal_prepare_operation_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Resolve a period-independent, exact-profile read with no provider."""
-    _validated_censal_prepare_request(request, context)
+    require_access_request_profile_payload(
+        request,
+        definition_id=CENSAL_PREPARE_OPERATION_DEFINITION_ID,
+        payload_type=CensalPrepareOperationRequest,
+        access_profile_id=context.profile_id,
+    )
     return bind_whole_profile_censal_access(
         request, context, actions=OPERATION_LIFECYCLE_ACTIONS, provider=Availability.NOT_REQUIRED
     )
-
-
-def _validated_censal_prepare_request(
-    request: OperationRequest[BaseModel], context: OperationAccessContext
-) -> CensalPrepareOperationRequest:
-    payload = request.payload
-    if request.definition_id != CENSAL_PREPARE_OPERATION_DEFINITION_ID or not isinstance(
-        payload, CensalPrepareOperationRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if payload.profile_id != context.profile_id or request.subject_ref != profile_operation_subject(
-        str(payload.profile_id)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    return payload
 
 
 def build_censal_prepare_operation_definition(

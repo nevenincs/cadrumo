@@ -51,7 +51,7 @@ from .evidence import (
 )
 from .evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
 from .evidence_read_operation import LedgerEvidenceRecordProjection
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID = "ledger.evidence.update"
 LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID = "ledger.evidence.remove"
@@ -615,22 +615,24 @@ def resolve_ledger_evidence_update_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax-value disclosure and COMMIT for evidence update."""
-    if request.definition_id != LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceUpdateRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_EVIDENCE_UPDATE_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceUpdateRequest,
+    )
 
 
 def resolve_ledger_evidence_remove_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax-value disclosure and COMMIT for evidence removal."""
-    if request.definition_id != LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceRemoveRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_EVIDENCE_REMOVE_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceRemoveRequest,
+    )
 
 
 def build_ledger_evidence_update_registration(

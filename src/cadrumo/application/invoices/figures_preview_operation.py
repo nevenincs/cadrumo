@@ -49,7 +49,7 @@ from ...domain.invoices.figures import (
     dated_rate_slots,
     rate_refusal_finding,
 )
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_terminal_receipt
@@ -553,11 +553,12 @@ def resolve_invoice_figures_preview_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind the read to the exact profile, as every ledger read is."""
-    if request.definition_id != INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InvoiceFiguresPreviewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request,
+        context,
+        definition_id=INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
+        request_type=InvoiceFiguresPreviewRequest,
+    )
 
 
 def build_invoice_figures_preview_registration(

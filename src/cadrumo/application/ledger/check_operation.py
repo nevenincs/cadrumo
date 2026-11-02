@@ -28,7 +28,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory
 from .check_query import LedgerCheckV1, read_ledger_check
 from .preflight import LedgerPreflightIssue, LedgerPreflightIssueReason
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 
 LEDGER_CHECK_OPERATION_DEFINITION_ID = "ledger.check"
 
@@ -182,11 +182,9 @@ def resolve_ledger_check_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require independent all-period authority because links remain global."""
-    if request.definition_id != LEDGER_CHECK_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerCheckRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_CHECK_OPERATION_DEFINITION_ID, request_type=LedgerCheckRequest
+    )
 
 
 def build_ledger_check_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

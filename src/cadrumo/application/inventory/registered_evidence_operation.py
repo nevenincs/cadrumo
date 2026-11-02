@@ -27,7 +27,7 @@ from ..ledger.evidence import MediaKind, admit_evidence_file, ingest_evidence_fi
 from ..ledger.evidence_errors import PurchaseInvoiceEvidenceInputError
 from ..ledger.evidence_port_identity import require_exact_evidence_ports
 from ..ledger.evidence_ports import LedgerEvidencePorts, LedgerEvidencePortsFactory
-from ..ledger.read_access import resolve_ledger_commit_access
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
@@ -224,11 +224,12 @@ def resolve_inventory_evidence_add_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax-value disclosure and COMMIT, as adding any ledger document does."""
-    if request.definition_id != INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InventoryEvidenceAddRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=INVENTORY_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+        request_type=InventoryEvidenceAddRequest,
+    )
 
 
 def build_inventory_evidence_add_registration(

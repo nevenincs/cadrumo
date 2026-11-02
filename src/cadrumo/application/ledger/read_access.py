@@ -107,3 +107,17 @@ def resolve_ledger_request_read_access(
     if not isinstance(profile_id, UUID):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
+
+
+def resolve_ledger_request_commit_access(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    /,
+    *,
+    definition_id: str,
+    request_type: type[BaseModel],
+) -> ResolvedOperationAccess:
+    """Bind whole-profile read access for exactly ``request_type`` under ``definition_id`` and add COMMIT."""
+    return with_commit_action(
+        resolve_ledger_request_read_access(request, context, definition_id=definition_id, request_type=request_type)
+    )

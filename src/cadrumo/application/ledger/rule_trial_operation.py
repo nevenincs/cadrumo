@@ -28,7 +28,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_classification import classification_rule_in_scope
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 from .transaction_repository import transaction_catalogue_repository
 
 LEDGER_RULE_TRIAL_OPERATION_DEFINITION_ID: Final = "ledger.rule.trial"
@@ -188,11 +188,9 @@ def resolve_ledger_rule_trial_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind the read to the exact profile, as every ledger read is."""
-    if request.definition_id != LEDGER_RULE_TRIAL_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerRuleTrialRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_RULE_TRIAL_OPERATION_DEFINITION_ID, request_type=LedgerRuleTrialRequest
+    )
 
 
 def build_ledger_rule_trial_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
