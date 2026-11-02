@@ -2,15 +2,17 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Literal
 from uuid import UUID
 
-from pydantic import BaseModel, model_validator
+from pydantic import BaseModel, field_validator, model_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.retencion_soportada import RetencionSoportadaClase
-from ...core.time.utc import UtcInstant
+from ...core.time.utc import validate_utc_aware
 from ...domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence, RetencionSoportadaAbsenceState
 from .contracts import RetencionSoportadaAbsenceOperationId, RetencionSoportadaAbsenceOperationRefusalReason
 
@@ -31,9 +33,15 @@ class RetencionSoportadaAbsenceProjection(BaseModel):
     income_class: RetencionSoportadaClase
     note: str
     state: RetencionSoportadaAbsenceState
-    attested_at: UtcInstant
-    withdrawn_at: UtcInstant | None
+    attested_at: datetime
+    withdrawn_at: datetime | None
     revision_id: str
+
+    @field_validator("attested_at", "withdrawn_at")
+    @classmethod
+    @pydantic_validation_boundary
+    def _instants_are_utc(cls, value: datetime | None) -> datetime | None:
+        return None if value is None else validate_utc_aware(value)
 
     @classmethod
     def from_attestation(
