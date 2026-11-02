@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ed3464c325e8a0e7521f8b7158e107bc7e94dbcd4b81be565328877c8d1ed80a'
+body_hash: 'sha256:1a7437d6b5a08e5e1fc071c102d68c9563c2a64d1bc56f128d4f24c0bd861f29'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -212,6 +212,14 @@ related:
 - `S37` `M` `src/cadrumo/locales/hu/common.yml`
 - `S37` `verify:` `31 browser scenarios 20261102T221404Z-60704` -> `pass`
 - `S37` `verify:` `TypeScript scoped ESLint Prettier canonical chrome` -> `pass`
+- `S38` `M` `native/desktop/frontend/src/shell/useHostLogs.ts`
+- `S38` `M` `native/desktop/frontend/src/components/HostRecordList.tsx`
+- `S38` `M` `native/desktop/frontend/src/components/RecordList.tsx`
+- `S38` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S38` `M` `native/desktop/frontend/src/dev/scenarioHost.ts`
+- `S38` `M` `native/desktop/frontend/tests/scenarios/logs.spec.ts`
+- `S38` `verify:` `17 logs scenarios 20261102T221404Z-60704` -> `pass`
+- `S38` `verify:` `TypeScript scoped ESLint Prettier canonical chrome` -> `pass`
 
 ## Notes
 

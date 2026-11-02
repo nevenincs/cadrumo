@@ -33,6 +33,56 @@ async function exportSelection(
   await page.getByRole("menuitem", { name: label(key), exact: true }).click();
 }
 
+test("failed log attachment can reconnect without duplicating its partial backlog", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&logAttachFailures=1",
+  );
+  await openPanelTab(page, "logs");
+  const unavailable = page.locator(".source-banner.state-unavailable");
+  await expect(unavailable).toBeVisible();
+  await expect(page.locator('.record[data-seq="1"]')).toHaveCount(1);
+  const filter = page.getByRole("searchbox", {
+    name: label("desktop.logs.filter"),
+    exact: true,
+  });
+  await filter.fill("Workbench ready");
+  await unavailable
+    .getByRole("button", { name: label("desktop.logs.reconnect"), exact: true })
+    .click();
+  await expect(unavailable).toHaveCount(0);
+  await expect(filter).toHaveValue("Workbench ready");
+  await expect(page.locator('.record[data-seq="4"]')).toHaveCount(1);
+  await filter.clear();
+  await expect(page.locator('.record[data-seq="1"]')).toHaveCount(1);
+  expect(
+    await page.evaluate(
+      () =>
+        window.__scenarioHostCalls?.filter((call) => call === "subscribeLogs")
+          .length,
+    ),
+  ).toBe(2);
+});
+
+test("a reconnect backlog gap remains visible without inventing a dropped count", async ({
+  page,
+}) => {
+  await page.goto(
+    "/scenarios.html?scenario=signed-in&latency=0&logAttachFailures=1&logReplayGap=true",
+  );
+  await openPanelTab(page, "logs");
+  await page
+    .getByRole("button", { name: label("desktop.logs.reconnect"), exact: true })
+    .click();
+  await expect(
+    page.getByText(label("desktop.logs.interrupted"), { exact: true }),
+  ).toBeVisible();
+  await expect(page.locator('.record[data-seq="1"]')).toHaveCount(1);
+  await expect(page.locator('.record[data-seq="4"]')).toHaveCount(1);
+  await expect(page.locator('.record[data-seq="2"]')).toHaveCount(0);
+});
+
 test("reveal log location is available from the log bar and command palette", async ({
   page,
 }) => {

@@ -62,8 +62,13 @@ function readParams() {
     bar: params.get("bar") !== "off",
     // A log of this many generated records, for measuring the log view.
     logRecords: Math.max(0, Math.trunc(Number(params.get("records")) || 0)),
+    logReplayGap: params.get("logReplayGap") === "true",
     // A batch of records every this many milliseconds, for a log that grows.
     logFeedMs: Math.max(0, Math.trunc(Number(params.get("feed")) || 0)),
+    logAttachFailures: Math.max(
+      0,
+      Math.trunc(Number(params.get("logAttachFailures")) || 0),
+    ),
     logLevel: LOG_LEVELS.find((level) => level === params.get("logLevel")),
     // Another shape of the fixture calendar, for where its mark for the
     // evaluated day stands.
@@ -210,7 +215,9 @@ function Scenarios() {
           }
         : null,
       logRecords: initial.logRecords,
+      logReplayGap: initial.logReplayGap,
       logFeedMs: initial.logFeedMs,
+      logAttachFailures: initial.logAttachFailures,
       logLevel: initial.logLevel,
       calendar: initial.calendar,
       agentStream: initial.agentStream,

@@ -20,9 +20,10 @@ export function HostRecordList({
   onErrors: (count: number) => void;
 } & Omit<
   ComponentProps<typeof RecordList>,
-  "records" | "sourceStates" | "dropped"
+  "records" | "sourceStates" | "dropped" | "onRetry" | "interrupted"
 >) {
-  const { records, dropped, sourceStates } = useHostLogs(host);
+  const { records, dropped, sourceStates, interrupted, retry } =
+    useHostLogs(host);
   const errors = useMemo(
     () =>
       (records ?? []).filter(
@@ -56,6 +57,8 @@ export function HostRecordList({
       records={records}
       sourceStates={sourceStates}
       dropped={dropped}
+      onRetry={retry}
+      interrupted={interrupted}
       {...view}
     />
   );
