@@ -410,7 +410,6 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
             "modelo-131.page1.actividad-1-epigrafe": "722",
             "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
             "modelo-131.page1.actividad-1-porcentaje": Decimal("2"),
-            "modelo-131.page1.declaracion-complementaria": "no",
             "modelo-131.page1.justificante-anterior": "1234567890123",
         },
         schema_provider=_period_schema_provider(),
@@ -422,7 +421,6 @@ def test_build_draft_preserves_modelo_131_page_one_structured_binding_values() -
     assert binding_values["modelo-131.page1.actividad-1-epigrafe"] == "722"
     assert binding_values["modelo-131.page1.actividad-1-rendimiento-neto"] == Decimal("1200.50")
     assert binding_values["modelo-131.page1.actividad-1-porcentaje"] == Decimal("2")
-    assert binding_values["modelo-131.page1.declaracion-complementaria"] is False
     assert binding_values["modelo-131.page1.justificante-anterior"] == "1234567890123"
 
 

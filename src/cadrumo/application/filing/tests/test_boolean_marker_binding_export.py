@@ -1,9 +1,9 @@
 """A boolean answer bound to a one-byte text slot exports blank or ``X``.
 
-DR131 (``aeat-dr-131-2026``) página 1 prints three such campos, all alfanuméricos de
+DR131 (``aeat-dr-131-2026``) página 1 prints two such operator-answered campos, all alfanuméricos de
 longitud 1 with valores ``blanco o "X"``: posición 109 (contribuyente con discapacidad
-igual o superior al 33 por 100), 613 (derecho a la deducción por vivienda habitual) and
-692 (declaración complementaria). DR184 (``aeat-dr-184-2025``) posición 82 reads ``X``
+igual o superior al 33 por 100) and 613 (derecho a la deducción por vivienda habitual).
+Posición 692 (declaración complementaria) is stated by the amendment evidence instead. DR184 (``aeat-dr-184-2025``) posición 82 reads ``X``
 when the miembro remains one at 31 December. The operator answers each as a boolean
 binding, so the answer reaches a text slot through the binding path. The expected bytes
 are transcribed from the designs, never read from the layout under test; the whole
@@ -38,7 +38,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _MARKERS = (
     ("modelo-131.page1.discapacidad-33", 109),
     ("modelo-131.page1.vivienda-derecho-deduccion", 613),
-    ("modelo-131.page1.declaracion-complementaria", 692),
 )
 _PAGE_ONE_OPEN = b"<T13101000>"
 

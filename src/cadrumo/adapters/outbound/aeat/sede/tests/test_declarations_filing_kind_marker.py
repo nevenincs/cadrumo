@@ -19,10 +19,11 @@ from ......application.filing.draft_construction import build_draft
 from ......application.filing.export import export_draft
 from ......application.filing.producer_snapshot import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ......application.filing.runtime import ModeloOperatorProfile
-from ......application.filing.tests.export_support import _PERIOD, _schema_provider, _typed_producer_snapshot
+from ......application.filing.tests.export_support import _schema_provider, _typed_producer_snapshot
 from ......application.live.filed_observation_persistence import filed_observation_filing_kind
 from ......core.casilla_id import validated_casilla_id
 from ......core.modelo import Modelo
+from ......core.period import Period
 from ......core.prior_domiciliation_election import PriorDomiciliationElection
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.binding_targets import revision_bindings_by_id
@@ -194,9 +195,11 @@ _M131_CASILLA_03 = validated_casilla_id("03", surface="test_declarations_filing_
 _M131_CASILLA_05 = validated_casilla_id("05", surface="test_declarations_filing_kind_marker.casilla")
 
 
-def _m131_multi_activity_file(tmp_path: Path) -> bytes:
-    """Export a two-activity Modelo 131 2026 fichero through the real renderer."""
-    template = _typed_producer_snapshot()
+def _m131_multi_activity_file(
+    tmp_path: Path, *, complementaria: bool, filing_year: int = 2026, period: str = "1T"
+) -> bytes:
+    """Export a two-activity Modelo 131 fichero through the real renderer."""
+    template = _typed_producer_snapshot(complementaria=complementaria)
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo("131"),
         taxpayer_tax_id=template.taxpayer_tax_id,
@@ -209,10 +212,10 @@ def _m131_multi_activity_file(tmp_path: Path) -> bytes:
         charge_account=None,
         m303_filing_facts=None,
     )
-    provider = _schema_provider(filing_year=2026, period="1T", modelos=("131",))
+    provider = _schema_provider(filing_year=filing_year, period=period, modelos=("131",))
     draft = build_draft(
         modelo="131",
-        period=_PERIOD,
+        period=Period.from_year_and_code(filing_year, period),
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Filing kind fixture"),
         inputs={
             _M131_CASILLA_03: Decimal("1000"),
@@ -221,6 +224,7 @@ def _m131_multi_activity_file(tmp_path: Path) -> bytes:
             "modelo-131.page1.actividad-1-rendimiento-neto": Decimal("1200.50"),
             "modelo-131.dpa.epigrafe-iae": ["722", "845"],
             "modelo-131.did.iban": "ES9121000418450200051332",
+            **({"modelo-131-resultados-negativos-anteriores": Decimal("0")} if period != "1T" else {}),
         },
         schema_provider=provider,
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
@@ -236,13 +240,6 @@ def _m131_multi_activity_file(tmp_path: Path) -> bytes:
     return output_path.read_bytes()
 
 
-def _m131_with_marker(body: bytes, token: bytes) -> bytes:
-    """Set the page-01 position-692 byte, which the 2026 export does not yet render from a draft."""
-    position = body.index(_M131_PAGE_01_OPEN_TAG) + _M131_MARKER_OFFSET - 1
-    assert body[position : position + 1] == b" "
-    return body[:position] + token + body[position + 1 :]
-
-
 @pytest.mark.parametrize(
     ("complementaria", "kind"),
     [(False, FilingDeclarationKind.ORIGINAL), (True, FilingDeclarationKind.COMPLEMENTARIA)],
@@ -250,7 +247,9 @@ def _m131_with_marker(body: bytes, token: bytes) -> bytes:
 def test_a_modelo_131_continuation_page_indicator_never_disagrees_with_the_page_01_marker(
     operation: PinnedAuthorityOperation, tmp_path: Path, complementaria: bool, kind: FilingDeclarationKind
 ) -> None:
-    body = _m131_with_marker(_m131_multi_activity_file(tmp_path), b"X" if complementaria else b" ")
+    body = _m131_multi_activity_file(tmp_path, complementaria=complementaria)
+    page_one = body.index(_M131_PAGE_01_OPEN_TAG) + _M131_MARKER_OFFSET - 1
+    assert body[page_one : page_one + 1] == (b"X" if complementaria else b" ")
     starts = [index for index in range(len(body)) if body.startswith(_M131_DPA_OPEN_TAG, index)]
     position = _M131_PAGE_INDICATOR_POSITION
     assert [body[start + position - 1 : start + position] for start in starts] == [b" ", b"C"]
@@ -270,3 +269,33 @@ def test_a_modelo_131_continuation_page_indicator_never_disagrees_with_the_page_
     assert filing_kind.basis is FilingKindEvidenceBasis.SUBMITTED_FILE_MARKER
     assert filing_kind.unknown_reason is None
     assert [reading.token for reading in filing_kind.readings] == [marker.declaration_marker.token]
+
+
+@pytest.mark.parametrize(
+    ("filing_year", "period"),
+    [(2024, "1T"), (2025, "1T"), (2026, "1T"), (2026, "3T")],
+    ids=("2024", "2025", "2026", "2026-3t-4t"),
+)
+@pytest.mark.parametrize(
+    ("complementaria", "kind"),
+    [(False, FilingDeclarationKind.ORIGINAL), (True, FilingDeclarationKind.COMPLEMENTARIA)],
+)
+def test_an_exported_modelo_131_fichero_reads_back_as_the_kind_it_was_exported_with(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+    filing_year: int,
+    period: str,
+    complementaria: bool,
+    kind: FilingDeclarationKind,
+) -> None:
+    body = _m131_multi_activity_file(tmp_path, complementaria=complementaria, filing_year=filing_year, period=period)
+
+    marker = observed_filing_kind_marker_from_submitted_file(
+        snapshot=operation.snapshot("131", filing_year=filing_year, period=period),
+        body=body,
+        operation=operation,
+    )
+
+    assert marker is not None
+    assert marker.declaration_marker.token == ("X" if complementaria else "")
+    assert marker.declaration_marker.kind is kind
