@@ -800,6 +800,9 @@ application:
           el recargo debe ser cero.
         printed_total_differs: El total impreso, %{printed}, difiere del total calculado,
           %{computed}.
+        rate_date_projected: 'Los tipos de IVA del %{on_date} se leen de las declaraciones
+          más cercanas, desde el %{nearest}: esta fecha es anterior a los ejercicios
+          que cubre Cadrumo, así que son una proyección y no sirven de base para presentar.'
         rate_date_unresolved: El registro no declara tipos de IVA para el %{on_date},
           así que no se puede calcular el IVA.
         recargo_above_iva_total: El recargo, %{stated}, no puede superar el IVA total,

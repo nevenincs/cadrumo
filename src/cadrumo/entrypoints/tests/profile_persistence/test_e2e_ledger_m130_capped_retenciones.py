@@ -225,7 +225,14 @@ def _receipt(
     )
 
 
-def _issued_invoice(number: str, *, base: Decimal, retencion: Decimal, linked: str) -> Invoice:
+def _issued_invoice(
+    number: str,
+    *,
+    base: Decimal,
+    retencion: Decimal,
+    linked: str | None,
+    issued_at: date | None = None,
+) -> Invoice:
     rate = iva_rate_percentage(IvaRate.from_registry("RATE_21"), date(_CAPPED_YEAR, 1, 1))
     assert rate is not None
     line = InvoiceLine(
@@ -240,7 +247,7 @@ def _issued_invoice(number: str, *, base: Decimal, retencion: Decimal, linked: s
         {
             "kind": InvoiceKind.ISSUED,
             "invoice_number": number,
-            "issued_at": date(_CAPPED_YEAR, 2, 10),
+            "issued_at": date(_CAPPED_YEAR, 2, 10) if issued_at is None else issued_at,
             "counterparty_name": "Cliente SL",
             "counterparty_tax_id": "B12345674",
             "counterparty_country": "ES",
@@ -254,12 +261,12 @@ def _issued_invoice(number: str, *, base: Decimal, retencion: Decimal, linked: s
             "iva_category": IvaCategory("domestic_general"),
             "retention_rate": Decimal("0.15"),
             "retention_amount": retencion,
-            "linked_transaction_ids": (linked,),
+            "linked_transaction_ids": () if linked is None else (linked,),
         },
     )
 
 
-def _persist_ledger(secure_objects: SecureObjectRepository) -> None:
+def _persist_ledger(secure_objects: SecureObjectRepository, *, older: tuple[Invoice, ...] = ()) -> None:
     """The capped quarter's two invoiced receipts, and an earlier year's receipt paid in full."""
     receipts = [_receipt(number, value_date=date(_CAPPED_YEAR, 2, 10), cash=cash) for number, _, _, cash in _INVOICES]
     unwithheld = _receipt(
@@ -277,7 +284,9 @@ def _persist_ledger(secure_objects: SecureObjectRepository) -> None:
     for invoice, receipt in zip(invoices, receipts, strict=True):
         catalogue = link_invoice(catalogue, receipt.transaction_id, invoice.invoice_id)
     TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(catalogue)
-    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(build_invoice_catalogue(invoices))
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        build_invoice_catalogue((*invoices, *older)),
+    )
 
 
 def _work_unit(secure_objects: SecureObjectRepository, year: int, operation: PinnedAuthorityOperation) -> WorkUnit:
@@ -445,6 +454,30 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
                 clock=_T0,
                 operation=operation,
             )
+
+
+def test_an_invoice_older_than_the_filing_years_stays_readable_and_moves_no_box(
+    secure_objects: SecureObjectRepository,
+) -> None:
+    _seed_taxpayer_profile()
+    with bundled_indexed_authority().operation() as operation:
+        floor = operation.supported_filing_years().floor
+        older = _issued_invoice(
+            "F-ANTERIOR",
+            base=Decimal("1000.00"),
+            retencion=Decimal("150.00"),
+            linked=None,
+            issued_at=date(floor - 1, 2, 10),
+        )
+        _persist_ledger(secure_objects, older=(older,))
+        work_unit = _work_unit(secure_objects, _CAPPED_YEAR, operation)
+        revision = _calculate(work_unit, operation)
+
+        assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == _STATED_RETENCION
+        assert older.invoice_id in {
+            invoice.invoice_id
+            for invoice in InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).load()
+        }
 
 
 def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(

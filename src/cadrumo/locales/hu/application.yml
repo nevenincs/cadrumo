@@ -784,6 +784,10 @@ application:
           az egyenértékűségi pótdíj nulla kell legyen.
         printed_total_differs: A számlán nyomtatott végösszeg (%{printed}) eltér a
           kiszámított végösszegtől (%{computed}).
+        rate_date_projected: 'A(z) %{on_date} napi áfakulcsok a legközelebbi, %{nearest}
+          napjától érvényes bejegyzésekből származnak: ez a dátum régebbi a Cadrumo
+          által lefedett adóéveknél, ezért vetítésről van szó, amely nem szolgál benyújtás
+          alapjául.'
         rate_date_unresolved: A nyilvántartás nem ad meg áfakulcsot %{on_date} napjára,
           ezért az áfa nem számolható ki.
         recargo_above_iva_total: Az egyenértékűségi pótdíj (%{stated}) nem haladhatja

@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Generator, Mapping
+from contextlib import contextmanager
+from contextvars import ContextVar
 from datetime import date
 from typing import Annotated, Final, Literal
 
@@ -72,8 +74,35 @@ __all__ = [
 ]
 
 
+_READING_DATED_FACTS_BELOW_SUPPORT: ContextVar[bool] = ContextVar("reading_dated_facts_below_support", default=False)
+
+
+def _reading_dated_facts_below_support() -> bool:
+    return _READING_DATED_FACTS_BELOW_SUPPORT.get()
+
+
+@contextmanager
+def reading_dated_facts_below_support() -> Generator[None]:
+    """Let date-addressed fact queries made inside this scope reach below the support floor.
+
+    A taxpayer's record can be dated before the years the product files for. Its
+    facts are then read from the nearest declarations and marked as a backward
+    projection; a filing-year coordinate stays gated, and a calculation that did
+    not open this scope still refuses, so no filing-grade path rests on one.
+    """
+    token = _READING_DATED_FACTS_BELOW_SUPPORT.set(True)
+    try:
+        yield
+    finally:
+        _READING_DATED_FACTS_BELOW_SUPPORT.reset(token)
+
+
 class _FactQuery(RegistryModel):
-    """Coordinates shared by every closed governed-fact query family."""
+    """Coordinates shared by every closed governed-fact query family.
+
+    ``reaches_below_support`` is part of the query's identity, so an authority's
+    resolution cache can never answer a gated query from a projected one.
+    """
 
     fact_id: FactId
     date_axis: DateAxisField
@@ -81,6 +110,7 @@ class _FactQuery(RegistryModel):
     selectors: tuple[FactSelector, ...] = ()
     filing_year: FilingYear | None = None
     period: RegistrySelectorPeriodCode | None = None
+    reaches_below_support: bool = Field(default_factory=_reading_dated_facts_below_support)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -406,11 +436,15 @@ def resolve_validated_governed_fact(
     omitting ``valid_from`` reaches its floor, and an open final variant carries
     past its horizon. An explicit endpoint is a legal boundary, so a coordinate
     in a gap between explicit windows resolves to nothing rather than to the
-    nearest variant.
+    nearest variant, and that holds below the floor too: a query admitted there
+    by :func:`reading_dated_facts_below_support` reaches a variant whose declared
+    window holds the date, or the first of a track whose start says only where
+    the corpus begins, by being absent or equal to the floor. It never crosses a
+    start declared earlier than the floor or after the date, which records law.
     """
     query_selectors = _validate_fact_query(fact, query, support)
     date_support = support.date_envelope()
-    windows = fact.materialized_windows(date_support)
+    windows = _fact_windows(fact, query, date_support)
     track = _matching_fact_track(fact, query, query_selectors, windows)
     candidates = _containing_fact_candidates(track, query.effective_date)
     if not candidates:
@@ -449,11 +483,36 @@ def _validate_fact_query(
         )
     query_selectors = _selector_identity(query.selectors)
     coordinate_year = query.filing_year if query.filing_year is not None else query.effective_date.year
-    if not support.admits_coordinate(coordinate_year):
+    below_floor_reach = query.reaches_below_support and query.filing_year is None and coordinate_year < support.floor
+    if not below_floor_reach and not support.admits_coordinate(coordinate_year):
         raise RegistryValidationError(
             f"governed fact {query.fact_id!r} query year {coordinate_year} falls outside the supported filing years"
         )
     return query_selectors
+
+
+def _fact_windows(
+    fact: GovernedFact,
+    query: GovernedFactQuery,
+    support: DateSupportEnvelope,
+) -> Mapping[RegistryRevisionNodeId, RegistryValidityWindow]:
+    """Return the windows a query reads, reaching back only where a track's start states no law."""
+    if not query.reaches_below_support or query.filing_year is not None or query.effective_date >= support.floor:
+        return fact.materialized_windows(support)
+    windows = dict(
+        fact.materialized_windows(
+            DateSupportEnvelope(floor=date.min, horizon=support.horizon, hard_ceiling=support.hard_ceiling),
+        ),
+    )
+    earliest: dict[object, date] = {}
+    for variant in fact.variants:
+        key = fact.track_key(variant)
+        start = windows[variant.variant_id].valid_from
+        earliest[key] = min(start, earliest.get(key, start))
+    for variant in fact.variants:
+        if variant.valid_from == support.floor and earliest[fact.track_key(variant)] == support.floor:
+            windows[variant.variant_id] = RegistryValidityWindow(valid_from=date.min, valid_to=variant.valid_to)
+    return windows
 
 
 def _matching_fact_track(
@@ -506,6 +565,8 @@ def _resolved_projection_context(
     support: DateSupportEnvelope,
     effective_date: date,
 ) -> tuple[TemporalProjectionDirection, date | None]:
+    if effective_date < support.floor:
+        return TemporalProjectionDirection.BACKWARD, support.floor
     projected_coordinate = support.projection_coordinate(effective_date)
     if projected_coordinate is not None and projected_coordinate != effective_date:
         return TemporalProjectionDirection.FORWARD, projected_coordinate

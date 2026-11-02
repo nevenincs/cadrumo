@@ -18,6 +18,7 @@ from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
+from ...domain.calculations.registry.facts.resolution import reading_dated_facts_below_support
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.invoice_legal_classification import (
     InvoiceLegalClassificationCatalogue,
@@ -402,13 +403,16 @@ def _prepare_invoice_add(
     # The transport carries plain text; re-enter the domain owner before port creation.
     business_premises_lease = invoice_add_lease(payload, authority_operation=authority_operation)
     ports = factory(bucket_id=profile)
-    invoice, advisory_required = build_invoice_from_add_request(
-        payload=payload,
-        business_premises_lease=business_premises_lease,
-        profile=profile,
-        authority_operation=authority_operation,
-        rate_provider=ports.rate_provider,
-    )
+    # An invoice older than the filing years is still a dated record: its facts
+    # are read as a projection, and filing never reaches this scope.
+    with reading_dated_facts_below_support():
+        invoice, advisory_required = build_invoice_from_add_request(
+            payload=payload,
+            business_premises_lease=business_premises_lease,
+            profile=profile,
+            authority_operation=authority_operation,
+            rate_provider=ports.rate_provider,
+        )
     return ports, invoice, advisory_required
 
 
