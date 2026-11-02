@@ -28,6 +28,7 @@ from ....core.secure_object_write import SecureObjectWrite
 from ....domain.buckets.errors import BucketEventValidationError
 from ....domain.buckets.event import BucketEvent, BucketEventHistoryCatalogue
 from ....domain.buckets.event_repository import BucketEventHistoryPersistenceError, append_bucket_event
+from ....domain.calculations.registry.tax_id_format import SubjectTaxId
 from ....domain.currency.errors import ExchangeRateProviderError
 from ....domain.currency.models import EurRateLookup
 from ....domain.currency.service import ExchangeRateProvider
@@ -343,8 +344,18 @@ def build_catalogue_creation_ports(
     )
 
 
-def build_catalogue_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
-    """Bind read, mutation, and audit adapters for one invoice bucket."""
+def build_catalogue_lifecycle_ports(
+    *,
+    bucket_id: str,
+    taxpayer_tax_id: SubjectTaxId | None = None,
+) -> CatalogueLifecyclePorts:
+    """Bind read, mutation, and audit adapters for one invoice bucket.
+
+    ``taxpayer_tax_id`` is the profile's own tax identity. The sealed-revision
+    scan decodes every stored calculation revision, and an M303 rectificativa
+    cannot be decoded without it, so a bucket holding one refuses every invoice
+    correction when the scan runs without.
+    """
     normalized_bucket_id = bucket_id.strip()
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
@@ -361,7 +372,10 @@ def build_catalogue_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePort
         sealed_revisions=CatalogueSealedRevisionReaderAdapter(
             bucket_id=normalized_bucket_id,
             work_unit_repository=WorkUnitCatalogueRepository(objects=objects),
-            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(
+                objects=objects,
+                m303_rectificativa_taxpayer_tax_id=taxpayer_tax_id,
+            ),
         ),
     )
 

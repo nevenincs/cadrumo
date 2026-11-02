@@ -49,6 +49,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 )
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ....domain.user_profile.schema import derived_selector_for_path
+from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....tests.inventory import REPO_ROOT
 from ...user_profile.projections import profile_fact_index
@@ -56,6 +57,7 @@ from ..profile_binding import resolve_profile_binding_value, resolve_profile_sou
 from ..profile_derived_facts import (
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
+    inject_derived_cash_election_fact,
     inject_derived_marriage_facts,
     inject_derived_minimo_descendientes_facts,
     inject_ordinary_work_maritime_facts,
@@ -150,6 +152,8 @@ def _full_m100_profile() -> UserProfileRecord:
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
             # 0024 renta-profile-family-minor-children-in-unit
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            # 0169 renta-profile-activity-cash-criterion (derived from the dated criterion at bind time)
+            *cash_criterion_facts(_YEAR),
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
@@ -247,6 +251,9 @@ def test_every_scalar_profile_binding_resolves_to_typed_value(
     inject_ordinary_work_maritime_facts(fact_index)
     inject_derived_anualidades_eligibility_facts(fact_index, snapshot, operation=authority_operation)
     inject_derived_minimo_descendientes_facts(fact_index, snapshot, operation=authority_operation)
+    # Casilla 0169's election is stated only for a direct-estimation taxpayer whose
+    # dated criterion is declared for the ejercicio; the fixture declares it.
+    inject_derived_cash_election_fact(fact_index, record, _YEAR, operation=authority_operation)
 
     # Deliberately absent or calculate-path-derived bindings — tested separately.
     absent = {
