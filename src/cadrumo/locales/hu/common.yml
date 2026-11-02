@@ -1112,6 +1112,15 @@ desktop:
     as_of: A helyi adatok alapján, {date} állapot szerint. Itt semmit nem kérdeztünk
       le az AEAT-től.
     close: Naptár bezárása
+    coverage:
+      applicability_undetermined: 'Nem állapítható meg, hogy kell-e bevallást benyújtanod:
+        {modelos}. Ellenőrizd az adókötelezettségeidet.'
+      applicable_window_missing: 'Ezek a bevallások vonatkoznak rád, de a Cadrumo
+        nem ismeri a benyújtási időszakot: {modelos}. Ellenőrizd a hivatalos naptárat.'
+      no_dates: Ehhez az időszakhoz nem állnak rendelkezésre benyújtási dátumok.
+      registry_unmodeled: 'A Cadrumo nem rendelkezik alkalmazhatósági szabályokkal
+        vagy benyújtási időszakokkal ezekhez: {modelos}. A benyújtási kötelezettségeidet
+        ellenőrizd a hivatalos tájékoztatás alapján.'
     day_event: '{date}: {kind}. {summary}'
     earliest_close: 'Legkorábbi zárás: {date}'
     empty: Ebben az időszakban nincs bevallási kötelezettség.
@@ -1145,7 +1154,6 @@ desktop:
       unknown: Ismeretlen
     title: Bevallási naptár
     to_day: 'Ugrás ide: {date}'
-    undetermined: 'Nem sikerült megállapítani: {modelos}'
     view: Nézet
     view_list: Lista
     view_months: Naptár
@@ -1174,6 +1182,22 @@ desktop:
     show:
       label: Megjelenítés
     signed_out: Jelentkezz be a bevallásaid megtekintéséhez.
+  dock:
+    arrange: Panel elrendezése
+    bottom: Felosztás alul
+    close: Panel bezárása
+    dock: Panel dokkolása
+    exit_fullscreen: Kilépés a teljes képernyőből
+    expand: Panel kibontása
+    float: Lebegő panel
+    fullscreen: Teljes képernyő
+    left: Felosztás balra
+    move: Lebegő panel mozgatása
+    resize: Lebegő panel átméretezése
+    right: Felosztás jobbra
+    tab: Áthelyezés a lapokhoz
+    tabs: Munkaterület lapjai
+    top: Felosztás felül
   docs:
     frame_title: Cadrumo-dokumentáció
     hide: Dokumentáció elrejtése

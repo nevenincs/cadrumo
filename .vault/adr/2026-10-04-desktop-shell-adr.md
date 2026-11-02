@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-31'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:89bf8fc31cc548237397b3ac3acada84c533e208e2dd4d7057ab28790abb9d66'
+body_hash: 'sha256:000081136c319b356a9f62dc4497a0c1d25e877671560314c37d18a5e34eb583'
 related:
   - "[[2026-10-04-desktop-shell-reference]]"
   - "[[2026-10-03-application-packaging-adr]]"

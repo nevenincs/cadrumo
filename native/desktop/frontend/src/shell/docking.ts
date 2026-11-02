@@ -29,6 +29,7 @@ export type DockLayout = {
 };
 export type DockPlacement = { group: DockGroup; rect: DockRect };
 export type DockDivider = {
+  panes: DockPane[];
   path: string;
   axis: "row" | "column";
   ratio: number;
@@ -314,7 +315,13 @@ export function dockGeometry(
     if (!a && !b) return;
     if (!a || !b)
       return visit(a ? node.first : node.second, rect, path + (a ? "0" : "1"));
-    dividers.push({ path, axis: node.axis, ratio: node.ratio, rect });
+    dividers.push({
+      path,
+      axis: node.axis,
+      ratio: node.ratio,
+      rect,
+      panes: dockPanes(node).filter((pane) => visible.includes(pane)),
+    });
     const row = node.axis === "row";
     visit(
       node.first,

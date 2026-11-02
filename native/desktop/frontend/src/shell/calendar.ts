@@ -1,6 +1,13 @@
 import { dateFormats } from "../shared/dateFormats";
 import { isoDay, localDay } from "../shared/dates";
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { failureCode } from "../errors";
 import { facts } from "./compose";
 import type { Translate } from "./strings";
@@ -135,7 +142,14 @@ export function useFilingCalendar(
   onRefused: () => void,
   locale = "",
 ) {
-  const [read, setRead] = useState<Read>({ kind: "loading" });
+  const identity = useMemo(() => ({ reader, views }), [reader, views]);
+  const [stored, setStored] = useState<{
+    identity: typeof identity;
+    read: Read;
+  }>({
+    identity,
+    read: { kind: "loading" },
+  });
   const [refreshing, setRefreshing] = useState(false);
   const [attempt, setAttempt] = useState(0);
   const request = useRef(0);
@@ -148,7 +162,7 @@ export function useFilingCalendar(
   refused.current = onRefused;
 
   const refresh = useCallback(() => {
-    if (!views) return;
+    if (!views || reader === null) return;
     const mine = ++request.current;
     // What is on screen stays up, and so does whatever was pressed to ask.
     setRefreshing(true);
@@ -166,20 +180,28 @@ export function useFilingCalendar(
         if (mine !== request.current) return;
         readAt.current = next.kind === "ready" ? Date.now() : 0;
         readOn.current = next.kind === "ready" ? localDay() : "";
-        setRead(next);
+        setStored({ identity, read: next });
         setRefreshing(false);
         setAttempt((count) => count + 1);
         if (next.kind === "failed") refused.current();
       });
-  }, [views, locale]);
+  }, [views, reader, identity, locale]);
+
+  // Invalidate before the new profile is painted, including refusal callbacks.
+  useLayoutEffect(() => {
+    request.current += 1;
+    return () => {
+      request.current += 1;
+    };
+  }, [identity]);
 
   useEffect(() => {
     ++request.current;
     readAt.current = 0;
     readOn.current = "";
-    setRead({ kind: "loading" });
+    setStored({ identity, read: { kind: "loading" } });
     setRefreshing(false);
-  }, [reader]);
+  }, [identity]);
 
   useEffect(() => {
     // Locale invalidates wording without dropping the current calendar or selection.
@@ -194,12 +216,21 @@ export function useFilingCalendar(
     if (reader !== null && shown && stale) {
       // Shown anew after a failure, it starts over: the old failure is not
       // said a second time ahead of the new answer.
-      setRead((held) => (held.kind === "failed" ? { kind: "loading" } : held));
+      setStored((held) =>
+        held.read.kind === "failed"
+          ? { identity, read: { kind: "loading" } }
+          : held,
+      );
       refresh();
     }
-  }, [reader, shown, refresh, today, locale]);
+  }, [reader, shown, refresh, today, locale, identity]);
 
-  const state: CalendarState = reader === null ? { kind: "withheld" } : read;
+  const state: CalendarState =
+    reader === null
+      ? { kind: "withheld" }
+      : stored.identity === identity
+        ? stored.read
+        : { kind: "loading" };
   return {
     state,
     refreshing: refreshing && state.kind !== "loading",

@@ -181,6 +181,8 @@ const ICONS = {
   maximize: Maximize2,
   merge: Merge,
   more: Ellipsis,
+  move: ArrowLeftRight,
+  tabs: NotebookTabs,
   noRate: CircleOff,
   office: Landmark,
   page: FileText,

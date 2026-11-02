@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#desktop-titlebar'
 date: '2026-10-09'
-modified: '2026-10-25'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a401f09aaf522e4cd0b9bb1681b1467f0decacc07f41a44a0a932620f37894ab'
+body_hash: 'sha256:616dbeb7b035242d36b117fb5865f70ea7fbecd21322dc7c8300543e54a42d00'
 related:
   - "[[2026-10-09-desktop-titlebar-reference]]"
   - "[[2026-10-04-desktop-shell-adr]]"

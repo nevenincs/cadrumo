@@ -9,6 +9,7 @@ import { fromPointer } from "../shell/pointer";
 import type { MenuAnchor } from "./ContextMenu";
 
 export type RailItem = {
+  dockPane?: string;
   id: string;
   icon: IconName;
   label: string;
@@ -57,6 +58,18 @@ function RailButton({ item }: { item: RailItem }) {
           aria-haspopup={item.expanded === undefined ? undefined : "dialog"}
           // A locale-independent handle for drivers outside the shell.
           data-rail={item.id}
+          draggable={!item.heldBy && item.dockPane !== undefined}
+          onDragStart={
+            item.dockPane
+              ? (event) => {
+                  event.dataTransfer.setData(
+                    "application/x-cadrumo-pane",
+                    item.dockPane ?? "",
+                  );
+                  event.dataTransfer.effectAllowed = "move";
+                }
+              : undefined
+          }
           onClick={item.heldBy ? undefined : item.onClick}
           onContextMenu={
             item.onMenu

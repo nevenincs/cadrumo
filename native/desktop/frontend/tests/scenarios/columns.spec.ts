@@ -103,15 +103,15 @@ test("each column closes on its own, and with none left the main area offers the
   await expect(canvas).toHaveCount(0);
   await railButton(target, "desktop.rail.docs").click();
   await expect(canvas).toBeVisible();
-  // The agent alone beside the rail still leaves the main area empty.
+  // A single docked pane takes the workspace instead of leaving an empty column.
   await canvas
     .getByRole("button", { name: label("desktop.agent.show") })
     .click();
   await expect(target.locator(".pane-agent")).toBeVisible();
-  await expect(canvas).toBeVisible();
-  await expect(
-    canvas.getByRole("button", { name: label("desktop.agent.show") }),
-  ).toHaveCount(0);
+  await expect(canvas).toHaveCount(0);
+  const agent = await target.locator('[data-dock-pane="agent"]').boundingBox();
+  const workspace = await target.locator("[data-dock-workspace]").boundingBox();
+  expect(agent).toEqual(workspace);
 });
 
 test("a maximized column fills the window and its close restores the rest", async ({
@@ -176,9 +176,7 @@ test("the agent's splitter moves by the arrow keys within its bounds", async ({
   page: target,
 }) => {
   await open(target);
-  const handle = target.getByRole("separator", {
-    name: label("desktop.agent.resize"),
-  });
+  const handle = target.locator('[data-dock-divider=""]');
   const width = async () =>
     (await target.locator(".agent-column").boundingBox())?.width ?? 0;
   await handle.focus();

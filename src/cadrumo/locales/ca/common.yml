@@ -1132,6 +1132,16 @@ desktop:
       submitted_observed: Presentació observada
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
     close: Tanca el calendari
+    coverage:
+      applicability_undetermined: 'No s''ha pogut determinar si has de presentar:
+        {modelos}. Comprova les teves obligacions.'
+      applicable_window_missing: 'Aquests models s''apliquen al teu perfil, però Cadrumo
+        no disposa d''un termini de presentació: {modelos}. Consulta el calendari
+        oficial.'
+      no_dates: No hi ha dates de presentació disponibles per a aquest període.
+      registry_unmodeled: 'Cadrumo no disposa de regles d''aplicabilitat ni terminis
+        de presentació per a: {modelos}. Consulta la informació oficial per comprovar
+        les teves obligacions de presentació.'
     day_event: '{date}: {kind}. {summary}'
     earliest_close: No tanca abans del {date}
     empty: No hi ha obligacions de presentació en aquest període.
@@ -1165,7 +1175,6 @@ desktop:
       unknown: Desconegut
     title: Calendari de presentacions
     to_day: Ves al {date}
-    undetermined: 'No s''ha pogut determinar: {modelos}'
     view: Vista
     view_list: Llista
     view_months: Calendari
@@ -1194,6 +1203,22 @@ desktop:
     show:
       label: Mostrar
     signed_out: Inicia la sessió per veure les teves declaracions.
+  dock:
+    arrange: Organitza el panell
+    bottom: Divideix a baix
+    close: Tanca el panell
+    dock: Acobla el panell
+    exit_fullscreen: Surt de pantalla completa
+    expand: Amplia el panell
+    float: Panell flotant
+    fullscreen: Pantalla completa
+    left: Divideix a l’esquerra
+    move: Mou el panell flotant
+    resize: Redimensiona el panell flotant
+    right: Divideix a la dreta
+    tab: Mou a les pestanyes
+    tabs: Pestanyes de l’espai de treball
+    top: Divideix a dalt
   docs:
     frame_title: Documentació de Cadrumo
     hide: Amaga la documentació

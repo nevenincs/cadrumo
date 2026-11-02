@@ -26,7 +26,9 @@ const shipped = resolve(import.meta.dirname, "../src/shell/ledgerContract.ts");
 // shell may set NO_COLOR; node warns on stderr when both reach it. The driver
 // is checked without either, so stderr carries only what the driver wrote.
 const driverEnvironment = () => {
-  const { FORCE_COLOR: _force, NO_COLOR: _none, ...rest } = process.env;
+  const rest = { ...process.env };
+  delete rest.FORCE_COLOR;
+  delete rest.NO_COLOR;
   return rest;
 };
 

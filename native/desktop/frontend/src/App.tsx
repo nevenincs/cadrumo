@@ -8,6 +8,7 @@ import { facts, labelled } from "./shell/compose";
 import { sessionFailedText } from "./shell/sessionWords";
 import { useDesktopEnvironment } from "./shell/useDesktopEnvironment";
 import { useWindowPresentation } from "./shell/useWindowPresentation";
+import { useFullscreen } from "./shell/useFullscreen";
 import {
   useCallback,
   useEffect,
@@ -17,12 +18,21 @@ import {
   type ReactNode,
   type SetStateAction,
 } from "react";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/components/ui/cn";
 import { EmptyState } from "@/components/ui/empty";
 import { IconButton } from "@/components/ui/icon-button";
-import { ResizeHandle } from "@/components/ui/resize-handle";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { DockWorkspace } from "./components/docking/DockWorkspace";
+import {
+  activateDockPane,
+  dockGeometry,
+  dockPanes,
+  initialDockLayout,
+  orientDockPane,
+  returnDockPane,
+  swapDockPane,
+  type DockLayout,
+  type DockPane,
+} from "./shell/docking";
 import { Toast } from "@/components/ui/toast";
 import {
   CommandPalette,
@@ -35,7 +45,7 @@ import {
   type MenuAnchor,
   type MenuEntry,
 } from "./components/ContextMenu";
-import { Icon, type IconName } from "@/components/ui/icon";
+import { Icon } from "@/components/ui/icon";
 import {
   DocsFrame,
   type DocsFrameApi,
@@ -109,7 +119,6 @@ import {
   type CalendarMemory,
 } from "./components/FilingCalendar";
 import { Button } from "@/components/ui/button";
-import { Split } from "./components/Split";
 import {
   TerminalPane,
   type TerminalApi,
@@ -175,18 +184,12 @@ import {
   type WindowViewEntry,
 } from "./shell/navigation/windowViews";
 
-const COUNT_LIMIT = 99;
 const TOAST_MS = 2400;
 // A dragged splitter changes the layout on every pointer move; it is written
 // to storage once the changes have paused.
 const SAVE_DELAY_MS = 250;
 // How long a wish to focus a view waits for that view to be shown.
 const FOCUS_WISH_MS = 1000;
-const TABS: readonly (readonly [PanelTab, string, IconName])[] = [
-  ["console", "desktop.rail.console", "console"],
-  ["python", "desktop.rail.python", "python"],
-  ["logs", "desktop.rail.logs", "logs"],
-];
 
 type OpenMenu = { items: MenuEntry[]; at: MenuAnchor };
 
@@ -214,7 +217,12 @@ const focusedArea = (): Area | "rail" | null => {
   if (element.closest(".pane-agent")) return "agent";
   if (element.closest(".pane-docs")) return "docs";
   if (element.closest(".pane-tui")) return "tui";
-  if (element.closest(".panel")) return "panel";
+  if (
+    element.closest(
+      '[data-dock-pane="console"], [data-dock-pane="python"], [data-dock-pane="logs"]',
+    )
+  )
+    return "panel";
   if (element.closest(".rail")) return "rail";
   return null;
 };
@@ -272,13 +280,53 @@ export function App({ host }: { host: Host }) {
   };
 
   const workspace = useRef<HTMLDivElement>(null);
-  const { viewportHeight, viewportWidth, prefersDark } =
-    useWindowPresentation(workspace);
+  const { viewportWidth, prefersDark } = useWindowPresentation(workspace);
   // How many log records are errors, as the log view reports it.
   const [errorCount, setErrorCount] = useState(0);
   const initial = useMemo(loadState, []);
   const [prefs, setPrefs] = useState<Prefs>(initial.prefs);
-  const [layout, setLayout] = useState<Layout>(initial.layout);
+  const [layout, setLayout] = useState<Layout>(() => {
+    let docking =
+      initial.layout.docking ??
+      initialDockLayout(initial.prefs, initial.layout);
+    for (const pane of [
+      "agent",
+      "docs",
+      "tui",
+      "console",
+      "python",
+      "logs",
+    ] as const) {
+      if (
+        !dockPanes(docking.root).includes(pane) &&
+        !docking.floating.some((item) => item.pane === pane)
+      )
+        docking = returnDockPane(docking, pane);
+    }
+    return { ...initial.layout, docking };
+  });
+  const docking = layout.docking ?? initialDockLayout(prefs, layout);
+  const changeDocking = useCallback(
+    (update: (current: DockLayout) => DockLayout) => {
+      setLayout((current) => ({
+        ...current,
+        docking: update(current.docking ?? initialDockLayout(prefs, current)),
+      }));
+    },
+    [prefs],
+  );
+  const fullscreen = useFullscreen(host, () =>
+    say(t("desktop.titlebar.failed")),
+  );
+  const enterFullscreen = fullscreen.toggle;
+  const revealPane = fullscreen.reveal;
+  const activatePane = useCallback(
+    (pane: DockPane) => {
+      revealPane(pane);
+      changeDocking((current) => activateDockPane(current, pane));
+    },
+    [changeDocking, revealPane],
+  );
   // The least width the Ledger page asks beside the agent, while it shows.
   const [ledgerFloor, setLedgerFloor] = useState<number | null>(null);
   const setMaximized = useCallback((update: SetStateAction<Maximized>) => {
@@ -377,14 +425,26 @@ export function App({ host }: { host: Host }) {
   // Shows a page through the layout store; only the navigator, past the
   // guards, calls it directly.
   const showPage = useCallback(
-    (page: Layout["page"]) => setLayout((current) => ({ ...current, page })),
-    [],
+    (page: Layout["page"]) => {
+      revealPane("docs");
+      setLayout((current) => ({
+        ...current,
+        page,
+        docking: current.docking
+          ? activateDockPane(current.docking, "docs")
+          : null,
+      }));
+    },
+    [revealPane],
   );
   // Leaving the page shown takes it down, so its owners are asked first.
   const setPage = useCallback(
     (next: Layout["page"]) => {
       const shown = layoutNow.current;
-      if (next === shown.page) return;
+      if (next === shown.page) {
+        activatePane("docs");
+        return;
+      }
       guardNavigation(
         {
           kind: "navigate",
@@ -393,7 +453,7 @@ export function App({ host }: { host: Host }) {
         () => showPage(next),
       );
     },
-    [guardNavigation, showPage],
+    [guardNavigation, showPage, activatePane],
   );
   // The census pull was asked for from any page: the profile page takes the
   // one census flow over once it has the profile, and starts it only when
@@ -435,7 +495,6 @@ export function App({ host }: { host: Host }) {
   const wantsBrowser = useRef(false);
   // The agent column was asked for: it takes focus once it is laid out.
   const wantsAgent = useRef(false);
-  const agentColumn = useRef<HTMLElement>(null);
   const agentBody = useRef<HTMLElement>(null);
   // Where the keyboard goes when a navigation opens each page or the agent.
   // The window provides the navigation context, so it registers its own
@@ -544,21 +603,32 @@ export function App({ host }: { host: Host }) {
 
   // Layout geometry, read from the canonical tokens (src/styles/tokens.css) instead
   // of duplicated as literals; each metric re-reads on resize.
-  const docsMin = useMetric("--docs-min", 200);
-  const panelMin = useMetric("--panel-min", 140);
   const splitMinA = useMetric("--split-min-a", 260);
-  const splitMinBRow = useMetric("--split-min-b-row", 320);
-  const splitMinBCol = useMetric("--split-min-b-col", 160);
   const railWidth = useMetric("--rail-w", 48);
   const agentMin = useMetric("--agent-min", 240);
-  const panelResizeStep = useMetric("--resize-step", 24);
-  const panelCollapseThreshold = useMetric("--panel-collapse-threshold", 60);
   const terminalFontSize = useTerminalFontSize(prefs.fontSize);
 
   const patch = useCallback(
-    (change: Partial<Layout>) =>
-      setLayout((current) => ({ ...current, ...change })),
-    [],
+    (change: Partial<Layout>) => {
+      const pane =
+        change.tab ??
+        (change.agentShown
+          ? "agent"
+          : change.tuiShown
+            ? "tui"
+            : change.docsShown
+              ? "docs"
+              : change.panelOpen
+                ? layoutNow.current.tab
+                : null);
+      if (pane) revealPane(pane);
+      setLayout((current) => {
+        let docking = current.docking;
+        if (docking && pane) docking = activateDockPane(docking, pane);
+        return { ...current, docking, ...change };
+      });
+    },
+    [revealPane],
   );
   // The documentation asked for by name: its pane is shown first.
   const showDocs = useCallback(() => {
@@ -628,7 +698,6 @@ export function App({ host }: { host: Host }) {
   // What is on screen: a maximized area alone, otherwise every area that is
   // shown. The first pane holds the documentation or a view of the profile,
   // and is on screen while either is asked for.
-  const unhidden = (area: Area) => maximized === null || maximized === area;
   const profileOn = host.userProfile !== undefined && page === "profile";
   const calendarOn = views !== undefined && page === "calendar";
   const ledgerOn = host.ledger !== undefined && page === "ledger";
@@ -643,6 +712,54 @@ export function App({ host }: { host: Host }) {
     declarationsOn ||
     browserOn ||
     aeatSyncOn;
+  const besideRail = Math.max(0, viewportWidth - railWidth);
+  const mainMin = Math.max(splitMinA, ledgerOn ? (ledgerFloor ?? 0) : 0);
+  const agentFits = besideRail >= agentMin + mainMin;
+  const agentTab = dockGeometry(docking, [
+    "agent",
+    "docs",
+    "tui",
+    "console",
+    "python",
+    "logs",
+  ]).groups.find((entry) => entry.group.tabs.includes("agent"));
+  const agentHasRoom =
+    agentFits ||
+    maximized === "agent" ||
+    fullscreen.pane === "agent" ||
+    docking.floating.some((entry) => entry.pane === "agent") ||
+    (agentTab?.group.tabs.length ?? 0) > 1 ||
+    (!layout.docsShown && !pageOn && !layout.tuiShown && !layout.panelOpen);
+  const dockOffered: DockPane[] = [
+    ...(signedIn && layout.agentShown && agentHasRoom
+      ? ["agent" as const]
+      : []),
+    ...(layout.docsShown || pageOn ? ["docs" as const] : []),
+    ...(layout.tuiShown ? ["tui" as const] : []),
+    ...(layout.panelOpen ? (["console", "python", "logs"] as const) : []),
+  ].filter((pane) => !docking.closed.includes(pane));
+  const requestedExpansion =
+    fullscreen.pane ?? (maximized === "panel" ? layout.tab : maximized);
+  const expandedPane =
+    requestedExpansion && dockOffered.includes(requestedExpansion)
+      ? requestedExpansion
+      : null;
+  const activePanes = expandedPane
+    ? [expandedPane]
+    : [
+        ...dockGeometry(docking, dockOffered).groups.map(
+          (item) => item.group.active,
+        ),
+        ...docking.floating
+          .filter((item) => dockOffered.includes(item.pane))
+          .map((item) => item.pane),
+      ];
+  const unhidden = (area: Area) =>
+    area === "panel"
+      ? activePanes.some(
+          (pane) => pane === "console" || pane === "python" || pane === "logs",
+        )
+      : activePanes.includes(area);
   const firstPaneShown =
     (layout.docsShown || pageOn || maximized === "docs") && unhidden("docs");
   const docsVisible = firstPaneShown && !pageOn;
@@ -653,21 +770,13 @@ export function App({ host }: { host: Host }) {
   const tuiVisible =
     (layout.tuiShown || maximized === "tui") && unhidden("tui");
   const panelVisible = layout.panelOpen && unhidden("panel");
-  // The room beside the rail. A window too narrow for the agent column's
-  // floor beside the main area's shows the agent only on its own: alone in
-  // the window, or maximized.
-  const besideRail = Math.max(0, viewportWidth - railWidth);
-  // The main area's floor: the split's, or more where the page shown asks.
-  const mainMin = Math.max(splitMinA, ledgerVisible ? (ledgerFloor ?? 0) : 0);
-  const agentFits = besideRail >= agentMin + mainMin;
   const mainOccupied = firstPaneShown || tuiVisible || panelVisible;
   // The agent works only for a profile signed in here: signed out, it is
   // not there at all, and it comes back as it was laid out on signing in.
   const agentVisible =
     signedIn &&
     (layout.agentShown || maximized === "agent") &&
-    unhidden("agent") &&
-    (maximized === "agent" || agentFits || !mainOccupied);
+    unhidden("agent");
   // Whose views are read: the signed-in profile's. Where the platform signs
   // in inside the TUI the shell cannot tell, so it asks and shows the answer.
   const reader =
@@ -1170,7 +1279,12 @@ export function App({ host }: { host: Host }) {
 
   const openTab = useCallback(
     (tab: PanelTab, { toggle = true }: { toggle?: boolean } = {}) => {
-      if (toggle && layout.panelOpen && layout.tab === tab) {
+      if (
+        toggle &&
+        panelVisible &&
+        activePanes.includes(tab) &&
+        layout.tab === tab
+      ) {
         patch({ panelOpen: false });
         if (maximized === "panel") setMaximized(null);
         return;
@@ -1179,7 +1293,15 @@ export function App({ host }: { host: Host }) {
       patch({ panelOpen: true, tab });
       focusView(tab);
     },
-    [layout.panelOpen, layout.tab, maximized, patch, focusView, setMaximized],
+    [
+      panelVisible,
+      activePanes,
+      layout.tab,
+      maximized,
+      patch,
+      focusView,
+      setMaximized,
+    ],
   );
 
   const toggleMaximize = useCallback(
@@ -1213,16 +1335,18 @@ export function App({ host }: { host: Host }) {
   // one maximized.
   const closeColumn = useCallback(
     (column: Column) => {
-      setMaximized((area) => (area === column ? null : area));
       if (column === "docs") {
-        // The first pane shows the calendar where it was asked for; closed,
-        // the calendar goes with the pane.
-        setPage("docs");
-        patch({ docsShown: false });
-      } else
+        guarded(() => {
+          showPage("docs");
+          patch({ docsShown: false });
+          setMaximized((area) => (area === column ? null : area));
+        });
+      } else {
+        setMaximized((area) => (area === column ? null : area));
         patch(column === "agent" ? { agentShown: false } : { tuiShown: false });
+      }
     },
-    [patch, setMaximized, setPage],
+    [patch, setMaximized, guarded, showPage],
   );
   // A column asked for from the rail, the palette or a shortcut: put away
   // when it is on screen, else shown with the layout restored around it.
@@ -1273,7 +1397,7 @@ export function App({ host }: { host: Host }) {
   // focus leaves one.
   const cycleFocus = useCallback(
     (step: 1 | -1) => {
-      type Stop = [Area | "rail", boolean, () => void];
+      type Stop = [DockPane | "rail", boolean, () => void];
       const docsStop: Stop = [
         "docs",
         firstPaneShown &&
@@ -1304,25 +1428,31 @@ export function App({ host }: { host: Host }) {
       ];
       const stops: Stop[] = [
         ["agent", agentVisible, () => agentBody.current?.focus()],
-        ...(prefs.order === "tui" ? [tuiStop, docsStop] : [docsStop, tuiStop]),
-        [
-          "panel",
-          panelVisible,
+        tuiStop,
+        docsStop,
+        ...(["console", "python", "logs"] as const).map((tab): Stop => [
+          tab,
+          panelVisible && activePanes.includes(tab),
           () => {
-            if (layout.tab === "logs")
+            if (tab === "logs")
               document
                 .querySelector<HTMLElement>(".logview .filter-text")
                 ?.focus();
             // Without a session there is no terminal to focus; its tab is.
-            else if (status[layout.tab].phase === "unavailable")
-              document.getElementById(`tab-${layout.tab}`)?.focus();
-            else focusView(layout.tab);
+            else if (status[tab].phase === "unavailable")
+              document.getElementById(`tab-${tab}`)?.focus();
+            else focusView(tab);
           },
-        ],
-        ["rail", true, focusRail],
+        ]),
       ];
-      const shown = stops.filter(([, on]) => on);
-      const at = shown.findIndex(([area]) => area === focusedArea());
+      const shown: Stop[] = activePanes.flatMap((pane) =>
+        stops.filter(([id, on]) => id === pane && on),
+      );
+      shown.push(["rail", true, focusRail]);
+      const focused =
+        document.activeElement?.closest<HTMLElement>("[data-dock-pane]")
+          ?.dataset.dockPane ?? focusedArea();
+      const at = shown.findIndex(([area]) => area === focused);
       const to =
         at === -1
           ? step === 1
@@ -1336,8 +1466,7 @@ export function App({ host }: { host: Host }) {
       firstPaneShown,
       tuiVisible,
       panelVisible,
-      prefs.order,
-      layout.tab,
+      activePanes,
       gated,
       status,
       focusView,
@@ -1454,6 +1583,28 @@ export function App({ host }: { host: Host }) {
   // The single action registry.
   const actions = useMemo<Action[]>(
     () => [
+      {
+        id: "window.fullscreen",
+        label: t(
+          fullscreen.fullscreen
+            ? "desktop.dock.exit_fullscreen"
+            : "desktop.dock.fullscreen",
+        ),
+        group: "layout",
+        icon: "windowMaximize",
+        chords: [{ code: "F11", key: "F11", scope: "global" }],
+        run: () => enterFullscreen(),
+      },
+      {
+        id: "window.leaveFullscreen",
+        label: t("desktop.dock.exit_fullscreen"),
+        group: "layout",
+        icon: "restore",
+        hidden: true,
+        chords: [{ code: "Escape", key: "Esc", scope: "global" }],
+        enabled: () => fullscreen.fullscreen,
+        run: () => enterFullscreen(),
+      },
       {
         id: "palette.open",
         label: t("desktop.palette.placeholder"),
@@ -1602,22 +1753,26 @@ export function App({ host }: { host: Host }) {
             : t("desktop.split.side_by_side"),
         group: "layout",
         icon: prefs.orientation === "row" ? "splitColumn" : "splitRow",
-        run: () =>
+        run: () => {
+          changeDocking((current) => orientDockPane(current, "docs"));
           setPrefs((p) => ({
             ...p,
             orientation: p.orientation === "row" ? "column" : "row",
-          })),
+          }));
+        },
       },
       {
         id: "split.swap",
         label: t("desktop.split.swap"),
         group: "layout",
         icon: "swap",
-        run: () =>
+        run: () => {
+          changeDocking((current) => swapDockPane(current, "docs"));
           setPrefs((p) => ({
             ...p,
             order: p.order === "docs" ? "tui" : "docs",
-          })),
+          }));
+        },
       },
       {
         id: "logs.errors",
@@ -1868,13 +2023,13 @@ export function App({ host }: { host: Host }) {
               { ctrl: true, code: "Backquote", key: "`", scope: "global" },
             ],
             run: () => {
-              if (!layout.panelOpen) openTab(layout.tab, { toggle: false });
+              if (!panelVisible) openTab(layout.tab, { toggle: false });
               else {
                 patch({ panelOpen: false });
                 if (maximized === "panel") setMaximized(null);
               }
             },
-            shown: layout.panelOpen,
+            shown: panelVisible,
           },
           "panel/console": {
             id: "panel.console",
@@ -1890,7 +2045,7 @@ export function App({ host }: { host: Host }) {
               },
             ],
             run: () => openTab("console"),
-            shown: layout.panelOpen && layout.tab === "console",
+            shown: panelVisible && activePanes.includes("console"),
           },
           "panel/python": {
             id: "panel.python",
@@ -1906,7 +2061,7 @@ export function App({ host }: { host: Host }) {
               },
             ],
             run: () => openTab("python"),
-            shown: layout.panelOpen && layout.tab === "python",
+            shown: panelVisible && activePanes.includes("python"),
           },
           "panel/logs": {
             id: "panel.logs",
@@ -1929,7 +2084,7 @@ export function App({ host }: { host: Host }) {
               },
             ],
             run: () => openTab("logs"),
-            shown: layout.panelOpen && layout.tab === "logs",
+            shown: panelVisible && activePanes.includes("logs"),
           },
         } satisfies Record<string, ViewActionSpec>,
         (id) => {
@@ -2127,6 +2282,11 @@ export function App({ host }: { host: Host }) {
     ],
     [
       t,
+      fullscreen.fullscreen,
+      panelVisible,
+      activePanes,
+      enterFullscreen,
+      changeDocking,
       setMaximized,
       setPage,
       about,
@@ -2307,6 +2467,17 @@ export function App({ host }: { host: Host }) {
         : "chrome";
       const action = findAction(actionsRef.current, event, focus);
       if (!action) return;
+      if (
+        action.id === "window.leaveFullscreen" &&
+        document.querySelector(
+          '[role="dialog"], [role="menu"][data-state="open"]',
+        )
+      )
+        return;
+      if (event.repeat && action.id === "window.fullscreen") {
+        event.preventDefault();
+        return;
+      }
       if (!chordAllowed(action.id)) return;
       event.preventDefault();
       event.stopPropagation();
@@ -2496,20 +2667,7 @@ export function App({ host }: { host: Host }) {
     [docsSearchReady, locale],
   );
 
-  const clampPanel = (height: number) =>
-    // A window too short for both floors, as a small one at a large text
-    // size is, shares its height between them in proportion: neither the
-    // documentation nor the panel is pushed out of the window.
-    viewportHeight < docsMin + panelMin
-      ? Math.round((viewportHeight * panelMin) / (docsMin + panelMin))
-      : Math.max(panelMin, Math.min(viewportHeight - docsMin, height));
-  const panelHeight = clampPanel(
-    Math.round(layout.panelRatio * viewportHeight),
-  );
-  const setPanelHeight = (height: number) =>
-    patch({ panelOpen: true, panelRatio: clampPanel(height) / viewportHeight });
-
-  const tabOpen = (tab: PanelTab) => panelVisible && layout.tab === tab;
+  const tabOpen = (tab: PanelTab) => panelVisible && activePanes.includes(tab);
   // A column hidden from under the keyboard: focus goes to the TUI while
   // that is shown, else to the first pane, else to the agent, else to the
   // rail, never to nothing. The bottom panel maximized over them hands
@@ -2622,26 +2780,7 @@ export function App({ host }: { host: Host }) {
       run: () => toggleMaximize(area),
     };
   };
-  // The agent column's width, as a share of the room beside the rail. A
-  // window too narrow for its floor and the split's shares the room between
-  // them in proportion, as the bottom panel shares the height.
-  const clampAgent = (width: number) =>
-    besideRail < agentMin + mainMin
-      ? Math.round((besideRail * agentMin) / (agentMin + mainMin))
-      : Math.max(agentMin, Math.min(besideRail - mainMin, width));
-  const agentWidth = clampAgent(Math.round(layout.agentRatio * besideRail));
-  const setAgentWidth = (width: number) =>
-    besideRail > 0 &&
-    patch({ agentShown: true, agentRatio: clampAgent(width) / besideRail });
-
-  // Side by side needs room for both panes' minimums; a narrower window
-  // stacks them without changing the remembered preference.
-  const orientation =
-    prefs.orientation === "row" &&
-    besideRail - (agentVisible && !maximized ? agentWidth : 0) <
-      mainMin + splitMinBRow
-      ? "column"
-      : prefs.orientation;
+  const orientation = prefs.orientation;
 
   // The split's own controls, only while it holds both panes.
   const splitControls: PaneControl[] =
@@ -2680,6 +2819,7 @@ export function App({ host }: { host: Host }) {
     // The window's columns, in the order they are laid out by default.
     {
       id: "agent",
+      dockPane: "agent",
       icon: "agent",
       label: t("desktop.rail.agent"),
       shortcut: primaryChord(byId("agent.toggle")),
@@ -2690,6 +2830,7 @@ export function App({ host }: { host: Host }) {
     },
     {
       id: "tui",
+      dockPane: "tui",
       icon: "tui",
       label: t("desktop.rail.tui"),
       shortcut: primaryChord(byId("tui.toggle")),
@@ -2698,6 +2839,7 @@ export function App({ host }: { host: Host }) {
     },
     {
       id: "docs",
+      dockPane: "docs",
       icon: "book",
       label: t("desktop.rail.docs"),
       shortcut: primaryChord(byId("docs.toggle")),
@@ -2835,6 +2977,7 @@ export function App({ host }: { host: Host }) {
       : []),
     {
       id: "panel",
+      dockPane: layout.tab,
       icon: "console",
       label: t("desktop.panel.label"),
       shortcut: primaryChord(byId("panel.toggle")),
@@ -3355,7 +3498,6 @@ export function App({ host }: { host: Host }) {
   );
   // Nothing open above the bottom panel: the main area says so, and offers
   // each column back.
-  const canvasShown = !firstPaneShown && !tuiVisible;
   const canvas = (
     <EmptyState
       className="canvas bg-background"
@@ -3387,7 +3529,6 @@ export function App({ host }: { host: Host }) {
       </div>
     </EmptyState>
   );
-  const panelMax = maximizeControl("panel", "desktop.pane.maximize_panel");
 
   return (
     <ShellContexts t={t} navigation={nav.runtime} provisioning={provisioning}>
@@ -3395,6 +3536,7 @@ export function App({ host }: { host: Host }) {
         <div className="desktop-window flex h-dvh min-w-0 flex-col bg-chrome">
           <Titlebar
             host={host}
+            onPresentation={fullscreen.observe}
             guardClose={(proceed) =>
               guardNavigation({ kind: "close" }, proceed)
             }
@@ -3459,247 +3601,148 @@ export function App({ host }: { host: Host }) {
               top={railTop}
               bottom={railBottom}
             />
-            <div className="flex min-h-0 min-w-0">
-              {/* The agent column, always beside the rail, the full height of
-                the window under the title bar. */}
-              <aside
-                ref={agentColumn}
-                className={cn(
-                  "agent-column flex min-h-0 min-w-0 bg-background",
-                  maximized === "agent" ? "flex-1" : "flex-none",
-                )}
-                hidden={!agentVisible}
-                style={
-                  maximized === "agent" ? undefined : { width: agentWidth }
+            <DockWorkspace
+              layout={docking}
+              visible={dockOffered}
+              expanded={expandedPane}
+              onChange={changeDocking}
+              onFocusPane={(pane) => {
+                if (
+                  pane === "console" ||
+                  pane === "python" ||
+                  pane === "logs" ||
+                  pane === "tui"
+                )
+                  focusView(pane);
+              }}
+              onActivate={(pane) => {
+                if (pane === "console" || pane === "python" || pane === "logs")
+                  patch({ panelOpen: true, tab: pane });
+                else if (pane === "agent") patch({ agentShown: true });
+                else if (pane === "tui") patch({ tuiShown: true });
+                else patch({ docsShown: true });
+              }}
+              onClose={(pane) => {
+                if (fullscreen.pane === pane) enterFullscreen();
+                if (pane === "docs") {
+                  closeColumn("docs");
+                  return;
                 }
-                aria-label={t("desktop.pane.agent")}
-              >
-                {agentPane}
-                {/* Inside the column, so the splitter is part of the area it
-                    resizes. */}
-                {agentVisible && !maximized && (
-                  <ResizeHandle
-                    className="agent-separator"
-                    orientation="vertical"
-                    aria-label={t("desktop.agent.resize")}
-                    value={besideRail > 0 ? (agentWidth / besideRail) * 100 : 0}
-                    // The column starts at the rail, so its width is what lies
-                    // left of the pointer. Dragged well past its smallest size,
-                    // it collapses.
-                    onDrag={({ x }) => {
-                      const next =
-                        x -
-                        (agentColumn.current?.getBoundingClientRect().left ??
-                          0);
-                      if (next < agentMin - panelCollapseThreshold)
-                        patch({ agentShown: false });
-                      else setAgentWidth(next);
-                    }}
-                    onStep={(direction) =>
-                      setAgentWidth(agentWidth + direction * panelResizeStep)
-                    }
-                    onLimit={(limit) =>
-                      setAgentWidth(
-                        limit === "min" ? agentMin : besideRail - mainMin,
-                      )
-                    }
-                    onReset={() =>
-                      setAgentWidth(DEFAULT_LAYOUT.agentRatio * besideRail)
-                    }
-                  />
-                )}
-              </aside>
-              <div
-                className="flex min-h-0 min-w-0 flex-1 flex-col"
-                hidden={maximized === "agent"}
-              >
-                <main
-                  className="main-area flex min-h-0 flex-auto"
-                  hidden={maximized === "panel"}
-                >
-                  {/* Kept mounted while the canvas shows: neither the
-                    documentation nor a live terminal is ever reloaded. */}
-                  <div
-                    className="flex min-h-0 min-w-0 flex-1"
-                    hidden={canvasShown}
-                  >
-                    <Split
-                      orientation={orientation}
-                      reversed={prefs.order === "tui"}
-                      ratio={layout.splitRatio}
-                      onRatio={(ratio) => patch({ splitRatio: ratio })}
-                      minA={orientation === "row" ? mainMin : splitMinA}
-                      minB={orientation === "row" ? splitMinBRow : splitMinBCol}
-                      a={docsPane}
-                      b={tuiPane}
-                      aShown={firstPaneShown}
-                      bShown={tuiVisible}
-                      label={t("desktop.split.resize")}
-                    />
-                  </div>
-                  {canvasShown && canvas}
-                </main>
-                <section
-                  className={cn(
-                    // A container in both dimensions: its content answers to its width
-                    // and, in the log's bar, to its height.
-                    "panel flex min-h-0 flex-col bg-chrome [container:panel/size]",
-                    maximized === "panel" ? "flex-auto" : "flex-none",
-                  )}
-                  hidden={!panelVisible}
-                  style={
-                    maximized === "panel" ? undefined : { height: panelHeight }
-                  }
-                  aria-label={t("desktop.panel.label")}
-                >
-                  {layout.panelOpen && !maximized && (
-                    <ResizeHandle
-                      className="panel-separator"
-                      orientation="horizontal"
-                      aria-label={t("desktop.panel.resize")}
-                      value={(panelHeight / viewportHeight) * 100}
-                      // The panel sits on the window's bottom edge, so its height
-                      // is what lies below the pointer. Dragged well past its
-                      // smallest size, it collapses.
-                      onDrag={({ y }) => {
-                        const next =
-                          (workspace.current?.getBoundingClientRect().bottom ??
-                            window.innerHeight) - y;
-                        if (next < panelMin - panelCollapseThreshold)
-                          patch({ panelOpen: false });
-                        else setPanelHeight(next);
-                      }}
-                      onStep={(direction) =>
-                        setPanelHeight(
-                          panelHeight - direction * panelResizeStep,
-                        )
-                      }
-                      onLimit={(limit) =>
-                        setPanelHeight(
-                          limit === "min" ? panelMin : viewportHeight - docsMin,
-                        )
-                      }
-                      onReset={() =>
-                        setPanelHeight(
-                          DEFAULT_LAYOUT.panelRatio * viewportHeight,
-                        )
-                      }
-                    />
-                  )}
-                  <Tabs
-                    value={layout.tab}
-                    // Arrow keys move through the tabs and choose; a click or
-                    // Enter also hands the keyboard to the chosen view.
-                    onValueChange={(tab) => patch({ tab: tab as PanelTab })}
-                    className="tabstrip h-control-lg shrink-0 flex-row items-center border-b pr-1.5 pl-1"
-                    onDoubleClick={(event) => {
-                      if (!(event.target as HTMLElement).closest("button"))
-                        toggleMaximize("panel");
-                    }}
-                  >
-                    <TabsList
-                      aria-label={t("desktop.panel.label")}
-                      className="h-full"
-                    >
-                      {TABS.map(([tab, labelKey, icon]) => (
-                        <TabsTrigger
-                          key={tab}
-                          value={tab}
-                          id={`tab-${tab}`}
-                          aria-controls={`panel-${tab}`}
-                          title={t(labelKey)}
-                          onClick={() => openTab(tab, { toggle: false })}
-                          onKeyDown={(event) => {
-                            // Enter and Space choose a tab without a click, so
-                            // they hand the keyboard over here.
-                            if (event.key === "Enter" || event.key === " ")
-                              openTab(tab, { toggle: false });
-                          }}
-                        >
-                          <Icon name={icon} />
-                          {/* In a narrow panel the tab keeps its name, not its
-                          width. */}
-                          <span className="@max-md/panel:sr-only">
-                            {t(labelKey)}
-                          </span>
-                          {tab !== "logs" &&
-                            exitCode(status[tab]) !== undefined && (
-                              <span className="text-xs font-normal text-faint">
-                                {t("desktop.session.exited", {
-                                  code: exitCode(status[tab]) ?? "?",
-                                })}
-                              </span>
-                            )}
-                          {tab !== "logs" &&
-                            failure(status[tab]) !== undefined && (
-                              <>
-                                <Icon
-                                  name="alert"
-                                  size="xs"
-                                  className="text-destructive"
-                                />
-                                <span className="sr-only">
-                                  {sessionFailedText(
-                                    t,
-                                    failure(status[tab]) ?? "",
-                                  )}
-                                </span>
-                              </>
-                            )}
-                          {tab === "logs" && errorCount > 0 && (
-                            <>
-                              <Badge variant="count" aria-hidden="true">
-                                {errorCount > COUNT_LIMIT
-                                  ? `${COUNT_LIMIT}+`
-                                  : errorCount}
-                              </Badge>
-                              <span className="sr-only">
-                                {t("desktop.logs.errors", {
-                                  count: errorCount,
-                                })}
-                              </span>
-                            </>
-                          )}
-                        </TabsTrigger>
-                      ))}
-                    </TabsList>
-                    <span className="flex-1 self-stretch" />
-                    <IconButton
-                      label={panelMax.label}
-                      shortcut={panelMax.shortcut}
-                      aria-pressed={panelMax.pressed}
-                      onClick={panelMax.run}
-                    >
-                      <Icon name={panelMax.icon} />
-                    </IconButton>
-                    <IconButton
-                      label={t("desktop.panel.hide")}
-                      shortcut={primaryChord(byId("panel.toggle"))}
-                      onClick={() => runAction("panel.toggle")}
-                    >
-                      <Icon name="chevronDown" />
-                    </IconButton>
-                  </Tabs>
-                  <div className="relative flex min-h-0 flex-1">
-                    {terminalPane("console", tabOpen("console"))}
-                    {terminalPane("python", tabOpen("python"))}
-                    <HostRecordList
-                      host={host}
-                      onErrors={setErrorCount}
-                      filters={filters}
-                      defaultFilters={defaultFilters}
-                      setFilters={setFilters}
-                      onLevelChange={selectLogLevel}
-                      onMenu={recordMenu}
-                      onCopy={copyLogs}
-                      onExport={(text) => void exportLogs(text)}
-                      onReveal={host.revealLogs ? revealLogs : undefined}
-                      shown={tabOpen("logs")}
-                    />
-                  </div>
-                </section>
-              </div>
-            </div>
+                if (pane === "agent" || pane === "tui") {
+                  closeColumn(pane);
+                  return;
+                }
+                setLayout((current) => {
+                  const dock =
+                    current.docking ?? initialDockLayout(prefs, current);
+                  const closed = [...new Set([...dock.closed, pane])];
+                  return {
+                    ...current,
+                    docking: { ...dock, closed },
+                    panelOpen: ["console", "python", "logs"].some(
+                      (id) => !closed.some((pane) => pane === id),
+                    ),
+                  };
+                });
+                if (maximized === "panel") setMaximized(null);
+              }}
+              onExpand={(pane) => {
+                if (fullscreen.pane) {
+                  enterFullscreen();
+                  return;
+                }
+                if (
+                  pane === "console" ||
+                  pane === "python" ||
+                  pane === "logs"
+                ) {
+                  patch({ tab: pane });
+                  toggleMaximize("panel");
+                } else toggleMaximize(pane);
+              }}
+              onFullscreen={(pane) => enterFullscreen(pane)}
+              empty={canvas}
+              panes={[
+                {
+                  id: "agent",
+                  className: "agent-column",
+                  title: t("desktop.pane.agent"),
+                  content: agentPane,
+                },
+                {
+                  id: "docs",
+                  className: "main-area",
+                  title: t(
+                    profileOn
+                      ? "desktop.profile.title"
+                      : calendarOn
+                        ? "desktop.calendar.title"
+                        : ledgerOn
+                          ? "desktop.ledger.title"
+                          : declarationsOn
+                            ? "workspace.declarations.destination.overview"
+                            : browserOn
+                              ? "desktop.browser.title"
+                              : aeatSyncOn
+                                ? "desktop.aeat_sync.title"
+                                : "desktop.pane.docs",
+                  ),
+                  content: docsPane,
+                },
+                { id: "tui", title: t("desktop.pane.tui"), content: tuiPane },
+                {
+                  id: "console",
+                  className: cn(
+                    "[container:panel/size]",
+                    layout.tab === "console" && "panel",
+                  ),
+                  title: t("desktop.rail.console"),
+                  content: (
+                    <div className="relative flex min-h-0 flex-1">
+                      {terminalPane("console", tabOpen("console"))}
+                    </div>
+                  ),
+                },
+                {
+                  id: "python",
+                  className: cn(
+                    "[container:panel/size]",
+                    layout.tab === "python" && "panel",
+                  ),
+                  title: t("desktop.rail.python"),
+                  content: (
+                    <div className="relative flex min-h-0 flex-1">
+                      {terminalPane("python", tabOpen("python"))}
+                    </div>
+                  ),
+                },
+                {
+                  id: "logs",
+                  className: cn(
+                    "[container:panel/size]",
+                    layout.tab === "logs" && "panel",
+                  ),
+                  title: t("desktop.rail.logs"),
+                  content: (
+                    <div className="relative flex min-h-0 flex-1">
+                      <HostRecordList
+                        host={host}
+                        onErrors={setErrorCount}
+                        filters={filters}
+                        defaultFilters={defaultFilters}
+                        setFilters={setFilters}
+                        onLevelChange={selectLogLevel}
+                        onMenu={recordMenu}
+                        onCopy={copyLogs}
+                        onExport={(text) => void exportLogs(text)}
+                        onReveal={host.revealLogs ? revealLogs : undefined}
+                        shown={tabOpen("logs")}
+                      />
+                    </div>
+                  ),
+                },
+              ]}
+            />
 
             {settingsOpen && (
               <Settings
