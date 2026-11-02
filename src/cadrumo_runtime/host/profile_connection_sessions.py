@@ -407,8 +407,8 @@ class ProfileConnectionSessionMixin:
             connection_id=context.connection_id,
             profile_id=request.profile_id,
             session_ids=retired,
-            receipt_removed=deletion is not ReceiptDeletion.RECEIPT_RETAINED,
-            keychain_removed=deletion in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED},
+            receipt_removed=deletion.receipt_removed,
+            keychain_removed=deletion.keychain_removed,
             automation_enabled=automation_enabled,
             automation_access_remains=automation_access_remains,
         )

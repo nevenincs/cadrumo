@@ -29,7 +29,7 @@ from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from .runtime_login_contracts import RuntimeLoginHandoff, RuntimeLoginMethod
+from .runtime_login_contracts import AUTOMATION_LOGIN_METHODS, RuntimeLoginHandoff, RuntimeLoginMethod
 from .runtime_login_session import LoginAttemptState, open_to_completion
 
 if TYPE_CHECKING:
@@ -218,7 +218,7 @@ class RuntimeLoginAttemptMixin:
                 profile_id=profile_id,
                 session_id=access.session_id,
                 at=now(),
-                requires_automation_grant=method in {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE},
+                requires_automation_grant=method in AUTOMATION_LOGIN_METHODS,
             )
             or access.session_id != client.session_id
         ):

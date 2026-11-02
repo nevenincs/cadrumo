@@ -57,9 +57,9 @@ from ...domain.iva.schema import (
     spanish_eu_member_state,
 )
 from ...domain.transactions.cash_accounting_validation import validate_cash_accounting_axis
-from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.models import Transaction
+from ._shared_issue_reasons import business_state_issue_reason
 from .currency_predicates import is_non_eur_without_conversion
 from .invoice_kind import invoice_kind_for_direction
 from .iva_ledger import (
@@ -484,11 +484,7 @@ def _resolve_iva_transaction_ownership(
         )
     proportionality = business_proportionality_for(transaction)
     if proportionality is None:
-        reason = (
-            IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-            if transaction.business_classification is BusinessClassification.PERSONAL
-            else IvaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
-        )
+        reason = IvaLedgerAggregationIssueReason(business_state_issue_reason(transaction.business_classification))
         business_classification = transaction.business_classification.value
         return _IvaTransactionOutcome(
             gate_issue=IvaLedgerAggregationIssue(

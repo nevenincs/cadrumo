@@ -7,10 +7,8 @@ from collections.abc import Callable
 from pathlib import Path
 
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.core.diagnostic_log import diagnostic_event
-from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.contracts import ByteChannel, ClientHello, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.view_stream import ViewWorkerBind
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document
@@ -18,16 +16,9 @@ from cadrumo_client.transport.framing import VerifiedConnection
 
 from ..adapters.worker_native_identity import worker_view_namespace
 from ..adapters.worker_transport import WorkerChannel, worker_endpoint
+from .view_stream_state import close_view_leg_quietly
 
-_LOGGER = get_logger("cadrumo_runtime.host.view_stream_relay")
 _FRAME_SECONDS = 5.0
-
-
-def _close_quietly(channel: ByteChannel) -> None:
-    try:
-        channel.close()
-    except Exception as error:
-        diagnostic_event(_LOGGER, "view_leg_close_failed", fields={"error_type": type(error).__name__}, level=30)
 
 
 def open_worker_view_leg(
@@ -63,6 +54,6 @@ def open_worker_view_leg(
             raise RefusalError(RefusalCode.PEER_UNTRUSTED, check="view_worker_identity")
         bind = read_document(channel, ViewWorkerBind, deadline=deadline)
     except BaseException:
-        _close_quietly(channel)
+        close_view_leg_quietly(channel)
         raise
     return bind, channel

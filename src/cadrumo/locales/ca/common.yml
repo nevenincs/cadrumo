@@ -1159,6 +1159,8 @@ desktop:
     close: Tanca les declaracions
     loading: S'estan llegint les teves declaracions…
     maximize: Maximitza les declaracions
+    notes:
+      label: El que ha anotat l'últim càlcul
     position: Declaració {row} de {count}
     read_failed: Cadrumo no ha pogut llegir les teves declaracions.
     retry: Torna-ho a provar
@@ -3507,6 +3509,7 @@ desktop:
     prorrata:
       accepted: 'S''accepta: {provenances}.'
       action:
+        declare_gross: Declara una quota bruta
         declare_sector: Declara un sector
         elect_especial: Opta per l'especial
         elect_general: Opta per la general
@@ -3531,6 +3534,7 @@ desktop:
       evidence: Referència del justificant
       evidence_hint: El document de l'opció o de la seva revocació
       form:
+        declare_gross: Declara la quota deduïble bruta d'una liquidació de {ejercicio}
         declare_sector: Declara un sector diferenciat
         elect_especial: Opta per la prorrata especial el {ejercicio}
         elect_general: Opta per la prorrata general el {ejercicio}
@@ -3538,6 +3542,26 @@ desktop:
         seed: Pren {ejercicio} de l'any anterior
         seed_sector: Pren la prorrata provisional d'un sector el {ejercicio}
         settle_sector: Liquida la prorrata definitiva d'un sector el {ejercicio}
+      gross:
+        column:
+          evidence: Document
+          gross_cuota: Quota bruta
+          period: Període
+        empty: No hi ha cap quota bruta declarada per a cap període de liquidació.
+        evidence: Document justificatiu
+        evidence_hint: Referència al teu propi document que justifica l'import.
+        gross_cuota: Quota deduïble bruta
+        gross_cuota_hint: Abans de la prorrata, en euros amb fins a dos decimals.
+        period: Període de liquidació
+        remove: Elimina
+        remove_confirm: Elimina la declaració
+        remove_of: Elimina la quota bruta declarada per a {liquidation}
+        remove_what: Vols eliminar la quota bruta que vas declarar per a {liquidation}?
+        replace: Substitueix la quota bruta ja declarada per al mateix període i sector
+        title: Quota deduïble bruta de liquidacions anteriors
+        what: La quota deduïble bruta, abans de la prorrata, d'una liquidació anterior
+          que vas introduir a mà, per a un període del qual el llibre no té cap quota
+          suportada.
       kind:
         definitiva: Definitiva
         provisional: Provisional
@@ -4111,6 +4135,8 @@ desktop:
     none_unread: Cap sense llegir a l'última sincronització
     unread: '{count} sense llegir'
   modelo:
+    box_notes:
+      label: El que el càlcul ha anotat sobre aquesta casella
     correction:
       kind_label: Tipus de correcció
       motive_label: Motiu de la rectificació

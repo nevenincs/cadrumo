@@ -54,8 +54,8 @@ class PublicAnnualRecipientDetail(BaseModel):
     territorial_deduction_clave: int | None = None
     perceptor_birth_year: FourDigitYear | None = None
     perceptor_situacion_familiar: int | None = None
-    representative_tax_id: str | None = Field(default=None, min_length=1, max_length=32)
-    spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=1, max_length=32)
+    representative_tax_id: str | None = Field(default=None, min_length=1, max_length=64)
+    spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=1, max_length=64)
     disability_clave: int | None = None
     contract_relation_clave: int | None = None
     unit_convivencia_titular_clave: int | None = None
@@ -131,7 +131,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     fecha_vencimiento_prestamo: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
     compensaciones: PublicDecimal = PublicDecimal(decimal="0")
     garantias: PublicDecimal = PublicDecimal(decimal="0")
-    nif_pagador_anterior: str | None = Field(default=None, min_length=1, max_length=32)
+    nif_pagador_anterior: str | None = Field(default=None, min_length=1, max_length=64)
     fecha_devengo: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
     clave_mercado: str | None = None
     numero_orden: int | None = Field(default=None, ge=1, le=1 << 30)

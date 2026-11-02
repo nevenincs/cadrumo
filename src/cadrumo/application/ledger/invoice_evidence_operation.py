@@ -15,7 +15,6 @@ from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BY
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import Settings
 from ...core.config_support import LLMProvider
-from ...core.hashing import canonical_json_bytes
 from ...core.operations import (
     EFFECTS_WITHOUT_PARTIAL_COMMIT,
     OperationCancellation,
@@ -38,6 +37,7 @@ from ..operations.capabilities import (
 )
 from ..operations.models import OperationTerminalReceipt, require_succeeded_receipt_references
 from ..operations.owner import OperationExecutorContext
+from ..operations.result_size import refuse_oversized_result
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .counterparty_establishment_ports import CounterpartyEstablishmentRepositoryProtocol
 from .evidence_ports import LedgerEvidencePorts
@@ -96,8 +96,7 @@ def require_bound_invoice_evidence_ports(ports: InvoiceEvidenceOperationPorts, *
 
 def check_invoice_evidence_result_size(result: BaseModel) -> None:
     """Refuse a private result document that exceeds the registered projection bound."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, _MAX_RESULT_BYTES)
 
 
 def invoice_evidence_operation_capabilities(*, mutates: bool, off_host_optional: bool = False) -> OperationCapabilities:

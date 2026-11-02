@@ -20,6 +20,12 @@ class RuntimeLoginMethod(StrEnum):
     RECEIPT = auto()
 
 
+AUTOMATION_LOGIN_METHODS: frozenset[RuntimeLoginMethod] = frozenset(
+    {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE}
+)
+"""The login methods that sign in an automation credential rather than a person."""
+
+
 @dataclass(frozen=True, slots=True)
 class RuntimeLoginHandoff:
     """Transfer the one verified connection, without claiming local custody."""

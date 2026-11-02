@@ -13,7 +13,7 @@ from collections.abc import Callable
 
 from ...core.period import Period
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
-from ...domain.transactions.enums import BusinessClassification
+from ...domain.transactions.enums import BusinessClassification, is_classified
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..review.filter import LedgerReviewStatus
 from .actions_common import display_decimal, require_transaction
@@ -66,11 +66,7 @@ def ledger_transaction_review_status(transaction: Transaction) -> LedgerReviewSt
         return LedgerReviewStatus.SKIPPED
     if transaction.business_classification is BusinessClassification.REVIEWED_EXCLUDED:
         return LedgerReviewStatus.EXCLUDED
-    if transaction.business_classification in {
-        BusinessClassification.BUSINESS,
-        BusinessClassification.PERSONAL,
-        BusinessClassification.MIXED,
-    }:
+    if is_classified(transaction.business_classification):
         return LedgerReviewStatus.REVIEWED
     return LedgerReviewStatus.PENDING
 

@@ -20,10 +20,11 @@ from textual.widgets import Input, Static
 from ....application.user_profile.overview import ProfileOverview
 from ..components.host import ScreenHostApp
 from ..components.status import PinnedStatusBar
-from ..profile.overview import ProfileFieldPersist, ProfileManagerScreen
+from ..profile.overview import ProfileManagerScreen
 from .manager_pilot import wait_until_settled
 from .manager_subject_profile import (
     manager_subject_overview,
+    manager_subject_persist,
     manager_subject_stored_facts,
     registered_manager_subject,
     write_manager_subject_field,
@@ -50,26 +51,12 @@ def _live_overview(label: str = _LABEL):
     return manager_subject_overview(label=label, passphrase=_CREDENTIAL_INPUT)
 
 
-def _write(
-    path: str, value: str, expected_revision: int | None = None, expected_content_digest: str | None = None
-) -> ProfileOverview:
+def _write(path: str, value: str) -> ProfileOverview:
     """The production write door, so an edit here travels the real path."""
-    return write_manager_subject_field(
-        label=_LABEL,
-        passphrase=_CREDENTIAL_INPUT,
-        path=path,
-        value=value,
-        expected_revision=expected_revision,
-        expected_content_digest=expected_content_digest,
-    )
+    return write_manager_subject_field(label=_LABEL, passphrase=_CREDENTIAL_INPUT, path=path, value=value)
 
 
-def _persist_door(path: str, value: str, expected_revision: int, expected_content_digest: str) -> ProfileOverview:
-    """The screen's door, bound to its declared signature so a change fails type-checking, not a run."""
-    return _write(path, value, expected_revision, expected_content_digest)
-
-
-_persist: ProfileFieldPersist = _persist_door
+_persist = manager_subject_persist(label=_LABEL, passphrase=_CREDENTIAL_INPUT)
 
 
 def _stored() -> dict[str, object | None]:
