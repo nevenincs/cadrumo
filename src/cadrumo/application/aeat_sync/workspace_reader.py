@@ -885,6 +885,7 @@ def _area_status(
         unread_notification_count=unread_notification_count,
         filed_rows=filed_rows,
         refused_snapshots=refused_snapshots,
+        outdated_stored_snapshots=outdated_stored_snapshots,
     )
 
 
@@ -899,6 +900,7 @@ def _captured_area_status(
     unread_notification_count: int | None,
     filed_rows: tuple[AeatSyncFiledRowV1, ...] | None,
     refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...],
+    outdated_stored_snapshots: int,
 ) -> AeatSyncAreaStatusV1:
     """Judge an area that holds a capture: current unless strictly older than its horizon."""
     stale = horizon is not None and observed_at - captured_at > horizon
