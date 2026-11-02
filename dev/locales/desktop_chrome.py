@@ -620,6 +620,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.ledger.field.": (
             "booked_date",
             "value_date",
+            "operation_date",
             "currency",
             "business_pct",
             "usage_ratio_id",
