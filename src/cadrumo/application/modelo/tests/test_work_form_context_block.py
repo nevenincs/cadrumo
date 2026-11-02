@@ -54,5 +54,6 @@ def test_walker_projects_summary_as_readonly_unknown_without_edit_address(snapsh
     projected = form.pages[0].sections[0].blocks[0]
     assert isinstance(projected, ModeloFormContextFieldBlock)
     assert projected.value is None
-    assert projected.label.text == "[02] Importe total"
+    assert projected.label.text == "Importe total"
+    assert projected.box_number == "02"
     assert "address" not in projected.model_dump()
