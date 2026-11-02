@@ -13,11 +13,11 @@ async function open(target: Page, scenario: string) {
   return reach(target);
 }
 
-async function reach(target: Page) {
+async function reach(target: Page, language = "en") {
   await target.keyboard.press("ControlOrMeta+Shift+KeyK");
-  const input = target
-    .locator(".palette")
-    .getByRole("combobox", { name: label("desktop.palette.label") });
+  const input = target.locator(".palette").getByRole("combobox", {
+    name: label("desktop.palette.label", {}, language),
+  });
   await expect(input).toBeFocused();
   await input.fill("aeat-sync");
   await target.keyboard.press("Enter");
@@ -568,6 +568,81 @@ test("a notification shows its date and no sender", async ({
   await expect(list).toContainText("Requerimiento de información");
   await expect(list).not.toContainText("Agencia Tributaria");
 });
+
+for (const outcome of ["failed", "unknown"] as const)
+  test(`${outcome} empty results never claim confirmed absence`, async ({
+    page: target,
+  }) => {
+    const page = await open(target, `aeat-sync-${outcome}-empty`);
+    await update(page).click();
+    for (const id of ["filed", "notifications"]) {
+      const result = area(results(page), id);
+      await expect(result).toHaveAttribute("data-outcome", outcome);
+      await expect(result).toContainText(
+        label(`desktop.aeat_sync.results.${outcome}`),
+      );
+      await expect(result).not.toContainText(
+        label(`desktop.aeat_sync.results.${id}.empty`),
+      );
+    }
+  });
+
+test("confirmed empty results retain their explicit empty messages", async ({
+  page: target,
+}) => {
+  const page = await open(target, "aeat-sync-empty");
+  await update(page).click();
+  for (const id of ["filed", "notifications"])
+    await expect(area(results(page), id)).toContainText(
+      label(`desktop.aeat_sync.results.${id}.empty`),
+    );
+});
+
+for (const language of ["en", "es", "ca", "hu"])
+  test(`a failed local results refresh retains rows and reloads locally in ${language}`, async ({
+    page: target,
+  }) => {
+    await target.goto(
+      `/scenarios.html?scenario=aeat-sync-refresh-failed&lang=${language}&latency=0&bar=off`,
+    );
+    const page = await reach(target, language);
+    const localButton = (scope: Locator, key: string) =>
+      scope.getByRole("button", {
+        name: label(key, {}, language),
+        exact: true,
+      });
+    await localButton(page, "desktop.aeat_sync.bring_all").click();
+    const saved = results(page);
+    const rows = area(saved, "filed").locator('[data-match="matched"]');
+    await expect(rows).toHaveCount(2);
+    await area(saved, "notifications")
+      .getByRole("button", {
+        name: label(
+          "desktop.aeat_sync.results.retry_named",
+          {
+            name: label(
+              "desktop.aeat_sync.area.notifications.name",
+              {},
+              language,
+            ),
+          },
+          language,
+        ),
+        exact: true,
+      })
+      .click();
+    const warning = saved.getByRole("alert").filter({
+      hasText: label("desktop.aeat_sync.results.refresh_failed", {}, language),
+    });
+    await expect(warning).toBeVisible();
+    await expect(rows).toHaveCount(2);
+    const retried = await calls(target, "aeatSyncResults.retry");
+    expect(retried).toHaveLength(1);
+    await localButton(warning, "desktop.aeat_sync.results.reload").click();
+    await expect(warning).toHaveCount(0);
+    await expect(rows).toHaveCount(2);
+    expect(await calls(target, "aeatSyncResults.retry")).toEqual(retried);
+  });
 
 test("the Borrador import is for the year the person chooses", async ({
   page: target,

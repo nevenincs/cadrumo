@@ -86,6 +86,14 @@ PASS for S05/S07. The shared matching Chips view now renders every supplied chip
 
 Concurrent commit 3978e6c5e2 captured the root-implemented S04 source and tests before root staged its checkpoint. ecccd77d02 records the matching execution/review checkpoint. The passing evidence applies to those unchanged sources; no duplicate implementation was made.
 
+### s06-review | low | Saved-result reload failures and empty outcomes are explicit
+
+PASS for S06. Sol designed the retained-result warning/local reload; Terra confirmed authority and partial-data preservation. Canonical locale batch updated en/es/ca/hu and desktop-frontend-chrome generation passed. TypeScript and targeted ESLint passed; sources/tests formatted. Thirty AEAT cases passed in the full run; four added language recovery cases initially failed because the test used visible retry text instead of the area-specific accessible name. After correcting that selector, all four passed. Failed/unknown empty rows suppress confirmed-absence messages; successful empty retains them; partial rows survive failure; local reload does not issue another remote retry. Adjacent pre-existing unknown retry handling is separately tracked in S25 and remains open.
+
+### aeat-retry-uncertainty | high | An unknown retry can leave old failed-result controls active
+
+Terra identified that remote retry returning unknown sets trouble but retains an old failed result; failed-part controls can then retry with acknowledgedUnknown=false, especially when the local reread also fails. S25 must preserve the unknown gate until explicit acknowledgement or an authoritative settled result; use the existing UnknownWarning and do not automatically replay the remote action.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

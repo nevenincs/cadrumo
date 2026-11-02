@@ -943,6 +943,9 @@ desktop:
         refused: Az AEAT elutasította.
         session_ended: Lejárt a bejelentkezés.
         unavailable: Az AEAT jelenleg nem érhető el.
+      refresh_failed: Nem sikerült újra betölteni a mentett eredményeket. A korábbi
+        eredmények láthatók.
+      reload: Eredmények újratöltése
       retry: Próbáld újra
       retry_failed: Nem sikerült elindítani. Próbáld újra.
       retry_named: 'Próbáld újra: {name}'

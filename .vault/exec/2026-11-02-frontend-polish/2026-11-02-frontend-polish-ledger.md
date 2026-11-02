@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:a016dad47c4fb537750e6d83c0bcb2ec5ad9c5b92e75f09be1a12e732b860ff3'
+body_hash: 'sha256:49fab3076b9cd51817c15cbac800f1bd822a7e08ff5fb2b63d278c89f3091122'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -56,6 +56,18 @@ related:
 - `S07` `M` `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`
 - `S07` `verify:` `TypeScript and matching/invoice targeted ESLint` -> `pass`
 - `S07` `verify:` `ledger-invoices and ledger-matching scenarios (25)` -> `pass`
+- `S06` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S06` `M` `native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts`
+- `S06` `M` `native/desktop/frontend/src/dev/scenarios.ts`
+- `S06` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S06` `M` `dev/locales/desktop_interface_keys.py`
+- `S06` `M` `src/cadrumo/locales/en/common.yml`
+- `S06` `M` `src/cadrumo/locales/es/common.yml`
+- `S06` `M` `src/cadrumo/locales/ca/common.yml`
+- `S06` `M` `src/cadrumo/locales/hu/common.yml`
+- `S06` `verify:` `canonical desktop-frontend-chrome generation` -> `pass`
+- `S06` `verify:` `TypeScript and targeted AEAT ESLint` -> `pass`
+- `S06` `verify:` `AEAT behavior cases (30) and corrected multilingual local reload cases (4)` -> `pass`
 
 ## Notes
 

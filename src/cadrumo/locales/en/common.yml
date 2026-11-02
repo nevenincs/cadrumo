@@ -935,6 +935,8 @@ desktop:
         refused: AEAT refused.
         session_ended: Sign-in timed out.
         unavailable: AEAT isn't available right now.
+      refresh_failed: Couldn't reload the saved results. Showing the previous results.
+      reload: Reload results
       retry: Try again
       retry_failed: Couldn't start. Try again.
       retry_named: 'Try again: {name}'

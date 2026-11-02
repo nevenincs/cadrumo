@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:f4e1eb7882efdda6c9e9f384b95375e6eb4ccf178405a129b957b5b1a60977aa'
+body_hash: 'sha256:bd6eaa093597e974302d373802c543eb157b225b7c10ea5bd5cad322ea046e66'
 ---
 
 # `frontend-polish` plan
@@ -45,7 +45,8 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S03` - Retire stale provider mutation results and prevent old reads from replacing newly accepted settings; `native/desktop/frontend/src/shell/providerSettings.ts, native/desktop/frontend/src/shell/agentViews.ts`.
 - [x] `S04` - Bind reading-model selections and agent observations to the current reader lifecycle; `native/desktop/frontend/src/shell/readingModel.ts, native/desktop/frontend/src/shell/agentLive.ts, native/desktop/frontend/src/components/AgentColumn.tsx`.
 - [x] `S05` - Show every available matching-evidence chip without extra disclosure controls; `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`.
-- [ ] `S06` - Distinguish failed AEAT result refreshes and unavailable empty outcomes from confirmed empty observations; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/shell/aeatSyncResults.ts`.
+- [x] `S06` - Distinguish failed AEAT result refreshes and unavailable empty outcomes from confirmed empty observations; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/shell/aeatSyncResults.ts`.
+- [ ] `S25` - Require explicit unknown-outcome acknowledgement after an AEAT retry loses settlement, including failed local refresh; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
 - [x] `S07` - Keep invoice grid row identity stable across unrelated editor and notification updates; `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`.
 - [ ] `S18` - Repair shared suggestion visibility and combobox keyboard escape, and verify grid focus when an active column is hidden; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/tests/scenarios/`.
 - [ ] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.

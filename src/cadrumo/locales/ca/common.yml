@@ -960,6 +960,9 @@ desktop:
         refused: L'AEAT ho ha rebutjat.
         session_ended: Accés caducat.
         unavailable: L'AEAT no està disponible ara mateix.
+      refresh_failed: No s'han pogut tornar a carregar els resultats desats. Es mostren
+        els resultats anteriors.
+      reload: Torna a carregar els resultats
       retry: Torna-ho a provar
       retry_failed: No s'ha pogut iniciar. Torna-ho a provar.
       retry_named: 'Torna-ho a provar: {name}'

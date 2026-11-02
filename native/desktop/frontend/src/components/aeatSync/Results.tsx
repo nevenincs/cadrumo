@@ -138,8 +138,13 @@ export const Results = memo(function Results({
       <Alert role="alert" tone="danger" icon={<Icon name="alert" />}>
         {t("desktop.aeat_sync.results.unavailable")}
         <span>
-          <Button size="xs" variant="outline" onClick={refresh}>
-            {t("desktop.aeat_sync.results.retry")}
+          <Button
+            size="xs"
+            variant="outline"
+            onClick={refresh}
+            pending={results.loading}
+          >
+            {t("desktop.aeat_sync.results.reload")}
           </Button>
         </span>
       </Alert>
@@ -162,8 +167,24 @@ export const Results = memo(function Results({
       className="@container/aeat flex flex-col gap-3"
       data-testid="aeat-sync-results"
     >
+      {results.failed && (
+        <Alert role="alert" tone="warning" icon={<Icon name="alert" />}>
+          {t("desktop.aeat_sync.results.refresh_failed")}
+          <span>
+            <Button
+              size="xs"
+              variant="outline"
+              onClick={refresh}
+              pending={results.loading}
+            >
+              {t("desktop.aeat_sync.results.reload")}
+            </Button>
+          </span>
+        </Alert>
+      )}
       <ul
         aria-label={t("desktop.aeat_sync.results.title")}
+        aria-busy={results.loading || undefined}
         className="flex flex-col gap-3"
       >
         {AEAT_SYNC_AREAS.flatMap((id) => {
@@ -179,6 +200,8 @@ export const Results = memo(function Results({
               : null;
           const busy = trying?.startsWith(`${result.area}:`) ?? false;
           const problem = trouble[result.area];
+          const confirmed =
+            result.outcome !== "failed" && result.outcome !== "unknown";
           return (
             <li
               key={result.area}
@@ -308,16 +331,18 @@ export const Results = memo(function Results({
                   )}
                 </Alert>
               )}
-              {result.area === "filed" && (
-                <FiledResults rows={data.filed} language={language} />
-              )}
-              {result.area === "notifications" && (
-                <NotificationResults
-                  rows={data.notifications}
-                  language={language}
-                  onOpenAeat={onOpenAeat}
-                />
-              )}
+              {result.area === "filed" &&
+                (confirmed || data.filed.length > 0) && (
+                  <FiledResults rows={data.filed} language={language} />
+                )}
+              {result.area === "notifications" &&
+                (confirmed || data.notifications.length > 0) && (
+                  <NotificationResults
+                    rows={data.notifications}
+                    language={language}
+                    onOpenAeat={onOpenAeat}
+                  />
+                )}
               {result.area === "borrador" && (
                 <BorradorImport
                   port={port}
