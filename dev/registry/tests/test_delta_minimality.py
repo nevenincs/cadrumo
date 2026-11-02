@@ -34,13 +34,16 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefiniti
 from ..analysis.corpus import bundled_modelo_ids
 from ..analysis.delta_minimality import (
     EDITION_LOCAL_FIELDS,
+    MinimalityCensus,
     MinimalityVerdict,
     RowJudgement,
+    check_authority,
     definition_findings,
     definitions_census,
     edition_predecessors,
     inheritable_value,
     judge_definition,
+    main,
     minimality_census,
     restatement_differences,
     restating_modelos,
@@ -220,9 +223,13 @@ def test_an_override_citing_this_editions_orden_is_a_statement_inheritance_canno
 def test_the_live_corpus_carries_no_edition_restating_an_inherited_row(
     authority: ValidatedRegistryAuthority,
 ) -> None:
-    """Held by identity: no modelo restates, and 131's judged rows are differences, not copies."""
-    findings = screen_authority(authority, ("303", _MODELO))
+    """Held across every bundled modelo: none restates, and 131's judged rows are differences, not copies."""
+    modelo_ids = bundled_modelo_ids()
+    findings = screen_authority(authority, modelo_ids)
+    census = minimality_census(authority, modelo_ids)
+    assert census.rows_judged > 0
     assert restating_modelos(findings) == ()
+    assert check_authority(findings, census) == ()
     kinds = {item.kind for item in judge_definition(authority.modelo(_MODELO), modelo_id=_MODELO)}
     assert "restated_unchanged" not in kinds
     assert "stated_difference" in kinds
@@ -408,6 +415,43 @@ def test_a_delta_restating_one_identical_row_is_named_and_stops_when_it_is_remov
     changed = _stating(inheritance.delta, inheritance.row.model_copy(update={"section": ("planted",)}))
     assert definition_findings(changed, modelo_id=_MODELO) == ()
     assert _successor_judgements(changed)[_ROW].detail == "differs in section"
+
+
+def test_the_gate_names_a_planted_restating_edition_and_refuses_a_census_that_judged_nothing(
+    inheritance: _Inheritance,
+) -> None:
+    """The gate fails on a restated row, and on zero rows judged, which is not the same as minimal."""
+    restating = _stating(inheritance.delta, inheritance.row)
+    findings = definition_findings(restating, modelo_id=_MODELO)
+    census = definitions_census({_MODELO: restating})
+    assert census.rows_judged > 0
+    reasons = check_authority(findings, census)
+    assert len(reasons) == 1
+    assert _MODELO in reasons[0]
+
+    minimal = inheritance.delta
+    clean = definition_findings(minimal, modelo_id=_MODELO)
+    assert check_authority(clean, definitions_census({_MODELO: minimal})) == ()
+
+    nothing = MinimalityCensus(
+        editions=0,
+        root_editions=0,
+        declared_predecessor_editions=0,
+        rows_judged=0,
+        rows_inherited=0,
+        rows_storage_reused=0,
+        rows_in_root_editions=0,
+        verdicts={},
+    )
+    assert check_authority((), nothing) == ("no casilla row was judged, so minimality was not measured",)
+
+
+def test_the_program_gates_only_when_asked_and_refuses_an_unknown_argument(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    assert main(["--check"]) == 0
+    assert "restating_modelos=0" in capsys.readouterr().out
+    assert main(["--unknown"]) == 2
 
 
 def test_a_row_without_lineage_is_unchecked_never_minimal(inheritance: _Inheritance) -> None:
