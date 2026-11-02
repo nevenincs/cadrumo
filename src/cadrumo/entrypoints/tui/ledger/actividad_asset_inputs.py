@@ -13,6 +13,7 @@ from ....application.actividad_asset.operation_dtos import ActivityAssetDisposal
 from ....application.actividad_asset.request_restoration import restoring
 from ....application.operations.public_scalar import PublicDecimal
 from ....core.decimal.coercion import coerce_finite_european_decimal
+from ....core.errors.hierarchy import CadrumoError
 from ....core.i18n.render import tr
 from ....core.parsing.dates import require_iso8601_date
 from ....domain.renta.actividad_asset.disposal import ActivityAssetDisposalReason, PriorFreeDepreciationRegime
@@ -20,7 +21,7 @@ from ....domain.renta.actividad_asset.election import ActivityAssetAmortizationE
 from ....domain.renta.actividad_asset.lifecycle import ActivityAssetBasis, ActivityAssetRevision
 
 
-class InputRefusedError(ValueError):
+class InputRefusedError(CadrumoError):
     """An entry the operator can correct, already worded for the screen in the interface language."""
 
 

@@ -679,7 +679,7 @@ const applyButton = (dialog: Locator) =>
   dialog.getByRole("button", { name: label("workspace.modelo.review.apply") });
 
 /** The value the producer's edits stage on box 06, as the filer types it. */
-const TYPED_06 = "1.234,56";
+const TYPED_06 = "1,234.56";
 
 test("an applied edit settles, clears what was staged and shows what was stored", async ({
   page: target,
@@ -1082,16 +1082,16 @@ test("the real Modelo 303 takes a typed value and checks it as staged", async ({
 }) => {
   const typed = envelope<{
     parsed: { value_text: string | null }[];
-  }>("preflight-303-1T-entry-42").parsed[0];
+  }>("preflight-303-1T-entry-42-en").parsed[0];
   if (!typed?.value_text) throw new Error("the 303 entry read no value");
   await openDeclaration(target, "303");
   // The form draws its sections as they scroll in: find the box by number.
   await target
     .getByRole("searchbox", { name: label("desktop.modelo.search.label") })
     .fill("42");
-  // The application read the entry as a figure; the box says it as typed.
-  await stage(target, "42", "1.234,56");
-  await expect(boxRow(target, "42")).toContainText("1.234,56");
+  // The application read the entry as a figure; the box says it as read.
+  await stage(target, "42", "1,234.56");
+  await expect(boxRow(target, "42")).toContainText(typed.value_text);
   const dialog = await review(target);
   await expect(dialog.getByRole("listitem")).toContainText("42");
   await expect(applyButton(dialog)).toBeVisible();

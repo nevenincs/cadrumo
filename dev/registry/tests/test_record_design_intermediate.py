@@ -59,6 +59,142 @@ _MINIMUM_FIXED_SHEETS = 50
 _MINIMUM_VARIABLE_ENVELOPES = 1
 
 
+def _intermediate_field_key(field) -> tuple[object, ...]:
+    return (
+        field.sheet,
+        field.record_identity,
+        field.source_row,
+        field.source_cell,
+        field.ordinal,
+        field.offset,
+        field.length,
+        field.aeat_type,
+        field.normalized_description,
+        field.validation,
+        field.content,
+    )
+
+
+def _parser_field_key(field, record_name: str) -> tuple[object, ...]:
+    return (
+        field.sheet,
+        record_name,
+        field.row,
+        f"A{field.row}",
+        field.ordinal,
+        field.offset,
+        field.length,
+        field.type_code,
+        field.description,
+        field.validation,
+        field.content,
+    )
+
+
+def _assert_fixed_sheet_is_preserved(parser_sheet, intermediate_sheet) -> None:
+    assert intermediate_sheet.sheet == parser_sheet.name
+    assert intermediate_sheet.record_identity == parser_sheet.name
+    assert intermediate_sheet.declared_total == parser_sheet.total_positions
+    assert intermediate_sheet.declared_total is not None
+    assert max(field.offset + field.length - 1 for field in parser_sheet.fields) == intermediate_sheet.declared_total
+    assert tuple(_intermediate_field_key(field) for field in intermediate_sheet.fields) == tuple(
+        _parser_field_key(field, parser_sheet.name) for field in parser_sheet.fields
+    )
+
+
+def _assert_envelope_prefix_is_preserved(envelope, parser_envelope) -> None:
+    assert tuple(_intermediate_field_key(field) for field in envelope.prefix_fields) == tuple(
+        _parser_field_key(field, parser_envelope.name) for field in parser_envelope.prefix_fields
+    )
+    assert envelope.prefix_extent == 328
+    assert max(field.offset + field.length - 1 for field in envelope.prefix_fields) == 328
+
+
+def _assert_envelope_body_is_preserved(envelope, parser_envelope) -> None:
+    assert (
+        envelope.body_source_row,
+        envelope.body_source_cell,
+        envelope.body_ordinal,
+        envelope.body_offset,
+        envelope.body_length,
+        envelope.body_aeat_type,
+        envelope.body_normalized_description,
+        envelope.body_validation,
+        envelope.body_content,
+    ) == (
+        parser_envelope.body.row,
+        f"A{parser_envelope.body.row}",
+        parser_envelope.body.ordinal,
+        parser_envelope.body.offset,
+        parser_envelope.body.length,
+        parser_envelope.body.type_code,
+        parser_envelope.body.description,
+        parser_envelope.body.validation,
+        parser_envelope.body.content,
+    )
+    assert (envelope.body_source_cell, envelope.body_offset, envelope.body_length) == (
+        "A14",
+        329,
+        "Variable",
+    )
+    assert envelope.body_aeat_type == "An"
+    assert envelope.body_normalized_description.startswith("Contenido del fichero")
+    assert envelope.body_validation is None
+    assert envelope.body_content is None
+
+
+def _assert_envelope_closing_is_preserved(envelope, parser_envelope) -> None:
+    assert (
+        envelope.closing.source_row,
+        envelope.closing.source_cell,
+        envelope.closing.ordinal,
+        envelope.closing.offset,
+        envelope.closing.length,
+        envelope.closing.aeat_type,
+        envelope.closing.normalized_description,
+        envelope.closing.validation,
+        envelope.closing.content,
+    ) == (
+        parser_envelope.closing.row,
+        f"A{parser_envelope.closing.row}",
+        parser_envelope.closing.ordinal,
+        parser_envelope.closing.offset,
+        parser_envelope.closing.length,
+        parser_envelope.closing.type_code,
+        parser_envelope.closing.description,
+        parser_envelope.closing.validation,
+        parser_envelope.closing.content,
+    )
+    assert (
+        envelope.closing.source_cell,
+        envelope.closing.offset,
+        envelope.closing.length,
+    ) == ("A15", "***", 18)
+    assert envelope.closing.aeat_type == "An"
+    assert envelope.closing.normalized_description.startswith("Constante. </T")
+    assert envelope.closing.validation is None
+    assert envelope.closing.content == '"</T200020250A0000>"'
+
+
+def _assert_envelope_total_is_preserved(envelope, parser_envelope) -> None:
+    assert (
+        envelope.total_source_row,
+        envelope.total_source_cell,
+        envelope.total_label,
+        envelope.total_length,
+    ) == (
+        parser_envelope.variable_total.row,
+        f"A{parser_envelope.variable_total.row}",
+        parser_envelope.variable_total.label,
+        parser_envelope.variable_total.length,
+    )
+    assert (
+        envelope.total_source_cell,
+        envelope.total_label,
+        envelope.total_length,
+    ) == ("A16", "total", "Variable")
+
+
 def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_workbook() -> None:
     """Every parsed record and official total reaches the generator IR unchanged."""
     source_root = bundled_path()
@@ -108,44 +244,7 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     )
 
     for parser_sheet, intermediate_sheet in zip(fixed_parser_sheets, intermediate.sheets, strict=True):
-        assert intermediate_sheet.sheet == parser_sheet.name
-        assert intermediate_sheet.record_identity == parser_sheet.name
-        assert intermediate_sheet.declared_total == parser_sheet.total_positions
-        assert intermediate_sheet.declared_total is not None
-        assert (
-            max(field.offset + field.length - 1 for field in parser_sheet.fields) == intermediate_sheet.declared_total
-        )
-        assert tuple(
-            (
-                field.sheet,
-                field.record_identity,
-                field.source_row,
-                field.source_cell,
-                field.ordinal,
-                field.offset,
-                field.length,
-                field.aeat_type,
-                field.normalized_description,
-                field.validation,
-                field.content,
-            )
-            for field in intermediate_sheet.fields
-        ) == tuple(
-            (
-                field.sheet,
-                parser_sheet.name,
-                field.row,
-                f"A{field.row}",
-                field.ordinal,
-                field.offset,
-                field.length,
-                field.type_code,
-                field.description,
-                field.validation,
-                field.content,
-            )
-            for field in parser_sheet.fields
-        )
+        _assert_fixed_sheet_is_preserved(parser_sheet, intermediate_sheet)
 
     envelope = next(envelope for envelope in intermediate.variable_envelopes if envelope.sheet == "DP200000")
     parser_envelope = next(sheet.variable_envelope for sheet in parsed_sheets if sheet.name == envelope.sheet)
@@ -154,115 +253,10 @@ def test_intermediate_is_a_complete_total_preserving_projection_of_the_verified_
     assert isinstance(parser_envelope.closing, RecordDesignRelativeSuffixMarker)
     assert envelope.sheet == "DP200000"
     assert envelope.record_identity == "DP200000"
-    assert tuple(
-        (
-            field.sheet,
-            field.record_identity,
-            field.source_row,
-            field.source_cell,
-            field.ordinal,
-            field.offset,
-            field.length,
-            field.aeat_type,
-            field.normalized_description,
-            field.validation,
-            field.content,
-        )
-        for field in envelope.prefix_fields
-    ) == tuple(
-        (
-            field.sheet,
-            parser_envelope.name,
-            field.row,
-            f"A{field.row}",
-            field.ordinal,
-            field.offset,
-            field.length,
-            field.type_code,
-            field.description,
-            field.validation,
-            field.content,
-        )
-        for field in parser_envelope.prefix_fields
-    )
-    assert envelope.prefix_extent == 328
-    assert max(field.offset + field.length - 1 for field in envelope.prefix_fields) == 328
-    assert (
-        envelope.body_source_row,
-        envelope.body_source_cell,
-        envelope.body_ordinal,
-        envelope.body_offset,
-        envelope.body_length,
-        envelope.body_aeat_type,
-        envelope.body_normalized_description,
-        envelope.body_validation,
-        envelope.body_content,
-    ) == (
-        parser_envelope.body.row,
-        f"A{parser_envelope.body.row}",
-        parser_envelope.body.ordinal,
-        parser_envelope.body.offset,
-        parser_envelope.body.length,
-        parser_envelope.body.type_code,
-        parser_envelope.body.description,
-        parser_envelope.body.validation,
-        parser_envelope.body.content,
-    )
-    assert (envelope.body_source_cell, envelope.body_offset, envelope.body_length) == (
-        "A14",
-        329,
-        "Variable",
-    )
-    assert envelope.body_aeat_type == "An"
-    assert envelope.body_normalized_description.startswith("Contenido del fichero")
-    assert envelope.body_validation is None
-    assert envelope.body_content is None
-    assert (
-        envelope.closing.source_row,
-        envelope.closing.source_cell,
-        envelope.closing.ordinal,
-        envelope.closing.offset,
-        envelope.closing.length,
-        envelope.closing.aeat_type,
-        envelope.closing.normalized_description,
-        envelope.closing.validation,
-        envelope.closing.content,
-    ) == (
-        parser_envelope.closing.row,
-        f"A{parser_envelope.closing.row}",
-        parser_envelope.closing.ordinal,
-        parser_envelope.closing.offset,
-        parser_envelope.closing.length,
-        parser_envelope.closing.type_code,
-        parser_envelope.closing.description,
-        parser_envelope.closing.validation,
-        parser_envelope.closing.content,
-    )
-    assert (
-        envelope.closing.source_cell,
-        envelope.closing.offset,
-        envelope.closing.length,
-    ) == ("A15", "***", 18)
-    assert envelope.closing.aeat_type == "An"
-    assert envelope.closing.normalized_description.startswith("Constante. </T")
-    assert envelope.closing.validation is None
-    assert envelope.closing.content == '"</T200020250A0000>"'
-    assert (
-        envelope.total_source_row,
-        envelope.total_source_cell,
-        envelope.total_label,
-        envelope.total_length,
-    ) == (
-        parser_envelope.variable_total.row,
-        f"A{parser_envelope.variable_total.row}",
-        parser_envelope.variable_total.label,
-        parser_envelope.variable_total.length,
-    )
-    assert (
-        envelope.total_source_cell,
-        envelope.total_label,
-        envelope.total_length,
-    ) == ("A16", "total", "Variable")
+    _assert_envelope_prefix_is_preserved(envelope, parser_envelope)
+    _assert_envelope_body_is_preserved(envelope, parser_envelope)
+    _assert_envelope_closing_is_preserved(envelope, parser_envelope)
+    _assert_envelope_total_is_preserved(envelope, parser_envelope)
 
 
 def _object_boundary(value: object) -> object:

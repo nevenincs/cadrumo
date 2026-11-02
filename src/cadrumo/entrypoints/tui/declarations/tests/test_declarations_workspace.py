@@ -87,6 +87,12 @@ _NOW = datetime(2026, 9, 3, 10, tzinfo=UTC)
 _PERIOD = Period.from_year_and_code(2026, "1T")
 _BUCKET = "11111111-1111-4111-8111-111111111111"
 _CASILLA = validated_casilla_id("01")
+_FILED_ON = {
+    OutputLanguage.EN: "Sep 3, 2026 10:00 UTC",
+    OutputLanguage.ES: "3 sept 2026 10:00 UTC",
+    OutputLanguage.CA: "3 de set. 2026 10:00 UTC",
+    OutputLanguage.HU: "2026. szept. 3. 10:00 UTC",
+}
 _EXPECTED = {
     OutputLanguage.ES: (
         "Tus declaraciones",
@@ -730,7 +736,7 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         assert table.row_count == 3
         rows = tuple(tuple(str(cell) for cell in table.get_row_at(index)) for index in range(3))
         assert len(set(rows)) == 3
-        assert all("03/09/2026" in row[1] and "UTC" in row[1] for row in rows)
+        assert all("3 sept 2026" in row[1] and "UTC" in row[1] for row in rows)
         assert {row[-2:] for row in rows} == {
             (tr("workspace.declarations.value.yes"), tr("workspace.declarations.value.yes")),
             (tr("workspace.declarations.value.no"), tr("workspace.declarations.value.no")),
@@ -738,7 +744,7 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         drafts = tuple(row for row in projection.calculation_revisions if not row.is_current and not row.is_filed)
         assert len(drafts) == 2
         displayed_draft_times = tuple(str(table.get_row(row.calculation_revision_id)[1]) for row in drafts)
-        assert displayed_draft_times == ("03/09/2026 09:15 UTC", "03/09/2026 09:45 UTC")
+        assert displayed_draft_times == ("3 sept 2026 09:15 UTC", "3 sept 2026 09:45 UTC")
         selected_revision = drafts[-1]
         selected_index = next(
             index
@@ -758,7 +764,7 @@ async def test_revision_and_filing_rows_render_exact_chronology_and_independent_
         table = filings.query_one("#declarations-filings", DataTable)
         filing_key = f"filing:{projection.filings[0].filing_record_id}"
         row = tuple(str(cell) for cell in table.get_row(filing_key))
-        assert row[1] == "03/09/2026 10:00 UTC"
+        assert row[1] == "3 sept 2026 10:00 UTC"
         assert row[2] == tr("workspace.declarations.filing_state.vigente")
         assert row[3] == tr("workspace.declarations.confirmation.confirmada")
         assert row[4] == tr("workspace.declarations.evidence.aeat_justificante_pdf")
@@ -800,7 +806,7 @@ async def test_real_locales_change_copy_without_changing_semantic_rows(
                     )
         assert _EXPECTED[locale][3] in filing_copy
         assert _EXPECTED[locale][4] in filing_copy
-        assert "03/09/2026 10:00 UTC" in filing_copy
+        assert _FILED_ON[locale] in filing_copy
         assert filing_keys == (
             f"filing:{screens[-1].controller.projection.filings[0].filing_record_id}",
             "lifecycle:event-filed",

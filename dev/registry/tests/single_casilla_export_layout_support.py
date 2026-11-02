@@ -2,15 +2,20 @@
 
 from __future__ import annotations
 
+from datetime import date
+
 from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
 from cadrumo.domain.calculations.registry.fixed_width_codec import ExportEncoding
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import CasillaDataType
 from cadrumo.domain.calculations.registry.schema_exports import (
     ExportFieldDefinition,
     ExportLayoutDefinition,
     ExportRecordDefinition,
 )
+from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
+from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 LEGAL_REF = "ley-35-2006:art-test"
 SOURCE_REF = "aeat-test-source-001"
@@ -41,3 +46,19 @@ def single_casilla_export_layout(*, field_source_refs: tuple[str, ...] = (SOURCE
         fields=(field,),
     )
     return ExportLayoutDefinition(id="layout", legal_refs=(LEGAL_REF,), source_refs=(SOURCE_REF,), records=(record,))
+
+
+def revision_with(
+    *, casillas: tuple[CasillaDefinition, ...], layouts: tuple[ExportLayoutDefinition, ...]
+) -> ModeloRevision:
+    """A 2026 first-quarter revision citing the shared legal and source references."""
+    return ModeloRevision(
+        id="test-revision",
+        localization_key="test.schema.revision.test-revision.label",
+        valid_from=date(2026, 1, 1),
+        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
+        legal_refs=(LEGAL_REF,),
+        source_refs=(SOURCE_REF,),
+        casillas=casillas,
+        export_layouts=layouts,
+    )

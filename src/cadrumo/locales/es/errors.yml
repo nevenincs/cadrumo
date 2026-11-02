@@ -117,6 +117,7 @@ errors:
       100 sin valor catastral requiere casillas de base sustitutiva que no están presentes.
     m100_art85_revision_flag_invalid: El indicador de valor catastral revisado del
       artículo 85 del Modelo 100 debe ser el valor oficial X de la casilla.
+    m184_days_past_the_year: '{days} días no caben en {filing_year}.'
     m210_gastos_deducibles_negative: Los gastos_deducibles M210 %{casilla_id} no pueden
       ser negativos; valor recibido %{value}.
     m210_gastos_deducibles_not_allowed: Los gastos_deducibles M210 %{casilla_id} solo

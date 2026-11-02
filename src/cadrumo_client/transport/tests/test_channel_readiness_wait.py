@@ -12,7 +12,7 @@ from uuid import uuid4
 
 import pytest
 
-from ...contracts.contracts import ChannelWake, ClientHello, Peer, RefusalCode, RefusalError, ServerHello
+from ...contracts.contracts import ChannelWake, ClientHello, RefusalCode, RefusalError, ServerHello
 from ...contracts.profile_access import SessionRequest
 from ...contracts.session_events import SignInChanged
 from ..frame_io import DOCUMENT_FRAME_KIND, read_frame_payload, write_document, write_session_event
@@ -20,6 +20,7 @@ from ..framing import VerifiedConnection
 from ..native_wake import NativeWake
 from ..windows import WindowsEndpoint
 from ..windows_channel import WindowsChannel
+from .delegating_channel import DelegatingChannel
 
 pytestmark = [
     pytest.mark.integration,
@@ -69,32 +70,16 @@ class _Wait:
             self.done.set()
 
 
-class _Counted:
+class _Counted(DelegatingChannel):
     """The real channel, counting how often its reader starts a readiness wait."""
 
     def __init__(self, channel: WindowsChannel) -> None:
-        self.channel = channel
+        super().__init__(channel)
         self.waits = 0
-
-    @property
-    def peer(self) -> Peer:
-        return self.channel.peer
-
-    def read_exact(self, count: int, *, deadline: float) -> bytes:
-        return self.channel.read_exact(count, deadline=deadline)
-
-    def read_ready(self) -> bool:
-        return self.channel.read_ready()
 
     def wait_readable(self, *wakes: ChannelWake) -> bool:
         self.waits += 1
         return self.channel.wait_readable(*wakes)
-
-    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
-        self.channel.write_all(payload, deadline=deadline)
-
-    def close(self) -> None:
-        self.channel.close()
 
 
 def test_a_wake_ends_an_idle_wait_and_later_input_is_read_whole(pair: tuple[WindowsChannel, WindowsChannel]) -> None:

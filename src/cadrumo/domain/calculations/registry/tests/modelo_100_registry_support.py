@@ -2,9 +2,15 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
+from datetime import date
 from decimal import Decimal
 from types import MappingProxyType
 from typing import Final
+
+from ..binding_value_contract import BindingValueChannel
+from ..ids import BindingId
+from ..schema import BindingDefinition
 
 #: M100's maternity binding for a scenario with no descendants, in every edition
 #: that computes casilla 0611 through that binding. With no
@@ -14,3 +20,29 @@ from typing import Final
 M100_NO_DESCENDANT_MATERNIDAD_BINDINGS: Final = MappingProxyType(
     {"renta-profile-deduccion-maternidad": Decimal(0)},
 )
+
+
+def neutral_binding_values(
+    bindings: Iterable[BindingDefinition],
+) -> tuple[dict[BindingId, Decimal], dict[BindingId, bool], dict[BindingId, date], dict[BindingId, str]]:
+    """Neutral decimal, boolean, date and enum values for the scalar bindings given.
+
+    An individual Madrid filer with no other income, family or carry-forward is
+    the neutral profile; the caller drops bindings that arrive through another
+    channel and sets any binding whose neutral value differs.
+    """
+    decimals: dict[BindingId, Decimal] = {}
+    booleans: dict[BindingId, bool] = {}
+    dates: dict[BindingId, date] = {}
+    enums: dict[BindingId, str] = {}
+    for binding in bindings:
+        channel = binding.value.channel
+        if channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
+            decimals[binding.id] = Decimal("0")
+        elif channel is BindingValueChannel.BOOLEAN:
+            booleans[binding.id] = False
+        elif channel is BindingValueChannel.DATE:
+            dates[binding.id] = date(1975, 6, 15)
+        elif channel is BindingValueChannel.ENUM:
+            enums[binding.id] = "madrid"
+    return decimals, booleans, dates, enums

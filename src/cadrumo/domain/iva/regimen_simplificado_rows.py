@@ -254,7 +254,6 @@ class AutoridadAgricolaOrdenAnualNoResuelta(BaseModel):
     record_design_source_ref: _Token
     record_design_source_content_digest: _Token
     filing_record: Literal["DP30302"] = "DP30302"
-    filing_code_digits: Literal[2] = 2
     refusal_reason: Literal["annual_orden_does_not_publish_dp30302_two_digit_agricultural_crosswalk"] = (
         "annual_orden_does_not_publish_dp30302_two_digit_agricultural_crosswalk"
     )

@@ -7,7 +7,7 @@
     "refusal": {
       "kind": "stale_edit_baseline",
       "edit_contract_version": 1,
-      "baseline_id": "494e3ddbd4709bb5bfce9f3806557e132d95683e3c75f3a659a4c2af79f1afcd",
+      "baseline_id": "2817e21681b2faa168c204b821d94156d70e7612874e6ea323830e2e0f821cfb",
       "mismatching_coordinates": ["baseline_expiry"],
       "responsible_owner": "modelo.edit",
       "reconsideration_condition": "admit a fresh baseline and resubmit",

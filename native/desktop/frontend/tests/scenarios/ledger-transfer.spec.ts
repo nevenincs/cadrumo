@@ -381,6 +381,44 @@ test("documents are added as evidence and a drop on the window adds files", asyn
   ).toHaveAttribute("aria-selected", "true");
 });
 
+test("a step's heading takes focus from the keyboard without a ring, and a control beside it keeps its", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await button(head(target), "desktop.ledger.action.import").focus();
+  await target.keyboard.press("Enter");
+  const heading = importDialog(target).getByRole("heading", {
+    name: label("desktop.ledger.import.heading.what"),
+  });
+  await expect(heading).toBeFocused();
+  await expect(heading).toHaveCSS("outline-style", "none");
+  await target.keyboard.press("Tab");
+  await expect(target.locator(":focus-visible")).toHaveCSS(
+    "outline-style",
+    "solid",
+  );
+});
+
+test("a scrolling import keeps its actions flush with the dialog's foot", async ({
+  page: target,
+}) => {
+  await target.setViewportSize({ width: 1440, height: 640 });
+  await openLedger(target);
+  const dialog = await openImport(target);
+  await button(dialog, "desktop.ledger.import.choose_files").click();
+  await expect(
+    dialog
+      .getByRole("list", { name: label("desktop.ledger.import.chosen") })
+      .getByRole("listitem"),
+  ).toHaveCount(3);
+  expect(
+    await dialog.evaluate((frame) => frame.scrollHeight > frame.clientHeight),
+  ).toBe(true);
+  const frame = await dialog.boundingBox();
+  const foot = await dialog.locator("[data-slot=dialog-footer]").boundingBox();
+  expect(foot!.y + foot!.height).toBeCloseTo(frame!.y + frame!.height, 0);
+});
+
 test("the export file is chosen last and cleared when the format or period changes", async ({
   page: target,
 }) => {

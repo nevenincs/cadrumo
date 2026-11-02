@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
 import type { AgentApprovalOption } from "../../shell/agentSession";
+import { answersStayInView } from "@/dev/catalogue/plays";
 import { ApprovalPrompt } from "./ApprovalPrompt";
 import { APPEARANCE_NOTE, NOOP } from "./Composer.stories";
 
@@ -87,6 +88,7 @@ export const LongNames: Story = {
       { option_id: "reject-once-2", name: "No", kind: "reject_once" },
     ],
   },
+  play: ({ canvasElement }) => answersStayInView(canvasElement),
 };
 
 export const OnlyRememberedOffered: Story = {

@@ -43,7 +43,7 @@ from cadrumo_client.transport.windows import WindowsEndpoint
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin, connect_verified
+from .served_runtime import SyntheticLogin, admit_session, connect_verified
 
 pytestmark = [
     pytest.mark.integration,
@@ -71,19 +71,6 @@ def _login(
     )
     assert secret == bytes(len(proof))
     return reply
-
-
-def _admit(
-    connection: VerifiedConnection,
-    profile_id: UUID,
-    *,
-    method: Literal["password", "api_key"],
-    proof: bytes,
-) -> UUID:
-    reply = _login(connection, profile_id, method=method, proof=proof)
-    assert isinstance(reply, ProfileStatus)
-    assert reply.status.session_id is not None
-    return reply.status.session_id
 
 
 def _seed_two_grants(subject: AdministrationSubject) -> tuple[tuple[UUID, UUID, bytes], tuple[UUID, UUID, bytes]]:
@@ -119,8 +106,8 @@ class _Access:
 
 def _admit_and_inspect_sessions(access: _Access) -> tuple[UUID, UUID]:
     profile_id = access.profile_id
-    human_id = _admit(access.human, profile_id, method="password", proof=PROFILE_INPUT.encode())
-    api_id = _admit(access.api, profile_id, method="api_key", proof=access.selected_secret)
+    human_id = admit_session(access.human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+    api_id = admit_session(access.api, profile_id, method="api_key", proof=access.selected_secret)
     inventory = access.human.session_inventory(
         SessionInventory(request_id=uuid4(), profile_id=profile_id, session_id=human_id),
         deadline=time.monotonic() + 5,
@@ -251,8 +238,8 @@ def _revoke_selected_key(access: _Access, api_id: UUID) -> None:
         connect_verified(access.endpoint),
     )
     try:
-        renewed_human_id = _admit(renewed_human, profile_id, method="password", proof=PROFILE_INPUT.encode())
-        renewed_api_id = _admit(renewed_api, profile_id, method="api_key", proof=access.selected_secret)
+        renewed_human_id = admit_session(renewed_human, profile_id, method="password", proof=PROFILE_INPUT.encode())
+        renewed_api_id = admit_session(renewed_api, profile_id, method="api_key", proof=access.selected_secret)
         assert isinstance(_login(held_api, profile_id, method="api_key", proof=access.held_secret), AccessRefusal)
 
         revoked = renewed_human.deny_automation(

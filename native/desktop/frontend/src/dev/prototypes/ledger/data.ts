@@ -2395,7 +2395,7 @@ export const ASSETS: Asset[] = [
     acquired: "2026-02-03",
     base: 229900,
     method: "Linear, 25% per year",
-    claimed: "2026 1T–3T: 431.06",
+    claimed: { period: "2026 1T–3T", cents: 43106 },
     revisions: 1,
   },
   {
@@ -2404,7 +2404,7 @@ export const ASSETS: Asset[] = [
     acquired: "2026-03-12",
     base: 340000,
     method: "Linear, 10% per year",
-    claimed: "2026 1T–3T: 187.40",
+    claimed: { period: "2026 1T–3T", cents: 18740 },
     revisions: 2,
   },
 ];

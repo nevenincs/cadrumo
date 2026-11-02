@@ -13,8 +13,8 @@ from sqlalchemy import event
 
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.ready_profile_support import seed_ready_profile
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.action_errors import CalculationRevisionNotFoundError
 from cadrumo.application.modelo.selectors import ModeloCalculationRevisionSelector
@@ -54,48 +54,16 @@ from cadrumo.domain.modelos.calculation_revision import (
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.adapter_composition_work_ports import build_work_lifecycle_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
 _T0 = datetime(2026, 6, 5, 9, 0, 0, tzinfo=UTC)
 _ADDRESSING_PROFILE_ID = "13000000-0000-4000-8000-000000000230"
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Modelo Work"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
 
 
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
+    seed_ready_profile(bucket_id=bucket_id, surnames="Modelo Work", at=_T0)
 
 
 _OUTPUT_CASILLA: CasillaId = validated_casilla_id("01")

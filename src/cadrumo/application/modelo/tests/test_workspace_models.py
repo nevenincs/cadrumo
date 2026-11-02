@@ -388,25 +388,32 @@ def test_a_locale_key_still_refuses_a_shape_no_producer_emits() -> None:
             )
 
 
+def _schema_record_base_payload() -> dict[str, object]:
+    """The projected income casilla 0001 record every schema-record case here extends."""
+    return {
+        "reference": {"kind": "casilla", "casilla_id": "0001"},
+        "record_family": ("filing", "income"),
+        "data_type": "decimal",
+        "label": {
+            "kind": "localized",
+            "locale_key": "casilla.0001.label",
+            "value": "Base imponible",
+            "locale": {
+                "requested_language": OutputLanguage.ES,
+                "resolved_language": OutputLanguage.ES,
+                "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
+                "catalogue_digest": _DIGEST,
+            },
+        },
+        "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
+        "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
+    }
+
+
 def test_workspace_schema_record_has_typed_destinations_for_every_explanatory_relationship() -> None:
     record = ModeloWorkspaceSchemaRecordV1.model_validate(
         {
-            "reference": {"kind": "casilla", "casilla_id": "0001"},
-            "record_family": ("filing", "income"),
-            "data_type": "decimal",
-            "label": {
-                "kind": "localized",
-                "locale_key": "casilla.0001.label",
-                "value": "Base imponible",
-                "locale": {
-                    "requested_language": OutputLanguage.ES,
-                    "resolved_language": OutputLanguage.ES,
-                    "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
-                    "catalogue_digest": _DIGEST,
-                },
-            },
-            "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
-            "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
+            **_schema_record_base_payload(),
             "continuity": ({"kind": "continuity", "continuidad_id": "income-base"},),
             "constraints": ({"kind": "constraint", "casilla_id": "0001"},),
             "formula_operands": (
@@ -637,24 +644,7 @@ def test_workspace_cursor_page_state_and_unavailable_cursor_mutations_are_refuse
 
 def test_workspace_schema_record_distinguishes_unmeasured_legal_grounding_from_declared_empty() -> None:
     """None means the producer never carries the grounding; () means it does and declares none."""
-    base_payload = {
-        "reference": {"kind": "casilla", "casilla_id": "0001"},
-        "record_family": ("filing", "income"),
-        "data_type": "decimal",
-        "label": {
-            "kind": "localized",
-            "locale_key": "casilla.0001.label",
-            "value": "Base imponible",
-            "locale": {
-                "requested_language": OutputLanguage.ES,
-                "resolved_language": OutputLanguage.ES,
-                "disposition": ModeloWorkspaceLocaleDisposition.EXACT,
-                "catalogue_digest": _DIGEST,
-            },
-        },
-        "classification": ModeloWorkspaceSchemaClassification.PROJECTED,
-        "family_disposition": RegistrySchemaFamilyDisposition.POPULATED,
-    }
+    base_payload = _schema_record_base_payload()
 
     unmeasured = ModeloWorkspaceSchemaRecordV1.model_validate({**base_payload, "legal_refs": None, "constraints": None})
     declared_empty = ModeloWorkspaceSchemaRecordV1.model_validate({**base_payload, "legal_refs": (), "constraints": ()})

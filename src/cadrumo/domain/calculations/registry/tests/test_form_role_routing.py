@@ -16,6 +16,7 @@ from ..form_codes import (
     form_for_role,
     form_for_role_in_scope,
     form_role_validator,
+    holds_role_in_scope,
     resolve_form_codes,
 )
 from ..governed_fact_scope import governed_facts_in_scope, validating_governed_facts
@@ -42,6 +43,8 @@ def test_a_role_outside_every_scope_has_no_answer_and_a_strict_read_refuses() ->
     assert governed_facts_in_scope() is None
     assert form_for_role_in_scope("iva.periodic") is None
     assert differs_from_role("000", "iva.periodic") is False
+    assert holds_role_in_scope(form_for_role_in_scope("iva.periodic"), "iva.periodic") is False
+    assert holds_role_in_scope("303", "iva.periodic") is False
     with pytest.raises(InternalInvariantError):
         form_for_role("iva.periodic")
 
@@ -52,6 +55,8 @@ def test_inside_a_scope_a_role_tells_its_form_from_another() -> None:
         assert form_for_role_in_scope("iva.periodic") == holder
         assert differs_from_role(holder, "iva.periodic") is False
         assert differs_from_role(form_for_role("renta.annual"), "iva.periodic") is True
+        assert holds_role_in_scope(holder, "iva.periodic") is True
+        assert holds_role_in_scope(form_for_role("renta.annual"), "iva.periodic") is False
 
 
 class _Selector(BaseModel):

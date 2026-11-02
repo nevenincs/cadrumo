@@ -11,6 +11,7 @@ import pytest
 
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
 from .....tests.google_credentials import unused_google_credentials
+from .....tests.terminal_precondition_ast import call_name, fact_expressions
 from .. import _google_drive as drive_module
 from .. import _google_drive_metadata as drive_metadata_module
 from .. import google_drive_requests as drive_requests_module
@@ -319,14 +320,6 @@ _EXTERNAL_ERROR_TYPES = {
 }
 
 
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
-
-
 def _carrier_message(call: ast.Call) -> str:
     assert call.args
     message = call.args[0]
@@ -347,7 +340,7 @@ def _carrier_message(call: ast.Call) -> str:
 
 def _external_precondition(call: ast.Call) -> ast.Call:
     value = next((keyword.value for keyword in call.keywords if keyword.arg == "precondition_verdict"), None)
-    assert isinstance(value, ast.Call) and _call_name(value.func) == "drive_external_verdict"
+    assert isinstance(value, ast.Call) and call_name(value.func) == "drive_external_verdict"
     return value
 
 
@@ -375,16 +368,6 @@ def _fact_keys_from_precondition(call: ast.Call) -> frozenset[str]:
     return frozenset(keys)
 
 
-def _fact_expressions_from_precondition(call: ast.Call) -> tuple[tuple[str, str], ...]:
-    value = next((keyword.value for keyword in call.keywords if keyword.arg == "facts"), None)
-    assert isinstance(value, ast.Dict)
-    expressions: list[tuple[str, str]] = []
-    for key, fact_value in zip(value.keys, value.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        expressions.append((key.value, ast.unparse(fact_value)))
-    return tuple(expressions)
-
-
 def _external_failure_carriers() -> dict[str, ast.Call]:
     carriers: dict[str, ast.Call] = {}
     for module in (drive_module, drive_metadata_module, drive_requests_module):
@@ -409,7 +392,7 @@ def _external_failure_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                error_type = _call_name(node.func)
+                error_type = call_name(node.func)
                 if error_type in _EXTERNAL_ERROR_TYPES:
                     key = f"{self.owner}:{error_type}:{_carrier_message(node)}"
                     assert key not in carriers, f"duplicate Drive failure carrier {key}"
@@ -471,7 +454,7 @@ def test_drive_failure_carrier_totality_uses_the_canonical_no_action_authority()
         assert _condition_from_precondition(precondition) is expected.condition, key
         assert _outcome_from_precondition(precondition) is expected.outcome, key
         assert _fact_keys_from_precondition(precondition) == expected.fact_keys, key
-        assert _fact_expressions_from_precondition(precondition) == _FAILURE_CARRIER_FACT_EXPRESSIONS[key], key
+        assert fact_expressions(precondition) == _FAILURE_CARRIER_FACT_EXPRESSIONS[key], key
 
     source = "\n".join(
         inspect.getsource(module) for module in (drive_module, drive_metadata_module, drive_requests_module)

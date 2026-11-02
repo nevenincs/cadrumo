@@ -432,6 +432,10 @@ test("a stored invoice shows its identity and lines as fixed", async ({
   await expect(
     editor(target).locator(".ledger-invoice-lines tbody tr"),
   ).toHaveCount(2);
+  // A unit price shows the cents its subtotal shows.
+  await expect(
+    editor(target).locator(".ledger-invoice-lines tbody tr td:nth-child(3)"),
+  ).toHaveText([/\.\d{2}/, /\.\d{2}/]);
   // Payment status is among what the ledger lets you correct.
   await expect(field(target, "payment_status")).toBeEditable();
 });

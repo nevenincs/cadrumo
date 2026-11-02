@@ -15,6 +15,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
 
 from ....core.config import override_settings
+from ....core.errors.hierarchy import CadrumoError
 from ....core.operations import OperationEffect, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.renta.maritime_exemption import MaritimeExemptionInactiveError, MaritimeWorkerFacts
@@ -150,13 +151,18 @@ def test_maritime_worker_preserves_canonical_observations_original_facts_and_war
     monkeypatch.setattr("cadrumo.application.modelo.maritime_preview.maritime_facts_from_active_profile", lambda: facts)
 
     def preview(
-        *, annual_salary: Decimal | None, qualifying_days: int | None, gross_navigation_income: Decimal | None
+        *,
+        annual_salary: Decimal | None,
+        qualifying_days: int | None,
+        gross_navigation_income: Decimal | None,
+        filing_year: int | None = None,
     ) -> ModeloMaritimeExemptionPreview:
         return preview_maritime_exemption_for_active_profile(
             annual_salary=annual_salary,
             qualifying_days=qualifying_days,
             gross_navigation_income=gross_navigation_income,
             operation=authority_operation,
+            filing_year=filing_year,
         )
 
     canonical = preview(annual_salary=Decimal("36500"), qualifying_days=100, gross_navigation_income=Decimal("30000"))
@@ -221,7 +227,11 @@ def test_canonical_da41_refusal_is_unchanged_and_never_publishes_result(
     events, operands = RecordingEvents(), RecordingOperands("f" * 64)
 
     def preview(
-        *, annual_salary: Decimal | None, qualifying_days: int | None, gross_navigation_income: Decimal | None
+        *,
+        annual_salary: Decimal | None,
+        qualifying_days: int | None,
+        gross_navigation_income: Decimal | None,
+        filing_year: int | None = None,
     ) -> ModeloMaritimeExemptionPreview:
         resolve_maritime_exemption(
             facts=MaritimeWorkerFacts(worker_class="trabajador_del_mar", tuna_fleet=True, pending_eu_clearance=True),
@@ -245,3 +255,29 @@ def test_canonical_da41_refusal_is_unchanged_and_never_publishes_result(
         )
     assert refused.value.context == {"binding_id": "da41-tuna-fleet-inactive", "legal_ref": "ley-35-2006:da-41"}
     assert events.effects == [OperationEffect.NONE] and not operands.stored
+
+
+@pytest.mark.parametrize(("filing_year", "admitted"), [(2024, True), (2023, False)])
+def test_a_preview_reads_the_days_of_the_year_asked_about(
+    authority_operation: PinnedAuthorityOperation,
+    monkeypatch: pytest.MonkeyPatch,
+    filing_year: int,
+    admitted: bool,
+) -> None:
+    facts = MaritimeWorkerFacts(worker_class="trabajador_del_mar", vessel_flag="foreign")
+    monkeypatch.setattr("cadrumo.application.modelo.maritime_preview.maritime_facts_from_active_profile", lambda: facts)
+
+    def preview() -> ModeloMaritimeExemptionPreview:
+        return preview_maritime_exemption_for_active_profile(
+            annual_salary=Decimal("36600"),
+            qualifying_days=366,
+            gross_navigation_income=Decimal("30000"),
+            operation=authority_operation,
+            filing_year=filing_year,
+        )
+
+    if admitted:
+        assert preview().result is not None
+    else:
+        with pytest.raises(CadrumoError):
+            preview()

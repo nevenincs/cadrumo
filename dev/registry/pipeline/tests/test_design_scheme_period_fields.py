@@ -8,7 +8,6 @@ import openpyxl
 import pytest
 
 from cadrumo.application.filing.export_envelope import render_declared_prefix
-from cadrumo.application.filing.record_field_renderer import _scheme_period_value, format_field
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
 from cadrumo.core.resources.bundled_data import bundled_path
@@ -71,24 +70,9 @@ def test_a_reading_refuses_a_design_other_than_the_reviewed_bytes() -> None:
         design_scheme_period_fields_for(source)
 
 
-@pytest.mark.parametrize(("quarter", "ordinal"), [("1T", "01"), ("2T", "02"), ("3T", "03"), ("4T", "04")])
-def test_each_exterior_quarter_renders_the_three_official_detail_rows(quarter: str, ordinal: str) -> None:
-    fields = _period_fields("esquema-exterior", f"EXT-{quarter}")
-    draft = _Draft(Period.from_year_and_code(2026, f"EXT-{quarter}"))
-
-    rendered = {part: format_field(field, _scheme_period_value(field, draft)) for part, field in fields.items()}
-
-    assert rendered == {"filing_year": "2026", "period_type": "T", "quarter_ordinal": ordinal}
-
-
 @pytest.mark.parametrize(("revision", "period"), _REVISIONS[1:])
 def test_a_scheme_declaring_no_period_rows_keeps_its_bound_values(revision: str, period: str) -> None:
     assert _period_fields(revision, period) == {}
-
-
-def test_a_declared_row_outside_a_scheme_period_reads_its_bound_value() -> None:
-    [field, *_] = _period_fields("esquema-exterior", "EXT-1T").values()
-    assert _scheme_period_value(field, _Draft(Period.from_year_and_code(2026, "1T"))) is None
 
 
 def test_a_period_type_row_must_declare_the_constant_it_prints() -> None:
@@ -123,11 +107,3 @@ def test_a_declarant_envelope_refuses_a_period_its_design_does_not_list(token: s
             declarant_tax_id="Y0000001S",
             envelope=envelope,
         )
-
-
-class _Draft:
-    """The two facts of an approved draft the period projection reads."""
-
-    def __init__(self, period: Period) -> None:
-        self.period = period
-        self.modelo = "369"

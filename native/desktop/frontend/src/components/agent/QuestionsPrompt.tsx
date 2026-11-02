@@ -77,31 +77,37 @@ export function QuestionsPrompt({
   return (
     <section
       aria-labelledby={titleId}
-      className="agent-questions grid max-h-[60dvh] gap-3 overflow-y-auto rounded-xl bg-card p-3.5 text-card-foreground shadow-raised"
+      className="agent-questions flex max-h-[60dvh] flex-col gap-3 rounded-xl bg-card p-3.5 text-card-foreground shadow-raised"
     >
-      <div className="flex items-start gap-2">
-        <Icon name="agent" size="md" className="mt-0.5 text-muted-foreground" />
-        <div className="grid gap-1">
-          <h3 id={titleId} className="font-semibold text-foreground">
-            {t("desktop.agent.questions_title")}
-          </h3>
-          <p className="text-sm text-muted-foreground">
-            {t("desktop.agent.questions_lead")}
-          </p>
+      <div className="-mx-1 grid min-h-0 gap-3 overflow-y-auto px-1">
+        <div className="flex items-start gap-2">
+          <Icon
+            name="agent"
+            size="md"
+            className="mt-0.5 text-muted-foreground"
+          />
+          <div className="grid gap-1">
+            <h3 id={titleId} className="font-semibold text-foreground">
+              {t("desktop.agent.questions_title")}
+            </h3>
+            <p className="text-sm text-muted-foreground">
+              {t("desktop.agent.questions_lead")}
+            </p>
+          </div>
         </div>
+        {questions.map((question) => (
+          <QuestionField
+            key={question.id}
+            question={question}
+            value={written(answers, question.id)}
+            fault={faults.find((fault) => fault.id === question.id)}
+            onChange={(answer) =>
+              setAnswers((kept) => ({ ...kept, [question.id]: answer }))
+            }
+          />
+        ))}
       </div>
-      {questions.map((question) => (
-        <QuestionField
-          key={question.id}
-          question={question}
-          value={written(answers, question.id)}
-          fault={faults.find((fault) => fault.id === question.id)}
-          onChange={(answer) =>
-            setAnswers((kept) => ({ ...kept, [question.id]: answer }))
-          }
-        />
-      ))}
-      <div className="flex flex-wrap justify-end gap-2">
+      <div className="flex shrink-0 flex-wrap justify-end gap-2">
         <AgentTextAction variant="outline" size="sm" onAction={onDecline}>
           {t("desktop.agent.questions_decline")}
         </AgentTextAction>

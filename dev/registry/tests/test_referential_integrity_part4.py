@@ -30,6 +30,7 @@ from cadrumo.domain.calculations.registry.schema_revision_members import (
 
 from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
+    NUMERIC_CASILLA_01,
     PARITY_SOURCE_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
@@ -55,7 +56,6 @@ pytestmark = [
 ]
 
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
-_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _LAYOUT_SOURCE_ID = "aeat-layout-source-test"
 
@@ -206,7 +206,7 @@ def test_dangling_dependency_classification_target_construct() -> None:
 
 def test_dangling_export_field_casilla_ref() -> None:
     """export_field.casilla_id pointing at nonexistent CasillaId raises."""
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01)
+    casilla = minimal_casilla(NUMERIC_CASILLA_01)
     field = ExportFieldDefinition(
         id="el.test.field-01",
         kind=CasillaFieldKind.CASILLA,
@@ -323,12 +323,12 @@ def test_informative_modelo_with_formula_fails_validation() -> None:
     """An informative modelo that declares a formula raises RegistryValidationError."""
     formula = FormulaDefinition(
         id="test.formula",
-        target_casilla_id=_NUMERIC_CASILLA_01,
-        expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
+        target_casilla_id=NUMERIC_CASILLA_01,
+        expression=FormulaExpression(casilla_id=NUMERIC_CASILLA_01),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    computed_casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+    computed_casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     revision = minimal_revision(

@@ -15,6 +15,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record as _cr
 
 from ....core.aggregation import BindingSourceKind
 from ....core.period import Period
+from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ....domain.renta.actividad_asset.claims import AmortizationClaim
@@ -125,30 +126,17 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
     }
 
 
-def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_it() -> None:
-    """A depreciation row the register does not own carries a blocking note and reaches no box."""
-    revision = _revision("100", "2025")
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    acquisition = renta_transaction(
-        "asset-acquisition",
-        purchase_invoice_evidence_id=None,
-        amount=Decimal("2000.00"),
-        category=SpendingCategory.from_registry("hardware_amortizable"),
-    )
-    separate_depreciation = renta_transaction(
-        "separate-depreciation-row",
-        purchase_invoice_evidence_id=None,
-        amount=Decimal("250.00"),
-        category=SpendingCategory.from_registry("mobiliario_amortizable"),
-    )
-    tx_repo.save(TransactionCatalogue.from_transactions((acquisition, separate_depreciation)))
+def _computer_asset_history(
+    *, observed_transaction_id: str, evidence_fingerprint: str, schedule_fingerprint: str
+) -> ActivityAssetHistory:
+    """One computer asset with a 500,00 claim for 2025, tied to the supplied acquisition and fingerprints."""
     asset = ActivityAssetRevision(
         asset_id="computer",
         revision_number=1,
         acquisition=AcquisitionLineageReference(
-            observed_transaction_id=acquisition.transaction_id,
+            observed_transaction_id=observed_transaction_id,
             invoice_evidence_id="invoice-asset",
-            evidence_fingerprint="a" * 64,
+            evidence_fingerprint=evidence_fingerprint,
         ),
         acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
         asset_kind=AssetKind.MATERIAL,
@@ -178,12 +166,36 @@ def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_
         covered_from=date(2025, 1, 1),
         covered_until=date(2026, 1, 1),
         amount=Decimal("500.00"),
-        schedule_fingerprint="b" * 64,
+        schedule_fingerprint=schedule_fingerprint,
         authority_generation="published-test-generation",
         source_reference="modelo-100:2025:parameter:computer",
         creating_operation="record-amortization",
     )
-    history = ActivityAssetHistory(revisions=(asset,), claims=(claim,))
+    return ActivityAssetHistory(revisions=(asset,), claims=(claim,))
+
+
+def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_it() -> None:
+    """A depreciation row the register does not own carries a blocking note and reaches no box."""
+    revision = _revision("100", "2025")
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
+    acquisition = renta_transaction(
+        "asset-acquisition",
+        purchase_invoice_evidence_id=None,
+        amount=Decimal("2000.00"),
+        category=SpendingCategory.from_registry("hardware_amortizable"),
+    )
+    separate_depreciation = renta_transaction(
+        "separate-depreciation-row",
+        purchase_invoice_evidence_id=None,
+        amount=Decimal("250.00"),
+        category=SpendingCategory.from_registry("mobiliario_amortizable"),
+    )
+    tx_repo.save(TransactionCatalogue.from_transactions((acquisition, separate_depreciation)))
+    history = _computer_asset_history(
+        observed_transaction_id=acquisition.transaction_id,
+        evidence_fingerprint="a" * 64,
+        schedule_fingerprint="b" * 64,
+    )
 
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         ports=catalogue_read_ports(
@@ -211,48 +223,9 @@ def test_renta_source_mesh_blocks_a_separate_depreciation_row_and_never_deducts_
 
 def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> None:
     revision = _revision("100", "2025")
-    asset = ActivityAssetRevision(
-        asset_id="computer",
-        revision_number=1,
-        acquisition=AcquisitionLineageReference(
-            observed_transaction_id="c" * 64,
-            invoice_evidence_id="invoice-asset",
-            evidence_fingerprint="d" * 64,
-        ),
-        acquisition_shape=AcquisitionShape.PRIMARY_PURCHASE,
-        asset_kind=AssetKind.MATERIAL,
-        basis=ActivityAssetBasis(
-            stage=AssetBasisStage.BUSINESS_ALLOCATED,
-            basis_amount=Decimal("2000.00"),
-            non_deductible_iva=Decimal("0"),
-            prior_allocation_provenance="ledger-business-allocation",
-        ),
-        in_service_date=date(2025, 1, 1),
-        opening_history=OpeningAmortizationHistory(
-            status=OpeningHistoryStatus.KNOWN,
-            accumulated_amount=Decimal("0"),
-        ),
-        acquired_condition=AcquiredCondition.NEW,
-        amortization=ActivityAssetAmortizationElection(
-            regime=DirectEstimationRegime.NORMAL,
-            method=AmortizationMethod.LINEAR,
-            authority_class_key="equipo-proceso-informacion",
-        ),
+    history = _computer_asset_history(
+        observed_transaction_id="c" * 64, evidence_fingerprint="d" * 64, schedule_fingerprint="e" * 64
     )
-    claim = AmortizationClaim(
-        asset_id=asset.asset_id,
-        asset_revision_id=asset.revision_id,
-        asset_kind=asset.asset_kind,
-        tax_year=2025,
-        covered_from=date(2025, 1, 1),
-        covered_until=date(2026, 1, 1),
-        amount=Decimal("500.00"),
-        schedule_fingerprint="e" * 64,
-        authority_generation="published-test-generation",
-        source_reference="modelo-100:2025:parameter:computer",
-        creating_operation="record-amortization",
-    )
-    history = ActivityAssetHistory(revisions=(asset,), claims=(claim,))
 
     resolution = LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
         ports=_empty_catalogue_read_ports(),
@@ -277,7 +250,7 @@ def test_renta_source_mesh_projects_recorded_asset_claim_without_full_cost() -> 
 
     assert resolution.binding_values[target_binding.id] == Decimal("500.00")
     assert Decimal("2000.00") not in resolution.binding_values.values()
-    assert {item.source_ref for item in resolution.provenance} == {f"activity-asset-claim:{claim.claim_id}"}
+    assert {item.source_ref for item in resolution.provenance} == {f"activity-asset-claim:{history.claims[0].claim_id}"}
 
 
 def test_renta_source_mesh_declares_only_the_claim_for_a_register_owned_acquisition() -> None:
@@ -358,16 +331,14 @@ def test_renta_gasto_keeps_only_in_window_held_back_identity_as_durable_evidence
         assert held_back[0].binding_source is BindingSourceKind.LEDGER_RENTA_GASTOS_PAGO_FRACCIONADO_AGGREGATION
 
 
-def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_acquisition() -> None:
-    """Modelo 130 casilla 02 carries the same 120,00 charge and not the 1.000,00 purchase."""
-    revision = _revision("130", "2019-y-siguientes")
-    acquisition = machine_acquisition_transaction("hardware_amortizable")
-    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
-    tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
-    asset = machine_asset(acquisition.transaction_id)
-    claim = machine_claim(asset)
-
-    resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
+def _resolve_m130_gastos(
+    tx_repo: InMemoryTransactionCatalogueRepository,
+    revision: ModeloRevision,
+    asset: ActivityAssetRevision,
+    claim: AmortizationClaim,
+) -> CalculationSourceResolution:
+    """Resolve the Modelo 130 fourth-quarter gastos source over the ledger and one asset claim."""
+    return LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=tx_repo,
         invoice_reader=empty_invoice_repository(),
         prorrata_register_repository=empty_prorrata_repository(),
@@ -384,6 +355,18 @@ def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_ac
             revision=revision,
         ),
     )
+
+
+def test_renta_gasto_source_mesh_declares_only_the_claim_for_a_register_owned_acquisition() -> None:
+    """Modelo 130 casilla 02 carries the same 120,00 charge and not the 1.000,00 purchase."""
+    revision = _revision("130", "2019-y-siguientes")
+    acquisition = machine_acquisition_transaction("hardware_amortizable")
+    tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
+    tx_repo.save(TransactionCatalogue.from_transactions((acquisition,)))
+    asset = machine_asset(acquisition.transaction_id)
+    claim = machine_claim(asset)
+
+    resolution = _resolve_m130_gastos(tx_repo, revision, asset, claim)
     target_binding = next(
         binding
         for binding in revision.bindings
@@ -416,23 +399,7 @@ def test_renta_gasto_source_mesh_reports_a_separate_depreciation_row_without_ref
     asset = machine_asset(acquisition.transaction_id)
     claim = machine_claim(asset)
 
-    resolution = LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
-        transaction_repository=tx_repo,
-        invoice_reader=empty_invoice_repository(),
-        prorrata_register_repository=empty_prorrata_repository(),
-        usage_ratio_profile_loader=no_stored_usage_ratios,
-        activity_asset_history_repository=StaticActivityAssetHistoryRepository(
-            ActivityAssetHistory(revisions=(asset,), claims=(claim,)),
-        ),
-    ).resolve(
-        CalculationSourceContext(
-            bucket_id=BUCKET_ID,
-            modelo="130",
-            filing_year=2025,
-            period=Period.from_year_and_code(2025, "4T"),
-            revision=revision,
-        ),
-    )
+    resolution = _resolve_m130_gastos(tx_repo, revision, asset, claim)
 
     notes = [item for item in resolution.diagnostics if item.reason == "ledger_amortization_row_unregistered"]
     assert [note.source_ref for note in notes] == [f"transaction:{separate_depreciation.transaction_id}"]

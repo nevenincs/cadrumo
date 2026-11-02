@@ -93,74 +93,75 @@ def test_modelo_100_trabajo_otros_gastos_role_is_decimal_across_revisions() -> N
     assert found_years == expected_years
 
 
+def _assert_base_roles_are_grounded_in_their_own_articles(revision, filing_year: int) -> None:
+    general_formula_id = "renta-saldo-gp-base-general-cap-25"
+    savings_formula_id = "renta-saldo-gp-base-ahorro-cap-25"
+    general_formula = next(formula for formula in revision.formulas if formula.id == general_formula_id)
+    savings_formula = next(formula for formula in revision.formulas if formula.id == savings_formula_id)
+    general_gyp_limit = next(casilla for casilla in revision.casillas if casilla.id == _GENERAL_BASE_GYP_LIMIT_CASILLA)
+    savings_gyp_limit = next(casilla for casilla in revision.casillas if casilla.id == _SAVINGS_BASE_GYP_LIMIT_CASILLA)
+
+    for refs in (general_formula.legal_refs, general_gyp_limit.legal_refs):
+        assert _GENERAL_BASE_ART_48_REF in refs, filing_year
+        assert _SAVINGS_BASE_ART_49_REF not in refs, filing_year
+    for refs in (savings_formula.legal_refs, savings_gyp_limit.legal_refs):
+        assert _SAVINGS_BASE_ART_49_REF in refs, filing_year
+        assert _GENERAL_BASE_ART_48_REF not in refs, filing_year
+
+    general_casillas = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in _GENERAL_BASE_ART_48_ONLY_CASILLAS
+    }
+    assert set(general_casillas) == _GENERAL_BASE_ART_48_ONLY_CASILLAS, filing_year
+    for casilla in general_casillas.values():
+        assert _GENERAL_BASE_ART_48_REF in casilla.legal_refs, (filing_year, casilla.id)
+        assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, (filing_year, casilla.id)
+        assert _ATTRIBUTION_REGIME_ART_86_REF not in casilla.legal_refs, (filing_year, casilla.id)
+
+    base_general = general_casillas[_GENERAL_BASE_IMPONIBLE_CASILLA]
+    assert base_general.semantic_role == _GENERAL_BASE_IMPONIBLE_ROLE, filing_year
+    assert base_general.label == "Base imponible general", filing_year
+
+    savings_casillas = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.semantic_role in _SAVINGS_BASE_ART_49_ONLY_ROLES
+    }
+    assert set(savings_casillas) == _SAVINGS_BASE_ART_49_ONLY_CASILLAS, filing_year
+    for casilla in savings_casillas.values():
+        assert _SAVINGS_BASE_ART_49_REF in casilla.legal_refs, (filing_year, casilla.id)
+        assert _GENERAL_BASE_ART_48_REF not in casilla.legal_refs, (filing_year, casilla.id)
+
+
+def _assert_attribution_regime_is_grounded_in_art_86(revision, filing_year: int) -> None:
+    attribution_base = next(
+        casilla for casilla in revision.casillas if casilla.id == _ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA
+    )
+    assert _ATTRIBUTION_REGIME_ART_86_REF in attribution_base.legal_refs, filing_year
+    assert attribution_base.semantic_role == _ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE, filing_year
+    assert attribution_base.label == "Base imponible imputada", filing_year
+    assert _GENERAL_BASE_ART_48_REF not in attribution_base.legal_refs, filing_year
+    assert _SAVINGS_BASE_ART_49_REF not in attribution_base.legal_refs, filing_year
+    assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in attribution_base.legal_refs, filing_year
+
+    attribution_detail_casillas = {
+        casilla.id: casilla for casilla in revision.casillas if casilla.id in _ATTRIBUTION_DETAIL_ART_86_CASILLAS
+    }
+    assert set(attribution_detail_casillas) == _ATTRIBUTION_DETAIL_ART_86_CASILLAS, filing_year
+    for casilla in attribution_detail_casillas.values():
+        assert _ATTRIBUTION_REGIME_ART_86_REF in casilla.legal_refs, (filing_year, casilla.id)
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
+
+    checked_sections = [
+        casilla for casilla in revision.casillas if _ATTRIBUTION_DETAIL_SECTIONS & frozenset(casilla.section)
+    ]
+    assert checked_sections, filing_year
+    for casilla in checked_sections:
+        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
+
+
 def test_modelo_100_base_and_attribution_roles_are_legally_grounded_across_revisions() -> None:
     for filing_year in range(2020, 2026):
         revision = _modelo_100_revision(filing_year)
-        general_formula_id = "renta-saldo-gp-base-general-cap-25"
-        savings_formula_id = "renta-saldo-gp-base-ahorro-cap-25"
-        general_formula = next(formula for formula in revision.formulas if formula.id == general_formula_id)
-        savings_formula = next(formula for formula in revision.formulas if formula.id == savings_formula_id)
-        general_gyp_limit = next(
-            casilla for casilla in revision.casillas if casilla.id == _GENERAL_BASE_GYP_LIMIT_CASILLA
-        )
-        savings_gyp_limit = next(
-            casilla for casilla in revision.casillas if casilla.id == _SAVINGS_BASE_GYP_LIMIT_CASILLA
-        )
-
-        for refs in (general_formula.legal_refs, general_gyp_limit.legal_refs):
-            assert _GENERAL_BASE_ART_48_REF in refs, filing_year
-            assert _SAVINGS_BASE_ART_49_REF not in refs, filing_year
-        for refs in (savings_formula.legal_refs, savings_gyp_limit.legal_refs):
-            assert _SAVINGS_BASE_ART_49_REF in refs, filing_year
-            assert _GENERAL_BASE_ART_48_REF not in refs, filing_year
-
-        general_casillas = {
-            casilla.id: casilla for casilla in revision.casillas if casilla.id in _GENERAL_BASE_ART_48_ONLY_CASILLAS
-        }
-        assert set(general_casillas) == _GENERAL_BASE_ART_48_ONLY_CASILLAS, filing_year
-        for casilla in general_casillas.values():
-            assert _GENERAL_BASE_ART_48_REF in casilla.legal_refs, (filing_year, casilla.id)
-            assert _SAVINGS_BASE_ART_49_REF not in casilla.legal_refs, (filing_year, casilla.id)
-            assert _ATTRIBUTION_REGIME_ART_86_REF not in casilla.legal_refs, (filing_year, casilla.id)
-
-        base_general = general_casillas[_GENERAL_BASE_IMPONIBLE_CASILLA]
-        assert base_general.semantic_role == _GENERAL_BASE_IMPONIBLE_ROLE, filing_year
-        assert base_general.label == "Base imponible general", filing_year
-
-        savings_casillas = {
-            casilla.id: casilla
-            for casilla in revision.casillas
-            if casilla.semantic_role in _SAVINGS_BASE_ART_49_ONLY_ROLES
-        }
-        assert set(savings_casillas) == _SAVINGS_BASE_ART_49_ONLY_CASILLAS, filing_year
-        for casilla in savings_casillas.values():
-            assert _SAVINGS_BASE_ART_49_REF in casilla.legal_refs, (filing_year, casilla.id)
-            assert _GENERAL_BASE_ART_48_REF not in casilla.legal_refs, (filing_year, casilla.id)
-
-        attribution_base = next(
-            casilla for casilla in revision.casillas if casilla.id == _ATTRIBUTION_REGIME_BASE_IMPUTADA_CASILLA
-        )
-        assert _ATTRIBUTION_REGIME_ART_86_REF in attribution_base.legal_refs, filing_year
-        assert attribution_base.semantic_role == _ATTRIBUTION_REGIME_BASE_IMPUTADA_ROLE, filing_year
-        assert attribution_base.label == "Base imponible imputada", filing_year
-        assert _GENERAL_BASE_ART_48_REF not in attribution_base.legal_refs, filing_year
-        assert _SAVINGS_BASE_ART_49_REF not in attribution_base.legal_refs, filing_year
-        assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in attribution_base.legal_refs, filing_year
-
-        attribution_detail_casillas = {
-            casilla.id: casilla for casilla in revision.casillas if casilla.id in _ATTRIBUTION_DETAIL_ART_86_CASILLAS
-        }
-        assert set(attribution_detail_casillas) == _ATTRIBUTION_DETAIL_ART_86_CASILLAS, filing_year
-        for casilla in attribution_detail_casillas.values():
-            assert _ATTRIBUTION_REGIME_ART_86_REF in casilla.legal_refs, (filing_year, casilla.id)
-            assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
-
-        checked_sections = [
-            casilla for casilla in revision.casillas if _ATTRIBUTION_DETAIL_SECTIONS & frozenset(casilla.section)
-        ]
-        assert checked_sections, filing_year
-        for casilla in checked_sections:
-            assert _FRACTIONAL_PAYMENT_ARTICLE_REF not in casilla.legal_refs, (filing_year, casilla.id)
+        _assert_base_roles_are_grounded_in_their_own_articles(revision, filing_year)
+        _assert_attribution_regime_is_grounded_in_art_86(revision, filing_year)
 
 
 def test_modelo_100_annual_order_refs_are_declared_and_cited() -> None:

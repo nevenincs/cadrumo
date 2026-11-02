@@ -39,40 +39,24 @@ def test_actual_2026_filing_window_selects_its_own_source_branch(period: str, on
     }
 
 
-def test_late_hydrated_delta_rekeys_only_four_source_changed_binding_slots() -> None:
-    early = _modelo().revisions["2026"]
-    late = _modelo().revisions["2026-3t-4t"]
-    early_by_offset = {
+def _bindings_by_offset(revision) -> dict:
+    return {
         (binding.provider.record, binding.provider.offset): binding
-        for binding in early.bindings
+        for binding in revision.bindings
         if hasattr(binding.provider, "record") and hasattr(binding.provider, "offset")
     }
-    late_by_offset = {
-        (binding.provider.record, binding.provider.offset): binding
-        for binding in late.bindings
-        if hasattr(binding.provider, "record") and hasattr(binding.provider, "offset")
-    }
-    assert early_by_offset.keys() == late_by_offset.keys()
-    changed = {
-        coordinate
-        for coordinate, binding in late_by_offset.items()
-        if binding.model_dump(mode="json", exclude={"inherited_from"})
-        != early_by_offset[coordinate].model_dump(mode="json", exclude={"inherited_from"})
-    }
-    assert changed == {("page_1", 359), ("page_1", 448), ("page_1", 458), ("DPA", 29)}
-    for coordinate in changed:
-        binding = late_by_offset[coordinate]
-        assert str(binding.id).endswith("-ceuta-melilla-la-palma")
-        assert binding.provider.field.endswith("-ceuta-melilla-la-palma")
-        assert "real-decreto-ley-23-2026:art-1" in binding.legal_refs
-        assert "aeat-dr-131-2026-late" in binding.source_refs
-        assert "aeat-modelo-131-instructions-2026-late" in binding.source_refs
+
+
+def _assert_late_declarations_other_than_bindings_are_inherited(early, late) -> None:
     assert [item.model_dump(exclude={"inherited_from", "continuidad_origin"}) for item in early.casillas] == [
         item.model_dump(exclude={"inherited_from", "continuidad_origin"}) for item in late.casillas
     ]
     assert [item.model_dump(exclude={"inherited_from"}) for item in early.formulas] == [
         item.model_dump(exclude={"inherited_from"}) for item in late.formulas
     ]
+
+
+def _assert_late_layout_and_rate_follow_the_late_design(early, late) -> None:
     assert str(late.export_layouts[0].source_refs[0]) == "aeat-dr-131-2026-late"
     assert str(late.workbook_parity_refs[0].workbook_source) == "aeat-dr-131-2026-late"
     assert str(late.completeness_manifest.source_ref) == "aeat-dr-131-2026-late"
@@ -91,6 +75,30 @@ def test_late_hydrated_delta_rekeys_only_four_source_changed_binding_slots() -> 
     assert design_sources - {"aeat-dr-131-2026-late"} == {"boe-2015-1656-modelos-130-131-form"}
     assert "aeat-dr-131-2026-late" in late.constructs[0].source_refs
     assert "aeat-modelo-131-instructions-2026-late" in late.constructs[0].source_refs
+
+
+def test_late_hydrated_delta_rekeys_only_four_source_changed_binding_slots() -> None:
+    early = _modelo().revisions["2026"]
+    late = _modelo().revisions["2026-3t-4t"]
+    early_by_offset = _bindings_by_offset(early)
+    late_by_offset = _bindings_by_offset(late)
+    assert early_by_offset.keys() == late_by_offset.keys()
+    changed = {
+        coordinate
+        for coordinate, binding in late_by_offset.items()
+        if binding.model_dump(mode="json", exclude={"inherited_from"})
+        != early_by_offset[coordinate].model_dump(mode="json", exclude={"inherited_from"})
+    }
+    assert changed == {("page_1", 359), ("page_1", 448), ("page_1", 458), ("DPA", 29)}
+    for coordinate in changed:
+        binding = late_by_offset[coordinate]
+        assert str(binding.id).endswith("-ceuta-melilla-la-palma")
+        assert binding.provider.field.endswith("-ceuta-melilla-la-palma")
+        assert "real-decreto-ley-23-2026:art-1" in binding.legal_refs
+        assert "aeat-dr-131-2026-late" in binding.source_refs
+        assert "aeat-modelo-131-instructions-2026-late" in binding.source_refs
+    _assert_late_declarations_other_than_bindings_are_inherited(early, late)
+    _assert_late_layout_and_rate_follow_the_late_design(early, late)
 
 
 def test_late_evidence_is_new_and_early_captures_remain_pinned() -> None:

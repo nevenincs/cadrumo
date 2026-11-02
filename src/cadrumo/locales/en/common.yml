@@ -1538,8 +1538,8 @@ desktop:
       handoff_free_named: 'Not counted in Modelo 130, because their method leaves
         the depreciation charge to you: {names}.'
       handoff_gap_accrued: 'Modelo 100: {name} has no depreciation charge recorded
-        from {start} to {end}. The {amount} EUR it accrued in that time is not in
-        the amounts above.'
+        from {start} to {end}. The {amount} it accrued in that time is not in the
+        amounts above.'
       handoff_gap_box_unbound: 'Modelo 100: this edition has no box for the depreciation
         of {name}, so nothing is declared for it from {start} to {end}.'
       handoff_gap_free: 'Modelo 100: {name} has no depreciation charge recorded from
@@ -2521,7 +2521,7 @@ desktop:
       rebuilt: Rebuilt. {links} links updated.
       reset: Danger zone · reset the ledger
       reset_blocked: Reset is blocked
-      reset_blocker: Modelo {modelo} · {year} {period} · {state} cites movements
+      reset_blocker: Modelo {modelo} · {period} {year} · {state} cites movements
       reset_confirm: 'Reset and remove · movements: {movements}'
       reset_reason: Reason
       reset_reason_hint: Kept in the audit trail · up to {limit} characters
@@ -2531,7 +2531,7 @@ desktop:
       run_check: Run the check
       stale: Declarations to recalculate
       stale_none: 'None: every calculation covers the movements as they are.'
-      stale_row: 'Modelo {modelo} · {year} {period} · since it was calculated, changed:
+      stale_row: 'Modelo {modelo} · {period} {year} · since it was calculated, changed:
         {changed}, removed: {removed}'
       status: Status · {period}
       unconverted: Foreign without a rate
@@ -2760,6 +2760,7 @@ desktop:
         none: No documents
         pick_failed: The file dialog did not open.
         purchase_invoice: Purchase invoice · added {date}
+        search: Search documents
       drop: Drop it
       earlier: Earlier decisions
       effective_date: Effective date
@@ -2978,8 +2979,7 @@ desktop:
         category_needed: Choose a category for part {part}.
         choose_category: Choose a category
         count: A split has 2 to {max} parts.
-        description: The parts add up to {amount} {currency}. The last part takes
-          what is left.
+        description: The parts add up to {amount}. The last part takes what is left.
         description_needed: Part {part} needs a description.
         duplicate: 'Part {part} is the same as another: change its amount or description.'
         mixed_hint: Partly used for work? Use Mixed with a share instead.
@@ -3005,7 +3005,7 @@ desktop:
         draft: Draft
         filed_confirmed: Filed · receipt confirmed
         filed_local: Filed locally · AEAT status not confirmed
-        name: Modelo {modelo} · {year} {period}
+        name: Modelo {modelo} · {period} {year}
         none: No declaration uses this movement yet.
         not_built: Declaration links not built yet
         superseded: Superseded
@@ -3326,6 +3326,7 @@ desktop:
         transaction_only: The movement cites the invoice; the invoice does not list
           it
       empty: Nothing to match
+      empty_waiting: 'No suggestions · movements waiting for an invoice: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
       link: Link · permanent
       link_named: Link {number} to {description} · permanent
@@ -4182,7 +4183,7 @@ desktop:
       unknown: We couldn't confirm the sync finished. Refresh to check. Another sync
         can't start until this one is settled.
       unknown_start: We could not confirm whether the sync started. Do not start another
-        sync; contact support with code unknown.
+        sync; contact support.
       unsupported: This sign-in needs an interaction available in the terminal. Cancel
         this attempt and use Censo sync in the terminal.
     close: Close profile
@@ -4896,8 +4897,6 @@ ledger:
         not a payment.
       allocation_components_missing: The whole-property basis lacks its allocation
         components.
-      amortization_box_not_bound: This edition of the return binds no box for the
-        amortisation of this kind of asset, so a filing handoff cannot be prepared.
       amortization_period_elapsed: The element's maximum amortisation period ended
         on {ended_on}, so it counts as fully amortised.
       approved_plan_exceeds_basis: The approved plan distributes more than the amortisable
@@ -6013,7 +6012,7 @@ tui:
       pull_filed_all: Pull all filed declarations
       review_census: Review census
     address:
-      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+      declaration: Modelo %{modelo} · %{period} %{filing_year}
     aeat_observation_state:
       accepted: Accepted
       not_observed: Not observed
@@ -6290,7 +6289,7 @@ tui:
       context_across_records: Across records
       reason: Suggested by the local overview
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{filing_year} · %{period}
+    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'AEAT data: %{state}'
     availability:
       available: Available
@@ -7001,7 +7000,7 @@ tui:
         source_jurisdiction_required_irnr: As a non-resident taxpayer, give the source
           jurisdiction of this entry.
         title: Add entry
-      blocker: Modelo {modelo} {year} {period} ({state}) cites this entry.
+      blocker: Modelo {modelo} {period} {year} ({state}) cites this entry.
       browse:
         account: Own account (acc-01)
         action:
@@ -7138,11 +7137,11 @@ tui:
         read: Read status and checks
         ready: 'Ready: no findings in {checked} checked entries.'
         review_counts: 'Review: pending {pending}, reviewed {reviewed}, skipped {skipped}'
-        stale_filing: 'Modelo {modelo} {year} {period} was filed on entries that changed
+        stale_filing: 'Modelo {modelo} {period} {year} was filed on entries that changed
           since: {changed} changed, {removed} removed'
-        stale_filing_register: 'Modelo {modelo} {year} {period} was filed on an asset
+        stale_filing_register: 'Modelo {modelo} {period} {year} was filed on an asset
           register that changed since: {changes} changes'
-        stale_filing_register_unavailable: Modelo {modelo} {year} {period} could not
+        stale_filing_register_unavailable: Modelo {modelo} {period} {year} could not
           be compared with the asset register
         status_heading: Status for {period}
         title: Ledger status and checks
@@ -7222,7 +7221,7 @@ tui:
         lifecycle_change: '{when}: {previous} → {state} (reason: {reason})'
         manual: Entered by hand
         no_participation: No finalized declaration uses this entry.
-        participation: Used by Modelo {modelo} {year} {period} ({state})
+        participation: Used by Modelo {modelo} {period} {year} ({state})
         read: Read again
         siblings: Include the other parts of a split
         state: 'State: {state}'
@@ -7359,7 +7358,7 @@ tui:
           attached: Attached. The entry now has {count} attachments.
           attachment: Attachment {attachment}
           detached: Detached. The entry now has {count} attachments.
-          revision: Modelo {modelo} {year} {period} ({state})
+          revision: Modelo {modelo} {period} {year} ({state})
           stale: '{count} finalized Modelo revisions were calculated before this change
             and do not include it:'
           unchanged: 'Nothing changed: the entry already held exactly these attachments.'
@@ -8179,8 +8178,8 @@ tui:
           finding: 'Notice [%{code}]: %{message}'
           prior: Carried from exercise %{ejercicio}.
           sector: Sector %{sector} · letter %{letra} · activities %{activities}
-          seed_source: Carried from the local Modelo %{modelo} observation for %{year}
-            %{period}.
+          seed_source: Carried from the local Modelo %{modelo} observation for %{period}
+            %{year}.
         sectors: Differentiated sectors
         title: Prorrata register
         tool: Prorrata register
@@ -8641,7 +8640,7 @@ tui:
       unavailable: Search is unavailable in this session
       unknown: Search could not be prepared.
     result:
-      address: Modelo %{modelo} · %{filing_year} · %{period}
+      address: Modelo %{modelo} · %{period} %{filing_year}
       label:
         declaration: Declaration
         filing: Filing

@@ -28,94 +28,62 @@ from ..registry_schema_support import committed_modelo as _committed_modelo
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
-def test_construct_evidence_audit_enumerates_every_declared_construct_and_selector() -> None:
-    """The evidence ledger has one exact row for each real revision declaration."""
-    authority = compiled_bundled_authority()
-    modelos = authority.modelos
-    audit = audit_registry_construct_evidence(authority)
-
-    ledgers_by_coordinate = {(ledger.modelo, ledger.revision): ledger for ledger in audit.ledgers}
-    # A revision lying wholly below the supported floor carries no coordinate a
-    # filing could reach, so it holds no construct evidence to audit. The
-    # envelope is read here rather than the audit's own output: expecting every
-    # declared revision demanded ledgers for modelo 341's 2005-2015 and its
-    # kind, and expecting whatever the audit returned would assert nothing.
-    horizon = coverage_assessment_horizon(authority.catalogues)
-    floor = coverage_assessment_floor(authority.catalogues)
-    expected_ledger_coordinates = {
-        (modelo.id, revision.id)
-        for modelo in modelos
-        for revision in modelo.revisions.values()
-        if revision_selection_coordinates(revision, assessment_horizon=horizon, assessment_floor=floor)
+def _assert_revision_ledger_rows(
+    modelo, revision, ledgers_by_coordinate, expected_inspection_gap_coordinates, actual_inspection_gap_coordinates
+) -> None:
+    ledger = ledgers_by_coordinate[(modelo.id, revision.id)]
+    by_coordinate = {(row.kind, row.construct_id): row for row in ledger.rows}
+    expected_coordinates = {
+        (kind, declaration.id)
+        for kind, declarations in (
+            ("formula", revision.formulas),
+            ("parameter", revision.parameters),
+            ("binding", revision.bindings),
+        )
+        for declaration in declarations
     }
-    assert set(ledgers_by_coordinate) == expected_ledger_coordinates
-    assert len(audit.ledgers) == len(expected_ledger_coordinates)
-    assert audit.ok
-    assert audit.filing_gaps == ()
-    assert audit.inspection_gaps
+    expected_coordinates.update(("selector", binding.id) for binding in revision.bindings)
+    assert set(by_coordinate) == expected_coordinates
+    assert Counter(row.kind for row in ledger.rows) == Counter(coordinate[0] for coordinate in expected_coordinates)
 
-    expected_inspection_gap_coordinates = set()
-    actual_inspection_gap_coordinates = set()
+    inspection_gap_coordinates = {(row.kind, row.construct_id) for row in ledger.gaps}
+    if ledger.filing_eligible:
+        assert not inspection_gap_coordinates
+    else:
+        assert inspection_gap_coordinates == expected_coordinates
+        expected_inspection_gap_coordinates.update(
+            (ledger.modelo, ledger.revision, *coordinate) for coordinate in expected_coordinates
+        )
+        actual_inspection_gap_coordinates.update(
+            (ledger.modelo, ledger.revision, *coordinate) for coordinate in inspection_gap_coordinates
+        )
 
-    for modelo in modelos:
-        for revision in modelo.revisions.values():
-            if (modelo.id, revision.id) not in expected_ledger_coordinates:
-                continue
-            ledger = ledgers_by_coordinate[(modelo.id, revision.id)]
-            by_coordinate = {(row.kind, row.construct_id): row for row in ledger.rows}
-            expected_coordinates = {
-                (kind, declaration.id)
-                for kind, declarations in (
-                    ("formula", revision.formulas),
-                    ("parameter", revision.parameters),
-                    ("binding", revision.bindings),
-                )
-                for declaration in declarations
-            }
-            expected_coordinates.update(("selector", binding.id) for binding in revision.bindings)
-            assert set(by_coordinate) == expected_coordinates
-            assert Counter(row.kind for row in ledger.rows) == Counter(
-                coordinate[0] for coordinate in expected_coordinates
-            )
+    for kind, declarations in (
+        ("formula", revision.formulas),
+        ("parameter", revision.parameters),
+        ("binding", revision.bindings),
+    ):
+        for declaration in declarations:
+            row = by_coordinate[(kind, declaration.id)]
+            expected_status = "grounded" if ledger.filing_eligible else "unvalidated"
+            assert row.status == expected_status
+            assert row.authority_checked is ledger.filing_eligible
+            assert row.legal_refs == declaration.legal_refs
+            assert row.source_refs == declaration.source_refs
 
-            inspection_gap_coordinates = {(row.kind, row.construct_id) for row in ledger.gaps}
-            if ledger.filing_eligible:
-                assert not inspection_gap_coordinates
-            else:
-                assert inspection_gap_coordinates == expected_coordinates
-                expected_inspection_gap_coordinates.update(
-                    (ledger.modelo, ledger.revision, *coordinate) for coordinate in expected_coordinates
-                )
-                actual_inspection_gap_coordinates.update(
-                    (ledger.modelo, ledger.revision, *coordinate) for coordinate in inspection_gap_coordinates
-                )
+    for binding in revision.bindings:
+        row = by_coordinate[("selector", binding.id)]
+        assert row.binding_id == binding.id
+        expected_status = "inherited" if ledger.filing_eligible else "unvalidated"
+        assert row.status == expected_status
+        assert row.authority_checked is ledger.filing_eligible
+        assert row.legal_refs == binding.legal_refs
+        assert row.source_refs == binding.source_refs
+        expected_reason = "inherited" if ledger.filing_eligible else "no validated registry authority"
+        assert expected_reason in row.reason
 
-            for kind, declarations in (
-                ("formula", revision.formulas),
-                ("parameter", revision.parameters),
-                ("binding", revision.bindings),
-            ):
-                for declaration in declarations:
-                    row = by_coordinate[(kind, declaration.id)]
-                    expected_status = "grounded" if ledger.filing_eligible else "unvalidated"
-                    assert row.status == expected_status
-                    assert row.authority_checked is ledger.filing_eligible
-                    assert row.legal_refs == declaration.legal_refs
-                    assert row.source_refs == declaration.source_refs
 
-            for binding in revision.bindings:
-                row = by_coordinate[("selector", binding.id)]
-                assert row.binding_id == binding.id
-                expected_status = "inherited" if ledger.filing_eligible else "unvalidated"
-                assert row.status == expected_status
-                assert row.authority_checked is ledger.filing_eligible
-                assert row.legal_refs == binding.legal_refs
-                assert row.source_refs == binding.source_refs
-                expected_reason = "inherited" if ledger.filing_eligible else "no validated registry authority"
-                assert expected_reason in row.reason
-
-    assert actual_inspection_gap_coordinates == expected_inspection_gap_coordinates
-
+def _assert_modelo_038_selects_its_three_inspection_only_revisions(modelos, ledgers_by_coordinate) -> None:
     m038 = {modelo.id: modelo for modelo in modelos}["038"]
     m038_revisions = tuple(sorted(m038.revisions.values(), key=lambda revision: revision.id))
     assert {
@@ -161,6 +129,52 @@ def test_construct_evidence_audit_enumerates_every_declared_construct_and_select
         assert m038_ledger.authority_scope == "inspection_only"
         assert m038_ledger.rows == ()
         assert m038_ledger.gaps == ()
+
+
+def test_construct_evidence_audit_enumerates_every_declared_construct_and_selector() -> None:
+    """The evidence ledger has one exact row for each real revision declaration."""
+    authority = compiled_bundled_authority()
+    modelos = authority.modelos
+    audit = audit_registry_construct_evidence(authority)
+
+    ledgers_by_coordinate = {(ledger.modelo, ledger.revision): ledger for ledger in audit.ledgers}
+    # A revision lying wholly below the supported floor carries no coordinate a
+    # filing could reach, so it holds no construct evidence to audit. The
+    # envelope is read here rather than the audit's own output: expecting every
+    # declared revision demanded ledgers for modelo 341's 2005-2015 and its
+    # kind, and expecting whatever the audit returned would assert nothing.
+    horizon = coverage_assessment_horizon(authority.catalogues)
+    floor = coverage_assessment_floor(authority.catalogues)
+    expected_ledger_coordinates = {
+        (modelo.id, revision.id)
+        for modelo in modelos
+        for revision in modelo.revisions.values()
+        if revision_selection_coordinates(revision, assessment_horizon=horizon, assessment_floor=floor)
+    }
+    assert set(ledgers_by_coordinate) == expected_ledger_coordinates
+    assert len(audit.ledgers) == len(expected_ledger_coordinates)
+    assert audit.ok
+    assert audit.filing_gaps == ()
+    assert audit.inspection_gaps
+
+    expected_inspection_gap_coordinates = set()
+    actual_inspection_gap_coordinates = set()
+
+    for modelo in modelos:
+        for revision in modelo.revisions.values():
+            if (modelo.id, revision.id) not in expected_ledger_coordinates:
+                continue
+            _assert_revision_ledger_rows(
+                modelo,
+                revision,
+                ledgers_by_coordinate,
+                expected_inspection_gap_coordinates,
+                actual_inspection_gap_coordinates,
+            )
+
+    assert actual_inspection_gap_coordinates == expected_inspection_gap_coordinates
+
+    _assert_modelo_038_selects_its_three_inspection_only_revisions(modelos, ledgers_by_coordinate)
 
 
 def test_construct_evidence_rows_keep_incomplete_refs_explicit() -> None:

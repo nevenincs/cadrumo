@@ -89,10 +89,6 @@ DATE_VALUE_ISSUE_CODE: Final[str] = "invalid_date_value"
 """Issue code for a date field carrying something that is not a calendar day."""
 
 EMAIL_VALUE_ISSUE_CODE: Final[str] = "invalid_email_value"
-TEXT_LENGTH_ISSUE_CODE: Final[str] = "text_too_long"
-_IDENTITY_NAME_PATH: Final[str] = "identity.name"
-_IDENTITY_SURNAMES_PATH: Final[str] = "identity.surnames"
-_IDENTITY_LEGAL_NAME_PATH: Final[str] = "identity.legal_name"
 """Issue code for an email field carrying something that is not an address.
 
 Not a completeness code, for the same reason as its siblings: an entry that
@@ -100,6 +96,13 @@ is not an address is a bad answer rather than a missing one. The declaration
 was previously the only content-format type in the schema that nothing
 checked, so ``banana`` stored and stayed.
 """
+
+TEXT_LENGTH_ISSUE_CODE: Final[str] = "text_too_long"
+"""Issue code for a text past what the record carrying its field holds."""
+
+_IDENTITY_NAME_PATH: Final[str] = "identity.name"
+_IDENTITY_SURNAMES_PATH: Final[str] = "identity.surnames"
+_IDENTITY_LEGAL_NAME_PATH: Final[str] = "identity.legal_name"
 
 DERIVED_FIELD_ISSUE_CODE: Final[str] = "derived_field_not_editable"
 """Issue code for a write aimed at a path the engine computes.
@@ -615,6 +618,7 @@ def reject_invalid_profile_facts(
     *,
     require_complete: bool,
     schema: ProfileSchemaDefinition,
+    changed_paths: frozenset[str] | None = None,
 ) -> None:
     """Refuse a fact set on blocking schema issues, or return silently.
 
@@ -644,7 +648,7 @@ def reject_invalid_profile_facts(
     """
     service = ProfileValidationService(schema=schema)
     report = service.validate_facts(profile_id, facts)
-    blocking = _blocking_profile_issues(report, require_complete=require_complete)
+    blocking = _editable_issues(_blocking_profile_issues(report, require_complete=require_complete), changed_paths)
     if not blocking:
         return
     detail = _blocking_profile_detail(blocking)
@@ -695,6 +699,22 @@ def refuse_overlong_profile_text(record: UserProfileRecord, *, schema: ProfileSc
     """
     report = ProfileValidationService(schema=schema).validate_record(record)
     _refuse_first_text_length_issue(report.issues, schema=schema)
+
+
+def _editable_issues(
+    issues: tuple[ProfileValidationIssue, ...],
+    changed_paths: frozenset[str] | None,
+) -> tuple[ProfileValidationIssue, ...]:
+    """Drop a stored text's length from what refuses a write that does not touch it.
+
+    Such a value stays valid to hold: its own refusal comes when a filing needs it, naming the field, so editing
+    a phone number is not refused for a name no one changed.
+    """
+    if changed_paths is None:
+        return issues
+    name_parts = {_IDENTITY_NAME_PATH, _IDENTITY_SURNAMES_PATH}
+    touched = changed_paths | name_parts if changed_paths & name_parts else changed_paths
+    return tuple(issue for issue in issues if issue.code != TEXT_LENGTH_ISSUE_CODE or issue.path in touched)
 
 
 def _blocking_profile_issues(

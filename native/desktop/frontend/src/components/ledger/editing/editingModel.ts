@@ -1082,3 +1082,19 @@ export const DRAFT_REQUIRED: readonly DraftField[] = [
 ];
 export const draftMissing = (draft: Draft): DraftField[] =>
   DRAFT_REQUIRED.filter((field) => !draft.fields[field]);
+
+/** The room, in rem, a column needs while a new movement is drafted: the
+ * status holds the New mark and its remove button, and each required cell
+ * says it is still needed. Both are measured in the longest language. */
+const DRAFT_STATUS_REM = 6.5;
+const DRAFT_REQUIRED_REM = 5.5;
+
+/** A column's width while movements are drafted, at least the room a draft
+ * needs where it draws something wide in it. */
+export function draftedWidth(column: ColumnId, rem: number): number {
+  if (column === "status") return Math.max(rem, DRAFT_STATUS_REM);
+  const field = draftField(column);
+  return field !== null && DRAFT_REQUIRED.includes(field)
+    ? Math.max(rem, DRAFT_REQUIRED_REM)
+    : rem;
+}

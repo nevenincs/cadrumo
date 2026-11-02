@@ -307,7 +307,12 @@ if(NOT DEFINED CADRUMO_PACKAGE_USER_DOCS OR CADRUMO_PACKAGE_USER_DOCS)
   set(desktop_user_docs user_docs)
   set(desktop_test_user_docs 1)
 endif()
-set(CADRUMO_DESKTOP_HOST_TEST_FILTER "" CACHE STRING "Optional Rust test-name filter for desktop host tests")
+# A test filter narrows one run, never a target: tauri.mjs reads it from that build's own
+# environment and says so, so a value left in a shared cache cannot shrink a gate.
+if(DEFINED CACHE{CADRUMO_DESKTOP_HOST_TEST_FILTER})
+  message(WARNING "The cached CADRUMO_DESKTOP_HOST_TEST_FILTER is ignored and every desktop host test runs. "
+    "Set it in the environment of the one build it should narrow.")
+endif()
 foreach(action IN ITEMS test clippy unit-test unit-clippy)
   set(host_driver_action "${action}")
   set(host_dependencies desktop-frontend-build ${desktop_user_docs})
@@ -327,12 +332,8 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
     list(APPEND host_fixture_check COMMAND "${CADRUMO_DEV_PYTHON}" -B
       "${CMAKE_CURRENT_SOURCE_DIR}/src-tauri/src/shell/modelo/relay_contracts.py" --check)
   endif()
-  set(host_test_arguments)
   if(action STREQUAL "test" OR action STREQUAL "unit-test")
     set(host_summary "run the desktop host Rust tests")
-    if(NOT CADRUMO_DESKTOP_HOST_TEST_FILTER STREQUAL "")
-      list(APPEND host_test_arguments "${CADRUMO_DESKTOP_HOST_TEST_FILTER}")
-    endif()
   else()
     set(host_summary "lint the desktop host with clippy")
   endif()
@@ -346,7 +347,7 @@ foreach(action IN ITEMS test clippy unit-test unit-clippy)
       "CADRUMO_DESKTOP_PACKAGE_ROOT=${CADRUMO_DESKTOP_PACKAGE_ROOT}"
       "CADRUMO_PACKAGE_USER_DOCS=${desktop_test_user_docs}"
       "${CADRUMO_STORAGE_ROOT_VARIABLE}=${CADRUMO_PATH_DESKTOP_TESTING}/storage"
-      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action} ${host_test_arguments}
+      "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/tauri.mjs" ${host_driver_action}
     DEPENDS ${host_dependencies}
     WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}" COMMENT "${step_comment}" VERBATIM)
   add_dependencies(desktop-host-${action} ${desktop_host_contracts})

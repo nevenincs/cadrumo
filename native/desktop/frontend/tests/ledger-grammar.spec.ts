@@ -28,6 +28,7 @@ import {
   type LedgerPeriod,
   type Parsed,
 } from "../src/shell/ledgerGrammar";
+import { label } from "./support/strings";
 
 // The ledger's input grammar at its boundaries. No page is opened.
 
@@ -311,4 +312,18 @@ test("a period's span, the period a day falls in, and its list clauses", () => {
     "period=3T",
     "year=2026",
   ]);
+});
+
+test("a refusal's example amount is written with the language's own decimal mark", () => {
+  // English writes 1.5; Spanish, Catalan and Hungarian write 1,5.
+  for (const locale of ["es", "ca", "hu"])
+    for (const key of [
+      "desktop.ledger.edit.refusal.ambiguous_grouping",
+      "desktop.ledger.invoices.refusal.ambiguous_grouping",
+      "desktop.ledger.documents.record_refused",
+    ]) {
+      const text = label(key, { raw: "x" }, locale);
+      expect(text, `${locale} ${key}`).not.toMatch(/\d\.\d/);
+      expect(text, `${locale} ${key}`).toMatch(/\d,\d/);
+    }
 });

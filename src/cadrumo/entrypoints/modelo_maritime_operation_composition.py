@@ -29,7 +29,11 @@ def build_modelo_maritime_preview_ports(
     require_profile()
 
     def preview(
-        *, annual_salary: Decimal | None, qualifying_days: int | None, gross_navigation_income: Decimal | None
+        *,
+        annual_salary: Decimal | None,
+        qualifying_days: int | None,
+        gross_navigation_income: Decimal | None,
+        filing_year: int | None = None,
     ) -> ModeloMaritimeExemptionPreview:
         require_profile()
         result = preview_maritime_exemption_for_active_profile(
@@ -37,6 +41,7 @@ def build_modelo_maritime_preview_ports(
             qualifying_days=qualifying_days,
             gross_navigation_income=gross_navigation_income,
             operation=operation,
+            filing_year=filing_year,
         )
         require_profile()
         return result

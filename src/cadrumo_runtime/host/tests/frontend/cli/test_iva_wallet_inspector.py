@@ -14,7 +14,10 @@ from cadrumo.application.calculations.iva_wallet_balance import query_iva_wallet
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.cli.tests.native_profile_cli_support import invoke_native_cli, reauthenticate_native_profile
 from cadrumo.tests.cli_envelope import require_schema_envelope
-from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import native_cli_profile_scope
+from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture import (
+    NativeCliProfileFixture,
+    native_cli_profile_scope,
+)
 
 from ._iva_wallet_inspector_support import _NIF, _state
 
@@ -116,17 +119,24 @@ def test_empty_history_returns_zero_balance(
     assert report.unallocated_applied_amount == Decimal("0")
 
 
+def _register_profile_with_expiring_and_active_lots(
+    profile: NativeCliProfileFixture, label: str, authority_operation: PinnedAuthorityOperation
+) -> None:
+    """Register a profile whose wallet holds a 2022 lot of 100.00 and a 2025 lot of 200.00."""
+    profile.register(label=label, facts={"identity.tax_id": _NIF})
+    reauthenticate_native_profile(profile, authority_operation=authority_operation)
+    repo = IvaCompensationHistoryRepository()
+    repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
+    repo.save_period(_state(filing_year=2025, period="2T", generated=Decimal("200.00")))
+
+
 def test_cli_balance_verb_emits_expected_keys(
     tmp_path: Path,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
     """The CLI JSON surface emits gross, active, and expired balances."""
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="wallet-balance-json", facts={"identity.tax_id": _NIF})
-        reauthenticate_native_profile(profile, authority_operation=authority_operation)
-        repo = IvaCompensationHistoryRepository()
-        repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
-        repo.save_period(_state(filing_year=2025, period="2T", generated=Decimal("200.00")))
+        _register_profile_with_expiring_and_active_lots(profile, "wallet-balance-json", authority_operation)
 
         result = invoke_native_cli(
             profile,
@@ -154,11 +164,7 @@ def test_cli_balance_verb_text_output_lines(
 ) -> None:
     """Text-mode output includes tab-separated active and expired metric lines."""
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="wallet-balance-text", facts={"identity.tax_id": _NIF})
-        reauthenticate_native_profile(profile, authority_operation=authority_operation)
-        repo = IvaCompensationHistoryRepository()
-        repo.save_period(_state(filing_year=2022, period="4T", generated=Decimal("100.00")))
-        repo.save_period(_state(filing_year=2025, period="2T", generated=Decimal("200.00")))
+        _register_profile_with_expiring_and_active_lots(profile, "wallet-balance-text", authority_operation)
 
         result = invoke_native_cli(
             profile,

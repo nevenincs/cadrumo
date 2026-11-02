@@ -592,10 +592,11 @@ def _refusing_overlong_profile_text(
         yield
     except ValidationError as exc:
         for error in exc.errors(include_input=False, include_url=False):
-            if error["type"] == "string_too_long":
+            context = error.get("ctx")
+            if error["type"] == "string_too_long" and context is not None:
                 raise profile_text_too_long_error(
                     profile_facts[str(error["loc"][0])],
-                    limit=error["ctx"]["max_length"],
+                    limit=context["max_length"],
                     schema=schema,
                 ) from exc
         raise

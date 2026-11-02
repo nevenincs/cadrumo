@@ -15,10 +15,10 @@ from ..pipeline import joined_record_design
 from ..pipeline.joined_record_design import JoinedRecordDesignField, join_record_design_semantics
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
-    RecordDesignWorkbookFormat,
 )
 from ..pipeline.semantic_map import SemanticMap
 from ..pipeline.semantic_map_validation import SemanticMapAnomalyException
+from .semantic_map_intermediate_support import intermediate_payload
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -35,45 +35,11 @@ def _m130_inspection() -> RegistryRevisionInspection:
 #: asserts. Modelo 130 is a real revision authority declaring none.
 def _intermediate(snapshot) -> RecordDesignIntermediate:
     return RecordDesignIntermediate.model_validate(
-        {
-            "source": {
-                "source_ref": "aeat-dr-130-2019-v12",
-                "source_sha256": snapshot.sources["aeat-dr-130-2019-v12"].sha256,
-                "workbook_format": RecordDesignWorkbookFormat.XLSX,
-                "design_epoch": "2019",
-            },
-            "sheets": (
-                {
-                    "sheet": "Registro tipo 1",
-                    "record_identity": "registro-tipo-1",
-                    "declared_total": 2,
-                    "fields": (
-                        {
-                            "sheet": "Registro tipo 1",
-                            "record_identity": "registro-tipo-1",
-                            "source_row": 14,
-                            "source_cell": "A14",
-                            "ordinal": "1",
-                            "offset": 1,
-                            "length": 1,
-                            "aeat_type": "AN",
-                            "normalized_description": "Campo uno",
-                        },
-                        {
-                            "sheet": "Registro tipo 1",
-                            "record_identity": "registro-tipo-1",
-                            "source_row": 15,
-                            "source_cell": "A15",
-                            "ordinal": "2",
-                            "offset": 2,
-                            "length": 1,
-                            "aeat_type": "AN",
-                            "normalized_description": "Campo dos",
-                        },
-                    ),
-                },
-            ),
-        },
+        intermediate_payload(
+            source_ref="aeat-dr-130-2019-v12",
+            source_sha256=snapshot.sources["aeat-dr-130-2019-v12"].sha256,
+            design_epoch="2019",
+        )
     )
 
 

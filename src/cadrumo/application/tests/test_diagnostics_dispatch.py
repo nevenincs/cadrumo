@@ -309,14 +309,8 @@ def test_auth_check_no_provider_returns_warn_with_auth_setup_action() -> None:
     assert provider_binding.source_key == "provider"
 
 
-def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
-    report = _wizard_status(auth_provider="certificate", login_ready=False)
-
-    result = _auth_check(report)
-
-    assert result.name == "auth.readiness"
-    assert result.status == "warn"
-    assert "certificate" in result.summary
+def _assert_login_verdict_binds_provider(result: DiagnosticCheck, provider: str) -> None:
+    """The check offers the immediate login action with exactly the provider bound from its own context."""
     verdict = result.precondition_verdict
     assert verdict is not None
     action = verdict.action
@@ -328,9 +322,20 @@ def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
     assert set(bindings) == {"provider"}
     binding = bindings["provider"]
     assert binding.status is ActionArgumentStatus.RESOLVED
-    assert binding.value == "certificate"
+    assert binding.value == provider
     assert binding.source is ActionArgumentSource.VERDICT_CONTEXT
     assert binding.source_key == "provider"
+
+
+def test_auth_check_provider_configured_but_no_session_returns_warn() -> None:
+    report = _wizard_status(auth_provider="certificate", login_ready=False)
+
+    result = _auth_check(report)
+
+    assert result.name == "auth.readiness"
+    assert result.status == "warn"
+    assert "certificate" in result.summary
+    _assert_login_verdict_binds_provider(result, "certificate")
 
 
 def test_auth_check_uses_configured_provider_for_session_probe() -> None:
@@ -341,20 +346,7 @@ def test_auth_check_uses_configured_provider_for_session_probe() -> None:
     assert result.name == "auth.readiness"
     assert result.status == "warn"
     assert "clave_movil" in result.summary
-    verdict = result.precondition_verdict
-    assert verdict is not None
-    action = verdict.action
-    assert action is not None
-    assert action.action_id == "operator.auth.login"
-    assert verdict.conditionality is ActionConditionality.IMMEDIATE
-    assert verdict.missing_argument_names == ()
-    bindings = {binding.argument_name: binding for binding in verdict.argument_bindings}
-    assert set(bindings) == {"provider"}
-    binding = bindings["provider"]
-    assert binding.status is ActionArgumentStatus.RESOLVED
-    assert binding.value == "clave_movil"
-    assert binding.source is ActionArgumentSource.VERDICT_CONTEXT
-    assert binding.source_key == "provider"
+    _assert_login_verdict_binds_provider(result, "clave_movil")
 
 
 def test_auth_check_happy_path_returns_ok_with_provider_session_summary() -> None:

@@ -23,12 +23,12 @@ from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_creation import build_catalogue_invoice
 from ...operations.owner import OperationExecutorContext
 from ..persistence_ports import LedgerPersistenceConflictError
+from .action_port_fakes import EmptyInvoiceRepository, InMemoryEventRepository
 from .bulk_classify_operation_support import PROFILE_ID, CommitFence, EffectEvents, PrivateOperands
+from .in_memory_transaction_repository import InMemoryTransactionRepository
 from .test_classification_rule_plan import (
+    _BUCKET,
     _ClassificationScenario,
-    _EmptyInvoiceRepository,
-    _InMemoryEventRepository,
-    _InMemoryTransactionRepository,
     _transaction,
 )
 
@@ -45,7 +45,7 @@ class Rates:
         raise AssertionError("EUR fixture must not dispatch a rate lookup")
 
 
-class Invoices(_EmptyInvoiceRepository):
+class Invoices(EmptyInvoiceRepository):
     """Prepare a guarded invoice write without changing the stored catalogue."""
 
     @override
@@ -63,7 +63,7 @@ class Invoices(_EmptyInvoiceRepository):
         )
 
 
-class Events(_InMemoryEventRepository):
+class Events(InMemoryEventRepository):
     """Preparation records no audit event before the actual atomic writer."""
 
     @override
@@ -81,11 +81,11 @@ class Events(_InMemoryEventRepository):
         )
 
 
-class Repository(_InMemoryTransactionRepository):
+class Repository(InMemoryTransactionRepository):
     """Reject legacy writes and simulate one guarded all-object commit boundary."""
 
     def __init__(self, catalogue: TransactionCatalogue, fence: CommitFence, invoices: Invoices, events: Events) -> None:
-        super().__init__(catalogue)
+        super().__init__(bucket_id=_BUCKET, catalogue=catalogue, permit_secure_object_writes=True)
         self.fence, self.invoices, self.events = fence, invoices, events
         self.revision = "a" * 64
         self.mode = "normal"
@@ -147,7 +147,7 @@ class Subject:
             rate_provider=Rates(),
             operation=operation,
         )
-        self.invoices, self.events = Invoices(), Events()
+        self.invoices, self.events = Invoices(bucket_id=_BUCKET), Events()
         self.invoices._catalogue = InvoiceCatalogue(invoices={self.invoice.invoice_id: self.invoice})
         self.repository = Repository(catalogue, self.fence, self.invoices, self.events)
         self.ports = replace(

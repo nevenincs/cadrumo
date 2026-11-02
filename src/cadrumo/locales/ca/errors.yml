@@ -119,6 +119,7 @@ errors:
       sense valor cadastral requereix caselles de base substitutiva que no hi són.
     m100_art85_revision_flag_invalid: L'indicador de valor cadastral revisat de l'article
       85 del Model 100 ha de ser el valor oficial X de la casella.
+    m184_days_past_the_year: '{days} dies no caben a {filing_year}.'
     m210_gastos_deducibles_negative: Les gastos_deducibles M210 %{casilla_id} no poden
       ser negatives; valor rebut %{value}.
     m210_gastos_deducibles_not_allowed: Les gastos_deducibles M210 %{casilla_id} només

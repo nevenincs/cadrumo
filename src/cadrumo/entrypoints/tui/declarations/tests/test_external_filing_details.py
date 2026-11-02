@@ -30,20 +30,33 @@ from .portfolio_fixtures import portfolio_projection
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
 
-@pytest.mark.asyncio
-@pytest.mark.parametrize("locale", tuple(OutputLanguage))
-@pytest.mark.parametrize("theme", ("cadrumo-dark", "cadrumo-light"))
-@pytest.mark.parametrize("size", ((80, 24), (120, 40)))
-async def test_external_details_never_borrows_the_local_amount_and_returns_to_the_same_row(
-    locale: OutputLanguage, theme: str, size: tuple[int, int]
-) -> None:
-    workspace, calendar = portfolio_projection()
-    private_amount = ModeloFormResult(
-        casilla_id=validated_casilla_id("71"),
-        box="71",
-        value=Decimal("7900"),
-        direction=ModeloFormResultDirection.TO_PAY,
-    )
+def _assert_external_details_modal(app, external, size):
+    modal = app.screen
+    assert isinstance(modal, ExternalFilingDetailsScreen)
+    assert app.focused is modal.query_one("#external-filing-close", Button)
+    text = "\n".join(str(widget.render()) for widget in modal.query(Static))
+    for key in ("confirmed", "no_refile", "unavailable"):
+        assert tr("workspace.declarations.list.aeat_unlinked.help." + key) in text
+    assert "7900" not in text and "7,900" not in text and "7.900" not in text and "7 900" not in text
+    assert "2025" in text and "15" in text
+    assert external.calendar is not None and external.calendar.aeat_reference_id is not None
+    assert external.calendar.aeat_reference_id not in text
+    detail = modal.query_one("#external-filing-technical", Static)
+    assert not detail.display
+    assert "tui." not in text
+    assert geometry_band(app, size[0]) == []
+    return detail
+
+
+def _assert_local_row_keeps_its_own_amount(local, external, table, private_amount):
+    assert local.key != external.key
+    assert local.declaration is not None and local.declaration.summary is not None
+    assert local.declaration.summary.result == private_amount
+    local_text = "\n".join(str(cell) for cell in table.get_row(local.key))
+    assert tr("workspace.declarations.list.state.local_draft") in local_text
+
+
+def _workspace_with_private_303_amount(workspace, private_amount):
     declarations = tuple(
         declaration.model_copy(
             update={
@@ -58,6 +71,24 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
         for declaration in workspace.declarations
     )
     workspace = workspace.model_copy(update={"declarations": declarations})
+    return workspace
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("locale", tuple(OutputLanguage))
+@pytest.mark.parametrize("theme", ("cadrumo-dark", "cadrumo-light"))
+@pytest.mark.parametrize("size", ((80, 24), (120, 40)))
+async def test_external_details_never_borrows_the_local_amount_and_returns_to_the_same_row(
+    locale: OutputLanguage, theme: str, size: tuple[int, int]
+) -> None:
+    workspace, calendar = portfolio_projection()
+    private_amount = ModeloFormResult(
+        casilla_id=validated_casilla_id("71"),
+        box="71",
+        value=Decimal("7900"),
+        direction=ModeloFormResultDirection.TO_PAY,
+    )
+    workspace = _workspace_with_private_303_amount(workspace, private_amount)
     calls: list[DeclarationsWorkspaceDeclarationRefV1] = []
     with override_settings(cadrumo_output_language=locale.value):
         controller = DeclarationsWorkspaceController(
@@ -78,29 +109,12 @@ async def test_external_details_never_borrows_the_local_amount_and_returns_to_th
             table = screen.query_one("#declarations-list", DataTable)
             external = next(row for row in screen.rows if row.state == "aeat_unlinked")
             local = next(row for row in screen.rows if row.declaration is not None and row.modelo == "303")
-            assert local.key != external.key
-            assert local.declaration is not None and local.declaration.summary is not None
-            assert local.declaration.summary.result == private_amount
-            local_text = "\n".join(str(cell) for cell in table.get_row(local.key))
-            assert tr("workspace.declarations.list.state.local_draft") in local_text
+            _assert_local_row_keeps_its_own_amount(local, external, table, private_amount)
             table.move_cursor(row=next(i for i, row in enumerate(table.ordered_rows) if row.key.value == external.key))
             table.focus()
             await pilot.press("enter")
             await settle(pilot)
-            modal = app.screen
-            assert isinstance(modal, ExternalFilingDetailsScreen)
-            assert app.focused is modal.query_one("#external-filing-close", Button)
-            text = "\n".join(str(widget.render()) for widget in modal.query(Static))
-            for key in ("confirmed", "no_refile", "unavailable"):
-                assert tr("workspace.declarations.list.aeat_unlinked.help." + key) in text
-            assert "7900" not in text and "7,900" not in text and "7.900" not in text and "7 900" not in text
-            assert "2025" in text and "15" in text
-            assert external.calendar is not None and external.calendar.aeat_reference_id is not None
-            assert external.calendar.aeat_reference_id not in text
-            detail = modal.query_one("#external-filing-technical", Static)
-            assert not detail.display
-            assert "tui." not in text
-            assert geometry_band(app, size[0]) == []
+            detail = _assert_external_details_modal(app, external, size)
             await pilot.press("t")
             await settle(pilot)
             assert detail.display

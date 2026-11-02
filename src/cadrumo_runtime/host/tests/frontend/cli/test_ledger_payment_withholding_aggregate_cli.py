@@ -45,6 +45,7 @@ from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIM
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.entrypoints.adapter_composition_ports import build_retencion_observation_ports
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from .native_api_cli_support import NativeApiCliSession, native_api_cli_session, operation_lifecycle_scope
 from .test_runtime_invoice_add import password_profile_session
@@ -124,16 +125,7 @@ def _payroll_payload(transaction_id: str, *, idempotency_key: str = "payroll-cap
         clave=RetencionClave.from_registry("A"),
         percibido_dinerario=_GROSS,
         retencion_practicada=_IRPF,
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=_GROSS,
         porcentaje_retencion=Decimal("15"),
         gastos_deducibles=_EMPLOYEE_SOCIAL_SECURITY,

@@ -84,8 +84,11 @@ export type StagedEdit = {
    * the filer staged it, or as a renewal's read restaged it. */
   field: PublicModeloFormField;
   intent: StagedIntent;
-  /** What the filer typed, shown as typed until the edit is applied. */
+  /** What the filer typed, which the editor opens on again. */
   entry: string | null;
+  /** The value the application read the entry as, as its box shows a value;
+   * null where it said nothing or nothing was typed. */
+  read: string | null;
   /** What the application did to read the entry. */
   normalisations: ModeloEditNormalisation[];
   /** The box changed under the edit when the baseline was renewed; the
@@ -482,6 +485,7 @@ export function useFormSession({
       field: PublicModeloFormField,
       intent: StagedIntent,
       entry: string | null = null,
+      read: string | null = null,
       normalisations: ModeloEditNormalisation[] = [],
     ) => {
       const key = editKey(field);
@@ -493,6 +497,7 @@ export function useFormSession({
           field: now.get(key)?.field ?? field,
           intent,
           entry,
+          read,
           normalisations,
           beforeChanged: now.get(key)?.beforeChanged ?? false,
         });
@@ -618,6 +623,7 @@ export function useFormSession({
           field,
           valueIntent(field, entry.value, entry.comparable_value),
           lexeme,
+          entry.value_text,
           entry.normalisations,
         );
         return { kind: "staged" } as const;

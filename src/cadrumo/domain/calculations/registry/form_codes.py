@@ -178,6 +178,17 @@ def differs_from_role(value: object, role: str) -> bool:
     return form is not None and str(value) != form
 
 
+def holds_role_in_scope(value: object, role: str) -> bool:
+    """Return whether the scope's registry names ``value`` as the form for ``role``.
+
+    Outside every scope there is nothing to decide, so the answer is ``False``;
+    a validator that enforces a form's shape uses this, so a scope-free client
+    does not apply the shape to every form.
+    """
+    form = form_for_role_in_scope(role)
+    return form is not None and str(value) == form
+
+
 def form_role_validator(role: str) -> Callable[[str], str]:
     """Return a Pydantic validator that refuses any form but the one holding ``role`` in the scope."""
 
@@ -278,6 +289,7 @@ __all__ = [
     "form_codes_in_scope",
     "form_for_role_in_scope",
     "form_role_validator",
+    "holds_role_in_scope",
     "require_form_fit",
     "require_form_width",
     "resolve_form_codes",

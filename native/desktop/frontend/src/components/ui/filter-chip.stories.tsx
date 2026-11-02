@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
+import { useStrings } from "../../shell/strings";
 import { Button } from "./button";
 import { FilterChip } from "./filter-chip";
 
@@ -8,24 +9,31 @@ const meta = { title: "Primitives/Filter chip" } satisfies Meta;
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-const FILTERS = ["Category is Rent", "Amount over 100.00", "Unclassified"];
+// The chips the movements list shows, by their own words.
+const FILTER_KEYS = [
+  "desktop.ledger.filters.foreign_chip",
+  "desktop.ledger.filters.to_match_chip",
+  "desktop.ledger.classification.processed_unclassified",
+];
 
 function Chips() {
-  const [shown, setShown] = useState(FILTERS);
+  const t = useStrings();
+  const all = FILTER_KEYS.map((key) => t(key));
+  const [shown, setShown] = useState(all);
   return (
     <>
       {shown.map((filter) => (
         <FilterChip
           key={filter}
-          removeLabel={`Remove filter: ${filter}`}
+          removeLabel={t("desktop.ledger.filters.remove", { filter })}
           onRemove={() => setShown((now) => now.filter((f) => f !== filter))}
         >
           {filter}
         </FilterChip>
       ))}
-      {shown.length < FILTERS.length && (
-        <Button variant="link" onClick={() => setShown(FILTERS)}>
-          Reset
+      {shown.length < all.length && (
+        <Button variant="link" onClick={() => setShown(all)}>
+          {t("desktop.ledger.filters.reset")}
         </Button>
       )}
     </>

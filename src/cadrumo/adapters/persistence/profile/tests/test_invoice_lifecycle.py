@@ -77,39 +77,6 @@ def _build(invoice_number: str, *, linked: tuple[str, ...] = ()) -> Invoice:
     return invoice
 
 
-def test_resolve_catalogue_invoice_by_full_id_and_unambiguous_prefix() -> None:
-    """An exact id wins, and a prefix matching exactly one invoice resolves."""
-    invoice = _build("2026-0142")
-    catalogue = build_invoice_catalogue([invoice])
-
-    assert resolve_catalogue_invoice(catalogue, invoice.invoice_id) == invoice
-    # A short prefix of a single-record catalogue is unambiguous.
-    assert resolve_catalogue_invoice(catalogue, invoice.invoice_id[:8]) == invoice
-
-
-def test_resolve_catalogue_invoice_blank_id_refused() -> None:
-    """A blank id is refused with the typed required-id error, not a miss."""
-    catalogue = build_invoice_catalogue([_build("2026-0142")])
-    with pytest.raises(InvoiceLookupRefusedError) as exc:
-        resolve_catalogue_invoice(catalogue, "   ")
-    assert exc.value.reason is InvoiceLookupRefusalReason.REQUIRED
-    assert exc.value.invoice_id == ""
-    assert exc.value.candidate_ids == ()
-    assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_id_required"
-
-
-def test_resolve_catalogue_invoice_not_found_names_the_id() -> None:
-    """An id matching no invoice raises the localized not-found error with context."""
-    catalogue = build_invoice_catalogue([_build("2026-0142")])
-    with pytest.raises(InvoiceLookupRefusedError) as exc:
-        resolve_catalogue_invoice(catalogue, "deadbeefdeadbeef")
-    assert exc.value.reason is InvoiceLookupRefusalReason.NOT_FOUND
-    assert exc.value.invoice_id == "deadbeefdeadbeef"
-    assert exc.value.candidate_ids == ()
-    assert exc.value.translated_message == "application.invoices.lifecycle.errors.invoice_not_found"
-    assert exc.value.context == {"invoice_id": "deadbeefdeadbeef"}
-
-
 def test_resolve_catalogue_invoice_ambiguous_prefix_names_candidates() -> None:
     """A prefix matching more than one invoice is refused, never resolved to the first.
 

@@ -139,14 +139,7 @@ def test_modelo_131_calendar_exercise_deadline_census_dates_sources_and_ownershi
         assert set(window.source_refs) == {"aeat-modelo-131-instructions", calendar_ref}
 
 
-def test_modelo_131_guidance_and_layout_sources_are_separated(
-    modelo_131_registry: tuple[ModeloDefinition, RegistryCatalogues],
-) -> None:
-    modelo, catalogues = modelo_131_registry
-    procedure = catalogues.sources[_M131_PROCEDURE_SOURCE]
-    instructions = catalogues.sources[_M131_INSTRUCTIONS_SOURCE]
-    layout = catalogues.sources[_M131_LAYOUT_SOURCE]
-
+def _assert_m131_source_roles(modelo, procedure, instructions, layout) -> None:
     assert _M131_PROCEDURE_SOURCE in modelo.source_refs
     assert _M131_INSTRUCTIONS_SOURCE in modelo.source_refs
     assert _M131_LAYOUT_SOURCE in modelo.source_refs
@@ -162,33 +155,53 @@ def test_modelo_131_guidance_and_layout_sources_are_separated(
     assert layout.authority == "boe"
     assert layout.kind == "form_spec"
 
+
+def _assert_m131_revision_cites_only_the_sources_it_is_governed_by(
+    revision, catalogues, procedure, instructions
+) -> None:
+    assert _M131_LAYOUT_SOURCE in revision.source_refs
+    instruction_refs = {ref for ref in revision.source_refs if str(ref).startswith(_M131_INSTRUCTIONS_SOURCE)}
+    if _source_window_covers(instructions, revision):
+        assert instruction_refs
+        assert all(catalogues.sources[ref].kind == "instructions" for ref in instruction_refs)
+    else:
+        assert _M131_INSTRUCTIONS_SOURCE not in revision.source_refs
+    # The sede procedure ficha is required only of the revisions it actually
+    # governs. The bundled page states "Ejercicio 2026" and nothing earlier,
+    # so its applies_from is 2026-01-01, and a 2024 or 2025 revision citing
+    # it would claim grounding from a page that documents a later campaign --
+    # which `_check_revision_scoped_source_windows` refuses at snapshot build.
+    # Requiring it unconditionally made this test demand the refusal.
+    if _source_window_covers(procedure, revision):
+        assert _M131_PROCEDURE_SOURCE in revision.source_refs
+    else:
+        assert _M131_PROCEDURE_SOURCE not in revision.source_refs
+
+
+def _assert_m131_citations_are_guidance(revision, catalogues) -> None:
+    for parameter in revision.parameters:
+        for citation in parameter.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    for formula in revision.formulas:
+        for citation in formula.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+    for binding in revision.bindings:
+        for citation in binding.source_citations:
+            assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+
+
+def test_modelo_131_guidance_and_layout_sources_are_separated(
+    modelo_131_registry: tuple[ModeloDefinition, RegistryCatalogues],
+) -> None:
+    modelo, catalogues = modelo_131_registry
+    procedure = catalogues.sources[_M131_PROCEDURE_SOURCE]
+    instructions = catalogues.sources[_M131_INSTRUCTIONS_SOURCE]
+    layout = catalogues.sources[_M131_LAYOUT_SOURCE]
+
+    _assert_m131_source_roles(modelo, procedure, instructions, layout)
     for revision in modelo.revisions.values():
-        assert _M131_LAYOUT_SOURCE in revision.source_refs
-        instruction_refs = {ref for ref in revision.source_refs if str(ref).startswith(_M131_INSTRUCTIONS_SOURCE)}
-        if _source_window_covers(instructions, revision):
-            assert instruction_refs
-            assert all(catalogues.sources[ref].kind == "instructions" for ref in instruction_refs)
-        else:
-            assert _M131_INSTRUCTIONS_SOURCE not in revision.source_refs
-        # The sede procedure ficha is required only of the revisions it actually
-        # governs. The bundled page states "Ejercicio 2026" and nothing earlier,
-        # so its applies_from is 2026-01-01, and a 2024 or 2025 revision citing
-        # it would claim grounding from a page that documents a later campaign --
-        # which `_check_revision_scoped_source_windows` refuses at snapshot build.
-        # Requiring it unconditionally made this test demand the refusal.
-        if _source_window_covers(procedure, revision):
-            assert _M131_PROCEDURE_SOURCE in revision.source_refs
-        else:
-            assert _M131_PROCEDURE_SOURCE not in revision.source_refs
-        for parameter in revision.parameters:
-            for citation in parameter.source_citations:
-                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
-        for formula in revision.formulas:
-            for citation in formula.source_citations:
-                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
-        for binding in revision.bindings:
-            for citation in binding.source_citations:
-                assert catalogues.sources[citation.source_ref].evidence_tier == "official_source_guidance"
+        _assert_m131_revision_cites_only_the_sources_it_is_governed_by(revision, catalogues, procedure, instructions)
+        _assert_m131_citations_are_guidance(revision, catalogues)
 
 
 @pytest.mark.parametrize(

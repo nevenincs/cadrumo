@@ -31,6 +31,7 @@ from ._modelo_131_modulos_engine_support import (
     _OTROS_CAFES_673_2,
     _PASTELERIA_644_3,
     _PESCADOS_643_1,
+    _assert_fase1_previo_matches_orden_coefficients,
     _assert_fase4_reduccion_general,
     _run_modulos_engine,
 )
@@ -230,12 +231,7 @@ def test_fase_1_rendimiento_neto_previo_matches_orden_coefficients(
     modulos: dict[int, Decimal],
     expected_previo: Decimal,
 ) -> None:
-    previo, _minorado, _modulos, _actividad = _run_modulos_engine(
-        epigrafe,
-        **{f"modulo_{idx}": units for idx, units in modulos.items()},
-    )
-    expected = round_to_cents(sum((units * table[idx] for idx, units in modulos.items()), start=Decimal("0")))
-    assert previo == expected == expected_previo
+    _assert_fase1_previo_matches_orden_coefficients(epigrafe, table, modulos, expected_previo)
 
 
 @pytest.mark.parametrize(("epigrafe", "modulos"), _FASE_4_CASES)

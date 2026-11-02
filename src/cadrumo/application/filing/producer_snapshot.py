@@ -25,6 +25,7 @@ from ...core.period import Period, StandardPeriodCode
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition, result_disposition_is_refund
+from ...core.text_bounds import FILING_TEXT_CAPACITY
 from ...domain.bienes_inversion.register import (
     BienesInversionIvaRegister,
     RegistroRegularizacionResult,
@@ -65,7 +66,7 @@ from .producer_snapshot_m210 import Modelo210ProfileFacts
 from .producer_snapshot_m296 import Modelo296ProfileFacts
 from .producer_snapshot_m360 import Modelo360ProfileFacts
 
-_NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=256)]
+_NonBlankName = Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=FILING_TEXT_CAPACITY)]
 _AeatReceiptNumber = Annotated[
     str,
     StringConstraints(pattern=r"^\d+$", max_length=16),

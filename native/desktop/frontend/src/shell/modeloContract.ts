@@ -5262,6 +5262,7 @@ export type ModeloMaritimePreviewRequest = {
   annual_salary?: string | null;
   qualifying_days?: number | null;
   gross_navigation_income?: string | null;
+  filing_year?: number | null;
 };
 
 /**

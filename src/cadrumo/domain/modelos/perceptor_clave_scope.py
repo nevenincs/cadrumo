@@ -22,11 +22,10 @@ from types import MappingProxyType
 from typing import Final
 
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.modelo import Modelo
 from ...core.period import Period, StandardPeriodCode
 from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
-from ..calculations.registry.form_codes import resolve_form_codes
+from ..calculations.registry.form_codes import form_for_role, resolve_form_codes
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, require_governed_fact_authority
 from ..calculations.registry.ids import BindingId
 from ..calculations.registry.schema import ModeloRevision
@@ -35,10 +34,10 @@ from ..calculations.registry.validate_cross_domain_snapshot import register_cros
 from ..calculations.registry.withholding_bindings import resolve_retencion_clave
 
 PERCEPTOR_CLAVE_SCOPE_FACT_ID: Final = "m190-perceptor-casilla-clave-scope"
-#: The modelo whose perceptor records the scope fact governs. The snapshot check
-#: tests it before resolving the fact, because a year the fact has no edition
-#: for is a finding only for this modelo.
-PERCEPTOR_CLAVE_SCOPE_MODELO: Final = Modelo("190")
+#: The role of the form whose perceptor records the scope fact governs. The snapshot
+#: check asks it before resolving the fact, because a year the fact has no edition
+#: for is a finding only for this form.
+_PERCEPTOR_RECORDS_ROLE: Final = "withholding.work_annual"
 _CASILLA_KEY_PREFIX: Final = "casilla:"
 _RESERVED_KEYS: Final = frozenset({"modelo", "row_clave_binding", "row_subclave_binding"})
 
@@ -84,6 +83,11 @@ class PerceptorClaveScope:
         """
         tokens = self.casillas.get(casilla_id)
         return tokens is None or any(token.admits(clave, subclave) for token in tokens)
+
+
+def governs_perceptor_records(modelo: object, *, authority: GovernedFactSource | None = None) -> bool:
+    """Return whether ``modelo`` is the form whose perceptor records the scope fact governs."""
+    return str(modelo) == form_for_role(_PERCEPTOR_RECORDS_ROLE, authority=authority)
 
 
 def resolve_perceptor_clave_scope(
@@ -248,10 +252,10 @@ def check_perceptor_clave_scope(
     would have to say.
     """
     del renta_first_slice_binding_targets
-    if modelo_id != PERCEPTOR_CLAVE_SCOPE_MODELO or not revision_binding_ids:
+    if not revision_binding_ids or not governs_perceptor_records(modelo_id):
         return []
     try:
-        # Modelo 190 is an annual summary, so its filing coordinate is the year's 0A period.
+        # This form is an annual summary, so its filing coordinate is the year's annual period.
         scope = resolve_perceptor_clave_scope(
             period=Period.from_year_and_code(filing_year, StandardPeriodCode.ANNUAL.value)
         )
@@ -277,10 +281,10 @@ register_cross_domain_snapshot_check(check_perceptor_clave_scope)
 
 __all__ = [
     "PERCEPTOR_CLAVE_SCOPE_FACT_ID",
-    "PERCEPTOR_CLAVE_SCOPE_MODELO",
     "ClaveScopeToken",
     "PerceptorClaveScope",
     "check_perceptor_clave_scope",
+    "governs_perceptor_records",
     "perceptor_clave_scope_failures",
     "resolve_perceptor_clave_scope",
     "row_field_value_bindings",

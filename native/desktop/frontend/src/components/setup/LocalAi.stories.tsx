@@ -9,6 +9,7 @@ import { FIXTURE_CATALOG } from "../../dev/fixtures/agentCatalog";
 import type { SetupShape } from "../../dev/setupFixture";
 import { catalogLanes } from "../../shell/localModelLanes";
 import { LocalAi } from "./LocalAi";
+import { SOURCE_LOCALE, useStrings } from "../../shell/strings";
 
 // The local AI's one component, as the provisioning panel and the agent's
 // settings for the lane on this computer both render it: the program that
@@ -34,6 +35,7 @@ type Args = {
 };
 
 function Screen({ shape, latencyMs, starts, added }: Args) {
+  const { locale = SOURCE_LOCALE } = useStrings();
   const host = useMemo(
     () => (LOCAL_LANE ? stageListHost(LOCAL_LANE.id, added) : null),
     [added],
@@ -44,7 +46,7 @@ function Screen({ shape, latencyMs, starts, added }: Args) {
         <LocalAi
           lanes={LOCAL_LANE ? [LOCAL_LANE] : []}
           host={host}
-          locale="en"
+          locale={locale}
         />
       </div>
     </ProvisioningStage>

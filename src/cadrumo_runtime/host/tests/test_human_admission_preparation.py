@@ -9,16 +9,13 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT
 from cadrumo_client.contracts.operation_access import OperationContract, OperationContractReply
 from cadrumo_client.contracts.profile_access import ProfileStatus
-from cadrumo_client.transport.installation import installation
-from cadrumo_client.transport.windows import WindowsEndpoint
 
-from ...adapters.tests.profile_worker_support import owner_id
-from .served_runtime import connect_verified, serving_runtime
-from .test_profile_connections import LoginObservation, login
+from .served_profile_runtime import serving_enrolled_profile
+from .served_runtime import connect_verified
+from .test_profile_connections import login
 
 pytestmark = [
     pytest.mark.integration,
@@ -31,44 +28,31 @@ pytestmark = [
 
 @pytest.mark.parametrize("_attempt", range(3))
 def test_cold_and_shared_human_admission_publish_ready_contracts(tmp_path: Path, _attempt: int) -> None:
-    root = tmp_path / "cadrumo-storage"
-    root.mkdir()
-    endpoint = WindowsEndpoint(storage_root=root)
-    installation_state = installation(
-        storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity
-    )
-    with administration_subject(
-        tmp_path, os_owner_id=owner_id(), installation_id=installation_state.installation_id
-    ) as subject:
-        profile_id = subject.store.binding.profile_id
-        close_active_bucket_session()
-        observation = LoginObservation(owner_id())
-        with serving_runtime(
-            endpoint, root, capture_login=lambda _channel: observation, secret_store=lambda: subject.native
-        ):
-            first, second = connect_verified(endpoint), connect_verified(endpoint)
-            try:
-                sessions = []
-                for client in (first, second):
-                    started = time.monotonic()
-                    admitted = login(client, profile_id, "password", PROFILE_INPUT.encode())
-                    print("human_admission_seconds", time.monotonic() - started, flush=True)
-                    assert isinstance(admitted, ProfileStatus)
-                    assert admitted.status.denial is None
-                    session = admitted.status.session_id
-                    assert session is not None
-                    sessions.append(session)
-                    contract = client.operation(
-                        OperationContract(
-                            request_id=uuid4(),
-                            profile_id=profile_id,
-                            session_id=session,
-                            definition_id="user-profile.field-mutation",
-                        ),
-                        deadline=time.monotonic() + 10,
-                    )
-                    assert isinstance(contract, OperationContractReply)
-                assert sessions[0] != sessions[1]
-            finally:
-                first.close()
-                second.close()
+    with serving_enrolled_profile(tmp_path) as profile:
+        endpoint, profile_id = profile.endpoint, profile.profile_id
+        first, second = connect_verified(endpoint), connect_verified(endpoint)
+        try:
+            sessions = []
+            for client in (first, second):
+                started = time.monotonic()
+                admitted = login(client, profile_id, "password", PROFILE_INPUT.encode())
+                print("human_admission_seconds", time.monotonic() - started, flush=True)
+                assert isinstance(admitted, ProfileStatus)
+                assert admitted.status.denial is None
+                session = admitted.status.session_id
+                assert session is not None
+                sessions.append(session)
+                contract = client.operation(
+                    OperationContract(
+                        request_id=uuid4(),
+                        profile_id=profile_id,
+                        session_id=session,
+                        definition_id="user-profile.field-mutation",
+                    ),
+                    deadline=time.monotonic() + 10,
+                )
+                assert isinstance(contract, OperationContractReply)
+            assert sessions[0] != sessions[1]
+        finally:
+            first.close()
+            second.close()

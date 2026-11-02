@@ -1,5 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { EditorSpecimens } from "@/dev/catalogue/EditorSpecimens";
+import { EditorSpecimens, namedCodes } from "@/dev/catalogue/EditorSpecimens";
+import { currencyName } from "@/shared/codeNames";
+
+/** The codes the ledger serves for the field. */
+const CODES = ["EUR", "GBP", "USD", "CHF", "HUF"];
 
 const meta = {
   title: "Editors/Currency",
@@ -15,6 +19,7 @@ export const States: Story = {
       label="Currency"
       filled="EUR"
       invalid="EU"
+      offers={namedCodes(CODES, currencyName)}
       error="Not a currency code."
     />
   ),

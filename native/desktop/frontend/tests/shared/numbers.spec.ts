@@ -16,12 +16,114 @@ import {
 } from "../../src/shell/ledgerGrammar";
 
 const NBSP = " ";
+const MINUS = "\u2212";
 const LOCALES = ["en", "es", "ca", "hu"] as const;
 
 // `Intl` reads a decimal string as its exact value, which the module under test
 // does not use: it is an independent oracle at sizes a double cannot hold. The
 // configured library types only list number and bigint.
 const exactly = (text: string) => text as unknown as number;
+
+// The same literals pin the backend's figure formatter in
+// `value_presentation` (tests/test_value_presentation.py). Produced once by
+// `new Intl.NumberFormat(locale, { minimumFractionDigits: 2,
+// maximumFractionDigits: 2, useGrouping: "always" })` on Node 26, then held as
+// text so neither side agrees with itself by construction.
+const SHARED_FIGURES = {
+  en: ["999.00", "1,234.56", "12,345.67", "1,234,567.89"],
+  es: ["999,00", "1.234,56", "12.345,67", "1.234.567,89"],
+  ca: ["999,00", "1.234,56", "12.345,67", "1.234.567,89"],
+  hu: [
+    "999,00",
+    `1${NBSP}234,56`,
+    `12${NBSP}345,67`,
+    `1${NBSP}234${NBSP}567,89`,
+  ],
+} as const;
+
+// The euro sign follows the number after one no-break space in every language,
+// and a negative amount carries the screen minus before its digits. The same
+// literals pin the backend's money presentation in `value_presentation`
+// (test_value_presentation.py, _SHARED_EURO_AMOUNTS); both tables are spelled
+// out in full so neither side agrees with the other by construction.
+const SHARED_EURO_INPUTS = [
+  "0",
+  "999",
+  "1234.56",
+  "12345.67",
+  "1234567.89",
+  "-1234.56",
+];
+const SHARED_EURO_AMOUNTS = {
+  en: [
+    "0.00\u00a0\u20ac",
+    "999.00\u00a0\u20ac",
+    "1,234.56\u00a0\u20ac",
+    "12,345.67\u00a0\u20ac",
+    "1,234,567.89\u00a0\u20ac",
+    "\u22121,234.56\u00a0\u20ac",
+  ],
+  es: [
+    "0,00\u00a0\u20ac",
+    "999,00\u00a0\u20ac",
+    "1.234,56\u00a0\u20ac",
+    "12.345,67\u00a0\u20ac",
+    "1.234.567,89\u00a0\u20ac",
+    "\u22121.234,56\u00a0\u20ac",
+  ],
+  ca: [
+    "0,00\u00a0\u20ac",
+    "999,00\u00a0\u20ac",
+    "1.234,56\u00a0\u20ac",
+    "12.345,67\u00a0\u20ac",
+    "1.234.567,89\u00a0\u20ac",
+    "\u22121.234,56\u00a0\u20ac",
+  ],
+  hu: [
+    "0,00\u00a0\u20ac",
+    "999,00\u00a0\u20ac",
+    "1\u00a0234,56\u00a0\u20ac",
+    "12\u00a0345,67\u00a0\u20ac",
+    "1\u00a0234\u00a0567,89\u00a0\u20ac",
+    "\u22121\u00a0234,56\u00a0\u20ac",
+  ],
+} as const;
+
+test("the euro sign follows the number exactly as the backend writes it", () => {
+  for (const locale of LOCALES) {
+    const shown = SHARED_EURO_INPUTS.map((v) =>
+      formatAmount(locale, v, { currency: "EUR" }),
+    );
+    expect(shown).toEqual(SHARED_EURO_AMOUNTS[locale]);
+  }
+});
+
+test("every amount groups, four digits included, as the backend writes it", () => {
+  for (const locale of LOCALES) {
+    const shown = ["999.00", "1234.56", "12345.67", "1234567.89"].map((v) =>
+      formatDecimal(locale, v, { minFraction: 2, maxFraction: 2 }),
+    );
+    expect(shown).toEqual(SHARED_FIGURES[locale]);
+    const amounts = ["999.00", "1234.56", "12345.67", "1234567.89"].map((v) =>
+      formatAmount(locale, v),
+    );
+    expect(amounts).toEqual(SHARED_FIGURES[locale]);
+  }
+});
+
+test("typed text reads grouped or plain, and a held value shows grouped", () => {
+  for (const locale of ["es", "ca"] as const) {
+    expect(readLocaleDecimal(locale, "1.234,56")).toBe("1234.56");
+    expect(readLocaleDecimal(locale, "1234,56")).toBe("1234.56");
+    expect(formatDecimal(locale, "1234.56", { minFraction: 2 })).toBe(
+      "1.234,56",
+    );
+  }
+  expect(readLocaleDecimal("hu", `1${NBSP}234,56`)).toBe("1234.56");
+  expect(readLocaleDecimal("hu", "1234,56")).toBe("1234.56");
+  expect(readLocaleDecimal("en", "1,234.56")).toBe("1234.56");
+  expect(readLocaleDecimal("en", "1234.56")).toBe("1234.56");
+});
 
 test("decimals carry each locale's marks", () => {
   const expected = {
@@ -56,10 +158,10 @@ test("integers beyond 2^53 keep every digit", () => {
 
 test("six decimals and negatives stay exact", () => {
   const expected = {
-    en: ["0.000001", "-12,345.000001", "-0.5"],
-    es: ["0,000001", "-12.345,000001", "-0,5"],
-    ca: ["0,000001", "-12.345,000001", "-0,5"],
-    hu: ["0,000001", `-12${NBSP}345,000001`, "-0,5"],
+    en: ["0.000001", `${MINUS}12,345.000001`, `${MINUS}0.5`],
+    es: ["0,000001", `${MINUS}12.345,000001`, `${MINUS}0,5`],
+    ca: ["0,000001", `${MINUS}12.345,000001`, `${MINUS}0,5`],
+    hu: ["0,000001", `${MINUS}12${NBSP}345,000001`, `${MINUS}0,5`],
   };
   for (const locale of LOCALES) {
     const [tiny, negative, belowOne] = expected[locale];
@@ -85,26 +187,39 @@ test("exact text agrees with Intl's own exact reading in every locale", () => {
     "123456789012345678901234567890.123456",
   ];
   for (const locale of LOCALES) {
-    const plain = new Intl.NumberFormat(locale, { maximumFractionDigits: 20 });
-    const money = new Intl.NumberFormat(locale, {
-      style: "currency",
-      currency: "EUR",
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 6,
+    const plain = new Intl.NumberFormat(locale, {
+      maximumFractionDigits: 20,
+      useGrouping: "always",
     });
+    // The number is Intl's own; the sign and the mark after it are the
+    // window's written form of an amount.
+    const figure = new Intl.NumberFormat(locale, {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+      useGrouping: "always",
+    });
+    const money = (value: string) => {
+      const shown = figure.format(exactly(value));
+      return shown.startsWith("-")
+        ? `\u2212${shown.slice(1)}\u00a0€`
+        : `${shown}\u00a0€`;
+    };
     const percent = new Intl.NumberFormat(locale, {
       style: "percent",
       maximumFractionDigits: 20,
+      useGrouping: "always",
     });
     for (const value of values) {
-      expect(formatDecimal(locale, value)).toBe(plain.format(exactly(value)));
+      expect(formatDecimal(locale, value)).toBe(
+        plain.format(exactly(value)).replace("-", MINUS),
+      );
       expect(
         formatPercent(locale, value, { unit: "fraction", maxFraction: 20 }),
-      ).toBe(percent.format(exactly(value)));
+      ).toBe(percent.format(exactly(value)).replace("-", MINUS));
     }
     for (const value of ["1234.5", "-12345.67", "0.5", "9007199254740993.25"])
       expect(formatAmount(locale, value, { currency: "EUR" })).toBe(
-        money.format(exactly(value)),
+        money(value),
       );
   }
 });
@@ -113,7 +228,7 @@ test("fraction limits round half away from zero on the decimal text", () => {
   // Each of these sits on a tie that a double stores to one side or the other.
   expect(formatAmount("en", "1.005")).toBe("1.01");
   expect(formatAmount("en", "2.675")).toBe("2.68");
-  expect(formatAmount("en", "-2.675")).toBe("-2.68");
+  expect(formatAmount("en", "-2.675")).toBe(`${MINUS}2.68`);
   expect(formatAmount("en", "1.0049")).toBe("1.00");
   expect(formatAmount("en", "999.995")).toBe("1,000.00");
   expect(formatDecimal("en", "1.123", { minFraction: 1, maxFraction: 2 })).toBe(
@@ -145,12 +260,22 @@ test("grouping can be turned off and non-canonical spellings read the same", () 
   expect(formatDecimal("en", " 1.5 ")).toBe("1.5");
 });
 
-test("amounts show cents and place a named currency by locale", () => {
+test("amounts show cents and put a named currency's mark after the number", () => {
   expect(formatAmount("en", "1234.5")).toBe("1,234.50");
   expect(formatAmount("es", "12345.6")).toBe("12.345,60");
   expect(formatAmount("hu", "12345.6")).toBe(`12${NBSP}345,60`);
-  expect(formatAmount("en", "1234.5", { currency: "USD" })).toBe("$1,234.50");
-  expect(formatAmount("en", "-1234.5", { currency: "EUR" })).toBe("-€1,234.50");
+  expect(formatAmount("en", "1234.5", { currency: "USD" })).toBe(
+    `1,234.50${NBSP}$`,
+  );
+  expect(formatAmount("es", "1234.56", { currency: "GBP" })).toBe(
+    `1.234,56${NBSP}£`,
+  );
+  expect(formatAmount("hu", "1234.56", { currency: "USD" })).toBe(
+    `1${NBSP}234,56${NBSP}$`,
+  );
+  expect(formatAmount("en", "-1234.5", { currency: "EUR" })).toBe(
+    `\u22121,234.50${NBSP}€`,
+  );
   expect(formatAmount("es", "12345.6", { currency: "EUR" })).toBe(
     `12.345,60${NBSP}€`,
   );
@@ -163,12 +288,19 @@ test("amounts show cents and place a named currency by locale", () => {
   expect(formatAmount("en", "1.23456", { decimals: 4 })).toBe("1.2346");
   expect(formatAmount("en", "1234.5", { decimals: 0 })).toBe("1,235");
   // A three-place currency keeps its third place, and two remain the floor.
+  // A currency with no symbol keeps its code in the same place.
   expect(formatAmount("en", "1.234", { currency: "KWD" })).toBe(
-    `KWD${NBSP}1.234`,
+    `1.234${NBSP}KWD`,
   );
-  expect(formatAmount("en", "1.2", { currency: "KWD" })).toBe(`KWD${NBSP}1.20`);
-  expect(formatAmount("en", "1234", { currency: "JPY" })).toBe("¥1,234.00");
-  expect(formatAmount("en", "12.5", { currency: "??" })).toBe("12.50 ??");
+  expect(formatAmount("en", "1.2", { currency: "KWD" })).toBe(`1.20${NBSP}KWD`);
+  expect(formatAmount("en", "1234", { currency: "JPY" })).toBe(
+    `1,234.00${NBSP}¥`,
+  );
+  expect(formatAmount("en", "12.5", { currency: "??" })).toBe(`12.50${NBSP}??`);
+  // Neither the accounting style nor a sign on nothing but zeros.
+  expect(formatAmount("en", "-0.001", { currency: "EUR" })).toBe(
+    `0.00${NBSP}€`,
+  );
 });
 
 test("a percentage names its unit", () => {
@@ -197,9 +329,9 @@ test("a percentage names its unit", () => {
   ).toBe("10.5%");
   expect(formatPercent("en", "1", { unit: "fraction" })).toBe("100%");
   expect(formatPercent("en", "0.5", { unit: "fraction" })).toBe("50%");
-  expect(formatPercent("en", "-0.5", { unit: "fraction" })).toBe("-50%");
+  expect(formatPercent("en", "-0.5", { unit: "fraction" })).toBe(`${MINUS}50%`);
   expect(formatPercent("es", "-0.005", { unit: "fraction" })).toBe(
-    `-0,5${NBSP}%`,
+    `${MINUS}0,5${NBSP}%`,
   );
   expect(formatPercent("en", "12345.6", { unit: "points" })).toBe("12,345.6%");
   expect(
@@ -232,8 +364,9 @@ test("counts follow the locale's grouping", () => {
   expect(formatCount("en", 0)).toBe("0");
   for (const locale of LOCALES)
     expect(formatCount(locale, 1234)).toBe(
-      new Intl.NumberFormat(locale).format(1234),
+      new Intl.NumberFormat(locale, { useGrouping: "always" }).format(1234),
     );
+  expect(formatCount("es", 1234)).toBe("1.234");
 });
 
 // Worked by hand in steps of 1024: 1536 / 1024 = 1.5, 1048575 / 1024 =
@@ -247,7 +380,7 @@ test("file sizes use steps of 1024 and the locale's marks", () => {
   expect(formatSize("en", 0)).toBe(`0${B}`);
   expect(formatSize("es", 0)).toBe(`0${B}`);
   expect(formatSize("en", 1023)).toBe(`1,023${B}`);
-  expect(formatSize("es", 1023)).toBe(`1023${B}`);
+  expect(formatSize("es", 1023)).toBe(`1.023${B}`);
   expect(formatSize("en", 1024)).toBe(`1${KB}`);
   expect(formatSize("es", 1024)).toBe(`1${KB}`);
   expect(formatSize("en", 1536)).toBe(`1.5${KB}`);
@@ -271,10 +404,10 @@ test("file sizes use steps of 1024 and the locale's marks", () => {
   expect(formatSize("en", 1024 ** 3 - 1)).toBe(`1${GB}`);
   expect(formatSize("en", 1024 ** 2)).toBe(`1${MB}`);
   expect(formatSize("en", 180 * 1024 ** 2)).toBe(`180${MB}`);
-  // GB is the last unit, so a larger size groups, and Spanish leaves four
-  // digits whole: 5120 GB, then 12 * 1024 = 12288 GB.
+  // GB is the last unit, so a larger size groups, four digits included:
+  // 5120 GB, then 12 * 1024 = 12288 GB.
   expect(formatSize("en", 5120 * 1024 ** 3)).toBe(`5,120${GB}`);
-  expect(formatSize("es", 5120 * 1024 ** 3)).toBe(`5120${GB}`);
+  expect(formatSize("es", 5120 * 1024 ** 3)).toBe(`5.120${GB}`);
   expect(formatSize("en", 12288 * 1024 ** 3)).toBe(`12,288${GB}`);
   expect(formatSize("es", 12288 * 1024 ** 3)).toBe(`12.288${GB}`);
   // Nothing readable as a size counts as none.

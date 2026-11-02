@@ -42,7 +42,7 @@ GRID_VALUE_FLOOR: Final[int] = 12
 #: A record column makes room for this much of its heading, so a long heading takes few lines.
 GRID_RECORD_HEADING_FLOOR: Final[int] = 16
 #: A rate column makes room for at least this many cells.
-GRID_RATE_FLOOR: Final[int] = 4
+GRID_RATIO_FLOOR: Final[int] = 4
 
 
 def wrap_label(text: str, width: int) -> tuple[str, ...]:
@@ -166,7 +166,7 @@ def _column_measurements(
     widths: list[int] = []
     for heading, cells, fixed in zip(headings, columns, literals, strict=True):
         box = max((cell_len(cell.box) for cell in cells), default=0)
-        floor = GRID_RATE_FLOOR if cells and all(cell.rate for cell in cells) else GRID_VALUE_FLOOR
+        floor = GRID_RATIO_FLOOR if cells and all(cell.rate for cell in cells) else GRID_VALUE_FLOOR
         widest = max((cell_len(text) for text in (*(cell.value for cell in cells), *fixed)), default=1)
         value = max(widest, floor if cells else 1)
         boxes.append(box)
@@ -268,7 +268,7 @@ __all__ = [
     "GRID_LABEL_INDENT",
     "GRID_LABEL_LINES",
     "GRID_LEAD",
-    "GRID_RATE_FLOOR",
+    "GRID_RATIO_FLOOR",
     "GRID_RECORD_HEADING_FLOOR",
     "GRID_VALUE_FLOOR",
     "CasillaListRecords",

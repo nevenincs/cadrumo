@@ -15,7 +15,7 @@ from collections.abc import Callable
 from datetime import timedelta
 from functools import partial
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 from uuid import UUID
 
 import pytest
@@ -44,6 +44,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationSubmissionReceiptV1,
 )
 from cadrumo.application.operations.registry import OperationFrontendProjection, OperationPublicDefinitionContractV1
+from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore, NativeSecretBackend
 from cadrumo.core.async_cleanup import await_cancellation_complete, close_async_resources
 from cadrumo.core.config import override_settings
 from cadrumo.core.hashing import canonical_json_bytes
@@ -66,7 +67,7 @@ from cadrumo_runtime.commands.command_specs import RUNTIME_COMMAND_GRAPH
 from cadrumo_runtime.commands.lifecycle import dispatch_runtime_behavior
 from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 from cadrumo_runtime.host.tests.frontend.cli import native_api_cli_support
-from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import native_api_cli_session
+from cadrumo_runtime.host.tests.frontend.cli.native_api_cli_support import NativeApiCliSession, native_api_cli_session
 
 from .installed_mcp_stdio_support import structured_object
 from .test_installed_authenticated_stdio import (
@@ -95,6 +96,248 @@ def _status(value: object, *, profile_id: UUID) -> ProfileAccessStatus:
     status = ProfileAccessStatus.model_validate_json(canonical_json_bytes(document["status"]))
     assert status.profile_id == profile_id
     return status
+
+
+async def _assert_first_connection_admitted(
+    client: ClientSession,
+    profile: NativeApiCliSession[None],
+    backend: NativeSecretBackend,
+    source_metadata: ClientCredentialMetadata,
+) -> ProfileAccessStatus:
+    first_call = await client.call_tool("status", {})
+    assert first_call.is_error is False
+    first = _status(first_call.structured_content, profile_id=profile.profile_id)
+    assert first.connected and first.credential_authenticated and first.profile_bound
+    assert first.denial is None and first.grant_valid
+    assert first.session_id is not None and first.session_expires_at is not None
+    assert first.session_expires_at > now()
+    assert first.grant_expires_at is not None and first.grant_expires_at > now()
+    assert profile.registered_sessions() == (first.session_id,)
+    custody = profile.server_custody_health()
+    assert custody.binding == profile.binding
+    assert custody.backend is backend
+    assert custody.control_anchor_present is True
+    assert custody.grant_ids == (source_metadata.grant_id,)
+    assert custody.key_ids == (source_metadata.key_id,)
+    assert custody.wrap_count == 1
+    assert custody.wrapping_keys_valid is True
+    assert custody.runtime_uses_same_store is True
+    first_worker = profile.worker_health(first.session_id)
+    assert first_worker.identity.binding == profile.binding
+    assert first_worker.identity.binding.profile_id == profile.profile_id
+    assert first_worker.alive and first_worker.exact_session_admitted
+    assert first_worker.worker_process_id > 0
+    assert first_worker.worker_process_id != first_worker.runtime_process_id
+    assert first_worker.admitted_session_count == 1
+    return first
+
+
+async def _assert_second_connection_has_distinct_session(
+    client: ClientSession, profile: NativeApiCliSession[None], first: ProfileAccessStatus
+) -> None:
+    second_call = await client.call_tool("status", {})
+    assert second_call.is_error is False
+    second = _status(second_call.structured_content, profile_id=profile.profile_id)
+    assert second.connected and second.credential_authenticated and second.profile_bound
+    assert second.denial is None and second.grant_valid
+    assert second.session_id is not None and second.session_id != first.session_id
+    assert second.session_expires_at is not None and second.session_expires_at > now()
+    assert second.grant_expires_at == first.grant_expires_at
+    assert second.effective_scope == first.effective_scope
+    assert profile.registered_sessions() == (second.session_id,)
+    second_worker = profile.worker_health(second.session_id)
+    assert second_worker.identity.binding == profile.binding
+    assert second_worker.identity.binding.profile_id == profile.profile_id
+    assert second_worker.alive and second_worker.exact_session_admitted
+    assert second_worker.worker_process_id > 0
+    assert second_worker.worker_process_id != second_worker.runtime_process_id
+    assert second_worker.admitted_session_count == 1
+    assert first.session_id is not None
+    assert not profile.worker_health(first.session_id).exact_session_admitted
+
+
+async def _read_auth_result_privately(client: ClientSession, profile: NativeApiCliSession[None]) -> dict[str, object]:
+    """Discover, execute and release the auth read; return the arguments that release it."""
+    private = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+    assert private.is_error is False
+    found = structured_object(private.structured_content)
+    assert found["outcome"] == "found"
+    assert any(
+        structured_object(item)["definition_id"] == AUTH_READ_OPERATION_DEFINITION_ID
+        for item in cast("list[object]", found["operations"])
+    )
+
+    described = await client.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
+    assert described.is_error is False
+    description = structured_object(structured_object(described.structured_content)["description"])
+    contract = OperationPublicDefinitionContractV1.model_validate_json(canonical_json_bytes(description["contract"]))
+    assert contract.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
+    assert contract.result_schema is not None
+    request = AuthReadRequest(profile_id=profile.profile_id, kind="status")
+    submitted = await client.call_tool(
+        "execute",
+        {
+            "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,
+            "subject_ref": profile_operation_subject(str(profile.profile_id)),
+            "payload": request.model_dump(mode="json"),
+        },
+    )
+    assert submitted.is_error is False
+    submission = structured_object(submitted.structured_content)
+    assert submission["outcome"] == "submitted"
+    receipt = OperationSubmissionReceiptV1.model_validate_json(canonical_json_bytes(submission["receipt"]))
+    observation = OperationObservationRequestV1(operation_id=receipt.operation_id, after_cursor=0, page_limit=32)
+    terminal: OperationObservationSuccessV1 | None = None
+    for _attempt in range(80):
+        observed = await client.call_tool("observe", {"observation": observation.model_dump(mode="json")})
+        assert observed.is_error is False
+        reply = structured_object(structured_object(observed.structured_content)["reply"])
+        candidate = OperationObservationSuccessV1.model_validate_json(canonical_json_bytes(reply["observation"]))
+        if candidate.projection.lifecycle is OperationLifecycle.TERMINAL:
+            terminal = candidate
+            break
+        await asyncio.sleep(0.05)
+    assert terminal is not None
+    assert terminal.projection.operation_id == receipt.operation_id
+    assert terminal.projection.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
+    assert terminal.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.projection.effect is OperationEffect.NONE
+    result_request = OperationResultProjectionRequestV1(
+        operation_id=receipt.operation_id,
+        terminal_revision=terminal.projection.revision,
+        definition_contract_digest=contract.definition_contract_digest,
+        result_schema=contract.result_schema,
+    )
+    result_args = {"result": result_request.model_dump(mode="json")}
+    released = await client.call_tool("result", result_args)
+    assert released.is_error is False
+    document = structured_object(structured_object(released.structured_content)["document"])
+    result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(canonical_json_bytes(document))
+    assert result.definition_contract_digest == contract.definition_contract_digest
+    assert result.result_schema == contract.result_schema
+    assert result.projection.profile_id == profile.profile_id
+    assert result.projection.kind == "status" and result.projection.status is not None
+    return result_args
+
+
+async def _deny_key_through_cli(
+    profile: NativeApiCliSession[None], source_metadata: ClientCredentialMetadata, storage_root: Path
+) -> None:
+    # This is an explicit human denial after the passwordless
+    # reconnect, through the established CLI authority owner.
+    delete_profile_session(storage_root=storage_root, profile_id=profile.profile_id)
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
+        denied_output = await asyncio.to_thread(
+            invoke_typer_app,
+            build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
+            (
+                "--format",
+                "json",
+                "--profile",
+                str(profile.profile_id),
+                "--profile-secrets-stdin",
+                "config",
+                "profile",
+                "automation",
+                "deny",
+                "key",
+                str(source_metadata.key_id),
+            ),
+            input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+        )
+    assert denied_output.exit_code == 0, denied_output.output
+    assert PROFILE_INPUT not in denied_output.output
+    denied_document = structured_object(json.loads(denied_output.stdout))
+    assert denied_document["command"] == "config.profile.automation.deny"
+    assert denied_document["status"] in {"success", "warning"}
+    denied_result = structured_object(denied_document["result"])
+    assert denied_result["kind"] == "key"
+    assert denied_result["target_id"] == str(source_metadata.key_id)
+    assert structured_object(denied_result["receipt"])["access_denied"] is True
+
+
+async def _assert_inventory_lists_key_revoked(
+    profile: NativeApiCliSession[None], source_metadata: ClientCredentialMetadata
+) -> None:
+    with override_settings(cadrumo_cli_reveal_identifiers=True):
+        inventory_output = await asyncio.to_thread(
+            invoke_typer_app,
+            build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
+            (
+                "--format",
+                "json",
+                "--profile",
+                str(profile.profile_id),
+                "--profile-secrets-stdin",
+                "config",
+                "profile",
+                "automation",
+                "list",
+            ),
+            input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
+        )
+    assert inventory_output.exit_code == 0, inventory_output.output
+    assert PROFILE_INPUT not in inventory_output.output
+    inventory_document = structured_object(json.loads(inventory_output.stdout))
+    assert inventory_document["command"] == "config.profile.automation.list"
+    keys = cast(
+        "list[object]",
+        structured_object(structured_object(inventory_document["result"])["inventory"])["keys"],
+    )
+    selected = [
+        structured_object(item) for item in keys if structured_object(item)["key_id"] == str(source_metadata.key_id)
+    ]
+    assert len(selected) == 1 and selected[0]["state"] == "revoked"
+
+
+async def _assert_live_connection_fenced(
+    client: ClientSession, reference: UUID, result_args: dict[str, object]
+) -> None:
+    search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+    assert search.is_error is True
+    search_refusal = structured_object(search.structured_content)
+    assert set(search_refusal) <= {"outcome", "code", "remedy", "notice"}
+    assert search_refusal["outcome"] == "refused"
+    assert search_refusal["code"] in _LIVE_RETIREMENT_CODES
+    assert search_refusal["remedy"] == SIGN_IN_REMEDY
+    assert str(reference) not in repr(search_refusal)
+    cached_result = await client.call_tool("result", result_args)
+    assert cached_result.is_error is True
+    cached_refusal = structured_object(cached_result.structured_content)
+    assert set(cached_refusal) <= {"outcome", "code", "remedy", "notice"}
+    assert cached_refusal["outcome"] == "refused"
+    assert cached_refusal["code"] in _LIVE_RETIREMENT_CODES
+    assert cached_refusal["remedy"] == SIGN_IN_REMEDY
+    assert str(reference) not in repr(cached_refusal)
+
+
+async def _assert_new_connection_refused_after_revocation(
+    client: ClientSession, profile: NativeApiCliSession[None], reference: UUID
+) -> None:
+    revoked_call = await client.call_tool("status", {})
+    assert revoked_call.is_error is False
+    revoked = structured_object(revoked_call.structured_content)
+    assert revoked["outcome"] == "status"
+    assert revoked["profile_id"] == str(profile.profile_id)
+    assert revoked["authenticated"] is False
+    assert revoked["denial"] in _REVOKED_KEY_CODES
+    search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
+    assert search.is_error is True
+    search_refusal = structured_object(search.structured_content)
+    assert search_refusal == {
+        "outcome": "refused",
+        "code": revoked["denial"],
+        "remedy": SIGN_IN_REMEDY,
+    }
+    assert str(reference) not in repr(search.structured_content)
+    denied = await client.call_tool("observe", {"observation": {}})
+    assert denied.is_error is True
+    assert structured_object(denied.structured_content) == {
+        "outcome": "refused",
+        "code": revoked["denial"],
+        "remedy": SIGN_IN_REMEDY,
+    }
+    assert str(reference) not in repr(denied.structured_content)
 
 
 @pytest.mark.anyio
@@ -162,31 +405,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     ClientSession(reader, writer, read_timeout_seconds=60) as client,
                 ):
                     await client.initialize()
-                    first_call = await client.call_tool("status", {})
-                    assert first_call.is_error is False
-                    first = _status(first_call.structured_content, profile_id=profile.profile_id)
-                    assert first.connected and first.credential_authenticated and first.profile_bound
-                    assert first.denial is None and first.grant_valid
-                    assert first.session_id is not None and first.session_expires_at is not None
-                    assert first.session_expires_at > now()
-                    assert first.grant_expires_at is not None and first.grant_expires_at > now()
-                    assert profile.registered_sessions() == (first.session_id,)
-                    custody = profile.server_custody_health()
-                    assert custody.binding == profile.binding
-                    assert custody.backend is backend
-                    assert custody.control_anchor_present is True
-                    assert custody.grant_ids == (source_metadata.grant_id,)
-                    assert custody.key_ids == (source_metadata.key_id,)
-                    assert custody.wrap_count == 1
-                    assert custody.wrapping_keys_valid is True
-                    assert custody.runtime_uses_same_store is True
-                    first_worker = profile.worker_health(first.session_id)
-                    assert first_worker.identity.binding == profile.binding
-                    assert first_worker.identity.binding.profile_id == profile.profile_id
-                    assert first_worker.alive and first_worker.exact_session_admitted
-                    assert first_worker.worker_process_id > 0
-                    assert first_worker.worker_process_id != first_worker.runtime_process_id
-                    assert first_worker.admitted_session_count == 1
+                    first = await _assert_first_connection_admitted(client, profile, backend, source_metadata)
 
             # No worker lifetime is assumed while no adapter is connected.
             # The runtime remains ready and its old connection registration is gone.
@@ -200,177 +419,11 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     ClientSession(reader, writer, read_timeout_seconds=60) as client,
                 ):
                     await client.initialize()
-                    second_call = await client.call_tool("status", {})
-                    assert second_call.is_error is False
-                    second = _status(second_call.structured_content, profile_id=profile.profile_id)
-                    assert second.connected and second.credential_authenticated and second.profile_bound
-                    assert second.denial is None and second.grant_valid
-                    assert second.session_id is not None and second.session_id != first.session_id
-                    assert second.session_expires_at is not None and second.session_expires_at > now()
-                    assert second.grant_expires_at == first.grant_expires_at
-                    assert second.effective_scope == first.effective_scope
-                    assert profile.registered_sessions() == (second.session_id,)
-                    second_worker = profile.worker_health(second.session_id)
-                    assert second_worker.identity.binding == profile.binding
-                    assert second_worker.identity.binding.profile_id == profile.profile_id
-                    assert second_worker.alive and second_worker.exact_session_admitted
-                    assert second_worker.worker_process_id > 0
-                    assert second_worker.worker_process_id != second_worker.runtime_process_id
-                    assert second_worker.admitted_session_count == 1
-                    assert not profile.worker_health(first.session_id).exact_session_admitted
-
-                    private = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert private.is_error is False
-                    found = structured_object(private.structured_content)
-                    assert found["outcome"] == "found"
-                    assert any(
-                        structured_object(item)["definition_id"] == AUTH_READ_OPERATION_DEFINITION_ID
-                        for item in cast("list[object]", found["operations"])
-                    )
-
-                    described = await client.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert described.is_error is False
-                    description = structured_object(structured_object(described.structured_content)["description"])
-                    contract = OperationPublicDefinitionContractV1.model_validate_json(
-                        canonical_json_bytes(description["contract"])
-                    )
-                    assert contract.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
-                    assert contract.result_schema is not None
-                    request = AuthReadRequest(profile_id=profile.profile_id, kind="status")
-                    submitted = await client.call_tool(
-                        "execute",
-                        {
-                            "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,
-                            "subject_ref": profile_operation_subject(str(profile.profile_id)),
-                            "payload": request.model_dump(mode="json"),
-                        },
-                    )
-                    assert submitted.is_error is False
-                    submission = structured_object(submitted.structured_content)
-                    assert submission["outcome"] == "submitted"
-                    receipt = OperationSubmissionReceiptV1.model_validate_json(
-                        canonical_json_bytes(submission["receipt"])
-                    )
-                    observation = OperationObservationRequestV1(
-                        operation_id=receipt.operation_id, after_cursor=0, page_limit=32
-                    )
-                    terminal: OperationObservationSuccessV1 | None = None
-                    for _attempt in range(80):
-                        observed = await client.call_tool(
-                            "observe", {"observation": observation.model_dump(mode="json")}
-                        )
-                        assert observed.is_error is False
-                        reply = structured_object(structured_object(observed.structured_content)["reply"])
-                        candidate = OperationObservationSuccessV1.model_validate_json(
-                            canonical_json_bytes(reply["observation"])
-                        )
-                        if candidate.projection.lifecycle is OperationLifecycle.TERMINAL:
-                            terminal = candidate
-                            break
-                        await asyncio.sleep(0.05)
-                    assert terminal is not None
-                    assert terminal.projection.operation_id == receipt.operation_id
-                    assert terminal.projection.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
-                    assert terminal.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert terminal.projection.effect is OperationEffect.NONE
-                    result_request = OperationResultProjectionRequestV1(
-                        operation_id=receipt.operation_id,
-                        terminal_revision=terminal.projection.revision,
-                        definition_contract_digest=contract.definition_contract_digest,
-                        result_schema=contract.result_schema,
-                    )
-                    result_args = {"result": result_request.model_dump(mode="json")}
-                    released = await client.call_tool("result", result_args)
-                    assert released.is_error is False
-                    document = structured_object(structured_object(released.structured_content)["document"])
-                    result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
-                        canonical_json_bytes(document)
-                    )
-                    assert result.definition_contract_digest == contract.definition_contract_digest
-                    assert result.result_schema == contract.result_schema
-                    assert result.projection.profile_id == profile.profile_id
-                    assert result.projection.kind == "status" and result.projection.status is not None
-
-                    # This is an explicit human denial after the passwordless
-                    # reconnect, through the established CLI authority owner.
-                    delete_profile_session(storage_root=tmp_path / "cadrumo-storage", profile_id=profile.profile_id)
-                    with override_settings(cadrumo_cli_reveal_identifiers=True):
-                        denied_output = await asyncio.to_thread(
-                            invoke_typer_app,
-                            build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
-                            (
-                                "--format",
-                                "json",
-                                "--profile",
-                                str(profile.profile_id),
-                                "--profile-secrets-stdin",
-                                "config",
-                                "profile",
-                                "automation",
-                                "deny",
-                                "key",
-                                str(source_metadata.key_id),
-                            ),
-                            input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-                        )
-                    assert denied_output.exit_code == 0, denied_output.output
-                    assert PROFILE_INPUT not in denied_output.output
-                    denied_document = structured_object(json.loads(denied_output.stdout))
-                    assert denied_document["command"] == "config.profile.automation.deny"
-                    assert denied_document["status"] in {"success", "warning"}
-                    denied_result = structured_object(denied_document["result"])
-                    assert denied_result["kind"] == "key"
-                    assert denied_result["target_id"] == str(source_metadata.key_id)
-                    assert structured_object(denied_result["receipt"])["access_denied"] is True
-
-                    with override_settings(cadrumo_cli_reveal_identifiers=True):
-                        inventory_output = await asyncio.to_thread(
-                            invoke_typer_app,
-                            build_command_app(RUNTIME_COMMAND_GRAPH, dispatcher=dispatch_runtime_behavior),
-                            (
-                                "--format",
-                                "json",
-                                "--profile",
-                                str(profile.profile_id),
-                                "--profile-secrets-stdin",
-                                "config",
-                                "profile",
-                                "automation",
-                                "list",
-                            ),
-                            input=json.dumps({"profile_passphrase": PROFILE_INPUT}),
-                        )
-                    assert inventory_output.exit_code == 0, inventory_output.output
-                    assert PROFILE_INPUT not in inventory_output.output
-                    inventory_document = structured_object(json.loads(inventory_output.stdout))
-                    assert inventory_document["command"] == "config.profile.automation.list"
-                    keys = cast(
-                        "list[object]",
-                        structured_object(structured_object(inventory_document["result"])["inventory"])["keys"],
-                    )
-                    selected = [
-                        structured_object(item)
-                        for item in keys
-                        if structured_object(item)["key_id"] == str(source_metadata.key_id)
-                    ]
-                    assert len(selected) == 1 and selected[0]["state"] == "revoked"
-
-                    search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert search.is_error is True
-                    search_refusal = structured_object(search.structured_content)
-                    assert set(search_refusal) <= {"outcome", "code", "remedy", "notice"}
-                    assert search_refusal["outcome"] == "refused"
-                    assert search_refusal["code"] in _LIVE_RETIREMENT_CODES
-                    assert search_refusal["remedy"] == SIGN_IN_REMEDY
-                    assert str(reference) not in repr(search_refusal)
-                    cached_result = await client.call_tool("result", result_args)
-                    assert cached_result.is_error is True
-                    cached_refusal = structured_object(cached_result.structured_content)
-                    assert set(cached_refusal) <= {"outcome", "code", "remedy", "notice"}
-                    assert cached_refusal["outcome"] == "refused"
-                    assert cached_refusal["code"] in _LIVE_RETIREMENT_CODES
-                    assert cached_refusal["remedy"] == SIGN_IN_REMEDY
-                    assert str(reference) not in repr(cached_refusal)
+                    await _assert_second_connection_has_distinct_session(client, profile, first)
+                    result_args = await _read_auth_result_privately(client, profile)
+                    await _deny_key_through_cli(profile, source_metadata, tmp_path / "cadrumo-storage")
+                    await _assert_inventory_lists_key_revoked(profile, source_metadata)
+                    await _assert_live_connection_fenced(client, reference, result_args)
 
             with (tmp_path / "installed-reconnect-revoked.stderr").open("w", encoding="utf-8") as error_log:
                 async with (
@@ -378,30 +431,7 @@ async def test_installed_mcp_reconnects_same_native_grant_with_distinct_session_
                     ClientSession(reader, writer, read_timeout_seconds=60) as client,
                 ):
                     await client.initialize()
-                    revoked_call = await client.call_tool("status", {})
-                    assert revoked_call.is_error is False
-                    revoked = structured_object(revoked_call.structured_content)
-                    assert revoked["outcome"] == "status"
-                    assert revoked["profile_id"] == str(profile.profile_id)
-                    assert revoked["authenticated"] is False
-                    assert revoked["denial"] in _REVOKED_KEY_CODES
-                    search = await client.call_tool("search", {"query": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert search.is_error is True
-                    search_refusal = structured_object(search.structured_content)
-                    assert search_refusal == {
-                        "outcome": "refused",
-                        "code": revoked["denial"],
-                        "remedy": SIGN_IN_REMEDY,
-                    }
-                    assert str(reference) not in repr(search.structured_content)
-                    denied = await client.call_tool("observe", {"observation": {}})
-                    assert denied.is_error is True
-                    assert structured_object(denied.structured_content) == {
-                        "outcome": "refused",
-                        "code": revoked["denial"],
-                        "remedy": SIGN_IN_REMEDY,
-                    }
-                    assert str(reference) not in repr(denied.structured_content)
+                    await _assert_new_connection_refused_after_revocation(client, profile, reference)
         except BaseException as error:
             primary = error
             raise
@@ -442,6 +472,181 @@ class _NativeReferenceCleanup:
             await await_cancellation_complete(
                 asyncio.to_thread(self._delete), task_name="native-expiry-reference-delete"
             )
+
+
+async def _publish_reference_copy(
+    protected: NativeClientCredentialStore,
+    source: Any,
+    reference: UUID,
+    metadata: ClientCredentialMetadata,
+) -> None:
+    credential = await asyncio.to_thread(source.read)
+    try:
+        await await_cancellation_complete(
+            asyncio.to_thread(
+                protected.replace,
+                credential_reference=reference,
+                grant_id=metadata.grant_id,
+                key_id=metadata.key_id,
+                review_digest=metadata.review_digest,
+                credential=credential,
+            ),
+            task_name="native-expiry-reference-publish",
+        )
+    finally:
+        del credential
+
+
+async def _let_the_human_session_expire(
+    profile: NativeApiCliSession[None],
+    native_store: AutomationSecretStore,
+    metadata: ClientCredentialMetadata,
+    storage_root: Path,
+) -> tuple[UUID, AutomationControlStore, Any, Any]:
+    """Expire the human session on real UTC time; return it with the untouched authority state around it."""
+    human = await open_installed_client(profile_id=profile.profile_id, frontend=OperationFrontendProjection.CLI)
+    human_primary: BaseException | None = None
+    try:
+        proof = bytearray(PROFILE_INPUT, "utf-8")
+        try:
+            admitted = await await_cancellation_complete(
+                asyncio.to_thread(human.login_password, proof), task_name="native-expiry-human-login"
+            )
+            assert not any(proof)
+        finally:
+            proof[:] = bytes(len(proof))
+        human_status = admitted.status
+        assert human_status.credential_authenticated and human_status.profile_bound
+        assert human_status.profile_id == profile.profile_id and human_status.session_id == human.session_id
+        human_session = human.session_id
+        expiry = human_status.session_expires_at
+        assert expiry is not None and timedelta(0) < expiry - now() <= timedelta(minutes=1)
+        store = AutomationControlStore(
+            root=storage_root.resolve(),
+            binding=profile.binding,
+            secrets_store=native_store,
+        )
+        before = await asyncio.to_thread(store.snapshot)
+        lock_before = await asyncio.to_thread(store.profile_lock_state)
+        assert not lock_before.globally_locked
+        assert expiry < next(grant.expires_at for grant in before.grants if grant.grant_id == metadata.grant_id)
+        # Poll real UTC; neither parent nor immutable worker uses an accelerated clock.
+        async with asyncio.timeout(90):
+            while now() <= expiry:
+                await asyncio.sleep(0.25)
+        expired_codes = {
+            AccessDenialCode.SESSION_EXPIRED.value,
+            AccessDenialCode.SESSION_INACTIVE.value,
+            AccessDenialCode.CONNECTION_MISMATCH.value,
+        }
+        try:
+            expired = await asyncio.to_thread(human.status)
+        except FrontendRefusedError as refusal:
+            assert refusal.reason in expired_codes
+        else:
+            assert expired.status.denial is not None
+            assert expired.status.denial.value in expired_codes
+        assert await asyncio.to_thread(store.snapshot) == before
+        assert await asyncio.to_thread(store.profile_lock_state) == lock_before
+        return human_session, store, before, lock_before
+    except BaseException as error:
+        human_primary = error
+        raise
+    finally:
+        await close_async_resources(
+            human.cleanup_owner(primary_error=human_primary),
+            task_name="expired-human-client-close",
+            primary_error=human_primary,
+        )
+
+
+async def _assert_independent_admission(
+    sdk: ClientSession,
+    profile: NativeApiCliSession[None],
+    backend: NativeSecretBackend,
+    metadata: ClientCredentialMetadata,
+    human_session: UUID,
+) -> None:
+    status_call = await sdk.call_tool("status", {})
+    assert not status_call.is_error
+    status = _status(status_call.structured_content, profile_id=profile.profile_id)
+    assert status.credential_authenticated and status.profile_bound and status.grant_valid
+    assert status.denial is None and status.session_id is not None
+    assert status.session_id != human_session
+    assert status.session_expires_at is not None and status.session_expires_at > now()
+    custody = await asyncio.to_thread(profile.server_custody_health)
+    assert custody.backend is backend and custody.runtime_uses_same_store
+    assert custody.control_anchor_present and custody.wrapping_keys_valid
+    assert metadata.grant_id in custody.grant_ids and metadata.key_id in custody.key_ids
+    health = await asyncio.to_thread(profile.worker_health, status.session_id)
+    assert health.alive and health.exact_session_admitted and health.identity.binding == profile.binding
+
+
+async def _execute_and_release_auth_read(sdk: ClientSession, profile: NativeApiCliSession[None]) -> None:
+    described = await sdk.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
+    assert not described.is_error
+    contract = OperationPublicDefinitionContractV1.model_validate_json(
+        canonical_json_bytes(
+            structured_object(structured_object(described.structured_content)["description"])["contract"]
+        )
+    )
+    assert contract.definition_id == AUTH_READ_OPERATION_DEFINITION_ID and contract.result_schema
+    submitted = await sdk.call_tool(
+        "execute",
+        {
+            "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,
+            "subject_ref": profile_operation_subject(str(profile.profile_id)),
+            "payload": AuthReadRequest(profile_id=profile.profile_id, kind="status").model_dump(mode="json"),
+        },
+    )
+    assert not submitted.is_error
+    submission = structured_object(submitted.structured_content)
+    assert submission["outcome"] == "submitted"
+    receipt = OperationSubmissionReceiptV1.model_validate_json(canonical_json_bytes(submission["receipt"]))
+    observation = OperationObservationRequestV1(operation_id=receipt.operation_id, after_cursor=0, page_limit=32)
+    async with asyncio.timeout(30):
+        while True:
+            observed = await sdk.call_tool("observe", {"observation": observation.model_dump(mode="json")})
+            assert not observed.is_error
+            terminal = OperationObservationSuccessV1.model_validate_json(
+                canonical_json_bytes(
+                    structured_object(structured_object(observed.structured_content)["reply"])["observation"]
+                )
+            )
+            if terminal.projection.lifecycle is OperationLifecycle.TERMINAL:
+                break
+            await asyncio.sleep(0.05)
+    assert terminal.projection.operation_id == receipt.operation_id
+    assert terminal.projection.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
+    assert terminal.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+    assert terminal.projection.effect is OperationEffect.NONE
+    requested = OperationResultProjectionRequestV1(
+        operation_id=receipt.operation_id,
+        terminal_revision=terminal.projection.revision,
+        definition_contract_digest=contract.definition_contract_digest,
+        result_schema=contract.result_schema,
+    )
+    released = await sdk.call_tool("result", {"result": requested.model_dump(mode="json")})
+    assert not released.is_error
+    result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
+        canonical_json_bytes(structured_object(released.structured_content)["document"])
+    )
+    assert result.definition_contract_digest == contract.definition_contract_digest
+    assert result.result_schema == contract.result_schema
+    assert result.projection.profile_id == profile.profile_id
+    assert result.projection.kind == "status" and result.projection.status is not None
+
+
+async def _assert_authority_unchanged(store: AutomationControlStore, before: Any, lock_before: Any) -> None:
+    after = await asyncio.to_thread(store.snapshot)
+    assert after.grants == before.grants
+    # Admission may legitimately touch last-used metadata; authority-bearing key facts cannot change.
+    assert tuple(key.model_dump(exclude={"last_used_at"}) for key in after.keys) == tuple(
+        key.model_dump(exclude={"last_used_at"}) for key in before.keys
+    )
+    assert after.automation_enabled == before.automation_enabled
+    assert after.profile_lock_generation == before.profile_lock_generation
+    assert await asyncio.to_thread(store.profile_lock_state) == lock_before
 
 
 @pytest.mark.anyio
@@ -493,74 +698,10 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
         reference_owner = _NativeReferenceCleanup(protected, reference, metadata)
         primary: BaseException | None = None
         try:
-            credential = await asyncio.to_thread(source.read)
-            try:
-                await await_cancellation_complete(
-                    asyncio.to_thread(
-                        protected.replace,
-                        credential_reference=reference,
-                        grant_id=metadata.grant_id,
-                        key_id=metadata.key_id,
-                        review_digest=metadata.review_digest,
-                        credential=credential,
-                    ),
-                    task_name="native-expiry-reference-publish",
-                )
-            finally:
-                del credential
-            human = await open_installed_client(profile_id=profile.profile_id, frontend=OperationFrontendProjection.CLI)
-            human_primary: BaseException | None = None
-            try:
-                proof = bytearray(PROFILE_INPUT, "utf-8")
-                try:
-                    admitted = await await_cancellation_complete(
-                        asyncio.to_thread(human.login_password, proof), task_name="native-expiry-human-login"
-                    )
-                    assert not any(proof)
-                finally:
-                    proof[:] = bytes(len(proof))
-                human_status = admitted.status
-                assert human_status.credential_authenticated and human_status.profile_bound
-                assert human_status.profile_id == profile.profile_id and human_status.session_id == human.session_id
-                human_session = human.session_id
-                expiry = human_status.session_expires_at
-                assert expiry is not None and timedelta(0) < expiry - now() <= timedelta(minutes=1)
-                store = AutomationControlStore(
-                    root=(tmp_path / "cadrumo-storage").resolve(),
-                    binding=profile.binding,
-                    secrets_store=native_store,
-                )
-                before = await asyncio.to_thread(store.snapshot)
-                lock_before = await asyncio.to_thread(store.profile_lock_state)
-                assert not lock_before.globally_locked
-                assert expiry < next(grant.expires_at for grant in before.grants if grant.grant_id == metadata.grant_id)
-                # Poll real UTC; neither parent nor immutable worker uses an accelerated clock.
-                async with asyncio.timeout(90):
-                    while now() <= expiry:
-                        await asyncio.sleep(0.25)
-                expired_codes = {
-                    AccessDenialCode.SESSION_EXPIRED.value,
-                    AccessDenialCode.SESSION_INACTIVE.value,
-                    AccessDenialCode.CONNECTION_MISMATCH.value,
-                }
-                try:
-                    expired = await asyncio.to_thread(human.status)
-                except FrontendRefusedError as refusal:
-                    assert refusal.reason in expired_codes
-                else:
-                    assert expired.status.denial is not None
-                    assert expired.status.denial.value in expired_codes
-                assert await asyncio.to_thread(store.snapshot) == before
-                assert await asyncio.to_thread(store.profile_lock_state) == lock_before
-            except BaseException as error:
-                human_primary = error
-                raise
-            finally:
-                await close_async_resources(
-                    human.cleanup_owner(primary_error=human_primary),
-                    task_name="expired-human-client-close",
-                    primary_error=human_primary,
-                )
+            await _publish_reference_copy(protected, source, reference, metadata)
+            human_session, store, before, lock_before = await _let_the_human_session_expire(
+                profile, native_store, metadata, tmp_path / "cadrumo-storage"
+            )
 
             # No password or human-administration call follows expiry. Only protected API-reference admission.
             executable = _installed_mcp_executable()
@@ -581,92 +722,9 @@ async def test_installed_mcp_independent_grant_executes_after_genuine_human_idle
                     ClientSession(reader, writer, read_timeout_seconds=60) as sdk,
                 ):
                     await sdk.initialize()
-                    status_call = await sdk.call_tool("status", {})
-                    assert not status_call.is_error
-                    status = _status(status_call.structured_content, profile_id=profile.profile_id)
-                    assert status.credential_authenticated and status.profile_bound and status.grant_valid
-                    assert status.denial is None and status.session_id is not None
-                    assert status.session_id != human_session
-                    assert status.session_expires_at is not None and status.session_expires_at > now()
-                    custody = await asyncio.to_thread(profile.server_custody_health)
-                    assert custody.backend is backend and custody.runtime_uses_same_store
-                    assert custody.control_anchor_present and custody.wrapping_keys_valid
-                    assert metadata.grant_id in custody.grant_ids and metadata.key_id in custody.key_ids
-                    health = await asyncio.to_thread(profile.worker_health, status.session_id)
-                    assert health.alive and health.exact_session_admitted and health.identity.binding == profile.binding
-                    described = await sdk.call_tool("describe", {"definition_id": AUTH_READ_OPERATION_DEFINITION_ID})
-                    assert not described.is_error
-                    contract = OperationPublicDefinitionContractV1.model_validate_json(
-                        canonical_json_bytes(
-                            structured_object(structured_object(described.structured_content)["description"])[
-                                "contract"
-                            ]
-                        )
-                    )
-                    assert contract.definition_id == AUTH_READ_OPERATION_DEFINITION_ID and contract.result_schema
-                    submitted = await sdk.call_tool(
-                        "execute",
-                        {
-                            "definition_id": AUTH_READ_OPERATION_DEFINITION_ID,
-                            "subject_ref": profile_operation_subject(str(profile.profile_id)),
-                            "payload": AuthReadRequest(profile_id=profile.profile_id, kind="status").model_dump(
-                                mode="json"
-                            ),
-                        },
-                    )
-                    assert not submitted.is_error
-                    submission = structured_object(submitted.structured_content)
-                    assert submission["outcome"] == "submitted"
-                    receipt = OperationSubmissionReceiptV1.model_validate_json(
-                        canonical_json_bytes(submission["receipt"])
-                    )
-                    observation = OperationObservationRequestV1(
-                        operation_id=receipt.operation_id, after_cursor=0, page_limit=32
-                    )
-                    async with asyncio.timeout(30):
-                        while True:
-                            observed = await sdk.call_tool(
-                                "observe", {"observation": observation.model_dump(mode="json")}
-                            )
-                            assert not observed.is_error
-                            terminal = OperationObservationSuccessV1.model_validate_json(
-                                canonical_json_bytes(
-                                    structured_object(structured_object(observed.structured_content)["reply"])[
-                                        "observation"
-                                    ]
-                                )
-                            )
-                            if terminal.projection.lifecycle is OperationLifecycle.TERMINAL:
-                                break
-                            await asyncio.sleep(0.05)
-                    assert terminal.projection.operation_id == receipt.operation_id
-                    assert terminal.projection.definition_id == AUTH_READ_OPERATION_DEFINITION_ID
-                    assert terminal.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                    assert terminal.projection.effect is OperationEffect.NONE
-                    requested = OperationResultProjectionRequestV1(
-                        operation_id=receipt.operation_id,
-                        terminal_revision=terminal.projection.revision,
-                        definition_contract_digest=contract.definition_contract_digest,
-                        result_schema=contract.result_schema,
-                    )
-                    released = await sdk.call_tool("result", {"result": requested.model_dump(mode="json")})
-                    assert not released.is_error
-                    result = OperationResultProjectionSuccessV1[AuthReadProjection].model_validate_json(
-                        canonical_json_bytes(structured_object(released.structured_content)["document"])
-                    )
-                    assert result.definition_contract_digest == contract.definition_contract_digest
-                    assert result.result_schema == contract.result_schema
-                    assert result.projection.profile_id == profile.profile_id
-                    assert result.projection.kind == "status" and result.projection.status is not None
-                    after = await asyncio.to_thread(store.snapshot)
-                    assert after.grants == before.grants
-                    # Admission may legitimately touch last-used metadata; authority-bearing key facts cannot change.
-                    assert tuple(key.model_dump(exclude={"last_used_at"}) for key in after.keys) == tuple(
-                        key.model_dump(exclude={"last_used_at"}) for key in before.keys
-                    )
-                    assert after.automation_enabled == before.automation_enabled
-                    assert after.profile_lock_generation == before.profile_lock_generation
-                    assert await asyncio.to_thread(store.profile_lock_state) == lock_before
+                    await _assert_independent_admission(sdk, profile, backend, metadata, human_session)
+                    await _execute_and_release_auth_read(sdk, profile)
+                    await _assert_authority_unchanged(store, before, lock_before)
         except BaseException as error:
             primary = error
             raise

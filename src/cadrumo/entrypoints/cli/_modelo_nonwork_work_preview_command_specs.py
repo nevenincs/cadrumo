@@ -49,6 +49,16 @@ MODELO_NONWORK_WORK_PREVIEW_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 constraint=ParameterConstraint(minimum=1, maximum=366),
             ),
             OptionSpec(
+                name="filing_year",
+                declarations=("--year",),
+                value=ValueContract(DeferredTarget("builtins", "int")),
+                default=ParameterDefault.value(None),
+                help_key=TranslationKey("cli.app.modelo.work.preview_maritime_exemption_year_help"),
+                multiple=False,
+                is_flag=False,
+                flag_value=None,
+            ),
+            OptionSpec(
                 name="gross_navigation_income",
                 declarations=("--gross-navigation-income",),
                 value=ValueContract(DeferredTarget("builtins", "str")),

@@ -17,11 +17,38 @@ from ..workbook_demo_oss import build_oss_detail_plan
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("scheme", ["exterior", "union", "importacion"])
-def test_oss_detail_owners_remain_distinct_and_missing_settlement_is_disclosed(scheme):
-    source, plan = build_oss_detail_plan(scheme=scheme)
-    layout = plan_layout(source.revision)
-    values = {cell.address: cell.value for cell in plan.value_cells}
+def _assert_grid_owner(plan, layout, values, scheme, identifier, grid):
+    row = dict(zip((column.key for column in grid.columns), grid.rows[0].cells, strict=True))
+    amount = row["correccion" if identifier == "correcciones" else "cuota"]
+    assert amount.binding_id is not None
+    address = layout.binding_cells[amount.binding_id]
+    expected = (
+        Decimal("-20") if identifier == "correcciones" else Decimal("380" if identifier == "union-envio" else "190")
+    )
+    assert values[address] == expected
+    mirrors = [
+        cell
+        for cell in plan.formula_cells
+        if cell.address.tab is TabName.FORM
+        and not str(cell.casilla_id).startswith(
+            ("iva.exterior.resultado.", "iva.union.resultado.", "iva.importacion.resultado.")
+        )
+        and re.search(re.escape(address.qualified()) + r"(?![0-9])", cell.formula)
+    ]
+    assert len(mirrors) == 1
+    assert "ISBLANK" in mirrors[0].formula
+    unused = grid.rows[1 if scheme == "union" else 2].cells[-1]
+    assert unused.binding_id is not None
+    assert values[layout.binding_cells[unused.binding_id]] is None
+    if scheme != "union":
+        second = grid.rows[1].cells[-1]
+        assert second.binding_id is not None
+        assert values[layout.binding_cells[second.binding_id]] == Decimal(
+            "-140" if identifier == "correcciones" else "100"
+        )
+
+
+def _assert_grid_owners(source, plan, layout, values, scheme):
     grids = {
         block.id: block
         for form in source.revision.form_layouts
@@ -31,50 +58,19 @@ def test_oss_detail_owners_remain_distinct_and_missing_settlement_is_disclosed(s
         if isinstance(block, FormGridBlock) and block.id != "resultado-estados"
     }
     for identifier, grid in grids.items():
-        row = dict(zip((column.key for column in grid.columns), grid.rows[0].cells, strict=True))
-        amount = row["correccion" if identifier == "correcciones" else "cuota"]
-        assert amount.binding_id is not None
-        address = layout.binding_cells[amount.binding_id]
-        expected = (
-            Decimal("-20") if identifier == "correcciones" else Decimal("380" if identifier == "union-envio" else "190")
-        )
-        assert values[address] == expected
-        mirrors = [
-            cell
-            for cell in plan.formula_cells
-            if cell.address.tab is TabName.FORM
-            and not str(cell.casilla_id).startswith(
-                ("iva.exterior.resultado.", "iva.union.resultado.", "iva.importacion.resultado.")
-            )
-            and re.search(re.escape(address.qualified()) + r"(?![0-9])", cell.formula)
-        ]
-        assert len(mirrors) == 1
-        assert "ISBLANK" in mirrors[0].formula
-        unused = grid.rows[1 if scheme == "union" else 2].cells[-1]
-        assert unused.binding_id is not None
-        assert values[layout.binding_cells[unused.binding_id]] is None
-        if scheme != "union":
-            second = grid.rows[1].cells[-1]
-            assert second.binding_id is not None
-            assert values[layout.binding_cells[second.binding_id]] == Decimal(
-                "-140" if identifier == "correcciones" else "100"
-            )
+        _assert_grid_owner(plan, layout, values, scheme, identifier, grid)
+
+
+def _assert_settlement_disclosure(source, plan, layout, values, scheme):
     text = "\n".join(str(cell.value) for cell in plan.value_cells)
     assert not re.search(r"\b[0-9a-f]{64}\b", text)
-    if scheme != "union":
-        assert "ingreso de 170 euros" in text
-        assert "Falta el ingreso adicional" in text
-        assert any(
-            cell.casilla_id == f"iva.{scheme}.resultado.saldo-ingresar-espana" and cell.address.tab is TabName.FORM
-            for cell in plan.formula_cells
-        )
-    else:
-        assert "ingreso de 930 euros" in text
-        assert "Falta el ingreso adicional" in text
-        assert any(
-            cell.casilla_id == "iva.union.resultado.saldo-ingresar-espana" and cell.address.tab is TabName.FORM
-            for cell in plan.formula_cells
-        )
+    amount_text = "ingreso de 930 euros" if scheme == "union" else "ingreso de 170 euros"
+    assert amount_text in text
+    assert "Falta el ingreso adicional" in text
+    assert any(
+        cell.casilla_id == f"iva.{scheme}.resultado.saldo-ingresar-espana" and cell.address.tab is TabName.FORM
+        for cell in plan.formula_cells
+    )
     # Google Sheets rejects formulas longer than 50,000 characters.
     assert max(len(cell.formula) for cell in plan.formula_cells) < 50_000
     assert "entradas independientes" in text
@@ -83,7 +79,9 @@ def test_oss_detail_owners_remain_distinct_and_missing_settlement_is_disclosed(s
     for casilla in source.revision.casillas:
         if casilla.input_kind == "bound":
             assert values[layout.entradas_cells[casilla.id]] is None
-    workbook = load_workbook(BytesIO(materialize_export_plan(plan)))
+
+
+def _assert_internal_rows_hidden(source, plan, workbook):
     internal = {casilla.id: casilla for casilla in source.revision.casillas if casilla.internal_only}
     hidden = {(row.tab, row.row) for row in plan.hidden_rows}
     assert internal
@@ -98,6 +96,9 @@ def test_oss_detail_owners_remain_distinct_and_missing_settlement_is_disclosed(s
             assert (cell.address.tab, cell.address.row) not in hidden
     reference_labels = {cell.value for cell in plan.value_cells if cell.address.tab is TabName.PROVENANCE}
     assert not {casilla.label for casilla in internal.values()} & reference_labels
+
+
+def _assert_form_sections_and_guide(plan, workbook):
     form = workbook[TabName.FORM.value]
     section_positions = {
         cell.value: row_number
@@ -117,4 +118,16 @@ def test_oss_detail_owners_remain_distinct_and_missing_settlement_is_disclosed(s
     assert section_positions["Datos del pago"] < section_positions["Datos complementarios de presentación"]
     guide = workbook[TabName.GUIDE.value]
     assert tuple(guide.cell(row, 1).value for row in range(7, 11)) == plan.guide.paragraphs
+
+
+@pytest.mark.parametrize("scheme", ["exterior", "union", "importacion"])
+def test_oss_detail_owners_remain_distinct_and_missing_settlement_is_disclosed(scheme):
+    source, plan = build_oss_detail_plan(scheme=scheme)
+    layout = plan_layout(source.revision)
+    values = {cell.address: cell.value for cell in plan.value_cells}
+    _assert_grid_owners(source, plan, layout, values, scheme)
+    _assert_settlement_disclosure(source, plan, layout, values, scheme)
+    workbook = load_workbook(BytesIO(materialize_export_plan(plan)))
+    _assert_internal_rows_hidden(source, plan, workbook)
+    _assert_form_sections_and_guide(plan, workbook)
     workbook.close()

@@ -370,3 +370,21 @@ Reviewed through `b49f3e2399` against the assets core and registry-owned facts p
 
 ### asset-findings | low | Unbound-box finding is over-broad and contradicts the handoff
 `modelo_bindings_actividad_assets.py:789-791,828`, `application/actividad_asset/operations.py:766-770`. Not reachable today.
+
+### registry-facts | high | Two form codes remain in code past the gate
+`application/modelo/withholding_detail_gate.py:143,265`, `domain/modelos/perceptor_clave_scope.py:41`.
+
+### literal-gate | high | Sweep misses most fresh shapes and fact words lose to unit words
+`dev/quality/tests/test_tax_literal_sweep.py:380,649-656,1067-1074,1157`. 105 of 112 fresh probes passed.
+
+### tui-door | medium | An expired session shows a refusal with no reason
+`entrypoints/tui/ledger/actividad_asset.py:181`.
+
+### profile-bound | medium | Registry schema holds a copy of a code capacity
+`_data/registry/cadrumo/user_profile/schema.toml`, `application/filing/producer_snapshot.py:68`.
+
+### xml-export | low | Capitalizing can turn a character into a code letter
+`canonical_xml_text`: `ı` to `I` on `tipo_TIA`.
+
+### resolution | low | Findings above resolved; stated gate limits remain
+All high and medium findings above are fixed in commits through `e89af9ea3d` and verified by the suites named in the plan ledgers. The literal gate cannot judge every shape: `dev/quality/tests/test_tax_literal_sweep.py` lists and pins what it cannot see. Not repeated by an independent reviewer after the last fix round.

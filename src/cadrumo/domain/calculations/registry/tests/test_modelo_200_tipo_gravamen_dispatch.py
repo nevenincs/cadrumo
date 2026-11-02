@@ -41,6 +41,18 @@ from ..binding_selector_utils import selector_as_dict
 from ..errors import RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..schema_formula import ParameterDefinition
+from .modelo_200_casilla_ids import (
+    M200_BIN_APLICADA_CASILLA,
+    M200_BONIFICACIONES_CASILLA,
+    M200_CORRECCIONES_AUMENTO_CASILLA,
+    M200_CORRECCIONES_DISMINUCION_CASILLA,
+    M200_CUOTA_INTEGRA_CASILLA,
+    M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA,
+    M200_CUOTA_LIQUIDA_POSITIVA_CASILLA,
+    M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA,
+    M200_RESERVA_CAPITALIZACION_CASILLA,
+    M200_RESULTADO_CONTABLE_CASILLA,
+)
 from .published_authority import published_legal_evidence_text, published_legal_reference, published_snapshot
 from .registry_tree import bundled_modelo_components
 
@@ -50,37 +62,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures(
 # art. 101 ERD 24 % -- for the first exercise the published provision is in force.
 _DT44_FIRST_TRANSITIONAL_EXERCISE = published_legal_reference("ley-27-2014:dt-44").effective_from.year
 _DISPATCH_BINDING = "modelo-200-profile-legal-entity-form"
-_M200_RESULTADO_CONTABLE_CASILLA: CasillaId = validated_casilla_id(
-    "DP200012:00501", surface="_M200_RESULTADO_CONTABLE_CASILLA"
-)
-_M200_CORRECCIONES_AUMENTO_CASILLA: CasillaId = validated_casilla_id(
-    "DP200013:00417",
-    surface="_M200_CORRECCIONES_AUMENTO_CASILLA",
-)
-_M200_CORRECCIONES_DISMINUCION_CASILLA: CasillaId = validated_casilla_id(
-    "DP200013:00418",
-    surface="_M200_CORRECCIONES_DISMINUCION_CASILLA",
-)
-_M200_RESERVA_CAPITALIZACION_CASILLA: CasillaId = validated_casilla_id(
-    "01032",
-    surface="_M200_RESERVA_CAPITALIZACION_CASILLA",
-)
-_M200_BIN_APLICADA_CASILLA: CasillaId = validated_casilla_id("DP200014:00547", surface="_M200_BIN_APLICADA_CASILLA")
-_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014:01033",
-    surface="_M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA",
-)
-_M200_BONIFICACIONES_CASILLA: CasillaId = validated_casilla_id("DP200014:01034", surface="_M200_BONIFICACIONES_CASILLA")
-_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014B:01766",
-    surface="_M200_CUOTA_LIQUIDA_POSITIVA_CASILLA",
-)
-_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014B:01784",
-    surface="_M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA",
-)
 _M200_TIPO_GRAVAMEN_CASILLA: CasillaId = validated_casilla_id("DP200014:00558", surface="_M200_TIPO_GRAVAMEN_CASILLA")
-_M200_CUOTA_INTEGRA_CASILLA: CasillaId = validated_casilla_id("DP200014:00562", surface="_M200_CUOTA_INTEGRA_CASILLA")
 
 
 # Both M202 pagos-fraccionados fold relations (modalidad 40.2 casilla 03 + 40.3 casilla 34)
@@ -93,15 +75,15 @@ _M200_PAGOS_RELATIONS_ZERO = {
 
 def _base_inputs(base: Decimal) -> dict[CasillaId, Decimal]:
     return {
-        _M200_RESULTADO_CONTABLE_CASILLA: base,
-        _M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
-        _M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
-        _M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
-        _M200_BIN_APLICADA_CASILLA: Decimal("0"),
-        _M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
-        _M200_BONIFICACIONES_CASILLA: Decimal("0"),
-        _M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
-        _M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
+        M200_RESULTADO_CONTABLE_CASILLA: base,
+        M200_CORRECCIONES_AUMENTO_CASILLA: Decimal("0"),
+        M200_CORRECCIONES_DISMINUCION_CASILLA: Decimal("0"),
+        M200_RESERVA_CAPITALIZACION_CASILLA: Decimal("0"),
+        M200_BIN_APLICADA_CASILLA: Decimal("0"),
+        M200_DEDUCCION_DOBLE_IMPOSICION_CASILLA: Decimal("0"),
+        M200_BONIFICACIONES_CASILLA: Decimal("0"),
+        M200_CUOTA_LIQUIDA_POSITIVA_CASILLA: Decimal("0"),
+        M200_CUOTA_LIQUIDA_NEGATIVA_CASILLA: Decimal("0"),
     }
 
 
@@ -337,7 +319,7 @@ def test_tipo_gravamen_dispatch_routes_00558_by_legal_entity_form() -> None:
             relation_values=dict(_M200_PAGOS_RELATIONS_ZERO),
             date_context={"filing_period": date(2024, 12, 31)},
         )
-        return result.values[_M200_TIPO_GRAVAMEN_CASILLA], result.values[_M200_CUOTA_INTEGRA_CASILLA]
+        return result.values[_M200_TIPO_GRAVAMEN_CASILLA], result.values[M200_CUOTA_INTEGRA_CASILLA]
 
     sl_rate, sl_cuota = _cuota_for("sl")
     sa_rate, _ = _cuota_for("sa")
@@ -364,7 +346,7 @@ def test_nonprofit_special_regime_stays_at_10_percent_inside_erd_threshold() -> 
     result = _calculate_tipo_gravamen(_base_inputs(Decimal("1000000")), "sin_fines_lucrativos", incn="500000")
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("10")
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("100000.00")
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("100000.00")
 
 
 def test_tipo_gravamen_dispatch_raises_when_legal_entity_form_is_unsupplied() -> None:
@@ -526,7 +508,7 @@ def test_tipo_gravamen_dispatch_routes_erd_23_when_incn_below_1m() -> None:
         "SL with INCN 850k must display tipo 23 % (Ley 31/2022 ERD)"
     )
     # Cuota integra: 1.000.000 base x 23 % = 230.000.
-    assert result_sal.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("230000.00"), (
+    assert result_sal.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("230000.00"), (
         "SAL cuota integra at ERD 23 % on 1M base = 230.000"
     )
 
@@ -544,7 +526,7 @@ def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_display_rate_to_fir
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("10500.00")
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("10500.00")
 
 
 def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_cuota_to_rest_tranche() -> None:
@@ -554,8 +536,8 @@ def test_tipo_gravamen_dispatch_routes_dt44_first_year_micro_cuota_to_rest_tranc
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("21")
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("21500.00")
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] != Decimal("23000.00")
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("21500.00")
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] != Decimal("23000.00")
 
 
 def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> None:
@@ -572,7 +554,7 @@ def test_tipo_gravamen_dispatch_routes_general_25_when_incn_at_or_above_1m() -> 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25"), (
         "SA with INCN 1.5M must display tipo 25 % (above ERD threshold)"
     )
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
 
 
 def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_under_dt44() -> None:
@@ -588,7 +570,7 @@ def test_tipo_gravamen_dispatch_routes_art101_erd_below_10m_under_dt44() -> None
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("24")
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("240000.00")
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("240000.00")
 
 
 def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_under_dt44() -> None:
@@ -598,7 +580,7 @@ def test_tipo_gravamen_dispatch_keeps_general_rate_at_art101_boundary_under_dt44
     )
 
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("25")
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("250000.00")
 
 
 def test_new_entity_flag_overrides_erd_threshold() -> None:
@@ -614,7 +596,7 @@ def test_new_entity_flag_overrides_erd_threshold() -> None:
     assert result.values[_M200_TIPO_GRAVAMEN_CASILLA] == Decimal("15"), (
         "new-entity flag must override ERD lane: tipo = 15 %, not 23 %"
     )
-    assert result.values[_M200_CUOTA_INTEGRA_CASILLA] == Decimal("75000.00"), (
+    assert result.values[M200_CUOTA_INTEGRA_CASILLA] == Decimal("75000.00"), (
         "cuota integra at 15 % on 500k base = 75.000"
     )
 

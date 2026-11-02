@@ -34,7 +34,7 @@ from ...core.iban import IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ...core.isin import is_valid_isin
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.percentage import Percentage
-from ..calculations.registry.form_codes import RegistryCodedEnum, resolve_form_codes
+from ..calculations.registry.form_codes import RegistryCodedEnum, form_codes_in_scope, resolve_form_codes
 
 FOREIGN_ASSET_REGISTER_SCHEMA_VERSION: Final = "1"
 """Schema version stamped on the register document and every entry."""
@@ -110,10 +110,13 @@ def _validate_iban_identifier(value: str) -> None:
 
 
 def _validate_issuer_country_identifier(value: str) -> None:
-    # Positions 132-143: "se reflejará la clave ZXX, siendo XX el código del país emisor".
-    if len(value[1:]) != COUNTRY_CODE_LENGTH or not value.startswith("Z") or not value[1:].isalpha():
+    # The record design's marker clave, then the issuer's country code. Outside a scope the form's marker is unknown.
+    codes = form_codes_in_scope()
+    marker = value[:1] if codes is None else codes.code("m720.issuer_country_marker")
+    country = value.removeprefix(marker)
+    if len(marker) + len(country) != len(value) or len(country) != COUNTRY_CODE_LENGTH or not country.isalpha():
         raise ForeignAssetRegisterValidationError(
-            "a security without ISIN is written Z plus the issuer country",
+            "a security without ISIN is written as the form's marker plus the issuer country",
         )
     if value != value.upper():
         raise ForeignAssetRegisterValidationError("issuer country code must be uppercase")

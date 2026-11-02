@@ -3,58 +3,174 @@ import { useMemo } from "react";
 import { userEvent, within } from "storybook/test";
 import type { DocsSearchResult } from "../ipc/contract";
 import type { Action } from "../shell/actions";
-import { useStrings } from "../shell/strings";
+import { useStrings, type Translate } from "../shell/strings";
 import { CommandPalette, type DocsSearch } from "./CommandPalette";
 
 // The palette over a fixed action list and a fixed search provider. A story
 // that shows results types its query the way a person would.
 const DOCS = "https://docs.invalid";
 
-const RESULTS: DocsSearchResult[] = [
-  {
-    kind: "page",
-    title: "Declaring quarterly IVA",
-    url: `${DOCS}/guides/iva.html`,
-    excerpt: "The quarterly IVA return gathers output and input tax.",
-    ranges: [[14, 17]],
-    crumb: "Guides · IVA",
+// What the documentation serves is in the documentation's language, and the
+// category line is the controller's, so each language has its own results.
+// A match is the first "IVA" of the excerpt.
+type Page = {
+  title: string;
+  excerpt: string;
+};
+type Words = {
+  guides: string;
+  glossary: string;
+  pages: readonly [Page, Page, Page, Page];
+};
+
+const WORDS: Record<string, Words> = {
+  en: {
+    guides: "Guides",
+    glossary: "Glossary",
+    pages: [
+      {
+        title: "Declaring quarterly IVA",
+        excerpt: "The quarterly IVA return gathers output and input tax.",
+      },
+      {
+        title: "IVA devengado",
+        excerpt: "Output IVA charged on the operations of the period.",
+      },
+      {
+        title: "Total cuota devengada",
+        excerpt: "Sum of the IVA quotas accrued in the period.",
+      },
+      {
+        title: "cadrumo app modelo calculate",
+        excerpt: "Calculates a draft revision, IVA carry included.",
+      },
+    ],
   },
-  {
-    kind: "concept",
-    title: "IVA devengado",
-    url: `${DOCS}/glossary.html#iva-devengado`,
-    excerpt: "Output IVA charged on the operations of the period.",
-    ranges: [[7, 10]],
-    crumb: "Glossary",
+  es: {
+    guides: "Guías",
+    glossary: "Glosario",
+    pages: [
+      {
+        title: "Declarar el IVA trimestral",
+        excerpt:
+          "La declaración trimestral de IVA reúne el IVA repercutido y el soportado.",
+      },
+      {
+        title: "IVA devengado",
+        excerpt: "IVA repercutido en las operaciones del periodo.",
+      },
+      {
+        title: "Total cuota devengada",
+        excerpt: "Suma de las cuotas de IVA devengadas en el periodo.",
+      },
+      {
+        title: "cadrumo app modelo calculate",
+        excerpt:
+          "Calcula una revisión en borrador, con el arrastre de IVA incluido.",
+      },
+    ],
   },
-  {
-    kind: "casilla",
-    title: "Total cuota devengada",
-    url: `${DOCS}/modelos/303.html#casilla-27`,
-    excerpt: "Sum of the IVA quotas accrued in the period.",
-    ranges: [[11, 14]],
-    crumb: "Casilla · Modelo 303 · 27",
+  ca: {
+    guides: "Guies",
+    glossary: "Glossari",
+    pages: [
+      {
+        title: "Declarar l'IVA trimestral",
+        excerpt:
+          "La declaració trimestral de l'IVA recull l'IVA repercutit i el suportat.",
+      },
+      {
+        title: "IVA devengado",
+        excerpt: "IVA repercutit en les operacions del període.",
+      },
+      {
+        title: "Total cuota devengada",
+        excerpt: "Suma de les quotes d'IVA meritades en el període.",
+      },
+      {
+        title: "cadrumo app modelo calculate",
+        excerpt:
+          "Calcula una revisió en esborrany, amb l'arrossegament d'IVA inclòs.",
+      },
+    ],
   },
-  {
-    kind: "cli",
-    title: "cadrumo app modelo calculate",
-    url: `${DOCS}/cli.html#modelo-calculate`,
-    excerpt: "Calculates a draft revision, IVA carry included.",
-    ranges: [[28, 31]],
-    crumb: "Command",
+  hu: {
+    guides: "Útmutatók",
+    glossary: "Szójegyzék",
+    pages: [
+      {
+        title: "A negyedéves IVA bevallása",
+        excerpt:
+          "A negyedéves IVA-bevallás összegyűjti a fizetendő és a levonható IVA-t.",
+      },
+      {
+        title: "IVA devengado",
+        excerpt: "Az időszak műveletei után felszámított fizetendő IVA.",
+      },
+      {
+        title: "Total cuota devengada",
+        excerpt: "Az időszakban esedékessé vált IVA-tételek összege.",
+      },
+      {
+        title: "cadrumo app modelo calculate",
+        excerpt: "Kiszámít egy vázlatverziót, az IVA-átvitellel együtt.",
+      },
+    ],
   },
-];
+};
+
+const IVA = "IVA";
+
+function resultsIn(t: Translate): DocsSearchResult[] {
+  const words = WORDS[t.locale ?? "en"] ?? WORDS.en!;
+  const hit = (excerpt: string) => {
+    const at = excerpt.indexOf(IVA);
+    return [[at, at + IVA.length]] as const;
+  };
+  const [page, concept, casilla, command] = words.pages;
+  return [
+    {
+      kind: "page",
+      ...page,
+      url: `${DOCS}/guides/iva.html`,
+      ranges: [...hit(page.excerpt)],
+      crumb: `${words.guides} · IVA`,
+    },
+    {
+      kind: "concept",
+      ...concept,
+      url: `${DOCS}/glossary.html#iva-devengado`,
+      ranges: [...hit(concept.excerpt)],
+      crumb: words.glossary,
+    },
+    {
+      kind: "casilla",
+      ...casilla,
+      url: `${DOCS}/modelos/303.html#casilla-27`,
+      ranges: [...hit(casilla.excerpt)],
+      crumb: `${t("desktop.palette.kind_casilla")} · Modelo 303 · 27`,
+    },
+    {
+      kind: "cli",
+      ...command,
+      url: `${DOCS}/cli.html#modelo-calculate`,
+      ranges: [...hit(command.excerpt)],
+      crumb: t("desktop.palette.kind_cli"),
+    },
+  ];
+}
 
 const noop = () => undefined;
 // What the documentation's search does in a story.
 type Mode = "answers" | "pending" | "empty" | "failing" | "absent";
-const SEARCH: Record<Mode, DocsSearch> = {
-  answers: async () => RESULTS,
-  pending: () => new Promise<DocsSearchResult[]>(noop),
-  empty: async () => [],
-  failing: () => Promise.reject(new Error("fixture")),
-  absent: null,
-};
+const searchOf = (mode: Mode, t: Translate): DocsSearch =>
+  ({
+    answers: async () => resultsIn(t),
+    pending: () => new Promise<DocsSearchResult[]>(noop),
+    empty: async () => [],
+    failing: () => Promise.reject(new Error("fixture")),
+    absent: null,
+  })[mode];
 
 function Palette({ mode }: { mode: Mode }) {
   const t = useStrings();
@@ -155,7 +271,7 @@ function Palette({ mode }: { mode: Mode }) {
   return (
     <CommandPalette
       actions={actions}
-      searchDocs={SEARCH[mode]}
+      searchDocs={searchOf(mode, t)}
       openDoc={noop}
       close={noop}
     />

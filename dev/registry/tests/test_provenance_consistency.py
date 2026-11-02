@@ -9,17 +9,11 @@ field's resolved coordinates as its id.
 
 from __future__ import annotations
 
-from datetime import date
-
 import pytest
 
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_base import SCHEMA_FAMILY
-from cadrumo.domain.calculations.registry.schema_exports import (
-    ExportLayoutDefinition,
-)
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
-from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..analysis.provenance_consistency import provenance_findings
@@ -28,6 +22,7 @@ from .single_casilla_export_layout_support import (
     CASILLA_01,
     LEGAL_REF,
     SOURCE_REF,
+    revision_with,
     single_casilla_export_layout,
 )
 
@@ -49,23 +44,8 @@ def _casilla(*, legal_refs: tuple[str, ...]) -> CasillaDefinition:
     )
 
 
-def _revision(
-    *, casillas: tuple[CasillaDefinition, ...], layouts: tuple[ExportLayoutDefinition, ...]
-) -> ModeloRevision:
-    return ModeloRevision(
-        id="test-revision",
-        localization_key="test.schema.revision.test-revision.label",
-        valid_from=date(2026, 1, 1),
-        period_selector=PeriodSelector(years=(2026,), periods=("1T",)),
-        legal_refs=(LEGAL_REF,),
-        source_refs=(SOURCE_REF,),
-        casillas=casillas,
-        export_layouts=layouts,
-    )
-
-
 def test_child_inside_manifest_is_clean() -> None:
-    revision = _revision(
+    revision = revision_with(
         casillas=(_casilla(legal_refs=(LEGAL_REF,)),),
         layouts=(single_casilla_export_layout(field_source_refs=(SOURCE_REF,)),),
     )
@@ -74,7 +54,7 @@ def test_child_inside_manifest_is_clean() -> None:
 
 
 def test_casilla_citing_outside_legal_ref_is_reported_with_the_ref() -> None:
-    revision = _revision(casillas=(_casilla(legal_refs=(LEGAL_REF, _EXTRA_LEGAL_REF)),), layouts=())
+    revision = revision_with(casillas=(_casilla(legal_refs=(LEGAL_REF, _EXTRA_LEGAL_REF)),), layouts=())
 
     (finding,) = provenance_findings(revision, modelo_id="000")
 
@@ -83,7 +63,7 @@ def test_casilla_citing_outside_legal_ref_is_reported_with_the_ref() -> None:
 
 
 def test_resolved_export_field_citing_outside_source_is_reported() -> None:
-    revision = _revision(
+    revision = revision_with(
         casillas=(_casilla(legal_refs=(LEGAL_REF,)),),
         layouts=(single_casilla_export_layout(field_source_refs=(SOURCE_REF, _EXTRA_SOURCE_REF)),),
     )
@@ -187,8 +167,6 @@ def test_the_walked_families_and_the_declared_child_kinds_agree() -> None:
     revision leaves empty is absent, and the derived export-field surface is
     added by the screen rather than by the walk.
     """
-
-    from cadrumo.domain.calculations.registry.schema import ModeloRevision
 
     from ..analysis.provenance_consistency import citing_children
 

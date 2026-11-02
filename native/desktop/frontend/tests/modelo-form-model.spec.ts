@@ -22,6 +22,8 @@ import {
   type StagedEdit,
 } from "../src/components/modelo/form/session";
 import { mayRenew } from "../src/components/modelo/dialogs/useEditReview";
+import { stagedText } from "../src/components/modelo/form/stagedWords";
+import type { Translate } from "../src/shell/strings";
 import type {
   ModeloWorkbenchFormProjectionV1,
   PublicModeloFormField,
@@ -60,6 +62,7 @@ const staged = (
   field,
   intent,
   entry: null,
+  read: null,
   normalisations: [],
   beforeChanged: false,
 });
@@ -346,4 +349,15 @@ test("only the latest check, on the baseline held now, may renew it", () => {
   expect(mayRenew({ ticket: 3, latest: 3, stale: held, current: null })).toBe(
     false,
   );
+});
+
+test("a typed value is said as the application read it, or as typed where it said nothing", () => {
+  const field = box(m130, "06");
+  const typed = {
+    ...staged(field, valueIntent(field, "1234.56")),
+    entry: "1234,56",
+  };
+  const t = ((key: string) => key) as Translate;
+  expect(stagedText(t, typed)).toBe("1234,56");
+  expect(stagedText(t, { ...typed, read: "1,234.56 €" })).toBe("1,234.56 €");
 });

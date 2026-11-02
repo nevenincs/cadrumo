@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import type { AgentDropSignal } from "../../src/shell/agentSession";
 import {
   agentColumn,
@@ -97,6 +97,25 @@ test("a Shift-drop reserves a new conversation and stages uploads and their refu
   await expect(
     staged(page).filter({ hasText: "escaneo-anual.pdf" }),
   ).toContainText(label("desktop.agent.upload_quota_exceeded"));
+  // The files sit between the message and the row that holds Send.
+  const boxOf = async (target: Locator) => {
+    const box = await target.boundingBox();
+    if (!box) throw new Error("Composer part is not visible");
+    return box;
+  };
+  const files = await boxOf(
+    agentColumn(page).getByRole("region", {
+      name: label("desktop.agent.attachments"),
+    }),
+  );
+  const message = await boxOf(messageField(page));
+  const send = await boxOf(
+    agentColumn(page).getByRole("button", {
+      name: label("desktop.agent.send"),
+    }),
+  );
+  expect(files.y).toBeGreaterThanOrEqual(message.y + message.height - 1);
+  expect(files.y + files.height).toBeLessThanOrEqual(send.y + 1);
   expect(
     (await calls(page)).filter((call) => call === "agentStartConversation"),
   ).toHaveLength(1);

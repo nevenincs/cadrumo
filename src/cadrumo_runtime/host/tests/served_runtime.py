@@ -82,6 +82,7 @@ def serving_runtime(
     workers: int = 1,
     ready_seconds: float = 3,
     drain_seconds: float = 20,
+    product_version: str = "test",
 ) -> Generator[ServedRuntime]:
     """Serve ``endpoint`` until the scope ends, drain the host, then close the endpoint.
 
@@ -98,10 +99,10 @@ def serving_runtime(
     )
     profiles.prepare_registry()
     server = RetainedRuntimeTransportServer(
-        endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
+        endpoint, product_version=product_version, stop=stop, profiles=profiles, boot_id=boot
     )
     launch = LaunchDoor(
-        endpoint, expected=ClientHello(product_version="test", storage_identity=endpoint.storage_identity)
+        endpoint, expected=ClientHello(product_version=product_version, storage_identity=endpoint.storage_identity)
     )
     with ThreadPoolExecutor(max_workers=workers) as pool:
         running = pool.submit(server.serve)
@@ -143,20 +144,20 @@ def admit_session(
     connection: VerifiedConnection,
     profile_id: UUID,
     *,
-    method: Literal["password", "api_key"],
+    method: Literal["password", "receipt", "api_key"],
     proof: bytes,
+    frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
+    deadline_seconds: float | None = None,
 ) -> UUID:
-    """Sign in over ``connection`` and return the admitted session, checking the proof buffer was wiped."""
+    """Sign in over ``connection`` and return the admitted session, checking the proof buffer was wiped.
+
+    The exchange budget is the runtime's own unless ``deadline_seconds`` bounds it.
+    """
     secret = bytearray(proof)
     reply = connection.login(
-        ProfileLogin(
-            request_id=uuid4(),
-            profile_id=profile_id,
-            frontend=OperationFrontendProjection.CLI,
-            method=method,
-        ),
+        ProfileLogin(request_id=uuid4(), profile_id=profile_id, frontend=frontend, method=method),
         secret,
-        deadline=exchange_deadline(),
+        deadline=exchange_deadline() if deadline_seconds is None else time.monotonic() + deadline_seconds,
     )
     assert secret == bytes(len(proof))
     assert isinstance(reply, ProfileStatus), reply

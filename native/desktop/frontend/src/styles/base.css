@@ -27,6 +27,11 @@
     outline: var(--focus-ring) solid var(--ring);
     outline-offset: var(--focus-ring);
   }
+  /* A heading takes focus from code, to bring a reader to a new step. It is
+     no control, so it draws no ring. */
+  :is(h1, h2, h3, h4, h5, h6)[tabindex="-1"]:focus-visible {
+    outline: none;
+  }
   kbd {
     font-family: inherit;
   }

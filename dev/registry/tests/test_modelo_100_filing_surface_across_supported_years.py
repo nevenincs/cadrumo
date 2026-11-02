@@ -24,7 +24,6 @@ from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.registry.binding_provider_registration import registration_for
-from cadrumo.domain.calculations.registry.binding_value_contract import BindingValueChannel
 from cadrumo.domain.calculations.registry.export_xml_dictionary import decode_dictionary_text
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.ids import BindingId, RelationId
@@ -37,6 +36,7 @@ from cadrumo.domain.calculations.registry.tests.modelo_100_profile_binding_table
     FAMILY_ROW_BINDINGS,
     PERSONAL_FAMILY_CASILLA_TO_BINDING,
 )
+from cadrumo.domain.calculations.registry.tests.modelo_100_registry_support import neutral_binding_values
 
 from ..compiler.loader import load_shared_catalogues
 
@@ -255,22 +255,9 @@ def _binding_inputs(
     figure enters at the casilla it names rather than on the binding channel,
     and supplying both would assert one value through two channels.
     """
-    decimals: dict[BindingId, Decimal] = {}
-    booleans: dict[BindingId, bool] = {}
-    dates: dict[BindingId, date] = {}
-    enums: dict[BindingId, str] = {}
-    for binding in snapshot.revision.bindings:
-        if binding.id == _WORK_CERTIFICATE:
-            continue
-        channel = binding.value.channel
-        if channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
-            decimals[binding.id] = Decimal("0")
-        elif channel is BindingValueChannel.BOOLEAN:
-            booleans[binding.id] = False
-        elif channel is BindingValueChannel.DATE:
-            dates[binding.id] = date(1975, 6, 15)
-        elif channel is BindingValueChannel.ENUM:
-            enums[binding.id] = "madrid"
+    decimals, booleans, dates, enums = neutral_binding_values(
+        binding for binding in snapshot.revision.bindings if binding.id != _WORK_CERTIFICATE
+    )
     decimals["renta-profile-declaration-type"] = Decimal("1")
     return decimals, booleans, dates, enums
 

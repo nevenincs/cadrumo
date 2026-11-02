@@ -59,6 +59,11 @@ export function fieldWidth(shape: FieldShape | "note", name = false): string {
   return `${width} max-w-full`;
 }
 
+/** The narrowest, in px, the reading table's value column is dragged to: the
+ * widest field `fieldWidth` draws (the theme's field width, 13.75rem) and
+ * the cell's padding, so a value is always read and edited in full. */
+export const VALUE_COLUMN_MIN_PX = 228;
+
 const SPECS: Record<FieldShape | "note", FieldSpec> = {
   text: { kind: "text", maxLength: LABEL_MAX },
   date: { kind: "date" },

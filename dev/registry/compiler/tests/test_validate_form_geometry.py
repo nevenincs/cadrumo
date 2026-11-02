@@ -19,6 +19,7 @@ from ...compiler import fact_providers
 from ...compiler import validate_form_geometry as geometry
 from ...compiler import validator as registry_validator
 from ...compiler.validate_form_geometry import (
+    indice_corrector_slot_failures,
     modelo_geometry_failures,
     prorrata_catalogue_failures,
     validate_form_geometry,
@@ -42,6 +43,20 @@ def _modelo(*, prefix_fields: int, tipo_renta: tuple[str, ...] | None) -> Any:
     window = SimpleNamespace(tipo_renta_scope=tipo_renta)
     revision = SimpleNamespace(layouts=(layout,), deadline_windows=(window,))
     return SimpleNamespace(id="000", revisions={"rev": revision})
+
+
+def _indices_modelo(slots: int) -> Any:
+    expression = SimpleNamespace(op="m100_resolve_eo_agraria_indices_correctores", args=(None,) * (slots + 1))
+    revision = SimpleNamespace(formulas=(SimpleNamespace(id="f", expression=expression),))
+    return SimpleNamespace(id="100", revisions={"rev": revision})
+
+
+def test_an_indices_correctores_formula_with_a_dropped_slot_fails_the_build() -> None:
+    declared = _codes().integer("m100.eo_agraria.indice_corrector_slots")
+
+    assert indice_corrector_slot_failures((_indices_modelo(declared),), _codes()) == []
+    [failure] = indice_corrector_slot_failures((_indices_modelo(declared - 1),), _codes())
+    assert f"declares {declared - 1}" in failure
 
 
 def test_the_bundled_catalogues_have_the_declared_shape() -> None:

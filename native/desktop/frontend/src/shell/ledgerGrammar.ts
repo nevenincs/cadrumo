@@ -145,7 +145,7 @@ export const UNIT_PRICE_RULE: DecimalRule = { decimals: 6, zero: true };
 /** Why text that is not a plain decimal was refused, and what it most
  * likely meant where one reading is certain. */
 function shapeRefusal(text: string, raw: string): Parsed<string> {
-  if (/^[+-]/.test(text)) {
+  if (/^[+\-\u2212]/.test(text)) {
     const rest = text.slice(1).trim();
     return refuse(
       "signed",

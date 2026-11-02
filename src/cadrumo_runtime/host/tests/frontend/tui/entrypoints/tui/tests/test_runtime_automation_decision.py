@@ -19,10 +19,14 @@ from textual.widgets import Button, DataTable, Input, Select, Static
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import delete_profile_session
 from cadrumo.adapters.persistence.storage.custody.automation_native_identity import CLIENT_NAMESPACE
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import PROFILE_INPUT, administration_subject
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
+    PROFILE_INPUT,
+    AdministrationSubject,
+    administration_subject,
+)
 from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
 from cadrumo.application.operations.registry import OperationFrontendProjection
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentStage
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
 from cadrumo.core.config import override_settings
 from cadrumo.core.operations import OperationEffect
 from cadrumo.entrypoints.tui.app import CadrumoTuiApp
@@ -39,8 +43,6 @@ from cadrumo_client.transport.framing import VerifiedConnection
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 from cadrumo_runtime.adapters.tests.profile_worker_support import owner_id
-from cadrumo_runtime.adapters.tests.retained_server import RetainedRuntimeTransportServer
-from cadrumo_runtime.host.profile_connections import RuntimeProfileConnections
 
 from .......frontend.tui.launcher import main
 from .......frontend.tui.profile.automation_inventory import RuntimeAutomationInventoryScreen
@@ -48,7 +50,7 @@ from .......frontend.tui.runtime_access_management import RuntimeAccessManagemen
 from .......frontend.tui.secret.automation_decision import RuntimeAutomationDecisionScreen
 from .......frontend.tui.secret.runtime_login import RuntimeLoginScreen
 from .......frontend.tui.secret.runtime_login_contracts import RuntimeLoginMethod
-from ......served_runtime import SyntheticLogin
+from ......served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -90,6 +92,237 @@ def _request_row(table: DataTable[str], request_id: UUID) -> int:
     raise AssertionError(f"review {request_id} is absent from the runtime inventory")
 
 
+class _DecisionJourney:
+    """The headless TUI journey: sign in, approve one request, decline another."""
+
+    def __init__(
+        self,
+        pool: ThreadPoolExecutor,
+        enrollment: NativeEnrollmentClient,
+        first: AutomationReceiptProjection,
+        second: AutomationReceiptProjection,
+    ) -> None:
+        self.pool = pool
+        self.enrollment = enrollment
+        self.first = first
+        self.second = second
+        self.stages: list[str] = []
+        self.done = Event()
+        self.polling: Future[None] | None = None
+
+    def _poll_requester(self) -> None:
+        deadline = time.monotonic() + 75
+        while not self.done.is_set() and time.monotonic() < deadline:
+            # A delivery exchange waits behind the publication fence the approval holds
+            # while it commits; a shorter poll ends the delivery being approved.
+            self.enrollment.poll(
+                timeout=min(max(0.0, deadline - time.monotonic()), MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
+            )
+
+    async def drive(self, pilot: Pilot[object]) -> None:
+        if not isinstance(pilot.app, CadrumoTuiApp):
+            await self._sign_in(pilot)
+            return
+        app = pilot.app
+        inventory = await self._open_inventory(pilot, app)
+        table = inventory.query_one("#automation-inventory-requests", DataTable)
+        await self._select_request(pilot, inventory, table, self.first, "#automation-inventory-approve")
+        await self._approve_first(pilot, app, inventory)
+        inventory.query_one("#automation-inventory-refresh", Button).press()
+        await settle_until(pilot, lambda: table.row_count == 2, "table.row_count == 2", workers=False)
+        await self._select_request(pilot, inventory, table, self.second, "#automation-inventory-decline")
+        await self._decline_second(pilot, app, inventory)
+        self.stages.append("declined")
+        app.exit()
+
+    async def _sign_in(self, pilot: Pilot[object]) -> None:
+        screen = pilot.app.screen
+        assert isinstance(screen, RuntimeLoginScreen)
+        submit = screen.query_one("#runtime-login-submit", Button)
+        await settle_until(
+            pilot,
+            lambda: screen._worker is not None and screen._worker.is_finished and not submit.disabled,
+            "( screen._worker is not None and screen._worker.is_finished and not...",
+            workers=False,
+        )
+        screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
+        await settle(pilot)
+        credential = screen.query_one("#runtime-login-credential", Input)
+        assert credential.password
+        credential.value = PROFILE_INPUT
+        submit.scroll_visible(animate=False)
+        assert await click_when_laid_out(pilot, submit)
+        assert credential.value == ""
+        self.stages.append("human-login")
+
+    async def _open_inventory(self, pilot: Pilot[object], app: CadrumoTuiApp) -> RuntimeAutomationInventoryScreen:
+        # The session is published before the first destination
+        # is swapped in; Access is offered once that swap can no
+        # longer remove it.
+        await settle_until(
+            pilot,
+            lambda: app.account_action_available(AccountActionV1.ACCESS),
+            "app.account_action_available(AccountActionV1.ACCESS)",
+            workers=False,
+        )
+        assert app.account_session is not None
+        assert app.account_session.profile_label == "Enrollment tests"
+        app.run_account_action(AccountActionV1.ACCESS)
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, RuntimeAccessManagementScreen),
+            "isinstance(app.screen, RuntimeAccessManagementScreen)",
+            workers=False,
+        )
+        access = app.screen
+        assert isinstance(access, RuntimeAccessManagementScreen)
+        await settle_until(
+            pilot,
+            lambda: (
+                access._admin_available
+                and not access._busy
+                and not access.query_one("#runtime-access-view-automation", Button).disabled
+            ),
+            "the access screen to offer the automation inventory",
+            workers=False,
+        )
+        assert access._admin_available and not access._busy, (
+            type(app.screen).__name__,
+            access._screen_live,
+            access.is_mounted,
+            access._busy,
+            access.access_lost,
+            str(access.query_one("#runtime-access-status", Static).content),
+            str(access.query_one("#runtime-access-sessions", Static).content),
+            app.return_value,
+        )
+        access.query_one("#runtime-access-view-automation", Button).press()
+        await settle_until(
+            pilot,
+            lambda: isinstance(app.screen, RuntimeAutomationInventoryScreen),
+            "the automation inventory screen to open",
+            workers=False,
+        )
+        assert isinstance(app.screen, RuntimeAutomationInventoryScreen), (
+            type(app.screen).__name__,
+            access._busy,
+            access._admin_available,
+            access.access_lost,
+            str(access.query_one("#runtime-access-status", Static).content),
+            app.return_value,
+        )
+        inventory = app.screen
+        assert isinstance(inventory, RuntimeAutomationInventoryScreen)
+        table = inventory.query_one("#automation-inventory-requests", DataTable)
+        await settle_until(pilot, lambda: table.row_count == 2, "table.row_count == 2", workers=False)
+        return inventory
+
+    async def _select_request(
+        self,
+        pilot: Pilot[object],
+        inventory: RuntimeAutomationInventoryScreen,
+        table: DataTable[str],
+        receipt: AutomationReceiptProjection,
+        button_selector: str,
+    ) -> None:
+        table.focus()
+        table.move_cursor(row=_request_row(table, receipt.request_id))
+        await settle_until(
+            pilot,
+            lambda: (
+                inventory._selected_review is not None
+                and inventory._selected_review.receipt.request_id == receipt.request_id
+            ),
+            "( inventory._selected_review is not None and inventory._selected_re...",
+            workers=False,
+        )
+        await settle_until(
+            pilot,
+            lambda: not inventory.query_one(button_selector, Button).disabled,
+            f"not inventory.query_one({button_selector!r}, Button).disabled",
+            workers=False,
+        )
+        inventory.query_one(button_selector, Button).press()
+        await settle_until(
+            pilot,
+            lambda: isinstance(pilot.app.screen, RuntimeAutomationDecisionScreen),
+            "isinstance(app.screen, RuntimeAutomationDecisionScreen)",
+            workers=False,
+        )
+
+    async def _approve_first(
+        self, pilot: Pilot[object], app: CadrumoTuiApp, inventory: RuntimeAutomationInventoryScreen
+    ) -> None:
+        """The masked password approves exactly the reviewed request and is never echoed."""
+        approval = app.screen
+        assert isinstance(approval, RuntimeAutomationDecisionScreen)
+        consent = str(approval.query_one("#automation-decision-review", Static).content)
+        assert str(self.first.request_id) in consent and self.first.review_digest in consent
+        assert PROFILE_INPUT not in consent
+        field = approval.query_one("#automation-decision-password", Input)
+        assert field.password
+        field.value = PROFILE_INPUT
+        self.polling = self.pool.submit(self._poll_requester)
+        approval.query_one("#automation-decision-confirm", Button).press()
+        await settle_until(pilot, lambda: field.value == "", "field.value == ''", workers=False)
+        await settle_until(
+            pilot,
+            lambda: approval._outcome is not None and not approval._busy,
+            "approval._outcome is not None and not approval._busy",
+            workers=False,
+        )
+        assert approval._outcome is not None and approval._outcome.completed, approval._outcome
+        assert approval._outcome.effect is OperationEffect.UPDATED
+        assert approval._pending_proof is None
+        assert PROFILE_INPUT not in repr(approval._outcome)
+        assert PROFILE_INPUT not in str(approval.query_one("#automation-decision-status", Static).content)
+        approval.action_close()
+        await settle_until(pilot, lambda: app.screen is inventory, "app.screen is inventory", workers=False)
+        assert approval._outcome is not None and approval._outcome.operation_id is not None
+        self.stages.append("approved")
+        self.done.set()
+        if self.polling is not None:
+            await asyncio.to_thread(self.polling.result, 15)
+
+    async def _decline_second(
+        self, pilot: Pilot[object], app: CadrumoTuiApp, inventory: RuntimeAutomationInventoryScreen
+    ) -> None:
+        decline = app.screen
+        assert isinstance(decline, RuntimeAutomationDecisionScreen)
+        assert str(self.second.request_id) in str(decline.query_one("#automation-decision-review", Static).content)
+        assert not tuple(decline.query("#automation-decision-password"))
+        decline.query_one("#automation-decision-confirm", Button).press()
+        await settle_until(
+            pilot,
+            lambda: decline._outcome is not None and not decline._busy,
+            "decline._outcome is not None and not decline._busy",
+            workers=False,
+        )
+        assert decline._outcome is not None and decline._outcome.completed, decline._outcome
+        assert decline._outcome.effect is OperationEffect.UPDATED
+        decline.action_close()
+        await settle_until(pilot, lambda: app.screen is inventory, "app.screen is inventory", workers=False)
+
+
+def _assert_decisions_reached_requesters(
+    subject: AdministrationSubject,
+    enrollment: NativeEnrollmentClient,
+    second_enrollment: NativeEnrollmentClient,
+    first: AutomationReceiptProjection,
+    second: AutomationReceiptProjection,
+) -> None:
+    completed = enrollment.inspect()
+    rejected = second_enrollment.inspect()
+    assert completed is not None and completed.stage is EnrollmentStage.COMPLETE
+    assert rejected is not None and rejected.stage is EnrollmentStage.DECLINED
+    assert completed.request_id == first.request_id
+    assert rejected.request_id == second.request_id
+    assert completed.credential_reference is not None
+    assert (CLIENT_NAMESPACE, str(completed.credential_reference)) in subject.client_native.items
+    assert (CLIENT_NAMESPACE, str(completed.credential_reference)) not in subject.native.items
+    assert len(subject.store.snapshot().grants) == len(subject.store.snapshot().keys) == 1
+
+
 def test_installed_tui_approves_and_declines_exact_review_with_protected_requester(tmp_path: Path) -> None:
     """Masked consent controls publish only safe receipts; requester gets its key."""
     storage_root = tmp_path / "cadrumo-storage"
@@ -104,262 +337,33 @@ def test_installed_tui_approves_and_declines_exact_review_with_protected_request
         profile_id = subject.store.binding.profile_id
         close_active_bucket_session()
         delete_profile_session(storage_root=storage_root, profile_id=profile_id)
-        stop, boot = Event(), uuid4()
-        profiles = RuntimeProfileConnections(
-            storage_root=storage_root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
-            capture_login=lambda _channel: SyntheticLogin("tui-automation-decision-native-login"),
-            secret_store=lambda: subject.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version=version("cadrumo"), stop=stop, profiles=profiles, boot_id=boot
-        )
-        stages: list[str] = []
-        done = Event()
-        polling: Future[None] | None = None
+        with (
+            override_settings(cadrumo_storage_root=storage_root),
+            serving_runtime(
+                endpoint,
+                storage_root,
+                capture_login=lambda _channel: SyntheticLogin("tui-automation-decision-native-login"),
+                secret_store=lambda: subject.native,
+                workers=3,
+                product_version=version("cadrumo"),
+            ) as served,
+            ExitStack() as cleanup,
+        ):
+            requester, enrollment = _requester(endpoint, profile_id, subject.client_native)
+            cleanup.callback(requester.close)
+            first = enrollment.submit(subject.proposal)
+            assert first.stage is EnrollmentStage.REQUESTED
+            second_requester, second_enrollment = _requester(endpoint, profile_id, MemoryNativePort())
+            cleanup.callback(second_requester.close)
+            second = second_enrollment.submit(subject.proposal)
+            assert second.stage is EnrollmentStage.REQUESTED
 
-        def poll_requester(enrollment: NativeEnrollmentClient) -> None:
-            deadline = time.monotonic() + 75
-            while not done.is_set() and time.monotonic() < deadline:
-                # A delivery exchange waits behind the publication fence the approval holds
-                # while it commits; a shorter poll ends the delivery being approved.
-                enrollment.poll(
-                    timeout=min(max(0.0, deadline - time.monotonic()), MAX_CONNECTION_EXCHANGE_TIMEOUT_SECONDS)
-                )
-
-        with override_settings(cadrumo_storage_root=storage_root), ThreadPoolExecutor(max_workers=3) as pool:
-            running = pool.submit(server.serve)
+            journey = _DecisionJourney(served.pool, enrollment, first, second)
             try:
-                assert server.ready.wait(3)
-                with ExitStack() as cleanup:
-                    requester, enrollment = _requester(endpoint, profile_id, subject.client_native)
-                    cleanup.callback(requester.close)
-                    first = enrollment.submit(subject.proposal)
-                    assert first.stage is EnrollmentStage.REQUESTED
-                    second_requester, second_enrollment = _requester(endpoint, profile_id, MemoryNativePort())
-                    cleanup.callback(second_requester.close)
-                    second = second_enrollment.submit(subject.proposal)
-                    assert second.stage is EnrollmentStage.REQUESTED
-
-                    async def drive(pilot: Pilot[object]) -> None:
-                        nonlocal polling
-                        if not isinstance(pilot.app, CadrumoTuiApp):
-                            screen = pilot.app.screen
-                            assert isinstance(screen, RuntimeLoginScreen)
-                            submit = screen.query_one("#runtime-login-submit", Button)
-                            await settle_until(
-                                pilot,
-                                lambda: (
-                                    screen._worker is not None and screen._worker.is_finished and not submit.disabled
-                                ),
-                                "( screen._worker is not None and screen._worker.is_finished and not...",
-                                workers=False,
-                            )
-                            screen.query_one("#runtime-login-method", Select).value = RuntimeLoginMethod.PASSWORD
-                            await settle(pilot)
-                            credential = screen.query_one("#runtime-login-credential", Input)
-                            assert credential.password
-                            credential.value = PROFILE_INPUT
-                            submit.scroll_visible(animate=False)
-                            assert await click_when_laid_out(pilot, submit)
-                            assert credential.value == ""
-                            stages.append("human-login")
-                            return
-
-                        app = pilot.app
-                        # The session is published before the first destination
-                        # is swapped in; Access is offered once that swap can no
-                        # longer remove it.
-                        await settle_until(
-                            pilot,
-                            lambda: app.account_action_available(AccountActionV1.ACCESS),
-                            "app.account_action_available(AccountActionV1.ACCESS)",
-                            workers=False,
-                        )
-                        assert app.account_session is not None
-                        assert app.account_session.profile_label == "Enrollment tests"
-                        app.run_account_action(AccountActionV1.ACCESS)
-                        await settle_until(
-                            pilot,
-                            lambda: isinstance(app.screen, RuntimeAccessManagementScreen),
-                            "isinstance(app.screen, RuntimeAccessManagementScreen)",
-                            workers=False,
-                        )
-                        access = app.screen
-                        assert isinstance(access, RuntimeAccessManagementScreen)
-                        await settle_until(
-                            pilot,
-                            lambda: (
-                                access._admin_available
-                                and not access._busy
-                                and not access.query_one("#runtime-access-view-automation", Button).disabled
-                            ),
-                            "the access screen to offer the automation inventory",
-                            workers=False,
-                        )
-                        assert access._admin_available and not access._busy, (
-                            type(app.screen).__name__,
-                            access._screen_live,
-                            access.is_mounted,
-                            access._busy,
-                            access.access_lost,
-                            str(access.query_one("#runtime-access-status", Static).content),
-                            str(access.query_one("#runtime-access-sessions", Static).content),
-                            app.return_value,
-                        )
-                        access.query_one("#runtime-access-view-automation", Button).press()
-                        await settle_until(
-                            pilot,
-                            lambda: isinstance(app.screen, RuntimeAutomationInventoryScreen),
-                            "the automation inventory screen to open",
-                            workers=False,
-                        )
-                        assert isinstance(app.screen, RuntimeAutomationInventoryScreen), (
-                            type(app.screen).__name__,
-                            access._busy,
-                            access._admin_available,
-                            access.access_lost,
-                            str(access.query_one("#runtime-access-status", Static).content),
-                            app.return_value,
-                        )
-                        inventory = app.screen
-                        assert isinstance(inventory, RuntimeAutomationInventoryScreen)
-                        table = inventory.query_one("#automation-inventory-requests", DataTable)
-                        await settle_until(pilot, lambda: table.row_count == 2, "table.row_count == 2", workers=False)
-                        table.focus()
-                        table.move_cursor(row=_request_row(table, first.request_id))
-                        await settle_until(
-                            pilot,
-                            lambda: (
-                                inventory._selected_review is not None
-                                and inventory._selected_review.receipt.request_id == first.request_id
-                            ),
-                            "( inventory._selected_review is not None and inventory._selected_re...",
-                            workers=False,
-                        )
-                        await settle_until(
-                            pilot,
-                            lambda: not inventory.query_one("#automation-inventory-approve", Button).disabled,
-                            "not inventory.query_one('#automation-inventory-approve', Button).di...",
-                            workers=False,
-                        )
-                        inventory.query_one("#automation-inventory-approve", Button).press()
-                        await settle_until(
-                            pilot,
-                            lambda: isinstance(app.screen, RuntimeAutomationDecisionScreen),
-                            "isinstance(app.screen, RuntimeAutomationDecisionScreen)",
-                            workers=False,
-                        )
-                        approval = app.screen
-                        assert isinstance(approval, RuntimeAutomationDecisionScreen)
-                        consent = str(approval.query_one("#automation-decision-review", Static).content)
-                        assert str(first.request_id) in consent and first.review_digest in consent
-                        assert PROFILE_INPUT not in consent
-                        field = approval.query_one("#automation-decision-password", Input)
-                        assert field.password
-                        field.value = PROFILE_INPUT
-                        polling = pool.submit(poll_requester, enrollment)
-                        approval.query_one("#automation-decision-confirm", Button).press()
-                        await settle_until(pilot, lambda: field.value == "", "field.value == ''", workers=False)
-                        await settle_until(
-                            pilot,
-                            lambda: approval._outcome is not None and not approval._busy,
-                            "approval._outcome is not None and not approval._busy",
-                            workers=False,
-                        )
-                        assert approval._outcome is not None and approval._outcome.completed, approval._outcome
-                        assert approval._outcome.effect is OperationEffect.UPDATED
-                        assert approval._pending_proof is None
-                        assert PROFILE_INPUT not in repr(approval._outcome)
-                        assert PROFILE_INPUT not in str(
-                            approval.query_one("#automation-decision-status", Static).content
-                        )
-                        approval.action_close()
-                        await settle_until(
-                            pilot, lambda: app.screen is inventory, "app.screen is inventory", workers=False
-                        )
-                        assert approval._outcome is not None and approval._outcome.operation_id is not None
-                        stages.append("approved")
-                        done.set()
-                        if polling is not None:
-                            await asyncio.to_thread(polling.result, 15)
-
-                        inventory.query_one("#automation-inventory-refresh", Button).press()
-                        await settle_until(pilot, lambda: table.row_count == 2, "table.row_count == 2", workers=False)
-                        table.focus()
-                        table.move_cursor(row=_request_row(table, second.request_id))
-                        await settle_until(
-                            pilot,
-                            lambda: (
-                                inventory._selected_review is not None
-                                and inventory._selected_review.receipt.request_id == second.request_id
-                            ),
-                            "( inventory._selected_review is not None and inventory._selected_re...",
-                            workers=False,
-                        )
-                        await settle_until(
-                            pilot,
-                            lambda: not inventory.query_one("#automation-inventory-decline", Button).disabled,
-                            "not inventory.query_one('#automation-inventory-decline', Button).di...",
-                            workers=False,
-                        )
-                        inventory.query_one("#automation-inventory-decline", Button).press()
-                        await settle_until(
-                            pilot,
-                            lambda: isinstance(app.screen, RuntimeAutomationDecisionScreen),
-                            "isinstance(app.screen, RuntimeAutomationDecisionScreen)",
-                            workers=False,
-                        )
-                        decline = app.screen
-                        assert isinstance(decline, RuntimeAutomationDecisionScreen)
-                        assert str(second.request_id) in str(
-                            decline.query_one("#automation-decision-review", Static).content
-                        )
-                        assert not tuple(decline.query("#automation-decision-password"))
-                        decline.query_one("#automation-decision-confirm", Button).press()
-                        await settle_until(
-                            pilot,
-                            lambda: decline._outcome is not None and not decline._busy,
-                            "decline._outcome is not None and not decline._busy",
-                            workers=False,
-                        )
-                        assert decline._outcome is not None and decline._outcome.completed, decline._outcome
-                        assert decline._outcome.effect is OperationEffect.UPDATED
-                        decline.action_close()
-                        await settle_until(
-                            pilot, lambda: app.screen is inventory, "app.screen is inventory", workers=False
-                        )
-                        stages.append("declined")
-                        app.exit()
-
-                    try:
-                        assert main(headless=True, auto_pilot=drive) == 0
-                    finally:
-                        done.set()
-                        if polling is not None:
-                            polling.result(timeout=15)
-                    assert stages == ["human-login", "approved", "declined"]
-                    completed = enrollment.inspect()
-                    rejected = second_enrollment.inspect()
-                    assert completed is not None and completed.stage is EnrollmentStage.COMPLETE
-                    assert rejected is not None and rejected.stage is EnrollmentStage.DECLINED
-                    assert completed.request_id == first.request_id
-                    assert rejected.request_id == second.request_id
-                    assert completed.credential_reference is not None
-                    assert (CLIENT_NAMESPACE, str(completed.credential_reference)) in subject.client_native.items
-                    assert (CLIENT_NAMESPACE, str(completed.credential_reference)) not in subject.native.items
-                    assert len(subject.store.snapshot().grants) == len(subject.store.snapshot().keys) == 1
+                assert main(headless=True, auto_pilot=journey.drive) == 0
             finally:
-                primary = sys.exception()
-                stop.set()
-                try:
-                    try:
-                        running.result(timeout=20)
-                    except Exception:
-                        if primary is None:
-                            raise
-                finally:
-                    endpoint.close()
+                journey.done.set()
+                if journey.polling is not None:
+                    journey.polling.result(timeout=15)
+            assert journey.stages == ["human-login", "approved", "declined"]
+            _assert_decisions_reached_requesters(subject, enrollment, second_enrollment, first, second)

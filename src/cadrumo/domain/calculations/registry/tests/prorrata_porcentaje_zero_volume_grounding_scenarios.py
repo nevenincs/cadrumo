@@ -6,22 +6,9 @@ from collections.abc import Callable
 from datetime import date
 from decimal import Decimal
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....iva.prorrata import ProrrataInputs, ProrrataKind, compute_prorrata_general
-from ..bindings import resolve_available_bound_inputs_by_casilla_id
-from ..formula_runtime import calculate_registry_snapshot
-from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..schema import RegistrySnapshot
-
-PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
-
-VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
-
-VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
-    "iva.prorrata-volumen-con-derecho",
-    surface="test casilla id",
-)
-
+from .prorrata_porcentaje_grounding_support import snapshot_prorrata_percentage
 
 #: 2022 resolves to the `2022` revision, 2024 to its early-period epoch. Both
 #: windows sit entirely inside the unamended art. 102.Uno / art. 104.Uno text, so
@@ -64,29 +51,9 @@ def registry_percentage(
     """The prorrata percentage via the real registry snapshot and formula runtime."""
     period_token, (close_month, close_day) = period
     snapshot = snapshot_of("303", filing_year=filing_year, period=period_token)
-    declared = {binding.id for binding in snapshot.revision.bindings}
-    binding_values: dict[str, Decimal] = {
-        binding_id: Decimal("100") if binding_id.endswith("state-attribution-ratio") else Decimal("0")
-        for binding_id in declared
-        & {
-            "modelo-303-compensacion-pendiente-anteriores",
-            "modelo-303-autoconsumo-promotor-base",
-            "modelo-303-profile-state-attribution-ratio",
-        }
-    }
-    binding_values.update(resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()))
-    inputs = {
-        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        VOLUMEN_TOTAL_ID: total,
-        VOLUMEN_CON_DERECHO_ID: con_derecho,
-    }
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        binding_values=binding_values,
-        date_context={"filing_period": date(filing_year, close_month, close_day)},
+    return snapshot_prorrata_percentage(
+        snapshot, con_derecho, total, closes_on=date(filing_year, close_month, close_day)
     )
-    return result.values[PORCENTAJE_ID]
 
 
 #: LIVA art. 94 is headed "Operaciones cuya realización origina el derecho a la

@@ -9,13 +9,14 @@ from uuid import uuid4
 
 import pytest
 
-from cadrumo.adapters.persistence.storage.custody import acceleration_keychain
 from cadrumo.adapters.persistence.storage.custody import acceleration_receipt as receipt
 from cadrumo.adapters.persistence.storage.custody.capsule import (
     load_committed_profile_password_material,
     replace_committed_profile_custody_envelope,
 )
 from cadrumo.adapters.persistence.storage.custody.records import ProfileCustodyEnvelope
+from cadrumo.adapters.persistence.storage.custody.tests.human_keyring_support import HumanKeyring
+from cadrumo.adapters.persistence.storage.custody.tests.human_keyring_support import human_keyring as human_keyring
 from cadrumo.adapters.persistence.storage.custody.tests.receipt_sign_in import (
     RECEIPT_LOGIN_ID,
     committed_sign_in,
@@ -42,42 +43,7 @@ from ..profile_receipt import resume_profile_candidate
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
-class _KeyringError(Exception):
-    """Controlled existing human keyring failure."""
-
-
-class _HumanKeyring:
-    """Exact service/account in-memory keyring for the real receipt writer."""
-
-    def __init__(self) -> None:
-        self.entries: dict[tuple[str, str], str] = {}
-        self.reads = 0
-
-    def get_password(self, service_name: str, username: str) -> str | None:
-        """Read one exact human account."""
-        self.reads += 1
-        return self.entries.get((service_name, username))
-
-    def set_password(self, service_name: str, username: str, password: str) -> None:
-        """Store one exact human account."""
-        self.entries[(service_name, username)] = password
-
-    def delete_password(self, service_name: str, username: str) -> None:
-        """Remove one exact human account."""
-        self.entries.pop((service_name, username), None)
-
-
-@pytest.fixture
-def human_keyring(monkeypatch: pytest.MonkeyPatch) -> _HumanKeyring:
-    """Compose the real receipt crypto/filesystem with a controlled store."""
-    keyring = _HumanKeyring()
-    monkeypatch.setattr(acceleration_keychain, "_keyring", lambda: (keyring, _KeyringError, _KeyringError))
-    return keyring
-
-
-def test_receipt_admission_preserves_ambient_session_and_deadlines(
-    tmp_path: Path, human_keyring: _HumanKeyring
-) -> None:
+def test_receipt_admission_preserves_ambient_session_and_deadlines(tmp_path: Path, human_keyring: HumanKeyring) -> None:
     profile_id = uuid4()
     opened = datetime.now(UTC)
     with override_settings(cadrumo_storage_root=tmp_path):
@@ -197,7 +163,7 @@ def test_receipt_admission_preserves_ambient_session_and_deadlines(
 )
 def test_receipt_admission_refuses_without_binding_custody(
     tmp_path: Path,
-    human_keyring: _HumanKeyring,
+    human_keyring: HumanKeyring,
     case: str,
     reason: ProfileSessionRefusalReason,
 ) -> None:

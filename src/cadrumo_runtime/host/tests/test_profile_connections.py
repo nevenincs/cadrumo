@@ -93,7 +93,7 @@ from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
 from .operation_transport_support import PausedProjectionListener, ProjectionWriteBarrier
-from .served_runtime import connect_verified
+from .served_runtime import connect_verified, serving_runtime
 
 pytestmark = [
     pytest.mark.integration,
@@ -274,24 +274,18 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
         assert secret is not None
         profile = enrollment.store.binding.profile_id
         close_active_bucket_session()
-        stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        native_login = LoginObservation(owner_id())
+        clients: list[VerifiedConnection] = []
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: native_login,
             secret_store=lambda: enrollment.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        clients: list[VerifiedConnection] = []
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
+            workers=1,
+            drain_seconds=12,
+        ) as served:
+            profiles = served.profiles
             try:
-                assert server.ready.wait(3)
                 api, human, other = (connect_verified(endpoint) for _ in range(3))
                 clients.extend((api, human, other))
                 proof = secret.get_secret_value()
@@ -302,9 +296,6 @@ def test_real_connection_admission_lock_reconnect_and_native_dependency_loss(tmp
             finally:
                 for client in clients:
                     client.close()
-                stop.set()
-                running.result(timeout=12)
-                endpoint.close()
 
 
 @dataclass(frozen=True)
@@ -784,24 +775,18 @@ def test_fresh_native_host_reconciles_exact_surviving_denial_before_api_admissio
         assert enrollment.store.deny(change).cleanup_pending
         enrollment.native.unavailable = False
         close_active_bucket_session()
-        stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        native_login = LoginObservation(owner_id())
+        clients: list[VerifiedConnection] = []
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: native_login,
             secret_store=lambda: enrollment.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        clients: list[VerifiedConnection] = []
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
+            workers=1,
+            drain_seconds=12,
+        ) as served:
+            profiles = served.profiles
             try:
-                assert server.ready.wait(3)
                 api = connect_verified(endpoint)
                 clients.append(api)
                 denied = login(api, profile, "api_key", secret.get_secret_value())
@@ -819,9 +804,6 @@ def test_fresh_native_host_reconciles_exact_surviving_denial_before_api_admissio
             finally:
                 for client in clients:
                     client.close()
-                stop.set()
-                running.result(timeout=12)
-                endpoint.close()
 
 
 def test_uncertain_native_status_recovers_on_same_connection_but_logout_does_not(tmp_path: Path) -> None:
@@ -834,24 +816,18 @@ def test_uncertain_native_status_recovers_on_same_connection_but_logout_does_not
     ) as enrollment:
         profile = enrollment.store.binding.profile_id
         close_active_bucket_session()
-        stop, boot, native_login = Event(), uuid4(), LoginObservation(owner_id())
-        profiles = RuntimeProfileConnections(
-            storage_root=root,
-            storage_identity=endpoint.storage_identity,
-            runtime_boot_id=boot,
-            stop=stop,
+        native_login = LoginObservation(owner_id())
+        clients: list[VerifiedConnection] = []
+        with serving_runtime(
+            endpoint,
+            root,
             capture_login=lambda _channel: native_login,
             secret_store=lambda: enrollment.native,
-        )
-        profiles.prepare_registry()
-        server = RetainedRuntimeTransportServer(
-            endpoint, product_version="test", stop=stop, profiles=profiles, boot_id=boot
-        )
-        clients: list[VerifiedConnection] = []
-        with ThreadPoolExecutor(max_workers=1) as pool:
-            running = pool.submit(server.serve)
+            workers=1,
+            drain_seconds=12,
+        ) as served:
+            profiles = served.profiles
             try:
-                assert server.ready.wait(3)
                 client = connect_verified(endpoint)
                 clients.append(client)
                 admitted = login(client, profile, "password", PROFILE_INPUT.encode())
@@ -923,6 +899,3 @@ def test_uncertain_native_status_recovers_on_same_connection_but_logout_does_not
             finally:
                 for client in clients:
                     client.close()
-                stop.set()
-                running.result(timeout=12)
-                endpoint.close()

@@ -11,6 +11,7 @@ import typer
 from pydantic import ValidationError
 
 from cadrumo.application.aggregation.tests.withholding_filer_profile_support import quarterly_filer_cadence
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from ....application.aggregation.invoice_retencion import (
     InvoiceWithholdingEvidenceRequest,
@@ -114,16 +115,7 @@ def _annual_detail(invoice: Invoice) -> WithholdingObservation:
         clave=RetencionClave.from_registry("G"),
         percibido_dinerario=Decimal("500.00"),
         retencion_practicada=Decimal("95.00"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("500.00"),
         porcentaje_retencion=Decimal("19"),
     )

@@ -7,6 +7,7 @@ import sys
 from collections.abc import Mapping
 from hashlib import sha256
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -87,6 +88,178 @@ def _assert_registered_refusal(result: Result, *, code: str) -> None:
     assert isinstance(operation_id, str) and len(operation_id) == 64
 
 
+def _add_two_recipients(
+    profile: NativeCliProfileFixture, failures: list[RuntimeFailureObservation]
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Register zulu then alpha and check each public DTO against its key."""
+    zulu_key = _public_key_hex()
+    zulu_added = _invoke(
+        profile,
+        "config",
+        "collab",
+        "recipient",
+        "add",
+        "zulu-accountant",
+        "--public-key",
+        zulu_key.upper(),
+        "--label",
+        "Zulu adviser",
+    )
+    assert zulu_added.exit_code == 0, (zulu_added.output, failures)
+    zulu = unwrap_cli_result(zulu_added)
+    assert zulu == {
+        "recipient_id": "zulu-accountant",
+        "label": "Zulu adviser",
+        "public_key_hex": zulu_key,
+        "fingerprint_sha256": sha256(bytes.fromhex(zulu_key)).hexdigest(),
+        "added_at": zulu["added_at"],
+    }
+    assert isinstance(zulu["added_at"], str) and zulu["added_at"]
+
+    alpha_key = _public_key_hex()
+    alpha_added = _invoke(
+        profile,
+        "config",
+        "collab",
+        "recipient",
+        "add",
+        "alpha-accountant",
+        "--public-key",
+        alpha_key,
+        "--label",
+        "Alpha adviser",
+    )
+    assert alpha_added.exit_code == 0, (alpha_added.output, failures)
+    alpha = unwrap_cli_result(alpha_added)
+    assert alpha["recipient_id"] == "alpha-accountant"
+    assert alpha["public_key_hex"] == alpha_key
+    assert alpha["label"] == "Alpha adviser"
+    assert alpha["fingerprint_sha256"] == sha256(bytes.fromhex(alpha_key)).hexdigest()
+    assert isinstance(alpha["added_at"], str) and alpha["added_at"]
+    return zulu, alpha
+
+
+def _assert_listing_and_refused_adds(
+    profile: NativeCliProfileFixture,
+    failures: list[RuntimeFailureObservation],
+    zulu: dict[str, Any],
+    alpha: dict[str, Any],
+) -> None:
+    listed = _invoke(profile, "config", "collab", "recipient", "list")
+    assert listed.exit_code == 0, (listed.output, failures)
+    before = unwrap_cli_result(listed)
+    assert before["count"] == 2
+    assert [row["recipient_id"] for row in before["recipients"]] == [
+        "alpha-accountant",
+        "zulu-accountant",
+    ]
+    assert before["recipients"] == [alpha, zulu]
+
+    duplicate = _invoke(
+        profile,
+        "config",
+        "collab",
+        "recipient",
+        "add",
+        "zulu-accountant",
+        "--public-key",
+        _public_key_hex(),
+    )
+    _assert_registered_refusal(duplicate, code="REFUSED_MODELO_RECIPIENT_ALREADY_REGISTERED")
+
+    malformed = _invoke(
+        profile,
+        "config",
+        "collab",
+        "recipient",
+        "add",
+        "malformed-key",
+        "--public-key",
+        "not-hex",
+    )
+    assert malformed.exit_code != 0, malformed.output
+    assert "not-hex" not in malformed.output
+
+
+def _assert_removal_and_remaining_listing(
+    profile: NativeCliProfileFixture, failures: list[RuntimeFailureObservation], zulu: dict[str, Any]
+) -> None:
+    removed = _invoke(
+        profile,
+        "config",
+        "collab",
+        "recipient",
+        "remove",
+        "alpha-accountant",
+    )
+    assert removed.exit_code == 0, (removed.output, failures)
+    removal = unwrap_cli_result(removed)
+    assert removal == {"recipient_id": "alpha-accountant", "remaining": 1}
+
+    missing = _invoke(
+        profile,
+        "config",
+        "collab",
+        "recipient",
+        "remove",
+        "missing-accountant",
+    )
+    _assert_registered_refusal(missing, code="REFUSED_MODELO_RECIPIENT_NOT_REGISTERED")
+
+    listed_after = _invoke(profile, "config", "collab", "recipient", "list")
+    assert listed_after.exit_code == 0, (listed_after.output, failures)
+    after = unwrap_cli_result(listed_after)
+    assert after["count"] == 1
+    assert after["recipients"] == [zulu]
+
+
+def _assert_audit_history(
+    profile: NativeCliProfileFixture,
+    failures: list[RuntimeFailureObservation],
+    zulu: dict[str, Any],
+    alpha: dict[str, Any],
+) -> None:
+    registered_history = _invoke(
+        profile,
+        "config",
+        "profile",
+        "history",
+        "--event-type",
+        "collab_event.recipient.registered",
+    )
+    assert registered_history.exit_code == 0, (registered_history.output, failures)
+    registrations = unwrap_cli_result(registered_history)["events"]
+    assert len(registrations) == 2
+    registration_payloads = {event["object_id"]: event["payload"] for event in registrations}
+    assert registration_payloads == {
+        "alpha-accountant": {
+            "recipient_id": "alpha-accountant",
+            "label": "Alpha adviser",
+            "fingerprint_sha256": alpha["fingerprint_sha256"],
+        },
+        "zulu-accountant": {
+            "recipient_id": "zulu-accountant",
+            "label": "Zulu adviser",
+            "fingerprint_sha256": zulu["fingerprint_sha256"],
+        },
+    }
+    assert all("public_key_hex" not in payload for payload in registration_payloads.values())
+
+    removed_history = _invoke(
+        profile,
+        "config",
+        "profile",
+        "history",
+        "--event-type",
+        "collab_event.recipient.removed",
+    )
+    assert removed_history.exit_code == 0, (removed_history.output, failures)
+    removal_events = unwrap_cli_result(removed_history)["events"]
+    assert len(removal_events) == 1
+    assert removal_events[0]["object_id"] == "alpha-accountant"
+    assert removal_events[0]["payload"] == {"recipient_id": "alpha-accountant"}
+
+
 def test_native_three_operation_recipient_lifecycle_and_refusal_readback(tmp_path: Path) -> None:
     """One authenticated worker profile preserves public DTOs and audit history."""
     with native_cli_profile_scope(tmp_path) as profile:
@@ -94,153 +267,10 @@ def test_native_three_operation_recipient_lifecycle_and_refusal_readback(tmp_pat
         profile.failure_observer = failures.append
         profile.register(label="native-collab-recipient", facts=_PROFILE_FACTS)
 
-        zulu_key = _public_key_hex()
-        zulu_added = _invoke(
-            profile,
-            "config",
-            "collab",
-            "recipient",
-            "add",
-            "zulu-accountant",
-            "--public-key",
-            zulu_key.upper(),
-            "--label",
-            "Zulu adviser",
-        )
-        assert zulu_added.exit_code == 0, (zulu_added.output, failures)
-        zulu = unwrap_cli_result(zulu_added)
-        assert zulu == {
-            "recipient_id": "zulu-accountant",
-            "label": "Zulu adviser",
-            "public_key_hex": zulu_key,
-            "fingerprint_sha256": sha256(bytes.fromhex(zulu_key)).hexdigest(),
-            "added_at": zulu["added_at"],
-        }
-        assert isinstance(zulu["added_at"], str) and zulu["added_at"]
-
-        alpha_key = _public_key_hex()
-        alpha_added = _invoke(
-            profile,
-            "config",
-            "collab",
-            "recipient",
-            "add",
-            "alpha-accountant",
-            "--public-key",
-            alpha_key,
-            "--label",
-            "Alpha adviser",
-        )
-        assert alpha_added.exit_code == 0, (alpha_added.output, failures)
-        alpha = unwrap_cli_result(alpha_added)
-        assert alpha["recipient_id"] == "alpha-accountant"
-        assert alpha["public_key_hex"] == alpha_key
-        assert alpha["label"] == "Alpha adviser"
-        assert alpha["fingerprint_sha256"] == sha256(bytes.fromhex(alpha_key)).hexdigest()
-        assert isinstance(alpha["added_at"], str) and alpha["added_at"]
-
-        listed = _invoke(profile, "config", "collab", "recipient", "list")
-        assert listed.exit_code == 0, (listed.output, failures)
-        before = unwrap_cli_result(listed)
-        assert before["count"] == 2
-        assert [row["recipient_id"] for row in before["recipients"]] == [
-            "alpha-accountant",
-            "zulu-accountant",
-        ]
-        assert before["recipients"] == [alpha, zulu]
-
-        duplicate = _invoke(
-            profile,
-            "config",
-            "collab",
-            "recipient",
-            "add",
-            "zulu-accountant",
-            "--public-key",
-            _public_key_hex(),
-        )
-        _assert_registered_refusal(duplicate, code="REFUSED_MODELO_RECIPIENT_ALREADY_REGISTERED")
-
-        malformed = _invoke(
-            profile,
-            "config",
-            "collab",
-            "recipient",
-            "add",
-            "malformed-key",
-            "--public-key",
-            "not-hex",
-        )
-        assert malformed.exit_code != 0, malformed.output
-        assert "not-hex" not in malformed.output
-
-        removed = _invoke(
-            profile,
-            "config",
-            "collab",
-            "recipient",
-            "remove",
-            "alpha-accountant",
-        )
-        assert removed.exit_code == 0, (removed.output, failures)
-        removal = unwrap_cli_result(removed)
-        assert removal == {"recipient_id": "alpha-accountant", "remaining": 1}
-
-        missing = _invoke(
-            profile,
-            "config",
-            "collab",
-            "recipient",
-            "remove",
-            "missing-accountant",
-        )
-        _assert_registered_refusal(missing, code="REFUSED_MODELO_RECIPIENT_NOT_REGISTERED")
-
-        listed_after = _invoke(profile, "config", "collab", "recipient", "list")
-        assert listed_after.exit_code == 0, (listed_after.output, failures)
-        after = unwrap_cli_result(listed_after)
-        assert after["count"] == 1
-        assert after["recipients"] == [zulu]
-
-        registered_history = _invoke(
-            profile,
-            "config",
-            "profile",
-            "history",
-            "--event-type",
-            "collab_event.recipient.registered",
-        )
-        assert registered_history.exit_code == 0, (registered_history.output, failures)
-        registrations = unwrap_cli_result(registered_history)["events"]
-        assert len(registrations) == 2
-        registration_payloads = {event["object_id"]: event["payload"] for event in registrations}
-        assert registration_payloads == {
-            "alpha-accountant": {
-                "recipient_id": "alpha-accountant",
-                "label": "Alpha adviser",
-                "fingerprint_sha256": alpha["fingerprint_sha256"],
-            },
-            "zulu-accountant": {
-                "recipient_id": "zulu-accountant",
-                "label": "Zulu adviser",
-                "fingerprint_sha256": zulu["fingerprint_sha256"],
-            },
-        }
-        assert all("public_key_hex" not in payload for payload in registration_payloads.values())
-
-        removed_history = _invoke(
-            profile,
-            "config",
-            "profile",
-            "history",
-            "--event-type",
-            "collab_event.recipient.removed",
-        )
-        assert removed_history.exit_code == 0, (removed_history.output, failures)
-        removal_events = unwrap_cli_result(removed_history)["events"]
-        assert len(removal_events) == 1
-        assert removal_events[0]["object_id"] == "alpha-accountant"
-        assert removal_events[0]["payload"] == {"recipient_id": "alpha-accountant"}
+        zulu, alpha = _add_two_recipients(profile, failures)
+        _assert_listing_and_refused_adds(profile, failures, zulu, alpha)
+        _assert_removal_and_remaining_listing(profile, failures, zulu)
+        _assert_audit_history(profile, failures, zulu, alpha)
 
         returned_definitions = {
             item.definition_id

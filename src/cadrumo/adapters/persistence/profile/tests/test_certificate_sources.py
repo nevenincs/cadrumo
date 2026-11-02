@@ -8,17 +8,15 @@ capabilities are bound explicitly at this outer seam.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import override
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.state_projection import StateProjectionPersistenceAdapter
 from cadrumo.adapters.persistence.profile.tests.operator_projection_test_support import (
     configure_operator_auth,
     inspect_operator_auth,
+    state_projection_read_ports,
 )
 from cadrumo.adapters.persistence.profile.tests.profile_registration import register_minimal_profile
-from cadrumo.adapters.persistence.profile.usage_ratios import load_usage_ratios
 from cadrumo.adapters.persistence.storage.tests.profile_storage_root_fixture import bucket_session_storage_fixture
 from cadrumo.application.auth import certificate_sources as _certificate_sources_module
 from cadrumo.application.auth.certificate_source_operations import (
@@ -30,12 +28,6 @@ from cadrumo.application.auth.certificate_source_operations import (
 from cadrumo.application.auth.credentials import resolve_active_certificate_credentials
 from cadrumo.application.auth.operator_results import CertificateSourceNotFoundError
 from cadrumo.application.auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
-from cadrumo.application.diagnostics_ports import (
-    DiagnosticSecureObjectNamespace,
-    DiagnosticSessionFailureClassifier,
-    DiagnosticsPorts,
-)
-from cadrumo.application.state_projection_ports import StateProjectionReadPorts
 from cadrumo.application.tests.operator_probe_fakes import fake_operator_probe_ports
 from cadrumo.application.tests.operator_scope_fakes import (
     build_inward_operator_scope_ports_for_active_route,
@@ -60,44 +52,6 @@ _BUCKET_ID = "c0000001-0000-4000-8000-000000000001"
 _PROFILE_LABEL = "gestor-multi-cert"
 _OPERATOR_PROBE_PORTS = fake_operator_probe_ports()
 _CERTIFICATE_SECRET_BACKEND_FACTORY = InMemoryCertificateSecretBackendFactory()
-
-
-class _EmptyDiagnosticRepository:
-    """Supply zero unreadable rows to the state-projection read adapter."""
-
-    def list_namespaces(self) -> tuple[str, ...]:
-        return ()
-
-    def probe_namespace_integrity(self, namespace: str) -> DiagnosticSecureObjectNamespace:
-        raise AssertionError(f"unexpected integrity probe for {namespace}")
-
-    def quarantine_unreadable_rows(self) -> tuple[DiagnosticSecureObjectNamespace, ...]:
-        return ()
-
-
-class _EmptySessionFailureClassifier(DiagnosticSessionFailureClassifier):
-    """Classify the empty test repository without widening the diagnostics port."""
-
-    @override
-    def __call__(self, error: BaseException) -> bool:
-        del error
-        return False
-
-
-def _state_projection_read_ports() -> StateProjectionReadPorts:
-    """Bind the real profile read adapter to application projection DTOs."""
-
-    adapter = StateProjectionPersistenceAdapter(
-        diagnostics_ports=DiagnosticsPorts(
-            secure_object_repository=_EmptyDiagnosticRepository(),
-            session_failure_classifier=_EmptySessionFailureClassifier(),
-        ),
-    )
-    return StateProjectionReadPorts(
-        workspace=adapter,
-        profile=adapter,
-        usage_ratio_profile_loader=load_usage_ratios,
-    )
 
 
 def _register_operator_profile() -> None:
@@ -200,7 +154,7 @@ def test_select_one_source_activates_it_and_leaves_the_other_inactive(tmp_path: 
             certificate_secret_backend_factory=_CERTIFICATE_SECRET_BACKEND_FACTORY,
             operator_probe_ports=_OPERATOR_PROBE_PORTS,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
-            read_ports=_state_projection_read_ports(),
+            read_ports=state_projection_read_ports(),
         )
         assert status.certificate_path == str(apoderado)
 

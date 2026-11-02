@@ -40,6 +40,7 @@ from cadrumo.application.user_profile.automation_enrollment import (
     ProtectedEnrollmentRecipient,
 )
 from cadrumo.application.user_profile.registration import register_profile_with_credentials
+from cadrumo.core.storage_environment import prepare_temporary_directory
 from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
 from cadrumo_client.contracts.enrollment_proposal import EnrollmentKind, EnrollmentProposal
@@ -231,3 +232,26 @@ def administration_subject(
             yield AdministrationSubject(service, owner, store, native, client_native, proposal)
         finally:
             reset_test_profile_session()
+
+
+@contextmanager
+def registered_profile(
+    tmp_path: Path, *, owner_module: str, label: str, passphrase: str
+) -> Generator[tuple[Path, UUID]]:
+    """Open this test's own copy of a profile registered once per worker; it is born without recovery."""
+    create, decode = profile_authority_contexts()
+    world = sealed_profile_world(
+        (owner_module, label, passphrase),
+        lambda: (
+            register_profile_with_credentials(
+                label=label,
+                passphrase=passphrase,
+                profile_create_context=create,
+                profile_decode_context=decode,
+            ).profile_id
+        ),
+    )
+    with copied_profile_world(world, tmp_path, profile_decode_context=decode) as registered:
+        # The world registered without a KDF child; a production registration's child leaves this scratch base.
+        prepare_temporary_directory()
+        yield registered

@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { useStrings } from "../../shell/strings";
 import { AgentHeader } from "./AgentHeader";
 import { AgentWelcome } from "./AgentWelcome";
 import {
@@ -16,7 +17,7 @@ import { ConsentPrompt } from "./ConsentPrompt";
 import { DOCUMENTS } from "./DocumentsPanel.stories";
 import { DocumentsPanel } from "./DocumentsPanel";
 import { DropOverlay } from "./DropOverlay";
-import { ACTIVE_GROUPS } from "./HistoryList.stories";
+import { historyGroups } from "./HistoryList.stories";
 import { HistoryList } from "./HistoryList";
 import type { StagedAttachment } from "./types";
 
@@ -39,14 +40,17 @@ function Column({
   dragging,
   locale,
 }: Args & { locale: string }) {
+  const t = useStrings();
   return (
     <div className="grid h-dvh grid-cols-[auto_minmax(0,1fr)] bg-chrome">
       <aside className="relative flex h-dvh w-(--agent-w) flex-col border-r bg-background">
         <AgentHeader
           title={
-            body === "welcome" ? "New conversation" : "IVA del tercer trimestre"
+            body === "welcome"
+              ? t("desktop.agent.new_conversation")
+              : "IVA del tercer trimestre"
           }
-          subtitle="Fixture Deep · High"
+          subtitle={`Fixture Deep · ${t("desktop.agent.effort_high")}`}
           documentCount={
             body === "welcome" ? attachments.length : DOCUMENTS.length
           }
@@ -58,7 +62,7 @@ function Column({
         />
         {body === "history" ? (
           <HistoryList
-            groups={ACTIVE_GROUPS}
+            groups={historyGroups(locale)}
             archivedCount={2}
             onToggleArchived={NOOP}
             onOpen={NOOP}
@@ -83,11 +87,10 @@ function Column({
                   providerName="Example Alpha"
                   modelName="Fixture Deep"
                   contentItems={[
-                    { id: "message", label: "Your message" },
+                    { id: "message", label: t("desktop.agent.message_label") },
                     {
                       id: "documents",
-                      label:
-                        "3 documents: factura-2026-031.pdf, ticket-gasolinera.jpg, extracto-tercer-trimestre.xlsx",
+                      label: `${t("desktop.agent.row_documents", { count: 3 })} · factura-2026-031.pdf, ticket-gasolinera.jpg, extracto-tercer-trimestre.xlsx`,
                     },
                   ]}
                   onAllow={NOOP}

@@ -26,6 +26,7 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.transactions.models import TransactionCatalogue
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
@@ -253,6 +254,18 @@ def _executor_context(
     )
 
 
+def _pin_profile_and_preparation(
+    monkeypatch: pytest.MonkeyPatch, executor: ModeloAggregateExecutor, prepared: object
+) -> None:
+    """Pin the active profile in both guards and make the executor prepare the supplied capture."""
+    monkeypatch.setattr(
+        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
+        lambda: str(_PROFILE),
+    )
+    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+
+
 def _terminal_receipt(
     *,
     effect: OperationEffect,
@@ -357,16 +370,7 @@ def test_request_rejects_caller_retenciones_and_mixed_capture_before_execution()
             clave=RetencionClave.from_registry("A"),
             percibido_dinerario=Decimal("100.00"),
             retencion_practicada=Decimal("15.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=Decimal("100.00"),
         )
         PerModeloAggregationCommand.model_validate(
@@ -471,16 +475,7 @@ def _percepcion(source_id: str, nif: str, clave: str) -> WithholdingObservation:
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=Decimal("1000.00"),
         retencion_practicada=Decimal("150.00"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("1000.00"),
     )
 
@@ -639,12 +634,7 @@ def test_ledger_capture_reports_updated_or_replay_without_releasing_rows(
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     def aggregate_then_advance(command: PerModeloAggregationCommand, *, operation: PinnedAuthorityOperation):
         result = aggregate_per_modelo(command, operation=operation)
@@ -711,12 +701,7 @@ def test_ledger_source_conflict_refuses_and_ambiguous_write_keeps_effect_unknown
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     class _Producer:
         def __init__(self, *, service: object) -> None:
@@ -777,12 +762,7 @@ def test_catalogue_revision_change_before_commit_refuses_without_producer_write(
         cadence=object(),
         calculation_rows=None,
     )
-    monkeypatch.setattr(
-        "cadrumo.application.modelo.aggregate_operation.require_active_bucket_id",
-        lambda: str(_PROFILE),
-    )
-    monkeypatch.setattr("cadrumo.application.operations.profile_guard.require_active_bucket_id", lambda: str(_PROFILE))
-    monkeypatch.setattr(executor, "_prepare", lambda *_args: prepared)
+    _pin_profile_and_preparation(monkeypatch, executor, prepared)
 
     result = asyncio.run(executor.execute(request, context))
 

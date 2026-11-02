@@ -8,6 +8,7 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from .....core.casilla_id import CasillaId
 from ..bindings import CasillaObservation
 from ..errors import RegistryValidationError
 from ..formula_initial_values import materialise_observations
@@ -96,20 +97,24 @@ def test_materialise_observations_refuses_registry_casilla_without_grounding(
         )
 
 
+def _ordinary_quarter_inputs() -> dict[CasillaId, Decimal]:
+    return {
+        _M130_INGRESOS_CASILLA: Decimal("10000"),
+        _M130_GASTOS_CASILLA: Decimal("4000"),
+        _M130_RETENCIONES_CASILLA: Decimal("100"),
+        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
+        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
+        _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+    }
+
+
 def test_registry_formula_runtime_calculates_committed_modelo_in_dependency_order(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
-        inputs={
-            _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
-            _M130_RETENCIONES_CASILLA: Decimal("100"),
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
-            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-        },
+        inputs=_ordinary_quarter_inputs(),
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
             _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
@@ -249,15 +254,7 @@ def test_registry_formula_runtime_calculates_income_reduction_from_previous_year
 ) -> None:
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
-        inputs={
-            _M130_INGRESOS_CASILLA: Decimal("10000"),
-            _M130_GASTOS_CASILLA: Decimal("4000"),
-            _M130_RETENCIONES_CASILLA: Decimal("100"),
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("2000"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("10"),
-            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-        },
+        inputs=_ordinary_quarter_inputs(),
         date_context={"filing_period": date(2026, 3, 31)},
         binding_values={
             _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("9500"),

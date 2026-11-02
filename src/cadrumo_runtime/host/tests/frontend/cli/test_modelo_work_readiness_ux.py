@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from typing import Any
 
 import pytest
 
@@ -100,10 +101,8 @@ def test_work_create_refuses_status_blocked_profile_missing_activity() -> None:
     assert _payload(listed.output)["work_unit_count"] == 0
 
 
-def test_incomplete_setup_readiness_matches_work_create_and_names_completion_door() -> None:
-    """Fact-complete is not operator-declared complete on either surface."""
-    seed_test_profile(label="issue-113-incomplete", complete=False)
-
+def _assert_incomplete_readiness_json() -> dict[str, Any]:
+    """The JSON readiness refuses with one typed notice that names the completion door."""
     readiness = invoke_modelo_scenario_cli(
         [
             "--format", "json",
@@ -135,7 +134,10 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     assert profile_action["action"]["target_command_key"] == "config.profile.complete_setup"
     assert profile_action["action"]["cli_path"] == ["aeat", "config", "profile", "complete-setup"]
     assert profile_notices[0]["message"] == readiness_payload["profile_refusal"]
+    return profile_action
 
+
+def _assert_text_readiness_and_create_refuse_alike(profile_action: dict[str, Any]) -> None:
     readiness_text = invoke_modelo_scenario_cli(
         [
             "app", "modelo", "readiness",
@@ -167,6 +169,8 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     assert error["action"]["action"]["action_id"] == "operator.profile.complete_setup"
     assert error["action"]["action"]["cli_path"] == ["aeat", "config", "profile", "complete-setup"]
 
+
+def _assert_completing_setup_clears_the_profile_refusal() -> None:
     completed = invoke_modelo_scenario_cli(["--format", "json", "config", "profile", "complete-setup"])
     assert completed.exit_code == 0, completed.output
 
@@ -184,6 +188,15 @@ def test_incomplete_setup_readiness_matches_work_create_and_names_completion_doo
     assert _payload(after.output)["profile_ready"] is True
     assert _payload(after.output)["profile_refusal"] == ""
     assert all(notice["code"] != "modelo.readiness.profile_refusal" for notice in json.loads(after.output)["notices"])
+
+
+def test_incomplete_setup_readiness_matches_work_create_and_names_completion_door() -> None:
+    """Fact-complete is not operator-declared complete on either surface."""
+    seed_test_profile(label="issue-113-incomplete", complete=False)
+
+    profile_action = _assert_incomplete_readiness_json()
+    _assert_text_readiness_and_create_refuse_alike(profile_action)
+    _assert_completing_setup_clears_the_profile_refusal()
 
 
 def test_work_create_refuses_pre_activity_m303_and_creates_no_unit() -> None:

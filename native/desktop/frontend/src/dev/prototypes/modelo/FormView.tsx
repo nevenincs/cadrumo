@@ -21,6 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { readLocaleDecimal } from "@/shared/numbers";
 import type { ModeloEditValueGrammarV1 } from "@/shell/modeloContract";
 import { translator } from "@/shell/strings";
 import type {
@@ -158,16 +159,19 @@ export function heldValue(field: FormField, locale: string): string {
   return shows(field) ? display(field, locale) : "";
 }
 
-/** A staged edit as the box will read: the text as typed, formatted when it
- * reads as an amount; the application parses it when the edits are checked. */
+/** A staged edit as the box will read: the text as typed, written as an
+ * amount when the box holds one and the text reads as one; the application
+ * parses it when the edits are checked. */
 export function stagedWords(f: FormField, intent: Intent, locale: string) {
   switch (intent.kind) {
     case "set_typed_value":
     case "set_override_value":
-      // Shown as typed: the application reads it when the edits are checked.
-      return "confirms" in intent && intent.confirms
-        ? display(f, locale)
-        : intent.text;
+      if ("confirms" in intent && intent.confirms) return display(f, locale);
+      if (f.data_type === "money") {
+        const read = readLocaleDecimal(locale, intent.text);
+        if (read !== null) return money(read, locale);
+      }
+      return intent.text;
     case "clear_declared_value":
       return w("workspace.modelo.staged.clear", locale);
     case "restore_source_value":
@@ -415,7 +419,9 @@ function ValueCell({
         field={field}
         initial={
           staged
-            ? stagedWords(field, staged.intent, locale)
+            ? "text" in staged.intent
+              ? staged.intent.text
+              : stagedWords(field, staged.intent, locale)
             : heldValue(field, locale)
         }
         locale={locale}

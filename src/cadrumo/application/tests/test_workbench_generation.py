@@ -26,11 +26,9 @@ from ..modelo.workspace_models import (
 )
 from ..modelo.workspace_schema import resolve_static_inspection_result
 from ..operations.registry import OperationPublicContractSetV1
-from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
+from ..overview.calendar_models import OverviewCalendarRange
 from ..overview.home import (
-    HomeAccountSession,
     HomeAvailability,
-    HomeSessionPosture,
 )
 from ..search.workbench import WorkbenchDestinationAdmissionState
 from ..user_profile.censal_operation import (
@@ -44,7 +42,6 @@ from ..workbench_generation_contracts import (
     WorkbenchGenerationInputsV1,
     WorkbenchGenerationSourceResultV1,
 )
-from ..workbench_generation_reader import SecureProfileWorkbenchGenerationReadDoorV1
 from ._workbench_generation_support import (
     _NOW,
     _PROFILE_ID,
@@ -52,9 +49,11 @@ from ._workbench_generation_support import (
     _declaration_work_unit,
     _inputs,
     _ledger_ports,
+    _plain_generation_door,
     _profile_record,
     _Repository,
     _StableStore,
+    _stub_empty_calendar,
     _test_censal_operation_definition,
 )
 
@@ -105,19 +104,12 @@ def test_secure_profile_provider_brackets_repository_capture_and_refuses_missing
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
 
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
+    door = _plain_generation_door(
+        authority_operation,
+        profile=profile,
+        work_units=work_units,
+        revisions=revisions,
+        filings=filings,
     )
 
     generation = InstalledWorkbenchGenerationProviderV1(door)()
@@ -153,19 +145,12 @@ def test_secure_profile_provider_contains_rejected_declarations_projection(
     )
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
+    door = _plain_generation_door(
+        authority_operation,
+        profile=profile,
+        work_units=work_units,
+        revisions=revisions,
+        filings=filings,
     )
 
     generation = InstalledWorkbenchGenerationProviderV1(door)()
@@ -204,19 +189,12 @@ def test_secure_profile_modelo_source_carries_each_work_unit_s_projection(
         output_language=OutputLanguage.ES,
     )
     assert isinstance(static_result, ModeloWorkspaceStaticInspectionResultV1)
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
+    door = _plain_generation_door(
+        authority_operation,
+        profile=profile,
+        work_units=work_units,
+        revisions=revisions,
+        filings=filings,
         modelo_projection_reader=lambda _unit: static_result.projection,
     )
 
@@ -259,19 +237,12 @@ def test_secure_profile_aeat_sync_reader_contains_a_validation_error(
             operation_contracts=contracts,
             censo_values={"contact.fiscal_address": "x" * 257},
         )
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
+    door = _plain_generation_door(
+        authority_operation,
+        profile=profile,
+        work_units=work_units,
+        revisions=revisions,
+        filings=filings,
         operation_contracts=contracts,
         ledger_action_ports=_ledger_ports(
             authority_operation,
@@ -317,19 +288,12 @@ def test_secure_profile_aeat_sync_reader_contains_a_named_projection_error(
             operation_contracts=contracts,
             censo_values={},
         )
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
+    door = _plain_generation_door(
+        authority_operation,
+        profile=profile,
+        work_units=work_units,
+        revisions=revisions,
+        filings=filings,
         operation_contracts=contracts,
     )
 
@@ -355,23 +319,13 @@ def test_secure_profile_provider_refuses_a_generation_changed_during_capture(
     revisions = _Repository(CalculationRevisionCatalogue())
     filings = _Repository(ModeloRecordCatalogue())
 
-    def empty_calendar(_profile: object, calendar_range: object, **_kwargs: object) -> OverviewCalendar:
-        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())  # type: ignore[arg-type]
-
-    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)
-    door = SecureProfileWorkbenchGenerationReadDoorV1(
-        profile_id=_PROFILE_ID,
-        operation=authority_operation,
-        profile_repository=cast(Any, profile),
-        work_unit_repository=cast(Any, work_units),
-        calculation_repository=cast(Any, revisions),
-        filing_repository=cast(Any, filings),
-        clock=lambda: _NOW,
-        account_session_reader=lambda: HomeAccountSession(
-            posture=HomeSessionPosture.ACTIVE,
-            profile_label="Perfil local",
-            expires_at=_NOW,
-        ),
+    _stub_empty_calendar(monkeypatch)
+    door = _plain_generation_door(
+        authority_operation,
+        profile=profile,
+        work_units=work_units,
+        revisions=revisions,
+        filings=filings,
     )
 
     with pytest.raises(InternalInvariantError, match="changed during capture"):

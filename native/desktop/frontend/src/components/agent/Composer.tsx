@@ -286,6 +286,13 @@ export function Composer({
           onKeyDown={onKeyDown}
           className="resize-none rounded-none border-0 bg-transparent px-3 pt-3 pb-1 focus-visible:outline-none"
         />
+        <AttachmentWell
+          attachments={attachments}
+          locale={locale}
+          onRemove={onRemoveAttachment}
+          onRemoveAll={onRemoveAllAttachments}
+          onShowAll={onShowAllAttachments}
+        />
         <div className="flex min-w-0 items-center gap-1 px-2 pb-2">
           <AgentIconAction
             icon="plus"
@@ -342,13 +349,6 @@ export function Composer({
             />
           )}
         </div>
-        <AttachmentWell
-          attachments={attachments}
-          locale={locale}
-          onRemove={onRemoveAttachment}
-          onRemoveAll={onRemoveAllAttachments}
-          onShowAll={onShowAllAttachments}
-        />
       </div>
     </ComposerSuggestions>
   );

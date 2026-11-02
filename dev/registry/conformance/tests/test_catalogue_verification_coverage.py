@@ -293,17 +293,7 @@ def test_modelo_220_scope_refuses_an_unevidenced_successor_exercise() -> None:
     assert not _record_design_sources_cover(sources, date(_M220_UNEVIDENCED_SUCCESSOR, 12, 31))
 
 
-def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
-    """M038 is filed on AEAT's 2012 design until Orden HAC/646/2024 adds IRUS in June 2024."""
-    # The authored catalogue, because a published generation's closure carries
-    # only the sources its revisions cite.
-    modelos, catalogues = committed_registry_tree()
-    modelo = next(candidate for candidate in modelos if candidate.id == "038")
-    pre_june = modelo.revisions["2022-hasta-2024-05"]
-    june_2024 = modelo.revisions["2024-desde-06"]
-    current_source = catalogues.sources["aeat-dr-038-2024"]
-    historical_source = catalogues.sources["aeat-dr-038-2012"]
-
+def _assert_m038_historical_design_manifest_entry(historical_source) -> None:
     manifest_path = bundled_path("corpus", "aeat_official", "disenos_registro", "modelo_038", "manifest.json")
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     (historical_artefact,) = [
@@ -320,6 +310,8 @@ def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
         "url": f"{RECORD_DESIGN_ROUTE_BASE_FIXTURE}/DR_01_99/archivos/dr038_2005.pdf",
     }
 
+
+def _assert_m038_amendment_grounding(modelo, catalogues) -> None:
     amendment_refs = {ref_id: catalogues.legal[ref_id] for ref_id in _M038_SOURCE_ERA_LEGAL_REFS}
     verify_legal_catalogue_grounding(amendment_refs, source_root=bundled_path())
     assert amendment_refs["orden-hac-646-2024:art-1"].required_text == (
@@ -336,6 +328,10 @@ def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
         assert len(revision.constructs) == 1
         assert set(revision.constructs[0].legal_refs) >= _M038_SOURCE_ERA_LEGAL_REFS
 
+
+def _assert_m038_design_eras_split_at_the_amendment(
+    modelo, pre_june, june_2024, current_source, historical_source
+) -> None:
     # The 2012 design closes the day before the amendment's first declaration,
     # and only the edition it governs cites it.
     assert historical_source.record_design_epoch == "2012"
@@ -351,6 +347,8 @@ def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
     assert not _record_design_sources_cover([historical_source], june_2024.valid_from)
     assert not _record_design_sources_cover([current_source], pre_june.valid_to)
 
+
+def _assert_m038_historical_design_resolves_only_its_years(catalogues, historical_source, june_2024) -> None:
     support = catalogues.supported_filing_years
     assert support is not None
     assert historical_source.applies_to is not None
@@ -375,6 +373,10 @@ def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
             design_epoch="2012",
         )
 
+
+def _assert_m038_every_revision_selects_itself(modelo, catalogues) -> None:
+    support = catalogues.supported_filing_years
+    assert support is not None
     for revision in modelo.revisions.values():
         coordinates = revision_selection_coordinates(
             revision,
@@ -388,6 +390,24 @@ def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
         select_revision(modelo, filing_year=min(support.years) - 1, period="12", support=support)
     assert refused.value.floor == support.floor
     assert refused.value.filing_year == support.floor - 1
+
+
+def test_modelo_038_selects_the_2012_design_until_the_irus_amendment() -> None:
+    """M038 is filed on AEAT's 2012 design until Orden HAC/646/2024 adds IRUS in June 2024."""
+    # The authored catalogue, because a published generation's closure carries
+    # only the sources its revisions cite.
+    modelos, catalogues = committed_registry_tree()
+    modelo = next(candidate for candidate in modelos if candidate.id == "038")
+    pre_june = modelo.revisions["2022-hasta-2024-05"]
+    june_2024 = modelo.revisions["2024-desde-06"]
+    current_source = catalogues.sources["aeat-dr-038-2024"]
+    historical_source = catalogues.sources["aeat-dr-038-2012"]
+
+    _assert_m038_historical_design_manifest_entry(historical_source)
+    _assert_m038_amendment_grounding(modelo, catalogues)
+    _assert_m038_design_eras_split_at_the_amendment(modelo, pre_june, june_2024, current_source, historical_source)
+    _assert_m038_historical_design_resolves_only_its_years(catalogues, historical_source, june_2024)
+    _assert_m038_every_revision_selects_itself(modelo, catalogues)
 
 
 def test_committed_registry_tree_has_required_model_law_coverage() -> None:

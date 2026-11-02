@@ -68,6 +68,103 @@ def _is_first_quarter(row: dict[str, object], exercise: int) -> bool:
     return any(date.startswith(f"{exercise}-{month:02d}") for month in (1, 2, 3))
 
 
+def _quarter_classification_lines(q1_rows, rules):
+    classify_lines = ["transaction_id,classification,category_id"]
+    expected: dict[str, str] = {}
+    for row in q1_rows:
+        desc = row.get("description")
+        tx_id = row.get("transaction_id")
+        assert isinstance(desc, str)
+        assert isinstance(tx_id, str)
+        rule = match_corpus_rule(desc, rules)
+        if rule is None:
+            continue
+        if rule.get("classification") == "MIXED":
+            continue
+        if rule.get("base_mode") == "gated":
+            continue
+        category = rule.get("category_id") or ""
+        classification_val = rule.get("classification")
+        assert isinstance(classification_val, str)
+        classify_lines.append(f"{tx_id},{classification_val},{category}")
+        expected[tx_id] = classification_val
+
+    assert len(expected) >= 10, f"the quarter should carry a meaningful classify workload, got {len(expected)}"
+    return classify_lines, expected
+
+
+def _assert_bulk_classification_stuck(bulk_result, expected):
+    assert bulk_result["applied"] == len(expected), bulk_result
+
+    # Verify the classifications actually stuck (re-list to confirm).
+    by_id = {r.get("transaction_id"): r for r in _list_rows() if isinstance(r.get("transaction_id"), str)}
+    for tx_id, classification in expected.items():
+        assert by_id.get(tx_id, {}).get("business_classification") == classification, tx_id
+
+
+def _classify_mixed_home_office_internet(q1_rows):
+    internet = None
+    for r in q1_rows:
+        desc_val = r.get("description")
+        if isinstance(desc_val, str) and "Factura internet fibra oficina" in desc_val:
+            internet = r
+            break
+    if internet is not None:
+        tx_id_val = internet.get("transaction_id")
+        if isinstance(tx_id_val, str):
+            mixed = _invoke(
+                [
+                    "app",
+                    "ledger",
+                    "classify",
+                    tx_id_val,
+                    "--classification",
+                    "MIXED",
+                    "--business-pct",
+                    "0.30",
+                    "--category-id",
+                    "suministros_home_office_internet",
+                ],
+            )
+            assert mixed.exit_code == 0, mixed.output
+
+
+def _run_readiness_gates(exercise):
+    preflight = _invoke(
+        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(exercise)],
+    )
+    assert preflight.exit_code == 0, preflight.output
+    pf = json.loads(preflight.output)["result"]
+    # The report carries a checked count, an issue list, and a ready flag.
+    assert "issues" in pf and "ready" in pf, pf
+    # TESTIMONIAL: with a quarter full of still-unprocessed personal/transfer
+    # rows, preflight is expected to surface readiness gaps; the value is the
+    # explicit, per-transaction issue list (reason + detail), not a bare bool.
+
+    # `check` audits anomalies across every period the ledger touches.
+    check = _invoke(["--format", "json", "app", "ledger", "check"])
+    assert check.exit_code == 0, check.output
+    chk = json.loads(check.output)["result"]
+    assert "issues" in chk, chk
+
+    # `status` is the at-a-glance summary for the quarter.
+    status = _invoke(["app", "ledger", "status", "--period", "1T", "--year", str(exercise)])
+    assert status.exit_code == 0, status.output
+
+
+def _export_and_assert_quarter(tmp_path, exercise):
+    out_csv = tmp_path / f"autonoma-1t-{exercise}.csv"
+    exported = _invoke(
+        ["--format", "json", "app", "ledger", "export", "--output", str(out_csv), "--export-format", "csv"],
+    )
+    assert exported.exit_code == 0, exported.output
+    assert out_csv.exists() and out_csv.stat().st_size > 0
+    export_result = json.loads(exported.output)["result"]
+    # The export envelope carries a row count and a sha256 — good for an
+    # operator who wants a verifiable hand-off artefact.
+    assert export_result.get("row_count", export_result.get("rows", 0)) > 0, export_result
+
+
 def test_autonoma_closes_the_first_quarter_end_to_end(tmp_path: Path) -> None:
     """The full first quarterly close as an operator would run it."""
     rules = load_corpus_oracle_rules()
@@ -99,28 +196,7 @@ def test_autonoma_closes_the_first_quarter_end_to_end(tmp_path: Path) -> None:
     # A classify CSV is built resolving each Q1 row against the oracle,
     # restricted to non-MIXED, non-gated rows (MIXED needs --business-pct, which
     # --file does not carry; gated/personal rows are left out of scope).
-    classify_lines = ["transaction_id,classification,category_id"]
-    expected: dict[str, str] = {}
-    for row in q1_rows:
-        desc = row.get("description")
-        tx_id = row.get("transaction_id")
-        assert isinstance(desc, str)
-        assert isinstance(tx_id, str)
-        rule = match_corpus_rule(desc, rules)
-        if rule is None:
-            continue
-        if rule.get("classification") == "MIXED":
-            continue
-        if rule.get("base_mode") == "gated":
-            continue
-        category = rule.get("category_id") or ""
-        classification_val = rule.get("classification")
-        assert isinstance(classification_val, str)
-        classify_lines.append(f"{tx_id},{classification_val},{category}")
-        expected[tx_id] = classification_val
-
-    assert len(expected) >= 10, f"the quarter should carry a meaningful classify workload, got {len(expected)}"
-
+    classify_lines, expected = _quarter_classification_lines(q1_rows, rules)
     classify_csv = tmp_path / "autonoma-1t-classifications.csv"
     classify_csv.write_text("\n".join(classify_lines) + "\n", encoding="utf-8")
 
@@ -130,76 +206,17 @@ def test_autonoma_closes_the_first_quarter_end_to_end(tmp_path: Path) -> None:
     # TESTIMONIAL: bulk classify reports total/applied/skipped/failures — a
     # clear summary. It is also the known-slow path (per-row re-persist), which
     # an operator would feel on a real quarter of dozens of rows.
-    assert bulk_result["applied"] == len(expected), bulk_result
-
-    # Verify the classifications actually stuck (re-list to confirm).
-    by_id = {r.get("transaction_id"): r for r in _list_rows() if isinstance(r.get("transaction_id"), str)}
-    for tx_id, classification in expected.items():
-        assert by_id.get(tx_id, {}).get("business_classification") == classification, tx_id
-
+    _assert_bulk_classification_stuck(bulk_result, expected)
     # --- Classify one MIXED home-office expense the long way ---------------
     # `--file` can't carry the business proportion, so mixed-use rows are
     # classified one at a time with --business-pct, picking the Q1 fibra
     # internet line (oracle business_pct 0.30).
-    internet = None
-    for r in q1_rows:
-        desc_val = r.get("description")
-        if isinstance(desc_val, str) and "Factura internet fibra oficina" in desc_val:
-            internet = r
-            break
-    if internet is not None:
-        tx_id_val = internet.get("transaction_id")
-        if isinstance(tx_id_val, str):
-            mixed = _invoke(
-                [
-                    "app",
-                    "ledger",
-                    "classify",
-                    tx_id_val,
-                    "--classification",
-                    "MIXED",
-                    "--business-pct",
-                    "0.30",
-                    "--category-id",
-                    "suministros_home_office_internet",
-                ],
-            )
-            assert mixed.exit_code == 0, mixed.output
-
+    _classify_mixed_home_office_internet(q1_rows)
     # --- Readiness gates --------------------------------------------------
     # Preflight runs for the quarter to see what's still missing.
-    preflight = _invoke(
-        ["--format", "json", "app", "ledger", "preflight", "--period", "1T", "--year", str(exercise)],
-    )
-    assert preflight.exit_code == 0, preflight.output
-    pf = json.loads(preflight.output)["result"]
-    # The report carries a checked count, an issue list, and a ready flag.
-    assert "issues" in pf and "ready" in pf, pf
-    # TESTIMONIAL: with a quarter full of still-unprocessed personal/transfer
-    # rows, preflight is expected to surface readiness gaps; the value is the
-    # explicit, per-transaction issue list (reason + detail), not a bare bool.
-
-    # `check` audits anomalies across every period the ledger touches.
-    check = _invoke(["--format", "json", "app", "ledger", "check"])
-    assert check.exit_code == 0, check.output
-    chk = json.loads(check.output)["result"]
-    assert "issues" in chk, chk
-
-    # `status` is the at-a-glance summary for the quarter.
-    status = _invoke(["app", "ledger", "status", "--period", "1T", "--year", str(exercise)])
-    assert status.exit_code == 0, status.output
-
+    _run_readiness_gates(exercise)
     # --- Export the quarter -----------------------------------------------
     # The whole ledger exports for the gestor. TESTIMONIAL: `export` has
     # no --period flag, so the operator cannot hand their gestor *just* the
     # quarter; the export is the entire bucket and the gestor must filter downstream.
-    out_csv = tmp_path / f"autonoma-1t-{exercise}.csv"
-    exported = _invoke(
-        ["--format", "json", "app", "ledger", "export", "--output", str(out_csv), "--export-format", "csv"],
-    )
-    assert exported.exit_code == 0, exported.output
-    assert out_csv.exists() and out_csv.stat().st_size > 0
-    export_result = json.loads(exported.output)["result"]
-    # The export envelope carries a row count and a sha256 — good for an
-    # operator who wants a verifiable hand-off artefact.
-    assert export_result.get("row_count", export_result.get("rows", 0)) > 0, export_result
+    _export_and_assert_quarter(tmp_path, exercise)

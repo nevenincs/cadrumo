@@ -63,6 +63,7 @@ See Also:
 
 from __future__ import annotations
 
+import argparse
 import ast
 import re
 import shutil
@@ -75,8 +76,15 @@ from pathlib import Path
 from typing import Final
 
 from dev._paths import REPO_ROOT, UTF_8
-from dev.exit_codes import ADVISORY_BROKEN, OK
-from dev.first_party_source import SOURCE_PACKAGES, production_exclusion_globs
+from dev.exit_codes import ADVISORY_BROKEN, FAILED, OK
+from dev.first_party_source import (
+    BUNDLED_DATA_DIRECTORY,
+    PYTEST_CONFTEST,
+    SOURCE_PACKAGES,
+    TEST_DIRECTORY,
+    TEST_MODULE_PREFIXES,
+    production_exclusion_globs,
+)
 from dev.packaging.command_execution import run_command
 
 from .duplication_declaration import intersects, site_span, source_span, span_is_declaration
@@ -91,6 +99,13 @@ _JSCPD_SPEC: Final[str] = "jscpd@4.2.0"
 _JSCPD_TIMEOUT_SECONDS: Final[float] = 300.0
 _SOURCE_ROOTS: Final[tuple[Path, ...]] = tuple(Path(package) for package in SOURCE_PACKAGES)
 _JSCPD_IGNORE: Final[str] = ",".join(production_exclusion_globs())
+# The test surface is what ``is_test_source`` admits, minus bundled data.
+_JSCPD_TEST_PATTERN: Final[str] = (
+    f"**/{{{TEST_DIRECTORY}/**/*.py,{','.join(f'{prefix}*.py' for prefix in TEST_MODULE_PREFIXES)},{PYTEST_CONFTEST}}}"
+)
+_JSCPD_TEST_IGNORE: Final[str] = f"**/{BUNDLED_DATA_DIRECTORY}/**"
+TEST_DUPLICATION_CEILING_PCT: Final[float] = 1.35
+"""Duplicated-line percentage the test surface may not exceed."""
 
 # The jscpd summary table's "Total:" row, post-ANSI-strip, reads:
 #   | Total: | 1252 | 290727 | 1676107 | 65 | 1185 (0.41%) | 10882 (0.65%) |
@@ -219,13 +234,14 @@ class DuplicationResult:
         )
 
 
-def jscpd_command(npx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS) -> list[str]:
+def jscpd_command(npx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS, *, tests: bool = False) -> list[str]:
     r"""Build the one jscpd command line.
 
     Each of ``source_roots`` is passed via :meth:`~pathlib.PurePath.as_posix`
     so it renders ``src/cadrumo`` on every OS. A Windows-native ``src\cadrumo``
     matches no files inside jscpd's glob engine, and jscpd then exits 0 having
     silently scanned nothing -- the false-green this module exists to prevent.
+    ``tests`` selects the test surface instead of production source.
     """
     return [
         npx,
@@ -240,8 +256,9 @@ def jscpd_command(npx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS) -> lis
         "80",
         "--max-size",
         "250kb",
+        *(("--pattern", _JSCPD_TEST_PATTERN) if tests else ()),
         "--ignore",
-        _JSCPD_IGNORE,
+        _JSCPD_TEST_IGNORE if tests else _JSCPD_IGNORE,
         "--gitignore",
         "--reporters",
         "console",
@@ -391,6 +408,7 @@ def run_duplication_scan(
     source_roots: Sequence[Path] = _SOURCE_ROOTS,
     timeout: float = _JSCPD_TIMEOUT_SECONDS,
     which: Callable[[str], str | None] = shutil.which,
+    tests: bool = False,
 ) -> DuplicationResult:
     """Run jscpd over ``source_roots`` and classify the outcome.
 
@@ -413,7 +431,7 @@ def run_duplication_scan(
 
     try:
         completed = run_command(
-            jscpd_command(npx, source_roots),
+            jscpd_command(npx, source_roots, tests=tests),
             errors="replace",
             cwd=repo_root,
             timeout_seconds=timeout,
@@ -457,16 +475,45 @@ def render_console_report(result: DuplicationResult) -> str:
     return "\n".join(out)
 
 
+def ceiling_verdict(result: DuplicationResult, ceiling: float = TEST_DUPLICATION_CEILING_PCT) -> str | None:
+    """Return why *result* breaks the test-surface ceiling, or ``None`` when it holds.
+
+    An unavailable scan breaks the ceiling: it cannot prove the percentage.
+    """
+    if result.outcome is DuplicationOutcome.UNAVAILABLE:
+        return f"test duplication unmeasured: {result.reason}"
+    if result.outcome is DuplicationOutcome.OBSERVED_ZERO or not result.duplicated_pct:
+        return None
+    measured = float(result.duplicated_pct)
+    if measured > ceiling:
+        return f"test duplication {measured:g}% exceeds the {ceiling:g}% ceiling"
+    return None
+
+
 def main() -> int:
     """Run the duplication scan and print the reduced console report.
 
     Findings are advisory and return 0. An unavailable scan returns the shared
-    advisory-broken status so it cannot pose as a clean run.
+    advisory-broken status so it cannot pose as a clean run. ``--tests-gate``
+    scans the test surface and fails above :data:`TEST_DUPLICATION_CEILING_PCT`.
     """
+    parser = argparse.ArgumentParser(description="Scan for copy-paste duplication.")
+    parser.add_argument(
+        "--tests-gate",
+        action="store_true",
+        help=f"Scan test files and fail above {TEST_DUPLICATION_CEILING_PCT:g}% duplicated lines.",
+    )
+    args = parser.parse_args()
     repo_root = REPO_ROOT
-    result = run_duplication_scan(repo_root)
+    result = run_duplication_scan(repo_root, tests=args.tests_gate)
     print(render_console_report(result))
-    return ADVISORY_BROKEN if result.outcome is DuplicationOutcome.UNAVAILABLE else OK
+    if not args.tests_gate:
+        return ADVISORY_BROKEN if result.outcome is DuplicationOutcome.UNAVAILABLE else OK
+    verdict = ceiling_verdict(result)
+    if verdict is not None:
+        print(verdict, file=sys.stderr)
+        return FAILED
+    return OK
 
 
 if __name__ == "__main__":

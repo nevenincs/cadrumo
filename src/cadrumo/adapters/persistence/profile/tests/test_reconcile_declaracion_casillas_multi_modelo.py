@@ -29,42 +29,32 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
+from functools import partial
 
 import pytest
 
-from cadrumo.adapters.inbound.declaracion.schema import InboundDeclaracionObservation, TemplateRevision
-from cadrumo.adapters.inbound.pdf.extracted_casilla import ExtractedCasilla
-from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
-from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.inbound.declaracion.schema import InboundDeclaracionObservation
 from cadrumo.adapters.persistence.storage.tests.active_profile_isolated_backend_fixture import (
     active_profile_isolated_backend_fixture,
 )
-from cadrumo.application.workflow.persistence import workflow_state_repository
-from cadrumo.core.casilla_id import validated_casilla_id
-from cadrumo.core.period import Period
-from cadrumo.core.time.clock import now
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.schema_references import RegistrySnapshotRef
-from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
-from cadrumo.domain.modelos.calculation_repository import upsert_calculation_revision
-from cadrumo.domain.modelos.calculation_revision import (
-    CalculationRevision,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
-)
-from cadrumo.domain.modelos.codes import ModeloCode
-from cadrumo.domain.modelos.repository import upsert_work_unit
-from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
+from cadrumo.domain.modelos.work_unit import WorkUnit
 
 from .....application.modelo.reconciliation_evidence_kind import ModeloReconciliationEvidenceKind
 from .....application.modelo.reconciliation_records import ModeloReconciliationDiffKind, ModeloReconciliationVerdict
-from .reconciliation_persist_support import reconcile_parsed_declaracion
+from .reconciliation_persist_support import (
+    persist_filed_revision,
+    reconcile_parsed_declaracion,
+    seed_active_work_unit,
+    synthetic_declaracion,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _PROFILE_TAX_ID = "00000000T"
 _CLOCK = datetime(2026, 4, 20, tzinfo=UTC)
+_persist_filed_revision = partial(persist_filed_revision, clock=_CLOCK)
+_synthetic_declaracion = partial(synthetic_declaracion, tax_id=_PROFILE_TAX_ID)
 
 
 # Seeded through a detached WorkflowState, never a repository read: the
@@ -75,142 +65,6 @@ _isolated_backend = active_profile_isolated_backend_fixture(
     bucket_id="33333333-3333-4333-8333-333333333333",
     profile_overrides={"identity.tax_id": _PROFILE_TAX_ID},
 )
-
-
-def _seed_work_unit(*, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation) -> WorkUnit:
-    state = workflow_state_repository().load()
-    bucket_id = state.active_profile_bucket_id()
-    assert bucket_id is not None
-    typed_period = Period.from_year_and_code(filing_year, period)
-    # Seed the real law-determined revision id (mirrors
-    # test_reconcile_declaracion_casillas.py) so the snapshot resolver's D1
-    # identity assertion holds and the casilla compare actually runs.
-    revision_id = operation.snapshot(
-        modelo,
-        filing_year=filing_year,
-        period=typed_period.registry_token,
-    ).revision.id
-    work_unit_id = derive_work_unit_id(
-        bucket_id=bucket_id,
-        modelo=modelo,
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-    )
-    work_unit = WorkUnit(
-        work_unit_id=work_unit_id,
-        bucket_id=bucket_id,
-        modelo=ModeloCode(modelo),
-        filing_year=filing_year,
-        period=typed_period,
-        revision_id=revision_id,
-        name=f"{modelo}-{filing_year}-{typed_period.registry_token}",
-        created_at=datetime.now(UTC),
-        updated_at=datetime.now(UTC),
-    )
-    repo = WorkUnitCatalogueRepository()
-    repo.save(upsert_work_unit(repo.load(), work_unit))
-    return work_unit
-
-
-def _persist_filed_revision(work_unit: WorkUnit, *, casilla_values: dict[str, Decimal]) -> None:
-    validated_values = {validated_casilla_id(k, surface="test"): v for k, v in casilla_values.items()}
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit.work_unit_id,
-        input_values_by_casilla_id={},
-        binding_overrides={},
-        casilla_values=validated_values,
-        filing_instance_evidence=None,
-        source_provenance=(),
-    )
-    repo = CalculationRevisionCatalogueRepository()
-    repo.save(
-        upsert_calculation_revision(
-            repo.load(),
-            CalculationRevision(
-                calculation_revision_id=revision_id,
-                work_unit_id=work_unit.work_unit_id,
-                registry_snapshot_ref=RegistrySnapshotRef(
-                    modelo=work_unit.modelo,
-                    revision_id=work_unit.revision_id,
-                    modelo_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                ),
-                state=CalculationRevisionState.PRESENTADO,
-                casilla_values=validated_values,
-                observations=registry_grounded_observations(
-                    modelo=str(work_unit.modelo),
-                    filing_year=work_unit.filing_year,
-                    period=work_unit.period.registry_token,
-                    casilla_values=validated_values,
-                ),
-                created_at=_CLOCK,
-                updated_at=_CLOCK,
-                verified_at=_CLOCK,
-                verified_by="test",
-                filed_at=_CLOCK,
-                filed_by="test",
-                filing_instance_evidence=None,
-                source_provenance=(),
-            ),
-        ),
-    )
-
-
-def _synthetic_declaracion(
-    work_unit: WorkUnit,
-    *,
-    values: dict[str, Decimal],
-    operation: PinnedAuthorityOperation,
-    tax_id: str = _PROFILE_TAX_ID,
-) -> InboundDeclaracionObservation:
-    """Build a synthetic, in-memory declaración observation for ``work_unit``'s modelo.
-
-    Bypasses real PDF extraction entirely (declared ``synthetic_generated``
-    provenance): constructs the same typed
-    :class:`~cadrumo.adapters.inbound.declaracion.InboundDeclaracionObservation`
-    the parser would return, with an explicit registry snapshot ref matching
-    the seeded work unit's law-determined revision.
-    """
-    snapshot = operation.snapshot(
-        str(work_unit.modelo),
-        filing_year=work_unit.filing_year,
-        period=work_unit.period.registry_token,
-    )
-    return InboundDeclaracionObservation(
-        modelo=str(work_unit.modelo),
-        ejercicio=str(work_unit.filing_year),
-        period=work_unit.period,
-        tax_id=tax_id,
-        template_revision=TemplateRevision(
-            modelo=str(work_unit.modelo),
-            año=work_unit.filing_year,
-            revision=snapshot.revision.id,
-            detected_from="explicit_override",
-        ),
-        registry_snapshot_ref=RegistrySnapshotRef(
-            modelo=snapshot.modelo.id,
-            revision_id=snapshot.revision.id,
-            modelo_year=snapshot.filing_year,
-            period=snapshot.period,
-        ),
-        values=tuple(
-            ExtractedCasilla(
-                casilla_id=validated_casilla_id(casilla_id, surface="test"),
-                printed_value=value,
-                source_page=1,
-                source_bbox=None,
-                extraction_confidence=1.0,
-            )
-            for casilla_id, value in values.items()
-        ),
-        warnings=(),
-        extraction_profile_id=f"modelo-{work_unit.modelo}-declaracion-pdf",
-        extraction_profile_provisional=False,
-        source_pdf_path=Path(f"synthetic/declaracion-{work_unit.modelo}.pdf"),
-        source_pdf_sha256="0" * 64,
-        parsed_at=now(),
-    )
 
 
 def _reconcile(
@@ -242,7 +96,7 @@ def test_modelo_100_pagos_fraccionados_mismatch_is_caught_as_typed_casilla_diff(
     prints a different 0604 must surface a typed casilla mismatch rather than
     an identity-only reconcile success.
     """
-    work_unit = _seed_work_unit(modelo="100", filing_year=2024, period="0A", operation=authority_operation)
+    work_unit = seed_active_work_unit(modelo="100", filing_year=2024, period="0A", operation=authority_operation)
     _persist_filed_revision(work_unit, casilla_values={"0604": Decimal("1520.00")})
 
     report = _reconcile(
@@ -313,7 +167,7 @@ def test_matching_declaracion_reconciles_clean(
     casilla_values: dict[str, Decimal],
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit = _seed_work_unit(
+    work_unit = seed_active_work_unit(
         modelo=modelo,
         filing_year=filing_year,
         period=period,
@@ -340,7 +194,7 @@ def test_modelo_303_value_mismatch_is_caught_as_typed_casilla_diff(
     """A filed casilla value that differs from the computed revision is
     CAUGHT and represented as a typed ``casilla`` diff — not a silent
     identity ``matches``."""
-    work_unit = _seed_work_unit(
+    work_unit = seed_active_work_unit(
         modelo="303",
         filing_year=2026,
         period="1T",
@@ -381,7 +235,7 @@ def test_modelo_390_missing_casilla_is_caught_as_typed_casilla_diff(
 ) -> None:
     """A casilla the computed revision resolved but the declaración omitted
     is MISSING_IN_FILED, not a silent skip."""
-    work_unit = _seed_work_unit(
+    work_unit = seed_active_work_unit(
         modelo="390",
         filing_year=2025,
         period="0A",
@@ -423,7 +277,7 @@ def test_modelo_390_missing_casilla_is_caught_as_typed_casilla_diff(
 def test_modelo_111_matching_declaracion_reconciles_clean(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit = _seed_work_unit(
+    work_unit = seed_active_work_unit(
         modelo="111",
         filing_year=2026,
         period="1T",
@@ -448,7 +302,7 @@ def test_modelo_111_matching_declaracion_reconciles_clean(
 def test_modelo_111_value_mismatch_is_caught_as_typed_casilla_diff(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit = _seed_work_unit(
+    work_unit = seed_active_work_unit(
         modelo="111",
         filing_year=2026,
         period="1T",
@@ -484,7 +338,7 @@ def test_modelo_111_value_mismatch_is_caught_as_typed_casilla_diff(
 def test_modelo_190_value_mismatch_is_caught_as_typed_casilla_diff(
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
-    work_unit = _seed_work_unit(
+    work_unit = seed_active_work_unit(
         modelo="190",
         filing_year=2025,
         period="0A",

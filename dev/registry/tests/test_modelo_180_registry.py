@@ -14,12 +14,14 @@ from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.formula_runtime import calculate_registry_snapshot
 from cadrumo.domain.calculations.registry.relations import (
     relation_prefill_bindings_for_period,
-    relation_source_requirements,
 )
 from cadrumo.domain.calculations.registry.schema_revision_members import ApplicationLinkSurface
 from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_modelo_observation
 from cadrumo.domain.calculations.registry.tests.relation_fixture import resolve_relation_values_from_observations
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
+from cadrumo.domain.calculations.registry.tests.synthetic_quarterly_relations import (
+    relation_values_from_synthetic_quarters,
+)
 from dev.registry.compiler.authority import compiled_bundled_authority
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -201,29 +203,8 @@ def test_modelo_180_calculation_aggregates_modelo_115_quarterly_observations() -
     authority = compiled_bundled_authority()
     snapshot = authority.snapshot("180", filing_year=2025, period="0A")
     snapshot_115 = authority.snapshot("115", filing_year=2025, period="1T")
-    source_casilla_ids = {casilla.id: casilla for casilla in snapshot_115.revision.casillas}
-    requirements = relation_source_requirements(snapshot.revision, filing_year=2025, period="0A")
-    observed_by_period: dict[str, dict[CasillaId, Decimal]] = {}
-    for requirement in requirements:
-        source_casilla_id = requirement.source_casilla_ids[0]
-        source_casilla = source_casilla_ids[source_casilla_id]
-        for index, period in enumerate(requirement.periods):
-            value = _value_for(source_casilla.data_type, index)
-            observed_by_period.setdefault(period, {})[source_casilla_id] = value
-    observations = tuple(
-        registry_grounded_modelo_observation(
-            modelo="115",
-            filing_year=2025,
-            period=period,
-            casilla_values=casilla_values,
-        )
-        for period, casilla_values in sorted(observed_by_period.items())
-    )
-    relation_values = resolve_relation_values_from_observations(
-        snapshot.revision,
-        observations,
-        filing_year=2025,
-        period="0A",
+    relation_values = relation_values_from_synthetic_quarters(
+        snapshot, snapshot_115, source_modelo="115", filing_year=2025
     )
     binding_values = {"modelo-180-115-perceptores-anual": Decimal("2")}
     result = calculate_registry_snapshot(
@@ -259,10 +240,3 @@ def test_modelo_180_rejects_incomplete_modelo_115_observation_chain() -> None:
             filing_year=2025,
             period="0A",
         )
-
-
-def _value_for(data_type: str, period_index: int) -> Decimal:
-    quarter = Decimal(period_index + 1)
-    if data_type == "integer":
-        return quarter
-    return Decimal("10") * quarter

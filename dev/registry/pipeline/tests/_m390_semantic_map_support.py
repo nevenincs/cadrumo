@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections import Counter
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
@@ -19,7 +20,7 @@ from ..record_design_intermediate import (
     load_record_design_intermediate,
 )
 from ..render_check import GeneratedExportBootstrapTransport, revision_render_inputs
-from ..semantic_map import SemanticMapEntry
+from ..semantic_map import SemanticMapEntry, load_semantic_map
 from ..source_defects import SourceDefectDeclaration
 
 
@@ -42,6 +43,45 @@ def field_index(design: RecordDesignIntermediate) -> dict[tuple[str, str], Recor
 
 def entry_index(entries: tuple[SemanticMapEntry, ...]) -> dict[tuple[str, str], SemanticMapEntry]:
     return {(entry.anchor.record_identity, entry.anchor.source_cell or ""): entry for entry in entries}
+
+
+@dataclass(frozen=True, slots=True)
+class EditionPair:
+    """A Modelo 390 record design and its predecessor, with the semantic maps reviewed against each."""
+
+    design: RecordDesignIntermediate
+    predecessor_fields: dict[tuple[str, str], RecordDesignIntermediateField]
+    fields: dict[tuple[str, str], RecordDesignIntermediateField]
+    delta: set[tuple[str, str]]
+    predecessor_entries: dict[tuple[str, str], SemanticMapEntry]
+    entries: dict[tuple[str, str], SemanticMapEntry]
+
+    @property
+    def stable(self) -> set[tuple[str, str]]:
+        """Anchors both designs carry unchanged."""
+        return set(self.predecessor_fields) & set(self.fields) - self.delta
+
+
+def load_edition_pair(
+    *, source_ref: str, exercise: int, predecessor_source_ref: str, predecessor_exercise: int
+) -> EditionPair:
+    """Load both designs, the anchors whose field changed between them, and both semantic maps."""
+    design = load_design(source_ref, filing_year=exercise, epoch=str(exercise))
+    predecessor_fields = field_index(
+        load_design(predecessor_source_ref, filing_year=predecessor_exercise, epoch=str(predecessor_exercise))
+    )
+    fields = field_index(design)
+    delta = {key for key in predecessor_fields.keys() | fields.keys() if predecessor_fields.get(key) != fields.get(key)}
+    predecessor_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{predecessor_exercise}"))
+    semantic_map = load_semantic_map(Path(f"dev/registry/mappings/modelo_390/{exercise}"))
+    return EditionPair(
+        design=design,
+        predecessor_fields=predecessor_fields,
+        fields=fields,
+        delta=delta,
+        predecessor_entries=entry_index(predecessor_map.entries),
+        entries=entry_index(semantic_map.entries),
+    )
 
 
 def assert_layout_owner(entry: SemanticMapEntry, field: ExportFieldDefinition) -> None:

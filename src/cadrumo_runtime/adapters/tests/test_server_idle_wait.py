@@ -15,9 +15,10 @@ import pytest
 
 from cadrumo.application.user_profile.access_contracts import LoginEligibility, OsLockState, OsLoginContext
 from cadrumo_client.contracts.access_vocabulary import Availability
-from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, RefusalCode, RefusalError
 from cadrumo_client.contracts.login import LoginEvidence, LoginInventory
 from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.transport.tests.delegating_channel import DelegatingChannel
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...host.profile_connections import RuntimeProfileConnections
@@ -31,23 +32,13 @@ pytestmark = [
 ]
 
 
-class _Counted:
+class _Counted(DelegatingChannel):
     """An accepted channel, recording each readiness wait its connection loop starts and how it ended."""
 
     def __init__(self, channel: ByteChannel) -> None:
-        self.channel = channel
+        super().__init__(channel)
         self.waits = 0
         self.endings: list[bool | RefusalCode] = []
-
-    @property
-    def peer(self) -> Peer:
-        return self.channel.peer
-
-    def read_exact(self, count: int, *, deadline: float) -> bytes:
-        return self.channel.read_exact(count, deadline=deadline)
-
-    def read_ready(self) -> bool:
-        return self.channel.read_ready()
 
     def wait_readable(self, *wakes: ChannelWake) -> bool:
         self.waits += 1
@@ -58,12 +49,6 @@ class _Counted:
             raise
         self.endings.append(ready)
         return ready
-
-    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
-        self.channel.write_all(payload, deadline=deadline)
-
-    def close(self) -> None:
-        self.channel.close()
 
 
 class _Listener:

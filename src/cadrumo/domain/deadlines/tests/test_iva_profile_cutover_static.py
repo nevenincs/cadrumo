@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import ast
 from collections import Counter
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -159,13 +159,33 @@ def _fact_path(call: ast.Call) -> str | None:
     return value.value if isinstance(value, ast.Constant) and isinstance(value.value, str) else None
 
 
-def _profile_fact_paths(container: ast.Tuple | ast.List) -> frozenset[str]:
-    return frozenset(
+def _profile_fact_paths(
+    container: ast.Tuple | ast.List, shared: Mapping[str, frozenset[str]] | None = None
+) -> frozenset[str]:
+    """Return the fact paths a container names, including those of a module-level fact tuple it unpacks."""
+    paths = {
         path
         for element in container.elts
         if isinstance(element, ast.Call)
         if ((path := _fact_path(element)) is not None and path)
-    )
+    }
+    for element in container.elts:
+        if isinstance(element, ast.Starred) and isinstance(element.value, ast.Name):
+            paths |= shared.get(element.value.id, frozenset()) if shared is not None else frozenset()
+    return frozenset(paths)
+
+
+def _shared_fact_tuples(module: ast.Module) -> dict[str, frozenset[str]]:
+    """Map each module-level fact tuple or list to its paths, so a fixture can unpack it."""
+    return {
+        statement.targets[0].id: paths
+        for statement in module.body
+        if isinstance(statement, ast.Assign)
+        and len(statement.targets) == 1
+        and isinstance(statement.targets[0], ast.Name)
+        and isinstance(statement.value, ast.Tuple | ast.List)
+        if (paths := _profile_fact_paths(statement.value))
+    }
 
 
 def _iter_modules() -> Iterator[tuple[Path, ast.Module]]:
@@ -219,12 +239,13 @@ def _fact_containers_with_enclosing_function(
     """Yield every fact container paired with the function that encloses it."""
     enclosing: list[str] = []
     results: list[tuple[ast.Tuple | ast.List, str | None]] = []
+    shared = _shared_fact_tuples(module)
 
     def walk(node: ast.AST) -> None:
         entered = isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef)
         if entered:
             enclosing.append(node.name)  # type: ignore[union-attr]
-        if isinstance(node, ast.Tuple | ast.List) and _profile_fact_paths(node):
+        if isinstance(node, ast.Tuple | ast.List) and _profile_fact_paths(node, shared):
             results.append((node, enclosing[-1] if enclosing else None))
         for child in ast.iter_child_nodes(node):
             walk(child)
@@ -249,8 +270,9 @@ def test_every_claimed_current_iva_profile_has_the_canonical_required_axes() -> 
                 if missing:
                     incomplete_modelo_iva_constructors.append((relative_path, node.lineno, missing))
 
+        shared_fact_tuples = _shared_fact_tuples(module)
         for fact_container, enclosing_function in _fact_containers_with_enclosing_function(module):
-            fact_paths = _profile_fact_paths(fact_container)
+            fact_paths = _profile_fact_paths(fact_container, shared_fact_tuples)
             if _IVA_REGIME_PATH in fact_paths and _REQUIRED_IVA_FACT_PATHS - fact_paths:
                 incomplete_fact_containers[(relative_path, enclosing_function)] += 1
 

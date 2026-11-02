@@ -31,6 +31,10 @@ from .records import (
 )
 from .theme import StyleRole
 
+_VIEW_ROWS = 1000
+"""How many rows of one repeating group this workbook view lays out: its own size, not the form's."""
+_PAST_THE_LAST_ROW = 1_000_001
+
 
 class FormRecordBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePreviewMetadata)](
     FormGridBuilder[M]
@@ -84,8 +88,8 @@ class FormRecordBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTempl
         saved_rows: tuple[ModeloFormRepeatingRow, ...],
         projection_types: dict[str, str],
     ) -> None:
-        if len(saved_rows) > min(block.max_rows or 1000, 1000):
-            raise CalcSheetsEngineError("repeating form exceeds its bounded row capacity")
+        if len(saved_rows) > min(block.max_rows or _VIEW_ROWS, _VIEW_ROWS):
+            raise CalcSheetsEngineError("this workbook view cannot show so many rows of a repeating group")
         if not saved_rows:
             self.line("No hay registros en el detalle guardado.")
         gridded = {cell.casilla_id for grid in block.grids for row in grid.rows for cell in row.cells}
@@ -112,7 +116,7 @@ class FormRecordBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTempl
         next_headers = [
             r.header_row for r in self.plan.row_sets if r.tab == row_set.tab and r.header_row > row_set.header_row
         ]
-        end = min(next_headers) if next_headers else 1_000_001
+        end = min(next_headers) if next_headers else _PAST_THE_LAST_ROW
         rows: dict[int, list[SheetValueCell]] = {}
         for cell in self.plan.value_cells:
             if (
@@ -139,9 +143,9 @@ class FormRecordBuilder[M: (SheetExportMetadata, SheetReviewMetadata, SheetTempl
             return
         row_set = row_sets[0]
         source_columns, rows = self._source_record_rows(row_set)
-        limit = min(block.max_rows or 1000, 1000)
+        limit = min(block.max_rows or _VIEW_ROWS, _VIEW_ROWS)
         if len(rows) > limit:
-            raise CalcSheetsEngineError("repeating form exceeds its bounded row capacity")
+            raise CalcSheetsEngineError("this workbook view cannot show so many rows of a repeating group")
         if not rows:
             self.line("Sin registros aportados a esta vista. Consulte el detalle de origen.")
         for index, cells in enumerate(rows.values(), 1):

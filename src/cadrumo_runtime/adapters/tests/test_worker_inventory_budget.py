@@ -11,7 +11,6 @@ import pytest
 
 from cadrumo.application.operations.contract_manifest import load_operation_contract_manifest
 from cadrumo.application.operations.person_acts import operation_is_persons_act
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.access_projections import PublicApiKey, PublicAutomationGrant
 from cadrumo.application.user_profile.automation_enrollment import (
@@ -20,7 +19,6 @@ from cadrumo.application.user_profile.automation_enrollment import (
     EnrollmentReview,
     EnrollmentStage,
 )
-from cadrumo.application.user_profile.automation_operations import AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
@@ -28,11 +26,8 @@ from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     AccessScope,
     AuthorityState,
-    Availability,
     DisclosureCategory,
     DisclosureCategoryGrant,
-    OperationAccessPolicy,
-    OperationAccessRequest,
 )
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.enrollment_proposal import GRANT_DEFAULT_VALIDITY, EnrollmentKind, EnrollmentProposal
@@ -43,10 +38,10 @@ from cadrumo_runtime.contracts.worker_authorization import (
     WORKER_AUTOMATION_INVENTORY_MAX_BYTES,
     WorkerAuthorizationReply,
     WorkerAutomationInventoryPermit,
-    WorkerAutomationInventoryRequest,
     WorkerAutomationInventoryTransfer,
 )
 
+from ...contracts.tests.inventory_request_support import inventory_request
 from ..worker_authorization import _require_inventory_ipc_budget, _write_permit
 from ..worker_authorization_lease import _read_inventory_permit
 
@@ -201,38 +196,7 @@ def _receive(worker: MemoryChannel, *, request_id: UUID, boot_id: UUID) -> Worke
     header = read_document(worker, WorkerAuthorizationReply, deadline=deadline).root
     assert isinstance(header, WorkerAutomationInventoryTransfer)
     return _read_inventory_permit(
-        worker, header, _inventory_request(request_id), runtime_boot_id=boot_id, deadline=deadline
-    )
-
-
-def _inventory_request(request_id: UUID) -> WorkerAutomationInventoryRequest:
-    definition_id = AUTOMATION_INVENTORY_OPERATION_DEFINITION_ID
-    return WorkerAutomationInventoryRequest(
-        request_id=request_id,
-        connection_id=uuid4(),
-        session_id=uuid4(),
-        operation_id="a" * 64,
-        request=OperationAccessRequest(
-            profile_id=uuid4(),
-            definition_id=definition_id,
-            action=AccessAction.START,
-            frontend=OperationFrontendProjection.CLI,
-            periods=frozenset(),
-            period_independent=True,
-            destination_id=uuid4(),
-        ),
-        policy=OperationAccessPolicy(
-            definition_id=definition_id,
-            definition_contract_digest="b" * 64,
-            actions=frozenset({AccessAction.START}),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            backend=Availability.AVAILABLE,
-            published_authority=Availability.AVAILABLE,
-            provider=Availability.NOT_REQUIRED,
-            transaction_authority_required=False,
-        ),
+        worker, header, inventory_request(request_id), runtime_boot_id=boot_id, deadline=deadline
     )
 
 

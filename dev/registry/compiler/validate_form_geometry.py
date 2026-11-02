@@ -58,6 +58,20 @@ def modelo_geometry_failures(modelos: Iterable[ModeloDefinition], codes: FormCod
     return failures
 
 
+def indice_corrector_slot_failures(modelos: Iterable[ModeloDefinition], codes: FormCodes) -> list[str]:
+    """Report an índices correctores formula missing a slot, which would drop that índice from the product unread."""
+    slots = codes.integer("m100.eo_agraria.indice_corrector_slots")
+    return [
+        f"{modelo.id} revision {revision_id} formula {formula.id} declares "
+        f"{len(formula.expression.args) - 1} índice corrector slots, not {slots}"
+        for modelo in modelos
+        for revision_id, revision in modelo.revisions.items()
+        for formula in revision.formulas
+        if formula.expression.op == "m100_resolve_eo_agraria_indices_correctores"
+        and len(formula.expression.args) - 1 != slots
+    ]
+
+
 def validate_form_geometry(modelos: Iterable[ModeloDefinition]) -> tuple[str, ...]:
     """Return failures for authored data whose shape differs from the declared form geometry."""
     authority = governed_facts_in_scope()
@@ -78,8 +92,15 @@ def validate_form_geometry(modelos: Iterable[ModeloDefinition]) -> tuple[str, ..
         for code in resolve_tipo_renta_irnr_catalogue().official_codes
         if str(len(code)) not in tipo_renta_widths
     )
+    modelos = tuple(modelos)
     failures.extend(modelo_geometry_failures(modelos, codes))
+    failures.extend(indice_corrector_slot_failures(modelos, codes))
     return tuple(failures)
 
 
-__all__ = ["modelo_geometry_failures", "prorrata_catalogue_failures", "validate_form_geometry"]
+__all__ = [
+    "indice_corrector_slot_failures",
+    "modelo_geometry_failures",
+    "prorrata_catalogue_failures",
+    "validate_form_geometry",
+]

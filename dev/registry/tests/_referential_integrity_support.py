@@ -67,10 +67,15 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 __all__ = [
     "EXTRA_LEGAL_ID",
     "EXTRA_SOURCE_ID",
+    "NUMERIC_CASILLA_01",
+    "NUMERIC_CASILLA_02",
     "PARITY_SOURCE_ID",
     "PRIOR_REVISION_ID",
     "REFERENCE_LEGAL_ID",
     "REFERENCE_SOURCE_ID",
+    "SEGMENTED_ECPN_CASILLA",
+    "SEGMENTED_LIQUIDACION_CASILLA",
+    "SEGMENTED_TARGET_CASILLA",
     "ExportFieldDefinition",
     "ExportRecordDefinition",
     "ExtractionTargetDefinition",
@@ -106,6 +111,13 @@ PRIOR_REVISION_ID = "test-prior-revision"
 EXTRA_LEGAL_ID = "ley-35-2006:art-9998"
 EXTRA_SOURCE_ID = "aeat-extra-source"
 PARITY_SOURCE_ID = "aeat-open-parity-source"
+NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="NUMERIC_CASILLA_01")
+NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="NUMERIC_CASILLA_02")
+SEGMENTED_LIQUIDACION_CASILLA: CasillaId = validated_casilla_id(
+    "DP200014:00562", surface="SEGMENTED_LIQUIDACION_CASILLA"
+)
+SEGMENTED_ECPN_CASILLA: CasillaId = validated_casilla_id("DP200032:00562", surface="SEGMENTED_ECPN_CASILLA")
+SEGMENTED_TARGET_CASILLA: CasillaId = validated_casilla_id("DP200014:00999", surface="SEGMENTED_TARGET_CASILLA")
 
 
 def _snapshot_for_revision(

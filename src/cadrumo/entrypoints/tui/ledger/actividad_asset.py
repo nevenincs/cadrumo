@@ -20,6 +20,7 @@ from ....core.errors.error_codes import resolve_error_message
 from ....core.errors.hierarchy import CadrumoError, InternalInvariantError
 from ....core.filing_year import FilingYear
 from ....core.i18n.render import tr
+from ....core.logging import get_logger
 from ....core.period import Period, PeriodError
 from ....domain.renta.actividad_asset.claims import ClaimProjection
 from ....domain.renta.actividad_asset.errors import ActividadAssetIncompleteError
@@ -159,7 +160,9 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
                 f"refused\t{tr('tui.ledger.activity_asset.errors.entry_unreadable')}"
             )
             return
-        except Exception:
+        except Exception as exc:
+            # Only the type: the text of an unforeseen failure may hold what the operator typed.
+            get_logger(__name__).warning("activity asset action failed: %s", type(exc).__name__)
             self._show_unexpected_outcome(button_id)
             return
         finally:
@@ -178,7 +181,7 @@ class ActivityAssetScreen(LedgerWorkspaceScreen):
         """Discard private facts and distinguish a refused change from an unknown outcome."""
         self._clear_private_view()
         if unknown_outcome_of(exc) is None:
-            self.query_one("#asset-result", Static).update(f"refused\t{exc}")
+            self.query_one("#asset-result", Static).update(f"refused\t{resolve_error_message(exc)}")
         else:
             self._hold_writes(self._named_asset_id)
             self.query_one("#asset-result", Static).update(f"unknown\t{resolve_error_message(exc)}")

@@ -16,6 +16,10 @@ import type {
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount, formatPercent } from "../../../shared/numbers";
 
+/** What the register's amounts are in: it keeps every figure in euros, and a
+ * payment in another currency is converted before an element can name it. */
+export const REGISTER_CURRENCY = "EUR";
+
 /** The labels the tab's parts name directly. */
 export const ASSET_KEYS = {
   area: {

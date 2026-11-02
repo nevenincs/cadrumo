@@ -578,7 +578,7 @@ export function modeloFixture(options: Options): ModeloPort {
           );
           const held = submission.held ?? [];
           const read = correction
-            ? /^[-+\d.,\s]+$/.test(correction.lexeme)
+            ? /^[-\u2212+\d.,\s]+$/.test(correction.lexeme)
               ? `preflight-${form}-correction`
               : `preflight-${form}-correction-refused`
             : entries.length > 0
@@ -588,7 +588,7 @@ export function modeloFixture(options: Options): ModeloPort {
                       ? entry.address.casilla_id
                       : entry.address.binding_id,
                   )
-                  .join("-")}`
+                  .join("-")}-${entries[0]?.entry_locale}`
               : catalogue[`preflight-${form}-stale`]
                 ? `preflight-${form}-stale`
                 : await reviewHeld(form, held);

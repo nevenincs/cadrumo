@@ -85,7 +85,7 @@ from ..justificante_composition import build_justificante_capture_service, load_
 from ..live_state_composition import compose_filed_observation_persistence_ports
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
-from .test_modelo_reconciliation_frontend_parity import _JUSTIFICANTE_FIXTURE, _session_host
+from .test_modelo_reconciliation_frontend_parity import _session_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -384,17 +384,7 @@ def test_a_receipt_capture_is_reconciled_by_the_filings_coordinates_on_every_fro
         subject_ref = profile_operation_subject(str(profile_id))
         with override_settings(cadrumo_active_profile=str(profile_id)):
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
-            pdf = _JUSTIFICANTE_FIXTURE.read_bytes()
-            snapshot = build_justificante_capture_service(str(profile_id)).capture(
-                modelo=str(unit.modelo),
-                filing_year=unit.filing_year,
-                period=unit.period,
-                expediente_id="202413000000001Z",
-                csv="ABCD1234EFGH",
-                pdf_bytes=pdf,
-                pdf_sha256=sha256_hex(pdf),
-                captured_at=datetime(2026, 9, 29, tzinfo=UTC),
-            )
+            snapshot = modelo_operation_test_support.captured_justificante_snapshot(profile_id, unit)
             before = tuple(ModeloReconciliationPersistence().iter_records())
             submitted, observed = asyncio.run(
                 driver.run(

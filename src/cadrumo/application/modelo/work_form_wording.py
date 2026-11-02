@@ -38,9 +38,9 @@ from .work_form_models import (
     ModeloFormScalar,
     ModeloFormSection,
     ModeloWorkForm,
-    holds_zero,
     map_form_fields,
 )
+from .work_form_scalar_values import holds_zero
 
 PERIOD_WORD_NAMES: Final[tuple[str, ...]] = (
     *(f"quarter_{quarter}" for quarter in range(1, 5)),

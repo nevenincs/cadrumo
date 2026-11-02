@@ -41,6 +41,7 @@ from ..normatives_html import (
 from ..schema import (
     ExtractionStatus,
     PreprocessOutput,
+    PreprocessUnit,
     SourceDocumentKind,
 )
 from ..sidecar import (
@@ -255,6 +256,31 @@ def test_annex_instructions_become_atomic_citation_units() -> None:
     assert "A efectos del pago fraccionado" not in annex_one_point_three.text
 
 
+def _anchors_with_prefix(output: PreprocessOutput, prefix: str, excluded: str) -> tuple[str, ...]:
+    return tuple(
+        unit.anchor
+        for unit in output.units
+        if (unit.anchor is not None and unit.anchor) and unit.anchor.startswith(prefix) and unit.anchor != excluded
+    )
+
+
+def _assert_activity_unit(
+    fragments: dict[str | None, PreprocessUnit],
+    anchor: str,
+    *,
+    number: str,
+    quota: str,
+    other_activity: str,
+    title: str | None = None,
+) -> None:
+    unit = fragments[anchor]
+    if title is not None:
+        assert unit.title == title
+    assert f"\n{number}\n" in unit.text
+    assert quota in unit.text
+    assert other_activity not in unit.text
+
+
 def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> None:
     """Real 2025 IVA source boundaries exclude adjacent instruction and activity units."""
     output = build_outputs(_MODULES_2025_HTML, repo_root=_REPO_ROOT)[0]
@@ -267,43 +293,38 @@ def test_iva_instructions_and_activity_tables_become_atomic_citation_units() -> 
     assert "Cuotas trimestrales" not in instructions.text
     assert not any(unit.anchor and unit.anchor.startswith("#m303-da-4-") for unit in output.units)
 
-    iva_table_anchors = tuple(
-        unit.anchor
-        for unit in output.units
-        if (unit.anchor is not None and unit.anchor)
-        and unit.anchor.startswith("#m303-anexo-ii-iva-")
-        and unit.anchor != "#m303-anexo-ii-iva-ingreso-a-cuenta"
-    )
+    iva_table_anchors = _anchors_with_prefix(output, "#m303-anexo-ii-iva-", "#m303-anexo-ii-iva-ingreso-a-cuenta")
     assert len(iva_table_anchors) == 49
     assert len(set(iva_table_anchors)) == len(iva_table_anchors)
-    agricultural_anchors = tuple(
-        unit.anchor
-        for unit in output.units
-        if (unit.anchor is not None and unit.anchor)
-        and unit.anchor.startswith("#m303-anexo-i-iva-")
-        and unit.anchor != "#m303-anexo-i-iva-ingreso-a-cuenta"
-    )
+    agricultural_anchors = _anchors_with_prefix(output, "#m303-anexo-i-iva-", "#m303-anexo-i-iva-ingreso-a-cuenta")
     assert len(agricultural_anchors) == 17
     assert len(set(agricultural_anchors)) == len(agricultural_anchors)
     assert "#m303-anexo-i-iva-ingreso-a-cuenta" in fragments
     assert "#m303-iva-indices-correctores-temporada" in fragments
     assert "#m303-iva-cuotas-soportadas-dificil-justificacion" in fragments
 
-    autotaxis = fragments["#m303-anexo-ii-iva-721-2-transporte-por-autotaxis"]
-    assert autotaxis.title == "Transporte por autotaxis"
-    assert "\n721.2\n" in autotaxis.text
-    assert "Cuota mínima por operaciones corrientes: 10 %" in autotaxis.text
-    assert "Transporte de mercancías por carretera" not in autotaxis.text
-
-    freight = fragments["#m303-anexo-ii-iva-722-transporte-de-mercancias-por-carretera-excepto-residuos"]
-    assert "\n722\n" in freight.text
-    assert "Cuota mínima por operaciones corrientes: 10 %" in freight.text
-    assert "Transporte de residuos por carretera" not in freight.text
-
-    hairdressing = fragments["#m303-anexo-ii-iva-972-1-servicios-de-peluqueria-de-senora-y-caballero"]
-    assert "\n972.1\n" in hairdressing.text
-    assert "Cuota mínima por operaciones corrientes: 13 %" in hairdressing.text
-    assert "Salones e institutos de belleza" not in hairdressing.text
+    _assert_activity_unit(
+        fragments,
+        "#m303-anexo-ii-iva-721-2-transporte-por-autotaxis",
+        number="721.2",
+        quota="Cuota mínima por operaciones corrientes: 10 %",
+        other_activity="Transporte de mercancías por carretera",
+        title="Transporte por autotaxis",
+    )
+    _assert_activity_unit(
+        fragments,
+        "#m303-anexo-ii-iva-722-transporte-de-mercancias-por-carretera-excepto-residuos",
+        number="722",
+        quota="Cuota mínima por operaciones corrientes: 10 %",
+        other_activity="Transporte de residuos por carretera",
+    )
+    _assert_activity_unit(
+        fragments,
+        "#m303-anexo-ii-iva-972-1-servicios-de-peluqueria-de-senora-y-caballero",
+        number="972.1",
+        quota="Cuota mínima por operaciones corrientes: 13 %",
+        other_activity="Salones e institutos de belleza",
+    )
 
 
 def test_lorca_reduction_modulos_orden_iva_units_preserve_the_legacy_table_shape() -> None:

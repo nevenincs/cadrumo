@@ -44,7 +44,10 @@ from pathlib import Path
 import pytest
 
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
-from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import assert_omitted_casilla_is_detected
+from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import (
+    assert_omitted_casilla_is_detected,
+    assert_two_ejercicio_round_trip,
+)
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import (
     find_observation,
     save_app_filing_observation,
@@ -194,17 +197,15 @@ def test_modelo_349_intracomunitario_fidelity_enrolls_two_renta_years(tmp_path: 
     record_context_year, and calls the cross-year behavior assertion. Manifest
     must declare renta_years = [2024, 2025] in the same commit.
     """
-    obs_n = _year_n_observation()
-    obs_n1 = _year_n_plus_1_observation()
-
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period=_PERIOD)
-        assert loaded_n is not None and loaded_n.observation == obs_n
-        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
-
-        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period=_PERIOD)
-        assert loaded_n1 is not None and loaded_n1.observation == obs_n1
-        _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="both",
+        modelo=_MODELO,
+        period=_PERIOD,
+        obs_n=_year_n_observation(),
+        obs_n_plus_1=_year_n_plus_1_observation(),
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )

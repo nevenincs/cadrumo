@@ -342,6 +342,18 @@ def test_repository_backed_projection_loads_persisted_bucket_catalogue(secure_ob
         assert result.observations[0].ledger_id == transaction.transaction_id
 
 
+def _aggregate_q2_2026(secure_objects: SecureObjectRepository, operation: PinnedAuthorityOperation):
+    return aggregate_iva_ledger_observations_from_repositories(
+        bucket_id=_BUCKET_ID,
+        period=_Q2_2026,
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+        investment_asset_register=_TEST_ASSET_REGISTER,
+        investment_asset_profile_id=_BUCKET_ID,
+        operation=operation,
+    )
+
+
 def test_repository_backed_projection_reports_out_of_period_catalogue_transactions(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -358,15 +370,7 @@ def test_repository_backed_projection_reports_out_of_period_catalogue_transactio
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
         repository.save(TransactionCatalogue.from_transactions((in_period, out_of_period)))
 
-        result = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            investment_asset_register=_TEST_ASSET_REGISTER,
-            investment_asset_profile_id=_BUCKET_ID,
-            operation=_authority_operation_for_test,
-        )
+        result = _aggregate_q2_2026(secure_objects, _authority_operation_for_test)
 
         assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
         assert result.issues == ()
@@ -403,15 +407,7 @@ def test_repository_backed_projection_summarizes_previously_silent_out_of_window
             TransactionCatalogue.from_transactions((in_period, excluded_out_of_period, archived_out_of_period)),
         )
 
-        result = aggregate_iva_ledger_observations_from_repositories(
-            bucket_id=_BUCKET_ID,
-            period=_Q2_2026,
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            transaction_repository=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
-            investment_asset_register=_TEST_ASSET_REGISTER,
-            investment_asset_profile_id=_BUCKET_ID,
-            operation=_authority_operation_for_test,
-        )
+        result = _aggregate_q2_2026(secure_objects, _authority_operation_for_test)
 
         assert {o.ledger_id for o in result.observations} == {in_period.transaction_id}
         assert result.issues == ()

@@ -60,6 +60,9 @@ _PUBLIC_MAPPING_ADAPTER: TypeAdapter[dict[object, object]] = TypeAdapter(
 )
 
 
+_SHOWN_SAMPLE = 20
+
+
 class ResolvedRegistryQueryContext(BaseModel):
     """One resolved registry query context, returned by both resolution forms.
 
@@ -280,7 +283,7 @@ def _find_casilla_for_detail(
     if matched is not None:
         return matched
     valid_ids = [item.id for item in revision.casillas]
-    shown = valid_ids[:20]
+    shown = valid_ids[:_SHOWN_SAMPLE]
     sample = ", ".join(shown)
     overflow = "" if len(valid_ids) == len(shown) else f" (+{len(valid_ids) - len(shown)} more)"
     raise RegistryValidationError(

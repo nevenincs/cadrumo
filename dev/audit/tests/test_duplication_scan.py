@@ -23,6 +23,7 @@ from .. import report
 from ..duplication import (
     DuplicationOutcome,
     DuplicationResult,
+    ceiling_verdict,
     run_duplication_scan,
 )
 from ..report import Status, audit_duplication
@@ -159,3 +160,47 @@ def test_health_report_duplication_dimension_reflects_the_live_scan(monkeypatch:
         assert dimension.status is Status.AMBER
         assert str(result.clone_count) in dimension.headline
         assert "no clones found" not in dimension.headline
+
+
+def _plant_test_tree(root: Path, *, copies: int) -> Path:
+    tests = root / "pkg" / "tests"
+    tests.mkdir(parents=True)
+    body = "".join(
+        f"    value_{i} = compute_{i}(argument) + offset_{i}\n    check(value_{i}, {i})\n" for i in range(20)
+    )
+    for index in range(copies):
+        tests.joinpath(f"test_copy_{index}.py").write_text(f"def test_case(argument):\n{body}", encoding="utf-8")
+    return root / "pkg"
+
+
+def test_the_test_surface_scan_fails_a_planted_duplicate_over_the_ceiling(tmp_path: Path) -> None:
+    """Copy-pasted test bodies exceed the ceiling and the verdict names it."""
+    _require_npx()
+    package = _plant_test_tree(tmp_path, copies=2)
+
+    result = run_duplication_scan(tmp_path, source_roots=(package.relative_to(tmp_path),), tests=True)
+
+    verdict = ceiling_verdict(result)
+    assert result.outcome is DuplicationOutcome.CLONES, result.headline()
+    assert verdict is not None
+    assert "exceeds" in verdict
+
+
+def test_the_test_surface_scan_passes_clean_tests_and_ignores_production_clones(tmp_path: Path) -> None:
+    """A single test copy passes, and cloned production modules are outside the test scope."""
+    _require_npx()
+    package = _plant_test_tree(tmp_path, copies=1)
+    source = package.joinpath("tests", "test_copy_0.py").read_text(encoding="utf-8")
+    for name in ("one.py", "two.py"):
+        package.joinpath(name).write_text(source, encoding="utf-8")
+
+    result = run_duplication_scan(tmp_path, source_roots=(package.relative_to(tmp_path),), tests=True)
+
+    assert result.outcome is DuplicationOutcome.OBSERVED_ZERO, result.headline()
+    assert result.files_analyzed == 1
+    assert ceiling_verdict(result) is None
+
+
+def test_an_unmeasured_test_surface_breaks_the_ceiling() -> None:
+    """An unavailable scan cannot prove the percentage, so it fails the ceiling check."""
+    assert ceiling_verdict(DuplicationResult.unavailable("npx was not found on PATH")) is not None

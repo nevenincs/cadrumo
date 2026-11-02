@@ -37,20 +37,18 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from functools import partial
 from pathlib import Path
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.tests._multi_year_roundtrip_support import (
     assert_omitted_casilla_is_detected,
     assert_two_ejercicio_round_trip,
 )
 from cadrumo.adapters.persistence.profile.tests._observation_lookup_support import (
-    find_observation,
-    save_app_filing_observation,
+    saved_two_ejercicios,
 )
-from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.tests.registry_observations import (
@@ -220,6 +218,17 @@ def test_year_n_and_year_n_plus_1_are_independently_retrievable(tmp_path: Path) 
     )
 
 
+_saved_two_ejercicios = partial(
+    saved_two_ejercicios,
+    modelo=_MODELO,
+    period="0A",
+    year_n=_YEAR_N,
+    year_n_plus_1=_YEAR_N_PLUS_1,
+    clock_n=_CLOCK_N,
+    clock_n_plus_1=_CLOCK_N_PLUS_1,
+)
+
+
 def test_member_nif_identity_persists_across_both_exercises(tmp_path: Path) -> None:
     """The miembro NIF stored in year N persists into year N+1 unchanged.
 
@@ -228,16 +237,10 @@ def test_member_nif_identity_persists_across_both_exercises(tmp_path: Path) -> N
     """
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
-
+    with _saved_two_ejercicios(tmp_path, obs_n=obs_n, obs_n_plus_1=obs_n1) as (
+        loaded_n,
+        loaded_n1,
+    ):
         nif_n = loaded_n.observation.casilla_values.get(_TIPO3_MIEMBRO_NIF_CASILLA)
         nif_n1 = loaded_n1.observation.casilla_values.get(_TIPO3_MIEMBRO_NIF_CASILLA)
         assert nif_n is not None, "year-N observation missing tipo3.miembro-nif casilla"
@@ -255,15 +258,10 @@ def test_renta_atribuible_casilla_is_present_and_non_zero_in_both_years(tmp_path
     primary declarable casilla. A reload that silently zeros this field produces
     a content-empty observation indistinguishable from a blank declaration.
     """
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        save_app_filing_observation(repo, _year_n_observation(), captured_at=_CLOCK_N)
-        save_app_filing_observation(repo, _year_n_plus_1_observation(), captured_at=_CLOCK_N_PLUS_1)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-
-        assert loaded_n is not None
-        assert loaded_n1 is not None
+    with _saved_two_ejercicios(tmp_path, obs_n=_year_n_observation(), obs_n_plus_1=_year_n_plus_1_observation()) as (
+        loaded_n,
+        loaded_n1,
+    ):
         val_n = loaded_n.observation.casilla_values.get(_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA)
         val_n1 = loaded_n1.observation.casilla_values.get(_TIPO2_RENTA_ATRIBUIBLE_IMPORTE_CASILLA)
         assert val_n is not None and val_n > Decimal("0"), (
@@ -293,20 +291,17 @@ def test_observations_round_trip_across_two_filing_years(
     obs_n = _year_n_observation()
     obs_n1 = _year_n_plus_1_observation()
 
-    with isolated_runtime_profile(tmp_path=tmp_path):
-        repo = CalculationObservationRepository()
-        # --- Year N -------------------------------------------------------
-        save_app_filing_observation(repo, obs_n, captured_at=_CLOCK_N)
-        loaded_n = find_observation(repo, _MODELO, filing_year=_YEAR_N, period="0A")
-        assert loaded_n is not None
-        assert loaded_n.observation == obs_n
-        _count_n = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N)
-
-        # --- Year N+1 -----------------------------------------------------
-        save_app_filing_observation(repo, obs_n1, captured_at=_CLOCK_N_PLUS_1)
-        loaded_n1 = find_observation(repo, _MODELO, filing_year=_YEAR_N_PLUS_1, period="0A")
-        assert loaded_n1 is not None
-        assert loaded_n1.observation == obs_n1
-        _count_n1 = sum(1 for _p in repo.iter_modelo(_MODELO) if _p.observation.filing_year == _YEAR_N_PLUS_1)
+    assert_two_ejercicio_round_trip(
+        tmp_path=tmp_path,
+        stage="both",
+        modelo=_MODELO,
+        period="0A",
+        obs_n=obs_n,
+        obs_n_plus_1=obs_n1,
+        year_n=_YEAR_N,
+        year_n_plus_1=_YEAR_N_PLUS_1,
+        clock_n=_CLOCK_N,
+        clock_n_plus_1=_CLOCK_N_PLUS_1,
+    )
 
     # --- Enrollment recording (outside the profile context) ---------------

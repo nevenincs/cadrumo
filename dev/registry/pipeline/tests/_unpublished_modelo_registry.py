@@ -16,12 +16,13 @@ from pathlib import Path
 from typing import Final
 
 from cadrumo.core.resources.bundled_data import bundled_path
-from cadrumo.core.toml import freeze_toml, parse_toml, render_toml
+from cadrumo.core.toml import parse_toml
 from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 from cadrumo.domain.calculations.registry.snapshot_globals import SupportedFilingYearsCatalogue
 
-from ...compiler.authority import compile_validated_authority, compiled_bundled_authority
+from ...compiler.authority import compile_validated_authority
 from ...conformance.loader_directory_mode_support import write_extracted_corpus_sidecar, write_fragmented_revision
+from ...tests.cited_catalogue_support import install_cited_catalogue_entries
 
 UNPUBLISHED_MODELO: Final = "999"
 UNPUBLISHED_REVISION: Final = "unpublished-fixture"
@@ -172,30 +173,7 @@ def _install_runtime_inputs(source_root: Path) -> None:
         target = source_root.joinpath("registry", "aeat", *parts)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copyfile(bundled_path("registry", "aeat", *parts), target)
-    _install_cited_catalogue_entries(source_root)
-
-
-def _install_cited_catalogue_entries(source_root: Path) -> None:
-    """Carry the legal and source entries the copied runtime inputs cite, with their corpus files."""
-    catalogues = compiled_bundled_authority().catalogues
-    installed_text = "\n".join(path.read_text(encoding="utf-8") for path in (source_root / "registry").rglob("*.toml"))
-    legal = {key: entry for key, entry in catalogues.legal.items() if f'"{key}"' in installed_text}
-    sources = {key: entry for key, entry in catalogues.sources.items() if f'"{key}"' in installed_text}
-    document: dict[str, object] = {
-        "legal": {key: entry.model_dump(exclude_none=True, exclude={"id"}) for key, entry in legal.items()},
-        "sources": {key: entry.model_dump(exclude_none=True, exclude={"id"}) for key, entry in sources.items()},
-    }
-    legal_dir = source_root / "registry" / "aeat" / "legal"
-    legal_dir.mkdir(parents=True, exist_ok=True)
-    (legal_dir / "cited-inputs.toml").write_text(render_toml(freeze_toml(document)), encoding="utf-8")
-    corpus_paths = {entry.corpus_ref.split("#", 1)[0] for entry in legal.values() if entry.corpus_ref}
-    corpus_paths.update(entry.corpus_path for entry in sources.values() if entry.corpus_path)
-    for corpus_path in corpus_paths:
-        bundled_file = bundled_path(*corpus_path.split("/"))
-        for sibling in bundled_file.parent.glob(f"{bundled_file.name}*"):
-            target = source_root.joinpath(*corpus_path.split("/")).with_name(sibling.name)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(sibling, target)
+    install_cited_catalogue_entries(source_root)
 
 
 def write_unpublished_modelo_registry(source_root: Path) -> UnpublishedModeloRegistry:

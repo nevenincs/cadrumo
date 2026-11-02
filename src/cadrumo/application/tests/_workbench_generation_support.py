@@ -7,6 +7,8 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any, cast
 
+import pytest
+
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import CalculationRevisionCatalogue
@@ -18,6 +20,7 @@ from ...domain.user_profile.values import (
     UserProfileRecord,
     create_user_profile_record,
 )
+from .. import workbench_generation_calendar as calendar_module
 from ..aeat_sync.workspace import AeatSyncWorkspaceProjectionV1
 from ..auth.tests.certificate_secret_fakes import InMemoryCertificateSecretBackendFactory
 from ..ledger.action_ports import LedgerActionPorts
@@ -30,6 +33,7 @@ from ..modelo.declarations_workspace_contracts import DeclarationsWorkspaceProje
 from ..modelo.workspace_models import (
     ModeloWorkspaceProjectionV1,
 )
+from ..overview.calendar_models import OverviewCalendar, OverviewCalendarRange
 from ..overview.home import (
     HomeAccountSession,
     HomeAvailability,
@@ -289,15 +293,18 @@ def _plain_generation_door(
     *,
     profile: _Repository[UserProfileRecord],
     work_units: _Repository[WorkUnitCatalogue] | None = None,
+    revisions: _Repository[CalculationRevisionCatalogue] | None = None,
+    filings: _Repository[ModeloRecordCatalogue] | None = None,
     bucket_events: object | None = None,
+    **door_options: Any,
 ) -> SecureProfileWorkbenchGenerationReadDoorV1:
     return SecureProfileWorkbenchGenerationReadDoorV1(
         profile_id=_PROFILE_ID,
         operation=operation,
         profile_repository=cast(Any, profile),
         work_unit_repository=cast(Any, work_units or _Repository(WorkUnitCatalogue())),
-        calculation_repository=cast(Any, _Repository(CalculationRevisionCatalogue())),
-        filing_repository=cast(Any, _Repository(ModeloRecordCatalogue())),
+        calculation_repository=cast(Any, revisions or _Repository(CalculationRevisionCatalogue())),
+        filing_repository=cast(Any, filings or _Repository(ModeloRecordCatalogue())),
         clock=lambda: _NOW,
         account_session_reader=lambda: HomeAccountSession(
             posture=HomeSessionPosture.ACTIVE,
@@ -305,4 +312,14 @@ def _plain_generation_door(
             expires_at=_NOW,
         ),
         bucket_event_repository=cast(Any, bucket_events),
+        **door_options,
     )
+
+
+def _stub_empty_calendar(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Make the generation calendar build an empty schedule so a test isolates capture bracketing."""
+
+    def empty_calendar(_profile: object, calendar_range: OverviewCalendarRange, **_kwargs: object) -> OverviewCalendar:
+        return OverviewCalendar(range=calendar_range, entries=(), generated_at=_NOW, evaluated_on=_NOW.date())
+
+    monkeypatch.setattr(calendar_module, "build_overview_calendar", empty_calendar)

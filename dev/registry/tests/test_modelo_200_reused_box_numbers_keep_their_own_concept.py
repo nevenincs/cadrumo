@@ -675,6 +675,152 @@ def test_entity_flags_and_tax_adjustments_export_independently(filing_year: int,
                 assert _slot(sink.payload, _record_tag(revision, sheet), field.offset, field.length) == expected
 
 
+def _printed_box_design_fields(revision: ModeloRevision, number: str, money_label, flag_label):
+    """Return the DP200014B amount and DP200001 flag design fields printed under one box number."""
+    design = _design_source(revision)
+    sheets = extract_record_design(bundled_path() / design.corpus_path).require_complete()
+    printed_box = [
+        (sheet.name.strip(), field)
+        for sheet in sheets
+        for field in sheet.fields
+        if number in _PRINTED_BOX.findall(field.description)
+    ]
+    (money_design_field,) = [
+        field
+        for sheet, field in printed_box
+        if sheet == "DP200014B" and all(part in field.description.casefold() for part in money_label)
+    ]
+    (flag_design_field,) = [
+        field
+        for sheet, field in printed_box
+        if sheet == "DP200001" and all(part in field.description.casefold() for part in flag_label)
+    ]
+    return money_design_field, flag_design_field
+
+
+def _layout_box_fields(revision: ModeloRevision, number: str):
+    """Return the export-layout amount and flag fields declared for one reused box number."""
+    layout_fields = [
+        field
+        for layout in revision.export_layouts
+        for record in layout.records
+        for field in record.fields
+        if field.kind is CasillaFieldKind.CASILLA and field.casilla_id is not None
+    ]
+    (money_field,) = [
+        field
+        for field in layout_fields
+        if str(field.id).split(".")[1].upper() == "DP200014B" and str(field.casilla_id) == f"DP200014B:{number}"
+    ]
+    (flag_field,) = [
+        field
+        for field in layout_fields
+        if str(field.id).split(".")[1].upper() == "DP200001" and str(field.casilla_id) == f"DP200001:{number}"
+    ]
+    return money_field, flag_field
+
+
+def _assert_box_fields_match_the_design(
+    money_field,
+    flag_field,
+    money_design_field,
+    flag_design_field,
+    *,
+    money_label: tuple[str, ...],
+    flag_label: tuple[str, ...],
+    money_type_code: str,
+    money_signed: bool,
+) -> None:
+    assert all(part in money_design_field.description.casefold() for part in money_label)
+    assert all(part in flag_design_field.description.casefold() for part in flag_label)
+    assert money_design_field.type_code == money_type_code
+    assert flag_design_field.type_code == "Num"
+    assert money_field.data_type in {CasillaDataType.MONEY, CasillaDataType.DECIMAL}
+    if money_field.data_type is CasillaDataType.DECIMAL:
+        assert money_field.decimals == 2
+    assert money_field.signed is money_signed
+    assert flag_field.data_type == "integer" and not flag_field.signed
+    assert (money_field.offset, money_field.length) == (
+        money_design_field.offset,
+        money_design_field.length,
+    )
+    assert (flag_field.offset, flag_field.length) == (
+        flag_design_field.offset,
+        flag_design_field.length,
+    )
+
+
+def _reused_box_renderer(operation, period: Period, scenario, number: str):
+    """Return a renderer that exports the scenario with only the given reused-box inputs supplied."""
+    provider = build_runtime_schema_provider(
+        operation=operation,
+        modelos=(_MODELO,),
+        filing_year=period.filing_year,
+        period=period,
+    )
+    identity = scenario.product_software_identity_factory
+    assert identity is not None
+    target_ids = {f"DP200001:{number}", f"DP200014B:{number}"}
+    base_inputs: ModeloInputs = {key: value for key, value in scenario.inputs.items() if key not in target_ids}
+
+    def render(target_input: tuple[str, Decimal] | None = None) -> bytes:
+        inputs = base_inputs
+        if target_input is not None:
+            casilla_id, value = target_input
+            inputs = {**base_inputs, casilla_id: value}
+        draft = build_draft(
+            modelo=_MODELO,
+            period=period,
+            profile=ModeloOperatorProfile(
+                tax_id=SYNTHETIC_TAX_ID,
+                display_name=f"Modelo 200 reused box {number}",
+            ),
+            inputs=inputs,
+            schema_provider=provider,
+        ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+        sink = _PayloadSink()
+        export_draft(
+            draft,
+            payload_consumer=sink,
+            producer_snapshot=scenario.producer_snapshot(),
+            prior_domiciliation_election=scenario.prior_domiciliation_election,
+            product_software_identity=identity(),
+            schema_provider=provider,
+        )
+        return sink.payload
+
+    return render
+
+
+def _assert_money_and_flag_slots(
+    payload: bytes,
+    revision: ModeloRevision,
+    money_design_field,
+    flag_design_field,
+    *,
+    money: bytes,
+    flag: bytes,
+) -> None:
+    assert (
+        _slot(
+            payload,
+            _record_tag(revision, "DP200014B"),
+            money_design_field.offset,
+            money_design_field.length,
+        )
+        == money
+    )
+    assert (
+        _slot(
+            payload,
+            _record_tag(revision, "DP200001"),
+            flag_design_field.offset,
+            flag_design_field.length,
+        )
+        == flag
+    )
+
+
 @pytest.mark.parametrize("filing_year", _filing_years())
 @pytest.mark.parametrize(
     ("number", "flag_label", "money_label", "money_type_code", "money_signed", "amount"),
@@ -740,159 +886,52 @@ def test_reused_flag_and_money_export_independently(
     scenario = m200_export_scenario(period)
     with bundled_indexed_authority().operation() as operation:
         revision = operation.snapshot(_MODELO, filing_year=period.filing_year, period=period.code).revision
-        design = _design_source(revision)
-        sheets = extract_record_design(bundled_path() / design.corpus_path).require_complete()
-        printed_box = [
-            (sheet.name.strip(), field)
-            for sheet in sheets
-            for field in sheet.fields
-            if number in _PRINTED_BOX.findall(field.description)
-        ]
-        (money_design_field,) = [
-            field
-            for sheet, field in printed_box
-            if sheet == "DP200014B" and all(part in field.description.casefold() for part in money_label)
-        ]
-        (flag_design_field,) = [
-            field
-            for sheet, field in printed_box
-            if sheet == "DP200001" and all(part in field.description.casefold() for part in flag_label)
-        ]
-        layout_fields = [
-            field
-            for layout in revision.export_layouts
-            for record in layout.records
-            for field in record.fields
-            if field.kind is CasillaFieldKind.CASILLA and field.casilla_id is not None
-        ]
-        (money_field,) = [
-            field
-            for field in layout_fields
-            if str(field.id).split(".")[1].upper() == "DP200014B" and str(field.casilla_id) == f"DP200014B:{number}"
-        ]
-        (flag_field,) = [
-            field
-            for field in layout_fields
-            if str(field.id).split(".")[1].upper() == "DP200001" and str(field.casilla_id) == f"DP200001:{number}"
-        ]
-
-        assert all(part in money_design_field.description.casefold() for part in money_label)
-        assert all(part in flag_design_field.description.casefold() for part in flag_label)
-        assert money_design_field.type_code == money_type_code
-        assert flag_design_field.type_code == "Num"
-        assert money_field.data_type in {CasillaDataType.MONEY, CasillaDataType.DECIMAL}
-        if money_field.data_type is CasillaDataType.DECIMAL:
-            assert money_field.decimals == 2
-        assert money_field.signed is money_signed
-        assert flag_field.data_type == "integer" and not flag_field.signed
-        assert (money_field.offset, money_field.length) == (
-            money_design_field.offset,
-            money_design_field.length,
+        money_design_field, flag_design_field = _printed_box_design_fields(revision, number, money_label, flag_label)
+        money_field, flag_field = _layout_box_fields(revision, number)
+        _assert_box_fields_match_the_design(
+            money_field,
+            flag_field,
+            money_design_field,
+            flag_design_field,
+            money_label=money_label,
+            flag_label=flag_label,
+            money_type_code=money_type_code,
+            money_signed=money_signed,
         )
-        assert (flag_field.offset, flag_field.length) == (
-            flag_design_field.offset,
-            flag_design_field.length,
-        )
-
-        provider = build_runtime_schema_provider(
-            operation=operation,
-            modelos=(_MODELO,),
-            filing_year=period.filing_year,
-            period=period,
-        )
-        identity = scenario.product_software_identity_factory
-        assert identity is not None
-        flag_id = f"DP200001:{number}"
-        money_id = f"DP200014B:{number}"
-        target_ids = {flag_id, money_id}
-        base_inputs: ModeloInputs = {key: value for key, value in scenario.inputs.items() if key not in target_ids}
-
-        def render(target_input: tuple[str, Decimal] | None = None) -> bytes:
-            inputs = base_inputs
-            if target_input is not None:
-                casilla_id, value = target_input
-                inputs = {**base_inputs, casilla_id: value}
-            draft = build_draft(
-                modelo=_MODELO,
-                period=period,
-                profile=ModeloOperatorProfile(
-                    tax_id=SYNTHETIC_TAX_ID,
-                    display_name=f"Modelo 200 reused box {number}",
-                ),
-                inputs=inputs,
-                schema_provider=provider,
-            ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
-            sink = _PayloadSink()
-            export_draft(
-                draft,
-                payload_consumer=sink,
-                producer_snapshot=scenario.producer_snapshot(),
-                prior_domiciliation_election=scenario.prior_domiciliation_election,
-                product_software_identity=identity(),
-                schema_provider=provider,
-            )
-            return sink.payload
-
-        flag_only = render((flag_id, Decimal("1")))
-        amount_only = render((money_id, amount))
+        render = _reused_box_renderer(operation, period, scenario, number)
+        flag_only = render((f"DP200001:{number}", Decimal("1")))
+        amount_only = render((f"DP200014B:{number}", amount))
         expected_amount = (
             b"N" + _wire(abs(amount), money_design_field.length - 1)
             if amount < 0
             else _wire(amount, money_design_field.length)
         )
-
-        assert (
-            _slot(
-                flag_only,
-                _record_tag(revision, "DP200014B"),
-                money_design_field.offset,
-                money_design_field.length,
-            )
-            == b"0" * money_design_field.length
-        )
-        assert _slot(
+        zero_money = b"0" * money_design_field.length
+        zero_flag = b"0" * flag_design_field.length
+        _assert_money_and_flag_slots(
             flag_only,
-            _record_tag(revision, "DP200001"),
-            flag_design_field.offset,
-            flag_design_field.length,
-        ) == b"1".rjust(flag_design_field.length, b"0")
-        assert (
-            _slot(
-                amount_only,
-                _record_tag(revision, "DP200014B"),
-                money_design_field.offset,
-                money_design_field.length,
-            )
-            == expected_amount
+            revision,
+            money_design_field,
+            flag_design_field,
+            money=zero_money,
+            flag=b"1".rjust(flag_design_field.length, b"0"),
         )
-        assert (
-            _slot(
-                amount_only,
-                _record_tag(revision, "DP200001"),
-                flag_design_field.offset,
-                flag_design_field.length,
-            )
-            == b"0" * flag_design_field.length
+        _assert_money_and_flag_slots(
+            amount_only,
+            revision,
+            money_design_field,
+            flag_design_field,
+            money=expected_amount,
+            flag=zero_flag,
         )
         if number == "00083":
-            empty = render()
-            assert (
-                _slot(
-                    empty,
-                    _record_tag(revision, "DP200014B"),
-                    money_design_field.offset,
-                    money_design_field.length,
-                )
-                == b"0" * money_design_field.length
-            )
-            assert (
-                _slot(
-                    empty,
-                    _record_tag(revision, "DP200001"),
-                    flag_design_field.offset,
-                    flag_design_field.length,
-                )
-                == b"0" * flag_design_field.length
+            _assert_money_and_flag_slots(
+                render(),
+                revision,
+                money_design_field,
+                flag_design_field,
+                money=zero_money,
+                flag=zero_flag,
             )
 
 

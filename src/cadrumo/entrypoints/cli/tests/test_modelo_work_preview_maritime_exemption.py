@@ -26,6 +26,14 @@ class TestHelpSurfaceLocalisation:
         assert "preview_maritime_exemption_help" not in result.output
         assert expected in result.output or "REBECA" in result.output
 
+    def test_help_offers_the_year_in_the_language_asked(self) -> None:
+        result = invoke_cached_cli(
+            ["--language", "es", "app", "modelo", "work", "preview-maritime-exemption", "--help"],
+        )
+        assert result.exit_code == 0, result.output
+        assert "--year" in result.output
+        assert "preview_maritime_exemption_year_help" not in result.output
+
 
 class TestAmountGrammarRefusal:
     """The frontend amount parser rejects tokens before submitting to the worker."""

@@ -106,11 +106,12 @@ test("a ratio has a percent box only where its grammar says percent", () => {
     });
 });
 
-test("a province box says the name beside its code", () => {
-  const offered = grammar("province_code", {
+test("a served word stands beside its code, whatever the box holds", () => {
+  const offered = grammar("text", {
     choices: [
       { code: "28", word: "application.modelo.edit_choice.province_code.28" },
-      { code: "99", word: "something.else.99" },
+      { code: "1T", word: "some.other.family.1T" },
+      { code: "99", word: null },
     ],
   });
   expect(entryField(t, offered)).toEqual({
@@ -121,6 +122,7 @@ test("a province box says the name beside its code", () => {
         value: "28",
         label: "28 · <application.modelo.edit_choice.province_code.28>",
       },
+      { value: "1T", label: "1T · <some.other.family.1T>" },
       { value: "99", label: "99" },
     ],
   });

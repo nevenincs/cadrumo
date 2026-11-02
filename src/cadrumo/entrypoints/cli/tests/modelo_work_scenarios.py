@@ -26,6 +26,7 @@ from cadrumo.domain.calculations.registry.tests.registry_tree import bundled_reg
 from cadrumo.domain.calculations.registry.withholding_bindings import WithholdingObservation
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.tests.cli_envelope import unwrap_schema_envelope
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
 
 from .cli_fixture_worlds import cli_world_provider, invoke_joined_cli
 from .modelo_cli import create_modelo_work_unit_via_cli
@@ -196,16 +197,7 @@ def m111_withholding_aggregate_arguments(invoice_id: str) -> list[str]:
             subclave="01",
             percibido_dinerario=Decimal("1000.00"),
             retencion_practicada=Decimal("150.00"),
-            incapacity_cash_perception=Decimal("0"),
-            incapacity_cash_withholding=Decimal("0"),
-            incapacity_kind_value=Decimal("0"),
-            incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-            incapacity_kind_repercutido=Decimal("0"),
-            foral_retention_estatal=Decimal("0"),
-            foral_retention_navarra=Decimal("0"),
-            foral_retention_araba=Decimal("0"),
-            foral_retention_gipuzkoa=Decimal("0"),
-            foral_retention_bizkaia=Decimal("0"),
+            **zeroed_withholding_blocks(),
             base_retenciones=Decimal("1000.00"),
             porcentaje_retencion=Decimal("15"),
         ),

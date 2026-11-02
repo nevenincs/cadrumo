@@ -21,6 +21,7 @@ import hashlib
 import json
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -97,104 +98,119 @@ def _import(profile: NativeCliProfileFixture, pdf: Path, *, filing_year: int = _
     )
 
 
+def _assert_store_starts_empty(profile: NativeCliProfileFixture) -> None:
+    empty = _json(_invoke(profile, "app", "live", "borrador", "100", "list"))
+    assert empty["rows"] == []
+    empty_latest = _json(
+        _invoke(profile, "app", "live", "borrador", "100", "latest", "--filing-year", str(_FIXTURE_YEAR)),
+    )
+    assert empty_latest["snapshot_id"] is None
+    assert empty_latest["state"] is None
+
+
+def _assert_first_import(profile: NativeCliProfileFixture) -> dict[str, Any]:
+    imported = _import(profile, _FIXTURE_PDF)
+    assert imported.exit_code == 0, imported.output
+    payload = _json(imported)
+
+    # The envelope redacts the bucket id before transport; assert the
+    # redaction contract rather than the raw identifier.
+    assert payload["bucket_id"] == "<bucket-id>"
+    assert payload["filing_year"] == _FIXTURE_YEAR
+    assert payload["extraction_profile_id"] == "modelo-100-borrador-pdf"
+    assert Decimal(str(payload["extraction_coverage"])) == Decimal("1")
+    assert payload["artefact_kind"] == "BORRADOR"
+    assert payload["binding_count"] == len(_PROFILE_TARGET_CASILLAS)
+    assert payload["blank_casillas"] == []
+    digest = hashlib.sha256(_FIXTURE_PDF.read_bytes()).hexdigest()
+    assert payload["source_pdf_sha256"] == digest
+    assert payload["source_url"] == f"file-import:sha256:{digest}"
+    assert "warnings" in payload and isinstance(payload["warnings"], list)
+    assert str(_FIXTURE_PDF) not in imported.output
+    return payload
+
+
+def _assert_replacement_supersedes(profile: NativeCliProfileFixture, snapshot_id: object) -> object:
+    """A second import creates the next active capture and exercises the public lifecycle filters."""
+    replacement = _import(profile, _FIXTURE_PDF)
+    assert replacement.exit_code == 0, replacement.output
+    replacement_payload = _json(replacement)
+    replacement_id = replacement_payload["snapshot_id"]
+    assert replacement_id != snapshot_id
+
+    active_rows = _json(_invoke(profile, "app", "live", "borrador", "100", "list"))["rows"]
+    assert [row["snapshot_id"] for row in active_rows] == [replacement_id]
+    assert active_rows[0]["state"] == "active"
+
+    all_rows = _json(_invoke(profile, "app", "live", "borrador", "100", "list", "--state", "all"))["rows"]
+    assert {row["snapshot_id"] for row in all_rows} == {snapshot_id, replacement_id}
+    assert {row["snapshot_id"]: row["state"] for row in all_rows} == {
+        snapshot_id: "superseded",
+        replacement_id: "active",
+    }
+    superseded_rows = _json(
+        _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "superseded"),
+    )["rows"]
+    assert [row["snapshot_id"] for row in superseded_rows] == [snapshot_id]
+    discarded_rows = _json(
+        _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "discarded"),
+    )["rows"]
+    assert discarded_rows == []
+    return replacement_id
+
+
+def _assert_view_and_latest(
+    profile: NativeCliProfileFixture, payload: dict[str, Any], snapshot_id: object, replacement_id: object
+) -> None:
+    viewed = _invoke(profile, "app", "live", "borrador", "100", "view", str(snapshot_id)[:12])
+    assert viewed.exit_code == 0, viewed.output
+    view_payload = _json(viewed)
+    binding_values = view_payload["binding_values"]
+    assert view_payload["source_url"] == payload["source_url"]
+    assert view_payload["state"] == "superseded"
+    assert str(_FIXTURE_PDF) not in str(view_payload)
+    assert sorted(binding_values) == [f"casilla.{casilla}" for casilla in _PROFILE_TARGET_CASILLAS]
+    # Values survive as the amounts printed on the PDF, not as zeros.
+    printed = corpus_casilla_values(_FIXTURE_YEAR)
+    assert {casilla: Decimal(binding_values[f"casilla.{casilla}"]) for casilla in _PROFILE_TARGET_CASILLAS} == {
+        casilla: printed[validated_casilla_id(casilla, surface="test.printed")] for casilla in _PROFILE_TARGET_CASILLAS
+    }
+
+    latest = _json(
+        _invoke(profile, "app", "live", "borrador", "100", "latest", "--filing-year", str(_FIXTURE_YEAR)),
+    )
+    assert latest["snapshot_id"] == replacement_id
+    assert latest["state"] == "active"
+    text_view = _invoke(
+        profile,
+        "app",
+        "live",
+        "borrador",
+        "100",
+        "view",
+        str(replacement_id),
+        json_output=False,
+    )
+    assert text_view.exit_code == 0, text_view.output
+    assert "binding_count\t5" in text_view.output
+    assert "state\tactive" in text_view.output
+
+    refused = _invoke(profile, "app", "live", "borrador", "100", "view", "no-such-id")
+    assert refused.exit_code != 0
+    unknown_state = _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "old")
+    assert unknown_state.exit_code != 0
+
+
 def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> None:
     """A committed PDF crosses the worker and all snapshot readers see its encrypted capture."""
     with native_cli_profile_scope(tmp_path) as profile:
         profile.register(label="native-borrador-import", facts={})
 
-        empty = _json(_invoke(profile, "app", "live", "borrador", "100", "list"))
-        assert empty["rows"] == []
-        empty_latest = _json(
-            _invoke(profile, "app", "live", "borrador", "100", "latest", "--filing-year", str(_FIXTURE_YEAR)),
-        )
-        assert empty_latest["snapshot_id"] is None
-        assert empty_latest["state"] is None
-
-        imported = _import(profile, _FIXTURE_PDF)
-        assert imported.exit_code == 0, imported.output
-        payload = _json(imported)
-
+        _assert_store_starts_empty(profile)
+        payload = _assert_first_import(profile)
         snapshot_id = payload["snapshot_id"]
-        # The envelope redacts the bucket id before transport; assert the
-        # redaction contract rather than the raw identifier.
-        assert payload["bucket_id"] == "<bucket-id>"
-        assert payload["filing_year"] == _FIXTURE_YEAR
-        assert payload["extraction_profile_id"] == "modelo-100-borrador-pdf"
-        assert Decimal(str(payload["extraction_coverage"])) == Decimal("1")
-        assert payload["artefact_kind"] == "BORRADOR"
-        assert payload["binding_count"] == len(_PROFILE_TARGET_CASILLAS)
-        assert payload["blank_casillas"] == []
-        digest = hashlib.sha256(_FIXTURE_PDF.read_bytes()).hexdigest()
-        assert payload["source_pdf_sha256"] == digest
-        assert payload["source_url"] == f"file-import:sha256:{digest}"
-        assert "warnings" in payload and isinstance(payload["warnings"], list)
-        assert str(_FIXTURE_PDF) not in imported.output
-
-        # A second worker import creates the next active capture and exercises
-        # the public lifecycle filters across both persisted encrypted rows.
-        replacement = _import(profile, _FIXTURE_PDF)
-        assert replacement.exit_code == 0, replacement.output
-        replacement_payload = _json(replacement)
-        replacement_id = replacement_payload["snapshot_id"]
-        assert replacement_id != snapshot_id
-
-        active_rows = _json(_invoke(profile, "app", "live", "borrador", "100", "list"))["rows"]
-        assert [row["snapshot_id"] for row in active_rows] == [replacement_id]
-        assert active_rows[0]["state"] == "active"
-
-        all_rows = _json(_invoke(profile, "app", "live", "borrador", "100", "list", "--state", "all"))["rows"]
-        assert {row["snapshot_id"] for row in all_rows} == {snapshot_id, replacement_id}
-        assert {row["snapshot_id"]: row["state"] for row in all_rows} == {
-            snapshot_id: "superseded",
-            replacement_id: "active",
-        }
-        superseded_rows = _json(
-            _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "superseded"),
-        )["rows"]
-        assert [row["snapshot_id"] for row in superseded_rows] == [snapshot_id]
-        discarded_rows = _json(
-            _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "discarded"),
-        )["rows"]
-        assert discarded_rows == []
-
-        viewed = _invoke(profile, "app", "live", "borrador", "100", "view", str(snapshot_id)[:12])
-        assert viewed.exit_code == 0, viewed.output
-        view_payload = _json(viewed)
-        binding_values = view_payload["binding_values"]
-        assert view_payload["source_url"] == payload["source_url"]
-        assert view_payload["state"] == "superseded"
-        assert str(_FIXTURE_PDF) not in str(view_payload)
-        assert sorted(binding_values) == [f"casilla.{casilla}" for casilla in _PROFILE_TARGET_CASILLAS]
-        # Values survive as the amounts printed on the PDF, not as zeros.
-        printed = corpus_casilla_values(_FIXTURE_YEAR)
-        assert {casilla: Decimal(binding_values[f"casilla.{casilla}"]) for casilla in _PROFILE_TARGET_CASILLAS} == {
-            casilla: printed[validated_casilla_id(casilla, surface="test.printed")]
-            for casilla in _PROFILE_TARGET_CASILLAS
-        }
-
-        latest = _json(
-            _invoke(profile, "app", "live", "borrador", "100", "latest", "--filing-year", str(_FIXTURE_YEAR)),
-        )
-        assert latest["snapshot_id"] == replacement_id
-        assert latest["state"] == "active"
-        text_view = _invoke(
-            profile,
-            "app",
-            "live",
-            "borrador",
-            "100",
-            "view",
-            str(replacement_id),
-            json_output=False,
-        )
-        assert text_view.exit_code == 0, text_view.output
-        assert "binding_count\t5" in text_view.output
-        assert "state\tactive" in text_view.output
-
-        refused = _invoke(profile, "app", "live", "borrador", "100", "view", "no-such-id")
-        assert refused.exit_code != 0
-        unknown_state = _invoke(profile, "app", "live", "borrador", "100", "list", "--state", "old")
-        assert unknown_state.exit_code != 0
+        replacement_id = _assert_replacement_supersedes(profile, snapshot_id)
+        _assert_view_and_latest(profile, payload, snapshot_id, replacement_id)
 
 
 def test_import_stores_a_digest_reference_and_never_the_operator_path(tmp_path: Path) -> None:

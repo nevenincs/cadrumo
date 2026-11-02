@@ -72,9 +72,9 @@ from ..work_form_models import (
     ModeloFormCasillaAddressV1,
     ModeloFormEditability,
     ModeloFormOrigin,
-    comparable_entry,
     revised_field,
 )
+from ..work_form_scalar_values import comparable_entry
 from .work_form_fixture import built_form
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]

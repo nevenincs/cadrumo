@@ -18,6 +18,8 @@ type Example = {
   series: string | null;
   number: string;
   issued: string;
+  /** When the work was done, where that is not the day it was issued. */
+  operated?: string;
   name: string;
   taxId: string | null;
   country: string;
@@ -97,6 +99,7 @@ const EXAMPLES: Example[] = [
     series: "F",
     number: "F-2026-020",
     issued: "2026-10-10",
+    operated: "2026-09-30",
     name: "Bodegas Peña Rubia, S.L.",
     taxId: "B00000066",
     country: "ES",
@@ -213,8 +216,8 @@ export function exampleInvoices(
       lines,
       invoice_class: example.invoiceClass,
       series: example.series,
-      operation_date: null,
-      operation_date_role: null,
+      operation_date: example.operated ?? null,
+      operation_date_role: example.operated ? "OPERATION_PERFORMED" : null,
       iva_category: example.currency === "EUR" ? "domestic_general" : null,
       rectifies_invoice_number: example.rectifies ?? null,
       fx_rate: null,

@@ -7,6 +7,7 @@ import {
   useStoryStage,
 } from "@/dev/LedgerStage";
 import type { LedgerShape } from "@/dev/ledgerFixture";
+import { LedgerSuggestions } from "../suggestions/SuggestionsProvider";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import {
   DOCUMENT_TABS,
@@ -36,17 +37,25 @@ function Documents({ shape, locale }: Args) {
   });
   return (
     <WritePauseContext.Provider value={pause}>
-      <div className="flex h-full min-h-0 flex-col">
-        <DocumentsSection
-          port={port}
-          reader={STORY_READER}
-          locale={locale}
-          shown
-          rows={read.rows}
-          stage={stage}
-          onStage={onStage}
-        />
-      </div>
+      <LedgerSuggestions
+        port={port}
+        reader={STORY_READER}
+        rows={read.rows}
+        stage={stage.content}
+        applied={stage.applied}
+      >
+        <div className="flex h-full min-h-0 flex-col">
+          <DocumentsSection
+            port={port}
+            reader={STORY_READER}
+            locale={locale}
+            shown
+            rows={read.rows}
+            stage={stage}
+            onStage={onStage}
+          />
+        </div>
+      </LedgerSuggestions>
     </WritePauseContext.Provider>
   );
 }

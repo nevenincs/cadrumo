@@ -14,8 +14,13 @@ from cadrumo.domain.calculations.registry.schema_surfaces import CalculationComp
 
 from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
+    NUMERIC_CASILLA_01,
+    NUMERIC_CASILLA_02,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
+    SEGMENTED_ECPN_CASILLA,
+    SEGMENTED_LIQUIDACION_CASILLA,
+    SEGMENTED_TARGET_CASILLA,
     build_minimal_snapshot,
     completeness_manifest,
     minimal_application_link,
@@ -33,14 +38,6 @@ pytestmark = [
     pytest.mark.usefixtures("isolated_provider_registration"),
 ]
 
-_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
-_NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
-_SEGMENTED_LIQUIDACION_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014:00562",
-    surface="_SEGMENTED_LIQUIDACION_CASILLA",
-)
-_SEGMENTED_ECPN_CASILLA: CasillaId = validated_casilla_id("DP200032:00562", surface="_SEGMENTED_ECPN_CASILLA")
-_SEGMENTED_TARGET_CASILLA: CasillaId = validated_casilla_id("DP200014:00999", surface="_SEGMENTED_TARGET_CASILLA")
 _BARE_REUSED_NUMBER_CASILLA: CasillaId = validated_casilla_id("00562", surface="_BARE_REUSED_NUMBER_CASILLA")
 _BARE_REUSED_NUMBER_ALT_CASILLA: CasillaId = validated_casilla_id(
     "00562-alt",
@@ -77,8 +74,8 @@ def test_same_number_distinct_segmento_casillas_validate() -> None:
     (segmento, number) metadata pairs (DP200014, 00562) and
     (DP200032, 00562) are unique and the validator must accept them.
     """
-    liquidacion = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
-    ecpn = segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
+    liquidacion = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    ecpn = segmented_casilla(SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
     _validate_revision(minimal_revision(casillas=(liquidacion, ecpn)))
 
 
@@ -105,7 +102,7 @@ def test_same_segmento_duplicate_number_collision_fails() -> None:
     unique; the (segmento, number) pair (DP200014, 00562) declared twice
     is a duplicate and the validator reports it segment-qualified.
     """
-    first = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    first = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     second = segmented_casilla(_SEGMENTED_LIQUIDACION_ALT_CASILLA, "00562", "DP200014")
     revision = minimal_revision(casillas=(first, second))
     with pytest.raises(
@@ -123,22 +120,22 @@ def test_single_segment_numeric_casilla_id_reference_resolves() -> None:
     that id and whose target is a computed casilla must validate with no
     unknown-casilla failure.
     """
-    input_casilla = segmented_casilla(_NUMERIC_CASILLA_01, "01", None)
-    computed_casilla = segmented_casilla(_NUMERIC_CASILLA_02, "02", None).model_copy(
+    input_casilla = segmented_casilla(NUMERIC_CASILLA_01, "01", None)
+    computed_casilla = segmented_casilla(NUMERIC_CASILLA_02, "02", None).model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target_casilla_id=_NUMERIC_CASILLA_02,
-        expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
+        target_casilla_id=NUMERIC_CASILLA_02,
+        expression=FormulaExpression(casilla_id=NUMERIC_CASILLA_01),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
         source_citations=(_REFERENCE_FORMULA_CITATION,),
     )
     manifest = completeness_manifest(
         (
-            CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),
-            CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_02, number="02"),
+            CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),
+            CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_02, number="02"),
         ),
     )
     revision = minimal_revision(
@@ -160,14 +157,14 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
     forcing the formula to name the intended occurrence by its
     segment-qualified id.
     """
-    liquidacion = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
-    ecpn = segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
-    target_casilla_def = segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
+    liquidacion = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    ecpn = segmented_casilla(SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
+    target_casilla_def = segmented_casilla(SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target_casilla_id=_SEGMENTED_TARGET_CASILLA,
+        target_casilla_id=SEGMENTED_TARGET_CASILLA,
         expression=FormulaExpression(casilla_id=_BARE_REUSED_NUMBER_CASILLA),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
@@ -185,7 +182,7 @@ def test_ambiguous_cross_segment_bare_number_reference_does_not_resolve() -> Non
 def test_reused_number_with_bare_canonical_id_fails() -> None:
     """A reused printed number cannot leave one casilla addressable by the bare number."""
     ecpn = segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00562", None)
-    liquidacion = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    liquidacion = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     revision = minimal_revision(casillas=(ecpn, liquidacion))
     with pytest.raises(RegistryValidationError, match=r"ambiguous bare casilla ids \['00562'\]"):
         _validate_revision(revision)
@@ -194,7 +191,7 @@ def test_reused_number_with_bare_canonical_id_fails() -> None:
 def test_casilla_id_cannot_equal_another_casilla_display_token() -> None:
     """A token cannot be one casilla's id and another casilla's display metadata."""
     canonical_owner = segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00563", None)
-    display_owner = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    display_owner = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     revision = minimal_revision(casillas=(canonical_owner, display_owner))
     with pytest.raises(RegistryValidationError, match="casilla reference token '00562' is ambiguous"):
         _validate_revision(revision)
@@ -202,7 +199,7 @@ def test_casilla_id_cannot_equal_another_casilla_display_token() -> None:
 
 def test_casilla_display_token_cannot_equal_binding_id() -> None:
     """Casilla metadata tokens cannot collide with non-casilla registry ids."""
-    display_owner = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    display_owner = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     binding = BindingDefinition(
         id="00562",
         provider={
@@ -231,7 +228,7 @@ def test_casilla_display_token_cannot_equal_binding_id() -> None:
 def test_snapshot_builder_rejects_ambiguous_selected_revision_identity() -> None:
     """Even direct snapshot construction must fail before publishing ambiguous casilla refs."""
     canonical_owner = segmented_casilla(_BARE_REUSED_NUMBER_CASILLA, "00563", None)
-    display_owner = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    display_owner = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     revision = minimal_revision(casillas=(canonical_owner, display_owner))
 
     with pytest.raises(RegistryValidationError, match="casilla reference token '00562' is ambiguous"):
@@ -246,13 +243,13 @@ def test_bare_number_reference_does_not_resolve_when_id_is_segment_qualified() -
     revision, a reference to a segment-qualified casilla must name the
     canonical ``casilla.id``.
     """
-    sole_occurrence = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
-    target_casilla_def = segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
+    sole_occurrence = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    target_casilla_def = segmented_casilla(SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target_casilla_id=_SEGMENTED_TARGET_CASILLA,
+        target_casilla_id=SEGMENTED_TARGET_CASILLA,
         expression=FormulaExpression(casilla_id=_BARE_REUSED_NUMBER_CASILLA),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),

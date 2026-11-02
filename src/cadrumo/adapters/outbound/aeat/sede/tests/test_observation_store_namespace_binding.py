@@ -20,18 +20,14 @@ would disagree with the registry authority and this gate would fail.
 
 from __future__ import annotations
 
-import hashlib
 from datetime import UTC, datetime
-from decimal import Decimal
 from pathlib import Path
 
 import pytest
-from pydantic import AnyHttpUrl
 from sqlalchemy import select
 
 from ......core.config import Settings
 from ......core.period import Period
-from ......domain.calculations.registry.tests.published_authority import published_snapshot
 from .....persistence.storage.secure_object_namespaces import (
     AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,
     AEAT_FILED_DECLARATION_OBSERVATIONS_NAMESPACE,
@@ -40,13 +36,11 @@ from .....persistence.storage.secure_object_namespaces import (
 from .....persistence.storage.sql.orm import SecureObjectRow
 from .....persistence.storage.sql.session import session_scope
 from .....persistence.storage.tests.secure_sql import isolated_runtime_profile
-from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
-from ..schema import (
-    FiledDeclaracionArtefact,
-    FiledDeclaracionObservation,
-    IvaCompensationWalletObservation,
-    IvaCompensationWalletRow,
+from .observation_store_support import (
+    declaration_pdf_artefact,
+    filed_declaration_observation,
+    pending_wallet_observation,
 )
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
@@ -54,54 +48,6 @@ pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, 
 _BUCKET_ID = "7303a2b7-83c8-4937-99f7-8259455fafe4"  # was 'sede-namespace-binding'
 _AEAT = Settings.external_constants().aeat
 _COTEJO_DOCUMENT_URL = f"{_AEAT.domains.www6}{_AEAT.sede_paths.cotejo_document}"
-
-
-def _artefact(body: bytes) -> FiledDeclaracionArtefact:
-    return FiledDeclaracionArtefact(
-        kind="declaration_pdf",
-        source_url=AnyHttpUrl(f"{_COTEJO_DOCUMENT_URL}?CSV=TUD4V9XAUV7QJ8QV"),
-        content_type="application/pdf",
-        byte_count=len(body),
-        sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2024, 7, 1, 9, 0, 0, tzinfo=UTC),
-    )
-
-
-def _observation(artefact: FiledDeclaracionArtefact) -> FiledDeclaracionObservation:
-    return FiledDeclaracionObservation(
-        modelo="100",
-        ejercicio=2023,
-        period=Period.from_year_and_code(2023, "0A"),
-        expediente_id="202310013522456T",
-        status="PRESENTADA",
-        presented_at=datetime(2024, 6, 30, 12, 34, 56, tzinfo=UTC),
-        authenticated_identity="12345678Z",
-        artefacts=(artefact,),
-        registry_snapshot_ref=published_snapshot("100", filing_year=2023, period="0A").snapshot_ref,
-    )
-
-
-def _iva_wallet_observation() -> IvaCompensationWalletObservation:
-    return IvaCompensationWalletObservation(
-        taxpayer_nif="12345678Z",
-        authenticated_identity="12345678Z",
-        target_year=2026,
-        target_period=Period.from_year_and_code(2026, "2T"),
-        rows=(
-            IvaCompensationWalletRow(
-                generation_year=2026,
-                generation_period=Period.from_year_and_code(2026, "1T"),
-                generated_amount=Decimal("1200"),
-                applied_amount=Decimal("0"),
-                pending_amount=Decimal("1200"),
-                raw_label="2026 | 1T | 1200 | 0 | 1200",
-            ),
-        ),
-        total_pending=Decimal("1200"),
-        source_url=AnyHttpUrl(WALLET_URL),
-        captured_at=datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC),
-        raw_sha256="b" * 64,
-    )
 
 
 def test_persisted_rows_carry_registry_declared_classification_and_version(
@@ -115,11 +61,11 @@ def test_persisted_rows_carry_registry_declared_classification_and_version(
         body = b"%PDF-1.7 sede declaration body for namespace-binding proof"
         artefact = store.persist_artefact(
             ("100", 2023, Period.from_year_and_code(2023, "0A"), "202310013522456T"),
-            _artefact(body),
+            declaration_pdf_artefact(body),
             body,
         )
-        store.persist_observation(_observation(artefact))
-        store.persist_iva_wallet_observation(_iva_wallet_observation())
+        store.persist_observation(filed_declaration_observation(artefact))
+        store.persist_iva_wallet_observation(pending_wallet_observation(datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)))
 
         expected_by_namespace = {
             AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE.namespace: AEAT_FILED_DECLARATION_ARTEFACTS_NAMESPACE,

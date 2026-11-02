@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-owned-facts'
 date: '2026-10-30'
-modified: '2026-10-31'
+modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:081f45c6c649ff542ca71403ed4567e1744dc28707663f6d284e2c2147fe2c7e'
+body_hash: 'sha256:2a99bf5571af23d1e91461bb16e4cb6d2e1253ef12887cc4bf8863b6e8554934'
 related:
   - "[[2026-10-30-registry-owned-facts-plan]]"
 ---
@@ -79,6 +79,14 @@ related:
 - `S07` `verify:` `publish-authority digest ba831103bc412fcf3a9f4b78cb1ff2b228a34ab225575efc759f18794759f0e2` -> `pass`
 - `S07` `verify:` `test_export_xml_dictionary_repeated_rows and test_modelo_bindings_asset_disposal and M360 widths, 100 tests` -> `pass`
 - `S07` `verify:` `test_form_row_slots_follow_the_registry` -> `pass`
+- `S05` `M` `src/cadrumo/adapters/inbound/borrador/parser.py`
+- `S05` `M` `dev/quality/tests/test_tax_literal_sweep.py`
+- `S05` `verify:` `test_tax_literal_sweep 422` -> `pass`
+- `S06` `A` `src/cadrumo/_data/registry/aeat/facts/0168-m347-operation-clave-vocabulary.toml`
+- `S06` `A` `src/cadrumo/_data/registry/aeat/facts/0169-m349-operation-clave-vocabulary.toml`
+- `S06` `verify:` `publish-authority digest 48b80cb52e1d13958f079d87eab275dd28660ce6869077ee68a0d1284bc35964` -> `pass`
+- `S06` `verify:` `lint-imports` -> `pass`
+- `S06` `verify:` `manifest --check` -> `pass`
 
 ## Notes
 
@@ -86,3 +94,5 @@ related:
 - `S02` lint-imports stops on a syntax error at `dev/tests/test_import_quality_gate.py:727,` outside this Step
 - `S06` Commits aee54940ab ab3b795e53 afbb705350 940a6ab1f8. AEAT certificate, CSV and expediente shapes have no official source and stay in their technical owners.
 - `S06` Correction: the commit in the earlier note is 38c4d81ca8, not 940a6ab1f8, which is a peer's commit; rows from that commit's paths are not this Step's work.
+- `S05` Reopened by review; commits 929c31c57e 0905e781ae 94b9230d0e.
+- `S06` Reopened by review; commits c120ccbfd9 5cdc3309f4 be7d47908c 0247c04ac9 9c5784b45b e89af9ea3d.

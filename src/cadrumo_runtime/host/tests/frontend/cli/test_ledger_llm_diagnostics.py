@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
+from typing import Any
 
 import pytest
 from click.testing import Result
@@ -158,22 +159,8 @@ def seed_ledger_llm_classified_transactions(bucket_id: str) -> None:
     TransactionCatalogueRepository(bucket_id=bucket_id).save(catalogue)
 
 
-def test_llm_diagnostics_reports_seeded_usage_and_confidence(
-    diagnostics_native_profile: NativeCliProfileFixture,
-) -> None:
-    """The registered worker reports both encrypted stores, including unpriced cost."""
-    seed_ledger_llm_usage_records()
-    seed_ledger_llm_classified_transactions(_registered_bucket_id(diagnostics_native_profile))
-
-    result = _invoke(["--format", "json", "app", "ledger", "llm-diagnostics"])
-    assert result.exit_code == 0, result.output
-    payload = _json_result(result)
-
-    assert payload["has_data"] is True
-    assert payload["low_confidence_threshold"] == "0.5"
-
-    # Usage/cost section: two calls recorded under a retired vendor, one a cache hit,
-    # and one unpriced agent run.
+def _assert_usage_and_cost_section(payload: dict[str, Any]) -> None:
+    """Two calls recorded under a retired vendor, one a cache hit, and one unpriced agent run."""
     usage = {row["provider"]: row for row in payload["usage_providers"]}
     assert set(usage) == {RetiredLLMProvider.ANTHROPIC.value, LLMProvider.AGENT.value}
     anthropic = usage[RetiredLLMProvider.ANTHROPIC.value]
@@ -194,7 +181,9 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(
     assert payload["total_unpriced_calls"] == 1
     assert payload["total_cost_estimate_usd"] is None
 
-    # Confidence section: two claude classifications, one below the 0.5 floor.
+
+def _assert_confidence_section(payload: dict[str, Any]) -> None:
+    """Two claude classifications, one below the 0.5 floor."""
     confidence = {row["provider"]: row for row in payload["confidence_providers"]}
     assert set(confidence) == {"claude"}
     claude = confidence["claude"]
@@ -206,6 +195,24 @@ def test_llm_diagnostics_reports_seeded_usage_and_confidence(
     assert Decimal(claude["max_confidence"]) == Decimal("0.95")
     assert payload["total_classified"] == 2
     assert payload["total_low_confidence"] == 1
+
+
+def test_llm_diagnostics_reports_seeded_usage_and_confidence(
+    diagnostics_native_profile: NativeCliProfileFixture,
+) -> None:
+    """The registered worker reports both encrypted stores, including unpriced cost."""
+    seed_ledger_llm_usage_records()
+    seed_ledger_llm_classified_transactions(_registered_bucket_id(diagnostics_native_profile))
+
+    result = _invoke(["--format", "json", "app", "ledger", "llm-diagnostics"])
+    assert result.exit_code == 0, result.output
+    payload = _json_result(result)
+
+    assert payload["has_data"] is True
+    assert payload["low_confidence_threshold"] == "0.5"
+
+    _assert_usage_and_cost_section(payload)
+    _assert_confidence_section(payload)
 
 
 def test_llm_diagnostics_usage_window_and_threshold_keep_confidence_independent(

@@ -10,6 +10,8 @@ from decimal import Decimal
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
+
 from .....core.aggregation import BindingAggregation, BindingAggregationOp, RetencionClave
 from ..binding_value_contract import BindingDataType, BindingValueChannel, BindingValueContract
 from ..errors import RegistryValidationError
@@ -149,16 +151,7 @@ def _observation(
         clave=RetencionClave.from_registry(clave),
         percibido_dinerario=amount,
         retencion_practicada=Decimal(withholding),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         pendiente_flag=pendiente_flag,
         accrual_year=accrual_year,
         base_retenciones=amount,

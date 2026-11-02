@@ -1258,6 +1258,7 @@
         "dev.registry.pipeline.casilla_tree_transaction",
         "dev.registry.pipeline.cli",
         "dev.registry.pipeline.compile_authority_candidate",
+        "dev.registry.pipeline.design_scheme_period_fields",
         "dev.registry.pipeline.edition_candidate_staging",
         "dev.registry.pipeline.export_field_derivation",
         "dev.registry.pipeline.export_field_literal_derivation",

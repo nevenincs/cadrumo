@@ -114,13 +114,14 @@ class _FreshReconciler:
 
 def _request_grant_change(
     change: _Change,
-) -> tuple[UUID, FrontendClient, UUID | None, NativeEnrollmentClient, EnrollmentProposal]:
+) -> tuple[UUID, FrontendClient, UUID, NativeEnrollmentClient, EnrollmentProposal]:
     grant, kind, profile_id = change.grant, change.kind, change.profile_id
     # The person signs in first: a key reaches the profile only under a live sign-in.
     human_id = _login(change.human, profile_id, method="password", proof=PROFILE_INPUT.encode())
     api = FrontendClient(change.raw, profile_id=profile_id, frontend=OperationFrontendProjection.CLI)
     api.login_api_key(bytearray(change.original_secret), timeout=25)
     old_session = api.session_id
+    assert old_session is not None, "the real API-key login must admit an exact session"
     for connection, session_id in ((change.foreign, api.session_id), (change.human, human_id)):
         refused = connection.enrollment_prepare(
             EnrollmentPrepare(
@@ -280,7 +281,7 @@ def _assert_completed_grant(
 def _assert_old_lease_retired(
     change: _Change,
     api: FrontendClient,
-    old_session: UUID | None,
+    old_session: UUID,
     fresh: FrontendClient,
     submitted: AutomationReceiptProjection,
     completed: AutomationReceiptProjection,

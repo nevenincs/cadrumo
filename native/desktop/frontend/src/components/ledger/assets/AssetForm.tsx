@@ -372,6 +372,7 @@ export function FieldsGrid({
                             amount: formatAmount(
                               locale,
                               candidate.amount.decimal,
+                              { currency: candidate.currency },
                             ),
                           },
                         ),

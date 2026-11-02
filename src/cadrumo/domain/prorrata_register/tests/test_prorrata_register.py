@@ -572,6 +572,17 @@ def test_register_resolve_provisional_delegates_to_ladder() -> None:
     assert register.resolve_provisional(2023).resolved is False
 
 
+def _general_entry(*, sector_id: str | None = None) -> ProrrataRegisterEntry:
+    """A 2026 general-regime declaration for the common scope or one named sector."""
+    return ProrrataRegisterEntry(
+        ejercicio=2026,
+        sector_id=sector_id,
+        regime=ProrrataRegisterRegime.from_registry("general"),
+        especial_transition=None,
+        source_registry_snapshot_refs=(),
+    )
+
+
 def _sector(sector_id: str, letra: SectorDiferenciadoLetra, *codes: str) -> SectorDefinition:
     return SectorDefinition(sector_id=sector_id, letra=letra, member_activity_codes=codes)
 
@@ -609,26 +620,9 @@ def test_sectorized_current_entry_coverage_requires_common_and_every_declared_se
     )
     register = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="retail",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="leasing",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
+            _general_entry(),
+            _general_entry(sector_id="retail"),
+            _general_entry(sector_id="leasing"),
         ),
         sector_definitions=sector_definitions,
     )
@@ -644,38 +638,15 @@ def test_sectorized_current_entry_coverage_refuses_missing_common_or_declared_sc
     )
     missing_common = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="retail",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="leasing",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
+            _general_entry(sector_id="retail"),
+            _general_entry(sector_id="leasing"),
         ),
         sector_definitions=sector_definitions,
     )
     missing_declared_sector = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="retail",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
+            _general_entry(),
+            _general_entry(sector_id="retail"),
         ),
         sector_definitions=sector_definitions,
     )
@@ -688,33 +659,10 @@ def test_sectorized_current_entry_coverage_refuses_an_extra_scope() -> None:
     """An undeclared extra sector cannot be smuggled into a complete filing declaration."""
     register = ProrrataRegister(
         entries=(
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="retail",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="leasing",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
-            ProrrataRegisterEntry(
-                ejercicio=2026,
-                sector_id="unclassified",
-                regime=ProrrataRegisterRegime.from_registry("general"),
-                especial_transition=None,
-                source_registry_snapshot_refs=(),
-            ),
+            _general_entry(),
+            _general_entry(sector_id="retail"),
+            _general_entry(sector_id="leasing"),
+            _general_entry(sector_id="unclassified"),
         ),
         sector_definitions=(
             _sector("retail", SectorDiferenciadoLetra.from_registry("a"), "4711"),

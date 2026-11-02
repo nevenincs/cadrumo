@@ -19,6 +19,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.casilla_id import CasillaId
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.errors.error_codes import get_registered_error_code
+from ...core.filing_year import FilingYear
 from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
@@ -55,6 +56,7 @@ class ModeloMaritimePreviewRequest(BaseModel):
     annual_salary: _Text | None = None
     qualifying_days: Annotated[int, Field(ge=1, le=366)] | None = None
     gross_navigation_income: _Text | None = None
+    filing_year: FilingYear | None = None
 
     @model_validator(mode="after")
     def _amount_grammar(self) -> Self:
@@ -111,7 +113,12 @@ class MaritimePreviewPort(Protocol):
     """Invoke the existing service with its exact retained authority operation."""
 
     def __call__(
-        self, *, annual_salary: Decimal | None, qualifying_days: int | None, gross_navigation_income: Decimal | None
+        self,
+        *,
+        annual_salary: Decimal | None,
+        qualifying_days: int | None,
+        gross_navigation_income: Decimal | None,
+        filing_year: int | None = None,
     ) -> ModeloMaritimeExemptionPreview:
         """Resolve the canonical preview from the supplied optional amounts."""
         ...
@@ -213,6 +220,7 @@ class ModeloMaritimePreviewExecutor:
                     )
                     if payload.gross_navigation_income is not None
                     else None,
+                    filing_year=payload.filing_year,
                 )
 
             result = _projection(payload.profile_id, await asyncio.to_thread(preview))

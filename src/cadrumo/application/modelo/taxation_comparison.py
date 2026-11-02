@@ -47,7 +47,7 @@ from collections.abc import Mapping
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import TYPE_CHECKING, Literal
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
@@ -64,6 +64,7 @@ from ...domain.calculations.registry.ids import (
     RelationId,
 )
 from ...domain.calculations.registry.schema import RegistrySnapshot
+from ...domain.contribuyente.renta_codes import RentaDeclaracionType
 from ...domain.modelos.work_unit import WorkUnitCatalogue
 from .semantic_role_resolution import AmbiguousSemanticRoleCasillaError, casilla_id_for_unique_semantic_role
 from .taxation_comparison_ports import TaxationComparisonPorts
@@ -292,8 +293,8 @@ def compare_taxation_modes(
     resolved_booleans = dict(boolean_binding_values or {})
     resolved_date_ctx: dict[str, date] = dict(date_context or {})
 
-    def _run(declaration_type: Literal[1, 2]) -> Mapping[CasillaId, Decimal]:
-        merged_bindings = {**binding_values, decl_binding: Decimal(declaration_type)}
+    def _run(declaration_type: RentaDeclaracionType) -> Mapping[CasillaId, Decimal]:
+        merged_bindings = {**binding_values, decl_binding: Decimal(declaration_type.code)}
         result = calculate_registry_snapshot(
             snapshot,
             inputs=inputs,
@@ -307,8 +308,8 @@ def compare_taxation_modes(
         )
         return result.values
 
-    conjunta_values = _run(2)
-    individual_values = _run(1)
+    conjunta_values = _run(RentaDeclaracionType.JOINT)
+    individual_values = _run(RentaDeclaracionType.INDIVIDUAL)
 
     _require_taxation_result_casillas(conjunta_values, individual_values, cuota_casilla, resultado_casilla)
     conjunta_cuota = conjunta_values[cuota_casilla]

@@ -999,7 +999,7 @@ export function grossCheck(r: Movement) {
     return null;
   return {
     sum,
-    text: `${canon(r.amount)} is not ${canon(r.base)} + ${canon(r.ivaAmount)}${r.recargo ? " + " + canon(r.recargo) : ""} = ${canon(sum)}`,
+    text: `${fmtMoney(r.amount)} is not ${fmtMoney(r.base)} + ${fmtMoney(r.ivaAmount)}${r.recargo ? " + " + fmtMoney(r.recargo) : ""} = ${fmtMoney(sum)}`,
   };
 }
 export function deriveIva(

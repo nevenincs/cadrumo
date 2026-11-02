@@ -16,7 +16,8 @@ from ..binding_selector_utils import selector_as_dict
 from ..bindings import binding_source_casilla_ids, binding_source_modelo
 from ..runtime_graph import expression_casilla_refs
 from ..schema_input_kind import InputKind
-from ._modelo_303_registry_support import (
+from ._modelo_303_registry_support import load_modelo_303
+from .modelo_303_registry_constants import (
     _M303_BIENES_INVERSION_REGULARIZACION_BINDING,
     _M303_BIENES_INVERSION_REGULARIZACION_CASILLA,
     _M303_CUOTA_DEDUCIBLE_TOTAL_CASILLA,
@@ -29,7 +30,6 @@ from ._modelo_303_registry_support import (
     _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
     _WWW1_HOST,
     _WWW6_HOST,
-    load_modelo_303,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]

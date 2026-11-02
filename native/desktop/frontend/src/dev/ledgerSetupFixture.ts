@@ -37,7 +37,7 @@ const ENTRY_OPTION_FAMILIES = {
   ],
 };
 import { assetOperations } from "./assetsFixture";
-import { RATIO_ELIGIBLE_FIXTURE } from "./fixtures/ledgerRatios";
+import { RATIO_ELIGIBLE_FIXTURE, ratioWording } from "./fixtures/ledgerRatios";
 import type {
   FixtureLedger,
   FixtureMovement,
@@ -2157,11 +2157,11 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     "ledger.ratios.eligible": (request) => {
       fromKeys(request, ["year", "output_language"]);
       const year = yearOf(request);
+      const language = String(request.output_language);
       const rows = Object.entries(RATIO_ELIGIBLE_FIXTURE).map(
         ([category, found]) => ({
           category,
-          label: found.label,
-          notes: found.notes,
+          ...ratioWording(found, language),
           proportionality_kind: found.kind,
           override_present: ratios.has(category),
         }),

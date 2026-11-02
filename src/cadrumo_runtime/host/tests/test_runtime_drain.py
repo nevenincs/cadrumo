@@ -178,14 +178,22 @@ def _enter_running_commit(
 
 
 def _drain_while_commit_is_held(
-    profiles: RuntimeProfileConnections, first_worker_handle: int, release_commit: Event
+    profiles: RuntimeProfileConnections,
+    first_worker_handle: int,
+    release_commit: Event,
+    *,
+    session_end: bool,
 ) -> ProfileDrainResult:
     import win32event
 
     with ThreadPoolExecutor(max_workers=1) as drain_thread:
         pending = drain_thread.submit(profiles.drain, deadline=time.monotonic() + 15)
+        # A session-end stop contains the worker at once. An ordinary stop first asks the
+        # worker to finish its running operation, bounded by the worker's own five-second
+        # drain, and contains it afterwards, so the exit is waited for up to the drain deadline.
+        exit_wait_ms = 5000 if session_end else 15000
         try:
-            assert win32event.WaitForSingleObject(first_worker_handle, 5000) == win32event.WAIT_OBJECT_0
+            assert win32event.WaitForSingleObject(first_worker_handle, exit_wait_ms) == win32event.WAIT_OBJECT_0
         finally:
             release_commit.set()
         return pending.result(timeout=15)
@@ -257,7 +265,7 @@ def test_runtime_drain_contains_all_workers_and_settles_intent(
             if session_end:
                 stop.request(ExitReason.SESSION_END_SETTLE)
             if running:
-                result = _drain_while_commit_is_held(profiles, handles[0], release_commit)
+                result = _drain_while_commit_is_held(profiles, handles[0], release_commit, session_end=session_end)
             else:
                 result = profiles.drain(deadline=time.monotonic() + 15)
             _assert_settled_drain(profiles, stop, worker, submitted, handles, result, session_end=session_end)

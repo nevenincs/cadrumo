@@ -38,6 +38,7 @@ from .synthetic_delta_edition_support import (
     SUCCESSOR_EDITION,
     delta_casilla,
     delta_formula,
+    write_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -61,40 +62,6 @@ def _construct(revision_id: str, construct_id: str, *, casilla_id: str) -> str:
     )
 
 
-def _write_revision(
-    modelo_dir: Path,
-    revision_id: str,
-    *,
-    year: int,
-    casillas: str,
-    formulas: str,
-    constructs: str,
-    predecessor: str | None = None,
-    extra_manifest: str = "",
-) -> None:
-    revision_dir = modelo_dir / "revisions" / revision_id
-    revision_dir.mkdir(parents=True)
-    predecessor_line = f'predecessor = "{predecessor}"\n' if predecessor is not None else ""
-    (revision_dir / "revision.toml").write_text(
-        f'[revisions."{revision_id}"]\n'
-        f"valid_from = {year}-01-01\n"
-        f"valid_to = {year}-12-31\n"
-        f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n'
-        f'legal_refs = ["{LEGAL_REF}"]\n'
-        f'source_refs = ["{SOURCE_REF}"]\n'
-        f"{predecessor_line}{extra_manifest}",
-        encoding="utf-8",
-        newline="\n",
-    )
-    (revision_dir / "casillas").mkdir()
-    (revision_dir / "casillas" / "0001-casillas.toml").write_text(casillas, encoding="utf-8", newline="\n")
-    (revision_dir / "formulas").mkdir()
-    (revision_dir / "formulas" / "0001-formulas.toml").write_text(formulas, encoding="utf-8", newline="\n")
-    if constructs:
-        (revision_dir / "constructs").mkdir()
-        (revision_dir / "constructs" / "0001-constructs.toml").write_text(constructs, encoding="utf-8", newline="\n")
-
-
 def _build_modelo(root: Path, *, successor_extra: str = "") -> Path:
     """A 2024 root and a 2025 delta whose stated formulas are fewer and reordered.
 
@@ -106,7 +73,7 @@ def _build_modelo(root: Path, *, successor_extra: str = "") -> Path:
     modelo_dir = root / MODELO_ID
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Test")
-    _write_revision(
+    write_revision(
         modelo_dir,
         PREDECESSOR_EDITION,
         year=2024,
@@ -122,7 +89,7 @@ def _build_modelo(root: Path, *, successor_extra: str = "") -> Path:
         ),
         constructs=_construct(PREDECESSOR_EDITION, "modelo-999-liquidacion", casilla_id="0001"),
     )
-    _write_revision(
+    write_revision(
         modelo_dir,
         SUCCESSOR_EDITION,
         year=2025,
@@ -222,7 +189,7 @@ def test_formula_target_identity_follows_unique_casilla_continuity(
     modelo_dir = tmp_path / MODELO_ID
     modelo_dir.mkdir()
     write_standard_manifest(modelo_dir, "Test")
-    _write_revision(
+    write_revision(
         modelo_dir,
         PREDECESSOR_EDITION,
         year=2024,
@@ -233,7 +200,7 @@ def test_formula_target_identity_follows_unique_casilla_continuity(
         formulas=delta_formula(PREDECESSOR_EDITION, _BASE_FORMULA, target="0001"),
         constructs="",
     )
-    _write_revision(
+    write_revision(
         modelo_dir,
         SUCCESSOR_EDITION,
         year=2025,
@@ -260,7 +227,7 @@ def test_omitted_formula_cannot_inherit_onto_reused_split_child(tmp_path: Path) 
     modelo_dir = tmp_path / MODELO_ID
     modelo_dir.mkdir()
     write_standard_manifest(modelo_dir, "Structural formula identity")
-    _write_revision(
+    write_revision(
         modelo_dir,
         "2024",
         year=2024,
@@ -268,7 +235,7 @@ def test_omitted_formula_cannot_inherit_onto_reused_split_child(tmp_path: Path) 
         formulas=delta_formula("2024", _BASE_FORMULA, target="0001"),
         constructs="",
     )
-    _write_revision(
+    write_revision(
         modelo_dir,
         "2025",
         year=2025,
@@ -296,7 +263,7 @@ def test_omitted_formula_keeps_unchanged_target_with_or_without_lineage(tmp_path
             row = row.replace('continuidad_id = "unused"\n', "")
         if year == 2025:
             row = '[revisions."2025"]\ncasillas = []\n'
-        _write_revision(
+        write_revision(
             modelo_dir,
             str(year),
             year=year,
@@ -340,7 +307,7 @@ def test_unchanged_formula_operand_cannot_follow_reused_split_child(
         formulas = delta_formula(revision, _BASE_FORMULA, target="0003").replace('{ literal = "0" }', expression)
         if year == 2025 and stated == "explicit-default":
             formulas = formulas.replace('casilla_id = "0001"', 'casilla_id = "0001", args = []')
-        _write_revision(
+        write_revision(
             modelo_dir,
             revision,
             year=year,
@@ -364,7 +331,7 @@ def test_formula_operand_identity_preserves_valid_declarations(tmp_path: Path, *
     for year in (2024, 2025, 2026):
         revision = str(year)
         expression = '{ casilla_id = "0002" }' if changed and year > 2024 else '{ casilla_id = "0001" }'
-        _write_revision(
+        write_revision(
             modelo_dir,
             revision,
             year=year,

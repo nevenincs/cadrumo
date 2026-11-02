@@ -36,6 +36,7 @@ from ....core.errors.hierarchy import CadrumoError
 from ....core.logging import get_logger
 from ....core.period import StandardPeriodCode
 from ....core.secure_object_write import SecureObjectWrite
+from ....domain.calculations.registry.form_codes import form_for_role
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.prorrata_register.register import (
     ProrrataRegister,
@@ -186,7 +187,10 @@ class ProrrataRegisterRepository:
         if source_snapshot.backend_identity is not self._objects.engine:
             raise StorageValidationError("prorrata seed source and target must share the same profile store")
         expected = {
-            (CALCULATION_OBSERVATIONS_NAMESPACE.namespace, observation_key_for_token("303", ejercicio - 1, token))
+            (
+                CALCULATION_OBSERVATIONS_NAMESPACE.namespace,
+                observation_key_for_token(form_for_role("iva.periodic"), ejercicio - 1, token),
+            )
             for token in (StandardPeriodCode.Q4.value, StandardPeriodCode.DEC.value)
         }
         actual = {(revision.namespace, revision.object_key) for revision in source_snapshot.revisions}

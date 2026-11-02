@@ -35,7 +35,8 @@ from ..models import BulkClassifyResult
 from ..persistence_ports import LedgerPersistenceConflictError
 from ..protocols import InvoiceCatalogueCoCommitWriterProtocol
 from .bulk_classify_operation_support import PROFILE_ID, BulkClassifySubject
-from .test_classification_rule_plan import _InMemoryTransactionRepository, _transaction
+from .in_memory_transaction_repository import InMemoryTransactionRepository
+from .test_classification_rule_plan import _BUCKET, _transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -262,7 +263,11 @@ def test_exact_profile_and_authority_mismatch_refuses_before_csv_storage(
 def test_nonrevision_catalogue_port_refuses_before_mutation(subject: BulkClassifySubject) -> None:
     subject.ports = replace(
         subject.ports,
-        transaction_repository=_InMemoryTransactionRepository(subject.repository.current),
+        transaction_repository=InMemoryTransactionRepository(
+            bucket_id=_BUCKET,
+            catalogue=subject.repository.current,
+            permit_secure_object_writes=True,
+        ),
     )
     with pytest.raises(InternalInvariantError, match="revision-guarded"):
         asyncio.run(operation.LedgerBulkClassifyExecutor(subject.compose).execute(_request(""), subject.context))

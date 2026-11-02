@@ -24,6 +24,8 @@ type ComboboxOption = {
   group?: string;
   /** A second line: what the option means, or why it cannot be chosen. */
   note?: string;
+  /** A part of the note that wraps as one piece, such as a number. */
+  whole?: string;
   disabled?: boolean;
   /** Why it cannot be chosen; shown in place of the note. */
   reason?: string;
@@ -57,6 +59,19 @@ type ComboboxProps = {
   children?: React.ReactElement;
   className?: string;
 };
+
+/** A note with its `whole` part kept from wrapping in the middle. */
+function WholeNote({ note, whole }: { note: string; whole?: string }) {
+  const at = whole ? note.indexOf(whole) : -1;
+  if (!whole || at < 0) return note;
+  return (
+    <>
+      {note.slice(0, at)}
+      <span className="whitespace-nowrap">{whole}</span>
+      {note.slice(at + whole.length)}
+    </>
+  );
+}
 
 /**
  * A searchable choice: a list of options, grouped under headings, filtered
@@ -308,7 +323,14 @@ function Combobox({
                       </span>
                       {(option.reason ?? option.note) && (
                         <span className="text-sm text-muted-foreground">
-                          {option.reason ?? option.note}
+                          {option.reason ? (
+                            option.reason
+                          ) : (
+                            <WholeNote
+                              note={option.note ?? ""}
+                              whole={option.whole}
+                            />
+                          )}
                         </span>
                       )}
                     </span>

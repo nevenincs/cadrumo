@@ -24,6 +24,8 @@ from pathlib import Path
 import pytest
 from pydantic import ValidationError
 
+from cadrumo.tests.withholding_zero_blocks import zeroed_withholding_blocks
+
 from .....application.aggregation.percepciones_observations_repository import (
     PercepcionObservationPersistenceError,
     percepcion_observation_key,
@@ -73,16 +75,7 @@ def _observation(
         percibido_especie=Decimal("50"),
         retencion_practicada=dinerario * Decimal("0.19"),
         ingreso_a_cuenta=Decimal("5"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
+        **zeroed_withholding_blocks(),
         base_retenciones=Decimal("0"),
     )
 

@@ -13,7 +13,11 @@ const queue = (target: Page) => target.locator(".ledger-match-queue");
 const item = (target: Page, description: string) =>
   queue(target).locator(".ledger-match-item").filter({ hasText: description });
 
-async function openQueue(target: Page, scheme?: "light" | "dark") {
+async function openPanel(
+  target: Page,
+  scheme?: "light" | "dark",
+  ledger = "documents",
+) {
   if (scheme)
     await target.addInitScript((appearance) => {
       localStorage.setItem(
@@ -22,7 +26,7 @@ async function openQueue(target: Page, scheme?: "light" | "dark") {
       );
     }, scheme);
   await target.goto(
-    "/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=documents",
+    `/scenarios.html?scenario=ledger&latency=0&bar=off&ledger=${ledger}`,
   );
   await target.locator("[data-rail=ledger]").click();
   await expect(target.locator(".ledger-movements")).toBeVisible();
@@ -49,8 +53,25 @@ async function openQueue(target: Page, scheme?: "light" | "dark") {
       .click();
   }
   await expect(queue(target)).toBeVisible();
+}
+
+async function openQueue(target: Page, scheme?: "light" | "dark") {
+  await openPanel(target, scheme);
   await expect(queue(target).locator(".ledger-match-list")).toBeVisible();
 }
+
+test("an empty queue says how many movements still wait for an invoice", async ({
+  page: target,
+}) => {
+  await openPanel(target, undefined, "fixture");
+  const waiting = await target
+    .locator(".ledger-movements [data-kind=data]")
+    .count();
+  expect(waiting).toBeGreaterThan(0);
+  await expect(queue(target).locator(".ledger-match-empty")).toHaveText(
+    label("desktop.ledger.matching.empty_waiting", { count: waiting }),
+  );
+});
 
 test("each movement shows its one best invoice with the evidence it stands on", async ({
   page: target,

@@ -512,7 +512,7 @@ cli:
           definitive percentage (LIVA art. 105.Uno), read from the stamped prior Modelo
           303 settlement observation.
         seed_local_authority: The provisional percentage was carried locally from
-          your stored {modelo} {filing_year} {period} settlement observation (LIVA
+          your stored {modelo} {period} {filing_year} settlement observation (LIVA
           art. 105.Uno). It is not a percentage AEAT issued for this ejercicio.
         seed_regulated_override_standing: Filing year {ejercicio} already carries
           a {provenance} provisional prorrata, which outranks the art. 105.Uno carry.
@@ -740,7 +740,7 @@ cli:
       year_help: Filing year
     modelo:
       aggregate:
-        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: no rows
+        calculation_rows_absent: 'Modelo {modelo} {period} {filing_year}: no rows
           are stored for the {source_family} data its calculation reads, so this report
           is empty because the data is missing, not because the amount is zero.'
         counterpart_observation_help: JSON CounterpartObservation object. The source_kind
@@ -1408,15 +1408,15 @@ cli:
           trail)
         amend_wizard_reason_required: A reason is required for the correction audit
           trail.
-        amend_wizard_select_prompt: 'Recorded as filed: %{modelo} %{year} %{period},
+        amend_wizard_select_prompt: 'Recorded as filed: %{modelo} %{period} %{year},
 
           current values:
 
           %{summary}
 
           Which box numbers changed? (comma/space separated, blank for none)'
-        amend_wizard_unknown_casilla: Box %{token} is not part of the %{modelo} %{year}
-          %{period} return recorded as filed; choose from the listed box numbers.
+        amend_wizard_unknown_casilla: Box %{token} is not part of the %{modelo} %{period}
+          %{year} return recorded as filed; choose from the listed box numbers.
         amend_wizard_value_prompt: Corrected value for casilla %{number} (%{label}),
           currently %{previous_value}
         amendment_kind_help: Legal kind of the amendment (`complementaria`, `sustitutiva`
@@ -1684,6 +1684,8 @@ cli:
         preview_maritime_exemption_qualifying_days_help: Calendar days worked outside
           Spanish territory in the tax year. Required alongside --annual-salary when
           Art. 7.p) applies.
+        preview_maritime_exemption_year_help: Tax year to preview; it fixes the days,
+          the cap and the fraction. Defaults to today's.
         prior_domiciliation_election_help: Keep or cancel/modify the prior Modelo
           303 direct debit; cancelling or modifying it requires a rectificativa over
           an earlier filing of kind U that is backed by imported AEAT evidence.
@@ -1750,7 +1752,7 @@ cli:
         rescate_year_help: Year the pension-plan withdrawal is received (defaults
           to the filing year). Compared against the LIRPF DT 12a apartado-4 window
           measured from --contingencia-year.
-        result_summary_header: result summary Modelo %{modelo} %{year} %{period}
+        result_summary_header: result summary Modelo %{modelo} %{period} %{year}
         resume_help: Validate whether you can retry an interrupted workflow run without
           contacting AEAT. Use --modelo --year --period for the normal path; exact
           ids remain advanced escape hatches.
@@ -2908,7 +2910,7 @@ cli:
       attachment_help: Secure attachment id to link to the transaction; repeat for
         multiple attachments
       finalized_revision_stale: The supporting document was stored on the transaction
-        in your records, but Modelo %{modelo} %{filing_year} %{period} was checked
+        in your records, but Modelo %{modelo} %{period} %{filing_year} was checked
         before that document existed and keeps its earlier set of supporting documents.
       help: Attach an existing supporting document to a transaction in your records.
       id_help: Transaction id to attach the supporting document to

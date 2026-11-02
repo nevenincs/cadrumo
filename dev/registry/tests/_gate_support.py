@@ -329,6 +329,15 @@ def assert_deadline_window_for_filing_year(revision: ModeloRevision, year: int, 
     assert not stranded, f"edition {revision.id} declares deadline windows for unserved filing years {stranded!r}"
 
 
+def assert_source_refs_not_stale(modelo: ModeloDefinition, revision: ModeloRevision, stale_refs: set[str]) -> None:
+    """No source reference the modelo, edition, casillas, links or workbook parity cites is in *stale_refs*."""
+    observed_source_refs = set(modelo.source_refs) | set(revision.source_refs)
+    observed_source_refs.update(ref.workbook_source for ref in revision.workbook_parity_refs)
+    observed_source_refs.update(ref for casilla in revision.casillas for ref in casilla.source_refs)
+    observed_source_refs.update(ref for link in revision.application_links for ref in link.source_refs)
+    assert stale_refs.isdisjoint(observed_source_refs)
+
+
 def _m130_definition() -> ModeloDefinition:
     modelos, _full = load_registry_tree(bundled_path("registry", "aeat"))
     return next(item for item in modelos if str(item.id) == "130")

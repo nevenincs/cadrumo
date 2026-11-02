@@ -43,6 +43,7 @@ from .withholding_filer_profile_support import (
     PUBLIC_ADMINISTRATION_FACTS,
     withholding_work_profile,
 )
+from .withholding_observation_support import perceptor_observation
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -193,28 +194,6 @@ def _context(revision: ModeloRevision, profile: ModeloWorkProfile | None) -> Cal
     )
 
 
-def _obs(nif: str, clave: RetencionClave) -> WithholdingObservation:
-    return WithholdingObservation(
-        source_id=f"row-{nif}-{clave}",
-        perceptor_tax_id=nif,
-        transaction_date=date(2024, 6, 1),
-        clave=clave,
-        percibido_dinerario=Decimal("1000"),
-        retencion_practicada=Decimal("190"),
-        incapacity_cash_perception=Decimal("0"),
-        incapacity_cash_withholding=Decimal("0"),
-        incapacity_kind_value=Decimal("0"),
-        incapacity_kind_ingreso_a_cuenta=Decimal("0"),
-        incapacity_kind_repercutido=Decimal("0"),
-        foral_retention_estatal=Decimal("0"),
-        foral_retention_navarra=Decimal("0"),
-        foral_retention_araba=Decimal("0"),
-        foral_retention_gipuzkoa=Decimal("0"),
-        foral_retention_bizkaia=Decimal("0"),
-        base_retenciones=Decimal("0"),
-    )
-
-
 def test_resolver_materialises_distinct_percepcion_count(authority_operation: PinnedAuthorityOperation) -> None:
     """One perceptor under two claves -> percepciones count of 2 from the store."""
     binding = _percepcion_binding()
@@ -225,9 +204,9 @@ def test_resolver_materialises_distinct_percepcion_count(authority_operation: Pi
         filing_year=2024,
         period=period,
         observations=[
-            _obs("11111111H", RetencionClave.from_registry("A")),
-            _obs("11111111H", RetencionClave.from_registry("G")),
-            _obs("22222222J", RetencionClave.from_registry("A")),
+            perceptor_observation("11111111H", RetencionClave.from_registry("A")),
+            perceptor_observation("11111111H", RetencionClave.from_registry("G")),
+            perceptor_observation("22222222J", RetencionClave.from_registry("A")),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
@@ -245,7 +224,7 @@ def _two_quarter_repository() -> _InMemoryPercepcionObservationRepository:
         modelo="111",
         filing_year=2024,
         period=Period.from_year_and_code(2024, "1T"),
-        observations=[_obs("11111111H", RetencionClave.from_registry("A"))],
+        observations=[perceptor_observation("11111111H", RetencionClave.from_registry("A"))],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )
     repository.replace_observations(
@@ -253,10 +232,10 @@ def _two_quarter_repository() -> _InMemoryPercepcionObservationRepository:
         filing_year=2024,
         period=Period.from_year_and_code(2024, "2T"),
         observations=[
-            _obs("11111111H", RetencionClave.from_registry("A")).model_copy(
+            perceptor_observation("11111111H", RetencionClave.from_registry("A")).model_copy(
                 update={"transaction_date": date(2024, 4, 2)}
             ),
-            _obs("22222222J", RetencionClave.from_registry("G")),
+            perceptor_observation("22222222J", RetencionClave.from_registry("G")),
         ],
         source_kind=AggregationCaptureKind.AGGREGATE_PULL,
     )

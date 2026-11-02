@@ -1,4 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import type { ComponentProps, ReactNode } from "react";
 import { Specimen } from "@/dev/catalogue/Frame";
 import { FIXTURE_CATALOG } from "@/dev/fixtures/agentCatalog";
@@ -174,12 +175,28 @@ export const UploadsInProgress: Story = {
   },
 };
 
+// The menu follows the caret, so a draft that was given opens it the way a
+// person would: by putting the caret in the field, at the end of the draft.
+const opensMenu =
+  (atLeast: number): Story["play"] =>
+  async ({ canvasElement }) => {
+    const field = within(canvasElement).getByRole("textbox");
+    await userEvent.click(field);
+    await userEvent.keyboard("{End}");
+    await waitFor(() =>
+      expect(
+        document.querySelectorAll('[role="listbox"] [role="option"]').length,
+      ).toBeGreaterThanOrEqual(atLeast),
+    );
+  };
+
 const BUNDLED_SKILLS = () => Promise.resolve(FIXTURE_SKILLS);
 const HUNDREDS_OF_SKILLS = () => Promise.resolve(MANY_FIXTURE_SKILLS);
 
 export const SlashSkills: Story = {
   name: "Slash: skills and commands",
   args: { defaultDraft: "/", skills: BUNDLED_SKILLS, onSkillCommand: NOOP },
+  play: opensMenu(FIXTURE_SKILLS.length),
 };
 
 export const SlashFiltered: Story = {
@@ -189,11 +206,13 @@ export const SlashFiltered: Story = {
     skills: BUNDLED_SKILLS,
     onSkillCommand: NOOP,
   },
+  play: opensMenu(1),
 };
 
 export const SlashHundreds: Story = {
   name: "Slash: hundreds of skills scroll",
   args: { defaultDraft: "/", skills: HUNDREDS_OF_SKILLS },
+  play: opensMenu(MANY_FIXTURE_SKILLS.length),
 };
 
 export const SlashCommandArgument: Story = {
@@ -203,6 +222,7 @@ export const SlashCommandArgument: Story = {
     skills: BUNDLED_SKILLS,
     onSkillCommand: NOOP,
   },
+  play: opensMenu(1),
 };
 
 export const Running: Story = {

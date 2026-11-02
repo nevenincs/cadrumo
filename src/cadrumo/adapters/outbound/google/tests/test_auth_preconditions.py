@@ -25,6 +25,7 @@ from cadrumo_client.contracts.google_auth import (
 from .....core.config import override_settings
 from .....core.errors.hierarchy import TerminalPreconditionErrorMixin
 from .....core.operator_action_enums import ActionConditionality, ActionEvidenceProvenance, NoRecoveryOutcome
+from .....tests.terminal_precondition_ast import call_name, fact_expressions, keyword_value
 from ....persistence.storage.tests.secure_sql import isolated_runtime_profile
 from .. import active_profile as active_profile_module
 from .. import installation_client as installation_client_module
@@ -218,14 +219,6 @@ _AUTH_PRODUCER_MODULES: tuple[ModuleType, ...] = (
 )
 
 
-def _call_name(node: ast.expr) -> str | None:
-    if isinstance(node, ast.Name):
-        return node.id
-    if isinstance(node, ast.Attribute):
-        return node.attr
-    return None
-
-
 def _message_identity(node: ast.expr) -> str:
     if isinstance(node, ast.Constant) and isinstance(node.value, str):
         return node.value
@@ -255,7 +248,7 @@ def _google_auth_carriers() -> dict[str, ast.Call]:
 
             @override
             def visit_Call(self, node: ast.Call) -> None:
-                error_type = _call_name(node.func)
+                error_type = call_name(node.func)
                 if error_type is not None and error_type.startswith("GoogleAuth") and error_type.endswith("Error"):
                     assert node.args
                     key = f"{self.module_name}:{self.owner}:{error_type}:{_message_identity(node.args[0])}"
@@ -270,35 +263,19 @@ def _google_auth_carriers() -> dict[str, ast.Call]:
 def _precondition(call: ast.Call) -> ast.Call:
     value = next((keyword.value for keyword in call.keywords if keyword.arg == "precondition_verdict"), None)
     assert isinstance(value, ast.Call)
-    assert _call_name(value.func) == "google_auth_no_action_verdict"
-    return value
-
-
-def _keyword(call: ast.Call, name: str) -> ast.expr:
-    value = next((keyword.value for keyword in call.keywords if keyword.arg == name), None)
-    assert value is not None, f"missing {name}"
+    assert call_name(value.func) == "google_auth_no_action_verdict"
     return value
 
 
 def _condition(precondition: ast.Call) -> GoogleAuthPreconditionCondition:
-    value = _keyword(precondition, "condition")
+    value = keyword_value(precondition, "condition")
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == "GoogleAuthPreconditionCondition"
     return GoogleAuthPreconditionCondition[value.attr]
 
 
-def _fact_expressions(precondition: ast.Call) -> tuple[tuple[str, str], ...]:
-    facts = _keyword(precondition, "facts")
-    assert isinstance(facts, ast.Dict)
-    values: list[tuple[str, str]] = []
-    for key, value in zip(facts.keys, facts.values, strict=True):
-        assert isinstance(key, ast.Constant) and isinstance(key.value, str)
-        values.append((key.value, ast.unparse(value)))
-    return tuple(values)
-
-
 def _enum_keyword(precondition: ast.Call, name: str, enum: type[ActionEvidenceProvenance] | type[NoRecoveryOutcome]):
-    value = _keyword(precondition, name)
+    value = keyword_value(precondition, name)
     assert isinstance(value, ast.Attribute) and isinstance(value.value, ast.Name)
     assert value.value.id == enum.__name__
     return enum[value.attr]
@@ -337,7 +314,7 @@ def test_google_auth_failure_totality_uses_one_canonical_no_action_projection() 
         expected = _AUTH_FAILURE_TOTALITY[key]
         precondition = _precondition(carrier)
         assert _condition(precondition) is expected.condition
-        assert _fact_expressions(precondition) == expected.facts
+        assert fact_expressions(precondition) == expected.facts
         assert _enum_keyword(precondition, "provenance", ActionEvidenceProvenance) is expected.provenance
         assert _enum_keyword(precondition, "outcome", NoRecoveryOutcome) is expected.outcome
 
@@ -347,9 +324,9 @@ def test_google_auth_modules_never_construct_verdict_or_evidence_locally() -> No
     for module in _AUTH_PRODUCER_MODULES:
         tree = ast.parse(inspect.getsource(module))
         constructed = {
-            _call_name(node.func)
+            call_name(node.func)
             for node in ast.walk(tree)
-            if isinstance(node, ast.Call) and _call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
+            if isinstance(node, ast.Call) and call_name(node.func) in {"PreconditionVerdict", "ConditionEvidence"}
         }
         assert not constructed, module.__name__
 

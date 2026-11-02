@@ -51,7 +51,7 @@ symbol variants -- so a measure qualified by a footnote is not read as \
 unqualified."""
 
 [[parser]]
-module = "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary_v2025.py"
+module = "src/cadrumo/adapters/inbound/borrador/_extractors/modelo_100_summary.py"
 corpus = "AEAT borrador renta summary (extracted PDF text)"
 reason = """\
 Reads the taxpayer's own borrador summary, which AEAT publishes as prose \

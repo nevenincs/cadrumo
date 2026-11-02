@@ -159,6 +159,66 @@ def test_modelo_190_validates_and_gates_workflow_surfaces_through_snapshot() -> 
     } <= linked_surfaces
 
 
+def _assert_190_deadline_construct_and_sources(revision, catalogues, window_id: str, form_source: str) -> None:
+    construct = revision.constructs[0]
+    schedule = next(item for item in revision.filing_schedules if item.id == "modelo-190-anual")
+    deadline_link = next(item for item in revision.application_links if item.id == "modelo-190-deadline")
+
+    assert deadline_link.surface == "deadline"
+    assert deadline_link.consumer == "cadrumo.domain.deadlines"
+    assert deadline_link.requires_snapshot is True
+    assert catalogues.legal["rd-439-2007:art-108"].evidence_tier == "legal_authority"
+    assert catalogues.legal["orden-eha-3127-2009:art-5"].evidence_tier == "legal_authority"
+    assert catalogues.sources["aeat-modelo-190-procedure"].evidence_tier == "official_source_guidance"
+    assert catalogues.sources[form_source].evidence_tier == "layout_authority"
+
+    assert construct.deadline_windows == (window_id,)
+    assert construct.filing_schedules == ("modelo-190-anual",)
+    assert schedule.period_kind == "annual"
+    assert schedule.periods == ("0A",)
+    assert schedule.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
+    assert schedule.source_refs == ("aeat-modelo-190-procedure", form_source)
+
+
+def _assert_190_window_dates_and_grounding(
+    window,
+    expected: tuple[int, str, date, date],
+    expected_legal_refs: tuple[str, ...],
+    form_source: str,
+) -> None:
+    expected_filing_year, expected_period, opens_on, closes_on = expected
+    assert window.filing_year == expected_filing_year
+    assert str(window.period) == expected_period
+    assert window.period_kind == "annual"
+    assert window.opens_on == opens_on
+    assert window.closes_on == closes_on
+    assert window.legal_refs == expected_legal_refs
+    assert {"aeat-modelo-190-procedure", form_source} <= set(window.source_refs)
+
+
+def _assert_190_deadline_shift_and_calendar_citation(window, expected_shift: tuple[date, bool, str]) -> None:
+    with bundled_indexed_authority().operation() as operation:
+        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
+        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
+        # A year with no published calendar still refuses rather than guessing.
+        with pytest.raises(
+            DeadlineValidationError,
+            match="holiday calendar publication for 2027 could not be resolved",
+        ):
+            shift_deadline(date(2027, 1, 29), modelo="190", ccaa_code=None, operation=operation)
+    # A close date that is NOT the statutory month-end has been moved off a
+    # non-working day, and the only sanctioned reason to move it is AEAT's own
+    # published calendar -- so such a window must cite the calendar it was read
+    # from. Pinning the ref tuple instead reddened when the 2026 window was
+    # corrected from Saturday 31 January to Monday 2 February.
+    moved = window.closes_on.day not in {31, 30, 28, 29}
+    cites_calendar = any("calendario-contribuyente" in ref for ref in window.source_refs)
+    assert cites_calendar == moved, (
+        f"{window.id}: closes_on {window.closes_on} and calendar citation must agree -- "
+        f"a moved deadline names the calendar, an unmoved one does not need it"
+    )
+
+
 @pytest.mark.parametrize(
     ("ejercicio", "window_id", "expected", "expected_legal_refs", "expected_shift", "form_source"),
     [
@@ -223,25 +283,8 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
         period="0A",
     )
     revision = snapshot.revision
-    construct = revision.constructs[0]
     windows = {window.id: window for window in revision.deadline_windows}
-    schedule = next(item for item in revision.filing_schedules if item.id == "modelo-190-anual")
-    deadline_link = next(item for item in revision.application_links if item.id == "modelo-190-deadline")
-
-    assert deadline_link.surface == "deadline"
-    assert deadline_link.consumer == "cadrumo.domain.deadlines"
-    assert deadline_link.requires_snapshot is True
-    assert catalogues.legal["rd-439-2007:art-108"].evidence_tier == "legal_authority"
-    assert catalogues.legal["orden-eha-3127-2009:art-5"].evidence_tier == "legal_authority"
-    assert catalogues.sources["aeat-modelo-190-procedure"].evidence_tier == "official_source_guidance"
-    assert catalogues.sources[form_source].evidence_tier == "layout_authority"
-
-    assert construct.deadline_windows == (window_id,)
-    assert construct.filing_schedules == ("modelo-190-anual",)
-    assert schedule.period_kind == "annual"
-    assert schedule.periods == ("0A",)
-    assert schedule.legal_refs == ("rd-439-2007:art-108", "orden-eha-3127-2009:art-1")
-    assert schedule.source_refs == ("aeat-modelo-190-procedure", form_source)
+    _assert_190_deadline_construct_and_sources(revision, catalogues, window_id, form_source)
 
     # The edition spans every supported year from 2025 onward and declares one
     # window per year, so the requested year's window is asserted rather than
@@ -249,34 +292,8 @@ def test_modelo_190_annual_deadline_is_grounded_to_current_revision(
     assert window_id in windows
     assert len({window.filing_year for window in windows.values()}) == len(windows)
     window = windows[window_id]
-    expected_filing_year, expected_period, opens_on, closes_on = expected
-    assert window.filing_year == expected_filing_year
-    assert str(window.period) == expected_period
-    assert window.period_kind == "annual"
-    assert window.opens_on == opens_on
-    assert window.closes_on == closes_on
-    assert window.legal_refs == expected_legal_refs
-    assert {"aeat-modelo-190-procedure", form_source} <= set(window.source_refs)
-    with bundled_indexed_authority().operation() as operation:
-        shift = shift_deadline(window.closes_on, modelo="190", ccaa_code=None, operation=operation)
-        assert (shift.adjusted_close_date, shift.shifted, shift.shift_reason) == expected_shift
-        # A year with no published calendar still refuses rather than guessing.
-        with pytest.raises(
-            DeadlineValidationError,
-            match="holiday calendar publication for 2027 could not be resolved",
-        ):
-            shift_deadline(date(2027, 1, 29), modelo="190", ccaa_code=None, operation=operation)
-    # A close date that is NOT the statutory month-end has been moved off a
-    # non-working day, and the only sanctioned reason to move it is AEAT's own
-    # published calendar -- so such a window must cite the calendar it was read
-    # from. Pinning the ref tuple instead reddened when the 2026 window was
-    # corrected from Saturday 31 January to Monday 2 February.
-    moved = window.closes_on.day not in {31, 30, 28, 29}
-    cites_calendar = any("calendario-contribuyente" in ref for ref in window.source_refs)
-    assert cites_calendar == moved, (
-        f"{window.id}: closes_on {window.closes_on} and calendar citation must agree -- "
-        f"a moved deadline names the calendar, an unmoved one does not need it"
-    )
+    _assert_190_window_dates_and_grounding(window, expected, expected_legal_refs, form_source)
+    _assert_190_deadline_shift_and_calendar_citation(window, expected_shift)
 
 
 def test_modelo_190_filed_declarations_read_allows_live_register_host() -> None:

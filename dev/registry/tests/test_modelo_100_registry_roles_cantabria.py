@@ -178,6 +178,13 @@ def test_modelo_100_cantabria_historical_obras_mejora_slots_keep_cant3aa_shape(
     assert _AUTONOMIC_DEDUCTION_ART_77_REF in current_pending.legal_refs
 
 
+def _assert_cantabria_deduction_casilla(casilla, *, label: str, role: str) -> None:
+    assert casilla.label == label
+    assert tuple(casilla.section) == _CANTABRIA_DEDUCTION_SECTION
+    assert casilla.semantic_role == role
+    assert _AUTONOMIC_DEDUCTION_ART_77_REF in casilla.legal_refs
+
+
 @pytest.mark.parametrize("filing_year", sorted(_EXPECTED_CANTABRIA_OBRAS_MEJORA_CURRENT_LABELS))
 def test_modelo_100_cantabria_current_obras_mejora_roles_follow_cant3_family(filing_year: int) -> None:
     revision = _modelo_100_revision(filing_year)
@@ -196,38 +203,25 @@ def test_modelo_100_cantabria_current_obras_mejora_roles_follow_cant3_family(fil
     assert not legacy_roles
     assert set(casillas_by_id) == {"0948", "0950", "0956", "0997", "0998", "1713"}
 
-    parent = casillas_by_id["0948"]
-    assert parent.label == "Por obras de mejora en viviendas"
-    assert tuple(parent.section) == _CANTABRIA_DEDUCTION_SECTION
-    assert parent.semantic_role == _CANTABRIA_OBRAS_MEJORA_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in parent.legal_refs
-
-    generated = casillas_by_id["0950"]
-    assert generated.label == "Importe generado"
-    assert tuple(generated.section) == _CANTABRIA_DEDUCTION_SECTION
-    assert generated.semantic_role == _CANTABRIA_OBRAS_MEJORA_GENERADO_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in generated.legal_refs
-
-    pending_1 = casillas_by_id["0997"]
-    assert pending_1.label == expected_labels["0997"]
-    assert tuple(pending_1.section) == _CANTABRIA_DEDUCTION_SECTION
-    assert pending_1.semantic_role == _CANTABRIA_OBRAS_MEJORA_PENDIENTE_1_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending_1.legal_refs
-
-    pending_2 = casillas_by_id["0998"]
-    assert pending_2.label == expected_labels["0998"]
-    assert tuple(pending_2.section) == _CANTABRIA_DEDUCTION_SECTION
-    assert pending_2.semantic_role == _CANTABRIA_OBRAS_MEJORA_PENDIENTE_2_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in pending_2.legal_refs
-
-    previous_pending = casillas_by_id["1713"]
-    assert previous_pending.label == expected_labels["1713"]
-    assert tuple(previous_pending.section) == _CANTABRIA_DEDUCTION_SECTION
-    assert previous_pending.semantic_role == _CANTABRIA_OBRAS_MEJORA_PENDIENTE_EJERCICIO_ANTERIOR_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in previous_pending.legal_refs
-
-    current_pending = casillas_by_id["0956"]
-    assert current_pending.label == expected_labels["0956"]
-    assert tuple(current_pending.section) == _CANTABRIA_DEDUCTION_SECTION
-    assert current_pending.semantic_role == _CANTABRIA_OBRAS_MEJORA_GENERADO_EJERCICIO_PENDIENTE_ROLE
-    assert _AUTONOMIC_DEDUCTION_ART_77_REF in current_pending.legal_refs
+    _assert_cantabria_deduction_casilla(
+        casillas_by_id["0948"], label="Por obras de mejora en viviendas", role=_CANTABRIA_OBRAS_MEJORA_ROLE
+    )
+    _assert_cantabria_deduction_casilla(
+        casillas_by_id["0950"], label="Importe generado", role=_CANTABRIA_OBRAS_MEJORA_GENERADO_ROLE
+    )
+    _assert_cantabria_deduction_casilla(
+        casillas_by_id["0997"], label=expected_labels["0997"], role=_CANTABRIA_OBRAS_MEJORA_PENDIENTE_1_ROLE
+    )
+    _assert_cantabria_deduction_casilla(
+        casillas_by_id["0998"], label=expected_labels["0998"], role=_CANTABRIA_OBRAS_MEJORA_PENDIENTE_2_ROLE
+    )
+    _assert_cantabria_deduction_casilla(
+        casillas_by_id["1713"],
+        label=expected_labels["1713"],
+        role=_CANTABRIA_OBRAS_MEJORA_PENDIENTE_EJERCICIO_ANTERIOR_ROLE,
+    )
+    _assert_cantabria_deduction_casilla(
+        casillas_by_id["0956"],
+        label=expected_labels["0956"],
+        role=_CANTABRIA_OBRAS_MEJORA_GENERADO_EJERCICIO_PENDIENTE_ROLE,
+    )

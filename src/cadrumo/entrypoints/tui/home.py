@@ -21,6 +21,7 @@ from textual.binding import Binding
 from textual.message import Message
 from textual.widgets import DataTable, Static
 
+from ...application.modelo.declarations_list import observed_text
 from ...application.overview.calendar_models import (
     OverviewAeatSubmissionState,
     OverviewLocalFilingState,
@@ -37,6 +38,7 @@ from ...application.overview.home import (
     HomeZoneState,
 )
 from ...application.search.workbench import WorkbenchDestinationAdmissionState
+from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import lookup_translation, output_language, tr
 from .components.account_chrome import AccountChromeScreen
 from .components.language import localized, repaint_tables
@@ -192,7 +194,7 @@ def _state_copy(state: HomeZoneState, *, empty_key: str | None = None) -> str:
         return tr(
             "tui.home.availability.stale_observed",
             label=label,
-            observed_at=state.observed_at.strftime("%d/%m/%Y %H:%M UTC"),
+            observed_at=observed_text(state.observed_at, OutputLanguage(output_language())),
         )
     if state.availability is HomeAvailability.AVAILABLE and empty_key is not None:
         return tr("tui.home.availability.available_empty", label=label, detail=tr(empty_key))

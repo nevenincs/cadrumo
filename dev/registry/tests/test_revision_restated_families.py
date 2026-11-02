@@ -33,13 +33,12 @@ from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from ..compiler.loader import load_modelo_directory
 from ..conformance.loader_directory_mode_support import write_standard_manifest
 from .synthetic_delta_edition_support import (
-    LEGAL_REF,
     MODELO_ID,
     PREDECESSOR_EDITION,
-    SOURCE_REF,
     SUCCESSOR_EDITION,
     delta_casilla,
     delta_formula,
+    write_revision,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
@@ -48,36 +47,6 @@ _REASON: Final = "the 2025 diseno de registros lays the formula set out end to e
 _RESTATED_FORMULAS: Final = (
     f'restated_families = [{{ family = "formulas", cause = "official_structure_differs", reason = "{_REASON}" }}]\n'
 )
-
-
-def _write_revision(
-    modelo_dir: Path,
-    revision_id: str,
-    *,
-    year: int,
-    casillas: str,
-    formulas: str,
-    predecessor: str | None = None,
-    extra_manifest: str = "",
-) -> None:
-    revision_dir = modelo_dir / "revisions" / revision_id
-    revision_dir.mkdir(parents=True)
-    predecessor_line = f'predecessor = "{predecessor}"\n' if predecessor is not None else ""
-    (revision_dir / "revision.toml").write_text(
-        f'[revisions."{revision_id}"]\n'
-        f"valid_from = {year}-01-01\n"
-        f"valid_to = {year}-12-31\n"
-        f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n'
-        f'legal_refs = ["{LEGAL_REF}"]\n'
-        f'source_refs = ["{SOURCE_REF}"]\n'
-        f"{predecessor_line}{extra_manifest}",
-        encoding="utf-8",
-        newline="\n",
-    )
-    (revision_dir / "casillas").mkdir()
-    (revision_dir / "casillas" / "0001-casillas.toml").write_text(casillas, encoding="utf-8", newline="\n")
-    (revision_dir / "formulas").mkdir()
-    (revision_dir / "formulas" / "0001-formulas.toml").write_text(formulas, encoding="utf-8", newline="\n")
 
 
 def _build_modelo(root: Path, *, successor_extra: str = "", predecessor_extra: str = "") -> Path:
@@ -90,7 +59,7 @@ def _build_modelo(root: Path, *, successor_extra: str = "", predecessor_extra: s
     modelo_dir = root / MODELO_ID
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Test")
-    _write_revision(
+    write_revision(
         modelo_dir,
         PREDECESSOR_EDITION,
         year=2024,
@@ -99,7 +68,7 @@ def _build_modelo(root: Path, *, successor_extra: str = "", predecessor_extra: s
         formulas=delta_formula(PREDECESSOR_EDITION, "modelo-999-2024-cuota", target="0002"),
         extra_manifest=predecessor_extra,
     )
-    _write_revision(
+    write_revision(
         modelo_dir,
         SUCCESSOR_EDITION,
         year=2025,

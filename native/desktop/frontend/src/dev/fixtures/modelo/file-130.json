@@ -1,15 +1,15 @@
 {
   "result_version": 2,
   "record": {
-    "filing_record_id": "7db22e1c49c7129f9e935bea97efc15a34e0e0f7a2a47d7dca053c7e2d09375a",
+    "filing_record_id": "d64df954a6b2002a180a95c50102d4014b4400dd0cb1bfc071f49e858ed470af",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
+    "calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
     "bucket_id": "13000000-0000-4000-8000-000000000730",
     "modelo": "130",
     "filing_year": 2026,
     "period": { "filing_year": 2026, "code": "1T" },
     "member_nif": null,
-    "filed_at": "2026-10-31T21:56:34.020415Z",
+    "filed_at": "2026-11-01T07:57:11.801100Z",
     "filed_by": "operator:desktop-modelo",
     "notes": null,
     "origin": "local",
@@ -29,7 +29,7 @@
   "advisories": {
     "version": 1,
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
+    "calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
     "modelo": "130",
     "filing_year": 2026,
     "period": "1T",
@@ -37,8 +37,8 @@
     "m184_socio_handoffs": []
   },
   "published": true,
-  "filing_record_id": "7db22e1c49c7129f9e935bea97efc15a34e0e0f7a2a47d7dca053c7e2d09375a",
+  "filing_record_id": "d64df954a6b2002a180a95c50102d4014b4400dd0cb1bfc071f49e858ed470af",
   "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-  "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
+  "calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
   "handoff_required": true
 }

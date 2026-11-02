@@ -44,15 +44,8 @@ from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, Pla
 
 from ..compiler.authority import compiled_bundled_authority
 from ..compiler.loader import load_shared_catalogues
-from .test_activity_asset_schedule_authority_resolution import (
-    _asset,
-    _election,
-    _linear,
-    _renewable,
-    _renewable_evidence,
-    _vehicle,
-    _workforce,
-)
+from ._activity_asset_schedule_support import _asset, _election, _linear
+from .test_activity_asset_schedule_authority_methods import _renewable, _renewable_evidence, _vehicle, _workforce
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 

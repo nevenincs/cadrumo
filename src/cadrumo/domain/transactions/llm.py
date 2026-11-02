@@ -68,6 +68,12 @@ _REASON_MAX_LENGTH = 2048
 # ── response model ────────────────────────────────────────────────
 
 
+_NOTES_PREVIEW = 120
+_PAYLOAD_PREVIEW = 100
+_ERROR_PREVIEW = 200
+_OUTPUT_PREVIEW = 400
+
+
 class LLMClassificationResponse(BaseModel):
     """One LLM-emitted classification result for a transaction."""
 
@@ -489,7 +495,7 @@ def _category_hint(value: SpendingCategory, *, year: int, operation: PinnedAutho
     spanish_label = _tr(profile.display_label, locale="es")
     rule = profile.proportionality
     notes = _tr(rule.notes, locale="es") if rule.notes else ""
-    notes_preview = notes.strip().splitlines()[0][:120] if notes else ""
+    notes_preview = notes.strip().splitlines()[0][:_NOTES_PREVIEW] if notes else ""
     segments = [spanish_label, f"[{rule.kind.value}]"]
     if notes_preview:
         segments.append(notes_preview)
@@ -686,7 +692,7 @@ def _classification_failure(
 ) -> str | None:
     """Return the allow-list failure for the classification field, if any."""
     if response.classification not in allowed_classifications:
-        return f"disallowed classification {response.classification.value!r} (payload {payload[:100]!r})"
+        return f"disallowed classification {response.classification.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     return None
 
 
@@ -699,9 +705,9 @@ def _category_failure(
     if response.category is None:
         return None
     if not allowed_categories:
-        return f"unexpected category {response.category.value!r} (payload {payload[:100]!r})"
+        return f"unexpected category {response.category.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     if response.category not in allowed_categories:
-        return f"disallowed category {response.category.value!r} (payload {payload[:100]!r})"
+        return f"disallowed category {response.category.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     return None
 
 
@@ -714,9 +720,9 @@ def _iva_category_failure(
     if response.iva_category is None:
         return None
     if not allowed_iva_categories:
-        return f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:100]!r})"
+        return f"unexpected iva_category {response.iva_category.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     if response.iva_category not in allowed_iva_categories:
-        return f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:100]!r})"
+        return f"disallowed iva_category {response.iva_category.value!r} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     return None
 
 
@@ -749,7 +755,7 @@ def _parse_classification_candidate(
     try:
         response = LLMClassificationResponse.model_validate_json(payload)
     except ValueError as exc:
-        return f"schema: {str(exc)[:160]} (payload {payload[:100]!r})"
+        return f"schema: {str(exc)[:_ERROR_PREVIEW]} (payload {payload[:_PAYLOAD_PREVIEW]!r})"
     failure = _classification_response_failure(
         response,
         payload,
@@ -807,7 +813,7 @@ def parse_response(
         failures.append(candidate)
 
     if not any_candidate_seen:
-        raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:400]!r}")
+        raise LLMClassifierError(f"no JSON object in LLM output: {stdout[:_OUTPUT_PREVIEW]!r}")
     raise LLMClassifierError(
         f"no JSON candidate matched schema + spec; tried {len(failures)}: " + "; ".join(failures[:3]),
     )
@@ -930,7 +936,7 @@ def _parse_split_payload(payload: str) -> LLMSplitResponse:
     try:
         return LLMSplitResponse.model_validate_json(payload)
     except ValueError as exc:
-        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:200]}") from exc
+        raise LLMClassifierError(f"split response failed schema validation: {str(exc)[:_ERROR_PREVIEW]}") from exc
 
 
 def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMSplitResponse:
@@ -957,7 +963,7 @@ def parse_split_response(stdout: str, *, spec: PromptSpec | None = None) -> LLMS
     allowed_iva_categories = resolved_spec.allowed_iva_categories()
     payload = _extract_json_object(stdout)
     if payload is None:
-        raise LLMClassifierError(f"no JSON object in LLM split output: {stdout[:400]!r}")
+        raise LLMClassifierError(f"no JSON object in LLM split output: {stdout[:_OUTPUT_PREVIEW]!r}")
     response = _parse_split_payload(payload)
     for child in response.children:
         failure = _split_child_failure(child, allowed_categories, allowed_iva_categories)

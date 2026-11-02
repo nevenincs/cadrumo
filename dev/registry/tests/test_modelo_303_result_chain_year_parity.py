@@ -26,10 +26,12 @@ from cadrumo.domain.calculations.registry.formula_runtime import calculate_regis
 from cadrumo.domain.calculations.registry.ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
+from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
+    _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+)
 from cadrumo.domain.period import calculation_filing_date
 
 from ..compiler.authority import compiled_bundled_authority
-from ._modelo_303_registry_support import _M303_RECORD_DESIGN_SOURCE_BY_REVISION
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_domain]
 

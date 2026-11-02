@@ -6,6 +6,7 @@ from collections.abc import Callable, Mapping
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_producer_key import FilingProducerKey
+from ...core.period import Period
 from ...core.result_disposition import ResultDisposition
 from ...domain.calculations.export_field_kind import CasillaFieldKind
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -280,7 +281,7 @@ def _field_value(
     render_context: FilingRecordRenderContext | None,
     projection_values: Mapping[ProjectionAddress, object],
 ) -> object:
-    scheme_period_value = _scheme_period_value(field, draft)
+    scheme_period_value = _scheme_period_value(field, draft.period)
     if scheme_period_value is not None:
         return scheme_period_value
     match field.kind:
@@ -304,9 +305,8 @@ def _field_value(
             raise FilingExportError(f"unsupported export field kind {field.kind!r}")
 
 
-def _scheme_period_value(field: ExportFieldDefinition, draft: ModeloDraft) -> object | None:
+def _scheme_period_value(field: ExportFieldDefinition, period: Period) -> object | None:
     """Project a scheme-qualified filing period into the part its design row prints."""
-    period = draft.period
     if field.scheme_period_part is None or period.scheme_quarter is None:
         return None
     match field.scheme_period_part:

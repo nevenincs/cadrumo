@@ -58,7 +58,7 @@ def _authority_with_036_override(periods: tuple[str, ...]) -> ValidatedRegistryA
     return ValidatedRegistryAuthority.from_validated_components(
         modelos=tuple(overridden if candidate.id == modelo.id else candidate for candidate in base.modelos),
         catalogues=base.catalogues,
-        identity_digest="censo-period-override-fixture",
+        identity_digest="c" * 64,
     )
 
 

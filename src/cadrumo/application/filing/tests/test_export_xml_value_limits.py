@@ -24,8 +24,6 @@ from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....core.resources.bundled_data import bundled_path
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
-from ....domain.calculations.registry.binding_value_contract import BindingValueChannel
 from ....domain.calculations.registry.bindings import resolve_available_bound_inputs_by_casilla_id
 from ....domain.calculations.registry.export_xml_dictionary import XmlDictionaryEntry, xml_dictionary_entries
 from ....domain.filing.protocols import ModeloInputValue
@@ -37,9 +35,9 @@ from ..draft_construction import build_draft
 from ..errors import ModeloApplicationError
 from ..export import export_draft
 from ..export_verification import DeclaracionVerifyVerdict, verify_export
-from ..export_xml_value_limits import refuse_xml_values_outside_schema
+from ..export_xml_value_limits import canonical_xml_text, refuse_xml_values_outside_schema, xml_value_schema
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
-from .export_support import m151_producer_snapshot
+from .export_support import filer_with_nothing_else, m151_producer_snapshot
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
@@ -143,24 +141,8 @@ def _named_row(provider: RegistrySchemaAccessor, field_id: str) -> XmlDictionary
     return next(entry for entry in _entries(provider) if entry.field_id == field_id)
 
 
-def _filer_with_nothing_else(provider: RegistrySchemaAccessor) -> dict[str, ModeloInputValue]:
-    """State every fact the revision reads as absent: the limits are the subject here."""
-    inputs: dict[str, ModeloInputValue] = {
-        "renta-profile-tax-residence-ccaa": "madrid",
-        "renta-profile-taxpayer-birth-date": "1975-06-15",
-    }
-    for binding_id, binding in revision_bindings_by_id(provider.get_snapshot("100").revision).items():
-        if binding.value.channel in {BindingValueChannel.DECIMAL, BindingValueChannel.INTEGER}:
-            inputs[str(binding_id)] = Decimal("0")
-        elif binding.value.channel is BindingValueChannel.BOOLEAN:
-            inputs[str(binding_id)] = False
-    inputs["renta-profile-declaration-type"] = Decimal("1")
-    inputs["renta-modelo-100-estimacion-directa-es-normal"] = True
-    return inputs
-
-
 def _build_draft(provider: RegistrySchemaAccessor, inputs: Mapping[str, ModeloInputValue]) -> ModeloDraft:
-    stated = _filer_with_nothing_else(provider)
+    stated = filer_with_nothing_else(provider)
     amounts = {key: value for key, value in stated.items() if isinstance(value, Decimal)}
     bound = resolve_available_bound_inputs_by_casilla_id(provider.get_snapshot("100").revision, amounts)
     return build_draft(
@@ -675,3 +657,27 @@ def test_the_operator_reads_which_box_and_which_limit_and_never_the_value(
     assert secret not in render_error_text(failure)
     assert failure.context is not None
     assert "cause" not in failure.context
+
+
+_CODE_TYPE_XSD = """<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="Doc">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="Code">
+          <xs:simpleType><xs:restriction base="xs:string"><xs:pattern value="[A-Z]+"/></xs:restriction></xs:simpleType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>"""
+
+
+@pytest.mark.parametrize(
+    ("typed", "kept"),
+    [("si", "SI"), ("\u0131", "\u0131"), ("\u017f", "\u017f"), ("a\u0131", "a\u0131")],
+    ids=["a plain letter capitalizes", "dotless i", "long s", "mixed"],
+)
+def test_a_letter_that_capitalizes_into_plain_ascii_never_becomes_a_code_letter(typed: str, kept: str) -> None:
+    schema = xml_value_schema(DefusedElementTree.fromstring(_CODE_TYPE_XSD), source_id="fixture", root_tag="Doc")
+
+    assert canonical_xml_text(schema, "Doc/Code", typed) == kept

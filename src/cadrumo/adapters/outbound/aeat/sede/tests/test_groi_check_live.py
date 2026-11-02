@@ -20,9 +20,11 @@ flagged independently from the selector check.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import AsyncIterator
+from contextlib import asynccontextmanager
 
 import pytest
-from playwright.async_api import BrowserContext
+from playwright.async_api import BrowserContext, Page
 
 from ......core.config import Settings
 from ......tests.live_gate import requires_live_enabled
@@ -66,22 +68,30 @@ def test_groi_verdict_parser_recognises_live_telefonica_certification() -> None:
     assert extract_marker_verdict(body_text, positive_markers=_POSITIVE_MARKERS) == "valid", body_text[:500]
 
 
-async def _assert_form_shape() -> None:
+@asynccontextmanager
+async def _groi_form_page() -> AsyncIterator[Page]:
+    """Open the GROI check form in a fresh browser context and close the session afterwards."""
     settings = Settings()
     session = await default_browser_session_factory(settings)
     contexts: list[BrowserContext] = []
     try:
         context = await session.create_context()
         contexts.append(context)
-        from playwright.async_api import Page as _Page
-
         _raw = await context.new_page()
-        assert isinstance(_raw, _Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
-        page: _Page = _raw
+        assert isinstance(_raw, Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
+        page: Page = _raw
         await page.set_viewport_size({"width": 1366, "height": 900})
         await session.navigate(page, Settings.external_constants().aeat.oracles.groi_check)
         await page.wait_for_load_state("networkidle", timeout=20_000)
+        yield page
+    finally:
+        for context in contexts:
+            await context.close()
+        await session.close()
 
+
+async def _assert_form_shape() -> None:
+    async with _groi_form_page() as page:
         # Asserting the actual elements the offline driver expects to find.
         # Each missing element is a real AEAT shape change and must fail loudly.
         nif_input = page.locator("input#nif").first
@@ -97,32 +107,11 @@ async def _assert_form_shape() -> None:
         form = page.locator("form").first
         action = await form.get_attribute("action")
         assert action == Settings.external_constants().aeat.oracles.groi_check.rsplit("/", maxsplit=1)[-1], action
-    finally:
-        for context in contexts:
-            await context.close()
-        await session.close()
 
 
 async def _query_live_body_text(nif: str) -> str:
-    settings = Settings()
-    session = await default_browser_session_factory(settings)
-    contexts: list[BrowserContext] = []
-    try:
-        context = await session.create_context()
-        contexts.append(context)
-        from playwright.async_api import Page as _Page
-
-        _raw = await context.new_page()
-        assert isinstance(_raw, _Page), f"new_page() did not return a Playwright Page; got {type(_raw)}"
-        page: _Page = _raw
-        await page.set_viewport_size({"width": 1366, "height": 900})
-        await session.navigate(page, Settings.external_constants().aeat.oracles.groi_check)
-        await page.wait_for_load_state("networkidle", timeout=20_000)
+    async with _groi_form_page() as page:
         await page.locator("input#nif").fill(nif, timeout=10_000)
         await page.locator("input#enviar").click(timeout=10_000)
         await page.wait_for_load_state("networkidle", timeout=20_000)
         return await page.locator("body").inner_text(timeout=10_000)
-    finally:
-        for context in contexts:
-            await context.close()
-        await session.close()

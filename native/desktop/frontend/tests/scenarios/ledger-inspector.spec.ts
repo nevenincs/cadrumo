@@ -837,6 +837,16 @@ test("a split's last part takes the remainder, and its parts may be classified",
     .click();
   const dialog = target.locator(".ledger-split");
   await expect(dialog).toBeVisible();
+  // The movement's amount names its currency once, as a sign in the figure,
+  // and the sentence adds no code of its own.
+  const [head, tail] = label("desktop.ledger.inspector.split.description", {
+    amount: "AMOUNT",
+  }).split("AMOUNT");
+  const figure = "\\d[\\d,]*\\.\\d{2}";
+  const description = dialog.locator("[data-slot=dialog-description]");
+  await expect(description).toHaveText(
+    new RegExp(`^${head}${figure}\\s€${tail}$`),
+  );
   await dialog.locator(".ledger-split-amount").first().fill("20");
   // The remainder is a figure drawn in the window's language: English groups
   // thousands with a comma and always shows two decimals.
@@ -976,10 +986,10 @@ test("the selection's totals are per currency and direction, and shared values s
   await target.keyboard.press("Alt+KeyI");
   const selection = panel(target).locator(".ledger-selection");
   const sums = selection.locator(".ledger-selection-sums");
-  // Each currency is drawn in its own English form: its sign, the comma
-  // grouping and two places.
-  await expect(sums).toContainText(/\$\d[\d,]*\.\d{2}/);
-  await expect(sums).toContainText(/€\d[\d,]*\.\d{2}/);
+  // Each currency is drawn in the English form: the comma grouping, two
+  // places and its sign after the number.
+  await expect(sums).toContainText(/\d[\d,]*\.\d{2}\s\$/);
+  await expect(sums).toContainText(/\d[\d,]*\.\d{2}\s€/);
   await expect(selection.locator("[data-common=direction]")).toHaveText(
     label("desktop.ledger.inspector.selection.mixed_values", { count: 2 }),
   );

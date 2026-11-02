@@ -1581,9 +1581,9 @@
         "closes_on": "2026-10-20",
         "nominal_closes_on": "2026-10-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-31",
+        "reference_on": "2026-11-01",
         "days_remaining": null,
-        "days_overdue": 11
+        "days_overdue": 12
       },
       "aeat_data": null,
       "filing": null,
@@ -1602,9 +1602,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "469ea4f43b88ef7d3ddc8e46a53e6236bcfa37167341fad56c8be0be19fb1acf",
+      "contract_set_digest": "0cfdbf479b0370dd1d78530f6ba5948664006054c534d2a99409964b9dd23c28",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "0a5464be70052921dbed5abd7efac24eb9efb7a371218d2af75ca7442aedf91f",
+      "definition_contract_digest": "073e2a8d43e20d60d4f5c71d2739448725074872eafc33f8b13786f0821f82b9",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1628,7 +1628,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "44a9fbf9f745a918fa95987868c324d253b905a0a55adb35134a5bac000ec353"
+        "schema_fingerprint": "b552091b3c6b35e5a2693c8dccb54641eb5a8406ba2128d99bfb36cbe07cc5fb"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1942,9 +1942,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-31T21:56:14.107219Z",
-    "expires_at": "2026-10-31T22:01:14.107219Z",
-    "baseline_id": "c481e8f682fe95c2f43a92c249adb43f7b175911ccb6e5d9f5e104bccaebc5f4"
+    "issued_at": "2026-11-01T07:56:53.205864Z",
+    "expires_at": "2026-11-01T08:01:53.205864Z",
+    "baseline_id": "1156d17e9ff98aec16e16d3db69e70302de65c95a470ef8510f06f3b24e88b05"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1974,8 +1974,8 @@
       "out_of_date_words": null
     },
     "deadline": {
-      "text": "A határidő lejárt: 2026. 10. 20.; a benyújtás most már késedelmes",
-      "short_text": "A határidő lejárt: 2026. 10. 20.; a benyújtás most már késedelmes",
+      "text": "A határidő lejárt: 2026. okt. 20.; a benyújtás most már késedelmes",
+      "short_text": "A határidő lejárt: 2026. okt. 20.; a benyújtás most már késedelmes",
       "tone": "urgent",
       "help": null
     },

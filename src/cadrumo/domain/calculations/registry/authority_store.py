@@ -39,7 +39,7 @@ from .snapshot_proof import (
     ValidatorSource,
 )
 
-_MINIMUM_SQLITE_VERSION = (3, 37, 0)
+_OLDEST_SQLITE_VERSION = (3, 37, 0)
 
 _MAX_CONNECTION_CHECKOUTS: Final = 4
 
@@ -261,7 +261,7 @@ class SQLiteAuthorityReader:
 
     def __init__(self, descriptor_path: Path, *, max_connections: int = 4) -> None:
         """Admit one exact database without hydrating any domain payload."""
-        if sqlite3.sqlite_version_info < _MINIMUM_SQLITE_VERSION or sqlite3.threadsafety == 0:
+        if sqlite3.sqlite_version_info < _OLDEST_SQLITE_VERSION or sqlite3.threadsafety == 0:
             raise AuthorityStoreError("authority SQLite requires SQLite 3.37+ with a thread-safe build")
         if not 1 <= max_connections <= _MAX_CONNECTION_CHECKOUTS:
             raise ValueError("authority reader permits between one and four connection checkouts")

@@ -42,6 +42,28 @@ const context = await browser.newContext({
   viewport: { width: Number(values.width), height: Number(values.height) },
   deviceScaleFactor: Number(values.scale),
 });
+// A play that throws still ends in the "finished" phase, so the failure is
+// taken from the preview's own events, which fire before any phase is read.
+await context.addInitScript(() => {
+  const failures = [];
+  window.__storyFailures = failures;
+  let channel;
+  Object.defineProperty(globalThis, "__STORYBOOK_ADDONS_CHANNEL__", {
+    configurable: true,
+    get: () => channel,
+    set: (next) => {
+      channel = next;
+      next.on("playFunctionThrewException", (error) =>
+        failures.push(error?.message ?? String(error)),
+      );
+      next.on("unhandledErrorsWhilePlaying", (errors) =>
+        failures.push(
+          ...errors.map((error) => error?.message ?? String(error)),
+        ),
+      );
+    },
+  });
+});
 const page = await context.newPage();
 // A story that cannot load something is not the application as it is drawn.
 const refused = [];
@@ -75,6 +97,8 @@ for (const story of stories)
           )
           .then((handle) => handle.jsonValue());
         if (phase === "errored") throw new Error("the story failed to render");
+        const played = await page.evaluate(() => window.__storyFailures);
+        if (played.length) throw new Error(`its play failed: ${played[0]}`);
         await page.evaluate(() => document.fonts.ready);
         const fonts = await page.evaluate(() =>
           [...document.fonts]

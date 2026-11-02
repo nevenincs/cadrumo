@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import pytest
-from pydantic import TypeAdapter
+from pydantic import BaseModel, TypeAdapter
 
 from cadrumo.application.filing.producer_snapshot import DeclarationContactFacts, TaxpayerIdentityFacts
 from cadrumo.application.user_profile.preflight import build_profile_preflight_requirement
@@ -71,7 +71,7 @@ def test_a_name_at_the_bound_is_carried(operation: PinnedAuthorityOperation) -> 
     ],
 )
 def test_the_declared_bound_is_what_the_producer_record_holds(
-    operation: PinnedAuthorityOperation, path: str, record: type, attribute: str
+    operation: PinnedAuthorityOperation, path: str, record: type[BaseModel], attribute: str
 ) -> None:
     limit = _field(operation, path).max_length
     assert limit is not None

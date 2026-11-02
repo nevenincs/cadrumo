@@ -151,7 +151,7 @@ def test_no_deadline_reads_muted_with_fewer_words_and_a_moved_one_says_why(
     assert missing is not None and missing.tone is ModeloFormDeadlineTone.MUTED
     assert len(missing.short_text) < len(missing.text)
     assert moved is not None and moved.help is not None
-    assert "16/04/2026" in moved.help and "18/04/2026" in moved.help, moved.help
+    assert "Apr 16, 2026" in moved.help and "Apr 18, 2026" in moved.help, moved.help
 
 
 def test_the_result_is_stated_once_calculated_and_otherwise_says_why_it_has_no_figure(

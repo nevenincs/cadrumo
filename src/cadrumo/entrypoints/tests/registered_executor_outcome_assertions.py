@@ -351,6 +351,52 @@ def assert_bienes_effects(ctx: ExecutorOutcome) -> None:
         assert bienes_result.record == expected_projection
 
 
+def _assert_inventory_listed(ctx: ExecutorOutcome, result, ledger, inventory_after) -> None:
+    assert result.profile_id == ctx.profile_id
+    assert len(result.rows) == 1
+    assert result.rows[0].actividad_id == ledger.actividad_id
+    assert inventory_after == ctx.inventory_before
+
+
+def _assert_inventory_inspected(ctx: ExecutorOutcome, result, ledger, inventory_after) -> None:
+    assert result.profile_id == ctx.profile_id and result.outcome == "found"
+    assert result.ledger == InventoryLedgerProjection.from_ledger(ledger)
+    assert inventory_after == ctx.inventory_before
+
+
+def _assert_inventory_ledger_changed(ctx: ExecutorOutcome, result, ledger) -> None:
+    assert result.profile_id == ctx.profile_id and result.outcome == "applied"
+    assert result.ledger == InventoryLedgerProjection.from_ledger(ledger, bucket_event_ids=result.bucket_event_ids)
+    assert len(ledger.history) > len(ctx.inventory_before.ledgers[0].history)
+    events = bucket_event_history_repository(bucket_id=str(ctx.profile_id)).load().events
+    assert all(event_id in events for event_id in result.bucket_event_ids)
+
+
+def _assert_inventory_created_or_moved(ctx: ExecutorOutcome, result, ledger) -> None:
+    assert result.profile_id == ctx.profile_id and result.ledger is not None
+    assert result.ledger == InventoryLedgerProjection.from_ledger(ledger, bucket_event_ids=result.bucket_event_ids)
+    expected_movements = 1 if isinstance(result, InventoryMovementAddProjection) else 0
+    assert len(ledger.period_movements) == expected_movements
+    events = bucket_event_history_repository(bucket_id=str(ctx.profile_id)).load().events
+    assert all(event_id in events for event_id in result.bucket_event_ids)
+
+
+def _assert_inventory_valued(ctx: ExecutorOutcome, result, inventory_after) -> None:
+    assert result.preview is not None and result.preview.profile_id == ctx.profile_id
+    assert Decimal(result.preview.derived_closing_value.decimal) == Decimal("100.00")
+    assert inventory_after == ctx.inventory_before
+    events = bucket_event_history_repository(bucket_id=str(ctx.profile_id)).load().events
+    assert all(event_id in events for event_id in result.preview.bucket_event_ids)
+
+
+def _assert_inventory_closing_authority_recorded(ctx: ExecutorOutcome, result, ledger) -> None:
+    assert isinstance(result, InventoryClosingAuthorityOperationProjection)
+    assert result.record is not None and result.record.profile_id == ctx.profile_id
+    assert ledger.closing_authority_record is not None
+    assert result.record.authority_record_fingerprint == ledger.closing_authority_record.fingerprint
+    assert result.record.changed is True
+
+
 def assert_inventory_effects(ctx: ExecutorOutcome) -> None:
     """Check the persisted effects bound to `inventory_repository`."""
     if ctx.family_preparation is not None:
@@ -369,43 +415,17 @@ def assert_inventory_effects(ctx: ExecutorOutcome) -> None:
     assert len(inventory_after.ledgers) == 1
     ledger = inventory_after.ledgers[0]
     if isinstance(inventory_result, InventoryListProjection):
-        assert inventory_result.profile_id == ctx.profile_id
-        assert len(inventory_result.rows) == 1
-        assert inventory_result.rows[0].actividad_id == ledger.actividad_id
-        assert inventory_after == ctx.inventory_before
+        _assert_inventory_listed(ctx, inventory_result, ledger, inventory_after)
     elif isinstance(inventory_result, InventoryInspectProjection):
-        assert inventory_result.profile_id == ctx.profile_id and inventory_result.outcome == "found"
-        assert inventory_result.ledger == InventoryLedgerProjection.from_ledger(ledger)
-        assert inventory_after == ctx.inventory_before
+        _assert_inventory_inspected(ctx, inventory_result, ledger, inventory_after)
     elif isinstance(inventory_result, InventoryLedgerChangeProjection):
-        assert inventory_result.profile_id == ctx.profile_id and inventory_result.outcome == "applied"
-        assert inventory_result.ledger == InventoryLedgerProjection.from_ledger(
-            ledger, bucket_event_ids=inventory_result.bucket_event_ids
-        )
-        assert len(ledger.history) > len(ctx.inventory_before.ledgers[0].history)
-        events = bucket_event_history_repository(bucket_id=str(ctx.profile_id)).load().events
-        assert all(event_id in events for event_id in inventory_result.bucket_event_ids)
+        _assert_inventory_ledger_changed(ctx, inventory_result, ledger)
     elif isinstance(inventory_result, InventoryCreateProjection | InventoryMovementAddProjection):
-        assert inventory_result.profile_id == ctx.profile_id and inventory_result.ledger is not None
-        assert inventory_result.ledger == InventoryLedgerProjection.from_ledger(
-            ledger, bucket_event_ids=inventory_result.bucket_event_ids
-        )
-        expected_movements = 1 if isinstance(inventory_result, InventoryMovementAddProjection) else 0
-        assert len(ledger.period_movements) == expected_movements
-        events = bucket_event_history_repository(bucket_id=str(ctx.profile_id)).load().events
-        assert all(event_id in events for event_id in inventory_result.bucket_event_ids)
+        _assert_inventory_created_or_moved(ctx, inventory_result, ledger)
     elif isinstance(inventory_result, InventoryValuationOperationProjection):
-        assert inventory_result.preview is not None and inventory_result.preview.profile_id == ctx.profile_id
-        assert Decimal(inventory_result.preview.derived_closing_value.decimal) == Decimal("100.00")
-        assert inventory_after == ctx.inventory_before
-        events = bucket_event_history_repository(bucket_id=str(ctx.profile_id)).load().events
-        assert all(event_id in events for event_id in inventory_result.preview.bucket_event_ids)
+        _assert_inventory_valued(ctx, inventory_result, inventory_after)
     else:
-        assert isinstance(inventory_result, InventoryClosingAuthorityOperationProjection)
-        assert inventory_result.record is not None and inventory_result.record.profile_id == ctx.profile_id
-        assert ledger.closing_authority_record is not None
-        assert inventory_result.record.authority_record_fingerprint == ledger.closing_authority_record.fingerprint
-        assert inventory_result.record.changed is True
+        _assert_inventory_closing_authority_recorded(ctx, inventory_result, ledger)
 
 
 def assert_user_profile_recovery_status_outcome(ctx: ExecutorOutcome) -> None:
@@ -537,6 +557,41 @@ def assert_auth_read_outcome(ctx: ExecutorOutcome) -> None:
     assert result.diagnostics_rows is not None
 
 
+def _assert_overview_status_read(ctx: ExecutorOutcome, result) -> None:
+    if ctx.payload.period is None:
+        assert result.payload.report is not None
+        assert result.payload.period_report is None
+        period_payload = OverviewReadRequest(
+            profile_id=ctx.profile_id,
+            kind=OverviewReadKind.STATUS,
+            output_language=OutputLanguage.ES,
+            period=PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")),
+        )
+        _, period_observed = asyncio.run(
+            ctx.driver.run(
+                definition_id=ctx.case.definition_id,
+                subject_ref=profile_operation_subject(str(ctx.profile_id)),
+                payload=period_payload,
+            )
+        )
+        assert period_observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
+        assert period_observed.projection.effect is OperationEffect.NONE
+        period_result = _resolve_result_projection(
+            ctx.driver,
+            ctx.registry,
+            definition_id=ctx.case.definition_id,
+            operation_id=period_observed.projection.operation_id,
+            terminal_revision=period_observed.projection.revision,
+            projection_type=OverviewReadProjection,
+        )
+        assert isinstance(period_result, OverviewReadProjection)
+        assert period_result.request == period_payload
+        assert isinstance(period_result.payload, OverviewStatusRead)
+        assert period_result.payload.period_report is not None
+        assert period_result.payload.period_report.period == period_payload.period
+        assert period_result.payload.report is None
+
+
 def assert_overview_read_outcome(ctx: ExecutorOutcome) -> None:
     """Check the overview read result and effects."""
     assert isinstance(ctx.payload, OverviewReadRequest)
@@ -547,38 +602,7 @@ def assert_overview_read_outcome(ctx: ExecutorOutcome) -> None:
     assert result.payload.kind == ctx.payload.kind.value
     match result.payload:
         case OverviewStatusRead() if ctx.payload.kind is OverviewReadKind.STATUS:
-            if ctx.payload.period is None:
-                assert result.payload.report is not None
-                assert result.payload.period_report is None
-                period_payload = OverviewReadRequest(
-                    profile_id=ctx.profile_id,
-                    kind=OverviewReadKind.STATUS,
-                    output_language=OutputLanguage.ES,
-                    period=PublicPeriod.from_period(Period.from_year_and_code(2025, "1T")),
-                )
-                _, period_observed = asyncio.run(
-                    ctx.driver.run(
-                        definition_id=ctx.case.definition_id,
-                        subject_ref=profile_operation_subject(str(ctx.profile_id)),
-                        payload=period_payload,
-                    )
-                )
-                assert period_observed.projection.terminal_condition is OperationTerminalCondition.SUCCEEDED
-                assert period_observed.projection.effect is OperationEffect.NONE
-                period_result = _resolve_result_projection(
-                    ctx.driver,
-                    ctx.registry,
-                    definition_id=ctx.case.definition_id,
-                    operation_id=period_observed.projection.operation_id,
-                    terminal_revision=period_observed.projection.revision,
-                    projection_type=OverviewReadProjection,
-                )
-                assert isinstance(period_result, OverviewReadProjection)
-                assert period_result.request == period_payload
-                assert isinstance(period_result.payload, OverviewStatusRead)
-                assert period_result.payload.period_report is not None
-                assert period_result.payload.period_report.period == period_payload.period
-                assert period_result.payload.report is None
+            _assert_overview_status_read(ctx, result)
         case OverviewCalendarRead() if ctx.payload.kind is OverviewReadKind.CALENDAR:
             assert result.payload.calendar is not None
             assert result.payload.calendar.range.from_date == ctx.payload.from_date

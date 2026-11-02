@@ -28,8 +28,8 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
 )
 
 
-def test_verification_finding_message_resolves_from_each_supported_locale_catalogue() -> None:
-    """The CLI boundary renders typed facts through the selected locale catalogue."""
+def _render_in_every_locale(locale_key: str, message_facts: dict[str, str | int]) -> dict[str, str]:
+    """Render one blocking finding through each supported catalogue and check what every rendering must lack."""
     from ....core.config import override_settings
     from ....domain.modelos.verification_report import (
         ModeloVerificationFinding,
@@ -38,13 +38,11 @@ def test_verification_finding_message_resolves_from_each_supported_locale_catalo
     )
     from .._modelo_rendering import _render_verification_finding_message
 
-    locale_key = "application.modelo.findings.cross_casilla_invariant_violated"
-    predicate_id = "test-predicate"
     finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.BLOCKING_RULE,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message_locale_key=locale_key,
-        message_facts={"predicate_id": predicate_id},
+        message_facts=message_facts,
         legal_refs=_TEST_FINDING_LEGAL_REFS,
     )
     rendered: dict[str, str] = {}
@@ -56,43 +54,35 @@ def test_verification_finding_message_resolves_from_each_supported_locale_catalo
     for message in rendered.values():
         assert locale_key not in message
         assert "%{" not in message
+    return rendered
+
+
+def test_verification_finding_message_resolves_from_each_supported_locale_catalogue() -> None:
+    """The CLI boundary renders typed facts through the selected locale catalogue."""
+    locale_key = "application.modelo.findings.cross_casilla_invariant_violated"
+    predicate_id = "test-predicate"
+    rendered = _render_in_every_locale(locale_key, {"predicate_id": predicate_id})
+
+    for message in rendered.values():
         assert predicate_id not in message, "an internal predicate id reached the filer's sentence"
 
 
 def test_iva_selected_scope_evidence_finding_resolves_from_each_supported_locale_catalogue() -> None:
     """The CLI renders selected-scope IVA blocking evidence in every locale."""
-    from ....core.config import override_settings
-    from ....domain.modelos.verification_report import (
-        ModeloVerificationFinding,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-    )
-    from .._modelo_rendering import _render_verification_finding_message
-
     locale_key = "application.modelo.findings.iva_selected_scope_evidence_failure"
     source_ref_count = 2
     unidentified_source_count = 1
     source_ref_ids = "transaction:synthetic-a|transaction:synthetic-b"
-    finding = ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-        severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message_locale_key=locale_key,
-        message_facts={
+    rendered = _render_in_every_locale(
+        locale_key,
+        {
             "source_ref_count": source_ref_count,
             "unidentified_source_count": unidentified_source_count,
             "source_ref_ids": source_ref_ids,
         },
-        legal_refs=_TEST_FINDING_LEGAL_REFS,
     )
-    rendered: dict[str, str] = {}
-    for locale in ("en", "es", "ca", "hu"):
-        with override_settings(cadrumo_output_language=locale):
-            rendered[locale] = _render_verification_finding_message(finding)
 
-    assert len(set(rendered.values())) == len(rendered)
     for message in rendered.values():
-        assert locale_key not in message
-        assert "%{" not in message
         assert str(source_ref_count) in message
         assert str(unidentified_source_count) in message
         assert source_ref_ids not in message, "raw source references reached the filer's sentence"
@@ -100,32 +90,11 @@ def test_iva_selected_scope_evidence_finding_resolves_from_each_supported_locale
 
 def test_iva_compensation_annual_source_evidence_finding_resolves_from_each_supported_locale_catalogue() -> None:
     """The CLI renders blocked annual Modelo 390 source evidence in every locale."""
-    from ....core.config import override_settings
-    from ....domain.modelos.verification_report import (
-        ModeloVerificationFinding,
-        ModeloVerificationFindingKind,
-        ModeloVerificationFindingSeverity,
-    )
-    from .._modelo_rendering import _render_verification_finding_message
-
     locale_key = "application.modelo.findings.iva_compensation_annual_source_evidence_failure"
     source_issue_count = 7
-    finding = ModeloVerificationFinding(
-        kind=ModeloVerificationFindingKind.BLOCKING_RULE,
-        severity=ModeloVerificationFindingSeverity.BLOCKING,
-        message_locale_key=locale_key,
-        message_facts={"source_issue_count": source_issue_count},
-        legal_refs=_TEST_FINDING_LEGAL_REFS,
-    )
-    rendered: dict[str, str] = {}
-    for locale in ("en", "es", "ca", "hu"):
-        with override_settings(cadrumo_output_language=locale):
-            rendered[locale] = _render_verification_finding_message(finding)
+    rendered = _render_in_every_locale(locale_key, {"source_issue_count": source_issue_count})
 
-    assert len(set(rendered.values())) == len(rendered)
     for message in rendered.values():
-        assert locale_key not in message
-        assert "%{" not in message
         assert str(source_issue_count) in message
 
 

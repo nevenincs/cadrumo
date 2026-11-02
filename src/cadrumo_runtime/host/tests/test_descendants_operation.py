@@ -12,23 +12,16 @@ from uuid import UUID
 import pytest
 
 from cadrumo.adapters.persistence.storage.custody.tests.automation_support import MemoryNativePort
-from cadrumo.adapters.persistence.storage.master_key.active_session import close_active_bucket_session
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
-    load_test_profile_record,
-    profile_authority_contexts,
-)
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.descendant_rows import (
     ProfileDescendantFact,
     ProfileDescendantRow,
     encode_descendant_rows,
 )
-from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileDescendantsOperationProjection,
     ProfileDescendantsOperationRequest,
 )
-from cadrumo.application.user_profile.view_operation import ProfileViewFactItem, ProfileViewPageKind
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.contribuyente.descendant import DescendantInfo
@@ -40,6 +33,7 @@ from cadrumo_client.transport.profile_mutations import ProfileMutationRunError, 
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import PROFILE_INPUT, owner_id, worker_profiles
+from .profile_record_support import profile_view_facts, stored_profile_record
 from .served_runtime import SyntheticLogin, serving_runtime
 
 pytestmark = [
@@ -49,27 +43,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _record(profile_id: UUID, *, root: Path) -> UserProfileRecord:
-    """Read the actual encrypted record without retaining parent custody."""
-    _, decode = profile_authority_contexts()
-    authenticate_profile_for_invocation(
-        name=str(profile_id), passphrase_callback=lambda: PROFILE_INPUT, profile_decode_context=decode
-    )
-    try:
-        return load_test_profile_record(profile_id, root=root)
-    finally:
-        close_active_bucket_session()
-
-
-def _view(client: FrontendClient) -> tuple[int, str, dict[str, str]]:
-    page = client.read_profile_view((ProfileViewPageKind.FACTS,), timeout=90)
-    items = page.items(ProfileViewPageKind.FACTS)
-    assert all(isinstance(item, ProfileViewFactItem) for item in items)
-    facts = {item.path: item.value for item in items if isinstance(item, ProfileViewFactItem)}
-    assert len(facts) == len(items)
-    return page.record_revision, page.content_digest, facts
 
 
 def _request(
@@ -92,7 +65,7 @@ def _replace_with_family(
     proof = bytearray(PROFILE_INPUT.encode())
     client.login_password(proof)
     assert not any(proof)
-    revision, digest, facts = _view(client)
+    revision, digest, facts = profile_view_facts(client)
     assert (revision, digest) == (baseline.record_revision, baseline.content_digest)
     assert not any(path.startswith("renta_family.descendiente.") for path in facts)
 
@@ -106,7 +79,7 @@ def _replace_with_family(
     assert (first.projection.total, first.projection.changed) == (2, True)
     assert first.projection.profile_id == profile_id
     assert first.projection.record_revision == revision + 1
-    revision, digest, facts = _view(client)
+    revision, digest, facts = profile_view_facts(client)
     assert revision == first.projection.record_revision
     assert facts["renta_family.descendientes_count"] == "2"
     assert facts["renta_family.descendiente.0.birth_date"] == "2015-04-03"
@@ -152,7 +125,7 @@ def _refuse_stale_and_malformed(
     assert stale.value.reason == "FAIL_PROFILE_RECORD_CONFLICT"
     assert stale.value.terminal_condition is OperationTerminalCondition.FAILED
     assert stale.value.effect is not OperationEffect.UPDATED
-    assert _view(client)[:2] == (revision, digest)
+    assert profile_view_facts(client)[:2] == (revision, digest)
 
     for malformed in (
         ProfileDescendantRow(
@@ -171,7 +144,7 @@ def _refuse_stale_and_malformed(
             )
         assert invalid.value.operation_id
         assert invalid.value.effect is not OperationEffect.UPDATED
-        assert _view(client)[:2] == (revision, digest)
+        assert profile_view_facts(client)[:2] == (revision, digest)
 
 
 def _replace_with_younger_only(
@@ -190,7 +163,7 @@ def _replace_with_younger_only(
     assert type(replaced.projection) is ProfileDescendantsOperationProjection
     assert (replaced.projection.total, replaced.projection.changed) == (1, True)
     assert replaced.projection.record_revision == revision + 1
-    revision, digest, facts = _view(client)
+    revision, digest, facts = profile_view_facts(client)
     assert facts["renta_family.descendientes_count"] == "1"
     assert facts["renta_family.descendiente.0.birth_date"] == "2020-08-09"
     assert not any(path.startswith("renta_family.descendiente.1.") for path in facts)
@@ -209,7 +182,7 @@ def _clear_family_and_repeat(client: FrontendClient, profile_id: UUID, revision:
     assert type(cleared.projection) is ProfileDescendantsOperationProjection
     assert (cleared.projection.total, cleared.projection.changed) == (0, True)
     assert cleared.projection.record_revision == revision + 1
-    revision, digest, facts = _view(client)
+    revision, digest, facts = profile_view_facts(client)
     assert facts["renta_family.descendientes_count"] == "0"
     assert not any(path.startswith("renta_family.descendiente.") for path in facts)
 
@@ -232,12 +205,12 @@ def _assert_final_records(
     baseline: UserProfileRecord,
     foreign_baseline: UserProfileRecord,
 ) -> None:
-    final = _record(profile_id, root=root)
+    final = stored_profile_record(profile_id, root=root)
     assert final.record_revision == baseline.record_revision + 3
     assert any(fact.path == "renta_family.descendiente.0.rentas_anuales" and fact.value is None for fact in final.facts)
     assert any(fact.path == "renta_family.descendiente.1.birth_date" and fact.value is None for fact in final.facts)
     assert next(fact.value for fact in final.facts if fact.path == "renta_family.descendientes_count") == Decimal(0)
-    foreign_final = _record(foreign_id, root=root)
+    foreign_final = stored_profile_record(foreign_id, root=root)
     assert (foreign_final.record_revision, foreign_final.content_digest) == (
         foreign_baseline.record_revision,
         foreign_baseline.content_digest,
@@ -250,8 +223,8 @@ def test_native_descendant_family_replace_reindex_clear_and_refuse_stale_intent(
     with worker_profiles(tmp_path) as (root, targets):
         profile_id = targets[0][0].binding.profile_id
         foreign_id = targets[1][0].binding.profile_id
-        baseline = _record(profile_id, root=root)
-        foreign_baseline = _record(foreign_id, root=root)
+        baseline = stored_profile_record(profile_id, root=root)
+        foreign_baseline = stored_profile_record(foreign_id, root=root)
         endpoint = WindowsEndpoint(storage_root=root)
         installation(storage_root=root, os_owner_id=owner_id(), storage_identity=endpoint.storage_identity)
         native = MemoryNativePort()
@@ -287,6 +260,6 @@ def test_native_descendant_family_replace_reindex_clear_and_refuse_stale_intent(
                         _request(foreign_id, revision=revision, digest=digest, descendants=family_rows),
                         timeout=90,
                     )
-                assert _view(client)[:2] == (revision, digest)
+                assert profile_view_facts(client)[:2] == (revision, digest)
                 client.lock()
         _assert_final_records(root, profile_id, foreign_id, baseline, foreign_baseline)

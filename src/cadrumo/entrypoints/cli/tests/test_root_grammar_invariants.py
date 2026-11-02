@@ -402,30 +402,7 @@ def test_retired_reset_and_sandbox_spellings_absent_from_source_and_docs() -> No
     and the removed `config profile sandbox use` door. A dead spelling in any of
     those surfaces would hand a downstream caller an instruction
     the live CLI refuses."""
-    from ....tests.inventory import REPO_ROOT
-
-    scanned: list[Path] = []
-    src_root = REPO_ROOT / "src" / "cadrumo"
-    scanned.extend(scan_directory(src_root, pattern="*.py", recursive=True))
-    scanned.extend(scan_directory(src_root / "locales", pattern="*.yml"))
-    docs_root = REPO_ROOT / "docs"
-    scanned.extend(scan_directory(docs_root, pattern="*.md"))
-    for sub in ("how-to", "explanation", "reference", "verification", "architecture"):
-        subdir = docs_root / sub
-        if subdir.is_dir():
-            scanned.extend(scan_directory(subdir, pattern="*.md", recursive=True))
-    sequences = docs_root / "_sequences"
-    if sequences.is_dir():
-        scanned.extend(scan_directory(sequences, pattern="*.seq", recursive=True))
-
-    # Floor the scan corpus: a relocation of the source tree or docs would empty
-    # this walk and pass identically to a clean tree, so the retired-spelling guard
-    # below would be silently vacuous.
-    assert len(scanned) > 500, (
-        f"scanned only {len(scanned)} source/locale/doc files under {src_root} and {docs_root}; "
-        "the scan corpus collapsed (a package relocation or rename), so an empty offender list "
-        "would mean 'nothing was checked' rather than 'nothing is wrong'"
-    )
+    scanned = _retired_spelling_scan_corpus()
 
     # Rejection-probe tests legitimately carry a retired spelling to prove the
     # CLI refuses it; they are the enforcement, not a citation.

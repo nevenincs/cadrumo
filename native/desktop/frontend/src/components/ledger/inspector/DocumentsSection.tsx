@@ -94,6 +94,8 @@ export function DocumentsSection({
       value: record.evidence_id,
       label: fileName(record.source_path),
       note: facts(t, [record.supplier, record.invoice_number]),
+      // The number stays whole where the note wraps.
+      ...(record.invoice_number ? { whole: record.invoice_number } : {}),
     }));
 
   const detach = (attachment: string) => {
@@ -252,6 +254,7 @@ export function DocumentsSection({
           label={t("desktop.ledger.inspector.documents.attach_existing")}
           value={null}
           options={attachable}
+          placeholder={t("desktop.ledger.inspector.documents.search")}
           emptyLabel={
             evidence?.kind === "reading"
               ? t("desktop.ledger.loading")

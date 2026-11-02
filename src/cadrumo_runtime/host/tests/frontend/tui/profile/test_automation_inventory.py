@@ -6,11 +6,12 @@ import asyncio
 from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 from threading import Event
-from typing import override
+from typing import Literal, override
 from uuid import UUID, uuid4
 
 import pytest
 from textual.content import Content
+from textual.pilot import Pilot
 from textual.widgets import Button, DataTable, Input, Static
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
@@ -388,6 +389,37 @@ async def test_unmount_clears_rows_and_drains_inflight_read_without_late_publish
         assert not client.closed
 
 
+async def _open_decision_modal(
+    pilot: Pilot[None], inventory: subject.RuntimeAutomationInventoryScreen, choice: Literal["approve", "decline"]
+) -> decision_subject.RuntimeAutomationDecisionScreen:
+    """Select the one pending request, press its approve or decline button and return the decision modal."""
+    await settle_until(
+        pilot,
+        lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 1,
+        "inventory.query_one('#automation-inventory-requests', DataTable).ro...",
+        workers=False,
+    )
+    table = inventory.query_one("#automation-inventory-requests", DataTable)
+    table.focus()
+    table.move_cursor(row=0)
+    await settle_until(
+        pilot,
+        lambda: not inventory.query_one(f"#automation-inventory-{choice}", Button).disabled,
+        f"not inventory.query_one('#automation-inventory-{choice}', Button).di...",
+        workers=False,
+    )
+    inventory.query_one(f"#automation-inventory-{choice}", Button).press()
+    await settle_until(
+        pilot,
+        lambda: isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDecisionScreen),
+        "isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDeci...",
+        workers=False,
+    )
+    modal = pilot.app.screen
+    assert isinstance(modal, decision_subject.RuntimeAutomationDecisionScreen)
+    return modal
+
+
 @pytest.mark.asyncio
 async def test_selected_review_approval_repeats_consent_and_wipes_one_fresh_proof(
     monkeypatch: pytest.MonkeyPatch,
@@ -421,30 +453,7 @@ async def test_selected_review_approval_repeats_consent_and_wipes_one_fresh_proo
     monkeypatch.setattr(decision_subject, "run_automation_decision", decide)
     inventory = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(inventory).run_test(size=(130, 45)) as pilot:
-        await settle_until(
-            pilot,
-            lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 1,
-            "inventory.query_one('#automation-inventory-requests', DataTable).ro...",
-            workers=False,
-        )
-        table = inventory.query_one("#automation-inventory-requests", DataTable)
-        table.focus()
-        table.move_cursor(row=0)
-        await settle_until(
-            pilot,
-            lambda: not inventory.query_one("#automation-inventory-approve", Button).disabled,
-            "not inventory.query_one('#automation-inventory-approve', Button).di...",
-            workers=False,
-        )
-        inventory.query_one("#automation-inventory-approve", Button).press()
-        await settle_until(
-            pilot,
-            lambda: isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDecisionScreen),
-            "isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDeci...",
-            workers=False,
-        )
-        modal = pilot.app.screen
-        assert isinstance(modal, decision_subject.RuntimeAutomationDecisionScreen)
+        modal = await _open_decision_modal(pilot, inventory, "approve")
         consent = str(modal.query_one("#automation-decision-review", Static).content)
         assert str(review.receipt.profile_id) in consent
         assert str(review.receipt.request_id) in consent
@@ -508,30 +517,7 @@ async def test_decline_has_no_password_and_preserves_unknown_post_submit_effect(
     monkeypatch.setattr(decision_subject, "run_automation_decision", refuse)
     inventory = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(inventory).run_test(size=(130, 45)) as pilot:
-        await settle_until(
-            pilot,
-            lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 1,
-            "inventory.query_one('#automation-inventory-requests', DataTable).ro...",
-            workers=False,
-        )
-        table = inventory.query_one("#automation-inventory-requests", DataTable)
-        table.focus()
-        table.move_cursor(row=0)
-        await settle_until(
-            pilot,
-            lambda: not inventory.query_one("#automation-inventory-decline", Button).disabled,
-            "not inventory.query_one('#automation-inventory-decline', Button).di...",
-            workers=False,
-        )
-        inventory.query_one("#automation-inventory-decline", Button).press()
-        await settle_until(
-            pilot,
-            lambda: isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDecisionScreen),
-            "isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDeci...",
-            workers=False,
-        )
-        modal = pilot.app.screen
-        assert isinstance(modal, decision_subject.RuntimeAutomationDecisionScreen)
+        modal = await _open_decision_modal(pilot, inventory, "decline")
         assert not modal.query("#automation-decision-password")
         modal.query_one("#automation-decision-confirm", Button).press()
         await settle_until(
@@ -596,30 +582,7 @@ async def test_expiry_during_submitted_decision_clears_consent_and_waits_for_set
     monkeypatch.setattr(decision_subject, "run_automation_decision", decide)
     inventory = subject.RuntimeAutomationInventoryScreen(client)
     async with ScreenHostApp(inventory).run_test(size=(130, 45)) as pilot:
-        await settle_until(
-            pilot,
-            lambda: inventory.query_one("#automation-inventory-requests", DataTable).row_count == 1,
-            "inventory.query_one('#automation-inventory-requests', DataTable).ro...",
-            workers=False,
-        )
-        table = inventory.query_one("#automation-inventory-requests", DataTable)
-        table.focus()
-        table.move_cursor(row=0)
-        await settle_until(
-            pilot,
-            lambda: not inventory.query_one("#automation-inventory-approve", Button).disabled,
-            "not inventory.query_one('#automation-inventory-approve', Button).di...",
-            workers=False,
-        )
-        inventory.query_one("#automation-inventory-approve", Button).press()
-        await settle_until(
-            pilot,
-            lambda: isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDecisionScreen),
-            "isinstance(pilot.app.screen, decision_subject.RuntimeAutomationDeci...",
-            workers=False,
-        )
-        modal = pilot.app.screen
-        assert isinstance(modal, decision_subject.RuntimeAutomationDecisionScreen)
+        modal = await _open_decision_modal(pilot, inventory, "approve")
         client.expires_at = datetime.now(UTC) + timedelta(milliseconds=650)
         password_field = modal.query_one("#automation-decision-password", Input)
         password_field.value = "fresh-proof"

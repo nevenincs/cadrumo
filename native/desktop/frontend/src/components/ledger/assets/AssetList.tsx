@@ -214,6 +214,7 @@ export function AssetList({
       {
         key: "name",
         label: t(ASSET_KEYS.list.column.name),
+        keepWords: true,
         sort: (row) => row.name,
         cell: (row) => (
           <Button
@@ -238,12 +239,14 @@ export function AssetList({
       {
         key: "kind",
         label: t(ASSET_KEYS.list.column.kind),
+        keepWords: true,
         sort: (row) => tokenWord(t, "asset_kind", row.asset_kind),
         cell: (row) => tokenWord(t, "asset_kind", row.asset_kind),
       },
       {
         key: "method",
         label: t(ASSET_KEYS.list.column.method),
+        keepWords: true,
         sort: (row) => tokenWord(t, "method", row.method),
         cell: (row) => tokenWord(t, "method", row.method),
       },
@@ -260,6 +263,7 @@ export function AssetList({
       {
         key: "state",
         label: t(ASSET_KEYS.list.column.state),
+        keepWords: true,
         sort: (row) => tokenWord(t, "register_state", row.state),
         cell: (row) => tokenWord(t, "register_state", row.state),
       },

@@ -1447,7 +1447,7 @@ desktop:
         casilla: Casilla
         unavailable: Sin calcular
       correct:
-        claim_item: '{year} · {amount} · {from} – {until}'
+        claim_item: '{year} · {amount} · del {from} al {until}'
         supersede: 'Registra de nuevo estas dotaciones con las cifras corregidas,
           en el mismo paso:'
       correct_claim_title: Corregir la dotación de {name} para {year}
@@ -1560,7 +1560,7 @@ desktop:
       filing:
         choose_year: Elige un año para ver a dónde van las dotaciones.
         unavailable: El traspaso a la declaración no está disponible.
-      forecast: Dotación {amount} · {days} días · {from} – {until}
+      forecast: Dotación {amount} · {days} días · del {from} al {until}
       forecast_note: La previsión no guarda nada hasta que registres la dotación.
       free: Amortización libre solicitada
       free_hint: Solo para un método de amortización libre
@@ -1579,8 +1579,8 @@ desktop:
       handoff_free_named: 'No cuentan en el Modelo 130, porque su método te deja la
         dotación a ti: {names}.'
       handoff_gap_accrued: 'Modelo 100: {name} no tiene dotación registrada del {start}
-        al {end}. Los {amount} EUR que se devengaron en ese tiempo no están en los
-        importes de arriba.'
+        al {end}. Los {amount} que se devengaron en ese tiempo no están en los importes
+        de arriba.'
       handoff_gap_box_unbound: 'Modelo 100: esta edición no tiene casilla para la
         dotación de {name}, así que no se declara nada por ese elemento del {start}
         al {end}.'
@@ -1638,7 +1638,7 @@ desktop:
           minimum: Mínimo acumulado hasta fin de año
           minimum_note: Cuenta como coste si das de baja este elemento. No es la deducción
             de este año.
-          period: Período
+          period: Periodo
           planned: Prevista
           rate: Porcentaje
           replaced_by: Sustituida por
@@ -1656,9 +1656,9 @@ desktop:
           citations: Base legal ({count})
           citations_partial: 'La lista es parcial: no se pudieron resolver algunas
             disposiciones.'
-          ends_on: El período máximo termina el
+          ends_on: El periodo máximo termina el
           maximum_coefficient: Coeficiente máximo
-          maximum_period: Período máximo
+          maximum_period: Periodo máximo
           minimum_coefficient: Coeficiente mínimo
           period_years: '{years} años'
           title: Límites de este método
@@ -1902,7 +1902,7 @@ desktop:
       ratio_unread: Ratios de uso sin leer
       search_category: Buscar
       select_range: Selecciona el rango
-      share: Parte empresarial
+      share: Parte profesional
       share_categories: Solo categorías que admiten una parte de uso empresarial
       share_refused: '«{raw}» no es una parte: escribe un porcentaje, como 50 para
         el 50 %.'
@@ -2204,7 +2204,7 @@ desktop:
         supplier: Proveedor
         taxable_base: Base imponible
       record_added: Documento añadido
-      record_refused: Escríbelo como 2026-10-15, 60.50 o 21
+      record_refused: Escríbelo como 2026-10-15, 60,50 o 21
       record_removed: Registro eliminado
       record_saved: Registro guardado
       records: Registros de justificantes
@@ -2292,7 +2292,7 @@ desktop:
       redone: 'Rehecho: {what}'
       refusal:
         ambiguous_grouping: '«{raw}» se puede leer de dos maneras: escríbelo sin separador
-          de miles, como 1000 o 1.5.'
+          de miles, como 1000 o 1,5.'
         cannot_clear: Esto no se puede vaciar. Escribe otro valor en su lugar.
         comma_decimal: '«{raw}» usa coma decimal: escribe {suggestion}.'
         currency_symbol: '«{raw}» lleva símbolo de moneda: escribe solo el número.'
@@ -2560,7 +2560,7 @@ desktop:
       rebuilt: 'Reconstruido. Enlaces actualizados: {links}.'
       reset: Zona de peligro · reiniciar el libro
       reset_blocked: El reinicio está bloqueado
-      reset_blocker: Modelo {modelo} · {year} {period} · {state} cita movimientos
+      reset_blocker: Modelo {modelo} · {period} {year} · {state} cita movimientos
       reset_confirm: 'Reiniciar y quitar · movimientos: {movements}'
       reset_reason: Motivo
       reset_reason_hint: Queda en el registro de auditoría · hasta {limit} caracteres
@@ -2570,7 +2570,7 @@ desktop:
       run_check: Hacer la comprobación
       stale: Declaraciones por recalcular
       stale_none: 'Ninguna: cada cálculo cubre los movimientos tal como están.'
-      stale_row: 'Modelo {modelo} · {year} {period} · desde el cálculo, cambiados:
+      stale_row: 'Modelo {modelo} · {period} {year} · desde el cálculo, cambiados:
         {changed}, quitados: {removed}'
       status: Estado · {period}
       unconverted: Extranjeros sin cambio
@@ -2800,6 +2800,7 @@ desktop:
         none: Sin documentos
         pick_failed: No se abrió el diálogo de archivos.
         purchase_invoice: Factura de compra · añadida {date}
+        search: Buscar documentos
       drop: Descartar
       earlier: Decisiones anteriores
       effective_date: Fecha efectiva
@@ -3019,8 +3020,8 @@ desktop:
         category_needed: Elige una categoría para la parte {part}.
         choose_category: Elige una categoría
         count: Una división tiene de 2 a {max} partes.
-        description: Las partes suman {amount} {currency}. La última parte se queda
-          con lo que falta.
+        description: Las partes suman {amount}. La última parte se queda con lo que
+          falta.
         description_needed: La parte {part} necesita una descripción.
         duplicate: 'La parte {part} es igual que otra: cambia su importe o descripción.'
         mixed_hint: ¿Lo usas en parte para trabajar? Usa Mixto con una parte.
@@ -3046,7 +3047,7 @@ desktop:
         draft: Borrador
         filed_confirmed: Presentado · justificante confirmado
         filed_local: Presentado en local · estado en la AEAT sin confirmar
-        name: Modelo {modelo} · {year} {period}
+        name: Modelo {modelo} · {period} {year}
         none: Ninguna declaración usa aún este movimiento.
         not_built: Vínculos con declaraciones aún sin generar
         superseded: Sustituido
@@ -3247,7 +3248,7 @@ desktop:
       read_failed: No se han podido leer las facturas.
       refusal:
         ambiguous_grouping: '"{raw}" se puede leer de dos maneras. Escribe 1500 o
-          1.5.'
+          1,5.'
         comma_decimal: '"{raw}": usa punto para los decimales.'
         currency_symbol: '"{raw}": sin símbolo de moneda.'
         date_not_in_calendar: '"{raw}" no es un día del calendario.'
@@ -3370,6 +3371,7 @@ desktop:
         invoice_only: La factura incluye el movimiento; el movimiento no la cita
         transaction_only: El movimiento cita la factura; la factura no lo incluye
       empty: Nada por conciliar
+      empty_waiting: 'Sin sugerencias · movimientos que esperan factura: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
       link: Vincular · permanente
       link_named: Vincular {number} a {description} · permanente
@@ -4242,7 +4244,7 @@ desktop:
       unknown: No hemos podido confirmar que la sincronización haya terminado. Actualiza
         para comprobarlo. No se puede iniciar otra hasta que esta se resuelva.
       unknown_start: No se ha podido confirmar si se inició la sincronización. No
-        inicies otra; contacta con soporte e indica el código unknown.
+        inicies otra; contacta con soporte.
       unsupported: Este acceso requiere una interacción disponible en el terminal.
         Cancela este intento y sincroniza el Censo desde el terminal.
     close: Cerrar perfil
@@ -4978,9 +4980,6 @@ ledger:
         no es un pago.
       allocation_components_missing: La base del inmueble completo carece de sus componentes
         de imputación.
-      amortization_box_not_bound: Esta edición de la declaración no asigna ninguna
-        casilla a la amortización de este tipo de elemento, así que no se puede preparar
-        la entrega para la declaración.
       amortization_period_elapsed: El periodo máximo de amortización del elemento
         terminó el {ended_on}, así que cuenta como totalmente amortizado.
       approved_plan_exceeds_basis: El plan aprobado reparte más que la base amortizable.
@@ -5498,7 +5497,7 @@ ledger:
       approved_plan: Sigue un plan especial de amortización aprobado
       authority_unavailable: Límites no disponibles para este ejercicio
       free_election: Eliges el importe cada año
-      research_development_period: Sigue el período de los edificios afectos a I+D
+      research_development_period: Sigue el periodo de los edificios afectos a I+D
       twentieth_limit: Limitado a una veinteava parte al año
       useful_life_evidence: Sigue la vida útil que justificas
     opening_history_status:
@@ -5519,7 +5518,7 @@ ledger:
         no puede calcular esta cifra.
       free_election: 'Libertad de amortización: sin cifra prevista'
       incomplete: 'Faltan datos: no se puede calcular'
-      period_elapsed: Período máximo transcurrido
+      period_elapsed: Periodo máximo transcurrido
       unsupported: Aún no admitido
     plan_advisory:
       used_element_group_limit: El último párrafo del art. 4.3 RIS limita los elementos
@@ -6127,7 +6126,7 @@ tui:
       pull_filed_all: Obtener todas las declaraciones presentadas
       review_census: Revisar el censo
     address:
-      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+      declaration: Modelo %{modelo} · %{period} %{filing_year}
     aeat_observation_state:
       accepted: Aceptada
       not_observed: No observada
@@ -6411,7 +6410,7 @@ tui:
       context_across_records: En todos los registros
       reason: Sugerida por el resumen local
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{filing_year} · %{period}
+    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'Datos de la AEAT: %{state}'
     availability:
       available: Disponible
@@ -7141,7 +7140,7 @@ tui:
         source_jurisdiction_required_irnr: Como contribuyente no residente, indica
           la jurisdicción de origen de este apunte.
         title: Añadir apunte
-      blocker: El Modelo {modelo} {year} {period} ({state}) cita este apunte.
+      blocker: El Modelo {modelo} {period} {year} ({state}) cita este apunte.
       browse:
         account: Cuenta propia (acc-01)
         action:
@@ -7280,12 +7279,12 @@ tui:
         ready: 'Listo: ningún hallazgo en {checked} apuntes comprobados.'
         review_counts: 'Revisión: pendientes {pending}, revisados {reviewed}, omitidos
           {skipped}'
-        stale_filing: 'El Modelo {modelo} {year} {period} se presentó con apuntes
+        stale_filing: 'El Modelo {modelo} {period} {year} se presentó con apuntes
           que han cambiado: {changed} cambiados, {removed} eliminados'
-        stale_filing_register: 'El Modelo {modelo} {year} {period} se presentó con
+        stale_filing_register: 'El Modelo {modelo} {period} {year} se presentó con
           un registro de activos que ha cambiado: {changes} cambios'
         stale_filing_register_unavailable: No se ha podido comparar el Modelo {modelo}
-          {year} {period} con el registro de activos
+          {period} {year} con el registro de activos
         status_heading: Estado de {period}
         title: Estado y comprobaciones del libro
         totals: Ingresos de la actividad {income}, gastos {expense}, neto {net}
@@ -7366,7 +7365,7 @@ tui:
         lifecycle_change: '{when}: {previous} → {state} (motivo: {reason})'
         manual: Introducido a mano
         no_participation: Ninguna declaración finalizada usa este apunte.
-        participation: Usado por el Modelo {modelo} {year} {period} ({state})
+        participation: Usado por el Modelo {modelo} {period} {year} ({state})
         read: Volver a leer
         siblings: Incluir las otras partes de una división
         state: 'Estado: {state}'
@@ -7508,7 +7507,7 @@ tui:
           attached: Adjuntado. El apunte tiene ahora {count} adjuntos.
           attachment: Adjunto {attachment}
           detached: Desvinculado. El apunte tiene ahora {count} adjuntos.
-          revision: Modelo {modelo} {year} {period} ({state})
+          revision: Modelo {modelo} {period} {year} ({state})
           stale: '{count} revisiones finalizadas de Modelo se calcularon antes de
             este cambio y no lo incluyen:'
           unchanged: 'No ha cambiado nada: el apunte ya tenía exactamente estos adjuntos.'
@@ -8345,7 +8344,7 @@ tui:
           prior: Trasladada desde el ejercicio %{ejercicio}.
           sector: Sector %{sector} · letra %{letra} · actividades %{activities}
           seed_source: Trasladada desde la observación local del Modelo %{modelo}
-            de %{year} %{period}.
+            de %{period} %{year}.
         sectors: Sectores diferenciados
         title: Registro de prorrata
         tool: Registro de prorrata
@@ -8817,7 +8816,7 @@ tui:
       unavailable: La búsqueda no está disponible en esta sesión
       unknown: No se ha podido preparar la búsqueda.
     result:
-      address: Modelo %{modelo} · %{filing_year} · %{period}
+      address: Modelo %{modelo} · %{period} %{filing_year}
       label:
         declaration: Declaración
         filing: Presentación

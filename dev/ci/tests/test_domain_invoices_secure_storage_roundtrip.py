@@ -223,8 +223,11 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
 
     assert loaded == original
     assert len(loaded.invoices) == 2
+    _assert_domestic_retention_fields(next(v for v in loaded.values() if v.invoice_number == "F-2025-100"))
+    _assert_oss_union_scheme_fields(next(v for v in loaded.values() if v.invoice_number == "F-2025-200"))
 
-    domestic = next(v for v in loaded.values() if v.invoice_number == "F-2025-100")
+
+def _assert_domestic_retention_fields(domestic: Invoice) -> None:
     assert domestic.bucket_id == "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"
     assert domestic.iva_category == IvaCategory("domestic_general")
     assert domestic.retention_rate == Decimal("0.15")
@@ -247,7 +250,8 @@ def test_invoice_catalogue_with_retention_and_oss_axes_survives_encrypted_storag
     assert domestic.recargo_amount == Decimal("52.00")
     assert domestic.suplido_amount == Decimal("25.00")
 
-    oss = next(v for v in loaded.values() if v.invoice_number == "F-2025-200")
+
+def _assert_oss_union_scheme_fields(oss: Invoice) -> None:
     assert oss.iva_category == IvaCategory("intra_community_supply")
     assert oss.operation_type is IntracomOperationType.S
     assert oss.oss_ioss_regime == OssIossRegime("union_scheme")

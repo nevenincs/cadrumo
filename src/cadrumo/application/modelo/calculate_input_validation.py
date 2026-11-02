@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 from collections.abc import Mapping
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal, NoReturn
@@ -51,6 +52,9 @@ from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+
+
+_SHOWN_SAMPLE = 20
 
 
 class ModeloCalculateInputError(ModeloError):
@@ -126,6 +130,14 @@ def validate_detail_rows(
 ) -> None:
     """Validate model-specific detail rows against the pinned operation."""
     member_rows = [row for row in rows if isinstance(row, Modelo184MemberRow)]
+    days_of_year = 366 if calendar.isleap(work_unit.filing_year) else 365
+    for row in member_rows:
+        for days in (row.dias_miembro, row.dias_arrendamiento):
+            if days is not None and days > days_of_year:
+                raise ModeloCalculateDetailRowsError(
+                    context={"days": str(days), "filing_year": str(work_unit.filing_year)},
+                    translated_message="errors.calc.m184_days_past_the_year",
+                )
     try:
         validate_m184_member_share_sum(member_rows)
     except Modelo184ShareSumError as exc:
@@ -452,7 +464,7 @@ def validated_canonical_casilla_id(key: str, revision: ModeloRevision, *, work_u
             translated_message="application.modelo.errors.calculate_casilla_noncanonical_refused",
         )
 
-    shown = sorted(known_ids)[:20]
+    shown = sorted(known_ids)[:_SHOWN_SAMPLE]
     accepted_hint = ", ".join(shown)
     if len(known_ids) > len(shown):
         accepted_hint += ", ..."

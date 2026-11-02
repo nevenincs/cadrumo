@@ -366,6 +366,12 @@ export function InvoicesSection({
         className="ledger-invoices-grid rounded-md"
         label={t("desktop.ledger.invoices.grid")}
         columns={columns}
+        moreColumnsLabel={(count) =>
+          t("desktop.ledger.columns.more_name", { count })
+        }
+        earlierColumnsLabel={(count) =>
+          t("desktop.ledger.columns.earlier_name", { count })
+        }
         rows={gridRows}
         positionLabel={(row, count) =>
           t("desktop.ledger.position", { row, count })

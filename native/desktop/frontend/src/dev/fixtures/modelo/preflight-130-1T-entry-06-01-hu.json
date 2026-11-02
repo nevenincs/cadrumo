@@ -4,7 +4,7 @@
   "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
   "outcome": {
     "outcome": "evaluated",
-    "baseline_id": "fd428f4e898e198be1900e438fc71c5bd64a31c45fc9b2f6cb8550f9e26bd8c8",
+    "baseline_id": "c2b1a5a3fc7b0b2a75583c15567bf30dfae19b6459de030ff376bee161d2ebe2",
     "findings": []
   },
   "parsed": [
@@ -13,7 +13,7 @@
       "value": "1234.56",
       "normalisations": ["separators_removed"],
       "refusal": null,
-      "value_text": "1.234,56 €",
+      "value_text": "1 234,56 €",
       "refusal_words": null,
       "comparable_value": "1234.56"
     },
@@ -29,7 +29,7 @@
         "message_arguments": []
       },
       "value_text": null,
-      "refusal_words": "Esta casilla no se puede cambiar así.",
+      "refusal_words": "Ez a rovat így nem módosítható.",
       "comparable_value": null
     }
   ],

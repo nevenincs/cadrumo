@@ -126,25 +126,29 @@ def test_requirements_are_indexed_by_the_slot_binding_id() -> None:
         assert requirement.target_bindings
 
 
+def _resolve_annual_180(repository, snapshot, operation):
+    return RelationPrefillSourceResolver(
+        repository=repository,
+        profile_read_ports=empty_profile_read_ports(),
+        operation=operation,
+        registry_snapshot=snapshot,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id="operator",
+            modelo="180",
+            filing_year=2026,
+            period=Period.from_year_and_code(2026, "0A"),
+            revision=snapshot.revision,
+        ),
+    )
+
+
 def test_the_real_resolver_folds_the_quarters_into_the_slot_values(tmp_path: Path) -> None:
     with _indexed_authority_for_test().operation() as operation, isolated_runtime_profile(tmp_path=tmp_path):
         repository = _seeded_repository()
         snapshot = _snapshot("180", 2026, "0A")
 
-        resolution = RelationPrefillSourceResolver(
-            repository=repository,
-            profile_read_ports=empty_profile_read_ports(),
-            operation=operation,
-            registry_snapshot=snapshot,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="180",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "0A"),
-                revision=snapshot.revision,
-            ),
-        )
+        resolution = _resolve_annual_180(repository, snapshot, operation)
 
     assert resolution.owned_sources == (BindingSourceKind.RELATION_PREFILL,)
     # The fold slot IS the binding, so the two channels carry the same keys and
@@ -169,20 +173,7 @@ def test_resolved_provenance_names_the_filed_casilla_terminal_origin(tmp_path: P
         repository = _seeded_repository()
         snapshot = _snapshot("180", 2026, "0A")
 
-        resolution = RelationPrefillSourceResolver(
-            repository=repository,
-            profile_read_ports=empty_profile_read_ports(),
-            operation=operation,
-            registry_snapshot=snapshot,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id="operator",
-                modelo="180",
-                filing_year=2026,
-                period=Period.from_year_and_code(2026, "0A"),
-                revision=snapshot.revision,
-            ),
-        )
+        resolution = _resolve_annual_180(repository, snapshot, operation)
 
     assert resolution.provenance
     for item in resolution.provenance:

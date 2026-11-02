@@ -85,7 +85,13 @@ export function TypedField({
     case "year":
       return <YearEditor {...editor} />;
     case "money":
-      return <MoneyEditor {...editor} decimals={field.decimals} />;
+      return (
+        <MoneyEditor
+          {...editor}
+          decimals={field.decimals}
+          currency={field.currency}
+        />
+      );
     case "decimal":
       return <DecimalEditor {...editor} />;
     case "integer":

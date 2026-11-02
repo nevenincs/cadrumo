@@ -46,9 +46,9 @@ from .....application.modelo.work_form_models import (
     ModeloFormTextDisclosure,
     ModeloWorkForm,
     address_key,
-    holds_zero,
     section_fields,
 )
+from .....application.modelo.work_form_scalar_values import holds_zero
 from .....application.modelo.work_form_wording import context_value_text, holds_nothing, shown_rate
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import output_language, tr

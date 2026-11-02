@@ -405,23 +405,21 @@ export function SignInDialog({
           </div>
         )}
 
-        {creating ? null : answerable ? (
+        {!creating && answerable && account.canCreate && account.offering && (
           <>
             <Separator />
-            {account.canCreate && account.offering && (
-              <Button
-                className="new-profile w-full"
-                variant="outline"
-                size="sm"
-                aria-disabled={busy || undefined}
-                onClick={busy ? undefined : () => onCreateChange?.(true)}
-              >
-                <Icon name="userAdd" />
-                {t("desktop.account.new_profile")}
-              </Button>
-            )}
+            <Button
+              className="new-profile w-full"
+              variant="outline"
+              size="sm"
+              aria-disabled={busy || undefined}
+              onClick={busy ? undefined : () => onCreateChange?.(true)}
+            >
+              <Icon name="userAdd" />
+              {t("desktop.account.new_profile")}
+            </Button>
           </>
-        ) : null}
+        )}
         {!creating && onManage && (
           <Button variant="ghost" disabled={busy} onClick={onManage}>
             {t("desktop.account.manage.title")}

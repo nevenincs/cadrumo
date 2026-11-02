@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
+from pathlib import Path
 from typing import Final
 from uuid import UUID
 
@@ -17,10 +18,12 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import (
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_modelo_ready_profile_record
+from cadrumo.application.live.justificante import JustificanteCaptureSnapshot
 from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.operation_shared import resolve_active_workflow_profile
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
+from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.calculations.registry.tests.cross_period_seeding import resolved_revision
@@ -31,6 +34,7 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
     build_verification_repository_bundle,
     build_work_lifecycle_ports,
 )
+from cadrumo.entrypoints.justificante_composition import build_justificante_capture_service
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
@@ -132,3 +136,20 @@ def seeded_modelo_verification_report(profile_id: UUID, *, operation: PinnedAuth
             f"(status={report.completeness_status.value}); filing cannot be exercised until it does: {findings}"
         )
     return revision_id, str(report.verification_report_id)
+
+
+def captured_justificante_snapshot(profile_id: UUID, unit: WorkUnit) -> JustificanteCaptureSnapshot:
+    """Capture the synthetic receipt for ``unit`` through the production service and return its active snapshot."""
+    pdf = (
+        Path(__file__).resolve().parents[2] / "tests" / "fixtures" / "justificantes" / "130" / "2024-1T.pdf"
+    ).read_bytes()
+    return build_justificante_capture_service(str(profile_id)).capture(
+        modelo=str(unit.modelo),
+        filing_year=unit.filing_year,
+        period=unit.period,
+        expediente_id="202413000000001Z",
+        csv="ABCD1234EFGH",
+        pdf_bytes=pdf,
+        pdf_sha256=sha256_hex(pdf),
+        captured_at=datetime(2026, 9, 29, tzinfo=UTC),
+    )

@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { expect, fireEvent, userEvent, waitFor } from "storybook/test";
 import { STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import { SEED_ELEMENTS } from "@/dev/assetsSeed";
+import { typeAsAPerson } from "@/dev/personTyping";
 import { ledgerClassOf } from "@/dev/ledgerClassesFixture";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPort } from "../../../shell/ledger";
@@ -29,8 +30,10 @@ import { translator } from "../../../shell/strings";
 const noop = () => undefined;
 
 /** How the made-up ledger treats a write: it settles as the shape says, or
- * never answers, or is not reached. */
-type Hold = "none" | "in_flight" | "unavailable" | "too_large";
+ * never answers, or is not reached, or is one another window has just sent
+ * the same of, so the answer is that it was already recorded. */
+type Hold =
+  "none" | "in_flight" | "unavailable" | "too_large" | "recorded_elsewhere";
 
 type Args = { shape?: LedgerShape; hold?: Hold; locale: string };
 
@@ -47,7 +50,9 @@ function useHeldPort(shape: LedgerShape | undefined, hold: Hold): LedgerPort {
           ? base.submit(id, payload)
           : hold === "in_flight"
             ? new Promise(noop)
-            : Promise.reject({ code: hold, operation_id: null }),
+            : hold === "recorded_elsewhere"
+              ? base.submit(id, payload).then(() => base.submit(id, payload))
+              : Promise.reject({ code: hold, operation_id: null }),
     };
   }, [base, hold]);
 }
@@ -113,17 +118,18 @@ const drawn = <Found extends HTMLElement>(root: Root, selector: string) =>
     { timeout: 5000 },
   );
 
-// A change is made as a change event, not by pointer and keys: a person who
+// A choice is made as a change event, not by pointer and keys: a person who
 // opens a picker or a list while the form is being filled keeps it open, since
-// nothing here counts as a click outside it.
+// nothing here counts as a click outside it. A written field is typed in and
+// left, as a person does, so it settles into the form it shows at rest.
 
-/** Sets the field the options named `key` to `text`. */
+/** Writes `text` into the field the options named `key`, then leaves it. */
 const typed = async (root: Root, key: string, text: string) => {
   const input = await drawn<HTMLInputElement>(
     root,
     `[data-field="${key}"] input`,
   );
-  await fireEvent.change(input, { target: { value: text } });
+  await typeAsAPerson(input, text);
 };
 
 /** Chooses the `nth` of the choices the options served for `key`. */
@@ -181,7 +187,7 @@ const submit = (root: Root) => pressed(root, ".ledger-asset-submit");
 const fillElement = async (root: Root) => {
   await typed(root, "name", "Sierra de cinta");
   await typed(root, "serial_number", "SC-0412");
-  await chosen(root, "asset_kind", 1);
+  await chosenValue(root, "asset_kind", "material");
   await typed(root, "in_service_date", "2026-06-15");
   await chosen(root, "method", 0);
   await chosen(root, "amortization.authority_class_key", 0);
@@ -219,7 +225,7 @@ export const AddElementIncomplete: Story = adding({
 export const AddElementOutsideLedger: Story = adding({
   name: "Add element, bought outside the ledger: date, activity and document",
   play: steps(
-    (root) => chosen(root, "asset_kind", 1),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosen(root, "acquisition_shape", 1),
     (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
@@ -230,7 +236,7 @@ export const AddElementOutsideLedger: Story = adding({
 export const AddElementOutsideLedgerLaterPayment: Story = adding({
   name: "Add element, bought outside the ledger, with a later payment from the ledger",
   play: steps(
-    (root) => chosen(root, "asset_kind", 1),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosen(root, "acquisition_shape", 1),
     (root) => typed(root, "declared_acquisition_date", "2024-11-05"),
@@ -243,7 +249,7 @@ export const AddElementOutsideLedgerLaterPayment: Story = adding({
 export const AddElementWholeProperty: Story = adding({
   name: "Add element, whole property: its parts",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "basis_stage", "whole_property"),
   ),
@@ -251,7 +257,7 @@ export const AddElementWholeProperty: Story = adding({
 export const AddElementUsedBuilding: Story = adding({
   name: "Add element, bought used: the date the building was built",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "acquired_condition", "used"),
     (root) => chosenValue(root, "basis_stage", "whole_property"),
@@ -260,7 +266,7 @@ export const AddElementUsedBuilding: Story = adding({
 export const AddElementOpeningKnown: Story = adding({
   name: "Add element, opening history known: the facts it can state",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "opening_status", "known"),
   ),
@@ -282,7 +288,8 @@ export const AddElementEditors: Story = adding({
   play: async (context) => {
     const root = context.canvasElement;
     await steps(
-      (found) => chosen(found, "asset_kind", 0),
+      (found) => chosenValue(found, "asset_kind", "material"),
+      (found) => typed(found, "in_service_date", "2026-06-15"),
       (found) => chosenValue(found, "basis_stage", "taxpayer_owned"),
       (found) => chosenValue(found, "opening_status", "known"),
     )(context);
@@ -323,7 +330,7 @@ export const AddElementEditors: Story = adding({
 export const AddElementUsedOriginalPrice: Story = adding({
   name: "Add element, bought used on the linear method: the originating price beside the building date",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "method", "linear"),
     (root) => chosenValue(root, "acquired_condition", "used"),
@@ -337,7 +344,7 @@ export const AddElementUsedOriginalPrice: Story = adding({
 export const AddElementNewHidesUsedFacts: Story = adding({
   name: "Add element, bought new: neither the building date nor the originating price is asked",
   play: steps(
-    (root) => chosen(root, "asset_kind", 0),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosenValue(root, "method", "linear"),
     (root) => chosenValue(root, "acquired_condition", "new"),
@@ -354,7 +361,7 @@ export const AddElementNewHidesUsedFacts: Story = adding({
 export const AddElementVehicle: Story = adding({
   name: "Add element, a class that requires a vehicle declaration: it opens as required, with no question",
   play: steps(
-    (root) => chosen(root, "asset_kind", 1),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosen(root, "method", 0),
     (root) =>
@@ -373,7 +380,7 @@ export const AddElementVehicle: Story = adding({
 export const AddElementClassWithoutVehicle: Story = adding({
   name: "Add element, a class that needs no vehicle declaration: nothing is drawn",
   play: steps(
-    (root) => chosen(root, "asset_kind", 1),
+    (root) => chosenValue(root, "asset_kind", "material"),
     (root) => typed(root, "in_service_date", "2026-06-15"),
     (root) => chosen(root, "method", 0),
     (root) =>
@@ -710,12 +717,24 @@ export const ClaimDone: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, done",
   play: steps(forecast, claim),
 });
+// Another window records the same dotación between this form's forecast and
+// its send: the backend answers the send as already recorded.
 export const ClaimAlreadyRecorded: Story = claiming("furgoneta", 2026, {
-  name: "Record dotación, sent again: already recorded",
-  play: steps(forecast, claim, async (root) => {
-    await drawn(root, ".ledger-asset-saved");
-    await claim(root);
-  }),
+  name: "Record dotación, recorded by another window meanwhile: already recorded",
+  args: { hold: "recorded_elsewhere" },
+  play: async (context) => {
+    await steps(forecast, claim)(context);
+    const root = context.canvasElement;
+    const t = translator(String(context.globals.locale ?? "en"));
+    await waitFor(() => {
+      const line = root.querySelector(".ledger-asset-saved");
+      if (
+        line?.textContent?.includes(t("desktop.ledger.assets.claim_reused")) !==
+        true
+      )
+        throw new Error("the answer that it was already recorded is not drawn");
+    });
+  },
 });
 export const ClaimConflict: Story = claiming("furgoneta", 2026, {
   name: "Record dotación, overlaps one recorded: refused, offers to correct it",

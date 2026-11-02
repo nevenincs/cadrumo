@@ -34,6 +34,7 @@ from ..edition_delta_equivalence import _prove_chain
 from ..edition_delta_override_pruning import prune_redundant_override_leaves
 from ..edition_family_delta_collapse import collapse_keyed_families
 from ..edition_round_trip import RoundTripReport
+from .synthetic_delta_edition_support import write_sectioned_edition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -62,34 +63,18 @@ def _construct(revision_id: str, *, extra: str = "") -> str:
     )
 
 
-def _edition(modelo_dir: Path, revision_id: str, *, manifest_extra: str, sections: dict[str, str]) -> None:
-    year = int(revision_id)
-    revision_dir = modelo_dir / "revisions" / revision_id
-    revision_dir.mkdir(parents=True)
-    (revision_dir / "revision.toml").write_text(
-        f'[revisions."{revision_id}"]\nvalid_from = {year}-01-01\nvalid_to = {year}-12-31\n'
-        f'period_selector = {{ years = [{year}], periods = ["0A"] }}\n'
-        f'legal_refs = ["{_REF}"]\nsource_refs = ["{_SOURCE}"]\n' + manifest_extra,
-        encoding="utf-8",
-        newline="\n",
-    )
-    for section, text in sections.items():
-        (revision_dir / section).mkdir()
-        (revision_dir / section / "0001-declarations.toml").write_text(text, encoding="utf-8", newline="\n")
-
-
 def _modelo(root: Path, *, construct_extra: str = "", manifest_extra: str = "", state_construct: bool = True) -> Path:
     """A 2024 root whose construct omits ``deadline_windows``, and a 2025 edition stored against it."""
     modelo_dir = root / _MODELO_ID
     modelo_dir.mkdir(parents=True)
     write_standard_manifest(modelo_dir, "Explicit empty fixture")
-    _edition(
+    write_sectioned_edition(
         modelo_dir,
         _BASELINE,
         manifest_extra="",
         sections={"casillas": _casillas(_BASELINE), "constructs": _construct(_BASELINE)},
     )
-    _edition(
+    write_sectioned_edition(
         modelo_dir,
         _EDITION,
         manifest_extra=(

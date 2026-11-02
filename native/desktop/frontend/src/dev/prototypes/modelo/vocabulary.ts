@@ -1,4 +1,5 @@
 import type { IconName } from "@/components/ui/icon";
+import { formatAmount } from "@/shared/numbers";
 import type {
   Editability,
   FormField,
@@ -178,26 +179,7 @@ export function periodWords(
 
 export function money(value: string | number | null, locale: string): string {
   if (value === null || value === "") return "";
-  const n = typeof value === "number" ? value : Number(value);
-  if (Number.isNaN(n)) return String(value);
-  // Spanish leaves four-digit amounts ungrouped; a column of amounts reads
-  // only if every one of them is grouped the same way.
-  const parts = new Intl.NumberFormat(locale, {
-    style: "currency",
-    currency: "EUR",
-    minimumFractionDigits: 2,
-  }).formatToParts(n);
-  const group =
-    new Intl.NumberFormat(locale)
-      .formatToParts(1_000_000)
-      .find((p) => p.type === "group")?.value ?? ".";
-  return parts
-    .map((p) =>
-      p.type === "integer" && p.value.length > 3
-        ? p.value.replace(/\B(?=(\d{3})+(?!\d))/g, group)
-        : p.value,
-    )
-    .join("");
+  return formatAmount(locale, String(value), { currency: "EUR" });
 }
 
 function percent(n: number, locale: string): string {

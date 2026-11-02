@@ -348,7 +348,7 @@ def test_an_open_deadline_counts_its_days_at_the_headers_thresholds_and_a_closed
 
     due_soon = next(row for row in rows.values() if row.period_code == "2T")
     assert (due_soon.days_remaining, due_soon.days_overdue, due_soon.due_tone) == (5, None, ModeloFormDeadlineTone.SOON)
-    assert due_soon.due_words == tr("workspace.modelo.header.deadline", date="05/05/2025", days=5, locale="en")
+    assert due_soon.due_words == tr("workspace.modelo.header.deadline", date="May 5, 2025", days=5, locale="en")
     late = next(row for row in rows.values() if row.key.startswith("due:") and row.period_code == "1T")
     assert (late.days_remaining, late.days_overdue, late.due_tone) == (None, 9, ModeloFormDeadlineTone.URGENT)
     closed = rows["c" * 64]
@@ -392,7 +392,7 @@ def test_the_new_declaration_dialog_offers_the_admitted_addresses_with_the_due_o
     assert existing is not None and existing.work_unit_id == "a" * 64 and existing.state_words
     suggested = targets["303", "2T"]
     assert suggested.suggested and suggested.expected and suggested.existing is None
-    assert suggested.deadline == date(2025, 7, 21) and suggested.deadline_text == "21/07/2025"
+    assert suggested.deadline == date(2025, 7, 21) and suggested.deadline_text == "Jul 21, 2025"
     assert not targets["390", "0A"].expected and not targets["390", "0A"].suggested
     assert [target.suggested for target in targets.values()].count(True) == 1
     # With nothing admitted, the returns due are what the dialog offers.
@@ -433,7 +433,7 @@ def test_the_list_says_what_it_could_read_and_never_passes_a_partial_read_for_ev
     assert aeat.observed_at is None and tr("workspace.declarations.calendar.never_observed", locale="en") in aeat.words
     assert notices == (aeat.words, tr("workspace.declarations.refusal.source", locale="en"))
     schedule = next(source for source in sources if source.source is DeclarationsCalendarSource.SCHEDULE)
-    assert "30/04/2025 12:00 UTC" in schedule.words, schedule.words
+    assert "Apr 30, 2025 12:00 UTC" in schedule.words, schedule.words
     fresh = calendar_sources(calendar, OutputLanguage.EN)
     aeat_read = next(item.words for item in fresh if item.source is DeclarationsCalendarSource.AEAT_EVIDENCE)
     assert source_notices(_workspace(), calendar, OutputLanguage.EN) == (aeat_read,)

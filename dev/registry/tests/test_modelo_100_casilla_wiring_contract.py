@@ -34,6 +34,77 @@ def test_every_formula_target_is_declared_as_the_matching_computed_casilla() -> 
                 )
 
 
+def _assert_inventory_covers_revision(revision, inventory) -> None:
+    declared_casilla_ids = {casilla.id for casilla in revision.casillas}
+    assert set(inventory.producer_kind_by_casilla) == declared_casilla_ids
+    assert set(inventory.producer_reason_by_casilla) == declared_casilla_ids
+    assert set(inventory.producer_provenance_by_casilla) == declared_casilla_ids
+    assert inventory.computed_casilla_ids == frozenset(
+        casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.COMPUTED
+    )
+    assert sum(len(formula_ids) for formula_ids in inventory.formula_ids_by_target.values()) == len(revision.formulas)
+    for formula in revision.formulas:
+        assert formula.id in inventory.formula_ids_by_target[formula.target_casilla_id]
+
+
+def _assert_casilla_producer_traces(inventory, casilla) -> None:
+    traces = inventory.producer_provenance_by_casilla[casilla.id]
+    assert traces
+    assert all(trace.casilla.id == casilla.id for trace in traces)
+    assert {trace.producer_kind for trace in traces} == {inventory.producer_kind_by_casilla[casilla.id]}
+    assert {trace.reason for trace in traces} == {inventory.producer_reason_by_casilla[casilla.id]}
+    assert all(trace.casilla.legal_refs == casilla.legal_refs for trace in traces)
+    assert all(trace.casilla.source_refs == casilla.source_refs for trace in traces)
+
+    producer_kind = inventory.producer_kind_by_casilla[casilla.id]
+    if producer_kind == "formula":
+        formulas = tuple(trace.formula for trace in traces)
+        assert all(formula is not None for formula in formulas)
+        assert all(formula.target_casilla_id == casilla.id for formula in formulas if formula is not None)
+        assert {formula.id for formula in formulas if formula is not None} == {casilla.formula}
+        assert all(
+            trace.producer_legal_refs == trace.formula.legal_refs
+            and trace.producer_source_refs == trace.formula.source_refs
+            for trace in traces
+            if trace.formula is not None
+        )
+    elif producer_kind == "manual":
+        assert len(traces) == 1
+        trace = traces[0]
+        assert trace.formula is None and trace.binding is None
+        assert trace.producer_legal_refs == casilla.legal_refs
+        assert trace.producer_source_refs == casilla.source_refs
+    elif producer_kind == "upstream":
+        assert len(traces) == 1
+        trace = traces[0]
+        assert trace.binding is not None and trace.binding.id == casilla.binding
+        assert trace.formula is None
+        assert trace.producer_legal_refs == trace.binding.legal_refs
+        assert trace.producer_source_refs == trace.binding.source_refs
+    elif producer_kind == "relation":
+        assert all(trace.binding is not None and trace.binding.id == casilla.binding for trace in traces)
+        assert all(trace.formula is None for trace in traces)
+        assert all(
+            trace.binding is not None
+            and trace.binding.source == "relation_prefill"
+            and trace.producer_legal_refs == trace.binding.legal_refs
+            and trace.producer_source_refs == trace.binding.source_refs
+            for trace in traces
+        )
+    else:
+        # The two kinds that produce no calculation edge at all, so
+        # their grounding is the casilla's own. Asserted together
+        # because they share a SHAPE rather than a name; a kind
+        # added later still reds here instead of falling through,
+        # which is what keeps this branch exhaustive.
+        assert producer_kind in {"informational", "projection_only"}, producer_kind
+        assert len(traces) == 1
+        trace = traces[0]
+        assert trace.formula is None and trace.binding is None
+        assert trace.producer_legal_refs == casilla.legal_refs
+        assert trace.producer_source_refs == casilla.source_refs
+
+
 def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible() -> None:
     """The real registry inventory preserves deterministic and intentional producers."""
     modelos_by_id, _catalogues = _loaded_registry()
@@ -42,74 +113,9 @@ def test_revision_producer_inventory_keeps_formula_and_non_formula_paths_visible
     for modelo in modelos_by_id.values():
         for revision in modelo.revisions.values():
             inventory = producer_inventory(revision)
-            declared_casilla_ids = {casilla.id for casilla in revision.casillas}
-            assert set(inventory.producer_kind_by_casilla) == declared_casilla_ids
-            assert set(inventory.producer_reason_by_casilla) == declared_casilla_ids
-            assert set(inventory.producer_provenance_by_casilla) == declared_casilla_ids
-            assert inventory.computed_casilla_ids == frozenset(
-                casilla.id for casilla in revision.casillas if casilla.input_kind is InputKind.COMPUTED
-            )
-            assert sum(len(formula_ids) for formula_ids in inventory.formula_ids_by_target.values()) == len(
-                revision.formulas
-            )
-            for formula in revision.formulas:
-                assert formula.id in inventory.formula_ids_by_target[formula.target_casilla_id]
+            _assert_inventory_covers_revision(revision, inventory)
             for casilla in revision.casillas:
-                traces = inventory.producer_provenance_by_casilla[casilla.id]
-                assert traces
-                assert all(trace.casilla.id == casilla.id for trace in traces)
-                assert {trace.producer_kind for trace in traces} == {inventory.producer_kind_by_casilla[casilla.id]}
-                assert {trace.reason for trace in traces} == {inventory.producer_reason_by_casilla[casilla.id]}
-                assert all(trace.casilla.legal_refs == casilla.legal_refs for trace in traces)
-                assert all(trace.casilla.source_refs == casilla.source_refs for trace in traces)
-
-                producer_kind = inventory.producer_kind_by_casilla[casilla.id]
-                if producer_kind == "formula":
-                    formulas = tuple(trace.formula for trace in traces)
-                    assert all(formula is not None for formula in formulas)
-                    assert all(formula.target_casilla_id == casilla.id for formula in formulas if formula is not None)
-                    assert {formula.id for formula in formulas if formula is not None} == {casilla.formula}
-                    assert all(
-                        trace.producer_legal_refs == trace.formula.legal_refs
-                        and trace.producer_source_refs == trace.formula.source_refs
-                        for trace in traces
-                        if trace.formula is not None
-                    )
-                elif producer_kind == "manual":
-                    assert len(traces) == 1
-                    trace = traces[0]
-                    assert trace.formula is None and trace.binding is None
-                    assert trace.producer_legal_refs == casilla.legal_refs
-                    assert trace.producer_source_refs == casilla.source_refs
-                elif producer_kind == "upstream":
-                    assert len(traces) == 1
-                    trace = traces[0]
-                    assert trace.binding is not None and trace.binding.id == casilla.binding
-                    assert trace.formula is None
-                    assert trace.producer_legal_refs == trace.binding.legal_refs
-                    assert trace.producer_source_refs == trace.binding.source_refs
-                elif producer_kind == "relation":
-                    assert all(trace.binding is not None and trace.binding.id == casilla.binding for trace in traces)
-                    assert all(trace.formula is None for trace in traces)
-                    assert all(
-                        trace.binding is not None
-                        and trace.binding.source == "relation_prefill"
-                        and trace.producer_legal_refs == trace.binding.legal_refs
-                        and trace.producer_source_refs == trace.binding.source_refs
-                        for trace in traces
-                    )
-                else:
-                    # The two kinds that produce no calculation edge at all, so
-                    # their grounding is the casilla's own. Asserted together
-                    # because they share a SHAPE rather than a name; a kind
-                    # added later still reds here instead of falling through,
-                    # which is what keeps this branch exhaustive.
-                    assert producer_kind in {"informational", "projection_only"}, producer_kind
-                    assert len(traces) == 1
-                    trace = traces[0]
-                    assert trace.formula is None and trace.binding is None
-                    assert trace.producer_legal_refs == casilla.legal_refs
-                    assert trace.producer_source_refs == casilla.source_refs
+                _assert_casilla_producer_traces(inventory, casilla)
             observed_kinds.update(inventory.producer_kind_by_casilla.values())
 
     assert observed_kinds >= {"formula", "manual", "upstream", "relation", "informational"}

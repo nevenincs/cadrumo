@@ -10,7 +10,7 @@ import os
 import sys
 import time
 from collections.abc import Generator
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import contextmanager
 from datetime import timedelta
 from pathlib import Path
 from threading import Lock, RLock
@@ -18,12 +18,10 @@ from typing import override
 from uuid import uuid4
 
 import pytest
-from pydantic import SecretBytes
 
 from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_contracts import ProfileAccessBinding
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
-from cadrumo.application.user_profile.automation_enrollment import EnrollmentTransition
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
@@ -38,15 +36,13 @@ from cadrumo_client.transport.windows_process import WindowsProcessScope
 from cadrumo_runtime.contracts.worker_authorization import (
     WorkerAuthorityRequest,
     WorkerAuthorizationRequest,
-    WorkerAutomationInventoryAllowed,
-    WorkerAutomationInventoryRequest,
     WorkerModelRun,
 )
-from cadrumo_runtime.contracts.worker_enrollment import WorkerApprovalPublication, WorkerApprovalRequest
 
 from ..worker_authorization import WorkerAuthorizationServer, worker_authorization_namespace
 from ..worker_transport import WorkerChannel, worker_endpoint
 from .profile_worker_support import owner_id
+from .worker_authority_support import UnavailableApprovalAuthority
 from .worker_authorization_reuse_fixture import Mode, ReuseSeed
 
 pytestmark = [
@@ -59,7 +55,7 @@ pytestmark = [
 _SERVED = ModelRunServed(provider_id="example", transport="cli", model="example-model-1", agent_version="1")
 
 
-class Owner:
+class Owner(UnavailableApprovalAuthority):
     """Runtime owner port: admits each exchange from what the test has set, and records what it admitted."""
 
     def __init__(self, root: Path, seed: ReuseSeed) -> None:
@@ -85,24 +81,8 @@ class Owner:
                 expires_at=now() + timedelta(seconds=300),
             )
 
-    def automation_inventory(
-        self, request: WorkerAutomationInventoryRequest
-    ) -> AbstractContextManager[WorkerAutomationInventoryAllowed]:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
     def operations_advanced(self, operation_ids: tuple[str, ...], *, records_changed: bool = False) -> None:
         self.advanced.append(operation_ids)
-
-    def approval_preflight(self, request: WorkerApprovalRequest) -> None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_phase(self, request: WorkerApprovalRequest, password: SecretBytes | None) -> bool | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-
-    def approval_publication(
-        self, authority: WorkerAuthorizationRequest, command: WorkerApprovalPublication
-    ) -> EnrollmentTransition | None:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
     def model_run(
         self, authority: WorkerAuthorizationRequest, command: WorkerModelRun, body: bytearray

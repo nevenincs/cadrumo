@@ -8,7 +8,6 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from threading import Event
-from typing import Literal
 from uuid import UUID, uuid4
 
 import pytest
@@ -46,15 +45,14 @@ from cadrumo_client.contracts.operation_access import (
     OperationSubmit,
     OperationSubmitted,
 )
-from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileLogin, ProfileStatus, SessionRequest
-from cadrumo_client.transport.framing import VerifiedConnection
+from cadrumo_client.contracts.profile_access import AccessRefusal, ProfileStatus, SessionRequest
 from cadrumo_client.transport.installation import installation
 from cadrumo_client.transport.windows import WindowsEndpoint
 
 from ...adapters.tests.profile_worker_support import owner_id
 from ...adapters.tests.retained_server import RetainedRuntimeTransportServer
 from ..profile_connections import RuntimeProfileConnections
-from .served_runtime import SyntheticLogin, connect_verified, start_and_settle
+from .served_runtime import SyntheticLogin, admit_session, connect_verified, start_and_settle
 
 pytestmark = [
     pytest.mark.integration,
@@ -63,26 +61,6 @@ pytestmark = [
     pytest.mark.skipif(sys.platform != "win32", reason="requires real native Windows profile workers"),
     pytest.mark.usefixtures("authority_operation"),
 ]
-
-
-def _login(
-    client: VerifiedConnection,
-    profile_id: UUID,
-    *,
-    frontend: OperationFrontendProjection,
-    method: Literal["password", "receipt", "api_key"],
-    proof: bytes,
-) -> UUID:
-    secret = bytearray(proof)
-    result = client.login(
-        ProfileLogin(request_id=uuid4(), profile_id=profile_id, frontend=frontend, method=method),
-        secret,
-        deadline=time.monotonic() + 20,
-    )
-    assert secret == bytes(len(proof))
-    assert isinstance(result, ProfileStatus)
-    assert result.status.session_id is not None
-    return result.status.session_id
 
 
 def _inventory_request(profile_id: UUID) -> AutomationOperationRequest:
@@ -171,15 +149,21 @@ def test_password_human_sees_nonsecret_inventory_and_api_key_cannot_submit_or_re
                 assert server.ready.wait(3)
                 human, api = connect_verified(endpoint), connect_verified(endpoint)
                 try:
-                    human_id = _login(
-                        human, profile_id, frontend=frontend, method="password", proof=PROFILE_INPUT.encode()
+                    human_id = admit_session(
+                        human,
+                        profile_id,
+                        frontend=frontend,
+                        method="password",
+                        proof=PROFILE_INPUT.encode(),
+                        deadline_seconds=20,
                     )
-                    api_id = _login(
+                    api_id = admit_session(
                         api,
                         profile_id,
                         frontend=frontend,
                         method="api_key",
                         proof=possession.get_secret_value(),
+                        deadline_seconds=20,
                     )
                     contract = human.operation(
                         OperationContract(
@@ -303,12 +287,13 @@ def test_pristine_inventory_is_empty_and_missing_optional_store_does_not_block_p
                 assert server.ready.wait(3)
                 human = connect_verified(endpoint)
                 try:
-                    human_id = _login(
+                    human_id = admit_session(
                         human,
                         profile_id,
                         frontend=OperationFrontendProjection.CLI,
                         method="password",
                         proof=PROFILE_INPUT.encode(),
+                        deadline_seconds=20,
                     )
                     contract = human.operation(
                         OperationContract(

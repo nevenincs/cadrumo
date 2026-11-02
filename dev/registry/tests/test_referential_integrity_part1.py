@@ -41,6 +41,7 @@ from ..compiler.validator import RegistryValidator
 from ._referential_integrity_support import (
     EXTRA_LEGAL_ID,
     EXTRA_SOURCE_ID,
+    NUMERIC_CASILLA_01,
     PARITY_SOURCE_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
@@ -69,7 +70,6 @@ pytestmark = [
 ]
 _NONEXISTENT_CASILLA: CasillaId = validated_casilla_id("nonexistent-casilla", surface="_NONEXISTENT_CASILLA")
 _TEXT_CASILLA: CasillaId = validated_casilla_id("text-casilla", surface="_TEXT_CASILLA")
-_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
 #: These cases assert on an alias's REF resolution, never on its rendered text,
 #: so the key only has to be a well-formed non-empty catalogue key; nothing here
 #: calls ``CasillaAlias.get_label``.
@@ -125,7 +125,7 @@ def test_dangling_casilla_references_fail_snapshot_integrity() -> None:
     """Casilla-level references to missing registry ids fail snapshot construction."""
 
     for casilla_update, expected_match in _DANGLING_CASILLA_REFERENCE_CASES:
-        casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update=casilla_update)
+        casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(update=casilla_update)
         revision = minimal_revision(casillas=(casilla,))
         with pytest.raises(RegistryValidationError, match=expected_match):
             build_minimal_snapshot(revision)
@@ -133,8 +133,8 @@ def test_dangling_casilla_references_fail_snapshot_integrity() -> None:
 
 def test_bound_casilla_without_binding_definition_fails_snapshot_integrity() -> None:
     """A bound casilla cannot defer missing binding coverage to formula runtime."""
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"input_kind": InputKind.BOUND})
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(update={"input_kind": InputKind.BOUND})
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={"casillas": (casilla,)},
     )
     with pytest.raises(
@@ -157,7 +157,7 @@ def test_bound_casilla_dangling_alternate_binding_fails_snapshot_integrity() -> 
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(
         update={
             "input_kind": InputKind.BOUND,
             "binding": "test.binding",
@@ -172,7 +172,7 @@ def test_bound_casilla_dangling_alternate_binding_fails_snapshot_integrity() -> 
 
 def test_dangling_casilla_legal_refs() -> None:
     """casilla.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(
         update={"legal_refs": (REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID)},
     )
     revision = minimal_revision(casillas=(casilla,))
@@ -182,7 +182,7 @@ def test_dangling_casilla_legal_refs() -> None:
 def test_dangling_casilla_source_refs() -> None:
     """casilla.source_refs referencing a SourceRefId absent from snapshot.sources raises."""
     _extra = "aeat-dr-extra-v1"
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"source_refs": (REFERENCE_SOURCE_ID, _extra)})
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(update={"source_refs": (REFERENCE_SOURCE_ID, _extra)})
     revision = minimal_revision(casillas=(casilla,))
     snapshot = build_snapshot_with_missing_source(revision, _extra)
     with pytest.raises(RegistryValidationError, match=r"casilla 01.source_refs"):
@@ -201,7 +201,7 @@ def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation(
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(_MISSING_SOURCE_ID,),
     )
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(
         update={"aliases": (alias,), "constraints": constraints},
     )
     revision = minimal_revision(casillas=(casilla,))
@@ -218,7 +218,7 @@ def test_casilla_alias_and_constraints_refs_must_resolve_in_registry_validation(
 
 
 def test_modelo_validation_rejects_casilla_sourced_only_by_executable_parity() -> None:
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"source_refs": (PARITY_SOURCE_ID,)})
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(update={"source_refs": (PARITY_SOURCE_ID,)})
     revision = minimal_revision(casillas=(casilla,))
 
     with pytest.raises(
@@ -236,7 +236,7 @@ def test_modelo_validation_rejects_casilla_constraints_sourced_only_by_executabl
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(PARITY_SOURCE_ID,),
     )
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"constraints": constraints})
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(update={"constraints": constraints})
     revision = minimal_revision(casillas=(casilla,))
 
     with pytest.raises(
@@ -254,7 +254,7 @@ def test_modelo_validation_rejects_casilla_alias_sourced_only_by_executable_pari
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(PARITY_SOURCE_ID,),
     )
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"aliases": (alias,)})
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(update={"aliases": (alias,)})
     revision = minimal_revision(casillas=(casilla,))
 
     with pytest.raises(
@@ -281,7 +281,7 @@ def test_snapshot_carries_casilla_alias_and_constraints_refs() -> None:
         legal_refs=(EXTRA_LEGAL_ID,),
         source_refs=(EXTRA_SOURCE_ID,),
     )
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(
         update={"aliases": (alias,), "constraints": constraints},
     )
     revision = minimal_revision(casillas=(casilla,))
@@ -295,7 +295,7 @@ def test_snapshot_integrity_checks_casilla_alias_refs() -> None:
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"aliases": (alias,)})
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(update={"aliases": (alias,)})
     revision = minimal_revision(casillas=(casilla,))
     snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
 
@@ -312,7 +312,7 @@ def test_snapshot_integrity_checks_casilla_constraints_refs() -> None:
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID, _MISSING_SOURCE_ID),
     )
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(update={"constraints": constraints})
+    casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(update={"constraints": constraints})
     revision = minimal_revision(casillas=(casilla,))
     snapshot = build_snapshot_with_missing_source(revision, _MISSING_SOURCE_ID)
 
@@ -336,10 +336,10 @@ def test_dangling_formula_target() -> None:
 
 def test_dangling_formula_legal_refs() -> None:
     """formula.legal_refs referencing a LegalRefId absent from snapshot.legal raises."""
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01)
+    casilla = minimal_casilla(NUMERIC_CASILLA_01)
     formula = FormulaDefinition(
         id="test.formula",
-        target_casilla_id=_NUMERIC_CASILLA_01,
+        target_casilla_id=NUMERIC_CASILLA_01,
         expression=FormulaExpression(literal=Decimal("0")),
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),

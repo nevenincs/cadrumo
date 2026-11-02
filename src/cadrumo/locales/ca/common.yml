@@ -1443,7 +1443,7 @@ desktop:
         casilla: Casella
         unavailable: Sense calcular
       correct:
-        claim_item: '{year} · {amount} · {from} – {until}'
+        claim_item: '{year} · {amount} · del {from} al {until}'
         supersede: 'Registra de nou aquestes dotacions amb les xifres corregides,
           en el mateix pas:'
       correct_claim_title: Corregeix la dotació de {name} per a {year}
@@ -1556,7 +1556,7 @@ desktop:
       filing:
         choose_year: Tria un any per veure on van les dotacions.
         unavailable: El traspàs a la declaració no està disponible.
-      forecast: Dotació {amount} · {days} dies · {from} – {until}
+      forecast: Dotació {amount} · {days} dies · del {from} al {until}
       forecast_note: La previsió no desa res fins que registris la dotació.
       free: Amortització lliure sol·licitada
       free_hint: Només per a un mètode d'amortització lliure
@@ -1575,7 +1575,7 @@ desktop:
       handoff_free_named: 'No compten al Model 130, perquè el seu mètode et deixa
         la dotació a tu: {names}.'
       handoff_gap_accrued: 'Model 100: {name} no té dotació registrada del {start}
-        al {end}. Els {amount} EUR que es van meritar en aquest temps no són als imports
+        al {end}. Els {amount} que es van meritar en aquest temps no són als imports
         de dalt.'
       handoff_gap_box_unbound: 'Model 100: aquesta edició no té casella per a la dotació
         de {name}, així que no es declara res per a aquest element del {start} al
@@ -1906,7 +1906,7 @@ desktop:
       ratio_unread: Ràtios d'ús sense llegir
       search_category: Cerca
       select_range: Selecciona el rang
-      share: Part empresarial
+      share: Part professional
       share_categories: Només categories que admeten una part d'ús empresarial
       share_refused: '«{raw}» no és una part: escriu un percentatge, com 50 per al
         50 %.'
@@ -2209,7 +2209,7 @@ desktop:
         supplier: Proveïdor
         taxable_base: Base imposable
       record_added: Document afegit
-      record_refused: Escriu-ho com 2026-10-15, 60.50 o 21
+      record_refused: Escriu-ho com 2026-10-15, 60,50 o 21
       record_removed: Registre eliminat
       record_saved: Registre desat
       records: Registres de justificants
@@ -2297,7 +2297,7 @@ desktop:
       redone: 'Refet: {what}'
       refusal:
         ambiguous_grouping: '«{raw}» es pot llegir de dues maneres: escriu-lo sense
-          separador de milers, com 1000 o 1.5.'
+          separador de milers, com 1000 o 1,5.'
         cannot_clear: Això no es pot buidar. Escriu-hi un altre valor.
         comma_decimal: '«{raw}» usa coma decimal: escriu {suggestion}.'
         currency_symbol: '«{raw}» porta símbol de moneda: escriu només el número.'
@@ -2562,7 +2562,7 @@ desktop:
       rebuilt: 'Reconstruït. Enllaços actualitzats: {links}.'
       reset: Zona de perill · reinicia el llibre
       reset_blocked: El reinici està bloquejat
-      reset_blocker: Model {modelo} · {year} {period} · {state} cita moviments
+      reset_blocker: Model {modelo} · {period} {year} · {state} cita moviments
       reset_confirm: 'Reinicia i treu · moviments: {movements}'
       reset_reason: Motiu
       reset_reason_hint: Queda al registre d'auditoria · fins a {limit} caràcters
@@ -2572,7 +2572,7 @@ desktop:
       run_check: Fes la comprovació
       stale: Declaracions per recalcular
       stale_none: 'Cap: cada càlcul cobreix els moviments tal com són.'
-      stale_row: 'Model {modelo} · {year} {period} · des del càlcul, canviats: {changed},
+      stale_row: 'Model {modelo} · {period} {year} · des del càlcul, canviats: {changed},
         trets: {removed}'
       status: Estat · {period}
       unconverted: Estrangers sense canvi
@@ -2802,6 +2802,7 @@ desktop:
         none: Sense documents
         pick_failed: No s'ha obert el diàleg de fitxers.
         purchase_invoice: Factura de compra · afegida {date}
+        search: Cerca documents
       drop: Descarta
       earlier: Decisions anteriors
       effective_date: Data efectiva
@@ -3020,8 +3021,7 @@ desktop:
         category_needed: Tria una categoria per a la part {part}.
         choose_category: Tria una categoria
         count: Una divisió té de 2 a {max} parts.
-        description: Les parts sumen {amount} {currency}. L'última part es queda el
-          que falta.
+        description: Les parts sumen {amount}. L'última part es queda el que falta.
         description_needed: La part {part} necessita una descripció.
         duplicate: 'La part {part} és igual que una altra: canvia''n l''import o la
           descripció.'
@@ -3048,7 +3048,7 @@ desktop:
         draft: Esborrany
         filed_confirmed: Presentat · justificant confirmat
         filed_local: Presentat en local · estat a l'AEAT sense confirmar
-        name: Model {modelo} · {year} {period}
+        name: Model {modelo} · {period} {year}
         none: Cap declaració no fa servir encara aquest moviment.
         not_built: Vincles amb declaracions encara sense generar
         superseded: Substituït
@@ -3248,7 +3248,7 @@ desktop:
       read_failed: No s'han pogut llegir les factures.
       refusal:
         ambiguous_grouping: '"{raw}" es pot llegir de dues maneres. Escriu 1500 o
-          1.5.'
+          1,5.'
         comma_decimal: '"{raw}": fes servir punt per als decimals.'
         currency_symbol: '"{raw}": sense símbol de moneda.'
         date_not_in_calendar: '"{raw}" no és un dia del calendari.'
@@ -3371,6 +3371,7 @@ desktop:
         invoice_only: La factura inclou el moviment; el moviment no la cita
         transaction_only: El moviment cita la factura; la factura no l'inclou
       empty: Res per conciliar
+      empty_waiting: 'Sense suggeriments · moviments que esperen factura: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
       link: Vincula · permanent
       link_named: Vincula {number} a {description} · permanent
@@ -4242,7 +4243,7 @@ desktop:
       unknown: No hem pogut confirmar que la sincronització hagi acabat. Actualitza
         per comprovar-ho. No se'n pot iniciar cap altra fins que aquesta es resolgui.
       unknown_start: No s’ha pogut confirmar si s’ha iniciat la sincronització. No
-        n’iniciïs cap altra; contacta amb suport i indica el codi unknown.
+        n’iniciïs cap altra; contacta amb suport.
       unsupported: Aquest accés requereix una interacció disponible al terminal. Cancel·la
         aquest intent i sincronitza el Cens des del terminal.
     close: Tanca el perfil
@@ -4974,9 +4975,6 @@ ledger:
         no és un pagament.
       allocation_components_missing: La base de l'immoble complet no té els seus components
         d'imputació.
-      amortization_box_not_bound: Aquesta edició de la declaració no assigna cap casella
-        a l'amortització d'aquest tipus d'element, així que no es pot preparar el
-        lliurament per a la declaració.
       amortization_period_elapsed: El període màxim d'amortització de l'element va
         acabar el {ended_on}, així que compta com a totalment amortitzat.
       approved_plan_exceeds_basis: El pla aprovat reparteix més que la base amortitzable.
@@ -6124,7 +6122,7 @@ tui:
       pull_filed_all: Recupera totes les declaracions presentades
       review_census: Revisa el cens
     address:
-      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+      declaration: Modelo %{modelo} · %{period} %{filing_year}
     aeat_observation_state:
       accepted: Acceptada
       not_observed: No observada
@@ -6408,7 +6406,7 @@ tui:
       context_across_records: A tots els registres
       reason: Suggerida pel resum local
     action_context: '%{label} - %{reason} · %{context}'
-    address: Model %{modelo} · %{filing_year} · %{period}
+    address: Model %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'Dades de l''AEAT: %{state}'
     availability:
       available: Disponible
@@ -7134,7 +7132,7 @@ tui:
         source_jurisdiction_required_irnr: Com a contribuent no resident, indica la
           jurisdicció d'origen d'aquest apunt.
         title: Afegeix un apunt
-      blocker: El Modelo {modelo} {year} {period} ({state}) cita aquest apunt.
+      blocker: El Modelo {modelo} {period} {year} ({state}) cita aquest apunt.
       browse:
         account: Compte propi (acc-01)
         action:
@@ -7270,12 +7268,12 @@ tui:
         read: Llegeix l'estat i les comprovacions
         ready: 'A punt: cap troballa en {checked} apunts comprovats.'
         review_counts: 'Revisió: pendents {pending}, revisats {reviewed}, omesos {skipped}'
-        stale_filing: 'El Modelo {modelo} {year} {period} es va presentar amb apunts
+        stale_filing: 'El Modelo {modelo} {period} {year} es va presentar amb apunts
           que han canviat: {changed} canviats, {removed} eliminats'
-        stale_filing_register: 'El Model {modelo} {year} {period} es va presentar
+        stale_filing_register: 'El Model {modelo} {period} {year} es va presentar
           amb un registre d''actius que ha canviat: {changes} canvis'
         stale_filing_register_unavailable: No s'ha pogut comparar el Model {modelo}
-          {year} {period} amb el registre d'actius
+          {period} {year} amb el registre d'actius
         status_heading: Estat de {period}
         title: Estat i comprovacions del llibre
         totals: Ingressos de l'activitat {income}, despeses {expense}, net {net}
@@ -7356,7 +7354,7 @@ tui:
         lifecycle_change: '{when}: {previous} → {state} (motiu: {reason})'
         manual: Introduït a mà
         no_participation: Cap declaració finalitzada no fa servir aquest apunt.
-        participation: Utilitzat pel Modelo {modelo} {year} {period} ({state})
+        participation: Utilitzat pel Modelo {modelo} {period} {year} ({state})
         read: Torna a llegir
         siblings: Inclou les altres parts d'una divisió
         state: 'Estat: {state}'
@@ -7498,7 +7496,7 @@ tui:
           attached: Adjuntat. L'apunt té ara {count} adjunts.
           attachment: Adjunt {attachment}
           detached: Desvinculat. L'apunt té ara {count} adjunts.
-          revision: Modelo {modelo} {year} {period} ({state})
+          revision: Modelo {modelo} {period} {year} ({state})
           stale: '{count} revisions finalitzades de Modelo es van calcular abans d''aquest
             canvi i no l''inclouen:'
           unchanged: 'No ha canviat res: l''apunt ja tenia exactament aquests adjunts.'
@@ -8331,7 +8329,7 @@ tui:
           prior: Traslladada des de l'exercici %{ejercicio}.
           sector: Sector %{sector} · lletra %{letra} · activitats %{activities}
           seed_source: Traslladada des de l'observació local del Modelo %{modelo}
-            de %{year} %{period}.
+            de %{period} %{year}.
         sectors: Sectors diferenciats
         title: Registre de prorrata
         tool: Registre de prorrata
@@ -8801,7 +8799,7 @@ tui:
       unavailable: La cerca no està disponible en aquesta sessió
       unknown: No s'ha pogut preparar la cerca.
     result:
-      address: Model %{modelo} · %{filing_year} · %{period}
+      address: Model %{modelo} · %{period} %{filing_year}
       label:
         declaration: Declaració
         filing: Presentació

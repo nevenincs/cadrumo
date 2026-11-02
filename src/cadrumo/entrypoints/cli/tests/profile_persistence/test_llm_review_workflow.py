@@ -18,6 +18,7 @@ from typing import override
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.tests.llm_suggestion_support import classification_suggestion
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.ledger.action_ports import LedgerActionPorts
@@ -42,7 +43,6 @@ from cadrumo.core.config import Settings, load_settings
 from cadrumo.core.type_adapters import STR_KEYED_MAPPING_ADAPTER
 from cadrumo.domain.buckets.event import BucketEvent, BucketEventType
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.categories.spending_category import SpendingCategory
 from cadrumo.domain.iva.schema import IvaCategory
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.errors import TransactionValidationError
@@ -126,17 +126,6 @@ def _seed_parent(repository: TransactionCatalogueRepository) -> str:
     return tx.transaction_id
 
 
-def _classification_suggestion(tx_id: str) -> LLMClassificationSuggestion:
-    return LLMClassificationSuggestion(
-        transaction_id=tx_id,
-        provenance="llm:claude:test-model",
-        classification=BusinessClassification.BUSINESS,
-        category=SpendingCategory.from_registry("material_oficina"),
-        confidence=Decimal("0.9"),
-        reason="looks like office supplies",
-    )
-
-
 def _events_of(events: BucketEventHistoryRepository, event_type: BucketEventType) -> tuple[BucketEvent, ...]:
     return events.load().for_bucket(_BUCKET, event_types=(event_type,))
 
@@ -211,7 +200,7 @@ def test_apply_composes_classification_primitive_with_derived_source_command(
 
     with _workflow_ports(repository, events) as (ports, _, _):
         result = execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
             decision=LlmReviewDecision.APPLY,
             bucket_id=_BUCKET,
@@ -239,7 +228,7 @@ def test_reject_composes_reject_primitive_and_mutates_nothing(
 
     with _workflow_ports(repository, events) as (ports, _, _):
         execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             decision=LlmReviewDecision.REJECT,
             bucket_id=_BUCKET,
@@ -464,7 +453,7 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
     ) -> tuple[dict[str, object], str]:
         tx_id = _seed_parent(repository)
         result = apply_llm_classification(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             bucket_id=repository.bucket_id,
             source_command=origin.source_command,
             transaction_repository=repository,
@@ -483,7 +472,7 @@ def test_cli_route_parity_classify_apply_matches_direct_primitive(tmp_path: Path
         tx_id = _seed_parent(repository)
         with _workflow_ports(repository, events) as (ports, _, _):
             result = execute_reviewed_decision(
-                _classification_suggestion(tx_id),
+                classification_suggestion(tx_id),
                 origin=origin,
                 decision=LlmReviewDecision.APPLY,
                 bucket_id=repository.bucket_id,
@@ -584,7 +573,7 @@ def test_reviewed_apply_refuses_stale_row_without_overwriting_newer_persistence(
     with _workflow_ports(repository, events) as (ports, llm_ports, settings):
         suggestion: LLMClassificationSuggestion | LLMSaturatedSuggestion | LLMSplitSuggestion
         if review_kind == "classification":
-            suggestion = _classification_suggestion(tx_id)
+            suggestion = classification_suggestion(tx_id)
             origin = LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY
             decision = LlmReviewDecision.APPLY
         elif review_kind == "saturated":
@@ -636,7 +625,7 @@ def test_review_rejection_audits_fresh_current_row_without_replaying_reviewed_fi
     repository.save(TransactionCatalogue.from_transactions([newer]))
     with _workflow_ports(repository, events) as (ports, _, _):
         result = execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             decision=LlmReviewDecision.REJECT,
             bucket_id=_BUCKET,
@@ -680,7 +669,7 @@ def test_review_rejection_refuses_actual_catalogue_revision_race_without_partial
         pytest.raises(LedgerPersistenceConflictError),
     ):
         execute_reviewed_decision(
-            _classification_suggestion(tx_id),
+            classification_suggestion(tx_id),
             origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_REJECT,
             decision=LlmReviewDecision.REJECT,
             bucket_id=_BUCKET,

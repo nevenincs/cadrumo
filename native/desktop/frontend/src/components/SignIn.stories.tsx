@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useRef } from "react";
+import { expect, waitFor } from "storybook/test";
 import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
 import type { ProfileList } from "../ipc/contract";
 import type { SignInController } from "../shell/signIn";
@@ -45,7 +46,23 @@ const meta = {
 export default meta;
 type Story = StoryObj<typeof meta>;
 
-export const SignedOutState: Story = { name: "Signed out" };
+// The divider above "New profile" belongs to that button: shown with it,
+// absent when the host offers none.
+const dividerBelow =
+  (button: boolean): NonNullable<Story["play"]> =>
+  async () => {
+    const dialog = () => document.querySelector('[role="dialog"]');
+    await waitFor(() => expect(dialog()).not.toBeNull());
+    await expect(dialog()?.querySelector(".new-profile") !== null).toBe(button);
+    await expect(
+      dialog()?.querySelector('[data-slot="separator"]') !== null,
+    ).toBe(button);
+  };
+
+export const SignedOutState: Story = {
+  name: "Signed out",
+  play: dividerBelow(false),
+};
 
 export const SigningIn: Story = {
   args: { account: controller({ busy: true }) },
@@ -62,6 +79,7 @@ export const Throttled: Story = {
       retrySeconds: 18,
     }),
   },
+  play: dividerBelow(false),
 };
 
 export const ProfileLocked: Story = {
@@ -97,6 +115,7 @@ const THREE = ["Ana Soler Vidal", "Demo profile", "Taller Ribera, S.L."];
 export const SeveralProfiles: Story = {
   name: "Several profiles",
   args: { account: controller({ profiles: profiles(THREE, 1) }) },
+  play: dividerBelow(true),
 };
 
 export const ProfileToChoose: Story = {

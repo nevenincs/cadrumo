@@ -76,7 +76,12 @@ import {
 import { useStrings, type Translate } from "../../../shell/strings";
 import { formatMonth, monthNames } from "../../../shared/dateFormats";
 import { formatAmount, formatCount } from "../../../shared/numbers";
-import { draftRow, stageTally, typedPoints } from "../editing/editingModel";
+import {
+  draftedWidth,
+  draftRow,
+  stageTally,
+  typedPoints,
+} from "../editing/editingModel";
 import {
   REVERT_CELL_CHORD,
   useMovementEditing,
@@ -223,9 +228,6 @@ function SumLine({ sums, locale }: { sums: CurrencySum[]; locale: string }) {
     <span className="flex flex-wrap items-center gap-x-3 tabular-nums">
       {sums.map((sum) => (
         <span key={sum.currency} className="flex items-center gap-2">
-          {sum.currency !== "EUR" && (
-            <span className="text-xs">{sum.currency}</span>
-          )}
           {(
             [
               ["incoming", "desktop.ledger.sum.in"],
@@ -235,7 +237,13 @@ function SumLine({ sums, locale }: { sums: CurrencySum[]; locale: string }) {
           ).map(([side, key]) =>
             sum[side] === null ? null : (
               <span key={side}>
-                {t(key, { amount: formatAmount(locale, sum[side]) })}
+                {t(key, {
+                  amount: formatAmount(
+                    locale,
+                    sum[side],
+                    sum.currency === "EUR" ? {} : { currency: sum.currency },
+                  ),
+                })}
               </span>
             ),
           )}
@@ -813,22 +821,34 @@ export function MovementsSection({
     return () => observer.disconnect();
   }, []);
   const untouched = view.columns.order.length === 0;
+  const drafting = stage.content.drafts.length > 0;
   const narrow = useMemo(() => {
     if (room === null || !untouched || presetOf(layout) !== "review")
       return false;
     const needed = shownColumns(layout).reduce((sum, column) => {
       const spec = COLUMN_SPECS[column];
-      const rem =
-        widths[column] ??
-        (column === "status"
+      const natural =
+        column === "status"
           ? statusWidth(view.density, marks)
           : column === "date"
             ? dateWidth(period === null)
-            : Math.max(spec.width, spec.minWidth ?? 0));
+            : Math.max(spec.width, spec.minWidth ?? 0);
+      const rem =
+        widths[column] ?? (drafting ? draftedWidth(column, natural) : natural);
       return sum + rem * remPx;
     }, 0);
     return needed > room;
-  }, [layout, untouched, room, widths, view.density, marks, period, remPx]);
+  }, [
+    layout,
+    untouched,
+    room,
+    widths,
+    view.density,
+    marks,
+    period,
+    remPx,
+    drafting,
+  ]);
   const drawnLayout = useMemo(
     () =>
       narrow
@@ -1689,6 +1709,7 @@ export function MovementsSection({
           duplicates,
           currencySlot,
           statusMarks: marks,
+          drafting,
           editing: edit.editing,
         }}
         byId={byId}

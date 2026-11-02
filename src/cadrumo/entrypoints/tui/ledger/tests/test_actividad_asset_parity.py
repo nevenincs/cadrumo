@@ -167,7 +167,9 @@ async def test_activity_asset_screen_clears_private_facts_when_the_session_is_lo
         )
         screen.query_one("#asset-revision-json", Input).value = revision.model_dump_json()
         await _activate(pilot=pilot, screen=screen, selector="#asset-create")
-        assert await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused") == "refused"
+        said = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="refused")
+        assert said == f"refused\t{resolve_error_message(AccountSessionExpiredError())}"
+        assert said != "refused\t"
         assert screen._last_forecast is None
         assert screen._last_forecast_supersedes is None
         assert all(
@@ -432,7 +434,7 @@ async def test_activity_asset_screen_reaches_describe_and_every_register_read() 
 
         await _activate(pilot=pilot, screen=screen, selector="#asset-plan")
         plan = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="Information equipment")
-        assert "31/12/2034" in plan
+        assert "31 dic 2034" in plan
         assert "equipo-informacion-software" not in plan
 
     assert actions.requests[0] == (
@@ -519,7 +521,7 @@ async def test_activity_asset_list_does_not_read_a_pending_that_does_not_apply_a
     assert in_service in rows["desk"]
     assert not_applicable in rows["printer"]
     assert "900" not in rows["printer"]
-    assert "30/06/2026" in rows["printer"]
+    assert "Jun 30, 2026" in rows["printer"]
     assert "in_service" not in listing
     assert "out_of_service" not in listing
 
@@ -551,7 +553,7 @@ async def test_activity_asset_timeline_says_what_each_record_did_and_changed() -
     assert not_recorded in second
     assert not_in_calculation in second
     assert f"{method}: {linear}" in second
-    assert "15/03/2025" in second
+    assert "Mar 15, 2025" in second
     assert "record-one" not in timeline
     assert "record-two" not in timeline
     assert "constant_percentage" not in timeline
@@ -969,7 +971,7 @@ async def test_activity_asset_filing_says_why_a_box_is_left_out_with_the_last_da
             shown = await _wait_for_screen_result(pilot=pilot, screen=screen, expected_prefix="filing_handoff")
         first, *lines = shown.splitlines()
         wanted = [
-            tr(key, name="laptop-1", start="01/01/2025", end="31/12/2025", amount=amount)
+            tr(key, name="laptop-1", start="Jan 1, 2025", end="Dec 31, 2025", amount=amount)
             for key, amount in (
                 ("desktop.ledger.assets.handoff_gap_accrued", "520.00"),
                 ("desktop.ledger.assets.handoff_gap_unavailable", ""),

@@ -31,6 +31,7 @@ import {
   type GrammarRefusal,
   type LedgerPeriod,
 } from "../../../shell/ledgerGrammar";
+import { heldDecimal } from "../../../shared/numbers";
 
 // ---- Exact decimals --------------------------------------------------------
 
@@ -732,9 +733,9 @@ export function correctionOf(invoice: CatalogueInvoice): CorrectionDraft {
     ivaCategory: invoice.iva_category ?? "",
     operationType: invoice.operation_type ?? "",
     operationDate: invoice.operation_date ?? "",
-    retentionRate: rate === null ? "" : (percentText(rate) ?? ""),
+    retentionRate: rate === null ? "" : heldDecimal(percentText(rate) ?? ""),
     retentionAmount: invoice.retention_amount
-      ? (canonicalDecimal(invoice.retention_amount.decimal) ?? "")
+      ? heldDecimal(canonicalDecimal(invoice.retention_amount.decimal) ?? "")
       : "",
     retentionTouched: true,
     series: invoice.series ?? "",

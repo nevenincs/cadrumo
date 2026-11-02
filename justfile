@@ -1480,6 +1480,16 @@ audit-complexity:
 complexity-gate:
     @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label complexity-gate -- uv run --no-sync python -m dev.audit.complexity --gate
 
+[doc('Reject rank E/F callables and modules over the line limit in src test files; dev test files are reported only. Slow: about two minutes.')]
+[group('check')]
+test-complexity-gate:
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label test-complexity-gate -- uv run --no-sync python -m dev.audit.complexity --tests --gate
+
+[doc('Reject test-file duplication above the declared duplicated-line ceiling with the production scan settings. Slow: about two minutes.')]
+[group('check')]
+test-duplication-gate:
+    @uv run --no-sync python -m dev.test_runs.command --family audit-runs --label test-duplication-gate -- uv run --no-sync python -m dev.audit.duplication --tests-gate
+
 # Both scans cover every package under src/ (the tax application, client,
 # runtime, MCP harness and agent service), excluding tests and bundled data.
 # Scan for dead code. Findings are advisory and unavailable data is reported.

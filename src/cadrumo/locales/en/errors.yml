@@ -111,6 +111,7 @@ errors:
       cadastral value requires substitute-base boxes that are not present.
     m100_art85_revision_flag_invalid: Modelo 100 Art. 85 revised cadastral value flag
       must be the official X checkbox value.
+    m184_days_past_the_year: '{days} days do not fit in {filing_year}.'
     m210_gastos_deducibles_negative: M210 gastos_deducibles %{casilla_id} must be
       non-negative; got %{value}.
     m210_gastos_deducibles_not_allowed: M210 gastos_deducibles %{casilla_id} is only

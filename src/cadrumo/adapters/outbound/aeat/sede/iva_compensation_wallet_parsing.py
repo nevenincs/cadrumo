@@ -95,6 +95,10 @@ IVA_COMPENSATION_WALLET_READ_POLICY = RemoteStateGuardPolicy(
 )
 
 
+_INPUT_SAMPLE = 20
+_LINK_SAMPLE = 40
+
+
 def parse_iva_compensation_wallet_html(
     html: str,
     *,
@@ -403,7 +407,7 @@ def _representation_gate_context(html: str, *, landing_url: str) -> dict[str, ob
             "type": bounded_text(input_node.get("type", "")),
             "checked": _input_checked(input_node),
         }
-        for input_node in soup.find_all("input")[:20]
+        for input_node in soup.find_all("input")[:_INPUT_SAMPLE]
     )
     return {"landing_url": redacted_url(landing_url), "forms": forms, "inputs": inputs}
 
@@ -486,7 +490,7 @@ def wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShap
         entrypoint
         for entrypoint in (
             _wallet_entrypoint_path(str(node.get("href") if node.name == "a" else node.get("action") or ""))
-            for node in soup.find_all(["a", "form"])[:40]
+            for node in soup.find_all(["a", "form"])[:_LINK_SAMPLE]
         )
         if entrypoint is not None
     )
@@ -505,7 +509,7 @@ def wallet_page_shape_context(html: str, *, landing_url: str) -> _WalletPageShap
             name=bounded_text(input_node.get("name", "")),
             type=bounded_text(input_node.get("type", "")),
         )
-        for input_node in soup.find_all("input")[:20]
+        for input_node in soup.find_all("input")[:_INPUT_SAMPLE]
     )
     return _WalletPageShape(
         landing_url=redacted_url(landing_url),

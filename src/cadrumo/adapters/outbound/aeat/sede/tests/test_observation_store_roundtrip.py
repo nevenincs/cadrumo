@@ -34,15 +34,13 @@ from .....persistence.storage.tests.secure_sql import (
     isolated_runtime_profile,
     mutate_encrypted_secure_object_json,
 )
-from ..iva_compensation_wallet_parsing import WALLET_URL
 from ..observation_store import FiledDeclaracionObservationStore
 from ..schema import (
     FiledDeclaracionArtefact,
     FiledDeclaracionObservation,
-    IvaCompensationWalletObservation,
-    IvaCompensationWalletRow,
     ObservedCasillaValue,
 )
+from .observation_store_support import pending_wallet_observation
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 _BUCKET_ID = "83a88c7e-9334-477e-83a8-40856124b522"  # was 'sede-observation'
@@ -211,26 +209,7 @@ def test_iva_wallet_observation_roundtrips_through_encrypted_store(
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
         store = FiledDeclaracionObservationStore(tmp_path / "sede-cache")
         captured_at = datetime(2026, 5, 19, 12, 0, 0, tzinfo=UTC)
-        observation = IvaCompensationWalletObservation(
-            taxpayer_nif="12345678Z",
-            authenticated_identity="12345678Z",
-            target_year=2026,
-            target_period=Period.from_year_and_code(2026, "2T"),
-            rows=(
-                IvaCompensationWalletRow(
-                    generation_year=2026,
-                    generation_period=Period.from_year_and_code(2026, "1T"),
-                    generated_amount=Decimal("1200"),
-                    applied_amount=Decimal("0"),
-                    pending_amount=Decimal("1200"),
-                    raw_label="2026 | 1T | 1200 | 0 | 1200",
-                ),
-            ),
-            total_pending=Decimal("1200"),
-            source_url=AnyHttpUrl(WALLET_URL),
-            captured_at=captured_at,
-            raw_sha256="b" * 64,
-        )
+        observation = pending_wallet_observation(captured_at)
 
         logical_path = store.persist_iva_wallet_observation(observation)
         loaded = store.load_iva_wallet_observation(logical_path)

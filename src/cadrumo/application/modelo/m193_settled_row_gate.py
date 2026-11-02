@@ -27,9 +27,9 @@ from __future__ import annotations
 from enum import StrEnum
 
 from ...core.aggregation import CalculationSourceLineageRole
-from ...core.modelo import Modelo
 from ...core.operator_action_enums import ActionEvidenceProvenance
 from ...domain.calculations.registry.authority import bundled_indexed_authority
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationSourceRef
 from ...domain.modelos.errors import ModeloError
@@ -47,7 +47,7 @@ from ..aggregation.withholding_source import WithholdingSourceResolver
 from .action_errors import ModeloPreconditionErrorMixin
 from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_failure_for_scenario
 
-_MODELO_193 = Modelo("193")
+_CAPITAL_ANNUAL_ROLE = "withholding.capital_annual"
 
 #: The capital withholding declared in the accrual period's Modelo 123 (RIRPF
 #: art. 108) and the order approving Modelo 193 whose record design leaves the
@@ -89,7 +89,7 @@ def modelo_193_settled_prior_accrual_contributors(
     Core types:
     :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`.
     """
-    if work_unit.modelo != _MODELO_193:
+    if work_unit.modelo != form_for_role(_CAPITAL_ANNUAL_ROLE):
         return ()
     return tuple(
         ref

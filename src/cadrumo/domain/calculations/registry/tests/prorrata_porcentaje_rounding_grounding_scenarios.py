@@ -8,25 +8,13 @@ from decimal import Decimal
 
 from cadrumo.domain.iva.prorrata import ProrrataKind
 
-from .....core.casilla_id import CasillaId, validated_casilla_id
 from ....iva.prorrata import ProrrataInputs, compute_prorrata_general
-from ..bindings import resolve_available_bound_inputs_by_casilla_id
-from ..formula_runtime import calculate_registry_snapshot
 from ..formula_runtime_ops import apply_rounding
-from ..ledger_iva_bindings import resolve_ledger_iva_aggregation_binding_values
 from ..schema import RegistrySnapshot
 from ..schema_rounding import RegistryRoundingCode
+from .prorrata_porcentaje_grounding_support import snapshot_prorrata_percentage
 
 FORMULA_ID = "modelo-303-iva-prorrata-porcentaje"
-
-PORCENTAJE_ID: CasillaId = validated_casilla_id("iva.prorrata-porcentaje", surface="test casilla id")
-
-VOLUMEN_TOTAL_ID: CasillaId = validated_casilla_id("iva.prorrata-volumen-total", surface="test casilla id")
-
-VOLUMEN_CON_DERECHO_ID: CasillaId = validated_casilla_id(
-    "iva.prorrata-volumen-con-derecho",
-    surface="test casilla id",
-)
 
 
 #: 2022 resolves to the `2022` revision, 2024 to its early-period epoch.
@@ -86,29 +74,7 @@ def registry_percentage(
 ) -> Decimal:
     """The same legal quantity via the real registry snapshot and formula runtime."""
     snapshot = snapshot_of("303", filing_year=filing_year, period="4T")
-    declared = {binding.id for binding in snapshot.revision.bindings}
-    binding_values: dict[str, Decimal] = {
-        binding_id: Decimal("100") if binding_id.endswith("state-attribution-ratio") else Decimal("0")
-        for binding_id in declared
-        & {
-            "modelo-303-compensacion-pendiente-anteriores",
-            "modelo-303-autoconsumo-promotor-base",
-            "modelo-303-profile-state-attribution-ratio",
-        }
-    }
-    binding_values.update(resolve_ledger_iva_aggregation_binding_values(snapshot.revision, ()))
-    inputs = {
-        **resolve_available_bound_inputs_by_casilla_id(snapshot.revision, binding_values),
-        VOLUMEN_TOTAL_ID: total,
-        VOLUMEN_CON_DERECHO_ID: con_derecho,
-    }
-    result = calculate_registry_snapshot(
-        snapshot,
-        inputs=inputs,
-        binding_values=binding_values,
-        date_context={"filing_period": date(filing_year, 12, 31)},
-    )
-    return result.values[PORCENTAJE_ID]
+    return snapshot_prorrata_percentage(snapshot, con_derecho, total, closes_on=date(filing_year, 12, 31))
 
 
 def check_integer_ceiling_takes_a_fractional_result_to_the_next_unit() -> None:

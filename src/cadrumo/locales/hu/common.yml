@@ -1558,7 +1558,7 @@ desktop:
       handoff_free_named: 'Nem számít bele a 130-asba, mert a módszerük az értékcsökkenési
         leírás összegét rád hagyja: {names}.'
       handoff_gap_accrued: '100-as: {name} esetében nincs rögzített értékcsökkenési
-        leírás {start} és {end} között. Az ez alatt felmerült {amount} EUR nincs benne
+        leírás {start} és {end} között. Az ez alatt felmerült {amount} nincs benne
         a fenti összegekben.'
       handoff_gap_box_unbound: '100-as: ebben a kiadásban nincs rovat {name} értékcsökkenési
         leírásához, ezért {start} és {end} között nem szerepel róla semmi.'
@@ -1886,7 +1886,7 @@ desktop:
       ratio_unread: A használati arányok nincsenek beolvasva
       search_category: Keresés
       select_range: Tartomány kijelölése
-      share: Üzleti rész
+      share: Üzleti arány
       share_categories: Csak üzleti használati arányt elfogadó kategóriák
       share_refused: '„{raw}” nem arány: írj százalékot, például 50-et az 50%-hoz.'
       skipped: 'Változatlan marad: {count}'
@@ -2191,7 +2191,7 @@ desktop:
         supplier: Szállító
         taxable_base: Adóalap
       record_added: Dokumentum hozzáadva
-      record_refused: 'Így írd: 2026-10-15, 60.50 vagy 21'
+      record_refused: 'Így írd: 2026-10-15, 60,50 vagy 21'
       record_removed: Bejegyzés törölve
       record_saved: Bejegyzés mentve
       records: Bizonylatok
@@ -2279,7 +2279,7 @@ desktop:
       redone: 'Újra: {what}'
       refusal:
         ambiguous_grouping: '„{raw}” kétféleképp olvasható: írd tagolás nélkül, például
-          1000 vagy 1.5.'
+          1000 vagy 1,5.'
         cannot_clear: Ezt nem lehet törölni. Írj be helyette másik értéket.
         comma_decimal: '„{raw}” tizedesvesszős: írd így: {suggestion}.'
         currency_symbol: '„{raw}” pénznemjelet tartalmaz: csak a számot írd.'
@@ -2543,7 +2543,7 @@ desktop:
       rebuilt: 'Újraépítve. Frissített kapcsolatok: {links}.'
       reset: Veszélyzóna · a napló alaphelyzetbe állítása
       reset_blocked: Az alaphelyzetbe állítás tiltott
-      reset_blocker: '{modelo}-s nyomtatvány · {year} {period} · {state} tételekre
+      reset_blocker: '{modelo}-s nyomtatvány · {period} {year} · {state} tételekre
         hivatkozik'
       reset_confirm: 'Alaphelyzet és eltávolítás · tételek: {movements}'
       reset_reason: Indok
@@ -2554,7 +2554,7 @@ desktop:
       run_check: Ellenőrzés futtatása
       stale: Újraszámolandó bevallások
       stale_none: 'Nincs: minden számítás a jelenlegi tételekre épül.'
-      stale_row: '{modelo}-s nyomtatvány · {year} {period} · a számítás óta módosult:
+      stale_row: '{modelo}-s nyomtatvány · {period} {year} · a számítás óta módosult:
         {changed}, törlődött: {removed}'
       status: Állapot · {period}
       unconverted: Árfolyam nélküli devizás
@@ -2670,7 +2670,7 @@ desktop:
       kind_received: Kapott számlák
       left_out: 'Kihagyva, mert nem ilyen típusú: {count}'
       no_account: Számla nélkül
-      nothing_new: Nincs új importálnivaló
+      nothing_new: Nincs új elem importálásra
       nothing_new_note: Minden sor már szerepel a naplóban.
       only_period: Csak egy időszakra datált tételek
       period: Importálási időszak
@@ -2784,6 +2784,7 @@ desktop:
         none: Nincs dokumentum
         pick_failed: A fájlválasztó nem nyílt meg.
         purchase_invoice: 'Beszerzési számla · hozzáadva: {date}'
+        search: Dokumentumok keresése
       drop: Elvetés
       earlier: Korábbi döntések
       effective_date: Hatályos dátum
@@ -3003,8 +3004,7 @@ desktop:
         category_needed: Válassz kategóriát a(z) {part}. részhez.
         choose_category: Válassz kategóriát
         count: Egy felosztás 2–{max} részből áll.
-        description: A részek összege {amount} {currency}. Az utolsó rész kapja a
-          maradékot.
+        description: A részek összege {amount}. Az utolsó rész kapja a maradékot.
         description_needed: A(z) {part}. résznek leírás kell.
         duplicate: 'A(z) {part}. rész megegyezik egy másikkal: módosítsd az összegét
           vagy a leírását.'
@@ -3031,7 +3031,7 @@ desktop:
         draft: Tervezet
         filed_confirmed: Benyújtva · igazolás megerősítve
         filed_local: Helyben benyújtva · AEAT-állapot nincs megerősítve
-        name: '{modelo}. számú modell · {year} {period}'
+        name: '{modelo}. számú modell · {period} {year}'
         none: Még egy bevallás sem használja ezt a tételt.
         not_built: A bevallási kapcsolatok még nem készültek el
         superseded: Felülírva
@@ -3230,7 +3230,7 @@ desktop:
         not_subject: Nem tárgya
       read_failed: A számlák nem olvashatók be.
       refusal:
-        ambiguous_grouping: '"{raw}" kétféleképpen érthető. Írd így: 1500 vagy 1.5.'
+        ambiguous_grouping: '"{raw}" kétféleképpen érthető. Írd így: 1500 vagy 1,5.'
         comma_decimal: '"{raw}": tizedesponttal írd.'
         currency_symbol: '"{raw}": pénznemjel nélkül.'
         date_not_in_calendar: '"{raw}" nem létező nap.'
@@ -3352,6 +3352,7 @@ desktop:
         invoice_only: A számla hivatkozik a tételre, a tétel nem a számlára
         transaction_only: A tétel hivatkozik a számlára, a számla nem a tételre
       empty: Nincs párosítandó tétel
+      empty_waiting: 'Nincs javaslat · számlára váró mozgások: {count}'
       invoice_line: '{number} · {counterparty} · {date} · {payment}'
       link: Összekapcsolás · végleges
       link_named: '{number} összekapcsolása ezzel: {description} · végleges'
@@ -3967,7 +3968,7 @@ desktop:
   logs:
     all_loggers: Minden naplózó
     all_origins: Minden forrás
-    clear_logger: Loggerszűrő törlése
+    clear_logger: A logger szűrő törlése
     copy_all: Összes másolása
     details: Részletek
     dropped: 'A nézetből elvetett régebbi bejegyzések: {count}'
@@ -4226,7 +4227,7 @@ desktop:
         az ellenőrzéshez. Másik szinkronizálás addig nem indítható, amíg ez le nem
         zárul.
       unknown_start: Nem sikerült megerősíteni, hogy elindult-e a szinkronizálás.
-        Ne indíts másikat; fordulj az ügyfélszolgálathoz az unknown kóddal.
+        Ne indíts másikat; fordulj az ügyfélszolgálathoz.
       unsupported: Ehhez a bejelentkezéshez a terminálban elérhető művelet szükséges.
         Szakítsd meg ezt a próbálkozást, és használd a terminál Censo-szinkronizálását.
     close: Profil bezárása
@@ -4457,7 +4458,7 @@ desktop:
     refused_local_ai_not_removed: A Cadrumo nem tudta eltávolítani a helyi MI-t. Ellenőrizd
       újra, majd próbáld meg még egyszer.
     refused_model_selection_unusable: A Cadrumo nem tudja letölteni ezt a modellt.
-      Ellenőrizd a helyi MI modelllistáját az ügynök beállításaiban, majd próbáld
+      Ellenőrizd a helyi modellek listáját az ügynök beállításaiban, majd próbáld
       újra.
     refused_not_cancellable: A beállítás most nem állítható le. Hamarosan befejeződik.
     refused_not_pending: Ez a terv már nem vár rád.
@@ -4958,9 +4959,6 @@ ledger:
         nem kifizetés.
       allocation_components_missing: Az egész ingatlanra vonatkozó alapból hiányoznak
         a megosztási összetevők.
-      amortization_box_not_bound: A bevallás ezen kiadása nem rendel mezőt az ilyen
-        típusú eszköz értékcsökkenéséhez, ezért a bevallási átadás nem készíthető
-        el.
       amortization_period_elapsed: Az elem maximális értékcsökkenési időszaka {ended_on}
         napon lejárt, ezért teljesen leírtnak számít.
       approved_plan_exceeds_basis: A jóváhagyott terv többet oszt fel, mint a leírható
@@ -6107,7 +6105,7 @@ tui:
       pull_filed_all: Összes benyújtott bevallás lekérése
       review_census: Törzsadatok áttekintése
     address:
-      declaration: Modelo %{modelo} · %{filing_year} · %{period}
+      declaration: Modelo %{modelo} · %{period} %{filing_year}
     aeat_observation_state:
       accepted: Elfogadva
       not_observed: Nem figyelték meg
@@ -6389,7 +6387,7 @@ tui:
       context_across_records: Minden nyilvántartásra
       reason: A helyi áttekintés javaslata
     action_context: '%{label} - %{reason} · %{context}'
-    address: Modelo %{modelo} · %{filing_year} · %{period}
+    address: Modelo %{modelo} · %{period} %{filing_year}
     aeat_evidence: 'AEAT-adatok: %{state}'
     availability:
       available: Elérhető
@@ -7108,7 +7106,7 @@ tui:
         source_jurisdiction_required_irnr: Nem rezidens adózóként add meg a tétel
           forrás joghatóságát.
         title: Tétel hozzáadása
-      blocker: A(z) {modelo} Modelo ({year} {period}, {state}) hivatkozik erre a tételre.
+      blocker: A(z) {modelo} Modelo ({period} {year}, {state}) hivatkozik erre a tételre.
       browse:
         account: Saját számla (acc-01)
         action:
@@ -7245,11 +7243,11 @@ tui:
         read: Állapot és ellenőrzések olvasása
         ready: 'Kész: {checked} ellenőrzött tételben nincs megállapítás.'
         review_counts: 'Átnézés: függő {pending}, átnézett {reviewed}, kihagyott {skipped}'
-        stale_filing: 'A(z) {modelo} Modelo ({year} {period}) olyan tételekkel lett
+        stale_filing: 'A(z) {modelo} Modelo ({period} {year}) olyan tételekkel lett
           beadva, amelyek azóta változtak: {changed} módosult, {removed} törölve'
-        stale_filing_register: 'A(z) {modelo} {year} {period} modelót olyan eszköznyilvántartással
+        stale_filing_register: 'A(z) {modelo} {period} {year} modelót olyan eszköznyilvántartással
           nyújtottad be, amely azóta megváltozott: {changes} változás'
-        stale_filing_register_unavailable: A(z) {modelo} {year} {period} modelót nem
+        stale_filing_register_unavailable: A(z) {modelo} {period} {year} modelót nem
           sikerült összevetni az eszköznyilvántartással
         status_heading: 'Állapot: {period}'
         title: A napló állapota és ellenőrzései
@@ -7331,7 +7329,7 @@ tui:
         lifecycle_change: '{when}: {previous} → {state} (indoklás: {reason})'
         manual: Kézzel rögzítve
         no_participation: Egyik véglegesített bevallás sem használja ezt a tételt.
-        participation: 'Felhasználja: {modelo} Modelo, {year} {period} ({state})'
+        participation: 'Felhasználja: {modelo} Modelo, {period} {year} ({state})'
         read: Újraolvasás
         siblings: A felosztás többi részével együtt
         state: 'Állapot: {state}'
@@ -7471,7 +7469,7 @@ tui:
           attached: Csatolva. A tételnek most {count} melléklete van.
           attachment: '{attachment} melléklet'
           detached: Leválasztva. A tételnek most {count} melléklete van.
-          revision: Modelo {modelo} {year} {period} ({state})
+          revision: Modelo {modelo} {period} {year} ({state})
           stale: '{count} lezárt Modelo-változat ezen módosítás előtt készült, és
             nem tartalmazza:'
           unchanged: 'Nem változott semmi: a tételnek már pontosan ezek a mellékletei
@@ -8302,7 +8300,7 @@ tui:
           finding: 'Figyelmeztetés [%{code}]: %{message}'
           prior: A(z) %{ejercicio}. gazdasági évből átvéve.
           sector: '%{sector} ágazat · %{letra} betűjel · tevékenységek: %{activities}'
-          seed_source: A Modelo %{modelo} %{year} %{period} helyi megfigyeléséből
+          seed_source: A Modelo %{modelo} %{period} %{year} helyi megfigyeléséből
             átvéve.
         sectors: Elkülönült ágazatok
         title: Prorrata-nyilvántartás
@@ -8772,7 +8770,7 @@ tui:
       unavailable: A keresés nem érhető el ebben a munkamenetben
       unknown: A keresést nem sikerült előkészíteni.
     result:
-      address: Modelo %{modelo} · %{filing_year} · %{period}
+      address: Modelo %{modelo} · %{period} %{filing_year}
       label:
         declaration: Bevallás
         filing: Benyújtás
@@ -9971,6 +9969,6 @@ workspace:
       none: Ezen a nyomtatványon semmi sem vár rád.
       title: Teendők
     value:
-      not_applicable: nem alk.
+      not_applicable: nem alkalmazható
       not_known_yet: Még nem ismert
     was: 'korábban: {value}'

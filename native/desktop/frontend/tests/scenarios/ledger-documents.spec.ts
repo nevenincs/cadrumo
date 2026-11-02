@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { VALUE_COLUMN_MIN_PX } from "../../src/components/ledger/documents/documentsModel";
 import { label } from "../support/strings";
 
 // The Documents section over the scenario's `documents` ledger: readings
@@ -163,6 +164,47 @@ test("fields are as wide as what they hold", async ({ page: target }) => {
   expect(date).toBeGreaterThan(amount);
   expect(number).toBeGreaterThan(date);
   expect(name).toBeGreaterThan(number);
+});
+
+test("a value column dragged as narrow as it goes still holds every field whole", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, DOMESTIKA);
+  await kind(target, "received");
+  // A name takes the row, so it alone follows the column.
+  const inputs = draft(target).locator(
+    "tr:not([data-field=counterparty_name]) .ledger-draft-input input",
+  );
+  const name = draft(target).locator(
+    "[data-field=counterparty_name] .ledger-draft-input input",
+  );
+  const measured = () =>
+    inputs.evaluateAll((fields) =>
+      fields.map((field) => ({
+        client: field.clientWidth,
+        content: field.scrollWidth,
+      })),
+    );
+  const resting = await measured();
+  expect(resting.length).toBeGreaterThan(5);
+  // The narrowest field is a currency's, 6rem less its borders.
+  for (const field of resting) {
+    expect(field.client).toBeGreaterThan(80);
+    expect(field.content).toBeLessThanOrEqual(field.client);
+  }
+  const edge = draft(target).locator("th[data-column=value] [role=separator]");
+  await edge.focus();
+  for (let step = 0; step < 16; step++)
+    await target.keyboard.press("Shift+ArrowLeft");
+  await expect(edge).toHaveAttribute(
+    "aria-valuenow",
+    String(VALUE_COLUMN_MIN_PX),
+  );
+  expect(await measured()).toEqual(resting);
+  expect(
+    await name.evaluate((field) => field.clientWidth),
+  ).toBeGreaterThanOrEqual(resting[0]!.client);
 });
 
 test("a flagged field's glyph goes to the question about it", async ({

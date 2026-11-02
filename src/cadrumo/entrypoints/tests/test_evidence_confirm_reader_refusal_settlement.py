@@ -26,7 +26,6 @@ from pydantic import BaseModel
 from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
-from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.storage.attachment import AttachmentStore
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ...application.ledger.evidence_errors import PurchaseInvoiceEvidenceReaderError
@@ -39,11 +38,6 @@ from ...application.ledger.invoice_evidence_confirm_operation import (
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
     OperationErrorDetailV1,
-    operation_error_detail_schema,
-)
-from ...application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
-    OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.projection_services import OperationResultProjectionService
@@ -58,7 +52,12 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.iva.schema import InvoiceKind
 from ...tests.llm_vision_evidence_support import png_image
 from ..invoice_evidence_operation_composition import build_invoice_evidence_operation_ports
-from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing, supervisor_with_projections
+from .dependency_operation_gating_support import (
+    RecordingRunsAuthority,
+    agent_refusing,
+    settle_to_error_detail,
+    supervisor_with_projections,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -112,7 +111,9 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles(
     async def settle(
         supervisor: OperationSupervisor, service: OperationResultProjectionService
     ) -> tuple[OperationTerminalCondition, str | None, OperationErrorDetailV1]:
-        operation_id = await supervisor.submit(
+        receipt, detail = await settle_to_error_detail(
+            supervisor,
+            service,
             OperationRequest[BaseModel](
                 definition_id=LEDGER_EVIDENCE_CONFIRM_OPERATION_DEFINITION_ID,
                 subject_ref=profile_operation_subject(str(_PROFILE)),
@@ -124,23 +125,8 @@ def test_a_confirm_whose_re_read_needs_the_vision_model_settles(
                     kind=InvoiceKind.RECEIVED,
                 ),
             ),
-            operation_id="4" * 64,
+            definition_contract_digest=registration.contract.definition_contract_digest,
         )
-        terminal = await run_to_settlement(supervisor, operation_id)
-        receipt = terminal.terminal_receipt
-        assert receipt is not None
-        resolved = await service.resolve(
-            OperationResultProjectionRequestV1(
-                operation_id=operation_id,
-                terminal_revision=terminal.revision,
-                definition_contract_digest=registration.contract.definition_contract_digest,
-                result_schema=operation_error_detail_schema(),
-            ),
-            OperationErrorDetailV1,
-        )
-        assert isinstance(resolved, OperationResultProjectionSuccessV1), resolved
-        detail = resolved.projection
-        assert isinstance(detail, OperationErrorDetailV1)
         return receipt.condition, receipt.refusal_ref, detail
 
     with agent_refusing(ModelRunRefusalCode.MODEL_NOT_INSTALLED) as agent:

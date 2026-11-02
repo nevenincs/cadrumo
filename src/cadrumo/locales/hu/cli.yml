@@ -536,9 +536,9 @@ cli:
         seed_help: Az adóév ideiglenes arányosítási százalékának átvezetése az előző
           év végleges százalékából (LIVA 105.Uno cikk), a lepecsételt előző Modelo
           303 elszámolási megfigyeléséből olvasva.
-        seed_local_authority: Az ideiglenes százalék helyben, a tárolt {modelo} {filing_year}
-          {period} elszámolási megfigyelésedből lett átvezetve (LIVA 105.Uno cikk).
-          Ez nem az AEAT által erre az adóévre kiadott százalék.
+        seed_local_authority: Az ideiglenes százalék helyben, a tárolt {modelo} {period}
+          {filing_year} elszámolási megfigyelésedből lett átvezetve (LIVA 105.Uno
+          cikk). Ez nem az AEAT által erre az adóévre kiadott százalék.
         seed_regulated_override_standing: A(z) {ejercicio} adóév már {provenance}
           eredetű ideiglenes arányosítási százalékot tartalmaz, amely megelőzi a 105.Uno
           cikk szerinti átvezetést. Semmi sem került rögzítésre; az átvezetés előtt
@@ -780,7 +780,7 @@ cli:
       year_help: Benyújtási év.
     modelo:
       aggregate:
-        calculation_rows_absent: 'Modelo {modelo} {filing_year} {period}: a számítása
+        calculation_rows_absent: 'Modelo {modelo} {period} {filing_year}: a számítása
           által olvasott {source_family} adatokhoz nincs tárolt sor, ezért ez a jelentés
           azért üres, mert hiányoznak az adatok, nem pedig azért, mert az összeg nulla.'
         counterpart_observation_help: JSON CounterpartObservation objektum. A source_kind
@@ -1490,15 +1490,15 @@ cli:
           naplóban)
         amend_wizard_reason_required: A helyesbítés ellenőrzési naplójához indoklás
           szükséges.
-        amend_wizard_select_prompt: 'Benyújtottként rögzítve: %{modelo} %{year} %{period},
-          jelenlegi értékek:
+        amend_wizard_select_prompt: 'Benyújtottként rögzítve: %{modelo} %{period}
+          %{year}, jelenlegi értékek:
 
           %{summary}
 
           Mely rovatszámok változtak? (vesszővel vagy szóközzel elválasztva, üresen,
           ha egyik sem)'
         amend_wizard_unknown_casilla: A(z) %{token} rovat nem része a benyújtottként
-          rögzített %{modelo} %{year} %{period} bevallásnak; válassz a felsorolt rovatszámok
+          rögzített %{modelo} %{period} %{year} bevallásnak; válassz a felsorolt rovatszámok
           közül.
         amend_wizard_value_prompt: Javított érték a(z) %{number} rovathoz (%{label}),
           jelenleg %{previous_value}
@@ -1779,6 +1779,9 @@ cli:
         preview_maritime_exemption_qualifying_days_help: Spanyol területen kívüli
           munkavégzés naptári napjai az adóéven belül. Az Art. 7.p) alkalmazásakor
           az --annual-salary mellett kötelező.
+        preview_maritime_exemption_year_help: Az előnézni kívánt adóév; ez határozza
+          meg a napokat, a felső határt és az arányt. Alapértelmezés szerint a mai
+          dátumé.
         prior_domiciliation_election_help: A korábbi 303-as bevallás csoportos beszedésének
           megtartása vagy törlése/módosítása; a törléshez vagy módosításhoz egy korábbi,
           U típusú, importált AEAT-bizonyítékkal alátámasztott benyújtásra épülő helyesbítő
@@ -1850,8 +1853,8 @@ cli:
         rescate_year_help: Az az év, amikor a visszaváltási juttatást megkapják (alapértelmezetten
           a bevallás éve). Összehasonlítva a LIRPF DT 12a 4. bekezdés szerinti ablakkal,
           a --contingencia-year évtől mérve.
-        result_summary_header: eredmény-összefoglaló nyomtatvány %{modelo} %{year}
-          %{period}
+        result_summary_header: eredmény-összefoglaló nyomtatvány %{modelo} %{period}
+          %{year}
         resume_help: Ellenőrzi, hogy megszakított munkafolyamat újrapróbálható-e az
           AEAT megkeresése nélkül. A normál út a --modelo --year --period; a pontos
           azonosítók haladó menekülőútvonalak.
@@ -3087,7 +3090,7 @@ cli:
       attachment_help: A tranzakcióhoz csatolandó biztonságos melléklet azonosítója;
         több melléklet esetén ismételd meg.
       finalized_revision_stale: A bizonylat bekerült a nyilvántartás tranzakciójához,
-        de a Modelo %{modelo} %{filing_year} %{period} ellenőrzése a bizonylat létrejötte
+        de a Modelo %{modelo} %{period} %{filing_year} ellenőrzése a bizonylat létrejötte
         előtt történt, ezért a korábbi bizonylatcsomagot őrzi.
       help: Meglévő bizonylat csatolása egy tranzakcióhoz a nyilvántartásban.
       id_help: A tranzakció azonosítója, amelyhez a bizonylatot csatolod.

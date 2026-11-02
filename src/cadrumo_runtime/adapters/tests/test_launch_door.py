@@ -14,9 +14,10 @@ import pytest
 
 from cadrumo.core.async_cleanup import AsyncResourceCleanupError, close_async_resources
 from cadrumo.tests.process_support import launch_fixture, runtime_namespace_base
-from cadrumo_client.contracts.contracts import ByteChannel, ChannelWake, ClientHello, Peer, RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import ByteChannel, ClientHello, RefusalCode, RefusalError
 from cadrumo_client.transport.posix_endpoint import PosixEndpoint
 from cadrumo_client.transport.startup import LaunchDoor
+from cadrumo_client.transport.tests.delegating_channel import DelegatingChannel
 from cadrumo_client.transport.transport_cleanup import TransportCleanup
 from cadrumo_client.transport.windows import WindowsEndpoint
 
@@ -183,30 +184,14 @@ async def test_cancelled_handshake_closes_late_connection_without_stopping_owner
                     await opening
 
 
-class _FailOnceNativeChannel:
+class _FailOnceNativeChannel(DelegatingChannel):
     """Preserve real native I/O while refusing the first owned release."""
 
     def __init__(self, channel: ByteChannel) -> None:
-        self.channel = channel
+        super().__init__(channel)
         self.close_calls = 0
         self.close_threads: list[int] = []
         self.released = False
-
-    @property
-    def peer(self) -> Peer:
-        return self.channel.peer
-
-    def read_exact(self, count: int, *, deadline: float) -> bytes:
-        return self.channel.read_exact(count, deadline=deadline)
-
-    def read_ready(self) -> bool:
-        return self.channel.read_ready()
-
-    def wait_readable(self, *wakes: ChannelWake) -> bool:
-        return self.channel.wait_readable(*wakes)
-
-    def write_all(self, payload: bytes | bytearray, *, deadline: float) -> None:
-        self.channel.write_all(payload, deadline=deadline)
 
     def close(self) -> None:
         if self.released:

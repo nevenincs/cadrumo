@@ -374,6 +374,23 @@ def test_cross_period_clean_state_blocks_group_member_fan_in_without_expected_ro
     assert CrossPeriodCleanStateBlocker.INCOMPLETE_GROUP_MEMBER_COVERAGE in member_evidence.blockers
 
 
+def _evaluate_expected_member_fan_in(observation_repository: CalculationObservationRepository):
+    """Evaluate the 353 clean state against a roster naming group members A and B."""
+    return _evaluate_clean_state(
+        _snapshot_353(),
+        observation_repository=observation_repository,
+        taxpayer_tax_id=None,
+        expected_member_sets=(
+            CrossPeriodExpectedMemberSet(
+                source_modelo="322",
+                filing_year=_M353_YEAR,
+                period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
+                member_nifs=(_GROUP_MEMBER_A, _GROUP_MEMBER_B),
+            ),
+        ),
+    )
+
+
 def test_cross_period_clean_state_blocks_incomplete_expected_group_member_fan_in(
     tmp_path: Path,
 ) -> None:
@@ -386,19 +403,7 @@ def test_cross_period_clean_state_blocks_incomplete_expected_group_member_fan_in
             source_casilla_ids=requirement.source_casilla_ids,
         )
 
-        verdict = _evaluate_clean_state(
-            _snapshot_353(),
-            observation_repository=observation_repository,
-            taxpayer_tax_id=None,
-            expected_member_sets=(
-                CrossPeriodExpectedMemberSet(
-                    source_modelo="322",
-                    filing_year=_M353_YEAR,
-                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
-                    member_nifs=(_GROUP_MEMBER_A, _GROUP_MEMBER_B),
-                ),
-            ),
-        )
+        verdict = _evaluate_expected_member_fan_in(observation_repository)
 
     member_evidence = next(evidence for evidence in verdict.dependencies if evidence.requirement.requires_member_fan_in)
     assert member_evidence.observed_member_nifs == (_GROUP_MEMBER_A,)
@@ -422,19 +427,7 @@ def test_cross_period_clean_state_blocks_unexpected_group_member_fan_in(
                 source_casilla_ids=requirement.source_casilla_ids,
             )
 
-        verdict = _evaluate_clean_state(
-            _snapshot_353(),
-            observation_repository=observation_repository,
-            taxpayer_tax_id=None,
-            expected_member_sets=(
-                CrossPeriodExpectedMemberSet(
-                    source_modelo="322",
-                    filing_year=_M353_YEAR,
-                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
-                    member_nifs=(_GROUP_MEMBER_A, _GROUP_MEMBER_B),
-                ),
-            ),
-        )
+        verdict = _evaluate_expected_member_fan_in(observation_repository)
 
     member_evidence = next(evidence for evidence in verdict.dependencies if evidence.requirement.requires_member_fan_in)
     assert member_evidence.observed_member_nifs == (_GROUP_MEMBER_A, _GROUP_MEMBER_B, _GROUP_MEMBER_C)
@@ -457,19 +450,7 @@ def test_cross_period_clean_state_accepts_member_scoped_group_filing_records(
                 source_casilla_ids=requirement.source_casilla_ids,
             )
 
-        verdict = _evaluate_clean_state(
-            _snapshot_353(),
-            observation_repository=observation_repository,
-            taxpayer_tax_id=None,
-            expected_member_sets=(
-                CrossPeriodExpectedMemberSet(
-                    source_modelo="322",
-                    filing_year=_M353_YEAR,
-                    period=Period.from_year_and_code(_M353_YEAR, _M353_PERIOD),
-                    member_nifs=(_GROUP_MEMBER_A, _GROUP_MEMBER_B),
-                ),
-            ),
-        )
+        verdict = _evaluate_expected_member_fan_in(observation_repository)
 
     member_evidence = next(evidence for evidence in verdict.dependencies if evidence.requirement.requires_member_fan_in)
     assert verdict.requires_clean_state is True

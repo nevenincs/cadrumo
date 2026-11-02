@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
+      "calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1571,12 +1571,12 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-31",
+        "reference_on": "2026-11-01",
         "days_remaining": null,
-        "days_overdue": 194
+        "days_overdue": 195
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-10-31T21:56:34.020415Z" },
+      "filing": { "recorded_at": "2026-11-01T07:57:11.801100Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF részletfizetés, közvetlen megállapítás",
@@ -1592,9 +1592,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "469ea4f43b88ef7d3ddc8e46a53e6236bcfa37167341fad56c8be0be19fb1acf",
+      "contract_set_digest": "0cfdbf479b0370dd1d78530f6ba5948664006054c534d2a99409964b9dd23c28",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "0a5464be70052921dbed5abd7efac24eb9efb7a371218d2af75ca7442aedf91f",
+      "definition_contract_digest": "073e2a8d43e20d60d4f5c71d2739448725074872eafc33f8b13786f0821f82b9",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1618,7 +1618,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "44a9fbf9f745a918fa95987868c324d253b905a0a55adb35134a5bac000ec353"
+        "schema_fingerprint": "b552091b3c6b35e5a2693c8dccb54641eb5a8406ba2128d99bfb36cbe07cc5fb"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1627,9 +1627,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "877db94d46c80d361eb863e9b9891879e4ebf68d181b89c98e15028c7825dd15",
-    "calculation_head_digest": "40ff3f160951483aeed2e0345ffffe88bf602a1870844dd4bb26dca19effbc5f",
-    "current_calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
+    "work_unit_record_digest": "b08712f7c8020f381b72988e246bdafef303549a517d0877b1eb09d052770a7b",
+    "calculation_head_digest": "919e08ffc0cde70a3f3e2f0dfae91231e70939706f152a796623c1506b519192",
+    "current_calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1932,9 +1932,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-31T21:56:38.129757Z",
-    "expires_at": "2026-10-31T22:01:38.129757Z",
-    "baseline_id": "8f743708ddb126fab23409c34116ffe77986fea7c660a70b2dde42966398cbdf"
+    "issued_at": "2026-11-01T07:57:16.636324Z",
+    "expires_at": "2026-11-01T08:02:16.636324Z",
+    "baseline_id": "99b0420bda73c8dec12c3a34446948c62cc7752f30bcb5016ef908b76d7d4dc4"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1943,7 +1943,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-10-31T21:56:34.020415Z",
+    "recorded_at": "2026-11-01T07:57:11.801100Z",
     "file_created_at": null,
     "receipt_to_add": true
   },
@@ -1988,8 +1988,8 @@
     "words": "Az ellenőrzés sikeres.",
     "unapplied_words": "A mentett számítás ellenőrzése sikeres; a módosításaidat nem alkalmaztuk."
   },
-  "calculation_revision_id": "1ddce0eff2b503a82514f66443ae0d50a8db23703facfe75e9e176b716ad86a0",
-  "verification_report_id": "3106ead26b25e27b205addeaed2fae996dec95d40a9470b088342209672cdcf6",
+  "calculation_revision_id": "cf385462b5343960905feb73173d3c448c71c3617c6ac1c91ccdf2a32390d9d3",
+  "verification_report_id": "8d986f7041e31ecce495e9a21e1dd3cff5ec258ecf0f7a6fc79c1dd10d6ea308",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -2051,7 +2051,7 @@
     "file_format_words": "AEAT-fájl a rögzített szélességű BOE-formátumban"
   },
   "receipt": {
-    "recorded_at": "2026-10-31T21:56:34.020415Z",
+    "recorded_at": "2026-11-01T07:57:11.801100Z",
     "verified": false,
     "verified_at": null,
     "words": "Ehhez a benyújtáshoz még nincs ellenőrzött AEAT-igazolás."

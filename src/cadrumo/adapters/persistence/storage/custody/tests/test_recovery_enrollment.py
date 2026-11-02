@@ -8,16 +8,15 @@ through the committed capsule, never about a call having been made.
 
 from __future__ import annotations
 
-from collections.abc import Generator
-from contextlib import contextmanager
+from functools import partial
 from typing import TYPE_CHECKING
 from uuid import UUID
 
 import pytest
 
-from cadrumo.adapters.persistence.profile.tests.sealed_profile_world import copied_profile_world, sealed_profile_world
 from cadrumo.adapters.persistence.storage.custody.capsule import load_committed_profile_password_material
 from cadrumo.adapters.persistence.storage.custody.errors import ProfileCustodyPasswordError
+from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import registered_profile
 from cadrumo.adapters.persistence.storage.master_key.login_throttle import login_throttle_path
 from cadrumo.adapters.persistence.storage.recovery_key import canonical_recovery_code
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import (
@@ -39,9 +38,7 @@ from cadrumo.application.user_profile.recovery_custody import (
     reset_profile_passphrase_with_recovery,
     revoke_profile_recovery,
 )
-from cadrumo.application.user_profile.registration import register_profile_with_credentials
 from cadrumo.core.credentials import ProfilePasswordRefusalReason
-from cadrumo.core.storage_environment import prepare_temporary_directory
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -59,25 +56,7 @@ class _HandoverDeclinedError(Exception):
     """The operator walked away before copying the code down."""
 
 
-@contextmanager
-def _registered(tmp_path: Path) -> Generator[tuple[Path, UUID]]:
-    """Open this test's own copy of the subject profile, registered once per worker; it is born without recovery."""
-    create, decode = _profile_contexts_for_test()
-    world = sealed_profile_world(
-        (__name__, _LABEL, _CURRENT),
-        lambda: (
-            register_profile_with_credentials(
-                label=_LABEL,
-                passphrase=_CURRENT,
-                profile_create_context=create,
-                profile_decode_context=decode,
-            ).profile_id
-        ),
-    )
-    with copied_profile_world(world, tmp_path, profile_decode_context=decode) as registered:
-        # The world registered without a KDF child; a production registration's child leaves this scratch base.
-        prepare_temporary_directory()
-        yield registered
+_registered = partial(registered_profile, owner_module=__name__, label=_LABEL, passphrase=_CURRENT)
 
 
 def _enroll(profile_id: UUID, passphrase: str = _CURRENT) -> str:

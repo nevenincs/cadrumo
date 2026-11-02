@@ -99,22 +99,7 @@ def _public_record_context() -> tuple[ModeloDraft, FilingProducerSnapshot]:
     return draft, producer
 
 
-@pytest.mark.usefixtures("governed_fact_scope")
-def test_complete_source_renders_two_500_position_records_with_exact_contact_and_decimal_values(
-    inputs: RevisionRenderInputs, tmp_path: Path
-) -> None:
-    rendered = render_complete_export_tree(
-        tmp_path / "export",
-        revision_id=inputs.revision_id,
-        joined=inputs.joined,
-        semantic_map=inputs.semantic_map,
-        transport_profile=inputs.transport_profile,
-        render_profile=inputs.render_profile,
-        render_profile_source_evidence=inputs.render_profile_source_evidence,
-    )
-    fields = {
-        (record.record_type, field.offset): field for record in rendered.layout.records for field in record.fields
-    }
+def _assert_record_headers_are_literal_draft_and_producer_fed(fields) -> None:
     for record_type, record_tag in (("type_1", "1"), ("type_2", "2")):
         for offset, literal in ((1, record_tag), (2, "720")):
             field = fields[record_type, offset]
@@ -131,6 +116,9 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
         assert taxpayer.binding is None
     assert fields["type_1", 18].producer_key is FilingProducerKey.TAXPAYER_FULL_NAME
     assert fields["type_1", 18].binding is None
+
+
+def _assert_contact_and_identifier_fields_render_exactly(fields) -> None:
     phone = fields["type_1", 59]
     name = fields["type_1", 68]
     assert (phone.length, name.length) == (9, 40)
@@ -141,6 +129,9 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
     for offset in (108, 123):
         identifier = fields["type_1", offset]
         assert render_fixed_width_export_field(identifier, "0000000000001") == "0000000000001"
+
+
+def _assert_quantity_percentage_and_date_fields_render_exactly(fields) -> None:
     quantity_whole = fields["type_2", 463]
     quantity_fraction = fields["type_2", 473]
     assert quantity_whole.binding == quantity_fraction.binding
@@ -150,6 +141,9 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
     for offset in (415, 424):
         field = fields["type_2", offset]
         assert render_fixed_width_export_field(field, date(2024, 2, 29)) == "20240229"
+
+
+def _assert_each_record_renders_exactly_500_positions(rendered) -> None:
     draft, producer = _public_record_context()
     for record in rendered.layout.records:
         assert all(field.offset is not None and field.length is not None for field in record.fields)
@@ -180,6 +174,9 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
         assert wire[8:17] == str(producer.taxpayer_tax_id)
         if record.record_type == "type_1":
             assert wire[17:57] == "PERSONA PRUEBA".ljust(40)
+
+
+def _assert_signed_amounts_round_trip(fields) -> None:
     for record_type, offset, whole in (
         ("type_1", 145, 15),
         ("type_1", 163, 15),
@@ -191,6 +188,29 @@ def test_complete_source_renders_two_500_position_records_with_exact_contact_and
             wire = render_fixed_width_export_field(field, value)
             assert wire == sign + str(abs(int(value * 100))).rjust(whole + 2, "0")
             assert parse_fixed_width_export_field(field, wire) == value
+
+
+@pytest.mark.usefixtures("governed_fact_scope")
+def test_complete_source_renders_two_500_position_records_with_exact_contact_and_decimal_values(
+    inputs: RevisionRenderInputs, tmp_path: Path
+) -> None:
+    rendered = render_complete_export_tree(
+        tmp_path / "export",
+        revision_id=inputs.revision_id,
+        joined=inputs.joined,
+        semantic_map=inputs.semantic_map,
+        transport_profile=inputs.transport_profile,
+        render_profile=inputs.render_profile,
+        render_profile_source_evidence=inputs.render_profile_source_evidence,
+    )
+    fields = {
+        (record.record_type, field.offset): field for record in rendered.layout.records for field in record.fields
+    }
+    _assert_record_headers_are_literal_draft_and_producer_fed(fields)
+    _assert_contact_and_identifier_fields_render_exactly(fields)
+    _assert_quantity_percentage_and_date_fields_render_exactly(fields)
+    _assert_each_record_renders_exactly_500_positions(rendered)
+    _assert_signed_amounts_round_trip(fields)
 
 
 @pytest.mark.parametrize("row", (161, 196, 720, 785))

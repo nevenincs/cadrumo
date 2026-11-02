@@ -27,7 +27,6 @@ from cadrumo_client.contracts.model_runs import ModelRunRefusalCode
 
 from ...adapters.outbound.llm.preconditions import LLMPreconditionCondition
 from ...adapters.outbound.llm.tests.model_run_support import RecordingModelRuns
-from ...adapters.persistence.operations.tests.supervision_support import run_to_settlement
 from ...adapters.persistence.profile.tests.ledger_action_create_support import ledger_ports_for_test
 from ...adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from ...adapters.persistence.storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
@@ -49,11 +48,6 @@ from ...application.ledger.llm_review_workflow import LlmReviewInvocationOrigin
 from ...application.operations.error_detail import (
     OperationErrorDetailKind,
     OperationErrorDetailV1,
-    operation_error_detail_schema,
-)
-from ...application.operations.frontend_requests import (
-    OperationResultProjectionRequestV1,
-    OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.registry import OperationRegistry
@@ -66,7 +60,12 @@ from ...domain.transactions.enums import TransactionDirection
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..ledger_llm_composition import compose_ledger_llm
-from .dependency_operation_gating_support import RecordingRunsAuthority, agent_refusing, supervisor_with_projections
+from .dependency_operation_gating_support import (
+    RecordingRunsAuthority,
+    agent_refusing,
+    settle_to_error_detail,
+    supervisor_with_projections,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -148,30 +147,17 @@ def _settle_and_read_detail(
                 mode="classification",
                 origin=LlmReviewInvocationOrigin.CLASSIFY_LLM_APPLY,
             )
-            operation_id = await supervisor.submit(
+            receipt, detail = await settle_to_error_detail(
+                supervisor,
+                projections,
                 OperationRequest[BaseModel](
                     definition_id=LEDGER_CLASSIFY_REVIEW_DEFINITION_ID,
                     subject_ref=ledger_llm_review_subject(review),
                     payload=review,
                 ),
-                operation_id="4" * 64,
+                definition_contract_digest=registration.contract.definition_contract_digest,
             )
-            terminal = await run_to_settlement(supervisor, operation_id)
-            receipt = terminal.terminal_receipt
-            assert receipt is not None
             assert receipt.effect is OperationEffect.NONE
-            resolved = await projections.resolve(
-                OperationResultProjectionRequestV1(
-                    operation_id=operation_id,
-                    terminal_revision=terminal.revision,
-                    definition_contract_digest=registration.contract.definition_contract_digest,
-                    result_schema=operation_error_detail_schema(),
-                ),
-                OperationErrorDetailV1,
-            )
-            assert isinstance(resolved, OperationResultProjectionSuccessV1), resolved
-            detail = resolved.projection
-            assert isinstance(detail, OperationErrorDetailV1)
             return receipt.condition, receipt.refusal_ref, detail
 
         return asyncio.run(settle())

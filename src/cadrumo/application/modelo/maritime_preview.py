@@ -29,6 +29,7 @@ See Also:
 from __future__ import annotations
 
 from dataclasses import dataclass, replace
+from datetime import date
 from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 
@@ -183,6 +184,7 @@ def preview_maritime_exemption_for_active_profile(
     qualifying_days: int | None,
     gross_navigation_income: Decimal | None,
     operation: PinnedAuthorityOperation | None = None,
+    filing_year: int | None = None,
 ) -> ModeloMaritimeExemptionPreview:
     """Resolve the active profile maritime exemption preview.
 
@@ -206,6 +208,7 @@ def preview_maritime_exemption_for_active_profile(
         gross_navigation_income: Optional gross navigation income in EUR for
             REBECA.
         operation: Optional caller-held generation-pinned registry operation.
+        filing_year: The tax year asked about, which fixes its days, cap and fraction; today's when absent.
 
     Returns:
         :class:`ModeloMaritimeExemptionPreview` carrying original facts,
@@ -224,9 +227,10 @@ def preview_maritime_exemption_for_active_profile(
                 qualifying_days=qualifying_days,
                 gross_navigation_income=gross_navigation_income,
                 operation=indexed_operation,
+                filing_year=filing_year,
             )
     facts = maritime_facts_from_active_profile()
-    resolved_on = today_madrid()
+    resolved_on = today_madrid() if filing_year is None else date(filing_year, 12, 31)
     try:
         result = resolve_maritime_exemption(
             facts=facts,

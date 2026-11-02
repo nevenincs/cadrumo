@@ -1,10 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { expect, userEvent, waitFor, within } from "storybook/test";
-import form130 from "../../../dev/fixtures/modelo/modelo-130-1T-en.json";
-import form303 from "../../../dev/fixtures/modelo/modelo-303-1T-en.json";
 import type { ModeloShape } from "../../../dev/modeloFixture";
+import { translator } from "../../../shell/strings";
 import type { ModeloWorkbenchFormProjectionV1 } from "../../../shell/modeloContract";
-import { StorySession } from "../details/Details.stories";
+import { StorySession, typedAmount } from "../details/Details.stories";
 import { FilingView } from "./FilingView";
 import { ReviewDialog } from "./ReviewDialog";
 
@@ -13,12 +12,15 @@ import { ReviewDialog } from "./ReviewDialog";
 // The scenario host answers the edit preflight as the application did; it
 // has no answer for an apply or an export, so a story's shape says whether
 // those are refused, never reach the runtime, or are lost in transit. The
-// filing stages below change the envelope's own filing fields the way a
-// check, an export and a recorded filing change them; the words they set are
-// English only.
+// filing stages are the envelopes the application read for the first
+// quarter's modelo 130 after its check, its export, a recorded filing and a
+// calculation that changed after the export, each in the language shown.
 
-const F130 = form130 as unknown as ModeloWorkbenchFormProjectionV1;
-const F303 = form303 as unknown as ModeloWorkbenchFormProjectionV1;
+// The envelope is read when the story opens, and the review waits for it.
+const READ_WAIT = 15_000;
+
+const M130 = "modelo-130-1T";
+const M303 = "modelo-303-1T";
 
 const meta: Meta = {
   title: "Modelo/Review and filing",
@@ -30,18 +32,19 @@ type Story = StoryObj;
 function Review({
   locale,
   shape,
-  envelope = F130,
+  adjust,
 }: {
   locale: unknown;
   shape?: ModeloShape;
-  envelope?: ModeloWorkbenchFormProjectionV1;
+  adjust?: (envelope: ModeloWorkbenchFormProjectionV1) => void;
 }) {
   return (
     <StorySession
-      envelope={envelope}
+      declaration={M130}
+      adjust={adjust}
       locale={locale}
       shape={shape}
-      edits={[{ casilla: "06", value: "1.234,56" }]}
+      edits={[{ casilla: "06", value: typedAmount(locale) }]}
     >
       {(props) =>
         props.session.stagedCount > 0 && (
@@ -65,19 +68,14 @@ export const ReviewChecked: Story = {
   render: (_, { globals }) => <Review locale={globals.locale} />,
 };
 
+const withoutKnownEntries = (envelope: ModeloWorkbenchFormProjectionV1) => {
+  envelope.form.form.operator_entries_known = false;
+};
+
 export const ReviewUnattributed: Story = {
   name: "Review · values typed outside this screen",
   render: (_, { globals }) => (
-    <Review
-      locale={globals.locale}
-      envelope={{
-        ...F130,
-        form: {
-          ...F130.form,
-          form: { ...F130.form.form, operator_entries_known: false },
-        },
-      }}
-    />
+    <Review locale={globals.locale} adjust={withoutKnownEntries} />
   ),
 };
 
@@ -86,12 +84,20 @@ export const ReviewApplyUnknown: Story = {
   render: (_, { globals }) => (
     <Review locale={globals.locale} shape="unknown" />
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, globals }) => {
     const page = within(canvasElement.ownerDocument.body);
-    const apply = await page.findByRole("button", {
-      name: /workspace\.modelo\.review\.apply|Apply/,
+    const apply = await page.findByRole(
+      "button",
+      {
+        name: translator(String(globals.locale))(
+          "workspace.modelo.review.apply",
+        ),
+      },
+      { timeout: READ_WAIT },
+    );
+    await waitFor(() => expect(apply).toBeEnabled(), {
+      timeout: READ_WAIT,
     });
-    await waitFor(() => expect(apply).toBeEnabled());
     await userEvent.click(apply);
     await page.findByRole("alert");
     await expect(apply).toBeDisabled();
@@ -103,69 +109,52 @@ export const ReviewApplyRefused: Story = {
   render: (_, { globals }) => (
     <Review locale={globals.locale} shape="refused" />
   ),
-  play: async ({ canvasElement }) => {
+  play: async ({ canvasElement, globals }) => {
     const page = within(canvasElement.ownerDocument.body);
-    const apply = await page.findByRole("button", {
-      name: /workspace\.modelo\.review\.apply|Apply/,
+    const apply = await page.findByRole(
+      "button",
+      {
+        name: translator(String(globals.locale))(
+          "workspace.modelo.review.apply",
+        ),
+      },
+      { timeout: READ_WAIT },
+    );
+    await waitFor(() => expect(apply).toBeEnabled(), {
+      timeout: READ_WAIT,
     });
-    await waitFor(() => expect(apply).toBeEnabled());
     await userEvent.click(apply);
   },
 };
 
-/** The envelope as checking, exporting and recording leave it. */
-function staged(
-  stage: "checked" | "exported" | "stale" | "recorded",
-  base = F130,
-) {
-  const form = structuredClone(base);
-  form.verification_report_id = "f".repeat(64);
-  form.form.verified = true;
-  form.form.form.verification = "complete";
-  form.header.export_hold = null;
-  const calculation = form.calculation_revision_id ?? "e".repeat(64);
-  form.calculation_revision_id = calculation;
-  if (stage !== "checked") {
-    form.form.form.last_export = {
-      exported_at: "2026-04-14T09:30:00Z",
-      calculation_revision_id: calculation,
-      current: stage !== "stale",
-    };
-    form.header.file = {
-      exported_at: "2026-04-14T09:30:00Z",
-      created_on: "2026-04-14",
-      current: stage !== "stale",
-      // A synthetic stage the scenario read did not produce; its words are
-      // the English the application gives such a file.
-      words:
-        stage === "stale"
-          ? "The file from 14/04/2026 is out of date. Create it again."
-          : "File created on 14/04/2026.",
-    };
-  }
-  if (stage === "recorded") {
-    form.form.form.filing = { recorded_at: "2026-04-15T11:00:00Z" };
-    form.receipt = {
-      recorded_at: "2026-04-15T11:00:00Z",
-      verified: false,
-      verified_at: null,
-      words: "Not confirmed by an AEAT receipt yet.",
-    };
-  }
-  return form;
-}
+/** A checked form: nothing holds the file back. For a declaration whose
+ * check the application did not read, the check's own fields are set. */
+const checked = (envelope: ModeloWorkbenchFormProjectionV1) => {
+  envelope.verification_report_id = "f".repeat(64);
+  envelope.form.verified = true;
+  envelope.form.form.verification = "complete";
+  envelope.header.export_hold = null;
+  envelope.calculation_revision_id ??= "e".repeat(64);
+};
 
 function Filing({
   locale,
-  envelope,
+  declaration,
+  adjust,
   shape,
 }: {
   locale: unknown;
-  envelope: ModeloWorkbenchFormProjectionV1;
+  declaration: string;
+  adjust?: (envelope: ModeloWorkbenchFormProjectionV1) => void;
   shape?: ModeloShape;
 }) {
   return (
-    <StorySession envelope={envelope} locale={locale} shape={shape}>
+    <StorySession
+      declaration={declaration}
+      adjust={adjust}
+      locale={locale}
+      shape={shape}
+    >
       {(props) => (
         <div className="@container h-full overflow-y-auto px-6 py-6">
           <FilingView
@@ -186,35 +175,35 @@ function Filing({
 export const FilingHeld: Story = {
   name: "Export and record · something blocks filing",
   render: (_, { globals }) => (
-    <Filing locale={globals.locale} envelope={F130} />
+    <Filing locale={globals.locale} declaration={M130} />
   ),
 };
 
 export const FilingReady: Story = {
   name: "Export and record · checked, ready to export",
   render: (_, { globals }) => (
-    <Filing locale={globals.locale} envelope={staged("checked")} />
+    <Filing locale={globals.locale} declaration={`${M130}-checked`} />
   ),
 };
 
 export const FilingElections: Story = {
   name: "Export and record · 303 checked, asking its elections",
   render: (_, { globals }) => (
-    <Filing locale={globals.locale} envelope={staged("checked", F303)} />
+    <Filing locale={globals.locale} declaration={M303} adjust={checked} />
   ),
 };
 
 export const FilingStale: Story = {
   name: "Export and record · file from an earlier calculation",
   render: (_, { globals }) => (
-    <Filing locale={globals.locale} envelope={staged("stale")} />
+    <Filing locale={globals.locale} declaration={`${M130}-stale`} />
   ),
 };
 
 export const FilingRecorded: Story = {
   name: "Export and record · recorded as filed",
   render: (_, { globals }) => (
-    <Filing locale={globals.locale} envelope={staged("recorded")} />
+    <Filing locale={globals.locale} declaration={`${M130}-filed`} />
   ),
 };
 
@@ -223,7 +212,7 @@ export const FilingRecordUnknown: Story = {
   render: (_, { globals }) => (
     <Filing
       locale={globals.locale}
-      envelope={staged("exported")}
+      declaration={`${M130}-exported`}
       shape="unknown"
     />
   ),

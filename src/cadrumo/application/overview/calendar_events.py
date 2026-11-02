@@ -9,6 +9,7 @@ from __future__ import annotations
 from datetime import date
 from typing import TYPE_CHECKING, Protocol
 
+from ...core.i18n.render import tr
 from ...core.identity.tax_id import same_tax_identifier
 from ...core.notificacion_estado_servicio import NotificacionEstadoServicio as _NotificacionEstadoServicio
 from ...core.notificacion_estado_servicio import (
@@ -135,7 +136,12 @@ def calendar_events_from_expedientes_snapshots(
             if not calendar_range.covers(event_date):
                 continue
             _period = declaration.period
-            summary = f"Modelo {declaration.modelo} {declaration.ejercicio} {_period.registry_token} filed at AEAT"
+            summary = tr(
+                "application.overview.calendar.event.declaration_filed",
+                modelo=declaration.modelo,
+                period=_period.registry_token,
+                year=declaration.ejercicio,
+            )
             aeat_submission_state = (
                 _OverviewAeatSubmissionState.SUBMITTED_OBSERVED
                 if _is_active_aeat_filing_status(declaration.estado)
@@ -296,9 +302,11 @@ def calendar_events_from_justificante_capture_snapshots(
                 post_filing_kind=_PostFilingEventKind.DECLARACION_PRESENTADA,
                 event_date=event_date,
                 source="aeat_sede_live_capture",
-                summary=(
-                    f"Modelo {snapshot.modelo} {snapshot.filing_year} "
-                    f"{snapshot.period.registry_token} live justificante"
+                summary=tr(
+                    "application.overview.calendar.event.live_justificante",
+                    modelo=snapshot.modelo,
+                    period=snapshot.period.registry_token,
+                    year=snapshot.filing_year,
                 ),
                 reference_id=snapshot.expediente_id,
                 snapshot_id=snapshot.snapshot_id,
@@ -480,7 +488,12 @@ def calendar_events_from_modelo_records(
                 event_date=event_date,
                 source="modelo_filing_record",
                 reference_id=record.filing_record_id,
-                summary=f"Modelo {record.modelo} {record.period} filing record",
+                summary=tr(
+                    "application.overview.calendar.event.filing_record",
+                    modelo=record.modelo,
+                    period=record.period.registry_token,
+                    year=record.filing_year,
+                ),
                 modelo=str(record.modelo),
                 filing_year=record.filing_year,
                 period=record.period,

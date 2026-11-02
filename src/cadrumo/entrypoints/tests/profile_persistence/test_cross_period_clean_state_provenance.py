@@ -67,7 +67,10 @@ from cadrumo.adapters.persistence.profile.tests.cross_period_clean_state_support
 )
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.calculations.cross_period_clean_state import evaluate_cross_period_clean_state
+from cadrumo.application.calculations.cross_period_clean_state import (
+    CrossPeriodCleanStateVerdict,
+    evaluate_cross_period_clean_state,
+)
 from cadrumo.application.calculations.cross_period_models import (
     CrossPeriodCleanStateBlocker,
     CrossPeriodExpectedMemberSet,
@@ -98,6 +101,23 @@ _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
+def _evaluate_390(
+    observation_repository: CalculationObservationRepository, operation: PinnedAuthorityOperation
+) -> CrossPeriodCleanStateVerdict:
+    """Evaluate the Modelo 390 snapshot's clean state over the profile's own catalogues."""
+    return evaluate_cross_period_clean_state(
+        _snapshot_390(),
+        bucket_id=_BUCKET_ID,
+        observation_repository=observation_repository,
+        filing_repository=ModeloRecordCatalogueRepository(),
+        calculation_repository=CalculationRevisionCatalogueRepository(),
+        verification_repository=VerificationReportCatalogueRepository(),
+        justificante_repository=JustificanteRepository(),
+        taxpayer_tax_id="X1234567L",
+        operation=operation,
+    )
+
+
 def test_cross_period_clean_state_blocks_missing_aeat_register_observation_provenance(tmp_path: Path) -> None:
     with _indexed_authority_for_test().operation() as _authority_operation_for_test:
         with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -107,17 +127,7 @@ def test_cross_period_clean_state_blocks_missing_aeat_register_observation_prove
                 source_metadata_by_period={"1T": None},
             )
 
-            verdict = evaluate_cross_period_clean_state(
-                _snapshot_390(),
-                bucket_id=_BUCKET_ID,
-                observation_repository=observation_repository,
-                filing_repository=ModeloRecordCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                verification_repository=VerificationReportCatalogueRepository(),
-                justificante_repository=JustificanteRepository(),
-                taxpayer_tax_id="X1234567L",
-                operation=_authority_operation_for_test,
-            )
+            verdict = _evaluate_390(observation_repository, _authority_operation_for_test)
 
         first_quarter = _m390_first_quarter_evidence(verdict)
         assert verdict.clean is False
@@ -137,17 +147,7 @@ def test_cross_period_clean_state_blocks_live_capture_observation_without_regist
                 source_metadata_by_period={"1T": {}},
             )
 
-            verdict = evaluate_cross_period_clean_state(
-                _snapshot_390(),
-                bucket_id=_BUCKET_ID,
-                observation_repository=observation_repository,
-                filing_repository=ModeloRecordCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                verification_repository=VerificationReportCatalogueRepository(),
-                justificante_repository=JustificanteRepository(),
-                taxpayer_tax_id="X1234567L",
-                operation=_authority_operation_for_test,
-            )
+            verdict = _evaluate_390(observation_repository, _authority_operation_for_test)
 
         first_quarter = _m390_first_quarter_evidence(verdict)
         assert verdict.clean is False
@@ -170,17 +170,7 @@ def test_cross_period_clean_state_blocks_non_alta_aeat_register_observation_prov
                 },
             )
 
-            verdict = evaluate_cross_period_clean_state(
-                _snapshot_390(),
-                bucket_id=_BUCKET_ID,
-                observation_repository=observation_repository,
-                filing_repository=ModeloRecordCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                verification_repository=VerificationReportCatalogueRepository(),
-                justificante_repository=JustificanteRepository(),
-                taxpayer_tax_id="X1234567L",
-                operation=_authority_operation_for_test,
-            )
+            verdict = _evaluate_390(observation_repository, _authority_operation_for_test)
 
         first_quarter = _m390_first_quarter_evidence(verdict)
         assert verdict.clean is False
@@ -202,17 +192,7 @@ def test_cross_period_clean_state_blocks_missing_aeat_register_reference(tmp_pat
                 },
             )
 
-            verdict = evaluate_cross_period_clean_state(
-                _snapshot_390(),
-                bucket_id=_BUCKET_ID,
-                observation_repository=observation_repository,
-                filing_repository=ModeloRecordCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                verification_repository=VerificationReportCatalogueRepository(),
-                justificante_repository=JustificanteRepository(),
-                taxpayer_tax_id="X1234567L",
-                operation=_authority_operation_for_test,
-            )
+            verdict = _evaluate_390(observation_repository, _authority_operation_for_test)
 
         first_quarter = _m390_first_quarter_evidence(verdict)
         assert verdict.clean is False
@@ -236,17 +216,7 @@ def test_cross_period_clean_state_blocks_wrong_authenticated_identity_observatio
                 },
             )
 
-            verdict = evaluate_cross_period_clean_state(
-                _snapshot_390(),
-                bucket_id=_BUCKET_ID,
-                observation_repository=observation_repository,
-                filing_repository=ModeloRecordCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                verification_repository=VerificationReportCatalogueRepository(),
-                justificante_repository=JustificanteRepository(),
-                taxpayer_tax_id="X1234567L",
-                operation=_authority_operation_for_test,
-            )
+            verdict = _evaluate_390(observation_repository, _authority_operation_for_test)
 
         first_quarter = _m390_first_quarter_evidence(verdict)
         assert verdict.clean is False
@@ -306,17 +276,7 @@ def test_cross_period_clean_state_blocks_dangling_justificante_evidence_referenc
                 omit_justificante_metadata_periods={"1T"},
             )
 
-            verdict = evaluate_cross_period_clean_state(
-                _snapshot_390(),
-                bucket_id=_BUCKET_ID,
-                observation_repository=observation_repository,
-                filing_repository=ModeloRecordCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                verification_repository=VerificationReportCatalogueRepository(),
-                justificante_repository=JustificanteRepository(),
-                taxpayer_tax_id="X1234567L",
-                operation=_authority_operation_for_test,
-            )
+            verdict = _evaluate_390(observation_repository, _authority_operation_for_test)
 
         first_quarter = _m390_first_quarter_evidence(verdict)
         assert verdict.requires_clean_state is True
@@ -335,17 +295,7 @@ def test_cross_period_clean_state_blocks_csv_register_without_justificante_verif
                 omit_justificante_metadata_periods={"1T"},
             )
 
-            verdict = evaluate_cross_period_clean_state(
-                _snapshot_390(),
-                bucket_id=_BUCKET_ID,
-                observation_repository=observation_repository,
-                filing_repository=ModeloRecordCatalogueRepository(),
-                calculation_repository=CalculationRevisionCatalogueRepository(),
-                verification_repository=VerificationReportCatalogueRepository(),
-                justificante_repository=JustificanteRepository(),
-                taxpayer_tax_id="X1234567L",
-                operation=_authority_operation_for_test,
-            )
+            verdict = _evaluate_390(observation_repository, _authority_operation_for_test)
 
         first_quarter = _m390_first_quarter_evidence(verdict)
         assert verdict.requires_clean_state is True

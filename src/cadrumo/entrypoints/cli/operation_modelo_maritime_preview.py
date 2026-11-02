@@ -26,6 +26,7 @@ def preview_modelo_maritime_exemption(
     annual_salary: Decimal | None,
     qualifying_days: int | None,
     gross_navigation_income: Decimal | None,
+    filing_year: int | None = None,
 ) -> ModeloMaritimePreviewProjection:
     """Submit parsed operator inputs to the bound profile's registered worker."""
     client = bound_profile_client(ctx)
@@ -34,6 +35,7 @@ def preview_modelo_maritime_exemption(
         annual_salary=str(annual_salary) if annual_salary is not None else None,
         qualifying_days=qualifying_days,
         gross_navigation_income=str(gross_navigation_income) if gross_navigation_income is not None else None,
+        filing_year=filing_year,
     )
     completed = run_registered_operation(
         client,

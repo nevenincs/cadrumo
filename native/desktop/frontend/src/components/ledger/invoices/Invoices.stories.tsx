@@ -1,10 +1,12 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useState } from "react";
-import { userEvent, waitFor } from "storybook/test";
+import { userEvent, waitFor, within } from "storybook/test";
 import { STORY_PERIOD, STORY_READER, useLedgerPort } from "@/dev/LedgerStage";
 import { fixtureLedger } from "@/dev/fixtures/ledger";
+import { typeAsAPerson } from "@/dev/personTyping";
 import type { LedgerShape } from "@/dev/ledgerFixture";
 import type { LedgerPeriod } from "../../../shell/ledgerGrammar";
+import { translator } from "../../../shell/strings";
 import { usePagePause, WritePauseContext } from "../WritePause";
 import { type EditorTarget } from "./InvoiceEditor";
 import { InvoicesSection } from "./InvoicesSection";
@@ -76,7 +78,6 @@ export const EveryPeriod: Story = {
 export const Empty: Story = { args: { shape: "empty" } };
 export const Reading: Story = { args: { shape: "slow" } };
 export const Unavailable: Story = { args: { shape: "unavailable" } };
-export const Refused: Story = { args: { shape: "refused" } };
 export const Large: Story = { args: { shape: "large" } };
 
 export const NewInvoice: Story = {
@@ -101,9 +102,113 @@ export const ReceivedInvoice: Story = {
     },
   },
 };
+
+/** The open editor, once it is drawn: it opens beside the page, outside the
+ * canvas. */
+const editorOf = (canvasElement: HTMLElement) =>
+  waitFor(() => {
+    const found = canvasElement.ownerDocument.querySelector<HTMLElement>(
+      ".ledger-invoice-editor",
+    );
+    if (!found) throw new Error("the editor is not drawn yet");
+    return found;
+  });
+
+/** Presses the editor's button named by `key`, once it is there to press. */
+async function pressIn(editor: HTMLElement, name: string): Promise<void> {
+  const button = await waitFor(() => {
+    const found = within(editor).getByRole("button", { name });
+    if (found.getAttribute("aria-disabled") === "true")
+      throw new Error(`${name} is not ready yet`);
+    return found;
+  });
+  await userEvent.click(button);
+}
+
+/** Corrects a stored invoice's notes and saves it, as a person does, so the
+ * ledger's answer to the write shows. */
+const corrected: NonNullable<Story["play"]> = async ({
+  canvasElement,
+  globals,
+}) => {
+  const t = translator(String(globals.locale ?? "en"));
+  const cell = await waitFor(() => {
+    const found = canvasElement.querySelector<HTMLElement>(
+      "[role=row][data-kind=data] [role=gridcell]",
+    );
+    if (!found) throw new Error("the catalogue is not drawn yet");
+    return found;
+  });
+  await userEvent.dblClick(cell);
+  const editor = await editorOf(canvasElement);
+  const notes = within(editor).getByLabelText(
+    t("desktop.ledger.invoices.field.notes"),
+    { exact: true, selector: "input, textarea" },
+  );
+  await userEvent.type(notes, "Chased by email");
+  await pressIn(
+    editor,
+    t("desktop.ledger.invoices.review_changes", { count: 1 }),
+  );
+  await pressIn(editor, t("desktop.ledger.invoices.save"));
+};
+
+/** Fills a new issued invoice with its four requirements and a line, then
+ * adds it, as a person does. */
+const added: NonNullable<Story["play"]> = async ({
+  canvasElement,
+  globals,
+}) => {
+  const t = translator(String(globals.locale ?? "en"));
+  const editor = await editorOf(canvasElement);
+  const typed = (key: string, text: string) =>
+    typeAsAPerson(
+      within(editor).getByLabelText<HTMLInputElement>(
+        t(`desktop.ledger.invoices.field.${key}`),
+        { exact: true, selector: "input" },
+      ),
+      text,
+    );
+  await userEvent.click(
+    within(editor).getByRole("radio", {
+      name: t("desktop.ledger.invoices.kind_choice.issued"),
+    }),
+  );
+  await typed("counterparty_name", "Norte Digital S. Coop.");
+  await typed("counterparty_tax_id", "F00000022");
+  await typed("counterparty_country", "ES");
+  await typed("series", "F");
+  await typed("invoice_number", "F-2026-021");
+  await typed("issued_at", "2026-10-23");
+  await typed("currency", "EUR");
+  const cells = editor.querySelectorAll<HTMLElement>(
+    ".ledger-invoice-lines tbody tr:first-child td",
+  );
+  await typeAsAPerson(
+    cells[0]!.querySelector<HTMLInputElement>("input")!,
+    "Brand design",
+  );
+  await typeAsAPerson(
+    cells[2]!.querySelector<HTMLInputElement>("input")!,
+    "550",
+  );
+  await userEvent.selectOptions(
+    cells[4]!.querySelector<HTMLSelectElement>("select")!,
+    "RATE_21",
+  );
+  await pressIn(editor, t("desktop.ledger.invoices.review"));
+  await pressIn(editor, t("desktop.ledger.invoices.add"));
+};
+
+export const Refused: Story = {
+  name: "Correct an invoice, writes refused",
+  args: { shape: "refused" },
+  play: corrected,
+};
 export const NewInvoiceRefused: Story = {
   name: "Add an invoice, writes refused",
   args: { shape: "refused", editor: { kind: "new" } },
+  play: added,
 };
 
 /** Searches the catalogue, as a person does. */

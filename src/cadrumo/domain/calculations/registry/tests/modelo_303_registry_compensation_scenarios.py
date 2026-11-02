@@ -12,7 +12,7 @@ from ..bindings import resolve_available_bound_inputs_by_casilla_id
 from ..bindings_previous_filing import previous_filing_binding_source_casilla_ids
 from ..schema import ModeloDefinition
 from ..schema_catalogues import RegistryCatalogues
-from ._modelo_303_registry_support import (
+from .modelo_303_registry_constants import (
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
     _M303_DISPONIBLE_CASILLA,

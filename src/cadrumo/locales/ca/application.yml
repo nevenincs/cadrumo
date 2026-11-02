@@ -184,15 +184,15 @@ application:
     binding_prefill:
       errors:
         observation_merge_key_conflict: 'No es poden fusionar observacions amb clau
-          de model, exercici o període diferent: {primary_modelo} {primary_filing_year}
-          {primary_period} davant de {overlay_modelo} {overlay_filing_year} {overlay_period}.'
+          de model, exercici o període diferent: {primary_modelo} {primary_period}
+          {primary_filing_year} davant de {overlay_modelo} {overlay_period} {overlay_filing_year}.'
     iva_compensation:
       errors:
         annual_partition_casilla_ids_noncanonical: Les observacions de compensació
           del Model 303 han d'usar els identificadors de casella declarats per la
           revisió {revision_id}; {casilla_ids} no estan declarats.
         correction_missing: No existeix cap registre de compensació sembrat per a
-          %{filing_year}/%{period}; la correcció sobreescriu una sembra existent,
+          %{period} %{filing_year}; la correcció sobreescriu una sembra existent,
           no la crea.
         history_casilla_undeclared: La casella {casilla_id} no està declarada al model
           {modelo} versió {revision_id}, de manera que no s'hi pot adjuntar cap referència
@@ -219,18 +219,18 @@ application:
           la llavor sobreescriuria l'historial emmagatzemat.
     iva_wallet:
       errors:
-        decision_blocks_calculation: La decisió de la cartera d'IVA per a {target_year}
-          {target_period} està bloquejada per la divergència {divergence}. Resol la
+        decision_blocks_calculation: La decisió de la cartera d'IVA per a {target_period}
+          {target_year} està bloquejada per la divergència {divergence}. Resol la
           divergència abans de calcular.
-        decision_no_selected_amount: La decisió de la cartera d'IVA per a {target_year}
-          {target_period} no conté cap import seleccionat, de manera que no es pot
-          vincular cap valor de compensació.
+        decision_no_selected_amount: La decisió de la cartera d'IVA per a {target_period}
+          {target_year} no conté cap import seleccionat, de manera que no es pot vincular
+          cap valor de compensació.
         decision_repository_backend_split: El magatzem de decisions de la cartera
           d'IVA i el d'observacions de càlcul han de compartir un únic backend xifrat
           quan la decisió es persisteix.
         decision_target_mismatch: La decisió emmagatzemada de la cartera d'IVA apunta
-          a {decision_target_year} {decision_target_period}, però la declaració és
-          {context_filing_year} {context_period}.
+          a {decision_target_period} {decision_target_year}, però la declaració és
+          {context_period} {context_filing_year}.
         modelo_303_only: La conciliació de la cartera de compensació d'IVA només s'aplica
           al Model 303; s'ha indicat el model {modelo}.
     m303_carry:
@@ -1673,7 +1673,7 @@ application:
         a caselles calculades i no es poden sobreescriure amb un valor extern. Caselles
         afectades: %{computed}.'
       cross_period_clean_state_incomplete: La prova d'estat net entre períodes està
-        incompleta per al model {modelo} {filing_year} {period}; queden {finding_count}
+        incompleta per al model {modelo} {period} {filing_year}; queden {finding_count}
         incidència(es).
       deductible_iva_evidence_missing: 'Els apunts amb IVA deduïble dels teus registres
         requereixen una factura de compra vinculada. Vincula la factura a l''apunt
@@ -1791,8 +1791,9 @@ application:
         d'IVA no té cap import seleccionat.
       iva_wallet_supplied_decision_mismatch: La decisió de conciliació de la cartera
         de compensació d'IVA aportada no coincideix amb la decisió persistida.
-      iva_wallet_target_mismatch: El destí %{target_year}/%{target_period} de la decisió
-        de la cartera de compensació d'IVA no coincideix amb la declaració %{filing_year}/%{period}.
+      iva_wallet_target_mismatch: El destí %{target_period} %{target_year} de la decisió
+        de la cartera de compensació d'IVA no coincideix amb la declaració %{period}
+        %{filing_year}.
       iva_wallet_taxpayer_identity_missing: La conciliació de la cartera de compensació
         d'IVA no pot continuar sense la identitat del contribuent de la declaració.
       iva_wallet_taxpayer_mismatch: El contribuent de la conciliació de la cartera
@@ -1805,7 +1806,7 @@ application:
         les incidències abans de calcular.'
       local_observation_actor_blank: Una correcció manual d'una observació ha d'indicar
         qui la registra.
-      local_observation_override_missing: El model %{modelo} %{filing_year} %{period}
+      local_observation_override_missing: El model %{modelo} %{period} %{filing_year}
         no té cap correcció manual teva per eliminar.
       local_observation_reason_blank: Una correcció manual d'una observació n'ha d'indicar
         el motiu.
@@ -1836,11 +1837,11 @@ application:
         a la versió %{revision_id}: les definicions del model declaren un origen de
         valor que cap resolutor de càlcul gestiona. Afegeix un resolutor o marca''l
         com a ajornat abans de calcular.'
-      profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{filing_year}
-        %{period}; completa abans aquestes dades de perfil: %{profile_requirements}.'
+      profile_readiness_missing: 'El perfil és incomplet per al model %{modelo} %{period}
+        %{filing_year}; completa abans aquestes dades de perfil: %{profile_requirements}.'
       profile_readiness_not_applicable: 'El model %{modelo} no és aplicable al perfil
         actiu (%{applicability_verdict}); referències legals: %{legal_refs}.'
-      profile_readiness_pre_activity: El model %{modelo} %{filing_year} %{period}
+      profile_readiness_pre_activity: El model %{modelo} %{period} %{filing_year}
         és anterior a la data d'inici d'activitat del perfil, %{activity_start_date};
         el període de declaració acaba el %{period_end_date}, de manera que cap unitat
         de treball, càlcul ni verificació del model %{modelo} no pot avançar en aquest
@@ -1871,9 +1872,10 @@ application:
         estigui habilitat.
       reconcile_no_active_bucket: No hi ha cap perfil actiu; executa `aeat config
         profile create NAME` abans de reconciliar una declaració.
-      refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{filing_year}
-        %{period}, però la devolució només està disponible en l'últim període de declaració
-        de l'any. Arrossega el crèdit (compensar) o tria la devolució en l'últim període.
+      refund_election_not_eligible: S'ha triat tornar per al Model %{modelo} %{period}
+        %{filing_year}, però la devolució només està disponible en l'últim període
+        de declaració de l'any. Arrossega el crèdit (compensar) o tria la devolució
+        en l'últim període.
       review_package_generic: S'ha produït un error en construir el paquet de revisió.
       review_package_integrity: 'El paquet de revisió %{package_path} no ha superat
         la comprovació de la suma de verificació: %{detail}.'
@@ -1910,7 +1912,7 @@ application:
       work_unit_not_found: No s'ha trobat cap declaració de model amb id=%{work_unit_id}.
       work_unit_revision_divergence: La declaració %{work_unit_id} es va crear amb
         la versió %{work_unit_revision} de les definicions del model, però la versió
-        que s'aplica per llei al model %{modelo} %{filing_year} %{period} ara és %{law_revision}.
+        que s'aplica per llei al model %{modelo} %{period} %{filing_year} ara és %{law_revision}.
         Torna a crear la declaració per usar la versió actual.
       workflow_gate_no_pending_obligation: 'No hi ha cap obligació de presentació
         pendent per a aquest model/període en la data actual (la finestra d''obligació
@@ -2176,18 +2178,18 @@ application:
         suppression_notice: Avís de supressió de l'AEAT
         xsd: Esquema XML de l'AEAT
     iva_wallet:
-      correct_no_record: No existeix cap registre de compensació sembrat per a %{filing_year}/%{period}.
-        Executa primer 'aeat app modelo iva-wallet seed'; la correcció sobreescriu
-        una sembra existent.
+      correct_no_record: No existeix cap registre de compensació sembrat per a %{period}
+        %{filing_year}. Executa primer 'aeat app modelo iva-wallet seed'; la correcció
+        sobreescriu una sembra existent.
       correct_sealed_blocked: 'Correcció rebutjada: un Model 303 ja registrat com
-        a presentat (%{blocking_filing_year}/%{blocking_period}) ha usat aquesta base
+        a presentat (%{blocking_period} %{blocking_filing_year}) ha usat aquesta base
         de compensació inicial. Canviar-la alteraria una declaració registrada com
         a presentada.'
       override_fresh_wallet_blocked: 'Anul·lació rebutjada: una lectura actual de
-        la cartera d''AEAT ja resol el Model 303 %{filing_year}/%{period}. L''evidència
+        la cartera d''AEAT ja resol el Model 303 %{period} %{filing_year}. L''evidència
         recent d''AEAT és l''autoritat i una anul·lació no l''ha de substituir.'
       override_sealed_blocked: 'Anul·lació rebutjada: un Model 303 ja registrat com
-        a presentat (%{blocking_filing_year}/%{blocking_period}) ha usat la base de
+        a presentat (%{blocking_period} %{blocking_filing_year}) ha usat la base de
         compensació d''aquest període. Registrar una anul·lació alteraria una declaració
         registrada com a presentada.'
       seed_negative_amount: L'import inicial no pot ser negatiu.
@@ -2221,12 +2223,26 @@ application:
           %{binding_id} ha de ser una data; s'ha rebut %{value_type}.
         decimal_value_type_invalid: 'La dada de perfil per a l''origen de valor de
           canal decimal %{binding_id} té un tipus no suportat: %{value_type}.'
-        enum_boolean_invalid: La dada de perfil per a l'origen de valor enum %{binding_id}
-          ha resolt a booleà; els booleans no són claus vàlides de dispatch enum.
+        enum_boolean_invalid: La dada de perfil per a l'origen de valor %{binding_id}
+          ha resolt a booleà; els booleans no són claus vàlides.
     quickfile:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha
         rebutjat amb %{error_code}.'
+    value_date:
+      month_01: de gen.
+      month_02: de febr.
+      month_03: de març
+      month_04: d’abr.
+      month_05: de maig
+      month_06: de juny
+      month_07: de jul.
+      month_08: d’ag.
+      month_09: de set.
+      month_10: d’oct.
+      month_11: de nov.
+      month_12: de des.
+      pattern: '{day} {month} {year}'
     work_form:
       additional_data_for_box: Dada addicional de la casella {box}
       box_locator_help:
@@ -2282,6 +2298,11 @@ application:
       unnamed_box: Casella sense nom
   overview:
     calendar:
+      event:
+        declaration_filed: Model %{modelo} %{period} %{year} presentat a l'AEAT
+        filing_record: Registre de presentació del Model %{modelo} %{period} %{year}
+        live_justificante: Justificant del Model %{modelo} %{period} %{year} llegit
+          a l'AEAT
       holiday_coverage:
         calendar_unavailable: calendari de festius no disponible; el termini original
           no s'ha comprovat

@@ -383,7 +383,6 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
                   <Button
                     id={control.id}
                     type="button"
-                    size="sm"
                     variant="outline"
                     aria-describedby={control.describedBy}
                     className="ledger-capital-movement w-full justify-between font-normal"

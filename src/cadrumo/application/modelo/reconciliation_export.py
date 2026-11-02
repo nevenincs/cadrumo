@@ -198,7 +198,7 @@ def build_modelo_reconciliation_export_plan(
             "advisory_count",
         ),
         records,
-        (32, 25, 12, 12, 12, 24, 24, 18, 18),
+        column_widths=(32, 25, 12, 12, 12, 24, 24, 18, 18),
     )
     layout.table(
         TabName.PROVENANCE,
@@ -218,7 +218,7 @@ def build_modelo_reconciliation_export_plan(
             "actor",
         ),
         references,
-        (18, 72, 28, 24, 12, 12, 12, 36, 72, 72, 24, 60, 28),
+        column_widths=(18, 72, 28, 24, 12, 12, 12, 36, 72, 72, 24, 60, 28),
     )
     layout.table(
         TabName.DETALLE,
@@ -233,9 +233,14 @@ def build_modelo_reconciliation_export_plan(
             "source_refs",
         ),
         differences,
-        (18, 24, 30, 24, 24, 36, 45, 45),
+        column_widths=(18, 24, 30, 24, 24, 36, 45, 45),
     )
-    layout.table(TabName.EVIDENCIA, ("record", "advisory_code", "advisory", "context"), advisories, (18, 36, 70, 60))
+    layout.table(
+        TabName.EVIDENCIA,
+        ("record", "advisory_code", "advisory", "context"),
+        advisories,
+        column_widths=(18, 36, 70, 60),
+    )
     return SheetExportPlan[SheetReviewMetadata](
         metadata=SheetReviewMetadata(
             kind="reconciliation",

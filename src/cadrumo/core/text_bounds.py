@@ -45,6 +45,9 @@ point at the sites that need it: an exchange rate of zero is not a rate,
 while a total of zero is a legitimate total.
 """
 
+#: The longest text the producer records hold for a name or a contact, in characters.
+FILING_TEXT_CAPACITY: Final[int] = 256
+
 #: The first month AEAT numbers.
 CALENDAR_MONTH_MIN: Final[int] = 1
 

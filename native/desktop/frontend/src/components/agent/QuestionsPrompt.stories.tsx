@@ -2,6 +2,7 @@ import { userEvent } from "storybook/test";
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import type { ComponentProps } from "react";
 import type { AgentQuestion } from "../../shell/agentSession";
+import { answersStayInView } from "@/dev/catalogue/plays";
 import { APPEARANCE_NOTE, NOOP } from "./Composer.stories";
 import { QuestionsPrompt } from "./QuestionsPrompt";
 
@@ -70,6 +71,7 @@ export const FourQuestions: Story = {
       },
     ],
   },
+  play: ({ canvasElement }) => answersStayInView(canvasElement),
 };
 
 export const LongestQuestion: Story = {

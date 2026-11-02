@@ -25,18 +25,16 @@ SQL backend, independent repository instances. Nothing is mocked.
 from __future__ import annotations
 
 from datetime import date
-from decimal import Decimal
 
 import pytest
 
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 
 from .....domain.invoices.catalogue import InvoiceCatalogue
-from .....domain.invoices.enums import PaymentStatus
-from .....domain.invoices.models import Invoice, InvoiceLine
-from .....domain.iva.schema import InvoiceKind
+from .....domain.invoices.models import Invoice
 from ...tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from ..invoices import InvoiceCatalogueRepository
+from .issued_invoice_support import issued_consulting_invoice
 
 pytestmark = [
     pytest.mark.unit,
@@ -52,37 +50,11 @@ _runtime_profile = bucket_scoped_runtime_profile_fixture(_BUCKET_ID)
 def _invoice(invoice_number: str) -> Invoice:
     """Build one minimal catalogue invoice attributed to this test's bucket.
 
-    Mirrors the shape the sibling round-trip module builds; the bucket
-    attribution is the addition, because the repository refuses a catalogue
-    carrying an invoice owned by another bucket on both read and write.
+    The repository refuses a catalogue carrying an invoice owned by another bucket on both
+    read and write, so the bucket attribution is required.
     """
-    line = InvoiceLine.model_validate(
-        {
-            "description": "Consultoría",
-            "quantity": Decimal("1"),
-            "unit_price": Decimal("100.00"),
-            "subtotal": Decimal("100.00"),
-            "iva_rate": resolve_iva_rate_token("RATE_21", date.today()),
-            "iva_amount": Decimal("21.00"),
-        },
-    )
-    return Invoice.model_validate(
-        {
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": invoice_number,
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "lines": (line,),
-            "payment_status": PaymentStatus.PENDING,
-            "linked_transaction_ids": (),
-            "bucket_id": _BUCKET_ID,
-        },
+    return issued_consulting_invoice(
+        invoice_number, iva_rate=resolve_iva_rate_token("RATE_21", date.today()), bucket_id=_BUCKET_ID
     )
 
 

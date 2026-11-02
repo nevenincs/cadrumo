@@ -24,6 +24,7 @@ from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.parsing.dates import parse_iso8601_date
 from ...core.parsing.utils import parse_bool
+from ...core.text_bounds import FILING_TEXT_CAPACITY
 from .errors import UserProfileNotFoundError, UserProfileValidationError
 
 _SchemaId = Annotated[
@@ -156,9 +157,8 @@ class ProfileFieldDefinition(BaseModel):
     legal_refs: tuple[_Description, ...] = Field(default=())
     minimum: Decimal | None = None
     maximum: Decimal | None = None
-    #: The longest text a string field holds, in characters, for a field the
-    #: filing path carries into a bounded record.
-    max_length: int | None = Field(default=None, gt=0)
+    #: Whether the filing path carries this string field into a bounded producer record.
+    carried_by_filing_record: bool = False
 
     @field_validator("type", mode="before")
     @classmethod
@@ -169,9 +169,14 @@ class ProfileFieldDefinition(BaseModel):
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _max_length_bounds_text(self) -> ProfileFieldDefinition:
-        if self.max_length is not None and self.type is not ProfileFieldType.STRING:
-            raise UserProfileValidationError("max_length is declared only on a string field")
+        if self.carried_by_filing_record and self.type is not ProfileFieldType.STRING:
+            raise UserProfileValidationError("only a string field is carried into a bounded record")
         return self
+
+    @property
+    def max_length(self) -> int | None:
+        """Return the longest text this field holds: the capacity of the record that carries it."""
+        return FILING_TEXT_CAPACITY if self.carried_by_filing_record else None
 
     @field_validator("code_list", mode="before")
     @classmethod

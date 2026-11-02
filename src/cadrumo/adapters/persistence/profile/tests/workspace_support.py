@@ -12,7 +12,6 @@ import pytest
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
-from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.work_addressing import ModeloVisibleFilingTarget
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -37,14 +36,10 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 )
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 from cadrumo.domain.modelos.work_unit import WorkUnit, WorkUnitCatalogue
-from cadrumo.domain.user_profile.tests.profile_creation_authority import (
-    profile_creation_context_for_test as _profile_creation_context_for_test,
-)
-from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
-from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from .....application.modelo.workspace_baseline import resolve_workspace_baseline
 from .published_authority_support import published_authority_operation
+from .ready_profile_support import seed_ready_profile
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.static_inspection import RegistryRevisionInspection
@@ -69,37 +64,8 @@ _T0 = datetime(_FILING_YEAR, 6, 5, 9, 0, 0, tzinfo=UTC)
 _LAW_SELECTED_REVISION_ID = "2019-y-siguientes"
 
 
-_READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = (
-    UserProfileFact(path="identity.tax_id", value="00000000T"),
-    UserProfileFact(path="identity.name", value="Test Operator"),
-    UserProfileFact(path="identity.surnames", value="Workspace"),
-    UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-    UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
-    UserProfileFact(path="activities.description", value="economic activity"),
-    UserProfileFact(path="iva.regime", value="GENERAL"),
-    UserProfileFact(path="iva.m303_regime_composition", value="general"),
-    UserProfileFact(path="iva.redeme_enrolled", value=False),
-    UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-    UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-    UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-    UserProfileFact(path="provenance.source", value="manual_cli"),
-    UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-    UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-    UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-)
-
-
 def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
-    seed_test_profile_record(
-        _create_profile_record_for_test(
-            setup_state=ProfileSetupState.COMPLETE,
-            profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
-            created_at=_T0,
-            updated_at=_T0,
-            context=_profile_creation_context_for_test(),
-        ),
-    )
+    seed_ready_profile(bucket_id=bucket_id, surnames="Workspace", at=_T0)
 
 
 @pytest.fixture

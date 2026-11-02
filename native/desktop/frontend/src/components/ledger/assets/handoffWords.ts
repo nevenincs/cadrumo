@@ -10,7 +10,7 @@ import type {
 import type { Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
-import { ASSET_KEYS, countSentence } from "./assetsWords";
+import { ASSET_KEYS, REGISTER_CURRENCY, countSentence } from "./assetsWords";
 
 export type Handoff = NonNullable<ActivityAssetFilingResult["filing_handoff"]>;
 
@@ -72,7 +72,11 @@ export function leftOutNotes(
         name,
         start: formatDay(locale, gap.covered_from),
         end: formatDay(locale, gap.covered_through),
-        amount: gap.accrued ? formatAmount(locale, gap.accrued.decimal) : "",
+        amount: gap.accrued
+          ? formatAmount(locale, gap.accrued.decimal, {
+              currency: REGISTER_CURRENCY,
+            })
+          : "",
       }),
     );
   }

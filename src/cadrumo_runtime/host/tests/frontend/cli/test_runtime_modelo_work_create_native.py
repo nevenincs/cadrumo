@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import sys
 from pathlib import Path
 from uuid import UUID
@@ -18,7 +17,6 @@ from cadrumo.application.modelo.work_create_operation import (
 )
 from cadrumo.application.operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from cadrumo.application.user_profile.login_session import authenticate_profile_for_invocation, resolve_login_target
-from cadrumo.core.config import override_settings
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests import modelo_operation_test_support
@@ -35,8 +33,8 @@ from cadrumo_runtime.host.tests.native_commands.runtime_profile_cli_fixture impo
 )
 
 from ...native_profile_facts import native_general_iva_facts
-from .cli_runner import invoke_cached_cli
 from .native_api_cli_support import native_api_cli_session
+from .native_profile_cli_invoke import invoke_native_profile_cli
 
 pytestmark = [
     pytest.mark.integration,
@@ -53,25 +51,7 @@ def _facts() -> dict[str, str]:
 
 
 def _invoke(fixture: NativeCliProfileFixture, *arguments: str) -> Result:
-    assert fixture.label is not None
-    with override_settings(cadrumo_cli_reveal_identifiers=False):
-        result = invoke_cached_cli(
-            (
-                "--format",
-                "json",
-                "--profile",
-                fixture.label,
-                "--profile-secrets-stdin",
-                "app",
-                "modelo",
-                "work",
-                "create",
-                *arguments,
-            ),
-            input=json.dumps({"profile_passphrase": fixture.passphrase}),
-        )
-    assert fixture.passphrase not in result.output
-    return result
+    return invoke_native_profile_cli(fixture, "app", "modelo", "work", "create", *arguments)
 
 
 def _m130(*extra: str) -> tuple[str, ...]:

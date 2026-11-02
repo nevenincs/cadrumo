@@ -218,8 +218,9 @@ export function SplitDialog({
             </DialogTitle>
             <DialogDescription>
               {t("desktop.ledger.inspector.split.description", {
-                amount: formatAmount(locale, tx.amount),
-                currency: tx.currency,
+                amount: formatAmount(locale, tx.amount, {
+                  currency: tx.currency,
+                }),
               })}
             </DialogDescription>
           </DialogHeader>
@@ -230,7 +231,7 @@ export function SplitDialog({
             {parts.map((part, at) => (
               <li key={at} className="ledger-split-part grid gap-1.5">
                 <div className="flex items-end gap-2">
-                  <div className="grid w-28 gap-0.5 text-sm">
+                  <div className="grid w-40 gap-0.5 text-sm">
                     <Label
                       htmlFor={`${partId}-${at}-amount`}
                       className="font-normal"
@@ -344,20 +345,22 @@ export function SplitDialog({
                     </Combobox>
                   )}
                   {part.classification === "MIXED" && (
-                    <div className="grid w-24 gap-0.5 text-sm">
+                    <div className="grid w-fit gap-0.5 text-sm">
                       <Label
                         htmlFor={`${partId}-${at}-share`}
                         className="font-normal"
                       >
                         {t("desktop.ledger.inspector.share")}
                       </Label>
-                      <PercentEditor
-                        unit="fraction"
-                        id={`${partId}-${at}-share`}
-                        controlSize="sm"
-                        value={part.share}
-                        onChange={(share) => update(at, { share })}
-                      />
+                      <div className="w-24">
+                        <PercentEditor
+                          unit="fraction"
+                          id={`${partId}-${at}-share`}
+                          controlSize="sm"
+                          value={part.share}
+                          onChange={(share) => update(at, { share })}
+                        />
+                      </div>
                     </div>
                   )}
                 </div>

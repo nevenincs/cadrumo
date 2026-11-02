@@ -7,7 +7,7 @@ in the inward application aggregation tests.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
 from pathlib import Path
 
@@ -21,12 +21,12 @@ from cadrumo.application.aggregation.impatriado_income_ledger import (
     aggregate_impatriado_income_ledger,
     aggregate_impatriado_income_ledger_from_repositories,
 )
+from cadrumo.application.aggregation.tests.impatriado_income_ledger_support import impatriado_transaction
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.period import Period
-from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
-from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
-from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.transactions.enums import TransactionDirection
+from cadrumo.domain.transactions.models import TransactionCatalogue
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -36,55 +36,6 @@ _BASE_CASILLA: CasillaId = validated_casilla_id("impatriado.base-liquidable-gene
 _M151_SOURCE_JURISDICTIONS = frozenset({"ES"})
 _M151_ELIGIBLE_INCOME_CATEGORIES = frozenset({"actividad_economica", "trabajo"})
 _BUCKET_ID = "16161616-1616-4616-8616-161616161616"
-
-
-def _impatriado_transaction(
-    provider_id: str,
-    *,
-    amount: Decimal,
-    source_jurisdiction: str | None,
-    irpf_category: str | None = "trabajo",
-    direction: TransactionDirection = TransactionDirection.INCOMING,
-    business_classification: BusinessClassification = BusinessClassification.BUSINESS,
-    business_pct: Decimal | None = None,
-    taxable_base: Decimal | None = None,
-    iva_amount: Decimal | None = None,
-    value_date: date = date(2024, 3, 1),
-    lifecycle_state: TransactionLifecycleState = TransactionLifecycleState.ACTIVE,
-) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": RawTransaction(
-                provider_transaction_id=provider_id,
-                booked_date=value_date,
-                value_date=value_date,
-                amount=amount,
-                currency="EUR",
-                counterparty="Empleador SA",
-                description=f"impatriado income {provider_id}",
-                provenance=RawProvenance(
-                    source_path=Path(__file__),
-                    source_sha256="a" * 64,
-                    source_row_index=1,
-                    source_format=SourceFormat.CSV,
-                    ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
-                    provider_name="CSV provider",
-                ),
-                raw_fields={"Concepto": provider_id},
-            ),
-            "direction": direction,
-            "group_label": None,
-            "source_jurisdiction": source_jurisdiction,
-            "business_classification": business_classification,
-            "business_pct": business_pct,
-            "taxable_base": taxable_base,
-            "iva_amount": iva_amount,
-            "irpf_category": irpf_category,
-            "lifecycle_state": lifecycle_state,
-            "classified_at": datetime(2024, 4, 6, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
 
 
 def _base_total(aggregation: ImpatriadoIncomeLedgerAggregation) -> Decimal:
@@ -102,13 +53,13 @@ def test_repository_backed_aggregation_reports_out_of_period_catalogue_transacti
     visibility signal without allocating one issue per plaintext index entry.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        in_period = _impatriado_transaction(
+        in_period = impatriado_transaction(
             "row-in-period",
             amount=Decimal("30000.00"),
             source_jurisdiction="ES",
             value_date=date(2024, 6, 1),
         )
-        out_of_period = _impatriado_transaction(
+        out_of_period = impatriado_transaction(
             "row-out-of-period",
             amount=Decimal("45000.00"),
             source_jurisdiction="ES",
@@ -147,13 +98,13 @@ def test_repository_backed_aggregation_summarizes_previously_silent_out_of_windo
     its count and date span instead of dropping it before aggregation.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        in_year = _impatriado_transaction(
+        in_year = impatriado_transaction(
             "row-in-year",
             amount=Decimal("20000.00"),
             source_jurisdiction="ES",
             value_date=date(2024, 3, 1),
         )
-        wrong_direction_out_of_year = _impatriado_transaction(
+        wrong_direction_out_of_year = impatriado_transaction(
             "row-wrong-direction-out-of-year",
             amount=Decimal("15000.00"),
             source_jurisdiction="ES",
@@ -193,19 +144,19 @@ def test_repository_backed_aggregation_partition_matches_full_scan(
     reasons, while the partition reports a compact count and date span.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
-        in_year = _impatriado_transaction(
+        in_year = impatriado_transaction(
             "row-parity-in-year",
             amount=Decimal("20000.00"),
             source_jurisdiction="ES",
             value_date=date(2024, 3, 1),
         )
-        out_of_year = _impatriado_transaction(
+        out_of_year = impatriado_transaction(
             "row-parity-out-of-year",
             amount=Decimal("10000.00"),
             source_jurisdiction="ES",
             value_date=date(2025, 1, 15),
         )
-        foreign_out_of_year = _impatriado_transaction(
+        foreign_out_of_year = impatriado_transaction(
             "row-parity-foreign-out-of-year",
             amount=Decimal("5000.00"),
             source_jurisdiction="FR",

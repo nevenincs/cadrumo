@@ -12,9 +12,9 @@ related:
   - '[[2026-09-21-assets-core-cost-basis-stages-adr]]'
   - '[[2026-10-30-assets-core-amortization-law-and-form-placement-research]]'
   - '[[2026-10-30-assets-core-implementation-state-against-law-reference]]'
-modified: '2026-10-30'
+modified: '2026-11-01'
 body_schema: body-v2
-body_hash: 'sha256:b764cb237a5f2dafcfdebf87a790c0718b97d21ab0cfec86c6127e4982838994'
+body_hash: 'sha256:7109d71a7e4f1a3afd6feffd024306f1d7bcfaca78fb467ac994ca0f3cdc9ceb'
 ---
 
 <!-- RETIRED: S02, S03 -->
@@ -42,10 +42,10 @@ Owners: CADRUMO-AMORTIZATION2 has S01, S05, S06, S08, S09, S12. CADRUMO-AMPORTIZ
 - [x] `S11` - Implement baja of an element with date and reason and its disposal calculation through registered operations, so an element leaves the register without erasing history; `src/cadrumo/domain/renta/actividad_asset/, src/cadrumo/application/actividad_asset/`.
 - [x] `S12` - Add the read model and operations: element list, per-year amortization plan with typed claim state, claimable intervals and authored or projected edition, ordered event timeline with sequence and nullable recorded time, claim used_by and schedule match, form options, acquisition candidates, refusal sub-reason keys, atomic correction with superseding claims, earlier-year claiming for rate methods, and a non-tax descriptor record for name, serial number and libro registro fields outside revision identity via ledger.actividad-asset.describe; `src/cadrumo/application/actividad_asset/, src/cadrumo/domain/renta/actividad_asset/claims.py and operation registration`.
 - [x] `S13` - Prove the calculations end to end with the official worked-example oracles, a used-asset case from RIS art. 4.3, and the invariants that quarterly accrual sums to the annual charge and Modelo 130 Q4 equals 0208 plus 0227 when claims are complete; `owning tests directories`.
-- [ ] `S14` - Run the integrated review across the amended decisions and the backend, and append findings to the rolling audit; `.vault/audit/`.
+- [x] `S14` - Run the integrated review across the amended decisions and the backend, and append findings to the rolling audit; `.vault/audit/`.
 - [x] `S15` - Localize every activity-asset refusal through registered catalogue keys in en, es, ca and hu, with a gate rejecting literal messages in the package, authorized by the operator's 2026-10-30 instruction that surfaced refusals must be translated; `src/cadrumo/domain/renta/actividad_asset/, src/cadrumo/application/actividad_asset/, src/cadrumo/domain/calculations/registry/actividad_asset_bindings.py, src/cadrumo/locales/`.
 - [x] `S16` - Close the foral gap the lifecycle decision requires: refuse forecast and claim for a foral resident, recognize Araba, Bizkaia and Gipuzkoa in the tax-residence catalogue, and stop an unparseable residence reading as common territory, with real-profile tests; `src/cadrumo/application/actividad_asset/operations.py, src/cadrumo/application/aggregation/renta_ledger.py, src/cadrumo/_data/registry/aeat/facts/`.
-- [ ] `S17` - Resolve the S14 high and medium findings recorded in the rolling assets-core audit; `src/cadrumo/application/actividad_asset, src/cadrumo/domain/renta/actividad_asset, src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`.
+- [x] `S17` - Resolve the S14 high and medium findings recorded in the rolling assets-core audit; `src/cadrumo/application/actividad_asset, src/cadrumo/domain/renta/actividad_asset, src/cadrumo/application/aggregation/modelo_bindings_actividad_assets.py`.
 
 ## Parallelization
 

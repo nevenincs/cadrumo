@@ -30,6 +30,7 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.adapters.persistence.profile.tests.override_migration_support import override_migration_catalogue
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority as _indexed_authority_for_test
 from cadrumo.domain.modelos.tests.work_unit_catalogue_support import build_work_unit_catalogue
 
@@ -51,7 +52,6 @@ from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
     CalculationRevision,
-    CalculationRevisionCatalogue,
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
@@ -153,10 +153,6 @@ def _revision(*, relation_overrides: dict[str, str]) -> CalculationRevision:
     )
 
 
-def _catalogue(revision: CalculationRevision) -> CalculationRevisionCatalogue:
-    return CalculationRevisionCatalogue(revisions={revision.calculation_revision_id: revision})
-
-
 def _seed_parent_work_unit(profile: TestRuntimeProfile) -> None:
     WorkUnitCatalogueRepository(objects=profile.repository).save(
         build_work_unit_catalogue(
@@ -188,7 +184,9 @@ def test_post_cut_binding_override_is_preserved_unchanged() -> None:
         assert binding_id not in bundled_relation_binding_join()
         stored = _revision(relation_overrides={binding_id: _OVERRIDE_VALUE})
 
-        result = rekey_calculation_revision_overrides(_catalogue(stored), operation=_authority_operation_for_test)
+        result = rekey_calculation_revision_overrides(
+            override_migration_catalogue(stored), operation=_authority_operation_for_test
+        )
 
         assert not result.changed
         assert result.unchanged_revision_ids == (stored.calculation_revision_id,)
@@ -212,7 +210,7 @@ def test_calculation_read_path_migrates_the_stored_catalogue(tmp_path: Path) -> 
         _seed_parent_work_unit(profile)
         repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
         stored = _revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})
-        repository.save(_catalogue(stored))
+        repository.save(override_migration_catalogue(stored))
 
         work_unit = WorkUnitCatalogueRepository(objects=profile.repository).load().get(_work_unit_id())
         assert work_unit is not None

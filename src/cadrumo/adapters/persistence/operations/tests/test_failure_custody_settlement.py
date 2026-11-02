@@ -208,6 +208,21 @@ def _request() -> OperationRequest[BaseModel]:
     )
 
 
+async def _submit_bind_and_start(supervisor, executor: _FailureAfterGrantExecutor) -> str:
+    """Submit an operation, bind its typed financial operands, record the requirement and start it."""
+    operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
+    await supervisor.bind_typed_financial_operand(
+        operation_id,
+        FinancialOperandBatch(
+            baseline=FinancialOperandBaseline(baseline_id="d" * 64),
+            values=(Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125")),
+        ),
+    )
+    executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
+    await supervisor.start(operation_id)
+    return operation_id
+
+
 @pytest.mark.parametrize("registered_refusal", (True, False), ids=("registered-refusal", "ordinary-failure"))
 def test_executor_failure_receipt_waits_for_financial_operand_release(tmp_path: Path, registered_refusal: bool) -> None:
     """A terminal receipt stays absent while the real custody cleanup is unfinished."""
@@ -228,16 +243,7 @@ def test_executor_failure_receipt_waits_for_financial_operand_release(tmp_path: 
             OperationPersistedSnapshot,
             OperationFinancialOperandCustodyCheckpointV1 | None,
         ]:
-            operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
-            await supervisor.bind_typed_financial_operand(
-                operation_id,
-                FinancialOperandBatch(
-                    baseline=FinancialOperandBaseline(baseline_id="d" * 64),
-                    values=(Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125")),
-                ),
-            )
-            executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
-            await supervisor.start(operation_id)
+            operation_id = await _submit_bind_and_start(supervisor, executor)
             # Whichever comes first decides: the custody release, or a settlement that skipped it.
             released = asyncio.ensure_future(custody.release_persisted.wait())
             settled = asyncio.ensure_future(supervisor.settled(operation_id))
@@ -289,16 +295,7 @@ def test_failed_financial_operand_cleanup_does_not_publish_executor_failure_rece
         )
 
         async def run() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
-            await supervisor.bind_typed_financial_operand(
-                operation_id,
-                FinancialOperandBatch(
-                    baseline=FinancialOperandBaseline(baseline_id="d" * 64),
-                    values=(Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125")),
-                ),
-            )
-            executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
-            await supervisor.start(operation_id)
+            operation_id = await _submit_bind_and_start(supervisor, executor)
             with pytest.raises(OperationUnsettledError):
                 await supervisor.settled(operation_id)
             return await supervisor.inspect(operation_id)
@@ -333,16 +330,7 @@ def test_executor_failure_log_record_carries_the_raising_frame(
         )
 
         async def run() -> OperationPersistedSnapshot:
-            operation_id = await supervisor.submit(_request(), operation_id=_OPERATION_ID)
-            await supervisor.bind_typed_financial_operand(
-                operation_id,
-                FinancialOperandBatch(
-                    baseline=FinancialOperandBaseline(baseline_id="d" * 64),
-                    values=(Decimal("1234.56"), Decimal("-4.12"), Decimal("0.125")),
-                ),
-            )
-            executor.requirement = (await supervisor.inspect(operation_id)).financial_requirement
-            await supervisor.start(operation_id)
+            operation_id = await _submit_bind_and_start(supervisor, executor)
             return await supervisor.settled(operation_id)
 
         with caplog.at_level(logging.WARNING, logger="cadrumo.application.operations._supervisor_execution"):

@@ -30,7 +30,6 @@ from decimal import Decimal
 import pytest
 
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
-from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.invoices.enums import resolve_iva_rate_token
 from cadrumo.domain.iva.components import IvaComponentPresence, IvaKindApplicability
 from cadrumo.domain.iva.schema import IvaCategory
@@ -41,8 +40,7 @@ from ....domain.iva.components import (
 )
 from ....domain.iva.flow import derive_flow_for_classification, is_deducible_flow
 from ....domain.iva.schema import InvoiceKind
-from .._modelo_bindings_invoice_iva import _invoice_line_iva_observation
-from ..iva_ledger_apportionment import resolve_iva_ledger_binding_values
+from .invoice_screen_resolution_support import resolved_for
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -79,10 +77,6 @@ def test_every_declared_category_base_only_flow_stays_outside_deduction_authorit
     }
 
     assert not wrongly_deducible
-
-
-def _revision():
-    return published_snapshot("303", filing_year=2024, period="1T").revision
 
 
 def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
@@ -124,38 +118,9 @@ def _invoice(*, category: IvaCategory, kind: InvoiceKind) -> Invoice:
     )
 
 
-def _resolved_for(invoice: Invoice, *, operation: PinnedAuthorityOperation) -> dict[str, Decimal]:
-    """Project the invoice's single line the way the screen does, then resolve."""
-    line = invoice.lines[0]
-    base_amount_eur = invoice.line_amount_eur(line.subtotal)
-    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
-    assert base_amount_eur is not None
-    assert iva_amount_eur is not None
-    observation = _invoice_line_iva_observation(
-        invoice=invoice,
-        line=line,
-        line_index=0,
-        devengo_date=_DEVENGO,
-        recargo_amount=Decimal("0"),
-        base_amount_eur=base_amount_eur,
-        iva_amount_eur=iva_amount_eur,
-        operation=operation,
-    )
-    if observation is None:
-        return {}
-    return {
-        str(k): v
-        for k, v in resolve_iva_ledger_binding_values(
-            _revision(),
-            (observation,),
-            operation=operation,
-        ).items()
-    }
-
-
 def test_the_supplier_side_base_reaches_casilla_122(authority_operation: PinnedAuthorityOperation) -> None:
     """The turnover arrives in the box AEAT names for it."""
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -176,7 +141,7 @@ def test_the_supplier_side_declares_a_base_and_no_cuota_anywhere(
     repercutes nothing, so every resolved value other than casilla 122 must be
     absent or zero.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -197,7 +162,7 @@ def test_the_recipient_side_does_not_reach_casilla_122(
     route both sides into 122 and double the declared volume across a pair of
     trading taxpayers.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.RECEIVED),
         operation=authority_operation,
     )
@@ -218,7 +183,7 @@ def test_a_domestic_exemption_does_not_reach_casilla_122(
     than on the declared category, this base would be reported as reverse-charge
     turnover the taxpayer never supplied under that regime.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("domestic_exempt"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -237,7 +202,7 @@ def test_the_new_arm_does_not_divert_the_intracom_and_export_bases(
     would show up as those tests failing for a reason that names this change
     nowhere.
     """
-    reverse_charge = _resolved_for(
+    reverse_charge = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -261,7 +226,7 @@ def test_an_eu_b2b_service_base_reaches_casilla_120(
     category before any binding could select it -- the same upstream loss that
     kept casilla 122 blank.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -281,11 +246,11 @@ def test_the_two_informacion_adicional_boxes_do_not_collect_each_other(
     each single-box test on its own. Only the cross-check catches that, and
     crossing them doubles the declared volumen across the two lines.
     """
-    service = _resolved_for(
+    service = resolved_for(
         _invoice(category=IvaCategory("intra_community_service_supply"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
-    reverse_charge = _resolved_for(
+    reverse_charge = resolved_for(
         _invoice(category=IvaCategory("domestic_reverse_charge"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )
@@ -307,7 +272,7 @@ def test_an_article_7_not_subject_operation_does_not_reach_casilla_120(
     Routing them here would report as located abroad an operation that was never
     located anywhere else.
     """
-    resolved = _resolved_for(
+    resolved = resolved_for(
         _invoice(category=IvaCategory("operacion_no_sujeta"), kind=InvoiceKind.ISSUED),
         operation=authority_operation,
     )

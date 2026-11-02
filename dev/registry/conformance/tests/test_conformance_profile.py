@@ -521,10 +521,7 @@ def test_annual_casilla_comparison_uses_the_selected_year_dictionary(
         _assert_annual_casilla_comparison(registry_authority, filing_year)
 
 
-def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAuthority, filing_year: int) -> None:
-    snapshot = registry_authority.snapshot("100", filing_year=filing_year, period="0A")
-    comparison = compare_annual_casilla_population(snapshot, source_root=source_root_for(registry_authority))
-
+def _assert_annual_comparison_header(comparison: AnnualCasillaPopulationComparison, filing_year: int) -> None:
     assert isinstance(comparison, AnnualCasillaPopulationComparison)
     assert comparison.modelo == "100"
     assert comparison.filing_year == filing_year
@@ -536,11 +533,8 @@ def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAutho
     assert comparison.printed_form_source_refs == (f"boe-modelo-100-{filing_year}-form",)
     assert comparison.xsd_source_refs == (f"aeat-dr-100-{filing_year}-xsd",)
 
-    dictionary_layout = next(
-        layout for layout in snapshot.revision.export_layouts if layout.format is ExportLayoutFormat.XML_DICTIONARY
-    )
-    assert len(comparison.layout_comparisons) == len(snapshot.revision.export_layouts)
-    layout_comparison = next(item for item in comparison.layout_comparisons if item.layout_id == dictionary_layout.id)
+
+def _assert_dictionary_layout_comparison_scope(layout_comparison, filing_year: int) -> None:
     assert layout_comparison.layout_format == ExportLayoutFormat.XML_DICTIONARY.value
     assert layout_comparison.identity_measurement == "measured"
     assert layout_comparison.printed_form_membership == "unsupported"
@@ -571,6 +565,10 @@ def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAutho
         f"{filing_year} declares AEAT-numbered casilla(s) {fabricated} that its own dictionary does not contain"
     )
 
+
+def _assert_comparison_matches_the_parsed_dictionary(
+    snapshot, dictionary_layout, comparison, layout_comparison
+) -> None:
     entries = xml_dictionary_entries(
         dictionary_layout,
         sources=snapshot.sources,
@@ -586,6 +584,20 @@ def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAutho
     assert set(layout_comparison.extra_casilla_ids) == dictionary_ids - registry_ids
     assert comparison.missing_casilla_ids == layout_comparison.missing_casilla_ids
     assert comparison.extra_casilla_ids == layout_comparison.extra_casilla_ids
+
+
+def _assert_annual_casilla_comparison(registry_authority: ValidatedRegistryAuthority, filing_year: int) -> None:
+    snapshot = registry_authority.snapshot("100", filing_year=filing_year, period="0A")
+    comparison = compare_annual_casilla_population(snapshot, source_root=source_root_for(registry_authority))
+    _assert_annual_comparison_header(comparison, filing_year)
+
+    dictionary_layout = next(
+        layout for layout in snapshot.revision.export_layouts if layout.format is ExportLayoutFormat.XML_DICTIONARY
+    )
+    assert len(comparison.layout_comparisons) == len(snapshot.revision.export_layouts)
+    layout_comparison = next(item for item in comparison.layout_comparisons if item.layout_id == dictionary_layout.id)
+    _assert_dictionary_layout_comparison_scope(layout_comparison, filing_year)
+    _assert_comparison_matches_the_parsed_dictionary(snapshot, dictionary_layout, comparison, layout_comparison)
 
 
 def test_annual_casilla_comparison_retains_unmeasured_when_source_root_is_unavailable(

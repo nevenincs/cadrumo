@@ -60,18 +60,11 @@ _DESIGNS = (
 _CASILLA_TAG = re.compile(r"\[(\d{1,3})\]")
 
 
-@pytest.mark.parametrize(("revision_id", "source_ref", "filing_year", "design_epoch", "period"), _DESIGNS)
-def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set(
-    revision_id: str,
-    source_ref: str,
-    filing_year: int,
-    design_epoch: str,
-    period: str,
-) -> None:
-    source_root = bundled_path()
+def _assert_official_design_endpoints(source_ref: str, filing_year: int, design_epoch: str) -> None:
+    """Read the official DP30301 and DP30304 sheets and pin the exonerado endpoint set they print."""
     catalogues = load_catalogue_file(bundled_path("registry", "aeat", "legal", "iva.toml"))
     resolved = resolve_record_design_binary(
-        source_root,
+        bundled_path(),
         catalogues.sources,
         source_ref=source_ref,
         filing_year=filing_year,
@@ -118,6 +111,9 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
     assert all(official_fields[number].length == 5 for number in _TERRITORY_RATIOS)
     assert all(official_fields[number].length == 17 for number in _ENDPOINTS - _TERRITORY_RATIOS)
 
+
+def _assert_registry_endpoints(revision_id: str, source_ref: str, filing_year: int, period: str) -> None:
+    """Pin the registry's own endpoint declarations for one revision."""
     modelo, registry_catalogues = _committed_modelo("303")
     snapshot = build_snapshot(
         modelo,
@@ -146,8 +142,8 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
         "88": "modelo-303-volumen-operaciones-anual"
     }
     # Each endpoint exports to exactly one field on DP30304 -- the same sheet
-    # this test reads above to build `official_fields`, and whose numbered field
-    # set it asserts equals `_ENDPOINTS`. This previously asserted the endpoints
+    # the official-design check reads to build its numbered field set, which it
+    # asserts equals `_ENDPOINTS`. This previously asserted the endpoints
     # carry NO export refs, which contradicted that evidence: a box AEAT prints
     # on the record design belongs in the fichero. The export wiring has since
     # landed for all six revisions, so the assertion is inverted to the property
@@ -160,6 +156,18 @@ def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint
         for casilla in endpoints
     )
     assert all((casilla.data_type == "ratio") == (str(casilla.id) in _TERRITORY_RATIOS) for casilla in endpoints)
+
+
+@pytest.mark.parametrize(("revision_id", "source_ref", "filing_year", "design_epoch", "period"), _DESIGNS)
+def test_real_official_binary_and_registry_agree_on_the_exact_exonerado_endpoint_set(
+    revision_id: str,
+    source_ref: str,
+    filing_year: int,
+    design_epoch: str,
+    period: str,
+) -> None:
+    _assert_official_design_endpoints(source_ref, filing_year, design_epoch)
+    _assert_registry_endpoints(revision_id, source_ref, filing_year, period)
 
 
 def test_exonerado_endpoints_are_unique_canonical_manual_homes_without_parallel_producers() -> None:

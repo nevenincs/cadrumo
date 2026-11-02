@@ -200,12 +200,23 @@ def canonical_xml_text(schema: XmlValueSchema, path: str, text: str) -> str:
         unchanged, for the check over the finished document to judge.
     """
     capitalized = text.upper()
-    if capitalized == text:
+    if capitalized == text or _capitalizes_into_ascii(text):
         return text
     declared = _simple_type_at(schema, path)
     if declared is None or _alphabet_admits(declared, text) or not _alphabet_admits(declared, capitalized):
         return text
     return capitalized
+
+
+def _capitalizes_into_ascii(text: str) -> bool:
+    """Whether a non-ASCII character capitalizes into one plain letter, as dotless i into I and long s into S.
+
+    That letter could then pass a code type as a different code, and the XSD patterns do not tell a code from a name.
+    The text stays as typed, so the check over the finished document refuses it.
+    """
+    return any(
+        not character.isascii() and len(capital := character.upper()) == 1 and capital.isascii() for character in text
+    )
 
 
 def _simple_type_at(schema: XmlValueSchema, path: str) -> _SimpleType | None:

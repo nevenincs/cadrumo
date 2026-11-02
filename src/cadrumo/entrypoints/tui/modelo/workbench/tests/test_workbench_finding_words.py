@@ -31,7 +31,6 @@ from textual.widget import Widget
 from textual.widgets import OptionList, Static
 
 from ......application.modelo.finding_message_text import FINDING_FACT_KINDS, FindingFactKind
-from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......application.modelo.work_form_models import (
     ModeloFormCasillaAddressV1,
@@ -42,19 +41,10 @@ from ......application.modelo.work_form_models import (
     address_key,
 )
 from ......application.modelo.work_form_next_step import missing_count
-from ......application.modelo.work_form_service import modelo_form_snapshot
-from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
-)
 from ......core.config import override_settings
-from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLanguage
+from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ......core.i18n.render import tr
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
-from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
-from ......domain.modelos.codes import ModeloCode
 from ......domain.modelos.verification_report import (
     ModeloVerificationFinding,
     ModeloVerificationFindingKind,
@@ -72,7 +62,7 @@ from ..page_items import WorkbenchPage, page_items, workbench_pages
 from ..vocabulary import BLOCKS_MARK, CHECK_MARK, DONE_MARK, MISSING_MARK
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import synthetic_form
+from .workbench_fixture import registry_form, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -388,7 +378,7 @@ def test_a_period_date_and_amount_read_as_the_filer_writes_them() -> None:
         english = {line.level: line.message for line in issue_lines(form)}
 
     assert "periodo 4.º trimestre" in spanish[IssueLevel.INFO]
-    assert "01/03/2025" in spanish[IssueLevel.INFO]
+    assert "1 mar 2025" in spanish[IssueLevel.INFO]
     assert "(1.234,50 EUR)" in spanish[IssueLevel.CHECK]
     assert "difieren en 234,50 EUR" in spanish[IssueLevel.CHECK]
     assert "period 4th quarter" in english[IssueLevel.INFO]
@@ -419,35 +409,7 @@ def test_a_missing_value_already_listed_among_the_missing_boxes_is_not_listed_tw
 
 
 def _form_349(operation: PinnedAuthorityOperation, findings: tuple[ModeloVerificationFinding, ...]) -> ModeloWorkForm:
-    modelo, year, code = "349", 2026, "1T"
-    period = Period.from_year_and_code(year, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000349",
-        modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
-        work_unit_id="e" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=findings,
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
-    )
+    return registry_form(operation, modelo="349", year=2026, code="1T", findings=findings)
 
 
 def test_a_missing_value_of_the_operator_records_is_named_by_its_heading_and_leads_to_the_table(

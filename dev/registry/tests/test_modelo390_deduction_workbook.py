@@ -18,18 +18,30 @@ from ..workbook_demo_inputs import demonstration_inputs
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application]
 
 
-@pytest.mark.parametrize("year", (2022, 2023, 2024, 2025))
-def test_full_deduction_total_and_regime_result_keep_all_printed_inputs_live(year: int) -> None:
-    snapshot = demonstration_snapshot(DemoCase("390", str(year), None, None, filing_year=year, period="0A"))
-    owners = {
-        p.box_number: p.casilla_id
-        for p in snapshot.revision.form_layouts[0].placements
-        if (p.box_number is not None and p.box_number)
-    }
-    components = ("49", "513", "51", "521", "53", "55", "57", "59", "598", "61", "661", "62", "652", "63", "522")
+_DEDUCTION_COMPONENT_NUMBERS = (
+    "49",
+    "513",
+    "51",
+    "521",
+    "53",
+    "55",
+    "57",
+    "59",
+    "598",
+    "61",
+    "661",
+    "62",
+    "652",
+    "63",
+    "522",
+)
+
+
+def _deduction_input_leaves(snapshot, owners) -> set:
+    """Return the manual casillas the deduction components depend on, following formulas to their leaves."""
     casillas = {c.id: c for c in snapshot.revision.casillas}
     formulas = {f.id: f for f in snapshot.revision.formulas}
-    pending = [owners[number] for number in components]
+    pending = [owners[number] for number in _DEDUCTION_COMPONENT_NUMBERS]
     leaves = set()
     visited = set()
     while pending:
@@ -47,14 +59,10 @@ def test_full_deduction_total_and_regime_result_keep_all_printed_inputs_live(yea
             if expression.casilla_id is not None and expression.casilla_id:
                 pending.append(expression.casilla_id)
             expressions.extend(expression.args)
-    inputs = OperatorInputs(
-        values=tuple(
-            OperatorInput(casilla_id=owner, value=Decimal(index * 100)) for index, owner in enumerate(sorted(leaves))
-        )
-    )
-    plan = add_form_workbook(build_export_plan(snapshot, operator_inputs=inputs), snapshot)
-    source_cells = {c.casilla_id: c for c in plan.value_cells if c.role == "operator_input"}
-    form_cells = {c.casilla_id: c for c in plan.formula_cells if c.address.tab is TabName.FORM}
+    return leaves
+
+
+def _assert_subtotals_sit_under_their_rate_rows(form_cells, owners) -> None:
     for last_rate, subtotal in (
         ("606", "49"),
         ("610", "513"),
@@ -72,6 +80,9 @@ def test_full_deduction_total_and_regime_result_keep_all_printed_inputs_live(yea
         assert total_address.column == detail_address.column
     adjustment_rows = [form_cells[owners[number]].address.row for number in ("61", "661", "62", "652")]
     assert adjustment_rows == list(range(adjustment_rows[0], adjustment_rows[0] + 4))
+
+
+def _assert_total_and_result_formulas_reference_every_component(plan, owners, source_cells):
     calculated = {c.casilla_id: c for c in plan.formula_cells if c.address.tab is TabName.CALCULOS}
     total = calculated[owners["64"]]
     result = calculated[owners["65"]]
@@ -85,11 +96,33 @@ def test_full_deduction_total_and_regime_result_keep_all_printed_inputs_live(yea
             "iva.anual.autorepercutido.interior.deducible.cuota",
         )
     )
-    for number in components:
+    for number in _DEDUCTION_COMPONENT_NUMBERS:
         source = calculated[owners[number]] if owners[number] in calculated else source_cells[owners[number]]
         assert source.address.qualified() in total.formula
     assert total.address.qualified() in result.formula
     assert calculated[owners["47"]].address.qualified() in result.formula
+    return total, result
+
+
+@pytest.mark.parametrize("year", (2022, 2023, 2024, 2025))
+def test_full_deduction_total_and_regime_result_keep_all_printed_inputs_live(year: int) -> None:
+    snapshot = demonstration_snapshot(DemoCase("390", str(year), None, None, filing_year=year, period="0A"))
+    owners = {
+        p.box_number: p.casilla_id
+        for p in snapshot.revision.form_layouts[0].placements
+        if (p.box_number is not None and p.box_number)
+    }
+    leaves = _deduction_input_leaves(snapshot, owners)
+    inputs = OperatorInputs(
+        values=tuple(
+            OperatorInput(casilla_id=owner, value=Decimal(index * 100)) for index, owner in enumerate(sorted(leaves))
+        )
+    )
+    plan = add_form_workbook(build_export_plan(snapshot, operator_inputs=inputs), snapshot)
+    source_cells = {c.casilla_id: c for c in plan.value_cells if c.role == "operator_input"}
+    form_cells = {c.casilla_id: c for c in plan.formula_cells if c.address.tab is TabName.FORM}
+    _assert_subtotals_sit_under_their_rate_rows(form_cells, owners)
+    total, result = _assert_total_and_result_formulas_reference_every_component(plan, owners, source_cells)
     workbook = load_workbook(BytesIO(materialize_export_plan(plan)), data_only=False)
     for cell in (total, result):
         assert workbook[cell.address.tab.value][cell.address.a1].value == "=" + cell.formula

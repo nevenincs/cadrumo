@@ -17983,9 +17983,9 @@
         "closes_on": "2026-04-20",
         "nominal_closes_on": "2026-04-20",
         "holiday_coverage": "national_only",
-        "reference_on": "2026-10-31",
+        "reference_on": "2026-11-01",
         "days_remaining": null,
-        "days_overdue": 194
+        "days_overdue": 195
       },
       "aeat_data": null,
       "filing": null,
@@ -18004,9 +18004,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "469ea4f43b88ef7d3ddc8e46a53e6236bcfa37167341fad56c8be0be19fb1acf",
+      "contract_set_digest": "0cfdbf479b0370dd1d78530f6ba5948664006054c534d2a99409964b9dd23c28",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "0a5464be70052921dbed5abd7efac24eb9efb7a371218d2af75ca7442aedf91f",
+      "definition_contract_digest": "073e2a8d43e20d60d4f5c71d2739448725074872eafc33f8b13786f0821f82b9",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -18030,7 +18030,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "44a9fbf9f745a918fa95987868c324d253b905a0a55adb35134a5bac000ec353"
+        "schema_fingerprint": "b552091b3c6b35e5a2693c8dccb54641eb5a8406ba2128d99bfb36cbe07cc5fb"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -21120,9 +21120,9 @@
     ],
     "permitted_surface_digest": "55e1f327f6ef11017b79b42e78ea5e991f50ab537a901307c3c3b3b06b6f049a",
     "mutation_family": "calculate",
-    "issued_at": "2026-10-31T21:55:42.479140Z",
-    "expires_at": "2026-10-31T22:00:42.479140Z",
-    "baseline_id": "14205b79e0a6acf5f9a4ea8d907a6f3cf7947ee7524efc5d2ae01e2fa2967936"
+    "issued_at": "2026-11-01T07:56:24.060153Z",
+    "expires_at": "2026-11-01T08:01:24.060153Z",
+    "baseline_id": "c2a089ac07570895c8cfcc4a7f1b5b5d5ac9e8183eca963438d2f07cb020198a"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -21152,8 +21152,8 @@
       "out_of_date_words": null
     },
     "deadline": {
-      "text": "El plazo terminó el 20/04/2026: presentar ahora es fuera de plazo",
-      "short_text": "El plazo terminó el 20/04/2026: presentar ahora es fuera de plazo",
+      "text": "El plazo terminó el 20 abr 2026: presentar ahora es fuera de plazo",
+      "short_text": "El plazo terminó el 20 abr 2026: presentar ahora es fuera de plazo",
       "tone": "urgent",
       "help": null
     },

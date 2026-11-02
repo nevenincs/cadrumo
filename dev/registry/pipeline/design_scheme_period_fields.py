@@ -81,4 +81,7 @@ def _printed_constant(content: str | None) -> str:
     match = _CONSTANT_CONTENT.fullmatch((content or "").strip())
     if match is None:
         raise RegistryValidationError(f"scheme period-type row prints no single constant: {content!r}")
-    return match.group("constant")
+    constant = match.group("constant")
+    if not isinstance(constant, str):
+        raise RegistryValidationError("the reviewed regex must capture its constant as text")
+    return constant

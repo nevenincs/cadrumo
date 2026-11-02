@@ -7,6 +7,7 @@ from decimal import Decimal
 
 import pytest
 
+from .....core.casilla_id import CasillaId
 from ..errors import CasillaConstraintViolationError, RegistryValidationError
 from ..formula_runtime import calculate_registry_snapshot
 from ..formula_text_inputs import validated_text_input_casilla_ids
@@ -169,25 +170,33 @@ def test_registry_formula_runtime_rejects_relation_values_inactive_for_snapshot_
         )
 
 
+def _complete_m130_inputs() -> dict[CasillaId, Decimal]:
+    return {
+        _M130_INGRESOS_CASILLA: Decimal("100"),
+        _M130_GASTOS_CASILLA: Decimal("0"),
+        _M130_RETENCIONES_CASILLA: Decimal("0"),
+        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
+        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
+        _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
+        _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
+    }
+
+
+def _complete_m130_bindings() -> dict[str, Decimal]:
+    return {
+        _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
+        _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
+    }
+
+
 def test_registry_formula_runtime_defaults_filing_period_axis_from_snapshot(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
     result = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
-        inputs={
-            _M130_INGRESOS_CASILLA: Decimal("100"),
-            _M130_GASTOS_CASILLA: Decimal("0"),
-            _M130_RETENCIONES_CASILLA: Decimal("0"),
-            _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-            _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-            _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-            _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-        },
+        inputs=_complete_m130_inputs(),
         date_context={},
-        binding_values={
-            _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
-            _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
-        },
+        binding_values=_complete_m130_bindings(),
     )
 
     assert _M130_PAGO_FRACCIONADO_CASILLA in result.values
@@ -209,20 +218,9 @@ def test_registry_formula_runtime_rejects_missing_non_snapshot_parameter_axis(
     with pytest.raises(RegistryValidationError, match="requires date axis 'devengo_date'"):
         calculate_registry_snapshot(
             mutated_snapshot,
-            inputs={
-                _M130_INGRESOS_CASILLA: Decimal("100"),
-                _M130_GASTOS_CASILLA: Decimal("0"),
-                _M130_RETENCIONES_CASILLA: Decimal("0"),
-                _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-                _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-                _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-                _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-            },
+            inputs=_complete_m130_inputs(),
             date_context={},
-            binding_values={
-                _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
-                _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
-            },
+            binding_values=_complete_m130_bindings(),
         )
 
 
@@ -264,19 +262,8 @@ def test_numeric_manual_input_must_obey_declared_range_before_formula_execution(
 def test_zero_numeric_manual_input_preserves_actual_calculation_results(
     committed_modelo_130_snapshot: RegistrySnapshot,
 ) -> None:
-    inputs = {
-        _M130_INGRESOS_CASILLA: Decimal("100"),
-        _M130_GASTOS_CASILLA: Decimal("0"),
-        _M130_RETENCIONES_CASILLA: Decimal("0"),
-        _M130_AGRARIAN_VOLUME_CASILLA: Decimal("0"),
-        _M130_AGRARIAN_WITHHELD_CASILLA: Decimal("0"),
-        _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
-        _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
-    }
-    bindings = {
-        _PREVIOUS_YEAR_NET_INCOME_BINDING: Decimal("13000"),
-        _PREVIOUS_PERIOD_NEGATIVE_RESULT_BINDING: Decimal("0"),
-    }
+    inputs = _complete_m130_inputs()
+    bindings = _complete_m130_bindings()
     original = calculate_registry_snapshot(
         committed_modelo_130_snapshot,
         inputs=inputs,

@@ -1069,7 +1069,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -1940,7 +1940,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -3174,7 +3174,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -3962,7 +3962,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -4812,7 +4812,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -5637,7 +5637,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -6415,7 +6415,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -7124,7 +7124,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -7199,7 +7199,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -7649,7 +7649,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -8106,7 +8106,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",
@@ -8530,7 +8530,7 @@ export const SEED_ELEMENTS: readonly SeedElement[] = [
             office_area: null,
             total_area: null,
             business_use_share: null,
-            prior_allocation_provenance: "allocation booked in the ledger",
+            prior_allocation_provenance: "Asignación contabilizada en el libro",
           },
           residual_value: {
             decimal: "0",

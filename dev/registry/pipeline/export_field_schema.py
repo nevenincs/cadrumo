@@ -102,7 +102,12 @@ def _presence_marker(joined_field: JoinedRecordDesignField) -> str | None:
     if joined_field.semantic_entry.kind.value != "header" or joined_field.parser_field.content is None:
         return None
     match = _BLANK_OR_CONSTANT_CONTENT.fullmatch(joined_field.parser_field.content.strip())
-    return None if match is None else match.group("constant")
+    if match is None:
+        return None
+    constant = match.group("constant")
+    if not isinstance(constant, str):
+        raise RegistryValidationError("the design regex must capture its constant as text")
+    return constant
 
 
 def _combined_requirement(

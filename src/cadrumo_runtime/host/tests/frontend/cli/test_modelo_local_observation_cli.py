@@ -29,6 +29,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.calculations.registry.bindings import CasillaObservation, RegistryModeloObservation
 from cadrumo.domain.calculations.registry.casilla_membership import casillas_by_id
 from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.values import (
     ProfileSetupState,
     UserProfileFact,
@@ -76,34 +77,14 @@ def _natural_person_record(
             UserProfileFact(path="identity.surnames", value="Scratch"),
             UserProfileFact(path="identity.tax_id", value="12345678Z"),
             UserProfileFact(path="activities.description", value="professional services"),
-            UserProfileFact(path="taxpayer_type.entity_type", value="natural_person"),
-            UserProfileFact(path="taxpayer_type.irpf_income_categories", value="actividad_economica"),
-            UserProfileFact(path="irpf.estimation_regime", value="directa_normal"),
-            UserProfileFact(path="iva.regime", value="GENERAL"),
-            UserProfileFact(path="iva.m303_regime_composition", value="general"),
-            UserProfileFact(path="iva.redeme_enrolled", value=False),
-            UserProfileFact(path="iva.cash_accounting_regime_enrolled", value=False),
-            UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
-            UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
-            UserProfileFact(path="tax_residence.ccaa", value="madrid"),
-            UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
+            *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             UserProfileFact(path="provenance.source", value="manual_cli"),
         ),
     )
 
 
-def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
-    runtime_profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation
-) -> None:
-    """A CLI-recorded local M100/2024 observation resolves Sofia's two prior-filing carries.
-
-    The assertion drives the real CLI command, persists into the real encrypted
-    observation store, and then reads through the real previous-filing resolver.
-    Expected values are the operator's literal zero observation and the registry
-    selectors: M100/2025 reads prior M100 casilla 1391, while M130/1T reads the
-    sum of prior M100 casillas 0224/1479/1553/1577.
-    """
-
+def _record_local_prior_observation() -> None:
+    """The CLI records the operator's literal zero observation without creating any filing record."""
     result = invoke_cached_cli(
         [
             "--format",
@@ -164,6 +145,8 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         "config.login.session_not_persisted",
     ]
 
+
+def _assert_prior_filing_prefills(runtime_profile: TestRuntimeProfile, operation: PinnedAuthorityOperation) -> None:
     with open_test_profile_session(runtime_profile.bucket_id):
         repository = CalculationObservationRepository()
         observed = repository.load_observation("100", Period.from_year_and_code(2024, "0A"))
@@ -193,7 +176,8 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
         )
         assert m130_prefill.binding_values["irpf.previous_year_economic_activity_net_income"] == Decimal("0")
 
-    _seed_natural_person_profile(runtime_profile)
+
+def _assert_m130_calculation_consumes_the_observation() -> None:
     created = invoke_cached_cli(
         [
             "--format",
@@ -240,6 +224,24 @@ def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
     previous_income = calculated_payload["binding_overrides"]["irpf.previous_year_economic_activity_net_income"]
     assert Decimal(previous_income) == Decimal("0")
     assert Decimal(calculated_payload["casilla_values"]["13"]) == Decimal("100.00")
+
+
+def test_observe_local_m100_prior_feeds_m100_and_m130_previous_filing_prefill(
+    runtime_profile: TestRuntimeProfile, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A CLI-recorded local M100/2024 observation resolves Sofia's two prior-filing carries.
+
+    The assertion drives the real CLI command, persists into the real encrypted
+    observation store, and then reads through the real previous-filing resolver.
+    Expected values are the operator's literal zero observation and the registry
+    selectors: M100/2025 reads prior M100 casilla 1391, while M130/1T reads the
+    sum of prior M100 casillas 0224/1479/1553/1577.
+    """
+
+    _record_local_prior_observation()
+    _assert_prior_filing_prefills(runtime_profile, operation)
+    _seed_natural_person_profile(runtime_profile)
+    _assert_m130_calculation_consumes_the_observation()
 
 
 def _observe_local(*arguments: str) -> dict[str, Any]:

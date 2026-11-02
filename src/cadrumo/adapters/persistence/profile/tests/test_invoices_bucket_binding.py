@@ -22,19 +22,18 @@ Nothing is mocked.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
-from decimal import Decimal
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
 
 from .....domain.invoices.catalogue import InvoiceCatalogue
-from .....domain.invoices.enums import IvaRate, PaymentStatus
+from .....domain.invoices.enums import IvaRate
 from .....domain.invoices.errors import InvoicePersistenceError
-from .....domain.invoices.models import Invoice, InvoiceLine
-from .....domain.iva.schema import InvoiceKind
+from .....domain.invoices.models import Invoice
 from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
 from ..invoices import InvoiceCatalogueRepository
+from .issued_invoice_support import issued_consulting_invoice
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -49,34 +48,7 @@ def _runtime_profile(tmp_path: Path) -> Iterator[TestRuntimeProfile]:
 
 
 def _invoice(invoice_number: str, *, bucket_id: str | None) -> Invoice:
-    line = InvoiceLine.model_validate(
-        {
-            "description": "Consultoría",
-            "quantity": Decimal("1"),
-            "unit_price": Decimal("100.00"),
-            "subtotal": Decimal("100.00"),
-            "iva_rate": IvaRate.from_registry("RATE_21"),
-            "iva_amount": Decimal("21.00"),
-        },
-    )
-    return Invoice.model_validate(
-        {
-            "bucket_id": bucket_id,
-            "kind": InvoiceKind.ISSUED,
-            "invoice_number": invoice_number,
-            "issued_at": date(2026, 4, 1),
-            "counterparty_name": "Cliente SL",
-            "counterparty_tax_id": "B12345674",
-            "counterparty_country": "ES",
-            "base_total": Decimal("100.00"),
-            "iva_total": Decimal("21.00"),
-            "grand_total": Decimal("121.00"),
-            "currency": "EUR",
-            "lines": (line,),
-            "payment_status": PaymentStatus.PENDING,
-            "linked_transaction_ids": (),
-        },
-    )
+    return issued_consulting_invoice(invoice_number, iva_rate=IvaRate.from_registry("RATE_21"), bucket_id=bucket_id)
 
 
 def _catalogue(invoice: Invoice) -> InvoiceCatalogue:

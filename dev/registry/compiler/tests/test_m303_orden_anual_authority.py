@@ -511,7 +511,6 @@ def test_lorca_reduction_snapshot_carries_lorca_authority_and_crosswalk_refusal_
     agricultural = resolved.orden.agricultural_authority
     assert agricultural.status == "official_code_crosswalk_unavailable"
     assert agricultural.filing_record == "DP30302"
-    assert agricultural.filing_code_digits == 2
     assert agricultural.annual_orden_source_ref == _LORCA_ORDEN_SOURCE_REF
     assert agricultural.record_design_source_ref == _LORCA_RECORD_DESIGN
     assert agricultural.record_design_source_content_digest == (

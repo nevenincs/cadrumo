@@ -10,7 +10,6 @@ released result carries the reference exactly as the stored record keeps it.
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
 
@@ -38,10 +37,8 @@ from ...application.operations.models import OperationIdentity
 from ...application.operations.registry import OperationFrontendProjection
 from ...application.user_profile.access_contracts import SessionKind
 from ...core.config import override_settings
-from ...core.hashing import sha256_hex
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ..justificante_composition import build_justificante_capture_service
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
 
@@ -78,17 +75,7 @@ def test_import_pull_and_list_release_the_recorded_evidence_reference_on_every_f
         released: dict[str, ModeloReconciliationImportProjection] = {}
         with override_settings(cadrumo_active_profile=str(profile_id)):
             unit = modelo_operation_test_support.seeded_modelo_work_unit(profile_id, operation=operation)
-            pdf = _JUSTIFICANTE_FIXTURE.read_bytes()
-            snapshot = build_justificante_capture_service(str(profile_id)).capture(
-                modelo=str(unit.modelo),
-                filing_year=unit.filing_year,
-                period=unit.period,
-                expediente_id="202413000000001Z",
-                csv="ABCD1234EFGH",
-                pdf_bytes=pdf,
-                pdf_sha256=sha256_hex(pdf),
-                captured_at=datetime(2026, 9, 29, tzinfo=UTC),
-            )
+            snapshot = modelo_operation_test_support.captured_justificante_snapshot(profile_id, unit)
             for definition_id, payload in (
                 (
                     MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,

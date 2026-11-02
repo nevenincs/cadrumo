@@ -117,6 +117,58 @@ def test_ledger_track_uses_null_when_no_finalized_revision_participates(
         )
 
 
+def _assert_amendment_failed_with_unknown_effect(observed):
+    assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
+    assert observed.projection.terminal_condition is OperationTerminalCondition.FAILED
+    assert observed.projection.effect is OperationEffect.UNKNOWN
+    assert observed.projection.result_ref is None
+    assert observed.projection.diagnostic_ref is not None
+
+
+def _assert_calculation_catalogue_after_race(
+    raced_catalogue, calculations_after, calculations_before, calculation_revision_id, raced_calculation_instants
+):
+    if raced_catalogue == "calculation":
+        concurrent_revision = calculations_after.get(calculation_revision_id)
+        assert concurrent_revision is not None
+        assert len(raced_calculation_instants) == 1
+        assert concurrent_revision.updated_at == raced_calculation_instants[0]
+        expected_revisions = dict(calculations_before.revisions)
+        expected_revisions[calculation_revision_id] = concurrent_revision
+        assert calculations_after.revisions == expected_revisions
+    else:
+        assert calculations_after.revisions == calculations_before.revisions
+
+
+def _assert_work_unit_catalogue_after_race(
+    raced_catalogue, work_units_after, work_units_before, work_unit_id, original_work_unit, concurrent_work_unit_name
+):
+    if raced_catalogue == "work_unit":
+        concurrent_unit = work_units_after.get(work_unit_id)
+        assert concurrent_unit is not None
+        assert concurrent_unit.name == concurrent_work_unit_name
+        assert concurrent_unit.updated_at > original_work_unit.updated_at
+        expected_work_units = dict(work_units_before.work_units)
+        expected_work_units[work_unit_id] = concurrent_unit
+        assert work_units_after.work_units == expected_work_units
+    else:
+        assert work_units_after.work_units == work_units_before.work_units
+
+
+def _assert_filing_catalogue_after_race(
+    raced_catalogue, records_after, records_before, filing_record_id, concurrent_filing_note
+):
+    if raced_catalogue == "filing":
+        concurrent_record = records_after.get(filing_record_id)
+        assert concurrent_record is not None
+        assert concurrent_record.notes == concurrent_filing_note
+        expected_records = dict(records_before.records)
+        expected_records[filing_record_id] = concurrent_record
+        assert records_after.records == expected_records
+    else:
+        assert records_after.records == records_before.records
+
+
 @pytest.mark.parametrize("raced_catalogue", ["filing", "work_unit", "calculation"])
 def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes(
     tmp_path: Path,
@@ -252,46 +304,31 @@ def test_amendment_co_commit_refuses_each_stale_catalogue_without_partial_writes
         submitted, observed = asyncio.run(
             driver.run(definition_id=definition.definition_id, subject_ref=subject_ref, payload=payload)
         )
-        assert observed.projection.lifecycle is OperationLifecycle.TERMINAL
-        assert observed.projection.terminal_condition is OperationTerminalCondition.FAILED
-        assert observed.projection.effect is OperationEffect.UNKNOWN
-        assert observed.projection.result_ref is None
-        assert observed.projection.diagnostic_ref is not None
+        _assert_amendment_failed_with_unknown_effect(observed)
         assert raced == [raced_catalogue]
 
         records_after = ModeloRecordCatalogueRepository().load()
         work_units_after = WorkUnitCatalogueRepository().load()
         calculations_after = CalculationRevisionCatalogueRepository().load()
         events_after = BucketEventHistoryRepository().load()
-        if raced_catalogue == "filing":
-            concurrent_record = records_after.get(filing_record_id)
-            assert concurrent_record is not None
-            assert concurrent_record.notes == concurrent_filing_note
-            expected_records = dict(records_before.records)
-            expected_records[filing_record_id] = concurrent_record
-            assert records_after.records == expected_records
-        else:
-            assert records_after.records == records_before.records
-        if raced_catalogue == "work_unit":
-            concurrent_unit = work_units_after.get(work_unit_id)
-            assert concurrent_unit is not None
-            assert concurrent_unit.name == concurrent_work_unit_name
-            assert concurrent_unit.updated_at > original_work_unit.updated_at
-            expected_work_units = dict(work_units_before.work_units)
-            expected_work_units[work_unit_id] = concurrent_unit
-            assert work_units_after.work_units == expected_work_units
-        else:
-            assert work_units_after.work_units == work_units_before.work_units
-        if raced_catalogue == "calculation":
-            concurrent_revision = calculations_after.get(calculation_revision_id)
-            assert concurrent_revision is not None
-            assert len(raced_calculation_instants) == 1
-            assert concurrent_revision.updated_at == raced_calculation_instants[0]
-            expected_revisions = dict(calculations_before.revisions)
-            expected_revisions[calculation_revision_id] = concurrent_revision
-            assert calculations_after.revisions == expected_revisions
-        else:
-            assert calculations_after.revisions == calculations_before.revisions
+        _assert_filing_catalogue_after_race(
+            raced_catalogue, records_after, records_before, filing_record_id, concurrent_filing_note
+        )
+        _assert_work_unit_catalogue_after_race(
+            raced_catalogue,
+            work_units_after,
+            work_units_before,
+            work_unit_id,
+            original_work_unit,
+            concurrent_work_unit_name,
+        )
+        _assert_calculation_catalogue_after_race(
+            raced_catalogue,
+            calculations_after,
+            calculations_before,
+            calculation_revision_id,
+            raced_calculation_instants,
+        )
         assert events_after.events == events_before.events
         assert not any(record.amends_filing_record_id is not None for record in records_after.records.values())
         assert submitted.receipt.operation_id == observed.projection.operation_id

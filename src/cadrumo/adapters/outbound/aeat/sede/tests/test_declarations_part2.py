@@ -22,6 +22,7 @@ from ......domain.calculations.registry.errors import RegistryValidationError
 from ......domain.calculations.registry.export import resolve_export_layout
 from ......domain.calculations.registry.export_parse import parse_export_payload
 from ......domain.calculations.registry.formula_runtime import calculate_registry_snapshot
+from ......domain.calculations.registry.schema import RegistrySnapshot
 from ......domain.calculations.registry.schema_input_kind import InputKind
 from .....persistence.tests.runtime_profile_fixture import bucket_scoped_runtime_profile_fixture
 from .._declarations_fetch import assert_declarations_read_browser_action, assert_declarations_read_http
@@ -93,6 +94,31 @@ def _casilla_values(values: Mapping[object, Decimal]) -> dict[CasillaId, Decimal
     return validated_casilla_id_map(values, surface="sede declarations part2 casilla values")
 
 
+def _submitted_file_artefact(body: bytes) -> FiledDeclaracionArtefact:
+    return FiledDeclaracionArtefact(
+        kind="submitted_file",
+        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
+        content_type="application/octet-stream",
+        byte_count=len(body),
+        sha256=hashlib.sha256(body).hexdigest(),
+        captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
+    )
+
+
+def _previous_net_income_source(snapshot: RegistrySnapshot):
+    """The previous-year net-income binding's source reference, with a distinct value for each source casilla."""
+    binding = next(
+        binding
+        for binding in snapshot.revision.bindings
+        if binding.id == "irpf.previous_year_economic_activity_net_income"
+    )
+    source_reference = previous_filing_source_reference(binding)
+    casilla_values: dict[CasillaId, Decimal] = {
+        casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_reference.source_casilla_ids)
+    }
+    return source_reference, casilla_values
+
+
 def _m130_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, FiledDeclaracionArtefact]:
     declaration = ExpedientesDeclaration(
         modelo="130",
@@ -104,14 +130,7 @@ def _m130_submitted_file_record(body: bytes) -> tuple[ExpedientesDeclaration, Fi
         justificante_link_text="Ver",
         archive_link_text="Ver",
     )
-    artefact = FiledDeclaracionArtefact(
-        kind="submitted_file",
-        source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-        content_type="application/octet-stream",
-        byte_count=len(body),
-        sha256=hashlib.sha256(body).hexdigest(),
-        captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
-    )
+    artefact = _submitted_file_artefact(body)
     return declaration, artefact
 
 
@@ -249,14 +268,7 @@ class TestSubmittedFileObservation:
                 justificante_link_text="Ver",
                 archive_link_text="Ver",
             )
-            artefact = FiledDeclaracionArtefact(
-                kind="submitted_file",
-                source_url=AnyHttpUrl(_DECLARATIONS_LISTING_URL),
-                content_type="application/octet-stream",
-                byte_count=len(body),
-                sha256=hashlib.sha256(body).hexdigest(),
-                captured_at=datetime(2026, 4, 20, 10, 0, 0, tzinfo=UTC),
-            )
+            artefact = _submitted_file_artefact(body)
 
             observed_casillas = observed_casillas_from_submitted_file(
                 snapshot=snapshot,
@@ -688,16 +700,7 @@ class TestFiledObservationBindings:
     def test_previous_filing_binding_resolves_from_filed_observation(self) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
-            binding = next(
-                binding
-                for binding in snapshot.revision.bindings
-                if binding.id == "irpf.previous_year_economic_activity_net_income"
-            )
-            source_reference = previous_filing_source_reference(binding)
-            source_casilla_ids = source_reference.source_casilla_ids
-            casilla_values: dict[CasillaId, Decimal] = {
-                casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)
-            }
+            source_reference, casilla_values = _previous_net_income_source(snapshot)
 
             resolved = _resolve_previous_filing_from_observations(
                 snapshot.revision,
@@ -721,16 +724,7 @@ class TestFiledObservationBindings:
     def test_encrypted_filed_observation_roundtrip_supplies_previous_filing_binding(self, tmp_path: Path) -> None:
         with _indexed_authority_for_test().operation() as _authority_operation_for_test:
             snapshot = _modelo_130_snapshot(operation=_authority_operation_for_test)
-            binding = next(
-                binding
-                for binding in snapshot.revision.bindings
-                if binding.id == "irpf.previous_year_economic_activity_net_income"
-            )
-            source_reference = previous_filing_source_reference(binding)
-            source_casilla_ids = source_reference.source_casilla_ids
-            casilla_values: dict[CasillaId, Decimal] = {
-                casilla_id: Decimal(index + 1) for index, casilla_id in enumerate(source_casilla_ids)
-            }
+            source_reference, casilla_values = _previous_net_income_source(snapshot)
             store = FiledDeclaracionObservationStore(
                 tmp_path / "observations",
             )

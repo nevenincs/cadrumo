@@ -9,7 +9,6 @@ profile, a receipt reporting an effect, a refusal receipt, and a lapsed session.
 from __future__ import annotations
 
 import asyncio
-import threading
 from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Protocol, cast
@@ -39,20 +38,16 @@ from cadrumo.application.ledger.review_operation import (
     build_ledger_review_definition,
     build_ledger_review_registration,
 )
-from cadrumo.application.operations.error_detail import OperationErrorDetailKind, OperationErrorDetailV1
 from cadrumo.application.operations.registry import (
     OperationRegistry,
 )
 from cadrumo.application.review.filter import LedgerReviewStatus
 from cadrumo.core.config import Settings
 from cadrumo.core.confirmation_gate import ConfirmationBlockReason
-from cadrumo.core.errors.hierarchy import RecordedRegisteredError
 from cadrumo.core.identity.transaction_ids import TransactionId
 from cadrumo.core.operations import (
     OperationEffect,
-    OperationTerminalCondition,
 )
-from cadrumo.entrypoints.tui.account import AccountSessionExpiredError
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.transport.frontend_client import FrontendClient
 
@@ -66,11 +61,12 @@ from ._door_session_support import (
     NOW,
     OTHER_PROFILE_ID,
     PROFILE_ID,
-    RECORDED_CODE,
-    RECORDED_KEY,
     SESSION_ID,
     ScriptedController,
     SessionClient,
+    assert_door_fails_closed_when_its_session_lapses,
+    assert_door_raises_the_recorded_error_of_a_refusal_receipt,
+    assert_door_reads_its_session_off_the_event_loop_thread,
     install_scripted_controller,
     terminal_observation,
 )
@@ -249,59 +245,36 @@ def test_each_door_refuses_a_receipt_reporting_an_effect(
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_raises_the_recorded_error_of_a_refusal_receipt(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = SessionClient()
-    detail = OperationErrorDetailV1(
-        kind=OperationErrorDetailKind.REGISTERED_ERROR,
-        error_code=RECORDED_CODE,
-        message_key=RECORDED_KEY,
-        context=(),
+    assert_door_raises_the_recorded_error_of_a_refusal_receipt(
+        monkeypatch,
+        registry=_REGISTRY,
+        definition_id=case.definition_id,
+        make_door=lambda client: _door(client, case),
+        request=case.request,
     )
-    observation = terminal_observation(
-        _REGISTRY, case.definition_id, condition=OperationTerminalCondition.REFUSED, refusal_ref=RECORDED_CODE
-    )
-    controller = ScriptedController(observation=observation, result=None, detail=detail)
-    install_scripted_controller(monkeypatch, client, controller)
-
-    with pytest.raises(RecordedRegisteredError) as raised:
-        asyncio.run(_door(client, case)(case.request))
-
-    assert raised.value.recorded_code == RECORDED_CODE
-    assert controller.detail_reads == 1
-    assert controller.result_reads == []
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_fails_closed_when_its_session_lapses(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
-    client = SessionClient()
-    submissions = install_scripted_controller(
+    assert_door_fails_closed_when_its_session_lapses(
         monkeypatch,
-        client,
-        ScriptedController(observation=terminal_observation(_REGISTRY, case.definition_id), result=None),
+        registry=_REGISTRY,
+        definition_id=case.definition_id,
+        make_door=lambda client: _door(client, case),
+        request=case.request,
     )
-    door = _door(client, case)
-    client.session_id = UUID("7cc00000-0000-4000-8000-0000000000cc")
-
-    with pytest.raises(AccountSessionExpiredError):
-        asyncio.run(door(case.request))
-
-    assert submissions == []
 
 
 @pytest.mark.parametrize("case", _CASES, ids=_IDS)
 def test_each_door_reads_its_session_off_the_event_loop_thread(monkeypatch: pytest.MonkeyPatch, case: _Case) -> None:
     """The session read is a blocking IPC exchange; a door awaited on the loop never runs it there."""
-    client = SessionClient()
-    controller = ScriptedController(
-        observation=terminal_observation(_REGISTRY, case.definition_id), result=case.result(PROFILE_ID)
+    assert_door_reads_its_session_off_the_event_loop_thread(
+        monkeypatch,
+        observation=terminal_observation(_REGISTRY, case.definition_id),
+        result=case.result(PROFILE_ID),
+        make_door=lambda client: _door(client, case),
+        request=case.request,
     )
-    install_scripted_controller(monkeypatch, client, controller)
-    door = _door(client, case)
-    client.session_read_threads.clear()
-
-    asyncio.run(door(case.request))
-
-    assert client.session_read_threads, "a door reads its session around its operation"
-    assert threading.get_ident() not in client.session_read_threads
 
 
 def test_a_review_detail_answering_another_selection_is_refused(monkeypatch: pytest.MonkeyPatch) -> None:

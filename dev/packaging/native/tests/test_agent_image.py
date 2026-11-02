@@ -10,6 +10,7 @@ import sys
 import types
 from collections.abc import Iterator
 from pathlib import Path
+from typing import Any
 
 import pytest
 
@@ -178,9 +179,11 @@ def test_the_contract_compiles_exactly_the_declared_invocations_of_the_agent_ima
         assert retired not in section["names"]
 
 
-def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile() -> None:
-    declaration = load_for_build(REPO_ROOT)
-    section = compile_section(declaration, load_layout("windows-x86-64"))
+def _profile(section: dict[str, Any], name: str) -> dict[str, Any]:
+    return next(profile for profile in section["profiles"] if profile["name"] == name)
+
+
+def _assert_agent_names_are_admitted_by_prefix_only(section: dict[str, Any]) -> None:
     by_prefix = {profile["name"] for profile in section["profiles"] if profile["prefix"]}
     assert by_prefix == {"agent-gateway", "agent-worker"}
     for profile in section["profiles"]:
@@ -198,11 +201,9 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
         assert profile["prefix"] in {"", "CADRUMO_AGENT_"}, profile["name"]
     # The worker's IPC token travels on its standard input; the file names no credential to admit or refuse.
     assert not [name for name in section["names"] if name.endswith("_TOKEN")]
-    providers = next(profile for profile in section["profiles"] if profile["name"] == "agent-providers")
-    assert (providers["slots"], providers["pins"], providers["prefix"], providers["fixed"]) == ([], [], "", [])
-    assert providers["base"] == list(declaration.base["windows"]["system"])
-    assert providers["package_path"]
-    gateway = next(profile for profile in section["profiles"] if profile["name"] == "agent-gateway")
+
+
+def _assert_gateway_and_worker_slots(gateway: dict[str, Any], worker: dict[str, Any]) -> None:
     assert {slot["name"]: slot["kind"] for slot in gateway["slots"]} == {
         "CADRUMO_STORAGE_ROOT": "directory",
         "CADRUMO_PROFILE_ROOT": "directory",
@@ -213,15 +214,24 @@ def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile
     # The gateway and its worker each receive their parent's storage root as an optional slot
     # they do not pin, which the agent forwards to the programs it starts. A slot is admitted
     # by its kind alone: whoever the caller is, the compiled slot names no parent.
-    worker = next(profile for profile in section["profiles"] if profile["name"] == "agent-worker")
     for profile in (gateway, worker):
         root_slot = next(slot for slot in profile["slots"] if slot["name"] == "CADRUMO_STORAGE_ROOT")
         assert root_slot == {"name": "CADRUMO_STORAGE_ROOT", "kind": "directory", "required": False}
         assert all(set(slot) == {"name", "kind", "required"} for slot in profile["slots"])
         assert "root" not in profile["pins"]
-    runtime = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-runtime")
-    assert runtime["fixed"] == []
-    service = next(profile for profile in section["profiles"] if profile["name"] == "cadrumo-agent-service")
+
+
+def test_agent_names_reach_the_gateway_and_worker_by_prefix_and_no_other_profile() -> None:
+    declaration = load_for_build(REPO_ROOT)
+    section = compile_section(declaration, load_layout("windows-x86-64"))
+    _assert_agent_names_are_admitted_by_prefix_only(section)
+    providers = _profile(section, "agent-providers")
+    assert (providers["slots"], providers["pins"], providers["prefix"], providers["fixed"]) == ([], [], "", [])
+    assert providers["base"] == list(declaration.base["windows"]["system"])
+    assert providers["package_path"]
+    _assert_gateway_and_worker_slots(_profile(section, "agent-gateway"), _profile(section, "agent-worker"))
+    assert _profile(section, "cadrumo-runtime")["fixed"] == []
+    service = _profile(section, "cadrumo-agent-service")
     assert {(value["name"], value["value"]) for value in service["fixed"]} == {
         ("CADRUMO_PACKAGE_AGENT_EXECUTABLE", _AGENT),
         ("CADRUMO_PACKAGE_RELAY_EXECUTABLE", "cadrumo-mcp"),

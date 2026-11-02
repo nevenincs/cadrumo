@@ -6,7 +6,7 @@ import { cn } from "@/components/ui/cn";
 // attribute of the element it draws.
 const inputVariants = cva(
   [
-    "w-full min-w-0 rounded-md border border-input bg-card text-base text-foreground",
+    "w-full min-w-0 rounded-md border border-input bg-card text-base text-ellipsis text-foreground",
     "transition-colors placeholder:text-faint",
     "selection:bg-primary selection:text-primary-foreground",
     "disabled:cursor-not-allowed disabled:opacity-50 read-only:cursor-default",

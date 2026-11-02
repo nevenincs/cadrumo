@@ -5,7 +5,6 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.toml import freeze_toml
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
 from cadrumo.domain.calculations.registry.governed_fact_scope import CandidateFactAuthority, validating_governed_facts
@@ -23,10 +22,15 @@ from ..conformance.registry_schema_support import committed_registry_tree as _co
 from ._referential_integrity_support import (
     EXTRA_LEGAL_ID,
     EXTRA_SOURCE_ID,
+    NUMERIC_CASILLA_01,
+    NUMERIC_CASILLA_02,
     PARITY_SOURCE_ID,
     PRIOR_REVISION_ID,
     REFERENCE_LEGAL_ID,
     REFERENCE_SOURCE_ID,
+    SEGMENTED_ECPN_CASILLA,
+    SEGMENTED_LIQUIDACION_CASILLA,
+    SEGMENTED_TARGET_CASILLA,
     assert_extra_catalogue_ids_resolve,
     build_snapshot_with_missing_legal,
     build_snapshot_with_missing_source,
@@ -48,20 +52,6 @@ pytestmark = [
     pytest.mark.usefixtures("governed_fact_scope"),
     pytest.mark.usefixtures("isolated_provider_registration"),
 ]
-_NUMERIC_CASILLA_01: CasillaId = validated_casilla_id("01", surface="_NUMERIC_CASILLA_01")
-_NUMERIC_CASILLA_02: CasillaId = validated_casilla_id("02", surface="_NUMERIC_CASILLA_02")
-_SEGMENTED_LIQUIDACION_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014:00562",
-    surface="_SEGMENTED_LIQUIDACION_CASILLA",
-)
-_SEGMENTED_ECPN_CASILLA: CasillaId = validated_casilla_id(
-    "DP200032:00562",
-    surface="_SEGMENTED_ECPN_CASILLA",
-)
-_SEGMENTED_TARGET_CASILLA: CasillaId = validated_casilla_id(
-    "DP200014:00999",
-    surface="_SEGMENTED_TARGET_CASILLA",
-)
 _MISSING_LEGAL_ID = "ley-35-2006:art-9999"
 _MISSING_SOURCE_ID = "aeat-missing-source"
 
@@ -77,27 +67,27 @@ def test_segment_qualified_reference_resolves_across_segments() -> None:
     from cadrumo.domain.calculations.registry.schema import FormulaDefinition
     from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
-    liquidacion = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
-    ecpn = segmented_casilla(_SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
-    target_casilla_def = segmented_casilla(_SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
+    liquidacion = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    ecpn = segmented_casilla(SEGMENTED_ECPN_CASILLA, "00562", "DP200032")
+    target_casilla_def = segmented_casilla(SEGMENTED_TARGET_CASILLA, "00999", "DP200014").model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target_casilla_id=_SEGMENTED_TARGET_CASILLA,
-        expression=FormulaExpression(casilla_id=_SEGMENTED_LIQUIDACION_CASILLA),
+        target_casilla_id=SEGMENTED_TARGET_CASILLA,
+        expression=FormulaExpression(casilla_id=SEGMENTED_LIQUIDACION_CASILLA),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
     manifest = completeness_manifest(
         (
             CalculationCompletenessCasilla(
-                casilla_id=_SEGMENTED_LIQUIDACION_CASILLA,
+                casilla_id=SEGMENTED_LIQUIDACION_CASILLA,
                 number="00562",
                 segmento="DP200014",
             ),
             CalculationCompletenessCasilla(
-                casilla_id=_SEGMENTED_TARGET_CASILLA,
+                casilla_id=SEGMENTED_TARGET_CASILLA,
                 number="00999",
                 segmento="DP200014",
             ),
@@ -175,7 +165,7 @@ def test_segmented_casilla_survives_strict_load_cycle_roundtrip() -> None:
     close.
     """
     casilla = CasillaDefinition(
-        id=_SEGMENTED_LIQUIDACION_CASILLA,
+        id=SEGMENTED_LIQUIDACION_CASILLA,
         number="00562",
         segmento="DP200014",
         localization_keys=("test.schema.casilla.label",),
@@ -212,7 +202,7 @@ def test_revision_without_calculation_closure_passes_without_completeness_manife
     revision has a formula/binding/relation/verification calculation
     closure.
     """
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),))
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),))
     modelo = minimal_modelo(revision)
     # A clean return proves no-calculation revisions are not forced to author an empty manifest.
     RegistryValidator(minimal_catalogues(), user_profile_schema=load_user_profile_schema()).validate_modelo(modelo)
@@ -223,14 +213,14 @@ def test_calculation_bearing_revision_without_manifest_fails_closed() -> None:
     from cadrumo.domain.calculations.registry.schema import FormulaDefinition
     from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 
-    input_casilla = minimal_casilla(_NUMERIC_CASILLA_01)
-    computed_casilla = minimal_casilla(_NUMERIC_CASILLA_02).model_copy(
+    input_casilla = minimal_casilla(NUMERIC_CASILLA_01)
+    computed_casilla = minimal_casilla(NUMERIC_CASILLA_02).model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     formula = FormulaDefinition(
         id="test.formula",
-        target_casilla_id=_NUMERIC_CASILLA_02,
-        expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
+        target_casilla_id=NUMERIC_CASILLA_02,
+        expression=FormulaExpression(casilla_id=NUMERIC_CASILLA_01),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
@@ -372,9 +362,9 @@ def test_completeness_gate_passes_when_manifest_required_subset_of_declared() ->
     revision declares exactly that casilla, so the required set is a
     subset of the declared set and the gate raises nothing.
     """
-    casilla = minimal_casilla(_NUMERIC_CASILLA_01)
+    casilla = minimal_casilla(NUMERIC_CASILLA_01)
     manifest = completeness_manifest(
-        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+        (CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),),
     )
     revision = minimal_revision(casillas=(casilla,)).model_copy(update={"completeness_manifest": manifest})
     modelo = minimal_modelo(revision)
@@ -392,10 +382,10 @@ def test_completeness_gate_passes_when_revision_declares_extra_accounting_casill
     without an exhaustive full-Diseño backfill.
     """
     manifest = completeness_manifest(
-        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+        (CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),),
     )
     revision = minimal_revision(
-        casillas=(minimal_casilla(_NUMERIC_CASILLA_01), minimal_casilla(_NUMERIC_CASILLA_02)),
+        casillas=(minimal_casilla(NUMERIC_CASILLA_01), minimal_casilla(NUMERIC_CASILLA_02)),
     ).model_copy(
         update={"completeness_manifest": manifest},
     )
@@ -413,11 +403,11 @@ def test_completeness_gate_fails_on_missing_required_casilla() -> None:
     """
     manifest = completeness_manifest(
         (
-            CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),
-            CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_02, number="02"),
+            CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),
+            CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_02, number="02"),
         ),
     )
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
     )
     modelo = minimal_modelo(revision)
@@ -439,11 +429,11 @@ def test_completeness_gate_fails_on_manifest_metadata_mismatch() -> None:
     that id belongs under DP200032, validation must fail as a metadata
     mismatch instead of treating DP200032:00562 as a second address.
     """
-    declared = segmented_casilla(_SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
+    declared = segmented_casilla(SEGMENTED_LIQUIDACION_CASILLA, "00562", "DP200014")
     manifest = completeness_manifest(
         (
             CalculationCompletenessCasilla(
-                casilla_id=_SEGMENTED_LIQUIDACION_CASILLA,
+                casilla_id=SEGMENTED_LIQUIDACION_CASILLA,
                 number="00562",
                 segmento="DP200032",
             ),
@@ -479,7 +469,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
     independently of the schema-level field constraint.
     """
     ungrounded = CasillaDefinition.model_construct(
-        id=_NUMERIC_CASILLA_01,
+        id=NUMERIC_CASILLA_01,
         number="01",
         segmento=None,
         localization_keys=("test.schema.casilla.label",),
@@ -489,9 +479,9 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
         source_refs=(),
     )
     manifest = completeness_manifest(
-        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+        (CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),),
     )
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest, "casillas": (ungrounded,)},
     )
     modelo = minimal_modelo(revision)
@@ -505,7 +495,7 @@ def test_completeness_gate_fails_on_ungrounded_required_casilla() -> None:
 def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> None:
     """Manifest-level legal/source refs are load-blocking catalogue references."""
     manifest = completeness_manifest(
-        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+        (CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),),
     ).model_copy(
         update={
             "legal_refs": (_MISSING_LEGAL_ID,),
@@ -513,7 +503,7 @@ def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> Non
             "source_refs": (_MISSING_SOURCE_ID,),
         },
     )
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
     )
 
@@ -531,11 +521,11 @@ def test_completeness_manifest_refs_must_resolve_in_registry_validation() -> Non
 
 def test_modelo_validation_rejects_manifest_sourced_only_by_executable_parity() -> None:
     manifest = completeness_manifest(
-        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+        (CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),),
     ).model_copy(
         update={"source_ref": PARITY_SOURCE_ID, "source_refs": (PARITY_SOURCE_ID,)},
     )
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={"completeness_manifest": manifest},
     )
 
@@ -562,7 +552,7 @@ def test_casilla_continuidad_evolution_refs_must_resolve_in_registry_validation(
         legal_refs=(_MISSING_LEGAL_ID,),
         source_refs=(_MISSING_SOURCE_ID,),
     )
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={"casilla_continuidad_evolutions": (evolution,)},
     )
 
@@ -590,7 +580,7 @@ def test_modelo_validation_rejects_continuity_evolution_sourced_only_by_executab
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(PARITY_SOURCE_ID,),
     )
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={"casilla_continuidad_evolutions": (evolution,)},
     )
 
@@ -609,7 +599,7 @@ def test_modelo_validation_rejects_continuity_evolution_sourced_only_by_executab
 def test_snapshot_carries_manifest_and_continuity_refs() -> None:
     """Slice snapshots retain manifest and continuity-evolution legal/source evidence."""
     manifest = completeness_manifest(
-        (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+        (CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),),
     ).model_copy(
         update={
             "legal_refs": (EXTRA_LEGAL_ID,),
@@ -626,7 +616,7 @@ def test_snapshot_carries_manifest_and_continuity_refs() -> None:
         legal_refs=(EXTRA_LEGAL_ID,),
         source_refs=(EXTRA_SOURCE_ID,),
     )
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={
             "completeness_manifest": manifest,
             "casilla_continuidad_evolutions": (evolution,),
@@ -654,9 +644,9 @@ def test_snapshot_integrity_checks_completeness_manifest_refs() -> None:
     )
     for manifest_update, snapshot_builder, missing_ref, match in cases:
         manifest = completeness_manifest(
-            (CalculationCompletenessCasilla(casilla_id=_NUMERIC_CASILLA_01, number="01"),),
+            (CalculationCompletenessCasilla(casilla_id=NUMERIC_CASILLA_01, number="01"),),
         ).model_copy(update=manifest_update)
-        revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+        revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
             update={"completeness_manifest": manifest},
         )
         snapshot = snapshot_builder(revision, missing_ref)
@@ -676,7 +666,7 @@ def test_snapshot_integrity_checks_casilla_continuidad_evolution_refs() -> None:
         legal_refs=(REFERENCE_LEGAL_ID, _MISSING_LEGAL_ID),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    revision = minimal_revision(casillas=(minimal_casilla(_NUMERIC_CASILLA_01),)).model_copy(
+    revision = minimal_revision(casillas=(minimal_casilla(NUMERIC_CASILLA_01),)).model_copy(
         update={"casilla_continuidad_evolutions": (evolution,)},
     )
     snapshot = build_snapshot_with_missing_legal(revision, _MISSING_LEGAL_ID)
@@ -700,12 +690,12 @@ def test_filing_modelo_with_formula_passes_invariant() -> None:
 
     formula = FormulaDefinition(
         id="test.formula",
-        target_casilla_id=_NUMERIC_CASILLA_01,
-        expression=FormulaExpression(casilla_id=_NUMERIC_CASILLA_01),
+        target_casilla_id=NUMERIC_CASILLA_01,
+        expression=FormulaExpression(casilla_id=NUMERIC_CASILLA_01),
         legal_refs=(REFERENCE_LEGAL_ID,),
         source_refs=(REFERENCE_SOURCE_ID,),
     )
-    computed_casilla = minimal_casilla(_NUMERIC_CASILLA_01).model_copy(
+    computed_casilla = minimal_casilla(NUMERIC_CASILLA_01).model_copy(
         update={"input_kind": InputKind.COMPUTED, "formula": "test.formula"},
     )
     revision = minimal_revision(

@@ -132,6 +132,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
 
   const listed = read?.kind === "done" ? read.result : null;
   const currencies = useFieldSuggestions("currency");
+  const countries = useFieldSuggestions("country");
   const designated = useMemo(
     () => usedCodeOptions((listed?.designations ?? []).map((d) => d.modelo)),
     [listed],
@@ -605,8 +606,7 @@ export function AccountsPane({ port, reader, locale }: SetupProps) {
             invalid={control.invalid}
             describedBy={control.describedBy}
             maxLength={2}
-            autoComplete="new-password"
-            secret
+            {...countries}
           />
         )}
       </EditorField>
