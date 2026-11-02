@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:9ee997bba6fe114ae86eb75b87e369c38a5c9d1245fa958e0ae3cc309fc30a99'
+body_hash: 'sha256:e0ecf44cc049bb8d49c7bb9c4508991394cd97c4e8fb7a95cfe8d276b65f02e2'
 ---
 
 # `frontend-polish` plan
@@ -56,7 +56,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/tests/scenarios/modelo*.spec.ts, native/desktop/frontend/tests/live/modelo-write-holds.unit.ts`.
 - [x] `S21` - Expose returned reconciliation differences and advisory limitations using the Sol design brief and localized labels; `native/desktop/frontend/src/components/modelo/dialogs/, native/desktop/frontend/src/dev/, dev/locales/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [ ] `S11` - Complete modelo workflow review from declaration selection through editing, review, calculation, export and reconciliation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modelo.ts`.
-- [ ] `S23` - Keep AEAT progress uncertainty visible before the first snapshot and after a failed observation of completed work; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/shell/aeatSyncRun.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
+- [x] `S23` - Keep AEAT progress uncertainty visible before the first snapshot and after a failed observation of completed work; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/shell/aeatSyncRun.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
 - [ ] `S24` - Recover refused Sede dialog answers and viewport updates without replaying uncertain person input; `native/desktop/frontend/src/components/browser/useSedeView.ts, native/desktop/frontend/tests/scenarios/sede-browser.spec.ts, native/desktop/frontend/src/dev/`.
 - [ ] `S12` - Complete AEAT and browser workflow review including preparation, progress, outcomes, notifications and calendar interactions; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/components/calendar/`.
 - [ ] `S13` - Complete agent conversation, approval, clarification, attachments, documents and skills workflow review; `native/desktop/frontend/src/components/agent/, native/desktop/frontend/src/shell/agentPermission.ts, native/desktop/frontend/src/shell/agentClarification.ts`.
@@ -74,6 +74,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S33` - Expose the supported local declaration PDF comparison beside receipt import, preserving backend refusals and write holds; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/tests/scenarios/modelo.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [ ] `S34` - Retry failed casilla help in place without changing selection or staged edits; `native/desktop/frontend/src/components/modelo/details/, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [ ] `S35` - Keep delayed agent clarification and approval results within their originating conversation and request owner; `native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`.
+- [ ] `S36` - Mount one responsive Modelo details panel and preserve its state across narrow and wide layouts; `native/desktop/frontend/src/components/modelo/workspace/Workspace.tsx, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 
 ## Parallelization
 

@@ -186,6 +186,12 @@ PASS for S21 and S33. Sol's design uses the existing notice, list, definition-li
 
 The local declaration PDF action uses the backend's existing declaration source kind, current work unit and nullable calculation revision, the native PDF picker and the shared write hold. It does not invent an export prerequisite or a supported-modelo list. Both declaration-comparison transport/refusal/uncertainty scenarios passed in the earlier 17-case focused run. Receipt prerequisites remain unchanged. These are frontend contract and scenario results; positive native PDF reconciliation is not claimed. Canonical four-language chrome, scoped TypeScript, ESLint and formatting passed before the independent AEAT/browser edits began.
 
+### s23-review | low | AEAT progress recovers without claiming stale completion
+
+PASS for S23. Initial observer/read failures have an explicit read-only recovery action. Reconnection invalidates superseded reads and queues refresh requests received while another connection is pending. Pushes mark progress uncertain immediately. Cached terminal results remain readable, but Done, start, resume and retry actions are withheld until current progress is readable, including actions inside Results. Preflight admission is single-use so its callback cannot submit or redirect twice when progress changes. Reader/session-owned actions cannot update a replacement follower.
+
+The full 74-case AEAT/browser run passed 72; all new AEAT recovery cases passed. Its sole AEAT failure came from newly added fixture read logging conflicting with an existing no-action assertion. Removing that unnecessary logging restored the cancellation case in 20261102T205403Z-63704, together with all four focused recovery cases. Combined evidence covers all 44 AEAT scenarios. TypeScript, scoped ESLint, formatting and canonical four-language chrome passed. Terra identified and reviewed the reconnect, preflight and cached-results action corrections. Concurrent WIP checkpoint af80a603c4 captured these source changes while the remaining frontend work was still open; it is not a claim of integrated completion.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

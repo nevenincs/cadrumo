@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:80cf0916fd6a38762f8dee907dc700d951174cadfb095a89ec3aec8bc3f30743'
+body_hash: 'sha256:c27159ccebacc7e23e8dc39e606867864edfb7a3ba8fcaebe5773188b6f8ff50'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -170,6 +170,16 @@ related:
 - `S33` `M` `dev/locales/desktop_workspace_keys.py`
 - `S33` `verify:` `Declaration comparison refusal and unknown-settlement browser cases two` -> `pass`
 - `S33` `verify:` `TypeScript scoped lint formatting and canonical chrome` -> `pass`
+- `S23` `M` `native/desktop/frontend/src/shell/aeatSyncRun.ts`
+- `S23` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncPage.tsx`
+- `S23` `M` `native/desktop/frontend/src/components/aeatSync/AeatSyncProgress.tsx`
+- `S23` `M` `native/desktop/frontend/src/components/aeatSync/Results.tsx`
+- `S23` `M` `native/desktop/frontend/src/dev/aeatSyncRunFixture.ts`
+- `S23` `M` `native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`
+- `S23` `M` `dev/locales/desktop_chrome.py`
+- `S23` `M` `dev/locales/desktop_interface_keys.py`
+- `S23` `verify:` `All44 AEAT scenarios covered by full suite plus corrected cancellation and four recovery reruns` -> `pass`
+- `S23` `verify:` `TypeScript scoped ESLint formatting and canonical chrome` -> `pass`
 
 ## Notes
 
