@@ -69,3 +69,7 @@ Supported Tauri methods provide native window behavior without custom window-man
 ## Consequences
 
 The desktop IPC gains a bounded window-control interface. Browser controls remain unavailable outside a native host. Native acceptance needs platform execution; shared rendering does not prove Linux window-manager behavior. Reconsider if native macOS application admission is implemented or native snapping requirements exceed Tauri's supported behavior.
+
+## Amendment 2026-11-02: fullscreen actions
+
+Accepted under the user's true F11 fullscreen request. The closed main-window action set adds explicit toggle-fullscreen and leave-fullscreen operations through supported Tauri Rust calls. The frontend shares the existing single presentation subscription. Fullscreen does not overwrite docking or normal-window bounds. Invoking-main-window and per-launch token restrictions remain binding. Evidence: `2026-11-02-cadrumo-windowmanager-reference`.

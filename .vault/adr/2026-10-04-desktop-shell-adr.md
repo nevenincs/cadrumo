@@ -463,3 +463,9 @@ What changed:
 - **Next launch.** When the close ended changes before they reported, the window appends a payload-free record naming each change by its closed command identity to `cadrumo-close-outcomes.jsonl` in the root's log directory. The next window on that root asks once (`previous_close`) and says that the outcome of the change is unknown and should be checked before it is repeated. It then marks the record reported. A settled close writes nothing. The runtime journal stays the authority on each change's outcome; the record only remembers that the person was not told.
 
 Unchanged: admitted work is owned by the runtime and survives the client disconnecting. The window holds no journal of its own and never infers an outcome from a timeout.
+
+## Amendment 2026-11-02: dockable single-instance panels
+
+Accepted under the user's explicit CADRUMO-WINDOWMANAGER implementation request. Fixed main/agent/bottom placement becomes a default. Panels support tab groups, directional splits, swaps, expansion and floating presentation. Each existing panel has one mounted owner; moves never duplicate terminals, documentation or private work. Console, Python and Logs are individually dockable. Existing page navigation and unsaved-work guards remain authoritative.
+
+A versioned presentation tree validates identities, active tabs, ratios and floating geometry. Legacy preferences seed its default; no private data is stored. Fullscreen is transient and restores the prior arrangement. F11 is globally reserved; Escape exits fullscreen only when no nearer modal owns dismissal. Floating within the main window adds no host authority; additional native windows require a refinement of the main-window-only boundary. No new dependencies are introduced. This supersedes fixed placement only; localization, theme, profile gating and session lifetime remain binding. Evidence: `2026-11-02-cadrumo-windowmanager-reference`.
