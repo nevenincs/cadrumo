@@ -40,11 +40,9 @@ from ...providers.application.service import ProviderSettingsService
 from ...providers.application.tests.memory_store import MemoryProviderSettingsStore
 from ...service import AgentService
 from ..controller import (
-    AgentGenerations,
     AgentHostController,
     AgentHostState,
     AgentLaunch,
-    ResolvedAgentCredentials,
 )
 from ..launch_environment import (
     GATEWAY_PORT_VARIABLE,
@@ -52,6 +50,7 @@ from ..launch_environment import (
     WORKER_PORT_VARIABLE,
     system_environment,
 )
+from .agent_checkout_support import FixedCredentials, agent_checkout, checkout_interpreter
 
 pytestmark = [
     pytest.mark.integration,
@@ -60,37 +59,8 @@ pytestmark = [
     pytest.mark.hex_application,
 ]
 
-CHECKOUT_VARIABLE: Final = "CADRUMO_DEV_AGENT_CHECKOUT"
 ANSWER_BOUND_SECONDS: Final = 0.5
 """Well inside the desktop's shortest administration bound."""
-_GENERATIONS: Final = AgentGenerations("synthetic-session", "synthetic-settings")
-
-
-def _checkout() -> Path:
-    named = os.environ.get(CHECKOUT_VARIABLE)
-    if named is None or not named.strip():
-        pytest.fail(f"{CHECKOUT_VARIABLE} must name a synced cadrumo-agent checkout", pytrace=False)
-    checkout = Path(named)
-    if not (checkout / ".venv" / "Scripts" / "python.exe").is_file():
-        pytest.fail(f"{CHECKOUT_VARIABLE} names no synced cadrumo-agent checkout", pytrace=False)
-    return checkout
-
-
-def _interpreter(checkout: Path) -> Path:
-    return checkout / ".venv" / "Scripts" / "python.exe"
-
-
-class _FixedCredentials:
-    def resolve_for_agent(self, *, deadline: TimeoutDeadline | None = None) -> ResolvedAgentCredentials:
-        return ResolvedAgentCredentials(
-            _GENERATIONS,
-            {},
-            gateway_bearer=bytearray(secrets.token_urlsafe(32), "ascii"),
-            host_token=bytearray(secrets.token_urlsafe(32), "ascii"),
-        )
-
-    def current_generations(self, *, deadline: TimeoutDeadline | None = None) -> AgentGenerations:
-        return _GENERATIONS
 
 
 class _SignedInStore(MemoryProviderSettingsStore):
@@ -126,7 +96,7 @@ def _running_tree(checkout: Path, root: Path) -> AgentHostController:
     root.mkdir(parents=True)
     environment = system_environment(os.environ) | {HOSTED_ROOT_VARIABLE: str(root)}
     setup = WindowsAgentInvocationRunner().run(
-        executable=_interpreter(checkout),
+        executable=checkout_interpreter(checkout),
         arguments=(*AGENT_COMMAND_LINE, "setup"),
         directory=root,
         environment=environment,
@@ -136,9 +106,9 @@ def _running_tree(checkout: Path, root: Path) -> AgentHostController:
     assert setup.status == 0, setup.standard_output[-2000:]
     controller = AgentHostController(
         launcher=WindowsAgentProcessLauncher(),
-        credentials=_FixedCredentials(),
+        credentials=FixedCredentials(),
         launch=AgentLaunch(
-            executable=_interpreter(checkout),
+            executable=checkout_interpreter(checkout),
             arguments=GATEWAY_ARGUMENTS,
             directory=root,
             environment=environment | {GATEWAY_PORT_VARIABLE: "0", WORKER_PORT_VARIABLE: "0"},
@@ -163,7 +133,7 @@ def _service(storage_root: Path, events: _Events) -> AgentService:
 
 
 def test_a_stop_is_answered_at_once_and_its_end_follows_as_the_stopped_event(tmp_path: Path) -> None:
-    checkout = _checkout()
+    checkout = agent_checkout()
     events = _Events()
     service = _service(tmp_path / "storage", events)
     controller = _running_tree(checkout, tmp_path / "tree")
@@ -190,8 +160,8 @@ def test_a_stop_is_answered_at_once_and_its_end_follows_as_the_stopped_event(tmp
 def test_unsupported_sign_in_is_refused_before_retirement_or_auth_work(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    checkout = _checkout()
-    monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(_interpreter(checkout)))
+    checkout = agent_checkout()
+    monkeypatch.setenv(PACKAGE_AGENT_VARIABLE, str(checkout_interpreter(checkout)))
     storage_root = tmp_path / "storage"
     storage_root.mkdir()
     events = _Events()
