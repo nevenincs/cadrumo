@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:57fa06c9ea98458855810562c04e322808638e5bb90c7430d46a5d3fb0f43688'
+body_hash: 'sha256:e71153f00f5445309b93095db7310da82bd276b7f2e1a8422dfa8d3fd1f8c266'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -590,6 +590,21 @@ related:
 - `S06` `verify:` `check --sequence modelo-100-inspect-inputs,modelo-100-export-file` -> `pass`
 - `S06` `M` `dev/docs/tests/test_sequence_goldens.py`
 - `S06` `verify:` `pytest -m '' dev/docs/tests/test_sequence_goldens.py -k ReleaseMaskHonesty` -> `pass`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_source_guards.py`
+- `S06` `M` `src/cadrumo/application/modelo/preconditions.py`
+- `S06` `M` `src/cadrumo/application/modelo/calculation_bucket_actions.py`
+- `S06` `M` `src/cadrumo/application/modelo/projection.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_actions.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_closed_record_row_admission.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_inventory_source_ownership.py`
+- `S06` `M` `src/cadrumo/application/modelo/tests/test_operator_override_advisory.py`
+- `S06` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_projection_source_owned_overrides.py`
+- `S06` `verify:` `pytest projection, source-guard and projection CLI tests (147)` -> `pass`
+- `S06` `verify:` `pytest dev/mcp_eval action coverage (8)` -> `pass`
+- `S06` `verify:` `ruff format+check touched files` -> `pass`
+- `S06` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
+- `S06` `verify:` `python -m dev.quality.types --full, no diagnostics on touched files` -> `pass`
+- `S06` `by:` `implementation-engineer-high`
 
 ## Notes
 
