@@ -113,14 +113,6 @@ reviewed_at = 2026-09-12
 family_storage_baseline = "2023"
 scoped_families = ["export_layouts", "workbook_parity_refs"]
 
-
-
-[revisions."2024".family_dispositions.credit_reconciliation]
-reason = """
-The credit reconciliation declares, for each Modelo 100 casilla that credits IRPF withholding suffered against the declarant's own cuota (LIRPF art. 99), which source supplies the credit and which sources cross-check it. This modelo has no box crediting IRPF withholding suffered, so there is no credit casilla for an entry to name."""
-legal_refs = ["orden-eha-3481-2008:art-1", "orden-eha-3481-2008:art-5", "orden-hfp-1180-2023:art-primero", "orden-hfp-1284-2023:art-11"]
-source_refs = ["boe-modelo-189-base-order", "boe-modelo-189-2023-amendment-hfp-1180", "boe-modelo-189-2023-amendment-hfp-1284", "aeat-dr-189-2023", "aeat-modelo-189-procedure"]
-
 [[revisions."2024".casilla_overrides]]
 selector = { revision = "2023", id = "declarante-nif" }
 fields = { continuidad_origin = "seeded" }
