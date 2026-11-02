@@ -982,7 +982,9 @@ def _calculate_renta(work: Any, filer: RentaFiler) -> None:
             actor=ACTOR,
             caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
             inputs=ModeloCalculationInputFieldsV1(
-                binding_overrides=tuple(ModeloCalculationOverride(key=key, value=value) for key, value in RENTA_ANSWERS),
+                binding_overrides=tuple(
+                    ModeloCalculationOverride(key=key, value=value) for key, value in RENTA_ANSWERS
+                ),
                 casilla_overrides=tuple(ModeloCalculationOverride(key=box, value=value) for box, value in stated),
             ),
         ),
