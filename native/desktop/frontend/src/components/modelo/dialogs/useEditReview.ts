@@ -327,7 +327,9 @@ export function useEditReview({
     if (
       sameInputs &&
       before.blocked &&
-      (phase.kind === "not_applied" || phase.kind === "applied")
+      (phase.kind === "applying" ||
+        phase.kind === "not_applied" ||
+        phase.kind === "applied")
     )
       return;
     void latest.current();

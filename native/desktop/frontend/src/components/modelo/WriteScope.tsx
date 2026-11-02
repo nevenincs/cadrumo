@@ -62,6 +62,7 @@ export function ScopedWriteHoldNotice() {
       port={scope.port}
       onReload={() => void reload()}
       refreshing={refreshing}
+      onCompleted={scope.onWritten}
     />
   );
 }

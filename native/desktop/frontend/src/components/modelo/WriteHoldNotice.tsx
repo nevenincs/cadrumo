@@ -23,6 +23,7 @@ export function WriteHoldNotice({
   onReload,
   refreshing = false,
   creation = false,
+  onCompleted,
 }: {
   holds: ModeloWriteHolds;
   target: string;
@@ -30,6 +31,7 @@ export function WriteHoldNotice({
   onReload: () => void;
   refreshing?: boolean;
   creation?: boolean;
+  onCompleted?: () => void;
 }) {
   const t = useStrings();
   const hold = useModeloWriteHold(holds, target);
@@ -47,7 +49,7 @@ export function WriteHoldNotice({
     setChecking(target);
     try {
       const outcome = await port.observe(hold.operationId);
-      if (outcome.kind === "settled" || outcome.kind === "refused")
+      if (outcome.kind === "settled" || outcome.kind === "refused") {
         holds.needsRead(
           hold,
           false,
@@ -55,6 +57,8 @@ export function WriteHoldNotice({
             ? servedRefusalWords(outcome.detail)
             : null,
         );
+        onCompleted?.();
+      }
       // A running/review operation, or a failed observation, stays unknown.
     } catch {
       // No successful observation means no evidence to unlock this target.

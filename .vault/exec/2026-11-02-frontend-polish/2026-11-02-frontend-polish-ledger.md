@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:88c5310c0e9672edb682d6bfbb088508d7578ea3610240feac541ec0138956d4'
+body_hash: 'sha256:b7510ce8cd66a163828efc589c78289908f0205253b64acb6b8f88a9e8bd4345'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -154,6 +154,17 @@ related:
 - `S19` `verify:` `Declarations and list lifecycle browser scenarios 16 plus final lifecycle rerun 5` -> `pass`
 - `S19` `verify:` `Modelo hold state race unit tests 4` -> `pass`
 - `S19` `verify:` `TypeScript targeted ESLint formatting and canonical four-language chrome` -> `pass`
+- `S20` `M` `native/desktop/frontend/src/components/modelo/WriteScope.tsx`
+- `S20` `M` `native/desktop/frontend/src/components/modelo/WriteHoldNotice.tsx`
+- `S20` `M` `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`
+- `S20` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S20` `verify:` `Focused Modelo browser regressions 17 and final export lifecycle case` -> `pass`
+- `S20` `verify:` `Five hold-state unit tests and scoped static checks` -> `pass`
+- `S21` `A` `native/desktop/frontend/src/components/modelo/dialogs/ReconciliationResult.tsx`
+- `S21` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S21` `M` `dev/locales/desktop_workspace_keys.py`
+- `S21` `verify:` `Four-language reconciliation plus limited and missing-value scenarios six` -> `pass`
+- `S21` `verify:` `Canonical chrome and scoped static checks` -> `pass`
 
 ## Notes
 
