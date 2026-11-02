@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:6b865344ec21fabcd7b478d824a084ea975469c0a1aabae05a3812686942d110'
+body_hash: 'sha256:7afb7fac1b3dc7aa5da1a9f83dedc17cd06231e76d852fda05c2774b1aa79bcb'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -264,6 +264,12 @@ related:
 - `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_declaration_summary.py`
 - `S14` `verify:` `pytest-declarations-list+gate-agreement+tui-declarations` -> `pass`
 - `S14` `by:` `standard-executor`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_filing_kind_marker.py`
+- `S16` `M` `src/cadrumo/application/calculations/tests/test_cross_period_filing_kind_blockers.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/filing_kind_marker.py`
+- `S16` `M` `src/cadrumo/domain/modelos/filing_kind_evidence.py`
+- `S16` `M` `src/cadrumo/domain/modelos/tests/test_filing_kind_evidence.py`
+- `S16` `verify:` `pytest filing_kind tests` -> `pass`
 
 ## Notes
 
@@ -281,3 +287,4 @@ related:
 - `S14` phase-review fix
 - `S05` phase-review fix
 - `S14` phase-review-fix
+- `S16` record amendment 2026-11-02
