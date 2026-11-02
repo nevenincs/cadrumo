@@ -35,7 +35,11 @@ import type {
 import { useStrings, type Translate } from "../../../shell/strings";
 import { boxNotes } from "./boxNotes";
 import { calm } from "./FieldRow";
-import { FormContext, type FormContextValue } from "./formContext";
+import {
+  FormContext,
+  type FormContextValue,
+  type OpenableSurface,
+} from "./formContext";
 import { SectionView, type DrawnSection, type Shown } from "./SectionView";
 import {
   clearIntent,
@@ -164,7 +168,7 @@ function Keys() {
 }
 
 function PageTab({ page, panel }: { page: DrawnPage; panel: string }) {
-  const todo = page.counts ? page.counts.needs_input + page.counts.blocked : 0;
+  const todo = page.counts?.needs_you ?? 0;
   return (
     <TabsTrigger
       value={page.id}
@@ -189,6 +193,9 @@ export type FormViewProps = {
   onDetailsOpenChange: (open: boolean) => void;
   /** Opens the place a source-fed value is corrected at. */
   onOpenSurface?: (surface: SourceSurface) => void;
+  /** Whether the window can open an area; every area is taken as openable
+   * when this is not given. */
+  canOpenSurface?: (surface: OpenableSurface) => boolean;
 };
 
 export function FormView({
@@ -197,6 +204,7 @@ export function FormView({
   detailsOpen,
   onDetailsOpenChange,
   onOpenSurface,
+  canOpenSurface,
 }: FormViewProps) {
   const t = useStrings();
   const form = envelope.form.form;
@@ -395,6 +403,7 @@ export function FormView({
     setEditing,
     onDone,
     onOpenSurface,
+    canOpenSurface: canOpenSurface ?? (() => true),
     notes,
     translated: form.language !== "es",
   };

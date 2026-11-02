@@ -178,7 +178,7 @@ export function SectionView({
   const body = drawn ? sectionBody(t, section, shown) : null;
   if (drawn && !body) return null;
   const counts = section.counts;
-  const todo = counts ? counts.needs_input + counts.blocked : 0;
+  const todo = counts?.needs_you ?? 0;
   const official =
     translated &&
     section.official_heading &&

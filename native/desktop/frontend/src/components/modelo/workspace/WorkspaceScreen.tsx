@@ -455,6 +455,10 @@ function Ready({
             session={session}
             detailsOpen={detailsOpen}
             onDetailsOpenChange={setDetailsOpen}
+            onOpenSurface={(surface) => {
+              if (surface !== "none") onOpenSurface(surface);
+            }}
+            canOpenSurface={canOpenSurface}
           />
         ),
         rail: (

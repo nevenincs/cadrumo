@@ -12,7 +12,7 @@ import { notesOf } from "./boxNotes";
 import { BoxNumber } from "./BoxNumber";
 import { readOnlyReason } from "./entryField";
 import { FieldFacts, FieldHelp } from "./FieldFacts";
-import { useForm } from "./formContext";
+import { openableSurface, useForm } from "./formContext";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
 import { confirmIntent, editKey, fieldKey, type StagedEdit } from "./session";
 import { ValueCell } from "./ValueCell";
@@ -105,6 +105,12 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const reason = readOnlyReason(field);
   const ref = useChosenFocus<HTMLDivElement>(selected, open !== null);
   const notes = notesOf(form.notes, field);
+  const surface = openableSurface(form, field);
+  // A box locked to its source is corrected there, never typed into here.
+  const correctAt =
+    surface && field.editability === "locked_source" && !staged
+      ? surface
+      : null;
   return (
     <div
       ref={ref}
@@ -146,7 +152,7 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
           }
           enter={session.enter}
           onDone={(how) => onDone(field, how)}
-          onOpenSurface={onOpenSurface}
+          onOpenSurface={surface ? onOpenSurface : undefined}
         />
       </span>
       <span
@@ -159,6 +165,20 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
             <Icon name="lock" size="xs" className="mt-0.5 shrink-0" />
             {reason}
           </span>
+        )}
+        {correctAt && onOpenSurface && (
+          <Button
+            size="xs"
+            variant="link"
+            className="h-auto p-0 text-sm"
+            onClick={(event) => {
+              event.stopPropagation();
+              onOpenSurface(correctAt);
+            }}
+          >
+            {t(`workspace.modelo.surface.correct.${correctAt}`)}
+            <Icon name="forward" size="xs" />
+          </Button>
         )}
         {staged && (
           <span className="text-xs text-faint tabular-nums">
