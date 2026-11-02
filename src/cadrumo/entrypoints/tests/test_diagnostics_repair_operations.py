@@ -17,7 +17,7 @@ import pytest
 from pydantic import AnyHttpUrl, BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
 from ...adapters.outbound.aeat.browser.site_health_records import SiteHealthEvidence, SiteHealthStatus
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
@@ -47,7 +47,7 @@ from ...application.diagnostics_repair_operations import (
     build_connectivity_probe_definition,
 )
 from ...application.ledger.tests.bulk_classify_operation_support import CommitFence, EffectEvents, PrivateOperands
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.execution_actor import OperationExecutionCaller
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.operation_definition import OperationDefinition
@@ -63,6 +63,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...domain.buckets.event import BucketEventType
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..diagnostics_repair_composition import DiagnosticsRepairOperations, build_diagnostics_repair_operations
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -472,14 +473,7 @@ def test_each_resolver_gives_the_three_frontends_the_same_decision(
     operations = build_diagnostics_repair_operations()
     registry = OperationRegistry(definitions=operations.definitions, public_registrations=operations.registrations)
     contract = registry.lookup_public_registration(definition_id).contract
-    context = OperationAccessContext(
-        profile_id=_PROFILE,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    context = operation_access_context(contract, profile_id=_PROFILE)
     request = _request(definition_id, payload)
 
     for action in (AccessAction.SUBMIT, AccessAction.START, AccessAction.OBSERVE, AccessAction.RESULT):

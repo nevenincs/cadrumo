@@ -25,14 +25,13 @@ from cadrumo.application.modelo.work_change_contracts import (
     ModeloWorkRenameRequest,
 )
 from cadrumo.application.modelo.work_lifecycle import get_work_unit, rename_work_unit
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_period import PublicPeriod
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.hashing import content_hash_hex
 from cadrumo.core.operations import (
@@ -47,10 +46,11 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     seeded_modelo_work_unit,
 )
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ..adapter_composition_work_ports import build_work_lifecycle_ports
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -214,14 +214,8 @@ def test_metadata_read_uses_canonical_selection_and_persisted_period(
         definition_id = MODELO_WORK_METADATA_OPERATION_DEFINITION_ID
         contract = registry.lookup_public_contract(definition_id)
         subject_ref = profile_operation_subject(str(profile_id))
-        context = OperationAccessContext(
-            profile_id=UUID(str(profile_id)),
-            destination_id=uuid4(),
-            action=AccessAction.RESULT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
+        context = operation_access_context(
+            contract, profile_id=UUID(str(profile_id)), action=AccessAction.RESULT, authority_operation=operation
         )
         no_pin_context = replace(context, authority_operation=None)
         request = OperationRequest(definition_id=definition_id, subject_ref=subject_ref, payload=payload)
