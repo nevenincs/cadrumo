@@ -25,7 +25,7 @@ from cadrumo.domain.calculations.registry.binding_temporal import (
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_references import PeriodSelector
 
-from ..validate_bindings import informational_binding_ids, unreferenced_binding_advisories
+from ..validate_bindings import informational_binding_ids, unreferenced_binding_failures
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -102,7 +102,7 @@ def test_non_calculation_carries_the_retired_box_revision() -> None:
     assert binding_applies_to_period(member, "1T") is False
 
 
-def test_advisory_skips_a_dispositioned_binding_and_counts_it_instead() -> None:
+def test_refusal_skips_a_dispositioned_binding_and_counts_it_instead() -> None:
     """The disposition moves a row between two reported lines, never out of both."""
     orphan = _binding("test.binding.orphan", applicability=AllRevisionContexts())
     dispositioned = _binding(
@@ -115,11 +115,11 @@ def test_advisory_skips_a_dispositioned_binding_and_counts_it_instead() -> None:
     )
     revision = _revision(orphan, dispositioned)
 
-    advisories = unreferenced_binding_advisories(prefix="modelo test revision test-revision", revision=revision)
+    failures = unreferenced_binding_failures(prefix="modelo test revision test-revision", revision=revision)
     informational = informational_binding_ids(revision)
 
-    assert [advisory for advisory in advisories if "test.binding.informational" in advisory] == []
-    assert any("test.binding.orphan" in advisory for advisory in advisories)
+    assert [failure for failure in failures if "test.binding.informational" in failure] == []
+    assert any("test.binding.orphan" in failure for failure in failures)
     assert informational == ("test.binding.informational",)
 
 
@@ -128,4 +128,4 @@ def test_an_undispositioned_orphan_is_not_counted_as_informational() -> None:
     revision = _revision(_binding("test.binding.orphan", applicability=AllRevisionContexts()))
 
     assert informational_binding_ids(revision) == ()
-    assert len(unreferenced_binding_advisories(prefix="modelo test revision test-revision", revision=revision)) == 1
+    assert len(unreferenced_binding_failures(prefix="modelo test revision test-revision", revision=revision)) == 1

@@ -61,7 +61,6 @@ from cadrumo.domain.user_profile.plantilla_media import PlantillaMediaState, Pla
 
 from ._activity_asset_schedule_support import (
     _DESCRIPTOR,
-    _SIMPLIFIED,
     _YEAR_END,
     _YEAR_START,
     _acquisition,
@@ -84,7 +83,11 @@ def test_indefinite_life_and_goodwill_are_limited_to_one_twentieth_in_both_modal
         _asset(_election(AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE), basis="20000", kind=AssetKind.INTANGIBLE),
     )
     goodwill = _charge(
-        _asset(_election(AmortizationMethod.GOODWILL, _SIMPLIFIED), basis="40000", kind=AssetKind.INTANGIBLE),
+        _asset(
+            _election(AmortizationMethod.GOODWILL, DirectEstimationRegime.SIMPLIFIED),
+            basis="40000",
+            kind=AssetKind.INTANGIBLE,
+        ),
     )
 
     assert indefinite.amount == Decimal("1000.00")  # 20,000 / 20
@@ -273,7 +276,7 @@ def test_a_vehicle_not_proven_affected_refuses_with_its_provision() -> None:
         "vehicle_affectation_required_for_class",
         rendered="vehicle affectation declaration",
     ):
-        _charge(_asset(_linear("transporte", _SIMPLIFIED), basis="20000"))
+        _charge(_asset(_linear("transporte", DirectEstimationRegime.SIMPLIFIED), basis="20000"))
 
 
 def test_the_goods_transport_use_belongs_to_a_mixed_vehicle_only() -> None:

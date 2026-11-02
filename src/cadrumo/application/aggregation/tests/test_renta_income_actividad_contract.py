@@ -7,7 +7,12 @@ from decimal import Decimal
 
 import pytest
 
-from ....core.aggregation import BindingAggregation, BindingAggregationOp, LedgerWithholdingDerivation
+from ....core.aggregation import (
+    BindingAggregation,
+    BindingAggregationOp,
+    BindingValueOutcome,
+    LedgerWithholdingDerivation,
+)
 from ....domain.calculations.registry.ledger_renta_income_bindings import (
     ledger_renta_withholding_derivation_partition,
     resolve_ledger_renta_income_aggregation_binding_values,
@@ -419,9 +424,9 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() ->
     assert len(excluded) == 1
     assert "300.00 EUR" in excluded[0].message
     assert tx.transaction_id in excluded[0].message
-    assert not [
-        diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "advisory_retencion_credit_grade"
-    ], "an excluded figure claims no credit, so it carries no credit grade"
+    # The zero rests on a row that bears a retención, so it is no proven zero:
+    # a grade cap on the binding withholds it like any other capped value.
+    assert resolution.value_outcomes[_M130_RETENCIONES_BINDING] is BindingValueOutcome.FROM_BEARING_ROWS
 
 
 def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -> None:

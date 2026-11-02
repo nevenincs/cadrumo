@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-099` · **Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
+**Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
 
 <!-- preserved:article -->
 **Scope:** 4 files under `src/cadrumo/application/storage/calc_sheets` and `src/cadrumo/application/storage/sync_runs`, totaling 659 lines, 29,153 bytes, and 6,222 measured `o200k_base` proxy tokens. Both bounded-reader pages and all assigned ranges were read. Static inspection only; no workbook was materialized and no application execution or tests were run.

@@ -46,18 +46,18 @@ These integrations are implemented as typed adapters with significant fail-close
 
 ## Detailed articles
 
-- [Local runtime clients and native OS bindings](../articles/005-local-runtime-clients-and-native-os-bindings.md) — `STAGE-2-005`
-- [Local runtime transport, worker custody, and lifecycle](../articles/006-local-runtime-transport-worker-custody-and-lifecycle.md) — `STAGE-2-006`
-- [Windows login, process containment, and worker authority](../articles/007-windows-login-process-containment-and-worker-authority.md) — `STAGE-2-007`
-- [AEAT certificate and Cl@ve browser authentication](../articles/008-aeat-certificate-and-cl-ve-browser-authentication.md) — `STAGE-2-008`
-- [Cl@ve Permanente, browser support, and Sede read primitives](../articles/009-cl-ve-permanente-browser-support-and-sede-read-primitives.md) — `STAGE-2-009`
-- [Censal reads, filed-declaration capture, and GROI checks](../articles/010-censal-reads-filed-declaration-capture-and-groi-checks.md) — `STAGE-2-010`
-- [IVA wallet, notifications, VIES checks, and expediente reads](../articles/011-iva-wallet-notifications-vies-checks-and-expediente-reads.md) — `STAGE-2-011`
-- [PDF summaries, ECB rates, and Google Sheets exports](../articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md) — `STAGE-2-012`
-- [Google Sheets readback, Drive ownership, and Google sign-in](../articles/013-google-sheets-readback-drive-ownership-and-google-sign-in.md) — `STAGE-2-013`
-- [LLM dispatch, consent, and invoice-reading pipeline](../articles/014-llm-dispatch-consent-and-invoice-reading-pipeline.md) — `STAGE-2-014`
-- [LLM provider adapters and Google Drive storage](../articles/015-llm-provider-adapters-and-google-drive-storage.md) — `STAGE-2-015`
-- [Local storage, remote ciphertext mirroring, and offline workbooks](../articles/016-local-storage-remote-ciphertext-mirroring-and-offline-workbooks.md) — `STAGE-2-016`
+- [Local runtime clients and native OS bindings](../articles/005-local-runtime-clients-and-native-os-bindings.md)
+- [Local runtime transport, worker custody, and lifecycle](../articles/006-local-runtime-transport-worker-custody-and-lifecycle.md)
+- [Windows login, process containment, and worker authority](../articles/007-windows-login-process-containment-and-worker-authority.md)
+- [AEAT certificate and Cl@ve browser authentication](../articles/008-aeat-certificate-and-cl-ve-browser-authentication.md)
+- [Cl@ve Permanente, browser support, and Sede read primitives](../articles/009-cl-ve-permanente-browser-support-and-sede-read-primitives.md)
+- [Censal reads, filed-declaration capture, and GROI checks](../articles/010-censal-reads-filed-declaration-capture-and-groi-checks.md)
+- [IVA wallet, notifications, VIES checks, and expediente reads](../articles/011-iva-wallet-notifications-vies-checks-and-expediente-reads.md)
+- [PDF summaries, ECB rates, and Google Sheets exports](../articles/012-pdf-summaries-ecb-rates-and-google-sheets-exports.md)
+- [Google Sheets readback, Drive ownership, and Google sign-in](../articles/013-google-sheets-readback-drive-ownership-and-google-sign-in.md)
+- [LLM dispatch, consent, and invoice-reading pipeline](../articles/014-llm-dispatch-consent-and-invoice-reading-pipeline.md)
+- [LLM provider adapters and Google Drive storage](../articles/015-llm-provider-adapters-and-google-drive-storage.md)
+- [Local storage, remote ciphertext mirroring, and offline workbooks](../articles/016-local-storage-remote-ciphertext-mirroring-and-offline-workbooks.md)
 
 
 ```{toctree}

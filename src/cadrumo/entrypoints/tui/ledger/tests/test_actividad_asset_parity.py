@@ -861,6 +861,38 @@ async def test_activity_asset_screen_names_the_field_whose_json_cannot_be_read()
 
 
 @pytest.mark.asyncio
+@pytest.mark.parametrize("selector", ("#asset-dispose", "#asset-disposal-calculate"))
+@pytest.mark.parametrize(
+    ("input_id", "stated_id", "label_key"),
+    (
+        ("asset-disposal-proceeds", "asset-disposal-costs", "tui.ledger.activity_asset.disposal_proceeds"),
+        ("asset-disposal-costs", "asset-disposal-proceeds", "tui.ledger.activity_asset.disposal_costs"),
+    ),
+)
+async def test_activity_asset_screen_refuses_a_blank_baja_amount_before_the_door(
+    selector: str, input_id: str, stated_id: str, label_key: str
+) -> None:
+    actions = ActivityAssetActionStub(activity_asset_revision("tui-blank-amount"))
+
+    with override_settings(cadrumo_output_language="en"):
+        shown = await _refusal_for(
+            actions,
+            selector,
+            **{
+                "asset-id": "a",
+                "asset-disposal-date": "2026-06-30",
+                "asset-disposal-reason": "sale",
+                input_id: "   ",
+                stated_id: "10.00",
+            },
+        )
+        wanted = tr("tui.ledger.activity_asset.errors.amount_required", field=tr(label_key))
+
+    assert shown == f"refused\t{wanted}"
+    assert actions.requests == []
+
+
+@pytest.mark.asyncio
 async def test_activity_asset_screen_never_shows_the_text_of_an_exception_it_did_not_judge() -> None:
     revision = activity_asset_revision("tui-unjudged")
     actions = ActivityAssetActionStub(revision, plan_error=ValueError("secret internal detail"))

@@ -24,6 +24,7 @@ from .errors import LocaleError
 from .locale_audit import LocaleAuditResult, LocaleFileAudit, LocalePlaceholderMismatch
 from .locale_tree import _flatten_raw_locale_leaves
 from .manager import LocaleManager
+from .signal_report import NON_GATING_OUTCOMES
 
 _REVISION_PREFIX_TEMPLATE = "modelo.schema.{modelo}.revision.{revision}"
 
@@ -243,7 +244,10 @@ def status(
     ] = False,
     check: Annotated[
         bool,
-        typer.Option("--check", help="Exit 1 when the complete locale backlog is not empty."),
+        typer.Option(
+            "--check",
+            help="Exit 1 when any blocking locale finding or open inventory remains; advisory findings do not gate.",
+        ),
     ] = False,
 ) -> None:
     """Print the cross-surface locale status.
@@ -257,7 +261,7 @@ def status(
     if json_output:
         payload = locale_signal(manager)
         typer.echo(json.dumps(payload, sort_keys=True, separators=(",", ":")))
-        if check and payload["outcome"] != "complete":
+        if check and payload["outcome"] not in NON_GATING_OUTCOMES:
             raise typer.Exit(code=1)
         return
     for record in catalogue_status(manager):

@@ -162,6 +162,7 @@ def test_resolve_filing_window_annual_period() -> None:
     window = None if resolution is None else resolution.dated_window
     assert window is not None
     closes_on = window.closes_on
+    assert closes_on is not None
     # M100 2024 anual plazo: AEAT opens April, closes June 30 2025.
     assert closes_on.year == 2025
     assert closes_on.month == 6

@@ -228,6 +228,7 @@ def _closes_on(filing_year: int, period_token: str) -> date:
     )
     window = None if resolution is None else resolution.dated_window
     assert window is not None, f"registry must register an M130 {period_token} {filing_year} deadline window"
+    assert window.closes_on is not None, f"the M130 {period_token} {filing_year} window must carry a close date"
     return window.closes_on
 
 

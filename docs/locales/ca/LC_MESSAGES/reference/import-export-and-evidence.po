@@ -120,7 +120,7 @@ msgid ""
 "enrolled resolver projects them"
 msgstr ""
 "Fets empresarials reutilitzables que romanen separats d'una presentació "
-"fins que un resolvedor inscrit els projecta"
+"fins que un resolutor inscrit els projecta"
 
 #: ../../reference/import-export-and-evidence.md
 msgid "Tax rules"

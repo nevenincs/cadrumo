@@ -58,6 +58,7 @@ _CLI = OperationFrontendProjection.CLI
 def _installed_runtime(tmp_path: Path, login: InstallationLogin) -> Generator[Path]:
     """Serve the effective storage root as the installed cohort, so the command line finds it."""
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        root.mkdir(mode=0o700, parents=True, exist_ok=True)
         endpoint = WindowsEndpoint(storage_root=root)
         with serving_installation_runtime(endpoint, root, login, product_version=version("cadrumo")):
             yield root

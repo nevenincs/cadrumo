@@ -129,7 +129,7 @@ application:
     sessions:
       errors:
         clave_contraste_missing: 'A Cl@ve Móvil alapértelmezés szerint jóváhagyási
-          kérést küld a Cl@ve alkalmazásba, ehhez a dokumentumodon szereplő contraste
+          kérést küld a Cl@ve alkalmazásba, ehhez a dokumentumodon szereplő `contraste`
           szükséges. NIE esetén rögzítsd az aktív profilon a következőt: %{nie_field},
           DNI esetén pedig ezt: %{dni_field}. Ha inkább QR-kódot olvasnál be egy látható
           böngészőben, futtasd az `cadrumo-runtime config auth configure --provider
@@ -289,7 +289,7 @@ application:
           szükséges; a kapott érték: Modelo {modelo}, {filing_year}. adóév, {period}
           időszak.'
         result_casilla_required: A Modelo 303 átvitel normalizálásához szükséges a
-          rögzített resultado rovat ({casilla_id}), amelyet a megfigyelés nem tartalmaz.
+          rögzített eredmény rovat ({casilla_id}), amelyet a megfigyelés nem tartalmaz.
         supplied_available_contradicts_derivation: A megadott rendelkezésre álló kompenzáció
           ({supplied_available}) ellentmond a(z) {basis} levezetésnek ({derived_available}).
           Csak az adózó döntheti el, melyik összeget nyújtották be; nincs biztonságos
@@ -753,6 +753,102 @@ application:
           esetén).'
         unsupported_iva_rate: 'A(z) %{iva_rate} IVA-kulcs nem ismert; használd az
           alábbiak egyikét: %{accepted}.'
+    figures_preview:
+      finding:
+        base_total_not_line_sum: Az alapösszeg nem egyezik a sorok részösszegeinek
+          összegével.
+        figure_out_of_range: Egy szám túl nagy ahhoz, hogy centre pontosan ki lehessen
+          számolni.
+        grand_total_identity: A végösszeg nem egyezik az alap, az áfa és az egyenértékűségi
+          pótdíj összegével.
+        iva_total_not_line_sum: Az áfa összesen nem egyezik a sorok áfa-összegeinek
+          összegével.
+        line_amount_negative: Az ár, a részösszeg és az áfa összege nem lehet negatív.
+        line_iva_mismatch: A megadott áfa-összeg (%{stated}) több mint egy centtel
+          eltér a részösszeg és a kulcs szorzatától (%{expected}).
+        line_iva_not_zero_for_nonnumeric: A mentes vagy az áfa hatályán kívüli sor
+          nem tartalmaz áfát, de ezen %{stated} szerepel.
+        line_quantity_not_positive: A mennyiségnek nullánál nagyobbnak kell lennie.
+        line_rate_coverage_gap: A Cadrumo nem tartja nyilván a(z) %{slot} kulcsot
+          %{on_date} napjára, ezért nem alkalmazhatja.
+        line_rate_not_in_force: A(z) %{slot} áfakulcs nem volt hatályban %{on_date}
+          napján.
+        line_rate_undeclared: A(z) %{slot} áfakulcsot nem deklarálja a nyilvántartás.
+        line_subtotal_mismatch: A megadott részösszeg (%{stated}) több mint egy centtel
+          eltér a mennyiség és az egységár szorzatától (%{expected}).
+        nonnumeric_grand_total_identity: Ha minden sor mentes vagy az áfa hatályán
+          kívüli, a végösszegnek meg kell egyeznie az alappal.
+        nonnumeric_iva_total_not_zero: Ha minden sor mentes vagy az áfa hatályán kívüli,
+          az áfa összesen nulla kell legyen.
+        nonnumeric_recargo_not_zero: Ha minden sor mentes vagy az áfa hatályán kívüli,
+          az egyenértékűségi pótdíj nulla kell legyen.
+        printed_total_differs: A számlán nyomtatott végösszeg (%{printed}) eltér a
+          kiszámított végösszegtől (%{computed}).
+        rate_date_unresolved: A nyilvántartás nem ad meg áfakulcsot %{on_date} napjára,
+          ezért az áfa nem számolható ki.
+        recargo_above_iva_total: Az egyenértékűségi pótdíj (%{stated}) nem haladhatja
+          meg az áfa összesen értékét (%{iva_total}).
+        recargo_negative: Az egyenértékűségi pótdíj nem lehet negatív.
+        retention_amount_above_base: A levonás (%{stated}) nem haladhatja meg az alapot
+          (%{base_total}).
+        retention_amount_mismatch: A megadott levonás (%{stated}) több mint egy centtel
+          eltér az alap és a kulcs szorzatától (%{expected}).
+        retention_amount_negative: A levonás összege nem lehet negatív.
+        retention_rate_out_of_range: A levonás kulcsa 0 és 1 közötti tört, például
+          0.15 a 15 %-hoz, nem százalék.
+        retention_rate_without_amount: A levonás kulcsához meg kell adni a levont
+          összeget; a kulcs önmagában nem rögzít levonást.
+        suplido_negative: A vevő nevében kifizetett költségek összege nem lehet negatív.
+        total_negative: A számla végösszege nem lehet negatív.
+      rate_slot:
+        exempt: Mentes
+        not_subject: Az áfa hatályán kívül
+        rate_0: ÁFA 0%
+        rate_10: ÁFA 10%
+        rate_2: ÁFA 2%
+        rate_21: ÁFA 21%
+        rate_4: ÁFA 4%
+        rate_5: ÁFA 5%
+        rate_7_5: ÁFA 7,5%
+      rule_finding:
+        counterparty_country_invalid: Ez nem olyan kétbetűs országkód, amelyet a főkönyv
+          felismer.
+        counterparty_name_blank: A partner neve nem maradhat üresen.
+        counterparty_tax_id_invalid: Ez az adószám nem érvényes a partner országában.
+        counterparty_tax_id_required: Ehhez a számlához kell a partner adószáma. Csak
+          a kiállított factura simplificada lehet meg nélküle.
+        counterparty_tax_id_required_by_category: Ebben az IVA-kategóriában a factura
+          simplificadához kell a partner adószáma.
+        currency_invalid: Ez nem háromjegyű ISO 4217 pénznemkód.
+        intra_community_spanish_identification: Mentes Közösségen belüli értékesítés
+          nem nevezhet meg spanyol IVA-számmal vásárló partnert.
+        invoice_class_undeclared: A nyilvántartás nem ismer ilyen számlaosztályt.
+        invoice_number_blank: A számla sorszáma nem maradhat üresen.
+        iva_category_undeclared: A nyilvántartás ezen a napon nem ismer ilyen IVA-kategóriát.
+        lease_only_on_issued: Üzlethelyiség-bérletet csak kiállított számla rögzít.
+        lease_reference_not_allowed: Az ilyen helyzetű ingatlannak nincs kataszteri
+          hivatkozása.
+        lease_reference_too_long: A Modelo 347 legfeljebb {limit} karakteres kataszteri
+          hivatkozást fogad el.
+        lease_situation_undeclared: Ezt az ingatlanhelyzetet a Modelo 347 nem ismeri.
+        line_description_blank: A tétel leírása nem maradhat üresen.
+        line_description_too_long: A tétel leírása legfeljebb {limit} karakter lehet.
+        line_oss_rate_kind_refused: Ez az OSS-kulcstípus ennél a tételnél nem érhető
+          el.
+        operation_date_role_mismatch: 'A teljesítési dátum a tárolt szerepéhez tartozik:
+          tárolt számlán áthelyezheted, de nem adhatod hozzá és nem veheted el.'
+        operation_type_required: Ehhez az IVA-kategóriához kell a Modelo 349 műveleti
+          kódja.
+        other_invoice_rule: A főkönyv egy másik szabály miatt elutasítaná ezt a számlát.
+          Ellenőrizd az adatait a bizonylat alapján.
+        rectified_invoice_not_allowed: Helyesbített számlát csak factura rectificativa
+          nevezhet meg.
+        rectified_invoice_required: A factura rectificativának meg kell neveznie a
+          helyesbített számlát.
+        series_required_for_rectificativa: A factura rectificativát külön sorozatban
+          kell kiállítani.
+        simplificada_not_for_intra_community: Mentes Közösségen belüli értékesítésről
+          nem állítható ki factura simplificada.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'A(z) %{invoice_id} számlaazonosító-előtag nem egyértelmű;
@@ -1078,16 +1174,23 @@ application:
         what: Egy ügyvezetői tétel levonási kulcsa eltér az alkalmazandó kulcstól.
         what_to_do: Hasonlítsd össze a kulcsot a hivatalos útmutatóval, és szükség
           esetén javítsd a tételt.
-      advisory_retencion_credit_grade:
-        what: 'A kiállított számláiból származó levonási jóváírás nincs teljesen megerősítve:
-          a Cadrumo még nem erősítette meg, melyik adóévhez tartozik.'
-        what_to_do: Benyújtás előtt vesd össze az összeget az egyes ügyfelek levonási
-          igazolásával erre az adóévre.
+      advisory_binding_value:
+        what: 'Egy mező összege olyan értelmezésen alapul, amelyet a Cadrumo még nem
+          tud megerősíteni: megnézheted és előnézetben láthatod, de a bevallást ezzel
+          nem ellenőrizheted, nem exportálhatod és nem rögzítheted.'
+        what_to_do: Vesd össze az összeget a saját nyilvántartásoddal és a kifizető
+          igazolásával. Amíg az összeg függőben van, a Cadrumo nem tudja ellenőrizni,
+          exportálni vagy rögzíteni ezt a bevallást; egy későbbi változat, amely megerősíti
+          az időszakot, feloldja.
       aggregation_activity_undeclared:
         what: A(z) {box} rovat nullát mutat, pedig ebben az időszakban vannak tevékenységtípus
           nélküli bevételei.
         what_to_do: Add meg a tevékenység típusát ezeknél a bevételi tételeknél, majd
           számolj újra.
+      calculation_screen_outdated:
+        what: Ez a számítás a Cadrumo jelenlegi ellenőrzései előtt készült, ezért
+          ebben a formában nem ellenőrizhető, nem exportálható és nem rögzíthető.
+        what_to_do: Számold újra a bevallást, majd ellenőrizd.
       deferred_binding_source:
         what: A Cadrumo a nyilatkozat egy értékét még nem tölti ki automatikusan.
         what_to_do: Nincs teendőd, hacsak az az érték nem vonatkozik rád. Ha igen,
@@ -1359,6 +1462,14 @@ application:
         ezért nem szerepel benne.'
       activity_undeclared: '{element}: a vásárlásához nincs tevékenységtípus, és egy
         másik eszközöd mezőgazdasági, ezért nem mezőgazdaságiként számít.'
+      advisory_imputation_period_ungrounded: 'A(z) {box} mező: {amount} levont adóelőleg
+        függőben van, mert nincs megerősítve, melyik időszakhoz tartozik. A levonás
+        annak a jövedelemnek az időszakához tartozik, amelyből levonták (RIRPF 79.
+        cikk), a nyilvántartásod pedig minden befizetést a bankba érkezés napjával
+        datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad (RIRPF
+        7.2. cikk; LIRPF 14.1.b cikk).'
+      advisory_value_proven_zero: 'A(z) {box} mező: a nulla érvényes, mert az időszakban
+        nincs olyan tétel, amelynek az időszaka kétséges lehetne.'
       agrarian_excluded: '{element}: mezőgazdasági tevékenységhez tartozik, ezért
         kimarad a(z) {period_end} napon végződő időszak előlegéből.'
       amortization_box_unbound: '{element}: ebben a kiadásban nincs mező az értékcsökkenési
@@ -2435,7 +2546,7 @@ application:
           concept: Fogalom
           fixed_quota: Fix kvóta
           formula: Képlet
-          legal_refs: Jogi hivatk.
+          legal_refs: Jogi hivatkozások
           marginal_rate: Határkulcs
           maximum_base: Maximum alap
           minimum_base: Minimum alap
@@ -2443,13 +2554,13 @@ application:
           rounding: Kerekítés
           section: Szakasz
           source: Forrás
-          source_refs: Forráshivatk.
+          source_refs: Forráshivatkozások
           value: Érték
         protected:
           calculos: Származtatott számítások - védett a paritás megőrzéséhez
           evidencia: 'Generált bizonyíték: csak olvasható'
           guide: Útmutató - védett
-          provenance: Eredet / audit trail - védett
+          provenance: Eredet / ellenőrzési nyomvonal - védett
           tariffs: Tarifák / aktív paraméterek - védett
       form:
         communication_caption: Adatlap · az adatokat a forráslapokon módosíthatod
@@ -2725,11 +2836,11 @@ application:
         és futtasd újra: %{missing_flags}'
       edit_missing_modelo_requirements: 'Az azonosító adatok teljesek, de ez a profil
         IVA-t vall be, és még hiányoznak a Modelo 303 kötelező mezői. Add hozzá ezeket
-        a flageket ugyanahhoz a parancshoz, és futtasd újra: %{missing_flags}.'
+        a kapcsolókat ugyanahhoz a parancshoz, és futtasd újra: %{missing_flags}.'
       persist_patch_unknown_question_id: A varázsló javítása ismeretlen kérdésazonosítóra
         hivatkozik.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit
-        "default" tartalék).
+        `default` tartalék).
       profile_label_taken: Már létezik %{label} nevű profil. Válassz másik nevet,
         vagy módosítsd ezt a profilt a szerkesztési folyamattal.
       quiet_missing_flags: 'Ennek a --quiet futtatásnak hiányoznak a kötelező adatok.

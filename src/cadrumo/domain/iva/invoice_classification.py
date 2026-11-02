@@ -192,9 +192,7 @@ def classify_invoice_line_for_iva(
         )
 
     # One canonical rate-kind to domestic-category table, composed with the
-    # public rate-kind accessor. A local IvaRate-keyed copy used to live here
-    # and was exactly this composition, so it could drift without any symbol
-    # search relating the two.
+    # public rate-kind accessor.
     category = domestic_categories_by_rate_kind(_scoped_rate_categories(on_date or today_madrid()))[rate_kind]
     flow_direction = flow_direction_for_invoice_kind(invoice_kind)
     return IvaInvoiceClassification(
@@ -301,19 +299,11 @@ def invoice_line_to_iva_observation(
         rectifies_ledger_id=rectifies_ledger_id,
         input_classification=input_classification,
         prorrata_sector_id=prorrata_sector_id,
-        # applied_rate was previously left unset, on the reasoning that an
-        # invoice line carries a rate SLOT rather than a number, so filling it
-        # would mean re-deriving the rate from the TIER -- answering "what does
-        # this tier mean" instead of "what was this line charged", and inventing
-        # agreement with a tier default the line may not have carried.
-        #
-        # That reasoning does not survive registry slots that name a rate of
-        # their own. Transitional food slots can coexist with an ordinary
-        # tier, so iva_rate_percentage reads the selected slot's own authority
-        # record and confirms it was in force on issued_at rather than
-        # consulting the tier default. The rate is measured, not inferred, so
-        # withholding it would drop the line out of its rate-specific return
-        # bucket.
+        # The applied rate is measured, not inferred. Transitional food slots can
+        # coexist with an ordinary tier, so iva_rate_percentage reads the selected
+        # slot's own authority record and confirms it was in force on issued_at
+        # rather than consulting the tier default. Withholding the rate would drop
+        # the line out of its rate-specific return bucket.
         applied_rate=iva_rate_percentage(iva_rate, issued_at),
         observation_role=IvaLedgerObservationRole.SETTLEMENT,
     )

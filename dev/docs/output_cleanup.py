@@ -30,8 +30,7 @@ def remove_orphan_pages(docs_root: Path, html_root: Path, repo_root: Path) -> in
     Furo bakes the theme's variables and templates into every page at build
     time, so a page whose source was removed or renamed keeps rendering its
     build-era design indefinitely and leaks stale results into the search
-    index (the docs-brand audit found 2208 such orphans rendering a retired
-    theme). Every docname maps to a ``.md``/``.rst`` source under ``docs/`` —
+    index. Every docname maps to a ``.md``/``.rst`` source under ``docs/`` —
     including the generated ``api/``, ``cli/``, and ``_generated/`` sources,
     which are written to disk before Sphinx reads the tree — and ``_modules``
     viewcode pages map back to ``src/`` modules.

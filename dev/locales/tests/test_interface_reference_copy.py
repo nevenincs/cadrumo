@@ -37,9 +37,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
         ),
         ("cli.config.profile.row.row_help", {"aeat config profile view"}),
         ("cli.ledger.classify.reason_help", {"aeat app ledger view"}),
-        ("cli.app.modelo.bindings.unscoped_revision_warning", {"aeat app modelo work calculate"}),
         ("cli.config.auth.apoderado.check_help", {"cadrumo-runtime config auth apoderado status"}),
-        ("cli.config.profile.create_guidance_unavailable", {"aeat config profile status"}),
         ("cli.ledger.check.period_help", {"aeat app ledger status"}),
     ],
 )

@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-161` · **Topic:** [Operator interfaces, part 1: command graph and principal workflows](../topics/operator-interfaces-part-1.md)
+**Topic:** [Operator interfaces: command graph and principal workflows](../topics/operator-interfaces-command-graph.md)
 
 <!-- preserved:article -->
 ## Scope and capability

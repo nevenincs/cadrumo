@@ -27,6 +27,7 @@ from ..calculations.row_source_identity import RowBindingKey, RowSourceIdentity
 from ..identifiers import canonical_decimal_string as _canonical_decimal
 from .calculation_revision_m303_handoff import FilingInstanceEvidence, M303RegimenSimplificadoAnnualSummaryHandoff
 from .calculation_revision_operator_layer import OPERATOR_LAYER_IDENTITY_KEY, CalculationOperatorLayer
+from .calculation_screen_stamp import SCREEN_STAMP_IDENTITY_KEY
 from .errors import ModeloValidationError
 from .m156_rows import Modelo156AfiliadoRow
 from .row_models import Modelo210AgrupacionRentaRow, Modelo349OperadorRow, Modelo349RectificacionRow, ModeloDetailRow
@@ -534,6 +535,9 @@ def derive_calculation_revision_id_from_identity_inputs(
     payload.update(_amendment_revision_id_payload(amendment_identity))
     payload.update(_cleared_casillas_revision_id_payload(cleared_casilla_ids))
     payload.update(_operator_layer_revision_id_payload(operator_layer))
+    screen_stamp = identity_inputs["screen_stamp"]
+    if screen_stamp is not None:
+        payload[SCREEN_STAMP_IDENTITY_KEY] = screen_stamp.identity_payload()
     rendering = identity_inputs["rendering_snapshot"]
     if rendering is not None:
         payload["rendering_snapshot"] = {

@@ -9,12 +9,19 @@ from textual.widgets import Select
 
 from ....application.ledger.transaction_projection import LedgerTransactionProjection
 from ....application.operations.public_period import PublicPeriod
+from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
 from ....core.i18n.render import tr
-from ....core.period import Period, PeriodError
+from ....core.period import Period, PeriodError, StandardPeriodCode
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 
-#: The AEAT period codes an operator can choose: quarters, the annual period and months.
-PERIOD_CODES: Final[tuple[str, ...]] = ("1T", "2T", "3T", "4T", "0A", *(f"{month:02d}" for month in range(1, 13)))
+#: The period codes an operator can choose: quarters, the annual period and months. The instalment
+#: codes identify payment events and span no ledger dates, so a ledger filter leaves them out.
+_INSTALMENT_PERIOD_CODES: Final[frozenset[StandardPeriodCode]] = frozenset(
+    {StandardPeriodCode.P1, StandardPeriodCode.P2, StandardPeriodCode.P3, StandardPeriodCode.P4}
+)
+PERIOD_CODES: Final[tuple[str, ...]] = tuple(
+    code.value for code in StandardPeriodCode if code not in _INSTALMENT_PERIOD_CODES
+)
 
 DIRECTION_LOCALE_KEYS: Final[dict[TransactionDirection, str]] = {
     TransactionDirection.INCOMING: "tui.ledger.entry_tools.direction.incoming",
@@ -107,7 +114,7 @@ def read_period(year_text: str, code: str | None, *, required: bool = False) -> 
         return None
     if not year_text or code is None:
         raise ValueError(tr("tui.ledger.entry_tools.period.pair"))
-    if not (year_text.isdigit() and 1000 <= int(year_text) <= 9999):
+    if not (year_text.isdigit() and FILING_YEAR_MIN <= int(year_text) <= FILING_YEAR_MAX):
         raise ValueError(tr("tui.ledger.entry_tools.period.invalid"))
     try:
         return PublicPeriod.from_period(Period.from_year_and_code(int(year_text), code))

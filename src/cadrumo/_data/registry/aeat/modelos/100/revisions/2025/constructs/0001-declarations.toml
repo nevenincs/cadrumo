@@ -85,6 +85,8 @@ source_refs = [
     "boe-modelo-190-2025-form",
     "aeat-modelo-193-296-note-2025",
     "boe-modelo-193-2011-form",
+    "aeat-modelo-130-instructions",
+    "aeat-modelo-131-instructions",
 ]
 bindings = [
     "renta-modelo-130-pagos-fraccionados",
@@ -314,6 +316,8 @@ source_refs = [
     "aeat-dr-100-2025-dictionary",
     "aeat-dr-100-2025-xsd",
     "aeat-dr-184-2025",
+    "aeat-modelo-130-instructions",
+    "aeat-modelo-131-instructions",
 ]
 bindings = [
     "renta-modelo-100-estimacion-directa-es-normal",

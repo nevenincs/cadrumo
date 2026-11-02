@@ -19,6 +19,7 @@ that would fail if the property were absent:
 
 from __future__ import annotations
 
+import re
 from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -37,7 +38,7 @@ from .....domain.modelos.calculation_revision import (
     derive_calculation_revision_id_from_revision,
 )
 from .....domain.modelos.work_unit import WorkUnit
-from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile
+from ...storage.tests.secure_sql import TestRuntimeProfile, isolated_runtime_profile, secure_object_select_log
 from ..calculation_revision_override_migration import (
     OrphanedRelationOverrideError,
     migrate_stored_relation_overrides_to_binding_ids,
@@ -287,3 +288,124 @@ def test_the_next_operation_still_refuses_an_unknown_stored_override_key(tmp_pat
             # A refused run settles nothing, so the operation's next caller is refused too.
             with pytest.raises(OrphanedRelationOverrideError):
                 migrate_stored_relation_overrides_to_binding_ids(next_operation, operation=operation)
+
+
+def _stored_catalogue_payload_selects(selects: list[str]) -> list[str]:
+    """Keep only the reads that fetch the encrypted payload column, not its stored digest."""
+    return [statement for statement in selects if re.search(r"\bpayload\b", statement.lower().split(" from ", 1)[0])]
+
+
+def test_a_new_repository_reads_no_payload_for_a_catalogue_published_without_overrides(tmp_path: Path) -> None:
+    """Each calculation composes a new repository; the bytes it published need no second read."""
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+    ):
+        _seed_parent_work_unit(profile)
+        publisher = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        publisher.save_with_secure_object_writes(override_migration_catalogue(_revision(relation_overrides={})), ())
+
+        next_calculation = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        with secure_object_select_log(profile.repository.engine) as selects:
+            result = migrate_stored_relation_overrides_to_binding_ids(next_calculation, operation=operation)
+
+    assert result is None
+    assert _stored_catalogue_payload_selects(selects) == []
+
+
+def test_a_catalogue_learned_override_free_by_a_read_needs_no_second_read(tmp_path: Path) -> None:
+    """A row this process did not write is read once, then its exact bytes are known."""
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+    ):
+        _seed_parent_work_unit(profile)
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save(
+            override_migration_catalogue(_revision(relation_overrides={}))
+        )
+
+        first = migrate_stored_relation_overrides_to_binding_ids(
+            CalculationRevisionCatalogueRepository(objects=profile.repository), operation=operation
+        )
+        second = migrate_stored_relation_overrides_to_binding_ids(
+            CalculationRevisionCatalogueRepository(objects=profile.repository), operation=operation
+        )
+
+    assert first is not None
+    assert not first.changed
+    assert second is None
+
+
+def test_a_retired_key_landing_after_an_override_free_proof_is_still_migrated(tmp_path: Path) -> None:
+    """Another writer moving the row off the proven bytes makes the next run do the work."""
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+    ):
+        _seed_parent_work_unit(profile)
+        proven = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        proven.save_with_secure_object_writes(override_migration_catalogue(_revision(relation_overrides={})), ())
+        assert migrate_stored_relation_overrides_to_binding_ids(proven, operation=operation) is None
+
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save(
+            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE}))
+        )
+
+        next_calculation = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        result = migrate_stored_relation_overrides_to_binding_ids(next_calculation, operation=operation)
+        reloaded = next_calculation.load(operation=operation)
+
+    assert result is not None
+    assert result.changed
+    (migrated,) = tuple(reloaded.values())
+    assert dict(migrated.relation_overrides) == {_ABSORBING_BINDING_ID: _OVERRIDE_VALUE}
+
+
+def test_a_published_catalogue_holding_a_retired_key_earns_no_proof(tmp_path: Path) -> None:
+    """Bytes holding any override are never remembered, so publishing one cannot skip its migration."""
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile,
+    ):
+        _seed_parent_work_unit(profile)
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save_with_secure_object_writes(
+            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE})),
+            (),
+        )
+
+        repository = CalculationRevisionCatalogueRepository(objects=profile.repository)
+        assert not repository.stored_catalogue_is_known_override_free()
+        result = migrate_stored_relation_overrides_to_binding_ids(repository, operation=operation)
+
+    assert result is not None
+    assert result.changed
+
+
+def test_a_proof_for_one_store_does_not_skip_another_store_of_the_same_bucket(tmp_path: Path) -> None:
+    """A second store carrying the same bucket id is judged by its own row's bytes."""
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path / "proven", bucket_id=_BUCKET_ID) as profile,
+    ):
+        _seed_parent_work_unit(profile)
+        CalculationRevisionCatalogueRepository(objects=profile.repository).save_with_secure_object_writes(
+            override_migration_catalogue(_revision(relation_overrides={})), ()
+        )
+        assert CalculationRevisionCatalogueRepository(
+            objects=profile.repository
+        ).stored_catalogue_is_known_override_free()
+    with (
+        _indexed_authority_for_test().operation() as operation,
+        isolated_runtime_profile(tmp_path=tmp_path / "other", bucket_id=_BUCKET_ID) as other,
+    ):
+        _seed_parent_work_unit(other)
+        CalculationRevisionCatalogueRepository(objects=other.repository).save(
+            override_migration_catalogue(_revision(relation_overrides={_RETIRED_RELATION_ID: _OVERRIDE_VALUE}))
+        )
+
+        result = migrate_stored_relation_overrides_to_binding_ids(
+            CalculationRevisionCatalogueRepository(objects=other.repository), operation=operation
+        )
+
+    assert result is not None
+    assert result.changed

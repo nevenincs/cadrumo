@@ -34,6 +34,7 @@ from ...application.invoices.catalogue_update_operation import (
     InvoiceUpdateRequest,
     InvoiceUpdateResult,
 )
+from ...application.invoices.figures_preview_contracts import InvoiceFiguresPreviewRequest, InvoiceFiguresPreviewResult
 from ...application.ledger.allocate_operation import LedgerAllocateOperationResult, LedgerAllocateRequest
 from ...application.ledger.bulk_classify_operation import (
     LEDGER_BULK_CLASSIFY_OPERATION_DEFINITION_ID,
@@ -75,10 +76,13 @@ from ...application.ledger.remove_operation import LedgerRemoveOperationResult, 
 from ...application.ledger.reset_operation import LedgerResetOperationResult, LedgerResetRequest
 from ...application.ledger.review_operation import LedgerReviewProjection
 from ...application.ledger.split_operation import LedgerSplitOperationResult, LedgerSplitRequest
+from ...application.ledger.rule_trial_operation import LedgerRuleTrialRequest, LedgerRuleTrialResult
+from ...application.ledger.staged_check_contracts import LedgerStagedCheckRequest, LedgerStagedCheckResult
 from ...application.ledger.status_operation import LedgerStatusProjection, LedgerStatusRequest
 from ...application.ledger.update_contracts import LedgerUpdateOperationResult, LedgerUpdateRequest
 from ...application.ledger.view_operation import LedgerViewProjection, LedgerViewRequest
 from ...application.operations.capabilities import OperationRequestStoragePolicy
+from ...application.operations.public_scalar import PublicDecimal
 from ...application.review.filter import LedgerReviewStatus
 from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.operations import (
@@ -415,6 +419,25 @@ def assert_ledger_invoice_add_outcome(ctx: ExecutorOutcome) -> None:
     assert created.invoice == CatalogueInvoiceSnapshot.from_invoice(invoice)
 
 
+def assert_ledger_invoice_preview_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.invoice.preview answer, which acceptance would reach and nothing stores."""
+    assert isinstance(ctx.payload, InvoiceFiguresPreviewRequest)
+    answer = ctx.resolve(InvoiceFiguresPreviewResult)
+    assert isinstance(answer, InvoiceFiguresPreviewResult)
+    assert answer.profile_id == ctx.profile_id
+    assert answer.verdict == "would_accept"
+    assert answer.invoice_id is not None
+    assert answer.refusal_code is None
+    # 100.00 at 21 percent: 21.00 of IVA, 121.00 in all.
+    assert (answer.totals.base, answer.totals.iva, answer.totals.total) == (
+        PublicDecimal(decimal="100.00"),
+        PublicDecimal(decimal="21.00"),
+        PublicDecimal(decimal="121.00"),
+    )
+    assert not InvoiceCatalogueRepository(bucket_id=str(ctx.profile_id)).load().invoices
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
 def assert_invoice_list_outcome(ctx: ExecutorOutcome) -> None:
     """Check the INVOICE_LIST_OPERATION_DEFINITION_ID public result and effects."""
     assert isinstance(ctx.payload, InvoiceListRequest)
@@ -535,6 +558,29 @@ def assert_ledger_preflight_outcome(ctx: ExecutorOutcome) -> None:
     assert preflight.issues[0].transaction_id == selected_transaction_id
     assert preflight.issues[0].reason is LedgerPreflightIssueReason.MISSING_CATEGORY
     assert outside_transaction_id not in {issue.transaction_id for issue in preflight.issues}
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
+def assert_ledger_rule_trial_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.rule.trial answer, which tries a pattern and stores nothing."""
+    assert isinstance(ctx.payload, LedgerRuleTrialRequest)
+    answer = ctx.resolve(LedgerRuleTrialResult)
+    assert isinstance(answer, LedgerRuleTrialResult)
+    assert answer.profile_id == ctx.profile_id
+    assert answer.outcome == "invalid_pattern"
+    assert answer.hits == ()
+    assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
+def assert_ledger_staged_check_outcome(ctx: ExecutorOutcome) -> None:
+    """Check the ledger.staged.check answer, which judges staged work and stores nothing."""
+    assert isinstance(ctx.payload, LedgerStagedCheckRequest)
+    answer = ctx.resolve(LedgerStagedCheckResult)
+    assert isinstance(answer, LedgerStagedCheckResult)
+    assert answer.profile_id == ctx.profile_id
+    # No stored movement carries that id, and a new movement with no fields lacks every required one.
+    assert answer.rows[0].found is False
+    assert [blocker.kind for blocker in answer.drafts[0].blockers] == ["draft_incomplete"]
     assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 
@@ -768,12 +814,15 @@ LEDGER_OUTCOME_ASSERTIONS: dict[str, Callable[[ExecutorOutcome], None]] = {
     "ledger.status": assert_ledger_status_outcome,
     "ledger.check": assert_ledger_check_outcome,
     "ledger.invoice.add": assert_ledger_invoice_add_outcome,
+    "ledger.invoice.preview": assert_ledger_invoice_preview_outcome,
     INVOICE_LIST_OPERATION_DEFINITION_ID: assert_invoice_list_outcome,
     INVOICE_VIEW_OPERATION_DEFINITION_ID: assert_invoice_view_outcome,
     INVOICE_REMOVE_OPERATION_DEFINITION_ID: assert_invoice_remove_outcome,
     INVOICE_UPDATE_OPERATION_DEFINITION_ID: assert_invoice_update_outcome,
     "ledger.preflight": assert_ledger_preflight_outcome,
     "ledger.entry-options": assert_ledger_entry_options_outcome,
+    "ledger.rule.trial": assert_ledger_rule_trial_outcome,
+    "ledger.staged.check": assert_ledger_staged_check_outcome,
     "ledger.known-values": assert_ledger_known_values_outcome,
     "ledger.list": assert_ledger_list_outcome,
     "ledger.history": assert_ledger_history_outcome,

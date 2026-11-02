@@ -335,7 +335,7 @@ class LedgerInvoiceImportScreen(LedgerConfirmationFlowScreen):
     @override
     def _cancel_flow(self) -> None:
         """Cancel before anything is submitted; nothing has been written."""
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self._transition(LedgerFlowState.CANCELLED)
         self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.invoices.import.cancelled"))
@@ -348,7 +348,7 @@ class LedgerInvoiceImportScreen(LedgerConfirmationFlowScreen):
 
     def _start_again(self) -> None:
         """Open a fresh form carrying what was typed, once this attempt has settled."""
-        if self.flow_state not in {LedgerFlowState.SUCCEEDED, LedgerFlowState.FAILED, LedgerFlowState.CANCELLED}:
+        if not self.flow_state.is_settled:
             return
         form = self.form
 

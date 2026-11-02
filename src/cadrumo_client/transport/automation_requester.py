@@ -144,7 +144,7 @@ class AutomationRequesterJourney:
         return submitted
 
     def _finish(self, receipt: AutomationReceiptProjection) -> AutomationReceiptProjection:
-        if receipt.stage not in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+        if not receipt.stage.is_terminal:
             return receipt
         submitted = self._submitted
         if submitted is None:
@@ -170,7 +170,7 @@ class AutomationRequesterJourney:
             raise self._uncertain(original) from original
         try:
             receipt = callback(submitted, timeout=self._remaining())
-            if receipt.stage not in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+            if not receipt.stage.is_terminal:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             self._client.accept_reconciled_terminal(receipt)
             return self._finish(receipt)
@@ -199,7 +199,7 @@ class AutomationRequesterJourney:
             return self._recover(error)
         if observed is None:
             raise self._uncertain(RefusalError(RefusalCode.INVALID_FRAME))
-        if observed.stage in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+        if observed.stage.is_terminal:
             return self._finish(observed)
         try:
             self._client.poll(timeout=self._wire_timeout())
@@ -211,7 +211,7 @@ class AutomationRequesterJourney:
                 final = self._client.inspect(timeout=self._wire_timeout())
             except (AutomationCustodyError, ProfileAccessRefusedError, RefusalError):
                 return self._recover(error)
-            if final is not None and final.stage in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+            if final is not None and final.stage.is_terminal:
                 return self._finish(final)
             raise self._uncertain(error) from error
         return observed

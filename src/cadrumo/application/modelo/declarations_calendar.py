@@ -86,7 +86,7 @@ class DeclarationsCalendarSourceStateV1(DeclarationsCalendarSourceObservationV1)
     @model_validator(mode="after")
     @pydantic_validation_boundary
     def _count_matches_observability(self) -> Self:
-        observable = self.availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
+        observable = self.availability.is_observable
         if observable != (self.item_count is not None):
             raise ValueError("only observable calendar sources carry a measured count")
         return self
@@ -269,15 +269,15 @@ def _prepare_calendar_inputs(
 ) -> _PreparedCalendarInputs:
     if schedule_observation.source is not DeclarationsCalendarSource.SCHEDULE:
         raise DeclarationsCalendarProjectionError("schedule observation names another calendar source")
-    schedule_observable = _observable(schedule_observation.availability)
+    schedule_observable = schedule_observation.availability.is_observable
     if not schedule_observable and calendar.entries:
         raise DeclarationsCalendarProjectionError("an unavailable schedule cannot carry legal rows")
 
     local_observation = _observation_from_home(DeclarationsCalendarSource.LOCAL_FILING, evidence.local_state)
     aeat_observation = _observation_from_home(DeclarationsCalendarSource.AEAT_EVIDENCE, evidence.aeat_state)
     evidence_by_address = _evidence_by_address(evidence.evidence)
-    local_observable = _observable(local_observation.availability)
-    aeat_observable = _observable(aeat_observation.availability)
+    local_observable = local_observation.availability.is_observable
+    aeat_observable = aeat_observation.availability.is_observable
     _validate_unobservable_evidence(
         evidence.evidence,
         local_observable=local_observable,
@@ -463,7 +463,7 @@ def _validate_local_projection_rows(
     local: DeclarationsCalendarSourceStateV1,
     entries: tuple[DeclarationsCalendarEntryRefV1, ...],
 ) -> None:
-    if entries and _observable(local.availability) != all(row.local_filing_state is not None for row in entries):
+    if entries and local.availability.is_observable != all(row.local_filing_state is not None for row in entries):
         raise ValueError("calendar rows contradict local source observability")
 
 
@@ -471,14 +471,10 @@ def _validate_aeat_projection_rows(
     aeat: DeclarationsCalendarSourceStateV1,
     entries: tuple[DeclarationsCalendarEntryRefV1, ...],
 ) -> None:
-    if entries and _observable(aeat.availability) != all(
+    if entries and aeat.availability.is_observable != all(
         row.aeat_submission_state is not None and row.justificante_verified is not None for row in entries
     ):
         raise ValueError("calendar rows contradict AEAT source observability")
-
-
-def _observable(availability: HomeAvailability) -> bool:
-    return availability in {HomeAvailability.AVAILABLE, HomeAvailability.STALE}
 
 
 def _observation_from_home(

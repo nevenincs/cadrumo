@@ -39,7 +39,7 @@ in every repository.
 Output
 ------
 A human summary on stdout always. ``--json`` writes the machine-readable report
-to stdout instead; when ``VAULTSPEC_CI_REPORTS`` names a directory the same
+to stdout instead; when ``CADRUMO_CI_REPORTS_DIR`` names a directory the same
 report is additionally written to ``<dir>/dependency-audit.json``. With the
 variable unset nothing is written anywhere, which preserves cadrumo's
 deliberate zero-artifact posture.
@@ -95,7 +95,7 @@ _SKIP_DIRS = frozenset(
         ".pytest-tmp",
         ".mypy_cache",
         ".ruff_cache",
-        ".logs",
+        ".tmp",
         "tmp",
         "scratch",
         "typings",
@@ -567,7 +567,7 @@ def write_artifact(report: Report, destination: str | None = None) -> Path | Non
     Args:
         report: The audit result to serialise.
         destination: Where to write. ``None`` -- the default, and what
-            :func:`main` passes -- reads ``VAULTSPEC_CI_REPORTS``. An empty
+            :func:`main` passes -- reads ``CADRUMO_CI_REPORTS_DIR``. An empty
             string means "nowhere", which is exactly what an unset variable
             amounts to. The parameter exists so a caller (a test included) can
             state the destination as a real value rather than reaching into
@@ -575,7 +575,7 @@ def write_artifact(report: Report, destination: str | None = None) -> Path | Non
 
     Returns:
         The path written, or ``None`` when no destination was named. With
-        ``VAULTSPEC_CI_REPORTS`` unset nothing is written anywhere: cadrumo
+        ``CADRUMO_CI_REPORTS_DIR`` unset nothing is written anywhere: cadrumo
         adopts the whole standard and simply never sets it.
     """
     directory = report_directory(destination)

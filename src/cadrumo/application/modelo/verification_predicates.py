@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import decimal as _decimal
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from dataclasses import dataclass
 from datetime import date as _date
 from decimal import Decimal
@@ -58,6 +58,8 @@ class VerificationPredicateRefusal(StrEnum):
     OPERATOR_FAMILY = "operator_family"
     #: A registry-authored literal of the operator is unreadable.
     LITERAL = "literal"
+    #: A blocking predicate names a casilla the selected revision does not declare.
+    UNDECLARED_CASILLA = "undeclared_casilla"
 
 
 _BLOCKING_ROUTE = VerificationPredicateRoute.BLOCKING
@@ -198,6 +200,26 @@ def _required_parsed_predicate(expression: str, *, route: VerificationPredicateR
     casilla_ids = tuple(_predicate_casilla_ids(parsed))
     threshold, cutoff = _predicate_literals(parsed, route)
     return _AdmittedPredicate(parsed=parsed, casilla_ids=casilla_ids, threshold=threshold, cutoff=cutoff)
+
+
+def _refuse_undeclared_blocking_casillas(
+    predicates: tuple[VerificationPredicateDefinition, ...],
+    declared_casilla_ids: Collection[CasillaId],
+) -> None:
+    """Refuse a blocking predicate naming a casilla outside the revision's declared set.
+
+    A casilla that is declared but has no value reads as zero; an undeclared
+    one is a registry typo whose zero reading would make the rule hold every
+    time, so it is refused before any predicate is evaluated.
+    """
+    for predicate in predicates:
+        if predicate.finding_kind == "ADVISORY":
+            continue
+        admitted = _required_parsed_predicate(predicate.expression, route=_BLOCKING_ROUTE)
+        if any(casilla_id not in declared_casilla_ids for casilla_id in admitted.casilla_ids):
+            raise _predicate_refusal(
+                admitted.parsed.operator, VerificationPredicateRefusal.UNDECLARED_CASILLA, _BLOCKING_ROUTE
+            )
 
 
 def required_advisory_predicate(expression: str) -> ParsedVerificationPredicate:
@@ -944,6 +966,7 @@ def evaluate_verification_predicates(
     query_service: RegistryQueryService | None = None,
     operation: PinnedAuthorityOperation | None = None,
     as_of: _date | None = None,
+    declared_casilla_ids: Collection[CasillaId] | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Evaluate Layer 2 cross-casilla predicates into verification findings.
 
@@ -969,6 +992,12 @@ def evaluate_verification_predicates(
     ``profile_field_required`` and ``profile_flag_enabled``. Casilla-only
     operators ignore the parameter.
 
+    ``declared_casilla_ids`` is the selected revision's hydrated casilla set
+    (inherited casillas included). When given, a blocking predicate naming a
+    casilla outside it is refused as malformed before any evaluation. When
+    omitted the caller owns that check, and
+    :func:`evaluate_predicate_expression` alone never has the set.
+
     See Also:
         :func:`evaluate_predicate_expression`:
             Evaluates the blocking-rule predicate DSL.
@@ -992,6 +1021,8 @@ def evaluate_verification_predicates(
     if not predicates:
         return []
 
+    if declared_casilla_ids is not None:
+        _refuse_undeclared_blocking_casillas(predicates, declared_casilla_ids)
     return _evaluate_selected_predicate_findings(
         predicates, casilla_values, profile, text_values, blocking_finding_observer
     )

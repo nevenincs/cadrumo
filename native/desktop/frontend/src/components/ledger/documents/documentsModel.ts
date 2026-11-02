@@ -14,7 +14,6 @@ import type {
   EvidenceConfirmRequest,
   EvidenceDraft,
   EvidenceRecord,
-  EvidenceUpdateField,
   EvidenceUpdateRequest,
   FieldProvenance,
   FindingResolution,
@@ -22,6 +21,7 @@ import type {
   InvoiceKind,
   JsonValue,
 } from "../../../shell/ledger";
+import type { EvidenceUpdateField } from "../../../shell/ledgerContract";
 import {
   TAX_AMOUNT_RULE,
   canonicalDecimal,

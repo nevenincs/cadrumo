@@ -66,7 +66,7 @@ SHEBANG = re.compile(r"^[ \t]*#!")
 
 
 #: Trees that hold no authored justfile and are expensive to walk.
-PRUNED = frozenset({".git", ".venv", ".logs", "node_modules", "target", "__pycache__"})
+PRUNED = frozenset({".git", ".venv", ".tmp", "node_modules", "target", "__pycache__"})
 
 
 def justfiles() -> list[Path]:

@@ -5,12 +5,10 @@ binding_source_refs = ["aeat-dr-190-2024"]
 formula_source_refs = ["aeat-dr-190-2024", "boe-modelo-190-2024-amendment"]
 casilla_source_refs = ["aeat-dr-190-2024"]
 application_link_source_refs = ["boe-modelo-190-2024-amendment", "aeat-modelo-190-procedure"]
-# THIS EDITION RESTS ON aeat-dr-190-2024, NOT THE 2025 DESIGN. Every design
-# citation on this revision previously named aeat-dr-190-2025, which declares
+# THIS EDITION RESTS ON aeat-dr-190-2024, NOT THE 2025 DESIGN. The 2025 design declares
 # applies_from 2025-01-01 and so covers NO day of this revision (2024-01-01 to
-# 2024-12-31). 95 citations across 9 files were repointed to aeat-dr-190-2024,
-# whose window is exactly 2024-01-01..2024-12-31 and whose corpus file is
-# present with its declared sha256 (20bc8086...).
+# 2024-12-31). aeat-dr-190-2024 has the window exactly 2024-01-01..2024-12-31, and its
+# corpus file is present with its declared sha256 (20bc8086...).
 #
 # THE CLAVE-B SUBCLAVE TABLE WAS RESUBDIVIDED FOR 2025, AND B.01/B.03 BELOW IS
 # NOT A TYPO FOR THE 2025 SET. The 2024 design admits exactly three clave-B
@@ -24,10 +22,8 @@ application_link_source_refs = ["boe-modelo-190-2024-amendment", "aeat-modelo-19
 # So the two editions denote the SAME set by different enumerations: 2024 says
 # "claves A, B.01, B.03 y C" and 2025 says "claves A, B (subclaves 01, 03, 04 y
 # 99) y C", and both mean clave B except subclave 02. The extension is
-# unchanged, which is why no binding needed re-grounding -- but writing the 2025
-# enumeration on this edition names subclaves 04 and 99 that DO NOT EXIST in
-# 2024 and gives 03 a meaning it does not have. 18 prose sites asserting the
-# 2025 enumeration were re-authored to the 2024 design's own wording.
+# unchanged, but writing the 2025 enumeration on this edition names subclaves 04 and
+# 99 that DO NOT EXIST in 2024 and gives 03 a meaning it does not have.
 #
 # THE 2024 DESIGN PDF CONTAINS CONTENT THAT IS NOT APPLICABLE TO 2024. Three
 # passages -- including the whole clave-C subclave table -- carry the marker
@@ -46,32 +42,6 @@ application_link_source_refs = ["boe-modelo-190-2024-amendment", "aeat-modelo-19
 # field cites orden-hac-1432-2024:art-unico and boe-modelo-190-2024-amendment,
 # the orden that governs ejercicio 2024; Orden HAC/1431/2025, the 2025 form and
 # the 2025 instrucciones apply from ejercicio 2025 and are cited by that edition.
-#
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes this revision cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off.
-#
-# What the review established, by measurement:
-#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
-#     every cited source's corpus file is present on disk;
-#   - every formula targets a casilla of this revision;
-#   - every enrolled schema family resolves;
-#   - every cited source's applicability window overlaps this revision's own life;
-#   - and all 2 fixed-width record(s) of the DERIVED layout were paired to
-#     their design sheet and cover it: no design DATA position is left
-#     unaddressed, and none reaches past its declared record length.
-#
-# The coverage figure is measured on the layout AFTER binding derivation, which
-# is what the renderer and the completeness gate consume; the raw export_layouts
-# collection holds only inline fields and reading it understates coverage badly.
-#
-# This stamp claims no fresh-render reproduction evidence: that belongs to the
-# revisions enrolled in the generated-tree drift gate, and this one is not.
-#
-# What it does NOT establish: that the figures a filing produces are correct
-# against AEAT. That is a tax review against official sources, and it is what an
-# operator re-stamping this to 'operator_reviewed' would be attesting.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19

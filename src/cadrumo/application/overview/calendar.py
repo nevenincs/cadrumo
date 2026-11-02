@@ -670,12 +670,7 @@ def _calendar_entry_from_obligation(
         holiday_refs=deadline.holiday_refs,
         jurisdictions=deadline.jurisdictions,
         holiday_coverage=holiday_coverage,
-        holiday_territory=(
-            holiday_territory
-            if holiday_coverage
-            in (_DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY, _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED)
-            else None
-        ),
+        holiday_territory=(holiday_territory if holiday_coverage.names_territory else None),
         payment_cutoff_on=obligation.payment_cutoff_on,
         evaluated_on=today,
         days_overdue=(today - adjusted).days if status is _ObligationStatus.OVERDUE else None,

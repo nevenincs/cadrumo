@@ -174,9 +174,9 @@ msgstr ""
 "A `--casilla` csak kézi rovatokon működik. Egy `bound` rovat "
 "automatikusan töltődik ki a forrásából, ezért a `--casilla` a `cannot "
 "override bucket-derived source-bound casillas` üzenettel utasítja el "
-"(például a Modelo 130 `02` Gastos rovata `bound`). Helyette a forrást "
-"javítsd ki. Lásd: [Hiányzó mezőérték megadása](#supply-a-missing-field-"
-"value)."
+"(például a Modelo 130 `02` <span lang=\"es\">Gastos</span> rovata "
+"`bound`). Helyette a forrást javítsd ki. Lásd: [Hiányzó mezőérték "
+"megadása](#supply-a-missing-field-value)."
 
 #: ../../how-to/review-calculation-values.md:69
 msgid ""

@@ -44,15 +44,15 @@ SQLite uses WAL and `synchronous=NORMAL`, explicitly allowing loss of the most r
 
 ## Detailed articles
 
-- [Persistence for LLM records, durable operations, and profile state](../articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md) — `STAGE-2-017`
-- [Profile persistence for invoices, filings, and calculation evidence](../articles/018-profile-persistence-for-invoices-filings-and-calculation-evidence.md) — `STAGE-2-018`
-- [Profile persistence for transactions, review exchange, and workflows](../articles/019-profile-persistence-for-transactions-review-exchange-and-workflows.md) — `STAGE-2-019`
-- [Encrypted blobs, bucket archives, and custody filesystem](../articles/020-encrypted-blobs-bucket-archives-and-custody-filesystem.md) — `STAGE-2-020`
-- [Supervised key derivation and automation custody](../articles/021-supervised-key-derivation-and-automation-custody.md) — `STAGE-2-021`
-- [Profile capsule lifecycle and custody proof](../articles/022-profile-capsule-lifecycle-and-custody-proof.md) — `STAGE-2-022`
-- [Profile custody primitives, session state, and secure envelopes](../articles/023-profile-custody-primitives-session-state-and-secure-envelopes.md) — `STAGE-2-023`
-- [Profile custody adapter, storage routing, and secure-object contracts](../articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.md) — `STAGE-2-024`
-- [Encrypted SQL repository, revision writes, and workflow storage](../articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.md) — `STAGE-2-025`
+- [Persistence for LLM records, durable operations, and profile state](../articles/017-persistence-for-llm-records-durable-operations-and-profile-state.md)
+- [Profile persistence for invoices, filings, and calculation evidence](../articles/018-profile-persistence-for-invoices-filings-and-calculation-evidence.md)
+- [Profile persistence for transactions, review exchange, and workflows](../articles/019-profile-persistence-for-transactions-review-exchange-and-workflows.md)
+- [Encrypted blobs, bucket archives, and custody filesystem](../articles/020-encrypted-blobs-bucket-archives-and-custody-filesystem.md)
+- [Supervised key derivation and automation custody](../articles/021-supervised-key-derivation-and-automation-custody.md)
+- [Profile capsule lifecycle and custody proof](../articles/022-profile-capsule-lifecycle-and-custody-proof.md)
+- [Profile custody primitives, session state, and secure envelopes](../articles/023-profile-custody-primitives-session-state-and-secure-envelopes.md)
+- [Profile custody adapter, storage routing, and secure-object contracts](../articles/024-profile-custody-adapter-storage-routing-and-secure-object-contracts.md)
+- [Encrypted SQL repository, revision writes, and workflow storage](../articles/025-encrypted-sql-repository-revision-writes-and-workflow-storage.md)
 
 
 ```{toctree}

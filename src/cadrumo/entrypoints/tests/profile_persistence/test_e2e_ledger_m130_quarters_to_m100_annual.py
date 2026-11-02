@@ -246,6 +246,18 @@ _EXPECTED_CUMULATIVE_C01: dict[str, Decimal] = {
     "4T": Decimal("12000.00"),
 }
 
+# Hand-derived quarterly casilla 19 for this persona (no retenciones, no
+# agrarian income, no vivienda deduction, no minoracion, original filings):
+# cumulative casilla 03 net income of 3500 / 6300 / 8000 / 9600 gives casilla 04
+# (20 per cent) of 700 / 1260 / 1600 / 1920, and casilla 05 subtracts the
+# earlier positive casilla 07 values, leaving 700 / 560 / 340 / 320.
+# oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 03, 04, 05, 07 y 19.
+_EXPECTED_M130_C19_BY_PERIOD: dict[str, Decimal] = {
+    "1T": Decimal("700.00"),
+    "2T": Decimal("560.00"),
+    "3T": Decimal("340.00"),
+    "4T": Decimal("320.00"),
+}
 _EXPECTED_M100_ACTIVITY_INCOME = Decimal("12000.00")
 _EXPECTED_M100_ACTIVITY_EXPENSES = Decimal("2400.00")
 _EXPECTED_M100_ACTIVITY_NET = Decimal("9600.00")
@@ -462,7 +474,8 @@ def _import_official_m130_result_observation(
             operation=operation,
             clock=_FILE_AT,
         )
-    casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value}
+    # An original autoliquidación: no earlier filing of the quarter, so casilla 18 is zero.
+    casilla_values = {_M130_RESULTADO_FINAL_CASILLA: c19_value, _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0")}
     # The reference id IS the justificante CSV, and a codigo seguro de
     # verificacion is uppercase alphanumeric: the model pins
     # ``^[A-Z0-9]{8,32}$``. The readable hyphenated spelling this replaced
@@ -664,11 +677,10 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
         )
         computed_c19[period] = Decimal(revision.casilla_values[_M130_RESULTADO_FINAL_CASILLA])
 
-    # The four engine-computed quarterly resultado-final values are distinct and
-    # strictly positive — a coincidental sum or a single-quarter copy cannot then
-    # satisfy the annual fold assertion below.
-    assert len(set(computed_c19.values())) == 4, f"quarterly c19 must be distinct: {computed_c19}"
-    assert all(value > Decimal("0") for value in computed_c19.values()), computed_c19
+    # The four quarterly resultado-final values are hand-derived from the ledger,
+    # distinct and strictly positive, so a coincidental sum or a single-quarter
+    # copy cannot satisfy the annual fold assertion below.
+    assert computed_c19 == _EXPECTED_M130_C19_BY_PERIOD, computed_c19
 
     annual = _calculate_m100_annual(secure_objects)
 
@@ -677,14 +689,13 @@ def test_ledger_drives_m130_quarters_and_folds_into_m100_annual(
     assert Decimal(annual.casilla_values[_M100_NORMAL_DEDUCTIBLE_EXPENSES_CASILLA]) == _EXPECTED_M100_ACTIVITY_EXPENSES
     assert Decimal(annual.casilla_values[_M100_ACTIVIDAD_ECONOMICA_NET_INCOME_CASILLA]) == _EXPECTED_M100_ACTIVITY_NET
 
-    # Transport invariant #2: the annual M100 0604 folds in the SUM of the four
-    # engine-computed M130 casilla-19 values (M131 folds as not-applicable zero). This wires
-    # the quarterly calculations the ledger produced through to the annual renta.
-    expected_total = sum(computed_c19.values(), Decimal("0"))
+    # Transport invariant #2: the annual M100 0604 credits what the four M130
+    # quarters paid (M131 folds as not-applicable zero). Every quarter is an
+    # original with a positive casilla 19, so each paid exactly its casilla 19.
+    # oracle: AEAT-MODELO-130-INSTRUCCIONES casillas 18, 19 y (4) Ingreso; 700 + 560 + 340 + 320 = 1920.00,
+    # which is also 20 per cent of the 9600.00 annual net income.
     casilla_0604 = Decimal(annual.casilla_values[_M100_PAGOS_CASILLA])
-    assert casilla_0604 == expected_total, (
-        f"M100 0604 must fold in the four computed M130 c19 (sum {expected_total}); got {casilla_0604}"
-    )
+    assert casilla_0604 == Decimal("1920.00"), casilla_0604
 
 
 def test_verify_accepts_autonoma_m100_with_official_m130_observations(

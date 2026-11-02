@@ -42,6 +42,7 @@ from ...domain.modelos.calculation_revision_m303_handoff import (
 from ...domain.modelos.calculation_revision_operator_layer import CalculationOperatorLayer
 from ...domain.modelos.calculation_revision_rendering import CalculationRenderingSnapshot
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue, CalculationSourceRef
+from ...domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from ...domain.modelos.errors import ModeloValidationError
 from ...domain.modelos.ledger_filing_snapshot import LedgerFilingSnapshot
 from ...domain.modelos.protocols import (
@@ -134,6 +135,7 @@ def _build_calculation_revision(
     cleared_casilla_ids: tuple[CasillaId, ...],
     operator_layer: CalculationOperatorLayer | None,
     rendering_snapshot: CalculationRenderingSnapshot | None,
+    screen_stamp: CalculationScreenStamp | None,
     casilla_values: dict[CasillaId, Decimal],
     observations: tuple[CasillaObservation, ...],
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...],
@@ -167,6 +169,7 @@ def _build_calculation_revision(
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
         rendering_snapshot=rendering_snapshot,
+        screen_stamp=screen_stamp,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,
@@ -496,6 +499,7 @@ def _derive_revision_identity_and_handoff(
     cleared_casilla_ids: tuple[CasillaId, ...],
     operator_layer: CalculationOperatorLayer | None,
     rendering_snapshot: CalculationRenderingSnapshot | None,
+    screen_stamp: CalculationScreenStamp | None,
 ) -> tuple[str, M303RegimenSimplificadoAnnualSummaryHandoff | None]:
     """Derive the content identity before stamping its annual handoff."""
     revision_id = derive_calculation_revision_id(
@@ -522,6 +526,7 @@ def _derive_revision_identity_and_handoff(
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
         rendering_snapshot=rendering_snapshot,
+        screen_stamp=screen_stamp,
     )
     stamped_annual_summary_handoff = _stamp_annual_summary_handoff(
         m303_regimen_simplificado_annual_summary_handoff,
@@ -584,6 +589,7 @@ def persist_calculation_revision(
     cleared_casilla_ids: tuple[CasillaId, ...] = (),
     operator_layer: CalculationOperatorLayer | None = None,
     rendering_snapshot: CalculationRenderingSnapshot | None = None,
+    screen_stamp: CalculationScreenStamp | None = None,
     unresolved_outcomes: tuple[RegistryCalculationUnresolvedOutcome, ...] = (),
     source_provenance: tuple[CalculationSourceRef, ...],
     source_issues: tuple[CalculationSourceIssue, ...] = (),
@@ -641,6 +647,7 @@ def persist_calculation_revision(
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
         rendering_snapshot=rendering_snapshot,
+        screen_stamp=screen_stamp,
     )
     revisions, revisions_revision_id, duplicate = _load_calculation_publication_target(
         operation=operation,
@@ -675,6 +682,7 @@ def persist_calculation_revision(
         cleared_casilla_ids=cleared_casilla_ids,
         operator_layer=operator_layer,
         rendering_snapshot=rendering_snapshot,
+        screen_stamp=screen_stamp,
         casilla_values=casilla_values,
         observations=observations,
         unresolved_outcomes=unresolved_outcomes,

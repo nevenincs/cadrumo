@@ -20,13 +20,7 @@ from .reference_sections import (
 )
 from .schema import ModeloRevision
 from .schema_input_kind import InputKind
-from .validate_cross_domain_snapshot import (
-    CrossDomainSnapshotCheck as CrossDomainSnapshotCheck,
-)
 from .validate_cross_domain_snapshot import check_cross_domain_snapshot_routing
-from .validate_cross_domain_snapshot import (
-    register_cross_domain_snapshot_check as register_cross_domain_snapshot_check,
-)
 
 if TYPE_CHECKING:
     from .schema import RegistrySnapshot

@@ -8,6 +8,12 @@
 // only: never in storage, a log line or an error message.
 
 import type {
+  EvidenceUpdateField,
+  InvoiceUpdateField,
+  LedgerUpdateField,
+  PaymentStatus,
+} from "./ledgerContract";
+import type {
   ActivityAssetChangeResult,
   ActivityAssetClaimRequest,
   ActivityAssetClaimResult,
@@ -159,6 +165,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.invoice.add",
   "ledger.invoice.import",
   "ledger.invoice.list",
+  "ledger.invoice.preview",
   "ledger.invoice.remove",
   "ledger.invoice.update",
   "ledger.invoice.view",
@@ -196,6 +203,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.rule.list",
   "ledger.split.manual",
   "ledger.split.review",
+  "ledger.staged.check",
   "ledger.stash",
   "ledger.status",
   "ledger.track",
@@ -471,23 +479,6 @@ export type LedgerViewResult = {
   latest_llm_rejection: { occurred_at: string; operator_reason: string } | null;
 };
 
-export const LEDGER_UPDATE_FIELDS = [
-  "booked_date",
-  "value_date",
-  "amount",
-  "direction",
-  "currency",
-  "counterparty",
-  "description",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "irpf_category",
-  "notes",
-  "group_label",
-  "own_account_id",
-] as const;
-export type LedgerUpdateField = (typeof LEDGER_UPDATE_FIELDS)[number];
 /** Editing the amount, description, date or own account gives the movement
  * a new `transaction_id`; the result names it. */
 export type LedgerUpdateRequest = {
@@ -647,8 +638,6 @@ export type LedgerAddResult = {
 };
 
 export type InvoiceKind = "issued" | "received";
-export type PaymentStatus =
-  "PAID" | "PENDING" | "PARTIALLY_PAID" | "OVERDUE" | "CANCELLED";
 export type CatalogueInvoiceLine = {
   description: string;
   quantity: PublicDecimal;
@@ -763,24 +752,197 @@ export type InvoiceAddResult = {
   validation_code: InvoiceAddValidation | null;
 };
 
-/** The fields a stored invoice may be corrected in; its identity and lines
- * are not among them. */
-export const INVOICE_UPDATE_FIELDS = [
-  "counterparty_name",
-  "counterparty_country",
-  "notes",
-  "payment_status",
-  "iva_category",
-  "operation_type",
-  "operation_date",
-  "retention_rate",
-  "retention_amount",
-  "series",
-  "invoice_class",
-  "rectifies_invoice_number",
-  "payment_id",
-] as const;
-export type InvoiceUpdateField = (typeof INVOICE_UPDATE_FIELDS)[number];
+/** One line of a draft invoice. A figure the draft does not state yet is
+ * left out, which is never the same as zero. `key` correlates the answer's
+ * line to this one. */
+export type InvoicePreviewLine = {
+  key: string;
+  description?: string | null;
+  quantity?: PublicDecimal | null;
+  unit_price?: PublicDecimal | null;
+  iva_rate?: string | null;
+  subtotal?: PublicDecimal | null;
+  iva_amount?: PublicDecimal | null;
+  spending_category_id?: string | null;
+  oss_rate_kind?: string | null;
+};
+/** What a correction restates of the stored invoice it corrects. */
+export type InvoicePreviewStored = {
+  invoice_id: string;
+  grand_total: PublicDecimal;
+  operation_date_role?: string | null;
+};
+/** A draft invoice, every field optional because it is incomplete while it
+ * is typed. It states `lines` or a bare `base_total`, never both; a correction
+ * states the bare base with `stored`. */
+/** One staged change: a value to set, or a clear when `value` is null. */
+export type LedgerStagedCell = { field: string; value: string | null };
+export type LedgerStagedRow = {
+  transaction_id: string;
+  cells: LedgerStagedCell[];
+  evidence_staged: boolean;
+  m210_staged: boolean;
+};
+export type LedgerStagedDraft = {
+  key: string;
+  fields: { field: string; value: string }[];
+};
+/** Staged work and the movements asked about, answered the way the writers
+ * would take them, plus the categories to judge a classification against. */
+export type LedgerStagedCheckRequest = {
+  rows: LedgerStagedRow[];
+  drafts: LedgerStagedDraft[];
+  categories: string[];
+};
+export type LedgerStagedRoute = {
+  field: string;
+  route: "bulk" | "classify" | "update" | null;
+  refused: "cannot_clear" | "needs_classification" | null;
+};
+export type LedgerStagedBlocker = {
+  kind:
+    | "cannot_clear"
+    | "needs_classification"
+    | "mixed_needs_share"
+    | "share_needs_mixed"
+    | "transfer_with_tax"
+    | "draft_incomplete";
+  fields: string[];
+};
+export type LedgerStagedNote = {
+  kind: "sends_current_classification" | "sends_current_share" | "new_identity";
+  value: string | null;
+  fields: string[];
+};
+export type LedgerStagedRowAnswer = {
+  transaction_id: string;
+  found: boolean;
+  classified: boolean;
+  takes_expense_category: boolean;
+  takes_share: boolean;
+  category_settable: boolean;
+  category_on_income: boolean;
+  tax_set_skip: "transfer" | "personal" | "unclassified" | null;
+  transfer_locked_fields: string[];
+  classifying_fields: string[];
+  identity_fields: string[];
+  routes: LedgerStagedRoute[];
+  blockers: LedgerStagedBlocker[];
+  notes: LedgerStagedNote[];
+};
+export type LedgerStagedCheckResult = {
+  profile_id: string;
+  input_digest: string;
+  rows: LedgerStagedRowAnswer[];
+  drafts: { key: string; blockers: LedgerStagedBlocker[] }[];
+  categories: { category: string; business: boolean; mixed: boolean }[];
+};
+
+export type InvoicePreviewRequest = {
+  operation_date?: string | null;
+  issued_at?: string | null;
+  lines?: InvoicePreviewLine[];
+  base_total?: PublicDecimal | null;
+  recargo_amount?: PublicDecimal | null;
+  retention_rate?: PublicDecimal | null;
+  retention_amount?: PublicDecimal | null;
+  printed_total?: PublicDecimal | null;
+  kind?: InvoiceKind | null;
+  invoice_number?: string | null;
+  counterparty_name?: string | null;
+  counterparty_tax_id?: string | null;
+  counterparty_country?: string | null;
+  currency?: string | null;
+  invoice_class?: string | null;
+  iva_category?: string | null;
+  operation_type?: string | null;
+  series?: string | null;
+  rectifies_invoice_number?: string | null;
+  notes?: string;
+  business_premises_lease?: {
+    situacion_inmueble?: string | null;
+    referencia_catastral?: string | null;
+  } | null;
+  stored?: InvoicePreviewStored | null;
+};
+export type InvoicePreviewOnDateSource =
+  "operation_date" | "issued_at" | "today";
+export type InvoicePreviewVerdict =
+  "incomplete" | "would_accept" | "would_refuse";
+export type InvoicePreviewFigureVerdict =
+  "equal" | "within_tolerance" | "refused" | "not_checked";
+export type InvoicePreviewSeverity = "refusal" | "warning";
+/** A rate slot's standing on the draft's date. `fraction` is null when no
+ * rate applies; `label_key` names the slot's word. */
+export type InvoicePreviewRateSlot = {
+  slot: string;
+  fraction: PublicDecimal | null;
+  in_force: boolean;
+  coverage_gap: boolean;
+  label_key: string;
+};
+/** The backend's figure, the stated one with its verdict, and the one add
+ * would store. */
+export type InvoicePreviewFigure = {
+  computed: PublicDecimal | null;
+  stated: PublicDecimal | null;
+  verdict: InvoicePreviewFigureVerdict | null;
+  submitted: PublicDecimal | null;
+};
+export type InvoicePreviewLineResult = {
+  key: string;
+  subtotal: InvoicePreviewFigure;
+  iva_amount: InvoicePreviewFigure;
+};
+/** A total is null until every part of it is known. */
+export type InvoicePreviewTotals = {
+  base: PublicDecimal | null;
+  iva: PublicDecimal | null;
+  recargo: PublicDecimal | null;
+  total: PublicDecimal | null;
+  net_of_retention: PublicDecimal | null;
+};
+export type InvoicePreviewRetention = {
+  rate: PublicDecimal | null;
+  amount: PublicDecimal | null;
+  implied: PublicDecimal | null;
+};
+/** One closed finding. `code` is stable, `values` are what it compared and
+ * `label_key` names its word. */
+export type InvoicePreviewFinding = {
+  code: string;
+  severity: InvoicePreviewSeverity;
+  fields: string[];
+  line_key: string | null;
+  values: { key: string; value: string | number | boolean | PublicDecimal }[];
+  label_key: string;
+};
+/** What a verdict was reached over. `correction_facts` judged only what a
+ * correction states: the update checks the whole stored record again and can
+ * still refuse. */
+export type InvoicePreviewVerdictScope = "whole_draft" | "correction_facts";
+/** The backend's whole answer for one draft, bound to it by `input_digest`.
+ * `would_accept` on a whole draft is acceptance's own verdict; a duplicate is
+ * decided only when the invoice is added. `rule_findings` names the document
+ * rules outside the figures, as far as an incomplete draft lets them be asked. */
+export type InvoicePreviewResult = {
+  profile_id: string;
+  input_digest: string;
+  on_date: string;
+  on_date_source: InvoicePreviewOnDateSource;
+  rate_slots: InvoicePreviewRateSlot[];
+  lines: InvoicePreviewLineResult[];
+  totals: InvoicePreviewTotals;
+  retention: InvoicePreviewRetention;
+  findings: InvoicePreviewFinding[];
+  missing_fields: string[];
+  verdict: InvoicePreviewVerdict;
+  refusal_code: string | null;
+  invoice_id: string | null;
+  rule_findings: InvoicePreviewFinding[];
+  verdict_scope: InvoicePreviewVerdictScope;
+};
+
 export type InvoiceUpdateValues = {
   counterparty_name?: string | null;
   counterparty_country?: string | null;
@@ -1448,16 +1610,6 @@ export type EvidenceViewResult = {
     | { kind: "success"; record: EvidenceRecord }
     | { kind: "refused"; evidence_record_present: false };
 };
-export const EVIDENCE_UPDATE_FIELDS = [
-  "supplier",
-  "invoice_number",
-  "invoice_date",
-  "taxable_base",
-  "iva_rate",
-  "iva_amount",
-  "notes",
-] as const;
-export type EvidenceUpdateField = (typeof EVIDENCE_UPDATE_FIELDS)[number];
 /** A correction: `patch_fields` names what changes, and a named field sent
  * as null clears it. Decimals are in their shortest spelling. */
 export type EvidenceUpdateRequest = {
@@ -1893,6 +2045,8 @@ export interface LedgerRequests {
   "ledger.invoice.list": InvoiceListRequest;
   "ledger.invoice.view": InvoiceViewRequest;
   "ledger.invoice.add": InvoiceAddRequest;
+  "ledger.invoice.preview": InvoicePreviewRequest;
+  "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
   "ledger.status": LedgerStatusRequest;
@@ -1995,6 +2149,8 @@ export interface LedgerResults {
   "ledger.invoice.list": InvoiceListResult;
   "ledger.invoice.view": InvoiceViewResult;
   "ledger.invoice.add": InvoiceAddResult;
+  "ledger.invoice.preview": InvoicePreviewResult;
+  "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;
   "ledger.status": LedgerStatusResult;

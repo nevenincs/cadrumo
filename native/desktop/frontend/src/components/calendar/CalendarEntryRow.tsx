@@ -6,10 +6,10 @@ import { deadlineDistance } from "@/shell/calendar";
 import { facts, labelled } from "@/shell/compose";
 import { daysBetween, isoDay as day } from "@/shared/dates";
 import { dateFormats } from "@/shared/dateFormats";
-import { entryKey } from "@/shell/calendarEntries";
+import { closeUnknown, entryKey } from "@/shell/calendarEntries";
 import { useStrings } from "@/shell/strings";
 import type { CalendarEntry } from "@/shell/views";
-import { STATE_TONE } from "./calendarMarks";
+import { STATE_MARK, STATE_TONE, stateWords } from "./calendarMarks";
 
 // A row is drawn again only when it changes: choosing one obligation does
 // not redraw the others.
@@ -30,6 +30,12 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
   const t = useStrings();
   const closes = day(entry.adjusted_closes_on);
   const { short, full, weekday, relative: distance } = dateFormats(locale);
+  // A close the product does not know has no distance to it: its date is
+  // only the earliest it can close, and is said as that and nothing more.
+  const unknown = closeUnknown(entry);
+  const earliest = unknown
+    ? t("desktop.calendar.earliest_close", { date: short.format(closes) })
+    : null;
   // How far the binding date is from the day the product evaluated: the
   // product's own count where it gives one.
   const away =
@@ -39,12 +45,15 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
   // A filed obligation has no distance left to say.
   const { value, unit } = deadlineDistance(away, entry.days_overdue !== null);
   const relative =
-    entry.user_state === "filed" ? null : distance.format(value, unit);
+    entry.user_state === "filed" || unknown
+      ? null
+      : distance.format(value, unit);
   const name = t("desktop.calendar.modelo", { modelo: entry.modelo });
   const notes = [
+    earliest,
     t(`desktop.calendar.local.${entry.local_filing_state}`),
     t(`desktop.calendar.aeat.${entry.aeat_submission_state}`),
-    entry.adjusted_closes_on !== entry.closes_on
+    !unknown && entry.adjusted_closes_on !== entry.closes_on
       ? t("desktop.calendar.moved", {
           date: short.format(day(entry.closes_on)),
         })
@@ -63,23 +72,31 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
       // does everywhere in the window.
       className="grid scroll-mt-[calc(var(--calendar-head)+--spacing(8))] grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-x-3 border-b border-l-(length:--selection-edge) border-l-transparent px-4 py-2 hover:bg-accent aria-[current=true]:border-l-ring aria-[current=true]:bg-selected forced-colors:border-l-[Canvas] forced-colors:aria-[current=true]:border-l-[Highlight]"
     >
-      <time
-        dateTime={entry.adjusted_closes_on}
-        className="grid w-10 justify-items-center"
-      >
-        {/* The eye has the month in the heading above; read aloud, a day
-            and a weekday alone are not a date, so the whole date is said. */}
-        <span className="sr-only">{full.format(closes)}</span>
-        <span
-          aria-hidden="true"
-          className="text-md leading-tight font-semibold tabular-nums"
+      {unknown ? (
+        // No day is drawn where a deadline's day would stand: the earliest
+        // close is said in the notes, as the earliest and nothing more.
+        <span className="calendar-close-unknown grid w-10 justify-items-center text-muted-foreground">
+          <Icon name={STATE_MARK.unknown ?? "info"} size="sm" />
+        </span>
+      ) : (
+        <time
+          dateTime={entry.adjusted_closes_on}
+          className="grid w-10 justify-items-center"
         >
-          {closes.getDate()}
-        </span>
-        <span aria-hidden="true" className="text-xs text-muted-foreground">
-          {weekday.format(closes)}
-        </span>
-      </time>
+          {/* The eye has the month in the heading above; read aloud, a day
+              and a weekday alone are not a date, so the whole date is said. */}
+          <span className="sr-only">{full.format(closes)}</span>
+          <span
+            aria-hidden="true"
+            className="text-md leading-tight font-semibold tabular-nums"
+          >
+            {closes.getDate()}
+          </span>
+          <span aria-hidden="true" className="text-xs text-muted-foreground">
+            {weekday.format(closes)}
+          </span>
+        </time>
+      )}
       <div className="grid min-w-0 gap-0.5">
         {/* The row's name is what chooses it: the same obligation is then
             shown among the months. */}
@@ -104,7 +121,7 @@ export const CalendarEntryRow = memo(function CalendarEntryRow({
       <div className="flex items-center gap-2">
         <span className="grid justify-items-end gap-0.5">
           <Badge variant={STATE_TONE[entry.user_state]}>
-            {t(`desktop.calendar.state.${entry.user_state}`)}
+            {stateWords(t, entry)}
           </Badge>
           {relative && (
             <span className="calendar-distance text-xs text-muted-foreground @max-md:hidden">

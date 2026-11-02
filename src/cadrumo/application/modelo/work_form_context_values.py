@@ -12,7 +12,7 @@ from decimal import Decimal
 from ...core.filing_producer_key import FilingProducerKey
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.export_semantics import ExportDraftAttribute
-from ...domain.calculations.registry.form_context import resolve_form_context_field
+from ...domain.calculations.registry.form_context import FORM_CONTEXT_DRAFT_ATTRIBUTES, resolve_form_context_field
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.calculations.registry.schema_form_layouts import FormContextFieldBlock
 from ...domain.modelos.calculation_revision import CalculationRevision
@@ -46,12 +46,7 @@ def form_context_value(
         return saved_projection_context_value(snapshot=snapshot, revision=revision, block=block)
     if field.binding is not None:
         raise RegistryValidationError("binding context requires the saved binding or workbook projection")
-    if field.draft_attribute in (
-        ExportDraftAttribute.FILING_YEAR,
-        ExportDraftAttribute.PERIOD_CODE,
-        ExportDraftAttribute.PERIOD_START_DATE,
-        ExportDraftAttribute.PERIOD_END_DATE,
-    ):
+    if field.draft_attribute in FORM_CONTEXT_DRAFT_ATTRIBUTES:
         return _draft_context_value(snapshot, field.draft_attribute)
     return _producer_context_value(producer_snapshot, field.producer_key)
 

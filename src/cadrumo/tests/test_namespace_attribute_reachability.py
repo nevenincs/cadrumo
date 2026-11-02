@@ -20,13 +20,18 @@ through a namespace is good style.
 from __future__ import annotations
 
 import ast
+import re
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
+
+from .inventory import iter_statements, parse_source, source_may_spell
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 _SRC = Path(__file__).resolve().parent.parent
+_DYNAMIC_IMPORT = re.compile(r"\bimport_module\b")
 
 
 def _is_package(path: Path) -> bool:
@@ -74,53 +79,51 @@ def _reachable_names(package_init: Path) -> set[str]:
     return names
 
 
-def _unreachable_attribute_reads(root: Path = _SRC) -> dict[str, list[str]]:
-    findings: dict[str, list[str]] = {}
-    for path in sorted(root.rglob("*.py")):
-        relative = path.relative_to(root).as_posix()
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:
+def _bound_packages(path: Path, tree: ast.AST, probed: dict[Path, bool]) -> dict[str, Path]:
+    """Map each name *tree* binds to a package through a relative import.
+
+    An import is a statement, so the expressions need no visit. *probed* holds
+    each directory's answer for one scan: thousands of modules import the same
+    names, and each probe is a filesystem round trip.
+    """
+    bound: dict[str, Path] = {}
+    for node in iter_statements(tree):
+        if not isinstance(node, ast.ImportFrom) or not node.level:
             continue
-        bound_packages: dict[str, Path] = {}
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.ImportFrom) or not node.level:
-                continue
-            target = _resolve_relative(path, node.level, node.module)
-            for alias in node.names:
-                candidate = target / alias.name
-                if _is_package(candidate):
-                    bound_packages[alias.asname or alias.name] = candidate
-        if not bound_packages:
-            continue
-        reads: dict[str, set[str]] = {}
-        for node in ast.walk(tree):
-            if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in bound_packages:
-                reads.setdefault(node.value.id, set()).add(node.attr)
-        for binding, attributes in reads.items():
-            package = bound_packages[binding]
-            reachable = _reachable_names(package / "__init__.py")
-            missing = sorted(
-                attribute for attribute in attributes if attribute not in reachable and not attribute.startswith("__")
-            )
-            if missing:
-                package_name = package.relative_to(root).as_posix()
-                findings.setdefault(relative, []).extend(f"{package_name}.{attribute}" for attribute in missing)
+        target = _resolve_relative(path, node.level, node.module)
+        for alias in node.names:
+            candidate = target / alias.name
+            is_package = probed.get(candidate)
+            if is_package is None:
+                is_package = probed[candidate] = _is_package(candidate)
+            if is_package:
+                bound[alias.asname or alias.name] = candidate
+    return bound
+
+
+def _namespace_read_findings(
+    relative_root: Path,
+    tree: ast.AST,
+    bound_packages: dict[str, Path],
+) -> list[str]:
+    reads: dict[str, set[str]] = {}
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name) and node.value.id in bound_packages:
+            reads.setdefault(node.value.id, set()).add(node.attr)
+    findings: list[str] = []
+    for binding, attributes in reads.items():
+        package = bound_packages[binding]
+        reachable = _reachable_names(package / "__init__.py")
+        package_name = package.relative_to(relative_root).as_posix()
+        findings.extend(
+            f"{package_name}.{attribute}"
+            for attribute in sorted(attributes)
+            if attribute not in reachable and not attribute.startswith("__")
+        )
     return findings
 
 
-def test_no_attribute_is_read_through_a_namespace_that_lacks_it() -> None:
-    """A package binding may not reach a name its namespace does not carry."""
-    findings = _unreachable_attribute_reads()
-    assert not findings, (
-        "these modules read an attribute through a package namespace that does "
-        "not expose it, which raises AttributeError only when the path runs. Test modules are scanned too: a test reaching through a retired namespace fails at collection, which is the same defect arriving one step earlier, and three such reads survived a retirement because this check used to skip them. "
-        "Import the owning submodule directly: "
-        f"{findings}"
-    )
-
-
-def _dynamic_attribute_reads() -> dict[str, list[str]]:
+def _dynamic_read_findings(tree: ast.AST) -> list[str]:
     """Attributes read straight off a dynamically imported cadrumo module.
 
     ``import_module("cadrumo.x.y").Thing`` is not an import statement, so the
@@ -133,42 +136,86 @@ def _dynamic_attribute_reads() -> dict[str, list[str]]:
     mechanism whose targets are not knowable here, and pretending otherwise
     would make this check lie about its coverage.
     """
-    findings: dict[str, list[str]] = {}
-    for path in sorted(_SRC.rglob("*.py")):
-        relative = path.relative_to(_SRC).as_posix()
-        if "tests" in path.relative_to(_SRC).parts or path.name.startswith("test_"):
+    findings: list[str] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Attribute) or not isinstance(node.value, ast.Call):
             continue
-        try:
-            tree = ast.parse(path.read_text(encoding="utf-8"))
-        except SyntaxError:
+        call = node.value
+        func = call.func
+        name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+        if name != "import_module" or not call.args:
             continue
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Attribute) or not isinstance(node.value, ast.Call):
-                continue
-            call = node.value
-            func = call.func
-            name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
-            if name != "import_module" or not call.args:
-                continue
-            target = call.args[0]
-            if not (isinstance(target, ast.Constant) and isinstance(target.value, str)):
-                continue
-            if not target.value.startswith("cadrumo."):
-                continue
-            module_path = _SRC.parent / Path(target.value.replace(".", "/"))
-            init = module_path / "__init__.py"
-            source = init if init.is_file() else module_path.with_suffix(".py")
-            if not source.is_file():
-                findings.setdefault(relative, []).append(f"{target.value} (module not found)")
-                continue
-            if node.attr not in _reachable_names(source):
-                findings.setdefault(relative, []).append(f"{target.value}.{node.attr}")
+        target = call.args[0]
+        if not (isinstance(target, ast.Constant) and isinstance(target.value, str)):
+            continue
+        if not target.value.startswith("cadrumo."):
+            continue
+        module_path = _SRC.parent / Path(target.value.replace(".", "/"))
+        init = module_path / "__init__.py"
+        source = init if init.is_file() else module_path.with_suffix(".py")
+        if not source.is_file():
+            findings.append(f"{target.value} (module not found)")
+            continue
+        if node.attr not in _reachable_names(source):
+            findings.append(f"{target.value}.{node.attr}")
     return findings
 
 
-def test_no_attribute_is_read_off_a_dynamically_imported_module_that_lacks_it() -> None:
+class _NamespaceScan(NamedTuple):
+    """The findings of both namespace gates, gathered in one parse of the tree."""
+
+    unreachable: dict[str, list[str]]
+    dynamic: dict[str, list[str]]
+
+
+def _scan_namespace_reads(root: Path = _SRC) -> _NamespaceScan:
+    unreachable: dict[str, list[str]] = {}
+    dynamic: dict[str, list[str]] = {}
+    probed: dict[Path, bool] = {}
+    for path in sorted(root.rglob("*.py")):
+        relative = path.relative_to(root).as_posix()
+        source = path.read_text(encoding="utf-8")
+        try:
+            tree = parse_source(source, filename=str(path))
+        except SyntaxError:
+            continue
+        bound_packages = _bound_packages(path, tree, probed)
+        if bound_packages and (findings := _namespace_read_findings(root, tree, bound_packages)):
+            unreachable[relative] = findings
+        if (
+            "tests" not in path.relative_to(root).parts
+            and not path.name.startswith("test_")
+            and source_may_spell(source, _DYNAMIC_IMPORT)
+            and (findings := _dynamic_read_findings(tree))
+        ):
+            dynamic[relative] = findings
+    return _NamespaceScan(unreachable, dynamic)
+
+
+def _unreachable_attribute_reads(root: Path = _SRC) -> dict[str, list[str]]:
+    return _scan_namespace_reads(root).unreachable
+
+
+@pytest.fixture(scope="module")
+def namespace_scan() -> _NamespaceScan:
+    """Parse the package once for both gates; each keeps its own assertion."""
+    return _scan_namespace_reads()
+
+
+def test_no_attribute_is_read_through_a_namespace_that_lacks_it(namespace_scan: _NamespaceScan) -> None:
+    """A package binding may not reach a name its namespace does not carry."""
+    findings = namespace_scan.unreachable
+    assert not findings, (
+        "these modules read an attribute through a package namespace that does "
+        "not expose it, which raises AttributeError only when the path runs. Test modules are scanned too: a test reaching through a retired namespace fails at collection, which is the same defect arriving one step earlier, and three such reads survived a retirement because this check used to skip them. "
+        "Import the owning submodule directly: "
+        f"{findings}"
+    )
+
+
+def test_no_attribute_is_read_off_a_dynamically_imported_module_that_lacks_it(namespace_scan: _NamespaceScan) -> None:
     """A string import hides a broken reach from every static check."""
-    findings = _dynamic_attribute_reads()
+    findings = namespace_scan.dynamic
     assert not findings, (
         "these modules read an attribute off a dynamically imported module that "
         "does not expose it. A string import resolves at runtime, so this fails "

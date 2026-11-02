@@ -1281,8 +1281,7 @@ _BROKEN_LINE = "Some other contract name BROKEN"
 #: What the linter prints when an exhaustive contract names a layer the tree no
 #: longer has. It exits 1 -- the same status a broken contract produces -- and
 #: prints no contract lines at all. That collision is the defect these cases
-#: exist for: `dev/containers` was deleted, this was the entire output, and the
-#: gate reported `status: "authoritative"` over an empty graph.
+#: exist for: the gate would report `status: "authoritative"` over an empty graph.
 _ABORTED_OUTPUT = "Missing layer in container 'dev': module dev.containers does not exist."
 
 
@@ -1318,9 +1317,8 @@ def test_a_linter_that_evaluated_no_contracts_is_unavailable_not_authoritative(t
 def test_a_broken_contract_is_counted_and_attributed_not_merely_carried(tmp_path: Path) -> None:
     """Four broken contracts must not read identically to none.
 
-    The verdict here is ``failed``, and that is PRE-EXISTING behaviour rather
-    than anything this change added: a broken contract with no attributable
-    direct occurrence is unexplained, and the gate has always escalated that.
+    The verdict here is ``failed``: a broken contract with no attributable
+    direct occurrence is unexplained, and the gate escalates that.
     This fixture declares no occurrences, so the rule fires. In the live tree
     the same four contracts are attributable to 207 ratchet-approved,
     entirely test-scoped occurrences, so the verdict is ``passing_with_debt``
@@ -1328,9 +1326,7 @@ def test_a_broken_contract_is_counted_and_attributed_not_merely_carried(tmp_path
     question this case deliberately does not answer.
 
     What it does pin is that the graph half reports the four: authoritative,
-    counted, and named. Before this change a run that evaluated nothing
-    reported the same ``authoritative`` with zero counted, and nothing
-    separated them.
+    counted, and named.
     """
     exit_status, output = _health_for_graph(tmp_path, _graph_states()["four_broken"], linter_returncode=1)
     payload = json.loads(output.rsplit("\n", 1)[1])
@@ -1364,10 +1360,8 @@ def test_an_all_kept_graph_still_passes_and_says_nothing_about_broken_contracts(
 def test_the_three_states_do_not_share_a_verdict(tmp_path: Path) -> None:
     """The finding, asserted as one proposition rather than three.
 
-    Before this change all three produced exit 0, verdict ``passing_with_debt``
-    and ``status: "authoritative"``. A future change that collapsed any two of
-    them again would pass the individual cases above only if it also passed
-    this one.
+    A change that collapsed any two of them would pass the individual cases
+    above only if it also passed this one.
     """
     verdicts = {
         name: _health_for_graph(tmp_path, output, linter_returncode=0 if name == "all_kept" else 1)

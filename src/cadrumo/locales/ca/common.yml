@@ -258,6 +258,8 @@ aggregation:
         tipus de font en blanc.
       owned_sources_duplicate: Les fonts propietat de la malla de fonts han de ser
         úniques.
+      proven_zero_value_not_zero: Un resolutor de fonts va declarar un zero provat
+        per a una vinculació el valor de la qual no és zero.
       provenance_binding_source_mismatch: El tipus d'origen declarat a la fila de
         procedència no coincideix amb l'origen del valor al qual diu pertànyer. Tots
         dos han de nomenar el mateix origen perquè la traçabilitat sigui comprovable.
@@ -1069,6 +1071,7 @@ desktop:
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
     close: Tanca el calendari
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: No tanca abans del {date}
     empty: No hi ha obligacions de presentació en aquest període.
     event:
       filing: Presentació
@@ -3155,6 +3158,10 @@ desktop:
         retention_rate: Tipus de retenció
         series: Sèrie
         situacion: Situació de l'immoble
+      figures_retry: Torna-ho a provar
+      figures_unavailable: Xifres no disponibles. El llibre no ha respost i el teu
+        esborrany es conserva.
+      figures_updating: S'estan actualitzant les xifres…
       fixed: Forma part de la identitat de la factura. Per canviar-ho, elimina-la
         i torna-la a afegir.
       from_lines: Segons les línies
@@ -3192,6 +3199,7 @@ desktop:
       line:
         actions: Accions
         add: Afegeix una línia
+        calculated: Calculat {amount}
         category: Categoria
         choose_rate: Tria un tipus
         description: Descripció
@@ -3206,7 +3214,8 @@ desktop:
       lines: Línies
       lines_fixed: Fixes
       lines_note: Punt per als decimals, fins a sis, sense separador de milers. El
-        subtotal i l'IVA es calculen al cèntim.
+        llibre calcula el subtotal i l'IVA; omple'ls només per indicar el que imprimeix
+        el document.
       linked: Moviments vinculats
       linked_count: 'Moviments vinculats: {count}'
       links_permanent: 'Un vincle és permanent: no es pot treure.'
@@ -3217,11 +3226,11 @@ desktop:
       next_number: 'Següent de la sèrie {series}: {number}'
       next_number_series: Tria una sèrie per veure'n el número següent.
       none: Cap
+      not_available: No disponible
       not_met: pendent
       not_saved: No s'ha desat. Els teus canvis es conserven.
       not_stated: Sense indicar
       open_duplicate: Obre-la
-      operation_date_fixed: Només s'indica en afegir la factura
       operation_key: Clau {key}
       party: Contrapart
       payment:
@@ -3237,22 +3246,9 @@ desktop:
         choose_rate: Tria un tipus.
         country_letters: Dues lletres, p. ex. ES.
         currency_letters: Tres lletres, p. ex. EUR.
-        lease_reference_not_allowed: Sense referència cadastral en aquesta situació.
         missing: Obligatori.
         no_line: Afegeix almenys una línia.
-        operation_date_fixed: Un cop afegida, es pot canviar, però no afegir ni treure.
         payment_id_shape: 64 caràcters hexadecimals.
-        printed_differs: Les línies sumen {total}.
-        recargo_above_iva: No pot superar l'IVA.
-        rectifies_required: Indica la factura que rectifica.
-        retention_above_base: No pot superar la base imposable.
-        retention_differs: El tipus dona {amount}.
-        retention_needs_amount: Un tipus necessita el seu import.
-        series_required: Una rectificativa necessita sèrie.
-        tax_id_required: Obligatori, excepte en una simplificada emesa.
-      rate:
-        exempt: Exempt
-        not_subject: No subjecte
       read_failed: No s'han pogut llegir les factures.
       refusal:
         ambiguous_grouping: '"{raw}" es pot llegir de dues maneres. Escriu 1500 o
@@ -3284,7 +3280,7 @@ desktop:
       remove_question: Vols eliminar aquesta factura?
       removed: Factura {number} eliminada
       retention: Retenció, fora del total
-      retention_presets: Tipus de retenció habituals
+      retention_implied: El tipus dona {amount}.
       review: Revisa
       review_changes: Revisa els canvis ({count})
       save: Desa
@@ -3311,6 +3307,8 @@ desktop:
       unmatched: Sense vincular
       use: Fes-lo servir
       use_number: Fes servir {number}
+      would_refuse: El llibre rebutjaria aquesta factura tal com està. Revisa'n el
+        NIF i els camps del document.
     irpf_category:
       actividad_economica: Activitat econòmica
       arrendamiento_local: Arrendament de local
@@ -4653,7 +4651,7 @@ entries:
     purpose: Consulta de l'estat de pagaments i devolucions tributàries.
   portal_dnie_sede_entry:
     label: Accés amb DNI electrònic
-    purpose: Punt d'accés a la Seu mitjançant el DNIe.
+    purpose: Punt d'accés a la Seu mitjançant el DNI electrònic.
   portal_domiciliacion_bancaria:
     label: Domiciliació bancària de pagaments
     purpose: Domiciliació bancària d'autoliquidacions i pagaments tributaris.
@@ -4732,7 +4730,7 @@ entries:
     purpose: Àrea personal autenticada del contribuent a la Seu.
   portal_mis_documentos_pendientes_firma:
     label: Documents pendents de signatura
-    purpose: Portasignatures amb els documents pendents de signatura electrònica.
+    purpose: Portafirmes amb els documents pendents de signatura electrònica.
   portal_mis_expedientes:
     label: Els meus expedients
     purpose: Consulta de l'estat dels expedients i tràmits del contribuent.
@@ -6039,7 +6037,8 @@ topic:
     title: Calendari d'obligacions
   casilla:
     body: Una casella és un camp numerat d'un model. Les caselles poden ser manuals,
-      calculades o derivades de bindings. 'aeat app modelo casillas <model>' les llista.
+      calculades o derivades de vinculacions. 'aeat app modelo casillas <model>' les
+      llista.
     title: Caselles
   formats:
     body: La CLI emet sortida en `text` o `json` segons `--format`. JSON és recomanat
@@ -6680,6 +6679,7 @@ tui:
       errors:
         amount_invalid: Escriu l'import només amb xifres i amb punt per als decimals,
           per exemple 1500.00.
+        amount_required: Escriu un import a «{field}». Si no n'hi ha cap, escriu 0.00.
         asset_id_required: Escriu primer l'identificador de l'element.
         choice_invalid: 'Tria una d''aquestes opcions: {options}.'
         date_invalid: Escriu la data com AAAA-MM-DD, per exemple 2025-06-30.

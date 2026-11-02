@@ -4,28 +4,6 @@ casilla_source_refs = ["aeat-dr-720"]
 parameter_source_refs = ["aeat-modelo-720-procedure"]
 live_cross_reference_source_refs = ["aeat-modelo-720-procedure"]
 application_link_source_refs = ["boe-modelo-720-2013-form", "aeat-modelo-720-procedure"]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes this revision cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off.
-#
-# What the review established, by measurement: every casilla legal_ref and
-# source_ref resolves to the legal catalogue; every cited source's corpus file is
-# present; every enrolled schema family resolves; and both records of the layout
-# now cover all 500 positions their diseño declares, with NO design data position
-# left unaddressed -- the tails that were previously unwritten are the BLANCOS
-# runs the design states, now emitted as filler so the record goes out at the
-# length AEAT reads.
-#
-# The canonical source-pinned generator replaced the binding-derived layout on
-# 2026-10-04. Its committed manifest and current-target receipt prove fresh-render
-# reproduction; the existing agent review stamp does not claim operator review.
-# The formulas family is dispositioned inapplicable: the declaration reports
-# holdings and settles no tax, so there is no computed figure to check.
-#
-# What it does NOT establish: that the figures a filing produces are correct
-# against AEAT. That is a tax review against official sources, and it is what an
-# operator re-stamping this to 'operator_reviewed' would be attesting.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19

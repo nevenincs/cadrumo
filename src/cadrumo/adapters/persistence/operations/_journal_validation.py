@@ -13,6 +13,7 @@ from ....application.operations.persistence.events import (
     OperationTerminalEvent,
 )
 from ....application.operations.persistence.journal import OperationPersistedSnapshot
+from ....application.operations.persistence.leases import OperationOwnerLease, operation_conflict_scope_reference
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.operations import OperationLifecycle
@@ -115,6 +116,18 @@ class OperationJournalRecord(BaseModel):
             "operation journal history tail must exactly match the latest snapshot events",
             ValueError,
         )
+
+
+def validate_lease(snapshot: OperationPersistedSnapshot, lease: OperationOwnerLease) -> None:
+    """Require a lease to name the snapshot's operation and conflict scope."""
+    if lease.operation_id != snapshot.operation_id:
+        raise RepositoryError("operation lease does not match the persisted snapshot identity")
+    expected_scope_ref = operation_conflict_scope_reference(
+        definition_id=snapshot.identity.definition_id,
+        subject_ref=snapshot.identity.subject_ref,
+    )
+    if lease.scope_ref != expected_scope_ref:
+        raise RepositoryError("operation lease does not match the persisted snapshot conflict scope")
 
 
 def validate_advance(
@@ -257,4 +270,4 @@ def _validate_advance_events(
     )
 
 
-__all__ = ["OperationJournalRecord", "validate_advance"]
+__all__ = ["OperationJournalRecord", "validate_advance", "validate_lease"]

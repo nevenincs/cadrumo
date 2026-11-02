@@ -55,6 +55,11 @@ def _observations_from_requirements(
             key = (requirement.source_modelo, requirement.filing_year, period)
             casilla_values = observed.setdefault(key, {})
             casilla_values[requirement.source_casilla_ids[0]] = value_for(requirement, period_index)
+            # A fold reading a second casilla reads it as the result already paid
+            # by earlier autoliquidaciones of the period; these synthetic filings
+            # are originals, so none was.
+            for casilla_id in requirement.source_casilla_ids[1:]:
+                casilla_values.setdefault(casilla_id, Decimal("0"))
     return tuple(
         RegistryModeloObservation(
             modelo=modelo,

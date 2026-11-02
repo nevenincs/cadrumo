@@ -17,7 +17,7 @@ from cadrumo.domain.calculations.registry.authority_location import bundled_auth
 from cadrumo.domain.calculations.registry.schema import ModeloDefinition
 
 from ..compiler.validate_below_floor_export_refs import declared_supported_filing_years_floor
-from ..compiler.validate_bindings import informational_binding_ids, unreferenced_binding_advisories
+from ..compiler.validate_bindings import informational_binding_ids
 from ..compiler.validate_export_field_placement import (
     binding_export_spans,
     export_record_placement_advisories,
@@ -117,22 +117,12 @@ class RegistryStatus:
     authority_recorded_digest: str | None
     authority_candidate_digest: str | None
     loadable: bool
-    unreferenced_bindings: tuple[tuple[str, int], ...]
-    """Per-modelo count of bindings no typed consumer names.
-
-    An advisory axis, not a lifecycle failure: the authored corpus still
-    carries such rows, and the compiler deliberately reports rather than
-    refuses them. Surfacing the count per modelo is what keeps the residue
-    measurable instead of invisible -- an advisory nothing prints is
-    indistinguishable from an advisory nothing raises.
-    """
     informational_bindings: tuple[tuple[str, int], ...]
     """Per-modelo count of bindings declaring a non-calculation disposition.
 
-    The dispositioned counterpart of :attr:`unreferenced_bindings`: a row the
-    author classed as informational leaves the advisory and arrives here, so the
-    disposition is a move between two reported lines rather than a way to make a
-    binding stop being counted at all.
+    An unreferenced binding is a registry refusal, so a row without a typed
+    consumer is either dispositioned here or keeps the registry from validating;
+    the disposition is visible rather than a way to stop a binding being counted.
     """
     details: tuple[str, ...]
     export_placement: ExportPlacementCensus = ExportPlacementCensus()
@@ -451,7 +441,7 @@ def collect_registry_status(
         details,
     )
     loadable = _runtime_authority_loadable(resolved_descriptor, details)
-    unreferenced_bindings, informational_bindings = _record_binding_counts(authority, details)
+    informational_bindings = _record_informational_bindings(authority, details)
     export_placement = _record_export_placement(authority, details)
 
     return RegistryStatus(
@@ -464,7 +454,6 @@ def collect_registry_status(
         authority_recorded_digest=recorded_digest,
         authority_candidate_digest=candidate_digest,
         loadable=loadable,
-        unreferenced_bindings=unreferenced_bindings,
         informational_bindings=informational_bindings,
         details=tuple(details),
         export_placement=export_placement,
@@ -558,6 +547,22 @@ def _generated_target_inventory(
     return states, excluded, excluded_count, bool(unrenderable)
 
 
+def declared_revision_filing_years(modelo: ModeloDefinition, revision_id: str) -> tuple[int, ...]:
+    """The filing years a revision's selector declares, whether it lists them or spans a range.
+
+    A selector declared with ``year_from``/``year_to`` lists no years, so its last
+    declared year is the range's end; an open-ended range declares no last year.
+    """
+    selector = next(
+        revision.period_selector
+        for candidate_id, revision in modelo.revisions.items()
+        if str(candidate_id) == revision_id
+    )
+    if selector.years:
+        return tuple(selector.years)
+    return (selector.year_to,) if selector.year_to is not None else ()
+
+
 def _project_generated_targets(
     authority: ValidatedRegistryAuthority,
     registry_root: Path,
@@ -572,10 +577,8 @@ def _project_generated_targets(
         excluded,
         dispositions=_explaining_dispositions(disposition_ledger),
         declared_floor=lambda: declared_supported_filing_years_floor(registry_root=registry_root),
-        revision_filing_years=lambda modelo_id, revision_id: next(
-            tuple(revision.period_selector.years)
-            for candidate_id, revision in authority.modelo(modelo_id).revisions.items()
-            if str(candidate_id) == revision_id
+        revision_filing_years=lambda modelo_id, revision_id: declared_revision_filing_years(
+            authority.modelo(modelo_id), revision_id
         ),
         excluded_count=excluded_count,
     )
@@ -609,16 +612,11 @@ def _runtime_authority_loadable(descriptor: Path, details: list[str]) -> bool:
         return False
 
 
-def _record_binding_counts(
+def _record_informational_bindings(
     authority: ValidatedRegistryAuthority | None,
     details: list[str],
-) -> tuple[tuple[tuple[str, int], ...], tuple[tuple[str, int], ...]]:
-    """Collect and describe both compiler-owned binding populations."""
-    unreferenced = _unreferenced_binding_counts(authority)
-    if unreferenced:
-        total = sum(count for _, count in unreferenced)
-        modelos = ", ".join(f"{modelo}={count}" for modelo, count in unreferenced)
-        details.append(f"UNREFERENCED-BINDINGS: {total} binding(s) named by no typed consumer ({modelos})")
+) -> tuple[tuple[str, int], ...]:
+    """Collect and describe the bindings that declare a non-calculation disposition."""
     informational = _informational_binding_counts(authority)
     if informational:
         total = sum(count for _, count in informational)
@@ -626,7 +624,7 @@ def _record_binding_counts(
         details.append(
             f"INFORMATIONAL-BINDINGS: {total} binding(s) declaring a non-calculation disposition ({modelos})"
         )
-    return unreferenced, informational
+    return informational
 
 
 def _record_export_placement(
@@ -709,37 +707,10 @@ def export_placement_census(modelos: Iterable[ModeloDefinition]) -> ExportPlacem
     )
 
 
-def _unreferenced_binding_counts(authority: ValidatedRegistryAuthority | None) -> tuple[tuple[str, int], ...]:
-    """Count, per modelo, the bindings the compiler's advisory names.
-
-    Read through the same :func:`unreferenced_binding_advisories` the compiler
-    owns rather than recounted here, so the report and the validator can never
-    disagree about what counts as unreferenced. Returns nothing when the
-    registry failed validity: an unloadable authority has no bindings to speak
-    about, which is not the same as having none unreferenced.
-    """
-    if authority is None:
-        return ()
-    counts: list[tuple[str, int]] = []
-    for modelo in authority.modelos:
-        advisories = tuple(
-            advisory
-            for revision_id, revision in modelo.revisions.items()
-            for advisory in unreferenced_binding_advisories(
-                prefix=f"modelo {modelo.id} revision {revision_id}",
-                revision=revision,
-            )
-        )
-        if advisories:
-            counts.append((str(modelo.id), len(advisories)))
-    return tuple(sorted(counts))
-
-
 def _informational_binding_counts(authority: ValidatedRegistryAuthority | None) -> tuple[tuple[str, int], ...]:
     """Count, per modelo, the bindings that declare a non-calculation disposition.
 
-    Read through the compiler-owned :func:`informational_binding_ids` for the
-    same reason the unreferenced count reads through its advisory: the report
+    Read through the compiler-owned :func:`informational_binding_ids`: the report
     must not hold a second opinion about what the disposition means.
     """
     if authority is None:
@@ -780,7 +751,6 @@ def _payload(status: RegistryStatus, *, blocking: bool) -> dict[str, object]:
         "targets": target_counts,
         "target_findings": _target_overview(status.target_findings),
         "authority": _authority_payload(status),
-        "unreferenced_bindings": _binding_payload(status.unreferenced_bindings),
         "informational_bindings": _binding_payload(status.informational_bindings),
         "export_placement": _export_placement_payload(status.export_placement),
         "details": list(status.details),
@@ -794,7 +764,6 @@ def _status_lanes(status: RegistryStatus, target_counts: dict[str, int]) -> dict
     return {
         **_authority_lanes(status),
         **_target_lanes(status, target_counts, blocking_targets),
-        "binding_reference_coverage": _coverage_lane(bool(status.unreferenced_bindings)),
         "export_placement_coverage": _export_placement_lane(status.export_placement),
     }
 

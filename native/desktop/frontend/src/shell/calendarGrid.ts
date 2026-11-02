@@ -1,5 +1,10 @@
 import { DAY_MS, dayOrdinal, isoDate } from "../shared/dates";
-import { compareCalendarEntries, entryKey, entrySpan } from "./calendarEntries";
+import {
+  closeUnknown,
+  compareCalendarEntries,
+  entryKey,
+  entrySpan,
+} from "./calendarEntries";
 import type { CalendarEntry, CalendarEvent } from "./views";
 
 // The filing calendar laid out as months of weeks. This is arithmetic on the
@@ -17,7 +22,9 @@ export type GridBar = {
   /** The row it takes among the week's windows, from 0. */
   lane: number;
   /** Whether the window opens, and closes, inside this segment. A segment
-   * that does neither is the middle of a longer window. */
+   * that does neither is the middle of a longer window. A window whose
+   * close is not known is never drawn closing: it runs on at its earliest
+   * close. */
   opens: boolean;
   closes: boolean;
 };
@@ -143,7 +150,7 @@ export function calendarMonths(
           to: end - start,
           lane,
           opens: span.from >= begin,
-          closes: span.to <= end,
+          closes: span.to <= end && !closeUnknown(span.entry),
         });
       }
       weeks.push({ days, bars, lanes: taken.length });

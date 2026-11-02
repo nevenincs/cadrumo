@@ -12,7 +12,6 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Final
 
 from ...core.decimal.coercion import coerce_decimal
-from ...core.decimal.constants import ZERO
 from ...core.errors.hierarchy import CoreValidationError
 from ...core.identity.documents import IdentityError
 from ...core.identity.tax_id import tax_id_identity_token
@@ -233,18 +232,6 @@ def require_invoice_text(value: object, message: str) -> str:
     if not isinstance(value, str):
         raise InvoiceValidationError(message)
     return value
-
-
-def require_optional_non_negative(value: Decimal | None, message: str) -> None:
-    """Raise ``message`` when ``value`` is present and negative."""
-    if value is not None and value < ZERO:
-        raise InvoiceValidationError(message)
-
-
-def require_equal(actual: Decimal, expected: Decimal, message: str) -> None:
-    """Raise ``message`` when ``actual`` does not equal ``expected``."""
-    if actual != expected:
-        raise InvoiceValidationError(message)
 
 
 def normalise_invoice_monetary_fields(payload: dict[str, object]) -> dict[str, object]:

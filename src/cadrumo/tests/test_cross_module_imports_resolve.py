@@ -29,10 +29,11 @@ from collections.abc import Iterator, Mapping
 from functools import cache
 from importlib.util import find_spec
 from pathlib import Path
+from typing import NamedTuple
 
 import pytest
 
-from .inventory import SRC_CADRUMO, package_ast_items
+from .inventory import SRC_CADRUMO, iter_parsed_sources, iter_statements, package_python_files
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -82,46 +83,53 @@ def _resolve_relative_module(source: Path, level: int, module: str | None) -> st
 
 def _walk_import_from(tree: ast.AST) -> Iterator[ast.ImportFrom]:
     """Yield every ``ImportFrom`` node not inside an ``if TYPE_CHECKING:`` block."""
-    skip: set[int] = set()
-    for node in ast.walk(tree):
-        if _is_type_checking_block(node):
-            for child in ast.walk(node):
-                skip.add(id(child))
-    for node in ast.walk(tree):
-        if id(node) in skip:
-            continue
+    for node in iter_statements(tree, prune=_is_type_checking_block):
         if isinstance(node, ast.ImportFrom):
             yield node
 
 
-def _collect_import_pairs(source_tree_ast: Mapping[Path, ast.AST] | None = None) -> list[tuple[Path, str, str]]:
-    """Walk every Cadrumo source and yield ``(source_file, module, name)`` import triples.
+def _import_triples(source: Path, tree: ast.AST) -> Iterator[tuple[Path, str, str]]:
+    """Yield the ``(source_file, module, name)`` triples one module imports.
 
     Only ``from cadrumo.X import Y`` (absolute) and relative imports
     resolving back into the ``cadrumo.*`` tree are returned. ``import *``
     statements are excluded — they don't pin a specific name and the
     no-wildcard hygiene is a separate concern.
     """
-    triples: list[tuple[Path, str, str]] = []
-    for source, tree in package_ast_items(source_tree_ast, include_data=True):
-        for node in _walk_import_from(tree):
-            resolved = _resolve_relative_module(source, node.level, node.module) if node.level > 0 else node.module
-            if not (resolved is not None and resolved) or not resolved.startswith("cadrumo"):
-                continue
-            for alias in node.names:
-                if alias.name == "*":
-                    continue
-                triples.append((source, resolved, alias.name))
-    return triples
+    for node in _walk_import_from(tree):
+        resolved = _resolve_relative_module(source, node.level, node.module) if node.level > 0 else node.module
+        if not (resolved is not None and resolved) or not resolved.startswith("cadrumo"):
+            continue
+        for alias in node.names:
+            if alias.name != "*":
+                yield (source, resolved, alias.name)
+
+
+class _ImportScan(NamedTuple):
+    """Everything the gate needs from the package's trees, which are not retained."""
+
+    triples: tuple[tuple[Path, str, str], ...]
+    bound_names: Mapping[Path, frozenset[str]]
 
 
 @pytest.fixture(scope="module")
-def cadrumo_import_triples(source_tree_ast: Mapping[Path, ast.AST]) -> list[tuple[Path, str, str]]:
-    """Collect import triples once per module from the shared package AST cache."""
-    return _collect_import_pairs(source_tree_ast)
+def cadrumo_import_scan() -> _ImportScan:
+    """Parse the package once, reading imports and bound names from each tree.
+
+    Imports and bindings live in the same files, so reading them in two passes
+    parsed the package twice. A module whose text held an undecodable byte is left
+    out of the bindings, so that its binding lookup still takes the strict read.
+    """
+    triples: list[tuple[Path, str, str]] = []
+    bound_names: dict[Path, frozenset[str]] = {}
+    for source, text, tree in iter_parsed_sources(package_python_files()):
+        triples.extend(_import_triples(source, tree))
+        if "\ufffd" not in text:
+            bound_names[source] = _bound_names(tree)
+    return _ImportScan(tuple(triples), bound_names)
 
 
-def _check_triple(triple: tuple[Path, str, str]) -> str | None:
+def _check_triple(triple: tuple[Path, str, str], bound_names: Mapping[Path, frozenset[str]]) -> str | None:
     """Return None when the triple resolves, or a one-line failure description otherwise.
 
     Two Python resolution paths are modeled: (a) ``name`` is bound as an
@@ -137,7 +145,7 @@ def _check_triple(triple: tuple[Path, str, str]) -> str | None:
         return (
             f"{source.relative_to(SRC_CADRUMO.parent).as_posix()}::{module}::{name}  (target module is not importable)"
         )
-    if _module_exports(target_path, name):
+    if name in (bound_names.get(target_path) or _source_bound_names(target_path)):
         return None
     # Submodule import path — ``from pkg import mod`` succeeds if
     # ``pkg.mod`` is a real importable module, regardless of whether
@@ -168,7 +176,7 @@ def _module_source_path(module: str) -> Path | None:
 def _bound_names(tree: ast.AST) -> frozenset[str]:
     """Return names statically bound by a module, including conditional imports."""
     names: set[str] = set()
-    for node in ast.walk(tree):
+    for node in iter_statements(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             names.add(node.name)
         elif isinstance(node, ast.Import):
@@ -186,14 +194,9 @@ def _bound_names(tree: ast.AST) -> frozenset[str]:
     return frozenset(names)
 
 
-def _module_exports(path: Path, name: str) -> bool:
-    """Return whether a module binds a runtime-importable name in its source."""
-    return name in _source_bound_names(path)
-
-
 @cache
 def _source_bound_names(path: Path) -> frozenset[str]:
-    """Parse one target module once, however many imports name it."""
+    """Parse one target module the package scan did not cover, once."""
     try:
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
     except (OSError, SyntaxError):
@@ -202,12 +205,12 @@ def _source_bound_names(path: Path) -> frozenset[str]:
 
 
 def test_cadrumo_cross_module_imports_resolve(
-    cadrumo_import_triples: list[tuple[Path, str, str]],
+    cadrumo_import_scan: _ImportScan,
 ) -> None:
     """Every runtime ``from cadrumo.X import Y`` triple resolves."""
     failures: list[str] = []
-    for triple in cadrumo_import_triples:
-        failure = _check_triple(triple)
+    for triple in cadrumo_import_scan.triples:
+        failure = _check_triple(triple, cadrumo_import_scan.bound_names)
         if failure is not None:
             failures.append(failure)
     assert not failures, "\nBroken cross-module imports:\n" + "\n".join(sorted(failures))

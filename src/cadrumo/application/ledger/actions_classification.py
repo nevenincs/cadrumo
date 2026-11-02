@@ -468,7 +468,7 @@ class ClassificationRulePlan(NamedTuple):
     matches: tuple[ClassificationRulePlanRow, ...]
 
 
-def _classification_rule_in_scope(transaction: Transaction, *, reaffirm: bool) -> bool:
+def classification_rule_in_scope(transaction: Transaction, *, reaffirm: bool) -> bool:
     """Return whether one transaction belongs to the rule-engine scan."""
     if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
         return False
@@ -486,13 +486,13 @@ def _classification_rule_scope(
     in_scope = tuple(
         transaction
         for transaction in catalogue.transactions.values()
-        if _classification_rule_in_scope(transaction, reaffirm=reaffirm)
+        if classification_rule_in_scope(transaction, reaffirm=reaffirm)
     )
     skipped_already_classified = sum(
         1
         for transaction in catalogue.transactions.values()
         if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
-        and not _classification_rule_in_scope(transaction, reaffirm=reaffirm)
+        and not classification_rule_in_scope(transaction, reaffirm=reaffirm)
         and transaction.business_classification is not BusinessClassification.NOT_YET_PROCESSED
     )
     return in_scope, skipped_already_classified
@@ -609,6 +609,7 @@ def apply_classification_rule_match(
 
 
 __all__ = [
+    "classification_rule_in_scope",
     "add_classification_rule",
     "apply_classification_rule_match",
     "bulk_classify_from_csv",

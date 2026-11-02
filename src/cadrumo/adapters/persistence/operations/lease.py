@@ -235,11 +235,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
                     disposition=OperationLeaseObservationDisposition.ABSENT,
                     observed_at=observed_at,
                 )
-            disposition = (
-                OperationLeaseObservationDisposition.ACTIVE
-                if current.expires_at > observed_at
-                else OperationLeaseObservationDisposition.EXPIRED
-            )
+            disposition = current.observation_at(observed_at)
             return OperationLeaseObservation(
                 scope_ref=scope_ref,
                 operation_id=operation_id,
@@ -305,11 +301,7 @@ class OperationLeaseFilesystemRepository(OperationLeaseRepository):
                     predecessor=predecessor,
                     current=current,
                 )
-            disposition = (
-                OperationLeaseDisposition.RENEWED
-                if current.expires_at > observed_at
-                else OperationLeaseDisposition.TAKEN_OVER
-            )
+            disposition = current.succession_at(observed_at)
             result = OperationLeaseResult(
                 scope_ref=predecessor.scope_ref,
                 operation_id=successor.operation_id,

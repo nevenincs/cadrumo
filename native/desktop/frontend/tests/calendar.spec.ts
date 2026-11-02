@@ -8,7 +8,9 @@ import {
   weekStartOf,
 } from "../src/shell/calendarGrid";
 import {
+  closeUnknown,
   compareCalendarEntries,
+  compareListedEntries,
   entrySpan,
   STATE_ORDER,
 } from "../src/shell/calendarEntries";
@@ -77,13 +79,97 @@ const obligation = (
   payment_cutoff_on: null,
   evaluated_on: "2026-10-06",
   days_overdue: null,
+  status: "UPCOMING",
   user_state: "due",
   local_filing_state: "not_ready_to_file",
   aeat_submission_state: "not_observed",
   justificante_verified: false,
 });
 
+/** A projected window whose close the product could not work out: its
+ * closing dates are only the earliest it can close. */
+const unknownClose = (
+  modelo: string,
+  opens: string | null,
+  earliest: string,
+): CalendarEntry => ({
+  ...obligation(modelo, opens, earliest),
+  status: "UNKNOWN",
+  user_state: "unknown",
+});
+
 const OCTOBER = { from_date: "2026-10-01", to_date: "2026-10-31" };
+
+test("only the product's unknown status makes a close unknown, never a reading or a date", () => {
+  expect(closeUnknown(unknownClose("303", "2026-10-01", "2026-10-20"))).toBe(
+    true,
+  );
+  // A reading the product could not place is not a close it could not
+  // work out.
+  expect(
+    closeUnknown({
+      ...obligation("349", null, "2026-10-20"),
+      status: "NOT_APPLICABLE",
+      user_state: "unknown",
+    }),
+  ).toBe(false);
+  expect(closeUnknown(obligation("130", "2026-10-01", "2026-10-20"))).toBe(
+    false,
+  );
+});
+
+test("a close that is not known follows the known ones, in its reading and in its month", () => {
+  const entries = [
+    unknownClose("111", "2026-10-01", "2026-10-02"),
+    {
+      ...obligation("349", null, "2026-10-25"),
+      status: "NOT_APPLICABLE" as const,
+      user_state: "unknown" as const,
+    },
+    obligation("303", null, "2026-10-30"),
+    unknownClose("123", "2026-09-01", "2026-09-20"),
+    obligation("130", null, "2026-10-20"),
+    obligation("202", null, "2026-09-25"),
+  ];
+  // Among what needs the person, by reading: the known closes of the
+  // unknown reading first, by date; the closes not known after them.
+  expect(
+    [...entries].sort(compareCalendarEntries).map((entry) => entry.modelo),
+  ).toEqual(["202", "130", "303", "349", "123", "111"]);
+  // In the list, by month of the earliest close; within it the known
+  // closes by date, then those not known, however early theirs is.
+  expect(
+    [...entries].sort(compareListedEntries).map((entry) => entry.modelo),
+  ).toEqual(["202", "123", "130", "349", "303", "111"]);
+});
+
+test("a window whose close is not known runs to its earliest close and is never drawn closing", () => {
+  const unknown = unknownClose("303", "2026-10-01", "2026-10-20");
+  expect(entrySpan(unknown)).toEqual({ from: "2026-10-01", to: "2026-10-20" });
+  const [month] = calendarMonths(
+    OCTOBER,
+    [unknown, obligation("130", "2026-10-01", "2026-10-20")],
+    [],
+    null,
+    1,
+  );
+  const ends = month?.weeks
+    .flatMap((week) => week.bars)
+    .filter((bar) => bar.to === 1 && bar.entry.closes_on === "2026-10-20")
+    .map((bar) => [bar.entry.modelo, bar.opens, bar.closes]);
+  // The week of the 20th: the known window closes there, the other does not.
+  expect(ends).toEqual([
+    ["130", false, true],
+    ["303", false, false],
+  ]);
+  // Where it opens it is still drawn opening.
+  expect(
+    month?.weeks[0]?.bars.map((bar) => [bar.entry.modelo, bar.opens]),
+  ).toEqual([
+    ["130", true],
+    ["303", true],
+  ]);
+});
 
 test("calendar faces share urgency ordering with deterministic date and identity ties", () => {
   const entries = [

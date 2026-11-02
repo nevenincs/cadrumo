@@ -332,7 +332,7 @@ class WorkflowRunSnapshot(BaseModel):
 
     def validate_period_facts(self) -> None:
         """Refuse contradiction between obligation and CLI-visible detail periods."""
-        if self.final_stage not in {WorkflowStage.DONE, WorkflowStage.ABORTED}:
+        if not self.final_stage.is_terminal:
             raise ValueError("workflow snapshot must be terminal")
         if (self.final_stage is WorkflowStage.ABORTED) != (self.aborted_reason is not None):
             raise ValueError("workflow snapshot abort reason contradicts terminal stage")

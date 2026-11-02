@@ -299,7 +299,9 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.export.help",
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_export_commands:ledger_export",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerExportPayload", "ledger.export"),
+        _expected_result_schema(
+            _TARGET, "cadrumo.entrypoints.cli.ledger_interchange_results:LedgerExportPayload", "ledger.export"
+        ),
         (
             _expected_option(
                 "output",
@@ -362,7 +364,9 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.import.help",
         "profile-bound",
         "cadrumo.entrypoints.cli.ledger_import_commands:ledger_import",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerImportPayload", "ledger.import"),
+        _expected_result_schema(
+            _TARGET, "cadrumo.entrypoints.cli.ledger_interchange_results:LedgerImportPayload", "ledger.import"
+        ),
         (
             _expected_option(
                 "file",
@@ -588,6 +592,33 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         ),
     ),
     _expected_command(
+        "app_ledger_staged_check",
+        "app_ledger",
+        "staged-check",
+        "leaf",
+        "cli.ledger.staged_check_help",
+        "none",
+        "cadrumo.entrypoints.cli.staged_check_commands:staged_check",
+        _expected_result_schema(
+            _TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerStagedCheckEnvelope", "ledger.staged-check"
+        ),
+        parameters=(
+            _expected_option(
+                "row", "--row", "cli.ledger.staged_check_row_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
+            ),
+            _expected_option(
+                "draft", "--draft", "cli.ledger.staged_check_draft_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
+            ),
+            _expected_option(
+                "category",
+                "--category",
+                "cli.ledger.staged_check_category_help",
+                default=_EMPTY_TUPLE_DEFAULT,
+                multiple=True,
+            ),
+        ),
+    ),
+    _expected_command(
         "app_ledger_participation",
         "app_ledger",
         "participation",
@@ -597,7 +628,7 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cadrumo.entrypoints.cli.participation_commands:participation_lookup",
         _expected_result_schema(
             _TARGET,
-            "cadrumo.entrypoints.cli.ledger_results:LedgerTransactionParticipationPayload",
+            "cadrumo.entrypoints.cli.ledger_participation_results:LedgerTransactionParticipationPayload",
             "ledger.participation",
         ),
         (_expected_argument("transaction_id", "cli.ledger.participation.transaction_id_help", default=_NONE_DEFAULT),),
@@ -893,7 +924,9 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         "cli.ledger.track.help",
         "none",
         "cadrumo.entrypoints.cli.ledger_read_commands:ledger_track",
-        _expected_result_schema(_TARGET, "cadrumo.entrypoints.cli.ledger_results:LedgerTrackResult", "ledger.track"),
+        _expected_result_schema(
+            _TARGET, "cadrumo.entrypoints.cli.ledger_participation_results:LedgerTrackResult", "ledger.track"
+        ),
         (_expected_argument("transaction_id", "cli.ledger.track.transaction_id_help"),),
     ),
     _expected_command(

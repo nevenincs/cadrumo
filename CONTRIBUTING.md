@@ -18,7 +18,8 @@ dependencies, creates `env/.env` from `env/.env.example` when it is missing and
 copies in the values you set in the `main` worktree's `env/.env`, installs the repository tooling, provisions the local search service, and
 publishes the runtime registry authority. Each step prints its own progress,
 and the command is safe to run again. `just setup` runs only the environment
-and tooling steps; CI and the devcontainer use it.
+and tooling steps, including the lock-pinned locale spelling dictionaries
+(downloaded and hash-verified without Node); CI and the devcontainer use it.
 
 The devcontainer (`.devcontainer/devcontainer.json`) runs `just setup` for you.
 Browser automation is optional: `just setup-browser` installs the Playwright

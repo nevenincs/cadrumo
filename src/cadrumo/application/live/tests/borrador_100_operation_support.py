@@ -35,6 +35,8 @@ from ..borrador_100_operation_ports import (
 from .test_borrador_100 import _BUCKET_ID, _InMemoryBorradorRepository
 
 PROFILE_ID = UUID(_BUCKET_ID)
+PROFILE_TAX_ID = "12345678Z"
+OTHER_TAX_ID = "00000001R"
 CAPTURED_AT = datetime(2026, 10, 1, 12, tzinfo=UTC)
 
 
@@ -116,6 +118,7 @@ class Parser:
             extraction_coverage=Decimal("1"),
             artefact_kind="BORRADOR",
             source_pdf_sha256=sha256(pdf_bytes).hexdigest(),
+            tax_id=PROFILE_TAX_ID,
             values=(replace(rows[0], value=None), *rows[1:]),
             warnings=("synthetic human printed warning",),
         )
@@ -131,6 +134,7 @@ class Parser:
                 ),
                 artefact_kind=receipt.artefact_kind,
                 source_pdf_sha256=receipt.source_pdf_sha256,
+                tax_id=cast(str | None, self.change.get("tax_id", receipt.tax_id)),
                 values=receipt.values,
                 warnings=receipt.warnings,
             )
@@ -173,7 +177,10 @@ class Subject:
         self.parser = Parser(self.fence)
         self.events = Events()
         self.operands = Operands()
-        self.ports = Borrador100OperationPorts(PROFILE_ID, operation, self.repository, self.parser)
+        self.profile_tax_id: str | None = PROFILE_TAX_ID
+        self.ports = Borrador100OperationPorts(
+            PROFILE_ID, operation, self.repository, self.parser, lambda: self.profile_tax_id
+        )
 
     def compose(self, *, profile_id: UUID, operation: PinnedAuthorityOperation) -> Borrador100OperationPorts:
         assert profile_id == PROFILE_ID and operation is self.operation

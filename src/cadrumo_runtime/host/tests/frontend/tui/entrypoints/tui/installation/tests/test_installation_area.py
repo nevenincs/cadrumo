@@ -529,6 +529,7 @@ async def test_the_installed_opener_reaches_the_running_runtime_with_no_profile_
     tmp_path: Path,
 ) -> None:
     with isolated_profile_storage_root(tmp_path=tmp_path) as root:
+        root.mkdir(mode=0o700, parents=True, exist_ok=True)
         endpoint = WindowsEndpoint(storage_root=root)
         try:
             with serving_installation_runtime(

@@ -46,9 +46,9 @@ def _m303_revision() -> ModeloRevision:
 def test_domestic_zero_is_structurally_unroutable_on_m303() -> None:
     """Positive control: the registry-only question, no observation needed.
 
-    Per Ruling B, this is the proof the screen exists at all: cuota-less by
-    law, base-bearing by law, and reused from
-    the registry's ``cuota_less_m303`` projection would wrongly suppress it.
+    DOMESTIC_ZERO is cuota-less by law but base-bearing by law, so reusing the
+    registry's ``cuota_less_m303`` projection would wrongly suppress it. That is
+    why this screen exists.
     """
     unroutable = structurally_unroutable_iva_base_categories(_m303_revision())
 
@@ -66,15 +66,14 @@ def test_a_fully_covered_category_is_not_reported() -> None:
 
 
 def test_the_out_of_scope_declaration_is_not_a_re_export_of_cuota_less() -> None:
-    """Ruling B, checked rather than asserted: the two suppression sets differ.
+    """The two suppression sets differ.
 
-    the registry's ``cuota_less_m303`` projection answers "does this produce a cuota?" and
-    would wrongly suppress DOMESTIC_ZERO here (base-bearing despite being
-    cuota-less). The out-of-scope set for THIS screen is a real, smaller,
-    independently-justified set -- proved by two cuota-less members landing on
-    opposite sides of this screen's membership test: DOMESTIC_ZERO (base-
-    bearing by law) IS reported, while REGIMEN_SIMPLIFICADO (settled from
-    módulos, not the ledger at all) is NOT. If reusing CUOTA_LESS as the
+    The registry's ``cuota_less_m303`` projection answers "does this produce a cuota?" and
+    would wrongly suppress DOMESTIC_ZERO here (base-bearing despite being cuota-less). The
+    out-of-scope set for THIS screen is a real, smaller, independently-justified set --
+    proved by two cuota-less members landing on opposite sides of this screen's membership
+    test: DOMESTIC_ZERO (base-bearing by law) IS reported, while REGIMEN_SIMPLIFICADO
+    (settled from módulos, not the ledger at all) is NOT. If reusing CUOTA_LESS as the
     suppressor here, both would be silenced together.
     """
     unroutable = set(structurally_unroutable_iva_base_categories(_m303_revision()))

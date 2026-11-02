@@ -52,6 +52,11 @@ class EnrollmentStage(StrEnum):
     COMPLETE = "complete"
     DECLINED = "declined"
 
+    @property
+    def is_terminal(self) -> bool:
+        """Whether the enrollment has settled, either conferring authority or declined."""
+        return self in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}
+
 
 class EnrollmentRequester(BaseModel):
     """Transport-verified recipient, never caller-asserted attribution."""

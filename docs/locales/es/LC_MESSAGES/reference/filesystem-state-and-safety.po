@@ -152,7 +152,7 @@ msgid ""
 "disposition."
 msgstr ""
 "El rechazo no es destructivo. Cadrumo no lee, ni se conecta, ni copia, ni"
-" mueve, ni recifra, ni borra, ni migra, ni adopta ese estado. La "
+" mueve, ni vuelve a cifrar, ni borra, ni migra, ni adopta ese estado. La "
 "detección deja intactos los bytes antiguos y exige que tú elijas una "
 "disposición aparte y explícita."
 

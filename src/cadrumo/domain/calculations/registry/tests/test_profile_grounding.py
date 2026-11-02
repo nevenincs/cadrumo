@@ -115,13 +115,9 @@ def test_a_profile_binding_with_a_misspelled_selector_key_is_refused_at_construc
     """The bite proof: a profile selector key the model does not declare is
     refused where it is written, never read as "no profile key here".
 
-    The refusal moved to a stronger owner. It used to live in this accessor's
-    raw-mapping fallback, because a ``source = "profile"`` binding could carry
-    an unhydrated selector whose key no longer matched the declared model, and
-    a ``mapping.get("profile_key")`` read returned an empty tuple for it. The
-    provider union removes the unhydrated shape entirely: ``provider`` is one
-    discriminated member, so a key the member does not declare cannot reach
-    the accessor at all -- it fails at construction, as asserted here.
+    The provider union removes the unhydrated shape entirely: ``provider`` is one
+    discriminated member, so a key the member does not declare cannot reach the
+    accessor at all -- it fails at construction, as asserted here.
     """
     with pytest.raises(ValidationError, match=r"provider\.profile\.profil_key"):
         BindingDefinition.model_validate(

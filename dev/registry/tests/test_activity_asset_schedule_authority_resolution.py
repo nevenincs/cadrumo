@@ -24,6 +24,7 @@ from cadrumo.domain.renta.actividad_asset.election import (
     ApprovedAmortizationPlan,
     DefiniteUsefulLife,
     DigitOrder,
+    DirectEstimationRegime,
     OriginalPriceDetermination,
     PlanAnnualAmount,
     PlanApprovalKind,
@@ -44,8 +45,6 @@ from cadrumo.domain.renta.actividad_asset.schedule import (
 )
 
 from ._activity_asset_schedule_support import (
-    _NORMAL,
-    _SIMPLIFIED,
     _YEAR_START,
     _asset,
     _charge,
@@ -74,7 +73,7 @@ def test_linear_table_resolves_each_modality_maximum_from_source() -> None:
         _modelo_100(),
         tax_year=2025,
         asset_revision=_asset(
-            _linear("equipo-informacion-software", _SIMPLIFIED),
+            _linear("equipo-informacion-software", DirectEstimationRegime.SIMPLIFIED),
             basis="2000",
             kind=AssetKind.INTANGIBLE,
         ),
@@ -120,7 +119,9 @@ def test_first_partial_year_and_residual_value_use_the_amortizable_basis() -> No
 def test_used_asset_may_double_the_maximum_only_in_the_normal_modality() -> None:
     used_machine = _charge(_asset(_linear("maquinaria"), basis="10000", condition=AcquiredCondition.USED))
     simplified_used = _charge(
-        _asset(_linear("maquinaria", _SIMPLIFIED), basis="10000", condition=AcquiredCondition.USED),
+        _asset(
+            _linear("maquinaria", DirectEstimationRegime.SIMPLIFIED), basis="10000", condition=AcquiredCondition.USED
+        ),
     )
 
     assert used_machine.amount == Decimal("2400.00")  # 10,000 x (2 x 12%)
@@ -167,7 +168,7 @@ def _used_machine(*, price: str = "30000.00", basis: str = "10000", **facts: obj
     return _asset(
         _election(
             AmortizationMethod.LINEAR,
-            _NORMAL,
+            DirectEstimationRegime.NORMAL,
             authority_class_key="maquinaria",
             used_original_price=_original(price),
             **facts,
@@ -257,7 +258,7 @@ def test_the_original_price_route_refuses_an_element_that_is_not_used() -> None:
 
 def test_the_original_price_route_refuses_a_modality_without_a_used_asset_rule() -> None:
     simplified = _asset(
-        _linear("maquinaria", _SIMPLIFIED, used_original_price=_original("30000.00")),
+        _linear("maquinaria", DirectEstimationRegime.SIMPLIFIED, used_original_price=_original("30000.00")),
         basis="10000",
         condition=AcquiredCondition.USED,
     )
@@ -297,7 +298,12 @@ def test_multi_shift_coefficient_follows_the_hours_formula() -> None:
     with _refused(ActividadAssetValidationError, "multi_shift_requires_extra_shift"):
         _charge(_asset(_linear("maquinaria", shift_hours_per_day=Decimal("8")), basis="18000"))
     with _refused(ActividadAssetUnsupportedError, "multi_shift_not_enrolled", regime="simplified"):
-        _charge(_asset(_linear("maquinaria", _SIMPLIFIED, shift_hours_per_day=Decimal("16")), basis="18000"))
+        _charge(
+            _asset(
+                _linear("maquinaria", DirectEstimationRegime.SIMPLIFIED, shift_hours_per_day=Decimal("16")),
+                basis="18000",
+            )
+        )
 
 
 def test_reduced_size_acceleration_doubles_the_maximum_for_a_new_element() -> None:
@@ -348,7 +354,7 @@ def test_used_doubling_is_limited_to_material_assets_where_it_is_enrolled() -> N
     )
     simplified_used_building = _charge(
         _asset(
-            _linear("edificio-otra-construccion", _SIMPLIFIED),
+            _linear("edificio-otra-construccion", DirectEstimationRegime.SIMPLIFIED),
             basis="100000",
             condition=AcquiredCondition.USED,
         ),
@@ -460,7 +466,7 @@ def test_constant_percentage_excludes_buildings_furniture_and_the_simplified_mod
     with _refused(
         ActividadAssetUnsupportedError, "method_excluded_by_law", rendered=r"excluded by law.*rd-439-2007:art-30"
     ):
-        _charge(_asset(_constant("maquinaria", regime=_SIMPLIFIED), basis="1000"))
+        _charge(_asset(_constant("maquinaria", regime=DirectEstimationRegime.SIMPLIFIED), basis="1000"))
 
 
 def test_constant_percentage_and_sum_of_digits_admit_the_intangibles_the_table_lists() -> None:
@@ -477,10 +483,10 @@ def test_constant_percentage_and_sum_of_digits_admit_the_intangibles_the_table_l
 
 def test_simplified_intangible_table_methods_refuse_with_the_sources_that_leave_them_open() -> None:
     for election in (
-        _constant("equipo-informacion-software", regime=_SIMPLIFIED),
+        _constant("equipo-informacion-software", regime=DirectEstimationRegime.SIMPLIFIED),
         _election(
             AmortizationMethod.SUM_OF_DIGITS,
-            _SIMPLIFIED,
+            DirectEstimationRegime.SIMPLIFIED,
             authority_class_key="equipo-informacion-software",
             sum_of_digits_period_years=4,
             digit_order=DigitOrder.DESCENDING,
@@ -574,7 +580,7 @@ def test_approved_plan_refusals() -> None:
         _charge(_asset(_plan(amounts=((2025, "5000"), (2026, "8000"))), basis="12000"))
     with _refused(ActividadAssetUnsupportedError, "approved_plan_without_distribution"):
         _charge(_asset(_plan(amounts=((2026, "5000"),)), basis="12000"))
-    simplified_plan = _plan().model_copy(update={"regime": _SIMPLIFIED})
+    simplified_plan = _plan().model_copy(update={"regime": DirectEstimationRegime.SIMPLIFIED})
     with _refused(ActividadAssetUnsupportedError, "method_excluded_by_law"):
         _charge(_asset(simplified_plan, basis="12000"))
 
@@ -613,7 +619,11 @@ def test_reduced_size_goodwill_and_indefinite_life_intangibles_deduct_150_percen
     )
     indefinite = _charge(
         _asset(
-            _election(AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE, _SIMPLIFIED, small_enterprise=evidence),
+            _election(
+                AmortizationMethod.INTANGIBLE_INDEFINITE_LIFE,
+                DirectEstimationRegime.SIMPLIFIED,
+                small_enterprise=evidence,
+            ),
             basis="20000",
             kind=AssetKind.INTANGIBLE,
         ),

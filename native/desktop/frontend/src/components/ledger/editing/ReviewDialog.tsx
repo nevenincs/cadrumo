@@ -23,15 +23,19 @@ import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts, factsGap, labelled, listed } from "@/shell/compose";
 import type {
   CatalogueInvoice,
+  LedgerPort,
   LedgerRow,
   OutputLanguage,
 } from "../../../shell/ledger";
 import type { StepOutcome, StepReport } from "../../../shell/ledgerApply";
-import {
-  classifyCells,
-  takesExpenseCategory,
-} from "../../../shell/ledgerCommands";
+import { classifyCells } from "../../../shell/ledgerCommands";
 import { parsePercent } from "../../../shell/ledgerGrammar";
+import {
+  checkOnce,
+  stagedCheckRequest,
+  useStagedCheck,
+  type StagedCheck,
+} from "../../../shell/ledgerStagedCheck";
 import {
   planApply,
   type LedgerPlan,
@@ -40,7 +44,6 @@ import {
 } from "../../../shell/ledgerPlan";
 import {
   actionRows,
-  effectiveFacts,
   storedFieldValue,
   type DraftField,
   type StageEvent,
@@ -48,13 +51,13 @@ import {
   type StagedAction,
   type StagedContent,
 } from "../../../shell/ledgerStage";
-import { SPENDING_CATEGORY_FAMILIES } from "../../../shell/ledgerVocabulary";
 import { useStrings, type Translate } from "../../../shell/strings";
 import {
   categoryLabel,
   categoryOption,
   classificationText,
   ivaCategoryLabel,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import {
   changeGroups,
@@ -72,7 +75,10 @@ import {
 import { fieldName, valueText } from "./editingWords";
 import type { LockProgress, useLedgerApply } from "./useLedgerApply";
 import { useWritePause } from "../WritePause";
-import { useFieldSuggestions } from "../suggestions/SuggestionsProvider";
+import {
+  useFieldSuggestions,
+  useVocabulary,
+} from "../suggestions/SuggestionsProvider";
 import { WindowedList } from "./WindowedList";
 import { formatCount, formatPercent } from "../../../shared/numbers";
 
@@ -246,23 +252,10 @@ function RuleApplies({
 /** The staged movements that would end Business or Mixed with a spending
  * category on pure income, which no expense reads: the product's own
  * missing-category rule, from the other side. */
-function incomeWithCategory(
-  content: StagedContent,
-  rows: ReadonlyMap<string, LedgerRow>,
-): string[] {
-  return Object.entries(content.rows).flatMap(([id, changes]) => {
-    const row = rows.get(id);
-    if (!row) return [];
-    const after = effectiveFacts(row, changes);
-    const classified =
-      after.business_classification === "BUSINESS" ||
-      after.business_classification === "MIXED";
-    return classified &&
-      after.category_id &&
-      !takesExpenseCategory(row, content)
-      ? [id]
-      : [];
-  });
+function incomeWithCategory(check: StagedCheck | null): string[] {
+  return [...(check?.rows.values() ?? [])]
+    .filter((answer) => answer.category_on_income)
+    .map((answer) => answer.transaction_id);
 }
 
 // ---- Needs you first -------------------------------------------------------
@@ -272,6 +265,7 @@ type Held = { id: string; blocker: PlanBlocker; draft: boolean };
 /** What the review offers for one kind of problem, acting on every movement
  * it holds. */
 function BlockerFixes({
+  port,
   kind,
   held,
   content,
@@ -293,6 +287,7 @@ function BlockerFixes({
   onRereadSealed: () => void;
   /** That read is under way. */
   checking: boolean;
+  port: LedgerPort;
 }) {
   const t = useStrings();
   const [share, setShare] = useState("");
@@ -300,12 +295,13 @@ function BlockerFixes({
   const [currency, setCurrency] = useState("");
   const currencies = useFieldSuggestions("currency");
   const ids = held.filter((entry) => !entry.draft).map((entry) => entry.id);
+  const vocabulary = useVocabulary();
   const categories = useMemo<ComboboxOption[]>(
     () =>
-      SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+      vocabulary.categoryFamilies.flatMap(([family, members]) =>
         members.map((member) => categoryOption(t, family, member)),
       ),
-    [t],
+    [t, vocabulary],
   );
   const button = (label: string, run: () => void, name?: string) => (
     <Button
@@ -332,11 +328,19 @@ function BlockerFixes({
       for (const action of pick(entry))
         onStage({ type: "drop_action", id: action });
   };
-  const classifyAll = (kind: "business" | "personal", category?: string) => {
-    const outcome = classifyCells(
-      { kind, ids, category, staged: content },
-      rows,
+  const classifyAll = async (
+    kind: "business" | "personal",
+    category?: string,
+  ) => {
+    const check = await checkOnce(
+      port,
+      stagedCheckRequest(content, rows, {
+        ids,
+        categories: category ? [category] : [],
+      }),
     );
+    if (!check) return;
+    const outcome = classifyCells({ kind, ids, category, check }, rows);
     if (outcome.kind === "staged") onStage(outcome.event);
   };
   const show = ids.length
@@ -350,7 +354,12 @@ function BlockerFixes({
             label={t("desktop.ledger.classify.category")}
             value={null}
             options={categories}
-            emptyLabel={t("desktop.ledger.classify.no_category_match")}
+            emptyLabel={vocabularyEmpty(
+              t,
+              vocabulary,
+              t("desktop.ledger.classify.no_category_match"),
+              categories.length,
+            )}
             placeholder={t("desktop.ledger.classify.search_category")}
             onCommit={(category) => classifyAll("business", category)}
           >
@@ -623,6 +632,7 @@ function blockerFields(t: Translate, blocker: PlanBlocker): string | null {
 }
 
 function NeedsYouFirst({
+  port,
   plan,
   content,
   rows,
@@ -633,6 +643,7 @@ function NeedsYouFirst({
   locks,
   locale,
 }: {
+  port: LedgerPort;
   plan: LedgerPlan;
   content: StagedContent;
   rows: ReadonlyMap<string, LedgerRow>;
@@ -697,6 +708,7 @@ function NeedsYouFirst({
                 onShowRows={onShowRows}
                 onGoToDraft={onGoToDraft}
                 onRereadSealed={onRereadSealed}
+                port={port}
                 checking={locks !== null}
               />
             </div>
@@ -1468,8 +1480,11 @@ function SummaryTable({
  * Technical details; then the apply with each part's progress and every
  * row's outcome.
  */
+const NO_ROWS: ReadonlyMap<string, LedgerRow> = new Map();
+
 export function ReviewDialog({
   apply,
+  port,
   content,
   tally,
   locale,
@@ -1479,6 +1494,7 @@ export function ReviewDialog({
   onCloseAutoFocus,
 }: {
   apply: Apply;
+  port: LedgerPort;
   content: StagedContent;
   tally: StageTally;
   locale: string;
@@ -1507,17 +1523,27 @@ export function ReviewDialog({
     state.phase === "failed"
       ? null
       : state.rows;
+  // A plan is made from the backend's answer about the content as it stands:
+  // with none yet there is no plan, and with none at all nothing to apply.
+  const checked = useStagedCheck(
+    port,
+    useMemo(
+      () => stagedCheckRequest(content, rows ?? NO_ROWS),
+      [content, rows],
+    ),
+  );
   const plan = useMemo(
     () =>
-      state.phase === "ready"
+      state.phase === "ready" && checked.current
         ? planApply(content, {
             rows: state.rows,
+            check: checked.current,
             sealed: state.sealed,
             unread: state.unread,
             outputLanguage: locale as OutputLanguage,
           })
         : null,
-    [state, content, locale],
+    [state, content, locale, checked],
   );
   if (state.phase === "closed") return null;
   const busy = state.phase === "applying";
@@ -1532,7 +1558,9 @@ export function ReviewDialog({
   let body: ReactNode = null;
   let footer: ReactNode = null;
 
-  if (state.phase === "reading") {
+  const checking =
+    state.phase === "ready" && !checked.current && !checked.failed;
+  if (state.phase === "reading" || checking) {
     description = t("desktop.ledger.apply.reading");
     body = (
       <div
@@ -1540,12 +1568,12 @@ export function ReviewDialog({
         className="ledger-apply-reading flex items-center gap-2 text-muted-foreground"
       >
         <Spinner />
-        {state.locks
+        {state.phase === "reading" && state.locks
           ? lockProgress(t, locale, state.locks)
           : t("desktop.ledger.apply.reading")}
       </div>
     );
-  } else if (state.phase === "failed") {
+  } else if (state.phase === "failed" || (state.phase === "ready" && !plan)) {
     body = (
       <Alert tone="danger" role="alert" icon={<Icon name="alert" />}>
         <AlertTitle>{t("desktop.ledger.apply.read_failed")}</AlertTitle>
@@ -1556,7 +1584,11 @@ export function ReviewDialog({
         <Button variant="ghost" onClick={close}>
           {t("desktop.ledger.apply.keep_editing")}
         </Button>
-        <Button onClick={() => void apply.open()}>
+        <Button
+          onClick={() =>
+            state.phase === "failed" ? void apply.open() : checked.retry()
+          }
+        >
           {t("desktop.ledger.retry")}
         </Button>
       </>
@@ -1639,7 +1671,7 @@ export function ReviewDialog({
     const groups = changeGroups(content, rows);
     const entries = entriesOf(t, locale, content, plan, rows);
     description = planLine(t, plan, held);
-    const onIncome = incomeWithCategory(content, rows);
+    const onIncome = incomeWithCategory(checked.current);
     body = (
       <div className="grid gap-5">
         {onIncome.length > 0 && (
@@ -1673,6 +1705,7 @@ export function ReviewDialog({
           onShowRows={onShowRows}
           onGoToDraft={onGoToDraft}
           onRereadSealed={() => void apply.rereadSealed()}
+          port={port}
           locks={state.phase === "ready" ? state.locks : null}
           locale={locale}
         />

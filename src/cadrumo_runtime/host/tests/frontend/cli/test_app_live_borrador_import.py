@@ -50,6 +50,7 @@ def _fixture_year() -> int:
 
 
 _FIXTURE_YEAR = _fixture_year()
+_PROFILE_NIF = "12345678Z"
 _FIXTURE_PDF = (
     bundled_path().resolve().parents[0] / "tests" / "fixtures" / "borrador" / f"modelo_100_{_FIXTURE_YEAR}.pdf"
 )
@@ -204,7 +205,7 @@ def _assert_view_and_latest(
 def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> None:
     """A committed PDF crosses the worker and all snapshot readers see its encrypted capture."""
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="native-borrador-import", facts={})
+        profile.register(label="native-borrador-import", facts={"identity.tax_id": _PROFILE_NIF})
 
         _assert_store_starts_empty(profile)
         payload = _assert_first_import(profile)
@@ -216,7 +217,7 @@ def test_import_persists_a_snapshot_the_read_verbs_retrieve(tmp_path: Path) -> N
 def test_import_stores_a_digest_reference_and_never_the_operator_path(tmp_path: Path) -> None:
     """The stored reference contains the PDF digest, never its input path."""
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="native-borrador-path", facts={})
+        profile.register(label="native-borrador-path", facts={"identity.tax_id": _PROFILE_NIF})
         imported = _import(profile, _FIXTURE_PDF)
         assert imported.exit_code == 0, imported.output
         payload = _json(imported)
@@ -257,7 +258,7 @@ def test_import_refuses_a_pdf_below_the_profile_coverage_minimum(tmp_path: Path)
     )
 
     with native_cli_profile_scope(tmp_path) as profile:
-        profile.register(label="native-borrador-coverage", facts={})
+        profile.register(label="native-borrador-coverage", facts={"identity.tax_id": _PROFILE_NIF})
         refused = _import(profile, partial_pdf)
         assert refused.exit_code != 0, refused.output
         error = require_error_document(refused.output)["error"]

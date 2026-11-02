@@ -1,9 +1,9 @@
 """The gated inference subpackage persists nothing, enforced structurally.
 
 These are the assertions the encryption exemption rests on, and the dependency
-runs one way only: the operator ruling exempts IN-MEMORY reading, rasterising
-and local inference from encryption **because the code persists nothing**, and
-the only thing establishing that it persists nothing is enforcement like this.
+runs one way only: IN-MEMORY reading, rasterising and local inference are exempt
+from encryption **because the code persists nothing**, and the only thing
+establishing that it persists nothing is enforcement like this.
 Remove these and the exemption becomes self-referential -- a correctly reasoned
 permission resting on a property nothing checks.
 
@@ -57,9 +57,8 @@ _FORBIDDEN_TOKENS = (
 def _subpackage_modules() -> list[Path]:
     """Return every non-test module in the subpackage.
 
-    Fails loudly on an empty result. The whole point of the enumerated-surface
-    lesson learned is that a check over nothing reports success
-    identically to a check over clean code -- so a rename or relocation that
+    Fails loudly on an empty result. A check over nothing reports success
+    identically to a check over clean code, so a rename or relocation that
     empties this path must break these tests rather than silently pass them.
     """
     modules = list(non_test_python_files_under(_LLM_PACKAGE, include_data=True))
@@ -81,9 +80,7 @@ def test_no_module_writes_a_file_or_opens_a_temp_path() -> None:
 
     A rendered invoice page IS the invoice. The rule this enforces names
     "no temp files, no scratch directories, no plaintext side stores, no
-    on-disk caches, no logs", and its own worked failure is exactly this shape:
-    an early design routed decrypted bytes through a temp file for a subprocess
-    to read by path, and it was rejected.
+    on-disk caches, no logs".
 
     Mutation that must trip this: add ``tempfile.NamedTemporaryFile()`` to any
     module in the subpackage, including under a ``if logger.isEnabledFor(DEBUG)``

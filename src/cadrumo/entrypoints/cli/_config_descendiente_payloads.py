@@ -1,9 +1,8 @@
 """Typed ``--json`` payload schemas for the ``config profile descendiente`` family.
 
-The former shared ``config_payloads`` module was split into focused siblings.
-Bucket-history schemas now live in
-:mod:`cadrumo.entrypoints.cli.profile_history_results`, leaving this
-module to own declared-descendant transport and its full canonical contract.
+Bucket-history schemas live in
+:mod:`cadrumo.entrypoints.cli.profile_history_results`. This module owns
+declared-descendant transport and its full canonical contract.
 
 :class:`ProfileDescendientePayload` is a lossless projection of
 :class:`~cadrumo.domain.contribuyente.descendant.DescendantInfo`: every field the canonical
@@ -121,12 +120,11 @@ class ProfileDescendientePayload(DescendantRecordFields, OutputSchema):
     def _validate_entry_event_dates(self) -> ProfileDescendientePayload:
         """Mirror the canonical entry-date ordering AND the relación coherence rules.
 
-        The ordering half was always mirrored here. The coherence half is
-        mirrored too, and deliberately rather than defensively: this transport
-        is a lossless projection, so a payload a consumer could construct but
-        the canonical record would refuse is a shape that exists only on the
-        wire. That is precisely where the excluded case would re-enter — a
-        tutela or temporal-acogimiento row carrying an entitling anchor.
+        The coherence half is mirrored deliberately rather than defensively: this
+        transport is a lossless projection, so a payload a consumer could construct but
+        the canonical record would refuse is a shape that exists only on the wire. That
+        is precisely where the excluded case would re-enter — a tutela or
+        temporal-acogimiento row carrying an entitling anchor.
         """
         for field_name, value in (
             ("inscripcion_registro_civil_date", self.inscripcion_registro_civil_date),

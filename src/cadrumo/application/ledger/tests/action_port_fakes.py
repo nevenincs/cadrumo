@@ -233,6 +233,10 @@ class EmptyCalculationRepository(CalculationRevisionCatalogueRepositoryProtocol)
         return bool(self._catalogue.revisions)
 
     @override
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        return False
+
+    @override
     def load(self, *, operation: PinnedAuthorityOperation | None = None) -> CalculationRevisionCatalogue:
         return self._catalogue
 

@@ -24,6 +24,7 @@ from ...domain.filing.schema import ModeloDraft
 from ...domain.iva.sepa_marca import derive_sepa_marca
 from ...domain.modelos.perceptor_clave_scope import PerceptorClaveScope
 from .m190_context_validation import require_m190_signed_reintegro_context
+from .m193_context_validation import require_m193_perceptor_devengo_context
 from .m280_context_validation import m280_contextual_sign_byte, m280_key_wire, require_m280_negative_imputation_context
 from .producer_snapshot import ChargeAccountSelection, FilingProducerSnapshot, RefundAccountSelection
 from .projection import FilingRecordRenderContext
@@ -149,6 +150,7 @@ def _render_positioned_record(
         buffer[start:end] = rendered
     wire = "".join(buffer)
     require_m190_signed_reintegro_context(record, wire, clave_scope=clave_scope, source_digests=source_digests)
+    require_m193_perceptor_devengo_context(record, wire)
     require_m280_negative_imputation_context(record, wire, source_digests=source_digests)
     return wire
 

@@ -125,7 +125,7 @@ application:
     sessions:
       errors:
         clave_contraste_missing: Cl@ve Móvil signs in by default with an approval
-          request to the Cl@ve app, which needs the contraste printed on your document.
+          request to the Cl@ve app, which needs the `contraste` printed on your document.
           Record %{nie_field} on the active profile for a NIE, or %{dni_field} for
           a DNI. To scan a QR code in a visible browser instead, run `cadrumo-runtime
           config auth configure --provider clave_movil --clave-movil-route qr`.
@@ -567,8 +567,8 @@ application:
   inventory:
     advisories:
       retired_book_leaves_year_unresolved: This inventory was retired but still holds
-        entries, so the %{year} Anexo D stays unresolved. Restore it, or remove its
-        entries.
+        entries, so the %{year} `Anexo D` stays unresolved. Restore it, or remove
+        its entries.
     labels:
       acquisition_evidence_kind:
         attributable_cost_review: Cost check
@@ -718,6 +718,100 @@ application:
           H via a fiscal representative).'
         unsupported_iva_rate: 'IVA rate %{iva_rate} is not recognised; use one of:
           %{accepted}.'
+    figures_preview:
+      finding:
+        base_total_not_line_sum: The base total is not the sum of the line subtotals.
+        figure_out_of_range: A figure is too large to be calculated to the cent.
+        grand_total_identity: The total is not the base plus the IVA plus the recargo
+          de equivalencia.
+        iva_total_not_line_sum: The IVA total is not the sum of the line IVA amounts.
+        line_amount_negative: A price, a subtotal or an IVA amount cannot be negative.
+        line_iva_mismatch: The stated IVA amount, %{stated}, differs by more than
+          a cent from the subtotal times the rate, %{expected}.
+        line_iva_not_zero_for_nonnumeric: An exempt or not-subject line carries no
+          IVA, but this one states %{stated}.
+        line_quantity_not_positive: The quantity must be greater than zero.
+        line_rate_coverage_gap: Cadrumo has no rates on record for %{slot} on %{on_date},
+          so it cannot apply it.
+        line_rate_not_in_force: The IVA rate %{slot} was not in force on %{on_date}.
+        line_rate_undeclared: The IVA rate %{slot} is not one the registry declares.
+        line_subtotal_mismatch: The stated subtotal, %{stated}, differs by more than
+          a cent from quantity times unit price, %{expected}.
+        nonnumeric_grand_total_identity: When every line is exempt or not subject,
+          the total must equal the base.
+        nonnumeric_iva_total_not_zero: When every line is exempt or not subject, the
+          IVA total must be zero.
+        nonnumeric_recargo_not_zero: When every line is exempt or not subject, the
+          recargo de equivalencia must be zero.
+        printed_total_differs: The printed total, %{printed}, differs from the calculated
+          total, %{computed}.
+        rate_date_unresolved: The registry declares no IVA rates for %{on_date}, so
+          no IVA can be worked out.
+        recargo_above_iva_total: The recargo de equivalencia, %{stated}, cannot exceed
+          the IVA total, %{iva_total}.
+        recargo_negative: The recargo de equivalencia cannot be negative.
+        retention_amount_above_base: The withholding, %{stated}, cannot exceed the
+          base, %{base_total}.
+        retention_amount_mismatch: The stated withholding, %{stated}, differs by more
+          than a cent from the base times the rate, %{expected}.
+        retention_amount_negative: The withholding amount cannot be negative.
+        retention_rate_out_of_range: The withholding rate is a fraction between 0
+          and 1, such as 0.15 for 15 %, not a percentage.
+        retention_rate_without_amount: A withholding rate needs the withheld amount;
+          a rate alone states nothing withheld.
+        suplido_negative: The amount of expenses paid on the client's behalf cannot
+          be negative.
+        total_negative: An invoice total cannot be negative.
+      rate_slot:
+        exempt: Exempt
+        not_subject: Not subject
+        rate_0: IVA 0 %
+        rate_10: IVA 10 %
+        rate_2: IVA 2 %
+        rate_21: IVA 21 %
+        rate_4: IVA 4 %
+        rate_5: IVA 5 %
+        rate_7_5: IVA 7.5 %
+      rule_finding:
+        counterparty_country_invalid: This is not a two-letter country code the ledger
+          recognises.
+        counterparty_name_blank: The counterparty's name cannot be blank.
+        counterparty_tax_id_invalid: This tax ID is not valid for the counterparty's
+          country.
+        counterparty_tax_id_required: This invoice needs the counterparty's tax ID.
+          Only an issued factura simplificada can go without it.
+        counterparty_tax_id_required_by_category: A factura simplificada in this IVA
+          category needs the counterparty's tax ID.
+        currency_invalid: This is not a three-letter ISO 4217 currency code.
+        intra_community_spanish_identification: An exempt intra-community supply cannot
+          name an acquirer buying under a Spanish IVA number.
+        invoice_class_undeclared: The registry declares no such invoice class.
+        invoice_number_blank: The invoice number cannot be blank.
+        iva_category_undeclared: The registry declares no such IVA category on this
+          date.
+        lease_only_on_issued: Only an issued invoice records a business-premises lease.
+        lease_reference_not_allowed: Premises in this situation have no cadastral
+          reference.
+        lease_reference_too_long: The Modelo 347 holds a cadastral reference of up
+          to {limit} characters.
+        lease_situation_undeclared: This is not a premises situation the Modelo 347
+          declares.
+        line_description_blank: A line's description cannot be blank.
+        line_description_too_long: A line's description holds up to {limit} characters.
+        line_oss_rate_kind_refused: This OSS rate kind is not available for this line.
+        operation_date_role_mismatch: The operation date travels with its stored role,
+          so on a stored invoice it can be moved but not added or removed.
+        operation_type_required: This IVA category needs a Modelo 349 operation key.
+        other_invoice_rule: The ledger would refuse this invoice under another rule.
+          Check its facts against the document.
+        rectified_invoice_not_allowed: Only a factura rectificativa names an invoice
+          it rectifies.
+        rectified_invoice_required: A factura rectificativa must name the invoice
+          it rectifies.
+        series_required_for_rectificativa: A factura rectificativa must be issued
+          in its own series.
+        simplificada_not_for_intra_community: A factura simplificada cannot be issued
+          for an exempt intra-community supply.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'The invoice id prefix %{invoice_id} is ambiguous;
@@ -1038,16 +1132,22 @@ application:
           the rate that applies.
         what_to_do: Check that rate against the official instructions and correct
           the record if needed.
-      advisory_retencion_credit_grade:
-        what: 'The withholding credit from your issued invoices is not fully confirmed:
-          Cadrumo has not yet confirmed which tax year it belongs to.'
-        what_to_do: Compare the amount with the withholding certificate from each
-          client for this filing year before you file.
+      advisory_binding_value:
+        what: A figure in a box rests on a reading Cadrumo cannot confirm yet, so
+          you can see and preview it, but you cannot check, export or record the declaration
+          with it.
+        what_to_do: Compare the figure with your records and the payer's certificate.
+          While it is held back, Cadrumo cannot check, export or record this declaration;
+          a later version that confirms the period will release it.
       aggregation_activity_undeclared:
         what: Box {box} shows zero, although you have income this period with no type
           of activity.
         what_to_do: Set the type of activity on those income entries, then calculate
           again.
+      calculation_screen_outdated:
+        what: This calculation was made before Cadrumo's current checks on its figures,
+          so it cannot be checked, exported or recorded as it stands.
+        what_to_do: Calculate the declaration again, then check it.
       deferred_binding_source:
         what: Cadrumo does not fill in one figure of this declaration automatically
           yet.
@@ -1317,6 +1417,14 @@ application:
         out, so it is not included.'
       activity_undeclared: '{element}: its purchase has no type of activity and another
         of your assets is agricultural, so it counts as non-agricultural.'
+      advisory_imputation_period_ungrounded: 'Box {box}: {amount} of withholding is
+        held back because the period it belongs to is not confirmed. A withholding
+        counts in the period of the income it was taken from (RIRPF art. 79), and
+        your records date each payment by when it reached the bank, which is right
+        only if you chose to declare income when you are paid (RIRPF art. 7.2; LIRPF
+        art. 14.1.b).'
+      advisory_value_proven_zero: 'Box {box}: the zero stands, because nothing in
+        the period carries a figure whose period could be in doubt.'
       agrarian_excluded: '{element}: it belongs to an agricultural activity, so it
         is left out of the instalment for the period ending {period_end}.'
       amortization_box_unbound: '{element}: this edition has no box for its depreciation
@@ -2441,7 +2549,7 @@ application:
           exact_iva_rate: Exact IVA rate (text)
           exact_m210_applicable_rate: Exact Modelo 210 rate (text)
           exact_m210_gross_income_amount: Exact Modelo 210 gross income (text)
-          exact_recargo_amount: Exact recargo amount (text)
+          exact_recargo_amount: Exact recargo de equivalencia amount (text)
           exact_taxable_base: Exact taxable base (text)
           exact_value: Exact decimal value (text)
           exported_at: Exported at

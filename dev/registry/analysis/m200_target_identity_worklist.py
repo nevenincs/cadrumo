@@ -9,22 +9,35 @@ from collections.abc import Mapping
 from dataclasses import asdict, dataclass, is_dataclass
 from enum import StrEnum
 from pathlib import Path
+from typing import TYPE_CHECKING
 
 import rtoml
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.core.resources.bundled_data import bundled_path
 from cadrumo.domain.calculations.export_field_kind import CasillaFieldKind
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.schema import ModeloRevision
+from cadrumo.domain.calculations.registry.schema_form_layouts import FormPlacementKind
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
-from ..compiler.loader import load_catalogue_file, load_modelo_directory
+from ..compiler.authority import compiled_bundled_authority
+from ..maintenance_support import (
+    coverage_assessment_floor,
+    coverage_assessment_horizon,
+    revision_selection_coordinates,
+)
 from ..pipeline.record_design_intermediate import (
     RecordDesignIntermediate,
     RecordDesignIntermediateField,
     load_record_design_intermediate,
 )
-from ..pipeline.semantic_map import SemanticMap, SemanticMapEntry, load_semantic_map, semantic_anchor_key
+from ..pipeline.semantic_map import SemanticMap, SemanticMapEntry, load_semantic_map_for_revision, semantic_anchor_key
+from ..pipeline.semantic_map_validation import resolve_semantic_map_casilla_tokens
 from .m200_record_design_support import record_design_field_index, record_design_source
+
+if TYPE_CHECKING:
+    from cadrumo.domain.calculations.registry.authority import ValidatedRegistryAuthority
 
 __all__ = [
     "M200MapOwnerIdentityDisposition",
@@ -33,27 +46,32 @@ __all__ = [
     "M200PrintedIdentityState",
     "M200TargetIdentityWorklist",
     "classify_m200_target_identities",
-    "load_bundled_m200_target_identity_worklist",
+    "load_bundled_m200_target_identity_worklists",
     "main",
-    "render_m200_target_identity_worklist_toml",
+    "render_m200_target_identity_worklists_toml",
 ]
 
 
-TARGET_SOURCE_REF = "aeat-dr-200-2024"
-TARGET_SOURCE_SHA256 = "ed4df89a451abc2184bc60a1d13ff53a3d38e9a6201698fb635cf0b8ee455218"
+_MODELO = "200"
+_PRINTED_NUMBER = re.compile(r"\[([0-9]+)\]")
 
 
 class M200MapOwnerIdentityDisposition(StrEnum):
     """A source-anchor-only classification for a noncanonical map owner."""
 
-    ZERO_PADDING_PROPOSAL = "zero_padding_proposal"
     SEGMENT_QUALIFIED_PROPOSAL = "segment_qualified_proposal"
 
 
 class M200OrphanDisposition(StrEnum):
-    """A closed disposition for a declaration that has no target map owner."""
+    """A closed disposition for a declaration that has no target map owner.
+
+    The layout dispositions record that the revision's own form layout declares
+    the casilla unplaced or an application working figure.
+    """
 
     UNMAPPED_DECLARATION = "unmapped_declaration"
+    DECLARED_UNPLACED = "declared_unplaced"
+    DECLARED_WORKING_FIGURE = "declared_working_figure"
 
 
 class M200PrintedIdentityState(StrEnum):
@@ -107,6 +125,7 @@ class M200PrintedIdentityDiagnostic:
 class M200TargetIdentityWorklist:
     """Complete, target-source-bound identity evidence with no authority mutation path."""
 
+    revision: str
     source_ref: str
     source_sha256: str
     semantic_map_source_ref: str
@@ -120,13 +139,17 @@ def classify_m200_target_identities(
     target_map: SemanticMap,
     target_design: RecordDesignIntermediate,
     *,
+    revision_id: str,
     target_declarations: Mapping[CasillaId, CasillaDefinition],
     target_candidate_ids: frozenset[CasillaId],
+    declared_placements: Mapping[CasillaId, FormPlacementKind] | None = None,
 ) -> M200TargetIdentityWorklist:
     """Classify target map-owner identity drift without changing ownership.
 
-    The 2024 design proves only the physical source anchor and its printed box
-    number.  A padded or segment-qualified declaration-like token is retained
+    A numeric owner token is resolved by the pipeline's own left-padding
+    resolver, so an owner it resolves is credited as mapped and is never a
+    finding.  The design proves only the physical source anchor and its
+    printed box number; a segment-qualified declaration-like token is retained
     as a non-authoritative proposal, never rewritten into the semantic map or
     promoted into a canonical declaration.
     """
@@ -134,6 +157,8 @@ def classify_m200_target_identities(
     target_fields = _complete_target_field_index(target_map, target_design)
     declared_ids = frozenset(target_declarations)
     known_ids = declared_ids | target_candidate_ids
+    source_ref = str(target_design.source.source_ref)
+    source_sha256 = target_design.source.source_sha256
     mismatches: list[M200MapOwnerIdentity] = []
     diagnostics: list[M200PrintedIdentityDiagnostic] = []
     map_owner_ids: set[CasillaId] = set()
@@ -142,9 +167,12 @@ def classify_m200_target_identities(
         field = target_fields[semantic_anchor_key(entry.anchor)]
         mismatch, diagnostic, map_owner = _target_identity_entry_findings(
             entry,
+            target_map=target_map,
             field=field,
             known_ids=known_ids,
             declared_ids=declared_ids,
+            source_ref=source_ref,
+            source_sha256=source_sha256,
         )
         if map_owner is not None:
             map_owner_ids.add(map_owner)
@@ -153,18 +181,20 @@ def classify_m200_target_identities(
         if mismatch is not None:
             mismatches.append(mismatch)
 
+    placements = {} if declared_placements is None else declared_placements
     orphaned = tuple(
         M200OrphanedDeclaration(
             casilla_id=str(casilla_id),
-            disposition=M200OrphanDisposition.UNMAPPED_DECLARATION,
+            disposition=_orphan_disposition(placements.get(casilla_id)),
             source_refs=tuple(declaration.source_refs),
         )
         for casilla_id, declaration in sorted(target_declarations.items())
         if casilla_id not in map_owner_ids
     )
     return M200TargetIdentityWorklist(
-        source_ref=TARGET_SOURCE_REF,
-        source_sha256=TARGET_SOURCE_SHA256,
+        revision=revision_id,
+        source_ref=source_ref,
+        source_sha256=source_sha256,
         semantic_map_source_ref=target_map.source_ref,
         semantic_map_source_sha256=target_map.source_sha256,
         map_owner_mismatches=tuple(sorted(mismatches, key=lambda item: item.export_field_id)),
@@ -173,46 +203,53 @@ def classify_m200_target_identities(
     )
 
 
+def _orphan_disposition(placement: FormPlacementKind | None) -> M200OrphanDisposition:
+    if placement is FormPlacementKind.UNPLACED:
+        return M200OrphanDisposition.DECLARED_UNPLACED
+    if placement is FormPlacementKind.WORKING_FIGURE:
+        return M200OrphanDisposition.DECLARED_WORKING_FIGURE
+    return M200OrphanDisposition.UNMAPPED_DECLARATION
+
+
 def _target_identity_entry_findings(
     entry: SemanticMapEntry,
     *,
+    target_map: SemanticMap,
     field: RecordDesignIntermediateField,
     known_ids: frozenset[CasillaId],
     declared_ids: frozenset[CasillaId],
+    source_ref: str,
+    source_sha256: str,
 ) -> tuple[M200MapOwnerIdentity | None, M200PrintedIdentityDiagnostic | None, CasillaId | None]:
     kind = _semantic_kind(entry)
-    owner = entry.casilla_id
     if kind != CasillaFieldKind.CASILLA.value:
-        if owner is not None:
+        if entry.casilla_id is not None:
             raise ValueError(f"non-casilla map entry {entry.export_field_id!r} declares casilla ownership")
         return None, None, None
-    if owner is None:
+    if entry.casilla_id is None:
         raise ValueError(f"casilla map entry {entry.export_field_id!r} omits its owner")
-    owner = str(owner)
     printed = _printed_target_number(field)
-    if owner in known_ids:
-        printed_state = _printed_identity_state(printed, owner, proposal=None)
+    resolved = _resolve_owner(entry, target_map, known_ids)
+    if resolved is not None:
+        printed_state = _printed_identity_state(printed, resolved, proposal=None)
         diagnostic = None
         if printed_state is not M200PrintedIdentityState.MATCHES_MAP_OWNER:
             diagnostic = M200PrintedIdentityDiagnostic(
                 export_field_id=str(entry.export_field_id),
                 anchor=semantic_anchor_key(entry.anchor),
-                declared_map_owner=owner,
+                declared_map_owner=resolved,
                 printed_number=printed,
                 state=printed_state,
-                source_ref=TARGET_SOURCE_REF,
-                source_sha256=TARGET_SOURCE_SHA256,
+                source_ref=source_ref,
+                source_sha256=source_sha256,
             )
-        return None, diagnostic, owner
+        return None, diagnostic, resolved
 
-    disposition, proposed = _classify_noncanonical_map_owner(owner, field=field, known_ids=known_ids)
+    owner = str(entry.casilla_id)
+    disposition, proposed = _classify_noncanonical_map_owner(entry, target_map, field=field, known_ids=known_ids)
     printed_state = _printed_identity_state(printed, owner, proposal=proposed)
-    if printed_state is not M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL:
+    if printed is None or printed_state is not M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL:
         raise ValueError(f"target anchor {entry.export_field_id!r} does not prove its proposed map-owner identity")
-    # MATCHES_IDENTITY_PROPOSAL is only reachable when `printed` is not None:
-    # `_printed_identity_state` returns MISSING_OFFICIAL_PRINTED_IDENTITY otherwise.
-    if printed is None:
-        raise ValueError("identity proposal requires an official printed identity")
     mismatch = M200MapOwnerIdentity(
         export_field_id=str(entry.export_field_id),
         anchor=semantic_anchor_key(entry.anchor),
@@ -222,89 +259,131 @@ def _target_identity_entry_findings(
         proposed_identity_origin=("declared" if proposed in declared_ids else "candidate_non_authoritative"),
         printed_number=printed,
         printed_identity_state=printed_state,
-        source_ref=TARGET_SOURCE_REF,
-        source_sha256=TARGET_SOURCE_SHA256,
+        source_ref=source_ref,
+        source_sha256=source_sha256,
     )
     return mismatch, None, None
 
 
-def render_m200_target_identity_worklist_toml(worklist: M200TargetIdentityWorklist) -> str:
-    """Render deterministic source-anchor identity evidence without an apply path."""
-    _require_worklist_source_identity(worklist)
+def _resolve_owner(
+    entry: SemanticMapEntry,
+    target_map: SemanticMap,
+    casilla_ids: frozenset[CasillaId],
+) -> CasillaId | None:
+    """Return the owner the canonical resolver settles on, or None when it refuses."""
+    try:
+        resolved = resolve_semantic_map_casilla_tokens(
+            target_map.model_copy(update={"entries": (entry,)}),
+            casilla_ids=casilla_ids,
+        )
+    except RegistryValidationError:
+        return None
+    return resolved.entries[0].casilla_id
+
+
+def render_m200_target_identity_worklists_toml(worklists: tuple[M200TargetIdentityWorklist, ...]) -> str:
+    """Render deterministic source-anchor identity evidence, one table per revision, without an apply path."""
+    for worklist in worklists:
+        _require_worklist_source_identity(worklist)
     return rtoml.dumps(
         {
             "schema_version": 1,
             "authority_status": "proposal_only",
-            "modelo": "200",
-            "revision": "2024",
-            "source_ref": worklist.source_ref,
-            "source_sha256": worklist.source_sha256,
-            "semantic_map_source_ref": worklist.semantic_map_source_ref,
-            "semantic_map_source_sha256": worklist.semantic_map_source_sha256,
-            "counts": {
-                "map_owner_mismatches": len(worklist.map_owner_mismatches),
-                "orphaned_declarations": len(worklist.orphaned_declarations),
-                "printed_identity_diagnostics": len(worklist.printed_identity_diagnostics),
-            },
-            "map_owner_mismatch": [_serialise(row) for row in worklist.map_owner_mismatches],
-            "orphaned_declaration": [_serialise(row) for row in worklist.orphaned_declarations],
-            "printed_identity_diagnostic": [_serialise(row) for row in worklist.printed_identity_diagnostics],
+            "modelo": _MODELO,
+            "revision_worklist": [
+                {
+                    "revision": worklist.revision,
+                    "source_ref": worklist.source_ref,
+                    "source_sha256": worklist.source_sha256,
+                    "semantic_map_source_ref": worklist.semantic_map_source_ref,
+                    "semantic_map_source_sha256": worklist.semantic_map_source_sha256,
+                    "counts": {
+                        "map_owner_mismatches": len(worklist.map_owner_mismatches),
+                        "orphaned_declarations": len(worklist.orphaned_declarations),
+                        "printed_identity_diagnostics": len(worklist.printed_identity_diagnostics),
+                    },
+                    "map_owner_mismatch": [_serialise(row) for row in worklist.map_owner_mismatches],
+                    "orphaned_declaration": [_serialise(row) for row in worklist.orphaned_declarations],
+                    "printed_identity_diagnostic": [_serialise(row) for row in worklist.printed_identity_diagnostics],
+                }
+                for worklist in worklists
+            ],
         },
         pretty=True,
     )
 
 
 def main(argv: list[str] | None = None) -> int:
-    """Emit the complete proposal-only target identity worklist as TOML to stdout."""
+    """Emit the complete proposal-only target identity worklists as TOML to stdout."""
     parser = argparse.ArgumentParser(description=__doc__)
     parser.parse_args(argv)
-    worklist = load_bundled_m200_target_identity_worklist()
-    sys.stdout.write(render_m200_target_identity_worklist_toml(worklist))
+    worklists = load_bundled_m200_target_identity_worklists()
+    sys.stdout.write(render_m200_target_identity_worklists_toml(worklists))
     return 0
 
 
-def load_bundled_m200_target_identity_worklist() -> M200TargetIdentityWorklist:
-    """Load the complete 2024 target-only map-owner and orphan worklist."""
+def load_bundled_m200_target_identity_worklists() -> tuple[M200TargetIdentityWorklist, ...]:
+    """Load one worklist per Modelo 200 revision the registry's supported envelope selects."""
+    authority = compiled_bundled_authority()
+    modelo = authority.modelo(_MODELO)
+    horizon = coverage_assessment_horizon(authority.catalogues)
+    floor = coverage_assessment_floor(authority.catalogues)
+    selected = tuple(
+        revision
+        for revision in sorted(modelo.revisions.values(), key=lambda item: item.valid_from)
+        if revision_selection_coordinates(revision, assessment_horizon=horizon, assessment_floor=floor)
+    )
     source_root = bundled_path()
-    registry_root = bundled_path("registry", "aeat")
-    modelo = load_modelo_directory(registry_root / "modelos" / "200")
-    target = modelo.revisions["2024"]
-    catalogues = load_catalogue_file(registry_root / "legal" / "is.toml")
-    target_source = record_design_source(target.source_refs, catalogues.sources)
-    target_epoch = catalogues.sources[target_source].record_design_epoch
+    worklists = (_load_revision_worklist(authority, revision, source_root) for revision in selected)
+    return tuple(worklist for worklist in worklists if worklist is not None)
+
+
+def _load_revision_worklist(
+    authority: ValidatedRegistryAuthority,
+    revision: ModeloRevision,
+    source_root: Path,
+) -> M200TargetIdentityWorklist | None:
+    """Screen one revision, or return None when it has no authored semantic map to screen."""
+    sources = authority.catalogues.sources
+    target_source = record_design_source(revision.source_refs, sources)
+    target_epoch = sources[target_source].record_design_epoch
     if target_epoch is None:
         raise ValueError("M200 target record-design source must declare an epoch")
+    epoch_directory = Path(__file__).parents[1] / "mappings" / f"modelo_{_MODELO}" / target_epoch
+    if not epoch_directory.is_dir():
+        return None
     target_design = load_record_design_intermediate(
         source_root,
-        catalogues.sources,
+        sources,
         source_ref=target_source,
-        filing_year=target.valid_from.year,
+        filing_year=revision.valid_from.year,
         design_epoch=target_epoch,
     )
+    semantic_map = load_semantic_map_for_revision(epoch_directory, revision.id)
     return classify_m200_target_identities(
-        load_semantic_map(Path(__file__).parents[1] / "mappings" / "modelo_200" / target_epoch),
+        semantic_map,
         target_design,
-        target_declarations={declaration.id: declaration for declaration in target.casillas},
+        revision_id=str(revision.id),
+        target_declarations={declaration.id: declaration for declaration in revision.casillas},
         target_candidate_ids=frozenset(),
+        declared_placements={
+            placement.casilla_id: placement.kind for layout in revision.form_layouts for placement in layout.placements
+        },
     )
 
 
 def _require_target_source_identity(target_map: SemanticMap, target_design: RecordDesignIntermediate) -> None:
     if (
-        str(target_design.source.source_ref) != TARGET_SOURCE_REF
-        or target_design.source.source_sha256 != TARGET_SOURCE_SHA256
-        or target_map.source_ref != TARGET_SOURCE_REF
-        or target_map.source_sha256 != TARGET_SOURCE_SHA256
+        target_map.source_ref != target_design.source.source_ref
+        or target_map.source_sha256 != target_design.source.source_sha256
     ):
         raise ValueError("M200 target source identity drifted")
 
 
 def _require_worklist_source_identity(worklist: M200TargetIdentityWorklist) -> None:
     if (
-        worklist.source_ref != TARGET_SOURCE_REF
-        or worklist.source_sha256 != TARGET_SOURCE_SHA256
-        or worklist.semantic_map_source_ref != TARGET_SOURCE_REF
-        or worklist.semantic_map_source_sha256 != TARGET_SOURCE_SHA256
+        worklist.semantic_map_source_ref != worklist.source_ref
+        or worklist.semantic_map_source_sha256 != worklist.source_sha256
     ):
         raise ValueError("M200 target identity worklist source identity drifted")
 
@@ -329,23 +408,24 @@ def _semantic_kind(entry: SemanticMapEntry) -> str:
 
 
 def _classify_noncanonical_map_owner(
-    owner: str,
+    entry: SemanticMapEntry,
+    target_map: SemanticMap,
     *,
     field: RecordDesignIntermediateField,
     known_ids: frozenset[CasillaId],
 ) -> tuple[M200MapOwnerIdentityDisposition, str]:
-    if not owner.isdecimal():
-        raise ValueError(f"M200 casilla map owner {owner!r} is neither declared nor a numeric identity")
-    padded = owner.zfill(5)
-    candidates: list[tuple[M200MapOwnerIdentityDisposition, str]] = []
-    if padded in known_ids:
-        candidates.append((M200MapOwnerIdentityDisposition.ZERO_PADDING_PROPOSAL, padded))
-    qualified = f"{field.record_identity}:{padded}"
-    if qualified in known_ids:
-        candidates.append((M200MapOwnerIdentityDisposition.SEGMENT_QUALIFIED_PROPOSAL, qualified))
-    if len(candidates) != 1:
-        raise ValueError(f"M200 casilla map owner {owner!r} has ambiguous or missing target identity")
-    return candidates[0]
+    """Propose the segment-qualified identity a token the canonical resolver refused may denote."""
+    prefix = f"{field.record_identity}:"
+    segment_ids = frozenset(str(item)[len(prefix) :] for item in known_ids if str(item).startswith(prefix))
+    resolved = _resolve_owner(entry, target_map, segment_ids)
+    if resolved is None:
+        raise ValueError(f"M200 casilla map owner {entry.casilla_id!r} has ambiguous or missing target identity")
+    return M200MapOwnerIdentityDisposition.SEGMENT_QUALIFIED_PROPOSAL, f"{prefix}{resolved}"
+
+
+def _same_box_number(left: str, right: str) -> bool:
+    """Compare two decimal box numbers modulo left-zero padding, as the design prints them."""
+    return left.isdecimal() and right.isdecimal() and left.lstrip("0") == right.lstrip("0")
 
 
 def _printed_identity_state(
@@ -356,17 +436,17 @@ def _printed_identity_state(
 ) -> M200PrintedIdentityState:
     if printed is None:
         return M200PrintedIdentityState.MISSING_OFFICIAL_PRINTED_IDENTITY
-    if printed == owner or (":" in owner and printed == owner.rsplit(":", 1)[-1]):
+    if printed == owner or _same_box_number(printed, owner.rsplit(":", 1)[-1]):
         return M200PrintedIdentityState.MATCHES_MAP_OWNER
-    if proposal is not None and (printed == proposal or printed == proposal.rsplit(":", 1)[-1]):
+    if proposal is not None and _same_box_number(printed, proposal.rsplit(":", 1)[-1]):
         return M200PrintedIdentityState.MATCHES_IDENTITY_PROPOSAL
     return M200PrintedIdentityState.CONFLICTS_WITH_MAP_OWNER
 
 
 def _printed_target_number(field: RecordDesignIntermediateField) -> str | None:
-    """Return only the complete five-digit printed identity used by the 2024 census."""
-    matches = [str(match) for match in re.findall(r"\[([0-9]{5})\]", field.normalized_description)]
-    return matches[0] if len(matches) == 1 else None
+    """Return the single bracketed printed box number, whatever its digit count."""
+    matches = _PRINTED_NUMBER.findall(field.normalized_description)
+    return str(matches[0]) if len(matches) == 1 else None
 
 
 def _serialise(value: object) -> object:

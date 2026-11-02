@@ -9,7 +9,7 @@ import re
 import shutil
 import sys
 import tempfile
-from collections.abc import Generator
+from collections.abc import Generator, Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import IO, Any, Final
@@ -428,10 +428,39 @@ def restate(config: pytest.Config) -> None:
             flush=True,
         )
         return
+    if run_log.exit_status == _NO_TESTS_COLLECTED:
+        for line in no_tests_diagnosis(config.args, config.invocation_params.dir):
+            print(line, flush=True)
     print(
         f"test run log: {run_log.path} (exit={run_log.exit_status}, metadata={run_log.metadata_path})",
         flush=True,
     )
+
+
+_NO_TESTS_COLLECTED: Final = 5
+
+
+def no_tests_diagnosis(args: Sequence[str], base: Path) -> tuple[str, ...]:
+    """Name the requested paths and node IDs that exit status 5 would otherwise hide.
+
+    Under xdist the workers collect and the controller only learns that nothing
+    was selected, so pytest's own ``not found`` error never reaches the
+    transcript (a plain run reports it and exits 4). The controller can still
+    see whether a requested file exists. It cannot see whether a function
+    inside an existing file does, and says so rather than guessing.
+    """
+    lines: list[str] = []
+    for argument in args:
+        path_text = argument.partition("::")[0]
+        if not (base / path_text).exists():
+            lines.append(f"ERROR: file or directory not found: {path_text} (requested as {argument!r})")
+        elif "::" in argument:
+            lines.append(
+                f"NOTE: {argument!r} names a file that exists; whether its node ID resolves cannot be "
+                "checked under xdist. Re-run with -n 0 to see pytest's own 'not found' error, "
+                "or pass -m '' if a marker deselected it."
+            )
+    return tuple(lines)
 
 
 #: The collect-only summary this module prints, read back by the gates that

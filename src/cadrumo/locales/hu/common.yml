@@ -247,6 +247,8 @@ aggregation:
         megadnia a számot, a legkorábbi és a legkésőbbi benyújtási dátumot.
       owned_sources_blank: A forrásháló saját forrásai nem tartalmazhatnak üres forrástípusokat.
       owned_sources_duplicate: A forrásháló saját forrásainak egyedinek kell lenniük.
+      proven_zero_value_not_zero: Egy forrásfeloldó bizonyított nullát jelzett egy
+        olyan kötéshez, amelynek értéke nem nulla.
       provenance_binding_source_mismatch: A származási soron megadott forrástípus
         nem egyezik azzal az értékforrással, amelyhez tartozónak vallja magát. A nyomon
         követhetőség csak akkor ellenőrizhető, ha mindkettő ugyanazt a forrást nevezi
@@ -307,7 +309,7 @@ auth:
     certificate_description: X.509 ügyféltanúsítvány-alapú hitelesítés (FNMT-RCM vagy
       bármely elismert hatóság). Minden Sede-folyamatot támogat.
     certificate_label: Digitális tanúsítvány
-    clave_movil_description: 'Push-jóváhagyásos hitelesítés a Cl@ve-nél regisztrált
+    clave_movil_description: 'Értesítéssel jóváhagyott hitelesítés a Cl@ve-nél regisztrált
       telefon segítségével. Szükséges: DNI/NIE, Cl@ve-regisztráció és párosított eszköz.'
     clave_movil_label: Cl@ve Móvil
     clave_permanente_description: DNI/NIE- és jelszóalapú hitelesítés a Cl@ve Permanente
@@ -1050,6 +1052,7 @@ desktop:
       le az AEAT-től.
     close: Naptár bezárása
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: 'Legkorábbi zárás: {date}'
     empty: Ebben az időszakban nincs bevallási kötelezettség.
     event:
       filing: Bevallás
@@ -3138,6 +3141,10 @@ desktop:
         retention_rate: Retención mértéke
         series: Sorozat
         situacion: Ingatlan helyzete
+      figures_retry: Próbáld újra
+      figures_unavailable: A számok nem érhetők el. A főkönyv nem válaszolt, a piszkozatod
+        megmaradt.
+      figures_updating: A számok frissülnek…
       fixed: A számla azonosítójának része. Módosításhoz töröld, majd add hozzá újra.
       from_lines: A tételsorok szerint
       gone: Ez a számla már nincs a katalógusban.
@@ -3174,6 +3181,7 @@ desktop:
       line:
         actions: Műveletek
         add: Tételsor hozzáadása
+        calculated: 'Számított: {amount}'
         category: Kategória
         choose_rate: Válassz kulcsot
         description: Leírás
@@ -3188,7 +3196,8 @@ desktop:
       lines: Tételsorok
       lines_fixed: Rögzített
       lines_note: Tizedespont, legfeljebb hat tizedes, ezres elválasztó nélkül. A
-        részösszeg és az IVA centre pontosan számolódik.
+        részösszeget és az IVA-t a főkönyv számolja; csak akkor töltsd ki, ha a bizonylaton
+        nyomtatott értéket adod meg.
       linked: Kapcsolt tételek
       linked_count: 'Kapcsolt tételek: {count}'
       links_permanent: 'A kapcsolat végleges: nem távolítható el.'
@@ -3199,11 +3208,11 @@ desktop:
       next_number: 'A(z) {series} sorozat következő száma: {number}'
       next_number_series: Válassz sorozatot a következő szám megjelenítéséhez.
       none: Nincs
+      not_available: Nem érhető el
       not_met: nem teljesül
       not_saved: Nem lett mentve. A módosításaid megmaradtak.
       not_stated: Nincs megadva
       open_duplicate: Megnyitás
-      operation_date_fixed: Csak a számla hozzáadásakor adható meg
       operation_key: '{key} kulcs'
       party: Partner
       payment:
@@ -3219,23 +3228,9 @@ desktop:
         choose_rate: Válassz kulcsot.
         country_letters: Két betű, pl. ES.
         currency_letters: Három betű, pl. EUR.
-        lease_reference_not_allowed: Ennél a helyzetnél nincs kataszteri hivatkozás.
         missing: Kötelező.
         no_line: Adj hozzá legalább egy tételsort.
-        operation_date_fixed: Hozzáadás után módosítható, de nem adható hozzá és nem
-          törölhető.
         payment_id_shape: 64 hexadecimális karakter.
-        printed_differs: A tételsorok összege {total}.
-        recargo_above_iva: Nem haladhatja meg az IVA-t.
-        rectifies_required: Add meg a helyesbített számlát.
-        retention_above_base: Nem haladhatja meg az adóalapot.
-        retention_differs: A mérték alapján {amount}.
-        retention_needs_amount: A mértékhez összeg is kell.
-        series_required: Helyesbítő számlához sorozat szükséges.
-        tax_id_required: Kötelező, kivéve kiállított egyszerűsített számla esetén.
-      rate:
-        exempt: Mentes
-        not_subject: Nem tárgya
       read_failed: A számlák nem olvashatók be.
       refusal:
         ambiguous_grouping: '"{raw}" kétféleképpen érthető. Írd így: 1500 vagy 1,5.'
@@ -3266,7 +3261,7 @@ desktop:
       remove_question: Törlöd ezt a számlát?
       removed: '{number} számla törölve'
       retention: Retención, a végösszegen kívül
-      retention_presets: Gyakori retención-mértékek
+      retention_implied: A kulcs szerint {amount}.
       review: Áttekintés
       review_changes: Módosítások áttekintése ({count})
       save: Mentés
@@ -3292,6 +3287,8 @@ desktop:
       unmatched: Párosítatlan
       use: Használat
       use_number: '{number} használata'
+      would_refuse: A főkönyv ebben a formában elutasítaná ezt a számlát. Ellenőrizd
+        az adószámát és a bizonylat mezőit.
     irpf_category:
       actividad_economica: Gazdasági tevékenység
       arrendamiento_local: Üzlethelyiség bérlete
@@ -5990,7 +5987,7 @@ sheets:
       startup_fund_rendimientos_clave: Alapkezelési jövedelem
       street_name: Közterület neve
       street_type: Közterület jellege
-      subclave: Alkulcs
+      subclave: Részkulcs
       supplier_tax_id: Szállító adóazonosítója
       taxable_base: Visszatartási alap
       territorial_deduction_clave: Ceuta vagy Melilla / La Palma
@@ -6659,6 +6656,8 @@ tui:
       errors:
         amount_invalid: Az összeget csak számjegyekkel, tizedesponttal add meg, például
           1500.00.
+        amount_required: 'Add meg az összeget itt: „{field}”. Ha nincs ilyen, írj
+          0.00-t.'
         asset_id_required: Először add meg az elem azonosítóját.
         choice_invalid: 'Válassz az alábbiak közül: {options}.'
         date_invalid: Add meg a dátumot ÉÉÉÉ-HH-NN alakban, például 2025-06-30.

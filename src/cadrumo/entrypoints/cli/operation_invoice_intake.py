@@ -95,13 +95,7 @@ def submit_invoice_import(
         result_type=InvoiceImportProjection,
     )
     projection = completed.projection
-    expected_effect = (
-        OperationEffect.NONE
-        if projection.created == 0
-        else OperationEffect.PARTIAL
-        if projection.refused
-        else OperationEffect.UPDATED
-    )
+    expected_effect = projection.settled_effect
     if (
         projection.profile_id != client.profile_id
         or completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED

@@ -2,6 +2,7 @@
 // takes no edit, a field's name and a value before and after, in the chrome
 // language and the product's terms. Nothing here decides anything.
 
+import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type { DraftField, StageField } from "../../../shell/ledgerStage";
 import type { Translate } from "../../../shell/strings";
 import type { ColumnId } from "../movements/movementsModel";
@@ -114,6 +115,7 @@ export function valueText(
 export function choiceLabels(
   t: Translate,
   accounts: readonly { id: string; label: string }[] | null,
+  vocabulary: ServedVocabulary,
 ): ChoiceLabels & {
   mixedShare: (share: string) => string;
 } {
@@ -126,6 +128,9 @@ export function choiceLabels(
     category: (id) => categoryLabel(t, id),
     ivaCategory: (id) => ivaCategoryLabel(t, id),
     irpfCategory: (id) => irpfCategoryLabel(t, id),
+    categories: vocabulary.categories,
+    ivaCategories: vocabulary.ivaCategories,
+    irpfCategories: vocabulary.irpfCategories,
     mixedShare: (share) =>
       t("desktop.ledger.classification.mixed_share", { share }),
   };

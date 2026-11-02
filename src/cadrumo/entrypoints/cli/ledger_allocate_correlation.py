@@ -13,6 +13,7 @@ from ...application.ledger.allocate_operation import (
     LedgerAllocateOperationResult,
 )
 from ...core.operations import OperationEffect, OperationTerminalCondition
+from ...domain.transactions.classification_effects import fields_cleared_by_classification
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.model_validation import classification_for_business_share
 
@@ -85,7 +86,7 @@ def allocation_usage_ratio(expected_classification: BusinessClassification, usag
     """Normalize the requested usage ratio id for the admitted classification."""
     return (
         None
-        if expected_classification is not BusinessClassification.MIXED or usage_ratio_id is None
+        if "usage_ratio_id" in fields_cleared_by_classification(expected_classification) or usage_ratio_id is None
         else usage_ratio_id.strip() or None
     )
 
@@ -96,7 +97,8 @@ def allocation_prorrata_reference(
     """Normalize the requested prorrata reference for the admitted classification."""
     return (
         None
-        if expected_classification is BusinessClassification.PERSONAL or prorrata_reference is None
+        if "prorrata_reference" in fields_cleared_by_classification(expected_classification)
+        or prorrata_reference is None
         else prorrata_reference.strip() or None
     )
 
@@ -105,7 +107,7 @@ def allocation_category(expected_classification: BusinessClassification, categor
     """Normalize the requested category id for the admitted classification."""
     return (
         None
-        if expected_classification is BusinessClassification.PERSONAL or category_id is None
+        if "category_id" in fields_cleared_by_classification(expected_classification) or category_id is None
         else category_id.strip()
     )
 

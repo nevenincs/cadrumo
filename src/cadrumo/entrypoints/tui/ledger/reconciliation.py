@@ -273,10 +273,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
 
     def on_button_pressed(self, event: Button.Pressed) -> None:
         """Submit once through the injected door or cancel before persistence."""
-        if event.button.id == "ledger-reconciliation-cancel" and self.flow_state in {
-            LedgerFlowState.EDITING,
-            LedgerFlowState.CONFIRMING,
-        }:
+        if event.button.id == "ledger-reconciliation-cancel" and self.can_cancel_flow:
             self._cancel_flow()
             return
         if (
@@ -311,7 +308,7 @@ class LedgerReconciliationScreen(LedgerConfirmationFlowScreen):
     @override
     def _cancel_flow(self) -> None:
         """Cancel only before the injected mutation begins."""
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self._transition(LedgerFlowState.CANCELLED)
         self.selected_pair = None

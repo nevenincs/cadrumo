@@ -51,7 +51,7 @@ wizard:
       1. Futtasd újra a parancsot interaktív terminálból az irányított beállítás használatához:
       aeat config profile create NAME
 
-      2. Vagy hozz létre resident IRPF természetes személy profilt egyetlen lépéssel,
+      2. Vagy hozz létre rezidens IRPF természetes személy profilt egyetlen lépéssel,
       a szükséges adatokat kapcsolókként megadva: aeat config profile create NAME
       --quiet --tax-id NIF/CIF/DNI/NIE --entity-type natural_person --irpf-income-categories
       actividad_economica --tax-residence-ccaa madrid --name KERESZTNÉV --surnames
@@ -480,8 +480,8 @@ wizard:
           4 = különváltan élő vagy elvált, 5 = bejegyzett élettársi kapcsolat.'
       taxpayer-marriage-date:
         help: A jelenlegi házasság kezdő dátuma (ÉÉÉÉ-HH-NN). Csak ha a családi állapot
-          = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (matrimonio sobrevenido,
-          82. cikk LIRPF).
+          = 2 (házas). Kiszámolja a 0245/0246/0247-es rovatokat (a házasság időtartama
+          az adóév folyamán, 82. cikk LIRPF).
       taxpayer-sex:
         help: 'Az első adózó neme: H = férfi, M = nő.'
       third-party-transactions-above-347-threshold:

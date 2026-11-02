@@ -88,9 +88,7 @@ class _ConcreteWrites:
     def effect(self, incomplete: bool = False) -> OperationEffect:
         if self.tracker.has_uncertain_write:
             return OperationEffect.UNKNOWN
-        if self.count:
-            return OperationEffect.PARTIAL if incomplete else OperationEffect.UPDATED
-        return OperationEffect.NONE
+        return OperationEffect.of_confirmed_writes(wrote=bool(self.count), incomplete=incomplete)
 
 
 def _require_ports(

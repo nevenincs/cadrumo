@@ -10,6 +10,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, OperationAccessPolicy
 
 from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationCancellation,
     OperationClosePolicy,
     OperationDeadline,
@@ -114,7 +115,7 @@ def project_google_review_result(value: BaseModel, receipt: OperationTerminalRec
         or receipt.identity.definition_id != GOOGLE_REVIEW_OPERATION_DEFINITION_ID
         or receipt.identity.subject_ref != profile_operation_subject(str(private.result.profile_id))
         or receipt.condition is not OperationTerminalCondition.SUCCEEDED
-        or receipt.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or receipt.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or receipt.effect.value != private.effect
         or not terminal_receipt_has_result_only(receipt)
     ):

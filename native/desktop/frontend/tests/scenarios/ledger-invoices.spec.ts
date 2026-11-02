@@ -1,12 +1,13 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
+import { formatDay } from "../../src/shared/dateFormats";
 import { label } from "../support/strings";
 
 // The Invoices section over the scenario's ledger: the whole catalogue,
 // filtered and sorted in the page, and the invoice editor. A new invoice
-// starts with nothing assumed, names its four requirements, works its lines,
-// totals and retención out, and suggests the next number of its series; a
+// starts with nothing assumed, names its four requirements, shows the ledger's
+// answer to the draft on the page, and suggests the next number of its series; a
 // stored one shows its identity as fixed and corrects only what the ledger
 // accepts. Writes are reviewed first, an unseen outcome is said to be
 // unknown, and leaving with edits asks first.
@@ -66,28 +67,52 @@ async function openStored(target: Page, number: string) {
   await expect(editor(target)).toBeVisible();
 }
 
+async function openStoredIn2026(target: Page, number: string) {
+  await allPeriods(target);
+  await openStored(target, number);
+}
+
+/** The ledger fails its next `count` preview reads. */
+const failPreviews = (target: Page, count: number) =>
+  target.evaluate(
+    ([definition, times]) =>
+      (
+        window as unknown as {
+          __scenarioLedger: {
+            nextReads(definition: string, count: number): void;
+          };
+        }
+      ).__scenarioLedger.nextReads(definition as string, times as number),
+    ["ledger.invoice.preview", count] as const,
+  );
+
 async function addNew(target: Page) {
   await target.locator(".pane-docs .pane-head .ledger-add").click();
   await expect(editor(target)).toBeVisible();
 }
 
 /** Fills an issued invoice to Norte Digital with two lines at 21%. */
-async function fillIssued(target: Page, number = "F-2026-021") {
+async function fillIssued(
+  target: Page,
+  number = "F-2026-021",
+  rate: string | null = "RATE_21",
+) {
   await editor(target)
     .getByRole("radio", {
       name: label("desktop.ledger.invoices.kind_choice.issued"),
     })
     .click();
   await field(target, "counterparty_name").fill("Norte Digital S. Coop.");
-  await field(target, "counterparty_tax_id").fill("F00000022");
+  await field(target, "counterparty_tax_id").fill("A58818501");
   await field(target, "counterparty_country").fill("es");
   await field(target, "series").fill("F");
   await field(target, "invoice_number").fill(number);
+  await field(target, "issued_at").focus();
   await field(target, "issued_at").fill("2026-10-23");
   await field(target, "currency").fill("eur");
   await lineCell(target, 0, 0).fill("Diseño de marca");
   await lineCell(target, 0, 2).fill("550");
-  await lineCell(target, 0, 4).selectOption("RATE_21");
+  if (rate) await lineCell(target, 0, 4).selectOption(rate);
   await editor(target)
     .getByRole("button", { name: label("desktop.ledger.invoices.line.add") })
     .click();
@@ -197,10 +222,9 @@ test("an issued invoice with two lines at 21% and a 15% retención is added", as
   await expect(editor(target).locator(".ledger-invoice-total")).toContainText(
     "1,331.00",
   );
-  // The retención is worked out from the rate.
-  await editor(target)
-    .getByRole("button", { name: "15%", exact: true })
-    .click();
+  // The ledger says what the typed rate comes to, and the person takes it.
+  await field(target, "retention_rate").fill("15");
+  await button(target, "desktop.ledger.invoices.use").click();
   await expect(field(target, "retention_amount")).toHaveValue("165.00");
   await expect(editor(target).locator(".ledger-invoice-to-pay")).toHaveText(
     label("desktop.ledger.invoices.to_pay_withheld", {
@@ -262,39 +286,39 @@ test("each requirement and rule is refused on its own field", async ({
   ).toHaveCount(0);
   await field(target, "counterparty_country").fill("ES");
 
+  // A printed total that differs warns in the ledger's words, and stops nothing.
   await field(target, "printed_total").fill("1330.99");
   await expect(
     editor(target).getByText(
-      label("desktop.ledger.invoices.problem.printed_differs", {
-        total: "1331",
-      }),
+      label(
+        "application.invoices.figures_preview.finding.printed_total_differs",
+        { printed: "1,330.99", computed: "1,331.00" },
+      ),
     ),
   ).toBeVisible();
-  await expect(
-    editor(target).locator("[data-invariant=totals][data-met]"),
-  ).toHaveCount(0);
-  await field(target, "printed_total").fill("1331");
   await expect(
     editor(target).locator("[data-invariant=totals][data-met]"),
   ).toHaveCount(1);
+  await field(target, "printed_total").fill("");
 
   await field(target, "retention_rate").fill("15");
   await field(target, "retention_amount").fill("1200");
+  await expect(field(target, "retention_amount")).toHaveAttribute(
+    "aria-invalid",
+    "true",
+  );
   await expect(
     editor(target).getByText(
-      label("desktop.ledger.invoices.problem.retention_above_base"),
-    ),
-  ).toBeVisible();
-  await field(target, "retention_amount").fill("0.15");
-  await expect(
-    editor(target).getByText(
-      label("desktop.ledger.invoices.problem.retention_differs", {
-        amount: "165",
-      }),
+      label(
+        "application.invoices.figures_preview.finding.retention_amount_above_base",
+        { stated: "1,200.00", base_total: "1,100.00" },
+      ),
     ),
   ).toBeVisible();
   await field(target, "retention_rate").fill("");
+  await field(target, "retention_amount").focus();
   await field(target, "retention_amount").fill("");
+  await expect(field(target, "retention_amount")).toHaveValue("");
 
   // In English this is fifteen hundred, or one and a half.
   await lineCell(target, 1, 1).fill("1,500");
@@ -303,14 +327,22 @@ test("each requirement and rule is refused on its own field", async ({
 
   await field(target, "invoice_class").selectOption("RECTIFICATIVA");
   await field(target, "series").fill("");
+  // The ledger's own findings, shown once the field has been left.
+  await field(target, "series").blur();
+  await field(target, "rectifies_invoice_number").focus();
+  await field(target, "rectifies_invoice_number").blur();
   await expect(
     editor(target).getByText(
-      label("desktop.ledger.invoices.problem.series_required"),
+      label(
+        "application.invoices.figures_preview.rule_finding.series_required_for_rectificativa",
+      ),
     ),
   ).toBeVisible();
   await expect(
     editor(target).getByText(
-      label("desktop.ledger.invoices.problem.rectifies_required"),
+      label(
+        "application.invoices.figures_preview.rule_finding.rectified_invoice_required",
+      ),
     ),
   ).toBeVisible();
 });
@@ -320,27 +352,12 @@ test("an invoice already in the catalogue is refused on its number", async ({
 }) => {
   await openInvoices(target);
   await addNew(target);
-  await editor(target)
-    .getByRole("radio", {
-      name: label("desktop.ledger.invoices.kind_choice.issued"),
-    })
-    .click();
-  await field(target, "counterparty_name").fill("Hotel Mirador Azul, S.L.");
-  await field(target, "counterparty_tax_id").fill("B00000058");
-  await field(target, "counterparty_country").fill("ES");
-  await field(target, "series").fill("F");
-  await field(target, "invoice_number").fill("F-2026-018");
-  await field(target, "issued_at").fill("2026-09-12");
-  await field(target, "currency").fill("EUR");
-  await lineCell(target, 0, 0).fill("Señalética de recepción");
-  await lineCell(target, 0, 1).fill("4");
-  await lineCell(target, 0, 2).fill("95.5");
-  await lineCell(target, 0, 4).selectOption("RATE_21");
-  await button(target, "desktop.ledger.invoices.line.add").click();
-  await lineCell(target, 1, 0).fill("Montaje");
-  await lineCell(target, 1, 1).fill("3");
-  await lineCell(target, 1, 2).fill("40");
-  await lineCell(target, 1, 4).selectOption("RATE_21");
+  await fillIssued(target);
+  await button(target, "desktop.ledger.invoices.review").click();
+  await button(target, "desktop.ledger.invoices.add").click();
+  await expect(editor(target)).toBeHidden();
+  await addNew(target);
+  await fillIssued(target);
   await button(target, "desktop.ledger.invoices.review").click();
   await button(target, "desktop.ledger.invoices.add").click();
   await expect(field(target, "invoice_number")).toHaveAttribute(
@@ -353,9 +370,108 @@ test("an invoice already in the catalogue is refused on its number", async ({
   await button(target, "desktop.ledger.invoices.open_duplicate").click();
   await expect(
     editor(target).getByRole("heading", {
-      name: label("desktop.ledger.invoices.title", { number: "F-2026-018" }),
+      name: label("desktop.ledger.invoices.title", { number: "F-2026-021" }),
     }),
   ).toBeVisible();
+});
+
+test("a stated figure is sent as stated when the served answer accepts it, and refused when not", async ({
+  page: target,
+}) => {
+  await openInvoices(target);
+  await addNew(target);
+  await fillIssued(target);
+  const total = editor(target).locator(".ledger-invoice-total");
+  await expect(total).toContainText("1,331.00");
+  await lineCell(target, 0, 5).fill("115.60");
+  await expect(lineCell(target, 0, 5)).toHaveAttribute("aria-invalid", "true");
+  await button(target, "desktop.ledger.invoices.review").click();
+  await expect(editor(target).locator(".ledger-invoice-confirm")).toHaveCount(
+    0,
+  );
+  await lineCell(target, 0, 5).fill("115.51");
+  await expect(total).toContainText("1,331.01");
+  await expect(
+    editor(target).getByText(
+      label("desktop.ledger.invoices.line.calculated", { amount: "115.50" }),
+    ),
+  ).toBeVisible();
+  await button(target, "desktop.ledger.invoices.review").click();
+  await button(target, "desktop.ledger.invoices.add").click();
+  await expect(editor(target)).toBeHidden();
+  await openStoredIn2026(target, "F-2026-021");
+  await expect(
+    editor(target).locator(".ledger-invoice-lines tbody tr").first(),
+  ).toContainText("115.51");
+});
+
+test("a rate not in force cannot be chosen, and a date that strands one says so on its line", async ({
+  page: target,
+}) => {
+  await openInvoices(target);
+  await addNew(target);
+  await field(target, "issued_at").fill("2026-10-23");
+  await lineCell(target, 0, 0).fill("Diseño de marca");
+  const rates = lineCell(target, 0, 4);
+  await expect(rates.locator("option[value=RATE_21]")).toBeEnabled();
+  await expect(rates.locator("option[value=RATE_5]")).toBeDisabled();
+
+  await field(target, "issued_at").focus();
+  await field(target, "issued_at").fill("2023-03-01");
+  await expect(rates.locator("option[value=RATE_5]")).toBeEnabled();
+  await rates.selectOption("RATE_5");
+
+  await fillIssued(target, "F-2026-021", null);
+  await expect(lineCell(target, 0, 4)).toHaveAttribute("aria-invalid", "true");
+  await expect(
+    editor(target).getByText(
+      label(
+        "application.invoices.figures_preview.finding.line_rate_not_in_force",
+        {
+          slot: label("application.invoices.figures_preview.rate_slot.rate_5"),
+          on_date: formatDay("en", "2026-10-23"),
+        },
+      ),
+    ),
+  ).toBeVisible();
+  await button(target, "desktop.ledger.invoices.review").click();
+  await expect(editor(target).locator(".ledger-invoice-confirm")).toHaveCount(
+    0,
+  );
+});
+
+test("with the ledger unavailable the draft stays, figures say so and nothing can be added", async ({
+  page: target,
+}) => {
+  await openInvoices(target);
+  await addNew(target);
+  await fillIssued(target);
+  await expect(editor(target).locator(".ledger-invoice-total")).toContainText(
+    "1,331.00",
+  );
+  await failPreviews(target, 1);
+  await field(target, "notes").fill("Sin respuesta");
+  const notice = editor(target).locator(".ledger-invoice-unavailable");
+  await expect(notice).toBeVisible();
+  await expect(editor(target).locator(".ledger-invoice-total")).toHaveText(
+    label("desktop.ledger.invoices.not_available"),
+  );
+  await expect(field(target, "notes")).toHaveValue("Sin respuesta");
+  await button(target, "desktop.ledger.invoices.review").click();
+  await expect(editor(target).locator(".ledger-invoice-confirm")).toHaveCount(
+    0,
+  );
+  await expect(button(target, "desktop.ledger.invoices.add")).toHaveCount(0);
+  // Nothing was sent, so nothing is unknown.
+  await expect(editor(target).locator(".ledger-invoice-unknown")).toHaveCount(
+    0,
+  );
+  await notice
+    .getByRole("button", {
+      name: label("desktop.ledger.invoices.figures_retry"),
+    })
+    .click();
+  await expect(notice).toBeHidden();
 });
 
 test("the next number follows its own series (M7)", async ({
@@ -421,7 +537,7 @@ test("a stored invoice shows its identity and lines as fixed", async ({
       }),
     ).toHaveCount(0);
   const fixed = editor(target).locator("[data-fixed]");
-  await expect(fixed).toHaveCount(6);
+  await expect(fixed).toHaveCount(5);
   await expect(fixed.filter({ hasText: "F-2026-018" })).toHaveAttribute(
     "aria-describedby",
     /.+/,
@@ -572,6 +688,34 @@ test("a write whose outcome was not seen is shown as unknown and checked, never 
   );
   expect(
     calls.filter((call) => call === "ledger ledger.invoice.update"),
+  ).toHaveLength(1);
+  expect(calls).toContain("ledger ledger.invoice.view");
+});
+
+test("an add whose outcome was not seen is looked up by the id its preview answered", async ({
+  page: target,
+}) => {
+  await openInvoices(target, "&ledger=unknown");
+  await addNew(target);
+  await fillIssued(target);
+  await button(target, "desktop.ledger.invoices.review").click();
+  await button(target, "desktop.ledger.invoices.add").click();
+  const unknown = editor(target).locator(".ledger-invoice-unknown");
+  await expect(unknown).toBeVisible();
+  await unknown
+    .getByRole("button", { name: label("desktop.ledger.invoices.check") })
+    .click();
+  await expect(editor(target)).toBeHidden();
+  await expect(toast(target)).toHaveText(
+    label("desktop.ledger.invoices.added", { number: "F-2026-021" }),
+  );
+  const calls = await target.evaluate(
+    () =>
+      (window as unknown as { __scenarioHostCalls?: string[] })
+        .__scenarioHostCalls ?? [],
+  );
+  expect(
+    calls.filter((call) => call === "ledger ledger.invoice.add"),
   ).toHaveLength(1);
   expect(calls).toContain("ledger ledger.invoice.view");
 });

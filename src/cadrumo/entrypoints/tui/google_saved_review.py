@@ -25,7 +25,6 @@ from ...application.export.google_review_operation_contracts import (
     GoogleReviewRequest,
     GoogleReviewResult,
 )
-from ...application.export.publication_receipt import ReadablePayloadCategory
 from ...application.operations.frontend_projection import (
     OperationPublicProjectionV1,
     OperationReviewAvailableInteractionV1,
@@ -45,6 +44,7 @@ from ...core.hex import Hex64Str
 from ...core.i18n.render import output_language
 from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
     OperationEffect,
     OperationLifecycle,
     OperationTerminalCondition,
@@ -75,13 +75,7 @@ def validate_saved_google_review(
     request: GoogleReviewRequest, review: GoogleReviewProjection, *, operation_id: str
 ) -> None:
     """Bind the readable disclosure to this selected revision, filing and invocation."""
-    if (
-        not _saved_review_matches_request(request, review, operation_id)
-        or not review.root_folder_id.strip()
-        or not review.readable_by_authorized_users
-        or ReadablePayloadCategory.CALCULATION not in review.payload_categories
-        or not set(review.payload_categories) <= {ReadablePayloadCategory.CALCULATION, ReadablePayloadCategory.LEDGER}
-    ):
+    if not _saved_review_matches_request(request, review, operation_id) or not review.discloses_a_readable_calculation:
         raise RefusalError(RefusalCode.INVALID_FRAME)
 
 
@@ -361,7 +355,7 @@ class GoogleSavedReviewScreen(Screen[None]):
         try:
             self._require_session()
             review = self._review
-            if review is None or projection.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}:
+            if review is None or projection.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT:
                 raise RefusalError(RefusalCode.INVALID_FRAME)
             result = await controller.read_settled_result(projection, GoogleReviewResult, result_version=1)
             self._require_session()

@@ -107,6 +107,10 @@ PYTHON = Phase(
     artifacts=(".venv",),
 )
 
+#: The npm packages whose Hunspell data the locale spelling signal reads; the
+#: tools phase is stale while any of their files is absent.
+LOCALE_DICTIONARY_PACKAGES: Final[tuple[str, ...]] = ("dictionary-ca", "dictionary-en-gb", "dictionary-es")
+
 TOOLS = Phase(
     name="tools",
     summary="Install repository tooling.",
@@ -133,9 +137,24 @@ TOOLS = Phase(
             argv=("uv", "run", "--no-sync", "python", "-m", "dev.actionlint", "--install"),
             summary="Provision the pinned actionlint executable for read-only workflow checks.",
         ),
+        # Stdlib-only, so the ephemeral interpreter runs it and Node is not
+        # needed: the locale spelling tests read these dictionaries, and a
+        # machine without them fails the default tooling lane.
+        Step(
+            name="locale-dictionaries",
+            argv=(PY, "-m", "dev.locales.dictionary_provisioning"),
+            summary="Install the lock-pinned Hunspell dictionary packages, verified by integrity hash.",
+        ),
     ),
-    inputs=("uv.lock",),
-    artifacts=(".vaultspec",),
+    inputs=("uv.lock", "package.json", "package-lock.json"),
+    artifacts=(
+        ".vaultspec",
+        *(
+            f"node_modules/{package}/index.{suffix}"
+            for package in LOCALE_DICTIONARY_PACKAGES
+            for suffix in ("aff", "dic")
+        ),
+    ),
 )
 
 #: The phases, keyed by name. The runner reads this and nothing else.

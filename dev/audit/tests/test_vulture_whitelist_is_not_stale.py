@@ -25,15 +25,17 @@ from __future__ import annotations
 import ast
 import inspect
 import pathlib
+from fnmatch import fnmatchcase
 from types import ModuleType
 
 import pytest
+import vulture
+from vulture.config import make_config
 
 from cadrumo.adapters.outbound.google import api as google_api
 from cadrumo.adapters.outbound.workbook import calc_sheets_xlsx
-from cadrumo.application.ledger import evidence_input
-from cadrumo.entrypoints.tui.components import terminal_controls
-from dev.docs.terminology_handbook import curation
+from dev._paths import REPO_ROOT
+from dev.first_party_source import SOURCE_PACKAGES
 
 from .. import vulture_whitelist
 
@@ -42,9 +44,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 _CITATIONS: dict[str, tuple[ModuleType, str | None, str]] = {
     "_custom_document_properties_append": (calc_sheets_xlsx, "_CustomDocumentProperties", "append"),
     "_execute": (google_api, "ExecutableRequest", "execute"),
-    "_reduce_ex": (evidence_input, "EvidenceInput", "__reduce_ex__"),
-    "_set_language_field": (curation, None, "set_language_field"),
-    "_line_filter_apply": (terminal_controls, "TerminalControlFilter", "apply"),
 }
 
 
@@ -117,7 +116,7 @@ def test_a_parameter_removed_at_its_source_is_detected() -> None:
     check is shown to work without editing the live whitelist or the module it
     cites.
     """
-    module_name, class_name, attribute = _CITATIONS["_set_language_field"]
+    module_name, class_name, attribute = _CITATIONS["_execute"]
     live = _cited_parameters(module_name, class_name, attribute)
     invented = _declared_parameters("def _mirror(retired_parameter: object) -> None:\n    pass\n")
 
@@ -142,3 +141,54 @@ def test_the_whitelist_holds_only_parameter_mirrors(declared: dict[str, tuple[st
     assert declared, "the parsed whitelist declared no parameters, so the public-name claim below ranges over nothing"
     assert not [node for node in tree.body if isinstance(node, ast.ClassDef)]
     assert all(name.startswith("_") for name in declared), "a mirror is exported under a public name"
+
+
+def _names_vulture_reports_without_the_whitelist() -> frozenset[str]:
+    """Scan the production tree exactly as the audit does, minus the whitelist file."""
+    configuration = make_config(["--config", str(REPO_ROOT / "pyproject.toml"), *SOURCE_PACKAGES])
+    patterns = tuple(
+        (pattern if any(char in pattern for char in "*?[") else f"*{pattern}*").lower()
+        for pattern in configuration["exclude"]
+    )
+    modules = [
+        str(module)
+        for package in SOURCE_PACKAGES
+        for module in (REPO_ROOT / package).resolve().glob("**/*.py")
+        if not any(fnmatchcase(str(module).lower(), pattern) for pattern in patterns)
+    ]
+    scanner = vulture.Vulture(
+        ignore_names=configuration["ignore_names"], ignore_decorators=configuration["ignore_decorators"]
+    )
+    scanner.scavenge(modules)
+    return frozenset(item.name for item in scanner.get_unused_code(min_confidence=configuration["min_confidence"]))
+
+
+@pytest.fixture(scope="module")
+def reported_without_whitelist() -> frozenset[str]:
+    names = _names_vulture_reports_without_the_whitelist()
+    assert names, "the production scan reported nothing, so the per-entry check below would prove nothing"
+    return names
+
+
+def test_every_whitelisted_name_still_clears_a_vulture_finding(
+    declared: dict[str, tuple[str, ...]], reported_without_whitelist: frozenset[str]
+) -> None:
+    """A parameter that still exists at its source can nonetheless stop needing the exemption.
+
+    The signature check above cannot see that: a body that now reads the parameter,
+    or a decorator vulture ignores, leaves the name present while the entry
+    clears nothing. Such an entry only hides an unrelated same-named finding
+    later, so it must be deleted.
+    """
+    idle = sorted({name for names in declared.values() for name in names} - reported_without_whitelist)
+
+    assert not idle, f"whitelist entries that clear no vulture finding: {idle}"
+
+
+def test_the_effect_check_names_an_entry_that_clears_nothing(reported_without_whitelist: frozenset[str]) -> None:
+    """Detector teeth: an invented name is absent from the scan, so it would be called idle."""
+    invented = _declared_parameters("def _mirror(never_reported_anywhere: object) -> None:\n    pass\n")
+
+    idle = [name for name in invented["_mirror"] if name not in reported_without_whitelist]
+
+    assert idle == ["never_reported_anywhere"]

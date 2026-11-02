@@ -175,7 +175,7 @@ def test_classify_help_exposes_the_irpf_category_contract(
     normalized = flat.casefold()
     assert "lirpf" in normalized and "27" in normalized
     assert "25.4" in normalized
-    assert "capital mobiliario" in flat
+    assert "movable capital" in flat
     assert any(
         author_phrase in normalized
         for author_phrase in ("not the author", "no es el autor", "no es l'autor", "nem a szerzo")

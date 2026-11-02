@@ -156,6 +156,11 @@ class DeadlineHolidayCoverage(StrEnum):
     NOT_SHIFTED = "not_shifted"
     CALENDAR_UNAVAILABLE = "calendar_unavailable"
 
+    @property
+    def names_territory(self) -> bool:
+        """Whether the taxpayer's territory is established, though its regional holidays may be unverified."""
+        return self in {DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY, DeadlineHolidayCoverage.TERRITORY_UNVERIFIED}
+
 
 # ---------------------------------------------------------------------------
 # Holiday + Calendar value types.

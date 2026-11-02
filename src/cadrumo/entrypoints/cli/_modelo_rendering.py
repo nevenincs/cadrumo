@@ -243,7 +243,7 @@ def source_diagnostic_notice(
     from ...application.modelo.work_form_findings import ModeloFormAttention
 
     box = None if boxes is None or diagnostic.casilla_id is None else boxes.number(str(diagnostic.casilla_id))
-    attention = note_attention(diagnostic.reason, box=box)
+    attention = note_attention(diagnostic.reason, box=box, outcome=diagnostic.value_outcome)
     context.update({key: value for key, value in optional.items() if value is not None and value != ""})
     context.update({"level": attention.value, "detail": diagnostic.message, **({} if box is None else {"box": box})})
     return Notice(

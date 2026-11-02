@@ -317,7 +317,7 @@ msgstr ""
 "utólagos rögzítése (Benyújtás rögzítése) opcionális, és csak a benyújtási"
 " időablak nyitvatartása alatt alkalmazható; a Cadrumo csak azt jegyzi "
 "fel, hogy már benyújtottad a fájlt a portálon. A Renta 2025 időablaka "
-"2026. április 8-án nyílik, az útmutató példáinak futtatási dátuma után, "
+"2026. április 8-tól nyílik, az útmutató példáinak futtatási dátuma után, "
 "ezért itt a benyújtás rögzítése nem futtatott példaként jelenik meg, "
 "ahogy az AEAT-tól olvasó egyeztetési lekérés is:"
 

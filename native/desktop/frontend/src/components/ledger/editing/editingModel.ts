@@ -28,7 +28,6 @@ import type {
   StepReport,
 } from "../../../shell/ledgerApply";
 import {
-  changesIdentity,
   effectiveFacts,
   storedFieldValue,
   unchangedBy,
@@ -41,12 +40,7 @@ import {
   type StagedRowChanges,
   type StagedValue,
 } from "../../../shell/ledgerStage";
-import {
-  DIRECTIONS,
-  IRPF_CATEGORIES,
-  IVA_CATEGORIES,
-  SPENDING_CATEGORIES,
-} from "../../../shell/ledgerVocabulary";
+import { DIRECTIONS } from "../../../shell/ledgerContract";
 import type { ColumnId } from "../movements/movementsModel";
 
 // ---- Columns and fields --------------------------------------------------------
@@ -226,6 +220,11 @@ export type ChoiceLabels = {
   category: (id: string) => string;
   ivaCategory: (id: string) => string;
   irpfCategory: (id: string) => string;
+  /** The lists the registry serves for the three category columns: empty
+   * until served, so nothing typed is taken for one. */
+  categories: readonly string[];
+  ivaCategories: readonly string[];
+  irpfCategories: readonly string[];
   /** An own account's label, and the ids the register holds. */
   account: (id: string) => string;
   accounts: readonly string[];
@@ -301,11 +300,11 @@ export function parseCell(
     case "direction":
       return choose(raw, DIRECTIONS, labels.direction, DIRECTION_ALIASES);
     case "category":
-      return choose(raw, SPENDING_CATEGORIES, labels.category);
+      return choose(raw, labels.categories, labels.category);
     case "iva_category":
-      return choose(raw, IVA_CATEGORIES, labels.ivaCategory);
+      return choose(raw, labels.ivaCategories, labels.ivaCategory);
     case "irpf_category":
-      return choose(raw, IRPF_CATEGORIES, labels.irpfCategory);
+      return choose(raw, labels.irpfCategories, labels.irpfCategory);
     case "account": {
       if (raw.trim() !== "" && fold(raw) === fold(labels.noAccount))
         return { kind: "value", value: { value: NO_ACCOUNT } };
@@ -669,8 +668,6 @@ export function planPaste(
     });
   }
   const columns: ColumnId[] = [];
-  const identity = new Set<string>();
-  const touched = new Map<string, StagedRowChanges>();
   let touchesIdentity = false;
   for (const { key, column, raw } of targets) {
     if (column === "select") continue;
@@ -691,19 +688,11 @@ export function planPaste(
         : raw.trim() === ""
           ? ({ kind: "empty" } as const)
           : ({ kind: "refused", refusal: { key: "locked", raw } } as const);
-    const before = out.stage.length;
     const placed = placeValue(key, column, subject, input, out, raw);
     if (placed === "blank") blanks += 1;
     if (placed === "staged") {
       changes += 1;
       if (IDENTITY_COLUMNS.has(column)) touchesIdentity = true;
-      if (subject.kind === "row") {
-        const merged = { ...(touched.get(key) ?? subject.changes) };
-        for (const cell of out.stage.slice(before))
-          merged[cell.field] = cell.value;
-        touched.set(key, merged);
-        if (changesIdentity(subject.row, merged).length) identity.add(key);
-      }
     }
   }
   const rows = new Set(targets.map((target) => target.key)).size;
@@ -714,7 +703,7 @@ export function planPaste(
     changes,
     dropped,
     blanks,
-    newIdentity: identity.size,
+    newIdentity: 0,
     needsPreview: block.length > 1 || rows > 1 || touchesIdentity,
   };
 }

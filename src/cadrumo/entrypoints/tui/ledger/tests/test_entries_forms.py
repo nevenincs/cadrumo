@@ -25,6 +25,7 @@ from ...components.dialogs import ConfirmScreen
 from ...tests.settling import settle
 from ..entries_add import LedgerEntryAddScreen
 from ..entries_browse import LedgerEntriesBrowseScreen
+from ..entries_common import period_options, read_period
 from ..entries_export import LedgerEntriesExportScreen
 from ..entries_health import LedgerHealthScreen
 from ..entries_reset import LedgerResetScreen
@@ -348,3 +349,23 @@ async def test_reset_needs_a_reason_before_its_preview() -> None:
             assert _text(screen, "#ledger-refusal") == tr("tui.ledger.entry_tools.reset.reason_required")
             assert screen.query_one("#entries-reset-run", Button).disabled
     assert ledger.requests == []
+
+
+def test_period_choices_are_the_canonical_codes_without_instalments() -> None:
+    codes = [code for code, _label in period_options()]
+
+    assert codes == ["1T", "2T", "3T", "4T", "0A", *(f"{month:02d}" for month in range(1, 13))]
+    assert not {"1P", "2P", "3P", "4P"} & set(codes)
+
+
+@pytest.mark.parametrize(("year", "code"), [("2000", "1T"), ("2099", "0A"), (" 2026 ", "03")])
+def test_read_period_accepts_years_inside_the_filing_window(year: str, code: str) -> None:
+    period = read_period(year, code)
+
+    assert period == PublicPeriod(filing_year=int(year), code=code)
+
+
+@pytest.mark.parametrize("year", ["1999", "2100", "1900", "9999", "20x6"])
+def test_read_period_refuses_years_outside_the_filing_window(year: str) -> None:
+    with pytest.raises(ValueError, match=tr("tui.ledger.entry_tools.period.invalid")):
+        read_period(year, "1T")

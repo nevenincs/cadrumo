@@ -57,7 +57,7 @@ def _normalize_root_cause(message: str) -> str:
     """Remove checkout and run-specific identity from a root-cause signature."""
     normalized = message.replace(str(REPO_ROOT), "<repo>").replace(REPO_ROOT.as_posix(), "<repo>")
     normalized = re.sub(
-        r"[\\/](?:\.tmp[\\/]logs|\.logs)[\\/]test-runs[\\/][^\\/\s]+[\\/][^\\/\s]+",
+        r"[\\/]\.tmp[\\/]logs[\\/]test-runs[\\/][^\\/\s]+[\\/][^\\/\s]+",
         "/.tmp/logs/test-runs/<run>",
         normalized,
     )

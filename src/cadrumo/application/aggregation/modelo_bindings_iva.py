@@ -154,7 +154,7 @@ def _residue_categories(observations: Sequence[IvaLedgerObservation]) -> str:
     the domestic tiers while import and the two reverse-charge categories carry it
     undrawn. Reporting only the fact would tell an operator that base is missing
     without saying where, which is the reading that makes a partially-closed gap
-    look wholly open (or, once the domestic half landed, wholly closed).
+    look wholly open.
 
     Naming the categories is what makes the residue attributable: it states which
     set is still open, so a later reader can tell a genuine remainder from a

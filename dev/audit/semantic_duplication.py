@@ -32,6 +32,7 @@ reproducible and the runner can later back a gate.
 Usage::
 
     uv run --no-sync python -m dev.audit.semantic_duplication            # human report
+    uv run --no-sync python -m dev.audit.semantic_duplication --full     # every candidate, uncapped
     uv run --no-sync python -m dev.audit.semantic_duplication --json     # machine output
     uv run --no-sync python -m dev.audit.semantic_duplication --detector enum_subset
 """
@@ -41,6 +42,7 @@ from __future__ import annotations
 import argparse
 import ast
 import collections
+import io
 import json
 import sys
 from collections.abc import Iterator, Sequence
@@ -447,7 +449,7 @@ def run(roots: Sequence[Path], detectors: Sequence[str]) -> list[Candidate]:
     return sorted(found, key=lambda candidate: (-candidate.weight, candidate.detector, candidate.sites))
 
 
-def _render(candidates: Sequence[Candidate], limit: int) -> str:
+def _render(candidates: Sequence[Candidate], limit: int | None) -> str:
     """Render a human report, heaviest candidates first."""
     lines: list[str] = []
     by_detector: dict[str, list[Candidate]] = collections.defaultdict(list)
@@ -456,13 +458,23 @@ def _render(candidates: Sequence[Candidate], limit: int) -> str:
     lines.append(f"{len(candidates)} candidate(s) across {len(by_detector)} detector(s)")
     lines.append("These are CANDIDATES, not verdicts: confirm each site before collapsing anything.\n")
     for detector, group in sorted(by_detector.items(), key=lambda kv: -len(kv[1])):
-        lines.append(f"== {detector}: {len(group)} candidate(s), showing up to {limit}")
-        for candidate in group[:limit]:
+        shown = group if limit is None else group[:limit]
+        scope = "showing all" if limit is None else f"showing up to {limit}, --full for all"
+        lines.append(f"== {detector}: {len(group)} candidate(s), {scope}")
+        for candidate in shown:
             lines.append(f"  [{candidate.weight}] {candidate.fingerprint}")
             for site in candidate.sites:
                 lines.append(f"       {site}")
         lines.append("")
     return "\n".join(lines)
+
+
+def _emit(text: str) -> None:
+    """Write the report as UTF-8; fingerprints carry literals a Windows console codec cannot encode."""
+    stream = sys.stdout
+    if isinstance(stream, io.TextIOWrapper):
+        stream.reconfigure(encoding="utf-8")
+    stream.write(text)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -477,15 +489,15 @@ def main(argv: Sequence[str] | None = None) -> int:
     )
     parser.add_argument("--detector", action="append", choices=sorted(_DETECTORS), default=None)
     parser.add_argument("--limit", type=int, default=12)
-    parser.add_argument("--json", action="store_true")
+    parser.add_argument("--full", action="store_true", help="List every candidate per detector, uncapped.")
+    parser.add_argument("--json", action="store_true", help="Emit every candidate as JSON (never capped).")
     args = parser.parse_args(argv)
 
     candidates = run(args.root or _SOURCE_ROOTS, args.detector or sorted(_DETECTORS))
     if args.json:
-        json.dump([candidate.as_dict() for candidate in candidates], sys.stdout, indent=2)
-        sys.stdout.write("\n")
+        _emit(json.dumps([candidate.as_dict() for candidate in candidates], indent=2) + "\n")
     else:
-        sys.stdout.write(_render(candidates, args.limit) + "\n")
+        _emit(_render(candidates, None if args.full else args.limit) + "\n")
     return 0
 
 

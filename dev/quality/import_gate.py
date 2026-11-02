@@ -52,7 +52,7 @@ _ROOT_ENV: Final[str] = "CADRUMO_IMPORT_GATE_ROOT"
 _LINTER_ENV: Final[str] = "CADRUMO_IMPORT_GATE_LINT_IMPORTS"
 _CHECKER_ENV: Final[str] = "CADRUMO_IMPORT_GATE_CHECKER"
 _FORCE_CHECKER_EXCEPTION_ENV: Final[str] = "CADRUMO_IMPORT_GATE_FORCE_CHECKER_EXCEPTION"
-_CHECKER_PATH: Final[Path] = Path(__file__).with_name("import_checker.py").resolve()
+_CHECKER_MODULE: Final[str] = "dev.quality.import_checker"
 _LOAD_PROBE_MODULE: Final[str] = "dev.quality.import_load_probe"
 _LOAD_HARNESS_PACKAGES: Final[tuple[str, ...]] = ("dev", "cadrumo")
 
@@ -403,7 +403,9 @@ def run_subordinate(
             report_path = Path(temporary) / "checker.json"
             command = (
                 resolved,
-                str(_CHECKER_PATH),
+                "-P",
+                "-m",
+                _CHECKER_MODULE,
                 "--internal",
                 "--root",
                 str(authority.repository),

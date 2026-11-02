@@ -610,7 +610,7 @@ errors:
     integrity_observability_run_trace_validation: The persisted run trace failed strict
       validation.
     integrity_outbound_storage: The fetched payload failed integrity checks (hash,
-      size or etag).
+      size or `etag`).
     integrity_outbound_storage_corruption: A sidecar metadata file contains a field
       with an unexpected type; the storage object is corrupted.
     integrity_period: 'Internal error: could not build a valid period from the supplied
@@ -1036,7 +1036,7 @@ errors:
     refused_corpus_search_input: The corpus search request could not be satisfied.
     refused_diagnostic_model_invariant: A DiagnosticCheck construction invariant was
       violated; check that exactly one of next_action or dead_end is set for fail/warn
-      rows, and neither is set for ok rows.
+      rows, and neither is set for `ok` rows.
     refused_einvoice_xml_parse: The e-invoice XML could not be read and was refused
       rather than partially parsed.
     refused_evidence_bundle_ambiguous: The evidence-bundle id prefix matches more
@@ -1177,8 +1177,8 @@ errors:
       {filing_year}.
     refused_modelo_amendment_complementaria_liability_decrease: A complementaria cannot
       lawfully decrease the taxpayer's declared liability before the autoliquidación
-      rectificativa unification. Use the solicitud de rectificación procedure for
-      a liability-decreasing correction instead.
+      rectificativa unification. Use the request-for-rectification procedure for a
+      liability-decreasing correction instead.
     refused_modelo_amendment_detail_rows_required: This modelo declares its detail
       rows as the return itself, so an amendment must state them. Supply the rows
       the amendment declares - only the added ones for a complementaria, the full

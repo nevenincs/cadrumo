@@ -463,7 +463,7 @@ def test_work_create_refuses_pre_activity_m130_and_creates_no_unit() -> None:
     assert payload["status"] == "error"
     assert payload["error"]["code"] == "REFUSED_MODELO_PROFILE_READINESS"
     message = payload["error"]["message"]
-    assert f"Modelo {Modelo('130').value} 2026 2T is before" in message
+    assert f"Modelo {Modelo('130').value} 2T 2026 is before" in message
     assert "pre-activity period" in message
     assert "2026-07-15" in message
     assert "2026-06-30" in message

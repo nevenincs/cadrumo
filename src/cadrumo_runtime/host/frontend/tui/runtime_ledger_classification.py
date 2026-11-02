@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from typing import cast
 
 from cadrumo.application.ledger.actions_common import display_decimal
+from cadrumo.application.ledger.classify_correlation import classification_selected_fields_match
 from cadrumo.application.ledger.classify_requests import (
     LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,
     LedgerClassifyPatch,
@@ -15,7 +15,6 @@ from cadrumo.application.ledger.classify_result_contracts import LedgerClassifyO
 from cadrumo.application.operations.frontend_projection import OperationPublicProjectionV1
 from cadrumo.application.operator_actions.catalogue import lookup_action
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition
-from cadrumo.domain.transactions.enums import BusinessClassification
 from cadrumo.domain.transactions.errors import TransactionValidationError
 from cadrumo.entrypoints.tui.ledger.models import LedgerClassificationResultV1, LedgerClassificationSubmissionV1
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
@@ -42,39 +41,16 @@ def build_runtime_ledger_classification_patch(values: dict[str, object]) -> Ledg
     return LedgerClassifyPatch.model_validate({name: _wire_value(value) for name, value in values.items()})
 
 
-def _normalized_patch_value(field: str, expected: object, *, business: bool) -> object:
-    """Mirror the canonical classification writer's selected-field normalization."""
-    if field == "category_id":
-        return (cast("str", expected).strip() or None) if expected is not None and business else None
-    if field in {"taxable_base", "iva_rate", "iva_amount", "irpf_category"} and not business:
-        return None
-    if field == "notes":
-        return expected or ""
-    return expected
-
-
 def _patch_matches(result: LedgerClassifyOperationResult, request: LedgerClassifyRequest) -> bool:
-    """Correlate the selected fields with the canonical writer's normalization."""
+    """Correlate the settled row and the fields the request selected."""
     transaction = result.transaction
-    if transaction is None or transaction.transaction_id != request.transaction_id:
-        return False
-    business = transaction.business_classification in {
-        BusinessClassification.BUSINESS.value,
-        BusinessClassification.MIXED.value,
-    }
-    expected_share = request.patch.business_pct if transaction.business_classification == "MIXED" else None
-    if transaction.business_pct != expected_share:
-        return False
-    for field in request.patch_fields:
-        expected = getattr(request.patch, field)
-        if field in {"deduction_fact_kind", "investment_asset_id"}:
-            actual = getattr(result, field)
-        else:
-            actual = getattr(transaction, field)
-        expected = _normalized_patch_value(field, expected, business=business)
-        if actual != expected:
-            return False
-    return True
+    return (
+        transaction is not None
+        and transaction.transaction_id == request.transaction_id
+        and classification_selected_fields_match(
+            patch=request.patch, fields=request.patch_fields, m210=request.m210, result=result
+        )
+    )
 
 
 def _settled_classification_matches(

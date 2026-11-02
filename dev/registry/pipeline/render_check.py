@@ -1,21 +1,9 @@
 """Re-render one modelo revision from its authored inputs and compare it to the shipped tree.
 
-The generation pipeline can render, validate, publish and check, but until now
-only tests assembled the inputs for a real modelo, and they did it with isolated
-fixtures. There was no supported way to ask whether the shipped export tree of a
-given revision still matches what its authored inputs produce, which meant a
-change to a semantic map or a render profile could not be verified without
-hand-driving the generator.
-
-That gap is not academic. A monetary field in a revision currently in force is
-emitted at the wrong magnitude, its root cause is proven and its corrected value
-is stated in the official design, and the correction is still unmade because
-nothing regenerates one revision from its inputs.
-
-This module closes the read-only half of that gap. It renders into a temporary
-directory and compares bytes against the committed tree. It never writes into
-the registry, so it is safe to run against filing data: publishing remains the
-pipeline's own concern and is deliberately not exposed here.
+Rendering happens in a temporary directory and the result is compared byte for
+byte against the committed tree. Nothing is written into the registry, so the
+comparison is safe to run against filing data; publishing remains the
+pipeline's own concern and is not exposed here.
 
 Everything the renderer needs is derived from the validated authority rather than
 declared in a table: the layout and its transport shape from the revision's own
@@ -23,26 +11,13 @@ export layout, the record design and its epoch from the revision's sources, and
 the filing year from the window the revision declares. A revision that carries no
 generated layout is refused by name rather than guessed at.
 
-Both outcomes are trustworthy, and that was established rather than assumed. The
-derivation was run across every published generated tree and its verdict compared
-with the reference implementation the test suite drives: twenty-one reproduce
-exactly, four differ only in their provenance attestation, and two differ in a
-record file. The two verdicts agree on all twenty-seven.
-
-An earlier revision of this module warned that a difference was inconclusive,
-because a modelo whose records repeat over binding rows re-rendered without that
-repeat and the loss was read as this module's incompleteness. The sweep showed
-otherwise: that modelo is the only one exhibiting it, the reference
-implementation reports the same record file, and the official design says the
-record must repeat. The missing repeat is a real defect in what the current
-inputs produce, not a gap in this comparison, and the caveat was excusing it.
+A difference in a record file is a real difference in what the current inputs
+produce, not a gap in this comparison.
 """
 
 from __future__ import annotations
 
-import argparse
 import json
-import sys
 import tempfile
 from collections.abc import Mapping
 from dataclasses import dataclass
@@ -824,36 +799,3 @@ def differing_manifest_fields(committed: bytes, rendered: bytes) -> tuple[str, .
         or name not in rendered_members
         or committed_members[name] != rendered_members[name]
     )
-
-
-def main(argv: list[str] | None = None) -> int:
-    """Delegate the legacy entry point to canonical target-currentness semantics."""
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0] if __doc__ else None)
-    parser.add_argument("modelo")
-    parser.add_argument("revision")
-    parser.add_argument(
-        "--check",
-        action="store_true",
-        help="exit 1 when the shipped tree is not reproduced (a difference is inconclusive)",
-    )
-    args = parser.parse_args(argv)
-
-    from .cli import target_currentness
-
-    fact = target_currentness(args.modelo, args.revision, None, None, None)
-    for name in fact.differing:
-        sys.stdout.write(f"render_check differs file={name}\n")
-    for name in fact.only_committed:
-        sys.stdout.write(f"render_check only_committed file={name}\n")
-    for name in fact.only_rendered:
-        sys.stdout.write(f"render_check only_rendered file={name}\n")
-    sys.stdout.write(
-        f"summary modelo={fact.modelo} revision={fact.revision} state={fact.state.value} "
-        f"differing={len(fact.differing)} serialization_only={len(fact.serialization_only)} "
-        f"detail={fact.detail!r}\n"
-    )
-    return 1 if args.check and fact.state.value != "current" else 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())

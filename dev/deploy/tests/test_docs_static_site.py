@@ -91,12 +91,11 @@ def _materialise_language_root(html_root: Path, language: str) -> None:
     "Valid" means what the publish contract means by it: every artifact
     ``_REQUIRED_ROOT_ARTIFACTS`` names -- the same complete set the English root
     must carry -- plus a sitemap correctly rooted at the language's own
-    canonical sub-path. Before the fix a localized root was accepted with none
-    of these.
+    canonical sub-path.
 
     The search index is deliberately NOT written here: the site carries one, at
     its apex (:func:`_materialise_site_search_index`), and a root that carried
-    its own would be exactly the per-language index this layout replaced.
+    its own would be a per-language index.
     """
     _materialise_site_root(html_root / language, canonical_base=language_site_url(language))
 
@@ -166,9 +165,8 @@ def test_every_language_is_a_published_root_including_english() -> None:
 
     The deploy roots deliberately are NOT the translation targets. English is
     absent from ``TARGET_LANGUAGES`` because it is the msgid source and needs no
-    catalogue -- a translation fact. Reusing that set as the publish matrix is
-    what put English at ``/`` and left readers of a Spanish-tax site landing in
-    English, so the two concepts are now separate constants.
+    catalogue -- a translation fact. The two concepts are kept as separate
+    constants.
     """
     languages = localized_languages()
     assert set(languages) == {member.value for member in OutputLanguage}
@@ -430,10 +428,7 @@ def test_the_one_index_covers_every_root_at_its_served_address(tmp_path: Path) -
 def test_the_publisher_produces_its_roots_in_one_place(tmp_path: Path) -> None:
     """The build reaches its roots through one producer, and consumes what it returns.
 
-    How the roots are produced has already changed once, from one build per
-    language to one compile for every translated root. It stayed a change to
-    this one function because nothing downstream reaches for the roots itself,
-    which is what this pins.
+    Nothing downstream reaches for the roots itself, which is what this pins.
     """
     calls = _direct_calls(_docs_site_build.build_site_roots)
 
@@ -562,12 +557,7 @@ def test_validate_language_roots_refuses_a_missing_index(tmp_path: Path) -> None
 
 @pytest.mark.parametrize("missing_artifact", sorted(_REQUIRED_ROOT_ARTIFACTS))
 def test_validate_language_roots_refuses_each_missing_required_artifact(tmp_path: Path, missing_artifact: str) -> None:
-    """A localized root missing ANY required artifact fails validation, not only its index page.
-
-    Reproduces the audit finding: before the fix, a localized root could pass
-    with no 404 page and no sitemap at all -- only ``index.html`` and a
-    substantive Pagefind index chunk were mandatory.
-    """
+    """A localized root missing ANY required artifact fails validation, not only index.html."""
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
     target_language = localized_languages()[0]
@@ -588,8 +578,8 @@ def test_every_artifact_a_valid_root_carries_is_a_required_root_artifact(tmp_pat
 
     So the roster is compared against the independently spelled root that
     ``_materialise_site_root`` writes, which is what a deployable root
-    actually contains. Removing an artifact from the publish contract now
-    has to be a deliberate edit on both sides rather than a silent one.
+    actually contains. Removing an artifact from the publish contract has to
+    be a deliberate edit on both sides rather than a silent one.
     """
     _materialise_site_root(tmp_path, canonical_base=CANONICAL_DOCS_BASE_URL)
     carried = {
@@ -604,7 +594,7 @@ def test_every_artifact_a_valid_root_carries_is_a_required_root_artifact(tmp_pat
 def test_every_search_artifact_the_apex_carries_is_a_required_site_artifact(tmp_path: Path) -> None:
     """The site search roster is pinned the same way, against the apex bundle.
 
-    The second half of the contract, and the half the roots no longer carry:
+    The second half of the contract, and the half the roots do not carry:
     the bundle is the site's, written once, so a dropped entry would be every
     language's search gone rather than one root's.
     """
@@ -639,8 +629,7 @@ def test_the_site_is_refused_when_its_one_pagefind_index_has_no_substantive_data
     """An apex index with no substantive data fails validation for the whole site.
 
     One index means one failure for every language at once, so the refusal
-    belongs to the site and not to a root. Before, four roots each carried one
-    and an emptied one named its own language.
+    belongs to the site and not to a root.
     """
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
@@ -668,7 +657,7 @@ def test_no_published_root_carries_a_search_index_of_its_own(tmp_path: Path) -> 
 
     The point of one index is that the per-language ones are gone; a root that
     still carried one would be uploaded, served and searched, and every check
-    above would stay green because nothing asks a root for an index any more.
+    above would stay green because nothing asks a root for an index.
     """
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
@@ -690,12 +679,11 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
     """Publish and dry run share ONE build-and-validate prefix, and nothing may re-inline it.
 
     The dry run is only worth running if its verdict is the publish's verdict.
-    That holds today because both go through ``build_site_roots`` and
-    ``_validate_built_site``, but "holds by construction" is not a gate: the
-    exact shape that existed before this composition was extracted -- the
-    validation calls written out inline in the publish -- would reintroduce a
-    dry run that passes where a publish refuses, with a green suite. So the
-    inlined form is refused here by name.
+    That holds because both go through ``build_site_roots`` and
+    ``_validate_built_site``, but "holds by construction" is not a gate. Writing
+    the validation calls out inline in the publish would reintroduce a dry run
+    that passes where a publish refuses, with a green suite. So the inlined form
+    is refused here by name.
     """
     calls = _direct_calls(_docs_delivery_activation._publish)
     assert calls.index("build_site_roots") < calls.index("_validate_built_site") < calls.index("_upload_release"), (
@@ -713,11 +701,10 @@ def test_the_publish_reaches_upload_through_the_composition_the_dry_run_runs() -
 def test_dry_run_validates_a_complete_built_site_and_uploads_nothing(tmp_path: Path) -> None:
     """The dry run passes on a complete multi-root tree, touching no AWS surface.
 
-    The verb exists because the whole build-and-validate prefix used to be
-    reachable only through ``publish``: the roots could not be checked until
-    bytes were already going to a live destination. Its subject is the built
-    tree, so the build is supplied here as a real prepared multi-root artefact
-    and the validation half runs production code against real files on disk.
+    The verb exists so the roots can be checked before bytes go to a live
+    destination. Its subject is the built tree, so the build is supplied here
+    as a real prepared multi-root artefact and the validation half runs
+    production code against real files on disk.
     """
     for language in localized_languages():
         _materialise_language_root(tmp_path, language)
@@ -809,7 +796,7 @@ def test_dry_run_refuses_an_apex_sitemap_index_missing_a_root(tmp_path: Path) ->
 def test_clearing_the_apex_keeps_only_the_language_roots(tmp_path: Path) -> None:
     """A full site or an index left at the apex by an earlier publish is never uploaded as current.
 
-    The apex now carries the site's one search index, so the clearing also has
+    The apex carries the site's one search index, so the clearing also has
     to remove it: a previous release's index left in place would be uploaded
     beside this release's pages and answer readers from the wrong corpus.
     """
@@ -885,8 +872,8 @@ def _download_latest_path(repo_root: Path) -> Path:
 def _seed_stale_download_latest(repo_root: Path) -> Path:
     """Pre-seed a valid-looking prior release payload at the destination.
 
-    Simulates the shape the audit finding names: a previous successful
-    refresh already wrote a real payload, and a LATER refresh attempt fails.
+    A previous successful refresh already wrote a real payload, and a LATER
+    refresh attempt fails.
     """
     destination = _download_latest_path(repo_root)
     destination.parent.mkdir(parents=True, exist_ok=True)
@@ -934,10 +921,9 @@ def test_refresh_download_latest_degrades_on_write_failure(tmp_path: Path) -> No
 def test_refresh_download_latest_invalidates_a_preseeded_stale_payload_on_network_error(tmp_path: Path) -> None:
     """A prior successful refresh's payload must not survive a failed re-run.
 
-    Reproduces the audit finding: every failure branch used to return
-    without touching a payload retained from an earlier successful run, so a
-    later documentation build would publish that prior release's stale
-    download links as though they were current.
+    A failed re-run must not leave a payload from an earlier successful run in
+    place, since a later documentation build would publish that prior release's
+    stale download links as though they were current.
     """
     stale = _seed_stale_download_latest(tmp_path)
     assert stale.is_file()

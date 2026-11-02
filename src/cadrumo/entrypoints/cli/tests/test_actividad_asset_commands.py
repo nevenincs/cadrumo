@@ -37,7 +37,11 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
-from cadrumo.entrypoints.cli.actividad_asset_commands import _correction_revision, _minimum_amortization_fields
+from cadrumo.entrypoints.cli.actividad_asset_commands import (
+    _correction_revision,
+    _minimum_amortization_fields,
+    _stated_disposal,
+)
 from cadrumo.entrypoints.cli.actividad_asset_receipts import claim_receipt, inspection_receipt
 from cadrumo.entrypoints.cli.command_operation_table import COMMAND_OPERATION_ROWS
 from cadrumo.entrypoints.cli.command_schema import command_schema_type
@@ -233,6 +237,21 @@ def test_an_undeclared_vehicle_refusal_names_the_live_correct_command() -> None:
     assert action.cli_path[-2:] == ("actividad-asset", "correct")
     assert resolved.missing_argument_names == ("revision_json",)
     assert resolved.evidence[0].values["asset_id"] == "car-1"
+
+
+def test_a_disposal_preview_states_its_proceeds_and_costs_or_is_refused() -> None:
+    stated = _stated_disposal("2026-03-01", "sale", "1200.50", "10.25", None, None, None)
+
+    assert stated is not None
+    assert stated.proceeds == PublicDecimal(decimal="1200.50")
+    assert stated.transmission_costs == PublicDecimal(decimal="10.25")
+    assert _stated_disposal(None, None, None, None, None, None, None) is None
+    with pytest.raises(ValidationError) as refused:
+        _stated_disposal("2026-03-01", "sale", None, "10.25", None, None, None)
+    assert [error["loc"] for error in refused.value.errors()] == [("proceeds",)]
+    with pytest.raises(ValidationError) as refused_both:
+        _stated_disposal("2026-03-01", "sale", None, None, None, None, None)
+    assert [error["loc"] for error in refused_both.value.errors()] == [("proceeds",), ("transmission_costs",)]
 
 
 def test_activity_asset_inspect_dispatches_to_profile_resolution() -> None:

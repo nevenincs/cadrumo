@@ -766,6 +766,105 @@ application:
           a una importació exempta (clau M, o H mitjançant representant fiscal).'
         unsupported_iva_rate: 'El tipus d''IVA %{iva_rate} no es reconeix; usa un
           de: %{accepted}.'
+    figures_preview:
+      finding:
+        base_total_not_line_sum: La base total no coincideix amb la suma dels subtotals
+          de les línies.
+        figure_out_of_range: Una xifra és massa gran per calcular-la al cèntim.
+        grand_total_identity: El total no coincideix amb la base més l'IVA més el
+          recàrrec.
+        iva_total_not_line_sum: L'IVA total no coincideix amb la suma de les quotes
+          de les línies.
+        line_amount_negative: Un preu, un subtotal o una quota d'IVA no pot ser negatiu.
+        line_iva_mismatch: La quota indicada, %{stated}, difereix en més d'un cèntim
+          del subtotal pel tipus, %{expected}.
+        line_iva_not_zero_for_nonnumeric: Una línia exempta o no subjecta no porta
+          quota d'IVA, però aquesta en indica %{stated}.
+        line_quantity_not_positive: La quantitat ha de ser més gran que zero.
+        line_rate_coverage_gap: Cadrumo no té tipus registrats per a %{slot} el %{on_date},
+          així que no el pot aplicar.
+        line_rate_not_in_force: El tipus d'IVA %{slot} no estava vigent el %{on_date}.
+        line_rate_undeclared: El tipus d'IVA %{slot} no és cap dels que declara el
+          registre.
+        line_subtotal_mismatch: El subtotal indicat, %{stated}, difereix en més d'un
+          cèntim de quantitat per preu unitari, %{expected}.
+        nonnumeric_grand_total_identity: Si totes les línies són exemptes o no subjectes,
+          el total ha de ser igual a la base.
+        nonnumeric_iva_total_not_zero: Si totes les línies són exemptes o no subjectes,
+          l'IVA total ha de ser zero.
+        nonnumeric_recargo_not_zero: Si totes les línies són exemptes o no subjectes,
+          el recàrrec ha de ser zero.
+        printed_total_differs: El total imprès, %{printed}, difereix del total calculat,
+          %{computed}.
+        rate_date_unresolved: El registre no declara tipus d'IVA per al %{on_date},
+          així que no es pot calcular l'IVA.
+        recargo_above_iva_total: El recàrrec, %{stated}, no pot superar l'IVA total,
+          %{iva_total}.
+        recargo_negative: El recàrrec no pot ser negatiu.
+        retention_amount_above_base: La retenció, %{stated}, no pot superar la base,
+          %{base_total}.
+        retention_amount_mismatch: La retenció indicada, %{stated}, difereix en més
+          d'un cèntim de la base pel tipus, %{expected}.
+        retention_amount_negative: L'import de la retenció no pot ser negatiu.
+        retention_rate_out_of_range: El tipus de retenció és una fracció entre 0 i
+          1, per exemple 0.15 per a un 15 %, no un percentatge.
+        retention_rate_without_amount: Un tipus de retenció necessita l'import retingut;
+          el tipus sol no declara cap retenció.
+        suplido_negative: L'import del suplert no pot ser negatiu.
+        total_negative: El total d'una factura no pot ser negatiu.
+      rate_slot:
+        exempt: Exempta
+        not_subject: No subjecta
+        rate_0: IVA 0 %
+        rate_10: IVA 10 %
+        rate_2: IVA 2 %
+        rate_21: IVA 21 %
+        rate_4: IVA 4 %
+        rate_5: IVA 5 %
+        rate_7_5: IVA 7,5 %
+      rule_finding:
+        counterparty_country_invalid: No és un codi de país de dues lletres que el
+          llibre reconegui.
+        counterparty_name_blank: El nom de la contrapart no pot quedar en blanc.
+        counterparty_tax_id_invalid: Aquest NIF no és vàlid per al país de la contrapart.
+        counterparty_tax_id_required: Aquesta factura necessita el NIF de la contrapart.
+          Només una factura simplificada emesa en pot prescindir.
+        counterparty_tax_id_required_by_category: Una factura simplificada d'aquesta
+          categoria d'IVA necessita el NIF de la contrapart.
+        currency_invalid: No és un codi de moneda ISO 4217 de tres lletres.
+        intra_community_spanish_identification: Un lliurament intracomunitari exempt
+          no pot indicar un adquirent que compra amb un NIF-IVA espanyol.
+        invoice_class_undeclared: El registre no declara aquesta classe de factura.
+        invoice_number_blank: El número de factura no pot quedar en blanc.
+        iva_category_undeclared: El registre no declara aquesta categoria d'IVA en
+          aquesta data.
+        lease_only_on_issued: Només una factura emesa registra un arrendament de local
+          de negoci.
+        lease_reference_not_allowed: Un immoble en aquesta situació no té referència
+          cadastral.
+        lease_reference_too_long: El Modelo 347 admet una referència cadastral de
+          fins a {limit} caràcters.
+        lease_situation_undeclared: No és una situació de l'immoble que declari el
+          Modelo 347.
+        line_description_blank: La descripció d'una línia no pot quedar en blanc.
+        line_description_too_long: La descripció d'una línia admet fins a {limit}
+          caràcters.
+        line_oss_rate_kind_refused: Aquest tipus d'OSS no està disponible per a aquesta
+          línia.
+        operation_date_role_mismatch: 'La data d''operació va unida a la seva funció
+          desada: en una factura desada pots moure-la, però no afegir-la ni treure-la.'
+        operation_type_required: Aquesta categoria d'IVA necessita una clau d'operació
+          del Modelo 349.
+        other_invoice_rule: El llibre rebutjaria aquesta factura per una altra regla.
+          Comprova'n les dades amb el document.
+        rectified_invoice_not_allowed: Només una factura rectificativa indica la factura
+          que rectifica.
+        rectified_invoice_required: Una factura rectificativa ha d'indicar la factura
+          que rectifica.
+        series_required_for_rectificativa: Una factura rectificativa s'ha d'emetre
+          en una sèrie pròpia.
+        simplificada_not_for_intra_community: No es pot emetre una factura simplificada
+          per un lliurament intracomunitari exempt.
     lifecycle:
       errors:
         ambiguous_invoice_prefix: 'El prefix d''identificador de factura %{invoice_id}
@@ -1108,16 +1207,24 @@ application:
           el que correspon.
         what_to_do: Compara aquest tipus amb les instruccions oficials i corregeix
           el registre si cal.
-      advisory_retencion_credit_grade:
-        what: 'La deducció per retencions de les teves factures emeses no està del
-          tot confirmada: Cadrumo encara no ha confirmat a quin exercici correspon.'
-        what_to_do: Compara l'import amb el certificat de retencions de cada client
-          per a aquest exercici abans de presentar.
+      advisory_binding_value:
+        what: 'Una xifra d''una casella es basa en una lectura que Cadrumo encara
+          no pot confirmar: pots veure-la i previsualitzar-la, però no comprovar,
+          exportar ni registrar la declaració amb ella.'
+        what_to_do: Compara la xifra amb els teus registres i amb el certificat del
+          pagador. Mentre estigui en espera, Cadrumo no pot comprovar, exportar ni
+          registrar aquesta declaració; una versió posterior que confirmi el període
+          l'alliberarà.
       aggregation_activity_undeclared:
         what: La casella {box} mostra zero, tot i que tens ingressos en aquest període
           sense tipus d'activitat.
         what_to_do: Indica el tipus d'activitat en aquests registres d'ingressos i
           torna a calcular.
+      calculation_screen_outdated:
+        what: Aquest càlcul es va fer abans de les comprovacions actuals de Cadrumo
+          sobre les seves xifres, així que no es pot comprovar, exportar ni registrar
+          tal com està.
+        what_to_do: Torna a calcular la declaració i comprova-la després.
       deferred_binding_source:
         what: Cadrumo encara no emplena automàticament una xifra d'aquesta declaració.
         what_to_do: No has de fer res, tret que aquesta xifra t'afecti. Si t'afecta,
@@ -1390,6 +1497,14 @@ application:
       activity_undeclared: '{element}: la seva compra no indica tipus d''activitat
         i un altre dels teus elements és agrari, de manera que es compta com a no
         agrària.'
+      advisory_imputation_period_ungrounded: 'Casella {box}: {amount} de retencions
+        queden en espera perquè no està confirmat el període al qual corresponen.
+        Una retenció s''imputa al període de la renda sobre la qual es va practicar
+        (art. 79 RIRPF), i els teus registres daten cada cobrament per la seva arribada
+        al banc, cosa que només és correcta si vas optar pel criteri de cobraments
+        i pagaments (art. 7.2 RIRPF; art. 14.1.b LIRPF).'
+      advisory_value_proven_zero: 'Casella {box}: el zero es manté, perquè en el període
+        no hi ha cap xifra el període de la qual pugui ser dubtós.'
       agrarian_excluded: '{element}: pertany a una activitat agrària, de manera que
         queda fora del pagament fraccionat del període que acaba el {period_end}.'
       amortization_box_unbound: '{element}: aquesta edició no té casella per a la
@@ -2770,8 +2885,8 @@ application:
         Afegeix aquests flags a la mateixa ordre i torna a executar-la: %{missing_flags}.'
       persist_patch_unknown_question_id: El pedaç de l'assistent referència un id
         de pregunta desconegut.
-      profile_flag_required: L'assistent requereix --profile NAME (sense valor per
-        defecte 'default' implícit).
+      profile_flag_required: L'assistent requereix --profile NAME (sense alternativa
+        `default` implícita).
       profile_label_taken: Ja existeix un perfil anomenat %{label}. Tria un altre
         nom o executa el flux d'edició per modificar aquest perfil.
       quiet_missing_flags: 'A aquesta execució amb --quiet li falten dades obligatòries.

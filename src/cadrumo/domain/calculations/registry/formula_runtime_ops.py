@@ -445,7 +445,9 @@ def apply_rounding(value: Decimal, rounding: RegistryRoundingCode | None) -> Dec
 
 def reject_non_decimal[Key](items: Mapping[Key, Decimal], label: str) -> None:
     """Reject non-decimal values before formula runtime consumption."""
-    del items, label
+    for key, value in items.items():
+        if isinstance(value, bool) or not isinstance(value, Decimal) or not value.is_finite():
+            raise RegistryValidationError(f"{label} {key!r} must be a finite Decimal")
 
 
 def validated_decimal_input_casilla_ids[InputKey, InputValue](
@@ -481,7 +483,7 @@ def _validated_decimal_inputs[InputValue](
 def reject_non_string[Key](values: Mapping[Key, str], label: str) -> None:
     """Reject empty or non-string external values before registry validation."""
     for key, value in values.items():
-        if not value:
+        if not isinstance(value, str) or not value:
             raise RegistryValidationError(f"{label} {key!r} must be a non-empty string")
 
 

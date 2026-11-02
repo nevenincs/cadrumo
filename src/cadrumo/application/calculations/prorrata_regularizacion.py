@@ -45,10 +45,7 @@ from ...core.i18n.render import tr
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.bienes_inversion.register import BienesInversionIvaRegister
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.calculations.registry.binding_targets import (
-    casillas_by_binding,
-    sole_bound_casilla,
-)
+from ...domain.calculations.registry.binding_targets import casillas_by_binding
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -86,7 +83,10 @@ from ..aggregation.source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
 )
-from ..aggregation.source_resolution_operations import storage_degradation_resolution
+from ..aggregation.source_resolution_operations import (
+    storage_degradation_resolution,
+    unresolved_binding_diagnostics,
+)
 from ..persistence_errors import PersistenceDegradationError
 from ..prorrata_register.service import require_prorrata_register_coordinates_current
 from .m303_settlement_observation import M303SettlementObservationState, m303_annual_settlement_observation
@@ -378,27 +378,6 @@ def _prorrata_source_modelo(revision: ModeloRevision) -> str:
     return next(iter(modelos))
 
 
-def _unresolved_binding_diagnostics(
-    *,
-    revision: ModeloRevision,
-    binding_ids: tuple[BindingId, ...],
-    resolver_id: str,
-    message: str,
-) -> tuple[CalculationSourceDiagnostic, ...]:
-    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one."""
-    return tuple(
-        CalculationSourceDiagnostic(
-            reason="unresolved_binding",
-            source_kind=_SOURCE_KIND.value,
-            resolver_id=resolver_id,
-            binding_id=binding_id,
-            casilla_id=sole_bound_casilla(revision, binding_id),
-            message=message,
-        )
-        for binding_id in binding_ids
-    )
-
-
 def _entry_for_register_provenance(
     register: ProrrataRegister,
     *,
@@ -591,7 +570,8 @@ def _unresolved_resolution(
         resolver_id=resolver_id,
         owned_sources=owned_sources,
         unresolved_binding_ids=declared_binding_ids,
-        diagnostics=_unresolved_binding_diagnostics(
+        diagnostics=unresolved_binding_diagnostics(
+            source_kind=_SOURCE_KIND.value,
             revision=revision,
             binding_ids=declared_binding_ids,
             resolver_id=resolver_id,
@@ -648,7 +628,8 @@ def _valued_prorrata_resolution(
             modelo=context.modelo,
         ),
         unresolved_binding_ids=unresolved,
-        diagnostics=_unresolved_binding_diagnostics(
+        diagnostics=unresolved_binding_diagnostics(
+            source_kind=_SOURCE_KIND.value,
             revision=revision,
             binding_ids=unresolved,
             resolver_id=resolver_id,

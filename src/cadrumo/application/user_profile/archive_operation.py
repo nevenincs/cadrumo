@@ -265,9 +265,7 @@ def _archive_effect(
 ) -> OperationEffect:
     if handoff or tracker.has_uncertain_write:
         return OperationEffect.UNKNOWN
-    if tracker.confirmed_write:
-        return OperationEffect.PARTIAL if failures else OperationEffect.UPDATED
-    return OperationEffect.NONE
+    return OperationEffect.of_confirmed_writes(wrote=tracker.confirmed_write, incomplete=failures)
 
 
 async def _settle_archive_work(
@@ -425,6 +423,11 @@ def resolve_profile_archive_operation_access(
     )
 
 
+def profile_archive_push_expected_effects(*, dry_run: bool) -> frozenset[OperationEffect]:
+    """Effects a mirror push may settle with: a dry run writes nothing, a real push may end unknown."""
+    return frozenset({OperationEffect.NONE}) if dry_run else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
+
+
 def _profile_archive_push_effects(
     projection: ProfileArchivePushProjection, receipt: OperationTerminalReceipt
 ) -> frozenset[OperationEffect]:
@@ -437,11 +440,7 @@ def _profile_archive_push_effects(
         or report.cleanup_failed_objects
     ):
         raise ValueError("mirror provider outcomes require an admitted handoff receipt")
-    return (
-        frozenset({OperationEffect.NONE})
-        if report.dry_run
-        else frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
-    )
+    return profile_archive_push_expected_effects(dry_run=report.dry_run)
 
 
 def _profile_archive_reconcile_effects(

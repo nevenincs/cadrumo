@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-119` · **Topic:** [Core authority and shared controls](../topics/core-authority-and-shared-controls.md)
+**Topic:** [Core authority and shared controls](../topics/core-authority-and-shared-controls.md)
 
 <!-- preserved:article -->
 ## Scope and method
@@ -17,7 +17,7 @@ The core layer defines seven stable categories—`ERROR`, `REFUSED`, `AUTH`, `IN
 
 The declared registry maps exception qualified names to those stable records. It is loaded on first use, rejects duplicate code IDs and duplicate class ownership, and binds subclasses created before the catalogue load through a deferred set. After loading, a `CadrumoError` subclass without a declaration raises an internal invariant error rather than silently receiving an unstable fallback. `RecordedRegisteredError` validates a recorded code through the same catalogue, allowing persisted error references to be rendered without recreating the original exception. Duplicate checks and lazy catalogue load (`src/cadrumo/core/errors/error_codes.py`) Deferred class binding (`src/cadrumo/core/errors/error_codes.py`) Registered lookup and recorded codes (`src/cadrumo/core/errors/error_codes.py`) Recorded error class (`src/cadrumo/core/errors/hierarchy.py`)
 
-The registry data covers authentication and profile custody, workflow and wizard refusals, Modelo calculation and export boundaries, invoice and ledger operations, storage and persistence failures, and adapter errors. These rows declare how concrete exceptions should be classified and presented; they do not themselves implement those workflows or prove that every raising call site uses the intended exception. For example, the catalogue classifies login-disabled and ambiguous workflow-resume outcomes as non-retryable refusals, cross-bucket Modelo export as a refusal, and a duplicate committed custody label as non-retryable while a stale custody conflict is retryable. Auth and workflow outcomes (`src/cadrumo/core/errors/registry/_application_part1.py`) Cross-bucket export and custody retry distinctions (`src/cadrumo/core/errors/registry/_application_part2.py`) Custody duplicate-label contract (`src/cadrumo/core/errors/registry/_application_part2.py`) Adapter registry composition (`src/cadrumo/core/errors/registry/_adapters.py`) Profile bundle journal contracts (`src/cadrumo/core/errors/registry/_application_profile_bundle.py`)
+The registry data covers authentication and profile custody, workflow and wizard refusals, Modelo calculation and export boundaries, invoice and ledger operations, storage and persistence failures, and adapter errors. These rows declare how concrete exceptions should be classified and presented; they do not themselves implement those workflows or prove that every raising call site uses the intended exception. For example, the catalogue classifies login-disabled and ambiguous workflow-resume outcomes as non-retryable refusals, cross-bucket Modelo export as a refusal, and a duplicate committed custody label as non-retryable while a stale custody conflict is retryable. Auth outcomes (`src/cadrumo/core/errors/registry/_application_profile.py`) Workflow outcomes (`src/cadrumo/core/errors/registry/_application_operations.py`) Cross-bucket export (`src/cadrumo/core/errors/registry/_application_modelo.py`) Custody retry distinctions (`src/cadrumo/core/errors/registry/_application_profile.py`) Custody duplicate-label contract (`src/cadrumo/core/errors/registry/_application_profile.py`) Adapter registry composition (`src/cadrumo/core/errors/registry/_adapters.py`) Profile bundle journal contracts (`src/cadrumo/core/errors/registry/_application_profile_bundle.py`)
 
 `retryable` has an explicit operational meaning: the identical request can succeed through time or another party's progress alone; an operator correction, changed argument, or different state requires a non-retryable result. Category-to-process-exit mapping is also centralized: the seven categories map to exit codes 1 through 7, with `INTERNAL` reserved for unexpected internal faults and expected domain refusals kept outside that bucket. This gives script callers consistent coarse outcomes, but the static catalogue cannot show whether all callers interpret the metadata correctly. Retryability contract (`src/cadrumo/core/errors/error_codes.py`) Exit-code mapping (`src/cadrumo/core/errors/error_codes.py`)
 
@@ -48,14 +48,14 @@ The main quality strength is that classification and retry semantics are explici
 - errors/record_fault.py (`src/cadrumo/core/errors/record_fault.py`) — lines 1–245
 - errors/registry/__init__.py (`src/cadrumo/core/errors/registry/__init__.py`) — lines 1–11
 - errors/registry/_adapters.py (`src/cadrumo/core/errors/registry/_adapters.py`) — lines 1–22
-- errors/registry/_adapters_part1.py (`src/cadrumo/core/errors/registry/_adapters_part1.py`) — lines 1–560
-- errors/registry/_adapters_part2.py (`src/cadrumo/core/errors/registry/_adapters_part2.py`) — lines 1–683
-- errors/registry/_adapters_part3.py (`src/cadrumo/core/errors/registry/_adapters_part3.py`) — lines 1–110
+- errors/registry/_adapters_inbound.py (`src/cadrumo/core/errors/registry/_adapters_inbound.py`) — lines 1–150
+- errors/registry/_adapters_outbound.py (`src/cadrumo/core/errors/registry/_adapters_outbound.py`) — lines 1–510
+- errors/registry/_adapters_persistence.py (`src/cadrumo/core/errors/registry/_adapters_persistence.py`) — lines 1–593
 - errors/registry/_application.py (`src/cadrumo/core/errors/registry/_application.py`) — lines 1–26
-- errors/registry/_application_part1.py (`src/cadrumo/core/errors/registry/_application_part1.py`) — lines 1–950
-- errors/registry/_application_part2.py (`src/cadrumo/core/errors/registry/_application_part2.py`) — lines 1–1,573
-- errors/registry/_application_part3a1.py (`src/cadrumo/core/errors/registry/_application_part3a1.py`) — lines 1–296
-- errors/registry/_application_part3a2.py (`src/cadrumo/core/errors/registry/_application_part3a2.py`) — lines 1–120
-- errors/registry/_application_part3b.py (`src/cadrumo/core/errors/registry/_application_part3b.py`) — lines 1–380
+- errors/registry/_application_ledger.py (`src/cadrumo/core/errors/registry/_application_ledger.py`) — lines 1–711
+- errors/registry/_application_modelo.py (`src/cadrumo/core/errors/registry/_application_modelo.py`) — lines 1–1,416
+- errors/registry/_application_operations.py (`src/cadrumo/core/errors/registry/_application_operations.py`) — lines 1–391
+- errors/registry/_application_profile.py (`src/cadrumo/core/errors/registry/_application_profile.py`) — lines 1–815
 - errors/registry/_application_profile_bundle.py (`src/cadrumo/core/errors/registry/_application_profile_bundle.py`) — lines 1–36
+- errors/registry/_client.py (`src/cadrumo/core/errors/registry/_client.py`) — lines 1–262
 <!-- /preserved:article -->

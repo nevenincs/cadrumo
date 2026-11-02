@@ -24,7 +24,7 @@ from cadrumo.domain.calculations.registry.binding_targets import BindingConsumer
 from cadrumo.domain.calculations.registry.binding_temporal import TargetPeriods
 
 from ..loader import load_modelo_directory
-from ..validate_bindings import unreferenced_binding_advisories
+from ..validate_bindings import unreferenced_binding_failures
 
 if TYPE_CHECKING:
     from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -59,8 +59,8 @@ def _evidence_kinds(revision: ModeloRevision, binding_id: str) -> list[BindingCo
     ]
 
 
-def _advised(revision: ModeloRevision) -> str:
-    return "\n".join(unreferenced_binding_advisories(prefix="modelo 193", revision=revision))
+def _unreferenced(revision: ModeloRevision) -> str:
+    return "\n".join(unreferenced_binding_failures(prefix="modelo 193", revision=revision))
 
 
 def test_the_annual_cross_check_relations_are_counted_as_evidence_consumers(tmp_path: Path) -> None:
@@ -70,7 +70,7 @@ def test_the_annual_cross_check_relations_are_counted_as_evidence_consumers(tmp_
     for binding_id in _EVIDENCE_BINDINGS:
         evidence = [ref for ref in consumers[binding_id] if ref.kind is BindingConsumerKind.RELATION_EVIDENCE]
         assert [ref.owner for ref in evidence] == ["modelo-193-dep-123"], consumers[binding_id]
-        assert binding_id not in _advised(revision)
+        assert binding_id not in _unreferenced(revision)
 
 
 def test_a_relation_that_enters_the_arithmetic_is_not_evidence(tmp_path: Path) -> None:
@@ -83,7 +83,7 @@ def test_a_relation_that_enters_the_arithmetic_is_not_evidence(tmp_path: Path) -
     )
 
     assert _evidence_kinds(revision, "modelo-193-123-base-anual") == []
-    assert "modelo-193-123-base-anual" in _advised(revision)
+    assert "modelo-193-123-base-anual" in _unreferenced(revision)
     assert _evidence_kinds(revision, "modelo-193-123-retenciones-anual") == [BindingConsumerKind.RELATION_EVIDENCE]
 
 
@@ -103,4 +103,4 @@ def test_evidence_no_declared_period_selects_is_never_read(tmp_path: Path) -> No
     )
 
     assert _evidence_kinds(unread, "modelo-193-123-base-anual") == []
-    assert "modelo-193-123-base-anual" in _advised(unread)
+    assert "modelo-193-123-base-anual" in _unreferenced(unread)

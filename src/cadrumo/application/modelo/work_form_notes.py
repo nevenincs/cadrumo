@@ -10,7 +10,7 @@ if TYPE_CHECKING:
 from collections.abc import Iterable, Mapping
 from typing import Final
 
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...domain.modelos.calculation_revision import CalculationRevision
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, element_names_of
 from ...domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
@@ -63,8 +63,11 @@ _FINDINGS_OF_THE_SAME_CAUSE: Final[Mapping[str, frozenset[str]]] = {
 _ATTENTION_ORDER: Final[tuple[ModeloFormAttention, ...]] = tuple(ModeloFormAttention)
 
 
-type NoteSource = tuple[str, str | None, BindingSourceKind | None, CalculationNoteFact | None]
-"""One latest-calculation reason, the box it names, the binding source that raised it, and its own facts."""
+type NoteSource = tuple[
+    str, str | None, BindingSourceKind | None, CalculationNoteFact | None, BindingValueOutcome | None
+]
+"""One latest-calculation reason, the box it names, the binding source that raised it, its own facts,
+and the outcome its resolver stated for a capped value."""
 
 
 def collect_note_sources(
@@ -76,12 +79,21 @@ def collect_note_sources(
     """
     if diagnostics is not None:
         return tuple(
-            (diagnostic.reason, diagnostic.casilla_id, durable_binding_source(diagnostic), diagnostic.fact)
+            (
+                diagnostic.reason,
+                diagnostic.casilla_id,
+                durable_binding_source(diagnostic),
+                diagnostic.fact,
+                diagnostic.value_outcome,
+            )
             for diagnostic in diagnostics
         )
     if revision is None:
         return ()
-    return tuple((issue.reason, issue.casilla_id, issue.binding_source, issue.fact) for issue in revision.source_issues)
+    # A persisted note is never a proven zero: those are held, not stored.
+    return tuple(
+        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, None) for issue in revision.source_issues
+    )
 
 
 def _said_by_a_finding(reason: str, casilla_id: str | None, findings: Iterable[ModeloVerificationFinding]) -> bool:
@@ -108,20 +120,20 @@ def project_calculation_notes(
         field.address.casilla_id: field.box for field in fields if isinstance(field.address, ModeloFormCasillaAddressV1)
     }
     notes: dict[tuple[str, str | None, tuple[str, ...]], ModeloFormCalculationNote] = {}
-    for reason, casilla_id, binding_source, fact in sources:
+    for reason, casilla_id, binding_source, fact, outcome in sources:
         key = (reason, casilla_id, () if fact is None else fact.identity())
         if key in notes or _said_by_a_finding(reason, casilla_id, context.review.findings):
             continue
         if checked and reason in CHECK_REFUSED_REASONS:
             continue
         box = None if casilla_id is None else boxes.get(casilla_id)
-        attention = note_attention(reason, box=box)
+        attention = note_attention(reason, box=box, outcome=outcome)
         notes[key] = ModeloFormCalculationNote(
             reason=reason,
             attention=attention,
             casilla_id=casilla_id,
             box=box,
-            withholds_filing=gate_refuses(reason, binding_source),
+            withholds_filing=gate_refuses(reason, binding_source, outcome),
             fact=fact,
             element_names=element_names_of(fact, context.element_names),
         )

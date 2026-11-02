@@ -9,7 +9,7 @@ inbound entry in the committed mapping.
 The MEASUREMENT is deterministic -- no timestamp, no machine path in the
 payload -- so two runs over one tree produce byte-identical JSON and the sweep
 cadence compares them directly. Its DESTINATION is not: the report is run
-output, so it lands in a fresh ``.logs/audit-runs/`` run directory that the
+output, so it lands in a fresh ``.tmp/logs/audit-runs/`` run directory that the
 next ``just clean-apply`` reclaims, and the command prints where it wrote.
 Pass ``--output`` to place it somewhere a reviewer has chosen instead.
 """

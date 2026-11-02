@@ -59,7 +59,7 @@ flows:
       shape:
         date: 'Format: YYYY-MM-DD - for example 1978-03-15.'
         decimal: A number, using a point for decimals - for example 1234.56.
-        email: An email address - for example nombre@ejemplo.es.
+        email: An email address - for example name@example.com.
         integer: A whole number, with no thousands separator.
         money: An amount in euros, using a point for decimals - for example 1234.56.
       stale_result: The save completed, but a newer profile version is already visible.

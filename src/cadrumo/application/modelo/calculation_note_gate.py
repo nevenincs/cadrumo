@@ -22,14 +22,20 @@ See Also:
 
 from __future__ import annotations
 
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...domain.modelos.calculation_revision import CalculationRevision
+from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloPreconditionErrorMixin
-from .calculation_notes import GATE_REFUSED_REASONS, what_locale_key
+from .calculation_notes import GATE_REFUSED_REASONS, capped_value_proven_zero, what_locale_key
+from .calculation_screen import (
+    CALCULATION_SCREEN_OUTDATED_REASON,
+    calculation_screen_is_current,
+    calculation_screen_outdated_message_key,
+    calculation_screen_stamp,
+)
 from .printed_boxes import PrintedBoxes, snapshot_printed_boxes
 
 
@@ -37,14 +43,25 @@ class ModeloCalculationBlockedError(ModeloPreconditionErrorMixin, ModeloError):
     """The current calculation carries a note that withholds this action until a recalculation clears it."""
 
 
-def gate_refuses(reason: str, binding_source: BindingSourceKind | None) -> bool:
+_FILED_STATES: frozenset[CalculationRevisionState] = frozenset(
+    {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+)
+
+
+def gate_refuses(
+    reason: str, binding_source: BindingSourceKind | None, outcome: BindingValueOutcome | None = None
+) -> bool:
     """Whether the gate refuses on a note of ``reason`` from ``binding_source``, wherever the note names.
 
     It is the one condition the gate, the form's hold on the file and its next
     step all decide with. An unrouted one-stop-shop row is the Modelo 369
-    check's to decide.
+    check's to decide. ``outcome`` is what the resolver stated beside a capped
+    value: a proven zero withholds nothing, and a capped value without a stated
+    outcome withholds like any other.
     """
     if reason not in GATE_REFUSED_REASONS:
+        return False
+    if capped_value_proven_zero(reason, outcome):
         return False
     return not (reason == "unrouted_observation" and binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION)
 
@@ -102,20 +119,38 @@ def require_no_blocking_calculation_notes(
 def require_work_unit_calculation_unblocked(
     *, work_unit: WorkUnit, revision: CalculationRevision, action: str, operation: PinnedAuthorityOperation
 ) -> None:
-    """Refuse ``action`` on ``work_unit`` while its ``revision`` carries a persisted blocking note.
+    """Refuse ``action`` on ``work_unit`` while its ``revision`` is stale or carries a persisted blocking note.
+
+    A revision is stale when its screen stamp is absent or differs from the one
+    a calculation under ``operation``'s pinned authority would carry: its notes
+    were screened against other declarations, so it is refused before its notes
+    are read. A revision already recorded as filed keeps its history and is not
+    adjudicated again.
 
     Raises:
-        ModeloCalculationBlockedError: The revision carries a blocking note.
+        ModeloCalculationBlockedError: The revision is stale or carries a blocking note.
 
     See Also:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
             The stored calculation head carrying values, provenance and lifecycle facts.
     """
-    if not blocking_calculation_issues(revision):
+    if revision.state in _FILED_STATES:
         return
     snapshot = operation.snapshot(
         str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period.registry_token
     )
+    if not calculation_screen_is_current(revision, calculation_screen_stamp(snapshot, operation=operation)):
+        raise ModeloCalculationBlockedError(
+            translated_message=calculation_screen_outdated_message_key(),
+            context={
+                "action": action,
+                "calculation_revision_id": revision.calculation_revision_id,
+                "reason": CALCULATION_SCREEN_OUTDATED_REASON,
+                "reasons": CALCULATION_SCREEN_OUTDATED_REASON,
+            },
+        )
+    if not blocking_calculation_issues(revision):
+        return
     require_no_blocking_calculation_notes(revision, action=action, boxes=snapshot_printed_boxes(operation, snapshot))
 
 

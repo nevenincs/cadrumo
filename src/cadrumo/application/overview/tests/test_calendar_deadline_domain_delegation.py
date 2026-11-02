@@ -116,7 +116,7 @@ def test_overview_keeps_its_local_period_fallback_when_no_window_exists() -> Non
     and the shared resolver must not start borrowing a neighbouring year's
     window to avoid returning ``None``.
     """
-    far_future_year = 2200  # the highest year the typed Period accepts
+    far_future_year = 2200
     far_future = Period.from_year_and_code(far_future_year, "1T")
 
     assert resolve_filing_window(_MODELO, far_future_year, far_future) is None

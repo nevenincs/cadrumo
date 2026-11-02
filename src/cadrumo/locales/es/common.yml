@@ -264,6 +264,8 @@ aggregation:
         contener tipos de fuente en blanco.
       owned_sources_duplicate: Las fuentes propiedad del mallado de fuentes deben
         ser únicas.
+      proven_zero_value_not_zero: Un resolvedor de fuentes declaró un cero probado
+        para una vinculación cuyo valor no es cero.
       provenance_binding_source_mismatch: El tipo de origen declarado en la fila de
         procedencia no coincide con el origen del valor al que dice pertenecer. Los
         dos deben nombrar el mismo origen para que la trazabilidad sea comprobable.
@@ -1075,6 +1077,7 @@ desktop:
       AEAT.
     close: Cerrar el calendario
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: No cierra antes del {date}
     empty: No hay obligaciones de presentación en este periodo.
     event:
       filing: Presentación
@@ -3154,6 +3157,10 @@ desktop:
         retention_rate: Tipo de retención
         series: Serie
         situacion: Situación del inmueble
+      figures_retry: Vuelve a intentarlo
+      figures_unavailable: Cifras no disponibles. El libro no ha respondido y tu borrador
+        se conserva.
+      figures_updating: Actualizando las cifras…
       fixed: Forma parte de la identidad de la factura. Para cambiarlo, elimínala
         y vuelve a añadirla.
       from_lines: Según las líneas
@@ -3191,6 +3198,7 @@ desktop:
       line:
         actions: Acciones
         add: Añadir una línea
+        calculated: Calculado {amount}
         category: Categoría
         choose_rate: Elige un tipo
         description: Descripción
@@ -3205,7 +3213,8 @@ desktop:
       lines: Líneas
       lines_fixed: Fijas
       lines_note: Punto para los decimales, hasta seis, sin separador de miles. El
-        subtotal y el IVA se calculan al céntimo.
+        libro calcula el subtotal y el IVA; rellénalos solo para indicar lo que imprime
+        el documento.
       linked: Movimientos vinculados
       linked_count: 'Movimientos vinculados: {count}'
       links_permanent: 'Un vínculo es permanente: no se puede quitar.'
@@ -3216,11 +3225,11 @@ desktop:
       next_number: 'Siguiente de la serie {series}: {number}'
       next_number_series: Elige una serie para ver su siguiente número.
       none: Ninguno
+      not_available: No disponible
       not_met: pendiente
       not_saved: No se ha guardado. Tus cambios se conservan.
       not_stated: Sin indicar
       open_duplicate: Abrirla
-      operation_date_fixed: Solo se indica al añadir la factura
       operation_key: Clave {key}
       party: Contraparte
       payment:
@@ -3236,23 +3245,9 @@ desktop:
         choose_rate: Elige un tipo.
         country_letters: Dos letras, p. ej. ES.
         currency_letters: Tres letras, p. ej. EUR.
-        lease_reference_not_allowed: Sin referencia catastral en esta situación.
         missing: Obligatorio.
         no_line: Añade al menos una línea.
-        operation_date_fixed: Una vez añadida, se puede cambiar, pero no añadir ni
-          quitar.
         payment_id_shape: 64 caracteres hexadecimales.
-        printed_differs: Las líneas suman {total}.
-        recargo_above_iva: No puede superar el IVA.
-        rectifies_required: Indica la factura que rectifica.
-        retention_above_base: No puede superar la base imponible.
-        retention_differs: El tipo da {amount}.
-        retention_needs_amount: Un tipo necesita su importe.
-        series_required: Una rectificativa necesita serie.
-        tax_id_required: Obligatorio, salvo en una simplificada emitida.
-      rate:
-        exempt: Exento
-        not_subject: No sujeto
       read_failed: No se han podido leer las facturas.
       refusal:
         ambiguous_grouping: '"{raw}" se puede leer de dos maneras. Escribe 1500 o
@@ -3284,7 +3279,7 @@ desktop:
       remove_question: ¿Eliminar esta factura?
       removed: Factura {number} eliminada
       retention: Retención, fuera del total
-      retention_presets: Tipos de retención habituales
+      retention_implied: El tipo da {amount}.
       review: Revisar
       review_changes: Revisar cambios ({count})
       save: Guardar
@@ -3311,6 +3306,8 @@ desktop:
       unmatched: Sin vincular
       use: Usar
       use_number: Usar {number}
+      would_refuse: El libro rechazaría esta factura tal como está. Revisa su NIF
+        y los campos del documento.
     irpf_category:
       actividad_economica: Actividad económica
       arrendamiento_local: Arrendamiento de local
@@ -4653,7 +4650,7 @@ entries:
     purpose: Consulta del estado de pagos y devoluciones tributarias.
   portal_dnie_sede_entry:
     label: Acceso con DNI electrónico
-    purpose: Punto de acceso a la Sede mediante DNIe.
+    purpose: Punto de acceso a la Sede mediante el DNI electrónico.
   portal_domiciliacion_bancaria:
     label: Domiciliación bancaria de pagos
     purpose: Domiciliación bancaria de autoliquidaciones y pagos tributarios.
@@ -6684,6 +6681,8 @@ tui:
       errors:
         amount_invalid: Escribe el importe solo con cifras y con punto para los decimales,
           por ejemplo 1500.00.
+        amount_required: Escribe un importe en «{field}». Si no hay ninguno, escribe
+          0.00.
         asset_id_required: Escribe primero el identificador del elemento.
         choice_invalid: 'Elige una de estas opciones: {options}.'
         date_invalid: Escribe la fecha como AAAA-MM-DD, por ejemplo 2025-06-30.

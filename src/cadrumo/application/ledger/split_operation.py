@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.async_cleanup import await_cancellation_complete
-from ...core.decimal.grammar import try_parse_canonical_decimal
+from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
 from ...core.hashing import HEX_ALPHABET
 from ...core.hex import Hex64Str
 from ...core.identity.transaction_ids import TransactionId
@@ -49,7 +49,7 @@ _SPLIT_REMERGED_BY: tuple[LedgerSplitRemergeOperationId, ...] = ("ledger.merge",
 _MAX_SPLIT_CHILDREN = 128
 _MAX_SPLIT_RESULT_JSON_BYTES = 16_384
 _TransactionPrefix = Annotated[str, Field(min_length=1, max_length=128)]
-_DecimalText = Annotated[str, Field(min_length=1, max_length=128)]
+_DecimalText = Annotated[str, Field(min_length=1, max_length=DECIMAL_TEXT_MAX_LENGTH)]
 _Description = Annotated[str, Field(min_length=1, max_length=1024)]
 _Reason = Annotated[str, Field(max_length=512)]
 _Actor = Annotated[str, Field(min_length=1, max_length=64)]

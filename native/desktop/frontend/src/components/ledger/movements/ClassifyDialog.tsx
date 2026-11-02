@@ -17,13 +17,15 @@ import type {
   ClassifyKind,
   RatioCoverage,
 } from "../../../shell/ledgerCommands";
-import {
-  SHARE_CATEGORY_FAMILIES,
-  SPENDING_CATEGORY_FAMILIES,
-} from "../../../shell/ledgerVocabulary";
+import { shareCategoryFamilies } from "../../../shell/ledgerServedVocabulary";
 import { useStrings } from "../../../shell/strings";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { pointsText, typedPoints } from "../editing/editingModel";
-import { categoryLabel, categoryOption } from "./movementWords";
+import {
+  categoryLabel,
+  categoryOption,
+  vocabularyEmpty,
+} from "./movementWords";
 
 /**
  * What classifying as Business or Mixed asks for, in one step: a category
@@ -87,13 +89,16 @@ export function ClassifyDialog({
   const [category, setCategory] = useState<string | null>(null);
   const [share, setShare] = useState(typedPoints(initialShare));
   const mixed = kind === "mixed";
+  const vocabulary = useVocabulary();
   const options = useMemo<ComboboxOption[]>(
     () =>
-      (mixed ? SHARE_CATEGORY_FAMILIES : SPENDING_CATEGORY_FAMILIES).flatMap(
-        ([family, members]) =>
-          members.map((member) => categoryOption(t, family, member)),
+      (mixed
+        ? shareCategoryFamilies(vocabulary)
+        : vocabulary.categoryFamilies
+      ).flatMap(([family, members]) =>
+        members.map((member) => categoryOption(t, family, member)),
       ),
-    [t, mixed],
+    [t, mixed, vocabulary],
   );
   const asksCategory =
     kind === "category" || (kind !== "personal" && split.expenses > 0);
@@ -202,7 +207,12 @@ export function ClassifyDialog({
                 label={categoryLabelText}
                 value={category}
                 options={options}
-                emptyLabel={t("desktop.ledger.classify.no_category_match")}
+                emptyLabel={vocabularyEmpty(
+                  t,
+                  vocabulary,
+                  t("desktop.ledger.classify.no_category_match"),
+                  options.length,
+                )}
                 placeholder={t("desktop.ledger.classify.search_category")}
                 hint={
                   mixed

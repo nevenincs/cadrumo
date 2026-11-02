@@ -31,9 +31,9 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.modelos.calculation_revision import (
+    FILED_REVISION_STATES,
     SEALED_REVISION_STATES,
     CalculationRevision,
-    CalculationRevisionState,
 )
 from ...domain.modelos.filing_record import ExternalEvidence, ModeloRecord, ModeloRecordCatalogue
 from ...domain.modelos.participation_index import (
@@ -97,10 +97,7 @@ def _participation_for_sealed_revision(
     if work_unit is None:
         return None
 
-    is_filed = revision.state in {
-        CalculationRevisionState.PRESENTADO,
-        CalculationRevisionState.PRESENTADO_SUPERSEDIDO,
-    }
+    is_filed = revision.state in FILED_REVISION_STATES
     filing_record = _filing_record_for_revision(revision.calculation_revision_id, filings) if is_filed else None
     participation = TransactionRevisionParticipation(
         calculation_revision_id=revision.calculation_revision_id,

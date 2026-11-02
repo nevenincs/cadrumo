@@ -201,8 +201,7 @@ class ForeignAssetProvider(BaseModel):
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
     so the selector model admits the key, since a source-family selector is
-    validated whole against its own strict model. Optional while the families
-    adopt it.
+    validated whole against its own strict model.
     """
 
 
@@ -369,12 +368,11 @@ _AtributionRowField = Literal[
 class AtributionMemberObservation(BaseModel):
     """One (member, clave, subclave) atribuci�n row for modelo 184.
 
-    Every field below ``base_imponible_assigned`` is the (member, clave,
-    subclave) row-shape ADR's clave/subclave-conditional fact set, and is
-    ``None`` whenever the declaring clave does not license it -- e.g.
-    ``naturaleza_inmueble`` is only ever populated for a clave-C row. A
-    ``None`` here is a legitimate "this field does not apply to this row",
-    never a missing value.
+    Every field below ``base_imponible_assigned`` is part of the clave/subclave-conditional
+    fact set of the (member, clave, subclave) row shape, and is ``None`` whenever the
+    declaring clave does not license it -- e.g. ``naturaleza_inmueble`` is only ever
+    populated for a clave-C row. A ``None`` here is a legitimate "this field does not apply
+    to this row", never a missing value.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -392,8 +390,7 @@ class AtributionMemberObservation(BaseModel):
 
     Absence propagates as an ABSENT KEY in the built row rather than as a
     value, so a binding that needs the country refuses with the shipped
-    not-produced error naming itself. That is the visible failure the silent
-    default replaced."""
+    not-produced error naming itself."""
     transaction_date: date
     share_percentage: Decimal
     base_imponible_assigned: Decimal
@@ -464,8 +461,7 @@ class AtribucionMemberProvider(BaseModel):
 
     The same fact ``BindingRowExportSelector.data_type`` carries; declared here
     so the selector model admits the key, since a source-family selector is
-    validated whole against its own strict model. Optional while the families
-    adopt it.
+    validated whole against its own strict model.
     """
 
 

@@ -409,7 +409,7 @@ class RuntimeInventoryTuiDoorV1:
                     refusal_code=None if refusal is None else refusal.code,
                     condition=condition,
                     terminal=terminal,
-                    success_effect=OperationEffect.UPDATED if result.outcome == "applied" else OperationEffect.NONE,
+                    success_effect=result.settled_effect,
                 )
                 and (ledger is None or _ledger_scope_matches(ledger.actividad_id, ledger.year, request))
             )

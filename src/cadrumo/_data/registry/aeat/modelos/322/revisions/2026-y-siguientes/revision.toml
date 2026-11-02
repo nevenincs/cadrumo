@@ -6,41 +6,14 @@ predecessor = { none = { reason = "No legal predecessor is declared. The root wa
 casilla_source_refs = ["aeat-dr-322-2026"]
 live_cross_reference_source_refs = ["aeat-modelo-322-procedure"]
 application_link_source_refs = ["aeat-modelo-322-procedure"]
-# Prepared and reviewed by an agent against the bundled diseño de registros and
-# the ordenes this revision cites; NO human operator has countersigned it, and
-# 'agent_reviewed' plus this reviewer token record that state honestly rather
-# than claiming the operator's own sign-off.
-#
-# What the review established, by measurement:
-#   - every casilla legal_ref and source_ref resolves to the legal catalogue, and
-#     every cited source's corpus file is present on disk;
-#   - every formula targets a casilla of this revision;
-#   - every enrolled schema family resolves;
-#   - every cited source's applicability window overlaps this revision's own life;
-#   - and all 4 fixed-width record(s) of the DERIVED layout were paired to
-#     their design sheet and cover it: no design DATA position is left
-#     unaddressed, and none reaches past its declared record length.
-#
-# The coverage figure is measured on the layout AFTER binding derivation, which
-# is what the renderer and the completeness gate consume; the raw export_layouts
-# collection holds only inline fields and reading it understates coverage badly.
-#
-# This stamp claims no fresh-render reproduction evidence: that belongs to the
-# revisions enrolled in the generated-tree drift gate, and this one is not.
-#
-# What it does NOT establish: that the figures a filing produces are correct
-# against AEAT. That is a tax review against official sources, and it is what an
-# operator re-stamping this to 'operator_reviewed' would be attesting.
 review_status = "agent_reviewed"
 reviewed_by = "agent-prepared-pending-operator"
 reviewed_at = 2026-08-19
 authority_grade = "filing"
-# Split from the former single "2008-y-siguientes" revision so the ejercicio-2026
-# diseño de registro can be emitted as AEAT publishes it. That design changes the
-# record byte extents against every earlier era (page 1: 1500 -> 1800, page 2:
-# 2000 -> 2300, page 4: 2000 -> 2005), so it cannot share a fixed-width layout
-# with them -- which is exactly why it gets its own revision rather than a
-# compromise layout serving neither.
+# This revision emits the ejercicio-2026 diseño de registro as AEAT publishes it. That
+# design changes the record byte extents against every earlier era (page 1: 1500 ->
+# 1800, page 2: 2000 -> 2300, page 4: 2000 -> 2005), so it cannot share a fixed-width
+# layout with them and needs its own revision.
 #
 # The boundary is grounded in the reviewed source metadata the registry already
 # carries: aeat-dr-322-2026 declares applies_from 2026-01-01 with no applies_to,
@@ -2129,7 +2102,6 @@ source_refs = [0, 2, 1]
 family = "export_layouts"
 selector = {revision = "2024-2025", id = "generated-modelo-322-2024-2025-fichero"}
 
-# Replace the earlier source-scoped disclosure owner.
 [[revisions."2026-y-siguientes".family_removals]]
 family = "constructs"
 selector = {revision = "2024-2025", id = "modelo-322-printed-disclosure-arithmetic-2024-2025"}

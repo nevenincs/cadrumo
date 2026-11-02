@@ -21,7 +21,12 @@ from ...application.modelo.filing_record_import_contracts import (
     ModeloFilingRecordImportRequest,
 )
 from ...core.casilla_id import CasillaId, validated_casilla_id
-from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from ...core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationEffect,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 from ...core.period import Period
 from ...domain.modelos.filing_record import ExternalEvidenceKind, FilingDeclarationKind
 from ._filing_chain_payloads import filing_reconciliation_payload
@@ -93,7 +98,7 @@ def _filing_import_terminal_invalid(
     return (
         completed.terminal_condition is not OperationTerminalCondition.SUCCEEDED
         or completed.refusal_code is not None
-        or completed.effect not in {OperationEffect.NONE, OperationEffect.UPDATED}
+        or completed.effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT
         or (
             completed.effect is OperationEffect.NONE
             and reconciliation.outcome is not FilingReconciliationOutcome.ALREADY_RECORDED

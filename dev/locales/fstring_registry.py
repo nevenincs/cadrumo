@@ -293,6 +293,7 @@ def _runtime_registrations(
     from dev.locales.desktop_entry_option_keys import ENTRY_OPTION_KEYS
     from dev.locales.desktop_modelo_choice_keys import MODELO_CHOICE_KEYS
     from dev.locales.inventory_fstring_registrations import inventory_dynamic_registrations
+    from dev.locales.invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
 
     from .m303_carry_fstring_registrations import m303_carry_error_registration
 
@@ -397,6 +398,21 @@ def _runtime_registrations(
             values=tuple(sorted(ENTRY_OPTION_KEYS)),
         ),
         FStringKeyRegistration(
+            description="application.invoices.figures_preview.finding.* (words of the closed figure findings)",
+            key_factory=lambda key: key,
+            values=tuple(sorted(FINDING_KEYS)),
+        ),
+        FStringKeyRegistration(
+            description="application.invoices.figures_preview.rule_finding.* (words of the closed document rules)",
+            key_factory=lambda key: key,
+            values=tuple(sorted(RULE_FINDING_KEYS)),
+        ),
+        FStringKeyRegistration(
+            description="application.invoices.figures_preview.rate_slot.* (words of the declared IVA rate slots)",
+            key_factory=lambda key: key,
+            values=tuple(sorted(RATE_SLOT_KEYS)),
+        ),
+        FStringKeyRegistration(
             description="application.modelo.edit_choice.* (words of the choices a Modelo box serves)",
             key_factory=lambda key: key,
             values=tuple(sorted(MODELO_CHOICE_KEYS)),
@@ -484,6 +500,7 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
         what_locale_key,
         what_to_do_locale_key,
     )
+    from cadrumo.application.modelo.calculation_screen import CALCULATION_SCREEN_OUTDATED_REASON
     from cadrumo.application.modelo.edit_models import ModeloEditParseReason
     from cadrumo.application.modelo.edit_review_wording import WORDED_FINDING_CODES
     from cadrumo.application.modelo.source_policy import SourceFamily
@@ -559,14 +576,14 @@ def _modelo_workbench_registrations() -> tuple[FStringKeyRegistration, ...]:
             values=_enum_values(ModeloEditParseReason),
         ),
         FStringKeyRegistration(
-            description="application.modelo.calc_diagnostic.*.what (calculation note reasons)",
+            description="application.modelo.calc_diagnostic.*.what (calculation note and derived gate reasons)",
             key_factory=what_locale_key,
-            values=tuple(CALCULATION_NOTE_ATTENTION),
+            values=(*CALCULATION_NOTE_ATTENTION, CALCULATION_SCREEN_OUTDATED_REASON),
         ),
         FStringKeyRegistration(
-            description="application.modelo.calc_diagnostic.*.what_to_do (calculation note reasons)",
+            description="application.modelo.calc_diagnostic.*.what_to_do (calculation note and derived gate reasons)",
             key_factory=what_to_do_locale_key,
-            values=tuple(CALCULATION_NOTE_ATTENTION),
+            values=(*CALCULATION_NOTE_ATTENTION, CALCULATION_SCREEN_OUTDATED_REASON),
         ),
         FStringKeyRegistration(
             description="application.modelo.calc_diagnostic_fact.* (CalculationNoteSentence)",

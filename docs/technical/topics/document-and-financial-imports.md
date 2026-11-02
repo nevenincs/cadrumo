@@ -38,10 +38,10 @@ Shared PDF extraction retains page slots and offers an in-memory bytes route for
 
 ## Detailed articles
 
-- [Package namespaces](../articles/001-package-namespaces.md) — `STAGE-2-001`
-- [Inbound document and financial adapters](../articles/002-inbound-document-and-financial-adapters.md) — `STAGE-2-002`
-- [Financial providers, receipts, and notification PDFs](../articles/003-financial-providers-receipts-and-notification-pdfs.md) — `STAGE-2-003`
-- [Shared PDF text and provenance boundary](../articles/004-shared-pdf-text-and-provenance-boundary.md) — `STAGE-2-004`
+- [Package namespaces](../articles/001-package-namespaces.md)
+- [Inbound document and financial adapters](../articles/002-inbound-document-and-financial-adapters.md)
+- [Financial providers, receipts, and notification PDFs](../articles/003-financial-providers-receipts-and-notification-pdfs.md)
+- [Shared PDF text and provenance boundary](../articles/004-shared-pdf-text-and-provenance-boundary.md)
 
 
 ```{toctree}

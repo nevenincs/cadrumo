@@ -1,17 +1,15 @@
 # M210 IRNR profile-axis bindings.
 #
 # Exposes the operator profile's country_of_fiscal_residence field
-# to the formula runtime so the m210_resolve_rate op (S400) can read
+# to the formula runtime so the m210_resolve_rate op can read
 # the treaty country at evaluation time via ctx.enum_binding_values.
 # Mirrors the M100 CCAA precedent at
 # bindings/0008-renta-2025-profile-tax-residence-ccaa.toml.
 #
 # country_of_fiscal_residence is a free-form ISO 3166-1 alpha-2 string
 # on TaxpayerProfile, not a closed enum class — typed_enum is omitted.
-# The cross-cutting ConvenioAuthority projects the canonical treaty override fact and resolves the
-# BOE treaty reference from this same field; the retired TaxpayerProfile
-# convenio_aplicable static-lookup property has been deleted in favour of
-# this resolution path.
+# The cross-cutting ConvenioAuthority projects the canonical treaty override fact and
+# resolves the BOE treaty reference from this same field.
 
 [[revisions."2023".bindings]]
 id = "m210-profile-country-of-fiscal-residence"

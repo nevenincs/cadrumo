@@ -50,7 +50,7 @@ import re
 from collections.abc import Sequence
 from datetime import date
 from decimal import Decimal
-from typing import Final, TypedDict
+from typing import TypedDict
 
 from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.descendant_relacion import DescendantRelacion
@@ -127,17 +127,6 @@ advertised at all -- a typo, a stale flag from a script, a future locale edit th
 gate's extraction misses -- now fails loudly instead of vanishing. Every other
 structured-token surface in this tree already refuses unknown keys, through a
 typed enum, a strict model, or an explicit check. This one was the exception.
-"""
-
-
-_FALSE_PROFILE_TOKENS: Final[frozenset[str]] = frozenset({"false", "0"})
-"""The lower-cased stored tokens a profile row uses to mean NO.
-
-Two descendant flags tested this pair independently, each with a different default, so
-the two agreed on what counts as false only by hand. A token added to one and not the
-other would have made one flag read a stored NO as a YES -- which for
-``convive_con_contribuyente`` decides whether a descendant counts toward the minimo
-familiar at all.
 """
 
 
@@ -420,7 +409,7 @@ def _descendant_from_stored_row(
     return DescendantInfo(
         birth_date=birth_date,
         **relacion_kwarg(relacion),
-        **_stored_civil_fields(row, authority=authority),
+        **_stored_civil_fields(row, index=index, authority=authority),
         **_stored_family_fields(row, index=index),
         **_stored_maternity_fields(row, index=index),
         nif=row.get("nif"),
@@ -430,12 +419,18 @@ def _descendant_from_stored_row(
 def _stored_civil_fields(
     row: dict[str, str],
     *,
+    index: int,
     authority: GovernedFactSource | None = None,
 ) -> _CivilFields:
     inscripcion_raw = row.get("inscripcion_registro_civil")
     acogimiento_raw = row.get("acogimiento_resolucion")
     fallecimiento_raw = row.get("fallecimiento")
     discapacidad_raw = row.get("discapacidad")
+    if discapacidad_raw is not None and not is_plain_whole_number(discapacidad_raw.strip()):
+        raise ProfileAnswerTypeError(
+            f"renta_family.descendiente.{index}.discapacidad must be a whole-number grade; got {discapacidad_raw!r}.",
+            context={"key": f"renta_family.descendiente.{index}.discapacidad"},
+        )
     disc_val = int(discapacidad_raw) if discapacidad_raw is not None else None
     if disc_val is not None and disc_val not in accepted_descendant_disability_grades(authority=authority):
         raise ProfileAnswerTypeError(f"DISCAPACIDAD carries an unsupported governed grade: {disc_val!r}")
@@ -457,14 +452,24 @@ def _stored_family_fields(row: dict[str, str], *, index: int) -> _FamilyFields:
     dependencia_raw = row.get("dependencia_economica")
     declaracion_raw = row.get("declaracion_propia")
     prorrata_raw = row.get("prorrata_minimo")
+    convivencia_raw = row.get("convivencia")
+    custodia_raw = row.get("custodia_compartida")
     return {
-        "convive_con_contribuyente": row.get("convivencia", "true").lower() not in _FALSE_PROFILE_TOKENS,
+        "convive_con_contribuyente": (
+            _flag_bool(convivencia_raw, key=f"renta_family.descendiente.{index}.convivencia")
+            if convivencia_raw is not None
+            else True
+        ),
         "dependencia_economica": (
             _flag_bool(dependencia_raw, key=f"renta_family.descendiente.{index}.dependencia_economica")
             if dependencia_raw is not None
             else None
         ),
-        "custodia_compartida": row.get("custodia_compartida", "false").lower() not in _FALSE_PROFILE_TOKENS,
+        "custodia_compartida": (
+            _flag_bool(custodia_raw, key=f"renta_family.descendiente.{index}.custodia_compartida")
+            if custodia_raw is not None
+            else False
+        ),
         "rentas_anuales_euros": _stored_rentas_anuales(
             row.get("rentas_anuales"),
             index=index,

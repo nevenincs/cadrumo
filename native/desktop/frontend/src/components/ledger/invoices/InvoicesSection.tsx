@@ -24,11 +24,12 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
 import { formatAmount } from "../../../shared/numbers";
 import { RowRevealNotice, useRowReveal, type LinkedRow } from "../RowReveal";
+import { PAYMENT_STATUSES } from "../../../shell/ledgerContract";
+import { ServedOptions } from "../suggestions/ServedOptions";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { INVOICE_TSV_COLUMNS, invoicesTsv } from "../transfer/tsv";
 import { InvoiceEditor, type EditorTarget } from "./InvoiceEditor";
 import {
-  INVOICE_CLASSES,
-  PAYMENT_STATUSES,
   filterCatalogue,
   seriesAndNumber,
   sortCatalogue,
@@ -244,6 +245,7 @@ export function InvoicesSection({
   linked: LinkedRow;
 }) {
   const t = useStrings();
+  const vocabulary = useVocabulary();
   const { read, reread, settle } = useInvoiceCatalogue(port, reader, shown);
   const [filter, setFilter] = useState<Omit<CatalogueFilter, "period">>({
     kind: "all",
@@ -457,11 +459,11 @@ export function InvoicesSection({
             onChange={(event) => set("invoiceClass", event.target.value)}
           >
             <option value="">{t("desktop.ledger.invoices.any_class")}</option>
-            {INVOICE_CLASSES.map((token) => (
-              <option key={token} value={token}>
-                {classLabel(t, token)}
-              </option>
-            ))}
+            <ServedOptions
+              values={vocabulary.invoiceClasses}
+              stored={filter.invoiceClass}
+              label={(token) => classLabel(t, token)}
+            />
           </NativeSelect>
         </div>
         <div className="w-40">

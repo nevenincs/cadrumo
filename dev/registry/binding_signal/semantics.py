@@ -27,19 +27,12 @@ _NON_CONSUMING_SURFACES = {
 
 
 def provider(binding: Mapping[str, object]) -> tuple[str | None, Mapping[str, object], str]:
-    """Read current provider-union or legacy source-selector declaration shape."""
-    provider_value = binding.get("provider")
-    provider_mapping = mapping(provider_value)
-    if provider_mapping is not None:
-        kind = provider_mapping.get("kind")
-        return (kind if isinstance(kind, str) else None, provider_mapping, "provider_union")
-    source = binding.get("source")
-    selector = mapping(binding.get("selector"))
-    return (
-        source if isinstance(source, str) else None,
-        selector if selector is not None else {},
-        "source_selector_legacy" if source is not None or binding.get("selector") is not None else "unclassified",
-    )
+    """Read a binding's provider union; any other declaration shape is unclassified."""
+    provider_mapping = mapping(binding.get("provider"))
+    if provider_mapping is None:
+        return (None, {}, "unclassified")
+    kind = provider_mapping.get("kind")
+    return (kind if isinstance(kind, str) else None, provider_mapping, "provider_union")
 
 
 def temporal_shape(provider_payload: Mapping[str, object]) -> tuple[str, tuple[str, ...], tuple[str, ...]]:
@@ -276,8 +269,6 @@ def _registered_route_status(
         return "closed_non_runtime", ()
     if disposition == "deferred":
         return "closed_deferred", ()
-    if disposition == "advisory":
-        return "closed_advisory", ()
     if disposition != "filing_grade":
         return "open_disposition", ("unknown_registration_disposition",)
     if not isinstance(resolver_id, str):

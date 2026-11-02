@@ -34,9 +34,35 @@ def _console_finding_sections(result: UnreachableCodeResult) -> list[tuple[str, 
         ),
         (f"modules reachable only through TYPE_CHECKING imports ({len(type_only)}) [exact]", type_only),
         (f"test modules whose every shipped subject is a finding ({len(result.tests)})", result.tests),
-        (f"symbols never referenced by reachable shipped code ({len(result.symbols)})", result.symbols),
+        (f"symbols never referenced by reachable shipped code ({use_split_summary(result.symbols)})", result.symbols),
     ]
     return sections
+
+
+def symbol_use_split(symbols: tuple[SymbolFinding, ...]) -> dict[str, int]:
+    """Count symbols by who still names them, since each class needs a different decision.
+
+    A symbol only tests name keeps dead code exercised; one nothing names can
+    simply go. Anything else is named by tooling labels and needs a look.
+    """
+    split = {"tests_only": 0, "no_reference": 0, "other_labels": 0}
+    for finding in symbols:
+        if not finding.used_by:
+            split["no_reference"] += 1
+        elif finding.used_by == ("tests",):
+            split["tests_only"] += 1
+        else:
+            split["other_labels"] += 1
+    return split
+
+
+def use_split_summary(symbols: tuple[SymbolFinding, ...]) -> str:
+    """Render the count with its test-only and no-reference parts."""
+    split = symbol_use_split(symbols)
+    return (
+        f"{len(symbols)}: {split['tests_only']} used only by tests, "
+        f"{split['no_reference']} with no reference anywhere, {split['other_labels']} named by other tooling"
+    )
 
 
 def filter_by_confidence(result: UnreachableCodeResult, tier: Confidence) -> UnreachableCodeResult:
@@ -62,6 +88,7 @@ def filter_by_confidence(result: UnreachableCodeResult, tier: Confidence) -> Unr
         tests=tests,
         data_cleared=result.data_cleared,
         dev_cleared=result.dev_cleared,
+        registry_cleared=result.registry_cleared,
         reason=result.reason,
     )
 
@@ -84,6 +111,8 @@ def render_console_report(result: UnreachableCodeResult, *, full: bool = False, 
     out.append(f"  roots: {', '.join(result.roots)}")
     if result.data_cleared:
         out.append(f"  {result.data_cleared} data-shaped member(s) cleared by the shipped registry/locale payloads")
+    if result.registry_cleared:
+        out.append(f"  {result.registry_cleared} enum member(s) cleared because the registry declares their form code")
     if result.dev_cleared:
         out.append(f"  {result.dev_cleared} top-level symbol(s) cleared by a resolved reference from dev/ tooling")
     if result.outcome is UnreachableCodeOutcome.CLEAN:
@@ -134,6 +163,7 @@ def result_as_json(result: UnreachableCodeResult) -> str:
             "reachable_modules": result.reachable_modules,
             "data_cleared": result.data_cleared,
             "dev_cleared": result.dev_cleared,
+            "registry_cleared": result.registry_cleared,
             "exact_finding_ids": [finding.id for finding in result.exact_findings],
             "modules": [
                 {
@@ -148,6 +178,7 @@ def result_as_json(result: UnreachableCodeResult) -> str:
                 }
                 for f in result.modules
             ],
+            "symbol_use_split": symbol_use_split(result.symbols),
             "symbols": [
                 {
                     "id": f.id,

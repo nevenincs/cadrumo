@@ -19,11 +19,6 @@ from pydantic import (
 
 from ...core.decimal.grammar import is_non_negative_canonical_decimal
 from ...core.errors.hierarchy import pydantic_validation_boundary
-
-# CLASSIFIED_BY_MANUAL is re-exported for constants centralisation tests.
-from ...core.external_constants import (
-    CLASSIFIED_BY_MANUAL as CLASSIFIED_BY_MANUAL,
-)
 from ...core.external_constants import (
     DEFAULT_CURRENCY,
 )

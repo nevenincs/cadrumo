@@ -46,7 +46,11 @@ from cadrumo.application.operations.registry import OperationFrontendProjection,
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.async_cleanup import await_cancellation_complete
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
-from cadrumo.core.operations import OperationLifecycle, OperationTerminalCondition
+from cadrumo.core.operations import (
+    TERMINAL_CONDITIONS_WITH_ERROR_DETAIL,
+    OperationLifecycle,
+    OperationTerminalCondition,
+)
 
 from ..contracts.contracts import RefusalCode, RefusalError
 from ..contracts.deadline_budget import exchange_timeout, remaining_budget
@@ -134,6 +138,21 @@ def _parse_settled_result[ResultT: BaseModel](
     except ValidationError:
         raise RefusalError(RefusalCode.INVALID_FRAME) from None
     return result
+
+
+def _parse_review_success[ReviewT: BaseModel](
+    raw: bytes, model: type[ReviewT]
+) -> OperationReviewProjectionSuccessV1[ReviewT]:
+    """Validate a review success envelope specialised to ``model``."""
+    # CAST-RATIONALE-TUI-REVIEW-GENERIC: Pydantic's runtime specialization binds
+    # the success envelope's projection field to this exact model;
+    # __class_getitem__ has an overly broad typing stub, so restore that generic
+    # result for static checking.
+    success_type = cast(
+        "type[OperationReviewProjectionSuccessV1[ReviewT]]",
+        OperationReviewProjectionSuccessV1.__class_getitem__(model),
+    )
+    return success_type.model_validate_json(raw)
 
 
 def _settled_result_matches_binding[ResultT: BaseModel](
@@ -469,8 +488,7 @@ class OperationController:
             self.client.session_id != self.session_id
             or projection.operation_id != self.operation_id
             or projection.lifecycle is not OperationLifecycle.TERMINAL
-            or projection.terminal_condition
-            not in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}
+            or projection.terminal_condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL
         ):
             return None
         contract = projection.definition_contract
@@ -570,14 +588,9 @@ class OperationController:
             if reply.document.get("outcome") == "refused":
                 return OperationReviewProjectionRefusalV1.model_validate_json(raw), content_hash_hex(reply.document)
             model = RuntimeReviewDocument if projection_type is BaseModel else projection_type
-            success_type = OperationReviewProjectionSuccessV1.__class_getitem__(model)
-            if not (isinstance(success_type, type) and issubclass(success_type, BaseModel)):
-                raise RefusalError(RefusalCode.INVALID_FRAME)
-            resolved = success_type.model_validate_json(raw)
+            resolved = _parse_review_success(raw, model)
         except ValidationError:
             raise RefusalError(RefusalCode.INVALID_FRAME) from None
-        if not isinstance(resolved, OperationReviewProjectionSuccessV1):
-            raise RefusalError(RefusalCode.INVALID_FRAME)
         if (
             resolved.projection_schema != reference.review_projection_schema
             or resolved.definition_contract_digest != reference.definition_contract_digest

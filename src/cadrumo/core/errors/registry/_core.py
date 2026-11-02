@@ -5,7 +5,6 @@ Rows map core exception qualnames to stable
 """
 
 from ..error_codes import ErrorCategory, ErrorCode
-from ._core_part2 import DECLARED_ERROR_CODES as _CORE_PART2_CODES
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
     (
@@ -409,5 +408,74 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
-    *_CORE_PART2_CODES,
+    (
+        "cadrumo.core.errors.hierarchy.AuthError",
+        ErrorCode(
+            code="AUTH_AUTH",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_auth",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.errors.hierarchy.AeatLoginAssertionError",
+        ErrorCode(
+            code="AUTH_AEAT_LOGIN_ASSERTION",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_aeat_login_assertion",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.errors.hierarchy.ViewCaptureIdentityMismatchError",
+        ErrorCode(
+            code="AUTH_VIEW_CAPTURE_IDENTITY_MISMATCH",
+            category=ErrorCategory.AUTH,
+            message_key="errors.auth.auth_view_capture_identity_mismatch",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.corpus_manifest.manifest._ManifestPayloadValidationError",
+        ErrorCode(
+            code="INTEGRITY_MANIFEST_PAYLOAD_VALIDATION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_manifest_payload_validation",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.corpus_manifest.manifest._MalformedManifestPayloadError",
+        ErrorCode(
+            code="INTEGRITY_MALFORMED_MANIFEST_PAYLOAD",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_malformed_manifest_payload",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.corpus_manifest.manifest._UnsupportedManifestVersionError",
+        ErrorCode(
+            code="INTEGRITY_UNSUPPORTED_MANIFEST_VERSION",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_unsupported_manifest_version",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.corpus_manifest.manifest._TamperedManifestPayloadError",
+        ErrorCode(
+            code="INTEGRITY_TAMPERED_MANIFEST_PAYLOAD",
+            category=ErrorCategory.INTEGRITY,
+            message_key="errors.integrity.canonical_tampered_manifest_payload",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

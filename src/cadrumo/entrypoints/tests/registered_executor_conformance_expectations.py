@@ -742,6 +742,18 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "ledger.list", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE, ("ledger.list",)
         ),
         RegisteredExecutorConformanceCase(
+            "ledger.rule.trial",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.rule.trial",),
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.staged.check",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.staged.check",),
+        ),
+        RegisteredExecutorConformanceCase(
             "ledger.entry-options",
             OperationTerminalCondition.SUCCEEDED,
             OperationEffect.NONE,
@@ -752,6 +764,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
         ),
         RegisteredExecutorConformanceCase(
             "ledger.invoice.add", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED, ("ledger.invoice.add",)
+        ),
+        RegisteredExecutorConformanceCase(
+            "ledger.invoice.preview",
+            OperationTerminalCondition.SUCCEEDED,
+            OperationEffect.NONE,
+            ("ledger.invoice.preview",),
         ),
         RegisteredExecutorConformanceCase(
             MODELO_INVOICE_WITHHOLDING_CAPTURE_OPERATION_DEFINITION_ID,

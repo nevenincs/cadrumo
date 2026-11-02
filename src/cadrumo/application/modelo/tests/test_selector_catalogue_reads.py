@@ -55,6 +55,10 @@ class _ReadRepository(CalculationRevisionCatalogueRepositoryProtocol):
         pytest.fail("Selector must read the catalogue directly")
 
     @override
+    def stored_catalogue_is_known_override_free(self) -> bool:
+        return False
+
+    @override
     def load_revisioned(
         self, *, operation: PinnedAuthorityOperation | None = None
     ) -> tuple[CalculationRevisionCatalogue, str]:

@@ -1,21 +1,18 @@
 """Annual-cadence revisions must date their own ejercicio, not their orden's.
 
-Two internally-consistent conventions for ``valid_from`` coexisted in this
-registry until tonight: January 1 of the ejercicio a revision computes, and
-the date its approving orden happened to take legal effect. Both read as
-correct in isolation -- each modelo agreed with itself -- and the two only
-diverged when compared against each other or against the field the second
-convention was silently duplicating (``LegalReference.effective_from``,
-which already carries that fact and needs no second home).
+Two internally-consistent conventions for ``valid_from`` can coexist in the
+registry: January 1 of the ejercicio a revision computes, and the date its
+approving orden happened to take legal effect. Both read as correct in
+isolation -- each modelo agreed with itself -- and the two only diverge when
+compared against each other or against the field the second convention
+duplicates (``LegalReference.effective_from``, which already carries that fact
+and needs no second home).
 
-The operator ruled ONE convention canonical: ``valid_from`` describes
-COVERAGE, because coverage is the only thing ``select_revision`` uses it
-for. A revision whose ``valid_from`` names its orden's effective date, not
-its own ejercicio's start, refuses an ``on=``-dated query anywhere between
-January 1 and the orden's real effective date -- a live gap for a genuinely
-in-force filing year, discovered on Modelo 200 as a self-contradiction
-against its own declared deadline window and confirmed on seven further
-modelos by cross-checking against ``LegalReference.effective_from``.
+ONE convention is canonical: ``valid_from`` describes COVERAGE, because
+coverage is the only thing ``select_revision`` uses it for. A revision whose
+``valid_from`` names its orden's effective date, not its own ejercicio's start,
+refuses an ``on=``-dated query anywhere between January 1 and the orden's real
+effective date, leaving a gap for a filing year that is genuinely in force.
 
 SCOPE, deliberately narrow. This check applies ONLY to annual-cadence
 revisions declaring exactly the single ``0A`` period -- the shape where "the

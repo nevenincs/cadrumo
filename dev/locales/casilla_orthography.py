@@ -62,7 +62,8 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
     # "inter vivos" is Latin, and "bitcoin" is the asset name.
     # Casilla text plus the interface domains: Latin and asset names, and words that
     # are transport tokens, field ids or English terms rather than Spanish prose
-    # ("movil" is the clave_movil provider token).
+    # ("movil" is the clave_movil provider token; "rectificacion" is the row-kind
+    # token of the typed --row option, which transport never translates).
     "es": frozenset(
         {
             "Coin",
@@ -83,6 +84,7 @@ REVIEWED_UNACCENTED_WORDS: Final[dict[str, frozenset[str]]] = {
             "prestacion",
             "razon",
             "record",
+            "rectificacion",
             "records",
             "retencion",
             "revision",

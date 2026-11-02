@@ -48,6 +48,7 @@ from ...domain.categories.spending_category import (
     home_office_categories,
 )
 from ...domain.categories.spending_category_catalogue import require_spending_category
+from ...domain.transactions.classification_effects import takes_expense_category
 from ...domain.transactions.enums import (
     BusinessClassification,
     TransactionDirection,
@@ -477,21 +478,8 @@ def _catalogue_uses_home_office_usage_ratio(*, period: Period, transactions: Tra
 
 
 def _transaction_needs_expense_category(transaction: Transaction) -> bool:
-    """Return whether the transaction feeds the deductible-expense pipeline.
-
-    ``category_id`` is a :class:`SpendingCategory` foreign key — a
-    deductible-expense taxonomy. The only modelo binding that consumes
-    it is the Renta first-slice expense aggregation, which only admits
-    OUTGOING transactions (expenses) and INCOMING transactions that
-    carry a purchase-invoice evidence id (expense refunds). Pure income
-    (INCOMING with no purchase-invoice evidence) is classified solely
-    by direction and never reads a spending category, so it must not
-    be flagged as ``missing_category``.
-    """
-    if transaction.direction is TransactionDirection.OUTGOING:
-        return True
-    return (
-        transaction.direction is TransactionDirection.INCOMING and transaction.purchase_invoice_evidence_id is not None
+    return takes_expense_category(
+        transaction.direction, has_purchase_evidence=transaction.purchase_invoice_evidence_id is not None
     )
 
 

@@ -168,9 +168,9 @@ msgid ""
 msgstr ""
 "Ha még nincs mentett munkád, előbb hozd létre az `aeat app modelo work "
 "create` paranccsal (a fenti lánc- és látható-cél-szekvenciák lefuttatják "
-"a teljes űrlapot). Ha újra futtatod ugyanazt a create parancsot, nem jön "
-"létre másolat; a parancs visszaadja az adott benyújtáshoz tartozó, már "
-"meglévő mentett munkát."
+"a teljes űrlapot). Ha újra futtatod ugyanazt a <span "
+"lang=\"en\">create</span> parancsot, nem jön létre másolat; a parancs "
+"visszaadja az adott benyújtáshoz tartozó, már meglévő mentett munkát."
 
 #: ../../how-to/filing-spine.md:72
 msgid "How a filing gets its ID"

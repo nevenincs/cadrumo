@@ -16,6 +16,9 @@ decides waits for that check: until the current calculation is checked the
 editor offers the check next, and once it is, the check's own finding of the
 same cause stands in the note's place.
 
+A value from a binding whose declared grade cap stops it at calculation is
+refused by the gate too, unless its resolver proved it zero.
+
 A printed box that could not be worked out, a source with no route and a source
 store not ready are refused by the gate: their producers report only sources
 that apply to the filer. A box that could not be worked out blocks only when the
@@ -40,7 +43,7 @@ from threading import Lock
 from types import MappingProxyType
 from typing import Final, get_args
 
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language, tr
@@ -72,9 +75,15 @@ GATE_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
         "unresolved_binding",
         "unhandled_binding_source",
         "source_domain_not_ready",
+        "advisory_binding_value",
     }
 )
-"""Reasons the calculation-note gate refuses checking, exporting and recording on: a figure left out or unworked."""
+"""Reasons the calculation-note gate refuses checking, exporting and recording on.
+
+A figure left out or unworked, or a figure whose binding's declared grade cap
+stops it at calculation; a capped figure the resolver proved to be zero is the
+one such note the gate passes (:func:`note_attention`).
+"""
 CHECK_REFUSED_REASONS: Final[frozenset[str]] = frozenset(
     {
         "iva_selected_scope_evidence_failure",
@@ -143,7 +152,6 @@ CALCULATION_NOTE_ATTENTION: Final[Mapping[str, ModeloFormAttention]] = MappingPr
         "m193_settled_row_amounts_unresolved_authority": _C,
         "inferred_retencion_excluded_from_credit": _C,
         "unresolved_retencion_substrate": _C,
-        "advisory_retencion_credit_grade": _C,
         "register_acquisition_exceeds_ledger": _C,
         "register_acquisition_partly_accounted": _C,
         "register_acquisition_row_missing": _C,
@@ -216,14 +224,27 @@ STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
 
 
-def note_attention(reason: str, *, box: str | None) -> ModeloFormAttention:
+def capped_value_proven_zero(reason: str, outcome: BindingValueOutcome | None) -> bool:
+    """Whether a note reports a capped value its resolver proved to be zero, which withholds nothing.
+
+    The outcome is the resolver's statement, never read off the amount: a
+    capped note without one is not a proven zero.
+    """
+    return reason == "advisory_binding_value" and outcome is BindingValueOutcome.PROVEN_ZERO
+
+
+def note_attention(reason: str, *, box: str | None, outcome: BindingValueOutcome | None = None) -> ModeloFormAttention:
     """Place one diagnostic reason on the filer's scale; ``box`` is the number the form prints for the box it names.
 
     ``box`` is ``None`` when the reason names no box or a working figure the
-    form does not print (:mod:`.printed_boxes`).
+    form does not print (:mod:`.printed_boxes`). ``outcome`` is the resolver's
+    stated outcome for a capped value: a proven zero is for the filer's
+    information.
     """
     if reason in PRINTED_BOX_REASONS and box is None:
         return _C
+    if capped_value_proven_zero(reason, outcome):
+        return _I
     return CALCULATION_NOTE_ATTENTION[reason]
 
 
@@ -405,6 +426,7 @@ __all__ = [
     "STALE_LOCALE_KEY",
     "UNWORKED_BOX_REASONS",
     "CalculationNoteStore",
+    "capped_value_proven_zero",
     "durable_binding_source",
     "fact_locale_key",
     "note_attention",

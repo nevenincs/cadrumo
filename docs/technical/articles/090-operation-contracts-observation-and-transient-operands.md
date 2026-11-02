@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-090` · **Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
+**Topic:** [Operations, profiles and workflows](../topics/operations-profiles-and-workflows.md)
 
 <!-- preserved:article -->
 **Scope:** 24 files under `src/cadrumo/application/operations`, totaling 5,765 lines, 233,160 bytes and 45,743 measured `o200k_base` proxy tokens. All nine bounded-reader pages were read in order. Static inspection only; no application execution or tests were run.

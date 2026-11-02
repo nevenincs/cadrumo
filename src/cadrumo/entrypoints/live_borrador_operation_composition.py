@@ -15,6 +15,9 @@ from ..application.live.borrador_100_operation_ports import (
     Borrador100PrintedValue,
 )
 from ..application.user_profile.access_errors import ProfileAccessRefusedError
+from ..application.user_profile.profile_record_repository import ProfileRecordRepository
+from ..application.user_profile.projections import record_to_path_values
+from ..application.workbench_generation_calendar import declared_tax_id
 from ..core.bucket_pointer import require_active_bucket_id
 from ..domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..domain.calculations.registry.schema_extraction import ExtractionProfileDefinition
@@ -46,6 +49,7 @@ class _CanonicalBorradorParser:
             extraction_coverage=observation.extraction_coverage,
             artefact_kind=observation.artefact_kind.value,
             source_pdf_sha256=observation.source_pdf_sha256,
+            tax_id=observation.tax_id,
             values=tuple(
                 Borrador100PrintedValue(
                     casilla_id=row.casilla_id,
@@ -72,4 +76,12 @@ def build_borrador_100_operation_ports(
         operation=operation,
         repository=build_borrador_100_snapshot_repository(bucket_id=str(profile_id)),
         parser=_CanonicalBorradorParser(),
+        profile_tax_id=lambda: _profile_tax_id(profile_id, operation),
     )
+
+
+def _profile_tax_id(profile_id: UUID, operation: PinnedAuthorityOperation) -> str | None:
+    record = ProfileRecordRepository.for_current_session(
+        profile_id, profile_decode_context=operation.profile_decode_context()
+    ).load(profile_id)
+    return declared_tax_id(record_to_path_values(record))

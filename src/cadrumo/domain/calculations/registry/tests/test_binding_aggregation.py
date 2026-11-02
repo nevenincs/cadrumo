@@ -15,8 +15,9 @@ corrupts the ``op`` string and asserts the strict model rejects it, so the
 round-trip cannot pass while the typed boundary is broken.
 
 The op member set (``sum``, ``rows``, ``copy``, ``count_distinct``,
-``prior_pagos_fraccionados``) is the complete set declared on a binding
-``aggregation`` table across ``src/cadrumo/_data/registry`` (confirmed by sweep);
+``prior_pagos_fraccionados``, ``pagos_fraccionados_ingresados``) is the complete
+set declared on a binding ``aggregation`` table across
+``src/cadrumo/_data/registry`` (confirmed by sweep);
 relation aggregation and formula-expression ops are a separate, unrelated axis.
 """
 
@@ -25,14 +26,11 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from .....core.aggregation import (
-    ROW_SET_GROUPING_FOR_BINDING_SOURCE,
-    BindingAggregation,
-    BindingAggregationOp,
-    BindingSourceKind,
-)
+from .....core.aggregation import BindingAggregation, BindingAggregationOp
 from .....core.casilla_id import CasillaId, validated_casilla_id
-from ..binding_aggregation import _ROWS_DEFAULT_SOURCE_KINDS, binding_aggregation_op, default_binding_aggregation_op
+from ..binding_aggregation import binding_aggregation_op, default_binding_aggregation_op
+from ..binding_provider_registration import BINDING_PROVIDER_REGISTRATIONS
+from ..errors import RegistryValidationError
 from ..schema import BindingDefinition
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain, pytest.mark.usefixtures("operation")]
@@ -154,6 +152,7 @@ _REGISTRY_DECLARED_OPS: tuple[str, ...] = (
     "copy",
     "count_distinct",
     "prior_pagos_fraccionados",
+    "pagos_fraccionados_ingresados",
 )
 
 
@@ -162,14 +161,11 @@ def test_binding_aggregation_op_member_set_matches_registry_declarations() -> No
     assert {member.value for member in BindingAggregationOp} == set(_REGISTRY_DECLARED_OPS)
 
 
-def test_rows_default_source_kinds_derive_from_canonical_row_set_source_map() -> None:
-    """Rows-default binding sources come from the canonical detail-record source map."""
-    expected = frozenset(
-        source for source in ROW_SET_GROUPING_FOR_BINDING_SOURCE if source is not BindingSourceKind.WITHHOLDING
-    )
-
-    assert expected == _ROWS_DEFAULT_SOURCE_KINDS
-    assert all(isinstance(source, BindingSourceKind) for source in _ROWS_DEFAULT_SOURCE_KINDS)
+def test_default_op_is_derived_from_the_registrations_permitted_operations() -> None:
+    """Every kind's default is a member of the operations its own registration permits."""
+    for kind, registration in BINDING_PROVIDER_REGISTRATIONS.items():
+        default = default_binding_aggregation_op(kind.value)
+        assert default in registration.permitted_aggregation_ops, kind
 
 
 def test_binding_aggregation_round_trips_through_strict_model() -> None:
@@ -203,12 +199,10 @@ _SUM_DEFAULT_SOURCES: tuple[str, ...] = (
     "withholding",
     "payable_invoice",
     "collectible_invoice",
-    "ledger_transaction",
     "ledger_oss_aggregation",
     "ledger_iva_aggregation",
     "ledger_renta_gastos_estimacion_directa_aggregation",
     "ledger_renta_income_aggregation",
-    "profile",
     "prorrata_regularizacion",
 )
 
@@ -225,6 +219,31 @@ def test_scalar_folding_family_defaults_to_sum() -> None:
     for source in _SUM_DEFAULT_SOURCES:
         assert default_binding_aggregation_op(source) is BindingAggregationOp.SUM, source
         assert binding_aggregation_op(_binding(source=source, op=None)) is BindingAggregationOp.SUM, source
+
+
+# Kinds whose registration permits exactly one operation, enumerated by hand
+# from the registrations' declared shape rather than read back from them.
+_COPY_ONLY_SOURCES: tuple[str, ...] = ("manual_input", "design_constant")
+_ROWS_ONLY_SOURCES: tuple[str, ...] = ("inventory", "ledger_transaction", "afiliado_cotizacion")
+
+
+def test_copy_only_family_defaults_to_copy() -> None:
+    """A kind that can only copy never defaults to a ``sum`` it cannot run."""
+    for source in (*_COPY_ONLY_SOURCES, "profile"):
+        assert default_binding_aggregation_op(source) is BindingAggregationOp.COPY, source
+
+
+def test_rows_only_family_defaults_to_rows() -> None:
+    """A kind permitting only rows defaults to rows."""
+    for source in _ROWS_ONLY_SOURCES:
+        assert default_binding_aggregation_op(source) is BindingAggregationOp.ROWS, source
+
+
+@pytest.mark.parametrize("source", ["borrador", "bogus_kind", ""])
+def test_unregistered_kind_has_no_default_and_raises(source: str) -> None:
+    """An unregistered kind is refused instead of falling back to ``sum``."""
+    with pytest.raises(RegistryValidationError, match="no registration"):
+        default_binding_aggregation_op(source)
 
 
 def test_explicit_op_overrides_family_default() -> None:

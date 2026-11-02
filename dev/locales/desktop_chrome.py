@@ -32,6 +32,7 @@ from pathlib import Path
 from types import MappingProxyType
 from typing import Final
 
+from cadrumo.application.invoices.figures_preview_contracts import INVOICE_FIGURES_PREVIEW_LABEL_PREFIX
 from cadrumo.core.atomic_write import atomic_write_text
 from cadrumo.core.external_constants import UTF_8_ENCODING
 from cadrumo_client.contracts.navigation import load_navigation_register
@@ -46,7 +47,12 @@ from .desktop_assets_keys import (
     INVENTORY_KEYS,
     INVENTORY_PERCENT_PLACEHOLDER_PREFIXES,
 )
-from .desktop_entry_option_keys import ENTRY_OPTION_FAMILIES, ENTRY_OPTION_KEYS
+from .desktop_entry_option_keys import (
+    ENTRY_OPTION_FAMILIES,
+    ENTRY_OPTION_KEYS,
+    ENTRY_TOKEN_WORD_FAMILIES,
+    ENTRY_TOKEN_WORD_KEYS,
+)
 from .desktop_interface_keys import DESKTOP_INTERFACE_KEYS
 from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
@@ -54,55 +60,10 @@ from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
+from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
 
 #: The shell's locales, source locale first.
 DESKTOP_LOCALES: Final[tuple[str, ...]] = ("en", "es", "ca", "hu")
-
-
-_SPENDING_CATEGORIES: Final[tuple[str, ...]] = (
-    "cuotas_colegiales",
-    "cuotas_autonomos_ss",
-    "mutualidad_alternativa",
-    "arrendamiento_local",
-    "arrendamiento_vivienda_afecto",
-    "ibi_local_afecto",
-    "suministros_local_afecto",
-    "suministros_home_office_luz",
-    "suministros_home_office_agua",
-    "suministros_home_office_gas",
-    "suministros_home_office_internet",
-    "amortizacion_vivienda_afecto",
-    "ibi_vivienda_afecto",
-    "comunidad_vivienda_afecto",
-    "telefonia_movil",
-    "telefonia_fija",
-    "material_oficina",
-    "software_suscripcion",
-    "hardware_amortizable",
-    "mobiliario_amortizable",
-    "reparaciones_conservacion",
-    "vehiculo_combustible",
-    "vehiculo_mantenimiento",
-    "vehiculo_seguro",
-    "vehiculo_peaje",
-    "vehiculo_parking",
-    "manutencion_dietas_nacional",
-    "manutencion_dietas_extranjero",
-    "asesoria_fiscal",
-    "asesoria_juridica",
-    "asesoria_contable",
-    "publicidad_marketing",
-    "formacion_profesional",
-    "viajes_transporte",
-    "viajes_alojamiento",
-    "seguros_responsabilidad_civil",
-    "seguros_salud_autonomo",
-    "gastos_bancarios",
-    "gastos_financieros",
-    "suministros_cliente_directos",
-    "subcontratacion",
-    "tributos_fiscalmente_deducibles",
-)
 
 
 #: Keys the shell composes at runtime, as ``prefix -> members``: a template
@@ -235,53 +196,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.calendar.local.": ("external_baseline_imported", "not_ready_to_file", "ready_to_file"),
         "desktop.calendar.state.": ("due", "filed", "late", "unknown"),
         "desktop.ledger.section.": ("movements", "invoices", "documents", "assets", "rules", "registers", "health"),
-        "desktop.ledger.category.": _SPENDING_CATEGORIES,
-        "desktop.ledger.category_keywords.": _SPENDING_CATEGORIES,
-        "desktop.ledger.category_family.": (
-            "social_security",
-            "premises",
-            "home_office_suministros",
-            "home_office_ownership",
-            "telecoms",
-            "office",
-            "vehicle",
-            "meals",
-            "professional_services",
-            "travel",
-            "insurance",
-            "financial",
-            "direct_costs",
-            "taxes",
-        ),
-        "desktop.ledger.iva_category.": (
-            "domestic_general",
-            "domestic_reduced",
-            "domestic_super_reduced",
-            "domestic_zero",
-            "domestic_exempt",
-            "domestic_not_subject",
-            "domestic_reverse_charge",
-            "intra_community_supply",
-            "intra_community_acquisition_reverse_charge",
-            "intra_community_triangulation",
-            "export_third_country_zero_rated",
-            "export_assimilated_zero_rated",
-            "import_third_country",
-            "recargo_equivalencia",
-            "regimen_simplificado",
-            "reagp_compensation",
-            "operacion_no_sujeta",
-            "erroneous_invoice",
-            "unknown",
-            "intra_community_service_supply",
-            "intra_community_service_acquisition_reverse_charge",
-        ),
-        "desktop.ledger.irpf_category.": (
-            "actividad_economica",
-            "arrendamiento_local",
-            "arrendamiento_vivienda_afecto",
-            "trabajo",
-        ),
         "desktop.ledger.classification.": (
             "business",
             "personal",
@@ -473,7 +387,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "group",
             "id",
         ),
-        "desktop.ledger.invoices.class.": ("ordinaria", "simplificada", "rectificativa"),
         "desktop.ledger.invoices.column.": (
             "number",
             "kind",
@@ -512,27 +425,24 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.ledger.invoices.kind.": ("issued", "received"),
         "desktop.ledger.invoices.kind_choice.": ("issued", "received"),
         "desktop.ledger.invoices.kinds.": ("all", "issued", "received"),
-        "desktop.ledger.invoices.line.": ("description", "quantity", "unit_price", "rate", "category"),
+        "desktop.ledger.invoices.line.": (
+            "description",
+            "quantity",
+            "unit_price",
+            "subtotal",
+            "rate",
+            "iva",
+            "category",
+        ),
         "desktop.ledger.invoices.payment.": ("paid", "pending", "partially_paid", "overdue", "cancelled"),
         "desktop.ledger.invoices.problem.": (
             "choose_kind",
             "country_letters",
             "currency_letters",
-            "tax_id_required",
-            "series_required",
-            "rectifies_required",
             "choose_rate",
             "no_line",
-            "recargo_above_iva",
-            "printed_differs",
-            "retention_above_base",
-            "retention_needs_amount",
-            "retention_differs",
-            "lease_reference_not_allowed",
             "payment_id_shape",
-            "operation_date_fixed",
         ),
-        "desktop.ledger.invoices.rate.": ("exempt", "not_subject"),
         "desktop.ledger.invoices.refusal.": (
             "too_long",
             "signed",
@@ -551,7 +461,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "not_a_date",
             "line_break",
         ),
-        "desktop.ledger.invoices.situacion.s": ("1", "2", "3", "4"),
         "desktop.ledger.documents.viewer.refused.": (
             "not_found",
             "digest_mismatch",
@@ -809,8 +718,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "used_price",
         ),
         "desktop.ledger.assets.submit.": ("create", "correct", "forecast"),
-        "desktop.ledger.capital.disposal.": ("sujeta_no_exenta", "exenta_o_no_sujeta"),
-        "desktop.ledger.capital.kind.": ("mueble", "inmueble"),
         "desktop.ledger.capital.refusal.": ("validation", "disposal_incomplete", "duplicate_identifier"),
         "desktop.ledger.counterparty.scope.": (
             "es_mainland",
@@ -838,13 +745,6 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "revoke_especial",
             "seed_sector",
             "settle_sector",
-        ),
-        "desktop.ledger.prorrata.letra.": ("a", "b", "c", "d"),
-        "desktop.ledger.prorrata.provenance.": (
-            "aeat_autorizada",
-            "inicio_actividad",
-            "carried_prior_definitiva",
-            "interrumpida_tres_ultimos",
         ),
         "desktop.ledger.prorrata.refusal.": (
             "validation",
@@ -874,6 +774,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         **ASSET_FAMILIES,
         **INVENTORY_FAMILIES,
         **ENTRY_OPTION_FAMILIES,
+        **ENTRY_TOKEN_WORD_FAMILIES,
         **MODELO_CHOICE_FAMILIES,
     }
 )
@@ -887,7 +788,11 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | ASSET_KEYS
     | INVENTORY_KEYS
     | ENTRY_OPTION_KEYS
+    | ENTRY_TOKEN_WORD_KEYS
     | MODELO_CHOICE_KEYS
+    | FINDING_KEYS
+    | RULE_FINDING_KEYS
+    | RATE_SLOT_KEYS
 )
 
 #: Declared keys no shell source names yet, because their view is still being
@@ -900,7 +805,9 @@ DESKTOP_CHROME_AWAITING_CONSUMER: Final[frozenset[str]] = frozenset({"desktop.si
 #: Keys the application serves with its data and the shell translates as they
 #: come, so its source never names them. Their declaration reads the same
 #: shape that serves them, and generation refuses until each word is authored.
-DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = MODELO_CHOICE_KEYS
+DESKTOP_CHROME_SERVED_KEYS: Final[frozenset[str]] = (
+    MODELO_CHOICE_KEYS | FINDING_KEYS | RULE_FINDING_KEYS | RATE_SLOT_KEYS
+)
 
 #: A whole key in quotes, or the fixed head of a template literal up to ``${``.
 _SHELL_LITERAL_KEY: Final[re.Pattern[str]] = re.compile(
@@ -1001,7 +908,13 @@ def _in_shell_form(key: str, value: str) -> str:
     ``%{name}`` placeholder and a ``{name}`` one the same way, so the sentence is
     unchanged. Every other key still refuses the form.
     """
-    if not key.startswith((*ASSET_PERCENT_PLACEHOLDER_PREFIXES, *INVENTORY_PERCENT_PLACEHOLDER_PREFIXES)):
+    if not key.startswith(
+        (
+            *ASSET_PERCENT_PLACEHOLDER_PREFIXES,
+            *INVENTORY_PERCENT_PLACEHOLDER_PREFIXES,
+            INVOICE_FIGURES_PREVIEW_LABEL_PREFIX,
+        )
+    ):
         return value
     return _PERCENT_PLACEHOLDER.sub(r"{\1}", value)
 

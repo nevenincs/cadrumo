@@ -20,7 +20,7 @@ ignored paths into three populations that are not interchangeable:
 
 **Regenerable output.** ``__pycache__``, the tool caches, every ``cache`` and
 ``.cache`` tree, ``build/``, ``dist/``, the generated documentation trees, and
-the current ``.tmp/logs/`` and legacy ``.logs/`` run roots. Every byte is reproduced by a command that
+the ``.tmp/logs/`` run root. Every byte is reproduced by a command that
 already exists, nothing reads it across a run boundary, and deleting it costs a
 rebuild. This is the only family this module removes.
 
@@ -72,7 +72,7 @@ FAMILIES: Final[frozenset[str]] = frozenset({WORKTREE_FAMILY, VAR_SCRATCH_FAMILY
 
 Folded into one command because they were three commands an operator had to
 know about separately, and the accrual they bound does not respect that split:
-the biggest thing on the disk moved between ``var/`` and ``.logs/`` depending on
+the biggest thing on the disk moved between ``var/`` and ``.tmp/logs/`` depending on
 what had been run that week, so a report covering one of them at a time never
 showed where the space actually went.
 
@@ -129,12 +129,10 @@ not one byte of taxpayer data. The store the warning is about lives at
 wherever they appear, including underneath ``var``. Guarding a name instead of
 a fact is what this module's own docstring tells its reader not to do.
 
-``.logs`` is absent for the same reason, and its removal from this set is the
-second correction of that one mistake. It was protected as state an operator
-would lose, on the strength of holding "evidence". What it actually holds is
-captured command output, downloaded BOE payloads, draft vault bodies staged on
+``.tmp/logs`` is absent for the same reason. What it holds is captured command
+output, downloaded BOE payloads, draft vault bodies staged on
 their way into ``.vault/``, and a cache: output of runs, written by a run and
-read back by nothing. ``.logs`` is a scratch root, the boundary is one-way --
+read back by nothing. ``.tmp/logs`` is a scratch root, the boundary is one-way --
 code may write there and must not read from there -- and a tool that spares it
 asserts a durability the tree does not have. No child of it is excepted. A
 family a run is still writing is deferred to the section that can observe that
@@ -160,7 +158,6 @@ the application's own cache and logs rather than anything the release build
 minted. It stays with the worktree section, which is what owns caches.
 """
 
-LOGS_SCRATCH_OWNER: Final = ".logs"
 TEMP_RUN_LOGS: Final = ".tmp/logs"
 """The repository's scratch log root, removed by this section in full.
 
@@ -170,19 +167,16 @@ something a run wrote; nothing in the product or the development tooling is
 entitled to read one back, so the whole root is regenerable by definition.
 """
 
-# `.logs` has no privileged child and no exception. Every family under it is
-# run output, reapable at any age, with no retention window anywhere in the
+# `.tmp/logs` has no privileged child and no exception. Every family under it
+# is run output, reapable at any age, with no retention window anywhere in the
 # path. The ONE question a family can raise is liveness -- a run writing its
 # directory right now -- and that question is answered by observing the owning
-# pid, never by recognising a name. `LOGS_TEST_RUNS` used to sit here as a
-# name-keyed spare, and it was wrong in both directions at once: it spared
-# FINISHED test runs from this section, so `--only worktree` left them
-# indefinitely, and it protected nothing else, so a live `audit-runs` or
-# `lane-runs` directory was reaped mid-write by the branch below.
+# pid, never by recognising a name: a name-keyed spare would keep finished runs
+# forever and still reap a live family it did not name.
 
 BUILD_OUTPUT_ROOT: Final = "build"
 MIXED_ROOTS: Final[frozenset[str]] = frozenset(
-    {VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, LOGS_SCRATCH_OWNER, BUILD_OUTPUT_ROOT, ".tmp", TEMP_RUN_LOGS}
+    {VAR_SCRATCH_OWNER, VAR_APPLICATION_STORAGE, BUILD_OUTPUT_ROOT, ".tmp", TEMP_RUN_LOGS}
 )
 """Ignored directories whose children are classified individually.
 
@@ -192,7 +186,7 @@ several unrelated things: ``var`` carries the release cohort's working trees,
 an operator's long-lived probe trees, and a cache, and no single verdict is
 right for all three. The packaging sweep that owns ``var`` says the same thing
 in its own words -- it is a mixed directory, so the rule cannot be keyed on the
-parent. ``.logs`` is here for the narrower version of the same reason: every
+parent. ``.tmp/logs`` is here for the narrower version of the same reason: every
 child is reapable, but a child a run is still writing has to reach the section
 that can observe its owner, and splitting the root is what lets it.
 
@@ -511,7 +505,7 @@ def expand(repo_root: Path, relative: str) -> list[str]:
 def _live_run_count(repo_root: Path, relative: str) -> int:
     """Return how many run directories under this log entry an owner is still writing.
 
-    The only question ``.logs`` can raise, and it is asked of the operating
+    The only question ``.tmp/logs`` can raise, and it is asked of the operating
     system rather than of the path. :func:`assess_run_directories` resolves each
     run's owning pid from the marker in the run's own name; a directory whose
     owner is gone, or which wrote the completion record a run writes last, is
@@ -526,7 +520,7 @@ def _live_run_count(repo_root: Path, relative: str) -> int:
     therefore normalised here rather than assumed by the caller.
     """
     parts = relative.strip("/").split("/")
-    prefix = TEMP_RUN_LOGS if relative.strip("/").startswith(TEMP_RUN_LOGS) else LOGS_SCRATCH_OWNER
+    prefix = TEMP_RUN_LOGS
     root = repo_root / prefix
     prefix_parts = prefix.split("/")
     if len(parts) == len(prefix_parts):
@@ -552,7 +546,7 @@ def _generated_output_verdict(repo_root: Path, stripped: str) -> tuple[Verdict, 
         if matching_family(Path(stripped).name) is not None:
             return Verdict.KEEP, "registered build scratch, judged by its owning section below"
         return Verdict.REAP, "generated build output"
-    if any(stripped == prefix or stripped.startswith(f"{prefix}/") for prefix in (LOGS_SCRATCH_OWNER, TEMP_RUN_LOGS)):
+    if stripped == TEMP_RUN_LOGS or stripped.startswith(f"{TEMP_RUN_LOGS}/"):
         live = _live_run_count(repo_root, stripped)
         if live:
             return Verdict.KEEP, f"{live} run directory(s) whose owner is still writing; reaped by their section below"

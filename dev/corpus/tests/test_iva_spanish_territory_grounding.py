@@ -71,8 +71,7 @@ _TERRITORIAL_EXCLUSION_REFERENCE: Final[str] = "ley-37-1992:art-3.dos"
 
 #: Wording from a distant article of the same law, used to prove the anchor
 #: really scoped. Without it a resolver regression returning the whole document
-#: would satisfy every positive assertion here and quietly restore exactly the
-#: law-wide reading this module was rewritten to remove.
+#: would satisfy every positive assertion here.
 _WORDING_FROM_ANOTHER_ARTICLE: Final[str] = "El impuesto se exigirá al tipo del 21 por ciento"
 
 
@@ -146,7 +145,7 @@ def _cited_article_text() -> str:
 
     # ``include_title`` mirrors the registry's legal evidence gate exactly. The
     # heading is part of what that gate reads, and reading a narrower slice here
-    # would reintroduce the divergence this rewrite closed.
+    # would diverge from it.
     return normalise_corpus_text(resolve_anchored_extracted_unit(sidecar, anchor=anchor, include_title=True))
 
 
@@ -166,12 +165,7 @@ def _article_states(phrase: str) -> bool:
 
 
 def test_every_cited_provision_resolves_in_the_legal_catalogue() -> None:
-    """A row citing an article nobody defined is ungrounded and must not ship.
-
-    This is the property the table could not previously assert: the citation
-    parsed as an identifier while no catalogue entry carried a ``corpus_ref``, so
-    nothing checked it against the statute.
-    """
+    """A row citing an article nobody defined is ungrounded and must not ship."""
     defined = _catalogue_entries()
     cited = {ref for record in _territory_records() for ref in _string_list(record, "legal_refs")}
 

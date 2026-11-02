@@ -1,12 +1,8 @@
 import type { ComboboxOption } from "@/components/ui/combobox";
 import type { LedgerParticipation } from "../../../shell/ledger";
 import type { OwnAccountChoice } from "../../../shell/ledgerMovementReads";
-import {
-  DIRECTIONS,
-  IRPF_CATEGORIES,
-  IVA_CATEGORIES,
-  SPENDING_CATEGORY_FAMILIES,
-} from "../../../shell/ledgerVocabulary";
+import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
+import { DIRECTIONS } from "../../../shell/ledgerContract";
 import type { Translate } from "../../../shell/strings";
 import {
   categoryOption,
@@ -167,14 +163,29 @@ export function modelFailureText(t: Translate, code: string): string {
 
 // ---- Choices -------------------------------------------------------------------
 
-export const categoryOptions = (t: Translate): ComboboxOption[] =>
-  SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+export const categoryOptions = (
+  t: Translate,
+  vocabulary: ServedVocabulary,
+): ComboboxOption[] =>
+  vocabulary.categoryFamilies.flatMap(([family, members]) =>
     members.map((member) => categoryOption(t, family, member)),
   );
-export const ivaCategoryOptions = (t: Translate): ComboboxOption[] =>
-  IVA_CATEGORIES.map((id) => ({ value: id, label: ivaCategoryLabel(t, id) }));
-export const irpfCategoryOptions = (t: Translate): ComboboxOption[] =>
-  IRPF_CATEGORIES.map((id) => ({ value: id, label: irpfCategoryLabel(t, id) }));
+export const ivaCategoryOptions = (
+  t: Translate,
+  vocabulary: ServedVocabulary,
+): ComboboxOption[] =>
+  vocabulary.ivaCategories.map((id) => ({
+    value: id,
+    label: ivaCategoryLabel(t, id),
+  }));
+export const irpfCategoryOptions = (
+  t: Translate,
+  vocabulary: ServedVocabulary,
+): ComboboxOption[] =>
+  vocabulary.irpfCategories.map((id) => ({
+    value: id,
+    label: irpfCategoryLabel(t, id),
+  }));
 export const directionOptions = (t: Translate): ComboboxOption[] =>
   DIRECTIONS.map((id) => ({ value: id, label: directionLabel(t, id) }));
 export const accountOptions = (

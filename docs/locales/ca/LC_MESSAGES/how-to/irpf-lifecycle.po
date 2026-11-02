@@ -287,7 +287,7 @@ msgid ""
 "Box `01` (income) now covers January through June - the records used for "
 "`2T` are the year to date, not the quarter alone."
 msgstr ""
-"La casella `01` (ingresos) ara cobreix de gener a juny: els registres "
+"La casella `01` (ingressos) ara cobreix de gener a juny: els registres "
 "utilitzats per a `2T` són els de l'any fins a la data, no només els del "
 "trimestre."
 

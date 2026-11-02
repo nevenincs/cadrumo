@@ -21,7 +21,7 @@ from .operation_ledger_participation import read_ledger_participation_for_cli
 from .operation_ledger_participation_rebuild import rebuild_ledger_participation_for_cli
 
 if TYPE_CHECKING:
-    from .ledger_results import LedgerTransactionParticipationEntryPayload
+    from .ledger_participation_results import LedgerTransactionParticipationEntryPayload
 
 
 def participation_lookup(ctx: typer.Context, transaction_id: str | None = None) -> None:
@@ -43,7 +43,7 @@ def _emit_participation_lookup(
     transaction_id: str,
 ) -> None:
     """Read and emit one :class:`TransactionRevisionParticipationIndex`."""
-    from .ledger_results import (
+    from .ledger_participation_results import (
         LedgerTransactionParticipationEntryPayload,
         LedgerTransactionParticipationPayload,
     )
@@ -99,7 +99,7 @@ def _participation_lines(
 
 def participation_rebuild(ctx: typer.Context) -> None:
     """Run :func:`rebuild_participation_index` for the active bucket."""
-    from .ledger_results import LedgerParticipationRebuildResult
+    from .ledger_participation_results import LedgerParticipationRebuildResult
 
     stats = rebuild_ledger_participation_for_cli(ctx)
     emit_envelope(

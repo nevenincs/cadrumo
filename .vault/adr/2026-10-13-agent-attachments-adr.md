@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#agent-attachments'
 date: '2026-10-13'
-modified: '2026-10-25'
+modified: '2026-11-01'
 body_schema: 'body-v2'
-body_hash: 'sha256:d1d781ba2e23a49957e4feb45a2f8f4464b97dd32064500a3e9ead3595bf0abb'
+body_hash: 'sha256:50d08acc0f358eeab502e44e5b320e3a8320f02ed3343ad7d5e80fac80eb3582'
 related:
   - "[[2026-10-12-desktop-agent-host-adr]]"
   - "[[2026-10-13-provider-settings-adr]]"
@@ -398,3 +398,12 @@ Authorized by the user's explicit service/harness/native migration instruction. 
 Basis: the owner's first-hand rulings of 2026-10-25 in conversation, recorded in `2026-10-25-agent-owned-models-adr`: Cadrumo defines no AI model names, digests, sizes, licences, defaults, candidate lists or rankings; cadrumo-agent's provider catalogue is the sole source of providers and models, local ones included; every tax model call goes through the agent service. The earlier wording above stays as history.
 
 - **Constraint 7 (eligibility and lanes).** "Local model reading needs no external-disclosure grant." is replaced by: "A lane whose catalogue entry sets `reads_off_host` false needs no external-disclosure grant. A lane with it true does. The flag is typed catalogue data and is never inferred from a transport." The historical sentence "A model the person runs on this machine needs no grant" reads the same way.
+
+## Amendment 2026-11-01: attachments may rest in plaintext on the local machine
+
+Accepted by the user on 2026-11-01, who ruled that the ADRs be amended to accept plaintext for attachments.
+
+- **Accepted.** Attachment source bytes and their text or page projections may persist unencrypted in cadrumo-agent's local workspace and stores. Any process of the same operating-system account can read them. This agrees with cadrumo-agent's accepted record `2026-10-10-cadrumo-integration-conversation-data-posture-adr`.
+- **Replaced.** The plaintext prohibitions in constraint 1, the at-rest obligation and development-exception refusal in constraint 8, and the encryption prerequisite in the Implementation section's availability sentence no longer bind. "+ Add files" does not wait on encryption. The title and earlier encrypted-custody wording stand as history where they conflict with this amendment.
+- **Unchanged.** Tax evidence, ledger, invoice, filing, banking and credential payloads stay in encrypted custody, and a conversation attachment gains no evidentiary grade. Promoting one to evidence goes through the deterministic owner's encrypted custody. The profile DEK never leaves the runtime. Attachments stay out of logs, command arguments and scratch files.
+- **Not decided here.** The ruling covers rest on the local machine only. The consent, grant, release-ledger and eligibility constraints (5, 6 and 7) and the deletion constraint (9) still bind for disclosure to a provider and for removal. The shipped control does not meet them: `native/desktop/frontend/src/components/AgentColumn.tsx` offers Add files, while `ConsentPrompt` appears only in stories.

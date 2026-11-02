@@ -48,7 +48,7 @@ def _expected_vulture_path(path: Path) -> str:
     current working directory (the repo root here, via ``cwd=_REPO_ROOT``)
     when it resolves under it, and falls back to the path exactly as given
     otherwise. The run harness confines pytest's basetemp under the
-    repository's own ``.logs`` tree, so ``tmp_path`` candidates land inside
+    repository's own ``.tmp/logs`` tree, so ``tmp_path`` candidates land inside
     the repo root and vulture reports them relative -- with the OS-native
     separator, not the POSIX form the repo-relative helpers elsewhere use.
     Mirroring the real contract keeps the assertion about vulture's actual

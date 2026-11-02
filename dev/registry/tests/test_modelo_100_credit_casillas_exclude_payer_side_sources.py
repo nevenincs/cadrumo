@@ -9,7 +9,11 @@ The credit set is read from the registry: it is the operand set of the formula
 that totals the payments on account into casilla ``0609``. Reachability follows
 every path a value can take into one of those casillas -- the primary binding of
 a bound casilla, its reviewed alternates, and the bindings a computing formula
-reads, transitively through the casillas that formula reads.
+reads, transitively through the casillas that formula reads. A dependency
+classification is judged as well: one that names a withholding-agent return as
+its source modelo may not reference a binding on those paths, nor target a
+construct that groups a credit casilla, because either would declare the return
+a source of the credit.
 
 The gate runs over every authored Modelo 100 edition. Its teeth are proven
 against in-memory defective revisions, one per reachability path; the authored
@@ -29,6 +33,7 @@ from cadrumo.domain.calculations.registry.runtime_graph import expression_bindin
 from cadrumo.domain.calculations.registry.schema import BindingDefinition, FormulaDefinition, ModeloRevision
 from cadrumo.domain.calculations.registry.schema_formula import FormulaExpression
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
+from cadrumo.domain.calculations.registry.schema_revision_members import DependencyClassificationDefinition
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ._modelo_100_registry_support import _loaded_registry
@@ -86,22 +91,28 @@ def _reachable_binding_ids(
     return reachable
 
 
-def payer_side_sources_in_credit_set(revision: ModeloRevision) -> dict[CasillaId, tuple[tuple[BindingId, str], ...]]:
-    """Return every credit casilla reachable from a withholding-agent return."""
+def _credit_binding_ids(revision: ModeloRevision) -> dict[CasillaId, set[BindingId]]:
+    """Return, per credit casilla, every binding id whose value can reach it."""
     casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
     formulas_by_target = {formula.target_casilla_id: formula for formula in revision.formulas}
+    return {
+        casilla_id: _reachable_binding_ids(
+            casilla_id,
+            casillas_by_id=casillas_by_id,
+            formulas_by_target=formulas_by_target,
+            visited=set(),
+        )
+        for casilla_id in _credit_casilla_ids(revision)
+    }
+
+
+def payer_side_sources_in_credit_set(revision: ModeloRevision) -> dict[CasillaId, tuple[tuple[BindingId, str], ...]]:
+    """Return every credit casilla reachable from a withholding-agent return."""
     bindings_by_id = {binding.id: binding for binding in revision.bindings}
     findings: dict[CasillaId, tuple[tuple[BindingId, str], ...]] = {}
-    for casilla_id in _credit_casilla_ids(revision):
+    for casilla_id, reachable in _credit_binding_ids(revision).items():
         offenders: list[tuple[BindingId, str]] = []
-        for binding_id in sorted(
-            _reachable_binding_ids(
-                casilla_id,
-                casillas_by_id=casillas_by_id,
-                formulas_by_target=formulas_by_target,
-                visited=set(),
-            )
-        ):
+        for binding_id in sorted(reachable):
             binding = bindings_by_id.get(binding_id)
             if binding is None:
                 continue
@@ -110,6 +121,39 @@ def payer_side_sources_in_credit_set(revision: ModeloRevision) -> dict[CasillaId
                 offenders.append((binding_id, source_modelo))
         if offenders:
             findings[casilla_id] = tuple(offenders)
+    return findings
+
+
+def payer_side_dependencies_in_credit_set(revision: ModeloRevision) -> dict[str, tuple[str, ...]]:
+    """Return every withholding-agent dependency classification that claims a credit.
+
+    A classification claims a credit when it references a binding that reaches a
+    credit casilla, or targets a construct that groups one. Each claim is named
+    ``binding:<id>`` or ``construct:<id>``.
+    """
+    credit_bindings = frozenset(
+        binding_id for reachable in _credit_binding_ids(revision).values() for binding_id in reachable
+    )
+    credit_casillas = frozenset(_credit_casilla_ids(revision))
+    credit_constructs = frozenset(
+        construct.id for construct in revision.constructs if credit_casillas.intersection(construct.casilla_ids)
+    )
+    findings: dict[str, tuple[str, ...]] = {}
+    for classification in revision.dependency_classifications:
+        if classification.source_modelo not in _PAYER_SIDE_MODELOS:
+            continue
+        claims = tuple(
+            [
+                f"binding:{binding_id}"
+                for binding_id in sorted(credit_bindings.intersection(classification.binding_refs))
+            ]
+            + [
+                f"construct:{construct_id}"
+                for construct_id in sorted(credit_constructs.intersection(classification.target_constructs))
+            ]
+        )
+        if claims:
+            findings[classification.id] = claims
     return findings
 
 
@@ -122,6 +166,15 @@ def test_no_authored_edition_reaches_a_credit_casilla_from_a_payer_side_return()
     """Every authored edition keeps the withholding-agent returns out of the credits."""
     offenders = {
         revision_id: payer_side_sources_in_credit_set(revision)
+        for revision_id, revision in sorted(_modelo_100_revisions().items())
+    }
+    assert not {revision_id: found for revision_id, found in offenders.items() if found}, offenders
+
+
+def test_no_authored_edition_classifies_a_payer_side_return_as_a_credit_source() -> None:
+    """No authored edition declares a withholding-agent return as a credit dependency."""
+    offenders = {
+        revision_id: payer_side_dependencies_in_credit_set(revision)
         for revision_id, revision in sorted(_modelo_100_revisions().items())
     }
     assert not {revision_id: found for revision_id, found in offenders.items() if found}, offenders
@@ -215,3 +268,47 @@ def test_gate_detects_a_payer_side_binding_read_by_a_credit_formula() -> None:
     defective = _revision_with_bindings(revision, defect).model_copy(update={"formulas": formulas})
 
     assert payer_side_sources_in_credit_set(defective) == {target: ((defect.id, "111"),)}
+
+
+def _payer_side_classification(revision: ModeloRevision, **update: object) -> DependencyClassificationDefinition:
+    """Return the authored Modelo 130 classification repointed at Modelo 111.
+
+    Only the source modelo and the fields under test change, so the defect is
+    the one fact the gate judges.
+    """
+    donor = next(
+        classification for classification in revision.dependency_classifications if classification.id == "renta-dep-130"
+    )
+    return donor.model_copy(update={"id": "defect-renta-dep-111", "source_modelo": "111", **update})
+
+
+def _revision_with_classification(
+    revision: ModeloRevision,
+    extra: DependencyClassificationDefinition,
+) -> ModeloRevision:
+    return revision.model_copy(update={"dependency_classifications": (*revision.dependency_classifications, extra)})
+
+
+def test_gate_detects_a_payer_side_classification_referencing_a_credit_binding() -> None:
+    """Teeth: a payer-side classification naming a binding that reaches a credit is found."""
+    revision = _newest_revision()
+    defect = _payer_side_classification(revision, target_constructs=())
+    defective = _revision_with_classification(revision, defect)
+
+    assert payer_side_dependencies_in_credit_set(revision) == {}
+    assert payer_side_dependencies_in_credit_set(defective) == {
+        defect.id: ("binding:renta-modelo-130-pagos-fraccionados",),
+    }
+
+
+def test_gate_detects_a_payer_side_classification_targeting_a_credit_construct() -> None:
+    """Teeth: a payer-side classification with no binding, aimed at a credit construct, is found."""
+    revision = _newest_revision()
+    credit_casillas = frozenset(_credit_casilla_ids(revision))
+    construct = next(
+        construct for construct in revision.constructs if credit_casillas.intersection(construct.casilla_ids)
+    )
+    defect = _payer_side_classification(revision, binding_refs=(), target_constructs=(construct.id,))
+    defective = _revision_with_classification(revision, defect)
+
+    assert payer_side_dependencies_in_credit_set(defective) == {defect.id: (f"construct:{construct.id}",)}

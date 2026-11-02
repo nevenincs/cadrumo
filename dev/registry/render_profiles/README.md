@@ -1,64 +1,154 @@
-# Render profiles — authored numeric-representation review
+# Render profiles
 
-One TOML fragment set per (modelo, design epoch), consumed by
-`dev.registry.pipeline.render_profile`. Every file is AUTHORED evidence, not
-generator output: each rule carries a hand-written `[.evidence]` block with its
-decision id and justification.
+Hand-written answers to formatting questions that AEAT's official record
+designs leave open, so that Cadrumo writes every field of an exported tax-return
+file with the right characters.
 
-## File schema
+## The problem
 
-`NNNN-<topic>[-<NNN>].toml` — `NNNN` is the global ordinal in the directory
-(the load order); the optional `NNN` is the per-topic counter; `fragment_id`
-inside the file matches the filename stem.
+AEAT publishes a record design (*diseño de registro*) for each modelo: a
+workbook that lists every field of the export file with its position, width and
+type. The registry pipeline reads these designs and generates each modelo's
+export layout from them.
 
-## Topic vocabulary (closed)
+The designs often say "17 positions, numeric" and stop there. That is not
+enough to write the field correctly:
 
-- `numeric-representation` — reviewed numeric-representation policy for fields
-  without a width-17 rule family (formerly spelled `reviewed-numerics`,
-  `blank-numeric`, `unstated-numerics`).
-- `singletons` — singleton-field numeric rules (formerly `singleton-numerics`).
-- `width17-num` — width-17 rules for `Num`-type fields.
-- `width17-n` — width-17 rules for `N`-type fields (n-prefix negative sign
-  policy). Deliberately distinct from `width17-num`: the two populations carry
-  different sign policies and are never the same topic.
-- `identifier-digits` — identifier digit-width policy (modelo 210).
-- `signed-composite` — source-stated signed monetary composites: one leading
-  blank-or-`N` sign byte and an unsigned integer/decimal magnitude, each rule
-  checked against the anchor's complete printed sign and partition clauses.
+- **Decimals.** Does the field carry cents? With two implied decimals,
+  1234.56 is written `00000000000123456`; without them it is
+  `00000000000001235`. Guessing wrong makes an amount 100 times too large or too
+  small.
+- **Sign.** Can the value be negative, and if so is the minus written as a
+  leading `N`, a blank, or not at all?
+- **Meaning of a short number.** Is a four-digit field a year, a count or a
+  code?
+- **Fixed values.** A 303 *Tipo %* slot holding `00400` means 4.00 %, read at
+  two decimal places.
+- **Obsolete choices.** Older designs (156, 180, 181, 193) ask whether the file
+  travels on cartridge (`C`), diskette (`D`) or telematically (`T`). Cadrumo's
+  exports are always telematic, so the answer is `T`.
 
-A new topic stem is a change to this vocabulary: add it here in the same
-change as its first use.
+A wrong guess produces a file that looks valid but carries the wrong amounts,
+so these answers are reviewed by a person and written down here instead of
+being inferred.
 
-## Which fields a profile may govern
+## Who uses this folder
 
-A profile exists to state a wire fact the official design left unstated, so the
-pipeline enumerates an ELIGIBLE set and demands the profile cover it exactly.
-Coverage is checked in both directions: a rule for a field outside the set is
-refused as unknown, and a field inside the set with no rule is refused as
-missing. Both refusals name the anchor, so a coverage error tells you which way
-it went.
+- **Developers authoring the registry** (adding a modelo or a new year's
+  design) write and review these files.
+- **The registry build pipeline** (`dev/registry/pipeline/render_profile.py`
+  and the `render_profile_*` modules beside it) loads the folder for the modelo
+  and design being built, checks it against the design, and uses the rules to
+  set each field's width, decimals, padding and sign in the generated export
+  layout. That layout is what the published registry, and therefore the
+  installed application, uses.
+- **The export verification checks** (`dev/registry/pipeline/render_check.py`,
+  `dev/registry/filing_export_generated_verification.py`) confirm that the
+  generated exports follow these rules.
 
-For a workbook design, eligibility turns on whether the field's content cell is
-blank. A blank cell means the design said nothing about representation and the
-field is yours to rule on. A non-blank cell means the design stated the fact and
-the pipeline takes it from there instead.
+The installed application never reads this folder. It is development input,
+like the rest of `dev/registry/`.
 
-**A footnote reference is a non-blank cell.** A content cell reading only
-`Nota 4.` excludes the field from profile authority exactly as a genuine format
-statement would, even though the note it points at usually says something about
-applicability rather than about how the value is written. If you find an amount
-you expected to govern reported as unknown, check its content cell before
-assuming the anchor is wrong: the field is outside your reach, and the
-representation is being taken from the note.
+## Layout
 
-This is not hypothetical. One monetary field in a revision currently in force is
-emitted unscaled beside five identical siblings that emit cents, because its
-content cell holds a bare footnote reference. Across the corpus 183 numeric
-fields sat in that position when it was measured on 2026-09-02; almost all still
-render correctly, because the generator derives a sound representation from the
-design's type column, so the population is a migration surface rather than a
-defect list. That count carries no standing command: deciding which fields are
-numeric needs predicates private to the pipeline module, and a screen importing
-them across that boundary was written, run once and deleted rather than shipped
-as a boundary violation. Treat the figure as a dated measurement, not a live
-number.
+```
+modelo_303/                              one folder per modelo
+  2025/                                  one folder per design version ("design epoch")
+    0001-numeric-representation.toml     one file per batch of related rules
+    0002-literal-rates.toml
+```
+
+The design-version folder is named after the year the design took effect.
+Where AEAT replaced a design within a year, a suffix tells the two apart
+(`2024-early`, `2024-late`, `2026-late`).
+
+Files are loaded in name order. The name is `NNNN-<topic>[-NNN].toml`:
+
+- `NNNN` is the file's position in the folder (its load order).
+- `<topic>` says what kind of rule the file holds (see the table below).
+- the optional `-NNN` numbers several files of the same topic.
+
+The `fragment_id` inside each file must equal its file name without `.toml`.
+
+## What one file contains
+
+```toml
+[design_identity]
+modelo = "111"
+design_epoch = "2019"
+source_ref = "aeat-dr-111-2019-v18"
+source_sha256 = "5f65…"          # fingerprint of the exact AEAT design reviewed
+
+[[singleton_rules]]
+integer_digits = 8               # the answer: 8 digits,
+decimal_digits = 0               # no decimals,
+sign_policy = "unsigned"         # never negative
+
+[singleton_rules.anchor]         # which field: sheet, row, cell, position
+sheet = "dr M11101"
+source_row = 17
+ordinal = "12"
+
+[singleton_rules.evidence]       # why
+decision_id = "m111-2019-field-12-integer"
+decision_statement = "The number of recipients is an unsigned integer."
+justification = "The official description names a count of perceptores …"
+```
+
+Every rule therefore says **which field** it covers, **what the answer is** and
+**why**, in words a reviewer can check against the official design.
+
+`source_sha256` ties the file to one exact AEAT workbook. If the design file
+changes, the fingerprint no longer matches and the build stops until someone
+reviews the rules again.
+
+## Topics
+
+The topic vocabulary is closed. Using a new topic means adding it to this table
+in the same change.
+
+| Topic | What its rules answer |
+| --- | --- |
+| `numeric-representation` | General number formatting for one modelo and design: years, counts, amounts and codes. Used where no width-17 group applies. |
+| `width17-num` | The 17-position amount fields of AEAT type `Num`. Many fields share one rule (for example 15 integer digits, 2 decimals, unsigned), so a rule lists all the fields it covers. |
+| `width17-n` | The 17-position amount fields of AEAT type `N`, which write a negative value with a leading `N`. Kept apart from `width17-num` because the two groups have different sign rules. |
+| `singletons` | Single numeric fields that belong to no group. |
+| `signed-composite` | Amounts that the design writes as one sign character (blank or `N`) followed by the unsigned number. Each rule is checked against the design's own sign and layout wording. |
+| `identifier-digits` | How many digits an identifier field holds (Modelo 210). |
+| `literal-rates` | Fixed numbers printed in the design, such as the 303 *Tipo %* constants (`00400` = 4 %). These rules set how the number is written. They do not decide which tax rate applies. |
+| `telematic-transport` | Selecting `T` (telematic transmission) where an old design still lists cartridge and diskette codes. The rule repeats the design's exact wording so that a changed design is noticed. |
+| `source-complete` | The design states every formatting fact itself, so there is nothing to answer. The file holds no rules, only `empty_rule_assertion`, as a record that this was checked. |
+
+One file, `modelo_200/2025/0129-width17-num-068-no-cumplimentar.toml`, adds a
+description after the counter. Its comment explains why those six "no
+cumplimentar" positions still need a width-17 rule.
+
+## Which fields need a rule
+
+A rule exists only to fill a gap in the design. For each design the pipeline
+works out the set of fields whose formatting the design leaves open, and it
+requires the profile to cover exactly that set:
+
+- a field in the set with no rule is refused as **missing**;
+- a rule for a field outside the set is refused as **unknown**.
+
+Both errors name the field, so the message tells you which side is wrong.
+
+For workbook designs the test is the field's content (*Contenido*) cell. If
+the cell is blank, the design said nothing about formatting and the field needs
+a rule here. If it holds any text, the pipeline takes the formatting from the
+design and a rule here is refused.
+
+**A footnote reference counts as text.** A content cell that reads only
+`Nota 4.` puts the field outside this folder's reach, even when the note is
+about whether the field applies rather than how it is written. If a rule you
+expected to be accepted is refused as unknown, look at the field's content cell
+first.
+
+This has real effects. One amount field in a design currently in force is
+written without decimals while five identical neighbouring fields carry cents,
+because its content cell holds only a footnote reference. On 2026-09-02, 183
+numeric fields across all designs were in that position. Almost all are still
+written correctly, because the generator falls back on the design's type
+column. Treat that number as a dated measurement, not a live count: no
+maintained check recomputes it.

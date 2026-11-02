@@ -35,7 +35,6 @@ from .tree_publication_contracts import (
     GeneratedExportTransactionPaths,
     GeneratedExportTreePublicationContext,
     PublishedGeneratedExportTree,
-    _require_no_legacy_transaction,
     export_provenance_file_sha256,
 )
 from .tree_publication_journal import (
@@ -159,7 +158,6 @@ def _recover_or_admit_publication_target(
     render_profile: RenderProfile,
     render_profile_source_evidence: RenderProfileSourceEvidence,
 ) -> tuple[Path, bool]:
-    _require_no_legacy_transaction(transaction_paths)
     if journal_path.exists():
         interrupted_journal = load_generated_export_publication_journal(journal_path)
         if (

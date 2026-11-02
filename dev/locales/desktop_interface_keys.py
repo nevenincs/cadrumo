@@ -623,6 +623,7 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.calendar.as_of",
         "desktop.calendar.close",
         "desktop.calendar.day_event",
+        "desktop.calendar.earliest_close",
         "desktop.calendar.empty",
         "desktop.calendar.event.filing",
         "desktop.calendar.event.message",

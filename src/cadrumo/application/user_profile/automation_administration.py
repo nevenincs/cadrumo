@@ -115,7 +115,7 @@ def _receipt_matches_session(state: EnrollmentControlState, session: AccessSessi
         and record.requester.client_id == session.client_id
         and record.requester.destination_id == session.client_id
         and record.grant_id == session.grant_id
-        and record.stage in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}
+        and record.stage.is_terminal
     )
 
 

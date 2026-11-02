@@ -312,7 +312,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                     event.button.disabled = True
                     self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.import.previewing"))
                     self.run_worker(self._preview(request), exclusive=True)
-            case "ledger-import-cancel" if self.flow_state in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+            case "ledger-import-cancel" if self.can_cancel_flow:
                 self._cancel_flow()
             case "ledger-import-confirm" if self.flow_state is LedgerFlowState.CONFIRMING:
                 self._transition(LedgerFlowState.SUBMITTING)
@@ -320,11 +320,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
                 self.query_one("#ledger-import-cancel", Button).disabled = True
                 self.query_one("#ledger-flow-status", Static).update(tr("tui.ledger.import.progress"))
                 self.run_worker(self._submit(), exclusive=True)
-            case "ledger-import-again" if self.flow_state in {
-                LedgerFlowState.SUCCEEDED,
-                LedgerFlowState.FAILED,
-                LedgerFlowState.CANCELLED,
-            }:
+            case "ledger-import-again" if self.flow_state.is_settled:
                 self._start_again()
             case _:
                 return
@@ -391,7 +387,7 @@ class LedgerImportScreen(LedgerConfirmationFlowScreen):
 
     @override
     def _cancel_flow(self) -> None:
-        if self.flow_state not in {LedgerFlowState.EDITING, LedgerFlowState.CONFIRMING}:
+        if not self.can_cancel_flow:
             return
         self.previewed = None
         self._transition(LedgerFlowState.CANCELLED)

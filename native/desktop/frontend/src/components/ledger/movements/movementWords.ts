@@ -10,41 +10,51 @@ import type {
 import {
   isClassification,
   isDirection,
-  isIrpfCategory,
-  isIvaCategory,
   isLifecycleState,
-  isSpendingCategory,
-  type SpendingCategoryFamily,
-} from "../../../shell/ledgerVocabulary";
+} from "../../../shell/ledgerContract";
+import type { ServedVocabulary } from "../../../shell/ledgerServedVocabulary";
 import type { Translate } from "../../../shell/strings";
+import { wordOrToken } from "../../../shell/tokenWords";
 import { formatPercent } from "../../../shared/numbers";
 
 const lower = (token: string) => token.toLowerCase();
 
 export const categoryLabel = (t: Translate, id: string) =>
-  isSpendingCategory(id) ? t(`desktop.ledger.category.${id}`) : id;
-export const familyLabel = (t: Translate, family: SpendingCategoryFamily) =>
-  t(`desktop.ledger.category_family.${family}`);
+  wordOrToken(t, "desktop.ledger.category.", id);
+export const familyLabel = (t: Translate, family: string) =>
+  wordOrToken(t, "desktop.ledger.category_family.", family);
 /** The words a category is also found by, such as those a bank statement
  * prints for it, in the catalogue's language. */
-export const categoryKeywords = (t: Translate, id: string): string[] =>
-  t(`desktop.ledger.category_keywords.${id}`).split(/\s+/).filter(Boolean);
+export const categoryKeywords = (t: Translate, id: string): string[] => {
+  const key = `desktop.ledger.category_keywords.${id}`;
+  const said = t(key);
+  return said === key ? [] : said.split(/\s+/).filter(Boolean);
+};
 /** A spending category as a list choice: its name under its family's
  * heading, found by its keywords too. */
-export const categoryOption = (
-  t: Translate,
-  family: SpendingCategoryFamily,
-  id: string,
-) => ({
+export const categoryOption = (t: Translate, family: string, id: string) => ({
   value: id,
   label: categoryLabel(t, id),
   group: familyLabel(t, family),
   keywords: categoryKeywords(t, id),
 });
 export const ivaCategoryLabel = (t: Translate, id: string) =>
-  isIvaCategory(id) ? t(`desktop.ledger.iva_category.${id}`) : id;
+  wordOrToken(t, "desktop.ledger.iva_category.", id);
 export const irpfCategoryLabel = (t: Translate, id: string) =>
-  isIrpfCategory(id) ? t(`desktop.ledger.irpf_category.${id}`) : id;
+  wordOrToken(t, "desktop.ledger.irpf_category.", id);
+/** What an empty picker of a served list says: that the list is being read
+ * or could not be, and `empty` once it was served. */
+export const vocabularyEmpty = (
+  t: Translate,
+  vocabulary: Pick<ServedVocabulary, "state">,
+  empty: string,
+  offered: number,
+) =>
+  offered > 0 || vocabulary.state === "ready"
+    ? empty
+    : vocabulary.state === "loading"
+      ? t("desktop.ledger.form.reading")
+      : t("desktop.ledger.unavailable");
 export const directionLabel = (t: Translate, direction: string) =>
   isDirection(direction)
     ? t(`desktop.ledger.direction.${lower(direction)}`)

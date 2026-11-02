@@ -42,13 +42,13 @@ The strongest design is promotion through evidence gates: local drafts, rendered
 
 ## Detailed articles
 
-- [Filing draft, approval, and local export pipeline](../articles/045-filing-draft-approval-and-local-export-pipeline.md) — `STAGE-2-045`
-- [Filing-envelope integrity, export parity, and producer values](../articles/046-filing-envelope-integrity-export-parity-and-producer-values.md) — `STAGE-2-046`
-- [Filing producer facts, repeated-record projection, and runtime schema](../articles/047-filing-producer-facts-repeated-record-projection-and-runtime-schema.md) — `STAGE-2-047`
-- [Live snapshots and filed-data capture operations](../articles/063-live-snapshots-and-filed-data-capture-operations.md) — `STAGE-2-063`
-- [Filed declaration capture, evidence enrollment, and history sweep](../articles/064-filed-declaration-capture-evidence-enrollment-and-history-sweep.md) — `STAGE-2-064`
-- [IVA, receipt, and notification evidence surfaces](../articles/065-iva-receipt-and-notification-evidence-surfaces.md) — `STAGE-2-065`
-- [Notifications, verification, and shared live-state contracts](../articles/066-notifications-verification-and-shared-live-state-contracts.md) — `STAGE-2-066`
+- [Filing draft, approval, and local export pipeline](../articles/045-filing-draft-approval-and-local-export-pipeline.md)
+- [Filing-envelope integrity, export parity, and producer values](../articles/046-filing-envelope-integrity-export-parity-and-producer-values.md)
+- [Filing producer facts, repeated-record projection, and runtime schema](../articles/047-filing-producer-facts-repeated-record-projection-and-runtime-schema.md)
+- [Live snapshots and filed-data capture operations](../articles/063-live-snapshots-and-filed-data-capture-operations.md)
+- [Filed declaration capture, evidence enrollment, and history sweep](../articles/064-filed-declaration-capture-evidence-enrollment-and-history-sweep.md)
+- [IVA, receipt, and notification evidence surfaces](../articles/065-iva-receipt-and-notification-evidence-surfaces.md)
+- [Notifications, verification, and shared live-state contracts](../articles/066-notifications-verification-and-shared-live-state-contracts.md)
 
 
 ```{toctree}

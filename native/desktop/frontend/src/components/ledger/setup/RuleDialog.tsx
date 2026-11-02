@@ -1,3 +1,7 @@
+import {
+  isRuleClassification,
+  RULE_CLASSIFICATIONS,
+} from "../../../shell/ledgerContract";
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
@@ -20,13 +24,14 @@ import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
 import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
 import type { StageEvent } from "../../../shell/ledgerStage";
-import { SPENDING_CATEGORY_FAMILIES } from "../../../shell/ledgerVocabulary";
 import { useStrings } from "../../../shell/strings";
+import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { landingSettle, useWritePause, WriteHold } from "../WritePause";
 import {
   categoryLabel,
   categoryOption,
   classificationLabel,
+  vocabularyEmpty,
 } from "../movements/movementWords";
 import { descriptionWords, listOptions } from "../suggestions/setupSuggestions";
 import { EditorField } from "./EditorField";
@@ -45,13 +50,6 @@ import {
   type SetupCall,
 } from "./setupModel";
 import { ruleName } from "./setupWords";
-
-/** What a rule decides: a classification for the business, or none. */
-export const RULE_CLASSIFICATIONS = [
-  "BUSINESS",
-  "PERSONAL",
-  "SKIPPED_BY_RULE",
-] as const;
 
 /** Where the dialog opens from: a selection or a group, a stored rule, or
  * nothing. */
@@ -87,10 +85,7 @@ function firstValues(
     expression: "",
     advanced: false,
     classification:
-      prefill.classification &&
-      (RULE_CLASSIFICATIONS as readonly string[]).includes(
-        prefill.classification,
-      )
+      prefill.classification && isRuleClassification(prefill.classification)
         ? prefill.classification
         : "",
     category: prefill.categoryId ?? "",
@@ -174,14 +169,15 @@ export function RuleDialog({
   const patternBroken = advanced && pattern !== "" && !patternMatcher(pattern);
   const hits = rows && pattern ? patternHits(pattern, rows) : null;
   const matches = rows && pattern ? patternMatches(pattern, rows) : null;
+  const vocabulary = useVocabulary();
   const categories = useMemo<ComboboxOption[]>(
     () => [
       { value: "", label: t("desktop.ledger.rules.no_category") },
-      ...SPENDING_CATEGORY_FAMILIES.flatMap(([family, members]) =>
+      ...vocabulary.categoryFamilies.flatMap(([family, members]) =>
         members.map((member) => categoryOption(t, family, member)),
       ),
     ],
-    [t],
+    [t, vocabulary],
   );
   const priority = priorityAt(ordered, position);
   const changesRule =
@@ -377,7 +373,12 @@ export function RuleDialog({
                 label={t("desktop.ledger.rules.category")}
                 value={takesCategory ? category : ""}
                 options={categories}
-                emptyLabel={t("desktop.ledger.classify.no_category_match")}
+                emptyLabel={vocabularyEmpty(
+                  t,
+                  vocabulary,
+                  t("desktop.ledger.classify.no_category_match"),
+                  vocabulary.categories.length,
+                )}
                 placeholder={t("desktop.ledger.classify.search_category")}
                 onCommit={(value) => setCategory(value)}
               >

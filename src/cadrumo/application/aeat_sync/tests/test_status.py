@@ -1,10 +1,9 @@
 """Per-area AEAT sync staleness, judged through the real status reader.
 
-Every horizon is an owner ruling, so the expected days are written here
-independently of the constants under test: notifications 7, IVA wallet 30, and
-census, filed declarations and identity checks 90. An area is possibly stale
-once its last successful capture is STRICTLY older than its horizon, so each
-boundary is exercised from both sides.
+The expected days are written here independently of the constants under test:
+notifications 7, IVA wallet 30, and census, filed declarations and identity checks 90.
+An area is possibly stale once its last successful capture is STRICTLY older than its
+horizon, so each boundary is exercised from both sides.
 """
 
 from __future__ import annotations

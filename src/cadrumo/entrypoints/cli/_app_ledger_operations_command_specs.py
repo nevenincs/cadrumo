@@ -167,7 +167,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".ledger_export_commands", "ledger_export", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".ledger_results", "LedgerExportPayload", __package__),
+            target=DeferredTarget(".ledger_interchange_results", "LedgerExportPayload", __package__),
             identity="ledger.export",
         ),
     ),
@@ -273,7 +273,7 @@ LEDGER_OPERATIONS_COMMAND_SPECS: tuple[CommandSpec, ...] = (
         handler=LazyBinding.available(DeferredTarget(".ledger_import_commands", "ledger_import", __package__)),
         result_schema=ResultSchemaSpec(
             SchemaState.TARGET,
-            target=DeferredTarget(".ledger_results", "LedgerImportPayload", __package__),
+            target=DeferredTarget(".ledger_interchange_results", "LedgerImportPayload", __package__),
             identity="ledger.import",
         ),
     ),

@@ -10,6 +10,7 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, model_validator
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.operations import OperationEffect
 from ...domain.contribuyente.inventory.records import (
     InventoryCorrectionReason,
     InventoryHistoryKind,
@@ -429,6 +430,11 @@ class InventoryLedgerChangeProjection(BaseModel):
     ledger: InventoryLedgerProjection | None = None
     bucket_event_ids: tuple[str, ...] = ()
     refusal: InventoryRefusalProjection | None = None
+
+    @property
+    def settled_effect(self) -> OperationEffect:
+        """The mutation effect a receipt must carry: only an applied change writes."""
+        return OperationEffect.UPDATED if self.outcome == "applied" else OperationEffect.NONE
 
     @model_validator(mode="after")
     def _outcome_is_complete(self) -> InventoryLedgerChangeProjection:

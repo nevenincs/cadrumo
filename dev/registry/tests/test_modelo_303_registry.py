@@ -11,11 +11,11 @@ from cadrumo.domain.calculations.registry.errors import FilingYearOutsideSupport
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
 from cadrumo.domain.calculations.registry.temporal import select_revision
 from cadrumo.domain.calculations.registry.tests.modelo_303_registry_constants import (
-    _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,
-    _M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
-    _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION,
-    _M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF,
-    _M303_RECORD_DESIGN_SOURCE_BY_REVISION,
+    M303_ANNUAL_ORDEN_SOURCE_BY_REVISION,
+    M303_EXPLICIT_RECORD_DESIGN_REVISIONS,
+    M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION,
+    M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF,
+    M303_RECORD_DESIGN_SOURCE_BY_REVISION,
 )
 from cadrumo.domain.calculations.registry.tests.snapshot_support import build_snapshot
 
@@ -227,10 +227,10 @@ def test_modelo_303_explicit_record_design_revisions_have_one_exact_source() -> 
     """Each post-2022 design has its own primary source, never a fallback."""
     modelo, _ = load_modelo_303()
 
-    for revision_id in _M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
+    for revision_id in M303_EXPLICIT_RECORD_DESIGN_REVISIONS:
         revision = modelo.revisions[revision_id]
-        record_design_source = _M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]
-        annual_orden_source = _M303_ANNUAL_ORDEN_SOURCE_BY_REVISION[revision_id]
+        record_design_source = M303_RECORD_DESIGN_SOURCE_BY_REVISION[revision_id]
+        annual_orden_source = M303_ANNUAL_ORDEN_SOURCE_BY_REVISION[revision_id]
 
         assert revision.source_refs == (
             record_design_source,
@@ -262,7 +262,7 @@ def test_modelo_303_snapshot_carries_legal_authority_and_record_design() -> None
 
 def test_modelo_303_extraction_profile_legal_refs_match_target_casillas() -> None:
     modelo, _ = load_modelo_303()
-    for revision_id, expected_refs in _M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items():
+    for revision_id, expected_refs in M303_EXTRACTION_PROFILE_TARGET_LEGAL_REFS_BY_REVISION.items():
         revision = modelo.revisions[revision_id]
         casillas_by_id = {casilla.id: casilla for casilla in revision.casillas}
 
@@ -283,7 +283,7 @@ def test_modelo_303_layout_modification_authority_starts_only_with_the_late_spli
     modelo, catalogues = load_modelo_303()
 
     assert "orden-hac-819-2024:art-1" not in catalogues.legal
-    authority = catalogues.legal[_M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF]
+    authority = catalogues.legal[M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF]
     assert authority.document_id == "BOE-A-2024-16129"
     assert authority.article == "único"
     assert authority.effective_from == date(2024, 8, 6)
@@ -292,13 +292,13 @@ def test_modelo_303_layout_modification_authority_starts_only_with_the_late_spli
         construct = next(
             item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
         )
-        assert _M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF not in construct.legal_refs
+        assert M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF not in construct.legal_refs
 
     for revision_id in ("2024-desde-09-y-3t", "2025", "2026-y-siguientes"):
         construct = next(
             item for item in modelo.revisions[revision_id].constructs if item.id == "modelo-303-iva-autoliquidacion"
         )
-        assert _M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF in construct.legal_refs
+        assert M303_RECORD_DESIGN_LAYOUT_MODIFICATION_LEGAL_REF in construct.legal_refs
 
 
 def test_modelo_303_quarterly_deadlines_match_orden_eha_3786_2008_art_7() -> None:

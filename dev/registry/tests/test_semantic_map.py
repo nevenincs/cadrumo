@@ -24,7 +24,7 @@ def _anchor() -> dict[str, object]:
         "sheet": "Registro tipo 1",
         "source_row": 14,
         "source_cell": "A14",
-        "ordinal": 3,
+        "ordinal": "3",
         "record_identity": "registro-tipo-1",
     }
 

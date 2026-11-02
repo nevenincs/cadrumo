@@ -60,18 +60,18 @@ Assigned reports: [111](../articles/111-core-configuration-profile-selection-and
 
 ## Detailed articles
 
-- [Core configuration, profile selection, and durable writes](../articles/111-core-configuration-profile-selection-and-durable-writes.md) — `STAGE-2-111`
-- [Settings, storage routing, corpus citations, and credentials](../articles/112-settings-storage-routing-corpus-citations-and-credentials.md) — `STAGE-2-112`
-- [External-service constants, field provenance, and filing producers](../articles/113-external-service-constants-field-provenance-and-filing-producers.md) — `STAGE-2-113`
-- [Filing projections, workflow state, and JSON output contracts](../articles/114-filing-projections-workflow-state-and-json-output-contracts.md) — `STAGE-2-114`
-- [Logging, output privacy, model selection, and periods](../articles/115-logging-output-privacy-model-selection-and-periods.md) — `STAGE-2-115`
-- [Identity, profile sessions, result disposition, and storage taxonomy](../articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md) — `STAGE-2-116`
-- [Text normalization, legal categories, and validity contracts](../articles/117-text-normalization-legal-categories-and-validity-contracts.md) — `STAGE-2-117`
-- [Live access policy, corpus integrity, and decimal contracts](../articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md) — `STAGE-2-118`
-- [Error contracts, renderers, and record-fault projection](../articles/119-error-contracts-renderers-and-record-fault-projection.md) — `STAGE-2-119`
-- [Error registry catalogues and severity](../articles/120-error-registry-catalogues-and-severity.md) — `STAGE-2-120`
-- [Localization, identity validation, run traces, and date parsing](../articles/121-localization-identity-validation-run-traces-and-date-parsing.md) — `STAGE-2-121`
-- [Redaction, bundled resources, and time contracts](../articles/122-redaction-bundled-resources-and-time-contracts.md) — `STAGE-2-122`
+- [Core configuration, profile selection, and durable writes](../articles/111-core-configuration-profile-selection-and-durable-writes.md)
+- [Settings, storage routing, corpus citations, and credentials](../articles/112-settings-storage-routing-corpus-citations-and-credentials.md)
+- [External-service constants, field provenance, and filing producers](../articles/113-external-service-constants-field-provenance-and-filing-producers.md)
+- [Filing projections, workflow state, and JSON output contracts](../articles/114-filing-projections-workflow-state-and-json-output-contracts.md)
+- [Logging, output privacy, model selection, and periods](../articles/115-logging-output-privacy-model-selection-and-periods.md)
+- [Identity, profile sessions, result disposition, and storage taxonomy](../articles/116-identity-profile-sessions-result-disposition-and-storage-taxonomy.md)
+- [Text normalization, legal categories, and validity contracts](../articles/117-text-normalization-legal-categories-and-validity-contracts.md)
+- [Live access policy, corpus integrity, and decimal contracts](../articles/118-live-access-policy-corpus-integrity-and-decimal-contracts.md)
+- [Error contracts, renderers, and record-fault projection](../articles/119-error-contracts-renderers-and-record-fault-projection.md)
+- [Error registry catalogues and severity](../articles/120-error-registry-catalogues-and-severity.md)
+- [Localization, identity validation, run traces, and date parsing](../articles/121-localization-identity-validation-run-traces-and-date-parsing.md)
+- [Redaction, bundled resources, and time contracts](../articles/122-redaction-bundled-resources-and-time-contracts.md)
 
 
 ```{toctree}

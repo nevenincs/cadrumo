@@ -54,13 +54,9 @@ class _Receipt(TypedDict):
 def _validate_metadata(receipt_file: Path, metadata: Path, plan: Preparation) -> None:
     from .installation import member
 
-    allowed = {"installation.json", "wix", *plan.metadata}
+    allowed = {"installation.json", "wix"}
     if any(member(metadata, child.name).name not in allowed for child in metadata.iterdir()):
         raise ValueError("Installation metadata membership changed")
-    for name, contents in plan.metadata.items():
-        output = member(metadata, name)
-        if output.read_bytes() != contents or not public_permissions(output):
-            raise ValueError("Installation metadata changed")
     if not public_permissions(receipt_file):
         raise ValueError("Installation receipt permissions changed")
 

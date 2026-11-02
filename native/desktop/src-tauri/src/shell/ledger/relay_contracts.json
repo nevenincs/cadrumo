@@ -538,6 +538,14 @@
         "path": []
       }
     },
+    "ledger.invoice.preview": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.invoice.remove": {
       "may_write": true,
       "review": false,
@@ -818,6 +826,14 @@
         "path": []
       }
     },
+    "ledger.rule.trial": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.split.manual": {
       "may_write": true,
       "review": false,
@@ -829,6 +845,14 @@
     "ledger.split.review": {
       "may_write": true,
       "review": true,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
+    "ledger.staged.check": {
+      "may_write": false,
+      "review": false,
       "subject": {
         "kind": "profile",
         "path": []

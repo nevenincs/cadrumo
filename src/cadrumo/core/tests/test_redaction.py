@@ -45,9 +45,9 @@ _IBAN_DE = "DE89370400440532013000"
 _IBAN_GB = "GB29NWBK60161331926819"
 _IBAN_BAD_CHECKSUM = "ES9921000418450200051332"
 _HEX_DIGEST = "EB58612F0394953A4B516B938AD3FEB1"
-# Operator ruling, recorded as a standing negative control: "ibans are
-# sensitive, boe citations are not". A legal citation must reach the operator
-# intact, so a pattern that starts hashing one is too wide by definition.
+# Standing negative control: "ibans are sensitive, boe citations are not". A
+# legal citation must reach the operator intact, so a pattern that starts
+# hashing one is too wide by definition.
 _BOE_CITATION = "BOE-A-2024-26694"
 _JWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.aaaaaaaaaaaa.bbbbbbbbbbbb"
 _URL = "https://example.test/private/path?token=secret"
@@ -337,7 +337,7 @@ def test_cli_output_leaves_a_cif_shaped_document_reference_verbatim() -> None:
         assert redact_for_cli_output(f"ref={lookalike}") == f"ref={lookalike}"
 
 
-# ── bank accounts (operator ruling) ─────────────────────────────────────────
+# ── bank accounts ───────────────────────────────────────────────────────────
 
 
 def test_cli_output_hashes_a_bank_account_in_any_country() -> None:
@@ -398,9 +398,7 @@ def test_cif_rule_is_enrolled_in_every_policy_that_carries_the_nif_rule() -> Non
     """Enrolment is the only thing that makes a rule reachable.
 
     A rule resolves through the policy's ``redaction_rules`` name tuple, so
-    a rule declared but never enrolled is inert everywhere — which is how a
-    CIF reached the log, error, and LLM-cache paths in cleartext while the
-    rule catalogue claimed to cover it.
+    a rule declared but never enrolled is inert everywhere.
     """
     for sensitivity in SensitivityClass:
         names = {rule.name for rule in default_rules_for_class(sensitivity)}
@@ -433,12 +431,9 @@ def test_structured_redaction_hashes_a_cif_leaf() -> None:
 def test_structured_redaction_hashes_a_tax_id_written_as_a_mapping_key() -> None:
     """A key is as readable as a value once the JSON is on disk.
 
-    The gap this pins was latent rather than live: the walker redacted
-    dict values and skipped dict keys, and no payload model on the
-    observability or LLM-cache path declares a ``dict[str, ...]`` field,
-    so nothing exercised it. A single added field keyed by anything
-    taxpayer-derived would have written cleartext into the persisted
-    artefact while the value beside it was hashed.
+    A dict key derived from taxpayer data must be redacted as a value is.
+    Otherwise it is written into the persisted artefact in cleartext while
+    the value beside it is hashed.
     """
     redacted = redact_structured(
         {_NIF: "seen", _IBAN_ES: {"nested": _CIF}},
@@ -483,8 +478,7 @@ def test_iso_instant_survives_the_diagnostic_funnel_unchanged() -> None:
 
     ``model_dump(mode="json")`` writes the ``Z``-suffixed fractional form, and
     its seconds-plus-microseconds field is a valid NIF by shape AND by check
-    character -- so the rule hashed it, the stamp stopped parsing, and every
-    model that re-validated it on the way to storage refused the record.
+    character.
     """
     rules = default_rules_for_class(SensitivityClass.DIAGNOSTIC)
 
@@ -519,10 +513,8 @@ _IVA_SHAPED_UUID = "7c150b93-bf82-490d-a09d-747b58b055e7"
 def test_a_profile_id_survives_the_diagnostic_funnel_whole(profile_id: str, sensitivity: SensitivityClass) -> None:
     """A UUID is an opaque identifier, not a tax identity.
 
-    Reproduction: ``config profile delete`` on the selected profile refused
-    with a context ``profile_id`` of ``7c150b93-sha256:3e0bfde4-747b58b055e7``:
-    the IVA arm hashed three hex groups from the middle of the UUID, and the
-    NIF arm did the same to ``1470176e``. The value then named no profile.
+    Its groups must pass through unhashed, so no identity arm may match inside
+    one.
     """
     rules = default_rules_for_class(sensitivity)
 
@@ -569,10 +561,7 @@ def test_a_profile_id_inside_custody_storage_is_masked(path: str) -> None:
 def test_a_uuid_the_operator_chose_for_a_directory_survives(path: str) -> None:
     """An operator path is only useful if it still names a real place.
 
-    Reproduction: the ``config repair`` log path and the ``archive export``
-    target both sat under a UUID-named temporary directory, and both were
-    printed with that directory rewritten to ``<profile-id>``, a path that
-    does not exist. The hold root itself is not an owner directory, so a UUID
+    The hold root itself is not an owner directory, so a UUID
     directly beneath it with nothing further is not treated as one either.
     """
     assert redact_for_cli_output(f"written to {path}") == f"written to {path}"

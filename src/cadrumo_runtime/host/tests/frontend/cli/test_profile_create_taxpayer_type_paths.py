@@ -10,37 +10,10 @@ a taxpayer with no economic activity is not forced to invent one.
 No mocks: the runner drives the real Typer command, the real wizard
 runtime, and the real encrypted-SQLite profile store.
 
-Non-interactive creation is now retired: `create` diverts a capable terminal
-to the profile manager and refuses a console-less host. What survives here is
-what does NOT depend on that path -- two edit refusals, whose fixtures now
-register through the credential door, and two foral refusals, which fire
-before the retirement check.
-
-Thirteen tests were retired with this change. Each is named with what answers
-it now, so a later reader does not read the deletions as lost coverage:
-
-- creates_non_interactively_without_spouse_flags, creates_with_explicit_no_spouse_flag,
-  creates_without_activity_start_date_flag: the subject WAS scripted creation,
-  which is retired. No successor; the capability is gone by design.
-- attribution_entity_profile_creates_without_spouse_flags:
-  application/user_profile/tests/test_taxpayer_type_completeness.py
-- pure_landlord_profile_creates_without_activity,
-  pure_landlord_profile_stores_explicit_iva_regime_when_operator_opts_in,
-  natural_person_with_economic_activity_stores_the_activity:
-  application/user_profile/tests/test_irnr_profile_completeness.py
-- non_resident_irnr_quiet_create_requires_country_before_registration,
-  gb_legal_entity_irnr_quiet_create_requires_representante_before_registration:
-  the same module, which asserts those paths among the missing-required set.
-- legal_entity_form_flag_populates_the_legal_entity_form_field,
-  activity_start_date_flag_stores_the_censo_alta_date: their subject is the
-  flag-to-fact mapping of a retired path. The mapping itself is declared in
-  application/wizard/catalogue.py, which is its own authority.
-- legal_entity_profile_create_and_edit_exposes_legal_name: the create half is
-  retired; the edit half is covered by the surviving edit refusals here.
-- missing_entity_type_does_not_re_report_supplied_identity_flags: its subject
-  is the CONTENT of a refusal message on the retired path. The application
-  layer does not render operator text, so it has no home rather than a
-  successor.
+Non-interactive creation is retired: `create` diverts a capable terminal to the
+profile manager and refuses a console-less host. The cases here do not depend on
+that path: two edit refusals, whose fixtures register through the credential
+door, and two foral refusals, which fire before the retirement check.
 
 The remaining cases assert the live setup-state boundary: registration and
 editing may leave a profile incomplete, while ``complete-setup`` refuses a
@@ -151,9 +124,9 @@ def test_non_resident_irnr_create_guides_to_setup_before_work_creation() -> None
 def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
     """A branch-changing edit must not persist a legal entity without legal name."""
 
-    # The profile is registered through the credential door rather than the
-    # creation verb. This profile is already complete, so the edit itself must
-    # reject a transition that omits the legal name.
+    # The profile is registered through the credential door. This profile is
+    # already complete, so the edit itself must reject a transition that omits
+    # the legal name.
     register_cli_profile(
         label="branch-to-legal",
         facts={
@@ -192,9 +165,9 @@ def test_edit_refuses_natural_person_branch_change_without_legal_name() -> None:
 def test_edit_allows_a_natural_person_branch_without_surnames() -> None:
     """Surnames remain a modelo-specific filing requirement, not setup state."""
 
-    # The profile is registered through the credential door rather than the
-    # creation verb. Setup remains incomplete to prove that the profile setup
-    # gate does not impose a modelo-specific surname requirement.
+    # The profile is registered through the credential door. Setup remains
+    # incomplete to prove that the profile setup gate does not impose a
+    # modelo-specific surname requirement.
     register_cli_profile(
         label="branch-to-natural",
         facts={
@@ -277,7 +250,7 @@ def test_profile_create_foral_refusal_renders_localized_error_document_in_json_m
     Under ``--format json`` the refusal must route through the localized
     CadrumoError boundary — a registered ``REFUSED_PROFILE_FORAL_REGIME``
     error document — rather than a Click ``Usage`` box wrapping a localized
-    body. This is the operator-reported localization gap for foral CCAA.
+    body.
     """
     import json
 

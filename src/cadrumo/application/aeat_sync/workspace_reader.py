@@ -70,6 +70,7 @@ from .workspace import (
     AeatSyncWorkspaceZoneObservationV1,
     aeat_sync_workspace_sources,
     project_aeat_sync_workspace,
+    source_observation_is_observable,
 )
 
 if TYPE_CHECKING:
@@ -200,7 +201,7 @@ def _filed_source_observation(
             refusal=_NEVER_PULLED,
         )
     availability = AeatSyncWorkspaceAvailability(state.availability.value)
-    if availability not in {AeatSyncWorkspaceAvailability.AVAILABLE, AeatSyncWorkspaceAvailability.STALE}:
+    if not source_observation_is_observable(availability):
         return AeatSyncWorkspaceSourceObservationV1(
             source=AeatSyncWorkspaceSource.AEAT_FILED_DECLARATIONS,
             availability=availability,

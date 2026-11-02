@@ -60,7 +60,7 @@ flows:
       shape:
         date: 'Formátum: ÉÉÉÉ-HH-NN - például 1978-03-15.'
         decimal: Szám, tizedesponttal - például 1234.56.
-        email: Egy e-mail-cím - például nev@pelda.hu.
+        email: Egy e-mail-cím - például `nev@pelda.hu`.
         integer: Egész szám, ezreselválasztó nélkül.
         money: Összeg euróban, tizedesponttal - például 1234.56.
       stale_result: A mentés befejeződött, de már egy újabb profilverzió látható.

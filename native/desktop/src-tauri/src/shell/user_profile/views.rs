@@ -41,6 +41,20 @@ enum UserState {
     Filed,
     Unknown,
 }
+// The deadline engine's status of an obligation, in its own spelling. `Unknown`
+// is a projected window whose close is not known: its closing dates are only
+// the earliest it can close, and the window must not show them as a deadline.
+#[derive(Debug, Deserialize, Serialize, PartialEq)]
+#[serde(rename_all = "SCREAMING_SNAKE_CASE")]
+enum ObligationStatus {
+    Upcoming,
+    DueSoon,
+    DueToday,
+    Overdue,
+    Filed,
+    NotApplicable,
+    Unknown,
+}
 #[derive(Debug, Deserialize, Serialize, PartialEq)]
 #[serde(rename_all = "snake_case")]
 enum LocalFilingState {
@@ -92,6 +106,7 @@ struct EntryIn {
     payment_cutoff_on: Option<String>,
     evaluated_on: String,
     days_overdue: Option<u64>,
+    status: ObligationStatus,
     user_state: UserState,
     filing_evidence: Evidence,
 }
@@ -106,6 +121,7 @@ struct Entry {
     payment_cutoff_on: Option<String>,
     evaluated_on: String,
     days_overdue: Option<u64>,
+    status: ObligationStatus,
     user_state: UserState,
     local_filing_state: LocalFilingState,
     aeat_submission_state: AeatSubmissionState,
@@ -292,6 +308,7 @@ fn filing_calendar(
                 payment_cutoff_on: entry.payment_cutoff_on,
                 evaluated_on: entry.evaluated_on,
                 days_overdue: entry.days_overdue,
+                status: entry.status,
                 user_state: entry.user_state,
                 local_filing_state: entry.filing_evidence.local_filing_state,
                 aeat_submission_state: entry.filing_evidence.aeat_submission_state,
@@ -407,7 +424,7 @@ mod tests {
         json!({
             "modelo":"303", "period":"3T", "opens_on":"2026-10-01", "closes_on":"2026-10-20",
             "adjusted_closes_on":"2026-10-20", "shift_reason":"none", "payment_cutoff_on":"2026-10-15",
-            "evaluated_on":"2026-10-22", "days_overdue":2, "status":"overdue", "user_state":"late",
+            "evaluated_on":"2026-10-22", "days_overdue":2, "status":"OVERDUE", "user_state":"late",
             "holiday_refs":[], "filing_evidence":{"local_filing_state":"ready_to_file",
             "aeat_submission_state":"not_observed", "justificante_verified":false,
             "justificante_required":true}
@@ -450,7 +467,7 @@ mod tests {
         assert_eq!(entry["local_filing_state"], "ready_to_file");
         assert_eq!(entry["aeat_submission_state"], "not_observed");
         assert_eq!(entry["days_overdue"], 2);
-        assert!(entry.get("status").is_none());
+        assert_eq!(entry["status"], "OVERDUE");
         assert_eq!(
             shown["warnings"][0]["message"],
             "Tu perfil no indica el régimen"
@@ -460,6 +477,28 @@ mod tests {
             "applicable_window_missing"
         );
         assert!(shown["events"][0].get("source_url").is_none());
+    }
+
+    #[test]
+    fn a_close_the_product_does_not_know_reaches_the_window_as_unknown() {
+        let mut read = projection(true);
+        read["payload"]["calendar"]["entries"][0] = json!({
+            "modelo":"303", "period":"1T", "opens_on":"2027-04-01", "closes_on":"2027-04-20",
+            "adjusted_closes_on":"2027-04-20", "shift_reason":"none", "payment_cutoff_on":null,
+            "evaluated_on":"2027-06-01", "days_overdue":null, "status":"UNKNOWN",
+            "user_state":"unknown", "holiday_coverage":"calendar_unavailable", "holiday_refs":[],
+            "filing_evidence":{"local_filing_state":"not_ready_to_file",
+            "aeat_submission_state":"not_observed", "justificante_verified":false,
+            "justificante_required":true}
+        });
+        let calendar = filing_calendar(read, PROFILE, "2026-07-01", "2027-06-30").unwrap();
+        let shown = serde_json::to_value(&calendar).unwrap();
+        let entry = &shown["entries"][0];
+        assert_eq!(entry["status"], "UNKNOWN");
+        assert_eq!(entry["user_state"], "unknown");
+        assert_eq!(entry["adjusted_closes_on"], "2027-04-20");
+        assert_eq!(entry["days_overdue"], Value::Null);
+        assert_eq!(entry["payment_cutoff_on"], Value::Null);
     }
 
     #[test]
@@ -480,6 +519,17 @@ mod tests {
         let mut unknown = projection(true);
         unknown["payload"]["calendar"]["entries"][0]["user_state"] = json!("maybe");
         assert!(filing_calendar(unknown, PROFILE, "2026-07-01", "2027-06-30").is_err());
+        for status in [json!("maybe"), json!("unknown"), Value::Null] {
+            let mut unread = projection(true);
+            unread["payload"]["calendar"]["entries"][0]["status"] = status;
+            assert!(filing_calendar(unread, PROFILE, "2026-07-01", "2027-06-30").is_err());
+        }
+        let mut statusless = projection(true);
+        statusless["payload"]["calendar"]["entries"][0]
+            .as_object_mut()
+            .unwrap()
+            .remove("status");
+        assert!(filing_calendar(statusless, PROFILE, "2026-07-01", "2027-06-30").is_err());
         let mut untranslated = projection(true);
         untranslated["payload"]["calendar"]["warnings"][0]
             .as_object_mut()

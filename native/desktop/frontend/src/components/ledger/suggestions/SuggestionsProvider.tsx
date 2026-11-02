@@ -31,6 +31,12 @@ import type {
   LedgerEntryOptionsResult,
   ProrrataListedEntry,
 } from "../../../shell/ledgerSetup";
+import {
+  NO_VOCABULARY,
+  servedVocabulary,
+  type ServedVocabulary,
+  type VocabularyState,
+} from "../../../shell/ledgerServedVocabulary";
 import type { StagedContent } from "../../../shell/ledgerStage";
 import { useStrings, type Translate } from "../../../shell/strings";
 import { useLedgerRead } from "../documents/useLedgerRead";
@@ -85,6 +91,9 @@ type Held = {
   invoices: readonly CatalogueInvoice[] | null;
   /** The served entry vocabularies, by family; null likewise. */
   served: ReadonlyMap<string, ServedOptions> | null;
+  /** Whether the entry vocabularies are being read, were read, or could not
+   * be; the window holds no list to show meanwhile. */
+  vocabulary: ServedVocabulary;
   /** The whole history's movement values; null likewise. */
   known: LedgerKnownValuesResult | null;
   /** The references the activity assets state; null likewise. */
@@ -276,11 +285,21 @@ export function LedgerSuggestions({
         : null,
     [entryOptions],
   );
+  const vocabularyState: VocabularyState = entryOptions
+    ? "ready"
+    : entryRead.phase === "failed"
+      ? "unavailable"
+      : "loading";
+  const vocabulary = useMemo(
+    () => servedVocabulary(entryOptions ?? null, vocabularyState),
+    [entryOptions, vocabularyState],
+  );
   const held = useMemo<Held>(
     () => ({
       rows: rowsSeen,
       invoices,
       served,
+      vocabulary,
       known,
       assetReferences,
       capitalGoods,
@@ -292,6 +311,7 @@ export function LedgerSuggestions({
       rowsSeen,
       invoices,
       served,
+      vocabulary,
       known,
       assetReferences,
       capitalGoods,
@@ -481,6 +501,14 @@ export function useServedCodes(family: "country" | "currency") {
     () => (options ? options.map((option) => option.value) : null),
     [options],
   );
+}
+
+/** The registry's closed lists for an entry form, once served: while they
+ * are being read or could not be, each is empty and `state` says which, so a
+ * picker shows loading or unavailable and a stored id shows as itself. Outside
+ * the page nothing is served and the state is unavailable. */
+export function useVocabulary(): ServedVocabulary {
+  return useContext(HeldContext)?.vocabulary ?? NO_VOCABULARY;
 }
 
 /** A served closed list as choices worded in the window's language, or null

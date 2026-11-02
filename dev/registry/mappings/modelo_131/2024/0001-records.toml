@@ -169,14 +169,14 @@ record_identity = "Pág. 0"
 sheet = "Pág. 0"
 source_row = 19
 source_cell = "A19"
-ordinal = 14
+ordinal = "14"
 record_identity = "Pág. 0"
 
 [variable_envelopes.closer_anchor]
 sheet = "Pág. 0"
 source_row = 20
 source_cell = "A20"
-ordinal = 15
+ordinal = "15"
 record_identity = "Pág. 0"
 
 [variable_envelopes.total_anchor]

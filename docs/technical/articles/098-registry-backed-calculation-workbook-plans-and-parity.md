@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-098` · **Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
+**Topic:** [Authentication and storage management](../topics/authentication-and-storage-management.md)
 
 <!-- preserved:article -->
 **Scope:** 17 files under `src/cadrumo/application/storage/calc_sheets`, totaling 5,501 lines, 212,643 bytes, and 47,384 measured `o200k_base` proxy tokens. All nine bounded-reader pages and assigned ranges were read. Static inspection only; no application execution or tests were run. The parity harness is an external-write workflow: invoking it can create or update a Google spreadsheet.

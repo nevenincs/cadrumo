@@ -4,7 +4,7 @@
 
 > This page describes the analyzed source snapshot. Its findings and limitations are not a certification of the current branch.
 
-**Report:** `STAGE-2-084` · **Topic:** [Modelo work and revision lifecycle, part 2: verification, workbench and workspace](../topics/modelo-work-and-revision-lifecycle-part-2.md)
+**Topic:** [Modelo work and revision lifecycle: verification, workbench and workspace](../topics/modelo-work-verification-and-workspace.md)
 
 <!-- preserved:article -->
 **Scope:** 11 files under `src/cadrumo/application/modelo`, totaling 5,439 lines, 230,444 bytes, and 47,471 measured proxy tokens. All nine bounded-reader pages were read in order, covering each assigned line range. Static inspection only: no application execution or tests. The token count is the manifest's `o200k_base` proxy.

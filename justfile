@@ -87,10 +87,12 @@ setup:
 setup-repository-tools:
     uv run --isolated --no-project --python 3.13 -- python -m dev.init tools
 
-[doc('Install the pinned Hunspell dictionaries used by check-locales.')]
+# The same provisioner `just setup` runs. It needs no Node: it reads the
+# integrity-pinned tarballs from package-lock.json and verifies each before use.
+[doc('Install the pinned Hunspell dictionaries used by check-locales, verified against package-lock.json; needs no Node.')]
 [group('setup')]
 setup-locale-spelling:
-    npm ci --ignore-scripts --no-audit --no-fund
+    uv run --isolated --no-project --python 3.13 -- python -m dev.locales.dictionary_provisioning
 
 [doc('Install the desktop frontend packages native builds require; keeps a current tree and serializes with other installs.')]
 [group('setup')]
@@ -1404,8 +1406,11 @@ test-powershell-literal:
     uv run --no-sync pytest -v -n0 -m external_tool src/cadrumo/entrypoints/cli/tests/test_common_action_resolution.py
 
 # Run the locale orthography tests. These carry `external_tool` because they
-# read the pinned Hunspell dictionaries that `setup-locale-spelling` installs
-# from npm, which the default unit lane cannot assume.
+# need the full pinned Hunspell dictionaries, which `setup` and
+# `setup-locale-spelling` install from the integrity-pinned npm tarballs (no
+# Node needed) and which the deliberately fast default lane does not exercise.
+# Other locale tests without the marker also read the dictionaries, so a checkout
+# that skipped `setup` fails them until the dictionaries are provisioned.
 [doc('Run the locale orthography tests against the pinned Hunspell dictionaries (external_tool marker).')]
 [group('test')]
 test-locale-spelling:

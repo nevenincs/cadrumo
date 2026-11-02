@@ -15,13 +15,8 @@ normalises the printed total toward the computed one -- the disagreement IS the
 finding, and a run in which this scores clean is a broken run, not a clean
 document.
 
-NOTE ON PROVENANCE: the corpus fixtures named for this case
-(``OP-PUR-COM-2026-0005_camera-photo`` and ``_layout-minimal``) are scheduled to
-be bundled with their provenance sidecars in a future change and are NOT in the
-repository yet. The figures below reproduce the arithmetic those documents
-carry so the CHECK is gated now; they are constructed inputs and are labelled
-as such rather than named after fixtures that do not exist. When the real
-documents land, they plug into :func:`_closure_over` unchanged.
+The figures below are constructed inputs that reproduce the arithmetic of such a
+document. They are labelled as constructed rather than named after a fixture.
 """
 
 from __future__ import annotations
@@ -172,10 +167,9 @@ def test_a_consistent_retencion_raises_nothing() -> None:
 def test_an_unread_taxable_base_reports_nothing_rather_than_accusing_the_document() -> None:
     """The retención identity needs a base, and absent is not zero.
 
-    Coercing it produced a finding that read "the stated retención 150.00 is
-    not 15% of the taxable base (0)" — reporting a discrepancy against a figure
-    the reader never recovered. The zero was ours, and an operator sent to
-    correct their invoice would find nothing wrong with it.
+    Reading an absent base as zero would report that the stated retención 150.00
+    is not 15% of the taxable base (0): a discrepancy against a figure the reader
+    never recovered, sending an operator to correct an invoice that is right.
     """
     draft = InvoiceDraft(
         taxable_base=None,
@@ -190,7 +184,7 @@ def test_an_unread_taxable_base_reports_nothing_rather_than_accusing_the_documen
 def test_a_genuine_zero_base_still_checks_the_retencion() -> None:
     """Absent is silent; a stated zero is evidence and must not be.
 
-    Without this the two states are indistinguishable again, just in the other
+    Without this the two states are indistinguishable, just in the other
     direction: a document stating a zero base and a non-zero retención really
     does contradict itself.
     """
@@ -207,8 +201,8 @@ def test_a_genuine_zero_base_still_checks_the_retencion() -> None:
 def test_the_retencion_identity_does_not_need_the_grand_total() -> None:
     """The total appears nowhere in ``retencion = base * rate``.
 
-    Requiring it skipped drafts whose three actual terms were all stated, so a
-    real inconsistency went unreported because an unrelated field was missing.
+    Requiring it would skip drafts whose three actual terms are all stated,
+    hiding a real inconsistency behind an unrelated missing field.
     """
     draft = InvoiceDraft(
         taxable_base=Decimal("1000.00"),
@@ -356,8 +350,8 @@ def test_findings_are_deterministic_and_stably_ordered() -> None:
 #
 # The per-tier check above iterates ``iva_breakdown``, populated only by the
 # STRUCTURED reader; a flat ``iva_rate`` is populated only by the model-read
-# lane. The two representations are disjoint, so until the identity below
-# existed the unchecked one was exactly the one a model produced.
+# lane. The two representations are disjoint, so the flat triple needs its own
+# identity.
 #
 # The identity is the same accounting one the tier check uses, so these cases
 # are legitimate on the terms this module's docstring sets: the expectation
@@ -365,7 +359,7 @@ def test_findings_are_deterministic_and_stably_ordered() -> None:
 
 #: A two-rate invoice as a text or vision lane reads it: 1000 at 21% plus 1000
 #: at 10%, so the printed TOTAL base and TOTAL cuota, and ONE of the two rates.
-#: The total identity holds, which is why this confirmed clean.
+#: The total identity holds on it.
 _COLLAPSED_BASE = Decimal("2000.00")
 _COLLAPSED_CUOTA = Decimal("310.00")
 _COLLAPSED_TOTAL = Decimal("2310.00")
@@ -377,12 +371,12 @@ def test_the_collapsed_figures_are_the_two_rate_document_they_are_named_for() ->
     assert Decimal("1000.00") * Decimal("10") / Decimal("100") == Decimal("100.00")
     assert Decimal("1000.00") + Decimal("1000.00") == _COLLAPSED_BASE
     assert Decimal("210.00") + Decimal("100.00") == _COLLAPSED_CUOTA
-    # The reason nothing caught it: the TOTAL identity holds perfectly.
+    # The TOTAL identity holds perfectly on this document.
     assert _COLLAPSED_BASE + _COLLAPSED_CUOTA == _COLLAPSED_TOTAL
 
 
 def test_a_multi_rate_document_collapsed_to_one_rate_is_reported() -> None:
-    """The measured silence, closed.
+    """A multi-rate document read as a single rate is reported.
 
     A single rate cannot describe this document, and the rate is what decides
     which Modelo 303 tier the base lands in -- so confirming it files the whole
@@ -495,12 +489,10 @@ def test_a_multi_tier_breakdown_leaves_the_flat_rate_alone() -> None:
 
 
 def test_the_identity_is_what_causes_the_finding() -> None:
-    """Mutation proof: without the comparison the collapse confirms clean again.
+    """Mutation proof: without the comparison the collapse confirms clean.
 
-    Re-runs the pre-change behaviour, where the flat triple was simply not an
-    identity anyone checked. It reports nothing -- which is the measured silence
-    this closes. Without this the suite would prove a finding EXISTS, not that
-    comparing the three figures is what produces it.
+    Without this the suite would prove a finding EXISTS, not that comparing the
+    three figures is what produces it.
     """
     draft = InvoiceDraft(
         taxable_base=_COLLAPSED_BASE,

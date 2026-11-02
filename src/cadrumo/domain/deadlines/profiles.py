@@ -155,7 +155,7 @@ _BARE_PROFILE_FLAG_KEYS: tuple[tuple[str, str], ...] = (
 
 
 def _forward_bare_profile_flags(canonical: Mapping[str, str], padded: dict[str, str]) -> None:
-    """Forward legacy bare flag names to the canonical wizard paths."""
+    """Forward schema ``model_selectors`` flag aliases to the canonical wizard paths."""
     for bare, canonical_key in _BARE_PROFILE_FLAG_KEYS:
         if bare in canonical and canonical_key not in canonical:
             padded[canonical_key] = canonical[bare]

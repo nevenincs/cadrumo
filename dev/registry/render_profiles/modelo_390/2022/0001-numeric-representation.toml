@@ -16,7 +16,7 @@ allowed_values = []
 sheet = "Pág. 1"
 source_row = 15
 source_cell = "A15"
-ordinal = 10
+ordinal = "10"
 record_identity = "Pág. 1"
 
 [singleton_rules.evidence]
@@ -29,7 +29,7 @@ justification = "The exact official design leaves Contenido blank while marking 
 sheet = "Pág. 1"
 source_row = 15
 source_cell = "A15"
-ordinal = 10
+ordinal = "10"
 record_identity = "Pág. 1"
 
 [[singleton_rules]]
@@ -46,7 +46,7 @@ allowed_values = []
 sheet = "Pág. 1"
 source_row = 65
 source_cell = "A65"
-ordinal = 60
+ordinal = "60"
 record_identity = "Pág. 1"
 
 [singleton_rules.evidence]
@@ -70,7 +70,7 @@ allowed_values = []
 sheet = "Pág. 1"
 source_row = 69
 source_cell = "A69"
-ordinal = 64
+ordinal = "64"
 record_identity = "Pág. 1"
 
 [singleton_rules.evidence]
@@ -94,7 +94,7 @@ allowed_values = []
 sheet = "Pág. 1"
 source_row = 73
 source_cell = "A73"
-ordinal = 68
+ordinal = "68"
 record_identity = "Pág. 1"
 
 [singleton_rules.evidence]
@@ -118,7 +118,7 @@ allowed_values = []
 sheet = "Pág. 5"
 source_row = 59
 source_cell = "A59"
-ordinal = 54
+ordinal = "54"
 record_identity = "Pág. 5"
 
 [singleton_rules.evidence]
@@ -131,7 +131,7 @@ justification = "The exact official design leaves Contenido and validation blank
 sheet = "Pág. 5"
 source_row = 59
 source_cell = "A59"
-ordinal = 54
+ordinal = "54"
 record_identity = "Pág. 5"
 
 [[singleton_rules]]
@@ -148,7 +148,7 @@ allowed_values = []
 sheet = "Pág. 5"
 source_row = 65
 source_cell = "A65"
-ordinal = 60
+ordinal = "60"
 record_identity = "Pág. 5"
 
 [singleton_rules.evidence]
@@ -161,7 +161,7 @@ justification = "The exact official design leaves Contenido and validation blank
 sheet = "Pág. 5"
 source_row = 65
 source_cell = "A65"
-ordinal = 60
+ordinal = "60"
 record_identity = "Pág. 5"
 
 [[singleton_rules]]
@@ -178,7 +178,7 @@ allowed_values = []
 sheet = "Pág. 5"
 source_row = 71
 source_cell = "A71"
-ordinal = 66
+ordinal = "66"
 record_identity = "Pág. 5"
 
 [singleton_rules.evidence]
@@ -191,7 +191,7 @@ justification = "The exact official design leaves Contenido and validation blank
 sheet = "Pág. 5"
 source_row = 71
 source_cell = "A71"
-ordinal = 66
+ordinal = "66"
 record_identity = "Pág. 5"
 
 [[singleton_rules]]
@@ -208,7 +208,7 @@ allowed_values = []
 sheet = "Pág. 5"
 source_row = 77
 source_cell = "A77"
-ordinal = 72
+ordinal = "72"
 record_identity = "Pág. 5"
 
 [singleton_rules.evidence]
@@ -221,7 +221,7 @@ justification = "The exact official design leaves Contenido and validation blank
 sheet = "Pág. 5"
 source_row = 77
 source_cell = "A77"
-ordinal = 72
+ordinal = "72"
 record_identity = "Pág. 5"
 
 [[singleton_rules]]
@@ -238,7 +238,7 @@ allowed_values = []
 sheet = "Pág. 5"
 source_row = 83
 source_cell = "A83"
-ordinal = 78
+ordinal = "78"
 record_identity = "Pág. 5"
 
 [singleton_rules.evidence]
@@ -251,7 +251,7 @@ justification = "The exact official design leaves Contenido and validation blank
 sheet = "Pág. 5"
 source_row = 83
 source_cell = "A83"
-ordinal = 78
+ordinal = "78"
 record_identity = "Pág. 5"
 
 [design_identity]

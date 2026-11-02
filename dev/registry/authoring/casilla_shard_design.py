@@ -303,7 +303,7 @@ def _unrecognised_bracket_problems(
 ) -> list[str]:
     return [
         f"{name} @{row.offset}: bracket token [{token}] is not a recognised "
-        "box number on this wave's grammar; it would silently become a position range"
+        "box number in this design's grammar; it would silently become a position range"
         for token in _IDENTIFIER_BRACKET.findall(row.description)
         if token not in recognised
     ]

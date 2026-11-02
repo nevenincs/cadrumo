@@ -27,7 +27,12 @@ from cadrumo.application.user_profile.automation_operations import (
     build_automation_operation_registrations,
 )
 from cadrumo.core.errors.hierarchy import CadrumoError
-from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
+from cadrumo.core.operations import (
+    EFFECTS_OF_A_SUCCEEDED_RECEIPT,
+    OperationEffect,
+    OperationTerminalCondition,
+    profile_operation_subject,
+)
 
 from ..contracts.access_refusals import AccessDenialCode
 from ..contracts.contracts import RefusalCode, RefusalError
@@ -186,7 +191,7 @@ def run_automation_decision(
                 terminal_condition=condition,
                 effect=effect,
             )
-        if effect not in {OperationEffect.NONE, OperationEffect.UPDATED}:
+        if effect not in EFFECTS_OF_A_SUCCEEDED_RECEIPT:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         receipt = _read_decision_receipt(client, review, decision, pinned, operation_id, state, contract, deadline)
         return AutomationDecisionCompletion(operation_id, receipt, effect)

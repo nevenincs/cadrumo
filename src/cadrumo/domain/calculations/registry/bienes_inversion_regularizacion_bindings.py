@@ -8,18 +8,23 @@ annual box, so one is never a spelling of the other.
 from __future__ import annotations
 
 from enum import StrEnum
-from typing import Annotated, Literal
+from typing import TYPE_CHECKING, Annotated, Literal
 
 from pydantic import AfterValidator, BaseModel
 
 from ....core.aggregation import BindingSourceKind
 from ....core.models import STRICT_FROZEN_CONFIG
+from .binding_selector_utils import computed_money_binding_failures
 from .form_codes import form_role_validator
+
+if TYPE_CHECKING:
+    from .schema import BindingDefinition
 
 __all__ = [
     "BienesInversionRegularizacionOutput",
     "BienesInversionRegularizacionOutputValue",
     "BienesInversionRegularizacionProvider",
+    "validate_bienes_inversion_regularizacion_binding",
 ]
 
 
@@ -51,3 +56,13 @@ class BienesInversionRegularizacionProvider(BaseModel):
 
     source_modelo: Annotated[str, AfterValidator(form_role_validator("iva.periodic"))]
     regularizacion_output: BienesInversionRegularizacionOutputValue
+
+
+def validate_bienes_inversion_regularizacion_binding(binding: BindingDefinition) -> list[str]:
+    """Return the build-time diagnostics for one capital-goods regularisation binding.
+
+    The provider model pins the source modelo and the landing output; what
+    remains is the value contract, which must be the monetary regularisation the
+    resolver computes.
+    """
+    return computed_money_binding_failures(binding, "bienes-inversion-regularizacion")

@@ -7,15 +7,13 @@
 import {
   ledgerFailure,
   type CatalogueInvoice,
-  type InvoiceAddRequest,
   type InvoiceUpdateRequest,
   type LedgerDefinitionId,
   type LedgerPort,
   type LedgerRequest,
   type LedgerResult,
 } from "../../../shell/ledger";
-import { readAnswer } from "../../../shell/ledgerWindow";
-import { holdsCorrection, isAddedInvoice } from "./invoiceModel";
+import { holdsCorrection } from "./invoiceModel";
 
 export type WriteAnswer<Result> =
   | { kind: "done"; result: Result }
@@ -85,21 +83,17 @@ async function view(
 }
 
 /** Whether an add whose outcome was not seen put its invoice in the
- * catalogue. */
+ * catalogue, looked up by the id the preview answered for that draft. */
 export async function addLanded(
   port: LedgerPort,
-  request: InvoiceAddRequest,
+  invoiceId: string | null,
 ): Promise<Landed> {
-  try {
-    const answer = readAnswer(await port.submit("ledger.invoice.list", {}));
-    if (answer.kind !== "answer") return { kind: "unreadable" };
-    const found = answer.result.invoices.find((invoice) =>
-      isAddedInvoice(invoice, request),
-    );
-    return found ? { kind: "saved", invoice: found } : { kind: "not_saved" };
-  } catch {
-    return { kind: "unreadable" };
-  }
+  if (invoiceId === null) return { kind: "unreadable" };
+  const found = await view(port, invoiceId);
+  if (found === "unreadable") return { kind: "unreadable" };
+  return found === null
+    ? { kind: "not_saved" }
+    : { kind: "saved", invoice: found };
 }
 
 /** Whether a correction whose outcome was not seen is now stored. */

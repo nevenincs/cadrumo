@@ -349,6 +349,8 @@ source_refs = [
     "aeat-dr-100-2020-xsd",
     "aeat-renta-2020-manual-parte1",
     "boe-modelo-100-2020-form",
+    "aeat-modelo-130-instructions",
+    "aeat-modelo-131-instructions",
 ]
 bindings = [
     "renta-modelo-130-pagos-fraccionados",

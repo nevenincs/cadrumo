@@ -1,4 +1,4 @@
-"""Paths for temporary developer runs, with legacy log discovery for cleanup."""
+"""Paths for temporary developer runs and the discovery of their log families."""
 
 from __future__ import annotations
 
@@ -24,8 +24,8 @@ TEST_RUNS_FAMILY = "test-runs"
 
 
 def run_log_bases() -> tuple[Path, ...]:
-    """Return the current temporary base and the legacy repository log base."""
-    return (test_log_root(), REPO_ROOT)
+    """Return the base every run-log family lives under."""
+    return (test_log_root(),)
 
 
 def test_log_root() -> Path:
@@ -39,24 +39,20 @@ def _has_link(path: Path) -> bool:
 
 
 def run_log_roots(family: str, *, bases: tuple[Path, ...] | None = None) -> tuple[Path, ...]:
-    """Return existing current and legacy log family roots across ``bases``.
+    """Return the existing log family roots across ``bases``.
 
     Absent bases are filtered out rather than reported: a checkout that has never
     run the audit tooling simply has no such root, and that is not a condition a
     reclamation report should raise. ``bases`` is injectable so a caller can be
     tested against a tree it controls without substituting this module.
     """
-    containers = (
-        (test_log_root() / LOGS_STEM, REPO_ROOT / ".logs")
-        if bases is None
-        else tuple(base / stem for base in bases for stem in (LOGS_STEM, ".logs"))
-    )
+    containers = (test_log_root() / LOGS_STEM,) if bases is None else tuple(base / LOGS_STEM for base in bases)
     roots = tuple(dict.fromkeys(container / family for container in containers))
     return tuple(root for root in roots if not _has_link(root) and root.is_dir())
 
 
 def run_log_families(*, bases: tuple[Path, ...] | None = None) -> tuple[str, ...]:
-    """Return every run family under the current or legacy log names.
+    """Return every run family under the log roots of ``bases``.
 
     DISCOVERED, never enumerated. A family named in a constant list is a list
     someone has to remember to extend, and the cost of forgetting is not
@@ -69,11 +65,7 @@ def run_log_families(*, bases: tuple[Path, ...] | None = None) -> tuple[str, ...
     Returns:
         Each family's directory name, sorted and deduplicated across bases.
     """
-    containers = (
-        (test_log_root() / LOGS_STEM, REPO_ROOT / ".logs")
-        if bases is None
-        else tuple(base / stem for base in bases for stem in (LOGS_STEM, ".logs"))
-    )
+    containers = (test_log_root() / LOGS_STEM,) if bases is None else tuple(base / LOGS_STEM for base in bases)
     families: dict[str, None] = {}
     for root in containers:
         if _has_link(root):

@@ -24,7 +24,7 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionContractV1,
 )
 from cadrumo.core.hashing import canonical_json_bytes
-from cadrumo.core.operations import OperationTerminalCondition
+from cadrumo.core.operations import TERMINAL_CONDITIONS_WITH_ERROR_DETAIL, OperationTerminalCondition
 from cadrumo_client.commands.registered_operation_deadlines import MIN_SETTLED_OPERATION_READ_SECONDS
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 from cadrumo_client.contracts.operation_access import (
@@ -75,7 +75,7 @@ def settled_registered_error_detail(
     that may not read it, or a malformed document leaves the caller with the
     registered code the observation already carried.
     """
-    if condition not in {OperationTerminalCondition.REFUSED, OperationTerminalCondition.FAILED}:
+    if condition not in TERMINAL_CONDITIONS_WITH_ERROR_DETAIL:
         return None
     schema = operation_error_detail_schema()
     try:

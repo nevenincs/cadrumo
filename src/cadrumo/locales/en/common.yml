@@ -245,6 +245,8 @@ aggregation:
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
+      proven_zero_value_not_zero: A source resolver stated a proven zero for a binding
+        whose value is not zero.
       provenance_binding_source_mismatch: The source kind declared on the origin row
         does not match the value source it claims to belong to. Both must name the
         same source for the trail to be checkable.
@@ -439,8 +441,9 @@ categories:
     mutualidad_alternativa:
       label: Alternative mutual-insurance contribution
       notes: Deductible up to the RETA maximum quota for common contingencies of each
-        year, and only for the part that covers RETA contingencies, when the mutualidad
-        replaces your RETA membership (Ley 35/2006 art. 30.2, rule 1, second paragraph).
+        year, and only for the part that covers RETA contingencies, when the alternative
+        mutual-insurance scheme replaces your RETA membership (Ley 35/2006 art. 30.2,
+        rule 1, second paragraph).
     publicidad_marketing:
       label: Advertising and marketing
       notes: Fully deductible expense (Ley 35/2006 art. 28.1, other external services).
@@ -1036,6 +1039,7 @@ desktop:
     as_of: From local records as of {date}. Nothing here was asked of the tax agency.
     close: Close the calendar
     day_event: '{date}: {kind}. {summary}'
+    earliest_close: Closes no earlier than {date}
     empty: No filing obligations in this period.
     event:
       filing: Filing
@@ -3111,6 +3115,10 @@ desktop:
         retention_rate: Withholding tax rate
         series: Series
         situacion: Property situation
+      figures_retry: Try again
+      figures_unavailable: Figures not available. The ledger did not answer, and your
+        draft is kept.
+      figures_updating: Updating the figures…
       fixed: Part of the invoice's identity. Remove it and add it again to change
         it.
       from_lines: From the lines
@@ -3148,6 +3156,7 @@ desktop:
       line:
         actions: Actions
         add: Add a line
+        calculated: Calculated {amount}
         category: Category
         choose_rate: Choose a rate
         description: Description
@@ -3161,8 +3170,9 @@ desktop:
         unit_price: Unit price
       lines: Lines
       lines_fixed: Fixed
-      lines_note: A dot for decimals, up to six places, no thousands separator. Subtotal
-        and IVA are worked out to the cent.
+      lines_note: A dot for decimals, up to six places, no thousands separator. The
+        ledger works out subtotal and IVA; fill them in only to state what the document
+        prints.
       linked: Linked movements
       linked_count: 'Linked movements: {count}'
       links_permanent: 'A link is permanent: it can''t be removed.'
@@ -3173,11 +3183,11 @@ desktop:
       next_number: 'Next in series {series}: {number}'
       next_number_series: Choose a series to see its next number.
       none: None
+      not_available: Not available
       not_met: not met
       not_saved: It wasn't saved. Your edits are kept.
       not_stated: Not stated
       open_duplicate: Open it
-      operation_date_fixed: Set only when the invoice is added
       operation_key: Key {key}
       party: Counterparty
       payment:
@@ -3193,22 +3203,9 @@ desktop:
         choose_rate: Choose a rate.
         country_letters: Two letters, e.g. ES.
         currency_letters: Three letters, e.g. EUR.
-        lease_reference_not_allowed: No cadastral reference for this situation.
         missing: Required.
         no_line: Add at least one line.
-        operation_date_fixed: Once added, it can move but not be added or removed.
         payment_id_shape: 64 hexadecimal characters.
-        printed_differs: The lines add up to {total}.
-        recargo_above_iva: Can't exceed the IVA.
-        rectifies_required: Name the invoice it rectifies.
-        retention_above_base: Can't exceed the taxable base.
-        retention_differs: The rate gives {amount}.
-        retention_needs_amount: A rate needs its amount.
-        series_required: A rectificativa needs a series.
-        tax_id_required: Required, except on an issued simplified invoice.
-      rate:
-        exempt: Exempt
-        not_subject: Not subject
       read_failed: Couldn't read the invoices.
       refusal:
         ambiguous_grouping: '"{raw}" can be read two ways. Write 1500 or 1.5.'
@@ -3239,7 +3236,7 @@ desktop:
       remove_question: Remove this invoice?
       removed: Invoice {number} removed
       retention: Withholding tax, outside the total
-      retention_presets: Common withholding tax rates
+      retention_implied: The rate gives {amount}.
       review: Review
       review_changes: Review changes ({count})
       save: Save
@@ -3265,6 +3262,8 @@ desktop:
       unmatched: Unmatched
       use: Use
       use_number: Use {number}
+      would_refuse: The ledger would refuse this invoice as it stands. Check its tax
+        ID and document fields.
     irpf_category:
       actividad_economica: Economic activity
       arrendamiento_local: Rent of business premises
@@ -5898,7 +5897,7 @@ sheets:
       startup_fund_rendimientos_clave: Fund-management income
       street_name: Street name
       street_type: Street type
-      subclave: Subclave
+      subclave: Subcode
       supplier_tax_id: Supplier tax id
       taxable_base: Withholding base
       territorial_deduction_clave: Ceuta or Melilla / La Palma
@@ -5955,7 +5954,7 @@ topic:
     title: IRPF advance payment
   profile:
     body: The local profile carries your tax identifier (NIF/CIF/DNI/NIE), main activity,
-      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intracomunitario).
+      IVA/IRPF regime, and optional enrolments (SII, Verifactu, intra-community).
       Edit it with 'aeat config profile edit NAME'.
     title: Taxpayer profile
   providers:
@@ -6554,6 +6553,7 @@ tui:
       errors:
         amount_invalid: Write the amount in digits only, with a point for the decimals,
           for example 1500.00.
+        amount_required: Write an amount in “{field}”. If there is none, write 0.00.
         asset_id_required: Write the asset identifier first.
         choice_invalid: 'Choose one of these: {options}.'
         date_invalid: Write the date as YYYY-MM-DD, for example 2025-06-30.

@@ -805,13 +805,12 @@ def _requirements_from_previous_filing(
 def _requirements_from_relation(
     requirement: RegistryFoldRequirement,
 ) -> Iterable[CrossPeriodDependencyRequirement]:
-    source_casilla_id = requirement.source_casilla_ids[0]
     for period in requirement.periods:
         yield CrossPeriodDependencyRequirement(
             source_modelo=requirement.source_modelo,
             filing_year=requirement.filing_year,
             period=Period.from_year_and_code(requirement.filing_year, period),
-            source_casilla_ids=(source_casilla_id,),
+            source_casilla_ids=requirement.source_casilla_ids,
             origin=CrossPeriodDependencyOrigin.REGISTRY_RELATION,
             origin_ids=requirement.target_bindings,
             legal_refs=requirement.legal_refs,

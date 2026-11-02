@@ -37,7 +37,14 @@ from ..borrador_100_import import prepare_borrador_100_import
 from ..borrador_100_operation_ports import Borrador100OperationPorts
 from ..errors import LiveApplicationInputError
 from ..snapshot_base import SnapshotLifecycleState, SnapshotStateFilter
-from .borrador_100_operation_support import CAPTURED_AT, PROFILE_ID, Subject, policy_decision
+from .borrador_100_operation_support import (
+    CAPTURED_AT,
+    OTHER_TAX_ID,
+    PROFILE_ID,
+    PROFILE_TAX_ID,
+    Subject,
+    policy_decision,
+)
 from .test_borrador_100 import _InMemoryBorradorRepository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -264,9 +271,51 @@ def test_prepare_refuses_bad_parser_receipt_before_commit(subject: Subject, tmp_
     path.write_bytes(b"source")
     with pytest.raises((LiveApplicationInputError, InternalInvariantError)):
         prepare_borrador_100_import(
-            path, filing_year=_PERIOD.filing_year, period=_PERIOD, operation=subject.operation, parser=subject.parser
+            path,
+            filing_year=_PERIOD.filing_year,
+            period=_PERIOD,
+            operation=subject.operation,
+            parser=subject.parser,
+            profile_tax_id=lambda: subject.profile_tax_id,
         )
     assert subject.repository.writes == subject.fence.entries == 0
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "pdf_tax_id,profile_tax_id,key",
+    [
+        (OTHER_TAX_ID, PROFILE_TAX_ID, "import_tax_id_mismatch"),
+        (None, PROFILE_TAX_ID, "import_tax_id_unreadable"),
+        ("   ", PROFILE_TAX_ID, "import_tax_id_unreadable"),
+        ("12345678A", PROFILE_TAX_ID, "import_tax_id_unreadable"),
+        (PROFILE_TAX_ID, None, "import_profile_tax_id_unusable"),
+        (PROFILE_TAX_ID, "  ", "import_profile_tax_id_unusable"),
+    ],
+)
+async def test_import_refuses_unconfirmed_document_owner_before_any_write(
+    subject: Subject, tmp_path: Path, pdf_tax_id: str | None, profile_tax_id: str | None, key: str
+) -> None:
+    subject.parser.change = {"tax_id": pdf_tax_id}
+    subject.profile_tax_id = profile_tax_id
+    path = tmp_path / "synthetic.pdf"
+    path.write_bytes(b"source")
+    request = _import_request(path)
+    with pytest.raises(LiveApplicationInputError) as refused:
+        await module.Borrador100ImportExecutor(subject.compose).execute(request, subject.context(request.definition_id))
+    assert "cli.app.live.borrador." + key in str(refused.value)
+    assert subject.repository.writes == subject.fence.entries == 0
+
+
+@pytest.mark.asyncio
+async def test_import_matches_the_owner_through_canonical_spelling(subject: Subject, tmp_path: Path) -> None:
+    subject.parser.change = {"tax_id": " 12345678-z "}
+    subject.profile_tax_id = PROFILE_TAX_ID.lower()
+    path = tmp_path / "synthetic.pdf"
+    path.write_bytes(b"source")
+    request = _import_request(path)
+    await module.Borrador100ImportExecutor(subject.compose).execute(request, subject.context(request.definition_id))
+    assert subject.repository.writes == subject.fence.entries == 1
 
 
 @pytest.mark.asyncio

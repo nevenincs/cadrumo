@@ -97,12 +97,6 @@ _YEAR_END = date(2026, 1, 1)
 _DESCRIPTOR = ActivityAssetDescriptorFacts(name="Published-authority element")
 
 
-_NORMAL = DirectEstimationRegime.NORMAL
-
-
-_SIMPLIFIED = DirectEstimationRegime.SIMPLIFIED
-
-
 def _modelo_100() -> ModeloRevision:
     return load_modelo_directory(bundled_path("registry", "aeat", "modelos", "100")).revisions["2025"]
 
@@ -113,7 +107,7 @@ def _legal_reference(reference_id: str) -> LegalReference:
 
 def _election(
     method: AmortizationMethod,
-    regime: DirectEstimationRegime = _NORMAL,
+    regime: DirectEstimationRegime = DirectEstimationRegime.NORMAL,
     **facts: object,
 ) -> ActivityAssetAmortizationElection:
     return ActivityAssetAmortizationElection.model_validate({"regime": regime, "method": method, **facts})
@@ -187,7 +181,7 @@ def _charge(
     )
 
 
-def _linear(class_key: str, regime: DirectEstimationRegime = _NORMAL, **facts: object):
+def _linear(class_key: str, regime: DirectEstimationRegime = DirectEstimationRegime.NORMAL, **facts: object):
     return _election(AmortizationMethod.LINEAR, regime, authority_class_key=class_key, **facts)
 
 
@@ -199,7 +193,9 @@ def _small_enterprise(turnover: str, made_available: date = date(2025, 11, 15)) 
     )
 
 
-def _constant(class_key: str, coefficient: str | None = None, regime: DirectEstimationRegime = _NORMAL):
+def _constant(
+    class_key: str, coefficient: str | None = None, regime: DirectEstimationRegime = DirectEstimationRegime.NORMAL
+):
     facts: dict[str, object] = {"authority_class_key": class_key}
     if coefficient is not None:
         facts["linear_coefficient"] = Decimal(coefficient)

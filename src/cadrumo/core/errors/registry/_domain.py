@@ -1,24 +1,24 @@
 """Domain-layer :class:`~cadrumo.core.errors.error_codes.ErrorCode` registry aggregator.
 
-Combines the ordered domain shards into the tuple consumed by
-:mod:`cadrumo.core.errors.error_codes`.
+Combines the domain registrations, grouped by owning subpackage, into the tuple
+consumed by :mod:`cadrumo.core.errors.error_codes`.
 """
 
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-from ._domain_part1 import DECLARED_ERROR_CODES as _DOMAIN_PART1_CODES
-from ._domain_part2 import DECLARED_ERROR_CODES as _DOMAIN_PART2_CODES
-from ._domain_part3 import DECLARED_ERROR_CODES as _DOMAIN_PART3_CODES
-from ._domain_part4 import DECLARED_ERROR_CODES as _DOMAIN_PART4_CODES
+from ._domain_calculations import DECLARED_ERROR_CODES as _CALCULATIONS_CODES
+from ._domain_filing import DECLARED_ERROR_CODES as _FILING_CODES
+from ._domain_ledger import DECLARED_ERROR_CODES as _LEDGER_CODES
+from ._domain_profile import DECLARED_ERROR_CODES as _PROFILE_CODES
 
 if TYPE_CHECKING:
     from ..error_codes import ErrorCode
 
 DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
-    *_DOMAIN_PART1_CODES,
-    *_DOMAIN_PART2_CODES,
-    *_DOMAIN_PART3_CODES,
-    *_DOMAIN_PART4_CODES,
+    *_PROFILE_CODES,
+    *_LEDGER_CODES,
+    *_FILING_CODES,
+    *_CALCULATIONS_CODES,
 )

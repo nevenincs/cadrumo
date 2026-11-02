@@ -81,11 +81,21 @@ def _inject_binding(modelo: ModeloDefinition, replacement: BindingDefinition) ->
     return modelo.model_copy(update={"revisions": {**modelo.revisions, mutated.id: mutated}})
 
 
+_FamilyCase = tuple[
+    str, str, dict[str, object], BindingAggregationOp | None, dict[str, object], BindingAggregationOp | None
+]
+"""One family: label, source, well-formed selector and op, malformed selector and op.
+
+An op of ``None`` states that the family's resolver never reads an aggregation, so
+none is authored.
+"""
+
+
 def _build_binding(
     *,
     source: str,
     selector: dict[str, object],
-    op: BindingAggregationOp,
+    op: BindingAggregationOp | None,
     base: BindingDefinition | None = None,
 ) -> BindingDefinition:
     """Build a binding of ``source`` reusing the first M130 binding's id and grounding."""
@@ -104,7 +114,7 @@ def _build_binding(
             "id": base.id,
             "provider": {"kind": source, **selector},
             "value": value,
-            "aggregation": BindingAggregation(op=op),
+            "aggregation": None if op is None else BindingAggregation(op=op),
             "legal_refs": base.legal_refs,
             "source_refs": base.source_refs,
             "source_citations": base.source_citations,
@@ -124,9 +134,7 @@ _ROW_GROUPING_BY_SOURCE: dict[str, str | None] = {
 # Per-family build-validation cases. Each case carries a well-formed selector
 # (must pass the dispatch gate) and a malformed selector with a bad op/fact
 # pairing or a missing required key (must be rejected at registry build).
-_FAMILY_CASES: tuple[
-    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
-] = (
+_FAMILY_CASES: tuple[_FamilyCase, ...] = (
     (
         "invoice (collectible)",
         "collectible_invoice",
@@ -216,9 +224,7 @@ _FAMILY_CASES: tuple[
 
 # Families whose provider member states the invariant itself: the malformed
 # declaration is refused as the member is built, so it never reaches the gate.
-_CONSTRUCTION_REFUSED_CASES: tuple[
-    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
-] = (
+_CONSTRUCTION_REFUSED_CASES: tuple[_FamilyCase, ...] = (
     (
         "m303_regimen_simplificado_annual_summary",
         "m303_regimen_simplificado_annual_summary",
@@ -228,14 +234,14 @@ _CONSTRUCTION_REFUSED_CASES: tuple[
             "summary_casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
             "temporal": {"kind": "filed_current_period", "source_period": "4T"},
         },
-        BindingAggregationOp.COPY,
+        None,
         {
             "source_modelo": "303",
             "source_casilla_ids": ("51", "53", "52", "54", "55", "56", "57", "58"),
             "summary_casilla_id": "iva.anual.regimen-simplificado.cuota-resultante-no-agricola",
             "temporal": {"kind": "filed_current_period", "source_period": "3T"},
         },
-        BindingAggregationOp.COPY,
+        None,
     ),
 )
 
@@ -244,7 +250,7 @@ _FAMILY_IDS = tuple(case[0] for case in _FAMILY_CASES)
 
 @pytest.mark.parametrize("case", _FAMILY_CASES, ids=_FAMILY_IDS)
 def test_binding_family_build_gate_contract(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
+    case: _FamilyCase,
 ) -> None:
     """Each family accepts a good binding, constructs a bad one, and rejects it at build."""
     _label, source, well_formed_selector, well_formed_op, malformed_selector, malformed_op = case
@@ -266,9 +272,7 @@ def test_binding_family_build_gate_contract(
     assert malformed.id in message
 
 
-_TYPED_FACT_CASES: tuple[
-    tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp], ...
-] = (
+_TYPED_FACT_CASES: tuple[_FamilyCase, ...] = (
     (
         "ledger_renta_income_aggregation",
         "ledger_renta_income_aggregation",
@@ -300,7 +304,7 @@ _MEMBER_REFUSED_CASES = (*_CONSTRUCTION_REFUSED_CASES, *_TYPED_FACT_CASES)
 
 @pytest.mark.parametrize("case", _MEMBER_REFUSED_CASES, ids=tuple(case[0] for case in _MEMBER_REFUSED_CASES))
 def test_provider_member_refuses_a_malformed_declaration_at_construction(
-    case: tuple[str, str, dict[str, object], BindingAggregationOp, dict[str, object], BindingAggregationOp],
+    case: _FamilyCase,
 ) -> None:
     """A well-formed declaration passes the gate; the malformed one cannot be built."""
     _label, source, well_formed_selector, well_formed_op, malformed_selector, malformed_op = case

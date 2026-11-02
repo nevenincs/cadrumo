@@ -10,9 +10,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
-from typing import Any, cast
-from uuid import UUID, uuid5
-from xml.etree.ElementTree import Element, SubElement, tostring
+from typing import cast
 
 from .hashing import digest
 from .identity import DistributionIdentity
@@ -68,7 +66,6 @@ class Preparation:
     files: dict[str, str]
     modes: dict[str, int]
     controls: dict[str, bytes]
-    metadata: dict[str, bytes]
     identity: dict[str, object]
     seal: BundleSeal | None = None
 
@@ -99,7 +96,9 @@ def project(
     value = json.loads(identity_file.read_text(encoding="utf-8"))
     target = value["target"]
     managers = [image for image in application_images(manifest["layout"]) if image.target == "rust_manager"]
-    versioned = target.startswith("windows-") and bool(managers)
+    versioned = target.startswith("windows-")
+    if versioned and not managers:
+        raise ValueError("A Windows payload must carry its manager image; rebuild the package")
     definition = manifest["layout"].get("installation", {})
     wrapper = application_bundle(manifest["layout"]) if target.startswith("macos-") else None
     destination = _installation_destination(target, value, definition, managers, desktop, versioned, wrapper)
@@ -121,7 +120,6 @@ def project(
         )
     _linux_controls(target, desktop, value, control_root, controls)
     seal = _bundle_seal(wrapper, bundle, desktop, value, managers, manifest["files"], controls, modes)
-    metadata = _legacy_windows_metadata(target, desktop, versioned, value, managers, destination)
     _include_controls(controls, files, modes)
     helpers = _installation_helper_hashes()
     binding = {
@@ -132,7 +130,6 @@ def project(
         "helpers": helpers,
         "files": files,
         "modes": modes,
-        "metadata": {name: checksum(data) for name, data in metadata.items()},
         "layout": load_layout(),
         "seal": None if seal is None else seal.sealer.binding(),
     }
@@ -141,7 +138,7 @@ def project(
         "inputs": checksum(json.dumps(binding, sort_keys=True).encode("utf-8")),
         "payload_manifest": source["data/package-manifest.json"],
     }
-    return Preparation(destination, files, modes, controls, metadata, identity, seal)
+    return Preparation(destination, files, modes, controls, identity, seal)
 
 
 def _bundle_seal(
@@ -167,19 +164,6 @@ def _bundle_seal(
             bundle.sealer,
         )
     return None
-
-
-def _legacy_windows_metadata(
-    target: str,
-    desktop: str | None,
-    versioned: bool,
-    value: dict[str, Any],
-    managers: list[ApplicationImage],
-    destination: str,
-) -> dict[str, bytes]:
-    if target.startswith("windows-") and bool(desktop) and not versioned:
-        return windows_metadata(value, managers, destination, desktop, versioned)
-    return {}
 
 
 def _license_controls(
@@ -336,7 +320,7 @@ def _installation_destination(
     elif versioned:
         destination = f"{definition['versions']}/{value['version']}"
     else:
-        destination = "app"
+        raise ValueError(f"No installation layout is declared for target {target!r}")
     return destination
 
 
@@ -347,62 +331,3 @@ def _require_versioned_layout(definition: Mapping[str, object], managers: list[A
         raise ValueError("Versioned installation requires one root-level manager image")
     if not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version):
         raise ValueError("Versioned installation requires a canonical numeric release")
-
-
-def windows_metadata(
-    value: dict[str, Any], managers: list[ApplicationImage], destination: str, desktop: str | None, versioned: bool
-) -> dict[str, bytes]:
-    """Render the one canonical Windows desktop metadata description."""
-    metadata: dict[str, bytes] = {}
-    wix = Element("Wix", xmlns="http://wixtoolset.org/schemas/v4/wxs")
-    fragment = SubElement(wix, "Fragment")
-    if desktop is not None and desktop:
-        menu = SubElement(fragment, "StandardDirectory", Id="ProgramMenuFolder")
-        folder = SubElement(menu, "Directory", Id="CADRUMO_MENU", Name=value["name"])
-    else:
-        folder = SubElement(fragment, "DirectoryRef", Id="INSTALL_ROOT")
-    component = SubElement(
-        folder,
-        "Component",
-        Id="CADRUMO_MENU_COMPONENT",
-        Bitness="always64",
-        Guid=str(uuid5(UUID(value["upgrade_code"]), "start-menu")).upper(),
-    )
-    if desktop is not None and desktop:
-        shortcut = SubElement(
-            component,
-            "Shortcut",
-            Id="CADRUMO_LAUNCH",
-            Name=value["name"],
-            Target="[INSTALL_ROOT]" + destination.replace("/", "\\") + "\\" + desktop.replace("/", "\\"),
-            WorkingDirectory="INSTALL_ROOT",
-        )
-        SubElement(shortcut, "ShortcutProperty", Key="System.AppUserModel.ID", Value=value["application_id"])
-    SubElement(
-        component,
-        "RegistryValue",
-        Root="HKLM",
-        Key="Software\\" + value["application_id"],
-        Name="InstallLocation",
-        Type="string",
-        Value="[INSTALL_ROOT]",
-        KeyPath="yes",
-    )
-    if desktop is not None and desktop:
-        SubElement(component, "RemoveFolder", Id="CADRUMO_REMOVE_MENU", On="uninstall")
-    if versioned:
-        SubElement(
-            component,
-            "RegistryValue",
-            Root="HKLM",
-            Key="Software\\" + value["application_id"],
-            Name="EntryPoint",
-            Type="string",
-            Value="[INSTALL_ROOT]" + managers[0].package_path.replace("/", "\\"),
-        )
-    metadata["Desktop.wxs"] = tostring(wix, encoding="utf-8", xml_declaration=True)
-    patch = Element("CPackWiXPatch")
-    feature = SubElement(patch, "CPackWiXFragment", Id="#PRODUCTFEATURE")
-    SubElement(feature, "ComponentRef", Id="CADRUMO_MENU_COMPONENT")
-    metadata["DesktopPatch.xml"] = tostring(patch, encoding="utf-8", xml_declaration=True)
-    return metadata

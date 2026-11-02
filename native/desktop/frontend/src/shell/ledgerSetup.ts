@@ -741,12 +741,18 @@ export type InventoryOptionsResult = {
   }[];
 };
 /** What a ledger entry form offers. A code with no key is named by the window
- * with `Intl`; a code's list says what is known, not what is allowed. */
+ * with `Intl`; a code's list says what is known, not what is allowed. A
+ * `group` is the family a value is filed under, as the spending categories
+ * are. */
 export type LedgerEntryOptionsResult = {
   profile_id: string;
   families: {
     family: string;
-    options: { value: string; label_key: string | null }[];
+    options: {
+      value: string;
+      label_key: string | null;
+      group?: string | null;
+    }[];
   }[];
 };
 /** A document the person chose, now kept: what a purchase or a closing

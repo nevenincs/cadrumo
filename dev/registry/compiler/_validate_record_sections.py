@@ -22,7 +22,10 @@ from pathlib import Path
 
 from cadrumo.core.casilla_id import CasillaId
 from cadrumo.domain.calculations.registry.binding_selector_utils import selector_as_dict
-from cadrumo.domain.calculations.registry.bindings import validate_binding_selector_shape
+from cadrumo.domain.calculations.registry.bindings import (
+    validate_binding_selector_shape,
+    validate_iva_compensation_annual_partition_revision,
+)
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.ledger_renta_gastos_estimacion_directa_bindings import (
     ledger_renta_gastos_estimacion_directa_target_failures,
@@ -231,6 +234,7 @@ def validate_binding_section(
     failures.extend(
         f"{prefix}: {failure}" for failure in validate_m303_regimen_simplificado_annual_summary_revision(revision)
     )
+    failures.extend(f"{prefix}: {failure}" for failure in validate_iva_compensation_annual_partition_revision(revision))
     for target_failures in (
         ledger_renta_income_target_failures,
         ledger_renta_gastos_estimacion_directa_target_failures,

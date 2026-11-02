@@ -460,6 +460,20 @@ cli:
           T entregas triangulares, S servicios prestados, I servicios adquiridos,
           R transferencias de bienes en consigna, D devoluciones de bienes en consigna,
           C sustituciones del destinatario en consigna'
+        preview_help: 'Previsualiza un borrador de factura: las cifras, los avisos
+          y el veredicto que alcanzaría la operación de alta, sin guardar nada.'
+        preview_line_help: Objeto JSON repetible para una línea del borrador, con
+          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` e
+          `iva_amount` opcionales. Una cifra que omitas queda sin conocer. Úsalo en
+          lugar de --taxable-base.
+        preview_operation_date_role_help: Función guardada de la fecha de operación
+          de la factura que repite una corrección.
+        preview_printed_total_help: El total impreso en el documento, que se compara
+          con el total calculado.
+        preview_stored_grand_total_help: Total guardado de la factura que repite una
+          corrección, del que sale lo que queda por pagar.
+        preview_stored_invoice_id_help: Id de la factura guardada que repite una corrección;
+          con él, el veredicto cubre solo los datos indicados.
         recargo_help: Recargo de equivalencia repercutido sobre la cuota (LIVA art.
           161). Va incluido en el total de la factura, a diferencia de una retención.
         rectifies_help: Número de la factura que corrige esta rectificativa.
@@ -631,6 +645,10 @@ cli:
         list_help: Lista las reglas de clasificación almacenadas ordenadas por prioridad.
         priority_help: Prioridad numérica; un valor menor se evalúa primero (por defecto
           100).
+        trial_help: Prueba un patrón sin guardar con el motor de reglas e indica qué
+          movimientos de los indicados encuentra, sin guardar nada.
+        trial_transaction_id_help: Identificador repetible de un movimiento en el
+          que probar el patrón.
     live:
       app_help: Comandos de observación AEAT en vivo de solo lectura
       borrador:
@@ -647,8 +665,15 @@ cli:
           modelo 100)
         import_period_invalid: El código de periodo no es válido para ese ejercicio
           fiscal.
+        import_profile_tax_id_unusable: Tu perfil no tiene un NIF válido, así que
+          no se puede confirmar el titular del PDF; registra primero tu NIF. No se
+          importó nada.
         import_profile_unresolved: Las definiciones del modelo no declaran un único
           perfil de extracción de borrador para ese ejercicio y periodo.
+        import_tax_id_mismatch: El NIF impreso en el PDF no coincide con el de este
+          perfil; no se importó nada.
+        import_tax_id_unreadable: El PDF no lleva un NIF válido, así que no se puede
+          confirmar su titular; no se importó nada.
         latest_help: Mostrar el snapshot activo más reciente de un ejercicio fiscal
         list_help: Listar snapshots persistidos del borrador del modelo 100
         modelo_100_help: Comandos de snapshots del borrador del modelo 100
@@ -930,7 +955,7 @@ cli:
           conocidos para {code}@{revision} ({period}): {suggestion}.'
         unscoped_revision_warning: La lista de orígenes no está acotada por %{missing_filters};
           puede incluir ids de orígenes de una versión del modelo oficial que no coincide
-          con la declaración usada por `aeat app modelo work calculate`.
+          con la declaración que usa el cálculo.
         year_help: Ejercicio fiscal del modelo (p. ej. 2026)
       casilla:
         casilla_help: Id de casilla o número impreso de casilla que se debe describir
@@ -2138,7 +2163,7 @@ cli:
         guardadas. Vuelve a ejecutar el comando con --yes para confirmar.
       reset_yes_help: Confirmar el restablecimiento destructivo de la autenticación
       route_help: 'Vía de aprobación de Cl@ve Móvil: app_request (por defecto, funciona
-        sin navegador visible) o qr (abre un navegador visible). Requiere --provider
+        sin navegador visible) o `qr` (abre un navegador visible). Requiere --provider
         clave_movil.'
       status_help: Mostrar el estado de autenticación configurado
       status_summary_configured: La autenticación está configurada pero aún no hay
@@ -2320,7 +2345,7 @@ cli:
         help: Muestra la carpeta de Google Drive creada para el perfil activo
         organize_help: Organiza la carpeta del perfil dentro de Cadrumo
         view_help: Muestra la carpeta de Google Drive creada para el perfil activo.
-      help: Gestionar la integración OAuth de Google Desktop para Drive y Sheets
+      help: Gestionar la integración OAuth de escritorio de Google para Drive y Sheets
       login_help: Ejecutar el flujo de consentimiento OAuth
       logout_help: Limpiar el token de refresco y los metadatos
       probe_help: Comprueba el acceso a la carpeta de Google Drive del perfil
@@ -2740,9 +2765,9 @@ cli:
           usa `base` para la fila sin índice.
         section_help: Clave de la sección repetible del perfil.
       sandbox:
-        active_indicator_info: Estás operando dentro del sandbox %{label}, no en un
-          perfil real; todos los comandos se ejecutan contra este bucket aislado y
-          descartable.
+        active_indicator_info: Estás operando dentro del entorno de pruebas %{label},
+          no en un perfil real; todos los comandos se ejecutan contra este bucket
+          aislado y descartable.
       sessions:
         help: Enumera las sesiones actuales de este perfil en el entorno local.
       show:
@@ -3151,7 +3176,7 @@ cli:
       value_date_help: Fecha valor de la transacción (AAAA-MM-DD)
     allocate:
       business_pct_help: Proporción de uso profesional de 0 a 1 para filas MIXED/proporcionales;
-        no uses ledger allocate para una fila totalmente BUSINESS.
+        no uses `ledger allocate` para una fila totalmente BUSINESS.
       help: Registrar proporcionalidad profesional/personal para un movimiento de
         tus registros
       id_help: Id del movimiento a asignar
@@ -3612,6 +3637,16 @@ cli:
       read_evidence_help: Lee la factura adjunta de la transacción en local y aliméntala
         al proponente de división --llm.
       yes_help: Confirma la división de la transacción
+    staged_check_category_help: Categoría de gasto repetible que se contrasta con
+      una clasificación.
+    staged_check_draft_help: 'Objeto JSON repetible para un movimiento nuevo: `key`
+      y `fields`.'
+    staged_check_help: Responde al trabajo preparado del libro como lo tomarían las
+      escrituras, sin guardar nada.
+    staged_check_invalid: Cada fila y borrador preparados deben ser un objeto JSON
+      con la forma esperada.
+    staged_check_row_help: 'Objeto JSON repetible para un movimiento: `transaction_id`,
+      `cells` y, si procede, `evidence_staged` y `m210_staged`.'
     stash:
       help: Apartar un movimiento de tus registros en el perfil activo
       id_help: Id del movimiento a apartar
@@ -3728,7 +3763,7 @@ cli:
         certificate_secret_remove: Elimina el secreto del certificado almacenado.
         certificate_secret_set: Guarda el secreto del certificado en el almacenamiento
           seguro.
-        diagnostics_logs: Mostrar la ruta del log configurada y sus últimas líneas.
+        diagnostics_logs: Mostrar la ruta del registro configurada y sus últimas líneas.
         diagnostics_quarantine: Gestionar los elementos en cuarentena.
         diagnostics_repair: Ejecutar comprobaciones de salud y reparar el estado de
           la aplicación.
@@ -3771,7 +3806,7 @@ cli:
           reconstruir
         storage_view: Consulta el detalle de una ubicación de almacenamiento concreta
       root:
-        diagnostics_logs: Muestra la ruta del log y sus últimas líneas.
+        diagnostics_logs: Muestra la ruta del registro y sus últimas líneas.
         diagnostics_overview_verbose: Muestra el estado general con más detalle.
         diagnostics_repair_json: Devuelve en JSON el informe completo de salud local.
         diagnostics_version: Muestra la identidad del paquete instalado.

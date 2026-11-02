@@ -7,7 +7,7 @@ from uuid import UUID, uuid4
 
 from cadrumo.application.bucket_deletion_contracts import BucketDeletionFingerprint
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
-from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection, EnrollmentStage
+from cadrumo.application.user_profile.automation_enrollment import AutomationReceiptProjection
 
 from ..contracts.access_management import (
     ProfileRecoveryPrepare,
@@ -258,6 +258,6 @@ class FrontendCustodyClient(ProfileViewFrontend):
         reply = self._reply(
             self._connection.enrollment_inspect(request, deadline=deadline_after(timeout)), EnrollmentRecorded
         )
-        if reply.receipt.stage not in {EnrollmentStage.COMPLETE, EnrollmentStage.DECLINED}:
+        if not reply.receipt.stage.is_terminal:
             raise RefusalError(RefusalCode.INVALID_FRAME)
         return reply.receipt

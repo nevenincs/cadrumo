@@ -72,7 +72,7 @@ def _support_label(
     bindings: set[str],
     label: Callable[[str], str],
 ) -> Decimal | str | bool | None:
-    if cell.address.tab in (TabName.ENTRADAS, TabName.CALCULOS):
+    if cell.address.tab.holds_casilla_cells:
         return _calculation_label(cell, rows, readonly, printed_boxes, bindings, label)
     if cell.address.tab is TabName.TARIFFS:
         return _tariff_label(cell, bindings, label)
@@ -127,7 +127,7 @@ def human_rows[M: (SheetExportMetadata, SheetReviewMetadata, SheetTemplatePrevie
     rows = {
         (c.address.tab, c.address.row): casillas[c.casilla_id]
         for c in (*plan.value_cells, *plan.formula_cells)
-        if c.casilla_id in casillas and c.address.tab in (TabName.ENTRADAS, TabName.CALCULOS)
+        if c.casilla_id in casillas and c.address.tab.holds_casilla_cells
     }
     excluded_addresses = tuple(c.address for c in (*plan.value_cells, *plan.formula_cells) if c.casilla_id in excluded)
     if any(

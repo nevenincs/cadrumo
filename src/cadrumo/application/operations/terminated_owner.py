@@ -5,7 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from ...core.hex import Hex64Str
-from ...core.operations import OperationEffect, OperationLifecycle, OperationTerminalCondition
+from ...core.operations import OperationLifecycle, OperationTerminalCondition
 from .models import OperationId, OperationReconciliationOutcome, OperationTerminalReceipt
 from .persistence.events import OperationReconciliationEvent, OperationTerminalEvent
 from .persistence.journal import OperationJournal, OperationLeaseRepository
@@ -54,7 +54,7 @@ async def settle_terminated_operation(
     contract = registry.lookup_public_contract(snapshot.identity.definition_id)
     if contract.definition_contract_digest != snapshot.definition_contract_digest:
         raise ValueError("terminated operation definition contract changed")
-    effect = OperationEffect.NONE if snapshot.executor_entered_at is None else OperationEffect.UNKNOWN
+    effect = snapshot.interruption_effect
     if effect not in definition.capabilities.permitted_effects:
         raise ValueError("terminated operation effect is not declared")
     receipt = OperationTerminalReceipt(

@@ -72,10 +72,7 @@ def test_no_production_module_walks_out_of_the_package() -> None:
     therefore depth-aware — it compares hop count against how deep the
     file sits — rather than banning ``__file__`` arithmetic outright.
 
-    This is an eradication ratchet. It replaced a guard that policed
-    *unused* ``PROJECT_ROOT`` imports, which turned vacuous the moment the
-    constant was deleted; the property still worth defending is that the
-    concept never comes back.
+    The property this guards is that the concept never comes back.
     """
     offenders: list[str] = []
     for path in package_python_files(include_data=True):

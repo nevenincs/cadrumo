@@ -16,13 +16,14 @@ from datetime import date
 from decimal import Decimal
 from typing import Protocol
 
-from ...core.aggregation import BindingSourceKind
+from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.binding_provider_registration import registration_for
+from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import BindingId, RelationId
 from ...domain.calculations.registry.schema import ModeloRevision
@@ -84,6 +85,28 @@ def source_diagnostics_for[T](
             fact=fact(item),
         )
         for item in items
+    )
+
+
+def unresolved_binding_diagnostics(
+    *,
+    revision: ModeloRevision,
+    source_kind: str,
+    binding_ids: tuple[BindingId, ...],
+    resolver_id: str,
+    message: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="unresolved_binding",
+            source_kind=source_kind,
+            resolver_id=resolver_id,
+            binding_id=binding_id,
+            casilla_id=sole_bound_casilla(revision, binding_id),
+            message=message,
+        )
+        for binding_id in binding_ids
     )
 
 
@@ -159,6 +182,7 @@ class _SourceResolutionMergeState:
     casilla_owners: dict[CasillaId, str] = field(default_factory=dict)
     borrador_provenance: BorradorSourceProvenance | None = None
     m303_regimen_simplificado_annual_summary_handoff: M303RegimenSimplificadoAnnualSummaryHandoff | None = None
+    value_outcomes: dict[BindingId, BindingValueOutcome] = field(default_factory=dict)
 
     def absorb(self, resolution: CalculationSourceResolution) -> None:
         self._absorb_closed_record_rows(resolution)
@@ -229,6 +253,16 @@ class _SourceResolutionMergeState:
         self.m303_regimen_simplificado_annual_summary_handoff = handoff
 
     def _absorb_precedence_values(self, resolution: CalculationSourceResolution) -> None:
+        # An outcome speaks for the value it was stated beside: a later tier's
+        # value replaces the earlier outcome along with the earlier value.
+        for binding_id in (
+            *resolution.binding_values,
+            *resolution.enum_binding_values,
+            *resolution.date_binding_values,
+            *resolution.boolean_binding_values,
+        ):
+            self.value_outcomes.pop(binding_id, None)
+        self.value_outcomes.update(resolution.value_outcomes)
         self.binding_values.update(resolution.binding_values)
         self.enum_binding_values.update(resolution.enum_binding_values)
         self.date_binding_values.update(resolution.date_binding_values)
@@ -258,6 +292,7 @@ class _SourceResolutionMergeState:
         self.unresolved_relation_ids.difference_update(resolution.relation_values)
 
     def _absorb_binding_values(self, resolution: CalculationSourceResolution) -> None:
+        self.value_outcomes.update(resolution.value_outcomes)
         for binding_id, value in resolution.binding_values.items():
             _claim_binding(self.binding_owners, binding_id, resolution.resolver_id)
             self.binding_values[binding_id] = value
@@ -339,6 +374,7 @@ class _SourceResolutionMergeState:
             m303_regimen_simplificado_annual_summary_handoff=self.m303_regimen_simplificado_annual_summary_handoff,
             diagnostics=tuple(self.diagnostics),
             provenance=tuple(self.provenance),
+            value_outcomes=self.value_outcomes,
         )
 
 
@@ -531,4 +567,5 @@ __all__ = [
     "source_issue_diagnostics",
     "source_provenance_for",
     "storage_degradation_resolution",
+    "unresolved_binding_diagnostics",
 ]

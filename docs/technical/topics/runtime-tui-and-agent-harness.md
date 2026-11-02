@@ -42,18 +42,18 @@ The implementation is strongly explicit about profile/session binding, uncertain
 
 ## Detailed articles
 
-- [Installed runtime, profile host, and worker authority](../articles/174-installed-runtime-profile-host-and-worker-authority.md) — `STAGE-2-174`
-- [Profile-worker request staging](../articles/175-profile-worker-request-staging.md) — `STAGE-2-175`
-- [Textual terminal workbench and Declarations calendar](../articles/176-textual-terminal-workbench-and-declarations-calendar.md) — `STAGE-2-176`
-- [Home, Declarations portfolio, and Ledger TUI flows](../articles/177-home-declarations-portfolio-and-ledger-tui-flows.md) — `STAGE-2-177`
-- [Ledger operations and Modelo lifecycle TUI doors](../articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md) — `STAGE-2-178`
-- [Modelo workbench, casilla editing, and lifecycle screens](../articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md) — `STAGE-2-179`
-- [Modelo workbench issue review, progress and navigation](../articles/180-modelo-workbench-issue-review-progress-and-navigation.md) — `STAGE-2-180`
-- [Modelo workbench editing, source map, and operation flow](../articles/181-modelo-workbench-editing-source-map-and-operation-flow.md) — `STAGE-2-181`
-- [Supervised operation modal and profile manager](../articles/182-supervised-operation-modal-and-profile-manager.md) — `STAGE-2-182`
-- [Runtime TUI access, workbench and secret-entry flows](../articles/183-runtime-tui-access-workbench-and-secret-entry-flows.md) — `STAGE-2-183`
-- [Profile registration, recovery and runtime login](../articles/184-profile-registration-recovery-and-runtime-login.md) — `STAGE-2-184`
-- [Python typing package marker](../articles/185-python-typing-package-marker.md) — `STAGE-2-185`
+- [Installed runtime, profile host, and worker authority](../articles/174-installed-runtime-profile-host-and-worker-authority.md)
+- [Profile-worker request staging](../articles/175-profile-worker-request-staging.md)
+- [Textual terminal workbench and Declarations calendar](../articles/176-textual-terminal-workbench-and-declarations-calendar.md)
+- [Home, Declarations portfolio, and Ledger TUI flows](../articles/177-home-declarations-portfolio-and-ledger-tui-flows.md)
+- [Ledger operations and Modelo lifecycle TUI doors](../articles/178-ledger-operations-and-modelo-lifecycle-tui-doors.md)
+- [Modelo workbench, casilla editing, and lifecycle screens](../articles/179-modelo-workbench-casilla-editing-and-lifecycle-screens.md)
+- [Modelo workbench issue review, progress and navigation](../articles/180-modelo-workbench-issue-review-progress-and-navigation.md)
+- [Modelo workbench editing, source map, and operation flow](../articles/181-modelo-workbench-editing-source-map-and-operation-flow.md)
+- [Supervised operation modal and profile manager](../articles/182-supervised-operation-modal-and-profile-manager.md)
+- [Runtime TUI access, workbench and secret-entry flows](../articles/183-runtime-tui-access-workbench-and-secret-entry-flows.md)
+- [Profile registration, recovery and runtime login](../articles/184-profile-registration-recovery-and-runtime-login.md)
+- [Python typing package marker](../articles/185-python-typing-package-marker.md)
 
 
 ```{toctree}

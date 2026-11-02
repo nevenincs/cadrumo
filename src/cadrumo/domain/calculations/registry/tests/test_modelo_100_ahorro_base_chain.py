@@ -92,6 +92,15 @@ _RELATION_VALUES_2024: dict[str, Decimal] = {
 }
 
 
+def _zero_relation_output(op: BindingAggregationOp) -> Decimal | tuple[Decimal, ...] | tuple[tuple[Decimal, ...], ...]:
+    """Return a zero external output shaped for ``op``'s relation fold."""
+    if op is BindingAggregationOp.COPY:
+        return Decimal("0")
+    if op is BindingAggregationOp.PAGOS_FRACCIONADOS_INGRESADOS:
+        return ((Decimal("0"), Decimal("0")),)
+    return (Decimal("0"),)
+
+
 _CAPITAL_MOBILIARIO_INTERESES_CASILLA: CasillaId = validated_casilla_id(
     "0027", surface="test_modelo_100_ahorro_base_chain.casilla"
 )
@@ -285,9 +294,7 @@ def test_reviewed_edition_0029_dividends_20000_populates_0460(
     relation_values = resolve_relation_values(
         snapshot.revision,
         {
-            binding.id: (
-                Decimal("0") if binding_aggregation_op(binding) == BindingAggregationOp.COPY else (Decimal("0"),)
-            )
+            binding.id: _zero_relation_output(binding_aggregation_op(binding))
             for binding, _ in relation_prefill_bindings_for_period(snapshot.revision, period="0A")
         },
         period="0A",

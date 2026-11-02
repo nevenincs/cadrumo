@@ -256,8 +256,9 @@ msgstr ""
 "metaadataiban soha nem jelennek meg; azok csak azonosítókat, kivonatokat,"
 " kódokat és az aláíró nyilvános kulcsot tartalmazzák. Harmadik felek, "
 "például a visszatartással (retención) érintett kifizetések "
-"kedvezményezettjei (perceptores), csak kulcsolt kivonatként jelennek meg."
-" A benyújtási fájl és a bizonylataid nincsenek beágyazva."
+"kedvezményezettjei (<span lang=\"es\">perceptores</span>), csak kulcsolt "
+"kivonatként jelennek meg. A benyújtási fájl és a bizonylataid nincsenek "
+"beágyazva."
 
 #: ../../how-to/calculation-summary.md:96
 msgid "What the signature means"

@@ -280,7 +280,7 @@ adapters:
       justificante_column_missing: La respuesta de declaraciones de AEAT no contiene
         la columna de justificante; la estructura de la tabla puede haber cambiado.
       landing_off_policy: Se rechazó la lectura de la AEAT porque la página en la
-        que aterrizó está fuera de los hosts permitidos de esta superficie o nombra
+        que aterrizó está fuera de los dominios permitidos de esta superficie o nombra
         una acción de escritura.
       landing_off_read_pages: Se rechazó la lectura de la AEAT porque aterrizó en
         una página que este lector no consulta; este lector nunca llega a una página

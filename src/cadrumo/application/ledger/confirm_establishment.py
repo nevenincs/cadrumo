@@ -2,11 +2,11 @@
 
 The ladder, its four rungs, the identification and establishment split, the
 country vocabulary, the alpha-3 correspondence and the Spanish postal derivation
-were each built and each gated. None of them was called from a live path. This
-module is the call: it takes the document an operator is confirming and the
-direction they settled it under, resolves BOTH parties' territories through the
-authorities that own them, and hands the answers to the criteria assembly in the
-one channel that carries who established what.
+are reached from here. This module is the call: it takes the document an
+operator is confirming and the direction they settled it under, resolves BOTH
+parties' territories through the authorities that own them, and hands the
+answers to the criteria assembly in the one channel that carries who
+established what.
 
 **Two parties, two authorities, and they are not interchangeable.** The filer's
 own territory is a profile fact -- system-authoritative, declared once, and
@@ -33,14 +33,14 @@ counterparties inside a territory their operations are not subject to. What an
 exhausted ladder produces instead is a review item naming the counterparty, so
 the question reaches a person.
 
-**The review items are surfaced, not yet refused, and that is a stated
-interim.** The fourth amendment's design is one question per new counterparty
-whose paper is non-decisive, deduped by an operator answer persisted at
-counterparty level. The persisting verb has no operator-facing surface yet, so
-refusing here would make every domestic invoice permanently unconfirmable rather
-than asking once -- a refusal nobody can answer is not a review gate. The items
-are therefore carried onto the confirmation result, where the review surface
-reads them, and the refusal follows the answer channel rather than preceding it.
+**The review items are surfaced, not refused.** The design asks one question per
+new counterparty whose paper is non-decisive, deduped by an operator answer
+persisted at counterparty level. The persisting verb has no operator-facing
+surface, so refusing here would make every domestic invoice permanently
+unconfirmable rather than asking once -- a refusal nobody can answer is not a
+review gate. The items are therefore carried onto the confirmation result, where
+the review surface reads them, and the refusal follows the answer channel rather
+than preceding it.
 
 See Also:
     :func:`~application.ledger.establishment_ladder.resolve_draft_counterparty_establishment`
@@ -348,10 +348,7 @@ def resolve_confirmed_establishment(
     """Resolve both parties' territories for one confirm, and classify the operation.
 
     The confirm path's single call into the establishment and classification
-    apparatus. Everything it reaches -- the ladder, the profile authority, the
-    declared-facts channel, the criteria assembly and the rule table behind it
-    -- had no production caller before this function, so this is the whole of
-    what makes them reachable.
+    apparatus.
 
     Args:
         bucket_id: Active profile bucket, for the ladder's confirmed-fact rung.
@@ -378,7 +375,7 @@ def resolve_confirmed_establishment(
         supply_nature: The operator's own statement of whether the supply is
             goods or services, when they have made one. It is demanded only on
             the branches where the law forks on it -- cross-border and reverse
-            charge -- and the ADR sanctions exactly two sources for the axis: a
+            charge -- and only two sources are admitted for the axis: a
             printed statutory citation, which decides by law, and this
             assertion. It enters stamped as an OPERATOR assertion so the
             classifier's inputs stay facts about who established them; a
@@ -449,10 +446,8 @@ def resolve_confirmed_establishment(
         # it, and the sparing is unreachable from the other field. The resolved
         # field is populated only where the vocabulary PLACED the token, so it
         # is empty for exactly the codes this exemption exists for: reading it
-        # handed the classifier `None` for `TH` and `THA` alike, which is the
-        # same answer a document with no address block gives, and the guard
-        # refused every legitimate Thai export while its own tests -- which
-        # supply the status directly -- stayed green. The record token also
+        # would give the classifier `None` for `TH` and `THA` alike, the same
+        # answer a document with no address block gives. The record token also
         # carries the alpha-3 spelling Facturae states, which the printed-value
         # status axis declines to judge at all.
         counterparty_country_status=record_country_code_status(side.stated_country_token, operation=operation),
@@ -497,6 +492,6 @@ def _confirmed_declared_facts(
         # The mention the reader already recovers, handed to the citation axis.
         # Both readers carry it -- the structured path reads it exactly from the
         # record, the model path transcribes it -- so wiring it here reaches
-        # every lane rather than the one it was written for.
+        # every lane.
         printed_citation=draft.regime_legend,
     )
