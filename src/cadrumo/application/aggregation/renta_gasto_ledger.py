@@ -20,9 +20,8 @@ Only ACTIVE, EUR-denominated, OUTGOING transactions whose explicit
 ``business_classification`` is BUSINESS or MIXED are eligible. The deductible
 amount is the IVA-exclusive base imponible (``taxable_base``), plus the
 non-recoverable share of ``iva_amount`` when the activity's IVA-deduction ratio
-(:func:`~.renta_ledger.resolve_iva_deduction_ratio` -- the SAME resolver the
-annual counterpart uses, for the SAME ejercicio, so the two filings cannot
-diverge) is less than full: IVA soportado a taxpayer cannot recover through
+(:func:`~.renta_ledger.resolve_iva_deduction_ratio`, the provisional percentage
+a quarter runs on; the annual return closes on the definitive one) is less than full: IVA soportado a taxpayer cannot recover through
 The indirect-tax input is PGC NRV 12.ª acquisition cost, same as the annual side (LIRPF arts.
 28-30 base-imponible deductibility governs the pago fraccionado's gasto
 determination identically to the annual declaration). A declarable expense
@@ -43,7 +42,7 @@ pipeline refuses it: the payment is computed on the same rendimiento neto
 This module does NOT reuse the annual pipeline's invoice-evidence
 reconciliation or its annual window, which are constraint-shape-divergent from
 the quarterly cumulative gasto sum. It shares that module's category-rule
-construction, its single IVA-deduction-ratio resolver
+construction, its provisional IVA-deduction-ratio resolver
 (:func:`~.renta_ledger.resolve_iva_deduction_ratio`) and its residence lookup.
 """
 
@@ -254,9 +253,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
     """Load the transaction catalogue and aggregate a cumulative expense window.
 
     Derives the activity's IVA-deduction ratio through
-    :func:`~.renta_ledger.resolve_iva_deduction_ratio` -- the SAME resolver the
-    The annual counterpart uses, for the SAME ejercicio (``period.filing_year``),
-    so the two filings cannot diverge on it. ``profile_record`` (a
+    :func:`~.renta_ledger.resolve_iva_deduction_ratio`, for the ejercicio
+    (``period.filing_year``). ``profile_record`` (a
     :class:`UserProfileRecord`) and ``prorrata_register_repository`` supply the
     profile and canonical register directly. ``usage_ratios`` carries the
     effective per-category ratios (the same mapping the annual pipeline is

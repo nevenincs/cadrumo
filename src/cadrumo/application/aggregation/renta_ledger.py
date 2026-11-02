@@ -711,7 +711,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     :func:`aggregate_renta_ledger_expenses` (defaulting to the empty
     registry-provisioned layer, :func:`resolve_region_category_profiles`).
 
-    Also derives the activity's IVA-deduction ratio (:func:`resolve_iva_deduction_ratio`)
+    Also derives the activity's IVA-deduction ratio (:func:`resolve_annual_iva_deduction`)
     from the bucket's ``iva.regime`` profile fact and its
     :class:`~domain.prorrata_register.register.ProrrataRegister`, so the non-recoverable
     share of input IVA joins the IRPF-deductible cost basis (PGC NRV 12.ª) for

@@ -17,6 +17,7 @@ ledgers really would diverge, and silently.
 
 from __future__ import annotations
 
+from datetime import date
 from decimal import Decimal
 
 import pytest
@@ -34,24 +35,29 @@ from ....domain.prorrata_register.register import (
     ProrrataRegisterEntry,
     resolve_provisional_percentage,
 )
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ...actividad_asset.history import ActivityAssetHistory
 from ..iva_ledger import sector_scoped_apportionment
+from .ledger_source_mesh_support import resolve_m100
+from .ledger_transaction_support import iva_transaction
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 _EJERCICIO = 2026
 _PERCENTAGE = Decimal("64")
+_DECLARED = 2025
 
 
 def _prior_m303_snapshot_ref():
     return published_snapshot("303", filing_year=2025, period="4T").snapshot_ref
 
 
-def _register(regime: ProrrataRegisterRegime) -> ProrrataRegister:
+def _register(regime: ProrrataRegisterRegime, *, ejercicio: int = _EJERCICIO) -> ProrrataRegister:
     """A real single-entry register carrying a resolvable provisional percentage."""
     return ProrrataRegister(
         entries=(
             ProrrataRegisterEntry(
-                ejercicio=_EJERCICIO,
+                ejercicio=ejercicio,
                 regime=regime,
                 especial_transition=None,
                 provisional_percentage=_PERCENTAGE,
@@ -154,3 +160,31 @@ def test_an_absent_entry_yields_no_apportionment() -> None:
             )
             is None
         )
+
+
+def test_a_year_without_its_definitive_prorrata_holds_the_annual_return_through_the_source_mesh() -> None:
+    """The provisional 64 % does not stand in: the row is held and names itself, and its figure stays out."""
+    row = iva_transaction(
+        "prorrata-row",
+        direction=TransactionDirection.OUTGOING,
+        amount=Decimal("1210.00"),
+        taxable_base=Decimal("1000.00"),
+        iva_amount=Decimal("210.00"),
+        booked_date=date(_DECLARED, 2, 10),
+    ).model_copy(
+        update={
+            "business_classification": BusinessClassification.BUSINESS,
+            "category_id": "material_oficina",
+        }
+    )
+
+    resolution = resolve_m100(
+        ActivityAssetHistory(),
+        rows=(row,),
+        year=_DECLARED,
+        prorrata_register=_register(ProrrataRegisterRegime.from_registry("general"), ejercicio=_DECLARED),
+    )
+
+    held_back = [item for item in resolution.diagnostics if item.reason == "source_domain_not_ready"]
+    assert [item.source_ref for item in held_back] == [f"transaction:{row.transaction_id}"]
+    assert row.transaction_id not in resolution.source_transaction_ids
