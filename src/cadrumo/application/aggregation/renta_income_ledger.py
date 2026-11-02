@@ -342,6 +342,45 @@ class RentaIncomeLedgerAggregation(
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
     unadmitted_activity_income: UnadmittedActivityIncome | None = None
     accrued_unpaid: tuple[AccruedUnpaidIncome, ...] = ()
+    accrued_without_eur_value: tuple[str, ...] = ()
+    """The numbers of the issued invoices that accrue unsettled with no EUR value to count."""
+
+
+def _accrued_without_eur_value(
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
+    criteria: ImputationCriteria,
+) -> tuple[str, ...]:
+    """Name the unrated foreign invoices accruing in the window that their active receipts do not settle.
+
+    Their accrued income has no EUR figure, and a box left silent would read as complete.
+    """
+    if criteria.usable(window_end.year) is not ActivityImputationCriterion.DEVENGO:
+        return ()
+    found: list[str] = []
+    for invoice in invoices.values():
+        accrual = invoice_accrual_date(invoice)
+        if (
+            invoice.kind is not InvoiceKind.ISSUED
+            or invoice.bucket_id != bucket_id
+            or invoice.grand_total_eur is not None
+            or accrual is None
+            or not window_start <= accrual <= window_end
+        ):
+            continue
+        receipts = [
+            row
+            for row in (transactions.get(row_id) for row_id in invoice.linked_transaction_ids)
+            if row is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE
+        ]
+        comparison = renta_income_evidence.settlement_comparison(invoice, receipts)
+        if not receipts or comparison is None or not comparison.settled:
+            found.append(invoice.invoice_number)
+    return tuple(found)
 
 
 def _accrued_unpaid_income(
@@ -365,10 +404,11 @@ def _accrued_unpaid_income(
     found: list[AccruedUnpaidIncome] = []
     for invoice in invoices.values():
         accrual = invoice_accrual_date(invoice)
+        base_total = invoice.base_total_eur
         if (
             invoice.kind is not InvoiceKind.ISSUED
             or invoice.bucket_id != bucket_id
-            or invoice.currency != "EUR"
+            or base_total is None
             or accrual is None
             or not window_start <= accrual <= window_end
         ):
@@ -377,9 +417,9 @@ def _accrued_unpaid_income(
         shares = [renta_income_evidence.part_payment_share(invoice, receipt) for receipt in receipts]
         if None in shares:
             continue
-        retencion = invoice.retention_amount or Decimal("0")
-        base_left = invoice.base_total - sum(
-            (round_to_cents(invoice.base_total * share) for share in shares if share is not None), Decimal("0")
+        retencion = invoice.retention_amount_eur or Decimal("0")
+        base_left = base_total - sum(
+            (round_to_cents(base_total * share) for share in shares if share is not None), Decimal("0")
         )
         retencion_left = retencion - sum(
             (round_to_cents(retencion * share) for share in shares if share is not None), Decimal("0")
@@ -502,7 +542,11 @@ def rectification_diagnostics(
         if filed_on is None or cash <= filed_on or year not in {accrual.year, cash.year}:
             continue
         share = renta_income_evidence.part_payment_share(invoice, transaction)
-        amount = invoice.retention_amount if share is None else round_to_cents(invoice.retention_amount * share)
+        stated_eur = invoice.retention_amount_eur
+        if stated_eur is None:
+            what = f"a retencion of {invoice.retention_amount} {invoice.currency}, with no EUR value,"
+        else:
+            what = f"{stated_eur if share is None else round_to_cents(stated_eur * share)} EUR of retencion"
         findings.append(
             CalculationSourceDiagnostic(
                 reason="source_issue",
@@ -510,7 +554,7 @@ def rectification_diagnostics(
                 resolver_id=resolver_id,
                 source_ref=f"invoice:{invoice.invoice_id}",
                 message=(
-                    f"Invoice {invoice.invoice_number}: {amount} EUR of retencion was paid on {cash}, after the "
+                    f"Invoice {invoice.invoice_number}: {what} was paid on {cash}, after the "
                     f"return of {accrual.year} was filed on {filed_on}. Claim it by an autoliquidacion rectificativa "
                     f"of {accrual.year} (TEAC 00/03187/2011; LGT art. 120.3); it is never credited in {cash.year}."
                 ),
@@ -694,6 +738,16 @@ def aggregate_renta_income_ledger(
             target_casilla_id=target_casilla_id,
             criteria=criteria,
         ),
+        accrued_without_eur_value=()
+        if criteria is None
+        else _accrued_without_eur_value(
+            transactions,
+            resolved_invoices,
+            bucket_id=bucket_id,
+            window_start=window.start,
+            window_end=window.end,
+            criteria=criteria,
+        ),
     )
 
 
@@ -848,6 +902,16 @@ def aggregate_renta_m100_income_ledger(
             window_start=window_start,
             window_end=window_end,
             target_casilla_id=target_casilla_id,
+            criteria=criteria,
+        ),
+        accrued_without_eur_value=()
+        if criteria is None
+        else _accrued_without_eur_value(
+            transactions,
+            resolved_invoices,
+            bucket_id=bucket_id,
+            window_start=window_start,
+            window_end=window_end,
             criteria=criteria,
         ),
     )

@@ -31,7 +31,12 @@ from ...domain.transactions.retencion_facts import (
     maximum_supported_activity_retencion_rate,
     retencion_effective_date,
 )
-from .currency_predicates import effective_eur_amount, is_non_eur_without_conversion
+from .currency_predicates import (
+    effective_eur_amount,
+    effective_eur_iva_amount,
+    effective_eur_taxable_base,
+    is_non_eur_without_conversion,
+)
 
 
 class SalesInvoiceEvidenceRefusal(StrEnum):
@@ -117,17 +122,38 @@ def settlement_comparison(invoice: Invoice, receipts: Sequence[Transaction]) -> 
     )
 
 
+def taxable_base_comparison(invoice: Invoice, rows: Sequence[Transaction]) -> SettlementComparison | None:
+    """Put the bases ``rows`` state and the base of ``invoice`` in one currency, by the settlement rule.
+
+    Bases stated in the invoice's own currency compare as stated. Any other row compares
+    in EUR, and a side with no EUR value leaves nothing to compare.
+    """
+    if all(row.raw.currency == invoice.currency for row in rows):
+        return SettlementComparison(
+            cash=sum((row.taxable_base or Decimal("0") for row in rows), Decimal("0")),
+            owed=invoice.base_total,
+        )
+    base_eur = invoice.base_total_eur
+    if base_eur is None or any(is_non_eur_without_conversion(row) for row in rows):
+        return None
+    return SettlementComparison(
+        cash=round_to_cents(sum((effective_eur_taxable_base(row) or Decimal("0") for row in rows), Decimal("0"))),
+        owed=base_eur,
+    )
+
+
 def part_payment_share(invoice: Invoice, transaction: Transaction) -> Decimal | None:
     """Return the share of ``invoice`` this receipt settles, or ``None`` when it is no part payment.
 
     The share is cash over what the invoice leaves to be paid, base + IVA - retención,
-    both in EUR, so a foreign receipt counts for its EUR value. A receipt settling the
-    whole invoice alone, or exceeding it, is no part payment, and a foreign-currency
-    invoice, a receipt with no EUR value or ungrounded figures cannot be shared out.
+    read through :func:`settlement_comparison`, and it applies to the invoice's EUR
+    figures. A receipt settling the whole invoice alone, or exceeding it, is no part
+    payment, and an invoice with no EUR value, a receipt that cannot be compared or
+    ungrounded figures cannot be shared out.
     """
     comparison = settlement_comparison(invoice, (transaction,))
     if (
-        invoice.currency != "EUR"
+        invoice.grand_total_eur is None
         or comparison is None
         or transaction.transaction_id not in invoice.linked_transaction_ids
         or comparison.owed <= Decimal("0")
@@ -152,15 +178,12 @@ def sales_invoice_evidence_payload(
     corrected invoice is reflected on the next aggregation and no stale figure
     can outlive it.
 
-    One guard differs from the expense side, and the difference is the point. An
-    expense pays the whole contraprestación, so that side asserts the cash
-    equals ``grand_total``. A sales invoice subject to retención is paid NET --
-    the payer withholds and remits the retención on the taxpayer's account -- so
-    the bank credit is ``grand_total - retention_amount``. Asserting equality
-    against ``grand_total`` here would refuse precisely the net-paid
-    professional invoices this evidence path exists to ground; asserting it
-    against the cash without the retención term would accept an invoice that
-    does not describe the payment.
+    A sales invoice subject to retención is paid NET -- the payer withholds and
+    remits the retención on the taxpayer's account -- so the bank credit is
+    ``grand_total - retention_amount``. Asserting equality against ``grand_total``
+    here would refuse precisely the net-paid professional invoices this evidence
+    path exists to ground; asserting it against the cash without the retención
+    term would accept an invoice that does not describe the payment.
 
     The cash and the invoice are compared through :func:`settlement_comparison`, and
     the figures returned are always EUR, whatever currency the invoice is stated in.
@@ -181,13 +204,15 @@ def sales_invoice_evidence_payload(
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNSUPPORTED_KIND
     if transaction_id not in invoice.linked_transaction_ids:
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
+    base_eur = invoice.base_total_eur
+    iva_eur = invoice.iva_total_eur
     share = part_payment_share(invoice, transaction) if allocate_part_payments else None
-    if share is not None:
+    if share is not None and base_eur is not None and iva_eur is not None:
         return (
             _SalesInvoiceEvidencePayload(
-                taxable_base=round_to_cents(invoice.base_total * share),
-                iva_amount=round_to_cents(invoice.iva_total * share),
-                retencion_amount=round_to_cents((invoice.retention_amount or Decimal("0")) * share),
+                taxable_base=round_to_cents(base_eur * share),
+                iva_amount=round_to_cents(iva_eur * share),
+                retencion_amount=round_to_cents((invoice.retention_amount_eur or Decimal("0")) * share),
                 allocated_to_part_payment=True,
             ),
             None,
@@ -199,8 +224,6 @@ def sales_invoice_evidence_payload(
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.NO_EUR_VALUE
     if not comparison.settled:
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.AMOUNT_MISMATCH
-    base_eur = invoice.base_total_eur
-    iva_eur = invoice.iva_total_eur
     if base_eur is None or iva_eur is None:
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.NO_EUR_VALUE
     # Linkage is established by this point; coherence is a separate question and
@@ -228,7 +251,7 @@ class _WithheldInference(NamedTuple):
 
 
 def _determinable_cuota(transaction: Transaction) -> Decimal | None:
-    """Return the row's IVA cuota when it can be known, else ``None``.
+    """Return the row's IVA cuota in EUR when it can be known, else ``None``.
 
     A recorded ``iva_amount`` is the cuota. Failing that, the declared IVA
     category can still determine it: for a category whose cuota is zero by law
@@ -242,7 +265,7 @@ def _determinable_cuota(transaction: Transaction) -> Decimal | None:
     receipts, so the taxpayer is always the issuer by construction.
     """
     if transaction.iva_amount is not None:
-        return transaction.iva_amount
+        return effective_eur_iva_amount(transaction)
     category = transaction.iva_category
     if category is not None and category_cuota_is_zero_by_law(category, InvoiceKind.ISSUED):
         return Decimal("0")
@@ -266,6 +289,11 @@ def income_withheld_amount(
     exists on the transaction gross invariant too, but only for rows carrying
     both a base and a cuota; zero-cuota rows admitted here never meet it, so the
     inference applies the bound uniformly.
+
+    Every figure is the row's EUR value, so a converted foreign receipt infers EUR and
+    an unconverted one infers nothing. The shortfall is rounded to cents because a
+    converted ``value_in_eur`` is rounded while the converted base and cuota are not,
+    and that gap is no retención.
     """
     if not has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NOT_APPLICABLE)
@@ -278,7 +306,10 @@ def income_withheld_amount(
             evidence.retencion_amount,
             LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
         )
-    if transaction.taxable_base is None:
+    if is_non_eur_without_conversion(transaction):
+        return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NO_SUBSTRATE)
+    base = effective_eur_taxable_base(transaction)
+    if base is None:
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NO_SUBSTRATE)
     cuota = _determinable_cuota(transaction)
     if cuota is None:
@@ -288,13 +319,11 @@ def income_withheld_amount(
         if transaction.iva_amount is not None
         else LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA
     )
-    invoice_gross = transaction.taxable_base + cuota
-    cash_received = abs(transaction.raw.amount)
-    if invoice_gross <= cash_received:
+    inferred = round_to_cents(base + cuota - abs(effective_eur_amount(transaction)))
+    if inferred <= Decimal("0"):
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NONE_WITHHELD)
-    inferred = invoice_gross - cash_received
     maximum_supported = round_to_cents(
-        transaction.taxable_base
+        base
         * maximum_supported_activity_retencion_rate(
             effective_date=retencion_effective_date(
                 value_date=transaction.raw.value_date,
@@ -302,6 +331,6 @@ def income_withheld_amount(
             ),
         )
     )
-    if round_to_cents(inferred) > maximum_supported:
+    if inferred > maximum_supported:
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.REFUSED_ABOVE_SUPPORTED_RATE)
     return _WithheldInference(inferred, derivation)

@@ -104,6 +104,7 @@ from .modelo_bindings_actividad_assets import (
 from .renta_imputation import (
     ImputationCriteria,
     ImputationFilingHistory,
+    ImputationUnresolved,
     accruing_invoices,
     declared_imputation_criteria,
     imputation_blocking_diagnostics,
@@ -423,7 +424,14 @@ class LedgerRentaIncomeAggregationSourceResolver:
                             end=context.period.end_date,
                         )
                     ),
-                    unresolved_details=tuple(issue.detail for issue in unresolved_rows),
+                    unresolved_details=(
+                        *(issue.detail for issue in unresolved_rows),
+                        *(
+                            f"{ImputationUnresolved.EUR_VALUE_UNKNOWN.value}: issued invoice {number} accrues with no "
+                            "EUR value; stamp its rate"
+                            for number in aggregation.accrued_without_eur_value
+                        ),
+                    ),
                 )
             )
             + tuple(

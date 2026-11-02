@@ -33,11 +33,12 @@ from ...domain.calculations.registry.ledger_renta_gastos_pago_fraccionado_bindin
     unsupported_ledger_renta_gastos_pago_fraccionado_observations,
 )
 from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.invoices.models import Invoice
 from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
 from ...domain.transactions.enums import TransactionLifecycleState
-from ...domain.transactions.models import TransactionCatalogue
+from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..actividad_asset.history import ActivityAssetHistory
 from ..actividad_asset.ports import ActivityAssetHistoryRepository
@@ -97,6 +98,7 @@ from .renta_imputation import (
     imputation_blocking_diagnostics,
     ledger_sum_outcome,
 )
+from .renta_income_evidence import taxable_base_comparison
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .renta_ledger_models import RentaLedgerAggregationIssueReason, RentaLedgerExpenseAggregation
 from .source_mesh import (
@@ -492,6 +494,24 @@ def _ledger_expense_value_outcomes(
     }
 
 
+def _accrual_coverage_gap(invoice: Invoice, rows: Sequence[Transaction]) -> str | None:
+    """Say what of an accruing received invoice its ledger rows leave unclassified, or ``None``."""
+    if not rows:
+        return f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
+    comparison = taxable_base_comparison(invoice, rows)
+    if comparison is None:
+        return (
+            f"accrual_part_paid: received invoice {invoice.invoice_number} and its ledger rows have no "
+            "common currency with a EUR value, so what they cover is not known"
+        )
+    if comparison.cash < comparison.owed:
+        return (
+            f"accrual_part_paid: received invoice {invoice.invoice_number} accrues {comparison.owed} "
+            f"but its ledger rows state {comparison.cash}; add a row for the rest"
+        )
+    return None
+
+
 def _expense_imputation_diagnostics(
     context: CalculationSourceContext,
     *,
@@ -521,22 +541,18 @@ def _expense_imputation_diagnostics(
             start=date(period.filing_year, 1, 1),
             end=period.end_date,
         )
-    covered: dict[str, Decimal] = {}
+    rows_by_invoice: dict[str, list[Transaction]] = {}
     for row in transactions.values():
         if row.purchase_invoice_evidence_id is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE:
-            covered[row.purchase_invoice_evidence_id] = covered.get(row.purchase_invoice_evidence_id, Decimal("0")) + (
-                row.taxable_base or Decimal("0")
-            )
-    unpaid = tuple(
-        (
-            f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
-            if invoice.invoice_id not in covered
-            else f"accrual_part_paid: received invoice {invoice.invoice_number} accrues {invoice.base_total} "
-            f"but its ledger rows state {covered[invoice.invoice_id]}; add a row for the rest"
+            rows_by_invoice.setdefault(row.purchase_invoice_evidence_id, []).append(row)
+    unpaid = (
+        tuple(
+            detail
+            for invoice in accruing
+            if (detail := _accrual_coverage_gap(invoice, rows_by_invoice.get(invoice.invoice_id, ()))) is not None
         )
-        for invoice in accruing
-        if covered.get(invoice.invoice_id, Decimal("-1")) < invoice.base_total
-        and criteria.usable(period.filing_year) is ActivityImputationCriterion.DEVENGO
+        if criteria.usable(period.filing_year) is ActivityImputationCriterion.DEVENGO
+        else ()
     )
     return imputation_blocking_diagnostics(
         source_kind=source_kind,

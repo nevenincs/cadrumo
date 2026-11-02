@@ -102,6 +102,9 @@ class ImputationUnresolved(StrEnum):
     CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN = "capital_subsidy_schedule_unknown"
     """A capital subsidy follows its asset's amortization under either criterion, and no schedule links one."""
 
+    EUR_VALUE_UNKNOWN = "eur_value_unknown"
+    """A foreign invoice accrues with no rate stamped on it, so what it adds to the box is not known."""
+
 
 _CRITERION_PATH: Final[str] = "irpf.activity_income_imputation_criterion"
 _COMMERCIAL_ACCOUNTING_PATH: Final[str] = "irpf.codigo_comercio_accounting"
