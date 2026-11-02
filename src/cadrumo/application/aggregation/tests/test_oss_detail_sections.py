@@ -198,9 +198,9 @@ def _row(
 def _two_states_two_tiers(regime: _Regime) -> tuple[Invoice, ...]:
     return (
         _invoice(regime, "SYNTHETIC-1", country="PL", tier="reduced", base="50.00", cuota="4.00"),
-        _invoice(regime, "SYNTHETIC-2", country="FR", tier="general", base="1000.00", cuota="200.00"),
+        _invoice(regime, "SYNTHETIC-2", country="FR", tier="general", base="100.00", cuota="20.00"),
         _invoice(regime, "SYNTHETIC-3", country="PL", tier="general", base="100.00", cuota="23.00"),
-        _invoice(regime, "SYNTHETIC-4", country="FR", tier="reduced", base="200.00", cuota="20.00"),
+        _invoice(regime, "SYNTHETIC-4", country="FR", tier="reduced", base="20.00", cuota="2.00"),
     )
 
 

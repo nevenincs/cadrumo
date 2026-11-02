@@ -281,7 +281,8 @@ def _scheme_period_field_value(
     derived_period_value = scheme_period_value(field, draft.period)
     if derived_period_value is None:
         return None
-    if contradicts_scheme_period(field, draft.period, binding_values.get((field.binding, row_index))):
+    entered = None if field.binding is None else binding_values.get((field.binding, row_index))
+    if contradicts_scheme_period(field, draft.period, entered):
         raise FilingExportValidationError(f"export field {field.id!r} contradicts the period being filed")
     return derived_period_value
 

@@ -77,16 +77,29 @@ def _header_feed(revision: ModeloRevision) -> ModeloRevision:
     return revision.model_copy(update={"export_layouts": layouts})
 
 
+def _sharing_the_old_form(before: ModeloRevision, after: ModeloRevision) -> tuple[ModeloRevision, ModeloRevision]:
+    """Both sides hold the one form as it stood, stamped with the state before the change."""
+    form = before.form_layouts[0].model_copy(update={"source_state_digest": form_layout_source_digest(before)})
+    return (
+        before.model_copy(update={"form_layouts": (form,)}),
+        after.model_copy(update={"form_layouts": (form,)}),
+    )
+
+
 def test_the_form_follows_a_feed_change_that_keeps_every_byte_rule(after: ModeloRevision) -> None:
-    reconciled = reconcile_unreferenced_export_producers(_header_feed(after), after)
-    assert reconciled.source_state_digest == form_layout_source_digest(after)
+    old, new = _sharing_the_old_form(_header_feed(after), after)
+    reconciled = reconcile_unreferenced_export_producers(old, new)
+    assert reconciled.source_state_digest == form_layout_source_digest(new)
+    assert reconciled.source_state_digest != form_layout_source_digest(old)
 
 
 def test_a_required_slot_may_not_lose_its_requirement_through_the_feed_change(after: ModeloRevision) -> None:
+    old, new = _sharing_the_old_form(_header_feed(after), _with_marker_fields(after, required=False))
     with pytest.raises(RegistryValidationError, match="beyond unreferenced header producers"):
-        reconcile_unreferenced_export_producers(_header_feed(after), _with_marker_fields(after, required=False))
+        reconcile_unreferenced_export_producers(old, new)
 
 
 def test_a_changed_constant_is_refused(after: ModeloRevision) -> None:
+    old, new = _sharing_the_old_form(_header_feed(after), _with_marker_fields(after, presence_marker="X"))
     with pytest.raises(RegistryValidationError, match="marker-changing feed"):
-        reconcile_unreferenced_export_producers(_header_feed(after), _with_marker_fields(after, presence_marker="X"))
+        reconcile_unreferenced_export_producers(old, new)
