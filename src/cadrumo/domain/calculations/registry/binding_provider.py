@@ -57,6 +57,7 @@ from .manual_input_selector import ManualInputProvider
 from .profile_bindings import ProfileProvider
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
 from .relation_prefill_bindings import RelationPrefillProvider
+from .retencion_soportada_bindings import RetencionSoportadaProvider
 from .retenciones_bindings import RetencionesAggregationProvider
 from .withholding296_bindings import Withholding296Provider
 from .withholding_bindings import WithholdingProvider
@@ -84,6 +85,7 @@ BindingProvider = Annotated[
     | LedgerImpatriadoIncomeProvider
     | LedgerIrnrIncomeProvider
     | RetencionesAggregationProvider
+    | RetencionSoportadaProvider
     | WithholdingProvider
     | Withholding296Provider
     | LedgerTransactionProvider

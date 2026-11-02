@@ -37,6 +37,8 @@ docs:
       prorrata_regularizacion: desde la regularización de prorrata
       purchase_invoice_evidence: desde los justificantes de tus facturas recibidas
       relation_prefill: desde el resultado de un modelo relacionado
+      retencion_soportada: desde las retenciones que informan los certificados de
+        tus pagadores
       retenciones_aggregation: desde las retenciones registradas
       withholding: desde las retenciones soportadas
       withholding296: desde las retenciones por perceptor del modelo 296

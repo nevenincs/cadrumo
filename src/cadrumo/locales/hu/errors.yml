@@ -403,6 +403,8 @@ errors:
       kért műveletet.
     canonical_retencion_observation_persistence: A forrásadó-levonási megfigyeléseket
       nem sikerült menteni.
+    canonical_retencion_soportada_persistence: A levont forrásadók nyilvántartását
+      nem sikerült menteni.
     canonical_state_projection_read: Az alkalmazás állapotvetítését nem sikerült beolvasni.
     canonical_taxation_comparison_persistence: Az adózási összehasonlításhoz szükséges
       munkaegységeket nem sikerült betölteni.
@@ -1376,6 +1378,10 @@ errors:
       számítási revízióval. Futtasd a aeat app modelo work calculate parancsot egy
       friss revízió létrehozásához.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
+    retencion_soportada_revision_conflict: A levont forrásadók nyilvántartása az olvasás
+      óta megváltozott.
+    retencion_soportada_write: A levont forrásadók nyilvántartását a mentés előtt
+      elutasította a rendszer.
     submission_preflight_auth_describe_failed: A hitelesítési szolgáltató nem tudta
       leírni magát ({cause_type}).
     submission_preflight_auth_not_ready: A(z) {kind} hitelesítési szolgáltató nem

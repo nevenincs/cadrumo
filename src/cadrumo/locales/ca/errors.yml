@@ -438,6 +438,8 @@ errors:
       l'operació sol·licitada.
     canonical_retencion_observation_persistence: No s'han pogut desar les observacions
       de retencions.
+    canonical_retencion_soportada_persistence: No s'han pogut desar els registres
+      de retencions suportades.
     canonical_state_projection_read: No s'ha pogut llegir la projecció de l'estat
       de l'aplicació.
     canonical_taxation_comparison_persistence: No s'han pogut carregar les unitats
@@ -1463,6 +1465,10 @@ errors:
       no coincideix amb la revisió de càlcul. Executa `aeat app modelo work calculate`
       per generar una revisió nova.
     refused_workflow_resume: L'execució del flux de treball anterior no es pot reprendre.
+    retencion_soportada_revision_conflict: El registre de retencions suportades ha
+      canviat després de llegir-lo.
+    retencion_soportada_write: S'ha rebutjat el registre de retencions suportades
+      abans de desar-lo.
     submission_preflight_auth_describe_failed: El proveïdor d'autenticació no s'ha
       pogut descriure ({cause_type}).
     submission_preflight_auth_not_ready: El proveïdor d'autenticació {kind} no està
