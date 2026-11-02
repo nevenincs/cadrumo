@@ -225,7 +225,9 @@ def test_domiciliation_closes_at_the_resolved_cutoff_of_every_supported_quarter(
     day_after = datetime.combine(cutoff_on + timedelta(days=1), time(0, 0), tzinfo=MADRID_TZ)
     with pytest.raises(ModeloDomiciliationPastCutoffError) as refused:
         gate(day_after)
-    assert refused.value.context["payment_cutoff_on"] == cutoff_on.isoformat()
-    assert refused.value.context["payment_cutoff_source"] == cutoff.source.value
-    assert refused.value.context["period"] == period.registry_token
-    assert refused.value.context["filing_year"] == str(period.filing_year)
+    context = refused.value.context
+    assert context is not None
+    assert context["payment_cutoff_on"] == cutoff_on.isoformat()
+    assert context["payment_cutoff_source"] == cutoff.source.value
+    assert context["period"] == period.registry_token
+    assert context["filing_year"] == str(period.filing_year)
