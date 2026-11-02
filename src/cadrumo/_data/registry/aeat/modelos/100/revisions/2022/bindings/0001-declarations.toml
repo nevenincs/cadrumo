@@ -72,7 +72,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
@@ -88,7 +87,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -108,7 +106,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -128,7 +125,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -148,7 +144,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -504,7 +499,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -524,7 +518,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -544,7 +537,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -564,7 +556,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -584,7 +575,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -604,7 +594,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -624,7 +613,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -664,7 +652,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"

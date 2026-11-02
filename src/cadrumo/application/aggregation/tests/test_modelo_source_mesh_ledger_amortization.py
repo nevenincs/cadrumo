@@ -11,6 +11,7 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
     leased_profile_create_context as _profile_creation_context_for_test,
 )
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingSourceKind
@@ -69,6 +70,7 @@ from .ledger_source_mesh_support import (
     _renta_expense_binding_id,
     _revision,
     _UnreadableActivityAssetHistoryRepository,
+    cash_criterion_profile,
     catalogue_read_ports,
     empty_invoice_repository,
     empty_prorrata_repository,
@@ -114,6 +116,7 @@ def test_renta_source_mesh_resolver_preserves_purchase_invoice_evidence_provenan
             filing_year=2025,
             period=Period.from_year_and_code(2025, "0A"),
             revision=revision,
+            profile=cash_criterion_profile(2025),
         ),
     )
 
@@ -320,6 +323,7 @@ def test_renta_gasto_keeps_only_in_window_held_back_identity_as_durable_evidence
             filing_year=2025,
             period=Period.from_year_and_code(2025, period),
             revision=_revision("130", "2019-y-siguientes"),
+            profile=cash_criterion_profile(2025),
         )
     )
     held_back = [diagnostic for diagnostic in resolution.diagnostics if diagnostic.reason == "source_domain_not_ready"]
@@ -666,6 +670,7 @@ def test_a_foral_period_leaves_registered_assets_out_with_a_finding_and_refuses_
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
                 UserProfileFact(path="tax_residence.ccaa", value="navarra"),
+                *cash_criterion_facts(2025),
             ),
             context=_profile_creation_context_for_test(),
         ),
@@ -695,6 +700,7 @@ def test_an_unreadable_residence_leaves_registered_assets_out_with_a_finding(res
             facts=(
                 UserProfileFact(path="identity.tax_id", value="X1234567L"),
                 UserProfileFact(path="tax_residence.ccaa", value="not-a-region"),
+                *cash_criterion_facts(2025),
             ),
             context=_profile_creation_context_for_test(),
         ),

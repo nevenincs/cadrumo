@@ -9,9 +9,7 @@ A row whose retención the substrate cannot determine is reported as unknown,
 never as zero. Until the year that credits an invoice whose payment and accrual
 fall in different ejercicios is grounded, the binding is capped at calculation
 grade: the calculation and preview show the credit, and checking, export and
-local filing refuse it unless it is a proven zero. The income box 0171 carries
-its own cap, so a year with income stays refused through that box even when
-0599 is a proven zero.
+local filing refuse it unless it is a proven zero.
 
 Every case runs through the production resolver against the Modelo 100 and
 Modelo 130 revisions of the published authority, so the bindings under test are
@@ -73,7 +71,7 @@ from ...modelo.calculation_screen import calculation_screen_stamp
 from ...modelo.printed_boxes import snapshot_printed_boxes
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
-from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
+from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
 from .renta_income_aggregation_support import _period, catalogue_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -251,6 +249,7 @@ def _resolve(
             filing_year=_YEAR,
             period=_period(_YEAR, period_code),
             revision=revision,
+            profile=cash_criterion_profile(_YEAR),
         ),
     )
 
@@ -295,11 +294,6 @@ def _calculated(
     emitted = add_advisory_binding_value_diagnostics(snapshot, resolution, operation=operation)
     persisted = unrouted_source_issues(emitted.diagnostics, snapshot_printed_boxes(operation, snapshot))
     return emitted, persisted
-
-
-def _advisory_notes(emitted: CalculationSourceResolution, box: str) -> list[CalculationSourceDiagnostic]:
-    """The advisory notes of one box: each capped binding of the calculation states its own."""
-    return [item for item in emitted.diagnostics if item.reason == _ADVISORY_REASON and item.casilla_id == box]
 
 
 def _refused_reasons(
@@ -367,8 +361,8 @@ def _refused_reasons(
     return refusals[0]
 
 
-def test_the_cap_sits_on_the_activity_credit_and_on_the_income_box(operation: PinnedAuthorityOperation) -> None:
-    """The 0599 binding and the 0171 income binding sharing its provider kind each declare the cap."""
+def test_the_cap_sits_on_the_activity_credit_and_not_on_the_income_box(operation: PinnedAuthorityOperation) -> None:
+    """The 0599 binding is capped; the 0171 income binding sharing its provider kind keeps its grade."""
     snapshot = operation.snapshot("100", filing_year=_YEAR, period="0A")
     bindings = revision_bindings_by_id(snapshot.revision)
     credit = bindings[_casilla_0599_binding(snapshot.revision)]
@@ -383,7 +377,7 @@ def test_the_cap_sits_on_the_activity_credit_and_on_the_income_box(operation: Pi
         for casilla_id in entry.casilla_ids
     }
     assert "0599" in reached
-    assert "0171" in reached
+    assert "0171" not in reached
 
 
 def test_a_declared_credit_is_calculated_shown_and_refused_at_check_export_and_recording(
@@ -397,7 +391,8 @@ def test_a_declared_credit_is_calculated_shown_and_refused_at_check_export_and_r
 
     assert _credit_0599(resolution, revision) == _DECLARED_CREDIT
     emitted, persisted = _calculated(operation, resolution)
-    (note,) = _advisory_notes(emitted, "0599")
+    (note,) = [item for item in emitted.diagnostics if item.reason == _ADVISORY_REASON]
+    assert note.casilla_id == "0599"
     assert note.fact is not None
     assert note.fact.sentence is CalculationNoteSentence.ADVISORY_IMPUTATION_PERIOD_UNGROUNDED
     reasons = _refused_reasons(operation, persisted)
@@ -405,11 +400,7 @@ def test_a_declared_credit_is_calculated_shown_and_refused_at_check_export_and_r
 
 
 def test_a_proven_zero_over_rows_without_withholding_passes(operation: PinnedAuthorityOperation) -> None:
-    """An activity receipt that carries no retención is a proven zero for 0599, while its income still refuses.
-
-    The receipt's 2.000,00 base reaches the capped income box 0171, which is
-    not a zero, so the refusal comes from 0171 alone and 0599 withholds nothing.
-    """
+    """An activity receipt that carries no retención is a proven zero: shown, and nothing is refused."""
     paid_in_full = _transaction(
         provider_id="cobro-integro",
         cash=_INFERRED_BASE + _INFERRED_IVA,
@@ -425,15 +416,9 @@ def test_a_proven_zero_over_rows_without_withholding_passes(operation: PinnedAut
     assert _credit_0599(resolution, revision) == Decimal("0")
     assert resolution.value_outcomes[_casilla_0599_binding(revision)] is BindingValueOutcome.PROVEN_ZERO
     emitted, persisted = _calculated(operation, resolution)
-    (note,) = _advisory_notes(emitted, "0599")
+    (note,) = [item for item in emitted.diagnostics if item.reason == _ADVISORY_REASON]
     assert note.value_outcome is BindingValueOutcome.PROVEN_ZERO
-    assert [issue for issue in persisted if issue.casilla_id == "0599"] == []
-    (income_note,) = _advisory_notes(emitted, "0171")
-    assert income_note.value_outcome is not BindingValueOutcome.PROVEN_ZERO
-    income_only = tuple(issue for issue in persisted if issue.casilla_id == "0171")
-    assert income_only
-    reasons = _refused_reasons(operation, persisted)
-    assert reasons is not None and _ADVISORY_REASON in reasons
+    assert _refused_reasons(operation, persisted) is None
 
 
 def test_an_inferred_row_raises_the_advisory_and_leaves_0599_unchanged() -> None:

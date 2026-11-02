@@ -255,6 +255,13 @@ profile:
         tax_id:
           label: NIF/NIE/CIF de identificación
       irpf:
+        activity_income_imputation_criterion:
+          choices:
+            cobros_y_pagos: 'Cobros y pagos (art. 7.2 RIRPF)'
+            devengo: 'Devengo'
+          label: 'Criterio de imputación de ingresos y gastos'
+        codigo_comercio_accounting:
+          label: 'Llevas contabilidad ajustada al Código de Comercio'
         activity_kind:
           choices:
             profesional: Actividad profesional

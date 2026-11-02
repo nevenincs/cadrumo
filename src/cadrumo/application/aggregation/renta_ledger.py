@@ -52,6 +52,7 @@ from ...domain.contribuyente.seguro_enfermedad_insured import (
 )
 from ...domain.contribuyente.tax_residence import ResidenceTerritory, classify_tax_region, parse_tax_region
 from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
     RentaDeductibilityContext,
@@ -94,6 +95,7 @@ from .errors import AggregationPeriodError
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
+from .renta_imputation import ImputationCriteria, ImputationUnresolved, impute_row, linked_accrual_date
 from .renta_ledger_evidence import iva_amount_for, purchase_invoice_evidence_payload, taxable_base_for
 from .renta_ledger_models import (
     RentaLedgerAggregationIssue,
@@ -581,6 +583,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
     operation: PinnedAuthorityOperation | None = None,
     ownership_share: Decimal | None = None,
     register_owned_transaction_ids: frozenset[str] = frozenset(),
+    criteria: ImputationCriteria | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Load persisted catalogues and aggregate first-slice Renta expenses.
 
@@ -621,6 +624,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
                 operation=indexed_operation,
                 ownership_share=ownership_share,
                 register_owned_transaction_ids=register_owned_transaction_ids,
+                criteria=criteria,
             )
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
@@ -670,6 +674,7 @@ def aggregate_renta_ledger_expenses_from_repositories(
         operation=operation,
         ownership_share=ownership_share,
         register_owned_transaction_ids=register_owned_transaction_ids,
+        criteria=criteria,
     )
 
 
@@ -691,6 +696,7 @@ def aggregate_renta_ledger_expenses(
     operation: PinnedAuthorityOperation | None = None,
     ownership_share: Decimal | None = None,
     register_owned_transaction_ids: frozenset[str] = frozenset(),
+    criteria: ImputationCriteria | None = None,
 ) -> RentaLedgerExpenseAggregation:
     """Aggregate classified ledger transactions into Renta expense observations.
 
@@ -731,6 +737,8 @@ def aggregate_renta_ledger_expenses(
         register_owned_transaction_ids: The ledger rows the activity-asset
             register declares as an asset's acquisition; the register deducts
             them through its amortization schedule.
+        criteria: The dated imputation election that places each row; ``None``
+            keeps the fact's own filing date, for a caller not consulting the profile.
 
     Returns a :class:`RentaLedgerExpenseAggregation` containing the accepted
     observations, exclusion issues, and binding-ready casilla totals.
@@ -754,6 +762,7 @@ def aggregate_renta_ledger_expenses(
                 operation=indexed_operation,
                 ownership_share=ownership_share,
                 register_owned_transaction_ids=register_owned_transaction_ids,
+                criteria=criteria,
             )
     if profile_decode_context is None:
         profile_decode_context = operation.profile_decode_context()
@@ -793,6 +802,7 @@ def aggregate_renta_ledger_expenses(
             region_overrides=rules.region_overrides,
             context=rules.context,
             activity_key=activity_key,
+            criteria=criteria,
         )
         if isinstance(outcome, RentaLedgerAggregationIssue):
             issues.append(outcome)
@@ -822,6 +832,7 @@ def _classify_renta_transaction(
     region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
     context: RentaDeductibilityContext,
     activity_key: str,
+    criteria: ImputationCriteria | None = None,
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
     """Filter + classify one ledger transaction against the Renta-expense pipeline.
 
@@ -880,6 +891,15 @@ def _classify_renta_transaction(
         profile=profile,
         context=context,
         period=resolved_period,
+        imputed=None
+        if criteria is None
+        else impute_row(
+            fact.operation_date,
+            linked_accrual_date(
+                None if fact.invoice_id is None else invoices.get(fact.invoice_id), kind=InvoiceKind.RECEIVED
+            ),
+            criteria,
+        ),
     )
 
 
@@ -995,13 +1015,27 @@ def _renta_observation_or_issue(
     profile: CategoryProfile,
     context: RentaDeductibilityContext,
     period: Period,
+    imputed: date | ImputationUnresolved | None = None,
 ) -> RentaDeductibleExpenseObservation | RentaLedgerAggregationIssue:
     """Apply filing-period and deductibility gates to one validated fact."""
-    if not period.contains(fact.filing_date):
+    if isinstance(imputed, ImputationUnresolved):
+        if not (period.contains(fact.operation_date) or period.contains(fact.filing_date)):
+            return _renta_transaction_issue(
+                transaction,
+                RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+                f"payment of {fact.operation_date.isoformat()} is outside {period}",
+            )
+        return _renta_transaction_issue(
+            transaction,
+            RentaLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
+            f"{imputed.value}: payment of {fact.operation_date.isoformat()} cannot be placed in an ejercicio",
+        )
+    anchor = fact.filing_date if imputed is None else imputed
+    if not period.contains(anchor):
         return _renta_transaction_issue(
             transaction,
             RentaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            f"filing date {fact.filing_date.isoformat()} is outside {period}",
+            f"filing date {anchor.isoformat()} is outside {period}",
         )
     result = evaluate_renta_deductibility(fact, profile, context)
     if result.status is not RentaDeductibilityStatus.ELIGIBLE:
@@ -1011,7 +1045,7 @@ def _renta_observation_or_issue(
             result.reason,
         )
     try:
-        return build_renta_deductible_expense_observation(fact, result, tax_year=period.filing_year)
+        return build_renta_deductible_expense_observation(fact, result, tax_year=period.filing_year, imputed_on=imputed)
     except ValueError as exc:
         return _renta_transaction_issue(
             transaction,

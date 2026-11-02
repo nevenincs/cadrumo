@@ -9,11 +9,9 @@ the real calculation-note gate on a revision stamped as a calculation stamps
 it. Every expected figure is invoice arithmetic worked out in the test.
 
 The resolver states what a capped value rests on. A zero over rows that carry
-no retención is a proven zero and withholds nothing for that box. A zero over
-rows whose retención was left out, a declared credit, and a capped value whose
-resolver stated nothing all withhold checking, exporting and recording. The
-income box beside it carries its own cap: a window with income stays withheld
-through casilla 01 even when casilla 06 is a proven zero.
+no retención is a proven zero and withholds nothing. A zero over rows whose
+retención was left out, a declared credit, and a capped value whose resolver
+stated nothing all withhold checking, exporting and recording.
 """
 
 from __future__ import annotations
@@ -45,7 +43,10 @@ from ....domain.transactions.models import TransactionCatalogue
 from ...actividad_asset.tests.register_support import MemoryRepository
 from ...aggregation.modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ...aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
-from ...aggregation.tests.ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
+from ...aggregation.tests.ledger_source_mesh_support import (
+    InMemoryTransactionCatalogueRepository,
+    cash_criterion_profile,
+)
 from ...aggregation.tests.renta_income_aggregation_support import actividad_transaction, catalogue_read_ports
 from ...aggregation.tests.test_actividad_retencion_declared_credit import (
     BUCKET,
@@ -66,7 +67,6 @@ _YEAR = 2026
 _QUARTER = "1T"
 _CAPPED_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _CAPPED_BOX = "06"
-_INCOME_BOX = "01"
 _REASON = "advisory_binding_value"
 # Hand-derived: 150,00 at 15 % of 1.000,00 plus 140,00 at 7 % of 2.000,00.
 _DECLARED_CREDIT = Decimal("290.00")
@@ -116,6 +116,7 @@ def _resolve(
             filing_year=_YEAR,
             period=Period.from_year_and_code(_YEAR, _QUARTER),
             revision=snapshot.revision,
+            profile=cash_criterion_profile(_YEAR),
         )
     )
 
@@ -218,17 +219,8 @@ def _refused_reasons(operation: PinnedAuthorityOperation, revision: CalculationR
     return refusals[0]
 
 
-def _capped_notes(emitted: CalculationSourceResolution, box: str = _CAPPED_BOX):
-    """The advisory notes of one box: every capped binding of the calculation states its own."""
-    return [
-        diagnostic
-        for diagnostic in emitted.diagnostics
-        if diagnostic.reason == _REASON and diagnostic.casilla_id == box
-    ]
-
-
-def _persisted_for(persisted: tuple[CalculationSourceIssue, ...], box: str = _CAPPED_BOX):
-    return [issue for issue in persisted if issue.reason == _REASON and issue.casilla_id == box]
+def _capped_notes(emitted: CalculationSourceResolution):
+    return [diagnostic for diagnostic in emitted.diagnostics if diagnostic.reason == _REASON]
 
 
 def test_a_zero_over_rows_that_carry_no_retencion_is_proven_and_withholds_nothing(
@@ -245,15 +237,9 @@ def test_a_zero_over_rows_that_carry_no_retencion_is_proven_and_withholds_nothin
     assert note.casilla_id == _CAPPED_BOX
     assert note.value_outcome is BindingValueOutcome.PROVEN_ZERO
     assert note.fact is not None and note.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
-    assert _persisted_for(persisted) == []
-    # The income the receipt carries is capped on its own binding and still withholds.
-    (income_note,) = _capped_notes(emitted, _INCOME_BOX)
-    assert income_note.value_outcome is not BindingValueOutcome.PROVEN_ZERO
-    (income_issue,) = _persisted_for(persisted, _INCOME_BOX)
-    assert income_issue.binding_source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    assert [issue for issue in persisted if issue.reason == _REASON] == []
     revision = _revision(_work_unit(snapshot), persisted, stamp=_stamp(snapshot, operation))
-    reasons = _refused_reasons(operation, revision)
-    assert reasons is not None and _REASON in reasons
+    assert _refused_reasons(operation, revision) is None
 
 
 def test_a_zero_over_rows_whose_retencion_was_left_out_withholds(operation: PinnedAuthorityOperation) -> None:
@@ -266,7 +252,7 @@ def test_a_zero_over_rows_whose_retencion_was_left_out_withholds(operation: Pinn
 
     (note,) = _capped_notes(emitted)
     assert note.value_outcome is BindingValueOutcome.FROM_BEARING_ROWS
-    (issue,) = _persisted_for(persisted)
+    (issue,) = [issue for issue in persisted if issue.reason == _REASON]
     assert issue.casilla_id == _CAPPED_BOX
     assert issue.binding_source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
     reasons = _refused_reasons(operation, _revision(_work_unit(snapshot), persisted, stamp=_stamp(snapshot, operation)))
@@ -292,7 +278,7 @@ def test_a_declared_credit_is_calculated_shown_and_refused_at_check_export_and_r
 
     # The form shows the note and withholds the file exactly where the gate refuses.
     form = built_form(operation, "130", _YEAR, _QUARTER, revision=revision)
-    (shown,) = [item for item in form.calculation_notes if item.reason == _REASON and item.box == _CAPPED_BOX]
+    (shown,) = [item for item in form.calculation_notes if item.reason == _REASON]
     assert shown.withholds_filing
     assert shown.box == _CAPPED_BOX
 
@@ -307,7 +293,7 @@ def test_a_capped_value_whose_resolver_stated_no_outcome_withholds(operation: Pi
 
     (note,) = _capped_notes(emitted)
     assert note.value_outcome is None
-    assert [issue.reason for issue in _persisted_for(persisted)] == [_REASON]
+    assert [issue.reason for issue in persisted if issue.reason == _REASON] == [_REASON]
     reasons = _refused_reasons(operation, _revision(_work_unit(snapshot), persisted, stamp=_stamp(snapshot, operation)))
     assert reasons is not None and _REASON in reasons
 
@@ -342,9 +328,7 @@ def test_a_filed_revision_carrying_a_blocking_note_is_still_refused_at_export(
     """The filed state exempts the revision from the screen only: the note it was persisted with still refuses."""
     snapshot = _snapshot(operation)
     _, persisted = _calculated(operation, _resolve(snapshot, *declared_pair()))
-    # Only the retención note is persisted here, so the refusal names its box.
-    persisted = tuple(_persisted_for(persisted))
-    assert [issue.reason for issue in persisted] == [_REASON]
+    assert [issue.reason for issue in persisted if issue.reason == _REASON] == [_REASON]
     unit = _work_unit(snapshot)
 
     for state in (CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO):
@@ -378,10 +362,8 @@ def test_the_stamp_reads_only_the_screen_declarations(operation: PinnedAuthority
     assert _stamp(snapshot.model_copy(update={"revision": recapped}), operation) != current
 
 
-def test_the_income_box_fed_by_the_same_provider_kind_is_capped_on_its_own_binding(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    """Income is dated by the bank like the withholding beside it, so each box carries its own declared cap."""
+def test_the_income_box_fed_by_the_same_provider_kind_stays_filing_grade(operation: PinnedAuthorityOperation) -> None:
+    """The cap is on one binding, so Modelo 130 casilla 01 and Modelo 100 casilla 0171 keep their grade."""
     for modelo, year, period, casilla in (("130", _YEAR, _QUARTER, "01"), ("100", 2025, "0A", "0171")):
         snapshot = operation.snapshot(modelo, filing_year=year, period=period)
         bindings = revision_bindings_by_id(snapshot.revision)
@@ -393,7 +375,7 @@ def test_the_income_box_fed_by_the_same_provider_kind_is_capped_on_its_own_bindi
         assert bound.binding is not None
         binding = bindings[bound.binding]
         assert binding.source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
-        assert binding.grade_cap is not None
+        assert binding.grade_cap is None
         reached = {
             str(casilla_id)
             for entry in capped_binding_reach(
@@ -401,4 +383,4 @@ def test_the_income_box_fed_by_the_same_provider_kind_is_capped_on_its_own_bindi
             ).values()
             for casilla_id in entry.casilla_ids
         }
-        assert casilla in reached
+        assert casilla not in reached

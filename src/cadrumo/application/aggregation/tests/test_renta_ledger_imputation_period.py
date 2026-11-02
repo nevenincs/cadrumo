@@ -1,10 +1,10 @@
-"""Activity income and expense boxes dated by the bank wait on the imputation criterion.
+"""Activity income and expense boxes wait on the dated imputation criterion; the credit boxes stay capped.
 
 LIRPF art. 14.1.b imputes activity income on accrual and RIRPF art. 7.2 opens a
 cash election. An invoice accrued on 20 December and collected on 10 January
 therefore belongs to the earlier ejercicio unless the taxpayer elected cash; the
-ledger places it in the later one on its bank date. Every case runs the
-production resolver against the published revision.
+ledger places it in the later one on its bank date only under the cash election.
+Every case runs the production resolver against the published revision.
 
 Worked figures: 1.000,00 base + 210,00 IVA - 150,00 retencion = 1.060,00 banked.
 """
@@ -148,13 +148,17 @@ def _resolve(
     )
 
 
-def test_the_bank_date_moves_a_december_invoice_into_the_later_ejercicio() -> None:
-    """The defect: with no criterion, the accrual year shows nothing and the collection year shows the base."""
+def test_an_unset_criterion_places_no_income_and_names_the_gap() -> None:
+    """With no criterion declared the invoice is in neither ejercicio, and both years say the box is unresolved."""
     transactions, invoices = _boundary_ledger()
     earlier = _resolve(transactions, invoices, year=_EARLIER)
     later = _resolve(transactions, invoices, year=_LATER)
     assert earlier.binding_values[_INCOME_0171] == Decimal("0")
-    assert later.binding_values[_INCOME_0171] == _BASE
+    assert later.binding_values[_INCOME_0171] == Decimal("0")
+    for resolution in (earlier, later):
+        assert _INCOME_0171 in {
+            str(item.binding_id) for item in resolution.diagnostics if item.reason == "unresolved_binding"
+        }
 
 
 def test_a_zero_beside_an_invoice_accruing_in_the_year_is_not_proven() -> None:
@@ -172,21 +176,23 @@ def test_a_year_with_no_row_and_no_accruing_invoice_proves_its_zeros() -> None:
     assert resolution.value_outcomes[_CREDIT_0599] is BindingValueOutcome.PROVEN_ZERO
 
 
+_UNCAPPED_100 = {"0171", "0183", "0186", "0191", "0192", "0193", "0194", "0195", "0199", "0200", "0202", "0203"} | {
+    "0206",
+    "0217",
+}
+
+
 @pytest.mark.parametrize(
-    ("modelo", "period", "boxes"),
+    ("modelo", "period", "capped", "uncapped"),
     [
-        (
-            "100",
-            "0A",
-            {"0171", "0599", "0183", "0186", "0191", "0192", "0193", "0194", "0195", "0199", "0200", "0202", "0203"}
-            | {"0206", "0217"},
-        ),
-        ("130", "1T", {"01", "02", "06"}),
+        ("100", "0A", {"0599"}, _UNCAPPED_100),
+        ("130", "1T", {"06"}, {"01", "02"}),
     ],
 )
-def test_every_bank_dated_activity_box_is_capped(
-    operation: PinnedAuthorityOperation, modelo: str, period: str, boxes: set[str]
+def test_only_the_withholding_credit_boxes_stay_capped(
+    operation: PinnedAuthorityOperation, modelo: str, period: str, capped: set[str], uncapped: set[str]
 ) -> None:
+    """Income and expense boxes read the dated criterion; the credit boxes still wait on their own grounding."""
     snapshot = operation.snapshot(modelo, filing_year=_LATER, period=period)
     reached = {
         str(casilla_id)
@@ -195,7 +201,8 @@ def test_every_bank_dated_activity_box_is_capped(
         ).values()
         for casilla_id in entry.casilla_ids
     }
-    assert reached == boxes
+    assert reached == capped
+    assert reached.isdisjoint(uncapped)
 
 
 def test_the_register_owned_amortization_boxes_stay_uncapped(operation: PinnedAuthorityOperation) -> None:
