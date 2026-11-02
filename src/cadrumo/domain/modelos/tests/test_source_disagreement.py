@@ -66,7 +66,16 @@ def test_a_stored_fact_round_trips_through_json_unchanged() -> None:
 
 @pytest.mark.parametrize(
     ("amount", "text"),
-    [(Decimal("500.00"), "500.00"), (Decimal("-0.01"), "-0.01"), (Decimal("1E+2"), "100"), (Decimal("0"), "0")],
+    [
+        (Decimal("500.00"), "500.00"),
+        (Decimal("-0.01"), "-0.01"),
+        (Decimal("1E+2"), "100"),
+        (Decimal("0"), "0"),
+        (Decimal("12.500"), "12.500"),
+        (Decimal("1.000"), "1.000"),
+        (Decimal("0.00"), "0.00"),
+        (Decimal("-3.10"), "-3.10"),
+    ],
 )
 def test_an_amount_is_held_as_canonical_text_and_read_back_exactly(amount: Decimal, text: str) -> None:
     value = DisagreementDecimalValue.of(amount)
@@ -74,7 +83,15 @@ def test_an_amount_is_held_as_canonical_text_and_read_back_exactly(amount: Decim
     assert value.decimal == amount
 
 
-@pytest.mark.parametrize("text", ["1e3", "+5", "1,00", " 5", "", "1.000.000"])
+@pytest.mark.parametrize("text", ["12.500", "1.000", "0.00", "-3.10"])
+def test_a_canonical_amount_shaped_like_a_thousands_group_is_accepted_as_text(text: str) -> None:
+    assert DisagreementDecimalValue(amount=text).amount == text
+    assert DisagreementRelationValue(amount=text).decimal == Decimal(text)
+
+
+@pytest.mark.parametrize(
+    "text", ["1e3", "+1", "+5", "1,5", "1,00", "01", "-01.5", " 5", "", "1.000.000", "1.", ".5", "-"]
+)
 def test_an_amount_that_is_not_canonical_decimal_text_is_refused(text: str) -> None:
     with pytest.raises(ValidationError):
         DisagreementDecimalValue(amount=text)
