@@ -31,6 +31,7 @@ from pydantic_core import PydanticCustomError
 
 from ...core.errors.hierarchy import ProfileAnswerTypeError, pydantic_validation_boundary
 from ...core.external_constants import DEFAULT_OUTPUT_LANGUAGE, OutputLanguage
+from ...core.filing_year import YEAR_DIGITS, is_four_digit_year
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.utils import parse_bool
 from ...core.spanish_postcode import OptionalSpanishPostcode
@@ -117,9 +118,6 @@ def _parse_optional_bool_token(value: object, *, field_name: str) -> OptionalWiz
             return parsed
     raise ValueError(f"{field_name} must be a boolean, blank, or a recognised canonical token")
 
-
-_EJERCICIO_DIGITS: Final[int] = 4
-"""Digits of an ejercicio as the setup flow states it."""
 
 PROFILE_OUTPUT_LANGUAGE_PATH: Final[str] = "preferences.output_language"
 """Dotted profile-record path for the setup flow's output-language answer."""
@@ -361,7 +359,7 @@ class SetupAnswers(BaseModel):
     def _validate_irpf_activity_income_imputation_year(cls, value: str) -> str:
         if value == "":
             return value
-        if len(value) != _EJERCICIO_DIGITS or not (value.isascii() and value.isdigit()) or int(value) < 1:
+        if len(value) != YEAR_DIGITS or not (value.isascii() and value.isdigit()) or not is_four_digit_year(int(value)):
             raise ValueError(
                 f"irpf_activity_income_imputation_year must be a four-digit ejercicio (YYYY), got {value!r}"
             )

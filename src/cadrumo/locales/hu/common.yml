@@ -227,7 +227,7 @@ aggregation:
         így a rekord soha nem jutna el egy számításhoz.
       identity_mismatch: A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemtípussal
         vagy igazolással.
-      not_found: Ehhez az ejercicióhoz, jövedelemosztályhoz és kifizetői hivatkozáshoz
+      not_found: Ehhez az adóévhez, jövedelemosztályhoz és kifizetői hivatkozáshoz
         nincs levonási rekord.
       own_tax_id: A kifizető adóazonosítója (NIF) a sajátod; az általad végzett levonás
         nem a javadra szóló előleg.

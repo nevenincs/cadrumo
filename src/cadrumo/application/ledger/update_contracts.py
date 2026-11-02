@@ -66,7 +66,9 @@ LedgerUpdatePatchField = Literal[
     "group_label",
     "own_account_id",
 ]
-_UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=18)]
+_UpdateFields = Annotated[
+    tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=len(LEDGER_UPDATE_FIELD_NAMES))
+]
 LEDGER_UPDATE_TEXT_MAX = 4096
 """The longest description, counterparty or notes a ledger correction takes."""
 LEDGER_GROUP_LABEL_MAX = 64

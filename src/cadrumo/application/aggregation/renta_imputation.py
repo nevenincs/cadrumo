@@ -16,6 +16,7 @@ from enum import StrEnum
 from typing import TYPE_CHECKING, Final
 
 from ...core.aggregation import BindingValueOutcome
+from ...core.parsing.utils import parse_bool
 from ...core.period import Period
 from ...domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
 from ...domain.invoices.catalogue import InvoiceCatalogue
@@ -28,6 +29,7 @@ from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnos
 from .source_resolution_operations import unresolved_binding_diagnostics
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.calculations.registry.bindings import RegistryModeloObservation
     from ...domain.calculations.registry.ids import BindingId
     from ...domain.calculations.registry.schema import ModeloRevision
@@ -243,12 +245,24 @@ def declared_imputation_criteria(
     )
 
 
-_CASH_ELECTION_CASILLAS: Final[frozenset[str]] = frozenset({"0169", "1443", "1487"})
+_CASH_ELECTION_ROLES: Final[frozenset[str]] = frozenset(
+    {"irpf_ed_cobros_pagos_flag", "irpf_eo_cobros_pagos_flag", "irpf_eo_agr_cobros_pagos_flag"}
+)
+"""The semantic roles of the cash-election boxes: estimacion directa, objetiva and its agricultural block.
+
+A box is named by its role in the revision that edition declares, never by its number."""
+
 _ELECTION_LOOKBACK_YEARS: Final[int] = 3
+
+_RECORD_DESIGN_FLAG_MARK: Final[str] = "X"
+"""The mark a record design prints in a checked box; any other affirmative is a yes/no word."""
 
 
 def _marked(value: Decimal | str) -> bool:
-    return value != 0 if isinstance(value, Decimal) else value.strip().upper() in {"X", "1", "TRUE", "S"}
+    if isinstance(value, Decimal):
+        return value != 0
+    token = value.strip()
+    return token.upper() == _RECORD_DESIGN_FLAG_MARK or parse_bool(token) is True
 
 
 def imputation_filing_history(
@@ -259,12 +273,16 @@ def imputation_filing_history(
     annual_period_code: str,
     load_observation: Callable[[str, Period], RegistryModeloObservation | None],
     filing_records: ModeloRecordCatalogue,
+    authority: PinnedAuthorityOperation,
 ) -> ImputationFilingHistory:
     """Read what the annual returns reaching ``year`` state about the criterion and when each was filed.
 
     A captured box that is marked states the election. An unmarked box states accrual
     only where the capture carries it: a capture without the box says nothing either way.
+    The boxes are the ones the pinned authority's revision for each past year gives the
+    cash-election roles.
     """
+    supported_years = authority.supported_filing_years().years
     stated: dict[int, ActivityImputationCriterion] = {}
     filed_on: dict[int, date] = {}
     for past in range(year - _ELECTION_LOOKBACK_YEARS, year + 1):
@@ -273,11 +291,11 @@ def imputation_filing_history(
         if record is not None:
             filed_on[past] = record.filed_at.date()
         observation = load_observation(annual_form, period)
-        flags = (
-            ()
-            if observation is None
-            else tuple(row.value for row in observation.observations if str(row.casilla_id) in _CASH_ELECTION_CASILLAS)
-        )
+        flags: tuple[Decimal | str, ...] = ()
+        if observation is not None and past in supported_years:
+            revision = authority.revision_for_context(annual_form, filing_year=past, period=annual_period_code)
+            boxes = {str(box.id) for box in revision.casillas if str(box.semantic_role) in _CASH_ELECTION_ROLES}
+            flags = tuple(row.value for row in observation.observations if str(row.casilla_id) in boxes)
         if flags:
             stated[past] = (
                 ActivityImputationCriterion.COBROS_Y_PAGOS

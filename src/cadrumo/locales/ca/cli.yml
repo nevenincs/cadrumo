@@ -466,11 +466,11 @@ cli:
           consigna, C substitucions del destinatari en consigna'
         preview_help: 'Previsualitza un esborrany de factura: les xifres, les troballes
           i el veredicte que assoliria l''operació d''alta, sense desar res. El NIF
-          de la contrapart (counterparty_nif) i les línies de l''esborrany (lines,
-          una matriu JSON d''objectes de línia amb key, description, quantity, unit_price,
-          iva_rate, subtotal i iva_amount opcionals; una xifra omesa queda desconeguda;
-          usa-la en lloc de --taxable-base) arriben com un objecte JSON per --secrets-stdin
-          o --secrets-fd.'
+          de la contrapart (`counterparty_nif`) i les línies de l''esborrany (`lines`,
+          una matriu JSON d''objectes de línia amb `key`, `description`, `quantity`,
+          `unit_price`, `iva_rate`, `subtotal` i `iva_amount` opcionals; una xifra
+          omesa queda desconeguda; usa-la en lloc de --taxable-base) arriben com un
+          objecte JSON per --secrets-stdin o --secrets-fd.'
         preview_operation_date_role_help: Funció desada de la data d'operació de la
           factura que repeteix una correcció.
         preview_printed_total_help: El total imprès al document, que es compara amb
@@ -641,7 +641,7 @@ cli:
         importe_integro_help: Renda dinerària que va pagar el pagador, abans de la
           retenció.
         income_class_help: Classe de renda sobre la qual el pagador va retenir, per
-          exemple trabajo.
+          exemple `trabajo`.
         ingreso_a_cuenta_help: Ingrés a compte que va fer el pagador per renda en
           espècie. Compta íntegre com a crèdit.
         ingreso_a_cuenta_repercutido_help: Part de l'ingrés a compte que el pagador
@@ -705,7 +705,7 @@ cli:
           patró de la qual no es pot cercar.
         remove_not_found: Cap regla desada té l'id %{rule_id}. No s'ha canviat res.
         remove_rule_id_help: Id complet de la regla que vols eliminar, tal com el
-          mostra la sortida JSON de rule list.
+          mostra la sortida JSON de `rule list`.
         remove_stale: La regla desada %{rule_id} es va tornar a desar el %{created_at},
           que no és la data que has indicat. No s'ha eliminat res; consulta el llistat
           de regles i comprova-la.
@@ -3354,9 +3354,10 @@ cli:
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       iva_vehicle_use_help: 'Per a què s''usa el vehicle de la fila, quan l''art.
         95.Tres.2.ª LIVA l''aparta de la presumpció del 50 per 100: un dels sis usos
-        presumits al 100 per 100 (mixed_vehicle_goods_transport, paid_passenger_transport,
-        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
-        surveillance) o outside_presumed_classes si aquesta regla no anomena el vehicle.'
+        presumits al 100 per 100 (`mixed_vehicle_goods_transport`, `paid_passenger_transport`,
+        `paid_driver_or_pilot_training`, `manufacturer_testing_or_promotion`, `commercial_agent_travel`,
+        `surveillance`) o `outside_presumed_classes` si aquesta regla no anomena el
+        vehicle.'
       llm_classified_by_label: classificat-per
       llm_confidence_label: confiança
       llm_exclusive: --llm no es pot combinar amb --classification ni --file; la via
@@ -3720,10 +3721,10 @@ cli:
     staged_check_category_help: Categoria de despesa repetible que es contrasta amb
       una classificació.
     staged_check_help: Respon al treball preparat del llibre com l'acceptarien els
-      escriptors, sense desar res. Les files preparades (rows, una matriu JSON d'objectes
-      amb transaction_id, cells i, opcionals, evidence_staged i m210_staged) i els
-      moviments nous (drafts, una matriu JSON d'objectes amb key i fields) arriben
-      com un objecte JSON per --secrets-stdin o --secrets-fd.
+      escriptors, sense desar res. Les files preparades (`rows`, una matriu JSON d'objectes
+      amb `transaction_id`, `cells` i, opcionals, `evidence_staged` i `m210_staged`)
+      i els moviments nous (`drafts`, una matriu JSON d'objectes amb `key` i `fields`)
+      arriben com un objecte JSON per --secrets-stdin o --secrets-fd.
     staged_check_invalid: Cada fila i esborrany preparats han de ser un objecte JSON
       amb la forma esperada.
     stash:

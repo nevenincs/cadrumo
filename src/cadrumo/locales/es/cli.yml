@@ -468,11 +468,11 @@ cli:
           C sustituciones del destinatario en consigna'
         preview_help: 'Previsualiza un borrador de factura: las cifras, los hallazgos
           y el veredicto que alcanzaría la operación de alta, sin guardar nada. El
-          NIF de la contraparte (counterparty_nif) y las líneas del borrador (lines,
-          una matriz JSON de objetos de línea con key, description, quantity, unit_price,
-          iva_rate, subtotal e iva_amount opcionales; una cifra omitida queda desconocida;
-          úsala en lugar de --taxable-base) llegan como un objeto JSON por --secrets-stdin
-          o --secrets-fd.'
+          NIF de la contraparte (`counterparty_nif`) y las líneas del borrador (`lines`,
+          una matriz JSON de objetos de línea con `key`, `description`, `quantity`,
+          `unit_price`, `iva_rate`, `subtotal` e `iva_amount` opcionales; una cifra
+          omitida queda desconocida; úsala en lugar de --taxable-base) llegan como
+          un objeto JSON por --secrets-stdin o --secrets-fd.'
         preview_operation_date_role_help: Función guardada de la fecha de operación
           de la factura que repite una corrección.
         preview_printed_total_help: El total impreso en el documento, que se compara
@@ -643,7 +643,7 @@ cli:
         group_help: Registra las retenciones que te certifican tus pagadores.
         importe_integro_help: Renta dineraria que pagó el pagador, antes de la retención.
         income_class_help: Clase de renta sobre la que el pagador retuvo, por ejemplo
-          trabajo.
+          `trabajo`.
         ingreso_a_cuenta_help: Ingreso a cuenta que hizo el pagador por renta en especie.
           Cuenta íntegro como crédito.
         ingreso_a_cuenta_repercutido_help: Parte del ingreso a cuenta que el pagador
@@ -697,7 +697,7 @@ cli:
         list_help: Lista las reglas de clasificación almacenadas ordenadas por prioridad.
         pattern_overrun: El patrón no pudo terminar de buscar en las descripciones
           de este libro dentro de su límite de tiempo, así que no se ha guardado.
-          Simplifícalo, por ejemplo evitando repeticiones dentro de repeticiones.
+          Simplifica el patrón, por ejemplo evitando repeticiones dentro de repeticiones.
         priority_help: Prioridad numérica; un valor menor se evalúa primero (por defecto
           100).
         remove_created_at_help: Fecha de creación de la regla tal como aparece en
@@ -709,7 +709,7 @@ cli:
         remove_not_found: Ninguna regla guardada tiene el id %{rule_id}. No se ha
           cambiado nada.
         remove_rule_id_help: Id completo de la regla que quieres eliminar, tal como
-          lo muestra la salida JSON de rule list.
+          lo muestra la salida JSON de `rule list`.
         remove_stale: La regla guardada %{rule_id} se volvió a guardar el %{created_at},
           que no es la fecha que indicaste. No se ha eliminado nada; consulta el listado
           de reglas y compruébala.
@@ -3378,9 +3378,9 @@ cli:
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       iva_vehicle_use_help: 'Para qué se usa el vehículo de la fila, cuando el art.
         95.Tres.2.ª LIVA lo aparta de la presunción del 50 por 100: uno de los seis
-        usos presumidos al 100 por 100 (mixed_vehicle_goods_transport, paid_passenger_transport,
-        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
-        surveillance) u outside_presumed_classes si esa regla no nombra el vehículo.'
+        usos presumidos al 100 por 100 (`mixed_vehicle_goods_transport`, `paid_passenger_transport`,
+        `paid_driver_or_pilot_training`, `manufacturer_testing_or_promotion`, `commercial_agent_travel`,
+        `surveillance`) u `outside_presumed_classes` si esa regla no nombra el vehículo.'
       llm_classified_by_label: clasificado-por
       llm_confidence_label: confianza
       llm_exclusive: --llm no puede combinarse con --classification ni --file; la
@@ -3744,10 +3744,10 @@ cli:
     staged_check_category_help: Categoría de gasto repetible que se contrasta con
       una clasificación.
     staged_check_help: Responde al trabajo preparado del libro como lo aceptarían
-      los escritores, sin guardar nada. Las filas preparadas (rows, una matriz JSON
-      de objetos con transaction_id, cells y, opcionales, evidence_staged y m210_staged)
-      y los movimientos nuevos (drafts, una matriz JSON de objetos con key y fields)
-      llegan como un objeto JSON por --secrets-stdin o --secrets-fd.
+      los escritores, sin guardar nada. Las filas preparadas (`rows`, una matriz JSON
+      de objetos con `transaction_id`, `cells` y, opcionales, `evidence_staged` y
+      `m210_staged`) y los movimientos nuevos (`drafts`, una matriz JSON de objetos
+      con `key` y `fields`) llegan como un objeto JSON por --secrets-stdin o --secrets-fd.
     staged_check_invalid: Cada fila y borrador preparados deben ser un objeto JSON
       con la forma esperada.
     stash:

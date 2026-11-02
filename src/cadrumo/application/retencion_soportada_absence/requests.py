@@ -10,7 +10,7 @@ from pydantic import BaseModel, Field
 from ...core.filing_year import FilingYear
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.retencion_soportada import RetencionSoportadaClase
-from ...domain.renta.retencion_soportada_absence import RETENCION_SOPORTADA_ABSENCE_NOTE_MAX_LENGTH
+from ...domain.renta.retencion_soportada_absence import ABSENCE_ATTESTATION_NOTE_MAX_LENGTH
 
 __all__ = [
     "RetencionSoportadaAbsenceAttestRequest",
@@ -49,7 +49,7 @@ class RetencionSoportadaAbsenceAttestRequest(RetencionSoportadaAbsenceRequest):
     a withdrawn attestation was left at when one is replaced.
     """
 
-    note: Annotated[str, Field(min_length=1, max_length=RETENCION_SOPORTADA_ABSENCE_NOTE_MAX_LENGTH)]
+    note: Annotated[str, Field(min_length=1, max_length=ABSENCE_ATTESTATION_NOTE_MAX_LENGTH)]
     expected_revision_id: _Revision | None = None
 
 

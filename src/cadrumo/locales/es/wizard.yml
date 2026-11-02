@@ -320,8 +320,8 @@ wizard:
           40.3 LIS; por debajo, ambas modalidades son posibles. Opcional.
       irpf-activity-income-imputation-criterion:
         help: 'Criterio del art. 7 RIRPF para los ingresos y gastos de actividad en
-          el ejercicio indicado con --irpf-activity-income-imputation-year: devengo
-          (lo habitual) o cobros_y_pagos (se mantiene tres años; no con contabilidad
+          el ejercicio indicado con --irpf-activity-income-imputation-year: `devengo`
+          (lo habitual) o `cobros_y_pagos` (se mantiene tres años; no con contabilidad
           ajustada al Código de Comercio).'
       irpf-activity-income-imputation-year:
         help: Ejercicio de cuatro cifras para el que se indican el criterio de imputación

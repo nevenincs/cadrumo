@@ -189,17 +189,6 @@ def _joined(values: Sequence[str]) -> str:
     return PERIOD_LIST_SEPARATOR.join(values) if values else NO_PERIODS_FACT
 
 
-def _common_facts(reconciliation: WithholdingCountReconciliation) -> dict[str, str | int]:
-    return {
-        "modelo": reconciliation.modelo,
-        "filing_year": reconciliation.filing_year,
-        "source_modelo": reconciliation.source_modelo,
-        "summary_perceptors": reconciliation.summary_perceptors,
-        "checked_periods": _joined(reconciliation.checked_periods),
-        "unchecked_periods": _joined(reconciliation.unchecked_periods),
-    }
-
-
 def append_withholding_count_reconciliation_findings(
     *,
     work_unit: WorkUnit,
@@ -222,7 +211,14 @@ def append_withholding_count_reconciliation_findings(
     )
     if reconciliation is None:
         return
-    facts = _common_facts(reconciliation)
+    facts: dict[str, str | int] = {
+        "modelo": reconciliation.modelo,
+        "filing_year": reconciliation.filing_year,
+        "source_modelo": reconciliation.source_modelo,
+        "summary_perceptors": reconciliation.summary_perceptors,
+        "checked_periods": _joined(reconciliation.checked_periods),
+        "unchecked_periods": _joined(reconciliation.unchecked_periods),
+    }
     for excess in reconciliation.excesses:
         finding = ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.BLOCKING_RULE,
@@ -230,7 +226,12 @@ def append_withholding_count_reconciliation_findings(
             casilla_id=excess.casilla_id,
             message_locale_key="application.modelo.findings.withholding_count_exceeds_summary_perceptors",
             message_facts={
-                **facts,
+                "modelo": reconciliation.modelo,
+                "filing_year": reconciliation.filing_year,
+                "source_modelo": reconciliation.source_modelo,
+                "summary_perceptors": reconciliation.summary_perceptors,
+                "checked_periods": _joined(reconciliation.checked_periods),
+                "unchecked_periods": _joined(reconciliation.unchecked_periods),
                 "period": excess.period,
                 "casilla_id": str(excess.casilla_id),
                 "declared_perceptors": str(excess.declared_perceptors),
