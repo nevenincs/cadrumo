@@ -2,15 +2,12 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Protocol, cast
-from uuid import UUID
+from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..ledger.read_access import resolve_ledger_exact_request_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
@@ -24,7 +21,6 @@ from ..operations.registry import (
     OperationResultProjector,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ports import InventoryServicePortsFactory
 
 if TYPE_CHECKING:
@@ -71,11 +67,6 @@ from .registered_result_projection import (
 )
 from .registered_specs import INVENTORY_LEDGER_CHANGE_REQUEST_TYPES, INVENTORY_OPERATION_SHAPES
 
-
-class _InventoryProfileScopedRequest(Protocol):
-    profile_id: UUID
-
-
 _MUTATING_IDS = frozenset(
     {
         INVENTORY_CLOSING_VALUE_RECORD_OPERATION_DEFINITION_ID,
@@ -88,23 +79,21 @@ _MUTATING_IDS = frozenset(
 )
 
 
+_REQUEST_TYPES = {definition_id: shape.request_type for definition_id, shape in INVENTORY_OPERATION_SHAPES.items()}
+
+
 def resolve_inventory_operation_access(
     request: OperationRequest[BaseModel],
     context: OperationAccessContext,
     /,
 ) -> ResolvedOperationAccess:
     """Bind inventory disclosure and mutation authority to the exact profile."""
-    shape = INVENTORY_OPERATION_SHAPES.get(request.definition_id)
-    payload = request.payload
-    if shape is None or type(payload) is not shape.request_type:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    # Cast rationale: exact registered request class was checked above; every inventory request carries
-    # profile_id.
-    profile_id = cast(_InventoryProfileScopedRequest, payload).profile_id  # nosemgrep: no-cast-in-domain-application
-    resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
-    if request.definition_id not in _MUTATING_IDS:
-        return resolved
-    return with_commit_action(resolved)
+    return resolve_ledger_exact_request_access(
+        request,
+        context,
+        request_types=_REQUEST_TYPES,
+        commit_definition_ids=_MUTATING_IDS,
+    )
 
 
 def _definition(
