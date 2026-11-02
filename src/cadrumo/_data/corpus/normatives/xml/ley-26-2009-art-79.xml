@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<response>
+  <status>
+    <code>200</code>
+    <text>ok</text>
+  </status>
+  <data>
+    <bloque id="a79" tipo="precepto" titulo="Artículo 79">
+      <version id_norma="BOE-A-2009-20765" fecha_publicacion="20091224" fecha_vigencia="20100101">
+        <p class="articulo">Artículo 79. Impuesto sobre el Valor Añadido.</p>
+        <p class="parrafo_2">Con efectos desde el 1 de julio de 2010 y vigencia indefinida, se introducen las siguientes modificaciones en la Ley 37/1992, de 28 de diciembre, del Impuesto sobre el Valor Añadido.</p>
+        <p class="parrafo_2">Uno. Se modifica el apartado uno del artículo 90, que queda redactado de la siguiente forma:</p>
+        <p class="sangrado_2">«Uno. El Impuesto se exigirá al tipo del 18 por ciento, salvo lo dispuesto en el artículo siguiente.»</p>
+        <p class="parrafo_2">El resto del artículo queda con el mismo contenido.</p>
+        <p class="parrafo_2">Dos. Se modifica el encabezado del apartado uno del artículo 91, que queda redactado de la siguiente forma:</p>
+        <p class="sangrado_2">«Uno. Se aplicará el tipo del 8 por ciento a las operaciones siguientes:»</p>
+        <p class="parrafo_2">El resto del apartado y artículo quedan con el mismo contenido.</p>
+        <p class="parrafo_2">Tres. Se modifica el apartado cinco del artículo 130, que queda redactado de la siguiente forma:</p>
+        <p class="sangrado_2">«Cinco. La compensación a tanto alzado a que se refiere el apartado tres de este artículo será la cantidad resultante de aplicar, al precio de venta de los productos o de los servicios indicados en dicho apartado, el porcentaje que proceda de entre los que se indican a continuación:</p>
+        <p class="sangrado_2">1.º El 10 por 100, en las entregas de productos naturales obtenidos en explotaciones agrícolas o forestales y en los servicios de carácter accesorio de dichas explotaciones.</p>
+        <p class="sangrado">2.º El 8,5 por 100, en las entregas de productos naturales obtenidos en explotaciones ganaderas o pesqueras y en los servicios de carácter accesorio de dichas explotaciones.</p>
+        <p class="sangrado_2">Para la determinación de los referidos precios, no se computarán los tributos indirectos que graven las citadas operaciones, ni los gastos accesorios o complementarios a las mismas cargados separadamente al adquirente, tales como comisiones, embalajes, portes, transportes, seguros, financieros u otros.</p>
+        <p class="sangrado">En las operaciones realizadas sin contraprestación dineraria, los referidos porcentajes se aplicarán sobre el valor de mercado de los productos entregados o de los servicios prestados.</p>
+        <p class="sangrado">El porcentaje aplicable en cada operación será el vigente en el momento en que nazca el derecho a percibir la compensación.»</p>
+        <p class="parrafo_2">El resto del artículo queda con el mismo contenido.</p>
+      </version>
+    </bloque>
+  </data>
+</response>

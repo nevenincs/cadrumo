@@ -931,23 +931,27 @@ def test_a_date_inside_the_registry_support_carries_no_projection_finding(
     assert FigureFindingCode.RATE_DATE_PROJECTED not in [item.code for item in answer.findings]
 
 
-@pytest.mark.parametrize("on_date", (date(2012, 8, 31), date(2012, 9, 1), date(2020, 12, 31)))
-def test_a_date_whose_vocabulary_the_registry_dates_later_states_no_rate(
+@pytest.mark.parametrize(
+    ("on_date", "fraction", "cuota"),
+    (
+        # AEAT 2020 IVA manual, art. 90: 18 % until 31 August 2012.
+        (date(2012, 8, 31), "0.18", "18.00"),
+        # RDL 20/2012 art. 23.Dos: 21 % from the next day.
+        (date(2012, 9, 1), "0.21", "21.00"),
+        (date(2020, 12, 31), "0.21", "21.00"),
+    ),
+)
+def test_a_date_before_the_filing_years_reads_its_published_rate_and_warns(
     operation: PinnedAuthorityOperation,
     on_date: date,
+    fraction: str,
+    cuota: str,
 ) -> None:
-    """The member-state catalogue starts with the Union of 2021-01-01, so nothing older projects across it.
+    answer = _preview(preview_draft(preview_line(iva_amount=cuota), issued_at=on_date), operation=operation)
 
-    That also keeps 2012-08-31 from answering 21 %: 18 % applied until RDL 20/2012 art. 23 took effect.
-    """
-    answer = _preview(preview_draft(preview_line(iva_amount="18.00"), issued_at=on_date), operation=operation)
-
-    assert answer.verdict == "would_refuse"
-    assert answer.refusal_code is FigureFindingCode.RATE_DATE_UNRESOLVED
-    assert answer.rate_slots == ()
-    assert answer.lines[0].iva_amount.computed is None
-    assert answer.lines[0].iva_amount.submitted is None
-    assert answer.totals.iva is None
+    assert {slot.slot: slot for slot in answer.rate_slots}["RATE_21"].fraction == PublicDecimal(decimal=fraction)
+    assert answer.lines[0].iva_amount.computed == PublicDecimal(decimal=cuota)
+    assert FigureFindingCode.RATE_DATE_PROJECTED in [item.code for item in answer.findings]
 
 
 def test_the_earliest_projected_date_answers_the_grounded_rate(operation: PinnedAuthorityOperation) -> None:

@@ -1,8 +1,10 @@
 """What the published rate schedule answers, and what a projected rate may prove.
 
 Expected figures come from the bundled sources, not from a run: Ley 41/1994 art. 78
-(16 % and 7 % from 1995), the AEAT 2020 IVA manual's art. 90 and 91 footnotes (18 %
-and 8 % until 31 August 2012), and RDL 20/2012 art. 23 (21 % and 10 % from the next day).
+(16 % and 7 % from 1995, 4 % super-reduced), Ley 26/2009 art. 79 (18 % and 8 % with
+effect from 1 July 2010, the rest of art. 91 unchanged), the AEAT 2020 IVA manual's
+art. 90 and 91 footnotes (until 31 August 2012), and RDL 20/2012 art. 23 (21 % and 10 %
+from the next day).
 """
 
 from __future__ import annotations
@@ -10,6 +12,7 @@ from __future__ import annotations
 from collections.abc import Iterator
 from datetime import date, timedelta
 from decimal import Decimal
+from itertools import pairwise
 
 import pytest
 
@@ -41,7 +44,9 @@ _ZERO = IvaRateKind("zero")
 _LAST_DAY_OF_18 = date(2012, 8, 31)
 _FIRST_DAY_OF_21 = date(2012, 9, 1)
 _FIRST_DAY_OF_16 = date(1995, 1, 1)
-_LAST_DAY_16_IS_CERTAIN = date(2009, 12, 23)
+_LAST_DAY_OF_16 = date(2010, 6, 30)
+_FIRST_DAY_OF_18 = date(2010, 7, 1)
+_BEFORE_EVERY_EDITION = _FIRST_DAY_OF_16 - timedelta(days=30)
 
 
 @pytest.fixture
@@ -56,8 +61,12 @@ def operation() -> Iterator[PinnedAuthorityOperation]:
         (_GENERAL, _FIRST_DAY_OF_16, "16"),
         (_REDUCED, _FIRST_DAY_OF_16, "7"),
         (_SUPER_REDUCED, _FIRST_DAY_OF_16, "4"),
-        (_GENERAL, _LAST_DAY_16_IS_CERTAIN, "16"),
-        (_REDUCED, _LAST_DAY_16_IS_CERTAIN, "7"),
+        (_GENERAL, _LAST_DAY_OF_16, "16"),
+        (_REDUCED, _LAST_DAY_OF_16, "7"),
+        (_SUPER_REDUCED, _LAST_DAY_OF_16, "4"),
+        (_GENERAL, _FIRST_DAY_OF_18, "18"),
+        (_REDUCED, _FIRST_DAY_OF_18, "8"),
+        (_SUPER_REDUCED, _FIRST_DAY_OF_18, "4"),
         (_GENERAL, _LAST_DAY_OF_18, "18"),
         (_REDUCED, _LAST_DAY_OF_18, "8"),
         (_GENERAL, _FIRST_DAY_OF_21, "21"),
@@ -77,23 +86,19 @@ def test_a_sourced_rate_is_published_for_its_date(
     assert lookup_published_rate(_ES, kind, on_date, operation=operation).pct == Decimal(pct)
 
 
-def test_the_unsourced_stretch_reads_the_nearest_edition_on_each_side(operation: PinnedAuthorityOperation) -> None:
-    gap_days = (_LAST_DAY_OF_18 - _LAST_DAY_16_IS_CERTAIN).days
-    midpoint = _LAST_DAY_16_IS_CERTAIN + timedelta(days=gap_days // 2)
-
-    before = lookup_rate(_ES, _GENERAL, midpoint - timedelta(days=1), operation=operation)
-    after = lookup_rate(_ES, _GENERAL, midpoint + timedelta(days=1), operation=operation)
-
-    assert (before.pct, before.published_on_date, before.projected_from_date) == (
-        Decimal("16"),
-        False,
-        _LAST_DAY_16_IS_CERTAIN,
-    )
-    assert (after.pct, after.published_on_date, after.projected_from_date) == (
-        Decimal("18"),
-        False,
-        _LAST_DAY_OF_18,
-    )
+def test_no_spanish_date_since_the_first_edition_is_left_to_projection(operation: PinnedAuthorityOperation) -> None:
+    """Each tier's editions abut, so only a date before them all is projected."""
+    fact = operation.governed_fact("iva-rate-schedule")
+    for kind in (_GENERAL, _REDUCED, _SUPER_REDUCED):
+        expected = {"member_state": "es", "kind": kind.value, "rate_role": "ordinary"}
+        windows = sorted(
+            (variant.valid_from, variant.valid_to)
+            for variant in fact.variants
+            if {selector.name: selector.value for selector in variant.selectors} == expected
+        )
+        assert windows[0][0] == _FIRST_DAY_OF_16
+        for (_start, end), (next_start, _next_end) in pairwise(windows):
+            assert end is not None and end + timedelta(days=1) == next_start, kind
 
 
 def test_a_date_before_every_edition_reads_the_first(operation: PinnedAuthorityOperation) -> None:
@@ -158,13 +163,21 @@ def test_a_temporary_measure_ends_where_its_law_ends_it(
 
 def test_a_declared_rate_is_never_confirmed_by_a_projected_one(operation: PinnedAuthorityOperation) -> None:
     """16 % is the nearest edition's rate; the date's own published table does not hold it."""
-    on_date = _LAST_DAY_16_IS_CERTAIN + timedelta(days=30)
+    on_date = _BEFORE_EVERY_EDITION
 
     assert lookup_rate(_ES, _GENERAL, on_date, operation=operation).pct == Decimal("16")
     assert rate_kinds_for_declared_rate(_ES, Decimal("0.16"), on_date, operation=operation) == ()
     assert not rate_table_covers(_ES, on_date, _GENERAL, operation=operation)
     with pytest.raises(IvaRateNotFoundError):
         resolve_iva_rate_slot(Decimal("16"), on_date)
+
+
+def test_ley_26_2009_moves_the_declared_rate_on_its_effective_date(operation: PinnedAuthorityOperation) -> None:
+    """A 16 % line is lawful on the last day of 16 % and refused the next, without any projection."""
+    assert _GENERAL in rate_kinds_for_declared_rate(_ES, Decimal("0.16"), _LAST_DAY_OF_16, operation=operation)
+    assert rate_kinds_for_declared_rate(_ES, Decimal("0.18"), _LAST_DAY_OF_16, operation=operation) == ()
+    assert _GENERAL in rate_kinds_for_declared_rate(_ES, Decimal("0.18"), _FIRST_DAY_OF_18, operation=operation)
+    assert rate_kinds_for_declared_rate(_ES, Decimal("0.16"), _FIRST_DAY_OF_18, operation=operation) == ()
 
 
 def test_a_declared_rate_on_a_published_date_is_judged_against_the_law(operation: PinnedAuthorityOperation) -> None:
@@ -179,17 +192,17 @@ def test_tier_rates_within_names_only_published_rates(operation: PinnedAuthority
     rates = tier_rates_within(
         _ES,
         _GENERAL,
-        _LAST_DAY_16_IS_CERTAIN + timedelta(days=30),
+        _BEFORE_EVERY_EDITION,
         _LAST_DAY_OF_18 + timedelta(days=30),
         operation=operation,
     )
 
-    assert rates == (Decimal("18"), Decimal("21"))
+    assert rates == (Decimal("16"), Decimal("18"), Decimal("21"))
 
 
 def test_a_line_on_a_projected_rate_prices_and_is_not_judged_wrong(operation: PinnedAuthorityOperation) -> None:
     """Base 100 at the nearest edition's 16 % gives 16.00; a stated 18.00 is unverifiable, not wrong."""
-    on_date = _LAST_DAY_16_IS_CERTAIN + timedelta(days=30)
+    on_date = _BEFORE_EVERY_EDITION
     general = IvaRate.from_registry("RATE_21")
     slot = next(item for item in dated_rate_slots(on_date) if item.slot == general)
 
