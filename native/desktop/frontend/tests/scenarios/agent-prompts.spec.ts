@@ -6,6 +6,7 @@ import {
   ask,
   conversation,
   live,
+  messageField,
   personTurns,
   questionsPrompt,
   recordedAnswers,
@@ -19,6 +20,68 @@ import {
   waitingOn,
 } from "../support/agent";
 import { label } from "../support/strings";
+
+declare global {
+  interface Window {
+    __promptGates?: Record<
+      string,
+      { entered: boolean; completed: boolean; release(): void }
+    >;
+  }
+}
+
+async function holdPrompt(
+  target: Page,
+  name: string,
+  kind: "answer" | "decision",
+  phase: "ack" | "reject" | "before",
+) {
+  await target.evaluate(
+    ({ name, kind, phase }) => {
+      const session = window.__fixtureAgentSession!;
+      let release!: () => void;
+      const waiting = new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      const gate = { entered: false, completed: false, release };
+      (window.__promptGates ??= {})[name] = gate;
+      const wait = async () => {
+        gate.entered = true;
+        await waiting;
+      };
+      const run = async <Result>(
+        original: () => Promise<Result>,
+      ): Promise<Result> => {
+        try {
+          if (phase === "ack") {
+            const result = await original();
+            await wait();
+            return result;
+          }
+          await wait();
+          if (phase === "reject") throw new Error("agent_service_failed");
+          return await original();
+        } finally {
+          gate.completed = true;
+        }
+      };
+      if (kind === "answer") {
+        const original = session.answerQuestions;
+        session.answerQuestions = async (...args) => {
+          session.answerQuestions = original;
+          return run(() => original(...args));
+        };
+      } else {
+        const original = session.decideApproval;
+        session.decideApproval = async (...args) => {
+          session.decideApproval = original;
+          return run(() => original(...args));
+        };
+      }
+    },
+    { name, kind, phase },
+  );
+}
 
 // What a reply waits on: questions the agent asks, and decisions only the
 // person makes. Each message asks for what it needs in words, as an agent
@@ -115,6 +178,77 @@ test("declined questions are gone, and the reply goes on without them", async ({
     .getByRole("button", { name: label("desktop.agent.questions_decline") })
     .click();
   await expect(questionsPrompt(target)).toHaveCount(0);
+  await settled(target);
+});
+
+for (const phase of ["ack", "reject"] as const)
+  test(`a delayed clarification ${phase} cannot change another conversation`, async ({
+    page: target,
+  }) => {
+    await open(target, "questions");
+    const first = "First conversation asks about the quarter.";
+    const continuation = "This answer belongs only to the first conversation.";
+    await send(target, first);
+    await expect(questionsPrompt(target)).toBeVisible();
+    await holdPrompt(target, "first", "answer", phase);
+    await ask(target, continuation);
+    await expect
+      .poll(() => target.evaluate(() => window.__promptGates!.first!.entered))
+      .toBe(true);
+    await button(target, "desktop.agent.new_conversation").click();
+    await send(target, "Second conversation asks about invoices.");
+    await expect(questionsPrompt(target)).toBeVisible();
+    await messageField(target).fill("Keep the second conversation draft.");
+    await target.evaluate(() => window.__promptGates!.first!.release());
+    await expect
+      .poll(() => target.evaluate(() => window.__promptGates!.first!.completed))
+      .toBe(true);
+    await expect(conversation(target)).not.toContainText(continuation);
+    await expect(messageField(target)).toHaveValue(
+      "Keep the second conversation draft.",
+    );
+    await expect(questionsPrompt(target)).toBeVisible();
+    await button(target, "desktop.agent.history").click();
+    await agentColumn(target).getByText(first, { exact: true }).click();
+    if (phase === "ack")
+      await expect(
+        personTurns(target).filter({ hasText: continuation }),
+      ).toHaveCount(1);
+    else await expect(questionsPrompt(target)).toBeVisible();
+  });
+
+test("a delayed approval cannot clear a newer conversation's pending decision", async ({
+  page: target,
+}) => {
+  await open(target, "approval");
+  await send(target, "First conversation requests access.");
+  await expect(approvalPrompt(target)).toBeVisible();
+  await holdPrompt(target, "first", "decision", "ack");
+  await approvalPrompt(target)
+    .getByRole("button", { name: "Allow this read", exact: true })
+    .click();
+  await expect
+    .poll(() => target.evaluate(() => window.__promptGates!.first!.entered))
+    .toBe(true);
+  await button(target, "desktop.agent.new_conversation").click();
+  await send(target, "Second conversation requests access.");
+  await expect(approvalPrompt(target)).toBeVisible();
+  await holdPrompt(target, "second", "decision", "before");
+  const allow = approvalPrompt(target).getByRole("button", {
+    name: "Allow this read",
+    exact: true,
+  });
+  await allow.click();
+  await expect
+    .poll(() => target.evaluate(() => window.__promptGates!.second!.entered))
+    .toBe(true);
+  await target.evaluate(() => window.__promptGates!.first!.release());
+  await expect
+    .poll(() => target.evaluate(() => window.__promptGates!.first!.completed))
+    .toBe(true);
+  await expect(allow).toBeDisabled();
+  await target.evaluate(() => window.__promptGates!.second!.release());
+  await expect(approvalPrompt(target)).toHaveCount(0);
   await settled(target);
 });
 

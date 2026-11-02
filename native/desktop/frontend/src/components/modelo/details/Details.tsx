@@ -455,7 +455,7 @@ export function Details({
   const staged = session.staged.get(key);
   const restore = editsAdmitted(envelope) ? restoreIntent(field) : null;
   return (
-    <div className="flex flex-col gap-5 p-5">
+    <div data-modelo-details="" className="flex flex-col gap-5 p-5">
       <div className="flex flex-col items-start gap-2">
         <div className="flex w-full items-center">
           <BoxNumber box={field.box} />

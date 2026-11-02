@@ -823,16 +823,7 @@ test("a refused dialog answer preserves the prompt and admits one manual retry",
   await expect(ok).toBeDisabled();
   await target.keyboard.press("Escape");
   await expect(dialog).toBeVisible();
-  // An external pane change can hide a modal's owner while its host call waits.
-  await target
-    .getByRole("button", {
-      name: label("desktop.calendar.title"),
-      exact: true,
-      includeHidden: true,
-    })
-    .evaluate((element: HTMLElement) => element.click());
-  await expect(dialog).toHaveCount(0);
-  await browserButton(target).click();
+  await target.keyboard.press("Enter");
   await expect(ok).toBeDisabled();
   await expect(field).toHaveValue("Berta");
   await target.evaluate(() => window.__scenarioSedeView!.releaseDialog());

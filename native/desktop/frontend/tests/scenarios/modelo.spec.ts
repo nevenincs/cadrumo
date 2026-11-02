@@ -10,6 +10,7 @@ import type {
 } from "../../src/shell/modeloContract";
 import { ASSET_NOTES } from "../../src/dev/modeloAssetNotes";
 import { label } from "../support/strings";
+import { seedLayout } from "../support/layout";
 
 declare global {
   interface Window {
@@ -390,12 +391,8 @@ test("failed box help can be retried without leaving the selected box", async ({
       return read(request);
     };
   });
-  await boxRow(target, helped.box!)
-    .getByRole("button", { name: label("workspace.modelo.field.details") })
-    .click();
-  const details = target.getByRole("dialog", {
-    name: label("workspace.modelo.field.details"),
-  });
+  await boxRow(target, helped.box!).click();
+  const details = target.locator("[data-modelo-details]:visible");
   await expect(details).toContainText(
     label("workspace.modelo.details.card_unavailable"),
   );
@@ -416,10 +413,54 @@ test("failed box help can be retried without leaving the selected box", async ({
     label("workspace.modelo.details.reading"),
   );
   await expect(details).toContainText(helped.label.text);
+  await expect(details).toContainText("Real Decreto 439/2007, art. 110");
   expect(await target.evaluate(() => window.__modeloHelpGate!.reads)).toBe(
     before + 1,
   );
   expect(await calls(target, "modelo submit")).toEqual([]);
+});
+
+test("one details panel survives responsive changes without rereading its help", async ({
+  page: target,
+}, info) => {
+  await seedLayout(target, {
+    layout: {
+      agentShown: false,
+      tuiShown: false,
+      docsShown: true,
+      page: "docs",
+    },
+  });
+  await target.setViewportSize({ width: 1600, height: 900 });
+  await openDeclaration(target, "130", { shape: "edit" });
+  await stage(target, "06", TYPED_06);
+  await boxRow(target, "01").click();
+  const details = target.locator("[data-modelo-details]");
+  await expect(details).toHaveCount(1);
+  await expect(details).toContainText("Real Decreto 439/2007, art. 110");
+  const reads = (await calls(target, "modelo casillaHelp")).length;
+  for (const width of [600, 1000, 1200, 1600]) {
+    await target.setViewportSize({ width, height: width === 600 ? 700 : 900 });
+    await expect(details).toHaveCount(1);
+    await expect(details).toBeVisible();
+    const panel = target.locator(".declarations-workspace [role=tabpanel]");
+    await expect(
+      panel.getByRole("button", {
+        name: label("workspace.modelo.next_button.apply"),
+        exact: true,
+      }),
+    ).toBeInViewport();
+    expect(
+      await panel.evaluate(
+        (element) => element.scrollWidth - element.clientWidth,
+      ),
+    ).toBeLessThanOrEqual(1);
+    expect((await calls(target, "modelo casillaHelp")).length).toBe(reads);
+    if (width === 600 || width === 1600)
+      await target.screenshot({
+        path: info.outputPath(`details-${width}.png`),
+      });
+  }
 });
 
 test("a box whose kind of value cannot be typed says why on the form", async ({
