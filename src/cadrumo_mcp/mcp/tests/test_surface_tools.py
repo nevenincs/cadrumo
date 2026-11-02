@@ -8,7 +8,6 @@ surface out of search and describe, and names the surface when it is admitted.
 
 from __future__ import annotations
 
-import sys
 from datetime import timedelta
 from types import SimpleNamespace
 from typing import NoReturn, cast
@@ -31,20 +30,18 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionDescriptionV1,
     OperationRegistry,
 )
-from cadrumo.core import logging as cadrumo_logging
 from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.deadline_budget import DEFAULT_TIMEOUT_POLICY
 from cadrumo_client.transport.frontend_client import FrontendClient
 from cadrumo_mcp.mcp.access_scope import surface_scope
 
-from .. import main as mcp_main
 from .. import runtime_adapter as mcp_runtime
-from .. import server as mcp_server
 from ..protocol_contract import MCP_TOOL_CATALOGUE
 from ..runtime_adapter import RuntimeMcpAdapter
 from ..server import build_server
 from ..surfaces import DEFAULT_MCP_SURFACE, MCP_SURFACES, McpSurface, McpSurfaceName
 from .admitted_lease import admitted_access_status
+from .entry_point_support import run_entry_point
 from .session import connected_server_and_client_session
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_core]
@@ -242,24 +239,12 @@ async def test_an_admission_names_the_finite_scope_ceiling_for_every_surface(
     assert opened == [expected]
 
 
-def _run_entry_point(monkeypatch: pytest.MonkeyPatch, arguments: list[str]) -> list[dict[str, object]]:
-    """Run the installed entry point on these arguments and return what it asked to be served."""
-    served: list[dict[str, object]] = []
-    monkeypatch.setenv("PYDANTIC_DISABLE_PLUGINS", "__all__")
-    monkeypatch.delenv("CADRUMO_MCP_REQUIRED_VERSION", raising=False)
-    monkeypatch.setattr(sys, "argv", ["cadrumo-mcp", *arguments])
-    monkeypatch.setattr(cadrumo_logging, "configure_logging", lambda: None)
-    monkeypatch.setattr(mcp_server, "serve", lambda **options: served.append(options))
-    mcp_main.main()
-    return served
-
-
 @pytest.mark.parametrize("unknown", ["read-only", "Full", "", "everything"])
 def test_the_entry_point_refuses_an_unknown_surface_before_serving(
     monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str], unknown: str
 ) -> None:
     with pytest.raises(SystemExit) as stopped:
-        _run_entry_point(monkeypatch, ["--profile-id", str(uuid4()), "--surface", unknown])
+        run_entry_point(monkeypatch, ["--profile-id", str(uuid4()), "--surface", unknown])
 
     assert stopped.value.code == 2
     message = capsys.readouterr().err
@@ -274,7 +259,7 @@ def test_the_entry_point_serves_the_surface_it_is_given(
 ) -> None:
     profile_id = uuid4()
 
-    served = _run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--surface", surface.value])
+    served = run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--surface", surface.value])
 
     assert served == [{"profile_id": profile_id, "credential_reference": None, "surface": MCP_SURFACES[surface]}]
 
@@ -282,7 +267,7 @@ def test_the_entry_point_serves_the_surface_it_is_given(
 def test_the_entry_point_serves_the_full_surface_when_none_is_named(monkeypatch: pytest.MonkeyPatch) -> None:
     profile_id, reference = uuid4(), uuid4()
 
-    served = _run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--credential-reference", str(reference)])
+    served = run_entry_point(monkeypatch, ["--profile-id", str(profile_id), "--credential-reference", str(reference)])
 
     assert served == [
         {"profile_id": profile_id, "credential_reference": reference, "surface": MCP_SURFACES[DEFAULT_MCP_SURFACE]}
