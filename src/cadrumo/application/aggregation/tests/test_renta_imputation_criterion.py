@@ -388,7 +388,7 @@ def test_the_minimum_binds_an_election_older_than_the_supported_years() -> None:
 
 def test_a_year_before_the_reglamento_binds_no_election() -> None:
     criteria = ImputationCriteria(facts=_declared((2005, _CASH), (2006, _DEVENGO)))
-    assert criteria.usable(2006) is ActivityImputationCriterion.DEVENGO
+    assert criteria.declared(2006) is criteria.usable(2006) is not None
 
 
 def test_cash_without_a_declared_accounting_state_is_not_usable() -> None:

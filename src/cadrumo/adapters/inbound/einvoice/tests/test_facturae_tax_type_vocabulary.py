@@ -4,30 +4,37 @@ from __future__ import annotations
 
 from datetime import date
 from pathlib import Path
-from xml.etree import ElementTree as ET
 
 import pytest
 
-from ..authority import PinnedAuthorityOperation
-from ..facturae_tax_type_codes import facturae_irpf_tax_type_code
+from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
+from cadrumo.domain.calculations.registry.facturae_tax_type_codes import facturae_irpf_tax_type_code
 
-pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
+from ..xml import local_tag_name, parse_hardened_xml
+
+pytestmark = [pytest.mark.unit, pytest.mark.hex_inbound_adapter]
 
 _SCHEMA = Path(__file__).parents[4] / "_data" / "corpus" / "facturae" / "Facturaev3_2_2.xml"
-_XS = "{http://www.w3.org/2001/XMLSchema}"
 _XML_LANG = "{http://www.w3.org/XML/1998/namespace}lang"
 
 
 def _schema_codes_naming(tax: str) -> list[str]:
     """Read ``TaxTypeCodeType`` from the schema, returning the members whose Spanish name starts with ``tax``."""
-    root = ET.parse(_SCHEMA).getroot()
-    simple_types = [node for node in root.iter(f"{_XS}simpleType") if node.get("name") == "TaxTypeCodeType"]
+    root = parse_hardened_xml(_SCHEMA.read_bytes())
+    simple_types = [
+        node
+        for node in root.iter()
+        if local_tag_name(node.tag) == "simpleType" and node.get("name") == "TaxTypeCodeType"
+    ]
     assert len(simple_types) == 1
     return [
         str(member.get("value"))
-        for member in simple_types[0].iter(f"{_XS}enumeration")
-        for doc in member.iter(f"{_XS}documentation")
-        if doc.get(_XML_LANG) == "es" and (doc.text or "").startswith(f"{tax}:")
+        for member in simple_types[0].iter()
+        if local_tag_name(member.tag) == "enumeration"
+        for doc in member.iter()
+        if local_tag_name(doc.tag) == "documentation"
+        and doc.get(_XML_LANG) == "es"
+        and (doc.text or "").startswith(f"{tax}:")
     ]
 
 
