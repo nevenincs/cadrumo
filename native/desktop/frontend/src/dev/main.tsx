@@ -16,6 +16,7 @@ import {
   scenarioHost,
   type CalendarShape,
 } from "./scenarioHost";
+import { HOUSEHOLD_SCENARIOS } from "./householdFixture";
 import { ELECTION_SCENARIOS } from "./imputationElectionFixture";
 import { LEDGER_SHAPES } from "./ledgerFixture";
 import { MODELO_SHAPES } from "./modeloFixture";
@@ -94,6 +95,10 @@ function readParams() {
     setup: SETUP_SHAPES.find((shape) => shape === params.get("setup")),
     // How the made-up ledger answers.
     ledger: LEDGER_SHAPES.find((shape) => shape === params.get("ledger")),
+    // What the made-up profile states for the household.
+    household: HOUSEHOLD_SCENARIOS.find(
+      (state) => state === params.get("household"),
+    ),
     // How the made-up declarations answer.
     modelo: MODELO_SHAPES.find((shape) => shape === params.get("modelo")),
     // What the made-up profile states for the imputation election.
@@ -216,6 +221,8 @@ function Scenarios() {
       setup: initial.setup,
       ledger: initial.ledger,
       modelo: initial.modelo,
+      election: initial.election,
+      household: initial.household,
       window: initial.window,
       language: run.language,
       latencyMs: initial.latencyMs,

@@ -62,22 +62,12 @@ class GatewayAttachments(AttachmentGateway):
         history_status, history = self._exchange("GET", f"/v1/runs/{quote(run_id, safe='')}/history")
         if status != 200 or history_status != 200:
             return None
-        pending = (history.get("state") or {}).get("pending_permissions") or []
-        request = next((held for held in pending if held.get("request_id") == request_id), None)
-        if request is None or request.get("tool_call") != _READ_TOOL or request.get("tool_server") is not None:
+        request = _parked_read_request(history, request_id)
+        described = None if request is None else _read_description(request.get("description"))
+        lane = _selected_lane(status_body)
+        if described is None or lane is None:
             return None
-        described = _read_description(request.get("description"))
-        selection = status_body.get("selection") or {}
-        conversation = status_body.get("conversation_id")
-        provider, transport, model = selection.get("provider"), selection.get("transport"), selection.get("model")
-        if (
-            described is None
-            or not isinstance(conversation, str)
-            or not isinstance(provider, str)
-            or not isinstance(transport, str)
-            or not isinstance(model, str)
-        ):
-            return None
+        conversation, provider, transport, model = lane
         name, action = described
         return PendingRead(
             conversation_id=conversation, name=name, action=action, provider=provider, transport=transport, model=model
@@ -127,10 +117,9 @@ class GatewayAttachments(AttachmentGateway):
         headers = {"Authorization": "Bearer " + self._bearer.decode("ascii"), "Accept": "application/json"}
         if host:
             headers[HOST_ADMISSION_HEADER] = self._host_token.decode("ascii")
-        encoded = None
+        encoded = None if body is None else json.dumps(body).encode("utf-8")
         if body is not None:
             headers["Content-Type"] = "application/json"
-            encoded = json.dumps(body).encode("utf-8")
         connection = HTTPConnection("127.0.0.1", endpoint.port, timeout=_SECONDS)
         try:
             connection.request(method, path, body=encoded, headers=headers)
@@ -143,11 +132,41 @@ class GatewayAttachments(AttachmentGateway):
             connection.close()
         if len(payload) > _RESPONSE_MAX_BYTES:
             return 0, {}
-        try:
-            decoded = json.loads(payload) if payload else {}
-        except ValueError:
-            return 0, {}
-        return status, decoded if isinstance(decoded, dict) else {}
+        decoded = _decoded_object(payload)
+        return (0, {}) if decoded is None else (status, decoded)
+
+
+def _parked_read_request(history: dict[str, Any], request_id: str) -> dict[str, Any] | None:
+    """Return the run's held permission request when it is the attachment read tool of the agent itself."""
+    pending = (history.get("state") or {}).get("pending_permissions") or []
+    request = next((held for held in pending if held.get("request_id") == request_id), None)
+    if request is None or request.get("tool_call") != _READ_TOOL or request.get("tool_server") is not None:
+        return None
+    return request
+
+
+def _selected_lane(status_body: dict[str, Any]) -> tuple[str, str, str, str] | None:
+    """Return the conversation id and the provider, transport and model the run selected, when all are text."""
+    selection = status_body.get("selection") or {}
+    conversation = status_body.get("conversation_id")
+    provider, transport, model = selection.get("provider"), selection.get("transport"), selection.get("model")
+    if (
+        isinstance(conversation, str)
+        and isinstance(provider, str)
+        and isinstance(transport, str)
+        and isinstance(model, str)
+    ):
+        return conversation, provider, transport, model
+    return None
+
+
+def _decoded_object(payload: bytes) -> dict[str, Any] | None:
+    """Decode a response body to a JSON object (an empty body is an empty object), or ``None`` when it is not JSON."""
+    try:
+        decoded = json.loads(payload) if payload else {}
+    except ValueError:
+        return None
+    return decoded if isinstance(decoded, dict) else {}
 
 
 __all__ = ["GatewayAttachments"]

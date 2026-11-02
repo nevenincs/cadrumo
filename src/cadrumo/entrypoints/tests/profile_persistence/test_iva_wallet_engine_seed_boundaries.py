@@ -28,7 +28,8 @@ from cadrumo.domain.calculations.registry.authority import (
     bundled_indexed_authority as _indexed_authority_for_test,
 )
 from cadrumo.domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
     _BUCKET_ID,
     _DECIDED_AT,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -44,7 +45,6 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _store_operator_profile_with_tax_id,
     _work_unit_repositories_with_modelo_303_work_unit,
 )
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
     M303_LEDGER_CUOTA,
     seed_m303_period_cuotas,

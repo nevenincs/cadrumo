@@ -17,7 +17,7 @@ import pytest
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.domain.calculations.registry.modelo_localization import form_heading_edition_locale_key
 from cadrumo.domain.calculations.registry.schema_form_layouts import FormLayoutDefinition
-from dev.locales._registry_scanner import scan_form_layout_heading_keys
+from dev.locales.form_layout_heading_scan import scan_form_layout_heading_keys
 
 from ...compiler.loader import load_registry_tree
 from ..cli import REGISTRY_ROOT

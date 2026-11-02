@@ -305,22 +305,3 @@ def _single_value(period_values: tuple[Decimal, ...], *, subject: str) -> Decima
 def _requirement_ids(requirement: RegistryFoldRequirement) -> tuple[str, ...]:
     """Return the binding ids carried by either kind of fold requirement."""
     return requirement.target_bindings or requirement.binding_ids
-
-
-def resolve_observed_requirement_value(
-    requirement: RegistryFoldRequirement,
-    observations: tuple[RegistryModeloObservation, ...],
-    *,
-    source_filing_kinds: SourceFilingKindIndex | None = None,
-) -> Decimal:
-    """Gather and fold one requirement to a single :class:`~decimal.Decimal`.
-
-    Convenience wrapper for callers that already hold the normalized
-    :class:`~domain.calculations.registry.bindings.RegistryModeloObservation` rows.
-    """
-    gathered = gather_observed_requirement_values(
-        requirement,
-        observations,
-        source_filing_kinds=source_filing_kinds,
-    )
-    return fold_observed_requirement_values(requirement, gathered.values)

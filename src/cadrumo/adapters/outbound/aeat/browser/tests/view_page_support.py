@@ -19,7 +19,14 @@ from typing import Final
 
 from playwright.async_api import Browser, BrowserContext, Page, Route, async_playwright
 
-from cadrumo_client.contracts.view_stream import ViewClosedReason, ViewImage, ViewNotice, ViewSinkInput, ViewState
+from cadrumo_client.contracts.view_stream import (
+    ViewClipboardSelection,
+    ViewClosedReason,
+    ViewImage,
+    ViewNotice,
+    ViewSinkInput,
+    ViewState,
+)
 from cadrumo_client.contracts.view_transfer import (
     ViewDownload,
     ViewFileChooser,
@@ -68,7 +75,9 @@ class RecordingViewSink:
         self._lock = threading.Lock()
         self._inbox: deque[ViewSinkInput] = deque()
         self.images: list[ViewImage] = []
-        self.documents: list[ViewState | ViewNotice | ViewClipboardSelection | ViewDownload | ViewFileChooser | ViewTransferCancel] = []
+        self.documents: list[
+            ViewState | ViewNotice | ViewClipboardSelection | ViewDownload | ViewFileChooser | ViewTransferCancel
+        ] = []
         self.downloaded: dict[int, bytes] = {}
         self.closed: list[ViewClosedReason] = []
         self.cancelled_downloads: list[int] = []
@@ -94,7 +103,10 @@ class RecordingViewSink:
         with self._lock:
             self.images.append(announcement)
 
-    def send(self, document: ViewState | ViewNotice | ViewClipboardSelection | ViewDownload | ViewFileChooser | ViewTransferCancel) -> None:
+    def send(
+        self,
+        document: ViewState | ViewNotice | ViewClipboardSelection | ViewDownload | ViewFileChooser | ViewTransferCancel,
+    ) -> None:
         with self._lock:
             self.documents.append(document)
 

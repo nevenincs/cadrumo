@@ -614,13 +614,6 @@ def load_usage_ratios(*, bucket_id: str, operation: PinnedAuthorityOperation) ->
     return load_usage_ratios(bucket_id=bucket_id, operation=operation)
 
 
-def save_usage_ratios(profile: UsageRatioProfile, *, bucket_id: str) -> None:
-    """Compose save usage ratios for the operation scope."""
-    from ..adapters.persistence.profile.usage_ratios import save_usage_ratios
-
-    save_usage_ratios(profile, bucket_id=bucket_id)
-
-
 def save_usage_ratios_with_secure_object_writes(
     profile: UsageRatioProfile,
     extra_writes: tuple[SecureObjectWrite, ...],

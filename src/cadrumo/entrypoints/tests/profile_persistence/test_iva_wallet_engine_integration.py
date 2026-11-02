@@ -44,7 +44,8 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationOverride,
     IvaCompensationReconciliationDecision,
 )
-from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support import (
+from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.iva_wallet_engine_support import (
     _DECIDED_AT,
     _M303_COMPENSACION_APLICADA_CASILLA,
     _M303_COMPENSACION_PENDIENTE_ANTERIORES_CASILLA,
@@ -62,18 +63,17 @@ from cadrumo.entrypoints.tests.profile_persistence._iva_wallet_engine_support im
     _store_operator_profile,
     _store_operator_profile_with_tax_id,
     _store_prior_303_compensation,
-    _wallet_observation,
     _work_unit_repositories,
     _work_unit_repositories_with_modelo_303_work_unit,
+    wallet_observation,
 )
-from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.m303_annual_ledger_support import (
     M303_LEDGER_CUOTA,
     seed_m303_period_cuotas,
 )
 
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
-from ._iva_wallet_engine_support import resolve_without_caller_inputs
+from .iva_wallet_engine_support import resolve_without_caller_inputs
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("authority_operation")]
 
@@ -96,7 +96,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_filing_
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(pending=Decimal("1200.00")),
+            wallet=wallet_observation(pending=Decimal("1200.00")),
             repository=observation_repo,
             decision_repository=IvaWalletDecisionRepository(),
             decided_at=_DECIDED_AT,
@@ -427,7 +427,7 @@ def test_wallet_capture_decision_feeds_real_modelo_303_engine_from_prior_year_hi
         report = reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(
+            wallet=wallet_observation(
                 pending=Decimal("450.00"),
                 target_year=target_year,
                 target_period=_period(target_year, target_period),
@@ -971,7 +971,7 @@ def test_persisted_wallet_refresh_uses_the_supplied_evaluation_instant(
         reconcile_modelo_303_iva_compensation(
             snapshot,
             taxpayer_nif=_TAXPAYER_NIF,
-            wallet=_wallet_observation(pending=Decimal("1200.00")),
+            wallet=wallet_observation(pending=Decimal("1200.00")),
             repository=observations,
             decision_repository=decisions,
             decided_at=_DECIDED_AT,

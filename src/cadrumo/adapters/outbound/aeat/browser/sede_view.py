@@ -31,7 +31,6 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, Self
 
 from cadrumo_client.contracts.view_stream import (
@@ -49,18 +48,6 @@ from cadrumo_client.contracts.view_stream import (
     ViewSinkInput,
     ViewStreamSink,
 )
-from cadrumo_client.contracts.view_transfer import (
-    VIEW_MAX_TRANSFER_ID,
-    ViewDownload,
-    ViewDownloadAnswer,
-    ViewFileChooser,
-    ViewFileChooserAnswer,
-    ViewFileChooserOutcome,
-    ViewTransferCancel,
-    ViewTransferDirection,
-    ViewUploadCancelled,
-    ViewUploadedFile,
-)
 
 from .....application.live.sede_view_ports import SedeViewEnd, SedeViewOpening, SedeViewSignIn
 from .....core.async_cleanup import AsyncCloseable, close_async_resources
@@ -71,14 +58,14 @@ from .factory import default_browser_session_factory
 from .screencast import ScreencastImage, ScreencastProfile, ViewScreencast
 from .session import BrowserSession
 from .view_clipboard import ViewClipboardAdapter
-from .view_download import deliver_download, discard_download
 from .view_input import ViewInputAdapter
 from .view_login_session import ViewLoginSessionFactory
-from .view_presentation import interrupts_assisted_login, is_aeat_page, safe_filename, view_state
+from .view_presentation import interrupts_assisted_login, is_aeat_page, view_state
+from .view_transfers import ViewTransfers
 from .view_work import settle
 
 if TYPE_CHECKING:
-    from playwright.async_api import Dialog, Download, FileChooser, FilePayload
+    from playwright.async_api import Dialog, Download, FileChooser
 
 logger = get_logger(__name__)
 
@@ -86,17 +73,6 @@ logger = get_logger(__name__)
 _RECEIVE_SECONDS: Final[float] = 0.25
 #: The screencast's own credit is kept full: the stream keeps only the newest image under the window's credit.
 _SCREENCAST_CREDIT: Final[int] = 2
-_FALLBACK_MIME: Final[str] = "application/octet-stream"
-
-
-@dataclass(slots=True)
-class _Chooser:
-    """A file chooser the page opened, waiting for the window's files."""
-
-    chooser: FileChooser
-    multiple: bool
-    expected: int | None = None
-    files: list[ViewUploadedFile] = field(default_factory=list)
 
 
 class SedeViewPage:
@@ -120,11 +96,8 @@ class SedeViewPage:
         self._phase = ViewPhase.BROWSING
         self._loading = False
         self._next_sequence = 0
-        self._last_transfer_id = 0
-        self._last_chooser_id = 0
-        self._downloads: dict[int, Download] = {}
-        self._choosers: dict[int, _Chooser] = {}
         self._background: set[asyncio.Task[None]] = set()
+        self._transfers = ViewTransfers(sink, self._spawn)
         self._sign_in: SedeViewSignIn | None = None
         self._assist: asyncio.Task[None] | None = None
         self._sign_in_check: asyncio.Task[None] | None = None
@@ -219,10 +192,7 @@ class SedeViewPage:
         for task in tuple(self._background):
             task.cancel()
         await asyncio.gather(*self._background, return_exceptions=True)
-        downloads, self._downloads = tuple(self._downloads.values()), {}
-        for download in downloads:
-            await discard_download(download)
-        self._choosers.clear()
+        await self._transfers.close()
         self._openers.clear()
         context, self._context = self._context, None
         await close_async_resources(context, self._owner, task_name="cadrumo-sede-view-close")
@@ -247,24 +217,12 @@ class SedeViewPage:
     def download_started(self, page: Page, download: Download) -> None:
         """Offer the download to the person; its bytes wait in the browser's transient file."""
         del page
-        if self._closed or self._last_transfer_id >= VIEW_MAX_TRANSFER_ID:
-            self._spawn(discard_download(download))
-            return
-        self._last_transfer_id += 1
-        self._downloads[self._last_transfer_id] = download
-        self._sink.send(
-            ViewDownload(transfer_id=self._last_transfer_id, filename=safe_filename(download.suggested_filename))
-        )
+        self._transfers.download_started(download, closed=self._closed)
 
     def file_chooser_opened(self, page: Page, file_chooser: FileChooser) -> None:
         """Ask the person for the files the page wants."""
         del page
-        if self._closed or self._last_chooser_id >= VIEW_MAX_TRANSFER_ID:
-            return
-        self._last_chooser_id += 1
-        multiple = file_chooser.is_multiple()
-        self._choosers[self._last_chooser_id] = _Chooser(chooser=file_chooser, multiple=multiple)
-        self._sink.send(ViewFileChooser(chooser_id=self._last_chooser_id, accept=(), multiple=multiple))
+        self._transfers.file_chooser_opened(file_chooser, closed=self._closed)
 
     def dialog_opened(self, page: Page, dialog: Dialog) -> None:
         """Hand the dialog to the input adapter, which asks the person."""
@@ -292,13 +250,9 @@ class SedeViewPage:
         if isinstance(item, ViewClose):
             return SedeViewEnd.CLOSED
         if isinstance(item, ViewInput):
-            adapter = self._input
-            if adapter is not None and (await adapter.input(item)).refused:
-                return SedeViewEnd.PROTOCOL_VIOLATION
-        elif isinstance(item, ViewNavigate):
-            adapter = self._input
-            if adapter is not None:
-                self._spawn(self._navigate(adapter, item))
+            return await self._relay_input(item)
+        if isinstance(item, ViewNavigate):
+            self._start_navigation(item)
         elif isinstance(item, ViewResize):
             await self._resize(item)
         elif isinstance(item, ViewDialog):
@@ -308,8 +262,19 @@ class SedeViewPage:
         elif isinstance(item, ViewClipboardCommit):
             await self._clipboard.commit(item, self._shown)
         else:
-            return self._dispatch_transfer(item)
+            return self._transfers.dispatch(item)
         return None
+
+    async def _relay_input(self, item: ViewInput) -> SedeViewEnd | None:
+        adapter = self._input
+        if adapter is not None and (await adapter.input(item)).refused:
+            return SedeViewEnd.PROTOCOL_VIOLATION
+        return None
+
+    def _start_navigation(self, item: ViewNavigate) -> None:
+        adapter = self._input
+        if adapter is not None:
+            self._spawn(self._navigate(adapter, item))
 
     async def _resize(self, item: ViewResize) -> None:
         self._viewport = item
@@ -320,68 +285,9 @@ class SedeViewPage:
         if self._input is not None:
             await self._input.answer_dialog(item)
 
-    def _dispatch_transfer(
-        self,
-        item: ViewDownloadAnswer | ViewFileChooserAnswer | ViewUploadedFile | ViewUploadCancelled | ViewTransferCancel,
-    ) -> SedeViewEnd | None:
-        if isinstance(item, ViewDownloadAnswer):
-            download = self._downloads.pop(item.transfer_id, None)
-            if download is not None:
-                self._spawn(deliver_download(self._sink, item.transfer_id, download, item.outcome))
-        elif isinstance(item, ViewFileChooserAnswer):
-            return self._answer_chooser(item)
-        elif isinstance(item, ViewUploadedFile):
-            self._receive_file(item)
-        elif isinstance(item, ViewUploadCancelled):
-            self._cancel_upload(item.chooser_id)
-        else:
-            self._cancel_transfer(item)
-        return None
-
     async def _navigate(self, adapter: ViewInputAdapter, verb: ViewNavigate) -> None:
         await adapter.navigate(verb)
         await self._send_state()
-
-    def _answer_chooser(self, answer: ViewFileChooserAnswer) -> SedeViewEnd | None:
-        pending = self._choosers.get(answer.chooser_id)
-        if pending is None or pending.expected is not None:
-            return None
-        if answer.outcome is ViewFileChooserOutcome.CANCELLED:
-            del self._choosers[answer.chooser_id]
-            return None
-        if answer.file_count > 1 and not pending.multiple:
-            return SedeViewEnd.PROTOCOL_VIOLATION
-        pending.expected = answer.file_count
-        return None
-
-    def _receive_file(self, uploaded: ViewUploadedFile) -> None:
-        pending = self._choosers.get(uploaded.chooser_id)
-        if pending is None or pending.expected is None:
-            return
-        pending.files.append(uploaded)
-        if len(pending.files) == pending.expected:
-            del self._choosers[uploaded.chooser_id]
-            self._spawn(self._supply(pending))
-
-    def _cancel_transfer(self, cancel: ViewTransferCancel) -> None:
-        if cancel.direction is ViewTransferDirection.DOWNLOAD:
-            download = self._downloads.pop(cancel.transfer_id, None)
-            if download is not None:
-                self._spawn(discard_download(download))
-
-    def _cancel_upload(self, chooser_id: int) -> None:
-        # A cancelled upload leaves its chooser without all its files; the page keeps no partial set.
-        pending = self._choosers.get(chooser_id)
-        if pending is not None and pending.expected is not None:
-            del self._choosers[chooser_id]
-
-    async def _supply(self, pending: _Chooser) -> None:
-        payloads: list[FilePayload] = [
-            {"name": uploaded.name, "mimeType": uploaded.mime or _FALLBACK_MIME, "buffer": uploaded.data}
-            for uploaded in pending.files
-        ]
-        pending.files.clear()
-        await pending.chooser.set_files(payloads)
 
     # -- signing in ------------------------------------------------------------------------------------------------
 
@@ -438,22 +344,29 @@ class SedeViewPage:
 
     def _page_closed(self, page: Page) -> None:
         opener = self._openers.pop(page, None)
-        for popup, parent in tuple(self._openers.items()):
-            if parent is page:
-                if opener is not None and not opener.is_closed():
-                    self._openers[popup] = opener
-                else:
-                    del self._openers[popup]
+        self._rehome_popups(page, opener)
         if page in self._pages:
             self._pages.remove(page)
         if not self._pages:
             self._mark_lost()
-            return
-        if page is self._shown:
-            if opener is not None and opener in self._pages and not opener.is_closed():
-                self._spawn(self._show(opener))
+        elif page is self._shown:
+            self._show_after_close(opener)
+
+    def _rehome_popups(self, closed: Page, opener: Page | None) -> None:
+        """Give the closed page's popups to its opener, or forget them when it has none left."""
+        for popup, parent in tuple(self._openers.items()):
+            if parent is not closed:
+                continue
+            if opener is not None and not opener.is_closed():
+                self._openers[popup] = opener
             else:
-                self._spawn(self._show_newest())
+                del self._openers[popup]
+
+    def _show_after_close(self, opener: Page | None) -> None:
+        if opener is not None and opener in self._pages and not opener.is_closed():
+            self._spawn(self._show(opener))
+        else:
+            self._spawn(self._show_newest())
 
     def _navigated(self, page: Page, main_frame: bool) -> None:
         if main_frame and page is self._shown:
