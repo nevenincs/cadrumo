@@ -25,7 +25,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.categories.spending_category_catalogue import require_spending_category, spending_category_tokens
-from ...domain.transactions.classification_rule import LedgerClassificationRule
+from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH, LedgerClassificationRule
 from ...domain.transactions.errors import ClassificationRuleError, TransactionValidationError
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
@@ -49,6 +49,7 @@ from .action_ports import LedgerActionPorts, LedgerActionPortsFactory, require_e
 from .actions_classification import (
     ClassificationRulePlan,
     ClassificationRulePlanRow,
+    ClassificationRuleSearchRefusedError,
     add_classification_rule,
     apply_classification_rule_match,
     plan_classification_rules,
@@ -78,6 +79,7 @@ from .rule_results import (
     LEDGER_RULE_VALIDATION_REFUSAL_CODE,
     build_rule_apply_plan_projection,
     build_rule_apply_result_projection,
+    build_rule_apply_search_refusal,
     build_rule_apply_validation_projection,
     build_rule_dry_run_projection,
     build_rule_validation_messages,
@@ -122,6 +124,14 @@ async def _prepare_rule_add(
             payload.profile_id,
             code="empty_pattern",
             error=ValueError("description pattern must not be empty or whitespace"),
+        )
+        return await _publish_add_refusal(context, projection)
+
+    if len(payload.description_pattern) > RULE_PATTERN_ENTRY_MAX_LENGTH:
+        projection = _add_validation_projection(
+            payload.profile_id,
+            code="pattern_too_long",
+            error=ValueError(f"description pattern must not exceed {RULE_PATTERN_ENTRY_MAX_LENGTH} characters"),
         )
         return await _publish_add_refusal(context, projection)
 
@@ -318,13 +328,17 @@ class LedgerRuleApplyExecutor:
             asyncio.to_thread(self._repository_factory, bucket_id=bucket_id),
         )
         require_exact_ledger_action_ports(ports, bucket_id=bucket_id, operation=operation)
-        plan = await asyncio.to_thread(
-            plan_classification_rules,
-            bucket_id=bucket_id,
-            reaffirm=payload.reaffirm,
-            ports=ports,
-            rule_repository=repository,
-        )
+        try:
+            plan = await asyncio.to_thread(
+                plan_classification_rules,
+                bucket_id=bucket_id,
+                reaffirm=payload.reaffirm,
+                ports=ports,
+                rule_repository=repository,
+            )
+        except ClassificationRuleSearchRefusedError as error:
+            await context.events.effect(OperationEffect.NONE)
+            return await publish_rule_apply_refusal(context, build_rule_apply_search_refusal(payload.profile_id, error))
 
         if payload.dry_run:
             projection = build_rule_dry_run_projection(payload.profile_id, plan)

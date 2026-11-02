@@ -20,6 +20,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.percentage import PERCENTAGE_BARE_FRACTION_CEILING, PERCENTAGE_ENTRY_DECIMALS, PERCENTAGE_MAX
 from ...core.unit_proportion import UNIT_PROPORTION_MAX
 from ...domain.identifiers import canonical_decimal_string
+from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH
 
 type DecimalRuleName = Literal["amount", "tax_amount", "quantity", "unit_price"]
 type PercentUnit = Literal["points", "fraction"]
@@ -58,6 +59,7 @@ class LedgerEntryLimitsProjection(BaseModel):
     percent_fraction_max: str
     percent_bare_fraction_ceiling: str
     document_percent_fields: tuple[LedgerEntryPercentField, ...]
+    rule_pattern_max: int
 
 
 _INVOICE_LINE_ENTRY_DECIMALS: Final = 6
@@ -90,6 +92,7 @@ def ledger_entry_limits() -> LedgerEntryLimitsProjection:
         percent_fraction_max=canonical_decimal_string(UNIT_PROPORTION_MAX),
         percent_bare_fraction_ceiling=canonical_decimal_string(PERCENTAGE_BARE_FRACTION_CEILING),
         document_percent_fields=_DOCUMENT_PERCENT_FIELDS,
+        rule_pattern_max=RULE_PATTERN_ENTRY_MAX_LENGTH,
     )
 
 

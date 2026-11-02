@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import sys
+import time
 from collections.abc import Mapping
 from decimal import Decimal
 from pathlib import Path
@@ -343,3 +344,56 @@ def test_native_rule_add_list_dry_run_and_apply_preserve_encrypted_meaning(
             transaction_before_preview=transaction_before_preview,
             history_after_preview=history_after_preview,
         )
+
+
+def test_native_catastrophic_pattern_is_answered_typed_by_the_real_worker_on_trial_and_apply(
+    tmp_path: Path,
+    authority_operation: PinnedAuthorityOperation,
+) -> None:
+    """A planted catastrophic pattern reaches the real worker and comes back typed, in bounded time, unwritten."""
+    catastrophic = "(a+)+$"
+    with native_cli_profile_scope(tmp_path) as profile:
+        profile.register(label="native-ledger-rule-overrun", facts=_PROFILE_FACTS)
+        assert profile.label is not None
+        bucket_id = str(resolve_login_target(profile.label).bucket_id)
+        transaction_id = _seed_transaction(profile, bucket_id, "a" * 27 + "!")
+
+        started = time.monotonic()
+        trial = invoke_native_profile_revealing(
+            profile,
+            "app",
+            "ledger",
+            "rule",
+            "trial",
+            "--description-pattern",
+            catastrophic,
+            "--transaction-id",
+            transaction_id,
+        )
+        trial_seconds = time.monotonic() - started
+        assert trial.exit_code == 0, trial.output
+        assert unwrap_cli_result(trial) == {"outcome": "overrun", "hits": [], "pending": []}
+        assert trial_seconds < 15
+
+        stored_rule, rules_after_add = _add_rule_and_read_back(profile, catastrophic, authority_operation)
+        _, ports, _ = _canonical_ports(profile, operation=authority_operation)
+        transaction_before = ports.transaction_repository.load().get(transaction_id)
+        history_before = ports.bucket_event_repository.load()
+
+        started = time.monotonic()
+        refused = invoke_native_profile_revealing(profile, "app", "ledger", "rule", "apply", "--actor", _ACTOR)
+        apply_seconds = time.monotonic() - started
+        assert refused.exit_code != 0, refused.output
+        assert stored_rule.rule_id in refused.output
+        assert apply_seconds < 15
+
+        _, ports, rule_repository = _canonical_ports(profile, operation=authority_operation)
+        assert ports.transaction_repository.load().get(transaction_id) == transaction_before
+        assert ports.bucket_event_repository.load().events == history_before.events
+        assert rule_repository.list_rules() == rules_after_add
+
+        # The worker answers the next operation at once: nothing of the overrun is left running in it.
+        started = time.monotonic()
+        listed = invoke_native_profile_revealing(profile, "app", "ledger", "rule", "list")
+        assert listed.exit_code == 0, listed.output
+        assert time.monotonic() - started < 5

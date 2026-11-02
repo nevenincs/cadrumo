@@ -95,6 +95,7 @@ class LedgerEntryLimitsPayload(OutputSchema):
     percent_fraction_max: str
     percent_bare_fraction_ceiling: str
     document_percent_fields: list[LedgerEntryPercentFieldPayload]
+    rule_pattern_max: int
 
 
 class LedgerEntryOptionsResult(OutputSchema):

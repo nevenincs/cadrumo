@@ -3689,6 +3689,10 @@ desktop:
       expression: Expresión
       expression_hint: Se busca en cualquier parte de la descripción, sin distinguir
         mayúsculas.
+      expression_overrun: Esta expresión tarda demasiado en probarse con tus movimientos.
+        Simplifícala.
+      expression_too_long: Esta expresión es demasiado larga. Puede tener hasta {max}
+        caracteres.
       expression_unread: Esta ventana no puede leer esa expresión.
       from_selection: Crear regla a partir de la selección
       matches_split: Coincide con {count} · {pending} por clasificar
@@ -3712,6 +3716,9 @@ desktop:
         empty_pattern: Escribe las palabras que buscar.
         invalid_command: El libro no aceptó la regla.
         invalid_pattern: El libro no puede leer esa expresión.
+        pattern_overrun: Una regla guardada tarda demasiado en probarse con tus movimientos,
+          así que no se ha ejecutado nada.
+        pattern_too_long: La expresión es demasiado larga.
       run_note: La vista previa no cambia nada. Aplicarlas se añade a tus cambios,
         como cualquier otro.
       run_staged: 'Reglas añadidas a tus cambios · Movimientos: {count} · aún sin
@@ -3721,6 +3728,8 @@ desktop:
       saved_toast: Regla guardada · orden {place}
       stage_run: Añadir la aplicación a tus cambios
       title: Reglas de clasificación
+      trial_failed: No hay respuesta sobre esta expresión. Lo que has escrito se conserva.
+      trial_retry: Inténtalo de nuevo
       what: Busca palabras en la descripción del movimiento y decide su clasificación.
       words: La descripción contiene
       words_hint: Palabras en este orden; da igual mayúsculas o minúsculas.

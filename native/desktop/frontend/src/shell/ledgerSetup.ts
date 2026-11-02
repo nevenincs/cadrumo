@@ -42,7 +42,12 @@ export type LedgerRuleAddRequest = {
   actor?: string | null;
 };
 export type LedgerRuleValidation =
-  "empty_pattern" | "invalid_pattern" | "category" | "invalid_command";
+  | "empty_pattern"
+  | "invalid_pattern"
+  | "pattern_too_long"
+  | "pattern_overrun"
+  | "category"
+  | "invalid_command";
 export type LedgerRuleAddResult = {
   profile_id: string;
   outcome: "added" | "validation_error";
@@ -87,6 +92,7 @@ export type LedgerRuleApplyResult = {
   bucket_event_count: number;
   validation_code: LedgerRuleValidation | null;
   validation_messages: string[];
+  refused_rule_id: string | null;
 };
 
 // ---- Business-use ratios -------------------------------------------------
@@ -805,6 +811,7 @@ export type LedgerEntryLimits = {
     field: string;
     unit: "points" | "fraction";
   }[];
+  rule_pattern_max: number;
 };
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */

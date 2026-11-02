@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -12,7 +13,11 @@ from uuid import UUID
 import pytest
 
 from ....core.iban import iban_mod_97
-from ....domain.transactions.classification_rule import LedgerClassificationRule
+from ....domain.transactions.classification_rule import (
+    RULE_PATTERN_ENTRY_MAX_LENGTH,
+    LedgerClassificationRule,
+    description_pattern_error,
+)
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.errors import ClassificationRuleError
 from ....domain.transactions.models import Transaction
@@ -123,10 +128,7 @@ def test_a_broken_pattern_is_refused_as_the_writer_refuses_it(pattern: str, rows
 def test_the_answer_is_the_engines_own_match(pattern: str, description: str, found: bool) -> None:
     answer = try_rule_pattern(_PROFILE, pattern, {"row": _row(description)})
     assert (answer.hits == ("row",)) is found
-    saved = LedgerClassificationRule.create(
-        description_pattern=pattern, classification=BusinessClassification.BUSINESS, actor="t"
-    )
-    assert saved.matches(description) is found
+    assert bool(re.search(pattern, description, re.IGNORECASE)) is found
 
 
 def test_every_recorded_answer_is_the_engines() -> None:
@@ -142,3 +144,35 @@ def test_the_number_the_window_recording_refuses_is_refused_and_its_correction_i
     # 91 is the control pair of this account; worked by hand, mod 97 of the moved digits is 1.
     assert iban_mod_97("ES9121000418450200051332") == 1
     assert iban_mod_97("ES9221000418450200051332") != 1
+
+
+_CATASTROPHIC: Final = r"(a+)+$"
+
+
+def test_a_pattern_that_overruns_is_answered_as_one_and_the_active_rows_are_all_it_saw() -> None:
+    stuck = "a" * 27 + "!"
+    answer = try_rule_pattern(_PROFILE, _CATASTROPHIC, {"stuck": _row(stuck)})
+    assert (answer.outcome, answer.hits, answer.pending) == ("overrun", (), ())
+    archived = {"stuck": _row(stuck, state=TransactionLifecycleState.ARCHIVED)}
+    assert try_rule_pattern(_PROFILE, _CATASTROPHIC, archived).outcome == "matched"
+
+
+@pytest.mark.parametrize("pattern", ["a{99999999999}", "(" * 1000 + ")" * 1000, "(?L)a"])
+def test_every_way_a_pattern_cannot_compile_is_the_invalid_answer(pattern: str, rows: dict[str, Transaction]) -> None:
+    assert try_rule_pattern(_PROFILE, pattern, rows).outcome == "invalid_pattern"
+    assert description_pattern_error(pattern) is not None
+    with pytest.raises((ClassificationRuleError, ValueError)):
+        LedgerClassificationRule.create(
+            description_pattern=pattern, classification=BusinessClassification.BUSINESS, actor="t"
+        )
+
+
+def test_a_new_pattern_past_the_limit_is_too_long_yet_a_stored_rule_past_it_stays_readable(
+    rows: dict[str, Transaction],
+) -> None:
+    longer = "albor|" + "x" * RULE_PATTERN_ENTRY_MAX_LENGTH
+    assert try_rule_pattern(_PROFILE, longer, rows).outcome == "too_long"
+    stored = LedgerClassificationRule.create(
+        description_pattern=longer, classification=BusinessClassification.BUSINESS, actor="t"
+    )
+    assert LedgerClassificationRule.model_validate(stored.model_dump(mode="python")) == stored

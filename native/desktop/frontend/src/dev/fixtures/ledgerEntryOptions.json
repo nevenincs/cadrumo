@@ -560,6 +560,7 @@
         "field": "retention_rate",
         "unit": "points"
       }
-    ]
+    ],
+    "rule_pattern_max": 2048
   }
 }

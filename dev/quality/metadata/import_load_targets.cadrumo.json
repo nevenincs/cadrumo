@@ -2085,6 +2085,8 @@
         "cadrumo.core.parsing.utils",
         "cadrumo.core.path_confinement",
         "cadrumo.core.paths",
+        "cadrumo.core.pattern_search",
+        "cadrumo.core.pattern_search_worker",
         "cadrumo.core.payment_election",
         "cadrumo.core.percentage",
         "cadrumo.core.period",

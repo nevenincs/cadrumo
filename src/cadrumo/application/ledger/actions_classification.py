@@ -19,7 +19,7 @@ from __future__ import annotations
 import csv
 import io
 from collections.abc import Mapping, Sequence
-from typing import TYPE_CHECKING, NamedTuple
+from typing import TYPE_CHECKING, Literal, NamedTuple
 
 from pydantic import ValidationError
 
@@ -34,6 +34,7 @@ if TYPE_CHECKING:
 from ...core.errors.error_codes import resolve_error_message
 from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import CLASSIFIED_BY_MANUAL
+from ...core.pattern_search import PatternSearchOverrunError, PatternSearchUnreadableError, first_matching_patterns
 from ...domain.buckets.event import BucketEvent
 from ...domain.transactions.enums import BusinessClassification, TransactionLifecycleState, is_classified
 from ...domain.transactions.errors import TransactionValidationError
@@ -498,12 +499,32 @@ def _classification_rule_scope(
     return in_scope, skipped_already_classified
 
 
-def _winning_classification_rule(
-    transaction: Transaction,
+class ClassificationRuleSearchRefusedError(Exception):
+    """A stored rule could not be searched with, so the scan has no answer and nothing was written."""
+
+    code: Literal["pattern_overrun", "invalid_pattern"]
+
+    def __init__(self, rule_id: str, *, code: Literal["pattern_overrun", "invalid_pattern"]) -> None:
+        """Name the rule and why it has no answer."""
+        super().__init__(f"classification rule {rule_id} could not be searched with")
+        self.rule_id = rule_id
+        self.code = code
+
+
+def _winning_rule_positions(
+    transactions: tuple[Transaction, ...],
     rules: tuple[LedgerClassificationRule, ...],
-) -> LedgerClassificationRule | None:
-    """Return the first stored rule matching a transaction description."""
-    return next((rule for rule in rules if rule.matches(transaction.raw.description)), None)
+) -> tuple[int | None, ...]:
+    """Find each description's first matching rule in one bounded batch."""
+    try:
+        return first_matching_patterns(
+            [rule.description_pattern for rule in rules],
+            [transaction.raw.description for transaction in transactions],
+        )
+    except PatternSearchOverrunError as error:
+        raise ClassificationRuleSearchRefusedError(rules[error.pattern_index].rule_id, code="pattern_overrun") from None
+    except PatternSearchUnreadableError as error:
+        raise ClassificationRuleSearchRefusedError(rules[error.pattern_index].rule_id, code="invalid_pattern") from None
 
 
 def _planned_rule_matches(
@@ -513,11 +534,11 @@ def _planned_rule_matches(
     """Build ordered winning-rule rows and count transactions with no match."""
     matches: list[ClassificationRulePlanRow] = []
     no_match = 0
-    for transaction in transactions:
-        winner = _winning_classification_rule(transaction, rules)
-        if winner is None:
+    for transaction, position in zip(transactions, _winning_rule_positions(transactions, rules), strict=True):
+        if position is None:
             no_match += 1
             continue
+        winner = rules[position]
         matches.append(
             ClassificationRulePlanRow(
                 transaction_id=transaction.transaction_id,
@@ -609,6 +630,7 @@ def apply_classification_rule_match(
 
 
 __all__ = [
+    "ClassificationRuleSearchRefusedError",
     "add_classification_rule",
     "apply_classification_rule_match",
     "bulk_classify_from_csv",
