@@ -107,6 +107,7 @@ _IVA_SELECTED_SCOPE_EVIDENCE_FAILURE_REASONS = frozenset(
         IvaLedgerAggregationIssueReason.EU_MEMBER_STATE_ON_EXPORT_TRANSACTION,
         IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
         IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT,
+        IvaLedgerAggregationIssueReason.UNDETERMINED_MIXED_USE_TREATMENT,
     }
 )
 
@@ -117,6 +118,7 @@ _IVA_SELECTED_SCOPE_DETAILED_REASONS = frozenset(
     {
         IvaLedgerAggregationIssueReason.UNACCEPTED_REGISTRY_VALUE,
         IvaLedgerAggregationIssueReason.CASH_ACCOUNTING_EVIDENCE_INCOHERENT,
+        IvaLedgerAggregationIssueReason.UNDETERMINED_MIXED_USE_TREATMENT,
     }
 )
 

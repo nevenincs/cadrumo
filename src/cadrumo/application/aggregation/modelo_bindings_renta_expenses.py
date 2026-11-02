@@ -83,7 +83,7 @@ from .renta_gasto_ledger import (
     aggregate_renta_gasto_ledger_from_repositories,
 )
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
-from .renta_ledger_models import RentaLedgerExpenseAggregation
+from .renta_ledger_models import RentaLedgerAggregationIssueReason, RentaLedgerExpenseAggregation
 from .source_mesh import (
     CalculationSourceContext,
     CalculationSourceDiagnostic,
@@ -360,6 +360,13 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 issues,
                 source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 resolver_id=self.resolver_id,
+                held_back_reasons=frozenset({RentaLedgerAggregationIssueReason.MISSING_CATEGORY}),
+                source_ref=lambda issue: f"transaction:{issue.transaction_id}",
+            )
+            + source_issue_diagnostics(
+                aggregation.advisories,
+                source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
+                resolver_id=self.resolver_id,
             )
             + register_owned_acquisition_diagnostics(
                 register_owned,
@@ -626,9 +633,15 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     {
                         RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
                         RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
+                        RentaGastoLedgerAggregationIssueReason.MISSING_CATEGORY,
                     }
                 ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",
+            )
+            + source_issue_diagnostics(
+                aggregation.advisories,
+                source_kind="ledger_renta_gastos_pago_fraccionado_aggregation",
+                resolver_id=self.resolver_id,
             )
             + register_owned_acquisition_diagnostics(
                 register_owned,

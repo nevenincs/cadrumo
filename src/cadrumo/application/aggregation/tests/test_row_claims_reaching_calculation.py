@@ -141,12 +141,15 @@ def test_an_uncategorized_split_part_is_held_before_any_calculation_reads_its_cu
     assert report.ready is False
 
 
-def test_the_aggregation_alone_would_deduct_the_share_of_an_uncategorized_mixed_row(
+def test_the_aggregation_alone_refuses_the_share_of_an_uncategorized_mixed_row(
     *, operation: PinnedAuthorityOperation
 ) -> None:
     row = _purchase(category_id=None, business_classification=BusinessClassification.MIXED, business_pct=Decimal("0.5"))
     result = _aggregate(row, _Q1, operation)
-    assert [observation.iva_amount for observation in result.observations] == [Decimal("10.50")]
+    assert result.observations == ()
+    assert [issue.reason for issue in result.issues] == [
+        IvaLedgerAggregationIssueReason.UNDETERMINED_MIXED_USE_TREATMENT
+    ]
 
 
 def test_a_mixed_row_in_a_category_with_no_share_reports_instead_of_deducting(

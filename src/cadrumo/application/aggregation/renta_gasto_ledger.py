@@ -36,8 +36,10 @@ against rules built by :func:`~.renta_ledger.resolve_category_deduction_rules`.
 A usage-ratio category (home-office suministros) is therefore
 apportioned once, by the operator's ratio and the rule's statutory multiplier,
 whatever the row's classification; a MIXED row's stored ``business_pct`` scales
-every other category. A row declaring no category has no rule to run and
-contributes its classification fraction of the base.
+every other category. A row wholly business by classification or marker that
+declares no category has no rule to run and contributes its base. A MIXED row
+declaring no category is refused: its share cannot be judged without knowing
+what it is a share of (RIRPF art. 22.2.1.º and 22.3).
 
 This module does NOT reuse the annual pipeline's invoice-evidence
 reconciliation or its annual window, which are constraint-shape-divergent from
@@ -85,6 +87,7 @@ from . import _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
+    RentaExpenseAdvisory,
     exclusive_business_use,
     renta_expense_business_proportion,
     row_scaling_proportion,
@@ -103,6 +106,7 @@ from .errors import AggregationValidationError
 from .renta_ledger import (
     CategoryRuleRefusal,
     RentaCategoryDeductionRules,
+    accepted_row_advisory,
     refusal_issue_reason,
     resolve_category_deduction_rules,
     resolve_category_rule,
@@ -135,6 +139,11 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
     # row is surfaced (no silent over-declaration of gastos) rather than
     # gross-folded; the operator tags it with a taxable_base via classify.
     MISSING_TAXABLE_BASE = "missing_taxable_base"
+    # A MIXED expense with no spending category. Simultaneous private use leaves
+    # an element unaffected unless a separately usable part serves the activity
+    # (RIRPF art. 22.2.1.º and 22.3), and nothing says what the stated share is a
+    # share of. The gasto is not zero either, so the row is held back.
+    MISSING_CATEGORY = _shared_issue_reasons.MISSING_CATEGORY
     # The row's category rule could not be evaluated or refused the row. Each
     # is a declarable gasto the rule dropped, so it is surfaced, never summed
     # at full value in place of the rule.
@@ -210,6 +219,8 @@ class RentaGastoLedgerAggregation(
     """
 
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
+    advisories: tuple[RentaExpenseAdvisory, ...] = ()
+    """Rows that keep their figure under a reading of the law the operator should review."""
 
 
 def aggregate_renta_gasto_ledger_from_repositories(
@@ -398,6 +409,7 @@ def aggregate_renta_gasto_ledger(
 
     observations: list[RentaGastoObservation] = []
     issues: list[RentaGastoLedgerAggregationIssue] = []
+    advisories: list[RentaExpenseAdvisory] = []
 
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
@@ -416,6 +428,9 @@ def aggregate_renta_gasto_ledger(
             issues.append(outcome.model_copy(update={"category_id": transaction.category_id}))
         else:
             observations.append(outcome)
+            advisory = accepted_row_advisory(transaction, rules=rules)
+            if advisory is not None:
+                advisories.append(advisory)
 
     observations = _apply_statutory_cap_trims(observations, rules=rules)
     casilla_aggregation = _gasto_casilla_aggregation(
@@ -429,6 +444,7 @@ def aggregate_renta_gasto_ledger(
         observations=tuple(observations),
         issues=tuple(issues),
         casilla_aggregation=casilla_aggregation,
+        advisories=tuple(advisories),
     )
 
 
@@ -506,9 +522,14 @@ def _classify_gasto_transaction(
 
     category_id = transaction.category_id or None
     if category_id is None:
-        # A row marked business by classification alone declares no category, so
-        # there is no category rule to run; it contributes its classification
-        # fraction of the base.
+        if transaction.business_classification is BusinessClassification.MIXED:
+            return RentaGastoLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=RentaGastoLedgerAggregationIssueReason.MISSING_CATEGORY,
+                detail="mixed-use expense has no spending category; assign it so its stated share can be judged",
+            )
+        # A row wholly business by classification or marker declares no category,
+        # so there is no category rule to run; it contributes its whole base.
         deductible_amount = _classification_deductible_amount(
             eur_base=eur_base,
             eur_iva_amount=eur_iva_amount,

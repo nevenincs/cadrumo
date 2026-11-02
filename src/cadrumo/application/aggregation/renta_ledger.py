@@ -79,8 +79,10 @@ from ..user_profile.projections import fact_value, profile_fact_index, record_to
 from . import _shared_issue_reasons
 from ._models import CasillaAggregation, CasillaProvenance
 from ._renta_business_eligibility import (
+    RentaExpenseAdvisory,
     exclusive_business_use,
     relies_on_activity_marker,
+    renta_expense_advisory,
     renta_expense_business_proportion,
     row_scaling_proportion,
 )
@@ -519,6 +521,26 @@ class CategoryRuleRefusal:
     detail: str
 
 
+def accepted_row_advisory(
+    transaction: Transaction,
+    *,
+    rules: RentaCategoryDeductionRules,
+) -> RentaExpenseAdvisory | None:
+    """Return the advisory a row that produced an expense observation carries, or ``None``."""
+    if transaction.category_id is None:
+        return renta_expense_advisory(transaction, None)
+    resolved = resolve_category_rule(
+        transaction.category_id,
+        profiles=rules.profiles,
+        region_overrides=rules.region_overrides,
+        context=rules.context,
+        profile_year=rules.profile_year,
+    )
+    if isinstance(resolved, CategoryRuleRefusal):
+        return None
+    return renta_expense_advisory(transaction, resolved[1].proportionality)
+
+
 def resolve_category_rule(
     category_id: str,
     *,
@@ -775,6 +797,7 @@ def aggregate_renta_ledger_expenses(
     )
     observations: list[RentaDeductibleExpenseObservation] = []
     issues: list[RentaLedgerAggregationIssue] = []
+    advisories: list[RentaExpenseAdvisory] = []
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
             continue
@@ -798,6 +821,9 @@ def aggregate_renta_ledger_expenses(
             issues.append(outcome)
         else:
             observations.append(outcome)
+            advisory = accepted_row_advisory(transaction, rules=rules)
+            if advisory is not None:
+                advisories.append(advisory)
 
     observations = _apply_statutory_cap_trims(observations, rules=rules)
     casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
@@ -808,6 +834,7 @@ def aggregate_renta_ledger_expenses(
         observations=tuple(observations),
         issues=tuple(issues),
         casilla_aggregation=casilla_aggregation,
+        advisories=tuple(advisories),
     )
 
 

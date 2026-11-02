@@ -232,6 +232,14 @@ class IvaLedgerAggregationIssueReason(StrEnum):
     # Excluded like a personal row rather than observed with a zero cuota: a
     # cuota the law never lets be deducted has no base in the deductible boxes.
     NON_DEDUCTIBLE_MIXED_USE = "non_deductible_mixed_use"
+    # A MIXED received row whose category states no IVA treatment for the pinned
+    # authority, usually because the row has no category at all. Simultaneous use
+    # deducts nothing (LIVA art. 95.Uno and Dos.2.º) unless the good is a bien de
+    # inversión (art. 95.Tres) or follows one (art. 95.Cuatro), and only the
+    # category answers that. Neither the row's share nor nothing is therefore
+    # known: unlike NON_DEDUCTIBLE_MIXED_USE, the remedy is to supply a fact, and
+    # the calculation stays unresolved until it is supplied.
+    UNDETERMINED_MIXED_USE_TREATMENT = "undetermined_mixed_use_treatment"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.

@@ -36,6 +36,7 @@ UNSUPPORTED_CURRENCY: Final[str] = "unsupported_currency"
 UNCLASSIFIED_BUSINESS_STATE: Final[str] = "unclassified_business_state"
 PERSONAL_TRANSACTION: Final[str] = "personal_transaction"
 OUTSIDE_PERIOD: Final[str] = "outside_period"
+MISSING_CATEGORY: Final[str] = "missing_category"
 UNKNOWN_CATEGORY: Final[str] = "unknown_category"
 MISSING_CATEGORY_PROFILE: Final[str] = "missing_category_profile"
 REGION_UNDECLARED_FOR_OVERRIDE: Final[str] = "region_undeclared_for_override"
@@ -49,6 +50,7 @@ __all__ = [
     "EXCLUSIVE_USE_REQUIRED",
     "INELIGIBLE_DEDUCTIBILITY",
     "INVALID_LEDGER_FACT",
+    "MISSING_CATEGORY",
     "MISSING_CATEGORY_PROFILE",
     "MISSING_OWNERSHIP_SHARE",
     "OUTSIDE_PERIOD",
