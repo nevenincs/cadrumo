@@ -379,7 +379,62 @@ def aggregate_oss_ioss_bindings(
         with bundled_indexed_authority().operation() as indexed_operation:
             return aggregate_oss_ioss_bindings(revision, candidates, operation=indexed_operation)
     observations = validate_oss_ioss_observations(candidates, operation=operation)
-    return resolve_ledger_oss_aggregation_binding_values(revision, observations)
+    return resolve_ledger_oss_aggregation_binding_values(
+        revision, _observations_at_row_level(observations, operation=operation)
+    )
+
+
+def _observations_at_row_level(
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> tuple[OssIossLedgerObservation, ...]:
+    """Fold the lines of each state, rate and kind into the one figure the return declares.
+
+    LIVA arts. 163 noniesdecies, duovicies and septvicies ask for the total value and the
+    "cantidad global" per state of consumption and rate, and convert at one rate for the
+    period. No bundled source says at which level cents are taken, or states the cuota's
+    relation to its base, so the base is rounded on the row and the cuota is that base at the
+    row's rate: the only reading that keeps a declared cuota equal to its base times its rate.
+    """
+    grouped: dict[
+        tuple[str, EUMemberState, IvaRateKind, InvoiceKind, TransactionKind, Decimal], list[OssIossLedgerObservation]
+    ] = {}
+    for observation in observations:
+        applied = _applied_rate(
+            observation.destination_member_state,
+            observation.rate_kind,
+            observation.transaction_date,
+            base=observation.base_amount,
+            iva=observation.iva_amount,
+            operation=operation,
+        )
+        if applied is None:
+            raise AggregationValidationError(tr("aggregation.oss_ioss.errors.iva_amount_mismatches_destination_rate"))
+        key = (
+            observation.regime,
+            observation.destination_member_state,
+            observation.rate_kind,
+            observation.invoice_direction,
+            observation.transaction_kind,
+            applied.pct,
+        )
+        grouped.setdefault(key, []).append(observation)
+    settled: list[OssIossLedgerObservation] = []
+    for key, members in grouped.items():
+        net = sum((member.signed_base_amount for member in members), Decimal("0"))
+        base = round_to_cents(abs(net))
+        corrected = any(member.effect is OssLineEffect.CORRECTION for member in members)
+        settled.append(
+            members[0].model_copy(
+                update={
+                    "base_amount": base,
+                    "iva_amount": round_to_cents(base * key[-1] / Decimal("100")),
+                    "effect": OssLineEffect.CORRECTION if net < 0 or (corrected and net == 0) else OssLineEffect.SUPPLY,
+                }
+            )
+        )
+    return tuple(settled)
 
 
 def _detail_binding_values(
@@ -397,7 +452,8 @@ def _detail_binding_values(
     """
     decimal_values: dict[BindingId, Decimal] = {}
     enum_values: dict[BindingId, str] = {}
-    for record_id, all_rows in _group_detail_observations(revision, observations, operation=operation).items():
+    at_row_level = _observations_at_row_level(observations, operation=operation)
+    for record_id, all_rows in _group_detail_observations(revision, at_row_level, operation=operation).items():
         slots = _record_row_slots(revision, record_id)
         grouped = _rows_left_by_corrections(all_rows)
         if len(grouped) > len(slots):
@@ -937,8 +993,9 @@ def _candidate_for_invoice_line(
         rate_kind=rate_kind,
         invoice_direction=invoice.kind,
         transaction_kind=invoice.oss_transaction_kind,
-        base_amount=line.subtotal if rate is None else round_to_cents(line.subtotal * rate),
-        iva_amount=line.iva_amount if rate is None else round_to_cents(line.iva_amount * rate),
+        # Left unrounded: the return states totals per state and rate, so cents are taken at the row.
+        base_amount=line.subtotal if rate is None else line.subtotal * rate,
+        iva_amount=line.iva_amount if rate is None else line.iva_amount * rate,
         effect=effect,
     )
 
@@ -1290,6 +1347,7 @@ class OssIossLedgerSourceResolver:
                     observations,
                     operation=indexed_operation,
                 )
+                at_row_level = _observations_at_row_level(observations, operation=indexed_operation)
                 closed_rows = (
                     _closed_detail_record_rows(
                         context,
@@ -1321,7 +1379,7 @@ class OssIossLedgerSourceResolver:
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values={
-                **resolve_ledger_oss_aggregation_binding_values(context.revision, observations),
+                **resolve_ledger_oss_aggregation_binding_values(context.revision, at_row_level),
                 **detail_values,
             },
             enum_binding_values=detail_enum_values,
