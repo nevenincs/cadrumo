@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { userEvent, waitFor, within } from "storybook/test";
+import { expect, userEvent, waitFor, within } from "storybook/test";
 import {
   STORY_PERIOD,
   STORY_READER,
@@ -13,8 +13,9 @@ import { WithholdingPane } from "./WithholdingPane";
 
 // The withholding register of Setup › Registers over the scenario's ledger:
 // the payers' certificates by income class, a year with none, the statements
-// that a class had no withholding, and a refusal said in the words the
-// backend served for it. The scenario's payer and tax ID are made up.
+// that a class had no withholding with the withdrawn ones kept as history, and
+// a refusal said in the words the backend served for it. The scenario's payer
+// and tax ID are made up.
 
 type Args = { locale: string };
 
@@ -129,6 +130,40 @@ export const AttestedAbsence: Story = {
       }),
     );
     await waitFor(() => canvas.getByText("No sales this year."));
+  },
+};
+
+/** The statements listed for the year: an active one with its withdrawal
+ * offered, and a withdrawn one kept below as history with none. */
+export const AttestationsListed: Story = {
+  name: "Attestations listed",
+  play: async ({ canvasElement }) => {
+    await control(canvasElement);
+    await waitFor(() => {
+      if (!canvasElement.querySelector(".ledger-withholding-withdrawn"))
+        throw new Error("the statements are not listed yet");
+    });
+    const active = within(
+      canvasElement.querySelector<HTMLElement>(".ledger-withholding-attested")!,
+    );
+    const history = within(
+      canvasElement.querySelector<HTMLElement>(".ledger-withholding-history")!,
+    );
+    await expect(
+      active.getByText("No professional fees were withheld."),
+    ).toBeVisible();
+    await expect(
+      active.getByRole("button", {
+        name: words("desktop.ledger.withholding.withdraw_of", {
+          class: "Economic activity income",
+        }),
+      }),
+    ).toBeVisible();
+    const withdrawn = history.getByText("No dividends were paid.");
+    await expect(withdrawn).toBeVisible();
+    await expect(
+      within(withdrawn.closest("tr")!).queryByRole("button"),
+    ).toBeNull();
   },
 };
 

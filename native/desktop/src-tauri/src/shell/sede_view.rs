@@ -48,7 +48,7 @@ use cadrumo_application::{
         service::{FeatureRefusal, RefusedFeature, ServiceFact},
     },
     provisioning::items::ItemId,
-    runtime_client::Refusal,
+    runtime_client::refusal::Refusal,
     view_stream::{
         chunks::AssembledImage,
         documents::{

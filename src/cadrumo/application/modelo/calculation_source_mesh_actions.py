@@ -487,8 +487,37 @@ def _resolve_mesh_families(
     The IVA ledger is resolved by the caller, because the annual settlement
     liquidation re-resolves it once the definitive prorrata percentage is known.
     """
-    from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
-    from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
+    return (
+        *_resolve_ledger_income_families(
+            resolve_declared,
+            ports,
+            memoized_transaction_repository,
+            prorrata_register_repository,
+            renta_catalogue_read_ports,
+        ),
+        *_resolve_observation_families(
+            resolve_declared,
+            work_unit,
+            ports,
+            memoized_transaction_repository,
+            profile_read_ports,
+            foreign_asset_observations,
+            foreign_asset_row_observations,
+        ),
+        *inventory_resolutions,
+        *_resolve_cross_period_families(resolve_declared, snapshot, ports, profile_read_ports),
+        *annual_summary_resolutions,
+    )
+
+
+def _resolve_ledger_income_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    ports: CalculationActionPorts,
+    memoized_transaction_repository: TransactionCatalogueRepositoryProtocol,
+    prorrata_register_repository: ProrrataRegisterServiceRepositoryProtocol,
+    renta_catalogue_read_ports: InvoiceCatalogueReadPorts,
+) -> tuple[CalculationSourceResolution, ...]:
+    """Resolve the Renta expense and income ledger families, then Impatriado and IRNR income."""
     from ..aggregation.modelo_bindings import (
         LedgerImpatriadoIncomeAggregationSourceResolver,
         LedgerIrnrIncomeAggregationSourceResolver,
@@ -498,30 +527,24 @@ def _resolve_mesh_families(
         LedgerRentaGastosEstimacionDirectaAggregationSourceResolver,
         LedgerRentaGastosPagoFraccionadoAggregationSourceResolver,
     )
-    from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
-    from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
     from ..aggregation.renta_imputation import imputation_filing_history
-    from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
-    from ..aggregation.withholding_source import WithholdingSourceResolver
-    from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
-    from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
-    from ..calculations.multi_year import PreviousFilingSourceResolver
-    from ..calculations.relation_prefill import RelationPrefillSourceResolver
-    from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
+    from ..aggregation.source_resolution_operations import source_context_operation
 
     def imputation_filings(context: CalculationSourceContext) -> ImputationFilingHistory:
         def load_filed(modelo: str, period: Period) -> RegistryModeloObservation | None:
             envelope = ports.observation_repository.load_observation(modelo, period)
             return None if envelope is None else envelope.observation
 
-        return imputation_filing_history(
-            bucket_id=context.bucket_id,
-            year=context.filing_year,
-            annual_form=form_for_role("renta.annual"),
-            annual_period_code=StandardPeriodCode.ANNUAL.value,
-            load_observation=load_filed,
-            filing_records=ports.filing_repository.load(),
-        )
+        with source_context_operation(context) as authority:
+            return imputation_filing_history(
+                bucket_id=context.bucket_id,
+                year=context.filing_year,
+                annual_form=form_for_role("renta.annual"),
+                annual_period_code=StandardPeriodCode.ANNUAL.value,
+                load_observation=load_filed,
+                filing_records=ports.filing_repository.load(),
+                authority=authority,
+            )
 
     return (
         resolve_declared(
@@ -561,6 +584,29 @@ def _resolve_mesh_families(
                 transaction_repository=memoized_transaction_repository,
             )
         ),
+    )
+
+
+def _resolve_observation_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    work_unit: WorkUnit,
+    ports: CalculationActionPorts,
+    memoized_transaction_repository: TransactionCatalogueRepositoryProtocol,
+    profile_read_ports: ProfileReadPorts,
+    foreign_asset_observations: tuple[ForeignAssetIngestObservation, ...],
+    foreign_asset_row_observations: tuple[Modelo720RowObservation, ...],
+) -> tuple[CalculationSourceResolution, ...]:
+    """Resolve the OSS/IOSS, withholding, invoice, foreign-asset and member families."""
+    from ..aggregation.atribucion_member import AtribucionMemberSourceResolver
+    from ..aggregation.foreign_assets import ForeignAssetsAggregationSourceResolver
+    from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
+    from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+    from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
+    from ..aggregation.withholding_source import WithholdingSourceResolver
+    from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
+    from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
+
+    return (
         resolve_declared(
             OssIossLedgerSourceResolver(
                 ports=ports.invoice_catalogue_read_ports,
@@ -595,7 +641,21 @@ def _resolve_mesh_families(
             )
         ),
         resolve_declared(AtribucionMemberSourceResolver()),
-        *inventory_resolutions,
+    )
+
+
+def _resolve_cross_period_families(
+    resolve_declared: Callable[..., CalculationSourceResolution],
+    snapshot: RegistrySnapshot,
+    ports: CalculationActionPorts,
+    profile_read_ports: ProfileReadPorts,
+) -> tuple[CalculationSourceResolution, ...]:
+    """Resolve the previous-filing, relation-prefill and IVA compensation partition families."""
+    from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
+    from ..calculations.multi_year import PreviousFilingSourceResolver
+    from ..calculations.relation_prefill import RelationPrefillSourceResolver
+
+    return (
         resolve_declared(
             PreviousFilingSourceResolver(
                 registry_snapshot=snapshot,
@@ -624,5 +684,4 @@ def _resolve_mesh_families(
                 operation=ports.operation,
             )
         ),
-        *annual_summary_resolutions,
     )

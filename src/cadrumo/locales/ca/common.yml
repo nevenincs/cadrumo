@@ -162,24 +162,37 @@ aggregation:
       unsupported_period: Període de model no admès per als totals dels teus registres.
   oss_ioss:
     errors:
-      exterior_country_code_undeclared: L'Estat membre de consum no té cap codi de
-        país declarat per al model 369, de manera que els seus serveis no es poden
+      consignment_exceeds_ceiling: 'Un enviament supera el valor màxim d''aquest règim:
+        el seu valor intrínsec no pot excedir el límit de la llei. Revisa la factura
+        o declara''l fora del règim d''importació.'
+      detail_consumption_state_excluded: Els serveis del règim de la Unió no es poden
+        declarar per a l'Estat membre d'identificació, perquè el règim només cobreix
+        els serveis prestats en un Estat membre on no estiguis establert.
+      detail_country_code_undeclared: L'Estat membre de consum no té cap codi de país
+        declarat per al model 369, de manera que les seves operacions no es poden
         declarar en aquest model.
-      exterior_detail_not_representable: El disseny del règim exterior no pot representar
-        totes les files o tots els seus camps. Revisa el detall abans de continuar.
-      exterior_rate_kind_unsupported: El règim exterior de la finestreta única només
-        admet serveis al tipus general o reduït de l'Estat membre de consum. L'observació
-        aportada declara un altre tipus de gravamen, que no es pot agregar en aquest
-        règim.
-      invoice_line_currency_unconverted: Una línia de factura OSS/IOSS està denominada
-        en moneda estrangera sense tipus de canvi a euros resolt, per la qual cosa
-        no es pot declarar en aquest model.
+      detail_not_representable: El disseny del model 369 no pot representar totes
+        les files o tots els seus camps. Revisa el detall abans de continuar.
+      detail_rate_kind_unsupported: Una fila del model 369 només admet el tipus general
+        o reduït de l'Estat membre de consum. L'observació aportada declara un altre
+        tipus de gravamen, que no es pot escriure en una fila.
+      detail_rows_exceed_page: Aquest període necessita més files de les que caben
+        en una pàgina del model 369, i les pàgines complementàries encara no es poden
+        preparar aquí. No s'ha exportat res, de manera que cap fila no queda fora.
+      invoice_line_currency_unconverted: Una línia de factura OSS/IOSS està en moneda
+        estrangera i no hi ha tipus de canvi del BCE publicat per a l'últim dia del
+        període ni per al dia següent, de manera que no es pot declarar en aquest
+        model.
       invoice_line_rate_kind_unclassifiable: Una línia de factura OSS/IOSS té un tipus
         d'IVA que no es pot classificar en cap tram, per la qual cosa la seva quota
         no es pot declarar en aquest model.
       iva_amount_mismatches_destination_rate: L'import d'IVA persistit no concorda
         amb el tipus de l'Estat membre de destinació més enllà de la tolerància d'un
         cèntim.
+      rate_change_devengo_undeclared: Una factura OSS/IOSS no té data d'operació i
+        el tipus de l'Estat membre de consum va canviar durant aquest període, de
+        manera que la data d'emissió no permet saber quin tipus s'aplica. Registra
+        la data d'operació a la factura.
   per_modelo:
     errors:
       unsupported_modelo: Model no admès per a l'agregació per model
@@ -1150,6 +1163,16 @@ desktop:
       submitted_observed: Presentació observada
     as_of: Segons els registres locals a {date}. Aquí no s'ha consultat res a l'AEAT.
     close: Tanca el calendari
+    coverage:
+      applicability_undetermined: 'No s''ha pogut determinar si has de presentar:
+        {modelos}. Comprova les teves obligacions.'
+      applicable_window_missing: 'Aquests models s''apliquen al teu perfil, però Cadrumo
+        no disposa d''un termini de presentació: {modelos}. Consulta el calendari
+        oficial.'
+      no_dates: No hi ha dates de presentació disponibles per a aquest període.
+      registry_unmodeled: 'Cadrumo no disposa de regles d''aplicabilitat ni terminis
+        de presentació per a: {modelos}. Consulta la informació oficial per comprovar
+        les teves obligacions de presentació.'
     day_event: '{date}: {kind}. {summary}'
     earliest_close: No tanca abans del {date}
     empty: No hi ha obligacions de presentació en aquest període.
@@ -1183,7 +1206,6 @@ desktop:
       unknown: Desconegut
     title: Calendari de presentacions
     to_day: Ves al {date}
-    undetermined: 'No s''ha pogut determinar: {modelos}'
     view: Vista
     view_list: Llista
     view_months: Calendari
@@ -1212,6 +1234,23 @@ desktop:
     show:
       label: Mostrar
     signed_out: Inicia la sessió per veure les teves declaracions.
+  dock:
+    arrange: Organitza el panell
+    bottom: Divideix a baix
+    close: Tanca el panell
+    dock: Acobla el panell
+    exit_fullscreen: Surt de pantalla completa
+    expand: Amplia a l’espai de treball
+    float: Panell flotant
+    fullscreen: Pantalla completa
+    left: Divideix a l’esquerra
+    move: Mou el panell flotant
+    resize: Redimensiona el panell flotant
+    restore: Restaura la mida del panell
+    right: Divideix a la dreta
+    tab: Mou a les pestanyes
+    tabs: Pestanyes de l’espai de treball
+    top: Divideix a dalt
   docs:
     frame_title: Documentació de Cadrumo
     hide: Amaga la documentació
@@ -1398,6 +1437,7 @@ desktop:
         differ: Sé que difereixen
         linked_elsewhere: 'Factura ja vinculada · moviments: {count}'
         sure: Vincula aquests · permanent
+        unjudged: El llibre encara no ha comparat aquest vincle
         unread: No s'ha pogut llegir la factura
       mine: Conserva el meu
       mismatch:
@@ -2181,6 +2221,9 @@ desktop:
       currency_not_read: 'No consta al document: indica quina'
       derived: Generat a partir d'una lectura externa
       duplicate: 'Ja és al catàleg: {number}'
+      duplicate_check_failed: El llibre no ha dit si aquesta lectura ja és al catàleg,
+        així que encara no pots confirmar-la.
+      duplicate_check_retry: Torna a preguntar
       entered_by_you: Introduït per tu
       field:
         counterparty_name: Contrapart
@@ -2220,6 +2263,7 @@ desktop:
         country: Indica el país amb dues lletres
         currency: Indica la moneda
         duplicate: Pot ser que ja sigui al catàleg
+        duplicate_unread: S'està esperant que el llibre comprovi el catàleg
         findings: Respon abans totes les preguntes
       in_review: En revisió
       keep: Conserva'l
@@ -3122,15 +3166,18 @@ desktop:
         add_part: Afegeix una part
         amount: La part {part} necessita un import més gran que zero.
         category_needed: Tria una categoria per a la part {part}.
+        check_failed: El llibre no ha respost sobre aquestes parts, així que encara
+          no pots afegir la divisió.
+        check_retry: Torna a preguntar
         choose_category: Tria una categoria
         count: Una divisió té de 2 a {max} parts.
         description: Les parts sumen {amount}. L'última part es queda el que falta.
         description_long: La part {part} admet una descripció de {max} caràcters com
           a màxim.
         description_needed: La part {part} necessita una descripció.
-        duplicate: 'La part {part} és igual que una altra: canvia''n l''import o la
-          descripció.'
+        gone: Aquest moviment ja no és al llibre.
         mixed_hint: L'utilitzes en part per a la feina? Fes servir Mixt amb una part.
+        not_active: Només pots dividir un moviment actiu.
         over: Les parts superen el moviment en {amount}.
         part_amount: Import de la part {part}
         part_category: Categoria de la part {part}
@@ -4131,8 +4178,7 @@ desktop:
       partial: Els grups i els totals esperen que es llegeixi tot.
     withholding:
       absence:
-        not_listed: Les indicacions anteriors encara no es poden llistar. Aquí es
-          mostren les que facis o retiris en aquesta finestra.
+        history: Indicacions retirades
         title: Sense retencions
         what: Indica que cap pagador no va retenir en una classe de renda aquest any.
       action:
@@ -4481,7 +4527,7 @@ desktop:
     dismiss: Descarta l’avís
     edit_field: Edita {field}
     ejercicio: Exercici
-    ejercicio_help: "L'any que declara aquesta resposta. Els altres conserven la seva."
+    ejercicio_help: L'any que declara aquesta resposta. Els altres conserven la seva.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
     entries_count: 'Registres: {count}'
@@ -8656,6 +8702,18 @@ tui:
         calculation_review_xlsx: Revisió del càlcul desat (XLSX)
         fichero_boe: Fitxer BOE per presentar a l'AEAT
         label: Document a exportar
+      instalment_election:
+        conditions: Pagar en dos terminis no té interessos ni recàrrecs. La declaració
+          s'ha de presentar dins de termini, i una autoliquidació rectificativa no
+          es pot pagar així. El 60 % es paga en presentar-la; si no es paga a temps,
+          s'exigeix l'import total. Si també domicilies el primer termini, el segon
+          es carrega al mateix compte.
+        label: 'Resultat a ingressar: d''una vegada o en dos terminis'
+        single: Pagar-ho tot d'una vegada
+        two_instalments_second_debited: 'Dos terminis: el 60 % en presentar-la i el
+          40 % restant domiciliat'
+        two_instalments_second_paid: 'Dos terminis: el 60 % en presentar-la i el 40
+          % restant el pagues tu amb el model 102'
       payment_election:
         cuenta_corriente: Compte corrent tributari
         domiciliacion: Domiciliació bancària
@@ -8754,6 +8812,47 @@ tui:
       stale_context: La declaració seleccionada ha canviat mentre el formulari era
         obert. No s'ha calculat res; torna a triar Calcula.
       title: Dades de l'autoliquidació del Model 303
+    m360_solicitud:
+      account_kind:
+        own_account: Un dels meus comptes (sol·licitant)
+        representante: El compte del representant
+      action:
+        declare: Declarar una sol·licitud
+        remove: Eliminar una sol·licitud
+      column:
+        account: Compte
+        cause: Causa
+        destination: Destinació
+        holder: Titular
+        year: Exercici
+      detail: '%{year} · destinació %{destination} · %{cause} · titular %{holder}
+        · representant %{representante} · compte %{account}'
+      done_declare: Sol·licitud declarada.
+      done_remove: Sol·licitud eliminada.
+      empty: Encara no hi ha cap sol·licitud del Model 360 declarada.
+      field:
+        account_kind: Compte de devolució
+        action: Acció
+        bank_address: Adreça del banc (opcional)
+        bank_city: Ciutat del banc (opcional)
+        bank_country_code: Codi de país del banc (opcional)
+        bank_name: Nom del banc (opcional)
+        facts_path: Fitxer de dades (JSON)
+        filing_year: Exercici
+        iban: IBAN del representant
+        own_account_id: Identificador de compte propi
+        swift_bic: SWIFT-BIC del representant
+      list: Sol·licituds declarades
+      prompt: Totes les sol·licituds del Model 360 que has declarat, per exercici.
+        Tria declarar-ne o eliminar-ne una, revisa-la i confirma-la. Les dades surten
+        d'un fitxer que indiques; el compte és un dels teus comptes o el d'un representant.
+      source: 'Dades llegides de: %{path}'
+      source_invalid: 'El fitxer %{path} no conté dades de sol·licitud vàlides: s''han
+        trobat %{count} problemes.'
+      source_unreadable: No s'ha pogut llegir el fitxer %{path}.
+      title: Sol·licituds del Model 360
+      tool: Sol·licituds del Model 360 (devolució d'IVA)
+      unchanged: 'No ha canviat res: el registre ja ho contenia.'
     next_line: 'Següent: {action} [{key}]'
     search:
       prompt: Cerca a totes les pàgines per número de casella o per paraules. Retorn
@@ -9253,11 +9352,9 @@ workspace:
       vigente: Presentació registrada vigent
     holiday_coverage:
       calendar_unavailable: Festius sense comprovar
-      national_only: Festius autonòmics sense comprovar
-      territory_unverified: Festius autonòmics sense confirmar
     hub:
-      holidays_national_only: Els terminis tenen en compte els festius estatals; els
-        autonòmics no es comproven.
+      holidays_unchecked: Alguns terminis no s'han pogut comprovar amb el calendari
+        de dies inhàbils.
     lifecycle:
       amended: Correcció iniciada
       calculated: Càlcul completat
@@ -9623,8 +9720,23 @@ workspace:
       save_next: Deixar i passar a la següent
       unreadable: No s'ha pogut llegir aquest valor.
     export:
+      account_choice: '%{label} (%{account})'
       confirm_first: 'Confirma els valors suposats abans de generar el fitxer o registrar
         la presentació (per confirmar: {count}).'
+      election:
+        amendment: Una autoliquidació rectificativa no es pot pagar en dos terminis.
+        filing_window_unknown: No es coneix el termini de presentació d'aquesta declaració,
+          així que no es pot oferir el pagament en dos terminis.
+        no_open_account: Cap dels teus comptes bancaris propis no és obert. Afegeix-ne
+          un als teus comptes propis per rebre la devolució.
+        no_spanish_account: Cap dels teus comptes propis oberts no és espanyol, i
+          la domiciliació ho necessita. Afegeix-ne un als teus comptes propis.
+        nothing_to_pay: El resultat no és una quantitat a ingressar, així que això
+          no s'aplica.
+        nothing_to_refund: El resultat no és una devolució, així que això no s'aplica.
+        past_filing_window: El termini de presentació ha acabat, i pagar en dos terminis
+          exigeix presentar la declaració dins d'aquest termini.
+        result_unknown: 'Calcula abans la declaració: el seu resultat ho decideix.'
       file_format:
         fixed_width: Fitxer de l'AEAT amb el disseny de registre BOE d'amplada fixa
         xml_dictionary: Fitxer XML de l'AEAT

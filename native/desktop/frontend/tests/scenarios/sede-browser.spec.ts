@@ -561,14 +561,14 @@ const PUTTING_ASIDE = {
       if ((await agent.getAttribute("aria-pressed")) !== "true")
         await agent.click();
       await target
-        .locator(".pane-agent")
-        .getByRole("button", { name: label("desktop.pane.maximize_agent") })
+        .locator('[data-dock-header="agent"]')
+        .getByRole("button", { name: label("desktop.dock.expand") })
         .click();
     },
     back: (target: Page) =>
       target
-        .locator(".pane-agent")
-        .getByRole("button", { name: label("desktop.pane.restore") })
+        .locator('[data-dock-header="agent"]')
+        .getByRole("button", { name: label("desktop.dock.restore") })
         .click(),
   },
 } as const;
@@ -972,8 +972,9 @@ test("closing the page with its close control closes the view once, and the next
   await target.evaluate(() => window.__scenarioSedeView?.holdPublication());
   const at = await mark(target);
   await target
+    .locator('[data-dock-header="docs"]')
     .getByRole("button", {
-      name: label("desktop.browser.close"),
+      name: label("desktop.dock.close"),
       exact: true,
     })
     .click();

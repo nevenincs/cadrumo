@@ -419,6 +419,44 @@ export type AgentToolKind =
   | "switch_mode"
   | "other";
 
+/** How far the person's approval of an attachment read reaches. */
+export type AgentAttachmentScope = "once" | "session" | "remember";
+
+/** A read the service refused, by its closed code; nothing left. */
+export type AgentAttachmentRefusal = { kind: "refused"; code: string };
+
+/** What the approval card shows, from the service's own record of the read. */
+export type AgentAttachmentCard =
+  | {
+      kind: "card";
+      name: string;
+      media_type: string;
+      size_bytes: number;
+      provider: string;
+      transport: string;
+      model: string;
+      action: "document_text" | "page_images";
+      existing_grant: boolean;
+    }
+  | { kind: "not_required" }
+  | AgentAttachmentRefusal;
+
+export type AgentAttachmentRelease =
+  { kind: "released" } | { kind: "not_required" } | AgentAttachmentRefusal;
+
+export type AgentAttachmentGrants =
+  | {
+      kind: "grants";
+      grants: readonly {
+        grant_id: string;
+        action: "document_text" | "page_images";
+        lane: string;
+        model: string;
+        display_name: string | null;
+      }[];
+    }
+  | AgentAttachmentRefusal;
+
 /** Something the reply cannot do until the person decides: a tool the agent
  * wants to call, or a Cadrumo operation's review before it commits. Only a
  * deliberate gesture of the person answers it; no tool the model can call
@@ -649,6 +687,21 @@ export interface AgentSession {
     approval: Pick<AgentApproval, "reply_id" | "request_id">,
     optionId: string,
   ): Promise<void>;
+  /** What the service says the card shows for a parked attachment read. */
+  attachmentCard(
+    approval: Pick<AgentApproval, "reply_id" | "request_id">,
+  ): Promise<AgentAttachmentCard>;
+  /** Puts the person's answer to the service; `null` asks it to release under a
+   * grant it already holds. The request is answered only once released. */
+  attachmentRelease(
+    approval: Pick<AgentApproval, "reply_id" | "request_id">,
+    optionId: string,
+    scope: AgentAttachmentScope | null,
+  ): Promise<AgentAttachmentRelease>;
+  attachmentGrants(): Promise<AgentAttachmentGrants>;
+  attachmentGrantRevoke(
+    grantId: string,
+  ): Promise<{ kind: "revoked" } | AgentAttachmentRefusal>;
   /**
    * Watches one conversation: the stream of its live run, if it has one, and
    * of the run a later send starts. A reply in progress is not in history():

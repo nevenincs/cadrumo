@@ -40,7 +40,9 @@ from ..catalogue_add_contracts import InvoiceAddRequest
 from ..catalogue_add_operation import _prepare_invoice_add, build_invoice_from_add_request, invoice_add_lease
 from ..catalogue_creation import build_catalogue_invoice
 from ..catalogue_creation_ports import CatalogueInvoiceRateError, CatalogueInvoiceRateProviderPort
+from ..catalogue_lifecycle import CatalogueInvoicePatch
 from ..figures_preview_contracts import (
+    INVOICE_CORRECTION_JUDGED_FIELDS,
     INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
     InvoiceFiguresPreviewExecutionResult,
     InvoiceFiguresPreviewLine,
@@ -1205,3 +1207,54 @@ def test_the_definition_is_a_read_holding_its_input_in_secure_custody() -> None:
 
     assert definition.capabilities.request_storage.value == "secure_reference"
     assert definition.capabilities.sensitive_input.value == "secure_reference"
+
+
+@pytest.mark.parametrize(
+    ("field", "overrides"),
+    (
+        ("counterparty_country", {"counterparty_country": "FR"}),
+        ("iva_category", {"iva_category": "no_such_category"}),
+        ("operation_date", {"operation_date": date(2026, 4, 1)}),
+        ("series", {"invoice_class": "RECTIFICATIVA", "series": "R"}),
+        ("invoice_class", {"invoice_class": "RECTIFICATIVA"}),
+        ("rectifies_invoice_number", {"rectifies_invoice_number": "F-1"}),
+        ("retention_rate", {"retention_rate": _decimal("0.07")}),
+        ("retention_amount", {"retention_rate": _decimal("0.07"), "retention_amount": _decimal("70.02")}),
+    ),
+)
+def test_a_judged_correction_field_moves_the_verdict_the_update_waits_on(
+    field: str, overrides: dict[str, object], operation: PinnedAuthorityOperation
+) -> None:
+    assert field in INVOICE_CORRECTION_JUDGED_FIELDS
+    plain = _preview(_correction(), operation=operation)
+    changed = _preview(_correction(**overrides), operation=operation)
+
+    assert (changed.verdict, changed.rule_findings, changed.findings) != (
+        plain.verdict,
+        plain.rule_findings,
+        plain.findings,
+    )
+
+
+@pytest.mark.parametrize(
+    ("field", "overrides"),
+    (("notes", {"notes": "x"}), ("counterparty_name", {"counterparty_name": "Otra S.L."})),
+)
+def test_a_correction_field_outside_the_judged_set_leaves_the_verdict_alone(
+    field: str, overrides: dict[str, object], operation: PinnedAuthorityOperation
+) -> None:
+    assert field not in INVOICE_CORRECTION_JUDGED_FIELDS
+    assert field in CatalogueInvoicePatch.model_fields
+    plain = _preview(_correction(), operation=operation)
+    changed = _preview(_correction(**overrides), operation=operation)
+
+    assert (changed.verdict, changed.rule_findings, changed.findings) == (
+        plain.verdict,
+        plain.rule_findings,
+        plain.findings,
+    )
+
+
+def test_every_judged_field_is_one_a_correction_may_name_and_the_preview_is_told() -> None:
+    assert CatalogueInvoicePatch.model_fields.keys() >= INVOICE_CORRECTION_JUDGED_FIELDS
+    assert InvoiceFiguresPreviewRequest.model_fields.keys() >= INVOICE_CORRECTION_JUDGED_FIELDS

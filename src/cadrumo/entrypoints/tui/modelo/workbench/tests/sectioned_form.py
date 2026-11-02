@@ -23,6 +23,7 @@ from ......application.modelo.work_form_models import (
     ModeloFormValueSource,
     ModeloWorkForm,
 )
+from ......application.modelo.work_form_outline import form_outline
 from ......application.modelo.work_review import ModeloWorkProgress
 from ......core.aggregation import BindingSourceKind
 from ......core.external_constants import OutputLanguage
@@ -121,6 +122,7 @@ def sectioned_form(*, last_quarter_applies: bool | None = False) -> ModeloWorkFo
         language=OutputLanguage.ES,
         layout_provenance=ModeloFormLayoutProvenance.REVIEWED,
         pages=pages,
+        outline=form_outline((), pages, OutputLanguage.ES, filed=False),
         working_figures=(),
         result_addresses=(),
         counts=form_counts(every),

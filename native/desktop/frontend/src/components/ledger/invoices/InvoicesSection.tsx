@@ -1,12 +1,13 @@
+import settings from "virtual:operational-settings";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
+import { DataGrid } from "@/components/ui/data-grid";
+import { DataGridText } from "@/components/ui/data-grid-text";
 import {
-  DataGrid,
-  DataGridText,
   type DataGridHandle,
   type GridColumn,
   type GridRow,
-} from "@/components/ui/data-grid";
+} from "@/components/ui/dataGridTypes";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
@@ -41,7 +42,6 @@ import { classLabel, kindLabel, paymentLabel } from "./invoiceWords";
 import { invoiceHiding, withoutHiding } from "./invoiceReveal";
 import { useInvoiceCatalogue } from "./useInvoiceCatalogue";
 
-const TOAST_MS = 4000;
 const KINDS = ["all", "issued", "received"] as const;
 
 type Column = {
@@ -261,7 +261,10 @@ export function InvoicesSection({
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    const timer = window.setTimeout(
+      () => setToast(null),
+      settings.ledger_toast_ms,
+    );
     return () => window.clearTimeout(timer);
   }, [toast]);
 

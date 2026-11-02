@@ -21,7 +21,7 @@ from ....domain.modelos.codes import ModeloCode
 from ...aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceResolution
 from .._calculation_source_staging import add_expected_missing_binding_diagnostics
 from ..work_form import build_modelo_work_form
-from ..work_form_models import ModeloFormCalculationNote
+from ..work_form_declaration_facts import ModeloFormCalculationNote
 from ..work_form_service import modelo_form_snapshot
 from ..work_review import ModeloWorkProgress, ModeloWorkReview, build_modelo_work_review_casillas
 

@@ -291,7 +291,8 @@ test("loading: nothing is invented while the host has not answered", async ({
   await expect(pane.locator("[data-slot=account-loading]")).toHaveText(
     label("desktop.signin.checking"),
   );
-  await expect(pane.locator(".pane-head")).toContainText(
+  await expect(target.locator("#tab-tui")).toHaveAttribute(
+    "aria-description",
     label("desktop.signin.checking"),
   );
   await expect(target.locator(".docs-frame")).toHaveCount(0);
@@ -1590,31 +1591,25 @@ test("Space on a record with no detail does not scroll the log", async ({
   expect((await logPlace(target)).scrollTop).toBe(before);
 });
 
-test("a pane's note that is cut for want of room still says all of itself", async ({
+test("a narrow tab keeps the full session state accessible without repeating its title", async ({
   page: target,
 }) => {
   await seedLayout(target);
-  // A window at 200 percent, in the language with the longest words: the
-  // note beside the TUI's title has room for a few letters.
+  // At a narrow width the state belongs to the tab description and tooltip.
   await target.setViewportSize({ width: 640, height: 450 });
   await open(target, "signed-out", "&lang=hu");
   await expect(target.locator(".sign-in input[type=password]")).toBeFocused();
   await target.keyboard.press("Escape");
   await expect(target.locator(".sign-in")).toHaveCount(0);
-  const note = target.locator(".pane-tui .pane-note");
+  const note = target.locator("#tab-tui");
   const whole = label("desktop.account.signed_out", {}, "hu");
-  await expect(note).toHaveText(whole);
-  expect(
-    await note.evaluate((element) => element.scrollWidth > element.clientWidth),
-  ).toBe(true);
-  // The title beside it is whole, the note says the rest to a pointer that
-  // rests on it, and the pane itself says it in full.
-  expect(
-    await target
-      .locator(".pane-tui .pane-title")
-      .evaluate((element) => element.scrollWidth <= element.clientWidth),
-  ).toBe(true);
-  await expect(note).toHaveAttribute("title", whole);
+  await expect(note).toHaveAttribute("aria-description", whole);
+  await expect(note).toHaveText(label("desktop.pane.tui", {}, "hu"));
+  await expect(note).toHaveAttribute(
+    "title",
+    `${label("desktop.pane.tui", {}, "hu")} · ${whole}`,
+  );
+  await expect(target.locator(".pane-tui .pane-title")).toHaveCount(0);
   await expect(
     target.locator(".pane-tui").getByText(whole, { exact: true }).last(),
   ).toBeInViewport();
@@ -1845,12 +1840,13 @@ for (const state of ACCOUNT_STATES)
       await expect(target.locator(".sign-in")).toHaveCount(0);
     }
     const pane = target.locator(".pane-tui");
-    await expect(pane.locator(".pane-head [data-phase]")).toHaveAttribute(
+    await expect(target.locator("#tab-tui [data-phase]")).toHaveAttribute(
       "data-phase",
       state.dot,
     );
     if (state.saying) {
-      await expect(pane.locator(".pane-head")).toContainText(
+      await expect(target.locator("#tab-tui")).toHaveAttribute(
+        "aria-description",
         label(state.saying),
       );
       await expect(pane.locator("[data-slot=empty]")).toContainText(
@@ -2184,7 +2180,7 @@ test("signing out leaves no running session showing in the TUI's header", async 
   page: target,
 }) => {
   await open(target, "signed-in");
-  const dot = target.locator(".pane-tui .pane-head [data-phase]");
+  const dot = target.locator("#tab-tui [data-phase]");
   await expect(dot).toHaveAttribute("data-phase", "running");
   await target
     .getByRole("button", { name: label("desktop.titlebar.profile_menu") })
@@ -2196,7 +2192,8 @@ test("signing out leaves no running session showing in the TUI's header", async 
     })
     .click();
   await expect(dot).toHaveAttribute("data-phase", "unavailable");
-  await expect(target.locator(".pane-tui .pane-head")).toContainText(
+  await expect(target.locator("#tab-tui")).toHaveAttribute(
+    "aria-description",
     label("desktop.account.signed_out"),
   );
 });
@@ -2272,7 +2269,7 @@ test("the filing calendar is a page of the first pane, read when it is shown", a
   expect(await calendarReads(target)()).toBe(0);
   await calendarButton(target).click();
   await expect(calendarButton(target)).toHaveAttribute("aria-pressed", "true");
-  await expect(pane.locator(".pane-title")).toHaveText(
+  await expect(target.locator("#tab-docs")).toHaveText(
     label("desktop.calendar.title"),
   );
   const page = target.getByRole("region", {
@@ -2617,8 +2614,8 @@ test("a maximized calendar shows the months and the list together, and one marks
   await expect(view).toBeVisible();
   await expect(page.locator(".calendar-list")).toHaveCount(0);
   await target
-    .locator(".pane-docs .pane-head")
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   // With room for both: the months, and the list as a second column that
   // scrolls by itself. There is nothing left to choose between.
@@ -2675,8 +2672,8 @@ test("a maximized calendar shows the months and the list together, and one marks
 
   // Back in a pane the choice is kept, and each face opens on it.
   await target
-    .locator(".pane-docs .pane-head")
-    .getByRole("button", { name: label("desktop.pane.restore") })
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.restore") })
     .click();
   await expect(view).toBeVisible();
   await expect(far).toHaveAttribute("aria-pressed", "true");
@@ -2949,8 +2946,8 @@ test("the calendar says what its marks are, and has a way back to where it stand
   await expect(mark).toBeInViewport();
   // Beside the list it brings both back.
   await target
-    .locator(".pane-docs .pane-head")
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   const aside = page.locator(".calendar-aside");
   await expect(aside).toBeVisible();
@@ -3108,17 +3105,17 @@ test("the months come back to the month the reader left them on, in a pane and b
   });
   await expect(heading("2027-01")).toBeInViewport();
   await expect(heading("2026-10")).not.toBeInViewport();
-  const head = target.locator(".pane-docs .pane-head");
+  const head = target.locator('[data-dock-header="docs"]');
   // Maximized, the months are laid out anew beside the list: on January.
   await head
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   await expect(page.locator(".calendar-aside")).toBeVisible();
   await expect(heading("2027-01")).toBeInViewport();
   await expect(heading("2026-10")).not.toBeInViewport();
   // And back in a pane, the same.
   await head
-    .getByRole("button", { name: label("desktop.pane.restore") })
+    .getByRole("button", { name: label("desktop.dock.restore") })
     .click();
   await expect(page.locator(".calendar-aside")).toHaveCount(0);
   await expect(heading("2027-01")).toBeInViewport();
@@ -3149,7 +3146,7 @@ test("the reader's month does not drift however often the months are laid out an
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
   });
-  const head = target.locator(".pane-docs .pane-head");
+  const head = target.locator('[data-dock-header="docs"]');
   // How far under the head a month's name sits.
   const under = (month: string) =>
     page.evaluate((element, key) => {
@@ -3204,7 +3201,7 @@ test("the reader's month does not drift however often the months are laid out an
   // March. Nothing walks from one round to the next.
   for (let round = 0; round < 3; round++) {
     await head
-      .getByRole("button", { name: label("desktop.calendar.maximize") })
+      .getByRole("button", { name: label("desktop.dock.expand") })
       .click();
     await expect(page.locator(".calendar-aside")).toBeVisible();
     expect(
@@ -3212,7 +3209,7 @@ test("the reader's month does not drift however often the months are laid out an
       `maximized ${round}`,
     ).toBeLessThanOrEqual(1);
     await head
-      .getByRole("button", { name: label("desktop.pane.restore") })
+      .getByRole("button", { name: label("desktop.dock.restore") })
       .click();
     await expect(page.locator(".calendar-aside")).toHaveCount(0);
     expect(
@@ -3268,14 +3265,14 @@ test("the reader's month does not drift however often the months are laid out an
     begins: await under(begins),
   };
   await head
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   await expect(page.locator(".calendar-aside")).toBeVisible();
   expect(Math.abs((await under(begins)) - chosenAt.begins)).toBeLessThanOrEqual(
     1,
   );
   await head
-    .getByRole("button", { name: label("desktop.pane.restore") })
+    .getByRole("button", { name: label("desktop.dock.restore") })
     .click();
   await expect(page.locator(".calendar-aside")).toHaveCount(0);
   expect(
@@ -3291,13 +3288,13 @@ test("the reader's month does not drift however often the months are laid out an
     element.scrollTop = 0;
   });
   await head
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   const aside = page.locator(".calendar-aside");
   await expect(aside).toBeVisible();
   expect(await aside.evaluate((element) => element.scrollTop)).toBe(0);
   await head
-    .getByRole("button", { name: label("desktop.pane.restore") })
+    .getByRole("button", { name: label("desktop.dock.restore") })
     .click();
   await expect(aside).toHaveCount(0);
   expect(await page.evaluate((element) => element.scrollTop)).toBe(0);
@@ -3311,8 +3308,8 @@ test("a choice that moves another obligation's stop takes the keyboard to the ne
   await open(target, "signed-in", "&calendar=busy");
   await calendarButton(target).click();
   await target
-    .locator(".pane-docs .pane-head")
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
@@ -3383,8 +3380,8 @@ test("a calendar brought back keeps a place the reader scrolled away from their 
   await open(target, "signed-in");
   await calendarButton(target).click();
   await target
-    .locator(".pane-docs .pane-head")
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
@@ -3490,8 +3487,8 @@ test("a month that makes the page scroll when drawn whole does not change the pa
   await open(target, "signed-in", "&calendar=busy");
   await calendarButton(target).click();
   await target
-    .locator(".pane-docs .pane-head")
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
@@ -3577,14 +3574,14 @@ test("a reader inside a month taller than the page is kept on that month", async
     (await page.boundingBox())!.height,
   );
   // Beside the list, and back, the reader is as deep inside January.
-  const head = target.locator(".pane-docs .pane-head");
+  const head = target.locator('[data-dock-header="docs"]');
   await head
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   await expect(page.locator(".calendar-aside")).toBeVisible();
   expect(Math.abs((await top()) - inside)).toBeLessThanOrEqual(1);
   await head
-    .getByRole("button", { name: label("desktop.pane.restore") })
+    .getByRole("button", { name: label("desktop.dock.restore") })
     .click();
   await expect(page.locator(".calendar-aside")).toHaveCount(0);
   expect(Math.abs((await top()) - inside)).toBeLessThanOrEqual(1);
@@ -3814,8 +3811,8 @@ test("with the system's colours forced, the calendar still shows its day, its st
   await open(target, "signed-in", "&calendar=busy");
   await calendarButton(target).click();
   await target
-    .locator(".pane-docs .pane-head")
-    .getByRole("button", { name: label("desktop.calendar.maximize") })
+    .locator('[data-dock-header="docs"]')
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   const page = target.getByRole("region", {
     name: label("desktop.calendar.title"),
@@ -4147,18 +4144,16 @@ test("the documentation keeps its place under the calendar", async ({
   );
   await calendarButton(target).click();
   // The header speaks of the calendar while it shows it.
-  const head = target.locator(".pane-docs .pane-head");
+  const head = target.locator('[data-dock-header="docs"]');
   await expect(
-    head.getByRole("button", { name: label("desktop.calendar.maximize") }),
+    head.getByRole("button", { name: label("desktop.dock.expand") }),
   ).toBeVisible();
   await expect(
     head.getByRole("button", { name: label("desktop.pane.maximize_docs") }),
   ).toHaveCount(0);
-  await head
-    .getByRole("button", { name: label("desktop.calendar.close") })
-    .click();
+  await head.getByRole("button", { name: label("desktop.dock.close") }).click();
   await expect(target.locator(".docs-frame")).toBeVisible();
-  await expect(target.locator(".pane-docs .pane-title")).toHaveText(
+  await expect(target.locator("#tab-docs")).toHaveText(
     label("desktop.pane.docs"),
   );
 });
@@ -4261,7 +4256,7 @@ test("the calendar's sign-in gets focus back when the dialog is put aside", asyn
   await expect(target.locator(".sign-in")).toHaveCount(0);
   // With the TUI hidden, its way back in is not on screen to fall back to.
   await target
-    .locator(".pane-tui .pane-head")
+    .locator('[data-dock-header="tui"]')
     .getByRole("button")
     .last()
     .click();
@@ -4363,8 +4358,8 @@ test("the calendar chosen while the TUI is maximized takes the keyboard", async 
   });
   await expect(page).toBeFocused();
   await target
-    .locator(".pane-tui .pane-head")
-    .getByRole("button", { name: label("desktop.pane.maximize_tui") })
+    .locator('[data-dock-header="tui"]')
+    .getByRole("button", { name: label("desktop.dock.expand") })
     .click();
   await expect(page).toBeHidden();
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
@@ -4502,7 +4497,7 @@ test("the messages button counts what is unread and opens the TUI", async ({
   await expect(tui(target)).toBeFocused();
   // Hidden, the TUI is shown again.
   await target
-    .locator(".pane-tui .pane-head")
+    .locator('[data-dock-header="tui"]')
     .getByRole("button")
     .last()
     .click();
@@ -4583,7 +4578,7 @@ test("messages, with the TUI withheld, leads to the way in", async ({
   await expect(target.locator(".sign-in")).toHaveCount(0);
   // From the documentation's side of the window, with the TUI hidden.
   await target
-    .locator(".pane-tui .pane-head")
+    .locator('[data-dock-header="tui"]')
     .getByRole("button")
     .last()
     .click();

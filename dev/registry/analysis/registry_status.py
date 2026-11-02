@@ -37,6 +37,7 @@ from ..pipeline.generated_tree_dispositions import (
     disposition_ledger_from_path,
     record_drift_dispositions,
 )
+from .edition_minimality_lanes import delta_minimality_reasons, edition_assessment_reasons
 
 if TYPE_CHECKING:
     from .generated_tree_state import GeneratedTreeState
@@ -132,6 +133,14 @@ class RegistryStatus:
     fabricate a census it did not take; the default reads as "walked nothing",
     which its own denominators make visible.
     """
+    delta_minimality_reasons: tuple[str, ...] = ()
+    """Why the casilla delta screen fails, empty when it held.
+
+    Defaulted like the placement census: a caller assembling a status for one
+    other axis need not run the screen, and the collector always does.
+    """
+    edition_assessment_reasons: tuple[str, ...] = ()
+    """Why the all-family assessment fails, empty when every modelo tree is minimal."""
     target_census_failed: bool = False
     """Whether the generated-target census refused to produce an answer.
 
@@ -443,6 +452,10 @@ def collect_registry_status(
     loadable = _runtime_authority_loadable(resolved_descriptor, details)
     informational_bindings = _record_informational_bindings(authority, details)
     export_placement = _record_export_placement(authority, details)
+    minimality = delta_minimality_reasons(authority)
+    assessment = edition_assessment_reasons(resolved_registry_root)
+    details.extend(f"DELTA-MINIMALITY: {reason}" for reason in minimality)
+    details.extend(f"EDITION-ASSESSMENT: {reason}" for reason in assessment)
 
     return RegistryStatus(
         valid=valid,
@@ -457,6 +470,8 @@ def collect_registry_status(
         informational_bindings=informational_bindings,
         details=tuple(details),
         export_placement=export_placement,
+        delta_minimality_reasons=minimality,
+        edition_assessment_reasons=assessment,
     )
 
 
@@ -765,6 +780,8 @@ def _status_lanes(status: RegistryStatus, target_counts: dict[str, int]) -> dict
         **_authority_lanes(status),
         **_target_lanes(status, target_counts, blocking_targets),
         "export_placement_coverage": _export_placement_lane(status.export_placement),
+        "delta_minimality": _reasons_lane(status.delta_minimality_reasons),
+        "edition_delta_assessment": _reasons_lane(status.edition_assessment_reasons),
     }
 
 
@@ -795,6 +812,11 @@ def _target_lanes(
 def _target_currentness(census_failed: bool, blocking_targets: int) -> str:
     """Fail currentness when the census failed or found blocking target states."""
     return "failed" if census_failed or blocking_targets else "passed"
+
+
+def _reasons_lane(reasons: tuple[str, ...]) -> str:
+    """Fail a minimality lane on any reason it was given."""
+    return "failed" if reasons else "passed"
 
 
 def _coverage_lane(has_findings: bool) -> str:

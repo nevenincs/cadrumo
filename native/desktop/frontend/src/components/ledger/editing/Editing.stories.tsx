@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef } from "react";
 import { userEvent, waitFor } from "storybook/test";
-import type { EditorContext } from "@/components/ui/data-grid";
+import type { EditorContext } from "@/components/ui/dataGridTypes";
 import {
   STORY_READER,
   useLedgerPort,

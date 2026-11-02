@@ -2,7 +2,6 @@ import { servedLimits } from "./support/servedLimits";
 import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
 import type {
-  CatalogueInvoice,
   ConfirmationBlocker,
   EvidenceDraft,
   EvidenceRecord,
@@ -10,7 +9,7 @@ import type {
 import {
   confirmation,
   correctionValues,
-  duplicateOf,
+  duplicateQuestion,
   findingsState,
   holdsUpdate,
   recordUpdate,
@@ -220,69 +219,33 @@ test("a finding is answered by a candidate it offers, a value, or an attestation
   expect(held).toEqual({ kind: "held", holds: ["findings"] });
 });
 
-function catalogued(
-  number: string,
-  facts: Partial<CatalogueInvoice> = {},
-): CatalogueInvoice {
-  return {
-    invoice_id: hexId(number),
-    bucket_id: null,
-    kind: "received",
-    invoice_number: number,
-    issued_at: "2026-10-15",
-    counterparty_name: "Papelería Trazo SL",
-    counterparty_tax_id: "B12000045",
-    counterparty_country: "ES",
-    base_total: { decimal: "30.00" },
-    iva_total: { decimal: "6.30" },
-    grand_total: { decimal: "36.30" },
-    currency: "EUR",
-    payment_status: "PENDING",
-    linked_transaction_ids: [],
-    source_filename: null,
-    source_sha256: null,
-    source_row_index: null,
-    notes: "",
-    retention_rate: null,
-    retention_amount: null,
-    recargo_amount: null,
-    operation_type: null,
-    lines: [],
-    invoice_class: "ORDINARIA",
-    series: null,
-    operation_date: null,
-    operation_date_role: null,
-    iva_category: null,
-    rectifies_invoice_number: null,
-    fx_rate: null,
-    fx_rate_date: null,
-    fx_rate_source: null,
-    base_total_eur: null,
-    iva_total_eur: null,
-    grand_total_eur: null,
-    referencia_catastral: null,
-    ...facts,
-  };
-}
-
-test("the catalogue's duplicate is the same number first, then the same party, day and total", () => {
-  const sameDay = catalogued("PT-0999");
-  const sameNumber = catalogued("pt 0412", { issued_at: "2026-01-01" });
-  const otherKind = catalogued("PT-0412", { kind: "issued" });
-  expect(duplicateOf(draft, "received", {}, [sameDay, sameNumber])).toBe(
-    sameNumber,
-  );
-  expect(duplicateOf(draft, "received", {}, [sameDay])).toBe(sameDay);
-  expect(duplicateOf(draft, "received", {}, [otherKind])).toBeNull();
-  const otherParty = catalogued("PT-0412", {
-    counterparty_tax_id: "B00000000",
-  });
-  expect(duplicateOf(draft, "received", {}, [otherParty])).toBeNull();
-  expect(duplicateOf(draft, null, {}, [sameNumber])).toBeNull();
-  // A corrected number is the one compared.
+test("the duplicate question states what the reading says, corrected, once a kind is chosen", () => {
+  expect(duplicateQuestion(draft, null, {})).toBeNull();
+  const asked = duplicateQuestion(draft, "received", {})!;
+  expect(asked.kind).toBe("received");
+  expect(asked.invoice_number).toBe(draft.invoice_number);
   expect(
-    duplicateOf(draft, "received", { invoice_number: "PT-0999" }, [sameDay]),
-  ).toBe(sameDay);
+    duplicateQuestion(draft, "received", { invoice_number: "PT-0999" })!
+      .invoice_number,
+  ).toBe("PT-0999");
+});
+
+test("a confirmation waits while the ledger has yet to say if the reading is in the catalogue", () => {
+  const held = confirmation({
+    reference,
+    binding,
+    draft,
+    blockers: [],
+    answers: {},
+    kind: "received",
+    country: "ES",
+    corrections: {},
+    duplicate: null,
+    duplicateUnread: true,
+    confirmAnyway: false,
+  });
+  expect(held.kind).toBe("held");
+  expect(held.kind === "held" && held.holds).toContain("duplicate_unread");
 });
 
 test("a fresh reading equal to the one shown is the reading reviewed", () => {

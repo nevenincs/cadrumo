@@ -56,7 +56,11 @@ use super::{
     },
     transfer::{SenderControl, TransferChunk, TransferReceiver, TransferSender},
 };
-use crate::runtime_client::{Cohort, Endpoint, Refusal, RuntimeChannel};
+use crate::runtime_client::{
+    endpoint::{Endpoint, RuntimeChannel},
+    handshake::Cohort,
+    refusal::Refusal,
+};
 use std::{
     collections::VecDeque,
     fmt, io,

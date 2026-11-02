@@ -102,14 +102,18 @@ test("both splitters move by the arrow keys and report their position", async ({
 }) => {
   await seedLayout(target);
   await open(target);
-  // Each reports the share of the area it sizes: the documentation pane for
-  // the split, which the left arrow narrows, and the bottom panel for its
-  // own handle, which the down arrow lowers.
-  for (const [name, back] of [
-    [label("desktop.split.resize"), "ArrowLeft"],
-    [label("desktop.panel.resize"), "ArrowDown"],
-  ] as const) {
-    const handle = target.getByRole("separator", { name });
+  // Each docking separator reports its first branch's share and names
+  // the panes it separates, regardless of where the split is nested.
+  const handles = target.locator("[data-dock-divider]");
+  await expect(handles).toHaveCount(2);
+  for (const handle of await handles.all()) {
+    const back =
+      (await handle.getAttribute("aria-orientation")) === "vertical"
+        ? "ArrowLeft"
+        : "ArrowUp";
+    await expect(handle).toHaveAccessibleName(
+      new RegExp(label("desktop.split.resize")),
+    );
     await handle.focus();
     const before = Number(await handle.getAttribute("aria-valuenow"));
     await target.keyboard.press(back);
@@ -119,7 +123,7 @@ test("both splitters move by the arrow keys and report their position", async ({
     await expect(handle).toBeFocused();
     const smaller = Number(await handle.getAttribute("aria-valuenow"));
     await target.keyboard.press(
-      back === "ArrowLeft" ? "ArrowRight" : "ArrowUp",
+      back === "ArrowLeft" ? "ArrowRight" : "ArrowDown",
     );
     await expect
       .poll(async () => Number(await handle.getAttribute("aria-valuenow")))

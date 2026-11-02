@@ -25,8 +25,9 @@ from ......application.modelo.calculation_notes import (
     what_locale_key,
     what_to_do_locale_key,
 )
+from ......application.modelo.work_form_declaration_facts import ModeloFormCalculationNote
 from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
-from ......application.modelo.work_form_models import ModeloFormCalculationNote, ModeloWorkForm
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......core.external_constants import SUPPORTED_OUTPUT_LANGUAGES
 from ......core.i18n.render import lookup_translation

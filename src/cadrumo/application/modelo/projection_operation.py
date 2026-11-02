@@ -14,7 +14,9 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
+from ...core.external_constants import OutputLanguage
 from ...core.filing_year import FourDigitYear, is_four_digit_year
+from ...core.i18n.render import output_language
 from ...core.identity.digest import ContentDigest
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -44,12 +46,14 @@ from .projection import (
     project_modelo_100_from_m130,
 )
 from .projection_migration_ports import ProjectionMigrationPlan, ProjectionMigrationPort
+from .projection_words import binding_source_words, unresolved_binding_words, unresolved_casilla_reason_words
 
 MODELO_PROJECT_OPERATION_DEFINITION_ID = "modelo.project"
 MODELO_COMPARE_OPERATION_DEFINITION_ID = "modelo.compare"
 
 _Token = Annotated[str, Field(min_length=1, max_length=128)]
 _Value = Annotated[str, Field(min_length=1, max_length=16_384)]
+_Words = Annotated[str, Field(min_length=1, max_length=1_024)]
 _LOG = get_logger(__name__)
 
 
@@ -135,7 +139,12 @@ class ProjectCasillaObservationProjection(BaseModel):
 
 
 class ProjectUnresolvedBindingProjection(BaseModel):
-    """One source-owned binding left without a value, named by its box and closed tokens."""
+    """One source-owned binding left without a value, named by its box and closed tokens.
+
+    ``words`` says why it has no value and what puts that right, and
+    ``source_words`` names its source in a few words (``None`` for a source kind
+    the product does not know); both are in the projection's ``words_language``.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -144,15 +153,21 @@ class ProjectUnresolvedBindingProjection(BaseModel):
     source_kind: _Token
     reason: _Token
     note: _Token | None
+    source_words: _Words | None
+    words: _Words
 
 
 class ProjectUnresolvedCasillaProjection(BaseModel):
-    """One computed box with no value, and the grounding of the formula that would compute it."""
+    """One computed box with no value, and the grounding of the formula that would compute it.
+
+    ``reason_words`` says why it has no value, in the projection's ``words_language``.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     casilla_id: _Token
     reason: _Token
+    reason_words: _Words
     formula_id: _Token
     legal_refs: tuple[_Token, ...]
     source_refs: tuple[_Token, ...]
@@ -163,7 +178,8 @@ class ModeloProjectOperationProjection(BaseModel):
 
     A box in ``unresolved_casillas`` or bound by a binding in
     ``unresolved_bindings`` has no value, and never appears in
-    ``casilla_observations``.
+    ``casilla_observations``. The words of both lists are in ``words_language``,
+    the language the worker's catalogue rendered them in.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -181,6 +197,7 @@ class ModeloProjectOperationProjection(BaseModel):
     m100_projection: ProjectM100SummaryProjection
     unresolved_bindings: tuple[ProjectUnresolvedBindingProjection, ...]
     unresolved_casillas: tuple[ProjectUnresolvedCasillaProjection, ...]
+    words_language: OutputLanguage
 
     @model_validator(mode="after")
     def _complete_quarters(self) -> Self:
@@ -205,6 +222,7 @@ class ModeloProjectOperationProjection(BaseModel):
         cls, profile_id: UUID, result: ModeloProjectServiceResult, *, authority_generation: ContentDigest
     ) -> Self:
         """Carry all canonical values and per-casilla provenance without rounding."""
+        language = OutputLanguage(output_language())
         return cls(
             authority_generation=authority_generation,
             profile_id=profile_id,
@@ -245,6 +263,8 @@ class ModeloProjectOperationProjection(BaseModel):
                     source_kind=row.source_kind,
                     reason=row.reason,
                     note=str(row.note) if row.note is not None else None,
+                    source_words=binding_source_words(row.source_kind, language=language),
+                    words=unresolved_binding_words(row.fact, language=language),
                 )
                 for row in result.unresolved_bindings
             ),
@@ -252,12 +272,14 @@ class ModeloProjectOperationProjection(BaseModel):
                 ProjectUnresolvedCasillaProjection(
                     casilla_id=row.casilla_id,
                     reason=row.reason,
+                    reason_words=unresolved_casilla_reason_words(row.reason, language=language),
                     formula_id=row.formula_id,
                     legal_refs=tuple(row.legal_refs),
                     source_refs=tuple(row.source_refs),
                 )
                 for row in result.unresolved_casillas
             ),
+            words_language=language,
         )
 
 

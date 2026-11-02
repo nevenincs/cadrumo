@@ -102,6 +102,7 @@ from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.categories.registry import resolve_category_profiles
 from ....domain.categories.spending_category import SpendingCategory
+from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
@@ -112,6 +113,7 @@ from ....domain.renta.ledger_expenses import RentaDeductibilityContext, RentaDed
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from ...exchange_rate_provider import bind_exchange_rate_provider_factory
 from .._iva_transaction import _substrate_admission_issue
 from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
 from ..impatriado_income_ledger import (
@@ -121,7 +123,8 @@ from ..impatriado_income_ledger import (
 from ..iva_ledger import IvaLedgerAggregationIssueReason
 from ..oss_ioss import _candidate_for_invoice_line
 from ..renta_gasto_ledger import RentaGastoLedgerAggregationIssue, _classify_gasto_transaction
-from ..renta_income_ledger import RentaIncomeLedgerAggregationIssue, _classify_income_transaction
+from ..renta_income_ledger import _classify_income_transaction
+from ..renta_income_models import RentaIncomeLedgerAggregationIssue
 from ..renta_ledger import RentaCategoryDeductionRules, _classify_renta_transaction
 from ..renta_ledger_models import RentaLedgerAggregationIssue
 
@@ -495,12 +498,37 @@ def test_modelo_bindings_iva_screen_converts_invoice_line_amounts() -> None:
     assert observation.base_amount != base_total_native
 
 
+class _OneQuote:
+    """A rate authority that publishes one day; the provider's own parsing has its own tests."""
+
+    rate_source_id = "ecb_reference"
+
+    def __init__(self, day: date, rate: Decimal) -> None:
+        self._day = day
+        self._rate = rate
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        del currency
+        if rate_date != self._day:
+            return EurRateLookup(
+                status=EurRateLookupStatus.MISSING_RATE, rate_date=rate_date, source=self.rate_source_id
+            )
+        return EurRateLookup(
+            status=EurRateLookupStatus.FOUND,
+            rate_date=rate_date,
+            source=self.rate_source_id,
+            rate=self._rate,
+            observation_date=rate_date,
+        )
+
+
 def test_oss_ioss_candidate_converts_invoice_line_amounts() -> None:
-    """FIXED: an OSS/IOSS candidate is EUR, not the invoice's native magnitude.
+    """An OSS/IOSS candidate is EUR at the period-close ECB rate, not native and not the invoice's stamp.
 
     OSS/IOSS is cross-border EU B2C by definition, where invoicing in the
-    destination Member State's own currency is the ORDINARY case -- the
-    highest-probability trigger of the whole native-read defect class.
+    destination Member State's own currency is the ORDINARY case. 1 EUR = 1.25
+    USD on the period's last day makes 1000.00 USD 800.00 EUR and 210.00 USD
+    168.00 EUR, whatever the invoice was stamped with.
     """
     base_total_native = Decimal("1000.00")
     iva_total_native = Decimal("210.00")
@@ -514,8 +542,12 @@ def test_oss_ioss_candidate_converts_invoice_line_amounts() -> None:
         oss_transaction_kind=TransactionKind("oss_union_services"),
         oss_rate_kind=IvaRateKind("general"),
     )
-    candidate = _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=date(2025, 2, 10))
+    close = date(2025, 3, 31)
+    with bind_exchange_rate_provider_factory(lambda: _OneQuote(close, Decimal("0.8"))):
+        candidate = _candidate_for_invoice_line(
+            invoice, line, line_index=1, devengo_date=date(2025, 2, 10), period_last_day=close
+        )
     assert candidate is not None
-    assert candidate.base_amount == base_total_native * _FX_RATE
-    assert candidate.iva_amount == iva_total_native * _FX_RATE
-    assert candidate.base_amount != base_total_native
+    assert candidate.base_amount == Decimal("800.00")
+    assert candidate.iva_amount == Decimal("168.00")
+    assert candidate.base_amount != base_total_native * _FX_RATE

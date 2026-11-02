@@ -80,6 +80,16 @@ def _resolve_manual_field_value(
         return BusinessClassification(value)
     if field_name in {"business_pct", "taxable_base", "iva_rate", "iva_amount"}:
         return _manual_decimal_value(field_name, value)
+    return _resolve_manual_authority_value(field_name, value, current=current, operation=operation)
+
+
+def _resolve_manual_authority_value(
+    field_name: str,
+    value: str,
+    *,
+    current: Transaction,
+    operation: PinnedAuthorityOperation,
+) -> object:
     if field_name == "category_id":
         return _manual_spending_category(value, operation)
     if field_name == "irpf_category":

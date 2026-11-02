@@ -8,6 +8,7 @@
 // only: never in storage, a log line or an error message.
 
 import type {
+  LedgerPreflightReason,
   EvidenceUpdateField,
   InvoiceUpdateField,
   LedgerUpdateField,
@@ -96,6 +97,8 @@ import type {
   ProrrataSettleSectorRequest,
   ProrrataDeclareGrossRequest,
   ProrrataRemoveGrossRequest,
+  WithholdingAbsenceListRequest,
+  WithholdingAbsenceListResult,
   WithholdingAbsenceResult,
   WithholdingAttestRequest,
   WithholdingListRequest,
@@ -173,8 +176,10 @@ export const LEDGER_DEFINITIONS = [
   "ledger.inventory.retire",
   "ledger.inventory.valuation.preview",
   "ledger.invoice.add",
+  "ledger.invoice.duplicate",
   "ledger.invoice.import",
   "ledger.invoice.list",
+  "ledger.invoice.match",
   "ledger.invoice.preview",
   "ledger.invoice.remove",
   "ledger.invoice.update",
@@ -209,6 +214,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.restore",
   "ledger.retencion_soportada.attest_absence",
   "ledger.retencion_soportada.list",
+  "ledger.retencion_soportada.list_absences",
   "ledger.retencion_soportada.record",
   "ledger.retencion_soportada.remove",
   "ledger.retencion_soportada.withdraw_absence",
@@ -218,6 +224,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.rule.list",
   "ledger.rule.remove",
   "ledger.rule.trial",
+  "ledger.split.check",
   "ledger.split.manual",
   "ledger.split.review",
   "ledger.staged.check",
@@ -721,6 +728,9 @@ export type CatalogueInvoice = {
   /** The issued invoice's leased premises' cadastral reference, as the
    * ledger holds it. */
   referencia_catastral: string | null;
+  /** The cash the invoice settles for: its total less the retención withheld
+   * at source. */
+  settlement_amount: PublicDecimal;
 };
 /** The catalogue filters by kind only. */
 export type InvoiceListRequest = { kind?: InvoiceKind | null };
@@ -839,6 +849,123 @@ export type LedgerRuleTrialResult = {
   hits: string[];
   pending: string[];
 };
+/** What a document states, as read or corrected. */
+export type LedgerInvoiceDuplicateRequest = {
+  kind: InvoiceKind;
+  invoice_number: string | null;
+  counterparty_tax_id: string | null;
+  invoice_date: string | null;
+  grand_total: string | null;
+};
+/** The stored invoice the document may already be, and what they share. */
+export type LedgerInvoiceDuplicateResult = {
+  profile_id: string;
+  invoice_id: string | null;
+  basis: "number" | "party_day_total" | null;
+};
+/** A link the person has staged and not saved. */
+export type LedgerInvoiceMatchStagedLink = {
+  transaction_id: string;
+  invoice_id: string;
+};
+/** What to propose given the staged links. With `invoice_id` only that invoice
+ * is weighed and the open movements near its day come back as choices; with
+ * `transaction_id` the invoices of that movement's flow come back as choices
+ * and only its suggestion is returned. */
+export type LedgerInvoiceMatchRequest = {
+  staged: LedgerInvoiceMatchStagedLink[];
+  invoice_id?: string | null;
+  transaction_id?: string | null;
+  /** Links to state the differences of; they take nothing from the
+   * suggestions. */
+  judge?: LedgerInvoiceMatchStagedLink[];
+};
+/** One way a judged movement and invoice do not agree; the fields besides
+ * `kind` are the kind's own and null otherwise. */
+export type LedgerInvoiceMatchMismatch = {
+  kind: "amount" | "currency" | "counterparty" | "linked_elsewhere";
+  /** `amount`: the magnitude of the movement's amount less what the invoice
+   * settles for. */
+  difference: { decimal: string } | null;
+  /** `currency`: the movement's currency. */
+  movement: string | null;
+  /** `currency`: the invoice's currency. */
+  invoice: string | null;
+  /** `linked_elsewhere`: how many other movements already hold the invoice. */
+  count: number | null;
+};
+/** What stands against one named link; `found` is false when the movement or
+ * the invoice is gone. */
+export type LedgerInvoiceMatchJudgement = {
+  transaction_id: string;
+  invoice_id: string;
+  found: boolean;
+  mismatches: LedgerInvoiceMatchMismatch[];
+};
+/** One movement and one invoice that settle each other, and the evidence the
+ * pair stands on. */
+export type LedgerInvoiceMatchPair = {
+  transaction_id: string;
+  invoice_id: string;
+  /** The description names the invoice's number. */
+  number: boolean;
+  /** Days from the invoice's date to the movement's; negative when paid first. */
+  gap: number;
+  /** The counterparty names overlap. */
+  counterparty: boolean;
+};
+/** A movement's best invoice, with what competes with it. */
+export type LedgerInvoiceMatchSuggestion = LedgerInvoiceMatchPair & {
+  ambiguous: boolean;
+  ties: LedgerInvoiceMatchPair[];
+  others: LedgerInvoiceMatchPair[];
+};
+/** The ledger's proposals, newest movement first, and the by-hand choices the
+ * request asked for. */
+export type LedgerInvoiceMatchResult = {
+  profile_id: string;
+  suggestions: LedgerInvoiceMatchSuggestion[];
+  /** How many days either side of an invoice's issue day the movement
+   * choices reach. */
+  window_days: number;
+  invoice_choices:
+    | {
+        invoice_id: string;
+        settles: boolean;
+        staged_for: string | null;
+        linked: number;
+      }[]
+    | null;
+  movement_choices: { transaction_id: string; settles: boolean }[] | null;
+  /** One judgement per link named in `judge`, in the order named. */
+  judgements: LedgerInvoiceMatchJudgement[];
+};
+/** Unsaved parts of a movement. No amount on the last asks what the others leave. */
+export type LedgerSplitCheckRequest = {
+  transaction_id: string;
+  parts: { amount: string | null; description: string }[];
+};
+/** What is left for the last part, the first thing the split writer would
+ * refuse, and the parts as it takes them. */
+export type LedgerSplitCheckResult = {
+  profile_id: string;
+  remainder: string | null;
+  problem: {
+    kind:
+      | "gone"
+      | "not_active"
+      | "count"
+      | "amount"
+      | "description"
+      | "description_long"
+      | "sum";
+    index: number | null;
+    max: number | null;
+    difference: string | null;
+    over: boolean | null;
+  } | null;
+  children: { amount: string; description: string }[];
+};
 export type LedgerStagedCheckRequest = {
   rows: LedgerStagedRow[];
   drafts: LedgerStagedDraft[];
@@ -870,6 +997,7 @@ export type LedgerStagedRowAnswer = {
   classified: boolean;
   takes_expense_category: boolean;
   takes_share: boolean;
+  category_askable: boolean;
   category_settable: boolean;
   category_on_income: boolean;
   takes_changes: boolean;
@@ -1091,25 +1219,6 @@ export type LedgerStatusResult = {
   }[];
 };
 
-export type LedgerPreflightReason =
-  | "missing_business_classification"
-  | "missing_category"
-  | "missing_taxable_base"
-  | "missing_iva_amount"
-  | "missing_iva_rate"
-  | "missing_eur_tax_substrate"
-  | "missing_counterparty_identification_state"
-  | "domestic_identification_on_intra_community_transaction"
-  | "eu_member_state_on_export_transaction"
-  | "missing_counterparty_establishment_on_export"
-  | "inadmissible_deduction_classification"
-  | "missing_proportionality_reference"
-  | "unsupported_currency"
-  | "unsupported_period"
-  | "censo_ratio_mismatch"
-  | "missing_home_office_afectacion"
-  | "anomaly_non_declarable_iva_category"
-  | "anomaly_non_declarable_recargo_equivalencia";
 export type LedgerPreflightRequest = { period: PublicPeriod };
 export type LedgerPreflightResult = {
   profile_id: string;
@@ -1925,6 +2034,7 @@ export type EvidenceConfirmResult = {
     draft: EvidenceDraft;
     /** False where the catalogue already held this confirmation. */
     created: boolean;
+    likely_duplicate_invoice_id?: string | null;
     total_discrepancy?: {
       printed_total: PublicDecimal;
       recorded_total: PublicDecimal;
@@ -2113,6 +2223,9 @@ export interface LedgerRequests {
   "ledger.invoice.add": InvoiceAddRequest;
   "ledger.invoice.preview": InvoicePreviewRequest;
   "ledger.rule.trial": LedgerRuleTrialRequest;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateRequest;
+  "ledger.invoice.match": LedgerInvoiceMatchRequest;
+  "ledger.split.check": LedgerSplitCheckRequest;
   "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
@@ -2173,9 +2286,11 @@ export interface LedgerRequests {
   "ledger.prorrata.declare_gross": ProrrataDeclareGrossRequest;
   "ledger.prorrata.remove_gross": ProrrataRemoveGrossRequest;
   "ledger.retencion_soportada.list": WithholdingListRequest;
+  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListRequest;
   "ledger.retencion_soportada.record": WithholdingRecordRequest;
   "ledger.retencion_soportada.remove": WithholdingRemoveRequest;
   "ledger.retencion_soportada.attest_absence": WithholdingAttestRequest;
+  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListRequest;
   "ledger.retencion_soportada.withdraw_absence": WithholdingWithdrawRequest;
   "ledger.bienes_inversion.list": Record<string, never>;
   "ledger.bienes_inversion.declare": CapitalGoodDeclareRequest;
@@ -2225,6 +2340,9 @@ export interface LedgerResults {
   "ledger.invoice.add": InvoiceAddResult;
   "ledger.invoice.preview": InvoicePreviewResult;
   "ledger.rule.trial": LedgerRuleTrialResult;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateResult;
+  "ledger.invoice.match": LedgerInvoiceMatchResult;
+  "ledger.split.check": LedgerSplitCheckResult;
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;
@@ -2284,9 +2402,11 @@ export interface LedgerResults {
   "ledger.prorrata.declare_gross": ProrrataMutationResult;
   "ledger.prorrata.remove_gross": ProrrataMutationResult;
   "ledger.retencion_soportada.list": WithholdingListResult;
+  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListResult;
   "ledger.retencion_soportada.record": WithholdingMutationResult;
   "ledger.retencion_soportada.remove": WithholdingMutationResult;
   "ledger.retencion_soportada.attest_absence": WithholdingAbsenceResult;
+  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListResult;
   "ledger.retencion_soportada.withdraw_absence": WithholdingAbsenceResult;
   "ledger.bienes_inversion.list": CapitalGoodsListResult;
   "ledger.bienes_inversion.declare": CapitalGoodDeclareResult;

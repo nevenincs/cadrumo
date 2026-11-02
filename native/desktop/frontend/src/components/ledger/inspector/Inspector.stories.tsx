@@ -399,6 +399,7 @@ function Split({ id, locale }: SplitArgs) {
     );
   return row ? (
     <SplitDialog
+      port={port}
       row={row}
       locale={locale}
       onStage={noop}

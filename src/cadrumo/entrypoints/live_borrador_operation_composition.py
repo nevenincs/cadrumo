@@ -9,6 +9,8 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ..adapters.inbound.borrador.parser import parse_borrador
 from ..adapters.inbound.borrador.schema import BorradorParseMode
+from ..application.live.borrador_100_comparison import Borrador100ComparisonSources
+from ..application.live.borrador_100_comparison_operation import Borrador100ComparisonPorts
 from ..application.live.borrador_100_operation_ports import (
     Borrador100ImportObservation,
     Borrador100OperationPorts,
@@ -77,6 +79,29 @@ def build_borrador_100_operation_ports(
         repository=build_borrador_100_snapshot_repository(bucket_id=str(profile_id)),
         parser=_CanonicalBorradorParser(),
         profile_tax_id=lambda: _profile_tax_id(profile_id, operation),
+    )
+
+
+def build_borrador_100_comparison_ports(
+    *, profile_id: UUID, operation: PinnedAuthorityOperation
+) -> Borrador100ComparisonPorts:
+    """Bind the profile's borrador store and calculation repositories inside the admitted worker."""
+    from .operation_composition_inputs import build_modelo_workbench_read_ports
+
+    bucket_id = str(profile_id)
+    if require_active_bucket_id() != bucket_id:
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    workbench = build_modelo_workbench_read_ports(bucket_id, operation)
+    return Borrador100ComparisonPorts(
+        profile_id=profile_id,
+        operation=operation,
+        borrador_snapshots=build_borrador_100_snapshot_repository(bucket_id=bucket_id),
+        sources=Borrador100ComparisonSources(
+            bucket_id=bucket_id,
+            work_units=workbench.work_units,
+            calculations=workbench.calculations,
+            verifications=workbench.verifications,
+        ),
     )
 
 

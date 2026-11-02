@@ -125,6 +125,19 @@ def test_every_income_class_a_sentence_names_reads_in_words(
     assert _RAW.search(text) is None, text
 
 
+@pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
+def test_every_income_class_is_worded_apart_from_its_stored_token(language: str) -> None:
+    words = {}
+    for income_class in RetencionSoportadaClase:
+        fact = CalculationNoteFact.of(
+            CalculationNoteSentence.RETENCION_SOPORTADA_EVIDENCE_REQUIRED, income_class=income_class.value
+        )
+        text = note_fact_text(fact, locale=language)
+        assert _RAW.search(text) is None, text
+        words[income_class] = text
+    assert len(set(words.values())) == len(words)
+
+
 def test_a_name_with_a_stored_look_still_reads_only_as_itself() -> None:
     fact = CalculationNoteFact.of(CalculationNoteSentence.ACCRUAL_UNAVAILABLE, elements=(_ASSET,))
 

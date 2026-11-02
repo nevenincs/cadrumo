@@ -65,13 +65,26 @@ def localized_text(keys: tuple[str, ...], language: OutputLanguage) -> ModeloFor
     return ModeloFormText(text=text, disclosure=disclosure)
 
 
-def localized_heading(key: str, official: str | None, technical: str, language: OutputLanguage) -> ModeloFormText:
-    """Resolve a layout heading: the translation, then Spanish, then the design's words, then a name."""
-    translated = lookup_translation(key, locale=language.value)
-    if translated is not None and translated:
+def localized_heading(
+    key: str,
+    official: str | None,
+    technical: str,
+    language: OutputLanguage,
+    *,
+    edition_key: str | None = None,
+) -> ModeloFormText:
+    """Resolve a layout heading: the translation, then Spanish, then the design's words, then a name.
+
+    ``edition_key`` is the heading one revision gives the part
+    (:func:`~cadrumo.domain.calculations.registry.modelo_localization.form_heading_edition_locale_key`);
+    in each language it is read before the modelo-wide ``key``.
+    """
+    keys = (key,) if edition_key is None else (edition_key, key)
+    translated = _first_translation(keys, language.value)
+    if translated is not None:
         return ModeloFormText(text=translated, disclosure=ModeloFormTextDisclosure.LOCALIZED)
-    spanish = lookup_translation(key, locale=_SPANISH)
-    if spanish is not None and spanish:
+    spanish = _first_translation(keys, _SPANISH)
+    if spanish is not None:
         disclosure = (
             ModeloFormTextDisclosure.LOCALIZED
             if language is OutputLanguage.ES
@@ -81,6 +94,14 @@ def localized_heading(key: str, official: str | None, technical: str, language: 
     if official is not None and official:
         return ModeloFormText(text=official, disclosure=ModeloFormTextDisclosure.OFFICIAL_SPANISH)
     return ModeloFormText(text=technical, disclosure=ModeloFormTextDisclosure.TECHNICAL)
+
+
+def _first_translation(keys: tuple[str, ...], locale: str) -> str | None:
+    for key in keys:
+        text = lookup_translation(key, locale=locale)
+        if text is not None and text:
+            return text
+    return None
 
 
 def unnamed_casilla_label(language: OutputLanguage) -> ModeloFormText:

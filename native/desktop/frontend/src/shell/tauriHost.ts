@@ -657,6 +657,17 @@ function tauriAgent(call: HostCall): {
           approval: { reply_id, request_id },
           optionId,
         }).then(() => undefined),
+      attachmentCard: ({ reply_id, request_id }) =>
+        call("agent_attachment_card", { approval: { reply_id, request_id } }),
+      attachmentRelease: ({ reply_id, request_id }, optionId, scope) =>
+        call("agent_attachment_release", {
+          approval: { reply_id, request_id },
+          optionId,
+          scope,
+        }),
+      attachmentGrants: () => call("agent_attachment_grants", {}),
+      attachmentGrantRevoke: (grantId) =>
+        call("agent_attachment_grant_revoke", { grantId }),
       async observe(conversationId, listener) {
         const events = new Channel<AgentStreamEvent>();
         events.onmessage = listener;

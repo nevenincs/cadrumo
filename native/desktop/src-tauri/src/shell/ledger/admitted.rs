@@ -53,7 +53,7 @@ use Kind::{Read, Review, Write};
 /// holds only the movement it asks about.
 const FIELD_SUBJECTS: [(&str, &[&str]); 1] = [("ledger.classify.review", &["transaction_id"])];
 
-const ADMITTED: [(&str, Kind); 118] = [
+const ADMITTED: [(&str, Kind); 122] = [
     ("ledger.actividad-asset.acquisition-candidates", Read),
     ("ledger.actividad-asset.claim", Write),
     ("ledger.actividad-asset.correct", Write),
@@ -120,7 +120,9 @@ const ADMITTED: [(&str, Kind); 118] = [
     ("ledger.inventory.valuation.preview", Write),
     ("ledger.invoice.add", Write),
     ("ledger.invoice.import", Write),
+    ("ledger.invoice.duplicate", Read),
     ("ledger.invoice.list", Read),
+    ("ledger.invoice.match", Read),
     ("ledger.invoice.preview", Read),
     ("ledger.invoice.remove", Write),
     ("ledger.invoice.update", Write),
@@ -155,6 +157,7 @@ const ADMITTED: [(&str, Kind); 118] = [
     ("ledger.restore", Write),
     ("ledger.retencion_soportada.attest_absence", Write),
     ("ledger.retencion_soportada.list", Read),
+    ("ledger.retencion_soportada.list_absences", Read),
     ("ledger.retencion_soportada.record", Write),
     ("ledger.retencion_soportada.remove", Write),
     ("ledger.retencion_soportada.withdraw_absence", Write),
@@ -164,6 +167,7 @@ const ADMITTED: [(&str, Kind); 118] = [
     ("ledger.rule.list", Read),
     ("ledger.rule.remove", Write),
     ("ledger.rule.trial", Read),
+    ("ledger.split.check", Read),
     ("ledger.split.manual", Write),
     ("ledger.split.review", Review),
     ("ledger.staged.check", Read),

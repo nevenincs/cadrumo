@@ -474,6 +474,10 @@ application:
           el recibo de exportación.
         rendered_payload_empty: El diseño de exportación produjo un contenido de declaración
           vacío.
+        shared_casilla_cells_unadjudicated: 'No se ha generado el fichero de la declaración:
+          las casillas %{casilla_ids} tienen un valor que el diseño oficial escribiría
+          en varias celdas, y aún no se ha confirmado que esas celdas signifiquen
+          lo mismo. Escribirlo llevaría esas cifras a conceptos que no les corresponden.'
         verify_draft_snapshot_stale: La comprobación requiere un borrador construido
           con las definiciones del modelo en uso.
         xml_schema_unreadable: No se ha podido aplicar el esquema oficial de este
@@ -488,6 +492,8 @@ application:
           esquema oficial.
         xml_value_not_listed: La casilla %{box} contiene un valor fuera de las opciones
           que enumera el esquema oficial.
+        xml_value_required_missing: El esquema oficial exige la casilla %{box} y no
+          tiene valor. Indícala antes de exportar; no se ha escrito nada.
         xml_value_too_long: La casilla %{box} tiene %{observed} caracteres; el esquema
           oficial admite como máximo %{limit}.
         xml_value_too_many_decimals: La casilla %{box} tiene %{observed} decimales;
@@ -1011,6 +1017,59 @@ application:
           Rellénalos tú.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Coinciden
+          differ: Difieren
+          not_comparable: No se pueden comparar
+          only_in_borrador: Solo en el borrador de la AEAT
+          only_in_calculation: Solo en tu cálculo
+        evidence:
+          borrador: Lo imprimió la AEAT en su borrador y lo importaste aquí. Es una
+            observación, no una declaración autenticada.
+          calculation: Calculado en este equipo a partir de tus registros. Es local,
+            no una presentación ante la AEAT.
+        reason:
+          borrador_does_not_read_box: La importación del borrador no lee esta casilla,
+            así que la falta de un valor del borrador no dice nada sobre ella.
+          borrador_printed_no_value: Tu cálculo tiene un valor, pero el borrador de
+            la AEAT no imprime ninguno en esta casilla.
+          borrador_value_ambiguous: El borrador de la AEAT tiene más de un valor para
+            esta casilla, así que no se puede comparar.
+          borrador_value_not_kept: El borrador de la AEAT imprime esta casilla, pero
+            la importación no guarda su valor, así que no se puede comparar.
+          calculation_blocked: Tu cálculo no pudo resolver esta casilla, así que no
+            se puede comparar.
+          calculation_has_no_value: El borrador de la AEAT imprime un valor, pero
+            tu cálculo no tiene ninguno en esta casilla.
+          calculation_not_applicable: Tu cálculo muestra que esta casilla no te corresponde,
+            pero el borrador de la AEAT imprime un valor.
+          not_applicable_zero: El borrador de la AEAT imprime cero y tu cálculo muestra
+            que esta casilla no te corresponde.
+          same_value: El borrador de la AEAT y tu cálculo tienen el mismo valor.
+          taken_from_borrador: Tu cálculo tomó este valor del borrador de la AEAT,
+            así que la coincidencia no lo confirma de forma independiente.
+          value_kinds_differ: Un lado tiene un importe y el otro un texto, así que
+            no se pueden comparar.
+          values_differ: El borrador de la AEAT y tu cálculo tienen valores distintos.
+        stale:
+          calculation_outdated: Las reglas cambiaron después de guardar tu cálculo,
+            así que hay que recalcularlo.
+          calculation_used_other_capture: Tu cálculo se hizo a partir de un borrador
+            de la AEAT distinto del que se compara aquí.
+          newer_capture_refused: Hay guardado un borrador que importaste después,
+            pero no se puede leer, así que esta comparación usa uno anterior.
+        status:
+          capture_refused: Hay borradores de la AEAT guardados para este año, pero
+            ninguno se puede leer con las reglas actuales; vuelve a importar el borrador.
+          compared: Se han comparado casilla por casilla el borrador de la AEAT que
+            importaste y tu cálculo guardado.
+          no_calculation: Esta declaración aún no tiene un cálculo guardado, así que
+            el borrador no se puede comparar; calcúlala primero.
+          no_capture: No has importado ningún borrador de la AEAT para este año, así
+            que no hay nada que comparar.
+          stale: Se han leído los dos, pero ya no se corresponden; recalcula o vuelve
+            a importar el borrador antes de fiarte de esta comparación.
       errors:
         binding_keys_not_admitted: 'Este borrador guardado tiene valores con claves
           que las definiciones del modelo no admiten, así que no se puede usar; vuelve
@@ -1817,6 +1876,9 @@ application:
       amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind}
         no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year},
         período {period}. Tipos aceptados para este período: {accepted_kinds}.'
+      amendment_later_period_only: El modelo {modelo} del ejercicio {filing_year}
+        y periodo {period} no admite corregir una autoliquidación ya presentada. Practica
+        el ajuste en la autoliquidación de un periodo posterior.
       amendment_registry_root_missing: Falta la generación publicada de la autoridad
         %{missing_path}; no se pueden validar las sobrescrituras de rectificación.
       amendment_registry_snapshot_unresolved: No se pudieron resolver las definiciones
@@ -2270,6 +2332,10 @@ application:
       iva_compensation_annual_source_evidence_failure: El modelo 390 necesita los
         datos de tus modelos 303 del año, y aún hay %{source_issue_count} incidencia(s)
         pendiente(s) con ellos, así que esta declaración no se puede completar.
+      iva_cuota_disagrees_with_rate: La entrada de IVA con fecha %{transaction_date}
+        registra una cuota de %{recorded_cuota} EUR, pero su base de %{base_amount}
+        EUR al tipo del %{iva_rate_percent} % da %{expected_cuota} EUR. Corrige la
+        cuota, la base o el tipo y vuelve a calcular antes de comprobar esta declaración.
       iva_import_document_unrecordable: El apunte del %{transaction_date} por %{transaction_amount}
         %{transaction_currency} necesita la declaración aduanera de la importación.
         Cadrumo todavía no puede registrarla, por lo que esta declaración no puede
@@ -2360,6 +2426,9 @@ application:
         de cero en este campo.
       selected_option_requires_zero: La opción seleccionada exige un cero explícito
         en este campo.
+      shared_casilla_cells_unadjudicated: 'La casilla %{casilla_id} tiene un valor
+        que la exportación escribiría también en celdas que aún no se ha confirmado
+        que signifiquen lo mismo: %{target_cells}.'
       suffered_retencion_capital_mobiliario_uncredited: Esta declaración recoge rendimientos
         del capital mobiliario del ahorro, pero no consta ninguna retención soportada.
         Introduce el importe del certificado de retenciones e ingresos a cuenta de
@@ -2490,10 +2559,34 @@ application:
           canal decimal %{binding_id} tiene un tipo no soportado: %{value_type}.'
         enum_boolean_invalid: El dato de perfil para el origen de valor %{binding_id}
           resolvió a booleano; los booleanos no son claves válidas.
+    projection_words:
+      binding_unresolved: No se ha podido sacar ningún valor para esta cifra a partir
+        de tus registros, así que queda sin resolver en lugar de contar como cero.
+        Registra la evidencia que falta y vuelve a proyectar.
+      casilla_reason:
+        m210_baseline_tipo_deferred: Esta casilla necesita el tipo de gravamen general
+          de esta clase de renta, que aún no está fundamentado para el ejercicio,
+          así que no tiene valor.
+        m210_convenio_rate_missing: Esta casilla necesita el tipo del convenio para
+          evitar la doble imposición según el país y la clase de renta, que no está
+          disponible, así que no tiene valor.
+        other: Esta casilla no se ha podido calcular, así que no tiene valor. Nunca
+          se muestra como cero.
+        unresolved_operand: Esta casilla suma o lee una cifra que todavía no tiene
+          valor, así que tampoco lo tiene ella. Nunca se muestra como cero.
     quickfile:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó
         con %{error_code}.'
+    taxation_comparison_words:
+      below_materiality: Los dos resultados difieren en {difference}, menos de {threshold},
+        así que da igual cuál de las dos modalidades elijas.
+      conjunta_lower_result: 'La tributación conjunta sale más barata: tu resultado
+        es {conjunta} en conjunta y {individual} en individual, una diferencia de
+        {difference}.'
+      individual_lower_result: 'La tributación individual sale más barata: tu resultado
+        es {individual} en individual y {conjunta} en conjunta, una diferencia de
+        {difference}.'
     value_date:
       month_01: ene
       month_02: feb
@@ -2558,6 +2651,9 @@ application:
           rentas exentas o por debajo del umbral de retención.
         settle_earlier_declaration: Resuelve primero la declaración del periodo anterior
           y vuelve a calcular.
+        shared_box_awaits_review: 'Cadrumo aún no puede exportar esta casilla. No
+          la vacíes para continuar: presenta esta declaración con otra herramienta
+          o espera a que se revisen sus celdas.'
       inspection_heading: Todas las casillas, por número de casilla
       unnamed_box: Casilla sin nombre
   operations:
@@ -2576,17 +2672,9 @@ application:
       holiday_coverage:
         calendar_unavailable: calendario de festivos no disponible; el plazo original
           no se ha comprobado
-        national_and_territory: festivos nacionales y de %{territory} comprobados;
-          festivos locales sin comprobar
-        national_and_territory_without_name: festivos nacionales y autonómicos aplicables
-          comprobados; festivos locales sin comprobar
-        national_only: solo festivos nacionales; festivos autonómicos y locales sin
-          comprobar
+        national_only: sábados, domingos y días inhábiles nacionales comprobados;
+          los festivos autonómicos y locales no mueven el plazo de presentación
         not_shifted: el plazo de este modelo no se traslada por días inhábiles
-        territory_unverified: solo festivos nacionales; los festivos autonómicos de
-          %{territory} de este año no se han comprobado y los locales no se comprueban
-        territory_unverified_without_name: solo festivos nacionales; el calendario
-          autonómico aplicable no está verificado; los festivos locales no se comprueban
       shift:
         business_day: Día hábil
         calendar_unavailable: Calendario no disponible
@@ -2916,6 +3004,8 @@ application:
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
       profile_authentication_refused: No se aceptó la contraseña del perfil.
+      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica
+        a qué ejercicio corresponde esta respuesta.
       profile_password_contains_surrogate: La contraseña del perfil contiene un valor
         que no puede codificarse como UTF-8 estricto.
       profile_password_too_few_scalars: La contraseña del perfil debe tener al menos
@@ -2926,7 +3016,6 @@ application:
         máximo {maximum_utf8_bytes} bytes UTF-8; se recibieron {utf8_byte_count}.
       profile_proof_cancelled: Se canceló la comprobación de la contraseña del perfil
         antes de terminar.
-      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica a qué ejercicio corresponde esta respuesta.
       profile_text_too_long: El campo %{field} admite como máximo %{limit} caracteres;
         acórtalo.
       recovery_already_enrolled: Este perfil ya tiene un código de recuperación. Desactívalo

@@ -92,8 +92,6 @@ modelo:
             main home. If the activity started during the year, use the quarter in
             which it started.
           label: 'Home deduction (farming): days active in the first quarter'
-        x-dlnm8pbcdsmj2cph5po62pr564n68pb3dhgn4ob3d5nmsbb3dtmn0r35dlimst31e9km2:
-          label: Complementaria declaration
         x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
           help: 'Only in the exceptional case where you must also file Modelo 130
             (instalment payment) in the quarter: enter the amount that form shows

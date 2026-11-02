@@ -243,8 +243,8 @@ record_identity = "T36901 Ext"
 
 [[entries]]
 export_field_id = "modelo-369-exterior-t36901-55-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -2412,8 +2412,8 @@ record_identity = "T36902 Ext"
 
 [[entries]]
 export_field_id = "modelo-369-exterior-t36902-9-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -4469,8 +4469,8 @@ record_identity = "T36903 Ext"
 
 [[entries]]
 export_field_id = "modelo-369-exterior-t36903-9-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 

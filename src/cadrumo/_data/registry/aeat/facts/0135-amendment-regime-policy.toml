@@ -19,6 +19,7 @@ source_refs = [
   "aeat-renta-2025-manual-parte1",
   "aeat-dr-200-2024",
   "aeat-modelo-200-manual-2024",
+  "boe-modelo-369-2021-form",
 ]
 review_status = "agent_reviewed"
 ownership = "authored"
@@ -68,6 +69,13 @@ required_text = [
   "la aplicación efectiva de la autoliquidación rectificativa como mecanismo de corrección de autoliquidaciones en sustitución del actual sistema de autoliquidación complementaria y solicitud de rectificación",
 ]
 
+# Orden HAC/610/2021 art. 7.5: a filed Modelo 369 is never amended; its adjustment belongs to a later period's return.
+[[fact.variants.source_citations]]
+source_ref = "boe-modelo-369-2021-form"
+required_text = [
+  "la misma no podrá modificarse",
+]
+
 [fact.variants.payload]
 kind = "mapping"
 entries = [
@@ -88,4 +96,7 @@ entries = [
   { key = "boundary.100.source", value = "aeat-renta-2025-manual-parte1" },
   { key = "boundary.200.date", value = "2024-12-31" },
   { key = "boundary.200.source", value = "aeat-dr-200-2024" },
+  { key = "later_period_adjustment.order", value = "369" },
+  { key = "later_period_adjustment.369.date", value = "2021-07-01" },
+  { key = "later_period_adjustment.369.source", value = "boe-modelo-369-2021-form" },
 ]

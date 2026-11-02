@@ -330,11 +330,15 @@ def _category_on_income(
     return (classification in BUSINESS_BEARING_STATES) and bool(after["category_id"]) and not takes_category
 
 
+def _category_askable(transaction: Transaction, classification: BusinessClassification | None) -> bool:
+    # The classification staged travels in the same write, so the row is judged as it will be saved.
+    return takes_changes(transaction.lifecycle_state) and classification in BUSINESS_BEARING_STATES
+
+
 def _category_settable(
     transaction: Transaction, classification: BusinessClassification | None, takes_category: bool
 ) -> bool:
-    # The classification staged travels in the same write, so the row is judged as it will be saved.
-    return takes_changes(transaction.lifecycle_state) and classification in BUSINESS_BEARING_STATES and takes_category
+    return _category_askable(transaction, classification) and takes_category
 
 
 @dataclass(frozen=True, slots=True)
@@ -412,6 +416,7 @@ def check_stored_row(row: LedgerStagedRow, transaction: Transaction) -> LedgerSt
         classified=state.classified,
         takes_expense_category=takes_category,
         takes_share=_shares_business(classification),
+        category_askable=_category_askable(transaction, classification),
         category_settable=_category_settable(transaction, classification, takes_category),
         takes_changes=takes_changes(transaction.lifecycle_state),
         takes_invoice=takes_invoice(transaction.direction),

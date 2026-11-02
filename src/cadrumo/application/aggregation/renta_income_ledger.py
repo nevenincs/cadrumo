@@ -59,7 +59,7 @@ from .renta_imputation import (
     rows_left_out_summary,
     rows_touching_window,
 )
-from .renta_income_diagnostics import accrued_unpaid_income, overpaid_invoice_issues
+from .renta_income_diagnostics import accrued_unpaid_income, accrued_without_eur_value, overpaid_invoice_issues
 from .renta_income_models import (
     AccruedUnpaidIncome,
     RentaIncomeLedgerAggregationIssue,
@@ -95,6 +95,8 @@ class RentaIncomeLedgerAggregation(
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
     unadmitted_activity_income: UnadmittedActivityIncome | None = None
     accrued_unpaid: tuple[AccruedUnpaidIncome, ...] = ()
+    accrued_without_eur_value: tuple[str, ...] = ()
+    """The numbers of the issued invoices that accrue unsettled with no EUR value to count."""
 
 
 def _load_income_invoices(
@@ -272,6 +274,16 @@ def aggregate_renta_income_ledger(
             target_casilla_id=target_casilla_id,
             criteria=criteria,
         ),
+        accrued_without_eur_value=()
+        if criteria is None
+        else accrued_without_eur_value(
+            transactions,
+            resolved_invoices,
+            bucket_id=bucket_id,
+            window_start=window.start,
+            window_end=window.end,
+            criteria=criteria,
+        ),
     )
 
 
@@ -426,6 +438,16 @@ def aggregate_renta_m100_income_ledger(
             window_start=window_start,
             window_end=window_end,
             target_casilla_id=target_casilla_id,
+            criteria=criteria,
+        ),
+        accrued_without_eur_value=()
+        if criteria is None
+        else accrued_without_eur_value(
+            transactions,
+            resolved_invoices,
+            bucket_id=bucket_id,
+            window_start=window_start,
+            window_end=window_end,
             criteria=criteria,
         ),
     )

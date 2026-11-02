@@ -261,8 +261,8 @@ record_identity = "T36904 Un"
 
 [[entries]]
 export_field_id = "modelo-369-union-t36904-55-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -2444,8 +2444,8 @@ record_identity = "T36905 Un"
 
 [[entries]]
 export_field_id = "modelo-369-union-t36905-9-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -4501,8 +4501,8 @@ record_identity = "T36906 Un"
 
 [[entries]]
 export_field_id = "modelo-369-union-t36906-9-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -7342,8 +7342,8 @@ record_identity = "T36907 Un"
 
 [[entries]]
 export_field_id = "modelo-369-union-t36907-9-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -10183,8 +10183,8 @@ record_identity = "T36908 Un"
 
 [[entries]]
 export_field_id = "modelo-369-union-t36908-9-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 
@@ -12240,8 +12240,8 @@ record_identity = "T36909 Un"
 
 [[entries]]
 export_field_id = "modelo-369-union-t36909-9-complementaria"
-kind = "header"
-producer_key = "amendment_evidence.is_complementaria"
+kind = "computed"
+computed_key = "continuation_page_marker"
 legal_refs = ["orden-hac-610-2021:art-1"]
 source_refs = ["aeat-dr-369-2021"]
 

@@ -306,23 +306,31 @@ export function useCachedRead<T>(
     owner: string | null;
     read: AgentRead<T>;
   }>({ owner, read: { kind: "loading" } });
-  const asked = useRef<{ owner: string | null; ask: number } | null>(null);
+  const asked = useRef<{
+    owner: string | null;
+    ask: number;
+    read: () => Promise<T>;
+  } | null>(null);
+  const generation = useRef(0);
   if (state.owner !== owner) setState({ owner, read: { kind: "loading" } });
   useEffect(() => {
     if (!read || !enabled) return;
     const last = asked.current;
-    if (last && last.owner === owner && last.ask === ask) return;
-    asked.current = { owner, ask };
+    if (last && last.owner === owner && last.ask === ask && last.read === read)
+      return;
+    asked.current = { owner, ask, read };
+    const mine = generation.current;
     let current = true;
     let settled = false;
     read().then(
       (value) => {
         settled = true;
-        if (current) setState({ owner, read: { kind: "ready", value } });
+        if (current && mine === generation.current)
+          setState({ owner, read: { kind: "ready", value } });
       },
       (error: unknown) => {
         settled = true;
-        if (current)
+        if (current && mine === generation.current)
           setState((held) =>
             held.owner === owner && held.read.kind === "ready"
               ? held
@@ -337,7 +345,11 @@ export function useCachedRead<T>(
     };
   }, [read, owner, enabled, ask]);
   const put = useCallback(
-    (value: T) => setState({ owner, read: { kind: "ready", value } }),
+    (value: T) => {
+      // A newer accepted answer supersedes any read still in flight.
+      generation.current += 1;
+      setState({ owner, read: { kind: "ready", value } });
+    },
     [owner],
   );
   if (!read) return { read: { kind: "unavailable" }, put };

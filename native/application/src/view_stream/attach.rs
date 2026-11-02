@@ -22,8 +22,12 @@ use super::{
     documents::is_lower_hex,
 };
 use crate::runtime_client::{
-    Admitted, Cohort, Endpoint, Refusal, RuntimeChannel, SessionExchange, document, handshake,
-    is_uuid, read_frame, request_id, text,
+    connection::SessionExchange,
+    endpoint::{Endpoint, RuntimeChannel},
+    framing::{document, is_uuid, read_frame, request_id, text},
+    handshake::{Cohort, handshake},
+    refusal::Refusal,
+    session::Admitted,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{Map, Value};
@@ -388,7 +392,7 @@ mod tests {
             Err(Refusal::Unavailable)
         }
 
-        fn subscribe_scoped(&self) -> mpsc::Receiver<crate::runtime_client::Pushed> {
+        fn subscribe_scoped(&self) -> mpsc::Receiver<crate::runtime_client::events::Pushed> {
             mpsc::channel().1
         }
 

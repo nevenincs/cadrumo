@@ -81,6 +81,26 @@ class ExportValuePolicy(StrEnum):
     YYYYMMDD_TEXT_DAY = "yyyymmdd-text-day"
 
 
+COMPONENT_VALUE_POLICIES: Final[frozenset[ExportValuePolicy]] = frozenset(
+    {
+        ExportValuePolicy.INTEGER_PART,
+        ExportValuePolicy.FRACTIONAL_DIGITS,
+        ExportValuePolicy.SIGNED_COMPONENT_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_MAGNITUDE,
+        ExportValuePolicy.SIGNED_COMPONENT_ZERO_SIGN,
+        ExportValuePolicy.SIGNED_COMPONENT_INTEGER_PART,
+        ExportValuePolicy.SIGNED_COMPONENT_FRACTIONAL_DIGITS,
+        ExportValuePolicy.YYYYMMDD_TEXT_YEAR,
+        ExportValuePolicy.YYYYMMDD_TEXT_MONTH,
+        ExportValuePolicy.YYYYMMDD_TEXT_DAY,
+        ExportValuePolicy.FOUR_DIGIT_YEAR,
+        ExportValuePolicy.TWO_DIGIT_MONTH,
+        ExportValuePolicy.TWO_DIGIT_DAY,
+    }
+)
+"""The policies under which a cell writes one part of a value split across several cells."""
+
+
 @dataclass(frozen=True, slots=True)
 class ParsedExportPolicyWireValue:
     """Validated wire value retained when its source semantic value is not invertible."""

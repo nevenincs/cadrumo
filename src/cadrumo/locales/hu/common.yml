@@ -159,22 +159,34 @@ aggregation:
         számított összesítésekhez.
   oss_ioss:
     errors:
-      exterior_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
-        Modelo 369 országkódja, ezért szolgáltatásai nem vallhatók be ezen a nyomtatványon.
-      exterior_detail_not_representable: A nem uniós séma nem tud minden sort vagy
-        mezőt megjeleníteni. A folytatás előtt ellenőrizd a részleteket.
-      exterior_rate_kind_unsupported: Az egyablakos rendszer külső sémája csak a fogyasztás
-        szerinti tagállam általános vagy kedvezményes adómértékével nyújtott szolgáltatásokat
-        fogadja el. A megadott megfigyelés más adómérték-típust jelöl, amely ebben
-        a sémában nem összesíthető.
+      consignment_exceeds_ceiling: 'Egy küldemény meghaladja e rendszer korlátját:
+        belső értéke nem lépheti túl a törvényi felső határt. Ellenőrizd a számlát,
+        vagy vallsd be az importrendszeren kívül.'
+      detail_consumption_state_excluded: Az uniós séma szolgáltatásai nem vallhatók
+        be az azonosítás szerinti tagállamra, mert a séma csak olyan tagállamban nyújtott
+        szolgáltatásokra vonatkozik, ahol nem vagy letelepedve.
+      detail_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
+        Modelo 369 országkódja, ezért az ügyletei nem vallhatók be ezen a nyomtatványon.
+      detail_not_representable: A Modelo 369 felépítése nem tud minden sort vagy mezőt
+        megjeleníteni. A folytatás előtt ellenőrizd a részleteket.
+      detail_rate_kind_unsupported: A Modelo 369 sora csak a fogyasztás szerinti tagállam
+        általános vagy kedvezményes adómértékét fogadja el. A megadott megfigyelés
+        más adómérték-típust jelöl, amely nem írható sorba.
+      detail_rows_exceed_page: Ehhez az időszakhoz több sor kell, mint amennyi egy
+        Modelo 369 oldalra fér, a kiegészítő oldalakat pedig itt még nem lehet elkészíteni.
+        Semmi sem került exportálásra, így egyetlen sor sem marad ki.
       invoice_line_currency_unconverted: Egy OSS/IOSS számlasor külföldi pénznemben
-        van megadva, és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen
-        a nyomtatványon.
+        van, és az EKB nem tett közzé árfolyamot sem az időszak utolsó napjára, sem
+        az azt követő napra, ezért nem szerepeltethető ezen a nyomtatványon.
       invoice_line_rate_kind_unclassifiable: Egy OSS/IOSS számlasor olyan áfakulcsot
         tartalmaz, amely nem sorolható be egyetlen kulcssávba sem, ezért az adóösszege
         nem szerepeltethető ezen a nyomtatványon.
       iva_amount_mismatches_destination_rate: A tárolt áfaösszeg az egy centes tűréshatáron
         túl eltér a rendeltetési tagállam adókulcsától.
+      rate_change_devengo_undeclared: Egy OSS/IOSS számlán nincs teljesítési dátum,
+        és a fogyasztás szerinti tagállam adómértéke ebben az időszakban megváltozott,
+        ezért a kiállítás dátumából nem állapítható meg, melyik adómérték alkalmazandó.
+        Rögzítsd a teljesítési dátumot a számlán.
   per_modelo:
     errors:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.
@@ -215,7 +227,7 @@ aggregation:
         így a rekord soha nem jutna el egy számításhoz.
       identity_mismatch: A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemtípussal
         vagy igazolással.
-      not_found: Ehhez az ejercicióhoz, jövedelemosztályhoz és kifizetői hivatkozáshoz
+      not_found: Ehhez az adóévhez, jövedelemosztályhoz és kifizetői hivatkozáshoz
         nincs levonási rekord.
       own_tax_id: A kifizető adóazonosítója (NIF) a sajátod; az általad végzett levonás
         nem a javadra szóló előleg.
@@ -1126,6 +1138,15 @@ desktop:
     as_of: A helyi adatok alapján, {date} állapot szerint. Itt semmit nem kérdeztünk
       le az AEAT-től.
     close: Naptár bezárása
+    coverage:
+      applicability_undetermined: 'Nem állapítható meg, hogy kell-e bevallást benyújtanod:
+        {modelos}. Ellenőrizd az adókötelezettségeidet.'
+      applicable_window_missing: 'Ezek a bevallások vonatkoznak rád, de a Cadrumo
+        nem ismeri a benyújtási időszakot: {modelos}. Ellenőrizd a hivatalos naptárat.'
+      no_dates: Ehhez az időszakhoz nem állnak rendelkezésre benyújtási dátumok.
+      registry_unmodeled: 'A Cadrumo nem rendelkezik alkalmazhatósági szabályokkal
+        vagy benyújtási időszakokkal ezekhez: {modelos}. A benyújtási kötelezettségeidet
+        ellenőrizd a hivatalos tájékoztatás alapján.'
     day_event: '{date}: {kind}. {summary}'
     earliest_close: 'Legkorábbi zárás: {date}'
     empty: Ebben az időszakban nincs bevallási kötelezettség.
@@ -1159,7 +1180,6 @@ desktop:
       unknown: Ismeretlen
     title: Bevallási naptár
     to_day: 'Ugrás ide: {date}'
-    undetermined: 'Nem sikerült megállapítani: {modelos}'
     view: Nézet
     view_list: Lista
     view_months: Naptár
@@ -1188,6 +1208,23 @@ desktop:
     show:
       label: Megjelenítés
     signed_out: Jelentkezz be a bevallásaid megtekintéséhez.
+  dock:
+    arrange: Panel elrendezése
+    bottom: Felosztás alul
+    close: Panel bezárása
+    dock: Panel dokkolása
+    exit_fullscreen: Kilépés a teljes képernyőből
+    expand: Munkaterület kitöltése
+    float: Lebegő panel
+    fullscreen: Teljes képernyő
+    left: Felosztás balra
+    move: Lebegő panel mozgatása
+    resize: Lebegő panel átméretezése
+    restore: Panelméret visszaállítása
+    right: Felosztás jobbra
+    tab: Áthelyezés a lapokhoz
+    tabs: Munkaterület lapjai
+    top: Felosztás felül
   docs:
     frame_title: Cadrumo-dokumentáció
     hide: Dokumentáció elrejtése
@@ -1374,6 +1411,7 @@ desktop:
         differ: Tudom, hogy eltérnek
         linked_elsewhere: 'A számla már kapcsolódik · tételek: {count}'
         sure: Összekapcsolás · végleges
+        unjudged: A főkönyv még nem vetette össze ezt a kapcsolatot
         unread: A számla nem olvasható
       mine: Az enyém marad
       mismatch:
@@ -2156,6 +2194,9 @@ desktop:
       currency_not_read: 'Nincs a dokumentumon: add meg'
       derived: Gépen kívüli beolvasásból készült
       duplicate: 'Már a katalógusban: {number}'
+      duplicate_check_failed: A főkönyv nem mondta meg, hogy ez az olvasat már a katalógusban
+        van-e, ezért még nem erősítheted meg.
+      duplicate_check_retry: Kérdezd újra
       entered_by_you: Te adtad meg
       field:
         counterparty_name: Partner
@@ -2195,6 +2236,7 @@ desktop:
         country: Add meg az országot két betűvel
         currency: Add meg a pénznemet
         duplicate: Lehet, hogy már a katalógusban van
+        duplicate_unread: Várakozás arra, hogy a főkönyv ellenőrizze a katalógust
         findings: Előbb válaszolj minden kérdésre
       in_review: Ellenőrzés alatt
       keep: Megtartás
@@ -3100,14 +3142,17 @@ desktop:
         add_part: Rész hozzáadása
         amount: A(z) {part}. résznek nullánál nagyobb összeg kell.
         category_needed: Válassz kategóriát a(z) {part}. részhez.
+        check_failed: A főkönyv nem válaszolt ezekről a részekről, ezért a felosztást
+          még nem adhatod hozzá.
+        check_retry: Kérdezd újra
         choose_category: Válassz kategóriát
         count: Egy felosztás 2–{max} részből áll.
         description: A részek összege {amount}. Az utolsó rész kapja a maradékot.
         description_long: A(z) {part}. rész leírása legfeljebb {max} karakter lehet.
         description_needed: A(z) {part}. résznek leírás kell.
-        duplicate: 'A(z) {part}. rész megegyezik egy másikkal: módosítsd az összegét
-          vagy a leírását.'
+        gone: Ez a tétel már nincs a főkönyvben.
         mixed_hint: Részben munkára használod? Inkább Vegyes, arányszámmal.
+        not_active: Csak aktív tételt oszthatsz fel.
         over: A részek {amount} összeggel többek a tételnél.
         part_amount: '{part}. rész összege'
         part_category: '{part}. rész kategóriája'
@@ -4101,8 +4146,7 @@ desktop:
       partial: A csoportosítás és az összegek a teljes beolvasásra várnak.
     withholding:
       absence:
-        not_listed: A korábbi jelzések még nem listázhatók. Itt azok jelennek meg,
-          amelyeket ebben az ablakban tettél vagy vontál vissza.
+        history: Visszavont jelzések
         title: Nincs levonás
         what: Jelezd, hogy ebben az évben egy jövedelemosztályban egyetlen kifizető
           sem vont le.
@@ -4457,7 +4501,7 @@ desktop:
     dismiss: Elrejtés
     edit_field: '{field} szerkesztése'
     ejercicio: Adóév
-    ejercicio_help: "Az év, amelyre ez a válasz szól. A többi év megtartja a sajátját."
+    ejercicio_help: Az év, amelyre ez a válasz szól. A többi év megtartja a sajátját.
     ejercicio_stated: '{ejercicio}: {value}'
     empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
     entries_count: 'Bejegyzések: {count}'
@@ -8620,6 +8664,18 @@ tui:
         calculation_review_xlsx: Mentett számítás áttekintése (XLSX)
         fichero_boe: BOE-fájl az AEAT-nál való benyújtáshoz
         label: Exportálandó dokumentum
+      instalment_election:
+        conditions: A két részletben fizetés kamat- és pótlékmentes. A bevallást a
+          benyújtási határidőn belül kell beadnod, és helyesbítő bevallást így nem
+          fizethetsz. A 60%-ot a benyújtáskor fizeted; ha nem fizeted meg időben,
+          a teljes összeg esedékessé válik. Ha az első részletet is csoportos beszedéssel
+          fizeted, a második ugyanarról a számláról terhelődik.
+        label: 'Fizetendő eredmény: egy összegben vagy két részletben'
+        single: Egy összegben fizeted ki
+        two_instalments_second_debited: 'Két részlet: 60% a benyújtáskor, a maradék
+          40% csoportos beszedéssel'
+        two_instalments_second_paid: 'Két részlet: 60% a benyújtáskor, a maradék 40%-ot
+          te fizeted be a 102-es nyomtatvánnyal'
       payment_election:
         cuenta_corriente: Adófolyószámla (cuenta corriente tributaria)
         domiciliacion: Csoportos beszedés
@@ -8718,6 +8774,48 @@ tui:
       stale_context: A kiválasztott bevallás megváltozott, miközben az űrlap nyitva
         volt. Semmi sem lett kiszámítva; válaszd újra a Számítást.
       title: A Modelo 303 bevallási adatai
+    m360_solicitud:
+      account_kind:
+        own_account: Az egyik saját számlám (kérelmező)
+        representante: A képviselő számlája
+      action:
+        declare: Kérelem bejelentése
+        remove: Kérelem törlése
+      column:
+        account: Számla
+        cause: Ok
+        destination: Célország
+        holder: Tulajdonos
+        year: Adóév
+      detail: '%{year} · célország %{destination} · %{cause} · tulajdonos %{holder}
+        · képviselő %{representante} · számla %{account}'
+      done_declare: A kérelem bejelentve.
+      done_remove: A kérelem törölve.
+      empty: Még nincs bejelentett 360-as modell szerinti kérelem.
+      field:
+        account_kind: Visszatérítési számla
+        action: Művelet
+        bank_address: A bank címe (nem kötelező)
+        bank_city: A bank városa (nem kötelező)
+        bank_country_code: A bank országkódja (nem kötelező)
+        bank_name: A bank neve (nem kötelező)
+        facts_path: Adatfájl (JSON)
+        filing_year: Adóév
+        iban: A képviselő IBAN-száma
+        own_account_id: Saját számla azonosítója
+        swift_bic: A képviselő SWIFT-BIC kódja
+      list: Bejelentett kérelmek
+      prompt: Az összes bejelentett 360-as modell szerinti kérelem, adóév szerint.
+        Válaszd a bejelentést vagy a törlést, nézd át, majd erősítsd meg. Az adatokat
+        egy általad megadott fájlból olvassuk; a számla a saját számlád vagy a képviselő
+        számlája.
+      source: 'Az adatok forrása: %{path}'
+      source_invalid: 'A(z) %{path} fájl nem érvényes kérelemadatokat tartalmaz: %{count}
+        hiba található.'
+      source_unreadable: A(z) %{path} fájl nem olvasható.
+      title: A 360-as modell kérelmei
+      tool: 360-as modell kérelmei (áfa-visszatérítés)
+      unchanged: 'Nem változott semmi: a nyilvántartás már tartalmazta.'
     next_line: 'Következő: {action} [{key}]'
     search:
       prompt: Keresés minden oldalon rovatszám vagy szavak alapján. Az Enter a rovathoz
@@ -9216,11 +9314,8 @@ workspace:
       vigente: Aktuális rögzített benyújtás
     holiday_coverage:
       calendar_unavailable: Az ünnepnapok nincsenek ellenőrizve
-      national_only: A regionális ünnepnapok nincsenek ellenőrizve
-      territory_unverified: A regionális ünnepnapok nincsenek megerősítve
     hub:
-      holidays_national_only: A határidők az országos ünnepnapokkal számolnak; a regionálisakat
-        nem ellenőrizzük.
+      holidays_unchecked: Néhány határidőt nem tudtunk az ünnepnapi naptárral ellenőrizni.
     lifecycle:
       amended: Helyesbítés elindítva
       calculated: Számítás elkészült
@@ -9581,8 +9676,22 @@ workspace:
       save_next: Megtartás és tovább
       unreadable: Ez az érték nem olvasható.
     export:
+      account_choice: '%{label} (%{account})'
       confirm_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt erősítsd
         meg a feltételezett értékeket (megerősítendő: {count}).'
+      election:
+        amendment: Helyesbítő bevallást nem fizethetsz két részletben.
+        filing_window_unknown: Ennek a bevallásnak nem ismert a benyújtási határideje,
+          ezért a két részletben fizetés nem ajánlható fel.
+        no_open_account: Egyik saját bankszámlád sincs nyitva. Adj hozzá egyet a saját
+          számláidhoz, hogy fogadhasd a visszatérítést.
+        no_spanish_account: Egyik nyitott saját számlád sem spanyol, pedig a csoportos
+          beszedéshez arra van szükség. Adj hozzá egyet a saját számláidhoz.
+        nothing_to_pay: Az eredmény nem fizetendő összeg, így ez nem vonatkozik rá.
+        nothing_to_refund: Az eredmény nem visszatérítés, így ez nem vonatkozik rá.
+        past_filing_window: A benyújtási határidő lejárt, a két részletben fizetéshez
+          pedig azon belül kell benyújtanod a bevallást.
+        result_unknown: 'Előbb számold ki a bevallást: az eredménye dönt erről.'
       file_format:
         fixed_width: AEAT-fájl a rögzített szélességű BOE-formátumban
         xml_dictionary: AEAT XML-fájl

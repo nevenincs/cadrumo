@@ -12,7 +12,9 @@ from cadrumo_client.commands.registered_operation import run_registered_operatio
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 
-from ...application.aggregation.retencion_soportada_absence_repository import RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS
+from ...application.aggregation.retencion_soportada_absence_repository import (
+    RETENCION_SOPORTADA_ABSENCE_MESSAGE_LOCALE_KEYS,
+)
 from ...application.retencion_soportada_absence.contracts import (
     RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
@@ -58,7 +60,7 @@ def _raise_refusal(
     ):
         raise invalid_completion_error(completed)
     raise CliRefusedBoundaryError(
-        translated_message=RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS[refusal.reason],
+        translated_message=RETENCION_SOPORTADA_ABSENCE_MESSAGE_LOCALE_KEYS[refusal.reason],
         context={
             "operation_id": str(completed.operation_id),
             "terminal_condition": completed.terminal_condition.value,

@@ -29,9 +29,11 @@ Classification is decided once, here, so every frontend shows the same states:
 * the settlement box and which way it settles,
 * what the latest calculation noticed, on the same scale as the check's
   findings and without repeating one of them, and which box a note says could
-  not be worked out, which then reads as not calculated rather than as zero, and
+  not be worked out, which then reads as not calculated rather than as zero,
 * whether the declaration is recorded as filed, which closes it to editing and
-  leaves nothing counted as still to do.
+  leaves nothing counted as still to do, and
+* the navigation outline: the layout's declared groups of sections, or one
+  group per page, each with its headings, applicability and attention counts.
 
 "Entered by the filer" is only ever claimed from the operator's own recorded
 entries. A revision that predates them has an unknown operator record, and a
@@ -74,6 +76,7 @@ from .edit_models import (
 )
 from .work_form_context import WorkFormContext
 from .work_form_counts import count_work_form_fields
+from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure
 from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_projection import project_casilla_field
 from .work_form_inspection import (
@@ -86,8 +89,6 @@ from .work_form_inspection import (
 from .work_form_layout import LayoutWalker
 from .work_form_models import (
     ModeloFormCasillaAddressV1,
-    ModeloFormDeadline,
-    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
@@ -102,6 +103,7 @@ from .work_form_notes import (
     project_calculation_notes,
     project_verification_issues,
 )
+from .work_form_outline import form_outline
 from .work_form_source_groups import worded_source_groups
 from .work_form_wording import worded_form
 from .work_review import ModeloWorkReview
@@ -331,6 +333,7 @@ def _assemble_work_form(
         layout_provenance=provenance,
         seed_source=layout.seed_source,
         pages=pages,
+        outline=form_outline(layout.outline, pages, language, filed=context.filed),
         working_figures=tuple(working),
         unplaced=tuple(unplaced),
         result_addresses=result_casilla_ids(context),

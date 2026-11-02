@@ -39,6 +39,7 @@ from ...core.iban import normalise_iban
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ...domain.iva.sepa_marca import SepaMarca, derive_sepa_marca
 from ...domain.transactions.own_accounts import OwnAccountHolding, OwnAccountRole
+from ._date_parsing import _parse_iso_date
 from .common import active_bucket_id_or_refuse, bad, emit_envelope
 from .ledger_account_results import (
     OwnAccountChangeResult,
@@ -127,10 +128,7 @@ def _profile_id() -> UUID:
 def _date_option(value: str | None, *, option: str) -> date | None:
     if value is None:
         return None
-    try:
-        return date.fromisoformat(value)
-    except ValueError:
-        raise bad(tr("cli.ledger.account.errors.invalid_date", option=option)) from None
+    return _parse_iso_date(value, label=option, translation_key="cli.ledger.account.errors.invalid_date")
 
 
 def _accounts(result: LedgerOwnAccountResult) -> tuple[OwnAccountPayload, ...]:

@@ -238,23 +238,39 @@ def _refreshed_draft_fingerprint(
     if existing.state is not CalculationRevisionState.BORRADOR:
         return None
     update: dict[str, object] = {}
-    recorded = existing.invoice_fingerprint
-    if invoice_fingerprint is not None and (
-        recorded is None
-        or recorded.field_set_version != invoice_fingerprint.field_set_version
-        or recorded.snapshot_fingerprint != invoice_fingerprint.snapshot_fingerprint
-    ):
+    if _invoice_fingerprint_moved(existing.invoice_fingerprint, invoice_fingerprint):
         update["invoice_fingerprint"] = invoice_fingerprint
-    anchor = existing.ledger_filing_snapshot
-    if ledger_filing_snapshot is not None and (
-        anchor is None
-        or anchor.fingerprint_field_set_version != ledger_filing_snapshot.fingerprint_field_set_version
-        or anchor.snapshot_fingerprint != ledger_filing_snapshot.snapshot_fingerprint
-    ):
+    if _ledger_filing_snapshot_moved(existing.ledger_filing_snapshot, ledger_filing_snapshot):
         update["ledger_filing_snapshot"] = ledger_filing_snapshot
     if not update:
         return None
     return existing.model_copy(update={**update, "updated_at": now})
+
+
+def _invoice_fingerprint_moved(
+    recorded: InvoiceFingerprintSnapshot | None,
+    current: InvoiceFingerprintSnapshot | None,
+) -> bool:
+    if current is None:
+        return False
+    return (
+        recorded is None
+        or recorded.field_set_version != current.field_set_version
+        or recorded.snapshot_fingerprint != current.snapshot_fingerprint
+    )
+
+
+def _ledger_filing_snapshot_moved(
+    anchor: LedgerFilingSnapshot | None,
+    current: LedgerFilingSnapshot | None,
+) -> bool:
+    if current is None:
+        return False
+    return (
+        anchor is None
+        or anchor.fingerprint_field_set_version != current.fingerprint_field_set_version
+        or anchor.snapshot_fingerprint != current.snapshot_fingerprint
+    )
 
 
 def _persist_duplicate_calculation_revision(

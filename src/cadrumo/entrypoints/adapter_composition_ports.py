@@ -38,6 +38,7 @@ if TYPE_CHECKING:
     from ..application.diagnostics_ports import DiagnosticsPorts
     from ..application.filing.draft_review_ports import DraftReviewPorts
     from ..application.inventory.ports import InventoryServicePorts
+    from ..application.invoices.catalogue_lifecycle_ports import CatalogueLifecyclePorts
     from ..application.live.borrador_100 import (
         Borrador100SnapshotRepository,
     )
@@ -118,6 +119,29 @@ def build_censal_fetch_port() -> CensalFetchPort:
             ) from exc
 
     return fetch
+
+
+def build_invoice_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
+    """Bind the invoice lifecycle bundle with the profile's own tax identity.
+
+    The sealed-revision scan decodes every stored calculation revision, and an
+    M303 rectificativa decodes only against the taxpayer it was filed for, so the
+    identity is resolved from this profile's record the way the ledger bundle
+    resolves it. A profile with no usable tax identity is scanned without one.
+    """
+    from ..adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
+    from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
+    from ..domain.calculations.registry.authority import bundled_indexed_authority
+    from .calculation_revision_composition import bind_calculation_revision_persistence_from_profile
+
+    normalized_bucket_id = bucket_id.strip()
+    with bundled_indexed_authority().operation() as operation:
+        binding = bind_calculation_revision_persistence_from_profile(
+            bucket_id=normalized_bucket_id,
+            objects=secure_object_repository_for_bucket(normalized_bucket_id),
+            operation=operation,
+        )
+    return build_catalogue_lifecycle_ports(bucket_id=normalized_bucket_id, taxpayer_tax_id=binding.taxpayer_tax_id)
 
 
 def build_modelo_export_ports(

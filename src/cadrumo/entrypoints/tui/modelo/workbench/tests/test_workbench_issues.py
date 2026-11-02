@@ -23,9 +23,9 @@ from rich.console import Console
 from textual.content import Content
 from textual.widgets import OptionList, Static
 
+from ......application.modelo.work_form_declaration_facts import ModeloFormCalculationNote
 from ......application.modelo.work_form_findings import ModeloFormAttention, ModeloFormIssue
 from ......application.modelo.work_form_models import (
-    ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormCounts,
     ModeloFormField,
@@ -39,6 +39,7 @@ from ......application.modelo.work_form_models import (
     address_key,
     section_fields,
 )
+from ......application.modelo.work_form_outline import form_outline
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
@@ -147,6 +148,8 @@ def _counts(total: int) -> ModeloFormCounts:
         default_to_confirm=total,
         not_applicable=0,
         blocked=0,
+        needs_you=total,
+        could_not_calculate=0,
     )
 
 
@@ -166,6 +169,7 @@ def _assumed_boxes(*section_sizes: int) -> ModeloWorkForm:
                 official_heading=None,
                 blocks=tuple(ModeloFormFieldBlock(id=f"f{field.box}", field=field) for field in fields),
                 counts=_counts(size),
+                applies=True,
             )
         )
     page = ModeloFormPage(
@@ -178,7 +182,13 @@ def _assumed_boxes(*section_sizes: int) -> ModeloWorkForm:
         counts=_counts(sum(section_sizes)),
     )
     return synthetic_form(needs_input=False).model_copy(
-        update={"pages": (page,), "working_figures": (), "result_addresses": (), "counts": _counts(sum(section_sizes))}
+        update={
+            "pages": (page,),
+            "outline": form_outline((), (page,), OutputLanguage.ES, filed=False),
+            "working_figures": (),
+            "result_addresses": (),
+            "counts": _counts(sum(section_sizes)),
+        }
     )
 
 

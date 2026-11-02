@@ -1,9 +1,10 @@
 import { useState } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useStrings } from "../../../shell/strings";
 import { formatDay } from "../../../shared/dateFormats";
-import { AssetForm, useLedgerRead, type ActProps } from "./AssetForm";
+import { useStrings } from "../../../shell/strings";
+import { AssetForm, type ActProps } from "./AssetForm";
+import { useLedgerRead } from "./assetFormState";
 import { staleClaims } from "./assetWrites";
 import { figureText } from "./planWords";
 

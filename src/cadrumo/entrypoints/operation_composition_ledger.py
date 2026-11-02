@@ -121,6 +121,28 @@ def compose_invoices_catalogue_intake_operation(inputs: OperationCompositionInpu
     )
 
 
+def compose_ledger_invoice_duplicate_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read of the stored invoice a document may already be."""
+    from ..application.invoices.duplicate_check_operation import (
+        build_ledger_invoice_duplicate_definition,
+        build_ledger_invoice_duplicate_registration,
+    )
+
+    definition = build_ledger_invoice_duplicate_definition(inputs.invoice_inspection())
+    return built((definition,), (build_ledger_invoice_duplicate_registration(definition),))
+
+
+def compose_ledger_invoice_match_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read of which movement settles which invoice."""
+    from ..application.invoices.payment_match_operation import (
+        build_ledger_invoice_match_definition,
+        build_ledger_invoice_match_registration,
+    )
+
+    definition = build_ledger_invoice_match_definition(inputs.invoice_inspection())
+    return built((definition,), (build_ledger_invoice_match_registration(definition),))
+
+
 def compose_invoices_catalogue_read_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose invoices catalogue read operation."""
     from ..application.invoices.catalogue_read_operation import (
@@ -226,6 +248,18 @@ def compose_ledger_rule_trial_operation(inputs: OperationCompositionInputs) -> O
     del inputs
     definition = build_ledger_rule_trial_definition()
     return built((definition,), (build_ledger_rule_trial_registration(definition),))
+
+
+def compose_ledger_split_check_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the read that answers an unsaved split the way the split writer would take it."""
+    from ..application.ledger.split_check_operation import (
+        build_ledger_split_check_definition,
+        build_ledger_split_check_registration,
+    )
+
+    del inputs
+    definition = build_ledger_split_check_definition()
+    return built((definition,), (build_ledger_split_check_registration(definition),))
 
 
 def compose_ledger_staged_check_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:

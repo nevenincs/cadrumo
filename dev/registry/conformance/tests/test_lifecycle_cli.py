@@ -246,6 +246,17 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
         lambda _descriptor: calls.append("load") or SimpleNamespace(close=lambda: None),
     )
 
+    monkeypatch.setattr(
+        registry_status,
+        "delta_minimality_reasons",
+        lambda received: calls.append("minimality") or (() if received is authority else ("wrong authority",)),
+    )
+    monkeypatch.setattr(
+        registry_status,
+        "edition_assessment_reasons",
+        lambda root: calls.append("assessment") or (() if root == Path("registry") else ("wrong root",)),
+    )
+
     status = registry_status.collect_registry_status(
         registry_root=Path("registry"),
         source_root=Path("source"),
@@ -254,6 +265,8 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
 
     assert status.valid is True
     assert status.oracles is True
+    assert status.delta_minimality_reasons == ()
+    assert status.edition_assessment_reasons == ()
     assert dict(status.targets) == {
         "current": 1,
         "explained": 0,
@@ -264,5 +277,5 @@ def test_status_delegates_axes_and_counts_excluded_targets(monkeypatch) -> None:
     }
     assert status.authority == "current"
     assert status.loadable is True
-    assert calls == ["valid", "oracles", "load"]
+    assert calls == ["valid", "oracles", "load", "minimality", "assessment"]
     assert "excluded by the generated-state owner" in " ".join(status.details)

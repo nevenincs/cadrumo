@@ -20,6 +20,23 @@ desktop:
     archived_empty: Nincs archivált beszélgetés
     archived_toggle: Archivált ({count})
     attach_filter: Dokumentumok
+    attachment_grant_document: '{name} ide: {model}'
+    attachment_grant_images: 'Oldalképek ide: {model}'
+    attachment_grant_revoke: Visszavonás
+    attachment_grants_title: Megjegyzett engedélyek
+    attachment_refusal:
+      acknowledgement_missing: Nem engedélyezted ezt az olvasást.
+      cloud_upload_not_permitted: Ez a telepítés nem engedi, hogy a dokumentumok elhagyják
+        ezt a számítógépet.
+      document_removed: A fájlt eltávolították.
+      file_changed_during_read: A fájl megváltozott. Add hozzá újra az új verzió olvasásához.
+      gestor_mode: A gestor mód soha nem küld dokumentumot erről a számítógépről.
+      grant_revoked: Ezt az engedélyt már visszavonták.
+      not_signed_in: A válaszhoz jelentkezz be.
+      profile_not_eligible: Ez a profil nem küldhet dokumentumot erről a számítógépről.
+      reference_unknown: Az ügynök már nem vár erre a fájlra.
+      service_failed: Az engedélyt nem sikerült rögzíteni, ezért semmi sem lett elküldve.
+    attachment_refused: Ez a fájl nem lett elküldve. {reason}
     attachments: Fájlok a következő üzenethez
     attachments_refused: 'Nem elfogadva: {count}'
     attachments_uploading: 'Feltöltés alatt: {count}'
@@ -43,12 +60,20 @@ desktop:
     condition_usage_exhausted: Elérted a szolgáltató használati korlátját. Ellenőrizd
       a szolgáltatói fiókodat, vagy válassz másik szolgáltatót.
     consent_allow: 'Küldés ide: {provider}'
+    consent_allow_remember: Engedélyezés és megjegyzés
+    consent_allow_session: Engedélyezés erre a munkamenetre
     consent_decline: Ne küldd el
+    consent_document_text: A(z) {name} fájlból kiolvasott szöveg
     consent_items: Ezt küldenénk el
     consent_lead: 'A válaszhoz a modellnek ({model}) szüksége van az alábbi tartalomra.
       Ha elküldöd, elhagyja ezt a számítógépet, és ide kerül: {provider}.'
     consent_note: Semmi sem megy el, amíg nem döntesz. Ha nem küldöd el, ezen a számítógépen
       marad.
+    consent_page_images: A(z) {name} oldalainak képei
+    consent_page_images_warning: Az oldalképek az oldal teljes tartalmát megmutatják,
+      és elhagyják ezt a számítógépet. Ha későbbre is engedélyezed, a modell által
+      olvasott bármely dokumentumra érvényes.
+    consent_recall: Amit már elküldtél, azt nem lehet visszahívni.
     consent_title: 'Elküldöd ezt ide: {provider}?'
     conversation_deleting: Ez a beszélgetés törlés alatt áll, ezért nem fogad fájlokat.
     conversation_id_taken: Ez a beszélgetés nem tárolhat fájlokat. Kezdj új beszélgetést

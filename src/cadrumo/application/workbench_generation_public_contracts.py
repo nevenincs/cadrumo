@@ -37,7 +37,7 @@ from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceZoneStateV1,
 )
-from cadrumo.application.modelo.work_form_models import ModeloFormResultDirection
+from cadrumo.application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.overview.calendar_models import (
     OverviewAeatSubmissionState,
@@ -61,6 +61,7 @@ from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
 from cadrumo.domain.deadlines.models import ObligationStatus
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteFact
 from cadrumo.domain.modelos.filing_record import (
     AeatConfirmationState,
     ExternalEvidenceKind,
@@ -284,6 +285,9 @@ class PublicDeclarationSummary(BaseModel):
     checked: bool
     result: PublicModeloFormResult | None
     is_correction: bool
+    calculation_outdated: bool
+    proven_zero_notes: tuple[CalculationNoteFact, ...]
+    filed_before_grade_cap: bool
     technical_reason: str | None
 
 
@@ -372,7 +376,6 @@ class PublicDeclarationsCalendarEntryRefV1(BaseModel):
     adjusted_closes_on: date
     shift_reason: str
     holiday_coverage: DeadlineHolidayCoverage
-    holiday_territory: str | None
     payment_cutoff_on: date | None
     evaluated_on: date
     days_overdue: int | None

@@ -1,42 +1,22 @@
-// The `modelo.project` result at version 2, as feature/renta-withholding
-// declares it (`ModeloProjectOperationProjection` in
-// src/cadrumo/application/modelo/projection_operation.py at 009999acb4). This
-// branch still generates version 1, so the shape is mirrored here until the
-// contract generator carries it. Version 2 names an unresolved credit and every
-// total computed from it by closed tokens only, and serves no words for them.
+// What the Renta prototypes read of the `modelo.project` result at version 2,
+// typed from the generated contract so a change to the result's shape stops
+// them compiling. Version 2 names an unresolved credit and every total
+// computed from it by closed tokens only, and serves no words for them. The
+// prototypes draw no figure from the totals, so none is given here.
 
-export type ProjectUnresolvedBinding = {
-  binding_id: string;
-  casilla_id: string | null;
-  source_kind: string;
-  reason: string;
-  note: string | null;
-};
+import type { ModeloProjectOperationProjection } from "../../../shell/modeloContract";
 
-export type ProjectUnresolvedCasilla = {
-  casilla_id: string;
-  reason: string;
-  formula_id: string;
-  legal_refs: string[];
-  source_refs: string[];
-};
-
-export type ProjectV2 = {
-  result_version: 2;
-  year: number;
-  quarters_filed: number;
-  quarters_available: string[];
-  is_extrapolated: boolean;
-  casilla_observations: {
-    casilla_id: string;
-    value: string;
-    formula_id: string | null;
-    legal_refs: string[];
-    source_refs: string[];
-  }[];
-  unresolved_bindings: ProjectUnresolvedBinding[];
-  unresolved_casillas: ProjectUnresolvedCasilla[];
-};
+export type ProjectV2 = Pick<
+  ModeloProjectOperationProjection,
+  | "result_version"
+  | "year"
+  | "quarters_filed"
+  | "quarters_available"
+  | "is_extrapolated"
+  | "casilla_observations"
+  | "unresolved_bindings"
+  | "unresolved_casillas"
+>;
 
 /** A salaried profile with no payer record and no stated absence for its
  * three withholding classes: the credits and the totals that read them are

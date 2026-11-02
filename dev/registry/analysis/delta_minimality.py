@@ -120,7 +120,9 @@ Where it stops:
 - A formula or binding reference is compared by lineage, not by resolving it to
   the successor edition's declaration of that lineage.
 
-The screen exits 0 whatever it finds. It reports; it does not gate.
+Run as a program it reports and exits 0. With ``--check`` it gates: it exits 1
+when any modelo restates an inherited row, and also when it judged no row at
+all, so a registry that stopped being examined cannot read as a minimal one.
 """
 
 from __future__ import annotations
@@ -151,6 +153,7 @@ __all__ = [
     "MinimalityVerdict",
     "PredecessorBasis",
     "RowJudgement",
+    "check_authority",
     "definition_findings",
     "definitions_census",
     "edition_predecessors",
@@ -611,8 +614,29 @@ def definitions_census(definitions: Mapping[str, ModeloDefinition]) -> Minimalit
     )
 
 
-def main() -> int:
-    """Print one greppable row per finding and a closing census; always exit 0."""
+def check_authority(findings: tuple[RowJudgement, ...], census: MinimalityCensus) -> tuple[str, ...]:
+    """Return the reasons the screen's result must fail a gate; empty means it holds.
+
+    A restated row fails it. So does a census that judged no row: zero restated
+    rows over zero examined rows is a screen that measured nothing, which must
+    not read the same as a registry that is minimal.
+    """
+    reasons: list[str] = []
+    restating = restating_modelos(findings)
+    if restating:
+        reasons.append(f"modelos restating an inherited casilla row: {', '.join(restating)}")
+    if census.rows_judged == 0:
+        reasons.append("no casilla row was judged, so minimality was not measured")
+    return tuple(reasons)
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    """Print one greppable row per finding and a closing census; exit 1 on ``--check`` failure only."""
+    arguments = sys.argv[1:] if argv is None else list(argv)
+    unknown = [item for item in arguments if item != "--check"]
+    if unknown:
+        sys.stderr.write(f"delta_minimality: unknown argument(s): {' '.join(unknown)}\n")
+        return 2
     authority = compiled_bundled_authority()
     modelo_ids = bundled_modelo_ids()
     findings = screen_authority(authority, modelo_ids)
@@ -630,6 +654,11 @@ def main() -> int:
         f"rows_in_root_editions={census.rows_in_root_editions} restating_modelos={len(restating_modelos(findings))} "
         f"{verdicts}\n"
     )
+    if "--check" in arguments:
+        reasons = check_authority(findings, census)
+        for reason in reasons:
+            sys.stderr.write(f"delta_minimality: {reason}\n")
+        return 1 if reasons else 0
     return 0
 
 

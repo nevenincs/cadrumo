@@ -46,6 +46,7 @@ _ENROLLED_DOOR_MODULES: frozenset[str] = frozenset(
         "application/wizard/patch_edit.py",
         "application/user_profile/fact_write.py",
         "application/user_profile/descendant_rows.py",
+        "application/user_profile/imputation_election_service.py",
         "application/user_profile/plantilla_media_rows.py",
         "application/user_profile/section_rows.py",
     }

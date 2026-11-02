@@ -93,8 +93,6 @@ modelo:
             se toma el trimestre en que se inició.
           label: 'Deducción por vivienda (agraria): días de actividad en el primer
             trimestre'
-        x-dlnm8pbcdsmj2cph5po62pr564n68pb3dhgn4ob3d5nmsbb3dtmn0r35dlimst31e9km2:
-          label: Declaración complementaria
         x-dlnm8pbcdsmj2cph5po62pr564n68pb4elhm6qbfdomm2sjk5koj2c1dcdqm2rjkd5gg:
           help: 'Solo en el caso excepcional de que en el trimestre tengas que presentar
             también el Modelo 130 de pago fraccionado: indica la cantidad que ese

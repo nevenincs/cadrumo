@@ -20,6 +20,11 @@ entry a reviewer translates; ``official_heading`` quotes the design's own
 Spanish words verbatim, as provenance and as the disclosed fallback when no
 translation exists. Neither is ever produced by humanising a technical token.
 
+An outline may group a layout's sections for navigation, under a heading of its
+own. When a layout declares one it names every section exactly once, so a
+navigator built over it can neither hide nor repeat a part of the form; a
+layout without one is navigated by its pages.
+
 Page conditions are a closed set of structural facts the registry already
 declares (an optional export record, a record gated on a positive casilla, a
 period-restricted record). Prose notes in a design are not parsed into
@@ -61,6 +66,8 @@ __all__ = [
     "FormLayoutReview",
     "FormLayoutReviewState",
     "FormLayoutSeedSource",
+    "FormOutlineGroup",
+    "FormOutlineSection",
     "FormPageCondition",
     "FormPageDefinition",
     "FormPlacementDefinition",
@@ -517,6 +524,22 @@ class FormPageDefinition(RegistryModel):
         return self
 
 
+class FormOutlineSection(RegistryModel):
+    """One section an outline group gathers, addressed by its page and its own id."""
+
+    page_id: FormNodeId
+    section_id: FormNodeId
+
+
+class FormOutlineGroup(RegistryModel):
+    """One navigation group of a layout's outline: a heading and the sections it gathers, in order."""
+
+    id: FormNodeId
+    heading_key: FormHeadingKey
+    official_heading: OfficialHeading | None = None
+    sections: tuple[FormOutlineSection, ...] = Field(min_length=1)
+
+
 class FormAliasPosition(RegistryModel):
     """Another official position the same box also appears at; never editable twice."""
 
@@ -578,6 +601,7 @@ class FormLayoutDefinition(RegistryModel):
     design_sources: tuple[FormDesignSource, ...] = ()
     pages: tuple[FormPageDefinition, ...] = ()
     placements: tuple[FormPlacementDefinition, ...] = Field(min_length=1)
+    outline: tuple[FormOutlineGroup, ...] = ()
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
@@ -597,6 +621,7 @@ class FormLayoutDefinition(RegistryModel):
                         f"{owner} placement {placement.casilla_id!r} aliases unknown section "
                         f"{alias.page_id!r}/{alias.section_id!r}",
                     )
+        _require_total_outline(owner, self.outline, tuple(item for page in self.pages for item in _page_sections(page)))
         return self
 
     def casilla_sections(self) -> dict[str, tuple[str, str]]:
@@ -613,6 +638,28 @@ class FormLayoutDefinition(RegistryModel):
                     for casilla_id in _block_casilla_ids(block):
                         found.setdefault(casilla_id, (page.id, section.id))
         return found
+
+
+def _page_sections(page: FormPageDefinition) -> tuple[tuple[str, str], ...]:
+    return tuple((page.id, section.id) for section in page.sections)
+
+
+def _require_total_outline(
+    owner: str, outline: tuple[FormOutlineGroup, ...], sections: tuple[tuple[str, str], ...]
+) -> None:
+    """Refuse an outline that invents a section, names one twice, or leaves one out."""
+    if not outline:
+        return
+    _require_unique(owner, "outline groups", tuple(group.id for group in outline))
+    grouped = tuple((item.page_id, item.section_id) for group in outline for item in group.sections)
+    _require_unique(owner, "outline sections", tuple(f"{page}/{section}" for page, section in grouped))
+    known = set(sections)
+    unknown = sorted(f"{page}/{section}" for page, section in grouped if (page, section) not in known)
+    if unknown:
+        raise RegistryValidationError(f"{owner} outline names unknown sections {unknown!r}")
+    missing = sorted(f"{page}/{section}" for page, section in sections if (page, section) not in set(grouped))
+    if missing:
+        raise RegistryValidationError(f"{owner} outline leaves out sections {missing!r}")
 
 
 def _block_casilla_ids(block: FormBlockDefinition) -> tuple[str, ...]:

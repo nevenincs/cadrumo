@@ -57,7 +57,7 @@ def _work_unit() -> WorkUnit:
 
 
 def test_the_effective_deadline_keeps_only_the_nominal_lower_bound(operation: PinnedAuthorityOperation) -> None:
-    deadline = resolve_effective_filing_deadline("303", _YEAR, _PERIOD, holiday_territory=None, operation=operation)
+    deadline = resolve_effective_filing_deadline("303", _YEAR, _PERIOD, operation=operation)
 
     assert deadline is not None
     assert deadline.close_known is False
@@ -83,8 +83,8 @@ def test_the_work_posture_counts_down_to_the_bound_and_then_states_nothing(
 
 
 def test_the_form_header_states_no_deadline_once_the_bound_passes(operation: PinnedAuthorityOperation) -> None:
-    before = modelo_form_deadline(operation, ModeloCode("303"), _PERIOD, holiday_territory=None, reference_on=_BEFORE)
-    after = modelo_form_deadline(operation, ModeloCode("303"), _PERIOD, holiday_territory=None, reference_on=_AFTER)
+    before = modelo_form_deadline(operation, ModeloCode("303"), _PERIOD, reference_on=_BEFORE)
+    after = modelo_form_deadline(operation, ModeloCode("303"), _PERIOD, reference_on=_AFTER)
 
     assert before is not None
     assert before.days_remaining == 10

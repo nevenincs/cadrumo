@@ -41,10 +41,17 @@ from ..taxation_comparison import (
     INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT,
     TaxationComparisonError,
     TaxationRecommendation,
+    TaxationRecommendationReason,
     compare_taxation_modes,
 )
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
+
+_REASON_OF = {
+    TaxationRecommendation.CONJUNTA: TaxationRecommendationReason.CONJUNTA_LOWER_RESULT,
+    TaxationRecommendation.INDIVIDUAL: TaxationRecommendationReason.INDIVIDUAL_LOWER_RESULT,
+    TaxationRecommendation.INDIFFERENT: TaxationRecommendationReason.BELOW_MATERIALITY,
+}
 
 # Importing the renta package registers the first-slice routing check.
 importlib.import_module("....domain.renta", package=__package__)
@@ -269,7 +276,7 @@ def test_comparison_result_structure_is_typed(snapshot_2025: RegistrySnapshot) -
     assert result.filing_year == 2025
     assert result.modelo == "100"
     assert result.revision == "2025"
-    assert len(result.recommendation_reason) > 10
+    assert result.recommendation_reason is _REASON_OF[result.recommendation]
 
 
 def test_individual_branch_honesty_caveat_surfaces(snapshot_2025: RegistrySnapshot) -> None:
@@ -329,6 +336,7 @@ def test_individual_branch_caveat_present_when_individual_recommended(
 
     assert result.individual_branch_single_earner_only is True
     assert result.individual_branch_caveat == INDIVIDUAL_BRANCH_SINGLE_EARNER_CAVEAT
+    assert result.recommendation_reason is _REASON_OF[result.recommendation]
 
 
 # DEFERRED: non-zero BL-negativa-anterior coverage test. Diagnostic 2026-06-03

@@ -44,7 +44,7 @@ from ..service import ReconciliationSuggestion, suggest_reconciliations
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 _CENT = Decimal("0.01")
-_SEEDS = tuple(range(24))
+_SEEDS = tuple(range(48))
 _TOLERANCES = (
     Decimal("0"),
     Decimal("0.005"),
@@ -118,7 +118,7 @@ def _all_pairs_oracle(
         )
         settlement = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
         for transaction in unlinked:
-            if transaction.direction is not expected:
+            if transaction.direction is not expected or transaction.raw.currency != invoice.currency:
                 continue
             if not abs(transaction.raw.amount - settlement) <= amount_tolerance:
                 continue
@@ -261,12 +261,14 @@ def _world(seed: int) -> tuple[InvoiceCatalogue, TransactionCatalogue]:
                 linked=linked,
             ),
         )
-    settlements = [invoice.grand_total - (invoice.retention_amount or Decimal("0")) for invoice in invoices]
     transactions: list[Transaction] = []
     # Every eighth world has no transactions at all.
     for idx in range(0 if seed % 8 == 7 else rng.randint(1, 60)):
+        source = rng.choice(invoices)
+        # Mostly the currency of the invoice it was drawn to settle, so pairs survive the currency rule.
+        currency = source.currency if rng.chance(4, 5) else rng.choice(_CURRENCIES)
         if rng.chance(4, 5):
-            amount = rng.choice(settlements) + rng.choice(_OFFSETS)
+            amount = source.grand_total - (source.retention_amount or Decimal("0")) + rng.choice(_OFFSETS)
             # Same value, different exponent: 12.30, 12.3 and 12.300 sort as equals.
             amount = rng.choice((amount, amount.normalize(), amount.quantize(Decimal("0.0000001"))))
         else:
@@ -277,7 +279,7 @@ def _world(seed: int) -> tuple[InvoiceCatalogue, TransactionCatalogue]:
                 amount=amount,
                 direction=rng.choice(_DIRECTIONS),
                 counterparty=rng.choice(_COUNTERPARTIES),
-                currency=rng.choice(_CURRENCIES),
+                currency=currency,
                 booked=_edge_date(rng),
                 invoice_id=(rng.choice(invoices).invoice_id if rng.chance(15, 100) else None),
             ),

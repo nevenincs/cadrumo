@@ -106,6 +106,23 @@ def construct_lineage_locale_key(
     )
 
 
+def form_heading_edition_locale_key(modelo_id: str, revision_id: RevisionId, heading_key: str) -> str | None:
+    """Derive the edition-scoped key a modelo's form-layout heading takes in one revision.
+
+    A layout heading key is modelo-wide: it names a part by the design's words or
+    by its position in the design, and a part named by position can be a
+    different part in another edition. The edition key states the heading one
+    revision gives the part, ahead of the modelo-wide key. A key that is not one
+    of this modelo's form keys (a shared column heading) has no edition key.
+    """
+    modelo = encode_modelo_locale_segment(modelo_id)
+    prefix = f"modelo.schema.{modelo}.form."
+    if not heading_key.startswith(prefix):
+        return None
+    edition = encode_modelo_locale_segment(revision_id)
+    return f"modelo.schema.{modelo}.revision.{edition}.form.{heading_key.removeprefix(prefix)}"
+
+
 def casilla_occurrence_locale_key(
     modelo_id: str,
     revision_id: RevisionId,
@@ -401,6 +418,7 @@ __all__ = [
     "construct_lineage_locale_key",
     "construct_locale_key",
     "encode_modelo_locale_segment",
+    "form_heading_edition_locale_key",
     "modelo_locale_key",
     "modelo_localization_source",
     "require_modelo_localization",

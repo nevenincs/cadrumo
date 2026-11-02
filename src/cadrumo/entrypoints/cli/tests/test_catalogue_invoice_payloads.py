@@ -32,6 +32,7 @@ def _invoice_record_payload(invoice: Invoice) -> dict[str, object]:
         name: getattr(invoice, name) for name in CatalogueInvoiceRecordPayload.model_fields if hasattr(invoice, name)
     }
     payload["linked_transaction_ids"] = list(invoice.linked_transaction_ids)
+    payload["settlement_amount"] = invoice.grand_total - (invoice.retention_amount or Decimal(0))
     payload["lines"] = [line.model_dump(mode="python") for line in invoice.lines]
     provenance = invoice.provenance
     payload["source_filename"] = provenance.source_path.name if provenance is not None else None

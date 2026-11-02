@@ -312,6 +312,8 @@ def _typed_profile_selector_values(selector: ProfileProvider) -> list[str]:
     )
     if model_selector is not None:
         selectors.append(model_selector)
+    if selector.rows is not None:
+        selectors.extend((selector.rows.object_path, selector.rows.count_path))
     return selectors
 
 

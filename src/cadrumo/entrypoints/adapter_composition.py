@@ -88,6 +88,7 @@ from .adapter_composition_ports import (
     build_diagnostics_ports,
     build_draft_review_ports,
     build_inventory_service_ports,
+    build_invoice_lifecycle_ports,
     build_modelo_edit_receipt_repository,
     build_modelo_export_ports,
     build_modelo_history_ports,
@@ -270,9 +271,7 @@ class ProfileAdapterComposition:
     @cached_property
     def catalogue_lifecycle_ports_factory(self) -> CatalogueLifecyclePortsFactory:
         """Resolve the catalogue lifecycle ports factory on first read."""
-        from ..adapters.persistence.profile.catalogue_creation import build_catalogue_lifecycle_ports
-
-        return build_catalogue_lifecycle_ports
+        return build_invoice_lifecycle_ports
 
     @property
     def draft_review_ports_factory(self) -> DraftReviewPortsFactory:

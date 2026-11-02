@@ -26,44 +26,12 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import Enum
-from typing import TYPE_CHECKING, Protocol, cast, get_args
+from typing import TYPE_CHECKING, cast, get_args
 
 if TYPE_CHECKING:
     from collections.abc import Callable, Iterable
 
-
-class _ChoiceLike(Protocol):
-    @property
-    def value(self) -> str: ...
-
-    @property
-    def description(self) -> object: ...
-
-
-class _QuestionLike(Protocol):
-    @property
-    def id(self) -> str: ...
-
-    @property
-    def profile_key(self) -> str | None: ...
-
-    @property
-    def choices(self) -> Iterable[_ChoiceLike]: ...
-
-
-class _SectionLike(Protocol):
-    @property
-    def questions(self) -> Iterable[_QuestionLike]: ...
-
-
-class _FlowLike(Protocol):
-    """The one attribute the flow-description registration reads."""
-
-    @property
-    def id(self) -> str: ...
-
-    @property
-    def sections(self) -> Iterable[_SectionLike]: ...
+    from .wizard_fstring_registrations import WizardFlowLike
 
 
 @dataclass(frozen=True, slots=True)
@@ -80,20 +48,6 @@ class FStringKeyRegistration:
     key_factory: Callable[[str], str]
     values: tuple[str, ...]
 
-
-def _hyphen(v: str) -> str:
-    """Replace underscores with hyphens — the transform used by wizard choice labels."""
-    return v.replace("_", "-")
-
-
-# The service-capability CONFIRM question ids (hyphenated, matching the catalogue
-# question ids in :mod:`application.wizard.catalogue`). Their prompt and
-# CLI-flag-help keys are f-string-built, so they are enumerated here for scaffold.
-_CAPABILITY_QUESTION_IDS: tuple[str, ...] = (
-    "cloud-evidence-upload",
-    "llm-vision",
-    "google-export",
-)
 
 # The `cli.config.google.errors.*` refusal-frame suffixes
 # `_GOOGLE_ERROR_KEY_SUFFIX` (`entrypoints.cli.config.google_errors`) maps
@@ -191,6 +145,12 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     from cadrumo.entrypoints.tui.ledger.classification import CLASSIFICATION_FIELD_NAMES
     from dev.docs.terminology_handbook.topics import load_topic_catalogue
     from dev.locales._registry_scanner import scan_detail_row_fields, scan_profile_schema_keys
+    from dev.locales.wizard_fstring_registrations import (
+        flow_choice_values,
+        wizard_choice_description_registrations,
+        wizard_choice_label_registrations,
+        wizard_question_registrations,
+    )
 
     with bundled_indexed_authority().operation() as operation:
         wizard_flow = build_setup_flow(operation)
@@ -212,24 +172,24 @@ def _build_registrations() -> tuple[FStringKeyRegistration, ...]:
     )
 
     return (
-        *_wizard_choice_label_registrations(
-            entity_type=_flow_choice_values(wizard_flow, "entity-type"),
-            legal_entity_form=_flow_choice_values(wizard_flow, "legal-entity-form"),
-            irpf_income_category=_flow_choice_values(wizard_flow, "irpf-income-categories"),
-            irpf_estimation_regime=_flow_choice_values(wizard_flow, "irpf-estimation-regime"),
-            irpf_special_regime=_flow_choice_values(wizard_flow, "irpf-special-regime"),
-            fiscal_residency=_flow_choice_values(wizard_flow, "fiscal-residency"),
-            ccaa=_flow_choice_values(wizard_flow, "tax-residence-ccaa"),
+        *wizard_choice_label_registrations(
+            entity_type=flow_choice_values(wizard_flow, "entity-type"),
+            legal_entity_form=flow_choice_values(wizard_flow, "legal-entity-form"),
+            irpf_income_category=flow_choice_values(wizard_flow, "irpf-income-categories"),
+            irpf_estimation_regime=flow_choice_values(wizard_flow, "irpf-estimation-regime"),
+            irpf_special_regime=flow_choice_values(wizard_flow, "irpf-special-regime"),
+            fiscal_residency=flow_choice_values(wizard_flow, "fiscal-residency"),
+            ccaa=flow_choice_values(wizard_flow, "tax-residence-ccaa"),
             output_languages=SUPPORTED_OUTPUT_LANGUAGES,
         ),
-        *_wizard_choice_description_registrations(
-            entity_type=_flow_choice_values(wizard_flow, "entity-type", described=True),
-            legal_entity_form=_flow_choice_values(wizard_flow, "legal-entity-form", described=True),
-            irpf_income_category=_flow_choice_values(wizard_flow, "irpf-income-categories", described=True),
-            irpf_estimation_regime=_flow_choice_values(wizard_flow, "irpf-estimation-regime", described=True),
-            fiscal_residency=_flow_choice_values(wizard_flow, "fiscal-residency", described=True),
+        *wizard_choice_description_registrations(
+            entity_type=flow_choice_values(wizard_flow, "entity-type", described=True),
+            legal_entity_form=flow_choice_values(wizard_flow, "legal-entity-form", described=True),
+            irpf_income_category=flow_choice_values(wizard_flow, "irpf-income-categories", described=True),
+            irpf_estimation_regime=flow_choice_values(wizard_flow, "irpf-estimation-regime", described=True),
+            fiscal_residency=flow_choice_values(wizard_flow, "fiscal-residency", described=True),
         ),
-        *_wizard_question_registrations(wizard_flows=(wizard_flow,)),
+        *wizard_question_registrations(wizard_flows=(wizard_flow,)),
         *_dynamic_family_registrations(
             wizard_flows=(wizard_flow,),
             apoderado_scope_values=apoderado_scope_values,
@@ -275,6 +235,39 @@ def _operation_refusal_values() -> tuple[str, ...]:
             + [code.value for code in OperationCancellationRefusalCode]
             + [code.value for code in OperationDetachRefusalCode]
         )
+    )
+
+
+def _automation_inventory_registration() -> FStringKeyRegistration:
+    """Enumerate the closed detail labels of the automation inventory."""
+    return FStringKeyRegistration(
+        # Closed detail-label arguments in entrypoints/tui/profile/automation_inventory.py.
+        description="tui.automation_inventory.* (automation inventory detail labels)",
+        key_factory=lambda v: f"tui.automation_inventory.{v}",
+        values=(
+            "id",
+            "client",
+            "destination",
+            "kind",
+            "state",
+            "expires",
+            "grant",
+            "last_used",
+            "operations",
+            "actions",
+            "disclosures",
+            "periods",
+            "delegation",
+            "period_independent",
+            "unattended",
+            "os_lock",
+            "grant_expires",
+            "key_expires",
+            "target_grant",
+            "target_key",
+            "profile",
+            "review_digest",
+        ),
     )
 
 
@@ -336,35 +329,7 @@ def _runtime_registrations(
             key_factory=lambda v: f"errors.prefix.{v}",
             values=tuple(c.value.lower() for c in ErrorCategory),
         ),
-        FStringKeyRegistration(
-            # Closed detail-label arguments in entrypoints/tui/profile/automation_inventory.py.
-            description="tui.automation_inventory.* (automation inventory detail labels)",
-            key_factory=lambda v: f"tui.automation_inventory.{v}",
-            values=(
-                "id",
-                "client",
-                "destination",
-                "kind",
-                "state",
-                "expires",
-                "grant",
-                "last_used",
-                "operations",
-                "actions",
-                "disclosures",
-                "periods",
-                "delegation",
-                "period_independent",
-                "unattended",
-                "os_lock",
-                "grant_expires",
-                "key_expires",
-                "target_grant",
-                "target_key",
-                "profile",
-                "review_digest",
-            ),
-        ),
+        _automation_inventory_registration(),
         FStringKeyRegistration(
             # The resume refusal derives its message key from the reason's own
             # value in application/workflow/resume.py and the CLI resume command.
@@ -933,7 +898,7 @@ def _generated_docs_registrations() -> tuple[FStringKeyRegistration, ...]:
 
 def _dynamic_family_registrations(
     *,
-    wizard_flows: Iterable[_FlowLike],
+    wizard_flows: Iterable[WizardFlowLike],
     apoderado_scope_values: Iterable[str],
     context_label_keys: Iterable[str],
     profile_validation_codes: Iterable[str],
@@ -1013,146 +978,6 @@ def _dynamic_family_registrations(
             description="wizard.errors.* (WIZARD_VALIDATION_REASON_CODES)",
             key_factory=lambda v: f"wizard.errors.{v}",
             values=tuple(wizard_reason_codes),
-        ),
-    )
-
-
-def _flow_choice_values(flow: _FlowLike, question_id: str, *, described: bool = False) -> tuple[str, ...]:
-    """Return the canonical choice values declared by one wizard question."""
-    for section in flow.sections:
-        for question in section.questions:
-            if question.id != question_id:
-                continue
-            return tuple(choice.value for choice in question.choices if not described or choice.description is not None)
-    raise LookupError(f"wizard flow has no question {question_id!r}")
-
-
-def _wizard_choice_label_registrations(
-    *,
-    entity_type: Iterable[str],
-    legal_entity_form: Iterable[str],
-    irpf_income_category: Iterable[str],
-    irpf_estimation_regime: Iterable[str],
-    irpf_special_regime: Iterable[str],
-    fiscal_residency: Iterable[str],
-    ccaa: Iterable[str],
-    output_languages: Iterable[str],
-) -> tuple[FStringKeyRegistration, ...]:
-    """Registrations for the wizard's closed-choice option labels.
-
-    Every entry expands one enum's members into the per-choice locale keys the
-    wizard renders. The enums arrive as parameters because the caller already
-    deferred their imports to keep this module import-error-safe.
-    """
-    return (
-        FStringKeyRegistration(
-            description="wizard.setup.taxpayer-type.entity-type.choices.*.label",
-            key_factory=lambda v: f"wizard.setup.taxpayer-type.entity-type.choices.{_hyphen(v)}.label",
-            values=tuple(entity_type),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.taxpayer-type.legal-entity-form.choices.*.label",
-            key_factory=lambda v: f"wizard.setup.taxpayer-type.legal-entity-form.choices.{_hyphen(v)}.label",
-            values=tuple(legal_entity_form),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.taxpayer-type.irpf-income-categories.choices.*.label",
-            key_factory=lambda v: f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{_hyphen(v)}.label",
-            values=tuple(irpf_income_category),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.obligations.irpf-estimation-regime.choices.*.label",
-            key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.label",
-            values=tuple(irpf_estimation_regime),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.obligations.irpf-special-regime.choices.*.label",
-            key_factory=lambda v: f"wizard.setup.obligations.irpf-special-regime.choices.{_hyphen(v)}.label",
-            values=tuple(irpf_special_regime),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.residence.fiscal-residency.choices.*.label",
-            key_factory=lambda v: f"wizard.setup.residence.fiscal-residency.choices.{_hyphen(v)}.label",
-            values=tuple(fiscal_residency),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.residence.ccaa.choices.*.label",
-            key_factory=lambda v: f"wizard.setup.residence.ccaa.choices.{v}.label",
-            values=tuple(ccaa),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.profile.output-language.choices.*.label",
-            key_factory=lambda v: f"wizard.setup.profile.output-language.choices.{v}.label",
-            values=tuple(sorted(output_languages)),
-        ),
-    )
-
-
-def _wizard_choice_description_registrations(
-    *,
-    entity_type: Iterable[str],
-    legal_entity_form: Iterable[str],
-    irpf_income_category: Iterable[str],
-    irpf_estimation_regime: Iterable[str],
-    fiscal_residency: Iterable[str],
-) -> tuple[FStringKeyRegistration, ...]:
-    """Registrations for the longer explanatory copy under each wizard choice.
-
-    Only some choice sets carry descriptions — a legal-entity-form subset is
-    curated rather than exhaustive — so this group is deliberately not a
-    mirror of the label group.
-    """
-    return (
-        FStringKeyRegistration(
-            description="wizard.setup.taxpayer-type.entity-type.choices.*.description",
-            key_factory=lambda v: f"wizard.setup.taxpayer-type.entity-type.choices.{_hyphen(v)}.description",
-            values=tuple(entity_type),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.taxpayer-type.irpf-income-categories.choices.*.description",
-            key_factory=lambda v: f"wizard.setup.taxpayer-type.irpf-income-categories.choices.{_hyphen(v)}.description",
-            values=tuple(irpf_income_category),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.obligations.irpf-estimation-regime.choices.*.description",
-            key_factory=lambda v: f"wizard.setup.obligations.irpf-estimation-regime.choices.{_hyphen(v)}.description",
-            values=tuple(irpf_estimation_regime),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.residence.fiscal-residency.choices.*.description",
-            key_factory=lambda v: f"wizard.setup.residence.fiscal-residency.choices.{_hyphen(v)}.description",
-            values=tuple(fiscal_residency),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.taxpayer-type.legal-entity-form.choices.*.description (curated subset)",
-            key_factory=lambda v: f"wizard.setup.taxpayer-type.legal-entity-form.choices.{_hyphen(v)}.description",
-            values=tuple(legal_entity_form),
-        ),
-    )
-
-
-def _wizard_question_registrations(*, wizard_flows: Iterable[_FlowLike]) -> tuple[FStringKeyRegistration, ...]:
-    """Registrations for wizard flow descriptions and per-question prompt/help copy.
-
-    Unlike the choice group these expand id tuples declared in this module
-    (the service-capability question ids) rather than enums, because their
-    sources are catalogue question ids with no enum home.
-    """
-    return (
-        FStringKeyRegistration(
-            description="wizard.*.description (registered wizard flow IDs)",
-            key_factory=lambda v: f"wizard.{v}.description",
-            values=tuple(flow.id for flow in wizard_flows),
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.capabilities.*.prompt (service-capability CONFIRM questions)",
-            key_factory=lambda v: f"wizard.setup.capabilities.{v}.prompt",
-            values=_CAPABILITY_QUESTION_IDS,
-        ),
-        FStringKeyRegistration(
-            description="wizard.setup.flags.*.help (service-capability CLI flags)",
-            key_factory=lambda v: f"wizard.setup.flags.{v}.help",
-            values=_CAPABILITY_QUESTION_IDS,
         ),
     )
 

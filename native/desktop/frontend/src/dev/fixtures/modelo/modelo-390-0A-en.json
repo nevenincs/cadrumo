@@ -1175,8 +1175,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2.5-operaciones-reg-gral-base-imponible-y-c-a46fd9",
@@ -2135,8 +2138,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2.5-operaciones-reg-gral-base-imponible-y-c-5505bd",
@@ -3095,8 +3101,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2.5-operaciones-reg-gral-base-imponible-y-c-93d4a1",
@@ -4027,8 +4036,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2.5-operaciones-reg-gral-base-imponible-y-c-0050f7",
@@ -4197,8 +4209,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2.5-operaciones-reg-gral-base-imponible-y-c-9faf8e",
@@ -5367,8 +5382,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2.5-operaciones-reg-gral-base-imponible-y-c-542bb5",
@@ -6537,8 +6555,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2.5-operaciones-reg-gral-base-imponible-y-cuota",
@@ -7348,8 +7369,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -7361,7 +7385,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -8516,8 +8542,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2-bis.5-operaciones-reg-gral-base-imponible-y-cuota",
@@ -8821,8 +8850,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-2-bis.5-operaciones-reg-gral",
@@ -8911,8 +8943,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -8924,7 +8959,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -9878,8 +9915,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-3.5-operaciones-reg-gral-iva-deducible-oper-0e46cf",
@@ -10852,8 +10892,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-3.5-operaciones-reg-gral-iva-deducible-oper-5198bd",
@@ -11832,8 +11875,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-3.5-operaciones-reg-gral-iva-deducible-oper-3192c1",
@@ -12834,8 +12880,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-3.5-operaciones-reg-gral-iva-deducible-impo-f31793",
@@ -13823,8 +13872,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-3.5-operaciones-reg-gral-iva-deducible-impo-56be24",
@@ -14843,8 +14895,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-3.5-operaciones-reg-gral-iva-deducible-adqu-84c649",
@@ -15999,8 +16054,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -16012,7 +16070,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -17204,8 +17264,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-4.5-operaciones-reg-gral-iva-deducible-adqu-315b09",
@@ -18360,8 +18423,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-4.5-operaciones-reg-gral-iva-deducible-2",
@@ -18968,8 +19034,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-4.5-operaciones-reg-gral",
@@ -19276,8 +19345,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -19289,7 +19361,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -20108,8 +20182,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -20121,7 +20198,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -20586,8 +20665,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-6.8-tributacion-razon-de-territorio",
@@ -21119,8 +21201,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-6.ordinary-periods",
@@ -21546,8 +21631,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-6.group-periods",
@@ -21683,8 +21771,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-6.10-volumen-de-operaciones",
@@ -22797,8 +22888,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -22810,7 +22904,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -23517,8 +23613,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -23530,7 +23629,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -24807,8 +24908,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-8.deduction-group-2",
@@ -26076,8 +26180,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "pag-8.deduction-group-3",
@@ -27345,8 +27452,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -27358,9 +27468,201 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
+        }
+      ],
+      "outline": [
+        {
+          "id": "pag-2",
+          "heading": { "text": "Page 2", "disclosure": "localized" },
+          "section_ids": [
+            "pag-2.5-operaciones-reg-gral-base-imponible-y-c-f2cdb2",
+            "pag-2.5-operaciones-reg-gral-base-imponible-y-c-a46fd9",
+            "pag-2.5-operaciones-reg-gral-base-imponible-y-c-5505bd",
+            "pag-2.5-operaciones-reg-gral-base-imponible-y-c-93d4a1",
+            "pag-2.5-operaciones-reg-gral-base-imponible-y-c-0050f7",
+            "pag-2.5-operaciones-reg-gral-base-imponible-y-c-9faf8e",
+            "pag-2.5-operaciones-reg-gral-base-imponible-y-c-542bb5",
+            "pag-2.5-operaciones-reg-gral-base-imponible-y-cuota"
+          ],
+          "counts": {
+            "total": 96,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "pag-2-bis",
+          "heading": { "text": "Page 2 bis", "disclosure": "localized" },
+          "section_ids": [
+            "pag-2-bis.5-operaciones-reg-gral-base-imponible-y-c-fef341",
+            "pag-2-bis.5-operaciones-reg-gral-base-imponible-y-cuota",
+            "pag-2-bis.5-operaciones-reg-gral"
+          ],
+          "counts": {
+            "total": 21,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "pag-3",
+          "heading": { "text": "Page 3", "disclosure": "localized" },
+          "section_ids": [
+            "pag-3.5-operaciones-reg-gral-iva-deducible-oper-6cb02a",
+            "pag-3.5-operaciones-reg-gral-iva-deducible-oper-0e46cf",
+            "pag-3.5-operaciones-reg-gral-iva-deducible-oper-5198bd",
+            "pag-3.5-operaciones-reg-gral-iva-deducible-oper-3192c1",
+            "pag-3.5-operaciones-reg-gral-iva-deducible-impo-f31793",
+            "pag-3.5-operaciones-reg-gral-iva-deducible-impo-56be24",
+            "pag-3.5-operaciones-reg-gral-iva-deducible-adqu-84c649"
+          ],
+          "counts": {
+            "total": 98,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "pag-4",
+          "heading": { "text": "Page 4", "disclosure": "localized" },
+          "section_ids": [
+            "pag-4.5-operaciones-reg-gral-iva-deducible-adqu-812147",
+            "pag-4.5-operaciones-reg-gral-iva-deducible-adqu-315b09",
+            "pag-4.5-operaciones-reg-gral-iva-deducible-2",
+            "pag-4.5-operaciones-reg-gral"
+          ],
+          "counts": {
+            "total": 40,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "pag-5",
+          "heading": { "text": "Page 5", "disclosure": "localized" },
+          "section_ids": ["pag-5.6-operaciones-reg-simplificado-4"],
+          "counts": {
+            "total": 10,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "pag-6",
+          "heading": { "text": "Page 6", "disclosure": "localized" },
+          "section_ids": [
+            "pag-6.7-resultado-liquidacion-anual",
+            "pag-6.8-tributacion-razon-de-territorio",
+            "pag-6.ordinary-periods",
+            "pag-6.group-periods",
+            "pag-6.10-volumen-de-operaciones"
+          ],
+          "counts": {
+            "total": 40,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "pag-7",
+          "heading": { "text": "Page 7", "disclosure": "localized" },
+          "section_ids": ["pag-7.11-oper-especificas"],
+          "counts": {
+            "total": 11,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "pag-8",
+          "heading": { "text": "Page 8", "disclosure": "localized" },
+          "section_ids": [
+            "pag-8.deduction-group-1",
+            "pag-8.deduction-group-2",
+            "pag-8.deduction-group-3"
+          ],
+          "counts": {
+            "total": 54,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
         }
       ],
       "working_figures": [
@@ -30545,7 +30847,9 @@
         "overridden": 0,
         "default_to_confirm": 0,
         "not_applicable": 0,
-        "blocked": 0
+        "blocked": 0,
+        "needs_you": 0,
+        "could_not_calculate": 0
       },
       "progress": {
         "state": "in_progress",

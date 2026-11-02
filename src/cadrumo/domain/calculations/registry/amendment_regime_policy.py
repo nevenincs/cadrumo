@@ -35,6 +35,7 @@ _PROCEDURE_ORDER_KEY = "procedure.order"
 _PRE_ORDER_KEY = "regime.pre_order"
 _POST_ORDER_KEY = "regime.post_order"
 _BOUNDARY_ORDER_KEY = "boundary.order"
+_LATER_PERIOD_ADJUSTMENT_ORDER_KEY = "later_period_adjustment.order"
 
 
 _ENTRIES_POLICY = StringMappingPolicy(subject=_ENTRY_SUBJECT, value_whitespace=MappingValueWhitespace.STRIP)
@@ -101,6 +102,25 @@ def _boundary_date(entries: Mapping[str, str], modelo: str) -> date:
     return boundary
 
 
+def _later_period_adjustments(entries: Mapping[str, str]) -> dict[str, date]:
+    """Read the modelos whose rule moves every correction to a later period's return, each with its source."""
+    if _LATER_PERIOD_ADJUSTMENT_ORDER_KEY not in entries:
+        return {}
+    adjustments: dict[str, date] = {}
+    for modelo in unique_mapping_tokens(entries, _LATER_PERIOD_ADJUSTMENT_ORDER_KEY, subject=_ENTRY_SUBJECT):
+        prefix = f"later_period_adjustment.{_boundary_model(modelo)}"
+        required_mapping_entry(entries, f"{prefix}.source", subject=_ENTRY_SUBJECT)
+        try:
+            adjustments[modelo] = date.fromisoformat(
+                required_mapping_entry(entries, f"{prefix}.date", subject=_ENTRY_SUBJECT)
+            )
+        except ValueError as exc:
+            raise RegistryValidationError(
+                f"amendment-regime-policy later-period adjustment for {modelo!r} must be an ISO date",
+            ) from exc
+    return adjustments
+
+
 def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
     pre_kinds, post_kinds = _procedure_kinds(entries)
     boundaries = {modelo: _boundary_date(entries, modelo) for modelo in _boundary_models(entries)}
@@ -108,6 +128,7 @@ def _policy(entries: Mapping[str, str]) -> AmendmentRegimePolicy:
         rectificativa_effective_from=MappingProxyType(boundaries),
         pre_rectificativa_kinds=pre_kinds,
         post_rectificativa_kinds=post_kinds,
+        later_period_adjustment_from=MappingProxyType(_later_period_adjustments(entries)),
     )
 
 

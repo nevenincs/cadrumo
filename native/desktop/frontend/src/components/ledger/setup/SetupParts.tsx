@@ -495,25 +495,38 @@ export function useSetupRead<D extends LedgerDefinitionId>(
   read: SetupCall<LedgerResult<D>> | null;
   reload(): void;
 } {
-  const [read, setRead] = useState<SetupCall<LedgerResult<D>> | null>(null);
+  const available = payload !== null;
+  const identity = useMemo(
+    () => ({ port, reader, definition, key, available }),
+    [port, reader, definition, key, available],
+  );
+  const [stored, setStored] = useState<{
+    identity: typeof identity;
+    read: SetupCall<LedgerResult<D>> | null;
+  }>({ identity, read: null });
   const [round, setRound] = useState(0);
   // The page's re-read after a write it could not settle reads this again.
   const { round: reread } = useWritePause();
   const latest = useRef(payload);
   latest.current = payload;
   useEffect(() => {
-    setRead(null);
+    const { port, reader, definition } = identity;
+    setStored({ identity, read: null });
     const asked = latest.current;
     if (reader === null || asked === null) return;
     let active = true;
     void setupCall(port, definition, asked, false).then((answer) => {
-      if (active) setRead(answer);
+      if (active) setStored({ identity, read: answer });
     });
     return () => {
       active = false;
     };
-  }, [port, reader, definition, key, round, reread]);
+  }, [identity, round, reread]);
   const reload = useCallback(() => setRound((value) => value + 1), []);
+  const read =
+    reader !== null && available && stored.identity === identity
+      ? stored.read
+      : null;
   return { read, reload };
 }
 

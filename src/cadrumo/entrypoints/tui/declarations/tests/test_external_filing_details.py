@@ -10,7 +10,7 @@ from textual.widgets import Button, DataTable, Static
 from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
 from .....application.modelo.declarations_list import declaration_list_rows
 from .....application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
-from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .....application.modelo.work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id

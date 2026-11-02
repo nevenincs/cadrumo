@@ -23,14 +23,9 @@ from textual.color import Color
 from textual.widgets import Static
 
 from ......application.modelo.calculation_notes import CALCULATION_NOTE_ATTENTION
+from ......application.modelo.work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormExport
 from ......application.modelo.work_form_findings import ModeloFormAttention
-from ......application.modelo.work_form_models import (
-    ModeloFormCalculationNote,
-    ModeloFormCasillaAddressV1,
-    ModeloFormExport,
-    ModeloFormOrigin,
-    ModeloWorkForm,
-)
+from ......application.modelo.work_form_models import ModeloFormCasillaAddressV1, ModeloFormOrigin, ModeloWorkForm
 from ......application.modelo.work_form_next_step import ModeloFormNextAction, blocking_count
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage

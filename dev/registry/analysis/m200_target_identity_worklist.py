@@ -22,6 +22,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import FormPlaceme
 from cadrumo.domain.calculations.registry.schema_surfaces import CasillaDefinition
 
 from ..compiler.authority import compiled_bundled_authority
+from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS
 from ..maintenance_support import (
     coverage_assessment_floor,
     coverage_assessment_horizon,
@@ -44,6 +45,8 @@ __all__ = [
     "M200OrphanDisposition",
     "M200PrintedIdentityDiagnostic",
     "M200PrintedIdentityState",
+    "M200SharedOwner",
+    "M200SharedOwnerCell",
     "M200TargetIdentityWorklist",
     "classify_m200_target_identities",
     "load_bundled_m200_target_identity_worklists",
@@ -122,6 +125,30 @@ class M200PrintedIdentityDiagnostic:
 
 
 @dataclass(frozen=True, slots=True)
+class M200SharedOwnerCell:
+    """One design cell that writes a casilla also written by another cell."""
+
+    export_field_id: str
+    sheet: str
+    source_row: int
+    description: str
+
+
+@dataclass(frozen=True, slots=True)
+class M200SharedOwner:
+    """A casilla whose single value is written into two or more unrelated cells.
+
+    A matching printed number does not prove a shared concept, because the
+    design reuses box numbers across sheets. Only a cell listed as a declared
+    echo repeats another cell's amount, so every other cell is counted here
+    until its concept is adjudicated against the revision's own design.
+    """
+
+    casilla_id: str
+    cells: tuple[M200SharedOwnerCell, ...]
+
+
+@dataclass(frozen=True, slots=True)
 class M200TargetIdentityWorklist:
     """Complete, target-source-bound identity evidence with no authority mutation path."""
 
@@ -133,6 +160,7 @@ class M200TargetIdentityWorklist:
     map_owner_mismatches: tuple[M200MapOwnerIdentity, ...]
     orphaned_declarations: tuple[M200OrphanedDeclaration, ...]
     printed_identity_diagnostics: tuple[M200PrintedIdentityDiagnostic, ...]
+    shared_owners: tuple[M200SharedOwner, ...]
 
 
 def classify_m200_target_identities(
@@ -162,6 +190,7 @@ def classify_m200_target_identities(
     mismatches: list[M200MapOwnerIdentity] = []
     diagnostics: list[M200PrintedIdentityDiagnostic] = []
     map_owner_ids: set[CasillaId] = set()
+    cells_by_owner: dict[CasillaId, list[M200SharedOwnerCell]] = {}
 
     for entry in target_map.entries:
         field = target_fields[semantic_anchor_key(entry.anchor)]
@@ -176,6 +205,14 @@ def classify_m200_target_identities(
         )
         if map_owner is not None:
             map_owner_ids.add(map_owner)
+            cells_by_owner.setdefault(map_owner, []).append(
+                M200SharedOwnerCell(
+                    export_field_id=str(entry.export_field_id),
+                    sheet=field.record_identity,
+                    source_row=field.source_row,
+                    description=field.normalized_description,
+                )
+            )
         if diagnostic is not None:
             diagnostics.append(diagnostic)
         if mismatch is not None:
@@ -200,7 +237,18 @@ def classify_m200_target_identities(
         map_owner_mismatches=tuple(sorted(mismatches, key=lambda item: item.export_field_id)),
         orphaned_declarations=orphaned,
         printed_identity_diagnostics=tuple(sorted(diagnostics, key=lambda item: item.export_field_id)),
+        shared_owners=_shared_owners(cells_by_owner),
     )
+
+
+def _shared_owners(cells_by_owner: Mapping[CasillaId, list[M200SharedOwnerCell]]) -> tuple[M200SharedOwner, ...]:
+    """Return the owners with more than one cell left once declared echoes are set aside."""
+    found: list[M200SharedOwner] = []
+    for casilla_id, cells in sorted(cells_by_owner.items()):
+        own_cells = tuple(cell for cell in cells if (cell.sheet, str(casilla_id)) not in MODELO_200_ECHO_CELLS)
+        if len(own_cells) > 1:
+            found.append(M200SharedOwner(casilla_id=str(casilla_id), cells=own_cells))
+    return tuple(found)
 
 
 def _orphan_disposition(placement: FormPlacementKind | None) -> M200OrphanDisposition:
@@ -301,10 +349,13 @@ def render_m200_target_identity_worklists_toml(worklists: tuple[M200TargetIdenti
                         "map_owner_mismatches": len(worklist.map_owner_mismatches),
                         "orphaned_declarations": len(worklist.orphaned_declarations),
                         "printed_identity_diagnostics": len(worklist.printed_identity_diagnostics),
+                        "shared_owners": len(worklist.shared_owners),
+                        "shared_owner_cells": sum(len(row.cells) for row in worklist.shared_owners),
                     },
                     "map_owner_mismatch": [_serialise(row) for row in worklist.map_owner_mismatches],
                     "orphaned_declaration": [_serialise(row) for row in worklist.orphaned_declarations],
                     "printed_identity_diagnostic": [_serialise(row) for row in worklist.printed_identity_diagnostics],
+                    "shared_owner": [_serialise(row) for row in worklist.shared_owners],
                 }
                 for worklist in worklists
             ],

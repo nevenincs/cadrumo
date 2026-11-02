@@ -213,3 +213,24 @@ export const EMPTY_CALENDAR: FilingCalendar = {
   warnings: [],
   coverage: { ...FIXTURE_CALENDAR.coverage, surfaced: [], advised: [] },
 };
+
+/** Each reason the local projection can leave a modelo without a window. */
+export const ADVISED_CALENDAR: FilingCalendar = {
+  ...FIXTURE_CALENDAR,
+  coverage: {
+    ...FIXTURE_CALENDAR.coverage,
+    advised: [
+      { modelo: "123", reason: "applicable_window_missing" },
+      { modelo: "347", reason: "applicability_undetermined" },
+      { modelo: "720", reason: "registry_unmodeled" },
+      { modelo: "216", reason: "applicable_window_missing" },
+    ],
+    out_of_scope: [],
+  },
+};
+
+/** No dated entries does not mean no possible obligations. */
+export const ADVICE_ONLY_CALENDAR: FilingCalendar = {
+  ...EMPTY_CALENDAR,
+  coverage: { ...ADVISED_CALENDAR.coverage, surfaced: [] },
+};

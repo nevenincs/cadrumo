@@ -15,8 +15,9 @@ from decimal import Decimal
 import pytest
 from textual.widgets import Static
 
+from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from ......application.modelo.work_form_findings import ModeloFormIssue
-from ......application.modelo.work_form_models import ModeloFormResultDirection, ModeloWorkForm
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.config import override_settings
 from ......core.i18n.render import tr
 from ......domain.modelos.verification_report import (

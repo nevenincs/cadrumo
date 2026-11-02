@@ -119,6 +119,7 @@ def work_compare_taxation(
         delta_resultado=str(comparison.delta_resultado),
         recommendation=comparison.recommendation,
         recommendation_reason=comparison.recommendation_reason,
+        recommendation_reason_words=comparison.recommendation_reason_words,
         individual_branch_single_earner_only=comparison.individual_branch_single_earner_only,
     )
     from ._modelo_rendering import advisory_notice
@@ -147,7 +148,7 @@ def work_compare_taxation(
         tr(
             "cli.app.modelo.work.compare_taxation_recommendation_line",
             recommendation=comparison.recommendation.value,
-            reason=comparison.recommendation_reason,
+            reason=comparison.recommendation_reason_words,
         ),
     ]
     lines.append(f"WARNING\t{comparison.individual_branch_caveat}")

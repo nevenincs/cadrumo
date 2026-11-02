@@ -108,11 +108,62 @@ declare global {
      * addresses to import them from, so the entry hands them over. */
     __scenarioModules?: {
       tauriHost(): Promise<typeof import("../shell/tauriHost")>;
+      profileViews(): Promise<{
+        react: typeof import("react");
+        dom: typeof import("react-dom");
+        client: typeof import("react-dom/client");
+        calendar: typeof import("../shell/calendar");
+        messages: typeof import("../shell/messages");
+      }>;
+      ledgerReads(): Promise<{
+        react: typeof import("react");
+        dom: typeof import("react-dom");
+        client: typeof import("react-dom/client");
+        documents: typeof import("../components/ledger/documents/useLedgerRead");
+        setup: typeof import("../components/ledger/setup/SetupParts");
+      }>;
+      declarationsList(): Promise<
+        typeof import("../components/modelo/declarations/useDeclarationsList")
+      >;
+      providerReads(): Promise<{
+        settings: typeof import("../shell/providerSettings");
+        views: typeof import("../shell/agentViews");
+      }>;
+      agentReaders(): Promise<{
+        models: typeof import("../shell/readingModel");
+        live: typeof import("../shell/agentLive");
+      }>;
     };
   }
 }
 
-window.__scenarioModules = { tauriHost: () => import("../shell/tauriHost") };
+window.__scenarioModules = {
+  agentReaders: async () => ({
+    models: await import("../shell/readingModel"),
+    live: await import("../shell/agentLive"),
+  }),
+  providerReads: async () => ({
+    settings: await import("../shell/providerSettings"),
+    views: await import("../shell/agentViews"),
+  }),
+  declarationsList: () =>
+    import("../components/modelo/declarations/useDeclarationsList"),
+  tauriHost: () => import("../shell/tauriHost"),
+  profileViews: async () => ({
+    react: await import("react"),
+    dom: await import("react-dom"),
+    client: await import("react-dom/client"),
+    calendar: await import("../shell/calendar"),
+    messages: await import("../shell/messages"),
+  }),
+  ledgerReads: async () => ({
+    react: await import("react"),
+    dom: await import("react-dom"),
+    client: await import("react-dom/client"),
+    documents: await import("../components/ledger/documents/useLedgerRead"),
+    setup: await import("../components/ledger/setup/SetupParts"),
+  }),
+};
 
 /** One mounted shell: a new run remounts it on a fresh host. */
 type Run = { id: number; scenario: Scenario; language: string };

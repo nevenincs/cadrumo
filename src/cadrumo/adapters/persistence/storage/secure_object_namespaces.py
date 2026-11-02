@@ -956,6 +956,35 @@ LOCAL_MODEL_LIST_NAMESPACE = SecureObjectNamespaceDefinition(
     remote_mirror_requires_revision=False,
     remote_mirror_requires_integrity_manifest=False,
 )
+# The person's remembered decisions to let an agent lane read a conversation
+# attachment, and the record of every release made under them. Each names a
+# document's digest beside a provider, so neither mirrors remotely.
+ATTACHMENT_DISCLOSURE_GRANTS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="attachment_disclosure_grants",
+    namespace="cadrumo.attachment_disclosure_grants",
+    owner="cadrumo.adapters.persistence.storage.secure_object_namespaces",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{extension_record_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
+ATTACHMENT_RELEASE_LEDGER_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="attachment_release_ledger",
+    namespace="cadrumo.attachment_release_ledger",
+    owner="cadrumo.adapters.persistence.storage.secure_object_namespaces",
+    sensitivity=SensitivityClass.SECRET,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{extension_record_key}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.PROCESS_LOCAL,
+    remote_mirror_policy=StorageRemoteMirrorPolicy.LOCAL_ONLY,
+    remote_mirror_requires_revision=False,
+    remote_mirror_requires_integrity_manifest=False,
+)
 LLM_CACHE_NAMESPACE = SecureObjectNamespaceDefinition(
     key="llm_cache",
     namespace="cadrumo.adapters.outbound.llm.cache",

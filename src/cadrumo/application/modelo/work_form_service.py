@@ -43,7 +43,6 @@ from ...core.period import Period
 from ...core.time.clock import today_madrid
 from ...domain.buckets.event import BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
-from ...domain.deadlines.festivos import CalendarCCAA
 from ...domain.modelos.calculation_revision import (
     FILED_REVISION_STATES,
     SEALED_REVISION_STATES,
@@ -64,10 +63,9 @@ from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .effective_deadline import resolve_effective_filing_deadline
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
+from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport
 from .work_form_models import (
     ModeloFormAddressV1,
-    ModeloFormDeadline,
-    ModeloFormExport,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
@@ -154,26 +152,22 @@ def modelo_form_deadline(
     modelo: ModeloCode,
     period: Period,
     *,
-    holiday_territory: CalendarCCAA | None,
     reference_on: date,
 ) -> ModeloFormDeadline | None:
     """The last day of the declaration's voluntary filing window, or ``None`` when none is declared.
 
     The window comes from the canonical resolver the calendar and the
     extemporaneity notice use; it stores the nominal statutory date, which the
-    business-day shift moves past weekends and holidays at read time. Without
-    the filer's territory only national holidays are checked, and a holiday
-    calendar that cannot be read leaves the nominal date standing; the
-    coverage says which, so neither is shown as a final date.
+    business-day shift moves past weekends and national inhábiles at read
+    time. A holiday calendar that cannot be read leaves the nominal date
+    standing and the coverage says so, so it is not shown as a final date.
 
     Raises:
         RegistryError: The registry could not be read, so the deadline is
             unknown rather than absent.
         DeadlineValidationError: More than one window matches the declaration.
     """
-    deadline = resolve_effective_filing_deadline(
-        str(modelo), period.filing_year, period, holiday_territory=holiday_territory, operation=operation
-    )
+    deadline = resolve_effective_filing_deadline(str(modelo), period.filing_year, period, operation=operation)
     if deadline is None:
         return None
     days_remaining = deadline.days_remaining_on(reference_on)
@@ -215,7 +209,6 @@ def load_modelo_work_form(
     admission: ModeloEditAdmissionResultV1 | None,
     language: OutputLanguage,
     borrador_snapshots: Borrador100SnapshotRepository | None = None,
-    holiday_territory: CalendarCCAA | None = None,
     reference_on: date | None = None,
     bucket_events: BucketEventHistoryRepositoryProtocol | None = None,
     activity_assets: ActivityAssetHistoryRepository | None = None,
@@ -232,12 +225,10 @@ def load_modelo_work_form(
 
     ``borrador_snapshots`` is the profile's AEAT draft store, read only for
     when the replayed draft was imported; without it the form still says the
-    draft feeds the declaration, with no import time. ``holiday_territory`` is
-    the filer's autonomous community for the deadline's holiday shift, and
-    ``reference_on`` the day the days left are counted from, today in Madrid by
-    default. ``bucket_events`` is the profile's event history, read only for
-    the latest file exported for this declaration; without it the form states
-    no export.
+    draft feeds the declaration, with no import time. ``reference_on`` is the
+    day the days left are counted from, today in Madrid by default.
+    ``bucket_events`` is the profile's event history, read only for the latest
+    file exported for this declaration; without it the form states no export.
     """
     review = build_modelo_work_review(
         bucket_id,
@@ -278,7 +269,6 @@ def load_modelo_work_form(
             operation,
             modelo,
             period,
-            holiday_territory=holiday_territory,
             reference_on=reference_on if reference_on is not None else today_madrid(),
         ),
         aeat_data_imported_at=_aeat_data_imported_at(context.borrador_snapshot_id, borrador_snapshots),

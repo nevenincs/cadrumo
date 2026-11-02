@@ -18,11 +18,11 @@ from decimal import Decimal
 import pytest
 from textual.widgets import Footer, Input, Static
 
+from ......application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from ......application.modelo.work_form_models import (
     ModeloFormField,
     ModeloFormFieldBlock,
     ModeloFormOrigin,
-    ModeloFormResultDirection,
     ModeloFormSection,
     ModeloFormText,
     ModeloFormTextDisclosure,
@@ -60,6 +60,7 @@ def _numbered_form(boxes: tuple[str, ...]) -> ModeloWorkForm:
         official_heading=None,
         blocks=tuple(ModeloFormFieldBlock(id=f"n{field.box}", field=field) for field in fields),
         counts=page.counts,
+        applies=True,
     )
     first = page.model_copy(update={"sections": (*page.sections, section)})
     return form.model_copy(update={"pages": (first, *form.pages[1:])})
@@ -213,6 +214,7 @@ def test_a_section_named_like_an_identifier_is_named_by_its_boxes_or_else_its_pl
             official_heading=None,
             blocks=tuple(ModeloFormFieldBlock(id=f"f{field.box}", field=field) for field in fields),
             counts=synthetic_form().counts,
+            applies=True,
         )
 
     titles = {}

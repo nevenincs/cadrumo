@@ -1685,6 +1685,24 @@ model_selectors = ["RentaFamilyProfile.descendientes_count", "modelo_100"]
 legal_refs = ["ley-35-2006:art-58"]
 
 [[sections.fields]]
+key = "ascendiente"
+type = "object"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Datos de cada ascendiente que da derecho al mínimo por ascendientes, guardados como renta_family.ascendiente.{n}: NIF, apellidos y nombre, fecha de nacimiento, clave de discapacidad, número de descendientes con los que convive y fecha de fallecimiento."
+legal_refs = ["ley-35-2006:art-59"]
+
+[[sections.fields]]
+key = "ascendientes_count"
+type = "decimal"
+required = false
+sensitivity = "identity"
+effective_dated = true
+description = "Count of ascendants represented in Renta family facts."
+legal_refs = ["ley-35-2006:art-59"]
+
+[[sections.fields]]
 key = "madrid_nacimiento_adopcion_eligible_count"
 type = "decimal"
 required = false

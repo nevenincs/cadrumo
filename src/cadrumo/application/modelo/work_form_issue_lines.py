@@ -55,10 +55,10 @@ from .calculation_notes import (
 )
 from .finding_message_text import finding_message_text
 from .source_policy import SourceSurface
+from .work_form_declaration_facts import ModeloFormCalculationNote
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_models import (
     ModeloFormAddressV1,
-    ModeloFormCalculationNote,
     ModeloFormCasillaAddressV1,
     ModeloFormField,
     ModeloFormOrigin,

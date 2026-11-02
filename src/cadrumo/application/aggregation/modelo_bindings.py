@@ -57,6 +57,7 @@ from ...domain.calculations.registry.ledger_impatriado_bindings import (
 )
 from ...domain.calculations.registry.ledger_renta_income_bindings import (
     LedgerRentaIncomeProvider,
+    RentaIncomeObservationProtocol,
     UngroundedRentaIncome,
     WithholdingDerivationPartition,
     ledger_renta_withholding_derivation_partition,
@@ -104,27 +105,30 @@ from .modelo_bindings_actividad_assets import (
 from .renta_imputation import (
     ImputationCriteria,
     ImputationFilingHistory,
+    ImputationUnresolved,
     accruing_invoices,
     declared_imputation_criteria,
     imputation_blocking_diagnostics,
     ledger_sum_outcome,
 )
-from .renta_income_ledger import (
-    RentaIncomeLedgerAggregation,
-    RentaIncomeLedgerAggregationIssueReason,
+from .renta_income_diagnostics import (
     accrued_withholding_unpaid_diagnostics,
-    aggregate_renta_income_ledger_from_repositories,
-    aggregate_renta_m100_income_ledger_from_repositories,
-    aggregate_renta_m131_agrario_income_ledger_from_repositories,
     part_payment_diagnostics,
     rectification_diagnostics,
 )
-from .renta_income_ledger import (
+from .renta_income_diagnostics import (
     fitted_diagnostic_id_list as _fitted_id_list,
 )
-from .renta_income_ledger import (
+from .renta_income_diagnostics import (
     unusable_sales_invoice_diagnostics as _unusable_sales_invoice_diagnostics,
 )
+from .renta_income_ledger import (
+    RentaIncomeLedgerAggregation,
+    aggregate_renta_income_ledger_from_repositories,
+    aggregate_renta_m100_income_ledger_from_repositories,
+    aggregate_renta_m131_agrario_income_ledger_from_repositories,
+)
+from .renta_income_models import RentaIncomeLedgerAggregationIssue, RentaIncomeLedgerAggregationIssueReason
 from .source_mesh import (
     DIAGNOSTIC_MESSAGE_MAX_LENGTH,
     CalculationSourceContext,
@@ -375,13 +379,58 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # its figure out. An excluded row and a row that suffered nothing both
         # contribute nothing, so the difference has to travel beside the value.
         derivation = ledger_renta_withholding_derivation_partition(context.revision, aggregation.observations)
+        bound_inputs = _m130_retenciones_backend_inputs(context, binding_values)
+        source_transaction_ids = sorted_ids(aggregation.observations, lambda observation: observation.transaction_id)
+        diagnostics = (
+            self._ledger_screening_diagnostics(context, aggregation, criteria)
+            + self._imputation_diagnostics(context, aggregation, criteria, binding_values, unresolved_rows)
+            + _unrouted_observation_diagnostics(context, unrouted, resolver_id=self.resolver_id)
+            + tuple(
+                CalculationSourceDiagnostic(
+                    reason="unrouted_declarable_quantity",
+                    source_kind="ledger_renta_income_aggregation",
+                    resolver_id=self.resolver_id,
+                    message=(
+                        f"{len(quantity.observations)} income row(s) carry {quantity.total} EUR of "
+                        f"{quantity.fact!r}, which no ledger_renta_income_aggregation binding on revision "
+                        f"{context.revision.id!r} draws; that amount is not declared on this calculation. "
+                        f"The rows themselves ARE consumed for their income, so no other screen reports them"
+                    ),
+                )
+                for quantity in unrouted_quantities
+            )
+            + self._advisory_diagnostics(
+                context,
+                aggregation,
+                profile_decode_context,
+                disposal_excess,
+                ungrounded=ungrounded,
+                derivation=derivation,
+            )
+        )
+        value_outcomes = _resolved_income_value_outcomes(
+            context, aggregation, binding_values, invoices=self._ports.invoice_reader.load()
+        )
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            bound_inputs_by_casilla_id=_m130_retenciones_backend_inputs(context, binding_values),
-            source_transaction_ids=sorted_ids(aggregation.observations, lambda observation: observation.transaction_id),
-            diagnostics=out_of_window_summary_diagnostics(
+            bound_inputs_by_casilla_id=bound_inputs,
+            source_transaction_ids=source_transaction_ids,
+            diagnostics=diagnostics,
+            value_outcomes=value_outcomes,
+            provenance=self._income_provenance(declared_excess, aggregation),
+        )
+
+    def _ledger_screening_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        aggregation: RentaIncomeLedgerAggregation,
+        criteria: ImputationCriteria,
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Report the window, issue, unpaid-withholding, part-payment and late-payment findings."""
+        return (
+            out_of_window_summary_diagnostics(
                 aggregation.out_of_window_summary,
                 source_kind="ledger_renta_income_aggregation",
                 resolver_id=self.resolver_id,
@@ -402,59 +451,60 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 criteria=criteria,
                 resolver_id=self.resolver_id,
             )
-            + (
-                ()
-                if context.modelo == form_for_role("renta.objective_instalment")
-                else imputation_blocking_diagnostics(
-                    source_kind="ledger_renta_income_aggregation",
-                    resolver_id=self.resolver_id,
-                    revision=context.revision,
-                    binding_ids=binding_values,
-                    criteria=criteria,
-                    year=context.filing_year,
-                    activity_present=bool(
-                        aggregation.observations
-                        or unresolved_rows
-                        or accruing_invoices(
-                            self._ports.invoice_reader.load().values(),
-                            kind=InvoiceKind.ISSUED,
-                            bucket_id=context.bucket_id,
-                            start=date(context.filing_year, 1, 1),
-                            end=context.period.end_date,
-                        )
-                    ),
-                    unresolved_details=tuple(issue.detail for issue in unresolved_rows),
+        )
+
+    def _imputation_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        aggregation: RentaIncomeLedgerAggregation,
+        criteria: ImputationCriteria,
+        binding_values: Mapping[BindingId, Decimal],
+        unresolved_rows: tuple[RentaIncomeLedgerAggregationIssue, ...],
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Report what blocks the imputation election, except for the objective-estimation modelo."""
+        if context.modelo == form_for_role("renta.objective_instalment"):
+            return ()
+        return imputation_blocking_diagnostics(
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=self.resolver_id,
+            revision=context.revision,
+            binding_ids=binding_values,
+            criteria=criteria,
+            year=context.filing_year,
+            activity_present=bool(
+                aggregation.observations
+                or unresolved_rows
+                or accruing_invoices(
+                    self._ports.invoice_reader.load().values(),
+                    kind=InvoiceKind.ISSUED,
+                    bucket_id=context.bucket_id,
+                    start=date(context.filing_year, 1, 1),
+                    end=context.period.end_date,
                 )
-            )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_observation",
-                    source_kind="ledger_renta_income_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=(
-                        f"declarable renta income observation (target_casilla_id="
-                        f"{observation.target_casilla_id!r}, gross_amount={observation.gross_amount}) "
-                        f"is not consumed by any ledger_renta_income_aggregation binding on revision "
-                        f"{context.revision.id!r}; its income is not declared on this calculation"
-                    ),
-                )
-                for observation in unrouted
-            )
-            + tuple(
-                CalculationSourceDiagnostic(
-                    reason="unrouted_declarable_quantity",
-                    source_kind="ledger_renta_income_aggregation",
-                    resolver_id=self.resolver_id,
-                    message=(
-                        f"{len(quantity.observations)} income row(s) carry {quantity.total} EUR of "
-                        f"{quantity.fact!r}, which no ledger_renta_income_aggregation binding on revision "
-                        f"{context.revision.id!r} draws; that amount is not declared on this calculation. "
-                        f"The rows themselves ARE consumed for their income, so no other screen reports them"
-                    ),
-                )
-                for quantity in unrouted_quantities
-            )
-            + _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
+            ),
+            unresolved_details=(
+                *(issue.detail for issue in unresolved_rows),
+                *(
+                    f"{ImputationUnresolved.EUR_VALUE_UNKNOWN.value}: issued invoice {number} accrues with no "
+                    "EUR value; stamp its rate"
+                    for number in aggregation.accrued_without_eur_value
+                ),
+            ),
+        )
+
+    def _advisory_diagnostics(
+        self,
+        context: CalculationSourceContext,
+        aggregation: RentaIncomeLedgerAggregation,
+        profile_decode_context: ProfileDecodeContext,
+        disposal_excess: tuple[ActivityAssetDisposalExcess, ...],
+        *,
+        ungrounded: UngroundedRentaIncome,
+        derivation: WithholdingDerivationPartition,
+    ) -> tuple[CalculationSourceDiagnostic, ...]:
+        """Report the grounding, derivation, invoice, rate, silence and disposal advisories."""
+        return (
+            _ungrounded_income_diagnostics(ungrounded, resolver_id=self.resolver_id)
             + _withholding_derivation_diagnostics(derivation, resolver_id=self.resolver_id)
             + _unusable_sales_invoice_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
             + inferred_actividad_retencion_rate_advisory_observations(
@@ -479,11 +529,17 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 activity_asset_disposal_excess_m131_findings(disposal_excess, resolver_id=self.resolver_id)
                 if context.modelo == form_for_role("renta.objective_instalment")
                 else ()
-            ),
-            value_outcomes=_resolved_income_value_outcomes(
-                context, aggregation, binding_values, invoices=self._ports.invoice_reader.load()
-            ),
-            provenance=_disposal_excess_provenance(declared_excess, resolver_id=self.resolver_id)
+            )
+        )
+
+    def _income_provenance(
+        self,
+        declared_excess: tuple[ActivityAssetDisposalExcess, ...],
+        aggregation: RentaIncomeLedgerAggregation,
+    ) -> tuple[CalculationSourceProvenance, ...]:
+        """Trace the disposal excess, the unpaid accrued invoices and each income row to their source."""
+        return (
+            _disposal_excess_provenance(declared_excess, resolver_id=self.resolver_id)
             + tuple(
                 CalculationSourceProvenance(
                     resolver_id=self.resolver_id,
@@ -509,8 +565,31 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     parent_source_ref=None,
                     terminal_origin=TerminalOriginClass.LEDGER_AGGREGATE,
                 ),
+            )
+        )
+
+
+def _unrouted_observation_diagnostics(
+    context: CalculationSourceContext,
+    unrouted: Sequence[RentaIncomeObservationProtocol],
+    *,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name each income observation that no income binding consumes."""
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="unrouted_observation",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"declarable renta income observation (target_casilla_id="
+                f"{observation.target_casilla_id!r}, gross_amount={observation.gross_amount}) "
+                f"is not consumed by any ledger_renta_income_aggregation binding on revision "
+                f"{context.revision.id!r}; its income is not declared on this calculation"
             ),
         )
+        for observation in unrouted
+    )
 
 
 def _declared_disposal_excess(

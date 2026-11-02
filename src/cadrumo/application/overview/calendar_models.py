@@ -310,9 +310,6 @@ class OverviewCalendarEntry(BaseModel):
     holiday_refs: tuple[str, ...] = Field(default_factory=tuple)
     jurisdictions: tuple[_HolidayJurisdiction, ...] = Field(default_factory=tuple)
     holiday_coverage: _DeadlineHolidayCoverage
-    # Text of the already-projected calendar territory: the CLI and TUI restore
-    # this row from its snapshot without a pinned authority to re-project it.
-    holiday_territory: str | None = None
     payment_cutoff_on: date | None = None
     evaluated_on: date
     days_overdue: NonNegativeInt | None = None
@@ -347,8 +344,6 @@ class OverviewCalendarEntry(BaseModel):
 
     @model_validator(mode="after")
     def _enforce_holiday_coverage_consistency(self) -> OverviewCalendarEntry:
-        if self.holiday_coverage.names_territory != (self.holiday_territory is not None):
-            raise ValueError("OverviewCalendarEntry.holiday_territory is present exactly when the territory is known")
         unevaluated = self.holiday_coverage in (
             _DeadlineHolidayCoverage.NOT_SHIFTED,
             _DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,

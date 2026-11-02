@@ -180,3 +180,28 @@ def test_a_modelo_131_complementaria_export_marks_only_its_second_dpa_page(tmp_p
     assert len(starts) == 2
     indicators = [payload[start + _POSITION - 1 : start + _POSITION].decode("ascii") for start in starts]
     assert indicators == [_PRINCIPAL, _CONTINUATION]
+
+
+@pytest.mark.parametrize(
+    ("revision_id", "period", "record_id"),
+    [
+        ("esquema-exterior", "EXT-1T", "modelo-369-exterior-t36901"),
+        ("esquema-union", "1T", "modelo-369-union-t36904"),
+        ("esquema-importacion", "01", "modelo-369-importacion-t36910"),
+    ],
+)
+@pytest.mark.parametrize(("occurrence", "expected"), [(1, _PRINCIPAL), (2, _CONTINUATION)], ids=("first", "next"))
+def test_dr369_page_indicator_follows_the_page_even_for_amendment_evidence(
+    revision_id: str, period: str, record_id: str, occurrence: int, expected: str
+) -> None:
+    """Position 55 of the first page of each regime, mandatory, printed ``[blanco | constante "C"]``."""
+    snapshot = published_snapshot("369", filing_year=2026, period=period, revision_id=revision_id)
+    [layout] = snapshot.revision.export_layouts
+    [record] = [candidate for candidate in layout.records if str(candidate.id) == record_id]
+    [field] = [candidate for candidate in record.fields if candidate.computed_key == "continuation_page_marker"]
+    assert (field.offset, field.length, field.required, field.presence_marker) == (55, 1, True, _CONTINUATION)
+    context = FilingRecordRenderContext(registry_snapshot=snapshot, layout=layout, record=record, occurrence=occurrence)
+
+    marker = continuation_page_marker(_approved_131_draft(("722",)), typed_producer_snapshot(complementaria=True), context)
+
+    assert format_field(field, marker if marker is not None else " ") == expected
