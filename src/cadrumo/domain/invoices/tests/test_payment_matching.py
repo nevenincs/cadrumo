@@ -33,7 +33,12 @@ from ..payment_matching import (
     movement_choices,
     suggest_payments,
 )
-from ..service import INVOICE_MATCH_TOLERANCE, invoice_settlement, suggest_reconciliations
+from ..service import (
+    INVOICE_MATCH_TOLERANCE,
+    counterparties_overlap,
+    invoice_settlement,
+    suggest_reconciliations,
+)
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -414,15 +419,54 @@ def test_the_suggestions_agree_with_the_link_suggestion_on_amount_and_counterpar
                 assert weighed == ()
 
 
-def test_unlike_the_link_suggestion_a_movement_in_another_currency_is_never_a_candidate() -> None:
+def test_like_the_link_suggestion_a_movement_in_another_currency_is_never_a_candidate() -> None:
     invoice = _invoice("U-1")
     dollars = _movement("usd", amount="36.30", currency="USD")
+    euros = _movement("eur", amount="36.30", currency="EUR")
     read = suggest_reconciliations(
         InvoiceCatalogue.model_validate({"invoices": {invoice.invoice_id: invoice}}),
-        TransactionCatalogue.from_transactions([dollars]),
+        TransactionCatalogue.from_transactions([dollars, euros]),
     )
-    assert len(read) == 1
+    assert [item.transaction_id for item in read] == [euros.transaction_id]
     assert suggest_payments([dollars], [invoice]) == ()
+
+
+@pytest.mark.parametrize("bare", ("S.L.", "s.l.", "SL", "S. L.", "S.L.U.", "SA", "S.A.", "Sociedad Anónima", " sl "))
+def test_a_name_that_is_only_a_legal_form_overlaps_no_party(bare: str) -> None:
+    assert not counterparties_overlap("Acme S.L.", bare)
+    assert not counterparties_overlap("Casa Pepe", bare)
+    assert not counterparties_overlap(bare, "Acme S.L.")
+
+
+@pytest.mark.parametrize(
+    ("invoice_name", "movement_name", "overlaps"),
+    (
+        ("Acme S.L.", "ACME", True),
+        ("Acme", "acme s.l. madrid", True),
+        ("Acme S.L.", "Beta S.L.", False),
+        ("Acme S.L.", None, False),
+        ("Acme S.L.", "   ", False),
+        ("   ", "Acme", False),
+    ),
+)
+def test_a_name_that_tells_a_party_apart_still_overlaps_either_way(
+    invoice_name: str, movement_name: str | None, overlaps: bool
+) -> None:
+    assert counterparties_overlap(invoice_name, movement_name) is overlaps
+
+
+def test_a_bare_legal_form_gives_the_link_suggestion_no_counterparty_boost() -> None:
+    invoice = _invoice("U-2", party="Acme S.L.")
+    bare = _movement("bare", amount="36.30", counterparty="S.L.")
+    named = _movement("named", amount="36.30", counterparty="acme")
+    read = suggest_reconciliations(
+        InvoiceCatalogue.model_validate({"invoices": {invoice.invoice_id: invoice}}),
+        TransactionCatalogue.from_transactions([bare, named]),
+    )
+    by_row = {item.transaction_id: item for item in read}
+    assert by_row[bare.transaction_id].counterparty_match is False
+    assert by_row[named.transaction_id].counterparty_match is True
+    assert by_row[named.transaction_id].score > by_row[bare.transaction_id].score
 
 
 # -- the recording the window's stand-in is held to -------------------------------------------------
