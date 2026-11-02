@@ -469,6 +469,43 @@ def test_the_stamp_reads_only_the_screen_declarations(operation: PinnedAuthority
     assert _stamp(snapshot.model_copy(update={"revision": recapped}), operation) != current
 
 
+def test_an_instalment_period_without_a_date_span_is_read_at_the_close_of_its_ejercicio(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Modelo 202 2P spans no calendar dates and caps no binding, so its screen and export gate need no span."""
+    snapshot = operation.snapshot("202", filing_year=_YEAR, period="2P")
+    period = Period.from_year_and_code(_YEAR, "2P")
+    assert not period.has_date_span()
+    assert snapshot_reach_date(snapshot) == date(_YEAR, 12, 31)
+    assert not capped_binding_reach(
+        snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+    )
+    revision_id = str(snapshot.revision.id)
+    unit = _work_unit(_snapshot(operation)).model_copy(
+        update={
+            "modelo": ModeloCode("202"),
+            "period": period,
+            "revision_id": revision_id,
+            "work_unit_id": derive_work_unit_id(
+                bucket_id=BUCKET, modelo="202", filing_year=_YEAR, period=period, revision_id=revision_id
+            ),
+        }
+    )
+    revision = _revision(unit, (), stamp=None, state=CalculationRevisionState.PRESENTADO, casilla_values={})
+    assert _refused_reasons(operation, revision, unit) is None
+    stamped = _revision(
+        unit,
+        (),
+        stamp=calculation_screen_stamp(snapshot, operation=operation),
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+    )
+    assert _refused_reasons(operation, stamped, unit) is None
+
+
+def test_a_capped_modelo_keeps_the_reach_date_at_the_close_of_its_period(operation: PinnedAuthorityOperation) -> None:
+    assert snapshot_reach_date(_snapshot(operation)) == date(_YEAR, 3, 31)
+
+
 def test_the_income_box_fed_by_the_same_provider_kind_stays_filing_grade(operation: PinnedAuthorityOperation) -> None:
     """The cap is on one binding, so Modelo 130 casilla 01 and Modelo 100 casilla 0171 keep their grade."""
     for modelo, year, period, casilla in (("130", _YEAR, _QUARTER, "01"), ("100", 2025, "0A", "0171")):

@@ -40,6 +40,7 @@ from ...domain.iva.schema import IvaCategory
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
+from ..operations.error_detail import operation_refusal_words
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -112,21 +113,21 @@ class InvoiceAddExecutor:
                 profile=profile,
                 authority_operation=authority_operation,
             )
-        except (InvoiceValidationError, ValidationError):
+        except (InvoiceValidationError, ValidationError) as error:
             async with context.cancellation.irreversible_section():
-                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
-        except RegistryValidationError:
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice", refused_by=error)
+        except RegistryValidationError as error:
             if not invoice_date_outside_registry_support(
                 payload.operation_date or payload.issued_at,
                 authority_operation,
             ):
                 raise
             async with context.cancellation.irreversible_section():
-                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
-        except (CoreValidationError, DecimalException):
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice", refused_by=error)
+        except (CoreValidationError, DecimalException) as error:
             # After the registry clause: RegistryValidationError is a CoreValidationError too.
             async with context.cancellation.irreversible_section():
-                return await _record_invoice_add_refusal(context, payload, "invalid_invoice")
+                return await _record_invoice_add_refusal(context, payload, "invalid_invoice", refused_by=error)
         return await await_cancellation_complete(
             _commit_invoice_add(
                 context=context,
@@ -148,9 +149,12 @@ async def _record_invoice_add_refusal(
     code: Literal["invalid_invoice", "duplicate_invoice"],
     *,
     invoice_id: str | None = None,
+    refused_by: BaseException,
 ) -> OperationRefusalEvidence:
     detail = InvoiceAddExecutionResult(
-        result=InvoiceAddResult.validation_refusal(payload.profile_id, code=code, invoice_id=invoice_id)
+        result=InvoiceAddResult.validation_refusal(
+            payload.profile_id, code=code, invoice_id=invoice_id, words=operation_refusal_words(refused_by)
+        )
     )
     detail_ref = await context.operands.put(detail, written_at=now())
     return OperationRefusalEvidence(refusal_code=INVOICE_ADD_VALIDATION_REFUSAL_CODE, detail_ref=detail_ref)
@@ -199,6 +203,7 @@ async def _commit_invoice_add(
                 payload,
                 "duplicate_invoice",
                 invoice_id=invoice.invoice_id,
+                refused_by=error,
             )
         if (
             created.invoice.invoice_id != invoice.invoice_id

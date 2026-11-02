@@ -14,7 +14,14 @@ envelope's scrubbed context and any typed precondition verdict. When it stops
 with a :class:`~pydantic.ValidationError` -- a record the application itself
 built failed its contract -- the detail holds the record fault projection,
 which names the record, the field path and the broken rule and never a value.
-Anything else leaves no detail. The detail is stored as an encrypted operand,
+Anything else leaves no detail.
+
+Either detail also carries the finished sentence a frontend shows for it, in
+the language the worker's catalogue renders. A frontend that holds no tax
+vocabulary of its own shows that sentence as served. It is worded only from
+the catalogue key and the scrubbed, bounded context the detail itself
+carries, never from an exception's free text or raw context, so it discloses
+nothing the detail does not. The detail is stored as an encrypted operand,
 referenced from the terminal receipt, and released only through the settled
 result read with the definition's own RESULT authority.
 """
@@ -30,6 +37,7 @@ from typing import TYPE_CHECKING, Annotated, Final, Literal, Self
 from pydantic import BaseModel, Field, NonNegativeInt, StringConstraints, ValidationError, model_validator
 
 from ...core.errors.error_codes import (
+    ErrorCode,
     get_registered_error_code,
     get_registered_error_code_by_code,
     public_error_context,
@@ -37,6 +45,14 @@ from ...core.errors.error_codes import (
 )
 from ...core.errors.hierarchy import CadrumoError, RecordedRegisteredError
 from ...core.errors.record_fault import internal_record_fault_context
+from ...core.external_constants import OutputLanguage
+from ...core.i18n.render import (
+    extract_placeholders,
+    lookup_translation,
+    normalise_supported_language,
+    output_language,
+    tr,
+)
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import TERMINAL_CONDITIONS_WITH_ERROR_DETAIL, OperationLifecycle
@@ -70,6 +86,15 @@ MAX_OPERATION_ERROR_CONTEXT_VALUE_LENGTH: Final[int] = 4_096
 
 #: Longest canonical JSON of one precondition verdict the detail carries.
 MAX_OPERATION_ERROR_VERDICT_LENGTH: Final[int] = 32_768
+
+#: Longest served sentence; a longer one gives way to its code's own sentence.
+MAX_OPERATION_ERROR_WORDS_LENGTH: Final[int] = 2_048
+
+#: The sentence served when neither the error's key nor its code's key can be worded from the detail.
+UNWORDED_REGISTERED_ERROR_LOCALE_KEY: Final[str] = "application.operations.error_detail.unworded"
+
+#: The sentence served for a record the application built that failed its own contract.
+RECORD_FAULT_WORDS_LOCALE_KEY: Final[str] = "application.operations.error_detail.record_fault"
 
 _ERROR_CODE_PATTERN: Final[str] = r"^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$"
 _MESSAGE_KEY_PATTERN: Final[str] = r"^[a-z][a-z0-9_]*(?:\.[a-z0-9_]+)+$"
@@ -130,12 +155,22 @@ class OperationErrorDetailV1(BaseModel):
         ]
         | None
     ) = None
+    #: The finished sentence a frontend shows for this stop, worded from the
+    #: catalogue key and this detail's own scrubbed context. ``None`` only on
+    #: a detail recorded before sentences were served.
+    refusal_words: (
+        Annotated[str, StringConstraints(min_length=1, max_length=MAX_OPERATION_ERROR_WORDS_LENGTH)] | None
+    ) = None
+    #: The language ``refusal_words`` is in: the one the worker's catalogue rendered.
+    refusal_words_language: OutputLanguage | None = None
 
     @model_validator(mode="after")
     def _closed_shape(self) -> Self:
         keys = tuple(entry.key for entry in self.context)
         if keys != tuple(sorted(set(keys))):
             raise ValueError("operation error detail context keys must be unique and ordered")
+        if (self.refusal_words is None) != (self.refusal_words_language is None):
+            raise ValueError("served words name the language they are in")
         if self.kind is OperationErrorDetailKind.REGISTERED_ERROR:
             if self.error_code is None:
                 raise ValueError("a registered error detail requires its registered code")
@@ -205,13 +240,63 @@ def _is_message_key(candidate: str) -> bool:
     )
 
 
+def _words_language() -> OutputLanguage:
+    """The language the worker's catalogue renders in, the one ``tr`` uses here."""
+    return OutputLanguage(normalise_supported_language(output_language()) or OutputLanguage.EN.value)
+
+
+def _worded(key: str, language: OutputLanguage, context: dict[str, str]) -> str | None:
+    """``key``'s sentence filled from ``context`` alone, or ``None`` when it cannot be finished.
+
+    A sentence whose placeholder has no carried value, whose catalogue entry is
+    missing, or that comes out over the bound is not served: a frontend would
+    show a half-filled template or a bare key.
+    """
+    template = lookup_translation(key, locale=language.value)
+    if template is None:
+        return None
+    names = extract_placeholders(template)
+    if not names <= context.keys():
+        return None
+    try:
+        words = tr(key, locale=language.value, **{name: context[name] for name in names}).strip()
+    except Exception:
+        return None
+    if not words or extract_placeholders(words) or len(words) > MAX_OPERATION_ERROR_WORDS_LENGTH:
+        return None
+    return words
+
+
+def _registered_error_words(
+    registered: ErrorCode,
+    error_key: str | None,
+    entries: tuple[OperationErrorContextEntryV1, ...],
+) -> tuple[str, OutputLanguage]:
+    """The sentence served for a registered error, chosen as the error envelope chooses its message.
+
+    The error's own catalogue key comes first unless its code's registry entry
+    owns the public message; then the code's own catalogue sentence; last a
+    sentence that names the code. Only the detail's scrubbed context fills them.
+    """
+    language = _words_language()
+    context = {entry.key: entry.value for entry in entries}
+    registry_owned = registered.public_message_from_registry or ".canonical_" in registered.message_key
+    keys = (registered.message_key,) if registry_owned or error_key is None else (error_key, registered.message_key)
+    for key in keys:
+        words = _worded(key, language, context)
+        if words is not None:
+            return words, language
+    return tr(UNWORDED_REGISTERED_ERROR_LOCALE_KEY, locale=language.value, error_code=registered.code), language
+
+
 def build_operation_error_detail(error: BaseException) -> OperationErrorDetailV1 | None:
     """Project the public facts of ``error``, or ``None`` when it has none to give.
 
     Free-text exception messages, arguments and raw values never enter the
     detail: a registered error contributes its code, its catalogue key and the
     envelope's scrubbed context; a validation fault contributes the record
-    fault projection, which names fields and rules but never a value.
+    fault projection, which names fields and rules but never a value. The
+    served sentence is worded from those same facts.
     """
     if isinstance(error, CadrumoError):
         try:
@@ -221,28 +306,89 @@ def build_operation_error_detail(error: BaseException) -> OperationErrorDetailV1
         view = cli_exception_envelope_view(error)
         entries, omitted = _bounded_context(public_error_context(view))
         key = view.translated_message
+        message_key = key if isinstance(key, str) and _is_message_key(key) else None
         verdict = nested_terminal_precondition_verdict(error)
         verdict_json = None if verdict is None else verdict.model_dump_json()
         if verdict_json is not None and len(verdict_json) > MAX_OPERATION_ERROR_VERDICT_LENGTH:
             verdict_json = None
+        words, language = _registered_error_words(registered, message_key, entries)
         return OperationErrorDetailV1(
             kind=OperationErrorDetailKind.REGISTERED_ERROR,
             error_code=registered.code,
-            message_key=key if isinstance(key, str) and _is_message_key(key) else None,
+            message_key=message_key,
             context=entries,
             context_entries_omitted=omitted,
             precondition_verdict_json=verdict_json,
+            refusal_words=words,
+            refusal_words_language=language,
         )
     if isinstance(error, ValidationError):
         entries, omitted = _bounded_context(scrub_error_context(internal_record_fault_context(error)))
+        words, language = _record_fault_words(error)
         return OperationErrorDetailV1(
             kind=OperationErrorDetailKind.RECORD_VALIDATION,
             error_code=None,
             message_key=None,
             context=entries,
             context_entries_omitted=omitted,
+            refusal_words=words,
+            refusal_words_language=language,
         )
     return None
+
+
+def operation_refusal_words(error: BaseException) -> tuple[str, OutputLanguage] | None:
+    """The sentence a typed refusal detail serves for ``error``, worded as the error detail words it.
+
+    A definition that records its own refusal detail instead of the error
+    detail carries this sentence in it, so every refusal a frontend reads is
+    worded by the same rules. ``None`` for an error with no public facts.
+    """
+    if isinstance(error, CadrumoError):
+        try:
+            registered = get_registered_error_code(error)
+        except Exception:
+            return None
+        view = cli_exception_envelope_view(error)
+        entries, _omitted = _bounded_context(public_error_context(view))
+        key = view.translated_message
+        return _registered_error_words(
+            registered, key if isinstance(key, str) and _is_message_key(key) else None, entries
+        )
+    if isinstance(error, ValidationError):
+        return _record_fault_words(error)
+    return None
+
+
+def _registered_cause(error: ValidationError) -> CadrumoError | None:
+    """The registered error a validator raised for the first failed rule, where one crossed the boundary.
+
+    A validator callback raises a registered error, and the Pydantic boundary
+    carries it as the ``__cause__`` of the ``ValueError`` the record's
+    validation reports. A rule with no registered cause has none.
+    """
+    for failure in error.errors():
+        raised = failure.get("ctx", {}).get("error")
+        cause = getattr(raised, "__cause__", None)
+        if isinstance(cause, CadrumoError):
+            return cause
+    return None
+
+
+def _record_fault_words(error: ValidationError) -> tuple[str, OutputLanguage]:
+    """The sentence served for a record that failed its contract.
+
+    When the first failed rule was a registered refusal raised inside the
+    record's own validator, that refusal's sentence is served, worded from its
+    scrubbed and bounded public context as a registered error's detail would
+    be. Otherwise the record fault's own sentence.
+    """
+    cause = _registered_cause(error)
+    words = None if cause is None else operation_refusal_words(cause)
+    if words is not None:
+        return words
+    language = _words_language()
+    return tr(RECORD_FAULT_WORDS_LOCALE_KEY, locale=language.value), language
 
 
 def _refusal(code: OperationResultProjectionRefusalCode) -> OperationResultProjectionRefusalV1:
@@ -344,11 +490,15 @@ __all__ = [
     "MAX_OPERATION_ERROR_CONTEXT_ENTRIES",
     "MAX_OPERATION_ERROR_CONTEXT_VALUE_LENGTH",
     "MAX_OPERATION_ERROR_VERDICT_LENGTH",
+    "MAX_OPERATION_ERROR_WORDS_LENGTH",
     "OPERATION_ERROR_DETAIL_SCHEMA_ID",
+    "RECORD_FAULT_WORDS_LOCALE_KEY",
+    "UNWORDED_REGISTERED_ERROR_LOCALE_KEY",
     "OperationErrorContextEntryV1",
     "OperationErrorDetailKind",
     "OperationErrorDetailV1",
     "build_operation_error_detail",
     "operation_error_detail_schema",
+    "operation_refusal_words",
     "resolve_operation_error_detail",
 ]

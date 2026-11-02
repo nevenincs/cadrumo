@@ -412,9 +412,11 @@ async fn outcome(relayed: &Relayed<'_>, p: &Value, tracked: &Tracked) -> Result<
         }
         Phase::Unknown => return Err(failure("unknown")),
         Phase::Stopped(reason) => {
-            // The relay reads a refusal's detail only where its definition
-            // declares one, and refuses the read otherwise.
-            let detail = if p["terminal_condition"] == "refused" {
+            // A refused or failed stop carries the detail its definition
+            // declares, or the registered error detail with the sentence the
+            // backend words for it; the relay refuses the read when there is
+            // none. The window shows that sentence as served.
+            let detail = if p["terminal_condition"] == "refused" || p["terminal_condition"] == "failed" {
                 relay::result(relayed)
                     .await
                     .ok()
@@ -1245,6 +1247,46 @@ mod tests {
             };
             assert_eq!(reason.as_deref(), Some("REFUSED_CLI_VALIDATION_BOUNDARY"));
             assert_eq!(detail.unwrap()["source_path"], "justificante.pdf");
+        }
+
+        #[tokio::test]
+        async fn a_failed_stop_relays_the_served_words_of_its_error_detail_unchanged() {
+            let words = "Direct debit for this filing closed on 2026-04-15 (Orden HAC/3625/2003, art. 3).";
+            let detail = json!({"detail_version":1,"kind":"registered_error",
+                "error_code":"REFUSED_MODELO_DOMICILIATION_PAST_CUTOFF","context":[],
+                "refusal_words":words,"refusal_words_language":"en"});
+            let held = holder(|_| {
+                vec![
+                    step(
+                        "operation_observe",
+                        json!([]),
+                        observed(
+                            READ.id,
+                            &subject(),
+                            "terminal",
+                            json!({"terminal_condition":"failed",
+                                "failure_error_code":"REFUSED_MODELO_DOMICILIATION_PAST_CUTOFF"}),
+                        ),
+                        false,
+                    ),
+                    step(
+                        "operation_result",
+                        json!([]),
+                        resulted(READ.id, detail.clone()),
+                        false,
+                    ),
+                ]
+            });
+            let mut events = held.events.subscribe();
+            let outcome = settle(&mut events, &tracked(READ, &held.identity), &held.person)
+                .await
+                .unwrap();
+            let Outcome::Refused { detail, .. } = outcome else {
+                panic!("the failure settled without effect");
+            };
+            let detail = detail.unwrap();
+            assert_eq!(detail["refusal_words"], words);
+            assert_eq!(detail["refusal_words_language"], "en");
         }
 
         #[tokio::test]

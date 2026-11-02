@@ -436,6 +436,8 @@ errors:
       la operación solicitada.
     canonical_retencion_observation_persistence: No se pudieron guardar las observaciones
       de retenciones.
+    canonical_retencion_soportada_persistence: No se pudieron guardar los registros
+      de retenciones soportadas.
     canonical_state_projection_read: No se pudo leer la proyección del estado de la
       aplicación.
     canonical_taxation_comparison_persistence: No se pudieron cargar las unidades
@@ -1457,6 +1459,10 @@ errors:
       para generar una revisión nueva.
     refused_workflow_resume: La ejecución del flujo de trabajo anterior no se puede
       reanudar.
+    retencion_soportada_revision_conflict: El registro de retenciones soportadas cambió
+      después de leerlo.
+    retencion_soportada_write: Se rechazó el registro de retenciones soportadas antes
+      de guardarlo.
     submission_preflight_auth_describe_failed: El proveedor de autenticación no pudo
       describirse ({cause_type}).
     submission_preflight_auth_not_ready: El proveedor de autenticación {kind} no está

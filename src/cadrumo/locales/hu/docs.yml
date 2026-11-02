@@ -36,6 +36,7 @@ docs:
       prorrata_regularizacion: az arányosítás korrekciójából
       purchase_invoice_evidence: a beérkezett számlák bizonylataiból
       relation_prefill: egy kapcsolódó nyomtatvány eredményéből
+      retencion_soportada: a kifizetőid igazolásain szereplő levonásokból
       retenciones_aggregation: a nyilvántartott retenciones tételekből
       withholding: a levont forrásadókból
       withholding296: a Modelo 296 kedvezményezettenkénti levonásaiból
