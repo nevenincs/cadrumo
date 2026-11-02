@@ -64,46 +64,25 @@ from ..oss_ioss import (
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
-@pytest.mark.parametrize("row", [28, 29])
-def test_exterior_detail_refuses_rows_beyond_declared_capacity(row):
+def test_a_revision_missing_one_field_of_a_row_is_not_a_table_of_rows():
     revision = published_revision("369", "esquema-exterior")
-    prefix = "3-prestaciones-de-servicios-"
-    fields = {f"{prefix}codigo-de-pais-em-de-consumo-{row}": "DE", f"{prefix}tipo-iva-{row}": "S"}
-    decimals = {
-        f"{prefix}tipo-de-iva-{row}": Decimal("19"),
-        f"{prefix}base-imponible-{row}": Decimal("1000"),
-        f"{prefix}cuota-iva-{row}": Decimal("190"),
-    }
-    amounts, texts = {}, {}
-    if row == 29:
-        with pytest.raises(AggregationValidationError):
-            oss_ioss_module._assign_exterior_detail_bindings(revision, fields, decimals, amounts, texts)
-        assert amounts == texts == {}
-    else:
-        oss_ioss_module._assign_exterior_detail_bindings(revision, fields, decimals, amounts, texts)
-        assert sorted(amounts.values()) == [Decimal("19"), Decimal("190"), Decimal("1000")]
-        assert set(texts.values()) == {"DE", "S"}
-
-
-def test_exterior_detail_refuses_partial_row_without_mutating_outputs():
-    revision = published_revision("369", "esquema-exterior")
-    country = "3-prestaciones-de-servicios-codigo-de-pais-em-de-consumo-1"
-    missing = "3-prestaciones-de-servicios-cuota-iva-1"
+    # DR369 T36901: the cuota of the fifth line, 25 positions into a 42-position line from 221.
+    missing_position = 221 + 4 * 42 + 25
     revision = revision.model_copy(
         update={
             "bindings": tuple(
                 binding
                 for binding in revision.bindings
-                if not (isinstance(binding.provider, ManualInputProvider) and binding.provider.field == missing)
+                if not (
+                    isinstance(binding.provider, ManualInputProvider)
+                    and binding.provider.record == "modelo-369-exterior-t36901"
+                    and binding.provider.offset == missing_position
+                )
             )
         }
     )
-    amounts, texts = {}, {}
     with pytest.raises(AggregationValidationError):
-        oss_ioss_module._assign_exterior_detail_bindings(
-            revision, {country: "DE"}, {missing: Decimal("190")}, amounts, texts
-        )
-    assert amounts == texts == {}
+        oss_ioss_module._record_row_slots(revision, "modelo-369-exterior-t36901")
 
 
 # ---------------------------------------------------------------------------

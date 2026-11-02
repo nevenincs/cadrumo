@@ -159,18 +159,19 @@ aggregation:
         számított összesítésekhez.
   oss_ioss:
     errors:
-      exterior_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
-        Modelo 369 országkódja, ezért szolgáltatásai nem vallhatók be ezen a nyomtatványon.
-      exterior_detail_not_representable: A nem uniós séma nem tud minden sort vagy
-        mezőt megjeleníteni. A folytatás előtt ellenőrizd a részleteket.
-      exterior_rate_change_devengo_undeclared: Egy OSS/IOSS számlán nincs teljesítési
-        dátum, és a fogyasztás szerinti tagállam adómértéke ebben a negyedévben megváltozott,
-        ezért a kiállítás dátumából nem állapítható meg, melyik adómérték alkalmazandó.
-        Rögzítsd a teljesítési dátumot a számlán.
-      exterior_rate_kind_unsupported: Az egyablakos rendszer külső sémája csak a fogyasztás
-        szerinti tagállam általános vagy kedvezményes adómértékével nyújtott szolgáltatásokat
-        fogadja el. A megadott megfigyelés más adómérték-típust jelöl, amely ebben
-        a sémában nem összesíthető.
+      detail_consumption_state_excluded: Az uniós séma szolgáltatásai nem vallhatók
+        be az azonosítás szerinti tagállamra, mert a séma csak olyan tagállamban nyújtott
+        szolgáltatásokra vonatkozik, ahol nem vagy letelepedve.
+      detail_country_code_undeclared: A fogyasztás szerinti tagállamnak nincs bejelentett
+        Modelo 369 országkódja, ezért az ügyletei nem vallhatók be ezen a nyomtatványon.
+      detail_not_representable: A Modelo 369 felépítése nem tud minden sort vagy mezőt
+        megjeleníteni. A folytatás előtt ellenőrizd a részleteket.
+      detail_rate_kind_unsupported: A Modelo 369 sora csak a fogyasztás szerinti tagállam
+        általános vagy kedvezményes adómértékét fogadja el. A megadott megfigyelés
+        más adómérték-típust jelöl, amely nem írható sorba.
+      detail_rows_exceed_page: Ehhez az időszakhoz több sor kell, mint amennyi egy
+        Modelo 369 oldalra fér, a kiegészítő oldalakat pedig itt még nem lehet elkészíteni.
+        Semmi sem került exportálásra, így egyetlen sor sem marad ki.
       invoice_line_currency_unconverted: Egy OSS/IOSS számlasor külföldi pénznemben
         van megadva, és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen
         a nyomtatványon.
@@ -179,6 +180,10 @@ aggregation:
         nem szerepeltethető ezen a nyomtatványon.
       iva_amount_mismatches_destination_rate: A tárolt áfaösszeg az egy centes tűréshatáron
         túl eltér a rendeltetési tagállam adókulcsától.
+      rate_change_devengo_undeclared: Egy OSS/IOSS számlán nincs teljesítési dátum,
+        és a fogyasztás szerinti tagállam adómértéke ebben az időszakban megváltozott,
+        ezért a kiállítás dátumából nem állapítható meg, melyik adómérték alkalmazandó.
+        Rögzítsd a teljesítési dátumot a számlán.
   per_modelo:
     errors:
       unsupported_modelo: Nem támogatott nyomtatvány a nyomtatványonkénti aggregáláshoz.

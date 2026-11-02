@@ -2,9 +2,34 @@
 id = "modelo-369-union-cuota-total"
 target_casilla_id = "iva.union.cuota-total"
 expression = { op = "add", args = [
-    { casilla_id = "iva.union.de.services-cuota" },
-    { casilla_id = "iva.union.fr.services-cuota" },
-    { casilla_id = "iva.union.de.goods-distance-cuota" },
+    { casilla_id = "iva.union.resultado.at.total-periodo" },
+    { casilla_id = "iva.union.resultado.be.total-periodo" },
+    { casilla_id = "iva.union.resultado.bg.total-periodo" },
+    { casilla_id = "iva.union.resultado.cy.total-periodo" },
+    { casilla_id = "iva.union.resultado.cz.total-periodo" },
+    { casilla_id = "iva.union.resultado.de.total-periodo" },
+    { casilla_id = "iva.union.resultado.dk.total-periodo" },
+    { casilla_id = "iva.union.resultado.ee.total-periodo" },
+    { casilla_id = "iva.union.resultado.es.total-periodo" },
+    { casilla_id = "iva.union.resultado.fi.total-periodo" },
+    { casilla_id = "iva.union.resultado.fr.total-periodo" },
+    { casilla_id = "iva.union.resultado.gr.total-periodo" },
+    { casilla_id = "iva.union.resultado.hr.total-periodo" },
+    { casilla_id = "iva.union.resultado.hu.total-periodo" },
+    { casilla_id = "iva.union.resultado.ie.total-periodo" },
+    { casilla_id = "iva.union.resultado.it.total-periodo" },
+    { casilla_id = "iva.union.resultado.lt.total-periodo" },
+    { casilla_id = "iva.union.resultado.lu.total-periodo" },
+    { casilla_id = "iva.union.resultado.lv.total-periodo" },
+    { casilla_id = "iva.union.resultado.mt.total-periodo" },
+    { casilla_id = "iva.union.resultado.nl.total-periodo" },
+    { casilla_id = "iva.union.resultado.pl.total-periodo" },
+    { casilla_id = "iva.union.resultado.pt.total-periodo" },
+    { casilla_id = "iva.union.resultado.ro.total-periodo" },
+    { casilla_id = "iva.union.resultado.se.total-periodo" },
+    { casilla_id = "iva.union.resultado.si.total-periodo" },
+    { casilla_id = "iva.union.resultado.sk.total-periodo" },
+    { casilla_id = "iva.union.resultado.xi.total-periodo" },
 ] }
 rounding = "money-2"
 legal_refs = [

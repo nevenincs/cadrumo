@@ -195,7 +195,8 @@ def _persisted_decimal_bindings(
     channels = {binding.id: binding.value.channel for binding in snapshot.revision.bindings}
     decimal_bindings: dict[BindingId, Decimal] = {}
     for binding_id, raw_value in revision.binding_overrides.items():
-        if binding_id in enum_ids or binding_id in date_ids:
+        # A text binding read by no formula, such as a row's country code, is no quantity either.
+        if binding_id in enum_ids or binding_id in date_ids or channels.get(binding_id) is BindingValueChannel.TEXT:
             continue
         # A boolean-channel binding is persisted as a truth token, which is a
         # fact about the taxpayer rather than a quantity to replay. A 1/0 on the
