@@ -101,7 +101,10 @@ def test_every_category_the_table_names_is_declared_by_the_bundled_vocabulary(
     vocabulary = resolve_irpf_income_category_catalogue(effective_date=date(2026, 3, 10), authority=operation)
     declared = {str(token) for token in vocabulary.all_categories}
     named = {
-        token for categories in RETENCION_SOPORTADA_INCOME_CATEGORIES.values() if categories for token in categories
+        token
+        for categories in RETENCION_SOPORTADA_INCOME_CATEGORIES.values()
+        if categories is not None
+        for token in categories
     }
     assert named
     assert named <= declared
@@ -162,7 +165,10 @@ def test_applicability_reads_the_declared_categories_and_never_infers_absence_fr
 
 def test_a_class_without_a_category_is_unknown_under_every_declaration() -> None:
     every_category = frozenset(
-        token for categories in RETENCION_SOPORTADA_INCOME_CATEGORIES.values() if categories for token in categories
+        token
+        for categories in RETENCION_SOPORTADA_INCOME_CATEGORIES.values()
+        if categories is not None
+        for token in categories
     )
     for income_class, categories in RETENCION_SOPORTADA_INCOME_CATEGORIES.items():
         if categories is None:

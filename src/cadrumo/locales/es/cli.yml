@@ -622,6 +622,15 @@ cli:
         year_help: Ejercicio cuyos perfiles de categoría aportan los ratios legales.
           Por defecto, el año en curso.
       retencion_soportada:
+        absence_invalid_input: 'Hay un valor no válido: revisa el ejercicio, la nota
+          (500 caracteres como máximo) y la revisión.'
+        absence_note_help: Por qué ningún pagador practicó retención sobre esta clase
+          de renta. Obligatorio.
+        attest_absence_expected_revision_help: Revisión de la declaración retirada
+          que sustituyes. Omítela en una primera declaración.
+        attest_absence_help: Declara que ningún pagador practicó retención sobre una
+          clase de renta en un ejercicio. Es tu propia declaración, no un certificado
+          del pagador.
         ejercicio_help: Ejercicio (año) al que se imputa la renta.
         evidence_sha256_help: SHA-256 del archivo del certificado; obligatorio con
           payer_certificate.
@@ -651,6 +660,10 @@ cli:
         retencion_help: Retención que practicó el pagador, en euros con como máximo
           dos decimales.
         valoracion_especie_help: Valoración del pago en especie.
+        withdraw_absence_expected_revision_help: Revisión con la que se guardó la
+          declaración.
+        withdraw_absence_help: Retira una declaración de ausencia, protegida por la
+          revisión con la que se guardó.
       rule:
         actor_help: Tu identificador, que se registra como origen de la regla.
         add_help: Añade una regla de clasificación que clasifica automáticamente las

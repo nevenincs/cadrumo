@@ -17,8 +17,10 @@ The write refuses, before anything is stored:
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Literal, Protocol
+from types import MappingProxyType
+from typing import TYPE_CHECKING, Final, Literal, Protocol
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.retencion_soportada import RetencionSoportadaClase
@@ -37,6 +39,7 @@ if TYPE_CHECKING:
 
 __all__ = [
     "RETENCION_SOPORTADA_ABSENCE_KEY_PREFIX",
+    "RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS",
     "RetencionSoportadaAbsenceReader",
     "RetencionSoportadaAbsenceRefusalReason",
     "RetencionSoportadaAbsenceRefusedError",
@@ -66,6 +69,18 @@ type RetencionSoportadaAbsenceRefusalReason = Literal[
 ]
 """Why an attestation or its withdrawal was refused before it reached storage."""
 
+RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "ejercicio_unsupported": "aggregation.retencion_soportada_absence.errors.ejercicio_unsupported",
+        "family_not_declared": "aggregation.retencion_soportada_absence.errors.family_not_declared",
+        "records_present": "aggregation.retencion_soportada_absence.errors.records_present",
+        "already_attested": "aggregation.retencion_soportada_absence.errors.already_attested",
+        "not_attested": "aggregation.retencion_soportada_absence.errors.not_attested",
+        "stale_revision": "aggregation.retencion_soportada_absence.errors.stale_revision",
+    },
+)
+"""The worded message of each refusal reason, the stale revision of a guarded write included."""
+
 
 class RetencionSoportadaAbsenceRefusedError(CadrumoError):
     """An attestation or withdrawal the write path refuses to store."""
@@ -76,7 +91,7 @@ class RetencionSoportadaAbsenceRefusedError(CadrumoError):
         super().__init__(
             f"suffered-withholding absence attestation refused: {reason}",
             context={"reason": reason, "ejercicio": str(ejercicio)},
-            translated_message=f"aggregation.retencion_soportada_absence.errors.{reason}",
+            translated_message=RETENCION_SOPORTADA_ABSENCE_MESSAGE_KEYS[reason],
         )
 
 

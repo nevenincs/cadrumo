@@ -88,7 +88,7 @@ def retencion_soportada_applicability(
     ejercicio, or ``None`` when it declares none.
     """
     categories = RETENCION_SOPORTADA_INCOME_CATEGORIES[income_class]
-    if categories is None or not declared_categories:
+    if categories is None or declared_categories is None or not bool(declared_categories):
         return RetencionSoportadaApplicability.UNKNOWN
     if categories & declared_categories:
         return RetencionSoportadaApplicability.DECLARED

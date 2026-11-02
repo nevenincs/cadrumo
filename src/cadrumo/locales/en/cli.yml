@@ -585,6 +585,13 @@ cli:
         year_help: Filing year whose category profiles supply the statutory ratios.
           Defaults to the current year.
       retencion_soportada:
+        absence_invalid_input: 'A value is not valid: check the ejercicio, the note
+          (at most 500 characters) and the revision.'
+        absence_note_help: Why no payer withheld on this income class. Required.
+        attest_absence_expected_revision_help: Revision of a withdrawn attestation
+          you are replacing. Leave it out for a first attestation.
+        attest_absence_help: Attest that no payer withheld on an income class in an
+          ejercicio. This is your own statement, not a payer certificate.
         ejercicio_help: Ejercicio (year) the income is imputed to.
         evidence_sha256_help: SHA-256 of the certificate file; required for payer_certificate.
         group_help: Record the withholding your payers' certificates report.
@@ -611,6 +618,10 @@ cli:
           showed.
         retencion_help: Retención the payer practised, in euros with at most two decimals.
         valoracion_especie_help: Valuation of the payment in kind.
+        withdraw_absence_expected_revision_help: Revision the attestation was stored
+          at.
+        withdraw_absence_help: Withdraw an absence attestation, guarded by the revision
+          it was stored at.
       rule:
         actor_help: Your identifier, recorded as the origin of the rule.
         add_help: Add a classification rule that auto-classifies matching transactions.

@@ -616,6 +616,15 @@ cli:
         year_help: Az az adóév, amelynek kategóriaprofiljai a törvényes arányokat
           adják. Alapértelmezés szerint az aktuális év.
       retencion_soportada:
+        absence_invalid_input: 'Egy érték érvénytelen: ellenőrizd az adóévet, a megjegyzést
+          (legfeljebb 500 karakter) és a változatot.'
+        absence_note_help: Miért nem vont le egyetlen kifizető sem adóelőleget erre
+          a jövedelemosztályra. Kötelező.
+        attest_absence_expected_revision_help: A visszavont nyilatkozat változata,
+          amelyet felváltasz. Első nyilatkozatnál hagyd el.
+        attest_absence_help: Kijelented, hogy egy adóévben egyetlen kifizető sem vont
+          le adóelőleget egy jövedelemosztályra. Ez a saját nyilatkozatod, nem a kifizető
+          igazolása.
         ejercicio_help: Az ejercicio (év), amelyhez a jövedelem tartozik.
         evidence_sha256_help: Az igazolás fájljának SHA-256 értéke; payer_certificate
           esetén kötelező.
@@ -645,6 +654,10 @@ cli:
           védelmében.
         retencion_help: A kifizető által levont összeg euróban, legfeljebb két tizedesjeggyel.
         valoracion_especie_help: A természetbeni juttatás értéke.
+        withdraw_absence_expected_revision_help: A változat, amellyel a nyilatkozatot
+          mentették.
+        withdraw_absence_help: Visszavonsz egy hiánynyilatkozatot; a mentéskori változat
+          védi.
       rule:
         actor_help: Azonosítód, amely a szabály eredeteként kerül rögzítésre.
         add_help: Osztályozási szabály hozzáadása, amely automatikusan osztályozza

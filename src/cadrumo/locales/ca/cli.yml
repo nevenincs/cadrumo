@@ -620,6 +620,15 @@ cli:
         year_help: Exercici els perfils de categoria del qual aporten les ràtios legals.
           Per defecte, l'any en curs.
       retencion_soportada:
+        absence_invalid_input: 'Hi ha un valor no vàlid: revisa l''exercici, la nota
+          (500 caràcters com a màxim) i la revisió.'
+        absence_note_help: Per què cap pagador no va practicar retenció sobre aquesta
+          classe de renda. Obligatori.
+        attest_absence_expected_revision_help: Revisió de la declaració retirada que
+          substitueixes. Omet-la en una primera declaració.
+        attest_absence_help: Declara que cap pagador no va practicar retenció sobre
+          una classe de renda en un exercici. És la teva pròpia declaració, no un
+          certificat del pagador.
         ejercicio_help: Exercici (any) al qual s'imputa la renda.
         evidence_sha256_help: SHA-256 del fitxer del certificat; obligatori amb payer_certificate.
         group_help: Registra les retencions que et certifiquen els teus pagadors.
@@ -649,6 +658,9 @@ cli:
         retencion_help: Retenció que va practicar el pagador, en euros amb com a màxim
           dos decimals.
         valoracion_especie_help: Valoració del pagament en espècie.
+        withdraw_absence_expected_revision_help: Revisió amb què es va desar la declaració.
+        withdraw_absence_help: Retira una declaració d'absència, protegida per la
+          revisió amb què es va desar.
       rule:
         actor_help: El teu identificador, que es registra com a origen de la regla.
         add_help: Afegeix una regla de classificació que classifica automàticament

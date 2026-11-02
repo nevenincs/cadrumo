@@ -103,7 +103,9 @@ def is_retencion_soportada_absence_row(stored_payload: bytes) -> bool:
     except ValueError:
         return False
     payload = document.get("payload") if isinstance(document, dict) else None
-    return isinstance(payload, dict) and payload.get("kind") == RETENCION_SOPORTADA_ABSENCE_KIND
+    if not isinstance(payload, dict):
+        return False
+    return bool(payload.get("kind") == RETENCION_SOPORTADA_ABSENCE_KIND)
 
 
 def _translate_storage_failure[ResultT](operation: str, action: Callable[[], ResultT]) -> ResultT:
