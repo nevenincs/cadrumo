@@ -290,7 +290,7 @@ test("Setup is opened by keys, and each area of its sections is chosen and enter
   await openLedger(target);
   const areas = [
     ["rules", 4, "desktop.ledger.rules.areas"],
-    ["registers", 3, "desktop.ledger.registers.areas"],
+    ["registers", 4, "desktop.ledger.registers.areas"],
   ] as const;
   for (const [section, count, group] of areas) {
     await setupByKeys(target, section);
