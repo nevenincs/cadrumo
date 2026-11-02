@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -45,7 +46,7 @@ from ._modelo_rendering import (
     verification_report_notices,
     verification_report_payload,
 )
-from .common import activate_subcommand_output_language, emit_envelope
+from .common import emit_envelope
 from .modelo_results import (
     CrossPeriodCleanStatePayload,
     CrossPeriodDependencyEvidencePayload,

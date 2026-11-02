@@ -620,7 +620,7 @@ _XLS_HEADER: list[object] = [
 ]
 
 
-def test_a_legacy_xls_book_reads_and_imports_like_the_same_xlsx_book(
+def test_an_xls_book_reads_and_imports_like_the_same_xlsx_book(
     tmp_path: Path,
     authority_operation: object,
 ) -> None:
@@ -661,7 +661,7 @@ def test_a_legacy_xls_book_reads_and_imports_like_the_same_xlsx_book(
     assert invoice.invoice_number == "BULK-XLS-001"
 
 
-def test_a_legacy_xls_formula_cell_refuses_the_book_like_xlsx(tmp_path: Path) -> None:
+def test_an_xls_formula_cell_refuses_the_book_like_xlsx(tmp_path: Path) -> None:
     """A formula's cached result in an .xls book is refused, never read as the taxable base."""
     xls_path = tmp_path / "formula.xls"
     xls_path.write_bytes(
@@ -684,7 +684,7 @@ def test_a_legacy_xls_formula_cell_refuses_the_book_like_xlsx(tmp_path: Path) ->
     assert (context["row"], context["column"]) == ("2", "5")
 
 
-def test_an_unreadable_legacy_xls_book_refuses_as_an_unreadable_table(tmp_path: Path) -> None:
+def test_an_unreadable_xls_book_refuses_as_an_unreadable_table(tmp_path: Path) -> None:
     """Bytes that are not an Excel 97-2003 workbook refuse before any row is read."""
     xls_path = tmp_path / "broken.xls"
     xls_path.write_bytes(b"not a workbook")

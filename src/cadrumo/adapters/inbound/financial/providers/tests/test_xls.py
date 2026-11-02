@@ -142,7 +142,7 @@ def test_xls_without_a_bank_layout_or_readable_workbook_is_invalid(tmp_path: Pat
     corrupt.write_bytes(b"not a workbook")
 
     assert "supported bank-statement header row" in XlsProvider().validate_source(unrelated).warnings[0]
-    assert "could not open legacy workbook" in XlsProvider().validate_source(corrupt).warnings[0]
+    assert "could not open XLS workbook" in XlsProvider().validate_source(corrupt).warnings[0]
 
 
 def test_auto_detection_reads_an_xls_statement_by_suffix_and_by_signature(tmp_path: Path) -> None:

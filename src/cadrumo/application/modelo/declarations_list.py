@@ -275,16 +275,23 @@ def _local_step(row: DeclarationListRow) -> DeclarationListNextStep:
     return DeclarationListNextStep.CONTINUE
 
 
+def _needs_recalculation(row: DeclarationListRow) -> bool:
+    """Whether the note gate refuses the row's calculation: stale, or recorded before screens capped a figure."""
+    summary = None if row.declaration is None else row.declaration.summary
+    if summary is None:
+        return False
+    if summary.filed_before_grade_cap and row.state == "recorded":
+        return True
+    return summary.calculation_outdated and row.state not in _CLOSED_STATES
+
+
 def next_step(row: DeclarationListRow) -> DeclarationListNextStep | None:
     """The step the row offers: fixing what blocks it, starting a due return, or opening its local work.
 
     A calculation the note gate refuses as stale is calculated again first, as the form's next step is,
     and so is a declaration recorded before screens existed whose export the gate refuses for a capped figure.
     """
-    summary = None if row.declaration is None else row.declaration.summary
-    if summary is not None and summary.filed_before_grade_cap and row.state == "recorded":
-        return DeclarationListNextStep.RECALCULATE
-    if summary is not None and summary.calculation_outdated and row.state not in _CLOSED_STATES:
+    if _needs_recalculation(row):
         return DeclarationListNextStep.RECALCULATE
     if row.state == "blocked":
         return DeclarationListNextStep.FIX

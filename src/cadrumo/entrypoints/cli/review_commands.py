@@ -7,6 +7,8 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
+
 from ...application.operations.public_scalar import PublicDecimal
 from ...application.review.enums import ReviewState
 from ...application.review.read_contracts import (
@@ -21,7 +23,7 @@ from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import output_language as current_output_language
 from ...core.i18n.render import tr
 from ...core.unit_proportion import is_unit_proportion
-from .common import activate_subcommand_output_language, active_bucket_id_or_refuse, bad, emit_envelope
+from .common import active_bucket_id_or_refuse, bad, emit_envelope
 from .operation_review import run_review_queue, run_review_view
 from .review_results import ReviewQueueResult, ReviewQueueRowPayload, ReviewViewResult
 

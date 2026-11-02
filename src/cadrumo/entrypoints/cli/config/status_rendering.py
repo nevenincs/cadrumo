@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from typing import TYPE_CHECKING
 
 from cadrumo_client.commands.payloads import ConfigStatusResult
@@ -49,30 +48,9 @@ def blocked_readiness_status(
     return result, tuple(lines)
 
 
-def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tuple[str, ...]:
-    """Render the exact resolved action DTO without synthesising recovery prose."""
-    if action is None:
-        return ()
-    document = action.model_dump(mode="json")
-    fields = (
-        "failed_condition_id",
-        "evidence",
-        "action",
-        "argument_bindings",
-        "missing_argument_names",
-        "conditionality",
-        "no_recovery_outcome",
-    )
-    return tuple(
-        f"precondition_action.{field_name}\t"
-        f"{json.dumps(document[field_name], ensure_ascii=False, sort_keys=True, separators=(',', ':'))}"
-        for field_name in fields
-    )
-
-
 def _presence(values: Mapping[str, str], path: str) -> str:
     """Render one fact path as the presence token the status report prints."""
     return "present" if bool(values.get(path)) else "missing"
 
 
-__all__ = ["blocked_readiness_status", "precondition_action_lines"]
+__all__ = ["blocked_readiness_status"]

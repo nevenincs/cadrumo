@@ -28,6 +28,7 @@ from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
 from cadrumo_client.commands.payloads import ConfigProfileRecoveryResult, ConfigProfileRecoveryStatusResult
 from cadrumo_client.commands.recovery_handover import recovery_handover
 from cadrumo_client.commands.secure_input import (
@@ -37,7 +38,6 @@ from cadrumo_client.commands.secure_input import (
     select_machine_secret_channel,
 )
 
-from .presentation import activate_subcommand_output_language as _activate_subcommand_output_language
 from .presentation import emit_envelope
 from .profile_admission import _profile_id
 

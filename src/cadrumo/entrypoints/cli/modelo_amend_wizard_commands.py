@@ -51,6 +51,7 @@ from uuid import UUID, uuid4
 import typer
 from pydantic import BaseModel
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -90,7 +91,7 @@ from ...domain.modelos.calculation_revision_amendment import (
 )
 from ._modelo_cli_support import bad_parameter_from_error, resolve_actor_option
 from ._modelo_rendering import filing_record_lines
-from .common import activate_subcommand_output_language, emit_envelope, no_active_profile_refusal
+from .common import emit_envelope, no_active_profile_refusal
 from .modelo_amend_wizard_results import AmendWizardCorrectedCasillaPayload, WorkAmendWizardResult
 from .operation_modelo_amendment import read_modelo_work_amendment_context, run_modelo_work_amendment
 from .operation_modelo_metadata import read_modelo_work_unit

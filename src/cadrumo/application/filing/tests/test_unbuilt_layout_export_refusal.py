@@ -14,13 +14,13 @@ import pytest
 
 from ....domain.filing.errors import FilingExportError
 from ..export import export_draft
-from .export_support import _approved_modelo_111_registry_draft, _schema_provider, _typed_producer_snapshot
+from .export_support import _approved_modelo_111_registry_draft, export_schema_provider, typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
 
 def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: Path) -> None:
-    snapshot = _typed_producer_snapshot()
+    snapshot = typed_producer_snapshot()
     output = tmp_path / "unbuilt-layout-modelo-111.txt"
 
     # Assert the CONDITION -- a revision carrying no export layout -- rather than
@@ -30,7 +30,7 @@ def test_a_modelo_with_no_export_layout_refuses_before_writing_output(tmp_path: 
     # layouts off the yielded subview keeps modelo 111's fixtures and makes the
     # subject the state under test, immune to any modelo later being authored.
     draft = _approved_modelo_111_registry_draft()
-    provider = _schema_provider(
+    provider = export_schema_provider(
         filing_year=draft.period.filing_year,
         period=draft.period.code,
         modelos=("111",),

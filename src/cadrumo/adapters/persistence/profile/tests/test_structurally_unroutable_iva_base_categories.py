@@ -63,29 +63,34 @@ def _m303_revision() -> ModeloRevision:
     return published_authority_operation().snapshot("303", filing_year=_Q1_2025.filing_year, period="1T").revision
 
 
+def _resolve_q1_2025(repository: TransactionCatalogueRepository):
+    """Resolve the first-quarter 2025 IVA ledger sources over ``repository`` with no invoices or investment assets."""
+    return LedgerIvaAggregationSourceResolver(
+        transaction_repository=repository,
+        invoice_catalogue_read_ports=_catalogue_read_ports(
+            invoices=InvoiceCatalogue(),
+            transactions=TransactionCatalogue(),
+        ),
+        prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
+        investment_asset_register=BienesInversionIvaRegister(),
+        investment_asset_profile_id=_BUCKET_ID,
+    ).resolve(
+        CalculationSourceContext(
+            bucket_id=_BUCKET_ID,
+            modelo="303",
+            filing_year=2025,
+            period=_Q1_2025,
+            revision=_m303_revision(),
+        ),
+    )
+
+
 def test_the_advisory_fires_live_for_a_present_unroutable_category(tmp_path: Path) -> None:
     """Positive control end to end: live wiring, scoped to this ledger's own categories."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((domestic_zero_sale(),)))
-        resolution = LedgerIvaAggregationSourceResolver(
-            transaction_repository=repository,
-            invoice_catalogue_read_ports=_catalogue_read_ports(
-                invoices=InvoiceCatalogue(),
-                transactions=TransactionCatalogue(),
-            ),
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id=_BUCKET_ID,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=_Q1_2025,
-                revision=_m303_revision(),
-            ),
-        )
+        resolution = _resolve_q1_2025(repository)
 
     advisories = [
         diagnostic
@@ -103,24 +108,7 @@ def test_the_advisory_stays_silent_when_the_category_never_appears(tmp_path: Pat
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         repository = TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=profile.repository)
         repository.save(TransactionCatalogue.from_transactions((domestic_general_sale(),)))
-        resolution = LedgerIvaAggregationSourceResolver(
-            transaction_repository=repository,
-            invoice_catalogue_read_ports=_catalogue_read_ports(
-                invoices=InvoiceCatalogue(),
-                transactions=TransactionCatalogue(),
-            ),
-            prorrata_register_repository=ProrrataRegisterRepository(bucket_id=_BUCKET_ID),
-            investment_asset_register=BienesInversionIvaRegister(),
-            investment_asset_profile_id=_BUCKET_ID,
-        ).resolve(
-            CalculationSourceContext(
-                bucket_id=_BUCKET_ID,
-                modelo="303",
-                filing_year=2025,
-                period=_Q1_2025,
-                revision=_m303_revision(),
-            ),
-        )
+        resolution = _resolve_q1_2025(repository)
 
     assert not [
         diagnostic

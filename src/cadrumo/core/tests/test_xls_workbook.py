@@ -7,15 +7,15 @@ from datetime import date, datetime
 import pytest
 
 from ...tests.xls_fixtures import XlsFormula, xls_workbook_bytes
-from ..legacy_workbook import read_legacy_workbook
 from ..tabular import TabularSourceError
 from ..workbook import first_formula_cell_column
+from ..xls_workbook import read_xls_workbook
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
 
 def test_cells_carry_openpyxl_values_and_type_codes() -> None:
-    (sheet,) = read_legacy_workbook(
+    (sheet,) = read_xls_workbook(
         xls_workbook_bytes([("Book", [["label", 12.5, date(2025, 3, 11)], [None, XlsFormula(7), "tail"]])])
     )
 
@@ -27,7 +27,7 @@ def test_cells_carry_openpyxl_values_and_type_codes() -> None:
 
 
 def test_formula_cells_are_attributed_to_their_own_worksheet() -> None:
-    first, second = read_legacy_workbook(
+    first, second = read_xls_workbook(
         xls_workbook_bytes([("First", [["a", "b"], ["c", "d"]]), ("Second", [["x", XlsFormula(3)]])])
     )
 
@@ -37,13 +37,13 @@ def test_formula_cells_are_attributed_to_their_own_worksheet() -> None:
 
 def test_bytes_that_are_not_an_ole2_workbook_are_refused() -> None:
     with pytest.raises(TabularSourceError, match="not an OLE2 compound document"):
-        read_legacy_workbook(b"date,amount\n2025-03-11,1.00\n")
+        read_xls_workbook(b"date,amount\n2025-03-11,1.00\n")
 
 
 def test_a_truncated_workbook_is_refused_without_printing_reader_warnings(capsys: pytest.CaptureFixture[str]) -> None:
     truncated = xls_workbook_bytes([("Book", [["a"]])])[:600]
 
     with pytest.raises(TabularSourceError, match="could not be read"):
-        read_legacy_workbook(truncated)
+        read_xls_workbook(truncated)
 
     assert capsys.readouterr().out == ""

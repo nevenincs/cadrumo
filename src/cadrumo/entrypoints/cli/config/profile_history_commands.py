@@ -8,6 +8,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import bound_profile_client, require_profile_client
 
 from ....core.errors.hierarchy import InternalInvariantError
@@ -15,7 +16,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.time.utc import coerce_utc_aware
 from ....domain.buckets.event import BucketEvent, BucketEventType
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope
 from ..operation_profile_history import read_profile_history_for_cli
 

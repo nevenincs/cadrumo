@@ -31,13 +31,13 @@ from cadrumo_client.commands.errors import (
     CliUnexpectedBoundaryError,
     log_cli_boundary_failure,
 )
-from cadrumo_client.commands.output import write_stderr
+from cadrumo_client.commands.output import precondition_action_lines, write_stderr
 from cadrumo_client.commands.stdio import configure_stdio_for_utf8, disable_rich_cli_rendering
 from cadrumo_client.logging import register_client_logging_namespace
 
 from .command_specs import RUNTIME_COMMAND_GRAPH
 from .lifecycle import dispatch_runtime_behavior
-from .presentation import precondition_action_lines, resolve_cli_precondition_action, runtime_error_context
+from .presentation import resolve_cli_precondition_action, runtime_error_context
 
 if TYPE_CHECKING:
     from inspect import BoundArguments

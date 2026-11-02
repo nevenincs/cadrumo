@@ -48,6 +48,7 @@ from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationReviewProjectionRequestV1,
 )
+from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.hashing import canonical_json_bytes, content_hash_hex
 from cadrumo.core.operations import (
@@ -301,8 +302,9 @@ class OperationRelay:
         self._watch(observation.projection)
         return observation
 
-    def _result(self, operation_id: str, *, deadline: float) -> dict[str, object]:
-        projection = self._observe(operation_id, 0, deadline=deadline).projection
+    @staticmethod
+    def _result_schema(projection: OperationPublicProjectionV1) -> OperationSchemaIdentityV1:
+        """Return the schema a terminal operation's result document is read under, else refuse."""
         contract = projection.definition_contract
         schema = contract.result_schema
         # A refusal its definition declares carries a detail document, read the same way as a result.
@@ -320,6 +322,12 @@ class OperationRelay:
             schema = operation_error_detail_schema()
         elif projection.lifecycle is not OperationLifecycle.TERMINAL or not documented or schema is None:
             raise RelayRefusedError("no_result")
+        return schema
+
+    def _result(self, operation_id: str, *, deadline: float) -> dict[str, object]:
+        projection = self._observe(operation_id, 0, deadline=deadline).projection
+        contract = projection.definition_contract
+        schema = self._result_schema(projection)
         document = self._client.read_result_document(
             OperationResultProjectionRequestV1(
                 operation_id=projection.operation_id,

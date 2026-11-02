@@ -463,17 +463,6 @@ def _require_current_profile_login(client: FrontendClient) -> None:
         )
 
 
-def _activate_subcommand_output_language(ctx: typer.Context, language: OutputLanguage | None) -> None:
-    """Apply an explicit leaf language choice to this invocation's output."""
-    if language is None:
-        return
-    from cadrumo.core.config import override_settings
-    from cadrumo.core.i18n.render import clear_output_language_cache
-
-    ctx.with_resource(override_settings(cadrumo_output_language=language))
-    clear_output_language_cache()
-
-
 def _raise_frontend_refusal(error: FrontendRefusedError) -> NoReturn:
     """Translate the runtime's typed session refusal at the command boundary."""
     from cadrumo_client.contracts.access_refusals import AccessDenialCode

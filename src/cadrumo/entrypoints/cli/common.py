@@ -34,7 +34,6 @@ from cadrumo_client.contracts.command_program import CommandProgram
 from ...application.operator_surface.action_targets import ACTION_TARGETS, recorded_action_target_reconciliation
 from ...core.cli_metadata import is_metadata_invocation
 from ...core.errors.hierarchy import InternalInvariantError, pydantic_validation_boundary
-from ...core.external_constants import OutputLanguage
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedActionArgument, ResolvedPreconditionAction
 from ...core.models import STRICT_FROZEN_CONFIG
@@ -1014,25 +1013,3 @@ def active_bucket_id_or_refuse() -> str:
         return require_active_bucket_id()
     except NoActiveProfileError as exc:
         raise _no_active_profile_refusal() from exc
-
-
-# ---------------------------------------------------------------------
-# Output-language override
-# ---------------------------------------------------------------------
-
-
-def activate_subcommand_output_language(ctx: typer.Context, language: OutputLanguage | None) -> None:
-    """Apply a subcommand-supplied ``--output-language`` to the render path.
-
-    ``--output-language`` on a subcommand short-circuits the root
-    callback's ``--language`` flow; rather than re-parsing, override the
-    Settings field directly and drop the cached language so any ``tr()``
-    fired during the verb body resolves to the requested locale.
-    """
-    if language is None:
-        return
-    from ...core.config import override_settings
-    from ...core.i18n.render import clear_output_language_cache
-
-    ctx.with_resource(override_settings(cadrumo_output_language=language))
-    clear_output_language_cache()

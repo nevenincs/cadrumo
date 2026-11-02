@@ -73,24 +73,8 @@ def build_calculation_review_snapshot(
     saved_form = capture_review_form(revision)
     findings = _review_findings(revision, saved_form is not None)
     if operation is not None:
-        modelo, filing_year, period = str(work_unit.modelo), work_unit.filing_year, work_unit.period
-        if saved_calculation_screen_outdated(
-            revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
-        ):
-            findings.append(_screen_outdated_finding())
-        if saved_calculation_filed_before_grade_cap(
-            revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
-        ):
-            findings.append(_filed_before_grade_cap_finding())
-    evidence = tuple(
-        EvidenceInventoryItem(
-            evidence_id=attachment_id,
-            source_revision=revision.calculation_revision_id,
-            disposition=EvidenceDisposition.EXCLUDED,
-            reason="Original attachment bytes were not selected for this spreadsheet publication.",
-        )
-        for attachment_id in sorted({attachment_id for row in rows for attachment_id in row.attachment_ids})
-    )
+        findings.extend(_staleness_findings(revision, work_unit, operation))
+    evidence = _excluded_attachment_inventory(revision)
     contributions, amounts = _scalar_values(revision)
     _append_row_values(revision, contributions, amounts)
     text_values = _text_values(revision, contributions)
@@ -107,14 +91,7 @@ def build_calculation_review_snapshot(
             selection=selection,
             status=ReviewStatus.INCOMPLETE,
             saved_form=saved_form,
-            calculation_lifecycle=ReviewCalculationLifecycle(
-                state=revision.state,
-                is_current_calculation=work_unit.current_calculation_revision_id == revision.calculation_revision_id,
-                is_current_filing=work_unit.filed_calculation_revision_id == revision.calculation_revision_id,
-                filing_record_id=filing_record.filing_record_id if filing_record is not None else None,
-                filing_status=filing_record.status if filing_record is not None else None,
-                aeat_confirmation=filing_record.confirmation if filing_record is not None else None,
-            ),
+            calculation_lifecycle=_calculation_lifecycle(revision, work_unit, filing_record),
             amounts=tuple(amounts),
             text_values=tuple(text_values),
             ledger_rows=rows,
@@ -122,6 +99,52 @@ def build_calculation_review_snapshot(
             evidence=evidence,
             findings=tuple(findings),
         )
+    )
+
+
+def _staleness_findings(
+    revision: CalculationRevision, work_unit: WorkUnit, operation: PinnedAuthorityOperation
+) -> list[ReviewFinding]:
+    """The findings of a saved screen the pinned authority outdates, then of a figure filed before grade caps."""
+    modelo, filing_year, period = str(work_unit.modelo), work_unit.filing_year, work_unit.period
+    findings: list[ReviewFinding] = []
+    if saved_calculation_screen_outdated(
+        revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
+    ):
+        findings.append(_screen_outdated_finding())
+    if saved_calculation_filed_before_grade_cap(
+        revision, modelo=modelo, filing_year=filing_year, period=period, operation=operation
+    ):
+        findings.append(_filed_before_grade_cap_finding())
+    return findings
+
+
+def _excluded_attachment_inventory(revision: CalculationRevision) -> tuple[EvidenceInventoryItem, ...]:
+    """Each attachment the ledger rows name, sorted, as excluded: its bytes are not selected for publication."""
+    ledger = revision.ledger_filing_evidence
+    rows = ledger.rows if ledger is not None else ()
+    return tuple(
+        EvidenceInventoryItem(
+            evidence_id=attachment_id,
+            source_revision=revision.calculation_revision_id,
+            disposition=EvidenceDisposition.EXCLUDED,
+            reason="Original attachment bytes were not selected for this spreadsheet publication.",
+        )
+        for attachment_id in sorted({attachment_id for row in rows for attachment_id in row.attachment_ids})
+    )
+
+
+def _calculation_lifecycle(
+    revision: CalculationRevision, work_unit: WorkUnit, filing_record: ModeloRecord | None
+) -> ReviewCalculationLifecycle:
+    """The revision's standing in its work unit and, when one is selected, its filing record's status."""
+    return ReviewCalculationLifecycle(
+        state=revision.state,
+        is_current_calculation=work_unit.current_calculation_revision_id == revision.calculation_revision_id,
+        is_current_filing=work_unit.filed_calculation_revision_id == revision.calculation_revision_id,
+        filing_record_id=filing_record.filing_record_id if filing_record is not None else None,
+        filing_status=filing_record.status if filing_record is not None else None,
+        aeat_confirmation=filing_record.confirmation if filing_record is not None else None,
     )
 
 

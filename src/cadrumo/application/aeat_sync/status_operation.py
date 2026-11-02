@@ -181,6 +181,29 @@ def _latest_identity_check(observations: tuple[VerifyObservation, ...]) -> UtcIn
     )
 
 
+def _require_borrador_bucket(
+    bucket_id: str,
+    readable: tuple[Borrador100Snapshot, ...],
+    refused: tuple[Borrador100RefusedSnapshot, ...],
+) -> None:
+    """Refuse a readable or refused Borrador 100 snapshot that belongs to another profile."""
+    _require_bucket(
+        bucket_id,
+        *(snapshot.bucket_id for snapshot in readable),
+        *(item.snapshot.bucket_id for item in refused),
+    )
+
+
+def _latest_borrador_import(readable: tuple[Borrador100Snapshot, ...]) -> UtcInstant | None:
+    """The newest capture instant among the readable snapshots, if any."""
+    return max((snapshot.captured_at for snapshot in readable), default=None)
+
+
+def _outdated_borrador_count(reading: Borrador100SnapshotReading | None) -> int:
+    """The stored snapshots a reading counts as outdated; no reading counts none."""
+    return 0 if reading is None else reading.outdated_stored_snapshots
+
+
 def load_aeat_sync_status(
     ports: AeatSyncStatusPorts,
     *,
@@ -223,11 +246,7 @@ def load_aeat_sync_status(
         _require_bucket(bucket_id, notifications.bucket_id)
     borrador_reading = guarded((AeatSyncStatusArea.BORRADOR_100,), ports.borrador_snapshots, None)
     borrador, borrador_refused = _split_borrador_reading(borrador_reading)
-    _require_bucket(
-        bucket_id,
-        *(snapshot.bucket_id for snapshot in borrador),
-        *(item.snapshot.bucket_id for item in borrador_refused),
-    )
+    _require_borrador_bucket(bucket_id, borrador, borrador_refused)
     identity = (
         ()
         if tax_id is None
@@ -243,9 +262,9 @@ def load_aeat_sync_status(
         filed_attempt=guarded(filed_areas, ports.filed_attempt, None),
         notifications=_notification_capture(notifications),
         iva_wallet_captured_at=guarded((AeatSyncStatusArea.IVA_WALLET,), ports.iva_wallet_captured_at, None),
-        borrador_imported_at=max((snapshot.captured_at for snapshot in borrador), default=None),
+        borrador_imported_at=_latest_borrador_import(borrador),
         borrador_refused=_refused_snapshot_rows(borrador_refused),
-        borrador_outdated=0 if borrador_reading is None else borrador_reading.outdated_stored_snapshots,
+        borrador_outdated=_outdated_borrador_count(borrador_reading),
         identity_checked_at=_latest_identity_check(identity),
         unreadable=unreadable,
     )

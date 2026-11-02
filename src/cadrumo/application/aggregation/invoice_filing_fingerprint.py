@@ -175,6 +175,42 @@ def _oss_period(period: Period) -> Period | None:
     return projection if projection.has_date_span() else None
 
 
+def _in_direct_scope(
+    invoice: Invoice,
+    *,
+    bucket_id: str,
+    period: Period | None,
+    selection: _InvoiceReadSelection,
+) -> bool:
+    return (
+        period is not None
+        and invoice_in_bucket_and_period(invoice, bucket_id=bucket_id, period=period)
+        and BindingSourceKind(invoice_source_kind(invoice)) in selection.direct_sources
+    )
+
+
+def _in_oss_scope(invoice: Invoice, *, period: Period | None, devengo: date) -> bool:
+    return (
+        period is not None
+        and invoice.kind is InvoiceKind.ISSUED
+        and invoice.oss_ioss_regime is not None
+        and invoice.oss_transaction_kind is not None
+        and period.contains(devengo)
+    )
+
+
+def _in_linked_scope(
+    invoice: Invoice,
+    *,
+    selection: _InvoiceReadSelection,
+    linked_invoice_ids: frozenset[str],
+    contributors: frozenset[str],
+) -> bool:
+    return selection.linked and (
+        invoice.invoice_id in linked_invoice_ids or not contributors.isdisjoint(invoice.linked_transaction_ids)
+    )
+
+
 def _invoices_in_scope(
     catalogue: InvoiceCatalogue,
     *,
@@ -199,25 +235,11 @@ def _invoices_in_scope(
             return False
         devengo = resolve_invoice_devengo(invoice).devengo_date
         return (
-            (
-                direct_period is not None
-                and invoice_in_bucket_and_period(invoice, bucket_id=bucket_id, period=direct_period)
-                and BindingSourceKind(invoice_source_kind(invoice)) in selection.direct_sources
-            )
+            _in_direct_scope(invoice, bucket_id=bucket_id, period=direct_period, selection=selection)
             or (iva_period is not None and iva_period.contains(devengo))
-            or (
-                oss_period is not None
-                and invoice.kind is InvoiceKind.ISSUED
-                and invoice.oss_ioss_regime is not None
-                and invoice.oss_transaction_kind is not None
-                and oss_period.contains(devengo)
-            )
-            or (
-                selection.linked
-                and (
-                    invoice.invoice_id in linked_invoice_ids
-                    or not contributors.isdisjoint(invoice.linked_transaction_ids)
-                )
+            or _in_oss_scope(invoice, period=oss_period, devengo=devengo)
+            or _in_linked_scope(
+                invoice, selection=selection, linked_invoice_ids=linked_invoice_ids, contributors=contributors
             )
         )
 

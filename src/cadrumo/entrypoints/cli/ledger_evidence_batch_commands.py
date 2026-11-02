@@ -37,6 +37,8 @@ from typing import TYPE_CHECKING
 
 import typer
 
+from cadrumo_client.commands.output import precondition_action_lines
+
 from ...application.operator_actions.models import ActionReference
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity, ResolvedNoticeAction
@@ -51,7 +53,6 @@ from .common import (
     resolve_cli_precondition_action,
     resolve_notice_action,
 )
-from .config.status_rendering import precondition_action_lines
 from .ledger_evidence_batch_results import EvidenceBatchResult
 
 if TYPE_CHECKING:

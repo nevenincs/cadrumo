@@ -112,16 +112,7 @@ def declaration_summary(
     blockers, checked = _verification_summary(head, verification)
     try:
         outdated, blockers, checked = _gated_by_calculation(declaration, head, operation, blockers, checked)
-        filed_before_cap = head.state is CalculationRevisionState.PRESENTADO and (
-            calculation_filed_before_grade_cap(
-                head,
-                modelo=str(declaration.modelo),
-                filing_year=declaration.filing_year,
-                period=declaration.period,
-                operation=operation,
-            )
-            is not None
-        )
+        filed_before_cap = _filed_before_grade_cap(declaration, head, operation)
         state = _summary_state(declaration, head, blockers, checked)
         result = settlement_result_values(
             str(declaration.modelo), snapshot.revision, head.casilla_values, declaration.period
@@ -136,8 +127,31 @@ def declaration_summary(
         is_correction=head.amendment_identity is not None,
         calculation_outdated=outdated,
         filed_before_grade_cap=filed_before_cap,
-        proven_zero_notes=tuple(issue.fact for issue in proven_zero_calculation_issues(head) if issue.fact is not None),
+        proven_zero_notes=_proven_zero_facts(head),
     )
+
+
+def _filed_before_grade_cap(
+    declaration: DeclarationsWorkspaceDeclarationRefV1,
+    head: CalculationRevision,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Whether a revision recorded as filed predates screens and holds a figure in a capped box."""
+    return head.state is CalculationRevisionState.PRESENTADO and (
+        calculation_filed_before_grade_cap(
+            head,
+            modelo=str(declaration.modelo),
+            filing_year=declaration.filing_year,
+            period=declaration.period,
+            operation=operation,
+        )
+        is not None
+    )
+
+
+def _proven_zero_facts(head: CalculationRevision) -> tuple[CalculationNoteFact, ...]:
+    """The facts of each capped value the calculation proved to be zero, in the calculation's order."""
+    return tuple(issue.fact for issue in proven_zero_calculation_issues(head) if issue.fact is not None)
 
 
 def _verification_summary(

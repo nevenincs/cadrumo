@@ -11,12 +11,13 @@ from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo_client.commands.custody_payloads import ConfigActivityResult
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_selection import command_profile_id, require_runtime_login_target
 from cadrumo_client.commands.sign_in_refusal_projection import raise_connection_refusal, session_refusal_translation_key
 from cadrumo_client.contracts.sign_in_outcomes import ProfileReceiptRefusedError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
-from .presentation import activate_subcommand_output_language, emit_envelope
+from .presentation import emit_envelope
 from .profile_admission import runtime_root_context
 
 

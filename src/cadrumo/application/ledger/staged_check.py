@@ -9,9 +9,8 @@ still checks itself against the row it finds.
 
 from __future__ import annotations
 
-from collections.abc import Set as AbstractSet
 from dataclasses import dataclass
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Final
 from uuid import UUID
 
@@ -54,6 +53,7 @@ from .staged_check_contracts import (
     TaxSetSkip,
     WriteRoute,
 )
+from .staged_identity import staged_identity_fields
 from .update_contracts import LEDGER_UPDATE_FIELD_NAMES, LEDGER_UPDATE_REQUIRED_FIELD_NAMES
 
 _BULK_COLUMN_OF_FIELD: Final = {"business_classification": "classification"}
@@ -176,44 +176,6 @@ def _stored_facts(transaction: Transaction) -> dict[str, str | None]:
             else str(transaction.counterparty_identification_state)
         ),
     }
-
-
-def _same_amount(left: str | None, right: str | None) -> bool:
-    if left is None or right is None:
-        return left is right
-    try:
-        return Decimal(left) == Decimal(right)
-    except InvalidOperation:
-        return left == right
-
-
-def _effective_date_moved(
-    staged: AbstractSet[str], before: dict[str, str | None], after: dict[str, str | None]
-) -> bool:
-    if not staged & {"booked_date", "value_date"}:
-        return False
-    effective_before = before["value_date"] or before["booked_date"]
-    effective_after = after["value_date"] or after["booked_date"]
-    return effective_after != effective_before
-
-
-def _identity_fields(
-    row: LedgerStagedRow, before: dict[str, str | None], after: dict[str, str | None]
-) -> tuple[StageFieldName, ...]:
-    """Name the staged fields that give the row a new id: what ``derive_transaction_id`` hashes."""
-    staged = {cell.field for cell in row.cells}
-    found: list[StageFieldName] = []
-    if "amount" in staged and not _same_amount(after["amount"], before["amount"]):
-        found.append("amount")
-    # The writer trims a description before deriving the id from it.
-    if "description" in staged and (after["description"] or "").strip() != (before["description"] or "").strip():
-        found.append("description")
-    # ``derive_transaction_id`` hashes the value date when there is one, else the booked date.
-    if _effective_date_moved(staged, before, after):
-        found.append("value_date" if "value_date" in staged else "booked_date")
-    if "own_account_id" in staged and (after["own_account_id"] or None) != before["own_account_id"]:
-        found.append("own_account_id")
-    return tuple(found)
 
 
 def _classification(value: str | None) -> BusinessClassification | None:
@@ -424,7 +386,7 @@ def _row_findings(
     if transfer_blocker is not None:
         blockers.append(transfer_blocker)
 
-    identity = _identity_fields(row, state.before, state.after)
+    identity = staged_identity_fields(row, state.before, state.after)
     if identity:
         notes.append(LedgerStagedNote(kind="new_identity", fields=identity))
     return blockers, notes, identity
