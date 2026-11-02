@@ -1821,6 +1821,9 @@ application:
       amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind}
         no està legalment disponible per al model {modelo}, exercici {filing_year},
         període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
+      amendment_later_period_only: El model {modelo} de l'exercici {filing_year} i
+        període {period} no admet corregir una autoliquidació ja presentada. Practica
+        l'ajust en l'autoliquidació d'un període posterior.
       amendment_registry_root_missing: La generació publicada de l'autoritat %{missing_path}
         no existeix; no es poden validar les sobreescriptures de la rectificació.
       amendment_registry_snapshot_unresolved: No s'han pogut resoldre les definicions
@@ -2920,6 +2923,8 @@ application:
       profile_already_exists: El perfil '%{profile}' ja existeix; executa aeat config
         login NAME per activar-lo o aeat config profile delete NAME primer.
       profile_authentication_refused: No s'ha acceptat la contrasenya del perfil.
+      profile_field_needs_ejercicio: El camp %{field} es declara per exercici; indica
+        a quin exercici correspon aquesta resposta.
       profile_password_contains_surrogate: La contrasenya del perfil conté un valor
         que no es pot codificar com a UTF-8 estricte.
       profile_password_too_few_scalars: La contrasenya del perfil ha de tenir almenys
@@ -2930,7 +2935,6 @@ application:
         com a màxim {maximum_utf8_bytes} bytes UTF-8; se n'han rebut {utf8_byte_count}.
       profile_proof_cancelled: S'ha cancel·lat la comprovació de la contrasenya del
         perfil abans d'acabar.
-      profile_field_needs_ejercicio: El camp %{field} es declara per exercici; indica a quin exercici correspon aquesta resposta.
       profile_text_too_long: El camp %{field} admet com a màxim %{limit} caràcters;
         escurça'l.
       recovery_already_enrolled: Aquest perfil ja té un codi de recuperació. Desactiva'l

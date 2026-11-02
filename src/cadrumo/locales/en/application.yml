@@ -1726,6 +1726,9 @@ application:
       amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
         is not legally available for modelo {modelo} filing year {filing_year} period
         {period}. Accepted kinds for this period: {accepted_kinds}.'
+      amendment_later_period_only: Modelo {modelo} for year {filing_year} period {period}
+        cannot correct a return already filed. Make the adjustment in the return of
+        a later period.
       amendment_registry_root_missing: The published authority generation %{missing_path}
         is missing; amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: The modelo definitions for modelo %{modelo},
@@ -2767,6 +2770,8 @@ application:
       profile_already_exists: Profile '%{profile}' already exists; run aeat config
         login NAME to activate it or aeat config profile delete NAME first.
       profile_authentication_refused: The profile password was not accepted.
+      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say
+        which ejercicio this answer is for.
       profile_password_contains_surrogate: The profile password contains a value that
         cannot be encoded as strict UTF-8.
       profile_password_too_few_scalars: The profile password must be at least {minimum_scalars}
@@ -2777,7 +2782,6 @@ application:
         {maximum_utf8_bytes} UTF-8 bytes; received {utf8_byte_count}.
       profile_proof_cancelled: The profile password check was cancelled before it
         finished.
-      profile_field_needs_ejercicio: The field %{field} is stated per ejercicio; say which ejercicio this answer is for.
       profile_text_too_long: The field %{field} holds at most %{limit} characters;
         shorten it.
       recovery_already_enrolled: This profile already has a recovery code. Disable

@@ -1819,6 +1819,9 @@ application:
       amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind}
         no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year},
         período {period}. Tipos aceptados para este período: {accepted_kinds}.'
+      amendment_later_period_only: El modelo {modelo} del ejercicio {filing_year}
+        y periodo {period} no admite corregir una autoliquidación ya presentada. Practica
+        el ajuste en la autoliquidación de un periodo posterior.
       amendment_registry_root_missing: Falta la generación publicada de la autoridad
         %{missing_path}; no se pueden validar las sobrescrituras de rectificación.
       amendment_registry_snapshot_unresolved: No se pudieron resolver las definiciones
@@ -2918,6 +2921,8 @@ application:
       profile_already_exists: El perfil '%{profile}' ya existe; ejecuta aeat config
         login NAME para activarlo o aeat config profile delete NAME primero.
       profile_authentication_refused: No se aceptó la contraseña del perfil.
+      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica
+        a qué ejercicio corresponde esta respuesta.
       profile_password_contains_surrogate: La contraseña del perfil contiene un valor
         que no puede codificarse como UTF-8 estricto.
       profile_password_too_few_scalars: La contraseña del perfil debe tener al menos
@@ -2928,7 +2933,6 @@ application:
         máximo {maximum_utf8_bytes} bytes UTF-8; se recibieron {utf8_byte_count}.
       profile_proof_cancelled: Se canceló la comprobación de la contraseña del perfil
         antes de terminar.
-      profile_field_needs_ejercicio: El campo %{field} se declara por ejercicio; indica a qué ejercicio corresponde esta respuesta.
       profile_text_too_long: El campo %{field} admite como máximo %{limit} caracteres;
         acórtalo.
       recovery_already_enrolled: Este perfil ya tiene un código de recuperación. Desactívalo

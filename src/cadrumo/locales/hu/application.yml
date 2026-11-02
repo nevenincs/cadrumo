@@ -1781,6 +1781,9 @@ application:
       amendment_kind_not_permitted: 'A kért módosítási típus ({requested_kind}) jogilag
         nem elérhető a Modelo {modelo} bevalláshoz, {filing_year} adóévhez, {period}
         időszakhoz. Az ehhez az időszakhoz elfogadott típusok: {accepted_kinds}.'
+      amendment_later_period_only: A(z) {modelo} modell {filing_year}. évi {period}
+        időszakában a már benyújtott bevallás nem javítható. A kiigazítást egy későbbi
+        időszak bevallásában végezd el.
       amendment_registry_root_missing: A(z) %{missing_path} közzétett hatósági generáció
         hiányzik; a módosítási felülírások nem érvényesíthetők.
       amendment_registry_snapshot_unresolved: A Modelo %{modelo} nyomtatvány, %{filing_year}
@@ -2873,6 +2876,8 @@ application:
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
       profile_authentication_refused: A profiljelszó hitelesítése sikertelen.
+      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni;
+        add meg, melyik adóévre vonatkozik ez a válasz.
       profile_password_contains_surrogate: A profiljelszó olyan értéket tartalmaz,
         amely nem kódolható szigorú UTF-8 formában.
       profile_password_too_few_scalars: A profiljelszónak legalább {minimum_scalars}
@@ -2883,7 +2888,6 @@ application:
         {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
       profile_proof_cancelled: A profiljelszó ellenőrzése megszakadt, mielőtt befejeződött
         volna.
-      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni; add meg, melyik adóévre vonatkozik ez a válasz.
       profile_text_too_long: A(z) %{field} mező legfeljebb %{limit} karaktert enged
         meg; rövidítsd le.
       recovery_already_enrolled: Ehhez a profilhoz már tartozik helyreállítási kód.

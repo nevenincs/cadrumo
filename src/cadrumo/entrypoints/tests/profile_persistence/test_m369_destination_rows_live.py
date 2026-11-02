@@ -32,7 +32,9 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.action_errors import AmendmentKindNotPermittedError
 from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_amendment_evidence import resolve_persisted_amendment_export_evidence
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_form import build_modelo_work_form
@@ -59,6 +61,10 @@ from cadrumo.domain.iva.classification import TransactionKind
 from cadrumo.domain.iva.oss import OssIossRegime
 from cadrumo.domain.iva.rates import IVA_RATE_FACT_ID
 from cadrumo.domain.iva.schema import InvoiceKind, IvaRateKind
+from cadrumo.domain.modelos.calculation_revision_amendment import (
+    CalculationRevisionAmendmentIdentity,
+    CalculationRevisionAmendmentKind,
+)
 from cadrumo.domain.modelos.verification_report import VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
@@ -542,6 +548,72 @@ def test_the_ceiling_belongs_to_the_import_regime_alone(
         objects, _UNION, (_invoice(_UNION, "OSS-BIG", "FR", "general", "1000.00", "200.00"),), operation
     )
     assert Decimal(result.revision.casilla_values[_UNION.total_casilla]) == Decimal("200.00")
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_an_amended_return_refuses_export_because_the_design_cannot_declare_it(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Orden HAC/610/2021 art. 7.5: a filed return is never modified, whichever amendment kind is asked for."""
+    result, work_unit = _calculate(objects, scenario, (_invoice(scenario, "OSS-A", "FR", "general", "100.00", "20.00"),), operation)
+    ports = modelo_export_ports_for_test(
+        bucket_id=_BUCKET,
+        secure_objects=objects,
+        work_unit=WorkUnitCatalogueRepository(objects=objects),
+        calculation=CalculationRevisionCatalogueRepository(objects=objects),
+    )
+    for kind in CalculationRevisionAmendmentKind:
+        amended = result.revision.model_copy(
+            update={
+                "amendment_identity": CalculationRevisionAmendmentIdentity(
+                    kind=kind, amends_filing_record_id="filing-ficticio", m303_rectificativa_motive=None
+                )
+            }
+        )
+        with pytest.raises(AmendmentKindNotPermittedError) as refused:
+            resolve_persisted_amendment_export_evidence(
+                ModeloExportCommand(
+                    calculation_revision_id=amended.calculation_revision_id,
+                    output_path=Path("nunca-escrito.txt"),
+                    actor="m369-rows-exporter",
+                ),
+                amended,
+                work_unit=work_unit,
+                workflow_profile=_profile(),
+                work_unit_repository=ports.work_unit,
+                filing_repository=ports.filing,
+                justificante_repository=None,
+                operation=operation,
+            )
+        assert refused.value.translated_message == "application.modelo.errors.amendment_later_period_only"
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_an_ordinary_single_page_return_leaves_every_page_indicator_blank(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    result, _ = _calculate(objects, scenario, (_invoice(scenario, "OSS-A", "FR", "general", "100.00", "20.00"),), operation)
+    assert _verify(result).granted_verificado_completo is True
+    wire = _export(objects, tmp_path, scenario, result)
+    revision = (
+        published_authority_operation()
+        .snapshot("369", filing_year=_YEAR, period=scenario.period_code, revision_id=scenario.revision_id)
+        .revision
+    )
+    markers = [
+        field
+        for field in parse_export_payload(revision.export_layouts[0], wire).fields
+        if field.field_id.endswith("complementaria")
+    ]
+    assert markers
+    assert {field.value for field in markers} == {" "}
 
 
 def _published_rows(scenario: _Scenario, operation: PinnedAuthorityOperation) -> tuple[Invoice, ...]:
