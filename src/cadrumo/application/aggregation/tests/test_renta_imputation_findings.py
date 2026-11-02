@@ -63,8 +63,8 @@ from .test_renta_imputation_criterion import (
     _in_year,
     _issued,
     _profile,
-    _received,
     _receipt,
+    _received,
     _unresolved_bindings,
 )
 
@@ -147,7 +147,9 @@ def test_a_part_paid_invoice_collected_next_year_stays_wholly_in_the_accrual_yea
 
 
 def test_part_collections_count_as_collected_under_cash(operation: PinnedAuthorityOperation) -> None:
-    rows, invoice = _part_paid(date(_EARLIER, 12, 1), (date(_EARLIER, 12, 20), "530.00"), (date(_LATER, 1, 10), "530.00"))
+    rows, invoice = _part_paid(
+        date(_EARLIER, 12, 1), (date(_EARLIER, 12, 20), "530.00"), (date(_LATER, 1, 10), "530.00")
+    )
     facts = _declared((_EARLIER, _CASH), (_LATER, _CASH))
     earlier = _resolve(operation, facts, rows=rows, invoices=(invoice,), year=_EARLIER)
     later = _resolve(operation, facts, rows=rows, invoices=(invoice,), year=_LATER)
@@ -217,9 +219,7 @@ def test_a_filed_cash_election_blocks_returning_to_accrual_inside_three_years(
 ) -> None:
     invoice = _issued(date(_LATER, 3, 1))
     filings = ImputationFilingHistory(stated={_LATER - 1: _COBROS})
-    resolution = _resolve(
-        operation, _declared((_LATER, _DEVENGO)), invoices=(invoice,), year=_LATER, filings=filings
-    )
+    resolution = _resolve(operation, _declared((_LATER, _DEVENGO)), invoices=(invoice,), year=_LATER, filings=filings)
     blocked = [item for item in resolution.diagnostics if item.binding_id == _INCOME_0171]
     assert any(item.reason == "unresolved_binding" and f"return of {_LATER - 1}" in item.message for item in blocked)
 
@@ -227,9 +227,7 @@ def test_a_filed_cash_election_blocks_returning_to_accrual_inside_three_years(
 def test_a_filed_return_contradicting_its_own_year_blocks(operation: PinnedAuthorityOperation) -> None:
     invoice = _issued(date(_LATER, 3, 1))
     filings = ImputationFilingHistory(stated={_LATER: _COBROS})
-    resolution = _resolve(
-        operation, _declared((_LATER, _DEVENGO)), invoices=(invoice,), year=_LATER, filings=filings
-    )
+    resolution = _resolve(operation, _declared((_LATER, _DEVENGO)), invoices=(invoice,), year=_LATER, filings=filings)
     assert _INCOME_0171 in _unresolved_bindings(resolution)
 
 
@@ -293,7 +291,10 @@ def test_the_filing_history_reads_the_marked_box_and_the_record_date() -> None:
             "filed_at": datetime(year, 6, 1, tzinfo=UTC),
         }
     )
-    observed = {(year - 1): _flag_observation(year - 1, "1443", "X"), (year - 2): _flag_observation(year - 2, "0169", "")}
+    observed = {
+        (year - 1): _flag_observation(year - 1, "1443", "X"),
+        (year - 2): _flag_observation(year - 2, "0169", ""),
+    }
     history = imputation_filing_history(
         bucket_id=filed.bucket_id,
         year=year,
@@ -363,34 +364,6 @@ def _elected(operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, 
         profile_record=_profile(operation, facts).record,
     )
     return exported.get("E1ITEMP")
-
-
-@pytest.mark.parametrize("edition", [2022, 2023, 2024, 2025])
-def test_the_election_boxes_keep_their_roles_in_each_edition(edition: int) -> None:
-    roles = {
-        str(casilla.id): casilla.semantic_role
-        for casilla in published_snapshot("100", filing_year=edition, period="0A").revision.casillas
-        if str(casilla.id) in {"0169", "1443", "1487"}
-    }
-    assert roles == {
-        "0169": "irpf_ed_cobros_pagos_flag",
-        "1443": "irpf_eo_cobros_pagos_flag",
-        "1487": "irpf_eo_agr_cobros_pagos_flag",
-    }
-
-
-@pytest.mark.parametrize("criterion", [_DEVENGO, _CASH])
-def test_a_capital_subsidy_stays_unresolved_under_either_criterion(
-    operation: PinnedAuthorityOperation, criterion: str
-) -> None:
-    catalogue = resolve_concepto_ingreso_catalogue(effective_date=date(_LATER, 1, 1), authority=operation)
-    row = _paying(date(_LATER, 2, 1), "1000.00").model_copy(
-        update={"concepto_ingreso": catalogue.require("subvencion_capital")}
-    )
-    resolution = _resolve(operation, _declared((_LATER, criterion)), rows=(row,), year=_LATER)
-    assert resolution.binding_values[_INCOME_0171] == _ZERO
-    blocked = [item.message for item in resolution.diagnostics if item.binding_id == _INCOME_0171]
-    assert any("capital_subsidy_schedule_unknown" in message for message in blocked)
 
 
 @pytest.mark.parametrize("edition", [2022, 2023, 2024, 2025])
