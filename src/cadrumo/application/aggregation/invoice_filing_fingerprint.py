@@ -16,11 +16,13 @@ a removal and a move in as an addition:
 - The renta expense sources refuse an unpaid received invoice and net a received
   correction, with no row at all, so from field-set version 3 every received invoice
   entering its window counts too.
+- A correction finds the invoice it reduces by that invoice's number, so from field-set
+  version 4 the number is a calculation fact.
 
 The field set is the union of what those readers consult, including the
 decomposition contract that grounds income evidence. What is left out, and why:
 
-- ``invoice_number``, ``series``, ``notes``, both addresses, ``payment_id``,
+- ``series``, ``notes``, both addresses, ``payment_id``,
   ``exemption_reference``, ``created_at``, ``updated_at``, ``provenance``: no
   calculation reads them.
 - ``retention_rate``: nothing reads it; ``retention_amount`` is the figure.
@@ -114,22 +116,30 @@ _INVOICE_FIELDS_V1: Final[tuple[str, ...]] = (
 # A correction nets against the invoice it names, so the name moves a figure.
 _INVOICE_FIELDS_V2: Final[tuple[str, ...]] = (*_INVOICE_FIELDS_V1, "rectifies_invoice_number")
 
+# A correction finds its invoice by this number, so renumbering moves a figure.
+_INVOICE_FIELDS_V4: Final[tuple[str, ...]] = (*_INVOICE_FIELDS_V2, "invoice_number")
+
 # Version 3 widens the scope, not the fields.
 _INVOICE_FIELD_SETS: Final[Mapping[int, tuple[str, ...]]] = {
     1: _INVOICE_FIELDS_V1,
     2: _INVOICE_FIELDS_V2,
     3: _INVOICE_FIELDS_V2,
+    4: _INVOICE_FIELDS_V4,
 }
 
 #: The version every new fingerprint is captured under.
-CURRENT_INVOICE_FIELD_SET_VERSION: Final = 3
+CURRENT_INVOICE_FIELD_SET_VERSION: Final = 4
 
 #: The first version whose scope holds the invoices renta income reads with no row.
-#: An older snapshot keeps its narrower scope, or its every draft would read as drifted.
+#: An older snapshot keeps its narrower scope and digests, so it stays readable, and verify
+#: sends its draft to be calculated again rather than reading it as drifted.
 _ACCRUED_INCOME_SCOPE_VERSION: Final = 2
 
 #: The first version whose scope holds the invoices renta expense reads with no row.
 _ACCRUED_EXPENSE_SCOPE_VERSION: Final = 3
+
+#: The first version holding everything a correction is read by, the number included.
+_CORRECTION_FACTS_VERSION: Final = 4
 
 _ACCRUED_EXPENSE_SOURCES: Final[frozenset[BindingSourceKind]] = frozenset(
     {
@@ -192,11 +202,16 @@ def fingerprint_scope_is_narrower(
     work_unit: WorkUnit,
     criteria: ImputationCriteria,
 ) -> bool:
-    """Whether this stored fingerprint leaves out invoices the draft's accrued income or expense may rest on."""
+    """Whether this stored fingerprint leaves out invoices or facts the draft's figures may rest on.
+
+    OSS nets corrections under any criterion; renta reads them, and invoices with no row, only under accrual.
+    """
     selection = _read_selection(revision, work_unit=work_unit)
-    return criteria.usable(work_unit.filing_year) is ActivityImputationCriterion.DEVENGO and (
-        (snapshot.field_set_version < _ACCRUED_INCOME_SCOPE_VERSION and selection.accrued_income)
-        or (snapshot.field_set_version < _ACCRUED_EXPENSE_SCOPE_VERSION and selection.accrued_expense)
+    if snapshot.field_set_version >= _CORRECTION_FACTS_VERSION:
+        return False
+    return selection.oss or (
+        criteria.usable(work_unit.filing_year) is ActivityImputationCriterion.DEVENGO
+        and (selection.accrued_income or selection.accrued_expense)
     )
 
 

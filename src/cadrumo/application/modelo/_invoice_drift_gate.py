@@ -26,7 +26,7 @@ from ..aggregation.invoice_filing_fingerprint import (
     fingerprint_scope_is_narrower,
     revision_reads_invoices,
 )
-from ..aggregation.renta_imputation import declared_imputation_criteria
+from ..aggregation.renta_imputation import ImputationFilingHistory, declared_imputation_criteria
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPersistenceError, InvoiceCatalogueReadPorts
 from ._ledger_drift_gate import LEDGER_DRIFT_LEGAL_REFS
 
@@ -71,14 +71,15 @@ def invoice_drift_findings(
     profile: ModeloWorkProfile,
     source_refs: tuple[str, ...] = (),
     blocking_finding_observer: _InvoiceDriftObserver | None = None,
+    narrower_scope_observer: Callable[[ModeloVerificationFinding], None] | None = None,
+    filings: ImputationFilingHistory | None = None,
 ) -> list[ModeloVerificationFinding]:
     """Compare a draft's stored invoice fingerprint with the catalogue.
 
     A draft calculated before fingerprints existed gets a warning saying so: its
-    invoices are neither known to match nor known to differ, and refusing it would
-    block every such draft over nothing observed. A draft fingerprinted under an
-    older, narrower scope keeps that scope and gets a warning for what it leaves out,
-    for the same reason.
+    invoices are neither known to match nor known to differ. A draft fingerprinted
+    under an older, narrower scope has a fingerprint that cannot prove it current, so
+    it is sent to be calculated again; its stored fingerprint stays as it was.
     """
     if target.state is not CalculationRevisionState.BORRADOR:
         return []
@@ -96,21 +97,19 @@ def invoice_drift_findings(
                 source_refs=source_refs,
             )
         ]
-    criteria = declared_imputation_criteria(profile.record)
-    narrower: list[ModeloVerificationFinding] = (
-        [
-            ModeloVerificationFinding(
-                kind=ModeloVerificationFindingKind.ADVISORY,
-                severity=ModeloVerificationFindingSeverity.WARNING,
-                message_locale_key="application.modelo.findings.invoice_fingerprint_narrower_scope",
-                message_facts=_message_facts(work_unit),
-                legal_refs=LEDGER_DRIFT_LEGAL_REFS,
-                source_refs=source_refs,
-            )
-        ]
-        if fingerprint_scope_is_narrower(snapshot, revision=revision, work_unit=work_unit, criteria=criteria)
-        else []
-    )
+    criteria = declared_imputation_criteria(profile.record, filings)
+    if fingerprint_scope_is_narrower(snapshot, revision=revision, work_unit=work_unit, criteria=criteria):
+        finding = ModeloVerificationFinding(
+            kind=ModeloVerificationFindingKind.STALE_CALCULATION,
+            severity=ModeloVerificationFindingSeverity.BLOCKING,
+            message_locale_key="application.modelo.findings.invoice_fingerprint_narrower_scope",
+            message_facts=_message_facts(work_unit),
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
+            source_refs=source_refs,
+        )
+        if narrower_scope_observer is not None:
+            narrower_scope_observer(finding)
+        return [finding]
     try:
         verdict = evaluate_invoice_fingerprint(
             snapshot,
@@ -131,9 +130,9 @@ def invoice_drift_findings(
         )
         if blocking_finding_observer is not None:
             blocking_finding_observer(finding, None)
-        return [*narrower, finding]
+        return [finding]
     if not verdict.is_stale:
-        return narrower
+        return []
     finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.STALE_CALCULATION,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
@@ -144,7 +143,7 @@ def invoice_drift_findings(
     )
     if blocking_finding_observer is not None:
         blocking_finding_observer(finding, verdict)
-    return [*narrower, finding]
+    return [finding]
 
 
 __all__ = ["invoice_drift_findings"]
