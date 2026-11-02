@@ -16,9 +16,16 @@ legal_refs = [
   "ley-37-1992:art-163-duovicies",
   "ley-37-1992:art-163-septvicies",
 ]
-source_refs = ["aeat-dr-369-2021"]
+source_refs = ["aeat-dr-369-2021", "aeat-modelo-369-file-description"]
 review_status = "agent_reviewed"
 ownership = "authored"
+
+# The file description reads the no-activity row: 0 -> false, 1 -> true.
+[[fact.variants.source_citations]]
+source_ref = "aeat-modelo-369-file-description"
+required_text = [
+  "Declaración sin actividad",
+]
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-369-2021"
