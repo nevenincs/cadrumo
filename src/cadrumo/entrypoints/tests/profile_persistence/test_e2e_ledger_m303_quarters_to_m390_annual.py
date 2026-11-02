@@ -89,6 +89,7 @@ from cadrumo.core.prior_domiciliation_election import PriorDomiciliationElection
 from cadrumo.core.prorrata_register import ProrrataProvisionalProvenance, ProrrataRegisterRegime
 from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from cadrumo.domain.calculations.registry.bindings import CasillaObservation
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 from cadrumo.domain.calculations.registry.tests.authored_editions import split_exercise_revisions
 from cadrumo.domain.contribuyente.entity_type import EntityType, LegalEntityForm
@@ -104,8 +105,12 @@ from cadrumo.domain.iva_compensation.reconciliation import (
     IvaCompensationAuthoritySource,
     IvaCompensationReconciliationDecision,
 )
-from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.calculation_revision import (
+    CalculationRevision,
+    derive_calculation_revision_id_from_revision,
+)
 from cadrumo.domain.modelos.codes import ModeloCode
+from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus, VerificationReport
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.prorrata_register.register import ProrrataRegister, ProrrataRegisterEntry
@@ -865,11 +870,10 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
     context = exc_info.value.context or {}
     assert context["reason"] == "missing_clean_cross_period_303_filings_or_observations"
     assert context["missing_303_periods"] == ("1T", "2T", "3T", "4T")
-    assert context["zero_reconciliation_casillas_at_risk"] == (
-        _M390_DEVENGADA,
-        _M390_DEDUCIBLE,
-        _M390_RESULTADO,
-    )
+    # Without a filed fourth quarter the annual prorrata regularisation is
+    # unresolved, so the annual deduction total and result that sum it hold no
+    # figure to set a zero slot against; the output-IVA total does, and refuses.
+    assert context["zero_reconciliation_casillas_at_risk"] == (_M390_DEVENGADA,)
 
 
 # AEAT Manual practico IVA 2025, Capitulo 5, prorrata general example
@@ -1038,6 +1042,98 @@ def test_settlement_quarter_without_filed_earlier_quarter_leaves_casilla_44_unre
     assert Decimal(stored.casilla_values[_SOPORTADO_INTERIORES]) == _MANUAL_4T_DEFINITIVE_DEDUCTION
     _assert_form_states_no_figure(secure_objects, (_CASILLA_44, _CASILLA_45), operation=operation)
     _assert_verify_export_and_file_refused(secure_objects, revision, tmp_path, operation=operation)
+
+
+def test_a_revision_saved_with_the_unresolved_44_as_zero_still_loads_unchanged(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """A draft saved before unresolved bound boxes were left absent keeps its stored zero and still opens.
+
+    Such a draft holds 44 as an ordinary zero beside its unresolved-binding
+    note. Loading neither rejects nor rewrites it, its note still refuses the
+    check, and the form still reads the box as not worked out.
+    """
+    _store_profile(secure_objects)
+    _save_general_prorrata_register(secure_objects)
+    _persist_year_of_invoices(
+        secure_objects,
+        facts_by_period=_PRORRATA_QUARTER_FACTS,
+        received_rate_percent=Decimal("10"),
+    )
+    for period in ("2T", "3T"):
+        _calculate_and_file_m303_quarter(secure_objects, period=period, operation=operation)
+    work_unit, current = _calculate_m303_quarter_revision(
+        secure_objects,
+        period="4T",
+        extra_casilla_inputs={
+            _PRORRATA_VOLUMEN_CON_DERECHO: Decimal("25000.00"),
+            _PRORRATA_VOLUMEN_TOTAL: Decimal("45000.00"),
+        },
+        operation=operation,
+    )
+    snapshot = published_authority_operation().snapshot("303", filing_year=_YEAR, period="4T")
+    casilla_44 = next(casilla for casilla in snapshot.revision.casillas if casilla.id == _CASILLA_44)
+    stored_zero = current.model_copy(
+        update={
+            "casilla_values": {**current.casilla_values, _CASILLA_44: Decimal("0.00")},
+            "observations": (
+                *current.observations,
+                CasillaObservation(
+                    casilla_id=_CASILLA_44,
+                    value=Decimal("0.00"),
+                    legal_refs=casilla_44.legal_refs,
+                    source_refs=casilla_44.source_refs,
+                ),
+            ),
+        }
+    )
+    legacy = stored_zero.model_copy(
+        update={"calculation_revision_id": derive_calculation_revision_id_from_revision(stored_zero)}
+    )
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    catalogue = cr_repo.load()
+    cr_repo.save(
+        catalogue.model_copy(update={"revisions": {**catalogue.revisions, legacy.calculation_revision_id: legacy}})
+    )
+    wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
+    current_unit = wu_repo.load().get(work_unit.work_unit_id)
+    assert current_unit is not None
+    wu_repo.save(
+        upsert_work_unit(
+            wu_repo.load(),
+            current_unit.model_copy(update={"current_calculation_revision_id": legacy.calculation_revision_id}),
+        )
+    )
+
+    reloaded = CalculationRevisionCatalogueRepository(objects=secure_objects).load().get(legacy.calculation_revision_id)
+    assert reloaded is not None
+    assert reloaded.casilla_values[_CASILLA_44] == Decimal("0.00")
+    assert reloaded.source_issues == current.source_issues
+    _assert_form_states_no_figure(secure_objects, (_CASILLA_44,), operation=operation)
+    with (
+        bundled_indexed_authority().operation() as verify_operation,
+        pytest.raises(ModeloCalculationBlockedError) as refusal,
+    ):
+        verify_modelo_revision_with_preconditions(
+            legacy.calculation_revision_id,
+            certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
+            verification_repositories=_verification_ports(
+                operation=verify_operation,
+                work_repo=wu_repo,
+                calc_repo=CalculationRevisionCatalogueRepository(objects=secure_objects),
+                filing_repo=ModeloRecordCatalogueRepository(objects=secure_objects),
+                verification_repo=VerificationReportCatalogueRepository(objects=secure_objects),
+                event_repo=BucketEventHistoryRepository(objects=secure_objects),
+                tx_repo=TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects),
+            ),
+            actor="operator",
+            workflow_profile=workflow_profile(),
+            settings=ready_clave_settings(_TAX_ID),
+            clock=_FILE_AT,
+            operator_scope_ports=_OPERATOR_SCOPE_PORTS,
+            operation=verify_operation,
+        )
+    assert (refusal.value.context or {})["reason"] == "unresolved_binding"
 
 
 def _assert_form_states_no_figure(

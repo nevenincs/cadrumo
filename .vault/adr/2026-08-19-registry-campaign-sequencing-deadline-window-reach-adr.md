@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#registry-campaign-sequencing'
 date: '2026-08-19'
-modified: '2026-10-03'
+modified: '2026-11-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:b2d6525b57ed816d649e68af1b6431f99cb6a1d704e4f46bd3a940d0564c73dc'
+body_hash: 'sha256:46a32511cc04c38d801e5b1d4534bad629cfa52e80cb1b91f4a54b993ad37797'
 related:
   - "[[2026-08-16-registry-campaign-sequencing-export-layout-authoring-backlog-audit]]"
 ---
@@ -96,3 +96,30 @@ source justified by something the revision actually declares.
 If adopted, a calendar source is admissible only when a declared deadline window closes within that source's period. A stale design citation still fails because no declared window supports it, while the following-year calendar needed by a forward-reaching deadline can be cited.
 
 The rule affects registry validation for every modelo. The sixty-one observed windows remain evidence of current practice, not proof of intent; the forward-reach convention still needs owner confirmation before rollout.
+
+## Reconciliation with accepted decisions (2026-11-01)
+
+This record is still proposed. Two amendments of the accepted ADR
+2026-08-24-deadline-window-revision-authority-adr, both approved by the operator on
+2026-11-01, narrow the premise in the Problem Statement that a filing deadline must be
+read from AEAT's published calendar rather than derived from the statutory rule. Before
+this record is accepted, its premise and options must be read as narrowed below; the text
+above is left as proposed.
+
+- An authored window date, and an authored payment cutoff, remain read from the published
+  calendar, remain revision-owned and always win. The citation question this record
+  raises still applies to them.
+- Where no window or cutoff is authored, a value may be derived from a governed rule with
+  explicit provenance: the domiciliación payment cutoff from
+  `deadlines.domiciliation-cutoff-clause` and `deadlines.domiciliation-procedure`, and the
+  opening and closing dates of modelos that declare `deadlines.filing-window-clause`
+  (today Modelo 303 and Modelo 390), with the inhábil-day extension from
+  `deadlines.filing-close-inhabil-shift`. A derived value is a projection of declared law,
+  not a claim of a published date; disagreement with an authored value is a registry
+  finding, and authored wins.
+- A derived close is unknown, never guessed, when the holiday calendar of a year the
+  extension consults is not published; it is then reported only as a lower bound and no
+  lateness is judged against it.
+- The forward-reach and source-applicability conflict this record describes is unaffected
+  for authored windows. For a coordinate filled by the rule there is no calendar citation
+  on a window, so the conflict does not arise there.

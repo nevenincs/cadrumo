@@ -5,7 +5,7 @@ tags:
 date: '2026-08-24'
 modified: '2026-11-01'
 body_schema: 'body-v1'
-body_hash: 'sha256:31d4316565921c7c63897ec4e1675cc300a91b5cd1a0b96e952930b5c454f060'
+body_hash: 'sha256:f335a115739bf0aa3dad99d2c277c5103ad4f5c8ee0e0d4e6ce0b7c06fa9e164'
 related:
   - "[[2026-08-24-deadline-window-revision-authority-research]]"
   - '[[2026-08-24-deadline-window-revision-authority-reference]]'
@@ -222,3 +222,130 @@ wording conflicts with this section, this section governs for the payment cutoff
   justified divergence list, a coverage gate requiring every periodic window of a modelo
   that declares domiciliación to have an authored cutoff or a covering clause, and the
   pruning of authored cutoffs equal to the derived value remain later steps.
+
+## Amendment 2026-11-01 (2): projected filing windows
+
+Approved by the operator on 2026-11-01 (decisions D1 to D6 of the window-projection
+design). The accepted body and the first 2026-11-01 amendment are unchanged; where their
+wording conflicts with this section, this section governs for the opening and closing
+dates of the modelos that declare a filing-window clause, today Modelo 303 and Modelo 390.
+
+### Ruling
+
+- A filing window's opening and nominal closing dates are a rule declared once per modelo
+  and typed period selector in the governed mapping fact `deadlines.filing-window-clause`
+  and projected through canonical governed-fact temporal selection. The extension of an
+  inhábil nominal close is the governed procedure `deadlines.filing-close-inhabil-shift`:
+  the next día hábil on the national calendar of días inhábiles, graded as AEAT published
+  practice and pending review. `DeadlineWindowDefinition` and the persisted authority
+  schema are unchanged.
+- A window exists only where the law-selected revision's filing schedule declares the
+  period; the clause supplies dates, never the obligation.
+- An authored window wins and need not agree with the rule; the rule fills only scheduled
+  coordinates that no owning revision authors. Disagreement is a registry finding for
+  review, never runtime arbitration. Administrative or territorial extensions the rule
+  cannot derive (RD 1624/1992 art. 71.4, last paragraph) are authored windows.
+- `closes_on` means the AEAT published close on the national basis. The filer's territory
+  is applied afterwards by the effective-deadline service, whose behaviour is unchanged.
+- Where the national holiday calendar of a year the shift consults is not published, the
+  window's close is unknown. Its opening and nominal close are reported, the nominal close
+  only as a lower bound; the obligation carries the status `UNKNOWN`, is never classified
+  as due or overdue against the nominal date, and no lateness, recargo or payment cutoff is
+  judged after it. It is never treated as open or as absent.
+- Projection respects the shared support envelope: nothing below the floor; above the
+  horizon the open frontier revision and the open fact variants carry forward, with the
+  projection direction retained in the provenance.
+- The domiciliación cutoff clause no longer carries the nominal close; it reads it from the
+  filing-window clause, so the nominal close has one home.
+- The 12M 2026 Modelo 303 window no longer authors `payment_cutoff_on` 2027-01-27 or the
+  two 2026 calendar source references that supported it: the bundled 2026 AEAT
+  domiciliación calendar prints no 12M 2026 row. Its cutoff is derived when the 2027
+  holiday calendar is published and is unavailable until then.
+
+### Grounding
+
+- RD 1624/1992 art. 71.4 and Orden EHA/3786/2008 art. 7 fix the Modelo 303 plazos:
+  twenty days after a quarter, thirty January for the fourth quarter and period 12, thirty
+  days after a month for SII filers, and the end of February for January. Orden
+  EHA/3111/2009 art. 8 fixes thirty January for Modelo 390. The clause variants cite the
+  bundled BOE form orders as source text.
+- Ley 39/2015 art. 30.5 moves a plazo ending on an inhábil day to the next hábil day;
+  art. 30.2 and art. 31.3 make Saturdays, Sundays and declared holidays inhábil for
+  electronic registers; DA 1ª.2 and Ley 58/2003 art. 7.2 apply the rule to tax procedure.
+  The national-only basis is graded as AEAT published practice because the AEAT calendar
+  publishes one close for all filers.
+- The legal entries are enrolled in the existing catalogue files
+  (src/cadrumo/_data/registry/aeat/legal/iva-flow.toml,
+  src/cadrumo/_data/registry/aeat/legal/ley-39-2015-notificaciones.toml,
+  src/cadrumo/_data/registry/aeat/legal/lgt-autoliquidacion.toml) from texts already in
+  the bundled corpus.
+- Measured against every authored window from the support floor to the horizon (80
+  Modelo 303 and 5 Modelo 390 windows), with the national calendars of 2022, 2023 and
+  January 2027 supplied where the authority publishes none, the rule reproduces all but
+  one: Modelo 390 2026 authors Saturday 30 January 2027 and states that no weekend
+  displacement is asserted, where the rule gives Monday 1 February. That authored date
+  stays, wins and is listed as the one justified divergence; whether to correct it is a
+  registry decision.
+
+### Implementation
+
+- The facts are src/cadrumo/_data/registry/aeat/facts/0172-filing-window-clause.toml and
+  src/cadrumo/_data/registry/aeat/facts/0173-filing-close-inhabil-shift.toml; the nominal
+  close keys left src/cadrumo/_data/registry/aeat/facts/0170-domiciliation-cutoff-clause.toml.
+- One domain module projects a coordinate:
+  src/cadrumo/domain/deadlines/filing_window_projection.py:259 resolves the clause through
+  the existing governed-fact resolver, src/cadrumo/domain/deadlines/filing_window_projection.py:460
+  applies the shift or reports the close unknown, and
+  src/cadrumo/domain/deadlines/filing_window_projection.py:601 enumerates the unauthored
+  scheduled coordinates of a year. There is no second loader, no newest-year fallback and
+  no year in code.
+- The deadline engine's year index adds the projections beside the authored windows and
+  keeps close-unknown projections apart (src/cadrumo/domain/deadlines/engine.py:208); the
+  schedule carries them as `close_unknown_obligations`
+  (src/cadrumo/domain/deadlines/engine.py:675, src/cadrumo/domain/deadlines/models.py:950)
+  with `ObligationStatus.UNKNOWN` (src/cadrumo/domain/deadlines/models.py:142).
+- Window matching stays solely in src/cadrumo/domain/deadlines/plazo.py:35, which now
+  returns a typed resolution: authored, projected, or projected with an unknown close.
+  Consumers read the dated window where one exists: the effective deadline
+  (src/cadrumo/application/modelo/effective_deadline.py:147), the work plazo and form
+  header, export accounts, the workflow gate, and the overview calendar, which shows an
+  unknown close as an `UNKNOWN` row (src/cadrumo/application/overview/calendar.py:559)
+  that agenda, backlog, next-due and the TUI past scope leave out of their date cohorts.
+- The domiciliación clause takes its nominal close from the window clause
+  (src/cadrumo/domain/deadlines/domiciliation_cutoff.py:246).
+- The agreement, precedence, future-year and unknown-close behaviour is tested in
+  src/cadrumo/domain/deadlines/tests/test_filing_window_projection.py against the authored
+  windows and an oracle written from the articles.
+- The facts and the 303 window change publish as existing governed-fact and window
+  components, so a new authority generation and its runtime adoption are required before
+  projected windows reach an installed runtime. Source installation, publication and
+  adoption are reported separately.
+
+### Wording of the accepted body and the first amendment this section qualifies
+
+- Constraints, "Validation makes no claim about unpublished future dates": a projected
+  window is a projection of declared law with provenance, not a claim of a published
+  date; its close is unknown until the holiday calendar it needs is published.
+- Constraints, "Exact filing dates are revision-owned legal facts": authored windows
+  remain so and win; projected dates are rule-derived and tested against the authored
+  windows as an independent oracle.
+- Implementation, periodic completeness: for a modelo with a filing-window clause, a
+  coordinate is complete when an authored window or a covering clause exists.
+- Implementation, "Open frontier revisions do not imply unpublished future dates": open
+  frontier revisions with a covering clause now yield projected windows, dated or with an
+  unknown close; without a clause they still do not.
+- First 2026-11-01 amendment, "Projecting window opening and closing dates is out of scope":
+  superseded by this section for the modelos that declare a clause. Its statement that the
+  domiciliación clause carries the nominal close is replaced by the single home above.
+
+### Follow-up recorded, not decided here
+
+- Modelo 390 2026 authored close (Saturday 30 January 2027) against the rule's Monday 1
+  February: correct the authored window or keep it as a reviewed divergence. Modelo 130
+  2026 4T is likewise authored on Saturday 30 January 2027; Modelo 130 declares no clause,
+  so it is outside this section.
+- The workflow and state projections read only dated obligations and do not yet surface
+  close-unknown obligations; the deadline engine's explain and applicability helpers read
+  dated windows only.
+- Review whether the taxpayer-territory shift (art. 30.6) applied by the effective-deadline
+  service is right for electronic filing given art. 31.3.

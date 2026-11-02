@@ -27,11 +27,13 @@ from cadrumo.domain.user_profile.tests.profile_creation_authority import (
 
 from ....adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ....adapters.persistence.profile.calculation_observations import CalculationObservationRepository
+from ....adapters.persistence.profile.inventory import InventoryLedgerRepository
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from ....application.aggregation.tests.test_inventory_source import inventory_ledger
 from ....application.calculations.observations_repository import APP_FILING_SOURCE_KIND
 from ....application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
@@ -48,6 +50,7 @@ from ....domain.calculations.registry.tests.authored_editions import newest_auth
 from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
 )
+from ....domain.contribuyente.inventory.records import InventoryLedgerDocument
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -232,6 +235,12 @@ def test_m100_anexo_c_applied_amount_reduces_base_liquidable_not_base_imponible(
     """A real 1389 amount becomes 0501 and reduces 0500 by the same amount."""
     obs_repo = CalculationObservationRepository(objects=secure_objects)
     _seed_taxpayer_unit_profile(secure_objects)
+    # The filer carries on an economic activity, so its Anexo D inventory rows
+    # feed the general base: without the year's ledger they are unresolved and
+    # so is every base that sums them.
+    InventoryLedgerRepository(objects=secure_objects).save(
+        InventoryLedgerDocument(ledgers=(inventory_ledger("actividad"),))
+    )
     _seed_prior_m100_generated_pending(obs_repo, source_year=_NEWEST_EDITION - 1, value=Decimal("4321.00"))
     _seed_zero_pagos_quarters(obs_repo, filing_year=_NEWEST_EDITION)
 

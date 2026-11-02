@@ -221,11 +221,12 @@ def _calculate_m130(session: NativeApiCliSession[None], work_unit_id: str, *, ou
 
 
 def _closes_on(filing_year: int, period_token: str) -> date:
-    window = resolve_filing_window(
+    resolution = resolve_filing_window(
         "130",
         filing_year,
         Period.from_year_and_code(filing_year, period_token),
     )
+    window = None if resolution is None else resolution.dated_window
     assert window is not None, f"registry must register an M130 {period_token} {filing_year} deadline window"
     assert window.closes_on is not None, f"the M130 {period_token} {filing_year} window must carry a close date"
     return window.closes_on

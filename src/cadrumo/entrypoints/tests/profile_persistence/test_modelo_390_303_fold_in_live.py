@@ -127,6 +127,11 @@ _IVA_IMPORTACION_ADUANA: CasillaId = validated_casilla_id("77")
 # carries that proven zero rather than a missing source.
 _COMPENSACIONES_REAGP: CasillaId = validated_casilla_id("42")
 _M390_COMPENSACIONES_REAGP_CASILLA: CasillaId = validated_casilla_id("iva.anual.deducible.compensaciones-reagp.cuota")
+# Box [44] of the settlement quarter is the prorrata regularisation the annual
+# summary restates. This filer applies no prorrata, so its 4T filed a [44] of
+# zero; without it the annual regularisation, and every total summing it, is
+# unresolved rather than zero.
+_PRORRATA_REGULARIZACION: CasillaId = validated_casilla_id("44")
 _COMPENSACION_APLICADA: CasillaId = validated_casilla_id("iva.compensacion-aplicada-periodo")
 _COMPENSACION_POSTERIOR: CasillaId = validated_casilla_id("iva.compensacion-pendiente-periodos-posteriores")
 _M390_REGULARIZACION_ART_80_CASILLA: CasillaId = validated_casilla_id("iva.anual.regularizacion-cuotas-art-80-cinco-5")
@@ -183,6 +188,7 @@ _M303_BY_PERIOD: dict[str, dict[CasillaId, Decimal]] = {
         _REGULARIZACION_ART_80: Decimal("1.50"),
         _IVA_IMPORTACION_ADUANA: Decimal("0.00"),
         _COMPENSACIONES_REAGP: Decimal("0.00"),
+        _PRORRATA_REGULARIZACION: Decimal("0.00"),
     },
 }
 

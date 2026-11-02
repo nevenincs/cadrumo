@@ -313,6 +313,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     relation_values: Mapping[RelationId, Decimal] | None = None,
     unresolved_relation_ids: tuple[RelationId, ...] = (),
     unresolved_binding_ids: tuple[BindingId, ...] = (),
+    settled_binding_ids: tuple[BindingId, ...] = (),
     source_transaction_ids: tuple[str, ...] = (),
     m210_official_tipo_renta_code: str | None = None,
     m210_gross_income_source_mode: M210GrossIncomeSourceMode | None = None,
@@ -374,6 +375,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         cleared_casilla_ids,
         unresolved_relation_ids,
         unresolved_binding_ids,
+        settled_binding_ids,
         closed_record_row_sets,
         row_binding_values,
         filing_instance_evidence,
@@ -476,6 +478,7 @@ def _calculate_prepared_registry_snapshot(
     date_binding_values: Mapping[BindingId, date],
     boolean_binding_values: Mapping[BindingId, bool],
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
+    settled_binding_ids: tuple[BindingId, ...] = (),
 ) -> RegistryCalculationResult:
     """Evaluate the registry after application channels have been resolved."""
     return calculate_registry_snapshot(
@@ -488,6 +491,7 @@ def _calculate_prepared_registry_snapshot(
         relation_values=relation_values,
         unresolved_relation_ids=unresolved_relation_ids,
         unresolved_binding_ids=unresolved_binding_ids,
+        settled_binding_ids=settled_binding_ids,
         date_binding_values=date_binding_values or None,
         boolean_binding_values=boolean_binding_values or None,
         closed_record_row_sets=closed_record_row_sets,
@@ -504,6 +508,7 @@ def _evaluate_prepared_calculation(
     cleared_casilla_ids: tuple[CasillaId, ...],
     unresolved_relation_ids: tuple[RelationId, ...],
     unresolved_binding_ids: tuple[BindingId, ...],
+    settled_binding_ids: tuple[BindingId, ...],
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...],
     row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None,
     filing_instance_evidence: FilingInstanceEvidence | None,
@@ -572,6 +577,7 @@ def _evaluate_prepared_calculation(
             relation_values=resolved_relations,
             unresolved_relation_ids=unresolved_relation_ids,
             unresolved_binding_ids=unresolved_binding_ids,
+            settled_binding_ids=settled_binding_ids,
             date_binding_values=prepared.channels.date_bindings,
             boolean_binding_values=prepared.channels.boolean_bindings,
             closed_record_row_sets=closed_record_row_sets,
