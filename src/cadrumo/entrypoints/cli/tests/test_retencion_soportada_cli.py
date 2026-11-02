@@ -30,9 +30,9 @@ from .cli_fixture_worlds import RegisteredCliProfile, cli_world_provider, invoke
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
 _TAXPAYER = "12345678Z"
-_PAYER_A = "B00000001"
-_PAYER_B = "B00000002"
-_PAYER_C = "B00000003"
+_PAYER_A = "B00000000"
+_PAYER_B = "B00000018"
+_PAYER_C = "B00000026"
 _EJERCICIO = "2025"
 _FIRST_CERTIFICATE = "1" * 64
 _SECOND_CERTIFICATE = "2" * 64

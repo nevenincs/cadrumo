@@ -63,7 +63,7 @@
         "ledger",
         "retencion-soportada",
         "record",
-        "B00000001",
+        "B00000000",
         "--ejercicio",
         "2025",
         "--income-class",
@@ -180,10 +180,10 @@
           {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
         ],
         "result": {
-          "bucket_event_id": "2f39facb05493a123f072ac8e5b5d175f8eabc45f31b76ac530162df18584f16",
+          "bucket_event_id": "8fcdf552c1a182c6fd07c39df5fec45349c3792dbbd758d8ca8c681547224cf8",
           "bucket_id": "<bucket-id>",
           "byte_size": 2282,
-          "calculation_revision_id": "6ef0c32909b0d171b705ab3de1b5adcf6f1ac886db9e70313ed73ed820bfb782",
+          "calculation_revision_id": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e",
           "file_sha256": "2662f83e48beacb501c2dabd38e202af97e70b316af8a02ae490645eb8e0d49c",
           "filing_year": 2025,
           "format": "xml-dictionary",

@@ -113,7 +113,7 @@
         "ledger",
         "retencion-soportada",
         "record",
-        "B00000001",
+        "B00000000",
         "--ejercicio",
         "2025",
         "--income-class",
@@ -156,7 +156,7 @@
         {
           "json_path": "result.calculation_revision_id",
           "name": "calculation_revision_id",
-          "value": "6ef0c32909b0d171b705ab3de1b5adcf6f1ac886db9e70313ed73ed820bfb782"
+          "value": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e"
         }
       ],
       "envelope": {
@@ -233,7 +233,7 @@
             "renta-retencion-soportada-ganancia-patrimonial": "0",
             "renta-retencion-soportada-trabajo": "2400"
           },
-          "calculation_revision_id": "6ef0c32909b0d171b705ab3de1b5adcf6f1ac886db9e70313ed73ed820bfb782",
+          "calculation_revision_id": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e",
           "casilla_values": {
             "0002": "0",
             "0003": "24000",
@@ -4178,7 +4178,7 @@
             {"casilla_id":"0586","label":"Increased net regional tax liability","role":"key_figure","value":"1616.62"}
           ],
           "saved": true,
-          "saved_confirmation": "Saved as draft calculation revision 6ef0c32909b0d171b705ab3de1b5adcf6f1ac886db9e70313ed73ed820bfb782 (state: draft). It is persisted and can be resumed later.",
+          "saved_confirmation": "Saved as draft calculation revision 9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e (state: draft). It is persisted and can be resumed later.",
           "source_provenance": [
             {
               "contributor_binding_source": "retencion_soportada",
@@ -4189,7 +4189,7 @@
               "parent_source_ref": null,
               "resolved_binding_source": "retencion_soportada",
               "resolver_id": "retencion_soportada",
-              "source_ref": "retencion-soportada:2025:trabajo:e4b83a90b7ee2b5e993c5b78dfa09a1c0326684abff25777b515c73e8ca76e11"
+              "source_ref": "retencion-soportada:2025:trabajo:d6e577984bddfc88faf2ad2926fa2527c0611fae83bbcf8aeced8276f1fa4cbd"
             },
             {
               "contributor_binding_source": "retencion_soportada",
@@ -4261,7 +4261,7 @@
         "modelo",
         "work",
         "verify",
-        "6ef0c32909b0d171b705ab3de1b5adcf6f1ac886db9e70313ed73ed820bfb782"
+        "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e"
       ],
       "captures": [],
       "envelope": {
@@ -4289,7 +4289,7 @@
           {"action":null,"code":"config.login.session_not_persisted","context":null,"message":"Profile authentication supplied to this command applies to this process only; supply it again to the next process.","severity":"warning"}
         ],
         "result": {
-          "calculation_revision_id": "6ef0c32909b0d171b705ab3de1b5adcf6f1ac886db9e70313ed73ed820bfb782",
+          "calculation_revision_id": "9e30eaeb65e7c5a66c3bdd988c86113e6138d4896ad6323cf4524f98e7f0942e",
           "completeness_status": "complete",
           "findings": [
             {
@@ -4361,7 +4361,7 @@
           },
           "resolved_casilla_ids": [],
           "run_at": "2026-04-01T09:00:00+00:00",
-          "verification_report_id": "83c0aae3f730f2816d81d9270283b81803c8747f54e37a561c9d28a7cecf6d2a",
+          "verification_report_id": "99895d3998cacc18ed72bafc490d29391794baee135d7a06f21d8efc4cebfc8a",
           "verified_by": "docs-sequence-sandbox"
         },
         "schema_version": "2",
