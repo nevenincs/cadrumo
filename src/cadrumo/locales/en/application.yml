@@ -1433,11 +1433,11 @@ application:
         out, so it is not included.'
       activity_undeclared: '{element}: its purchase has no type of activity and another
         of your assets is agricultural, so it counts as non-agricultural.'
-      advisory_imputation_period_ungrounded: 'Box {box}: {amount} of withholding is
-        held back because the period it belongs to is not confirmed. A withholding
-        counts in the period of the income it was taken from (RIRPF art. 79), and
-        your records date each payment by when it reached the bank, which is right
-        only if you chose to declare income when you are paid (RIRPF art. 7.2; LIRPF
+      advisory_imputation_period_ungrounded: 'Box {box}: {amount} is held back because
+        the period it belongs to is not confirmed. Activity income and expenses count
+        when they accrue, and a withholding counts with its income (RIRPF art. 79),
+        while your records date each entry by when it reached the bank, which is right
+        only if you chose to declare when you are paid or pay (RIRPF art. 7.2; LIRPF
         art. 14.1.b).'
       advisory_value_proven_zero: 'Box {box}: the zero stands, because nothing in
         the period carries a figure whose period could be in doubt.'
