@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from types import SimpleNamespace
 from typing import Any
 from uuid import UUID
 
@@ -26,20 +27,15 @@ class _Request:
         self.body = body
 
 
-class _Values:
-    def batchUpdate(self, *, spreadsheetId: str, body: dict[str, Any]) -> _Request:  # noqa: N802 - Google API name
-        return _Request("values", body)
-
-
-class _Sheets:
-    def spreadsheets(self) -> _Sheets:
-        return self
-
-    def values(self) -> _Values:
-        return _Values()
-
-    def batchUpdate(self, *, spreadsheetId: str, body: dict[str, Any]) -> _Request:  # noqa: N802 - Google API name
-        return _Request("structure", body)
+def _sheets() -> Any:
+    """A stand-in for the discovery-built resource that records request bodies."""
+    values = SimpleNamespace(batchUpdate=lambda **kwargs: _Request("values", kwargs["body"]))
+    sheets = SimpleNamespace(
+        values=lambda: values,
+        batchUpdate=lambda **kwargs: _Request("structure", kwargs["body"]),
+    )
+    sheets.spreadsheets = lambda: sheets
+    return sheets
 
 
 class _Recorder:
@@ -66,9 +62,9 @@ def _cells(body: dict[str, Any]) -> list[object]:
 
 def test_formula_looking_text_is_sent_raw_and_numbers_stay_numbers() -> None:
     plan = _review_plan()
-    recorder = _Recorder()
+    recorder: Any = _Recorder()
 
-    _write_plan_values(execute=recorder, sheets=_Sheets(), spreadsheet_id="sheet", plan=plan)
+    _write_plan_values(execute=recorder, sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
 
     literal_request, _, _ = recorder.calls[0]
     assert literal_request.body["valueInputOption"] == "RAW"
@@ -84,11 +80,13 @@ def test_formula_looking_text_is_sent_raw_and_numbers_stay_numbers() -> None:
 def test_only_generated_formulas_use_user_entered_input() -> None:
     plan = build_export_plan(published_snapshot("130", filing_year=2025, period="1T", on=date(2025, 4, 1)))
     assert plan.formula_cells
-    recorder = _Recorder()
+    recorder: Any = _Recorder()
 
-    _write_plan_values(execute=recorder, sheets=_Sheets(), spreadsheet_id="sheet", plan=plan)
+    _write_plan_values(execute=recorder, sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
 
-    by_input = {request.body["valueInputOption"]: request for request, _, _ in recorder.calls if request.kind == "values"}
+    by_input = {
+        request.body["valueInputOption"]: request for request, _, _ in recorder.calls if request.kind == "values"
+    }
     assert set(by_input) == {"RAW", "USER_ENTERED"}
     entered = _cells(by_input["USER_ENTERED"].body)
     assert len(entered) == len(plan.formula_cells)
@@ -98,11 +96,11 @@ def test_only_generated_formulas_use_user_entered_input() -> None:
 
 def test_structural_batch_that_creates_unkeyed_metadata_is_never_transport_retried() -> None:
     plan = _review_plan()
-    recorder = _Recorder()
+    recorder: Any = _Recorder()
 
     _apply_plan_structural_requests(
         execute=recorder,
-        sheets=_Sheets(),
+        sheets=_sheets(),
         spreadsheet_id="sheet",
         spreadsheet={},
         plan=plan,
