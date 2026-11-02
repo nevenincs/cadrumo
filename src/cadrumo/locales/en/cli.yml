@@ -428,6 +428,16 @@ cli:
         line_help: Repeatable JSON object for one invoice line; pass one object per
           --line. For structured input it replaces scalar --taxable-base and --iva-rate.
         list_help: List reconciliation catalogue invoices.
+        match_help: Answer which movement settles which invoice, and the choices for
+          a link by hand, without linking anything.
+        match_invalid: A staged link must name a movement id and an invoice id as
+          MOVEMENT:INVOICE, each in full.
+        match_invoice_help: 'Full id of one invoice: weigh only that invoice and list
+          the open movements near its issue day.'
+        match_staged_help: Repeatable link staged and not saved, as MOVEMENT:INVOICE;
+          neither is offered to anything else.
+        match_transaction_help: 'Full id of one movement: return only its suggestion
+          and list the invoices it may be linked to.'
         operation_date_help: Date the goods were delivered or the service was supplied
           (YYYY-MM-DD). This is the LIVA art. 75 tax accrual date that decides which
           period declares the VAT amount; without it the invoice date stands in for

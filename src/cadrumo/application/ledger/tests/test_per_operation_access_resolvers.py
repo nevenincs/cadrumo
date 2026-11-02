@@ -50,6 +50,10 @@ from ...invoices.figures_preview_operation import (
     InvoiceFiguresPreviewRequest,
     resolve_invoice_figures_preview_access,
 )
+from ...invoices.payment_match_operation import (
+    LedgerInvoiceMatchRequest,
+    resolve_ledger_invoice_match_access,
+)
 from ...modelo.invoice_withholding_capture_operation import (
     ModeloInvoiceWithholdingCaptureRequest,
     resolve_modelo_invoice_withholding_capture_access,
@@ -273,6 +277,13 @@ _RESOLVERS = [
         LedgerInvoiceDuplicateRequest,
         False,
         id="ledger.invoice.duplicate",
+    ),
+    pytest.param(
+        resolve_ledger_invoice_match_access,
+        "ledger.invoice.match",
+        LedgerInvoiceMatchRequest,
+        False,
+        id="ledger.invoice.match",
     ),
     pytest.param(
         resolve_invoice_figures_preview_access,

@@ -190,6 +190,49 @@ class LedgerInvoiceDuplicateEnvelope(OutputSchema):
     basis: str | None
 
 
+class LedgerInvoiceMatchPairPayload(OutputSchema):
+    """One movement and one invoice that settle each other, and the evidence the pair stands on."""
+
+    transaction_id: str
+    invoice_id: str
+    number: bool
+    gap: int
+    counterparty: bool
+
+
+class LedgerInvoiceMatchSuggestionPayload(LedgerInvoiceMatchPairPayload):
+    """A movement's best invoice, with what competes with it."""
+
+    ambiguous: bool
+    ties: list[LedgerInvoiceMatchPairPayload]
+    others: list[LedgerInvoiceMatchPairPayload]
+
+
+class LedgerInvoiceMatchInvoiceChoicePayload(OutputSchema):
+    """An invoice a movement may be linked to by hand."""
+
+    invoice_id: str
+    settles: bool
+    staged_for: str | None
+    linked: int
+
+
+class LedgerInvoiceMatchMovementChoicePayload(OutputSchema):
+    """A movement an invoice may be linked to by hand."""
+
+    transaction_id: str
+    settles: bool
+
+
+class LedgerInvoiceMatchEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice match``."""
+
+    suggestions: list[LedgerInvoiceMatchSuggestionPayload]
+    window_days: int
+    invoice_choices: list[LedgerInvoiceMatchInvoiceChoicePayload] | None
+    movement_choices: list[LedgerInvoiceMatchMovementChoicePayload] | None
+
+
 class LedgerSplitCheckProblemPayload(OutputSchema):
     """The first thing the split writer would refuse in the parts asked about."""
 
@@ -1033,6 +1076,11 @@ __all__ = [
     "LedgerHistoryEventPayload",
     "LedgerHistoryResult",
     "LedgerInvoiceDuplicateEnvelope",
+    "LedgerInvoiceMatchEnvelope",
+    "LedgerInvoiceMatchInvoiceChoicePayload",
+    "LedgerInvoiceMatchMovementChoicePayload",
+    "LedgerInvoiceMatchPairPayload",
+    "LedgerInvoiceMatchSuggestionPayload",
     "LedgerInvoicePreviewFactPayload",
     "LedgerInvoicePreviewFigurePayload",
     "LedgerInvoicePreviewFindingPayload",

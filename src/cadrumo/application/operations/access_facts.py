@@ -77,6 +77,7 @@ _LOCAL_READS: Final = (
     "ledger.inventory.list",
     "ledger.inventory.options",
     "ledger.invoice.duplicate",
+    "ledger.invoice.match",
     "ledger.invoice.list",
     "ledger.invoice.preview",
     "ledger.invoice.view",

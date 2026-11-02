@@ -494,6 +494,10 @@ def _ledger_rule_trial(ctx: PayloadContext) -> PayloadResult:
     )
 
 
+def _ledger_invoice_match(ctx: PayloadContext) -> PayloadResult:
+    return ctx.request(ctx.profile_subject, {"profile_id": ctx.profile_id})
+
+
 def _ledger_invoice_duplicate(ctx: PayloadContext) -> PayloadResult:
     return ctx.request(
         ctx.profile_subject,
@@ -788,6 +792,7 @@ LEDGER_BUILDERS: dict[str, PayloadBuilder] = {
     "ledger.entry-options": _ledger_entry_options,
     "ledger.rule.trial": _ledger_rule_trial,
     "ledger.invoice.duplicate": _ledger_invoice_duplicate,
+    "ledger.invoice.match": _ledger_invoice_match,
     "ledger.split.check": _ledger_split_check,
     "ledger.staged.check": _ledger_staged_check,
     "ledger.known-values": _ledger_known_values,
