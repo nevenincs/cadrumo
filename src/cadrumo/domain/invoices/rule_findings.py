@@ -12,8 +12,12 @@ from collections.abc import Iterable, Mapping
 from dataclasses import dataclass, field
 from decimal import Decimal
 from enum import StrEnum
+from typing import Final
 
 from .errors import InvoiceValidationError
+
+#: The catalogue root under which each document rule's finding is worded, one key per finding code.
+INVOICE_RULE_FINDING_WORDS_ROOT: Final = "application.invoices.figures_preview.rule_finding"
 
 
 class InvoiceRuleFindingCode(StrEnum):
@@ -56,11 +60,17 @@ class InvoiceRuleFinding:
     values: Mapping[str, Decimal | str] = field(default_factory=dict[str, Decimal | str])
 
 
+def rule_finding_words_key(code: InvoiceRuleFindingCode) -> str:
+    """The catalogue key of the sentence that words the finding ``code``."""
+    return f"{INVOICE_RULE_FINDING_WORDS_ROOT}.{code.value}"
+
+
 def invoice_rule_refusal(finding: InvoiceRuleFinding) -> InvoiceValidationError:
-    """Return the refusal a validator raises for ``finding``, carrying its stable code."""
+    """Return the refusal a validator raises for ``finding``, carrying its stable code and the key of its words."""
     return InvoiceValidationError(
         finding.message,
         context={"rule_finding_code": finding.code.value, "fields": finding.fields},
+        translated_message=rule_finding_words_key(finding.code),
     )
 
 
@@ -222,6 +232,7 @@ def lease_kind_finding(*, lease_stated: bool, issued: bool) -> InvoiceRuleFindin
 
 
 __all__ = [
+    "INVOICE_RULE_FINDING_WORDS_ROOT",
     "InvoiceRuleFinding",
     "InvoiceRuleFindingCode",
     "invoice_class_rule_findings",
@@ -229,4 +240,5 @@ __all__ = [
     "lease_kind_finding",
     "operation_date_role_finding",
     "raise_first_rule_finding",
+    "rule_finding_words_key",
 ]
