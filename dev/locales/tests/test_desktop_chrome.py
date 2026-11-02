@@ -222,8 +222,7 @@ def test_the_drift_check_sees_templates_undeclared_and_stale_keys(tmp_path: Path
 def test_a_family_prefix_without_a_separator_names_its_members(tmp_path: Path) -> None:
     source = tmp_path / "src"
     source.mkdir()
-    (source / "Panel.tsx").write_text('wordOrToken(t, "desktop.premises.s", code);
-', encoding="utf-8")
+    (source / "Panel.tsx").write_text('wordOrToken(t, "desktop.premises.s", code);\n', encoding="utf-8")
     keys = frozenset({"desktop.premises.s1", "desktop.premises.s2"})
 
     assert shell_drift(source, keys, {"desktop.premises.s": ("1", "2")}) == {
