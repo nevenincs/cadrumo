@@ -397,6 +397,7 @@ test("the review flags an expense category on income, which no expense reads", a
     label("desktop.ledger.category.vehiculo_combustible"),
   );
   // The same category on an expense is no mismatch.
+  await find(target, "comision mantenimiento");
   await chooseIn(
     target,
     cellOf(rowOf(target, "COMISION MANTENIMIENTO CUENTA"), "category"),
