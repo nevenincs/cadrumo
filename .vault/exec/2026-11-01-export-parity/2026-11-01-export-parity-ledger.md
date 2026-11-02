@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:9778925d8af7410de2309e593f8d96fbadaa9e4d03144f35de95259a7d46f63e'
+body_hash: 'sha256:e90f67c38fe022c00eea62c29b62eef27665f60ba3f97aae6fa28c667dcf8b71'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -197,6 +197,27 @@ related:
 - `S15` `verify:` `python -m dev.registry.conformance valid` -> `pass`
 - `S15` `verify:` `just check-bindings` -> `pass`
 - `S15` `by:` `implementation-engineer-high`
+- `S01` `M` `.vault/adr/2026-11-01-export-parity-binding-capability-grade-adr.md`
+- `S01` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S02` `M` `.vault/adr/2026-11-01-export-parity-observation-filing-kind-adr.md`
+- `S02` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S03` `M` `.vault/adr/2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr.md`
+- `S03` `M` `.vault/adr/2026-06-10-calculation-aggregation-taxonomy-adr.md`
+- `S03` `verify:` `vaultspec-core vault check all --feature calculation-aggregation-taxonomy` -> `pass`
+- `S12` `M` `.vault/adr/2026-11-01-export-parity-suffered-withholding-schemas-adr.md`
+- `S12` `M` `.vault/reference/2026-11-01-export-parity-suffered-withholding-schemas-reference.md`
+- `S12` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S13` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S13` `M` `.vault/research/2026-11-01-export-parity-income-imputation-criterion-research.md`
+- `S13` `A` `.vault/research/2026-11-01-export-parity-withholding-legal-readings-research.md`
+- `S13` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-binding-capability-grade-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-observation-filing-kind-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-calculation-aggregation-taxonomy-tier-divergence-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-suffered-withholding-schemas-adr.md`
+- `S27` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S27` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S28` `M` `.vault/plan/2026-11-01-export-parity-plan.md`
 
 ## Notes
 
@@ -209,3 +230,4 @@ related:
 - `S05` post-close test alignment
 - `S16` post-close test alignment
 - `S15` Every target casilla of the 2022-2023 borrador profile is computed, so a real import stores no value and reports all five as unowned; installed stdio acceptance fixture updated but not run (disposable host only)
+- `S28` coordination with IVA and registry sessions happened after S16 landed; consumer-domain items forwarded to operator
