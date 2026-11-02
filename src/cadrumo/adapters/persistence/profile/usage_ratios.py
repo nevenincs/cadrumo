@@ -198,9 +198,12 @@ def save_usage_ratios_with_secure_object_writes(
     """
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
+    # Building the write first validates the bucket identity, so a non-canonical bucket is refused
+    # here rather than by the repository resolver.
+    profile_write = _usage_ratio_write(profile, bucket_id=bucket_id)
     repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)
     try:
-        repository.apply_batch((_usage_ratio_write(profile, bucket_id=bucket_id), *extra_writes))
+        repository.apply_batch((profile_write, *extra_writes))
     except OSError as exc:
         _LOGGER.error("usage-ratios database batch write failed", exc_info=True)
         raise UsageRatioPersistenceError(
