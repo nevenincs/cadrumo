@@ -593,6 +593,9 @@ def assert_ledger_invoice_match_outcome(ctx: ExecutorOutcome) -> None:
     assert answer.suggestions == ()
     assert answer.invoice_choices is None
     assert answer.movement_choices is None
+    assert [(one.transaction_id, one.invoice_id, one.found, one.mismatches) for one in answer.judgements] == [
+        ("a" * 64, "b" * 64, False, ())
+    ]
     assert ctx.definition.capabilities.permitted_effects == frozenset({OperationEffect.NONE, OperationEffect.UNKNOWN})
 
 

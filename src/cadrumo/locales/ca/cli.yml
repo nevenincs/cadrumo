@@ -462,6 +462,9 @@ cli:
           factura com MOVIMENT:FACTURA, tots dos complets.
         match_invoice_help: 'Id complet d''una factura: pondera només aquesta factura
           i llista els moviments oberts propers al seu dia d''emissió.'
+        match_judge_help: Vincle repetible que es compara abans de fer-lo permanent,
+          com MOVIMENT:FACTURA; cadascun torna amb allò que no coincideix entre els
+          seus dos costats.
         match_staged_help: Vincle preparat i sense desar, repetible, com MOVIMENT:FACTURA;
           cap dels dos s'ofereix a una altra cosa.
         match_transaction_help: 'Id complet d''un moviment: retorna només el seu suggeriment

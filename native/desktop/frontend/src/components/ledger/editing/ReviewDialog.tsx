@@ -23,10 +23,12 @@ import { useTableView, type ViewColumn } from "@/components/ui/table-view";
 import { facts, factsGap, labelled, listed } from "@/shell/compose";
 import type {
   CatalogueInvoice,
+  LedgerInvoiceMatchJudgement,
   LedgerPort,
   LedgerRow,
   OutputLanguage,
 } from "../../../shell/ledger";
+import { useInvoiceMatches } from "../../../shell/ledgerInvoiceMatch";
 import type { StepOutcome, StepReport } from "../../../shell/ledgerApply";
 import { classifyCells } from "../../../shell/ledgerCommands";
 import { parsePercent } from "../../../shell/ledgerGrammar";
@@ -62,7 +64,6 @@ import {
 import {
   changeGroups,
   heldUnits,
-  linkMismatches,
   linksReady,
   pointsText,
   outcomeTally,
@@ -752,21 +753,31 @@ function mismatchText(t: Translate, locale: string, mismatch: LinkMismatch) {
   switch (mismatch.kind) {
     case "amount":
       return t("desktop.ledger.apply.link.amount_differs", {
-        amount: valueText(t, locale, "amount", mismatch.difference),
+        amount: valueText(
+          t,
+          locale,
+          "amount",
+          mismatch.difference?.decimal ?? "",
+        ),
       });
     case "counterparty":
       return t("desktop.ledger.apply.link.counterparty_differs");
     case "currency":
       return t("desktop.ledger.apply.link.currency_differs", {
-        movement: mismatch.movement,
-        invoice: mismatch.invoice,
+        movement: mismatch.movement ?? "",
+        invoice: mismatch.invoice ?? "",
       });
     case "linked_elsewhere":
       return t("desktop.ledger.apply.link.linked_elsewhere", {
-        count: mismatch.count,
+        count: mismatch.count ?? 0,
       });
   }
 }
+
+/** The mismatches the ledger found against a link, or null where it has not
+ * judged it or the movement or invoice is gone. */
+const judgementOf = (judgement: LedgerInvoiceMatchJudgement | undefined) =>
+  judgement?.found ? judgement.mismatches : null;
 
 function PermanentLinks({
   links,
@@ -774,19 +785,23 @@ function PermanentLinks({
   ticks,
   onTicks,
   onRereadInvoices,
+  onRetryJudgement,
 }: {
   links: {
     id: string;
     row: LedgerRow | undefined;
     invoice: CatalogueInvoice | undefined;
     invoiceId: string;
-    mismatches: LinkMismatch[];
+    /** What the ledger found against the link; null until it has said. */
+    mismatches: readonly LinkMismatch[] | null;
   }[];
   locale: string;
   ticks: LinkTicks;
   onTicks: (ticks: LinkTicks) => void;
   /** Reads the catalogue again where an invoice could not be read. */
   onRereadInvoices: () => void;
+  /** Asks the ledger again to compare the links. */
+  onRetryJudgement: () => void;
 }) {
   const t = useStrings();
   if (!links.length) return null;
@@ -848,7 +863,24 @@ function PermanentLinks({
                 </Button>
               </p>
             )}
-            {link.mismatches.length > 0 && (
+            {link.invoice && link.mismatches === null && (
+              <p
+                role="status"
+                className="ledger-link-unjudged flex flex-wrap items-center gap-1.5 text-sm"
+              >
+                <Icon name="unknown" size="xs" className="text-warning" />
+                {t("desktop.ledger.apply.link.unjudged")}
+                <Button
+                  variant="link"
+                  size="xs"
+                  className="ledger-link-rejudge"
+                  onClick={onRetryJudgement}
+                >
+                  {t("desktop.ledger.retry")}
+                </Button>
+              </p>
+            )}
+            {link.mismatches && link.mismatches.length > 0 && (
               <ul className="flex flex-wrap gap-1.5">
                 {link.mismatches.map((mismatch) => (
                   <li key={mismatch.kind}>
@@ -863,7 +895,7 @@ function PermanentLinks({
               <Checkbox
                 className="ledger-link-sure"
                 checked={tick.sure}
-                disabled={!link.invoice}
+                disabled={!link.invoice || link.mismatches === null}
                 onChange={(event) =>
                   onTicks({
                     ...ticks,
@@ -873,7 +905,7 @@ function PermanentLinks({
               />
               {t("desktop.ledger.apply.link.sure")}
             </label>
-            {link.mismatches.length > 0 && (
+            {link.mismatches && link.mismatches.length > 0 && (
               <label className="flex items-center gap-2 text-sm">
                 <Checkbox
                   className="ledger-link-differ"
@@ -1545,6 +1577,36 @@ export function ReviewDialog({
         : null,
     [state, content, locale, checked],
   );
+  const linkSteps = useMemo(
+    () =>
+      plan
+        ? plan.steps.flatMap((step) =>
+            step.kind === "action" && step.action.kind === "link"
+              ? [step.action]
+              : [],
+          )
+        : [],
+    [plan],
+  );
+  // The ledger states where each link's two sides differ; the window judges
+  // nothing, and a link not yet judged is held.
+  const judging = useInvoiceMatches(
+    port,
+    useMemo(
+      () =>
+        linkSteps.length > 0
+          ? {
+              staged: [],
+              judge: linkSteps.map((action) => ({
+                transaction_id: action.transactionId,
+                invoice_id: action.invoiceId,
+              })),
+            }
+          : null,
+      [linkSteps],
+    ),
+    rows,
+  );
   if (state.phase === "closed") return null;
   const busy = state.phase === "applying";
   const close = () => {
@@ -1643,10 +1705,13 @@ export function ReviewDialog({
   } else if (state.phase === "ready" && plan && rows) {
     const held = heldUnits(content, plan);
     const savable = tally.units - held;
-    const linkSteps = plan.steps.flatMap((step) =>
-      step.kind === "action" && step.action.kind === "link"
-        ? [step.action]
-        : [],
+    const judgements = new Map(
+      (judging.kind === "answer" ? judging.result.judgements : []).map(
+        (judgement) => [
+          `${judgement.transaction_id}:${judgement.invoice_id}`,
+          judgement,
+        ],
+      ),
     );
     const links = linkSteps.map((action) => {
       const row = rows.get(action.transactionId);
@@ -1658,11 +1723,14 @@ export function ReviewDialog({
         row,
         invoice,
         invoiceId: action.invoiceId,
-        mismatches: row && invoice ? linkMismatches(row, invoice) : [],
+        mismatches: judgementOf(
+          judgements.get(`${action.transactionId}:${action.invoiceId}`),
+        ),
       };
     });
     // A link whose invoice could not be read is held until it is read.
     const unread = links.some((link) => !link.invoice);
+    const unjudged = links.some((link) => link.mismatches === null);
     const ready = !unread && linksReady(links, ticks);
     const approvals = content.actions.filter(
       (action): action is Extract<StagedAction, { kind: "suggestion" }> =>
@@ -1715,6 +1783,7 @@ export function ReviewDialog({
           ticks={ticks}
           onTicks={setTicks}
           onRereadInvoices={() => void apply.rereadInvoices()}
+          onRetryJudgement={judging.retry}
         />
         <Approvals approvals={approvals} rows={rows} locale={locale} />
         {groups.length > 0 && (
@@ -1770,11 +1839,13 @@ export function ReviewDialog({
             ? apply.paused
             : unread
               ? t("desktop.ledger.apply.link.unread")
-              : !ready
-                ? t("desktop.ledger.apply.tick_links")
-                : held
-                  ? t("desktop.ledger.apply.held_note", { count: held })
-                  : ""}
+              : unjudged
+                ? t("desktop.ledger.apply.link.unjudged")
+                : !ready
+                  ? t("desktop.ledger.apply.tick_links")
+                  : held
+                    ? t("desktop.ledger.apply.held_note", { count: held })
+                    : ""}
         </span>
         <Button variant="ghost" onClick={close}>
           {t("desktop.ledger.apply.keep_editing")}

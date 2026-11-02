@@ -1384,6 +1384,7 @@ desktop:
         differ: Sé que difereixen
         linked_elsewhere: 'Factura ja vinculada · moviments: {count}'
         sure: Vincula aquests · permanent
+        unjudged: El llibre encara no ha comparat aquest vincle
         unread: No s'ha pogut llegir la factura
       mine: Conserva el meu
       mismatch:

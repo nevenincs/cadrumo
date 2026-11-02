@@ -7,6 +7,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type {
   LedgerInvoiceMatchRequest,
   LedgerInvoiceMatchResult,
+  LedgerInvoiceMatchStagedLink,
   LedgerPort,
 } from "./ledger";
 import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
@@ -18,18 +19,25 @@ export type InvoiceMatchView = LatestAnswer<LedgerInvoiceMatchResult> & {
   retry(): void;
 };
 
+const sameLinks = (
+  one: readonly LedgerInvoiceMatchStagedLink[],
+  other: readonly LedgerInvoiceMatchStagedLink[],
+) =>
+  one.length === other.length &&
+  one.every(
+    (link, at) =>
+      link.transaction_id === other[at]!.transaction_id &&
+      link.invoice_id === other[at]!.invoice_id,
+  );
+
 const sameQuestion = (
   one: LedgerInvoiceMatchRequest,
   other: LedgerInvoiceMatchRequest,
 ) =>
   (one.invoice_id ?? null) === (other.invoice_id ?? null) &&
   (one.transaction_id ?? null) === (other.transaction_id ?? null) &&
-  one.staged.length === other.staged.length &&
-  one.staged.every(
-    (link, at) =>
-      link.transaction_id === other.staged[at]!.transaction_id &&
-      link.invoice_id === other.staged[at]!.invoice_id,
-  );
+  sameLinks(one.staged, other.staged) &&
+  sameLinks(one.judge ?? [], other.judge ?? []);
 
 async function askMatches(
   port: LedgerPort,

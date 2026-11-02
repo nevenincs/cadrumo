@@ -30,6 +30,7 @@ from ..payment_matching import (
     PaymentSuggestion,
     can_take_invoice,
     invoice_choices,
+    link_differences,
     movement_choices,
     suggest_payments,
 )
@@ -469,6 +470,54 @@ def test_a_bare_legal_form_gives_the_link_suggestion_no_counterparty_boost() -> 
     assert by_row[named.transaction_id].score > by_row[bare.transaction_id].score
 
 
+def test_a_link_reads_the_amount_against_what_the_invoice_settles_for_not_its_total() -> None:
+    invoice = _invoice("R-1", kind="issued", base="1500.00", retention="225.00")
+    assert invoice_settlement(invoice) == Decimal("1590.00")
+    net = _movement("net", amount="1590.00", direction="INCOMING", counterparty="Trazo")
+    gross = _movement("gross", amount="1815.00", direction="INCOMING", counterparty="Trazo")
+    assert link_differences(net, invoice) == ()
+    (found,) = link_differences(gross, invoice)
+    assert (found.kind, found.difference) == ("amount", Decimal("225.00"))
+
+
+def test_a_link_tolerates_the_cent_the_suggestion_does_and_no_more() -> None:
+    invoice = _invoice("T-1")
+    assert link_differences(_movement("a", amount="36.31"), invoice) == ()
+    assert link_differences(_movement("b", amount="36.29"), invoice) == ()
+    (found,) = link_differences(_movement("c", amount="36.32"), invoice)
+    assert (found.kind, found.difference) == ("amount", Decimal("0.02"))
+
+
+def test_a_link_in_two_currencies_states_them_and_no_amount_difference() -> None:
+    (found,) = link_differences(_movement("usd", amount="999.00", currency="USD"), _invoice("C-1"))
+    assert (found.kind, found.movement_currency, found.invoice_currency, found.difference) == (
+        "currency",
+        "USD",
+        "EUR",
+        None,
+    )
+
+
+def test_a_link_judges_the_movements_own_counterparty_and_never_its_description() -> None:
+    invoice = _invoice("D-1")
+    described = _movement("described", description="PAPELERIA TRAZO SL FACTURA", counterparty=None)
+    assert link_differences(described, invoice) == ()
+    other = _movement("other", description="PAPELERIA TRAZO SL", counterparty="Imprenta Turia")
+    assert [found.kind for found in link_differences(other, invoice)] == ["counterparty"]
+    blank = _movement("blank", counterparty="   ")
+    assert link_differences(blank, invoice) == ()
+    assert link_differences(_movement("tidy", counterparty="papeleria trazo"), invoice) == ()
+
+
+def test_a_link_counts_the_other_movements_holding_the_invoice_and_not_itself() -> None:
+    row = _movement("own", counterparty="Trazo")
+    others = tuple(f"{digit}" * 64 for digit in "bc")
+    held = _invoice("H-1", linked=(row.transaction_id, *others))
+    (found,) = link_differences(row, held)
+    assert (found.kind, found.count) == ("linked_elsewhere", 2)
+    assert link_differences(row, _invoice("H-2", linked=(row.transaction_id,))) == ()
+
+
 # -- the recording the window's stand-in is held to -------------------------------------------------
 
 
@@ -535,6 +584,25 @@ def _scenario_answer(scenario: Mapping[str, Any]) -> dict[str, Any]:
         answer["movement_choices"] = [
             {"movement": names[choice.transaction.transaction_id], "settles": choice.settles}
             for choice in movement_choices(invoices[focus["invoice"]], movements.values(), staged=frozenset(staged))
+        ]
+    if "judge" in scenario:
+        answer["judgements"] = [
+            {
+                "movement": movement_name,
+                "invoice": number,
+                "found": True,
+                "mismatches": [
+                    {
+                        "kind": difference.kind,
+                        "difference": None if difference.difference is None else str(difference.difference),
+                        "movement": difference.movement_currency,
+                        "invoice": difference.invoice_currency,
+                        "count": difference.count,
+                    }
+                    for difference in link_differences(movements[movement_name], invoices[number])
+                ],
+            }
+            for movement_name, number in scenario["judge"]
         ]
     return answer
 

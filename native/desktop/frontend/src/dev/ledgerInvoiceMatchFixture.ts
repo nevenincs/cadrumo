@@ -12,6 +12,7 @@ import {
 } from "../shell/ledgerContract";
 import type {
   CatalogueInvoice,
+  LedgerInvoiceMatchMismatch,
   LedgerInvoiceMatchPair,
   LedgerInvoiceMatchRequest,
   LedgerInvoiceMatchResult,
@@ -47,11 +48,107 @@ const days = (from: string, to: string) =>
 const takesLink = (row: HeldRow) =>
   takesChanges(row.transaction.lifecycle_state) &&
   takesInvoice(row.transaction.direction);
+// A name that is only a legal form tells no party; the recording holds this
+// list to the backend's reading of "the same party".
+const BARE_LEGAL_FORMS = new Set([
+  "aie",
+  "cb",
+  "coop",
+  "gmbh",
+  "inc",
+  "llc",
+  "ltd",
+  "sa",
+  "sal",
+  "sau",
+  "sc",
+  "scoop",
+  "scp",
+  "sl",
+  "sll",
+  "slne",
+  "slp",
+  "slu",
+  "sociedadanonima",
+  "sociedadlimitada",
+]);
+const namesNoParty = (name: string) =>
+  BARE_LEGAL_FORMS.has(
+    name
+      .normalize("NFD")
+      .replace(/\p{M}+/gu, "")
+      .replace(/[^a-z0-9]+/g, ""),
+  );
 const overlap = (invoiceName: string, movementName: string) => {
   const a = invoiceName.trim().toLowerCase();
   const b = movementName.trim().toLowerCase();
-  return a !== "" && b !== "" && (a.includes(b) || b.includes(a));
+  return (
+    a !== "" &&
+    b !== "" &&
+    !namesNoParty(a) &&
+    !namesNoParty(b) &&
+    (a.includes(b) || b.includes(a))
+  );
 };
+
+/** Digits after the point, as the stand-in's exact arithmetic needs them. */
+const scaleOf = (text: string) => text.trim().split(".")[1]?.length ?? 0;
+
+/** The magnitude of two decimals' difference, in the wider of their spellings. */
+function spelledDistance(left: string, right: string): string {
+  const scale = Math.max(scaleOf(left), scaleOf(right));
+  const raw =
+    distance(units(left), units(right)) / 10n ** BigInt(SCALE - scale);
+  const digits = raw.toString().padStart(scale + 1, "0");
+  return scale === 0
+    ? digits
+    : `${digits.slice(0, -scale)}.${digits.slice(-scale)}`;
+}
+
+/** Where a movement and an invoice to be linked do not agree. */
+function mismatchesOf(
+  row: HeldRow,
+  invoice: CatalogueInvoice,
+): LedgerInvoiceMatchMismatch[] {
+  const found: LedgerInvoiceMatchMismatch[] = [];
+  const none = { difference: null, movement: null, invoice: null, count: null };
+  if (row.transaction.currency !== invoice.currency)
+    found.push({
+      ...none,
+      kind: "currency",
+      movement: row.transaction.currency,
+      invoice: invoice.currency,
+    });
+  else if (
+    distance(
+      units(row.transaction.amount),
+      units(invoice.settlement_amount.decimal),
+    ) > units(INVOICE_MATCH_TOLERANCE)
+  )
+    found.push({
+      ...none,
+      kind: "amount",
+      difference: {
+        decimal: spelledDistance(
+          row.transaction.amount,
+          invoice.settlement_amount.decimal,
+        ),
+      },
+    });
+  const named = row.transaction.counterparty;
+  if (
+    named.trim() !== "" &&
+    invoice.counterparty_name.trim() !== "" &&
+    !overlap(invoice.counterparty_name, named)
+  )
+    found.push({ ...none, kind: "counterparty" });
+  const elsewhere = invoice.linked_transaction_ids.filter(
+    (id) => id !== row.transaction.transaction_id,
+  ).length;
+  if (elsewhere > 0)
+    found.push({ ...none, kind: "linked_elsewhere", count: elsewhere });
+  return found;
+}
 
 function settles(row: HeldRow, invoice: CatalogueInvoice): boolean {
   return (
@@ -217,9 +314,24 @@ export function answerInvoiceMatch(
   const target = invoices.find(
     (invoice) => invoice.invoice_id === request.invoice_id,
   );
+  const judgements = (request.judge ?? []).map((link) => {
+    const held = rows.find(
+      (row) => row.transaction.transaction_id === link.transaction_id,
+    );
+    const asked = invoices.find(
+      (invoice) => invoice.invoice_id === link.invoice_id,
+    );
+    return {
+      transaction_id: link.transaction_id,
+      invoice_id: link.invoice_id,
+      found: held !== undefined && asked !== undefined,
+      mismatches: held && asked ? mismatchesOf(held, asked) : [],
+    };
+  });
   return {
     profile_id: profileId,
     suggestions,
+    judgements,
     window_days: WINDOW_DAYS,
     invoice_choices: own
       ? invoices

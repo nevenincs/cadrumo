@@ -18,7 +18,7 @@ from collections.abc import Collection, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import Final
+from typing import Final, Literal
 
 from ..transactions.classification_effects import takes_changes, takes_invoice
 from ..transactions.models import Transaction
@@ -284,16 +284,73 @@ def movement_choices(
     )
 
 
+type LinkDifferenceKind = Literal["amount", "currency", "counterparty", "linked_elsewhere"]
+
+
+@dataclass(frozen=True, slots=True)
+class LinkDifference:
+    """One way a movement and an invoice a person means to link permanently do not agree."""
+
+    kind: LinkDifferenceKind
+    #: The magnitude of the movement's amount less what the invoice settles for; set for ``amount``.
+    difference: Decimal | None = None
+    #: The movement's currency; set for ``currency``.
+    movement_currency: str | None = None
+    #: The invoice's currency; set for ``currency``.
+    invoice_currency: str | None = None
+    #: How many other movements already hold the invoice; set for ``linked_elsewhere``.
+    count: int | None = None
+
+
+def link_differences(transaction: Transaction, invoice: Invoice) -> tuple[LinkDifference, ...]:
+    """Return where a movement does not agree with the invoice it is to be linked to.
+
+    The amount is read against what the invoice settles for, within the link tolerance, and only
+    in a shared currency, as two currencies have no difference to state. The counterparty is the
+    movement's own and is judged by the one overlap reading; a movement that names none, or an
+    invoice that does not, says nothing to differ from. Another movement already holding the invoice
+    is stated with its count.
+    """
+    found: list[LinkDifference] = []
+    if transaction.raw.currency != invoice.currency:
+        found.append(
+            LinkDifference(
+                kind="currency",
+                movement_currency=transaction.raw.currency,
+                invoice_currency=invoice.currency,
+            )
+        )
+    else:
+        difference = abs(transaction.raw.amount - invoice_settlement(invoice))
+        if difference > INVOICE_MATCH_TOLERANCE:
+            found.append(LinkDifference(kind="amount", difference=difference))
+    named = transaction.raw.counterparty
+    if (
+        named is not None
+        and named.strip()
+        and invoice.counterparty_name.strip()
+        and not counterparties_overlap(invoice.counterparty_name, named)
+    ):
+        found.append(LinkDifference(kind="counterparty"))
+    elsewhere = sum(1 for linked in invoice.linked_transaction_ids if linked != transaction.transaction_id)
+    if elsewhere:
+        found.append(LinkDifference(kind="linked_elsewhere", count=elsewhere))
+    return tuple(found)
+
+
 __all__ = [
     "EARLY_PAYMENT_DAYS",
     "PICK_WINDOW_DAYS",
     "InvoiceChoice",
+    "LinkDifference",
+    "LinkDifferenceKind",
     "MovementChoice",
     "PaymentPair",
     "PaymentSuggestion",
     "can_take_invoice",
     "days_after_issue",
     "invoice_choices",
+    "link_differences",
     "movement_choices",
     "names_invoice_number",
     "payment_date",

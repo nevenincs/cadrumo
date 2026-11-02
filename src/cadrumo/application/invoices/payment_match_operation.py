@@ -3,12 +3,15 @@
 It proposes and ranks; it links nothing and writes nothing. The answer names movements and invoices
 by id, so the caller shows the records it already holds. Staged links the person has not saved yet
 are taken as given: a movement or invoice one of them takes is offered to nothing else.
+
+Links the person is about to make permanent may also be named: each comes back with where its
+movement and invoice do not agree, so the caller states the differences without judging them.
 """
 
 from __future__ import annotations
 
 import asyncio
-from typing import Annotated, Final
+from typing import Annotated, Final, Literal
 from uuid import UUID
 
 from pydantic import BaseModel, Field
@@ -23,9 +26,11 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.payment_matching import (
     PICK_WINDOW_DAYS,
+    LinkDifference,
     PaymentPair,
     PaymentSuggestion,
     invoice_choices,
+    link_differences,
     movement_choices,
     suggest_payments,
 )
@@ -42,6 +47,7 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_operation_profile
+from ..operations.public_scalar import PublicDecimal, project_scalar
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
@@ -74,6 +80,8 @@ class LedgerInvoiceMatchRequest(CredentialFreeOperationRequest):
     staged: Annotated[tuple[LedgerInvoiceMatchStagedLink, ...], Field(max_length=_MAX_STAGED_LINKS)] = ()
     invoice_id: InvoiceId | None = None
     transaction_id: TransactionId | None = None
+    #: Links to state the differences of; they take nothing from the suggestions.
+    judge: Annotated[tuple[LedgerInvoiceMatchStagedLink, ...], Field(max_length=_MAX_STAGED_LINKS)] = ()
 
 
 class LedgerInvoiceMatchPair(BaseModel):
@@ -125,6 +133,33 @@ class LedgerInvoiceMatchMovementChoice(BaseModel):
     settles: bool
 
 
+class LedgerInvoiceMatchMismatch(BaseModel):
+    """One way a judged movement and invoice do not agree; the fields besides ``kind`` are the kind's own."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    kind: Literal["amount", "currency", "counterparty", "linked_elsewhere"]
+    #: ``amount``: the magnitude of the movement's amount less what the invoice settles for.
+    difference: PublicDecimal | None = None
+    #: ``currency``: the movement's currency.
+    movement: str | None = None
+    #: ``currency``: the invoice's currency.
+    invoice: str | None = None
+    #: ``linked_elsewhere``: how many other movements already hold the invoice.
+    count: int | None = None
+
+
+class LedgerInvoiceMatchJudgement(BaseModel):
+    """What stands against one named link; ``found`` is false when the movement or the invoice is gone."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    transaction_id: TransactionId
+    invoice_id: InvoiceId
+    found: bool
+    mismatches: tuple[LedgerInvoiceMatchMismatch, ...] = ()
+
+
 class LedgerInvoiceMatchResult(BaseModel):
     """The suggestions newest movement first, and the choices the request asked for."""
 
@@ -138,6 +173,8 @@ class LedgerInvoiceMatchResult(BaseModel):
     invoice_choices: tuple[LedgerInvoiceMatchInvoiceChoice, ...] | None = None
     #: Movements for the invoice named by ``invoice_id``; None when none was named or it is gone.
     movement_choices: tuple[LedgerInvoiceMatchMovementChoice, ...] | None = None
+    #: One judgement per link named in ``judge``, in the order named.
+    judgements: tuple[LedgerInvoiceMatchJudgement, ...] = ()
 
 
 class LedgerInvoiceMatchExecutionResult(BaseModel):
@@ -155,6 +192,16 @@ def _pair_out(pair: PaymentPair) -> LedgerInvoiceMatchPair:
         number=pair.number,
         gap=pair.gap,
         counterparty=pair.counterparty,
+    )
+
+
+def _mismatch_out(found: LinkDifference) -> LedgerInvoiceMatchMismatch:
+    return LedgerInvoiceMatchMismatch(
+        kind=found.kind,
+        difference=None if found.difference is None else project_scalar(found.difference),
+        movement=found.movement_currency,
+        invoice=found.invoice_currency,
+        count=found.count,
     )
 
 
@@ -195,8 +242,25 @@ class LedgerInvoiceMatchExecutor:
             (transaction for transaction in transactions if transaction.transaction_id == payload.transaction_id),
             None,
         )
+        by_invoice = {invoice.invoice_id: invoice for invoice in invoices}
+        by_movement = {transaction.transaction_id: transaction for transaction in transactions}
+        judgements = tuple(
+            LedgerInvoiceMatchJudgement(
+                transaction_id=link.transaction_id,
+                invoice_id=link.invoice_id,
+                found=link.transaction_id in by_movement and link.invoice_id in by_invoice,
+                mismatches=tuple(
+                    _mismatch_out(found)
+                    for found in link_differences(by_movement[link.transaction_id], by_invoice[link.invoice_id])
+                )
+                if link.transaction_id in by_movement and link.invoice_id in by_invoice
+                else (),
+            )
+            for link in payload.judge
+        )
         return LedgerInvoiceMatchResult(
             profile_id=payload.profile_id,
+            judgements=judgements,
             window_days=PICK_WINDOW_DAYS,
             suggestions=tuple(
                 _suggestion_out(suggestion)
@@ -293,6 +357,8 @@ __all__ = [
     "LEDGER_INVOICE_MATCH_OPERATION_DEFINITION_ID",
     "LedgerInvoiceMatchExecutor",
     "LedgerInvoiceMatchInvoiceChoice",
+    "LedgerInvoiceMatchJudgement",
+    "LedgerInvoiceMatchMismatch",
     "LedgerInvoiceMatchMovementChoice",
     "LedgerInvoiceMatchPair",
     "LedgerInvoiceMatchRequest",

@@ -63,10 +63,14 @@ contracts, the classifications from their enum. Ten rules:
     A name of a rule the backend now answers (``checkSplit``), or a staged split
     whose ``children`` are not read from the backend's ``answer``: whether parts
     make a split is the split writer's. Likewise the names of the matching rules
-    (``EARLY_DAYS``, ``PICK_WINDOW_DAYS``, ``TOLERANCE_UNITS``) and a call or
-    declaration of ``settlement``, ``partyName``, ``sameParty``, ``reconcile``,
+    (``EARLY_DAYS``, ``PICK_WINDOW_DAYS``, ``TOLERANCE_UNITS``, ``LEGAL_FORMS``) and a call or
+    declaration of ``settlement``, ``partyName``, ``party``, ``sameParty``, ``reconcile``,
     ``linkPicker`` or ``movementPicker``: which invoice a payment settles, how
-    candidates rank and which movements are offered are the ledger's. Also, in a ``filter``, ``find``, ``some``
+    candidates rank and which movements are offered are the ledger's. A function
+    assigned to ``party`` or ``partyName`` (``const party = (text) => ...``) is a declaration, and
+    so is a pattern that alternates three or more of the legal forms the backend reads as
+    naming no party (read from its list at run time, under any name): which names are one
+    party, and what link differences a pair has, are the ledger's. Also, in a ``filter``, ``find``, ``some``
     or ``every``, a ``counterparty_tax_id`` compared, or an ``invoice_number``
     folded through a call and compared: whether two invoices are one is the
     backend's. Finding the exact number just sent, to tell whether a write landed,
@@ -118,6 +122,7 @@ from cadrumo.application.ledger.readiness_routes import READINESS_REASON_FIELDS
 from cadrumo.application.ledger.staged_identity import TRANSACTION_IDENTITY_FIELDS
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.invoices.enums import iva_rate_percentage, iva_rate_slots_on
+from cadrumo.domain.invoices.service import BARE_LEGAL_FORMS
 from cadrumo.domain.iva.errors import IvaRateNotFoundError
 from cadrumo.domain.transactions.enums import CLASSIFIED_STATES, TransactionDirection
 from dev._paths import REPO_ROOT
@@ -156,12 +161,15 @@ _MOVED_RULE_NAMES: Final = frozenset(
         "PICK_WINDOW_DAYS",
         "TOLERANCE_UNITS",
         "numberInDescription",
+        "LEGAL_FORMS",
     }
 )
 #: Rules the backend answers that a window might name as ordinary words, so they fail only when called or declared.
 _MOVED_RULE_CALLS: Final = frozenset(
-    {"settlement", "partyName", "sameParty", "reconcile", "linkPicker", "movementPicker"}
+    {"settlement", "partyName", "party", "sameParty", "reconcile", "linkPicker", "movementPicker"}
 )
+#: The names a counterparty-name fold goes by; a function assigned to one is a copy of it.
+_MOVED_FOLD_NAMES: Final = frozenset({"party", "partyName"})
 #: Invoice facts a duplicate rests on; the window asks and never compares them.
 _DUPLICATE_FACTS: Final = frozenset({"invoice_number", "counterparty_tax_id"})
 #: The request and result contracts of an invoice whose decimal fields are the figures a form could compute.
@@ -198,6 +206,7 @@ class Facts:
     identity_tokens: frozenset[str]
     judged_fields: frozenset[str]
     directions: frozenset[str]
+    legal_forms: frozenset[str]
 
 
 def _year_days(years: list[int]) -> Iterator[date]:
@@ -259,6 +268,7 @@ def read_facts() -> Facts:
         _identity_tokens(),
         INVOICE_CORRECTION_JUDGED_FIELDS,
         frozenset(direction.value for direction in TransactionDirection),
+        BARE_LEGAL_FORMS,
     )
 
 
@@ -392,7 +402,7 @@ def lex(source: str) -> list[Token]:
             i = end
         elif char == "/" and (not tokens or tokens[-1].text in _REGEX_AFTER or tokens[-1].text == "return"):
             end = _skip_regex(source, i)
-            push("regex", "/regex/", i)
+            push("regex", source[i:end], i)
             i = max(end, i + 1)
         elif (match := _NUMBER.match(source, i)) and (char.isdigit() or (char == "." and match.group())):
             push("num", match.group(), i)
@@ -1113,7 +1123,37 @@ def text_limit_hits(tokens: list[Token]) -> list[Hit]:
     ]
 
 
-def moved_rule_hits(tokens: list[Token]) -> list[Hit]:
+#: How many of the backend's bare legal forms one pattern must alternate to be a copy of the list.
+_LEGAL_FORMS_IN_PATTERN: Final = 3
+_PATTERN_NOISE: Final = re.compile(r"\\[bB]|[\\^$()?.*+\s]")
+
+
+def _legal_form_alternatives(literal: str, facts: Facts) -> int:
+    """How many alternatives of a regex literal are a legal form the backend reads as naming no party."""
+    body = literal[1 : literal.rfind("/")].lower()
+    return sum(1 for part in body.split("|") if _PATTERN_NOISE.sub("", part) in facts.legal_forms)
+
+
+def _arrow_declared(tokens: list[Token], index: int) -> bool:
+    """Whether the name at ``index`` is assigned a function: ``name = (..) =>``, ``name = x =>`` or ``function``."""
+    if index + 2 >= len(tokens) or tokens[index + 1].text != "=":
+        return False
+    follow = tokens[index + 2]
+    if follow.text in {"function", "async"}:
+        return True
+    if follow.kind == "id":
+        return index + 3 < len(tokens) and tokens[index + 3].text == "=>"
+    if follow.text != "(":
+        return False
+    depth = 0
+    for at in range(index + 2, len(tokens)):
+        depth += (tokens[at].text == "(") - (tokens[at].text == ")")
+        if depth == 0:
+            return at + 1 < len(tokens) and tokens[at + 1].text == "=>"
+    return False
+
+
+def moved_rule_hits(tokens: list[Token], facts: Facts) -> list[Hit]:
     """A moved rule's name, or a staged split's children that are not the backend's answer."""
     hits = [
         Hit("moved_rule", token.line, f"{token.text} is answered by the backend")
@@ -1127,6 +1167,16 @@ def moved_rule_hits(tokens: list[Token]) -> list[Hit]:
         and token.text in _MOVED_RULE_CALLS
         and index + 1 < len(tokens)
         and tokens[index + 1].text == "("
+    ]
+    hits += [
+        Hit("moved_rule", token.line, f"{token.text} is declared as a function, and is answered by the backend")
+        for index, token in enumerate(tokens)
+        if token.kind != "str" and token.text in _MOVED_FOLD_NAMES and _arrow_declared(tokens, index)
+    ]
+    hits += [
+        Hit("moved_rule", token.line, "a pattern of legal forms: which names are one party is the backend's")
+        for token in tokens
+        if token.kind == "regex" and _legal_form_alternatives(token.text, facts) >= _LEGAL_FORMS_IN_PATTERN
     ]
     for index, token in enumerate(tokens):
         if token.kind != "str" and token.text in _DUPLICATE_FACTS and _inside_predicate(tokens, token):
@@ -1160,7 +1210,7 @@ def scan_source(source: str, facts: Facts) -> list[Hit]:
         *field_route_hits(tokens, facts),
         *direction_rule_hits(tokens, facts),
         *text_limit_hits(tokens),
-        *moved_rule_hits(tokens),
+        *moved_rule_hits(tokens, facts),
     ]
 
 
@@ -1570,6 +1620,48 @@ def test_the_matching_rules_brought_back_fail_the_moved_rule_rule(facts: Facts) 
     assert "moved_rule" in _fired("export const PICK_WINDOW_DAYS = 10;\n", facts)
     assert "moved_rule" in _fired("const near = distance <= TOLERANCE_UNITS;\n", facts)
     assert "moved_rule" in _fired("const named = numberInDescription(row, invoice);\n", facts)
+
+
+_PLANTED_LEGAL_FORMS = (
+    r"const LEGAL_FORMS = /\b(s\.?l\.?u?|s\.?a\.?|s\.?coop|sll|slp|cb|scp)\b\.?/g;"
+    "\n"
+    'const party = (text: string) => fold(text).replace(LEGAL_FORMS, " ").trim();\n'
+    "const differs = party(row.counterparty) !== party(invoice.counterparty_name);\n"
+)
+
+
+def _moved_messages(source: str, facts: Facts) -> str:
+    return "\n".join(hit.detail for hit in scan_source(source, facts) if hit.rule == "moved_rule")
+
+
+def test_a_copy_of_the_legal_form_fold_fails_the_moved_rule_rule_however_it_is_spelled(facts: Facts) -> None:
+    assert "moved_rule" in _fired(_PLANTED_LEGAL_FORMS, facts)
+    # Each part alone is enough: the name, the fold and its call, and the pattern under any name.
+    assert "LEGAL_FORMS" in _moved_messages("const forms = LEGAL_FORMS;\n", facts)
+    assert "declared as a function" in _moved_messages("const party = (text: string) => text.trim();\n", facts)
+    assert "declared as a function" in _moved_messages("const party = text => text.trim();\n", facts)
+    assert "declared as a function" in _moved_messages("const party = function (text) { return text; };\n", facts)
+    assert "party is answered" in _moved_messages("const same = party(row.counterparty);\n", facts)
+    renamed = r"const FORMS = /\b(sl|sa|slu|cb)\b/gi;" "\n"
+    assert "pattern of legal forms" in _moved_messages(renamed, facts)
+    spelled = r"const ENDINGS = /(s\.?l\.?u?|s\.?a\.?|s\.?coop)$/;" "\n"
+    assert "pattern of legal forms" in _moved_messages(spelled, facts)
+
+
+def test_a_name_called_party_and_a_pattern_of_other_words_do_not_fail_the_moved_rule_rule(facts: Facts) -> None:
+    for source in (
+        'const party = correctable("counterparty_name");\n',
+        "const party = (picked ? picked.fills : null);\n",
+        "const party = row.counterparty || row.description;\n",
+        "const sizes = /(sl|sa)/;\n",
+        "const words = /(red|green|blue|sl)/;\n",
+        r"const digits = /\d+|\s+|\w+/g;" "\n",
+    ):
+        assert "moved_rule" not in _fired(source, facts), source
+
+
+def test_the_legal_forms_are_read_from_the_backend(facts: Facts) -> None:
+    assert {"sl", "sa", "slu", "scoop", "cb", "scp"} <= facts.legal_forms
 
 
 def test_the_words_the_matching_rules_share_with_other_names_do_not_fail_the_moved_rule_rule(facts: Facts) -> None:

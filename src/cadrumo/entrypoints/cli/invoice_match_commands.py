@@ -33,7 +33,11 @@ def _staged_link(text: str) -> LedgerInvoiceMatchStagedLink:
 
 
 def _request(
-    profile_id: UUID, invoice_id: str | None, transaction_id: str | None, staged: tuple[str, ...]
+    profile_id: UUID,
+    invoice_id: str | None,
+    transaction_id: str | None,
+    staged: tuple[str, ...],
+    judge: tuple[str, ...],
 ) -> LedgerInvoiceMatchRequest:
     try:
         return LedgerInvoiceMatchRequest(
@@ -41,6 +45,7 @@ def _request(
             invoice_id=invoice_id,
             transaction_id=transaction_id,
             staged=tuple(_staged_link(text) for text in staged),
+            judge=tuple(_staged_link(text) for text in judge),
         )
     except (ValueError, ValidationError) as exc:
         raise InvoiceValidationError(tr("cli.app.ledger.invoice.match_invalid")) from exc
@@ -51,12 +56,13 @@ def invoice_match(
     invoice_id: str | None = None,
     transaction_id: str | None = None,
     staged: tuple[str, ...] = (),
+    judge: tuple[str, ...] = (),
 ) -> None:
     """Answer which movement settles which invoice, and the choices for a by-hand link."""
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
     completed = run_registered_operation(
         client,
-        _request(client.profile_id, invoice_id, transaction_id, staged),
+        _request(client.profile_id, invoice_id, transaction_id, staged, judge),
         definition_id=LEDGER_INVOICE_MATCH_OPERATION_DEFINITION_ID,
         subject_ref=profile_operation_subject(str(client.profile_id)),
         result_type=LedgerInvoiceMatchResult,
@@ -73,10 +79,15 @@ def invoice_match(
     ):
         raise invalid_completion_error(completed)
     answer = completed.projection
+    shown = answer.model_dump(mode="json", exclude={"profile_id"})
+    for judgement in shown["judgements"]:
+        for mismatch in judgement["mismatches"]:
+            if mismatch["difference"] is not None:
+                mismatch["difference"] = mismatch["difference"]["decimal"]
     emit_envelope(
         ctx,
         command="ledger.invoice.match",
-        result=LedgerInvoiceMatchEnvelope.model_validate(answer.model_dump(mode="json", exclude={"profile_id"})),
+        result=LedgerInvoiceMatchEnvelope.model_validate(shown),
         lines=tuple(f"{found.transaction_id[:12]} {found.invoice_id[:12]}" for found in answer.suggestions),
     )
 

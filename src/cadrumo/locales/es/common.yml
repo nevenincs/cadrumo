@@ -1390,6 +1390,7 @@ desktop:
         differ: Sé que difieren
         linked_elsewhere: 'Factura ya vinculada · movimientos: {count}'
         sure: Vincular estos · permanente
+        unjudged: El libro aún no ha comparado este vínculo
         unread: No se ha podido leer la factura
       mine: Conservar el mío
       mismatch:

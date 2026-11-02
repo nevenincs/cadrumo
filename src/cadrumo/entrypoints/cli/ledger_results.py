@@ -224,6 +224,25 @@ class LedgerInvoiceMatchMovementChoicePayload(OutputSchema):
     settles: bool
 
 
+class LedgerInvoiceMatchMismatchPayload(OutputSchema):
+    """One way a judged movement and invoice do not agree; the fields besides ``kind`` are the kind's own."""
+
+    kind: str
+    difference: str | None
+    movement: str | None
+    invoice: str | None
+    count: int | None
+
+
+class LedgerInvoiceMatchJudgementPayload(OutputSchema):
+    """What stands against one named link."""
+
+    transaction_id: str
+    invoice_id: str
+    found: bool
+    mismatches: list[LedgerInvoiceMatchMismatchPayload]
+
+
 class LedgerInvoiceMatchEnvelope(OutputSchema):
     """JSON envelope for ``aeat app ledger invoice match``."""
 
@@ -231,6 +250,7 @@ class LedgerInvoiceMatchEnvelope(OutputSchema):
     window_days: int
     invoice_choices: list[LedgerInvoiceMatchInvoiceChoicePayload] | None
     movement_choices: list[LedgerInvoiceMatchMovementChoicePayload] | None
+    judgements: list[LedgerInvoiceMatchJudgementPayload]
 
 
 class LedgerSplitCheckProblemPayload(OutputSchema):
@@ -1078,6 +1098,8 @@ __all__ = [
     "LedgerInvoiceDuplicateEnvelope",
     "LedgerInvoiceMatchEnvelope",
     "LedgerInvoiceMatchInvoiceChoicePayload",
+    "LedgerInvoiceMatchJudgementPayload",
+    "LedgerInvoiceMatchMismatchPayload",
     "LedgerInvoiceMatchMovementChoicePayload",
     "LedgerInvoiceMatchPairPayload",
     "LedgerInvoiceMatchSuggestionPayload",

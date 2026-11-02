@@ -1349,6 +1349,7 @@ desktop:
         differ: I know they differ
         linked_elsewhere: 'Invoice also linked · movements: {count}'
         sure: Link these · permanent
+        unjudged: The ledger has not compared this link yet
         unread: Invoice could not be read
       mine: Keep mine
       mismatch:
