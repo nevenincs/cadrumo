@@ -3486,6 +3486,7 @@ desktop:
     prorrata:
       accepted: 'Elfogadott: {provenances}.'
       action:
+        declare_gross: Bruttó levonható adó bejelentése
         declare_sector: Ágazat bejelentése
         elect_especial: Különleges választása
         elect_general: Általános választása
@@ -3510,6 +3511,8 @@ desktop:
       evidence: Bizonyíték hivatkozása
       evidence_hint: A választás vagy a visszavonás dokumentuma
       form:
+        declare_gross: 'Korábbi elszámolás bruttó levonható adójának bejelentése:
+          {ejercicio}'
         declare_sector: Elkülönült ágazat bejelentése
         elect_especial: 'Különleges prorrata választása: {ejercicio}'
         elect_general: 'Általános prorrata választása: {ejercicio}'
@@ -3517,6 +3520,27 @@ desktop:
         seed: '{ejercicio} átvétele az előző évből'
         seed_sector: 'Ágazat ideiglenes prorratájának átvétele: {ejercicio}'
         settle_sector: 'Ágazat végleges prorratájának elszámolása: {ejercicio}'
+      gross:
+        column:
+          evidence: Dokumentum
+          gross_cuota: Bruttó adó
+          period: Időszak
+        empty: Egyetlen elszámolási időszakra sincs bruttó összeg bejelentve.
+        evidence: Igazoló dokumentum
+        evidence_hint: Hivatkozás a saját dokumentumodra, amely alátámasztja az összeget.
+        gross_cuota: Bruttó levonható adó
+        gross_cuota_hint: A prorrata előtt, euróban, legfeljebb két tizedesjeggyel.
+        period: Elszámolási időszak
+        remove: Törlés
+        remove_confirm: A bejelentés törlése
+        remove_of: A(z) {liquidation} időszakra bejelentett bruttó összeg törlése
+        remove_what: Törlöd a(z) {liquidation} időszakra bejelentett bruttó összeget?
+        replace: Az ugyanerre az időszakra és ágazatra már bejelentett bruttó összeg
+          cseréje
+        title: Korábbi elszámolások bruttó levonható adója
+        what: Egy korábbi, kézzel felvitt elszámolás bruttó levonható adója a prorrata
+          előtt, olyan időszakra, amelyhez a főkönyv nem tartalmaz előzetesen felszámított
+          adót.
       kind:
         definitiva: Végleges
         provisional: Ideiglenes
