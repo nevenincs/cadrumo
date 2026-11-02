@@ -35,22 +35,20 @@ from __future__ import annotations
 
 import json
 from collections.abc import Callable, Mapping
-from datetime import date, datetime
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from types import MappingProxyType
 from typing import Annotated, Final, Literal
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import Field, model_validator
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
 from ...core.hashing import sha256_hex
-from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.period import Period
-from ...core.result_disposition import ResultDisposition
 from ...core.type_guards import is_object_list_or_tuple
 from ...domain.calculations.registry.ids import BindingId, FormulaId, LegalRefId, RevisionId
 from ...domain.calculations.registry.schema_form_layouts import (
@@ -60,8 +58,6 @@ from ...domain.calculations.registry.schema_form_layouts import (
     FormUnplacedReason,
 )
 from ...domain.calculations.registry.schema_surfaces import CasillaConstraints
-from ...domain.deadlines.festivos import DeadlineHolidayCoverage
-from ...domain.modelos.calculation_revision_sources import CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT, CalculationNoteFact
 from ...domain.modelos.codes import ModeloCode
 from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
@@ -71,16 +67,22 @@ from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_
 from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
+from .work_form_declaration_facts import (
+    ModeloFormAeatData,
+    ModeloFormBase,
+    ModeloFormCalculationNote,
+    ModeloFormDeadline,
+    ModeloFormEditClosure,
+    ModeloFormExport,
+    ModeloFormFiling,
+    ModeloFormResult,
+)
 from .work_form_findings import ModeloFormAttention, ModeloFormIssue
 from .work_form_scalar_values import comparable_entry, holds_zero
 from .work_review import ModeloWorkProgress
 
 type ModeloFormScalar = Decimal | int | str | bool | date | None
 """A field's value as the calculation holds it; ``None`` only when there is none."""
-
-
-class _FormModel(BaseModel):
-    model_config = STRICT_FROZEN_CONFIG
 
 
 class ModeloFormLayoutProvenance(StrEnum):
@@ -117,7 +119,7 @@ class ModeloFormTextDisclosure(StrEnum):
     UNNAMED = "unnamed"
 
 
-class ModeloFormText(_FormModel):
+class ModeloFormText(ModeloFormBase):
     """One displayed text and the honest account of where it came from."""
 
     text: str = Field(min_length=1)
@@ -275,14 +277,14 @@ class ModeloFormEditability(StrEnum):
     NO_ADMISSION = "no_admission"
 
 
-class ModeloFormCasillaAddressV1(_FormModel):
+class ModeloFormCasillaAddressV1(ModeloFormBase):
     """A field addressed by its casilla."""
 
     kind: Literal["casilla"] = "casilla"
     casilla_id: CasillaId
 
 
-class ModeloFormBindingAddressV1(_FormModel):
+class ModeloFormBindingAddressV1(ModeloFormBase):
     """A field addressed by a binding no casilla owns."""
 
     kind: Literal["binding"] = "binding"
@@ -302,7 +304,7 @@ def address_key(address: ModeloFormAddressV1) -> tuple[str, str]:
     return ("binding", address.binding_id)
 
 
-class ModeloFormBinding(_FormModel):
+class ModeloFormBinding(ModeloFormBase):
     """One binding that feeds a field, with its source's policy and whether it resolved."""
 
     binding_id: BindingId
@@ -310,13 +312,13 @@ class ModeloFormBinding(_FormModel):
     resolved: bool
 
 
-class ModeloFormBlocker(_FormModel):
+class ModeloFormBlocker(ModeloFormBase):
     """One verification finding that blocks the field."""
 
     code: str = Field(min_length=1)
 
 
-class ModeloFormEarlierFiling(_FormModel):
+class ModeloFormEarlierFiling(ModeloFormBase):
     """One earlier declaration a carried value is read from."""
 
     modelo: str = Field(min_length=1)
@@ -324,7 +326,7 @@ class ModeloFormEarlierFiling(_FormModel):
     period: Period
 
 
-class ModeloFormValueSource(_FormModel):
+class ModeloFormValueSource(ModeloFormBase):
     """Where a field's value comes from, named from its primary binding.
 
     ``family`` is the kind of place a filer thinks of: their records, a register
@@ -350,7 +352,7 @@ class ModeloFormRateUnit(StrEnum):
     FRACTION = "fraction"
 
 
-class ModeloFormRate(_FormModel):
+class ModeloFormRate(ModeloFormBase):
     """The one rate a printed rate box stands for, grounded on the binding that fills its row's base.
 
     A rate-specific base binding accepts only records taxed at the rates it
@@ -367,7 +369,7 @@ class ModeloFormRate(_FormModel):
         return self.ratio * 100
 
 
-class ModeloFormPrintedRate(_FormModel):
+class ModeloFormPrintedRate(ModeloFormBase):
     """The rate the official design prints in a rate box it fixes, read from the design's own literal.
 
     A literal is read only where its scale is declared: it states a percentage
@@ -516,7 +518,7 @@ def _confirm_value_of(data: dict[str, object]) -> ModeloEditWireScalar:
     return wire_scalar_value(value) if value is not None and _confirmable_of(data) else None
 
 
-class ModeloFormField(_FormModel):
+class ModeloFormField(ModeloFormBase):
     """One box or binding input, classified for an editor."""
 
     address: ModeloFormAddressV1
@@ -702,7 +704,7 @@ def confirmable(field: ModeloFormField) -> bool:
     return _confirmable_of(dict(field))
 
 
-class ModeloFormCounts(_FormModel):
+class ModeloFormCounts(ModeloFormBase):
     """How many fields stand in each origin, for a section, a page or the form.
 
     ``needs_input`` and ``default_to_confirm`` count what is still to do, so a
@@ -721,7 +723,7 @@ class ModeloFormCounts(_FormModel):
     blocked: int = Field(ge=0)
 
 
-class ModeloFormFieldBlock(_FormModel):
+class ModeloFormFieldBlock(ModeloFormBase):
     """One field on its own line."""
 
     kind: Literal["field"] = "field"
@@ -729,7 +731,7 @@ class ModeloFormFieldBlock(_FormModel):
     field: ModeloFormField
 
 
-class ModeloFormContextFieldBlock(_FormModel):
+class ModeloFormContextFieldBlock(ModeloFormBase):
     """Read-only declared filing context; deliberately carries no editable address."""
 
     kind: Literal["context_field"] = "context_field"
@@ -740,14 +742,14 @@ class ModeloFormContextFieldBlock(_FormModel):
     value_text: str | None = None
 
 
-class ModeloFormGridColumn(_FormModel):
+class ModeloFormGridColumn(ModeloFormBase):
     """One official column heading."""
 
     key: str
     heading: ModeloFormText
 
 
-class ModeloFormGridCell(_FormModel):
+class ModeloFormGridCell(ModeloFormBase):
     """One grid cell: a field, the design's literal, or a blank where the paper form has no box."""
 
     kind: FormCellKind
@@ -755,7 +757,7 @@ class ModeloFormGridCell(_FormModel):
     literal: str | None = None
 
 
-class ModeloFormGridRow(_FormModel):
+class ModeloFormGridRow(ModeloFormBase):
     """One official printed row; ``cells`` align with the grid's columns."""
 
     key: str
@@ -763,7 +765,7 @@ class ModeloFormGridRow(_FormModel):
     cells: tuple[ModeloFormGridCell, ...]
 
 
-class ModeloFormGridBlock(_FormModel):
+class ModeloFormGridBlock(ModeloFormBase):
     """Official rows and columns, like the printed form's base, rate and amount lines."""
 
     kind: Literal["grid"] = "grid"
@@ -772,7 +774,7 @@ class ModeloFormGridBlock(_FormModel):
     rows: tuple[ModeloFormGridRow, ...]
 
 
-class ModeloFormRepeatingRow(_FormModel):
+class ModeloFormRepeatingRow(ModeloFormBase):
     """One detail row's values, aligned with the group's columns."""
 
     index: int = Field(ge=1)
@@ -789,7 +791,7 @@ class ModeloFormRepeatingRow(_FormModel):
         return self
 
 
-class ModeloFormRepeatingBlock(_FormModel):
+class ModeloFormRepeatingBlock(ModeloFormBase):
     """An open set of detail rows, never flattened into single boxes.
 
     ``rows_known`` is false when this form cannot read the rows from their
@@ -808,7 +810,7 @@ class ModeloFormRepeatingBlock(_FormModel):
     rows: tuple[ModeloFormRepeatingRow, ...]
 
 
-class ModeloFormBindingInputsBlock(_FormModel):
+class ModeloFormBindingInputsBlock(ModeloFormBase):
     """Values the filer supplies that no casilla owns."""
 
     kind: Literal["binding_inputs"] = "binding_inputs"
@@ -826,7 +828,7 @@ type ModeloFormBlock = Annotated[
 ]
 
 
-class ModeloFormSection(_FormModel):
+class ModeloFormSection(ModeloFormBase):
     """One apartado with its heading, ordered blocks and counts."""
 
     id: str
@@ -836,7 +838,7 @@ class ModeloFormSection(_FormModel):
     counts: ModeloFormCounts
 
 
-class ModeloFormPage(_FormModel):
+class ModeloFormPage(ModeloFormBase):
     """One official page, whether it applies to this filing, and its sections."""
 
     id: str
@@ -852,7 +854,7 @@ class ModeloFormPage(_FormModel):
     applicability_words: str | None = None
 
 
-class ModeloFormUnplacedField(_FormModel):
+class ModeloFormUnplacedField(ModeloFormBase):
     """A casilla the layout could not position, and why."""
 
     field: ModeloFormField
@@ -886,7 +888,7 @@ class ModeloFormSourceState(StrEnum):
     NOT_YET = "not_yet"
 
 
-class ModeloFormSourceReading(_FormModel):
+class ModeloFormSourceReading(ModeloFormBase):
     """One source feeding a group, what it gave, and the boxes listed under it, in the form's language."""
 
     source_kind: BindingSourceKind
@@ -897,7 +899,7 @@ class ModeloFormSourceReading(_FormModel):
     addresses: tuple[ModeloFormAddressV1, ...]
 
 
-class ModeloFormSourceGroup(_FormModel):
+class ModeloFormSourceGroup(ModeloFormBase):
     """One group of where the form's values come from: its boxes, its sources, and its words.
 
     ``boxes`` are the box numbers a closed group lists, for a group that asks
@@ -915,149 +917,7 @@ class ModeloFormSourceGroup(_FormModel):
     readings: tuple[ModeloFormSourceReading, ...] = ()
 
 
-class ModeloFormCalculationNote(_FormModel):
-    """One thing the latest calculation noticed, on the filer's scale, with the box it names.
-
-    ``reason`` is the calculation's own reason code, which the frontend words
-    from the catalogue; ``box`` is the printed box number when the note names a
-    box the form prints. ``withholds_filing`` is the application's
-    calculation-note gate's own answer: the gate refuses the file and the
-    recording while such a note stands, whatever its attention says, so the
-    editor withholds them too (:attr:`ModeloWorkForm.blocking_calculation_notes`),
-    as it does for a note at the blocking level. ``fact`` is what this note says
-    about its own subject, when its reason alone does not. ``message`` is the
-    calculation's own account of this note, as its resolver worded it for the
-    filer and the calculate result carries it, in the form's language; ``None``
-    when it wrote none in that language, or when only the note that persists
-    with the calculation is known.
-    """
-
-    reason: str = Field(min_length=1, max_length=64)
-    attention: ModeloFormAttention
-    casilla_id: CasillaId | None = None
-    box: str | None = None
-    withholds_filing: bool = False
-    fact: CalculationNoteFact | None = None
-    element_names: tuple[tuple[str, str], ...] = ()
-    message: str | None = Field(default=None, min_length=1, max_length=CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT)
-
-
-class ModeloFormAeatData(_FormModel):
-    """The AEAT tax data (borrador) the current calculation took values from.
-
-    Recalculating replays the imported snapshot, so its values keep feeding the
-    declaration until it is replaced. ``imported_at`` is when the data was
-    imported, or ``None`` when this read could not open the snapshot's record;
-    ``binding_ids`` are the bindings whose values the snapshot supplied.
-    """
-
-    snapshot_id: str = Field(min_length=1)
-    imported_at: datetime | None = None
-    binding_ids: tuple[BindingId, ...] = ()
-
-
-class ModeloFormDeadline(_FormModel):
-    """The last day of the voluntary filing window for this declaration.
-
-    ``nominal_closes_on`` is the date the registry declares; ``closes_on`` is
-    the date after the business-day shift, and ``holiday_coverage`` says which
-    holidays that shift accounted for, so a date computed without the filer's
-    regional holidays is never passed off as final. Exactly one of
-    ``days_remaining`` and ``days_overdue`` is set, counted from
-    ``reference_on``.
-    """
-
-    closes_on: date
-    nominal_closes_on: date
-    holiday_coverage: DeadlineHolidayCoverage
-    reference_on: date
-    days_remaining: int | None = Field(default=None, ge=0)
-    days_overdue: int | None = Field(default=None, gt=0)
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _one_posture(self) -> ModeloFormDeadline:
-        if (self.days_remaining is None) == (self.days_overdue is None):
-            raise ValueError("a deadline is either still open or passed, never both or neither")
-        return self
-
-
-class ModeloFormResultDirection(StrEnum):
-    """Which way the declaration's result settles, as its official design declares it."""
-
-    TO_PAY = "to_pay"
-    TO_REFUND = "to_refund"
-    TO_CARRY_FORWARD = "to_carry_forward"
-    #: A negative instalment result the filer deducts from the positive results of later quarters of the same year.
-    TO_DEDUCT_LATER = "to_deduct_later"
-    #: A negative result that nothing carries: it is declared as negative and settles nothing.
-    NEGATIVE = "negative"
-    NIL = "nil"
-    #: Nothing declares how this result settles, or it has no value yet.
-    UNKNOWN = "unknown"
-
-
-AMOUNTLESS_RESULT_DIRECTIONS: frozenset[ModeloFormResultDirection] = frozenset(
-    {ModeloFormResultDirection.NEGATIVE, ModeloFormResultDirection.NIL}
-)
-"""The directions of a result that settles nothing, so no amount is shown beside them."""
-
-
-class ModeloFormResult(_FormModel):
-    """The box that settles the declaration, its value and its direction.
-
-    ``disposition`` is the official "tipo de declaración" code the result
-    implies before any election the filer makes when filing; the direction is
-    read from it and from nothing else, never from the sign alone. When the
-    registry names the settlement box but declares no such rule, the direction
-    is unknown. ``election_may_change`` says the filer's refund election can
-    still turn a carried credit into a refund.
-    """
-
-    casilla_id: CasillaId
-    box: str | None
-    value: Decimal | None
-    direction: ModeloFormResultDirection
-    disposition: ResultDisposition | None = None
-    election_may_change: bool = False
-
-    @model_validator(mode="after")
-    @pydantic_validation_boundary
-    def _direction_needs_a_value(self) -> ModeloFormResult:
-        if self.value is None and self.direction is not ModeloFormResultDirection.UNKNOWN:
-            raise ValueError("a result without a value has no direction")
-        return self
-
-
-class ModeloFormFiling(_FormModel):
-    """The declaration is recorded in Cadrumo as filed; nothing was sent to AEAT from here."""
-
-    #: When the filing was recorded, or ``None`` when the revision does not say.
-    recorded_at: datetime | None = None
-
-
-class ModeloFormExport(_FormModel):
-    """The latest file exported for this declaration, and whether it was made from the current calculation.
-
-    A file made from an earlier calculation no longer matches the declaration:
-    changes applied or a recalculation since then created a newer one, so that
-    file must not be uploaded.
-    """
-
-    exported_at: datetime
-    calculation_revision_id: str = Field(min_length=1)
-    current: bool
-
-
-class ModeloFormEditClosure(StrEnum):
-    """Why nothing on the form may be edited, whatever the edit admission says."""
-
-    #: The declaration is recorded as filed; changing it starts a correction
-    #: (a complementaria or a rectificativa), never an edit in place.
-    RECORDED_AS_FILED = "recorded_as_filed"
-
-
-class ModeloWorkForm(_FormModel):
+class ModeloWorkForm(ModeloFormBase):
     """The editor form of one work target in one language."""
 
     modelo: ModeloCode
@@ -1215,31 +1075,24 @@ def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
 
 __all__ = [
     "ABSENT_FROM_ADMISSION",
-    "AMOUNTLESS_RESULT_DIRECTIONS",
     "ASKS_FOR_A_VALUE",
     "FED_BY_A_SOURCE",
     "NEEDS_ATTENTION",
     "ORIGINS_WITHOUT_A_VALUE",
     "ORIGIN_STANDINGS",
     "ModeloFormAddressV1",
-    "ModeloFormAeatData",
     "ModeloFormBinding",
     "ModeloFormBindingAddressV1",
     "ModeloFormBindingInputsBlock",
     "ModeloFormBlock",
     "ModeloFormBlocker",
-    "ModeloFormCalculationNote",
     "ModeloFormCasillaAddressV1",
     "ModeloFormContextFieldBlock",
     "ModeloFormCounts",
-    "ModeloFormDeadline",
     "ModeloFormEarlierFiling",
-    "ModeloFormEditClosure",
     "ModeloFormEditability",
-    "ModeloFormExport",
     "ModeloFormField",
     "ModeloFormFieldBlock",
-    "ModeloFormFiling",
     "ModeloFormGridBlock",
     "ModeloFormGridCell",
     "ModeloFormGridColumn",
@@ -1253,8 +1106,6 @@ __all__ = [
     "ModeloFormRateUnit",
     "ModeloFormRepeatingBlock",
     "ModeloFormRepeatingRow",
-    "ModeloFormResult",
-    "ModeloFormResultDirection",
     "ModeloFormScalar",
     "ModeloFormSection",
     "ModeloFormSourceGroup",

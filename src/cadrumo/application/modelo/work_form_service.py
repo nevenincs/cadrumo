@@ -64,10 +64,9 @@ from .edit_models import ModeloEditAdmissionResultV1, ModeloEditAdmittedV1
 from .effective_deadline import resolve_effective_filing_deadline
 from .work_addressing import law_selected_revision_for_work_target
 from .work_form import build_modelo_work_form
+from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormExport
 from .work_form_models import (
     ModeloFormAddressV1,
-    ModeloFormDeadline,
-    ModeloFormExport,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,

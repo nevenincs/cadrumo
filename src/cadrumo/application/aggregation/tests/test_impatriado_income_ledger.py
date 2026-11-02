@@ -60,10 +60,8 @@ from ..impatriado_income_ledger import (
     ImpatriadoIncomeLedgerAggregationIssueReason,
     aggregate_impatriado_income_ledger,
 )
-from ..renta_income_ledger import (
-    RentaIncomeLedgerAggregationIssueReason,
-    aggregate_renta_m100_income_ledger,
-)
+from ..renta_income_ledger import aggregate_renta_m100_income_ledger
+from ..renta_income_models import RentaIncomeLedgerAggregationIssueReason
 from .impatriado_income_ledger_support import impatriado_transaction
 from .renta_income_aggregation_support import (
     _M100_ACTIVIDAD_ECONOMICA_INGRESOS_CASILLA,

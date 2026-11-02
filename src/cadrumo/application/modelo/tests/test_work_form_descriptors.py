@@ -54,6 +54,7 @@ from ..edit_value_grammar import casilla_value_grammar
 from ..source_policy import SourceFamily
 from ..verification_cross_period import cross_period_clean_state_findings
 from ..work_form import build_modelo_work_form
+from ..work_form_declaration_facts import ModeloFormEditClosure, ModeloFormResultDirection
 from ..work_form_findings import (
     EXPLANATORY_FINDING_MESSAGE_KEYS,
     ModeloFormAttention,
@@ -63,10 +64,8 @@ from ..work_form_findings import (
 from ..work_form_models import (
     ModeloFormEarlierFiling,
     ModeloFormEditability,
-    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormOrigin,
-    ModeloFormResultDirection,
     ModeloWorkForm,
     address_key,
 )

@@ -11,15 +11,15 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 
-from ......application.modelo.work_form_findings import ModeloFormIssue
-from ......application.modelo.work_form_models import (
+from ......application.modelo.work_form_declaration_facts import (
     ModeloFormDeadline,
     ModeloFormEditClosure,
     ModeloFormFiling,
     ModeloFormResult,
     ModeloFormResultDirection,
-    ModeloWorkForm,
 )
+from ......application.modelo.work_form_findings import ModeloFormIssue
+from ......application.modelo.work_form_models import ModeloWorkForm
 from ......core.result_disposition import ResultDisposition
 from ......domain.deadlines.festivos import DeadlineHolidayCoverage
 from ......domain.modelos.verification_report import (

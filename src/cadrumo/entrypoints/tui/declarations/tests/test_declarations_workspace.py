@@ -29,7 +29,7 @@ from .....application.modelo.declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
     DeclarationsWorkspaceZoneObservationV1,
 )
-from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .....application.modelo.work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
 from .....application.operator_actions.catalogue import lookup_action
 from .....application.operator_actions.models import ActionReference
 from .....core.casilla_id import validated_casilla_id

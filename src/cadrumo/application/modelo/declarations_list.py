@@ -48,7 +48,7 @@ from .declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
 )
 from .value_presentation import format_casilla_value
-from .work_form_models import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResult, ModeloFormResultDirection
+from .work_form_declaration_facts import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResult, ModeloFormResultDirection
 from .work_form_wording import date_text
 
 

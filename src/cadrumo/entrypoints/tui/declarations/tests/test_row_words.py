@@ -8,7 +8,7 @@ import pytest
 
 from .....application.modelo.declaration_summary import DeclarationSummary, DeclarationSummaryState
 from .....application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
-from .....application.modelo.work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .....application.modelo.work_form_declaration_facts import ModeloFormResult, ModeloFormResultDirection
 from .....core.config import override_settings
 from .....core.external_constants import OutputLanguage
 from .....core.i18n.render import tr

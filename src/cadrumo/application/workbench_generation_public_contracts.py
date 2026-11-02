@@ -37,7 +37,7 @@ from cadrumo.application.modelo.declarations_workspace_contracts import (
     DeclarationsLifecycleKind,
     DeclarationsWorkspaceZoneStateV1,
 )
-from cadrumo.application.modelo.work_form_models import ModeloFormResultDirection
+from cadrumo.application.modelo.work_form_declaration_facts import ModeloFormResultDirection
 from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.overview.calendar_models import (
     OverviewAeatSubmissionState,

@@ -7,7 +7,7 @@ generated output envelopes.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable, Mapping, Sequence
+from collections.abc import Mapping, Sequence
 from datetime import date
 from enum import StrEnum
 from typing import Annotated, Final, Literal, TypeGuard
@@ -73,6 +73,12 @@ from .schema_live_verification import LiveCrossReferenceDecision
 from .schema_references import (
     RegistrySnapshotRef,
     TemporalProjectionDirection,
+)
+from .schema_revision_validation import (
+    require_revision_family_storage_delta,
+    require_revision_keys_and_review_references,
+    union_across_expectations,
+    validate_selected_view_references,
 )
 from .schema_rounding import RegistryRoundingCodeValue
 from .schema_scalars import (
@@ -781,7 +787,7 @@ class ModeloRevision(RegistryRevisionDeclaration):
     @pydantic_validation_boundary
     def _validate_family_storage_delta(self) -> ModeloRevision:
         """Keep generic storage declarations on one explicit keyed-family vocabulary."""
-        _require_revision_family_storage_delta(self)
+        require_revision_family_storage_delta(self)
         return self
 
     @model_validator(mode="after")
@@ -897,38 +903,6 @@ def _context_revision_ids(modelo_id: str, info: ValidationInfo) -> frozenset[str
     return frozenset(item for item in declared if isinstance(item, str))
 
 
-def _validate_selected_view_references(
-    modelo_id: str,
-    revisions: Mapping[RevisionId, ModeloRevision],
-    revision_ids: frozenset[str],
-) -> None:
-    """Resolve a selected view's cross-revision identity references against its directory.
-
-    Invariants that compare payloads of several revisions (predecessor date
-    agreement and cycles, structural-succession lineage ownership) belong to
-    complete-modelo validation, which the directory's source modelo passed.
-    """
-    foreign = sorted(set(revisions) - revision_ids)
-    if foreign:
-        raise RegistryValidationError(
-            f"modelo {modelo_id!r} view revisions {foreign!r} are not revisions of its directory; "
-            f"declared revisions are {sorted(revision_ids)!r}"
-        )
-    for revision in revisions.values():
-        predecessor = revision.predecessor
-        if isinstance(predecessor, DeclaredPredecessor) and predecessor.revision_id not in revision_ids:
-            raise RegistryValidationError(
-                f"modelo {modelo_id!r} revision {revision.id!r} declares predecessor {predecessor.revision_id!r}, "
-                f"which is not a revision of this modelo; declared revisions are {sorted(revision_ids)!r}"
-            )
-        for relation in revision.casilla_structural_successions:
-            if relation.to_revision != revision.id or relation.from_revision not in revision_ids:
-                raise RegistryValidationError(
-                    f"structural succession {modelo_id}/{revision.id}/{relation.id}: unknown endpoint revision; "
-                    f"declared revisions are {sorted(revision_ids)!r}"
-                )
-
-
 class ModeloDefinition(RegistryModel):
     """Declare a modelo and its complete collection of revision authorities."""
 
@@ -994,122 +968,15 @@ class ModeloDefinition(RegistryModel):
         else:
             self._directory_revision_ids = directory_revision_ids
         revision_ids = frozenset(self.revisions) if directory_revision_ids is None else directory_revision_ids
-        _require_revision_keys_and_review_references(self.revisions, revision_ids)
+        require_revision_keys_and_review_references(self.revisions, revision_ids)
         if directory_revision_ids is not None:
-            _validate_selected_view_references(self.id, self.revisions, directory_revision_ids)
+            validate_selected_view_references(self.id, self.revisions, directory_revision_ids)
             return self
         validate_revision_predecessors(self.id, self.revisions)
         failures = structural_succession_failures(self)
         if failures:
             raise RegistryValidationError("; ".join(failures))
         return self
-
-
-def _require_revision_family_storage_delta(revision: ModeloRevision) -> None:
-    from .keyed_families import KEYED_FAMILY_SPECS
-
-    keyed = {spec.section for spec in KEYED_FAMILY_SPECS}
-    scoped = {spec.section for spec in KEYED_FAMILY_SPECS if spec.scoped}
-    cleared = [item.family for item in revision.cleared_families]
-    named = _named_storage_delta_families(revision, cleared)
-    _require_known_storage_families(named, keyed)
-    _require_storage_delta_baseline(revision, named)
-    _require_unique_clearances_and_scopes(revision, cleared)
-    operated = _operated_storage_delta_families(revision)
-    _require_scoped_storage_operations(revision, scoped, operated)
-
-
-def _named_storage_delta_families(revision: ModeloRevision, cleared: list[str]) -> list[str]:
-    return [
-        *cleared,
-        *revision.scoped_families,
-        *(item.family for item in revision.family_overrides),
-        *(item.family for item in revision.family_removals),
-        *(item.family for item in revision.family_positions),
-    ]
-
-
-def _operated_storage_delta_families(revision: ModeloRevision) -> set[str]:
-    return {
-        *(item.family for item in revision.family_overrides),
-        *(item.family for item in revision.family_removals),
-        *(item.family for item in revision.family_positions),
-    }
-
-
-def _require_known_storage_families(named: list[str], keyed: set[str]) -> None:
-    unknown = sorted(set(named) - keyed)
-    if unknown:
-        raise RegistryValidationError(f"family storage delta names non-keyed families {unknown!r}")
-
-
-def _require_storage_delta_baseline(revision: ModeloRevision, named: list[str]) -> None:
-    if named and revision.family_storage_baseline is None and revision.predecessor is None:
-        raise RegistryValidationError("family storage delta requires family_storage_baseline or a named predecessor")
-
-
-def _require_unique_clearances_and_scopes(revision: ModeloRevision, cleared: list[str]) -> None:
-    if len(set(cleared)) != len(cleared):
-        raise RegistryValidationError(
-            "cleared families must be unique; one family carries one authored clearance, so two entries "
-            "leave the merge with two reasons for one decision and no rule for picking between them"
-        )
-    if len(set(revision.scoped_families)) != len(revision.scoped_families):
-        raise RegistryValidationError("scoped families must be unique")
-
-
-def _require_scoped_storage_operations(
-    revision: ModeloRevision,
-    scoped: set[str],
-    operated: set[str],
-) -> None:
-    invalid_scopes = sorted(set(revision.scoped_families) - scoped)
-    if invalid_scopes:
-        raise RegistryValidationError(f"family assertion scope names non-scoped families {invalid_scopes!r}")
-    missing_scopes = sorted((operated & scoped) - set(revision.scoped_families))
-    if missing_scopes:
-        raise RegistryValidationError(
-            f"scoped family storage operations require an edition-local assertion scope {missing_scopes!r}"
-        )
-
-
-def _require_revision_keys_and_review_references(
-    revisions: Mapping[RevisionId, ModeloRevision],
-    revision_ids: frozenset[str],
-) -> None:
-    for key, revision in revisions.items():
-        _require_revision_key(key, revision)
-        _require_review_reference(revision, revision_ids)
-
-
-def _require_revision_key(key: RevisionId, revision: ModeloRevision) -> None:
-    if key != revision.id:
-        raise RegistryValidationError(f"revision key {key!r} does not match revision id {revision.id!r}")
-
-
-def _require_review_reference(revision: ModeloRevision, revision_ids: frozenset[str]) -> None:
-    if revision.reviewed_against == revision.id:
-        raise RegistryValidationError(
-            f"revision {revision.id!r} has invalid review reference: reviewed_against cannot name itself"
-        )
-    if revision.reviewed_against is not None and revision.reviewed_against not in revision_ids:
-        raise RegistryValidationError(
-            f"revision {revision.id!r} has dangling review reference "
-            f"reviewed_against={revision.reviewed_against!r}; declared revisions are {sorted(revision_ids)!r}"
-        )
-
-
-def _union_across_expectations[T](
-    expectations: Sequence[VerificationExpectationDefinition],
-    select: Callable[[VerificationExpectationDefinition], Iterable[T]],
-) -> frozenset[T]:
-    """Union one declared set across every expectation folded into a policy.
-
-    The fold is a union rather than an intersection on purpose: an id any single
-    expectation declares is in scope for the snapshot's policy, so a second
-    expectation cannot narrow the first one's declared coverage away.
-    """
-    return frozenset(value for expectation in expectations for value in select(expectation))
 
 
 class RegistrySnapshot(RegistryModel):
@@ -1237,15 +1104,15 @@ class RegistrySnapshot(RegistryModel):
             raise RegistryValidationError("registry verification requires verification expectations")
         return RegistryVerificationPolicy(
             expectation_ids=tuple(expectation.id for expectation in expectations),
-            computed_casilla_ids=_union_across_expectations(
+            computed_casilla_ids=union_across_expectations(
                 expectations,
                 lambda expectation: expectation.computed_casilla_ids,
             ),
-            reconcile_when_present_casilla_ids=_union_across_expectations(
+            reconcile_when_present_casilla_ids=union_across_expectations(
                 expectations,
                 lambda expectation: expectation.reconcile_when_present_casilla_ids,
             ),
-            externally_grounded_casilla_ids=_union_across_expectations(
+            externally_grounded_casilla_ids=union_across_expectations(
                 expectations,
                 lambda expectation: expectation.externally_grounded_casilla_ids,
             ),
@@ -1253,7 +1120,7 @@ class RegistrySnapshot(RegistryModel):
             tolerance=min(expectation.tolerance for expectation in expectations),
             min_coverage=max(expectation.min_coverage for expectation in expectations),
             rounding_codes=frozenset(expectation.rounding for expectation in expectations),
-            discrepancy_causes=_union_across_expectations(
+            discrepancy_causes=union_across_expectations(
                 expectations,
                 lambda expectation: expectation.discrepancy_causes,
             ),

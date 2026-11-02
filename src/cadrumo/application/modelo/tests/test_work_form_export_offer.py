@@ -37,6 +37,7 @@ from ....domain.modelos.filing_record import (
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
+from ..work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormExport
 from ..work_form_export_offer import (
     EXPORT_ARTEFACT_LOCALE_KEYS,
     ModeloFormElection,
@@ -49,9 +50,7 @@ from ..work_form_export_offer import (
 from ..work_form_header import export_hold
 from ..work_form_models import (
     TYPED_EDITABILITIES,
-    ModeloFormCalculationNote,
     ModeloFormEditability,
-    ModeloFormExport,
     ModeloFormOrigin,
     ModeloWorkForm,
     map_form_fields,

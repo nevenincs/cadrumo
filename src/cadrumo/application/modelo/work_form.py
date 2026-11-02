@@ -74,6 +74,7 @@ from .edit_models import (
 )
 from .work_form_context import WorkFormContext
 from .work_form_counts import count_work_form_fields
+from .work_form_declaration_facts import ModeloFormDeadline, ModeloFormEditClosure
 from .work_form_errors import ModeloWorkFormLayoutError
 from .work_form_field_projection import project_casilla_field
 from .work_form_inspection import (
@@ -86,8 +87,6 @@ from .work_form_inspection import (
 from .work_form_layout import LayoutWalker
 from .work_form_models import (
     ModeloFormCasillaAddressV1,
-    ModeloFormDeadline,
-    ModeloFormEditClosure,
     ModeloFormField,
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,

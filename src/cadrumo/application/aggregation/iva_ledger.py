@@ -35,6 +35,7 @@ See Also:
 from __future__ import annotations
 
 from collections.abc import Sequence
+from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
@@ -781,6 +782,72 @@ def _is_included_transaction(transaction: Transaction) -> bool:
     )
 
 
+@dataclass(slots=True)
+class _IvaLedgerCollection:
+    """What the per-row pass accumulates before the aggregation is assembled."""
+
+    observations: list[IvaLedgerObservation] = field(default_factory=list[IvaLedgerObservation])
+    prorrata_references: list[ProrrataLedgerReference] = field(default_factory=list[ProrrataLedgerReference])
+    issues: list[IvaLedgerAggregationIssue] = field(default_factory=list[IvaLedgerAggregationIssue])
+    art_104_tres_excluded_ledger_ids: list[str] = field(default_factory=list[str])
+    unclassified_output_ledger_ids: list[str] = field(default_factory=list[str])
+    movement_dated_ledger_ids: list[str] = field(default_factory=list[str])
+    operation_after_movement_ledger_ids: list[str] = field(default_factory=list[str])
+
+
+def _gate_leaves_output_unclassified(transaction: Transaction, gate_issue: IvaLedgerAggregationIssue) -> bool:
+    """Whether a gate refusal drops an issued row whose output IVA is then unclassified."""
+    return invoice_kind_for_direction(transaction.direction) is InvoiceKind.ISSUED and gate_issue.reason not in {
+        IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
+        IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+    }
+
+
+def _operation_after_movement(transaction: Transaction, *, operation: PinnedAuthorityOperation) -> bool:
+    """Whether a dated operation follows the movement of a row not under IVA cash accounting."""
+    operation_date = transaction.operation_date
+    return (
+        operation_date is not None
+        and operation_date > transaction_filing_date(transaction)
+        and is_iva_cash_accounting_none(transaction.cash_accounting_treatment, authority=operation)
+    )
+
+
+def _collect_iva_transaction(
+    transaction: Transaction,
+    collected: _IvaLedgerCollection,
+    *,
+    resolved_period: Period,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Classify one included ledger row and add what it yields to ``collected``."""
+    from ._iva_transaction import classify_iva_transaction
+
+    outcome = classify_iva_transaction(transaction, resolved_period=resolved_period, operation=operation)
+    if outcome.gate_issue is not None:
+        collected.issues.append(outcome.gate_issue)
+        if _gate_leaves_output_unclassified(transaction, outcome.gate_issue):
+            collected.unclassified_output_ledger_ids.append(transaction.transaction_id)
+        return
+    if outcome.prorrata_issue is not None:
+        collected.issues.append(outcome.prorrata_issue)
+    if outcome.prorrata_reference is not None:
+        collected.prorrata_references.append(outcome.prorrata_reference)
+    collected.observations.extend(outcome.observations)
+    if outcome.observations:
+        if transaction.operation_date is None:
+            collected.movement_dated_ledger_ids.append(transaction.transaction_id)
+        elif _operation_after_movement(transaction, operation=operation):
+            collected.operation_after_movement_ledger_ids.append(transaction.transaction_id)
+    # LIVA art. 104.Tres: an operator-declared judgment exclusion removes the
+    # operation from BOTH terms of the prorrata ratio. The IVA cuota
+    # observations above still aggregate (the operation is a real taxable
+    # supply); only the prorrata annual volume rollup skips it, keyed by the
+    # ledger id recorded here.
+    if transaction.art_104_tres_exclusion is not None:
+        collected.art_104_tres_excluded_ledger_ids.append(transaction.transaction_id)
+
+
 def aggregate_iva_ledger_observations(
     transactions: TransactionCatalogue,
     *,
@@ -812,58 +879,21 @@ def aggregate_iva_ledger_observations(
             enclosing workflow.
     """
     resolved_period = period
-    observations: list[IvaLedgerObservation] = []
-    prorrata_references: list[ProrrataLedgerReference] = []
-    issues: list[IvaLedgerAggregationIssue] = []
-    art_104_tres_excluded_ledger_ids: list[str] = []
-    unclassified_output_ledger_ids: list[str] = []
-    movement_dated_ledger_ids: list[str] = []
-    operation_after_movement_ledger_ids: list[str] = []
-    from ._iva_transaction import classify_iva_transaction
-
+    collected = _IvaLedgerCollection()
     for transaction in transactions.values():
         if not _is_included_transaction(transaction):
             continue
-        outcome = classify_iva_transaction(transaction, resolved_period=resolved_period, operation=operation)
-        if outcome.gate_issue is not None:
-            issues.append(outcome.gate_issue)
-            if invoice_kind_for_direction(
-                transaction.direction
-            ) is InvoiceKind.ISSUED and outcome.gate_issue.reason not in {
-                IvaLedgerAggregationIssueReason.PERSONAL_TRANSACTION,
-                IvaLedgerAggregationIssueReason.OUTSIDE_PERIOD,
-            }:
-                unclassified_output_ledger_ids.append(transaction.transaction_id)
-            continue
-        if outcome.prorrata_issue is not None:
-            issues.append(outcome.prorrata_issue)
-        if outcome.prorrata_reference is not None:
-            prorrata_references.append(outcome.prorrata_reference)
-        observations.extend(outcome.observations)
-        if outcome.observations:
-            if transaction.operation_date is None:
-                movement_dated_ledger_ids.append(transaction.transaction_id)
-            elif transaction.operation_date > transaction_filing_date(transaction) and is_iva_cash_accounting_none(
-                transaction.cash_accounting_treatment, authority=operation
-            ):
-                operation_after_movement_ledger_ids.append(transaction.transaction_id)
-        # LIVA art. 104.Tres: an operator-declared judgment exclusion removes the
-        # operation from BOTH terms of the prorrata ratio. The IVA cuota
-        # observations above still aggregate (the operation is a real taxable
-        # supply); only the prorrata annual volume rollup skips it, keyed by the
-        # ledger id recorded here.
-        if transaction.art_104_tres_exclusion is not None:
-            art_104_tres_excluded_ledger_ids.append(transaction.transaction_id)
+        _collect_iva_transaction(transaction, collected, resolved_period=resolved_period, operation=operation)
     result = IvaLedgerAggregation(
         period=resolved_period,
-        observations=tuple(observations),
-        prorrata_references=tuple(prorrata_references),
+        observations=tuple(collected.observations),
+        prorrata_references=tuple(collected.prorrata_references),
         prorrata_apportionment=prorrata_apportionment,
-        issues=tuple(issues),
-        art_104_tres_excluded_ledger_ids=tuple(art_104_tres_excluded_ledger_ids),
-        unclassified_output_ledger_ids=tuple(unclassified_output_ledger_ids),
-        movement_dated_ledger_ids=tuple(movement_dated_ledger_ids),
-        operation_after_movement_ledger_ids=tuple(operation_after_movement_ledger_ids),
+        issues=tuple(collected.issues),
+        art_104_tres_excluded_ledger_ids=tuple(collected.art_104_tres_excluded_ledger_ids),
+        unclassified_output_ledger_ids=tuple(collected.unclassified_output_ledger_ids),
+        movement_dated_ledger_ids=tuple(collected.movement_dated_ledger_ids),
+        operation_after_movement_ledger_ids=tuple(collected.operation_after_movement_ledger_ids),
     )
     _validate_investment_asset_authority(
         result.observations,
