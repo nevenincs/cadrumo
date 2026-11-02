@@ -10,11 +10,15 @@ from decimal import Decimal
 from typing import Final, cast
 from uuid import UUID
 
+from pydantic import AnyHttpUrl
+
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
 )
 
+from ...adapters.outbound.aeat.sede.iva_compensation_wallet_parsing import WALLET_URL
+from ...adapters.outbound.aeat.sede.schema import IvaCompensationWalletObservation, IvaCompensationWalletRow
 from ...adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from ...adapters.persistence.profile.calculation_observations import (
     CalculationObservationRepository,
@@ -92,12 +96,41 @@ from .ledger_lifecycle_operation_test_support import (
     prepare_ledger_lifecycle_operation_conformance_case,
 )
 from .production_operation_registry import production_operation_registry
-from .profile_persistence._iva_wallet_engine_support import _wallet_observation
 from .prorrata_operation_test_support import (
     ProrrataOperationConformanceCase,
     prepare_prorrata_operation_conformance_case,
 )
 from .registered_executor_scenario_constants import _OPERATOR_SCOPE_PORTS
+
+
+def _pending_wallet_observation(
+    *,
+    pending: Decimal,
+    taxpayer_nif: str,
+    target_year: int,
+    target_period: Period,
+    generation_year: int,
+    generation_period: str,
+    captured_at: datetime,
+) -> IvaCompensationWalletObservation:
+    """The wallet AEAT would show for credit still pending from one earlier generation period."""
+    return IvaCompensationWalletObservation(
+        taxpayer_nif=taxpayer_nif,
+        authenticated_identity=taxpayer_nif,
+        target_year=target_year,
+        target_period=target_period,
+        rows=(
+            IvaCompensationWalletRow(
+                generation_year=generation_year,
+                generation_period=Period.from_year_and_code(generation_year, generation_period),
+                pending_amount=pending,
+            ),
+        ),
+        total_pending=pending,
+        source_url=AnyHttpUrl(WALLET_URL),
+        captured_at=captured_at,
+        raw_sha256=hashlib.sha256(f"conformance-wallet:{taxpayer_nif}:{target_period}:{pending}".encode()).hexdigest(),
+    )
 
 
 def _seeded_modelo_filing_record(profile_id: UUID, *, operation: PinnedAuthorityOperation) -> tuple[str, str]:
@@ -273,7 +306,7 @@ def _seeded_ledger_track_with_finalized_participation(profile_id: UUID, *, opera
     decision = reconcile_modelo_303_iva_compensation(
         snapshot,
         taxpayer_nif=SEEDED_SOURCE_TAX_ID,
-        wallet=_wallet_observation(
+        wallet=_pending_wallet_observation(
             pending=pending,
             taxpayer_nif=SEEDED_SOURCE_TAX_ID,
             target_year=period.filing_year,
