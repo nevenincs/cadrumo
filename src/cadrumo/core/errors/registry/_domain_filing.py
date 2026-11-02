@@ -719,4 +719,14 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.domain.deadlines.domiciliation_cutoff._CalendarGapError",
+        ErrorCode(
+            code="INTERNAL_DOMICILIATION_CALENDAR_GAP",
+            category=ErrorCategory.INTERNAL,
+            message_key="errors.internal.internal_domiciliation_calendar_gap",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

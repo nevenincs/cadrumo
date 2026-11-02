@@ -24,6 +24,7 @@ from ...core.unit_proportion import UNIT_PROPORTION_MAX
 from ...domain.buckets.event import BUCKET_EVENT_PAYLOAD_VALUE_MAX_LENGTH
 from ...domain.identifiers import canonical_decimal_string
 from ...domain.invoices.normalization import INVOICE_PAYMENT_ID_PATTERN
+from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH
 from .allocate_operation import LEDGER_ALLOCATE_RATIO_ID_MAX
 from .classify_requests import LEDGER_CLASSIFY_SHORT_TEXT_MAX
@@ -60,6 +61,7 @@ type TextLimitName = Literal[
     "confirm_note",
     "own_account_label",
     "own_account_currency",
+    "invoice_counterparty_name",
 ]
 
 
@@ -147,6 +149,7 @@ _TEXT_LIMITS: Final[tuple[LedgerEntryTextLimit, ...]] = (
     LedgerEntryTextLimit(name="confirm_note", max=INVOICE_EVIDENCE_NOTE_MAX),
     LedgerEntryTextLimit(name="own_account_label", max=LEDGER_OWN_ACCOUNT_LABEL_MAX),
     LedgerEntryTextLimit(name="own_account_currency", max=LEDGER_OWN_ACCOUNT_CURRENCY_MAX),
+    LedgerEntryTextLimit(name="invoice_counterparty_name", max=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH),
 )
 
 

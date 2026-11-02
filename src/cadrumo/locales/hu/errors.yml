@@ -477,6 +477,8 @@ errors:
       az internetkapcsolatot, és próbáld újra.
     fail_outbound_storage_unavailable: A tárhelyszolgáltatás átmenetileg nem érhető
       el. Várj néhány percet, és próbáld újra.
+    fail_pattern_search_unavailable: A mintakeresést nem sikerült elindítani vagy
+      értelmezni, ezért semmit sem kerestünk.
     fail_review_source_load: A forrásfájl jelen van, de nem elemezhető.
     fail_sancion_arithmetic: A szankciós dokumentumon nyomtatott összegek nem egyeztethetők
       össze egymással.
@@ -712,6 +714,8 @@ errors:
     internal_cli_unexpected_boundary: A parancs váratlan belső hiba miatt hiúsult
       meg, nem tárolt adatokkal kapcsolatos probléma miatt. Nézd meg a diagnosztikai
       naplókat, hogy mi hiúsult meg.
+    internal_domiciliation_calendar_gap: 'Belső hiba: a naptár egy éve nem tudta besorolni
+      a napjait.'
     internal_flow_copy_resolution: 'Belső hiba: a vezetett folyamat nem tudta feloldani
       a megjelenítendő szövegeit.'
     internal_flow_validator_registry: 'Belső hiba: a vezetett folyamat ellenőrző-nyilvántartása
@@ -1046,6 +1050,8 @@ errors:
     refused_auth_login_precondition: A bejelentkezés előfeltétele nem teljesül.
     refused_calculations_casilla_constraint: Egy számított mező értéke kívül esik
       az adott mezőhöz deklarált korlátokon. Tekintsd át a számítási bemeneteket.
+    refused_classification_rule_search: Egy mentett szabállyal nem sikerült keresni,
+      ezért semmi sem változott.
     refused_cli_boundary: A parancs elutasította a kérést.
     refused_cli_log_level_resolution: 'A megadott naplószint-kapcsolók ellentmondásosak.
       Csak egyiket használd: --quiet, --verbose vagy --debug.'
@@ -1281,6 +1287,9 @@ errors:
     refused_outbound_storage_validation: A tárolási művelet paraméterei nem mentek
       át az érvényesítésen.
     refused_output_format: A kért kimeneti formátum nem támogatott.
+    refused_pattern_search_overrun: A mintáddal végzett keresés nem fejeződött be
+      a korláton belül, ezért leállítottuk.
+    refused_pattern_search_unreadable: A mintát nem sikerült beolvasni.
     refused_pension_reduccion_computation: A nyugdíjcsökkentés számításának bemenete
       megsértett egy numerikus előfeltételt. Javítsd a megadott összegeket.
     refused_profile_already_exists: Ilyen adatokkal rendelkező profil már létezik.

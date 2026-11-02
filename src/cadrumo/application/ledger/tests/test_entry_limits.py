@@ -19,6 +19,8 @@ from ....domain.buckets.event import BucketEvent
 from ....domain.invoices import figures
 from ....domain.invoices.errors import InvoiceValidationError
 from ....domain.invoices.normalization import normalise_invoice_payment_id
+from ...invoices.catalogue_add_contracts import InvoiceAddRequest
+from ...invoices.catalogue_update_operation import InvoiceUpdateValues
 from ..allocate_operation import LedgerAllocateRequest
 from ..classify_requests import LedgerClassifyPatch
 from ..counterparty_operation import LedgerCounterpartyRequest
@@ -180,6 +182,10 @@ _OWNERS: Final[dict[str, list[tuple[type[BaseModel], str, Callable[[int], object
     "confirm_note": [(LedgerEvidenceConfirmRequest, "notes", _text), (FindingResolutionInputV1, "note", _text)],
     "own_account_label": [(LedgerOwnAccountRequest, "label", _text)],
     "own_account_currency": [(LedgerOwnAccountRequest, "currency", _text)],
+    "invoice_counterparty_name": [
+        (InvoiceAddRequest, "counterparty_name", _text),
+        (InvoiceUpdateValues, "counterparty_name", _text),
+    ],
 }
 
 

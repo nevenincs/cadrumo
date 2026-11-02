@@ -960,7 +960,8 @@ export type TextLimitName =
   | "confirm_label"
   | "confirm_note"
   | "own_account_label"
-  | "own_account_currency";
+  | "own_account_currency"
+  | "invoice_counterparty_name";
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */
 export type InventoryEvidenceAddRequest = { source_path: FileToken };

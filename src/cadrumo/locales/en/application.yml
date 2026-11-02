@@ -783,6 +783,7 @@ application:
         counterparty_country_invalid: This is not a two-letter country code the ledger
           recognises.
         counterparty_name_blank: The counterparty's name cannot be blank.
+        counterparty_name_too_long: A counterparty's name holds up to {limit} characters.
         counterparty_tax_id_invalid: This tax ID is not valid for the counterparty's
           country.
         counterparty_tax_id_required: This invoice needs the counterparty's tax ID.

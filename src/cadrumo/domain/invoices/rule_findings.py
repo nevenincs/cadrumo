@@ -32,6 +32,7 @@ class InvoiceRuleFindingCode(StrEnum):
     COUNTERPARTY_TAX_ID_INVALID = "counterparty_tax_id_invalid"
     COUNTERPARTY_COUNTRY_INVALID = "counterparty_country_invalid"
     COUNTERPARTY_NAME_BLANK = "counterparty_name_blank"
+    COUNTERPARTY_NAME_TOO_LONG = "counterparty_name_too_long"
     INVOICE_NUMBER_BLANK = "invoice_number_blank"
     CURRENCY_INVALID = "currency_invalid"
     INVOICE_CLASS_UNDECLARED = "invoice_class_undeclared"

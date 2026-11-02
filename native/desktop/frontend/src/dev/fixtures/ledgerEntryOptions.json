@@ -631,6 +631,10 @@
       {
         "name": "own_account_currency",
         "max": 16
+      },
+      {
+        "name": "invoice_counterparty_name",
+        "max": 256
       }
     ]
   }

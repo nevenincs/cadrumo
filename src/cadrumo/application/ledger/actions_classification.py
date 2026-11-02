@@ -502,16 +502,16 @@ def _classification_rule_scope(
     return in_scope, skipped_already_classified
 
 
-class ClassificationRuleSearchRefusedError(Exception):
+class ClassificationRuleSearchRefusedError(CadrumoError):
     """A stored rule could not be searched with, so the scan has no answer and nothing was written."""
 
-    code: Literal["pattern_overrun", "invalid_pattern"]
+    reason: Literal["pattern_overrun", "invalid_pattern"]
 
-    def __init__(self, rule_id: str, *, code: Literal["pattern_overrun", "invalid_pattern"]) -> None:
+    def __init__(self, rule_id: str, *, reason: Literal["pattern_overrun", "invalid_pattern"]) -> None:
         """Name the rule and why it has no answer."""
         super().__init__(f"classification rule {rule_id} could not be searched with")
         self.rule_id = rule_id
-        self.code = code
+        self.reason = reason
 
 
 def _winning_rule_positions(
@@ -525,9 +525,13 @@ def _winning_rule_positions(
             [transaction.raw.description for transaction in transactions],
         )
     except PatternSearchOverrunError as error:
-        raise ClassificationRuleSearchRefusedError(rules[error.pattern_index].rule_id, code="pattern_overrun") from None
+        raise ClassificationRuleSearchRefusedError(
+            rules[error.pattern_index].rule_id, reason="pattern_overrun"
+        ) from None
     except PatternSearchUnreadableError as error:
-        raise ClassificationRuleSearchRefusedError(rules[error.pattern_index].rule_id, code="invalid_pattern") from None
+        raise ClassificationRuleSearchRefusedError(
+            rules[error.pattern_index].rule_id, reason="invalid_pattern"
+        ) from None
 
 
 def _planned_rule_matches(

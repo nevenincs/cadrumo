@@ -28,6 +28,7 @@ from typing import IO, Any, Final, cast
 
 from .child_console import child_console_creation_flags
 from .config import load_settings
+from .errors.hierarchy import CadrumoError
 from .package_interpreter import isolated_interpreter_command
 from .storage_environment import ChildEnvironmentProfile, child_environment
 from .storage_taxonomy import StorageCategory
@@ -52,7 +53,7 @@ _CHILD_CPU_SECONDS: Final = 60
 _CHILD_MEMORY_BYTES: Final = 1024 * 1024 * 1024
 
 
-class PatternSearchOverrunError(Exception):
+class PatternSearchOverrunError(CadrumoError):
     """A pattern outran the batch's budget, or the child's memory; the child has been ended."""
 
     def __init__(self, pattern_index: int) -> None:
@@ -61,7 +62,7 @@ class PatternSearchOverrunError(Exception):
         self.pattern_index = pattern_index
 
 
-class PatternSearchUnreadableError(Exception):
+class PatternSearchUnreadableError(CadrumoError):
     """The child's ``re`` could not read a pattern."""
 
     def __init__(self, pattern_index: int) -> None:
@@ -70,7 +71,7 @@ class PatternSearchUnreadableError(Exception):
         self.pattern_index = pattern_index
 
 
-class PatternSearchUnavailableError(Exception):
+class PatternSearchUnavailableError(CadrumoError):
     """The child could not be started, contained or understood, so nothing was searched."""
 
 
