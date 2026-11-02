@@ -90,7 +90,7 @@ field, whether or not the rental is an activity (2024 Renta manual, page 1490).
 """
 
 RETENCION_SOPORTADA_NON_CREDIT_ROLES: Final[Mapping[RetencionSoportadaClase, frozenset[str]]] = MappingProxyType(
-    dict.fromkeys(RetencionSoportadaClase, frozenset()),
+    dict.fromkeys(RetencionSoportadaClase, frozenset[str]()),
 )
 """The income or cross-check roles each class may fill with a quantity other than the credit.
 
@@ -162,7 +162,9 @@ def credit_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     or no formula targeting it, so a credit binding there is refused rather
     than admitted by default.
     """
-    totals = frozenset(casilla.id for casilla in revision.casillas if casilla.semantic_role == TOTAL_PAGOS_A_CUENTA_ROLE)
+    totals = frozenset(
+        casilla.id for casilla in revision.casillas if casilla.semantic_role == TOTAL_PAGOS_A_CUENTA_ROLE
+    )
     return frozenset(
         operand
         for formula in revision.formulas

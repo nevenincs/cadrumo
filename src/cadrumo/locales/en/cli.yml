@@ -637,8 +637,9 @@ cli:
         list_help: List persisted Modelo 100 borrador snapshots
         modelo_100_help: Modelo 100 borrador snapshot commands
         snapshot_id_help: Snapshot id (or unambiguous prefix)
-        snapshot_schema_outdated: '%{count} stored borrador snapshot(s) were saved
-          by an older version and cannot be read. Import the document again.'
+        snapshot_schema_outdated: '%{count} stored borrador snapshot(s) in this profile
+          were saved in an older format that Cadrumo no longer reads. Importing the
+          document again creates a current snapshot.'
         state_help: 'Snapshot state filter: `active`, `superseded`, `discarded`, or
           `all`'
         view_help: Show one Modelo 100 borrador snapshot
