@@ -201,6 +201,7 @@ class PublicModeloFormContextFieldBlock(BaseModel):
     kind: Literal["context_field"]
     id: str
     label: ModeloFormText
+    box_number: str | None
     value: PublicScalarValueV1 | None
     value_text: str | None
 
