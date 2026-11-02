@@ -30,6 +30,9 @@ from ..command_specs import COMMAND_GRAPH
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
+_STDIN_CHANNEL: Final = "stdin"
+_FD_CHANNEL: Final = "file-descriptor"
+
 _NO_VALUE_HOOKS: Final[tuple[object, ...]] = (None, None, None, None)
 _DEFAULT_CONSTRAINT: Final[tuple[object, ...]] = (
     None,
@@ -604,17 +607,29 @@ _EXPECTED_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
         ),
         parameters=(
             _expected_option(
-                "row", "--row", "cli.ledger.staged_check_row_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
-            ),
-            _expected_option(
-                "draft", "--draft", "cli.ledger.staged_check_draft_help", default=_EMPTY_TUPLE_DEFAULT, multiple=True
-            ),
-            _expected_option(
                 "category",
                 "--category",
                 "cli.ledger.staged_check_category_help",
                 default=_EMPTY_TUPLE_DEFAULT,
                 multiple=True,
+            ),
+            _expected_option(
+                "secrets_stdin",
+                "--secrets-stdin",
+                "cli.config.custody.secrets_stdin_help",
+                annotation="builtins:bool",
+                default=_FALSE_DEFAULT,
+                is_flag=True,
+                flag_value=True,
+                machine_secret_channel=_STDIN_CHANNEL,
+            ),
+            _expected_option(
+                "secrets_fd",
+                "--secrets-fd",
+                "cli.config.custody.secrets_fd_help",
+                annotation="builtins:int",
+                default=_NONE_DEFAULT,
+                machine_secret_channel=_FD_CHANNEL,
             ),
         ),
     ),
