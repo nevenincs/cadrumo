@@ -60,8 +60,8 @@ def test_every_recorded_answer_is_the_rules(entry: dict[str, object]) -> None:
         kind=InvoiceKind(question["kind"]),
         invoice_number=question["invoice_number"],
         counterparty_tax_id=question["counterparty_tax_id"],
-        invoice_date=date.fromisoformat(question["invoice_date"]) if question["invoice_date"] else None,
-        grand_total=Decimal(question["grand_total"]) if question["grand_total"] else None,
+        invoice_date=date.fromisoformat(question["invoice_date"]) if question["invoice_date"] is not None else None,
+        grand_total=Decimal(question["grand_total"]) if question["grand_total"] is not None else None,
     )
 
     assert (found.invoice_id if found else None, found.basis if found else None) == (

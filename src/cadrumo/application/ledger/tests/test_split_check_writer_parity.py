@@ -237,21 +237,12 @@ def test_a_movement_gone_or_not_active_is_not_split() -> None:
         )
 
 
-def _recorded_questions() -> tuple[tuple[str, tuple[LedgerSplitCheckPart, ...]], ...]:
-    return tuple(
-        (
-            entry["parent_amount"],
-            tuple(
-                LedgerSplitCheckPart(amount=part["amount"], description=part["description"]) for part in entry["parts"]
-            ),
-        )
-        for entry in json.loads(_RECORDING.read_text(encoding="utf-8"))["answers"]
-    )
-
-
 def test_every_recorded_answer_is_the_live_one() -> None:
     recording = json.loads(_RECORDING.read_text(encoding="utf-8"))
     assert recording["answers"]
-    for entry, (amount, parts) in zip(recording["answers"], _recorded_questions(), strict=True):
-        live = check_split(_PROFILE, _parent(amount), parts).model_dump(mode="json", exclude={"profile_id"})
-        assert live == entry["answer"], (amount, entry["parts"])
+    for entry in recording["answers"]:
+        parts = tuple(
+            LedgerSplitCheckPart(amount=part["amount"], description=part["description"]) for part in entry["parts"]
+        )
+        live = check_split(_PROFILE, _parent(entry["parent_amount"]), parts)
+        assert live.model_dump(mode="json", exclude={"profile_id"}) == entry["answer"], entry["parts"]

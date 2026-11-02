@@ -91,7 +91,7 @@ def invoice_duplicate(
         ctx,
         command="ledger.invoice.duplicate",
         result=LedgerInvoiceDuplicateEnvelope.model_validate(answer.model_dump(mode="json", exclude={"profile_id"})),
-        lines=(answer.invoice_id[:12] if answer.invoice_id else "none",),
+        lines=(answer.invoice_id[:12] if answer.invoice_id is not None else "none",),
     )
 
 

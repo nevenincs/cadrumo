@@ -70,13 +70,13 @@ class LedgerInvoiceDuplicateExecutionResult(BaseModel):
 
 def _date_stated(text: str | None) -> date | None:
     try:
-        return date.fromisoformat(text.strip()) if text else None
+        return date.fromisoformat(text.strip()) if text is not None else None
     except ValueError:
         return None
 
 
 def _total_stated(text: str | None) -> Decimal | None:
-    return try_parse_canonical_decimal(text, signed=False) if text else None
+    return try_parse_canonical_decimal(text, signed=False) if text is not None else None
 
 
 class LedgerInvoiceDuplicateExecutor:
