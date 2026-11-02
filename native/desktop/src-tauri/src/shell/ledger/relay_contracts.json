@@ -810,6 +810,14 @@
         "path": []
       }
     },
+    "ledger.retencion_soportada.list_absences": {
+      "may_write": false,
+      "review": false,
+      "subject": {
+        "kind": "profile",
+        "path": []
+      }
+    },
     "ledger.retencion_soportada.record": {
       "may_write": true,
       "review": false,

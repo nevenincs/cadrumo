@@ -96,6 +96,8 @@ import type {
   ProrrataSettleSectorRequest,
   ProrrataDeclareGrossRequest,
   ProrrataRemoveGrossRequest,
+  WithholdingAbsenceListRequest,
+  WithholdingAbsenceListResult,
   WithholdingAbsenceResult,
   WithholdingAttestRequest,
   WithholdingListRequest,
@@ -209,6 +211,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.restore",
   "ledger.retencion_soportada.attest_absence",
   "ledger.retencion_soportada.list",
+  "ledger.retencion_soportada.list_absences",
   "ledger.retencion_soportada.record",
   "ledger.retencion_soportada.remove",
   "ledger.retencion_soportada.withdraw_absence",
@@ -2173,6 +2176,7 @@ export interface LedgerRequests {
   "ledger.prorrata.declare_gross": ProrrataDeclareGrossRequest;
   "ledger.prorrata.remove_gross": ProrrataRemoveGrossRequest;
   "ledger.retencion_soportada.list": WithholdingListRequest;
+  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListRequest;
   "ledger.retencion_soportada.record": WithholdingRecordRequest;
   "ledger.retencion_soportada.remove": WithholdingRemoveRequest;
   "ledger.retencion_soportada.attest_absence": WithholdingAttestRequest;
@@ -2284,6 +2288,7 @@ export interface LedgerResults {
   "ledger.prorrata.declare_gross": ProrrataMutationResult;
   "ledger.prorrata.remove_gross": ProrrataMutationResult;
   "ledger.retencion_soportada.list": WithholdingListResult;
+  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListResult;
   "ledger.retencion_soportada.record": WithholdingMutationResult;
   "ledger.retencion_soportada.remove": WithholdingMutationResult;
   "ledger.retencion_soportada.attest_absence": WithholdingAbsenceResult;

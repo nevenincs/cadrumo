@@ -1039,7 +1039,7 @@ DESKTOP_LEDGER_WORKFLOW_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.apply.one_by_one_quick",
         "desktop.ledger.apply.refusal.changed_elsewhere",
         "desktop.ledger.apply.refusal.other",
-        "desktop.ledger.withholding.absence.not_listed",
+        "desktop.ledger.withholding.absence.history",
         "desktop.ledger.withholding.absence.title",
         "desktop.ledger.withholding.absence.what",
         "desktop.ledger.withholding.action.attest",
