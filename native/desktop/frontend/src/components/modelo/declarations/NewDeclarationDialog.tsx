@@ -18,7 +18,7 @@ import {
   SegmentedControlItem,
 } from "@/components/ui/segmented-control";
 import { Spinner } from "@/components/ui/spinner";
-import { ledgerFailure } from "../../../shell/ledger";
+import { ledgerFailure, servedRefusalWords } from "../../../shell/ledger";
 import { MODELO_ACTOR, type ModeloPort } from "../../../shell/modelo";
 import type {
   ModeloDeclarationCreationTargetV1 as Target,
@@ -36,7 +36,8 @@ export type NewDeclarationStart = {
 type Attempt =
   | { kind: "idle" }
   | { kind: "creating" }
-  | { kind: "refused" }
+  /** `words` is why, as the backend served it; null when it served none. */
+  | { kind: "refused"; words: string | null }
   | { kind: "failed" }
   /** The write may have happened: nothing is sent again until the list is
    * read again. */
@@ -168,8 +169,12 @@ function Chooser({
         if (result.kind === "success") {
           onOpen(result.unit.work_unit_id);
           onClose();
-        } else setAttempt({ kind: "refused" });
-      } else if (outcome.kind === "refused") setAttempt({ kind: "refused" });
+        } else setAttempt({ kind: "refused", words: null });
+      } else if (outcome.kind === "refused")
+        setAttempt({
+          kind: "refused",
+          words: servedRefusalWords(outcome.detail),
+        });
       // Paused or still running: its settlement was not seen.
       else setAttempt({ kind: "unknown" });
     } catch (error: unknown) {
@@ -182,7 +187,11 @@ function Chooser({
         setAttempt({ kind: "saved_unread" });
       } else
         // A refusal settled without writing; any other failure never sent.
-        setAttempt({ kind: failure.code === "refused" ? "refused" : "failed" });
+        setAttempt(
+          failure.code === "refused"
+            ? { kind: "refused", words: null }
+            : { kind: "failed" },
+        );
     }
   };
 
@@ -382,11 +391,10 @@ function Chooser({
           </div>
           {attempt.kind === "refused" || attempt.kind === "failed" ? (
             <Alert tone="danger" role="alert" icon={<Icon name="refused" />}>
-              {t(
-                attempt.kind === "refused"
-                  ? "workspace.declarations.list.new.refused"
-                  : "workspace.declarations.list.new.failed",
-              )}
+              {attempt.kind === "refused"
+                ? (attempt.words ??
+                  t("workspace.declarations.list.new.refused"))
+                : t("workspace.declarations.list.new.failed")}
             </Alert>
           ) : attempt.kind === "saved_unread" ? (
             <Alert tone="success" role="status" icon={<Icon name="check" />}>
