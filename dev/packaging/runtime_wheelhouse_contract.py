@@ -39,10 +39,8 @@ class TargetPlatform:
 # met by choosing differently - only by moving it. x86-64 sits behind the same
 # wall and merely failed second, aarch64 being first in this tuple.
 #
-# 2.28 is chosen rather than 2.26 because it is what the rest of this fleet
-# already promises: vaultspec-core, vaultspec-rag and vaultspec-dashboard all
-# pin their Linux builds to a digest-pinned manylinux_2_28 image and measure
-# 2.28 out of the published artifact. It covers RHEL 8, Rocky 8, Alma 8,
+# 2.28 is chosen rather than 2.26 because it is the floor a digest-pinned
+# manylinux_2_28 build image measures out of its published artifact. It covers RHEL 8, Rocky 8, Alma 8,
 # Debian 10+, Ubuntu 20.04+ and Amazon Linux 2023, and it satisfies the 2.26
 # wheels above with headroom.
 #

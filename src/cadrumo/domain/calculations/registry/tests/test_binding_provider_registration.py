@@ -564,13 +564,13 @@ def test_a_manual_input_binding_marked_aeat_prefilled_is_accepted() -> None:
     assert validate_binding_against_registration(binding) == ()
 
 
-def test_every_bundled_aeat_prefilled_binding_is_on_an_admitting_kind() -> None:
+def test_every_bundled_binding_the_borrador_may_supply_is_on_an_admitting_kind() -> None:
     """The published corpus, hydrated through the real authority, honours the admission attribute."""
     refused: list[str] = []
     with bundled_indexed_authority().operation() as operation:
         for modelo_id, revision_id in operation.revision_ids():
             for binding in operation.revision(modelo_id, revision_id).bindings:
-                if binding.aeat_prefilled and not registration_for(binding.source).admits_aeat_prefill:
+                if binding.borrador_supplies_value and not registration_for(binding.source).admits_aeat_prefill:
                     refused.append(f"{modelo_id}/{revision_id}:{binding.id}")
 
     assert refused == []

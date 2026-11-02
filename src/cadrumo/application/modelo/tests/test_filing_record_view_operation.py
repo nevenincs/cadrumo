@@ -413,7 +413,7 @@ def test_projection_refuses_mismatched_coordinates_and_oversized_document(
 
     from .. import filing_record_view_operation as operation_module
 
-    monkeypatch.setattr(operation_module, "_RESULT_DOCUMENT_MAX_BYTES", 1)
+    monkeypatch.setattr(operation_module, "PROJECTION_RESULT_MAX_BYTES", 1)
     bundle = _bundle()
     request = ModeloFilingRecordViewRequest(profile_id=_PROFILE, filing_record_id=record.filing_record_id)
     with pytest.raises(ProfileAccessRefusedError) as oversized:

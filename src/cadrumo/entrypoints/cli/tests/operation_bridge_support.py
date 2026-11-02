@@ -8,11 +8,13 @@ from typing import cast
 from uuid import UUID
 
 import pytest
+import typer
 from pydantic import BaseModel
 
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
+from cadrumo_client.transport.frontend_client import FrontendClient
 
-from ....core.operations import OperationEffect, OperationTerminalCondition
+from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from .. import operation_profile_operation as profile_operation
 
 
@@ -100,3 +102,47 @@ def bind_profile_submission(
 
     monkeypatch.setattr(submit_module or bridge, "run_registered_operation", submit)
     return submitted, bound_profiles
+
+
+def bind_exact_profile_read(
+    monkeypatch: pytest.MonkeyPatch,
+    *,
+    bridge: ModuleType,
+    definition_id: str,
+    profile_id: UUID,
+    projection: BaseModel,
+    submitted: list[BaseModel],
+    result_version: int,
+    operation_id: str,
+) -> None:
+    """Serve ``projection`` for one read and assert the exact profile, subject, versions and timeout it was sent with."""
+    client = cast(FrontendClient, SimpleNamespace(profile_id=profile_id))
+    monkeypatch.setattr(bridge, "active_bucket_id_or_refuse", lambda: str(profile_id))
+
+    def bound_client(_ctx: typer.Context, *, expected_profile_id: UUID) -> FrontendClient:
+        assert expected_profile_id == profile_id
+        return client
+
+    monkeypatch.setattr(bridge, "require_profile_client", bound_client)
+
+    def submit(
+        actual_client: FrontendClient,
+        request: BaseModel,
+        **kwargs: object,
+    ) -> RegisteredOperationCompletion[BaseModel]:
+        submitted.append(request)
+        assert actual_client is client
+        assert kwargs["definition_id"] == definition_id
+        assert kwargs["subject_ref"] == profile_operation_subject(str(profile_id))
+        assert kwargs["result_type"] is type(projection)
+        assert kwargs["request_version"] == 1
+        assert kwargs["result_version"] == result_version
+        assert kwargs["timeout"] == 120
+        return RegisteredOperationCompletion(
+            operation_id=operation_id,
+            projection=projection,
+            effect=OperationEffect.NONE,
+            terminal_condition=OperationTerminalCondition.SUCCEEDED,
+        )
+
+    monkeypatch.setattr(bridge, "run_registered_operation", submit)

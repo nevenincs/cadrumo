@@ -9,7 +9,7 @@ from dataclasses import dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
@@ -38,7 +38,7 @@ from cadrumo.application.live.filed_read_operation import (
     build_filed_list_registration,
 )
 from cadrumo.application.live.session import SessionWriteReporter
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.capabilities import OperationOwnedResource
 from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
@@ -57,12 +57,13 @@ from cadrumo.core.period import Period
 from cadrumo.core.register_scoping_signal import RegisterScopingSignal
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from cadrumo.domain.deadlines.models import TaxpayerProfile
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from .supervised_operation_rig import (
     ProcessResourceScope,
     assert_foreign_profile_refused,
     build_supervised_operation,
+    operation_access_context,
     settle_and_project,
 )
 
@@ -199,13 +200,10 @@ def _assert_exact_external_client_access[RequestPayloadT: BaseModel](
     profile_id: UUID,
     authority: PinnedAuthorityOperation,
 ) -> None:
-    context = OperationAccessContext(
+    context = operation_access_context(
+        registration.contract,
         profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
         frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
         authority_operation=authority,
     )
     admitted = resolve_operation_access(

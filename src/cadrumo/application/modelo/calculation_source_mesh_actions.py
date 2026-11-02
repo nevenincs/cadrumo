@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.irnr import M210GrossIncomeSourceMode
-from ...core.period import Period
+from ...core.period import Period, StandardPeriodCode
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import (
     BindingId,
@@ -59,10 +59,13 @@ from .m303_regimen_simplificado_scope import (
 from .work_profile import ModeloWorkProfile, ModeloWorkProfilePathValues
 
 if TYPE_CHECKING:
+    from ...domain.calculations.registry.bindings import RegistryModeloObservation
     from ...domain.calculations.registry.detail_record_bindings import Modelo720RowObservation
     from ...domain.calculations.registry.schema import RegistrySnapshot
     from ..aggregation.foreign_assets import ForeignAssetIngestObservation
+    from ..aggregation.renta_imputation import ImputationFilingHistory
     from ..aggregation.source_mesh import (
+        CalculationSourceContext,
         CalculationSourceResolution,
     )
     from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -497,6 +500,7 @@ def _resolve_mesh_families(
     )
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
     from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+    from ..aggregation.renta_imputation import imputation_filing_history
     from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
     from ..aggregation.withholding_source import WithholdingSourceResolver
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
@@ -505,6 +509,20 @@ def _resolve_mesh_families(
     from ..calculations.relation_prefill import RelationPrefillSourceResolver
     from ..invoices.source_resolver import InvoiceCatalogueSourceResolver
 
+    def imputation_filings(context: CalculationSourceContext) -> ImputationFilingHistory:
+        def load_filed(modelo: str, period: Period) -> RegistryModeloObservation | None:
+            envelope = ports.observation_repository.load_observation(modelo, period)
+            return None if envelope is None else envelope.observation
+
+        return imputation_filing_history(
+            bucket_id=context.bucket_id,
+            year=context.filing_year,
+            annual_form=form_for_role("renta.annual"),
+            annual_period_code=StandardPeriodCode.ANNUAL.value,
+            load_observation=load_filed,
+            filing_records=ports.filing_repository.load(),
+        )
+
     return (
         resolve_declared(
             LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(
@@ -512,6 +530,7 @@ def _resolve_mesh_families(
                 prorrata_register_repository=prorrata_register_repository,
                 usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
                 activity_asset_history_repository=ports.activity_asset_history_repository,
+                imputation_filings=imputation_filings,
             )
         ),
         resolve_declared(
@@ -519,6 +538,7 @@ def _resolve_mesh_families(
                 ports=renta_catalogue_read_ports,
                 activity_asset_history_repository=ports.activity_asset_history_repository,
                 transaction_repository=memoized_transaction_repository,
+                imputation_filings=imputation_filings,
             )
         ),
         resolve_declared(
@@ -528,6 +548,7 @@ def _resolve_mesh_families(
                 prorrata_register_repository=prorrata_register_repository,
                 usage_ratio_profile_loader=ports.usage_ratio_profile_loader,
                 activity_asset_history_repository=ports.activity_asset_history_repository,
+                imputation_filings=imputation_filings,
             )
         ),
         resolve_declared(

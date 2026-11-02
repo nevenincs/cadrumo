@@ -7,8 +7,8 @@ import typer
 from cadrumo.application.auth.diagnostics import AuthDiagnosticPhoneState, AuthDiagnosticSummary
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo_client.commands.errors import CliRefusedBoundaryError as _CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
 
-from .presentation import activate_subcommand_output_language as _activate_subcommand_output_language
 from .presentation import emit_envelope
 
 

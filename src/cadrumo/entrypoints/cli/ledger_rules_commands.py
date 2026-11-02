@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime
 from typing import Never
 from uuid import UUID
 
@@ -19,10 +20,16 @@ from ...application.ledger.rule_contracts import (
     LedgerRuleApplyRequest,
     LedgerRuleListRequest,
 )
+from ...application.ledger.rule_remove_operation import LedgerRuleRemoveRequest
 from ...core.i18n.render import tr
 from ...domain.transactions.enums import BusinessClassification
 from .common import active_bucket_id_or_refuse, emit_envelope
-from .operation_ledger_rules import submit_ledger_rule_add, submit_ledger_rule_apply, submit_ledger_rule_list
+from .operation_ledger_rules import (
+    submit_ledger_rule_add,
+    submit_ledger_rule_apply,
+    submit_ledger_rule_list,
+    submit_ledger_rule_remove,
+)
 
 
 def _short_display_id(value: str) -> str:
@@ -54,6 +61,8 @@ def _raise_add_refusal(
             translated_message="cli.app.ledger.rule.empty_pattern",
             context=context,
         )
+    if projection.validation_code == "pattern_overrun":
+        raise CliRefusedBoundaryError(translated_message="cli.app.ledger.rule.pattern_overrun", context=context)
     if projection.validation_code == "category":
         context.update(
             {
@@ -219,4 +228,40 @@ def rule_list(ctx: typer.Context) -> None:
     emit_envelope(ctx, command="ledger.rule.list", result=result, lines=lines)
 
 
-__all__ = ["rule_add", "rule_apply", "rule_list"]
+def rule_remove(ctx: typer.Context, rule_id: str, created_at: str) -> None:
+    """Remove one stored classification rule, guarded by the creation stamp it was listed with."""
+    from .ledger_rule_results import RuleRemoveResult
+
+    try:
+        stamp = datetime.fromisoformat(created_at)
+    except ValueError:
+        stamp = None
+    if stamp is None or stamp.tzinfo is None:
+        raise CliRefusedBoundaryError(translated_message="cli.app.ledger.rule.remove_created_at_invalid")
+    profile_id = UUID(active_bucket_id_or_refuse())
+    completed = submit_ledger_rule_remove(
+        ctx, LedgerRuleRemoveRequest(profile_id=profile_id, rule_id=rule_id, expected_created_at=stamp)
+    )
+    projection = completed.projection
+    rule = projection.rule
+    if projection.outcome == "not_found" or rule is None:
+        raise CliRefusedBoundaryError(
+            translated_message="cli.app.ledger.rule.remove_not_found",
+            context={**_refusal_context(completed), "rule_id": rule_id},
+        )
+    if projection.outcome == "stale":
+        raise CliRefusedBoundaryError(
+            translated_message="cli.app.ledger.rule.remove_stale",
+            context={**_refusal_context(completed), "rule_id": rule_id, "created_at": rule.created_at.isoformat()},
+        )
+    result = RuleRemoveResult.model_validate(rule.model_dump(mode="python"))
+    lines = [
+        f"rule_id	{_short_display_id(rule.rule_id)}",
+        f"pattern	{rule.description_pattern}",
+        f"classification	{rule.classification.value}",
+        f"priority	{rule.priority}",
+    ]
+    emit_envelope(ctx, command="ledger.rule.remove", result=result, lines=lines)
+
+
+__all__ = ["rule_add", "rule_apply", "rule_list", "rule_remove"]

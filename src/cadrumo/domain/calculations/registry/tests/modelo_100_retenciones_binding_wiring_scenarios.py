@@ -33,6 +33,11 @@ M100_RETENCIONES_CAPITAL_MOBILIARIO_CASILLA: CasillaId = validated_casilla_id(
     surface="M100_RETENCIONES_CAPITAL_MOBILIARIO_CASILLA",
 )
 
+# The payer-record family bindings of the two credit casillas: the mesh sums the
+# taxpayer's payer certificates of the class and hands the engine that one value.
+M100_RETENCIONES_TRABAJO_BINDING: BindingId = "renta-retencion-soportada-trabajo"
+M100_RETENCIONES_CAPITAL_MOBILIARIO_BINDING: BindingId = "renta-retencion-soportada-capital-mobiliario"
+
 M100_TOTAL_PAGOS_A_CUENTA_CASILLA: CasillaId = validated_casilla_id(
     "0609",
     surface="M100_TOTAL_PAGOS_A_CUENTA_CASILLA",
@@ -66,7 +71,9 @@ REVIEWED_RELATION_VALUES: dict[RelationId, Decimal] = {
 }
 
 
-def prior_base_binding_values(*, certificado_trabajo: Decimal | None = None) -> dict[BindingId, Decimal]:
+def prior_base_binding_values(
+    *, certificado_trabajo: Decimal | None = None, certificado_capital: Decimal | None = None
+) -> dict[BindingId, Decimal]:
     values: dict[BindingId, Decimal] = {
         "renta-modelo-100-estimacion-directa-es-normal": Decimal("1"),
         "renta-profile-declaration-type": Decimal("1"),
@@ -86,7 +93,9 @@ def prior_base_binding_values(*, certificado_trabajo: Decimal | None = None) -> 
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
     }
     if certificado_trabajo is not None:
-        values["renta-certificado-trabajo-retenciones"] = certificado_trabajo
+        values[M100_RETENCIONES_TRABAJO_BINDING] = certificado_trabajo
+    if certificado_capital is not None:
+        values[M100_RETENCIONES_CAPITAL_MOBILIARIO_BINDING] = certificado_capital
     return values
 
 
@@ -113,7 +122,7 @@ def reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None) 
         **M100_NO_DESCENDANT_MATERNIDAD_BINDINGS,
     }
     if certificado_trabajo is not None:
-        values["renta-certificado-trabajo-retenciones"] = certificado_trabajo
+        values[M100_RETENCIONES_TRABAJO_BINDING] = certificado_trabajo
     return values
 
 
@@ -207,22 +216,25 @@ def check_zero_salary_certificate_retenciones_gives_zero_0596(prior_edition_snap
     assert result.values[M100_RETENCIONES_TRABAJO_CASILLA] == Decimal("0")
 
 
-def check_keyed_capital_mobiliario_retenciones_reach_0609(prior_edition_snapshot: RegistrySnapshot) -> None:
-    """Casilla 0597 is keyed by the declarant and still reaches the credit total.
+def check_capital_mobiliario_retenciones_binding_reaches_0609(prior_edition_snapshot: RegistrySnapshot) -> None:
+    """Casilla 0597 takes its payer-record family value and still reaches the credit total.
 
-    0597 carries no binding, so the amount arrives as a manual casilla input.
-    The formula renta-total-pagos-a-cuenta must still sum it into 0609.
+    The formula renta-total-pagos-a-cuenta must sum it into 0609.
     """
     capital_retenciones = Decimal("3800.00")
+    binding_values = prior_base_binding_values(
+        certificado_trabajo=Decimal("0"), certificado_capital=capital_retenciones
+    )
     result = calculate_registry_snapshot(
         prior_edition_snapshot,
-        inputs={
-            M100_MINIMO_PERSONAL_CASILLA: Decimal("0"),
-            M100_RETENCIONES_CAPITAL_MOBILIARIO_CASILLA: capital_retenciones,
-        },
+        inputs=with_bound_projection(
+            prior_edition_snapshot,
+            {M100_MINIMO_PERSONAL_CASILLA: Decimal("0")},
+            binding_values,
+        ),
         date_context=PRIOR_DATE_CONTEXT,
         enum_binding_values={"renta-profile-tax-residence-ccaa": "madrid"},
-        binding_values=prior_base_binding_values(),
+        binding_values=binding_values,
         relation_values=PRIOR_RELATION_VALUES,
         date_binding_values=PRIOR_DATE_BINDINGS,
     )
@@ -309,7 +321,7 @@ def check_conflicting_equivalent_binding_values_refuse_before_projection(
         resolve_available_bound_inputs_by_casilla_id(
             revision,
             {
-                "renta-certificado-trabajo-retenciones": Decimal("4500.00"),
+                M100_RETENCIONES_TRABAJO_BINDING: Decimal("4500.00"),
                 "renta-modelo-130-pagos-fraccionados": Decimal("4499.99"),
             },
         )

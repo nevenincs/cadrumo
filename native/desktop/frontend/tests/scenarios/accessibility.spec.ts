@@ -705,3 +705,37 @@ for (const scheme of ["light", "dark"] as const)
       );
       expect(await audit(target, surface.unchecked)).toEqual([]);
     });
+
+// A glyph that says one thing is named on its wrapper, because the icon is
+// always hidden from the tree: the label must be in the tree, the bare
+// icon must not be.
+test("a glyph mark's label is in the accessibility tree while its icon stays hidden", async ({
+  page: target,
+}) => {
+  await open(target, "ledger", "&modelo=filed");
+  await openDeclarations(target);
+  await target
+    .getByRole("grid", {
+      name: label("workspace.declarations.destination.overview"),
+    })
+    .getByRole("row")
+    .filter({
+      has: target.getByRole("gridcell", { name: "130", exact: true }),
+    })
+    .first()
+    .dblclick();
+  const filing = declarationViews(target).getByRole("tab", {
+    name: new RegExp(`^${label("workspace.modelo.filing.title")}`),
+  });
+  const mark = filing.getByRole("img", {
+    name: label("workspace.declarations.list.group.recorded"),
+  });
+  await expect(mark).toBeVisible();
+  await expect(filing).toMatchAriaSnapshot(
+    `- tab:\n  - img "${label("workspace.declarations.list.group.recorded")}"`,
+  );
+  await expect(mark.locator("svg[data-slot=icon]")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+});

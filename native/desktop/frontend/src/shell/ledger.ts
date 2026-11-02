@@ -385,6 +385,7 @@ export type LedgerTransaction = {
   date: string;
   booked_date: string;
   value_date: string | null;
+  operation_date: string | null;
   amount: string;
   currency: string;
   direction: string;
@@ -607,6 +608,7 @@ export type LedgerAddRequest = {
   direction: string;
   description: string;
   value_date?: string | null;
+  operation_date?: string | null;
   currency?: string;
   counterparty?: string | null;
   business_classification?: string;
@@ -1911,6 +1913,13 @@ export type EvidenceConfirmResult = {
       printed_total: PublicDecimal;
       recorded_total: PublicDecimal;
       difference: PublicDecimal;
+    } | null;
+    /** A withheld figure the document reads that the record does not hold. */
+    retention_discrepancy?: {
+      read_rate?: PublicDecimal | null;
+      read_amount: PublicDecimal;
+      recorded_rate?: PublicDecimal | null;
+      recorded_amount?: PublicDecimal | null;
     } | null;
     confirmation_id?: string | null;
     confirmed_provenance?: FieldProvenance[];

@@ -50,13 +50,14 @@ from ...core.errors.hierarchy import CadrumoError
 from ...core.external_constants import DEFAULT_CURRENCY, XLS_EXTENSION
 from ...core.hashing import sha256_hex
 from ...core.hex import Hex64Str
-from ...core.legacy_workbook import read_legacy_workbook
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.parsing.codes import IsoCurrencyCode
 from ...core.parsing.dates import parse_iso8601_date
+from ...core.percentage import fraction_of_percentage
 from ...core.tabular import TabularSourceError, coerce_cell_text, normalize_tabular_bytes
 from ...core.time.clock import now
 from ...core.workbook import FORMULA_CELL_REFUSAL, WorkbookCell, first_formula_cell_column
+from ...core.xls_workbook import read_xls_workbook
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.iva.schema import InvoiceKind
@@ -358,7 +359,9 @@ def _parse_bulk_row_retention_rate(
     """Return the row's retención rate as a fraction, or ``None``.
 
     A book prints the rate either as a percentage (``15``) or as a fraction
-    (``0.15``); a value above one is read as a percentage. A rate is only
+    (``0.15``); a value above one is read as a percentage, and a ``%`` suffix
+    marks points whatever the value. A bare ``1`` is one per cent or the whole,
+    so it is refused rather than guessed. A rate is only
     accepted beside the amount it produced: the amount is what the document
     states, and the importer never computes it from the rate. A zero rate with
     no amount is a book saying nothing was withheld, and is read as no
@@ -378,7 +381,14 @@ def _parse_bulk_row_retention_rate(
             field="retencion_amount",
             reason="retencion_amount is required when retencion_rate is given; the amount is never derived",
         )
-    return rate / 100 if rate > 1 else rate
+    marked_as_percentage = coerce_cell_text(raw_row.get("retencion_rate")).rstrip().endswith("%")
+    if rate == 1 and not marked_as_percentage:
+        raise _RowParseError(
+            row_number=row_number,
+            field="retencion_rate",
+            reason="a bare retencion_rate of 1 is ambiguous between one per cent and the whole; write 1% or 0.01",
+        )
+    return fraction_of_percentage(rate) if rate > 1 or marked_as_percentage else rate
 
 
 def _bulk_row_country_code(raw_row: Mapping[str, object], *, declared_country: str | None, row_number: int) -> str:
@@ -739,7 +749,7 @@ def _read_workbook_source(
         workbook.close()
 
 
-def _read_legacy_workbook_source(
+def _read_xls_workbook_source(
     path: Path,
     *,
     mapper: ColumnRoleMapper | None,
@@ -749,12 +759,12 @@ def _read_legacy_workbook_source(
 ) -> BulkInvoiceImportSource:
     """Read a legacy Excel 97-2003 invoice book exactly as :func:`_read_workbook_source` reads ``.xlsx``.
 
-    :func:`~core.legacy_workbook.read_legacy_workbook` marks each formula cell
+    :func:`~core.xls_workbook.read_xls_workbook` marks each formula cell
     the way ``openpyxl`` does, so the same first worksheet is read under the
     same formula refusal, header resolution and row numbering.
     """
     try:
-        worksheets = read_legacy_workbook(source_bytes)
+        worksheets = read_xls_workbook(source_bytes)
     except TabularSourceError as exc:
         raise InvoiceValidationError(
             "bulk invoice import file carries no readable table",
@@ -777,7 +787,7 @@ def read_bulk_invoice_import_source(
     mapper: ColumnRoleMapper | None = None,
     expected_sha256: str | None = None,
 ) -> BulkInvoiceImportSource:
-    """Read a CSV, TSV, XLSX/XLSM or legacy XLS invoice book into rows keyed by importer field.
+    """Read a CSV, TSV, XLSX/XLSM or XLS invoice book into rows keyed by importer field.
 
     A column whose header already names an importer field binds to it outright.
     Anything left over is put to ``mapper`` once for the whole file, and a column
@@ -832,7 +842,7 @@ def read_bulk_invoice_import_source(
             source_sha256=source_sha256,
             ingested_at=ingested_at,
         )
-    read_workbook = _read_legacy_workbook_source if suffix == XLS_EXTENSION else _read_workbook_source
+    read_workbook = _read_xls_workbook_source if suffix == XLS_EXTENSION else _read_workbook_source
     return read_workbook(
         path,
         mapper=mapper,

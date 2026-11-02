@@ -5,6 +5,7 @@ from __future__ import annotations
 from datetime import datetime
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.hashing import canonical_json_bytes
 from ...core.identity.hex_ids import CalculationRevisionId
@@ -21,7 +22,6 @@ from .calculation_revision_gate import require_calculation_revision_coordinates_
 from .verification_report_public_facts import ModeloVerificationReportProjection
 from .verification_report_read_contracts import (
     MAX_MODELO_VERIFICATION_REPORT_LIST_ROWS,
-    VERIFICATION_REPORT_RESULT_DOCUMENT_MAX_BYTES,
     ModeloVerificationReportListRequest,
     ModeloVerificationReportViewRequest,
 )
@@ -153,7 +153,7 @@ def capture_verification_report_list(
         report_count=len(reports),
         reports=tuple(ModeloVerificationReportProjection.from_report(report) for report in reports),
     )
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > VERIFICATION_REPORT_RESULT_DOCUMENT_MAX_BYTES:
+    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return projection
 
@@ -185,6 +185,6 @@ def capture_verification_report_view(
         verification_report_id=payload.verification_report_id,
         report=ModeloVerificationReportProjection.from_report(report),
     )
-    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > VERIFICATION_REPORT_RESULT_DOCUMENT_MAX_BYTES:
+    if len(canonical_json_bytes(projection.model_dump(mode="json"))) > PROJECTION_RESULT_MAX_BYTES:
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
     return projection

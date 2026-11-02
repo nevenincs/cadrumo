@@ -47,6 +47,7 @@ from ....domain.transactions.enums import BusinessClassification, TransactionDir
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_work_lifecycle_ports
@@ -121,6 +122,7 @@ def _seed_sofia_profile(objects: SecureObjectRepository) -> None:
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            *cash_criterion_facts(_YEAR),
         ),
         created_at=_T0,
         updated_at=_T0,

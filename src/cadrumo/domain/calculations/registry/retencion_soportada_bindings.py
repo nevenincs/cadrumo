@@ -43,6 +43,7 @@ __all__ = [
     "RETENCION_SOPORTADA_NON_CREDIT_ROLES",
     "TOTAL_PAGOS_A_CUENTA_ROLE",
     "RetencionSoportadaProvider",
+    "credit_borrador_participation_failures",
     "credit_casilla_ids",
     "retencion_soportada_bindings",
     "retencion_soportada_revision_failures",
@@ -90,7 +91,7 @@ field, whether or not the rental is an activity (2024 Renta manual, page 1490).
 """
 
 RETENCION_SOPORTADA_NON_CREDIT_ROLES: Final[Mapping[RetencionSoportadaClase, frozenset[str]]] = MappingProxyType(
-    dict.fromkeys(RetencionSoportadaClase, frozenset()),
+    dict.fromkeys(RetencionSoportadaClase, frozenset[str]()),
 )
 """The income or cross-check roles each class may fill with a quantity other than the credit.
 
@@ -188,13 +189,7 @@ def _target_casilla_ids(revision: ModeloRevision, binding_id: BindingId) -> tupl
     return tuple(dict.fromkeys(targets))
 
 
-def _binding_failures(
-    revision: ModeloRevision,
-    binding: BindingDefinition,
-    provider: RetencionSoportadaProvider,
-    credit_set: frozenset[CasillaId],
-) -> list[str]:
-    casillas = {casilla.id: casilla for casilla in revision.casillas}
+def _computed_casilla_failures(revision: ModeloRevision, binding: BindingDefinition) -> list[str]:
     failures: list[str] = []
     for casilla in revision.casillas:
         if casilla.input_kind is InputKind.COMPUTED and (
@@ -204,26 +199,49 @@ def _binding_failures(
                 f"binding {binding.id!r} is bound to computed casilla {casilla.id!r}; a computed casilla takes "
                 "a family value only as a formula operand",
             )
+    return failures
+
+
+def _target_failures(
+    binding: BindingDefinition,
+    provider: RetencionSoportadaProvider,
+    credit_set: frozenset[CasillaId],
+    target_id: CasillaId,
+    role: str | None,
+) -> list[str]:
+    failures: list[str] = []
+    if provider.quantity is RetencionSoportadaCantidad.PAGO_A_CUENTA:
+        if target_id not in credit_set:
+            failures.append(
+                f"binding {binding.id!r} draws pago_a_cuenta into casilla {target_id!r}, which is not an "
+                f"operand of the {TOTAL_PAGOS_A_CUENTA_ROLE!r} total",
+            )
+        if role not in RETENCION_SOPORTADA_CREDIT_ROLES[provider.income_class]:
+            failures.append(
+                f"binding {binding.id!r}: income class {provider.income_class.value!r} does not credit "
+                f"casilla {target_id!r} with role {role!r}",
+            )
+    elif role not in RETENCION_SOPORTADA_NON_CREDIT_ROLES[provider.income_class]:
+        failures.append(
+            f"binding {binding.id!r}: quantity {provider.quantity.value!r} of income class "
+            f"{provider.income_class.value!r} is admitted on no casilla role, and casilla {target_id!r} "
+            f"has role {role!r}",
+        )
+    return failures
+
+
+def _binding_failures(
+    revision: ModeloRevision,
+    binding: BindingDefinition,
+    provider: RetencionSoportadaProvider,
+    credit_set: frozenset[CasillaId],
+) -> list[str]:
+    casillas = {casilla.id: casilla for casilla in revision.casillas}
+    failures = _computed_casilla_failures(revision, binding)
     for target_id in _target_casilla_ids(revision, binding.id):
         target = casillas.get(target_id)
         role = None if target is None else target.semantic_role
-        if provider.quantity is RetencionSoportadaCantidad.PAGO_A_CUENTA:
-            if target_id not in credit_set:
-                failures.append(
-                    f"binding {binding.id!r} draws pago_a_cuenta into casilla {target_id!r}, which is not an "
-                    f"operand of the {TOTAL_PAGOS_A_CUENTA_ROLE!r} total",
-                )
-            if role not in RETENCION_SOPORTADA_CREDIT_ROLES[provider.income_class]:
-                failures.append(
-                    f"binding {binding.id!r}: income class {provider.income_class.value!r} does not credit "
-                    f"casilla {target_id!r} with role {role!r}",
-                )
-        elif role not in RETENCION_SOPORTADA_NON_CREDIT_ROLES[provider.income_class]:
-            failures.append(
-                f"binding {binding.id!r}: quantity {provider.quantity.value!r} of income class "
-                f"{provider.income_class.value!r} is admitted on no casilla role, and casilla {target_id!r} "
-                f"has role {role!r}",
-            )
+        failures.extend(_target_failures(binding, provider, credit_set, target_id, role))
     return failures
 
 
@@ -242,4 +260,30 @@ def retencion_soportada_revision_failures(revision: ModeloRevision) -> tuple[str
     failures: list[str] = []
     for binding, provider in family:
         failures.extend(_binding_failures(revision, binding, provider, credit_set))
+    return tuple(failures)
+
+
+def credit_borrador_participation_failures(revision: ModeloRevision) -> tuple[str, ...]:
+    """Return a refusal for each binding that would let the borrador supply a credit casilla.
+
+    The borrador is informative: a payer's omission or error there must never
+    become the credited figure. A binding whose value lands in the derived
+    credit set, bound directly or as a formula operand, may therefore be held
+    by a borrador snapshot only as ``cross_check_only``, so the snapshot
+    corroborates the evidenced value and never stands in for a missing one.
+    """
+    credit_set = credit_casilla_ids(revision)
+    if not credit_set:
+        return ()
+    failures: list[str] = []
+    for binding in revision.bindings:
+        if not binding.borrador_supplies_value:
+            continue
+        reached = sorted(str(target) for target in _target_casilla_ids(revision, binding.id) if target in credit_set)
+        if reached:
+            failures.append(
+                f"binding {binding.id!r} is aeat_prefilled with borrador precedence and reaches credit casilla(s) "
+                f"{reached}; a borrador value may only cross-check a credit, so declare "
+                "borrador_participation = 'cross_check_only'",
+            )
     return tuple(failures)

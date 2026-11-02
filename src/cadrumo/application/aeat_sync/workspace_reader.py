@@ -37,7 +37,7 @@ from ..overview.calendar_models import OverviewAeatSubmissionState
 from ..overview.home import HomeAvailability
 from ..user_profile.censal_observation import CensalObservation
 from ..user_profile.censo_sync import CENSAL_ADOPTABLE_PATHS, censal_facts_from_read
-from .reconciliation_reader import reconciliation_rows
+from .reconciliation_reader import reconciliation_rows, reconciliation_source_state
 from .workspace import (
     AEAT_SYNC_STALENESS_HORIZONS,
     AeatSyncAeatObservationState,
@@ -488,12 +488,9 @@ def _reconciliation_overview_state(
         rows = reconciliation_rows(
             bucket_id=reconciliations[0].bucket_id, subject_key="overview", records=reconciliations
         )
-        aeat_state = (
-            AeatSyncSourceState.CONFLICT
-            if any(fact.row.diffs for fact in rows)
-            else AeatSyncSourceState.INCOMPLETE
-            if any(fact.row.advisory_count for fact in rows)
-            else AeatSyncSourceState.PRESENT
+        aeat_state = reconciliation_source_state(
+            has_diffs=any(fact.row.diffs for fact in rows),
+            has_advisories=any(fact.row.advisory_count for fact in rows),
         )
         aeat_observed_at = max(record.reconciled_at for record in reconciliations)
     return aeat_state, aeat_observed_at

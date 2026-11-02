@@ -1,9 +1,9 @@
 """A boolean answer bound to a one-byte text slot exports blank or ``X``.
 
-DR131 (``aeat-dr-131-2026``) página 1 prints three such campos, all alfanuméricos de
+DR131 (``aeat-dr-131-2026``) página 1 prints two such operator-answered campos, all alfanuméricos de
 longitud 1 with valores ``blanco o "X"``: posición 109 (contribuyente con discapacidad
-igual o superior al 33 por 100), 613 (derecho a la deducción por vivienda habitual) and
-692 (declaración complementaria). DR184 (``aeat-dr-184-2025``) posición 82 reads ``X``
+igual o superior al 33 por 100) and 613 (derecho a la deducción por vivienda habitual).
+Posición 692 (declaración complementaria) is stated by the amendment evidence instead. DR184 (``aeat-dr-184-2025``) posición 82 reads ``X``
 when the miembro remains one at 31 December. The operator answers each as a boolean
 binding, so the answer reaches a text slot through the binding path. The expected bytes
 are transcribed from the designs, never read from the layout under test; the whole
@@ -30,7 +30,7 @@ from ..export import export_draft
 from ..producer_snapshot import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ..record_field_renderer import _binding_field_value, format_field
 from ..runtime import ModeloOperatorProfile
-from .export_support import FILING_PERIOD, schema_provider, typed_producer_snapshot
+from .export_support import EXPORT_PERIOD, export_schema_provider, typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -38,7 +38,6 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixt
 _MARKERS = (
     ("modelo-131.page1.discapacidad-33", 109),
     ("modelo-131.page1.vivienda-derecho-deduccion", 613),
-    ("modelo-131.page1.declaracion-complementaria", 692),
 )
 _PAGE_ONE_OPEN = b"<T13101000>"
 
@@ -57,7 +56,7 @@ def _exported_page_one_marker(tmp_path: Path, binding: str, position: int, answe
         charge_account=None,
         m303_filing_facts=None,
     )
-    provider = schema_provider(filing_year=2026, period="1T", modelos=("131",))
+    provider = export_schema_provider(filing_year=2026, period="1T", modelos=("131",))
     inputs: dict[str, ModeloInputValue] = {
         validated_casilla_id("03", surface="test_m131_marker.casilla"): Decimal("1000"),
         validated_casilla_id("05", surface="test_m131_marker.casilla"): Decimal("500"),
@@ -70,7 +69,7 @@ def _exported_page_one_marker(tmp_path: Path, binding: str, position: int, answe
         inputs[binding] = answer
     draft = build_draft(
         modelo="131",
-        period=FILING_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Export registry test"),
         inputs=inputs,
         schema_provider=provider,

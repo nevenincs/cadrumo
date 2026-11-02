@@ -831,6 +831,11 @@ application:
           linked to transactions: %{linked_transaction_ids}. There is no unlink command:
           remove those transactions with `aeat app ledger remove`, which releases
           the link, then remove the invoice.'
+        sealed_invoice_refused: Invoice %{invoice_id} was read by the Modelo %{modelo}
+          of %{filing_year} %{period} (%{revision_state}, revision %{calculation_revision_id}),
+          so this change is refused to keep those figures true. If it has not been
+          filed, discard that work with `aeat app modelo work discard` and calculate
+          again. If it has, issue a corrective invoice and file an amendment.
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -1243,6 +1248,17 @@ application:
           missing proof.
         what_to_do: Check the VAT records of the whole year, add the missing proof,
           then calculate again.
+      iva_operation_date_after_movement:
+        what: Some ledger rows have an operation date after their bank date. If that
+          money was an advance, its IVA fell due when it was collected.
+        what_to_do: For an advance, set the operation date to the collection date
+          and record the balance as its own row, then calculate again.
+      iva_row_placed_on_movement_date:
+        what: Some ledger rows have no operation date, so their bank date chose the
+          IVA period. IVA falls due when the operation takes place, not when the money
+          moves.
+        what_to_do: Add the operation date to rows near the end of a period, then
+          calculate again.
       iva_selected_scope_evidence_failure:
         what: The records behind the VAT in this declaration are missing proof or
           do not add up.
@@ -1433,11 +1449,11 @@ application:
         out, so it is not included.'
       activity_undeclared: '{element}: its purchase has no type of activity and another
         of your assets is agricultural, so it counts as non-agricultural.'
-      advisory_imputation_period_ungrounded: 'Box {box}: {amount} of withholding is
-        held back because the period it belongs to is not confirmed. A withholding
-        counts in the period of the income it was taken from (RIRPF art. 79), and
-        your records date each payment by when it reached the bank, which is right
-        only if you chose to declare income when you are paid (RIRPF art. 7.2; LIRPF
+      advisory_imputation_period_ungrounded: 'Box {box}: {amount} is held back because
+        the period it belongs to is not confirmed. Activity income and expenses count
+        when they accrue, and a withholding counts with its income (RIRPF art. 79),
+        while your records date each entry by when it reached the bank, which is right
+        only if you chose to declare when you are paid or pay (RIRPF art. 7.2; LIRPF
         art. 14.1.b).'
       advisory_value_proven_zero: 'Box {box}: the zero stands, because nothing in
         the period carries a figure whose period could be in doubt.'
@@ -1518,6 +1534,13 @@ application:
         that no longer exist.'
       residence_period_unknown: No tax residence is recorded for {date}, so your assets
         count as if Modelos 100 and 130 apply.
+      retencion_soportada_absence_contradicted: 'Income class {income_class}: there
+        are payer records and also your attestation that no payer withheld. Remove
+        the records or withdraw the attestation.'
+      retencion_soportada_evidence_required: 'Income class {income_class}: there is
+        no payer record and no absence attestation, and your profile does not declare
+        this income absent. Record each payer''s certificate, or attest that no payer
+        withheld.'
       row_unregistered: The ledger entry of {row_date} for {row_amount} records an
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does
@@ -2199,6 +2222,20 @@ application:
         or receipt attached. Attach it to the entry in your records.
       transaction_evidence_missing_output: An issued invoice on which you charge VAT
         has no supporting document. Attach it to the entry in your records.
+      undetermined_mixed_use_contributor: The stored %{modelo} calculation for %{filing_year},
+        period %{period}, counted %{rows} mixed-use expense(s) with no spending category
+        at their stated share. Calculating now would hold them back until you assign
+        the category. The stored values have not changed.
+      withholding_count_exceeds_summary_perceptors: Modelo %{source_modelo} %{period}
+        %{filing_year} counts %{declared_perceptors} payee(s) in box %{casilla_id},
+        but modelo %{modelo} names only %{summary_perceptors} different payee(s) for
+        the whole year. Everyone counted in that box must appear on the annual summary.
+        Add the missing payees to this modelo's detail, or correct the count on modelo
+        %{source_modelo}.
+      withholding_count_not_cross_checked: 'Modelo %{modelo} %{filing_year} could
+        not be compared with modelo %{source_modelo} for %{unchecked_periods}, because
+        no declaration is recorded for those periods. Compared periods: %{checked_periods}.
+        This does not mean nobody was paid in them.'
       withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
         declares no payments to anyone, but your records show payments subject to
         withholding made that year: %{contradicting_invoice_count} received invoice(s)

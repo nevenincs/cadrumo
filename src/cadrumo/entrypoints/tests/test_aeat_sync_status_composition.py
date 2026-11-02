@@ -126,7 +126,7 @@ def _store_borrador_below_support_floor(operation: PinnedAuthorityOperation, buc
         operation.modelo_directory("100"), filing_year=filing_year, period="0A"
     ).id
     ref = RegistrySnapshotRef(modelo="100", revision_id=revision_id, modelo_year=filing_year, period="0A")
-    values = {"renta-certificado-trabajo-retenciones": Decimal("15.25")}
+    values = {"renta-retencion-soportada-trabajo": Decimal("15.25")}
     source = "file-import:sha256:" + "3" * 64
     snapshot = Borrador100Snapshot(
         snapshot_id=derive_borrador_100_snapshot_id(
@@ -156,7 +156,7 @@ def _capture_borrador(operation: PinnedAuthorityOperation, bucket_id: str, *, ca
         period=Period.from_year_and_code(2025, "0A"),
         captured_at=captured_at,
         source_url="file-import:sha256:" + "2" * 64,
-        binding_values={"renta-certificado-trabajo-retenciones": Decimal("100.00")},
+        binding_values={"renta-retencion-soportada-trabajo": Decimal("100.00")},
         operation=operation,
     ).snapshot_id
 
@@ -270,7 +270,7 @@ def test_an_earlier_schema_borrador_beside_a_current_one_is_counted_and_the_area
             period=Period.from_year_and_code(2025, "0A"),
             captured_at=valid_at,
             source_url="file-import:sha256:" + "8" * 64,
-            binding_values={"renta-certificado-trabajo-retenciones": Decimal("100.00")},
+            binding_values={"renta-retencion-soportada-trabajo": Decimal("100.00")},
             operation=operation,
         )
         result = _status(operation, runtime.bucket_id, days_later=3)

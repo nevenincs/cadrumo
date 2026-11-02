@@ -250,3 +250,25 @@ def _actividad_transaction_with_source(
             "source_jurisdiction": source_jurisdiction,
         },
     )
+
+
+def csv_income_raw(provider_id: str, *, amount: Decimal, value_date: date) -> RawTransaction:
+    """One CSV-sourced income row booked and valued on ``value_date``, as the income derivation suites read it."""
+    return RawTransaction(
+        provider_transaction_id=provider_id,
+        booked_date=value_date,
+        value_date=value_date,
+        amount=amount,
+        currency="EUR",
+        counterparty="Cliente SA",
+        description=f"income row {provider_id}",
+        provenance=RawProvenance(
+            source_path=Path(__file__),
+            source_sha256="b" * 64,
+            source_row_index=1,
+            source_format=SourceFormat.CSV,
+            ingested_at=datetime(2024, 4, 6, 12, 0, tzinfo=UTC),
+            provider_name="CSV provider",
+        ),
+        raw_fields={"Concepto": provider_id},
+    )

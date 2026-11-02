@@ -1,0 +1,40 @@
+[fact]
+fact_id = "liva-art-95-vehicle-use-treatment"
+family = "mapping"
+
+# What a stated vehicle use deducts: a presumed share, or "degree_of_use" where
+# the vehicle falls outside regla 2.ª and under regla 1.ª. A row stating no use
+# takes the general presumption its spending category declares.
+[[fact.variants]]
+variant_id = "liva-art-95-vehicle-use-treatment:1998-01-01"
+date_axis = "transaction_date"
+valid_from = 1998-01-01
+legal_refs = ["ley-37-1992:art-95-3"]
+source_refs = ["boe-liva-art-95-statutory-facts"]
+review_status = "agent_reviewed"
+ownership = "authored"
+
+[[fact.variants.source_citations]]
+source_ref = "boe-liva-art-95-statutory-facts"
+required_text = [
+  "se presumirán afectados al desarrollo de la actividad empresarial o profesional en la proporción del 100 por 100",
+  "Los vehículos mixtos utilizados en el transporte de mercancías.",
+  "Los utilizados en la prestación de servicios de transporte de viajeros mediante contraprestación.",
+  "Los utilizados en la prestación de servicios de enseñanza de conductores o pilotos mediante contraprestación.",
+  "Los utilizados por sus fabricantes en la realización de pruebas, ensayos, demostraciones o en la promoción de ventas.",
+  "Los utilizados en los desplazamientos profesionales de los representantes o agentes comerciales.",
+  "Los utilizados en servicios de vigilancia.",
+  "en la medida en que dichos bienes vayan a utilizarse previsiblemente",
+]
+
+[fact.variants.payload]
+kind = "mapping"
+entries = [
+  { key = "mixed_vehicle_goods_transport", value = "1.00" },
+  { key = "paid_passenger_transport", value = "1.00" },
+  { key = "paid_driver_or_pilot_training", value = "1.00" },
+  { key = "manufacturer_testing_or_promotion", value = "1.00" },
+  { key = "commercial_agent_travel", value = "1.00" },
+  { key = "surveillance", value = "1.00" },
+  { key = "outside_presumed_classes", value = "degree_of_use" },
+]

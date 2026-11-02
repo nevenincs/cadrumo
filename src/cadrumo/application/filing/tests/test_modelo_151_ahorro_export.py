@@ -27,7 +27,7 @@ from ....domain.submission.models import ModeloDraftStatus
 from ..draft_construction import build_draft
 from ..export import export_draft
 from ..runtime import ModeloOperatorProfile
-from .export_support import schema_provider, m151_producer_snapshot
+from .export_support import export_schema_provider, m151_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -77,7 +77,7 @@ def _expected_cuota(coordinate: _Coordinate) -> Decimal:
 
 @pytest.mark.parametrize("coordinate", _COORDINATES, ids=lambda item: str(item.year))
 def test_boxes_18_and_20_carry_the_computed_ahorro_chain(coordinate: _Coordinate, tmp_path: Path) -> None:
-    provider = schema_provider(filing_year=coordinate.year, period="0A", modelos=("151",))
+    provider = export_schema_provider(filing_year=coordinate.year, period="0A", modelos=("151",))
     draft = build_draft(
         modelo="151",
         period=Period.from_year_and_code(coordinate.year, "0A"),

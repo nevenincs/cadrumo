@@ -12,7 +12,7 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from cadrumo.application.ledger.evidence import MediaKind
+from cadrumo.application.ledger.evidence import MediaKind, media_kind_for_path
 from cadrumo.application.ledger.evidence_add_operation import (
     LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
     LedgerEvidenceAddProjection,
@@ -51,7 +51,6 @@ from cadrumo_client.transport.frontend_client import FrontendClient
 from .operations.runtime_profile_session import RuntimeProfileSession
 
 _ResultT = TypeVar("_ResultT", bound=BaseModel)
-_IMAGE_EXTENSIONS = frozenset({".png", ".jpg", ".jpeg", ".tif", ".tiff", ".webp", ".heic", ".heif"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -154,7 +153,7 @@ class RuntimeEvidenceTuiDoorV1:
 
     async def add(self, source_path: str) -> LedgerEvidenceRecordRowV1:
         """Register one file and correlate its typed result with the durable receipt."""
-        expected_kind = MediaKind.IMAGE if Path(source_path).suffix.lower() in _IMAGE_EXTENSIONS else MediaKind.PDF
+        expected_kind = media_kind_for_path(source_path) or MediaKind.PDF
 
         def correlate(projection: LedgerEvidenceAddProjection) -> None:
             record = projection.record

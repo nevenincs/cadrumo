@@ -33,6 +33,56 @@ async def _read_through_event(stdout: asyncio.StreamReader, event: bytes) -> byt
             return bytes(published)
 
 
+async def _spawn_service(script: str, tmp_path: Path, environment: dict[str, str]) -> asyncio.subprocess.Process:
+    process = await asyncio.create_subprocess_exec(
+        sys.executable,
+        "-c",
+        script,
+        cwd=tmp_path,
+        env=environment,
+        stdin=asyncio.subprocess.PIPE,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+    )
+    assert process.stdin is not None
+    assert process.stdout is not None
+    assert process.stderr is not None
+    return process
+
+
+async def _await_service_stop(process: asyncio.subprocess.Process, published: bytes, failure: str) -> tuple[bytes, int]:
+    """Return the published lines through ``stopped`` and the exit code, killing the service if it never stops."""
+    assert process.stdout is not None
+    assert process.stderr is not None
+    try:
+        published += await asyncio.wait_for(
+            _read_through_event(process.stdout, b'"event":"stopped"'), timeout=_STOP_SECONDS
+        )
+    except TimeoutError:
+        process.kill()
+        await process.wait()
+        unread, errors = await asyncio.gather(process.stdout.read(), process.stderr.read())
+        pytest.fail(f"{failure}: {published + unread!r} {errors!r}")
+    return published, await process.wait()
+
+
+async def _reap_service(process: asyncio.subprocess.Process) -> None:
+    if process.returncode is None:
+        process.kill()
+        await process.wait()
+    assert process.stdin is not None
+    if not process.stdin.is_closing():
+        process.stdin.close()
+
+
+async def _drain_service(process: asyncio.subprocess.Process, published: bytes) -> tuple[bytes, bytes]:
+    """Return everything the service published and what it wrote to standard error."""
+    assert process.stdout is not None
+    assert process.stderr is not None
+    remaining, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
+    return published + remaining, errors
+
+
 def test_startup_frame_reader_leaves_bytes_after_its_newline_for_lifetime_monitor() -> None:
     reader, writer = os.pipe()
     frame = b'{"bearer":"synthetic-admin","gateway_bearer":"synthetic-gateway"}\n'
@@ -181,19 +231,9 @@ sys.argv = ["cadrumo-agent-service", "serve", "--profile-id", str(profile_id)]
 service_main.main()
 print(f"claims={client.claims}", file=sys.stderr)
 """.replace("WITHDRAW_LEASE", repr(ending == "runtime_revocation"))
-    process = await asyncio.create_subprocess_exec(
-        sys.executable,
-        "-c",
-        script,
-        cwd=tmp_path,
-        env=environment,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    process = await _spawn_service(script, tmp_path, environment)
     assert process.stdin is not None
     assert process.stdout is not None
-    assert process.stderr is not None
     try:
         startup = json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32}).encode("ascii") + b"\n"
         process.stdin.write(startup + (b"unexpected" if ending == "extra_input" else b""))
@@ -208,25 +248,13 @@ print(f"claims={client.claims}", file=sys.stderr)
             process.stdin.close()
         else:
             published = await _read_through_event(process.stdout, b'"event":"service_ready"')
-        try:
-            published += await asyncio.wait_for(
-                _read_through_event(process.stdout, b'"event":"stopped"'), timeout=_STOP_SECONDS
-            )
-        except TimeoutError:
-            process.kill()
-            await process.wait()
-            unread, errors = await asyncio.gather(process.stdout.read(), process.stderr.read())
-            pytest.fail(f"service did not stop after its parent lifetime ended: {published + unread!r} {errors!r}")
-        exit_code = await process.wait()
+        published, exit_code = await _await_service_stop(
+            process, published, "service did not stop after its parent lifetime ended"
+        )
     finally:
-        if process.returncode is None:
-            process.kill()
-            await process.wait()
-        if not process.stdin.is_closing():
-            process.stdin.close()
+        await _reap_service(process)
 
-    remaining, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
-    output = published + remaining
+    output, errors = await _drain_service(process, published)
     assert exit_code == 0, (output, errors)
     assert b'"event":"stopped"' in output
     assert b"Fatal Python error" not in errors
@@ -348,43 +376,21 @@ sys.argv = ["cadrumo-agent-service", "serve", "--profile-id", str(profile_id)]
 service_main.main()
 print(f"claims={client.claims} observes={FakeService.observes} stops={FakeService.stops}", file=sys.stderr)
 """.replace("CONNECTION_CLOSED", repr(connection_closed))
-    process = await asyncio.create_subprocess_exec(
-        sys.executable,
-        "-c",
-        script,
-        cwd=tmp_path,
-        env=environment,
-        stdin=asyncio.subprocess.PIPE,
-        stdout=asyncio.subprocess.PIPE,
-        stderr=asyncio.subprocess.PIPE,
-    )
+    process = await _spawn_service(script, tmp_path, environment)
     assert process.stdin is not None
     assert process.stdout is not None
-    assert process.stderr is not None
     try:
         startup = json.dumps({"bearer": "A" * 32, "gateway_bearer": "B" * 32}).encode("ascii") + b"\n"
         process.stdin.write(startup)
         await process.stdin.drain()
         published = await _read_through_event(process.stdout, b'"event":"service_ready"')
-        try:
-            published += await asyncio.wait_for(
-                _read_through_event(process.stdout, b'"event":"stopped"'), timeout=_STOP_SECONDS
-            )
-        except TimeoutError:
-            process.kill()
-            await process.wait()
-            unread, errors = await asyncio.gather(process.stdout.read(), process.stderr.read())
-            pytest.fail(f"service did not end once its lease was withdrawn: {published + unread!r} {errors!r}")
-        exit_code = await process.wait()
+        published, exit_code = await _await_service_stop(
+            process, published, "service did not end once its lease was withdrawn"
+        )
     finally:
-        if process.returncode is None:
-            process.kill()
-            await process.wait()
-        if not process.stdin.is_closing():
-            process.stdin.close()
+        await _reap_service(process)
 
-    remaining, errors = await asyncio.wait_for(asyncio.gather(process.stdout.read(), process.stderr.read()), timeout=5)
-    output = published + remaining
+    output, errors = await _drain_service(process, published)
     assert exit_code == 0, (output, errors)
     assert b'"event":"stopped"' in output
     if connection_closed:

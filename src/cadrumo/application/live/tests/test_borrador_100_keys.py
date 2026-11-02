@@ -16,9 +16,15 @@ from ..errors import LiveApplicationInputError
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
-# In the 2023 revision casilla 0596 is bound to the work-certificate binding, the
-# one binding marked prefilled by AEAT; 0505 is a computed casilla.
-_CERTIFICATE: BindingId = "renta-certificado-trabajo-retenciones"
+# In the 2023 revision casilla 0596 is bound to the suffered-withholding work
+# binding, one of the three credit bindings a borrador snapshot may hold; 0505
+# is a computed casilla.
+_CERTIFICATE: BindingId = "renta-retencion-soportada-trabajo"
+_CREDIT_BINDINGS: tuple[BindingId, ...] = (
+    _CERTIFICATE,
+    "renta-retencion-soportada-capital-mobiliario",
+    "renta-retencion-soportada-ganancia-patrimonial",
+)
 _UNMARKED: BindingId = "renta-profile-minimo-descendientes-estatal"
 _BOUND_CASILLA: CasillaId = "0596"
 _COMPUTED_CASILLA: CasillaId = "0505"
@@ -52,7 +58,7 @@ def _rebind(revision: ModeloRevision, casilla_id: CasillaId, **fields: object) -
 
 
 def test_published_revision_admits_only_the_bindings_marked_prefilled() -> None:
-    assert tuple(borrador_admitted_bindings(_revision())) == (_CERTIFICATE,)
+    assert tuple(borrador_admitted_bindings(_revision())) == _CREDIT_BINDINGS
 
 
 def test_a_printed_bound_casilla_is_stored_under_its_binding_and_a_computed_one_is_reported() -> None:

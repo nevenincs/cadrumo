@@ -48,6 +48,7 @@ from ..tree_publication_journal import (
     load_generated_export_publication_journal,
     write_generated_export_publication_journal,
 )
+from ..tree_publication_recovery import recover_interrupted_publication
 from ..tree_publication_supersession_recovery import recover_interrupted_supersession_bundle
 from ._generated_tree_test_support import (
     ISOLATED_TREE,
@@ -832,6 +833,50 @@ def test_publication_completes_a_real_interrupted_verified_candidate(tmp_path: P
     assert recovered.validated is None
     assert _tree_bytes(context.target_export_root) == expected_export
     assert _non_export_authority_bytes(context.target_export_root.parent) == before_authority
+    assert not backup_export_root.exists()
+    assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
+
+
+def _recover(
+    context: GeneratedExportTreePublicationContext,
+    joined: JoinedRecordDesign,
+    semantic_map: SemanticMap,
+    rendered: RenderedExportTree,
+) -> bool:
+    render_profile, render_evidence = isolated_render_profile()
+    return recover_interrupted_publication(
+        context=context,
+        target_export_root=context.target_export_root,
+        journal_path=GeneratedExportTransactionPaths.for_context(context).journal,
+        joined=joined,
+        semantic_map=semantic_map,
+        rendered=rendered,
+        render_profile=render_profile,
+        render_profile_source_evidence=render_evidence,
+    )
+
+
+def test_recovery_without_a_journal_reports_no_candidate_and_leaves_the_export(tmp_path: Path) -> None:
+    context, joined, semantic_map, rendered, _ = _publication_inputs(tmp_path, existing_export=True)
+    before = _tree_bytes(context.target_export_root)
+
+    assert _recover(context, joined, semantic_map, rendered) is False
+    assert _tree_bytes(context.target_export_root) == before
+    assert not _rollback_siblings(context.target_export_root)
+
+
+def test_recovery_installs_a_journaled_verified_candidate_and_retires_its_backup(tmp_path: Path) -> None:
+    context, joined, semantic_map, rendered, candidate_export_root = _publication_inputs(
+        tmp_path,
+        existing_export=True,
+    )
+    _validate(context.validation, joined, semantic_map, rendered)
+    expected_export = _tree_bytes(candidate_export_root)
+    backup_export_root = _stage_interrupted_verified_candidate(context, candidate_export_root)
+    assert not context.target_export_root.exists()
+
+    assert _recover(context, joined, semantic_map, rendered) is True
+    assert _tree_bytes(context.target_export_root) == expected_export
     assert not backup_export_root.exists()
     assert not GeneratedExportTransactionPaths.for_context(context).journal.exists()
 

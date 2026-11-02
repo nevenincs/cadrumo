@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from collections.abc import Callable, Generator
 from dataclasses import dataclass
-from datetime import timedelta
 from pathlib import Path
 from threading import Thread
 from uuid import uuid4
@@ -19,16 +18,11 @@ import pytest
 
 from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
-    SessionKind,
-    SessionState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import override_settings
-from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, AutomationCustodyError
-from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...profile_persistence_composition import composed_profile_persistence_ports
 from ...tests.profile_capsule_runtime import derive_test_bucket_key, publish_test_profile_capsule
@@ -38,7 +32,7 @@ from ..active_session import current_active_bucket_session
 from ..profile_worker_binding import ProfileWorkerBindingOwner
 from ..profile_worker_custody import ProfileWorkerCustody
 from .capsule_read_support import HELD_READ_WAIT_SECONDS, HeldCapsuleRead, republish_capsule_commit
-from .profile_worker_identity_support import published_capsule_identity
+from .profile_worker_identity_support import published_capsule_identity, worker_lease
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -49,32 +43,6 @@ class _Subject:
     lease: AccessSession
     key: bytes
     root: Path
-
-
-def _lease(identity: ProfileWorkerIdentity) -> AccessSession:
-    issued = now()
-    return AccessSession(
-        session_id=uuid4(),
-        binding=identity.binding,
-        runtime_boot_id=identity.runtime_boot_id,
-        profile_lock_generation=0,
-        connection_id=uuid4(),
-        client_id=uuid4(),
-        kind=SessionKind.HUMAN,
-        originating_login_id="synthetic-os-login",
-        state=SessionState.ACTIVE,
-        scope=AccessScope(
-            operations=frozenset(),
-            actions=frozenset(AccessAction),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=False,
-        ),
-        issued_at=issued,
-        issued_monotonic=0.0,
-        expires_at=issued + timedelta(minutes=15),
-    )
 
 
 @pytest.fixture
@@ -94,7 +62,9 @@ def subject(tmp_path: Path) -> Generator[_Subject]:
         with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(profile_id)):
             custody = ProfileWorkerCustody(identity, storage_root=root, monotonic=lambda: 0.0)
             try:
-                yield _Subject(custody, _lease(identity), derive_test_bucket_key(str(profile_id), purpose="dek"), root)
+                yield _Subject(
+                    custody, worker_lease(identity), derive_test_bucket_key(str(profile_id), purpose="dek"), root
+                )
             finally:
                 custody.close()
 

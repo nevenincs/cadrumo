@@ -45,6 +45,7 @@ def _validation_result_is_closed(result: LedgerClassifyOperationResult) -> None:
         result.transaction is not None
         or result.deduction_fact_kind is not None
         or result.investment_asset_id is not None
+        or result.iva_vehicle_use is not None
         or result.review_status is not None
         or result.bucket_event_ids
         or result.validation_kind == "none"
@@ -63,6 +64,7 @@ class LedgerClassifyOperationResult(BaseModel):
     transaction: LedgerTransactionProjection | None = None
     deduction_fact_kind: Annotated[str, Field(min_length=1, max_length=64)] | None = None
     investment_asset_id: LedgerClassifyShortText | None = None
+    iva_vehicle_use: LedgerClassifyShortText | None = None
     review_status: LedgerReviewStatus | None = None
     bucket_event_ids: Annotated[tuple[BucketEventId, ...], Field(max_length=_MAX_CLASSIFY_EVENT_IDS)] = ()
     validation_kind: LedgerClassifyValidationKind = "none"

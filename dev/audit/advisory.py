@@ -352,9 +352,9 @@ def allocate_run_dir(repository: Path, *, now: datetime | None = None) -> Path:
 def main() -> int:
     """Run every advisory-audit dimension, print the dashboard, persist the full result.
 
-    ADVISORY: exits 0 when every dimension ran, whatever it found. `audit` is
-    advisory across this fleet except for the dependency audit, which gates --
-    see ``dev/EXIT-CODES.md``. Scanner findings are normalized to zero, while
+    ADVISORY: exits 0 when every dimension ran, whatever it found; the
+    dependency vulnerability scan is a gating ``check`` instead -- see
+    ``dev/EXIT-CODES.md``. Scanner findings are normalized to zero, while
     unavailable scanner data returns the shared advisory-broken status.
     """
     import argparse

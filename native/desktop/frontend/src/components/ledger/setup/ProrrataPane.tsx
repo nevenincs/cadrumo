@@ -1,20 +1,27 @@
-import { useMemo, useState } from "react";
+import { useId, useMemo, useState } from "react";
 import { MoneyEditor } from "@/components/editors/MoneyEditor";
 import { PercentEditor } from "@/components/editors/PercentEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Icon } from "@/components/ui/icon";
+import { Label } from "@/components/ui/label";
 import { facts, listed } from "@/shell/compose";
+import { servedRefusalWords } from "../../../shell/ledger";
 import {
   compareDecimal,
+  MONTH_CODES,
   parseDecimal,
+  QUARTER_CODES,
   TAX_AMOUNT_RULE,
 } from "../../../shell/ledgerGrammar";
 import type {
   ProrrataEntry,
+  ProrrataGrossDeclaration,
   ProrrataMutationResult,
 } from "../../../shell/ledgerSetup";
+import { periodText } from "../ledgerWords";
 import { vocabularyEmpty } from "../movements/movementWords";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
 import { useStrings } from "../../../shell/strings";
@@ -49,14 +56,16 @@ const ACTIONS = [
   "revoke_especial",
   "seed_sector",
   "settle_sector",
+  "declare_gross",
 ] as const;
 type Action = (typeof ACTIONS)[number];
 
 /**
  * The prorrata register by ejercicio: the regime, the provisional
  * percentage and where it comes from, the definitive one once settled, and
- * the differentiated sectors. Each change is its own write, refused with
- * the register's reason where the law does not allow it.
+ * the differentiated sectors, and the gross cuota declared for earlier
+ * liquidations. Each change is its own write, refused with the register's
+ * reason where the law does not allow it.
  */
 export function ProrrataPane({
   port,
@@ -86,6 +95,14 @@ export function ProrrataPane({
   const [codes, setCodes] = useState("");
   const [con, setCon] = useState("");
   const [sin, setSin] = useState("");
+  const [grossPeriod, setGrossPeriod] = useState("");
+  const [grossCuota, setGrossCuota] = useState("");
+  const [replace, setReplace] = useState(false);
+  /** The declaration the person is asked to confirm removing. */
+  const [removing, setRemoving] = useState<ProrrataGrossDeclaration | null>(
+    null,
+  );
+  const replaceId = useId();
   // A form with anything typed into it that is not yet written.
   useSetupDraft(
     action !== null &&
@@ -99,6 +116,8 @@ export function ProrrataPane({
         codes,
         con,
         sin,
+        grossPeriod,
+        grossCuota,
       ].some(Boolean),
   );
 
@@ -119,6 +138,15 @@ export function ProrrataPane({
       ),
     [register],
   );
+  const grossEvidences = useMemo(
+    () =>
+      textOptions(
+        (register?.gross_declarations ?? []).map(
+          (found) => found.evidence_reference,
+        ),
+      ),
+    [register],
+  );
   const usedCodes = (register?.sectors ?? []).flatMap(
     (found) => found.member_activity_codes,
   );
@@ -134,10 +162,15 @@ export function ProrrataPane({
     setCodes("");
     setCon("");
     setSin("");
+    setGrossPeriod("");
+    setGrossCuota("");
+    setReplace(false);
+    setRemoving(null);
   };
   const points = parsePoints(percentage);
   const conVolume = parseDecimal(con, TAX_AMOUNT_RULE);
   const sinVolume = parseDecimal(sin, TAX_AMOUNT_RULE);
+  const grossValue = parseDecimal(grossCuota, TAX_AMOUNT_RULE);
   const refusedText = (parsed: ReturnType<typeof parsePoints>) =>
     parsed.kind === "refused" ? grammarText(t, parsed.refusal) : null;
   const sectorChoices = (register?.sectors ?? []).map((found) => ({
@@ -167,6 +200,12 @@ export function ProrrataPane({
           conVolume.kind === "value" &&
           sinVolume.kind === "value"
         );
+      case "declare_gross":
+        return (
+          grossPeriod !== "" &&
+          grossValue.kind === "value" &&
+          evidence.trim() !== ""
+        );
       default:
         return false;
     }
@@ -181,6 +220,8 @@ export function ProrrataPane({
     const target = ejercicio;
     const chosen = sector.trim() || null;
     const letter = letra;
+    const period = grossPeriod;
+    const gross = grossValue.kind === "value" ? grossValue.value : "";
     const volumes = {
       con: conVolume.kind === "value" ? conVolume.value : "",
       sin: sinVolume.kind === "value" ? sinVolume.value : "",
@@ -223,6 +264,16 @@ export function ProrrataPane({
               same(found.definitive_volume_sin_derecho, volumes.sin),
           );
         }
+        case "declare_gross":
+          return told(
+            result.gross_declarations.some(
+              (found) =>
+                found.ejercicio === target &&
+                found.period === period &&
+                found.sector_id === chosen &&
+                same(found.gross_cuota, gross),
+            ),
+          );
       }
     });
   };
@@ -298,6 +349,22 @@ export function ProrrataPane({
               },
               true,
             );
+          case "declare_gross":
+            return setupCall(
+              port,
+              "ledger.prorrata.declare_gross",
+              {
+                ejercicio,
+                period: grossPeriod,
+                sector_id: sector || null,
+                gross_cuota: {
+                  decimal: grossValue.kind === "value" ? grossValue.value : "",
+                },
+                evidence_reference: evidence.trim(),
+                replace,
+              },
+              true,
+            );
         }
       },
       prorrataLanding(action, election()),
@@ -306,10 +373,45 @@ export function ProrrataPane({
     reload();
   };
 
-  /** A refusal said in the register's own reason, with what it accepts. */
+  const grossKey = (found: ProrrataGrossDeclaration) =>
+    `${found.ejercicio}:${found.period}:${found.sector_id ?? ""}`;
+  /** A declaration named by what identifies it: its year, period and sector. */
+  const grossName = (found: ProrrataGrossDeclaration) =>
+    facts(t, [found.ejercicio, found.period, found.sector_id]);
+  /** Withdraws one declared gross cuota; it landed where the register,
+   * listed again, no longer holds that period and sector. */
+  const removeGross = async (found: ProrrataGrossDeclaration) => {
+    await write.run(
+      () =>
+        setupCall(
+          port,
+          "ledger.prorrata.remove_gross",
+          {
+            ejercicio: found.ejercicio,
+            period: found.period,
+            sector_id: found.sector_id,
+          },
+          true,
+        ),
+      readLanding(port, "ledger.prorrata.list", {}, (result) =>
+        result.gross_declarations.some(
+          (other) => grossKey(other) === grossKey(found),
+        )
+          ? "not_saved"
+          : "saved",
+      ),
+    );
+    setRemoving(null);
+    reload();
+  };
+
+  /** A refusal said in the words the backend served for it, else in the
+   * register's own reason, with what it accepts. */
   const refusal = () => {
     const last = write.last;
     if (last?.kind !== "refused") return null;
+    const served = servedRefusalWords(last.detail);
+    if (served) return served;
     const found = (last.detail as ProrrataMutationResult | null)?.refusal;
     if (!found) return null;
     const said = t(`desktop.ledger.prorrata.refusal.${found.reason}`);
@@ -405,6 +507,68 @@ export function ProrrataPane({
               ),
             })
           : "—",
+    },
+  ];
+
+  const grossColumns: Column<ProrrataGrossDeclaration>[] = [
+    {
+      key: "ejercicio",
+      label: t("desktop.ledger.prorrata.column.ejercicio"),
+      numeric: true,
+      sort: (found) => found.ejercicio,
+      cell: (found) => found.ejercicio,
+    },
+    {
+      key: "period",
+      label: t("desktop.ledger.prorrata.gross.column.period"),
+      sort: (found) => found.period,
+      cell: (found) => found.period,
+    },
+    {
+      key: "sector",
+      label: t("desktop.ledger.prorrata.column.sector"),
+      sort: (found) => found.sector_id,
+      cell: (found) =>
+        found.sector_id ?? (
+          <span className="text-muted-foreground">
+            {t("desktop.ledger.prorrata.whole")}
+          </span>
+        ),
+    },
+    {
+      key: "gross_cuota",
+      label: t("desktop.ledger.prorrata.gross.column.gross_cuota"),
+      numeric: true,
+      sort: (found) => rankDecimal(found.gross_cuota.decimal),
+      cell: (found) => formatAmount(locale, found.gross_cuota.decimal),
+    },
+    {
+      key: "evidence",
+      label: t("desktop.ledger.prorrata.gross.column.evidence"),
+      sort: (found) => found.evidence_reference,
+      cell: (found) => found.evidence_reference,
+    },
+    {
+      key: "actions",
+      label: t("desktop.ledger.form.actions"),
+      hidden: true,
+      resizable: false,
+      cell: (found) => (
+        <Button
+          size="xs"
+          variant="outline"
+          className="ledger-prorrata-gross-remove"
+          aria-label={t("desktop.ledger.prorrata.gross.remove_of", {
+            liquidation: grossName(found),
+          })}
+          onClick={() => {
+            write.clear();
+            setRemoving(found);
+          }}
+        >
+          {t("desktop.ledger.prorrata.gross.remove")}
+        </Button>
+      ),
     },
   ];
 
@@ -517,6 +681,64 @@ export function ProrrataPane({
           )}
         </p>
       )}
+      {register && (
+        <div className="ledger-prorrata-gross flex flex-col gap-2">
+          <h4 className="font-medium">
+            {t("desktop.ledger.prorrata.gross.title")}
+          </h4>
+          <p className="text-sm text-muted-foreground">
+            {t("desktop.ledger.prorrata.gross.what")}
+          </p>
+          {register.gross_declarations.length === 0 ? (
+            <p className="ledger-prorrata-gross-empty text-sm text-muted-foreground">
+              {t("desktop.ledger.prorrata.gross.empty")}
+            </p>
+          ) : (
+            <SetupTable
+              label={t("desktop.ledger.prorrata.gross.title")}
+              rows={register.gross_declarations}
+              rowKey={grossKey}
+              columns={grossColumns}
+              className="ledger-prorrata-gross-table"
+            />
+          )}
+          {removing && (
+            <Alert
+              tone="warning"
+              icon={<Icon name="alert" />}
+              className="ledger-prorrata-gross-removing"
+            >
+              <span>
+                {t("desktop.ledger.prorrata.gross.remove_what", {
+                  liquidation: grossName(removing),
+                })}
+              </span>
+              <span className="flex gap-2">
+                <Button
+                  size="xs"
+                  variant="ghost"
+                  onClick={() => setRemoving(null)}
+                >
+                  {t("desktop.ledger.form.cancel")}
+                </Button>
+                <WriteHold>
+                  <Button
+                    size="xs"
+                    variant="destructive"
+                    className="ledger-prorrata-gross-remove-confirm"
+                    aria-disabled={write.busy || undefined}
+                    onClick={() => {
+                      if (!write.busy) void removeGross(removing);
+                    }}
+                  >
+                    {t("desktop.ledger.prorrata.gross.remove_confirm")}
+                  </Button>
+                </WriteHold>
+              </span>
+            </Alert>
+          )}
+        </div>
+      )}
       <div
         role="group"
         aria-label={t("desktop.ledger.prorrata.changes", { ejercicio })}
@@ -616,6 +838,74 @@ export function ProrrataPane({
                   />
                 )}
               </EditorField>
+            )}
+            {action === "declare_gross" && (
+              <>
+                <ChoiceField
+                  label={t("desktop.ledger.prorrata.gross.period")}
+                  value={grossPeriod}
+                  onValue={setGrossPeriod}
+                  placeholder={t("desktop.ledger.form.choose")}
+                  required
+                  options={[...QUARTER_CODES, ...MONTH_CODES].map((code) => ({
+                    value: code,
+                    label: periodText(t, locale, { year: ejercicio, code }),
+                  }))}
+                />
+                {sectorChoices.length > 0 && (
+                  <ChoiceField
+                    label={t("desktop.ledger.prorrata.sector")}
+                    value={sector}
+                    onValue={setSector}
+                    options={[
+                      { value: "", label: t("desktop.ledger.prorrata.whole") },
+                      ...sectorChoices,
+                    ]}
+                  />
+                )}
+                <EditorField
+                  label={t("desktop.ledger.prorrata.gross.gross_cuota")}
+                  hint={t("desktop.ledger.prorrata.gross.gross_cuota_hint")}
+                  error={refusedText(grossValue)}
+                >
+                  {(control) => (
+                    <MoneyEditor
+                      id={control.id}
+                      value={grossCuota}
+                      onChange={setGrossCuota}
+                      invalid={control.invalid}
+                      describedBy={control.describedBy}
+                      required
+                    />
+                  )}
+                </EditorField>
+                <EditorField
+                  label={t("desktop.ledger.prorrata.gross.evidence")}
+                  hint={t("desktop.ledger.prorrata.gross.evidence_hint")}
+                >
+                  {(control) => (
+                    <TextEditor
+                      id={control.id}
+                      value={evidence}
+                      onChange={setEvidence}
+                      invalid={control.invalid}
+                      describedBy={control.describedBy}
+                      suggestions={grossEvidences}
+                      required
+                    />
+                  )}
+                </EditorField>
+                <span className="flex items-center gap-2 self-end">
+                  <Checkbox
+                    id={replaceId}
+                    checked={replace}
+                    onChange={(event) => setReplace(event.target.checked)}
+                  />
+                  <Label htmlFor={replaceId}>
+                    {t("desktop.ledger.prorrata.gross.replace")}
+                  </Label>
+                </span>
+              </>
             )}
             {(action === "seed_sector" || action === "settle_sector") && (
               <ChoiceField

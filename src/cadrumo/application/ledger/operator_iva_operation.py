@@ -46,7 +46,7 @@ from .operator_iva_contracts import (
 )
 from .operator_iva_projection import project_operator_iva_result
 from .persistence_ports import LedgerPersistenceConflictError
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 
 class LedgerOperatorIvaExecutor:
@@ -162,11 +162,9 @@ def resolve_ledger_operator_iva_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile ledger disclosure and COMMIT for IVA derivation."""
-    if request.definition_id != LEDGER_OPERATOR_IVA_DEFINITION_ID or not isinstance(
-        request.payload, LedgerOperatorIvaRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_OPERATOR_IVA_DEFINITION_ID, request_type=LedgerOperatorIvaRequest
+    )
 
 
 def build_ledger_operator_iva_definition(

@@ -24,7 +24,7 @@ from ...domain.modelos.verification_report import VerificationReport
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.verification_report_gate import require_verification_report_coordinates_current
 from ..ledger.manual_read import summarize_manual_transactions
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..modelo.calculation_revision_queries import get_recorded_calculation_revision
 from ..modelo.work_lifecycle import list_work_units
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -271,12 +271,9 @@ def resolve_overview_pipeline_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require all periods because the reused ledger counters are global."""
-    payload = request.payload
-    if request.definition_id != OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID or not isinstance(
-        payload, OverviewPipelineRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=OVERVIEW_PIPELINE_OPERATION_DEFINITION_ID, request_type=OverviewPipelineRequest
+    )
 
 
 def build_overview_pipeline_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

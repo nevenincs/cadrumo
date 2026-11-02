@@ -37,7 +37,7 @@ from ..operations.read_capture import capture_read_result
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 from .read_ports import LedgerReadPortsFactory
 
 LEDGER_KNOWN_VALUES_OPERATION_DEFINITION_ID = "ledger.known-values"
@@ -432,11 +432,12 @@ def resolve_ledger_known_values_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require the exact profile and every period: the values span the whole history."""
-    if request.definition_id != LEDGER_KNOWN_VALUES_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerKnownValuesRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request,
+        context,
+        definition_id=LEDGER_KNOWN_VALUES_OPERATION_DEFINITION_ID,
+        request_type=LedgerKnownValuesRequest,
+    )
 
 
 def build_ledger_known_values_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

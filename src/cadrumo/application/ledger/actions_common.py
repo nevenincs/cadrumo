@@ -386,10 +386,6 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
       provider identity, effective value date, amount, and narrative only, so an
       evidence-only edit re-derives the SAME id. A finalized revision's
       ``source_transaction_ids`` citation therefore keeps resolving.
-    * The ledger filing snapshot's fingerprint field set (the canonical
-      "tax facts" of a row) reads neither evidence field, so ``row_fingerprint``
-      and the revision's ``snapshot_fingerprint`` are unchanged and the revision's
-      :class:`LedgerFilingSnapshot` still reconciles against the live catalogue.
     * A finalized revision's casilla values and bundled ledger evidence are frozen
       persisted snapshots; this write touches the transaction catalogue alone.
 
@@ -404,10 +400,11 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
     takes the row's base and cuota from the invoice and counts an incoming row
     as a refund, which is why the link is one of
     :data:`~cadrumo.domain.transactions.classification_origin.CLASSIFICATION_DECISION_FIELDS`.
-    The fingerprint does not read it, so a sealed revision does not turn stale
-    by itself. The attach is admitted anyway, and the caller reports the cited
-    revisions as stale so the operator recalculates, rather than silently
-    accepting the write. A supplementary attachment feeds no calculation.
+    From fingerprint field-set version 5 the link is hashed, so a revision sealed
+    under that version reads as stale after the attach, which is true. The attach
+    is admitted anyway, and the caller reports the cited revisions as stale so the
+    operator recalculates, rather than silently accepting the write. A
+    supplementary attachment feeds no calculation and stays unhashed.
     """
     differing = set(ledger_values_differing_from_stored(command, current))
     return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
@@ -745,6 +742,7 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     return (
         raw.booked_date,
         raw.value_date,
+        transaction.operation_date,
         raw.amount,
         raw.currency,
         raw.counterparty,
@@ -760,6 +758,7 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
         transaction.iva_category,
         transaction.deduction_fact_kind,
         transaction.investment_asset_id,
+        transaction.iva_vehicle_use,
         transaction.recargo_amount,
         transaction.counterparty_country,
         transaction.counterparty_identification_state,
@@ -846,6 +845,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
     return {
         "booked_date": command.booked_date,
         "value_date": command.value_date,
+        "operation_date": command.operation_date,
         "amount": command.amount,
         "currency": command.currency,
         "counterparty": command.counterparty,
@@ -860,6 +860,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
         "iva_category": command.iva_category,
         "deduction_fact_kind": command.deduction_fact_kind,
         "investment_asset_id": command.investment_asset_id,
+        "iva_vehicle_use": command.iva_vehicle_use,
         "recargo_amount": command.recargo_amount,
         "source_jurisdiction": command.source_jurisdiction,
         "counterparty_country": command.counterparty_country,
@@ -899,6 +900,7 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
     return {
         "booked_date": raw.booked_date,
         "value_date": raw.value_date,
+        "operation_date": current.operation_date,
         "amount": raw.amount,
         "currency": raw.currency,
         "counterparty": raw.counterparty,
@@ -913,6 +915,7 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
         "iva_category": current.iva_category,
         "deduction_fact_kind": current.deduction_fact_kind,
         "investment_asset_id": current.investment_asset_id,
+        "iva_vehicle_use": current.iva_vehicle_use,
         "recargo_amount": current.recargo_amount,
         "source_jurisdiction": current.source_jurisdiction,
         "counterparty_country": current.counterparty_country,

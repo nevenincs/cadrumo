@@ -34,6 +34,7 @@ from .observation_key_component import validate_observation_key_component
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from .retencion_soportada_absence_repository import RetencionSoportadaAbsenceReader
 
 __all__ = [
     "PinnedRetencionSoportadaWriteAuthority",
@@ -137,9 +138,15 @@ class RetencionSoportadaRecordRepository(RetencionSoportadaRecordReader, Protoco
 
 @dataclass(frozen=True, slots=True)
 class RetencionSoportadaPorts:
-    """The suffered-withholding capability one calculation context reads through."""
+    """The suffered-withholding capability one calculation context reads through.
+
+    ``absences`` reads the operator's absence attestations. Without it no
+    attestation is honoured, so a class with no payer record stays unresolved
+    unless the profile declares its income absent: the omission fails closed.
+    """
 
     repository: RetencionSoportadaRecordReader
+    absences: RetencionSoportadaAbsenceReader | None = None
 
 
 class RetencionSoportadaWriteAuthority(Protocol):
@@ -188,14 +195,7 @@ def _require_admitted(
         raise RetencionSoportadaWriteRefusedError("family_not_declared", ejercicio=record.ejercicio)
 
 
-def _require_identity(
-    record: RetencionSoportadaRecord,
-    stored: RetencionSoportadaRecord | None,
-    *,
-    repository: RetencionSoportadaRecordRepository,
-) -> None:
-    if record.payer_ref != repository.payer_reference(record.payer_tax_id):
-        raise RetencionSoportadaWriteRefusedError("identity_mismatch", ejercicio=record.ejercicio)
+def _require_identity(record: RetencionSoportadaRecord, stored: RetencionSoportadaRecord | None) -> None:
     if stored is None:
         if record.replaces_evidence_fingerprint is not None:
             raise RetencionSoportadaWriteRefusedError("identity_mismatch", ejercicio=record.ejercicio)
@@ -228,8 +228,12 @@ def record_retencion_soportada(
         RetencionSoportadaPersistenceError: Storage failed.
     """
     _require_admitted(record, authority=authority, taxpayer_tax_id=taxpayer_tax_id)
+    if record.payer_ref != repository.payer_reference(record.payer_tax_id):
+        raise RetencionSoportadaWriteRefusedError("identity_mismatch", ejercicio=record.ejercicio)
     stored, current_revision_id = repository.load_revisioned(record.identity)
-    _require_identity(record, stored, repository=repository)
+    # A row that moved is judged by nothing it held when the caller read it, so
+    # the caller re-reads before its correction is compared with the stored one.
     if current_revision_id != expected_revision_id:
         raise RetencionSoportadaRevisionConflictError
+    _require_identity(record, stored)
     repository.save_revisioned(record, expected_revision_id=expected_revision_id)

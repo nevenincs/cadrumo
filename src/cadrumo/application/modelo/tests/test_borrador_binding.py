@@ -43,7 +43,8 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _YEAR = 2025
 _PERIOD = "0A"
-_DECIMAL_BINDING: BindingId = "renta-certificado-trabajo-retenciones"
+_DECIMAL_BINDING: BindingId = "renta-retencion-soportada-trabajo"
+"""A credit binding: a snapshot holds its value only to compare it, never to supply it."""
 _ENUM_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
 _UNMARKED_BINDING: BindingId = "renta-ledger-expense-0186-deductible"
 _R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
@@ -91,8 +92,8 @@ class _InMemoryBorradorSnapshotRepository:
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return tuple(self._snapshots[snapshot_id] for snapshot_id in sorted(self._snapshots))
 
-    def outdated_stored_snapshot_count(self) -> int:
-        return 0
+    def list_snapshots_with_outdated_count(self) -> tuple[tuple[Borrador100Snapshot, ...], int]:
+        return self.list_snapshots(), 0
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         trimmed_snapshot_id = snapshot_id.strip()
@@ -357,7 +358,9 @@ def test_committed_modelo_100_registry_declares_borrador_prefilled_bindings() ->
     bindings = {binding.id: binding for binding in _modelo_100_registry_snapshot().revision.bindings}
 
     assert bindings[_DECIMAL_BINDING].aeat_prefilled is True
+    assert bindings[_DECIMAL_BINDING].borrador_supplies_value is False
     assert bindings[_ENUM_BINDING].aeat_prefilled is True
+    assert bindings[_ENUM_BINDING].borrador_supplies_value is True
 
 
 def test_borrador_resolution_rejects_registry_without_borrador_capability(
@@ -383,7 +386,7 @@ def test_borrador_resolution_rejects_registry_without_borrador_capability(
     assert exc_info.value.context == {"modelo": "303"}
 
 
-def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
+def test_borrador_resolution_supplies_precedence_bindings_and_holds_a_credit_only_for_comparison(
     snapshot_repository: Borrador100SnapshotRepository,
     authority_operation: PinnedAuthorityOperation,
 ) -> None:
@@ -404,9 +407,10 @@ def test_borrador_resolution_consumes_only_registry_prefilled_bindings(
 
     assert result.borrador_provenance is not None
     assert result.borrador_provenance.snapshot_id == snapshot_id
-    assert result.binding_values == {_DECIMAL_BINDING: Decimal("125.50")}
+    # The credit's borrador figure never enters the tier: a missing certificate is not filled by the prefill.
+    assert result.binding_values == {}
     assert result.enum_binding_values == {_ENUM_BINDING: "madrid"}
-    assert result.borrador_provenance.bindings_sourced == (_DECIMAL_BINDING, _ENUM_BINDING)
+    assert result.borrador_provenance.bindings_sourced == (_ENUM_BINDING,)
 
 
 def test_borrador_source_resolver_matches_application_binding_resolution(
@@ -449,10 +453,7 @@ def test_borrador_source_resolver_matches_application_binding_resolution(
     assert resolution.enum_binding_values == expected.enum_binding_values
     assert resolution.owned_sources == (BindingSourceKind.BORRADOR,)
     assert {item.contributor_source_kind for item in resolution.provenance} == {"borrador"}
-    assert {item.source_ref for item in resolution.provenance} == {
-        f"borrador:{snapshot_id}:binding:{_DECIMAL_BINDING}",
-        f"borrador:{snapshot_id}:binding:{_ENUM_BINDING}",
-    }
+    assert {item.source_ref for item in resolution.provenance} == {f"borrador:{snapshot_id}:binding:{_ENUM_BINDING}"}
     expected_fingerprint = f"sha256:{hashlib.sha256(snapshot_id.encode('utf-8')).hexdigest()}"
     assert {item.fingerprint for item in resolution.provenance} == {expected_fingerprint}
     assert {item.terminal_origin for item in resolution.provenance} == {TerminalOriginClass.AEAT_THIRD_PARTY_DATA}

@@ -829,6 +829,9 @@ class ParsedLedgerRow(BaseModel):
             sign at the parse boundary.
         own_account_id: Always ``None`` from a provider: a statement row is
             bound to the taxpayer's own account by the import, not the parser.
+        operation_date: The LIVA art. 75 devengo date, only when the source has
+            a column that states exactly that. A bank's booking, value or
+            "fecha operacion" column dates the movement and never lands here.
     """
 
     model_config = _STRICT_FROZEN
@@ -836,6 +839,7 @@ class ParsedLedgerRow(BaseModel):
     raw: RawTransaction
     direction: TransactionDirection
     own_account_id: None = None
+    operation_date: date | None = None
 
 
 def direction_from_signed_amount(signed_amount: Decimal) -> TransactionDirection:

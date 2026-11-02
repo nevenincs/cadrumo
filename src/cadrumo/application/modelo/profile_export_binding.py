@@ -53,6 +53,7 @@ from ..filing.producer_snapshot import DeclarationContactFacts, PresenterIdentit
 from ..user_profile.projections import profile_fact_index
 from ..user_profile.validation import profile_text_too_long_error
 from .profile_binding import resolve_profile_binding_value
+from .profile_derived_facts import inject_derived_cash_election_fact
 
 _SURNAMES_NAME_FORMAT = "surnames_name"
 
@@ -353,6 +354,7 @@ def resolve_profile_export_values(
     bindings: Sequence[BindingDefinition],
     *,
     bucket_id: str,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
     profile_record: object | None = None,
     schema: ProfileSchemaDefinition | None = None,
@@ -370,18 +372,11 @@ def resolve_profile_export_values(
     decides a row's rendering from the Python type it receives, so pre-rendering
     to ``str`` here would destroy the distinction it needs.
 
-    Deliberately does NOT call ``_load_profile_facts``, and deliberately takes
-    no :class:`RegistrySnapshot`. That loader adds the engine-derived facts
-    (marriage months, guardería aggregates, mínimo descendientes, anualidades
-    eligibility, state attribution) on top of the stored index. Measured
-    against the real Modelo 100 2024 revision, ZERO of the 32 selectors named
-    by export-addressed bindings is a derived path -- every one is a stored
-    fact (identity, spouse, taxpayer, tax residence, declaration type). The
-    derived injectors therefore cannot change a single value this function
-    reads, so requiring a snapshot would be threading an input that provably
-    does not affect the answer. Re-measure before assuming otherwise; if a
-    future revision does declare an export binding on a derived path, route
-    this through the same loader rather than reproducing any part of it.
+    Deliberately does NOT call ``_load_profile_facts``: its family and state
+    attribution facts feed formulas, and no export-addressed binding names them.
+    The one derived path an export binding does name is the cash election, which
+    states one ejercicio and so needs ``filing_year``; it is injected through the
+    same function the loader uses, so the two cannot disagree.
 
     A ``repeating`` binding is skipped. Those name array paths
     (``RentaFamilyProfile.ascendants.*`` / ``.descendants.*``) that nothing in
@@ -397,6 +392,7 @@ def resolve_profile_export_values(
         bindings: The revision's export-addressed profile bindings, as
             projected onto the schema subview by ``profile_export_bindings``.
         bucket_id: Active profile bucket whose persisted facts are read.
+        filing_year: Ejercicio whose election the derived cash-criterion fact states.
         operation: Authority operation supplying the profile read and schema.
         profile_record: Pre-loaded profile record; loaded from the bucket when
             omitted.
@@ -412,6 +408,7 @@ def resolve_profile_export_values(
     return _resolve_profile_export_values(
         bindings,
         bucket_id=bucket_id,
+        filing_year=filing_year,
         operation=operation,
         profile_record=profile_record,
         schema=schema,
@@ -625,6 +622,7 @@ def _resolve_profile_export_values(
     bindings: Sequence[BindingDefinition],
     *,
     bucket_id: str,
+    filing_year: int,
     operation: PinnedAuthorityOperation,
     profile_record: object | None,
     schema: ProfileSchemaDefinition | None,
@@ -648,5 +646,6 @@ def _resolve_profile_export_values(
             return {}
     resolved_schema = operation.profile_schema() if schema is None else schema
     fact_index = profile_fact_index(record, resolved_schema)
+    inject_derived_cash_election_fact(fact_index, record, filing_year, operation=operation)
 
     return _profile_export_values_from_facts(bindings, fact_index)

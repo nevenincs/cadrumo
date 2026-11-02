@@ -9,6 +9,7 @@ reach an application caller.
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from datetime import date
 from typing import Protocol, override
 
@@ -32,10 +33,14 @@ from ....domain.currency.models import EurRateLookup
 from ....domain.currency.service import ExchangeRateProvider
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.errors import InvoicePersistenceError, InvoiceValidationError
+from ....domain.modelos.calculation_revision import SEALED_REVISION_STATES, CalculationRevision
+from ....domain.modelos.work_unit import WorkUnit
 from ..storage.errors import SecureObjectRevisionConflictError, StorageError
 from .buckets import BucketEventHistoryRepository
 from .catalogue_reads import build_invoice_catalogue_read_ports
 from .invoices import InvoiceCatalogueRepository
+from .modelos_calculation import CalculationRevisionCatalogueRepository
+from .modelos_work_units import WorkUnitCatalogueRepository
 
 
 class _InvoiceAuditRepository(Protocol):
@@ -285,6 +290,27 @@ class CatalogueCreationRateProviderAdapter(CatalogueInvoiceRateProviderPort):
             raise CatalogueInvoiceRateError("exchange_rate_lookup") from exc
 
 
+@dataclass(frozen=True, slots=True)
+class CatalogueSealedRevisionReaderAdapter:
+    """Read the sealed revisions of one bucket from its modelo repositories."""
+
+    bucket_id: str
+    work_unit_repository: WorkUnitCatalogueRepository
+    calculation_repository: CalculationRevisionCatalogueRepository
+
+    def sealed_revisions(self) -> tuple[tuple[CalculationRevision, WorkUnit], ...]:
+        """Scan the live catalogues, never a derived index, as the ledger guard does."""
+        work_units = self.work_unit_repository.load()
+        sealed: list[tuple[CalculationRevision, WorkUnit]] = []
+        for revision in self.calculation_repository.load().values():
+            if revision.state not in SEALED_REVISION_STATES:
+                continue
+            work_unit = work_units.get(revision.work_unit_id)
+            if work_unit is not None and work_unit.bucket_id == self.bucket_id:
+                sealed.append((revision, work_unit))
+        return tuple(sealed)
+
+
 def _catalogue_repositories(*, bucket_id: str) -> tuple[InvoiceCatalogueRepository, BucketEventHistoryRepository]:
     """Bind local invoice and audit storage without resolving an outbound provider."""
     from ..storage.runtime_repository import secure_object_repository_for_bucket
@@ -320,7 +346,10 @@ def build_catalogue_creation_ports(
 def build_catalogue_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePorts:
     """Bind read, mutation, and audit adapters for one invoice bucket."""
     normalized_bucket_id = bucket_id.strip()
+    from ..storage.runtime_repository import secure_object_repository_for_bucket
+
     invoice_repository, event_repository = _catalogue_repositories(bucket_id=normalized_bucket_id)
+    objects = secure_object_repository_for_bucket(normalized_bucket_id)
     return CatalogueLifecyclePorts(
         read_ports=build_invoice_catalogue_read_ports(bucket_id=normalized_bucket_id),
         invoice_repository=CatalogueCreationInvoiceRepositoryAdapter(repository=invoice_repository),
@@ -328,6 +357,11 @@ def build_catalogue_lifecycle_ports(*, bucket_id: str) -> CatalogueLifecyclePort
         audit_commit=CatalogueCreationAuditCommitAdapter(
             invoice_repository=invoice_repository,
             event_repository=event_repository,
+        ),
+        sealed_revisions=CatalogueSealedRevisionReaderAdapter(
+            bucket_id=normalized_bucket_id,
+            work_unit_repository=WorkUnitCatalogueRepository(objects=objects),
+            calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
         ),
     )
 
@@ -337,6 +371,7 @@ __all__ = [
     "CatalogueCreationEventRepositoryAdapter",
     "CatalogueCreationInvoiceRepositoryAdapter",
     "CatalogueCreationRateProviderAdapter",
+    "CatalogueSealedRevisionReaderAdapter",
     "build_catalogue_creation_ports",
     "build_catalogue_lifecycle_ports",
 ]

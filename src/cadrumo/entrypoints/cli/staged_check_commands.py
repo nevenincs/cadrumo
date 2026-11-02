@@ -11,6 +11,11 @@ from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_contracts import RegisteredOperationCompletion
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+from cadrumo_client.commands.secure_input import (
+    MachineSecretPayload,
+    read_machine_secret_payload,
+    select_machine_secret_channel,
+)
 
 from ...application.ledger.staged_check_contracts import (
     LEDGER_STAGED_CHECK_OPERATION_DEFINITION_ID,
@@ -25,6 +30,19 @@ from ...core.operations import OperationEffect, OperationTerminalCondition, prof
 from ...domain.transactions.errors import TransactionValidationError
 from .common import emit_envelope
 from .ledger_results import LedgerStagedCheckEnvelope
+from .machine_secret_json_items import json_array_items
+
+
+class StagedCheckSecrets(MachineSecretPayload):
+    """Machine-channel staged work for ``app ledger staged-check``.
+
+    Each field holds a JSON array: ``rows`` of movement objects with ``transaction_id``,
+    ``cells`` and optional ``evidence_staged`` and ``m210_staged``; ``drafts`` of new
+    movements with ``key`` and ``fields``. Blank is none.
+    """
+
+    rows: str = ""
+    drafts: str = ""
 
 
 def _request(
@@ -74,12 +92,22 @@ def _report_lines(answer: LedgerStagedCheckResult) -> tuple[str, ...]:
 
 def staged_check(
     ctx: typer.Context,
-    row: tuple[str, ...] = (),
-    draft: tuple[str, ...] = (),
     category: tuple[str, ...] = (),
+    secrets_stdin: bool = False,
+    secrets_fd: int | None = None,
 ) -> None:
     """Answer staged cells, new movements and categories the way the writers would take them."""
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
+    selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    staged = (
+        read_machine_secret_payload(StagedCheckSecrets, selection=selection)
+        if selection is not None
+        else StagedCheckSecrets()
+    )
+    try:
+        row, draft = json_array_items(staged.rows), json_array_items(staged.drafts)
+    except ValueError as exc:
+        raise TransactionValidationError(tr("cli.ledger.staged_check_invalid")) from exc
     completed = run_registered_operation(
         client,
         _request(client.profile_id, row, draft, category),
@@ -102,4 +130,4 @@ def staged_check(
     )
 
 
-__all__ = ["staged_check"]
+__all__ = ["StagedCheckSecrets", "staged_check"]

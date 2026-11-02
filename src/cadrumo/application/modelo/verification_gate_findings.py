@@ -64,7 +64,7 @@ from ..calculations.cross_period_models import (
 )
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ._invoice_drift_gate import invoice_drift_findings
-from ._ledger_drift_gate import ledger_drift_findings
+from ._ledger_drift_gate import ledger_drift_findings, undetermined_mixed_use_contributor_finding
 from .iva_wallet_gate import ModeloIvaWalletReconciliationBlocked
 from .iva_wallet_gate import (
     require_persisted_iva_compensation_decision_matches_revision as _require_iva_compensation_revision_match,
@@ -477,8 +477,16 @@ def _ledger_snapshot_findings(
             ),
         ),
     )
+    undetermined_mixed_use = undetermined_mixed_use_contributor_finding(
+        target=target,
+        work_unit=work_unit,
+        transaction_repository=transaction_repository,
+        operation=operation,
+        source_refs=optional_observation_refs(target.observations, "source_refs"),
+    )
     return [
         *drift_findings,
+        *(() if undetermined_mixed_use is None else (undetermined_mixed_use,)),
         *invoice_drift_findings(
             target=target,
             work_unit=work_unit,

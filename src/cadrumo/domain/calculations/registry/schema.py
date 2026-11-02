@@ -33,6 +33,7 @@ from ....core.period import Period, RegistrySelectorPeriodCode
 from ....core.revision_review import RevisionReviewStatus
 from ....core.tax_domain import TaxDomain
 from ....core.type_guards import is_object_mapping
+from .binding_borrador_participation import BorradorParticipation, BorradorParticipationField
 from .binding_grade_cap import BindingGradeCap
 from .binding_provider import BindingProvider
 from .binding_temporal import (
@@ -301,6 +302,10 @@ class BindingDefinition(RegistryModel):
     # direct-carry (`_binding_prefill`) tiers. The three share only the word
     # "prefill" and must not be merged.
     aeat_prefilled: bool = False
+    # Whether an admitted borrador value may supply the binding or is only
+    # compared with it. Undeclared reads as precedence; it is meaningful only
+    # beside ``aeat_prefilled`` (see :mod:`.binding_borrador_participation`).
+    borrador_participation: BorradorParticipationField | None = None
     # Absent means the binding reaches as far as its revision's grade; a cap
     # only narrows that reach (see :mod:`.binding_grade_cap`).
     grade_cap: BindingGradeCap | None = None
@@ -317,6 +322,32 @@ class BindingDefinition(RegistryModel):
         ``source`` column could.
         """
         return BindingSourceKind(self.provider.kind)
+
+    @property
+    def borrador_supplies_value(self) -> bool:
+        """Return whether the borrador tier may supply this binding's value.
+
+        A snapshot may hold an ``aeat_prefilled`` binding, but only a binding
+        that does not declare ``cross_check_only`` lets that value enter the
+        precedence ladder.
+        """
+        return self.aeat_prefilled and self.borrador_participation is not BorradorParticipation.CROSS_CHECK_ONLY
+
+    @model_validator(mode="after")
+    @pydantic_validation_boundary
+    def _validate_borrador_participation_needs_snapshot_admission(self) -> BindingDefinition:
+        """Refuse a participation declared on a binding no borrador snapshot may hold.
+
+        The participation says what an admitted borrador value does; on a
+        binding that is not ``aeat_prefilled`` there is no such value, so the
+        declaration could only mislead a reader.
+        """
+        if self.borrador_participation is not None and not self.aeat_prefilled:
+            raise RegistryValidationError(
+                f"binding {self.id!r}: borrador_participation is declared but the binding is not aeat_prefilled",
+                context={"id": self.id, "borrador_participation": self.borrador_participation.value},
+            )
+        return self
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

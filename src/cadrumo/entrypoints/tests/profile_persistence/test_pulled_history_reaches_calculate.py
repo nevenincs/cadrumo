@@ -121,9 +121,6 @@ _M100_BASE_LIQUIDABLE_NEGATIVA_GENERAL_CASILLA: CasillaId = validated_casilla_id
 )
 _RELATION_PREFILL_SOURCE = "relation_prefill"
 _M130_PAGOS_RELATION_ID = "renta-modelo-130-pagos-fraccionados"
-_OPTIONAL_PAYEE_RETENCIONES_BINDINGS: frozenset[BindingId] = frozenset(
-    {"renta-certificado-trabajo-retenciones"},
-)
 _SYNTHETIC_TAX_ID = "12345678Z"
 
 
@@ -265,7 +262,6 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.id not in _OPTIONAL_PAYEE_RETENCIONES_BINDINGS
         if binding.source
         not in (
             "profile",
@@ -276,6 +272,7 @@ def _non_relation_zero_bindings() -> dict[BindingId, Decimal]:
             "ledger_oss_aggregation",
             "collectible_invoice",
             "payable_invoice",
+            "retencion_soportada",
         )
     }
 

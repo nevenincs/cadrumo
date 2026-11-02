@@ -885,6 +885,12 @@ application:
           continuï vinculada a transaccions: %{linked_transaction_ids}. No hi ha cap
           ordre de desvinculació: elimina aquestes transaccions amb `aeat app ledger
           remove`, cosa que allibera el vincle, i elimina després la factura.'
+        sealed_invoice_refused: La factura %{invoice_id} la va llegir el Model %{modelo}
+          de %{filing_year} %{period} (%{revision_state}, revisió %{calculation_revision_id}),
+          així que es rebutja aquest canvi perquè aquestes xifres continuïn sent certes.
+          Si no s'ha presentat, descarta aquest treball amb `aeat app modelo work
+          discard` i torna a calcular. Si s'ha presentat, emet una factura rectificativa
+          i presenta una complementària o substitutiva.
     linking:
       errors:
         linked_invoice_not_found: No s'ha trobat la factura %{invoice_id} després
@@ -1320,6 +1326,18 @@ application:
           justificant.
         what_to_do: Revisa els registres d'IVA de tot l'any, afegeix el justificant
           que falti i torna a calcular.
+      iva_operation_date_after_movement:
+        what: Algunes files del llibre tenen una data de l'operació posterior a la
+          bancària. Si aquests diners eren una bestreta, el seu IVA es va meritar
+          en cobrar-la.
+        what_to_do: En una bestreta, posa com a data de l'operació la del cobrament,
+          registra la resta en una fila pròpia i torna a calcular.
+      iva_row_placed_on_movement_date:
+        what: Algunes files del llibre no tenen la data de l'operació, així que la
+          seva data bancària ha triat el període de l'IVA. L'IVA es merita quan es
+          fa l'operació, no quan es mou el diner.
+        what_to_do: Afegeix la data de l'operació a les files de final de període
+          i torna a calcular.
       iva_selected_scope_evidence_failure:
         what: Els registres que sustenten l'IVA d'aquesta declaració no tenen justificant
           o no quadren.
@@ -1514,12 +1532,12 @@ application:
       activity_undeclared: '{element}: la seva compra no indica tipus d''activitat
         i un altre dels teus elements és agrari, de manera que es compta com a no
         agrària.'
-      advisory_imputation_period_ungrounded: 'Casella {box}: {amount} de retencions
-        queden en espera perquè no està confirmat el període al qual corresponen.
-        Una retenció s''imputa al període de la renda sobre la qual es va practicar
-        (art. 79 RIRPF), i els teus registres daten cada cobrament per la seva arribada
-        al banc, cosa que només és correcta si vas optar pel criteri de cobraments
-        i pagaments (art. 7.2 RIRPF; art. 14.1.b LIRPF).'
+      advisory_imputation_period_ungrounded: 'Casella {box}: {amount} queda en espera
+        perquè no està confirmat el període al qual correspon. Els ingressos i les
+        despeses de l''activitat s''imputen a la meritació i una retenció va amb la
+        seva renda (art. 79 RIRPF), i els teus registres daten cada moviment per la
+        seva arribada al banc, cosa que només és correcta si vas optar pel criteri
+        de cobraments i pagaments (art. 7.2 RIRPF; art. 14.1.b LIRPF).'
       advisory_value_proven_zero: 'Casella {box}: el zero es manté, perquè en el període
         no hi ha cap xifra el període de la qual pugui ser dubtós.'
       agrarian_excluded: '{element}: pertany a una activitat agrària, de manera que
@@ -1606,6 +1624,13 @@ application:
       residence_period_unknown: No hi ha residència fiscal registrada per al {date},
         de manera que els teus elements es compten com si s'apliquessin els Models
         100 i 130.
+      retencion_soportada_absence_contradicted: 'Classe de renda {income_class}: hi
+        ha registres de pagadors i també la teva declaració que cap pagador no va
+        practicar retenció. Elimina els registres o retira la declaració.'
+      retencion_soportada_evidence_required: 'Classe de renda {income_class}: no hi
+        ha cap registre de pagador ni declaració d''absència, i el teu perfil no declara
+        absent aquesta renda. Registra el certificat de cada pagador o declara que
+        cap pagador no va practicar retenció.'
       row_unregistered: El moviment del {row_date} per {row_amount} registra un element
         que no és al teu registre.
       row_unregistered_undated: Un moviment registra un element que no consta al teu
@@ -2337,6 +2362,20 @@ application:
         ni justificant adjunt. Adjunta'l a l'apunt dels teus registres.
       transaction_evidence_missing_output: Una factura emesa amb IVA repercutit no
         té justificant. Adjunta'l a l'apunt dels teus registres.
+      undetermined_mixed_use_contributor: El càlcul desat del model %{modelo} de %{filing_year},
+        període %{period}, va comptar %{rows} despesa(es) d'ús mixt sense categoria
+        de despesa per la part indicada. Si calcules ara, quedaran retingudes fins
+        que els assignis la categoria. Els valors desats no han canviat.
+      withholding_count_exceeds_summary_perceptors: El model %{source_modelo} del
+        %{period} de %{filing_year} compta %{declared_perceptors} perceptor(s) a la
+        casella %{casilla_id}, però el model %{modelo} només recull %{summary_perceptors}
+        perceptor(s) diferent(s) en tot l'any. Tota persona comptada en aquesta casella
+        ha de figurar al resum anual. Afegeix els perceptors que falten al detall
+        d'aquest model o corregeix el recompte del model %{source_modelo}.
+      withholding_count_not_cross_checked: 'No s''ha pogut comparar el model %{modelo}
+        de %{filing_year} amb el model %{source_modelo} a %{unchecked_periods}, perquè
+        no consta cap declaració d''aquests períodes. Períodes comparats: %{checked_periods}.
+        Això no vol dir que no paguessis ningú en aquests períodes.'
       withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} de %{filing_year}
         no declara cap percepció per a cap perceptor, però els teus registres recullen
         rendes sotmeses a retenció pagades aquell any: %{contradicting_invoice_count}

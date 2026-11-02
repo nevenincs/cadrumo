@@ -271,25 +271,44 @@ test("a modelo whose rules are incomplete opens read only, without a next step",
   ).toHaveCount(0);
 });
 
-test("a filled Modelo 130 shows its figures, and its held zeros as zero", async ({
+test("a calculated Modelo 130 shows its figures, and its held zeros as zero", async ({
   page: target,
 }) => {
-  const filled = fields(form("130-1T-filed").form.form.pages);
-  const figure = filled.find(
-    (field) => field.box && !field.held_zero && field.value?.kind === "decimal",
+  // The quarter's activity income is booked and nothing is checked or filed:
+  // the capped boxes carry the figures the backend calculated.
+  const calculated = fields(form("130-1T-income").form.form.pages);
+  const figure = calculated.find(
+    (field) =>
+      field.box &&
+      !field.held_zero &&
+      field.value?.kind === "decimal" &&
+      field.value_text &&
+      field.value_text !== "0.00 €",
   );
-  const held = filled.find((field) => field.box && field.held_zero);
+  const held = calculated.find((field) => field.box && field.held_zero);
   if (!figure?.value_text || !held?.value_text)
-    throw new Error("the filed 130 holds no figure and no held zero");
-  await openDeclaration(target, "130", { shape: "filed" });
+    throw new Error("the calculated 130 holds no figure and no held zero");
+  await openDeclaration(target, "130", { shape: "income" });
   await expect(boxRow(target, figure.box!)).toContainText(figure.value_text);
   await expect(boxRow(target, held.box!)).toContainText(held.value_text);
+});
+
+test("a Modelo 130 recorded as filed shows its proven-zero quarter as zero", async ({
+  page: target,
+}) => {
+  const filed = form("130-1T-filed");
+  const zero = fields(filed.form.form.pages).find(
+    (field) => field.box && field.held_zero,
+  );
+  if (!zero?.value_text) throw new Error("the filed 130 holds no held zero");
+  await openDeclaration(target, "130", { shape: "filed" });
+  await expect(boxRow(target, zero.box!)).toContainText(zero.value_text);
   // The header states the result the read model stated.
-  const result = form("130-1T-filed").header.result;
-  if (result?.amount_text)
-    await expect(
-      target.getByText(result.amount_text, { exact: true }).first(),
-    ).toBeVisible();
+  const result = filed.header.result;
+  if (!result?.short_text) throw new Error("the filed 130 states no result");
+  await expect(
+    target.getByText(result.short_text, { exact: true }).first(),
+  ).toBeVisible();
 });
 
 test("a box whose kind of value cannot be typed says why on the form", async ({

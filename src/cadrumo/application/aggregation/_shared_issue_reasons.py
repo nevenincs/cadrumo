@@ -30,12 +30,14 @@ from __future__ import annotations
 from typing import Final
 
 from ...domain.renta.ledger_expenses import RentaDeductibilityRefusal
+from ...domain.transactions.enums import BusinessClassification
 
 UNSUPPORTED_DIRECTION: Final[str] = "unsupported_direction"
 UNSUPPORTED_CURRENCY: Final[str] = "unsupported_currency"
 UNCLASSIFIED_BUSINESS_STATE: Final[str] = "unclassified_business_state"
 PERSONAL_TRANSACTION: Final[str] = "personal_transaction"
 OUTSIDE_PERIOD: Final[str] = "outside_period"
+MISSING_CATEGORY: Final[str] = "missing_category"
 UNKNOWN_CATEGORY: Final[str] = "unknown_category"
 MISSING_CATEGORY_PROFILE: Final[str] = "missing_category_profile"
 REGION_UNDECLARED_FOR_OVERRIDE: Final[str] = "region_undeclared_for_override"
@@ -45,10 +47,18 @@ EXCLUSIVE_USE_REQUIRED: Final[str] = RentaDeductibilityRefusal.EXCLUSIVE_USE_REQ
 MISSING_OWNERSHIP_SHARE: Final[str] = RentaDeductibilityRefusal.MISSING_OWNERSHIP_SHARE.value
 
 
+def business_state_issue_reason(classification: BusinessClassification) -> str:
+    """Return the shared rejection for a row with no business attribution to read."""
+    if classification is BusinessClassification.PERSONAL:
+        return PERSONAL_TRANSACTION
+    return UNCLASSIFIED_BUSINESS_STATE
+
+
 __all__ = [
     "EXCLUSIVE_USE_REQUIRED",
     "INELIGIBLE_DEDUCTIBILITY",
     "INVALID_LEDGER_FACT",
+    "MISSING_CATEGORY",
     "MISSING_CATEGORY_PROFILE",
     "MISSING_OWNERSHIP_SHARE",
     "OUTSIDE_PERIOD",
@@ -58,4 +68,5 @@ __all__ = [
     "UNKNOWN_CATEGORY",
     "UNSUPPORTED_CURRENCY",
     "UNSUPPORTED_DIRECTION",
+    "business_state_issue_reason",
 ]

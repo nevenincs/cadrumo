@@ -145,6 +145,20 @@ test("a clean reading is confirmed only with a kind and a country, then offers i
   await expect(focused).not.toContainText(DOMESTIKA);
 });
 
+test("a withheld figure the document reads and the record lacks is said after confirming", async ({
+  page: target,
+}) => {
+  await openDocuments(target);
+  await choose(target, DOMESTIKA);
+  await kind(target, "received");
+  await draft(target).locator(".ledger-draft-country-read").click();
+  await draft(target).locator(".ledger-draft-confirm").click();
+  const done = section(target).locator(".ledger-draft-confirmed");
+  await expect(done.locator(".ledger-draft-retention-differs")).toHaveText(
+    label("desktop.ledger.documents.retention_unrecorded", { read: "9.00" }),
+  );
+});
+
 test("fields are as wide as what they hold", async ({ page: target }) => {
   await openDocuments(target);
   await choose(target, DOMESTIKA);

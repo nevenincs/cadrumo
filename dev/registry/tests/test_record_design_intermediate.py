@@ -271,7 +271,7 @@ def _official_totals(path: Path) -> dict[str, int]:
     disenos in the pre-OOXML format, and taking the format from the AEAT
     filename would be wrong: this design's name embeds "xls" mid-string
     (``01-200-ejercicio-2025-10-9-mb-xls.xls``) and other designs carry the same
-    token while being genuine .xlsx. openpyxl refuses a legacy .xls outright, so
+    token while being genuine .xlsx. openpyxl refuses an .xls outright, so
     that branch reads through xlrd, which the record-design parser already uses
     for these binaries.
     """

@@ -11,18 +11,15 @@ mocks, stubs, skips or xfail.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import date
 from decimal import Decimal
-from pathlib import Path
 
 import pytest
 
 from ....core.period import Period
-from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ....domain.transactions.models import Transaction
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..iva_ledger import IvaLedgerAggregationIssueReason
-from .iva_ledger_row_support import aggregate_row
+from .iva_ledger_row_support import aggregate_row, uncategorised_sale_row
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -33,45 +30,7 @@ _REFUSED = [IvaLedgerAggregationIssueReason.CUOTA_DISAGREES_WITH_RATE.value]
 
 
 def _transaction(row_id: str, *, base: Decimal, iva_rate: Decimal, iva_amount: Decimal) -> Transaction:
-    return Transaction.model_validate(
-        {
-            "raw": RawTransaction(
-                provider_transaction_id=row_id,
-                booked_date=_ON,
-                value_date=_ON,
-                amount=base + iva_amount,
-                currency="EUR",
-                counterparty="Cliente",
-                description=f"venta {row_id}",
-                provenance=RawProvenance(
-                    source_path=Path("ledger.csv"),
-                    source_sha256="d" * 64,
-                    source_row_index=1,
-                    source_format=SourceFormat.MANUAL,
-                    ingested_at=datetime(2024, 12, 1, 12, 0, tzinfo=UTC),
-                    provider_name="manual-ledger",
-                ),
-                raw_fields={"source_kind": "ledger_transaction"},
-            ),
-            "direction": TransactionDirection.INCOMING,
-            "group_label": None,
-            "source_jurisdiction": "ES",
-            "business_classification": BusinessClassification.BUSINESS,
-            "business_pct": None,
-            "taxable_base": base,
-            "iva_rate": iva_rate,
-            "iva_amount": iva_amount,
-            "iva_category": None,
-            "exemption_article": None,
-            "art_104_tres_exclusion": None,
-            "prorrata_reference": None,
-            "lifecycle_state": TransactionLifecycleState.ACTIVE,
-            "fx_rate": None,
-            "value_in_eur": None,
-            "classified_at": datetime(2024, 12, 2, 13, 0, tzinfo=UTC),
-            "classified_by": "manual",
-        },
-    )
+    return uncategorised_sale_row(row_id, booked=_ON, base=base, iva_rate=iva_rate, iva_amount=iva_amount)
 
 
 @pytest.mark.parametrize(

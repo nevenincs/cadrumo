@@ -39,7 +39,7 @@ from ..producer_snapshot import (
 from ..runtime import ModeloOperatorProfile, RegistrySchemaAccessor, build_runtime_schema_provider
 
 _HEX_DIGEST = "a" * 64
-FILING_PERIOD = Period.from_year_and_code(2026, "1T")
+EXPORT_PERIOD = Period.from_year_and_code(2026, "1T")
 _EXPORT_PATH = Path("exports/m130-2026Q1.txt")
 _OTHER_EXPORT_PATH = Path("exports/x.txt")
 _SCHEMA_PROVIDER_CACHE: dict[tuple[int, str, tuple[str, ...]], RegistrySchemaAccessor] = {}
@@ -277,7 +277,7 @@ def _narrative() -> str:
     return narrative
 
 
-def schema_provider(
+def export_schema_provider(
     *,
     filing_year: int,
     period: str,
@@ -342,7 +342,7 @@ def _assert_missing_export_layout_refusal(message: str, modelo: str) -> None:
 def _approved_registry_draft():
     draft = build_draft(
         modelo="130",
-        period=FILING_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -360,7 +360,7 @@ def _approved_registry_draft():
             _M130_HOME_DEDUCTION_CASILLA: Decimal("0"),
             _M130_PRIOR_RETURN_RESULT_CASILLA: Decimal("0"),
         },
-        schema_provider=schema_provider(filing_year=FILING_PERIOD.filing_year, period="1T"),
+        schema_provider=export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T"),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -369,7 +369,7 @@ def _approved_registry_draft():
 def _approved_modelo_131_registry_draft():
     draft = build_draft(
         modelo="131",
-        period=FILING_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -383,7 +383,7 @@ def _approved_modelo_131_registry_draft():
             "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
             "modelo-131.did.iban": "ES9121000418450200051332",
         },
-        schema_provider=schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -392,7 +392,7 @@ def _approved_modelo_131_registry_draft():
 def _approved_modelo_131_registry_draft_without_direct_debit():
     draft = build_draft(
         modelo="131",
-        period=FILING_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -405,7 +405,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
             "modelo-131.dpa.epigrafe-iae": ["722"],
             "modelo-131.dpa.vehiculos-afectos": {"1": "2"},
         },
-        schema_provider=schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -414,7 +414,7 @@ def _approved_modelo_131_registry_draft_without_direct_debit():
 def _approved_modelo_131_zero_payable_direct_debit_draft():
     draft = build_draft(
         modelo="131",
-        period=FILING_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -424,7 +424,7 @@ def _approved_modelo_131_zero_payable_direct_debit_draft():
             _M131_VOLUME_AGRARIO_CASILLA: Decimal("0"),
             "modelo-131.did.iban": "ES9121000418450200051332",
         },
-        schema_provider=schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -447,14 +447,14 @@ def _approved_modelo_131_year_scoped_registry_draft(filing_year: int, binding_pr
             f"{binding_prefix}.dpa.031-032.vehiculos-afectos": {"1": "2"},
             f"{binding_prefix}.did.012-045.iban": "ES9121000418450200051332",
         },
-        schema_provider=schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=filing_year, period="1T", modelos=("131",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 @cache
 def _approved_modelo_131_historical_registry_draft():
-    provider = schema_provider(filing_year=2023, period="4T", modelos=("131",))
+    provider = export_schema_provider(filing_year=2023, period="4T", modelos=("131",))
     draft = build_draft(
         modelo="131",
         period=Period.from_year_and_code(2023, "4T"),
@@ -482,7 +482,7 @@ def _approved_modelo_131_historical_registry_draft():
 def _approved_modelo_111_registry_draft():
     draft = build_draft(
         modelo="111",
-        period=FILING_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -499,7 +499,7 @@ def _approved_modelo_111_registry_draft():
             _M111_IMAGEN_RETENCIONES_CASILLA: Decimal("9.00"),
             _M111_PREVIOUS_RESULT_CASILLA: Decimal("40.00"),
         },
-        schema_provider=schema_provider(filing_year=FILING_PERIOD.filing_year, period="1T", modelos=("111",)),
+        schema_provider=export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T", modelos=("111",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -508,7 +508,7 @@ def _approved_modelo_111_registry_draft():
 def _approved_modelo_115_registry_draft():
     draft = build_draft(
         modelo="115",
-        period=FILING_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -518,7 +518,7 @@ def _approved_modelo_115_registry_draft():
             _M115_BASE_CASILLA: Decimal("1250.50"),
             _M115_PREVIOUS_RESULT_CASILLA: Decimal("10.00"),
         },
-        schema_provider=schema_provider(filing_year=FILING_PERIOD.filing_year, period="1T", modelos=("115",)),
+        schema_provider=export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T", modelos=("115",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
@@ -527,7 +527,7 @@ def _approved_modelo_115_registry_draft():
 def _approved_modelo_123_registry_draft():
     draft = build_draft(
         modelo="123",
-        period=FILING_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(
             tax_id="12345678Z",
             display_name="Export registry test",
@@ -543,14 +543,14 @@ def _approved_modelo_123_registry_draft():
             _M123_INGRESOS_CUENTA_INPUT_CASILLA: Decimal("7.50"),
             _M123_MINORACION_CASILLA: Decimal("12.25"),
         },
-        schema_provider=schema_provider(filing_year=FILING_PERIOD.filing_year, period="1T", modelos=("123",)),
+        schema_provider=export_schema_provider(filing_year=EXPORT_PERIOD.filing_year, period="1T", modelos=("123",)),
     )
     return draft.model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 @cache
 def _approved_modelo_123_2019_registry_draft():
-    provider = schema_provider(filing_year=2023, period="4T", modelos=("123",))
+    provider = export_schema_provider(filing_year=2023, period="4T", modelos=("123",))
     draft = build_draft(
         modelo="123",
         period=Period.from_year_and_code(2023, "4T"),
@@ -579,7 +579,7 @@ def _approved_modelo_390_registry_draft():
     # schema provider, so build_draft falls through to the direct casilla
     # overrides below (mirrors the M130/M200 previous_filing/relation-bound
     # override precedent in this module).
-    provider = schema_provider(filing_year=2025, period="0A", modelos=("390",))
+    provider = export_schema_provider(filing_year=2025, period="0A", modelos=("390",))
     draft = build_draft(
         modelo="390",
         period=Period.from_year_and_code(2025, "0A"),
@@ -660,5 +660,5 @@ def modelo_151_export_coordinate_draft():
         period=period,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Emilio Export Test"),
         inputs={},
-        schema_provider=schema_provider(filing_year=2025, period="0A", modelos=("151",)),
+        schema_provider=export_schema_provider(filing_year=2025, period="0A", modelos=("151",)),
     )

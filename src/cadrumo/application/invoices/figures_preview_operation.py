@@ -47,8 +47,9 @@ from ...domain.invoices.figures import (
     compute_invoice_figures,
     compute_line_figures,
     dated_rate_slots,
+    rate_refusal_finding,
 )
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_terminal_receipt
@@ -177,15 +178,6 @@ def _rate_undeclared_finding(token: str) -> FigureFinding:
     )
 
 
-def _slot_refusal_finding(line: InvoiceFiguresPreviewLine, slot: DatedRateSlot, on_date: date) -> FigureFinding:
-    return FigureFinding(
-        FigureFindingCode.LINE_RATE_COVERAGE_GAP if slot.coverage_gap else FigureFindingCode.LINE_RATE_NOT_IN_FORCE,
-        f"line rate {line.iva_rate} is not available on {on_date.isoformat()}",
-        ("iva_rate",),
-        values={"slot": str(slot.slot), "on_date": on_date.isoformat()},
-    )
-
-
 def _line_figures(
     line: InvoiceFiguresPreviewLine,
     slots: tuple[DatedRateSlot, ...] | None,
@@ -205,7 +197,7 @@ def _line_figures(
         if slot is None:
             rate_findings = (_rate_undeclared_finding(line.iva_rate),)
         elif not slot.in_force:
-            rate_findings = (_slot_refusal_finding(line, slot, on_date),)
+            rate_findings = (rate_refusal_finding(slot.slot, on_date, coverage_gap=slot.coverage_gap),)
     if not rate_findings:
         return figures
     return LineFigures(
@@ -561,11 +553,12 @@ def resolve_invoice_figures_preview_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind the read to the exact profile, as every ledger read is."""
-    if request.definition_id != INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InvoiceFiguresPreviewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request,
+        context,
+        definition_id=INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
+        request_type=InvoiceFiguresPreviewRequest,
+    )
 
 
 def build_invoice_figures_preview_registration(

@@ -6,6 +6,7 @@ from dataclasses import dataclass
 
 from ...core.errors.hierarchy import CadrumoError
 from ...core.operations import (
+    LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST,
     OperationCancellation,
     OperationInteractionKind,
     OperationLifecycle,
@@ -69,15 +70,6 @@ from .registry import (
 
 _SUPPORTED_OBSERVATION_VERSION = 1
 _UNSUPPORTED_INTERACTION_CODE = "operation.interaction.unsupported"
-_CANCELLABLE_LIFECYCLES = frozenset(
-    {
-        OperationLifecycle.CREATED,
-        OperationLifecycle.QUEUED,
-        OperationLifecycle.RUNNING,
-        OperationLifecycle.WAITING_FOR_INTERACTION,
-        OperationLifecycle.WAITING_FOR_EXTERNAL,
-    }
-)
 
 
 @dataclass(frozen=True, slots=True)
@@ -237,7 +229,7 @@ def _cancellable_now(
             financial_pending
             or (
                 contract.cancellation is not OperationCancellation.UNSUPPORTED
-                and snapshot.lifecycle in _CANCELLABLE_LIFECYCLES
+                and snapshot.lifecycle in LIFECYCLES_BEFORE_ANY_CANCELLATION_REQUEST
             )
         )
         and snapshot.cancellation_requested_at is None

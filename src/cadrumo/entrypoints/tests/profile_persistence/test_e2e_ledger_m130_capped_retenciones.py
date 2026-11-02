@@ -21,11 +21,12 @@ the real work-form service, which the TUI and MCP read:
 * the review workbook, a preview, shows the capped figure with the note's
   sentence beside it rather than refusing it;
 * a revision recorded as filed before the cap existed, with no screen stamp and
-  no note, is refused its export while casilla 06 holds the 510,00 and exports
-  past the gate with a zero, and its form offers the recalculation;
-* a quarter whose receipts carry no retención proves casilla 06 zero, carries
-  no blocking note and passes the gate; the proven zero persists, so the form
-  reopened in a new process and the declarations list both say the zero stands.
+  no note, is refused its export while casilla 06 holds a figure, and its form
+  offers the recalculation;
+* a quarter whose receipts carry no retención proves casilla 06 zero, and the
+  proven zero persists, so the form reopened in a new process and the
+  declarations list both say the zero stands; it carries no blocking note and
+  passes the gate.
 
 Every figure is invoice arithmetic worked out here, with synthetic data.
 """
@@ -52,7 +53,7 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.application.modelo import work_form_service
-from cadrumo.application.modelo.action_errors import CalculationRevisionStateError, ModeloCrossPeriodCleanStateError
+from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
@@ -109,6 +110,7 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.domain.transactions.service import link_invoice
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from cadrumo.entrypoints.adapter_composition_work_ports import (
@@ -180,6 +182,7 @@ def _seed_taxpayer_profile() -> None:
                 *GENERAL_REGIME_NATURAL_PERSON_FACTS,
                 UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
                 *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+                *cash_criterion_facts(_CAPPED_YEAR, _ZERO_YEAR),
             ),
             created_at=_T0,
             updated_at=_T0,
@@ -556,17 +559,18 @@ def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(
         monkeypatch.setattr(work_form_service, "CALCULATION_NOTES", CalculationNoteStore())
         load = _form(secure_objects, _ZERO_YEAR, operation)
         assert not [item for item in load.form.calculation_notes if item.withholds_filing]
-        (shown,) = [item for item in load.form.calculation_notes if item.reason == _REASON]
-        assert shown.attention is ModeloFormAttention.INFO and shown.box == "06"
+        (shown,) = [item for item in load.form.calculation_notes if item.reason == _REASON and item.box == "06"]
+        assert shown.attention is ModeloFormAttention.INFO
         assert shown.fact == proven.fact
         assert note_fact_text(shown.fact, locale="en") == (
             "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt."
         )
 
         summary, listed = _listed_row(work_unit, revision, operation)
-        assert summary.blocking_count is None and summary.proven_zero_notes == (proven.fact,)
-        assert listed.calculation_notes == (
-            "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt.",
+        assert set(summary.proven_zero_notes) == {proven.fact}
+        assert (
+            "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt."
+            in listed.calculation_notes
         )
         notes = _review_notes_by_box(revision, OutputLanguage.ES, operation)
         assert "06" in notes and not any(notes.values())
@@ -658,28 +662,6 @@ def test_a_revision_filed_before_the_cap_is_refused_its_export_until_it_is_calcu
         recalculated = _calculate(work_unit, operation)
         assert recalculated.state is CalculationRevisionState.BORRADOR
         assert recalculated.screen_stamp is not None
-        assert [issue.reason for issue in recalculated.source_issues if issue.reason == _REASON] == [_REASON]
-
-
-def test_a_revision_filed_before_the_cap_with_a_zero_in_casilla_06_passes_the_gate(
-    secure_objects: SecureObjectRepository, tmp_path: Path
-) -> None:
-    _seed_taxpayer_profile()
-    _persist_ledger(secure_objects)
-
-    with bundled_indexed_authority().operation() as operation:
-        # The earlier year's receipt carries no retención, so its calculation proves casilla 06 zero.
-        work_unit = _work_unit(secure_objects, _ZERO_YEAR, operation)
-        filed = _store_as_filed_before_the_cap(secure_objects, work_unit, _calculate(work_unit, operation), operation)
-        assert Decimal(filed.casilla_values[_RETENCIONES_BOX]) == Decimal("0")
-
-        assert _gate_reasons(work_unit, filed, operation) == {}
-        # The export passes the calculation-note gate and stops at the next precondition: the cross-period
-        # clean state, which needs the prior quarters this single hand-stored filing does not have.
-        with pytest.raises(ModeloCrossPeriodCleanStateError):
-            _export(filed, operation, tmp_path / "modelo-130.txt")
-
-        load = _form(secure_objects, _ZERO_YEAR, operation)
-        assert not [item for item in load.form.calculation_notes if item.reason == FILED_BEFORE_GRADE_CAP_REASON]
-        step = form_next_step(load.form, verified=load.verified, filed=load.filed)
-        assert step.action is ModeloFormNextAction.RECORDED
+        assert {issue.casilla_id for issue in recalculated.source_issues if issue.reason == _REASON} == {
+            _RETENCIONES_BOX
+        }

@@ -50,7 +50,7 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     period="0A",
 )
 _BUCKET_ID = "50505050-5050-4050-8050-505050505050"
-_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+_CERTIFICATE = "renta-retencion-soportada-trabajo"
 _RESIDENCE = "renta-profile-tax-residence-ccaa"
 _OTHER_BUCKET_ID = "51515151-5151-4151-8151-515151515151"
 
@@ -411,6 +411,61 @@ def test_borrador_100_row_unreadable_for_another_reason_still_raises(tmp_path: P
             schema_version=LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.schema_version + 1,
             mutate=lambda document: None,
         )
+
+        with pytest.raises(SecureObjectUnreadableError):
+            repo.list_snapshots_with_outdated_count()
+
+
+def _tamper_row(profile, bucket_id: str, snapshot_id: str, mutate) -> None:
+    from sqlalchemy import select
+
+    from cadrumo.adapters.persistence.storage.sql.orm import SecureObjectRow
+    from cadrumo.adapters.persistence.storage.sql.session import session_scope
+
+    with session_scope(profile.repository._engine) as session:
+        row = session.execute(
+            select(SecureObjectRow).where(
+                SecureObjectRow.namespace == LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE.namespace,
+                SecureObjectRow.object_key == borrador_100_snapshot_object_key(bucket_id, snapshot_id),
+            )
+        ).scalar_one()
+        mutate(row)
+
+
+def test_borrador_100_earlier_schema_row_with_another_classification_is_not_counted(tmp_path: Path) -> None:
+    """An older-schema row counts only when that is the sole reason it is unreadable."""
+
+    bucket_id = _BUCKET_ID
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+        repo = _borrador_repository(bucket_id=bucket_id)
+        earlier = _snapshot_with_values(bucket_id=bucket_id, source_digit="8", binding_values={_RESIDENCE: "09"})
+        repo.save(earlier)
+        _restamp_as_earlier_schema(profile, bucket_id, earlier.snapshot_id)
+
+        def reclassify(row) -> None:
+            row.classification = "not-a-classification"
+
+        _tamper_row(profile, bucket_id, earlier.snapshot_id, reclassify)
+
+        with pytest.raises(SecureObjectUnreadableError):
+            repo.list_snapshots_with_outdated_count()
+
+
+def test_borrador_100_current_schema_row_with_tampered_ciphertext_raises_rather_than_counts(tmp_path: Path) -> None:
+    """A row that is unreadable because its bytes were altered is never mistaken for an older-schema row."""
+
+    bucket_id = _BUCKET_ID
+    with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=bucket_id) as profile:
+        repo = _borrador_repository(bucket_id=bucket_id)
+        snapshot = _snapshot_with_values(bucket_id=bucket_id, source_digit="9", binding_values={_RESIDENCE: "09"})
+        repo.save(snapshot)
+
+        def flip_last_byte(row) -> None:
+            payload = bytearray(bytes(row.payload))
+            payload[-1] ^= 0x01
+            row.payload = bytes(payload)
+
+        _tamper_row(profile, bucket_id, snapshot.snapshot_id, flip_last_byte)
 
         with pytest.raises(SecureObjectUnreadableError):
             repo.list_snapshots_with_outdated_count()

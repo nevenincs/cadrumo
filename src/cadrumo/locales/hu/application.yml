@@ -869,6 +869,12 @@ application:
           kapcsolódik: %{linked_transaction_ids}. Nincs kapcsolatbontó parancs: töröld
           ezeket a tranzakciókat az `aeat app ledger remove` paranccsal, ami feloldja
           a kapcsolatot, majd töröld a számlát.'
+        sealed_invoice_refused: A(z) %{invoice_id} számlát beolvasta a(z) %{modelo}
+          modell (%{filing_year} %{period}, %{revision_state}, %{calculation_revision_id}
+          változat), ezért ezt a módosítást elutasítottuk, hogy azok a számok igazak
+          maradjanak. Ha még nincs benyújtva, vesd el ezt a munkát az `aeat app modelo
+          work discard` paranccsal, és számolj újra. Ha már benyújtottad, állíts ki
+          helyesbítő számlát, és nyújts be önellenőrzést.
     linking:
       errors:
         linked_invoice_not_found: A(z) %{invoice_id} számla nem található a kapcsolás
@@ -1282,6 +1288,16 @@ application:
           épül, amelyekből hiányzik az igazolás.
         what_to_do: Nézd át az egész év áfa-nyilvántartását, pótold a hiányzó igazolást,
           majd számolj újra.
+      iva_operation_date_after_movement:
+        what: Néhány főkönyvi sor ügyleti dátuma későbbi a banki dátumánál. Ha ez
+          a pénz előleg volt, az áfája a beérkezéskor vált esedékessé.
+        what_to_do: Előlegnél add meg ügyleti dátumként a beérkezés napját, a fennmaradó
+          részt rögzítsd külön sorban, majd számolj újra.
+      iva_row_placed_on_movement_date:
+        what: Néhány főkönyvi sornak nincs ügyleti dátuma, ezért a banki dátuma választotta
+          ki az áfaidőszakot. Az áfa az ügylet teljesítésekor esedékes, nem a pénzmozgáskor.
+        what_to_do: Add meg az ügylet dátumát az időszak végén lévő soroknál, majd
+          számolj újra.
       iva_selected_scope_evidence_failure:
         what: Az ebben a nyilatkozatban szereplő áfa alapjául szolgáló nyilvántartásokból
           hiányzik az igazolás, vagy nem egyeznek.
@@ -1479,12 +1495,12 @@ application:
         ezért nem szerepel benne.'
       activity_undeclared: '{element}: a vásárlásához nincs tevékenységtípus, és egy
         másik eszközöd mezőgazdasági, ezért nem mezőgazdaságiként számít.'
-      advisory_imputation_period_ungrounded: 'A(z) {box} mező: {amount} levont adóelőleg
-        függőben van, mert nincs megerősítve, melyik időszakhoz tartozik. A levonás
-        annak a jövedelemnek az időszakához tartozik, amelyből levonták (RIRPF 79.
-        cikk), a nyilvántartásod pedig minden befizetést a bankba érkezés napjával
-        datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad (RIRPF
-        7.2. cikk; LIRPF 14.1.b cikk).'
+      advisory_imputation_period_ungrounded: 'A(z) {box} mező: {amount} összeg függőben
+        van, mert nincs megerősítve, melyik időszakhoz tartozik. A tevékenység bevételei
+        és kiadásai a teljesítéskor számítanak, a levonás pedig a jövedelmével együtt
+        (RIRPF 79. cikk), a nyilvántartásod viszont minden tételt a bankba érkezés
+        napjával datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad
+        (RIRPF 7.2. cikk; LIRPF 14.1.b cikk).'
       advisory_value_proven_zero: 'A(z) {box} mező: a nulla érvényes, mert az időszakban
         nincs olyan tétel, amelynek az időszaka kétséges lehetne.'
       agrarian_excluded: '{element}: mezőgazdasági tevékenységhez tartozik, ezért
@@ -1568,6 +1584,13 @@ application:
         meg, amely már nem létezik.'
       residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
         az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
+      retencion_soportada_absence_contradicted: '{income_class} jövedelemosztály:
+        vannak kifizetői rekordok, és a nyilatkozatod is, hogy egyetlen kifizető sem
+        vont le. Töröld a rekordokat, vagy vond vissza a nyilatkozatot.'
+      retencion_soportada_evidence_required: '{income_class} jövedelemosztály: nincs
+        kifizetői rekord és hiánynyilatkozat sem, a profilod pedig nem jelöli hiányzónak
+        ezt a jövedelmet. Rögzítsd minden kifizető igazolását, vagy jelentsd ki, hogy
+        egyetlen kifizető sem vont le.'
       row_unregistered: A(z) {row_date} napi, {row_amount} összegű tétel olyan eszközt
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
@@ -2290,6 +2313,21 @@ application:
       transaction_evidence_missing_output: Egy felszámított IVA-t tartalmazó kiállított
         számlához nincs alátámasztó bizonylat. Csatold a nyilvántartásaid megfelelő
         tételéhez.
+      undetermined_mixed_use_contributor: A(z) %{modelo} modell %{filing_year}. évi,
+        %{period} időszakra mentett számítása %{rows} vegyes használatú kiadást a
+        megadott arányban vett figyelembe költségkategória nélkül. Ha most számolsz,
+        ezek visszatartásra kerülnek, amíg meg nem adod a kategóriát. A mentett értékek
+        nem változtak.
+      withholding_count_exceeds_summary_perceptors: A Modelo %{source_modelo} (%{filing_year},
+        %{period}) a(z) %{casilla_id} mezőben %{declared_perceptors} kedvezményezettet
+        számol, de a Modelo %{modelo} az egész évre csak %{summary_perceptors} különböző
+        kedvezményezettet tartalmaz. Az éves összesítőben szerepelnie kell mindenkinek,
+        akit ez a mező számol. Vedd fel a hiányzó kedvezményezetteket ennek a modelónak
+        a részletezőjébe, vagy javítsd a számot a Modelo %{source_modelo} bevallásban.
+      withholding_count_not_cross_checked: 'A Modelo %{modelo} (%{filing_year}) nem
+        volt összevethető a Modelo %{source_modelo} bevallással a következő időszakokra:
+        %{unchecked_periods}, mert ezekről nincs rögzített bevallás. Összevetett időszakok:
+        %{checked_periods}. Ez nem jelenti azt, hogy ezekben senkinek sem fizettél.'
       withholding_detail_absent_against_ledger_evidence: 'A Modelo %{modelo} (%{filing_year})
         egyetlen kedvezményezettnek sem jelent be kifizetést, de a nyilvántartásaid
         szerint abban az évben adólevonás alá eső kifizetések történtek: %{contradicting_invoice_count}

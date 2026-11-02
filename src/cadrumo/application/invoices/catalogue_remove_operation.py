@@ -13,8 +13,8 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..ledger.read_access import resolve_ledger_request_commit_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
@@ -109,12 +109,9 @@ def resolve_invoice_remove_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile ledger rights and a fresh commit fence."""
-    if request.definition_id != INVOICE_REMOVE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InvoiceRemoveRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    return with_commit_action(resolved)
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=INVOICE_REMOVE_OPERATION_DEFINITION_ID, request_type=InvoiceRemoveRequest
+    )
 
 
 def build_invoice_remove_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

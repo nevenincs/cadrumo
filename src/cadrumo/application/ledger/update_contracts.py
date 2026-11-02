@@ -28,6 +28,7 @@ LEDGER_UPDATE_FIELD_NAMES = frozenset(
     {
         "booked_date",
         "value_date",
+        "operation_date",
         "amount",
         "direction",
         "currency",
@@ -49,6 +50,7 @@ LEDGER_UPDATE_REQUIRED_FIELD_NAMES = frozenset(
 LedgerUpdatePatchField = Literal[
     "booked_date",
     "value_date",
+    "operation_date",
     "amount",
     "direction",
     "currency",
@@ -62,7 +64,7 @@ LedgerUpdatePatchField = Literal[
     "group_label",
     "own_account_id",
 ]
-_UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=16)]
+_UpdateFields = Annotated[tuple[LedgerUpdatePatchField, ...], Field(min_length=1, max_length=17)]
 LEDGER_UPDATE_TEXT_MAX = 4096
 """The longest description, counterparty or notes a ledger correction takes."""
 LEDGER_GROUP_LABEL_MAX = 64
@@ -84,6 +86,7 @@ class LedgerUpdatePatch(BaseModel):
 
     booked_date: _IsoDateText | None = None
     value_date: _IsoDateText | None = None
+    operation_date: _IsoDateText | None = None
     amount: _DecimalText | None = None
     direction: Annotated[str, Field(min_length=1, max_length=32)] | None = None
     currency: Annotated[str, Field(min_length=1, max_length=16)] | None = None
@@ -97,7 +100,7 @@ class LedgerUpdatePatch(BaseModel):
     group_label: Annotated[str, Field(max_length=LEDGER_GROUP_LABEL_MAX)] | None = None
     own_account_id: OwnAccountId | None = None
 
-    @field_validator("booked_date", "value_date")
+    @field_validator("booked_date", "value_date", "operation_date")
     @classmethod
     def _iso_dates(cls, value: str | None) -> str | None:
         if value is None:

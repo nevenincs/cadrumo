@@ -42,7 +42,7 @@ class _FinancialProviderBoundary(FinancialProviderProtocol):
         """Yield application rows while translating provider failures."""
         try:
             for row in self._provider.ingest(path):
-                yield LedgerParsedRow(raw=row.raw, direction=row.direction)
+                yield LedgerParsedRow(raw=row.raw, direction=row.direction, operation_date=row.operation_date)
         except FinancialProviderError as exc:
             raise _translate_provider_error(exc, operation="ingest", path=path) from exc
 

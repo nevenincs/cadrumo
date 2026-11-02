@@ -18,6 +18,8 @@ from collections.abc import Sequence
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
+
 from ...application.modelo.revision_inventory_operation import ModeloRevisionInventoryRow
 from ...application.modelo.selectors import ModeloCalculationRevisionSelector
 from ...core.external_constants import OutputLanguage
@@ -27,7 +29,7 @@ from ._modelo_rendering import (
     short_id,
 )
 from ._modelo_work_revision_payloads import WorkObservationsResult, WorkRevisionResult
-from .common import activate_subcommand_output_language, emit_envelope
+from .common import emit_envelope
 from .modelo_results import (
     CalculationRevisionSummaryPayload,
     WorkRevisionsResult,

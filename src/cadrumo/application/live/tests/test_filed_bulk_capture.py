@@ -17,6 +17,7 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 
 from ....core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ....core.observed_header_fact import ObservedHeaderFact
+from ....core.operations import OperationEffect
 from ....core.period import Period
 from ....domain.buckets.event import BucketEvent
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
@@ -30,6 +31,7 @@ from ..errors import (
     LiveIvaAcquisitionFailureMode,
     LiveIvaSurfaceTimeoutError,
 )
+from ..filed_bulk_capture_operation import bulk_capture_effect
 from ..filed_capture_accumulator import FiledCaptureAccumulator
 from ..filed_capture_queries import (
     await_filed_register_walk,
@@ -921,3 +923,34 @@ def test_bulk_capture_refuses_duplicate_coordinates_before_register_contact(tmp_
         )
     assert register.opened == 0
     assert register.walks == []
+
+
+@pytest.mark.parametrize(
+    ("sync_run_ref", "effect"),
+    [
+        (None, OperationEffect.NONE),
+        ("sync-run:filed_declarations:" + "a" * 64, OperationEffect.UPDATED),
+    ],
+    ids=["no-sync-run", "recorded-sync-run"],
+)
+def test_bulk_capture_effect_is_an_update_only_when_a_sync_run_was_recorded(
+    sync_run_ref: str | None, effect: OperationEffect
+) -> None:
+    report = BulkFiledDataCaptureReport(
+        output_root="var/aeat/filed-declarations",
+        modelos=("303",),
+        year_from=2025,
+        year_to=2025,
+        captured_count=0,
+        reached_count=0,
+        failed_count=0,
+        pair_outcomes=(),
+        observation_paths=(),
+        artefact_refs=(),
+        casilla_count=0,
+        calculation_observation_count=0,
+        calculation_observation_keys=(),
+        sync_run_ref=sync_run_ref,
+    )
+
+    assert bulk_capture_effect(report) is effect

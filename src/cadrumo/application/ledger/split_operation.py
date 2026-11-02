@@ -40,7 +40,7 @@ from .actions_split_merge import split_transaction
 from .id_resolution import resolve_transaction_id
 from .models import SplitChildCommand, SplitTransactionResult
 from .pinned_transaction_repository import PinnedRevisionedTransactionRepository
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_SPLIT_OPERATION_DEFINITION_ID = "ledger.split.manual"
 LEDGER_SPLIT_PHASE = "ledger.split.manual"
@@ -457,12 +457,9 @@ def resolve_ledger_split_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile whole-ledger consent and COMMIT for manual split."""
-    if request.definition_id != LEDGER_SPLIT_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        LedgerSplitRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_SPLIT_OPERATION_DEFINITION_ID, request_type=LedgerSplitRequest
+    )
 
 
 def build_ledger_split_registration(

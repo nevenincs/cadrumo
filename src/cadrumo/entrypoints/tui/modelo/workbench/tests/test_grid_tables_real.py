@@ -18,7 +18,6 @@ from rich.style import Style
 from textual.app import App, ComposeResult
 from textual.widgets import Static
 
-from ......application.modelo.work_form import build_modelo_work_form
 from ......application.modelo.work_form_models import (
     NEEDS_ATTENTION,
     ORIGIN_STANDINGS,
@@ -37,20 +36,11 @@ from ......application.modelo.work_form_models import (
     address_key,
     revised_field,
 )
-from ......application.modelo.work_form_service import modelo_form_snapshot
-from ......application.modelo.work_review import (
-    ModeloWorkProgress,
-    ModeloWorkReview,
-    build_modelo_work_review_casillas,
-)
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......core.i18n.render import lookup_translation
-from ......core.modelo_work_progress_state import ModeloWorkProgressState
-from ......core.period import Period
 from ......domain.calculations.registry.authority import PinnedAuthorityOperation
 from ......domain.calculations.registry.schema_form_layouts import FormCellKind
-from ......domain.modelos.codes import ModeloCode
 from ....components.host import ScreenHostApp
 from ....components.theme import install_cadrumo_themes
 from ....tests.settling import settle
@@ -78,7 +68,7 @@ from ..vocabulary import (
     NOT_IMPORTED_MARK,
     Attention,
 )
-from .workbench_fixture import FakeReader, form_field, synthetic_form
+from .workbench_fixture import FakeReader, form_field, registry_form_of, synthetic_form
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -99,33 +89,13 @@ _PRORRATAS_PAGE: Final[str] = "dp30305"
 def _form(
     operation: PinnedAuthorityOperation, modelo: str = "303", year: int = 2026, code: str = "1T"
 ) -> ModeloWorkForm:
-    period = Period.from_year_and_code(year, code)
-    revision_id = str(operation.revision_for_context(modelo, filing_year=year, period=code).id)
-    snapshot = modelo_form_snapshot(operation, ModeloCode(modelo), year, period, revision_id)
-    review = ModeloWorkReview(
-        bucket_id="13000000-0000-4000-8000-000000000457",
+    return registry_form_of(
+        operation,
         modelo=modelo,
-        filing_year=year,
-        period=period,
-        registry_revision_id=snapshot.revision.id,
+        year=year,
+        code=code,
+        bucket_id="13000000-0000-4000-8000-000000000457",
         work_unit_id="f" * 64,
-        calculation_revision_id=None,
-        lifecycle_state=None,
-        verification_outcome=None,
-        progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
-        casillas=build_modelo_work_review_casillas(snapshot=snapshot, revision=None, operation=operation),
-        findings=(),
-        blockers=(),
-    )
-    return build_modelo_work_form(
-        review=review,
-        snapshot=snapshot,
-        layout=operation.form_layout(modelo, snapshot.revision.id),
-        revision=None,
-        permitted_surface=None,
-        entered_casilla_ids=None,
-        overridden_binding_ids=None,
-        language=OutputLanguage.EN,
     )
 
 

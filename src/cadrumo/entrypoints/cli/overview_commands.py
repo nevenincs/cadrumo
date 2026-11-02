@@ -8,6 +8,7 @@ from uuid import UUID
 import typer
 
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
 
@@ -46,13 +47,7 @@ from ._overview_rendering import (
     overview_prepare_output,
     overview_status_output,
 )
-from .common import (
-    activate_subcommand_output_language,
-    attach_cli_policy_verdict,
-    bad,
-    emit_envelope,
-    resolve_notice_action,
-)
+from .common import attach_cli_policy_verdict, bad, emit_envelope, resolve_notice_action
 from .operation_overview import OverviewReadCompletion, read_overview
 from .operation_overview_pipeline import read_overview_pipeline
 from .overview_results import OverviewCalendarResult, OverviewDraftPayload, OverviewStatusResult

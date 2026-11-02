@@ -15,12 +15,11 @@ from uuid import UUID
 from pydantic import BaseModel, Field, NonNegativeInt, field_validator, model_validator
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
-from ...core.hashing import canonical_json_bytes
 from ...core.hex import Hex64Str
 from ...core.identity.bucket import BucketId
 from ...core.identity.digest import ContentDigest
@@ -49,19 +48,19 @@ from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationSchemaBindingV1,
 )
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .evidence import MediaKind, PurchaseInvoiceEvidence, PurchaseInvoiceEvidenceService
 from .evidence_errors import PurchaseInvoiceEvidenceNotFoundError
 from .evidence_ports import LedgerEvidencePortsFactory
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 
 LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID = "ledger.evidence.list"
 LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID = "ledger.evidence.view"
 LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID = "ledger.evidence.query"
 LEDGER_EVIDENCE_VIEW_NOT_FOUND_REFUSAL_CODE = "REFUSED_LEDGER_EVIDENCE_NOT_FOUND"
 _MAX_EVIDENCE_LIST_ROWS = 4_096
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 _EvidenceIdentity = Annotated[str, Field(min_length=1, max_length=64)]
 _SourcePath = Annotated[str, Field(min_length=1, max_length=4_096)]
@@ -425,8 +424,7 @@ def _project_query_result(result: BaseModel, receipt: OperationTerminalReceipt, 
 
 def _check_result_size(result: BaseModel) -> None:
     """Refuse a public read result that cannot fit the bounded projection document."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES)
 
 
 class LedgerEvidenceReadExecutor:
@@ -693,45 +691,33 @@ def build_ledger_evidence_query_definition(ports_factory: LedgerEvidencePortsFac
 def _resolve_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceListRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_LIST_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceListRequest,
     )
 
 
 def _resolve_view_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceViewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_VIEW_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceViewRequest,
     )
 
 
 def _resolve_query_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
-    if request.definition_id != LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceQueryRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(
+    return resolve_ledger_request_read_access(
         request,
         context,
-        profile_id=request.payload.profile_id,
-        periods=frozenset(),
+        definition_id=LEDGER_EVIDENCE_QUERY_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceQueryRequest,
     )
 
 

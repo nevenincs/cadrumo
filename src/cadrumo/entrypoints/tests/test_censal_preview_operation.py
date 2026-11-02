@@ -18,9 +18,9 @@ from cadrumo.application.live.tests.unopened_live_ports import (
     unopened_browser_session_factory,
     unopened_censal_fetch,
 )
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.models import OperationRequest
-from cadrumo.application.operations.registry import OperationFrontendProjection, OperationRegistry
+from cadrumo.application.operations.registry import OperationRegistry
 from cadrumo.application.user_profile.capsule_record import ProfileRecordStore
 from cadrumo.application.user_profile.censal_operation import CensalProfileBaseline
 from cadrumo.application.user_profile.censal_preview_operation import (
@@ -47,6 +47,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
 
 from . import registered_executor_case_support as conformance
+from .supervised_operation_rig import operation_access_context
 from .test_censal_operation_operand import _operand
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -314,13 +315,10 @@ def test_censal_preview_start_leaves_provider_readiness_to_the_worker_preflight(
     resolved = resolve_operation_access(
         registry=registry,
         request=request,
-        context=OperationAccessContext(
+        context=operation_access_context(
+            registry.lookup_public_contract(CENSAL_PREVIEW_OPERATION_DEFINITION_ID),
             profile_id=profile_id,
-            destination_id=uuid4(),
             action=AccessAction.START,
-            frontend=OperationFrontendProjection.CLI,
-            contract=registry.lookup_public_contract(CENSAL_PREVIEW_OPERATION_DEFINITION_ID),
-            published_authority=Availability.AVAILABLE,
         ),
     )
 

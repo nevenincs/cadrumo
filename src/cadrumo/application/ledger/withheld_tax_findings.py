@@ -63,6 +63,22 @@ def _band_finding(row: StructuredWithheldTax) -> DraftDiscrepancyFinding | None:
     )
 
 
+def _unread_findings(taxes: tuple[StructuredWithheldTax, ...], stated: Decimal | None) -> list[DraftDiscrepancyFinding]:
+    findings: list[DraftDiscrepancyFinding] = []
+    if not taxes and stated is not None and stated != 0:
+        findings.append(_unread_finding(None, stated))
+    findings.extend(
+        _unread_finding(row.stated_type, row.amount)
+        for row in taxes
+        if not row.is_irpf and row.amount is not None and row.amount != 0
+    )
+    return findings
+
+
+def _band_findings(taxes: tuple[StructuredWithheldTax, ...]) -> list[DraftDiscrepancyFinding]:
+    return [finding for row in taxes if row.is_irpf and (finding := _band_finding(row)) is not None]
+
+
 def withheld_tax_findings(record: StructuredInvoiceRecord) -> tuple[DraftDiscrepancyFinding, ...]:
     """Return the findings a record's withheld figures raise, in a stable order.
 
@@ -72,16 +88,9 @@ def withheld_tax_findings(record: StructuredInvoiceRecord) -> tuple[DraftDiscrep
     """
     taxes = record.withheld_taxes
     stated = record.withheld_total
-    findings: list[DraftDiscrepancyFinding] = []
-    if not taxes and stated is not None and stated != 0:
-        findings.append(_unread_finding(None, stated))
-    findings.extend(
-        _unread_finding(row.stated_type, row.amount)
-        for row in taxes
-        if not row.is_irpf and row.amount is not None and row.amount != 0
-    )
+    findings = _unread_findings(taxes, stated)
     if taxes and stated is not None and (total := _total_finding(taxes, stated)) is not None:
         findings.append(total)
     if record.retencion_rate is None:
-        findings.extend(finding for row in taxes if row.is_irpf and (finding := _band_finding(row)) is not None)
+        findings.extend(_band_findings(taxes))
     return tuple(findings)

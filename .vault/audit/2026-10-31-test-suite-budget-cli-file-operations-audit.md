@@ -3,14 +3,12 @@ tags:
   - '#audit'
   - '#test-suite-budget'
 date: '2026-10-31'
-modified: '2026-10-31'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:28127e2aea33be16c71b90e6da977d8d6db870c4b1fbe98449a57e0bb18a1d4c'
+body_hash: 'sha256:757d651e129565d2f8326cac36fa6a45a6c79498b2362d074caac92f1b15b2cc'
 related:
   - "[[2026-10-30-test-suite-budget-plan]]"
 ---
-
-
 
 # `test-suite-budget` audit: `cli-file-operations`
 

@@ -32,10 +32,17 @@ value a confirm is about to persist.
 
 from __future__ import annotations
 
-from ...core.identity.tax_id import same_tax_identifier
+from typing import TYPE_CHECKING
+
+from ...core.identity.documents import IdentityError
+from ...core.identity.tax_id import same_tax_identifier, validate_spanish_tax_id
+from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ...domain.iva.schema import InvoiceKind
 from .evidence_errors import PurchaseInvoiceEvidenceInputError
 from .preconditions import LedgerPreconditionCondition, ledger_no_recovery_verdict
+
+if TYPE_CHECKING:
+    from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 
 __all__ = [
     "agreed_counterparty_tax_id",
@@ -229,6 +236,20 @@ def refuse_a_counterparty_that_is_the_filer(counterparty_tax_id: str) -> None:
     )
 
 
+def _without_printed_country_prefix(tax_id: str, *, operation: PinnedAuthorityOperation) -> str:
+    """Return the issuer's identifier without the ``ES`` a document may print before it.
+
+    The profile holds the bare NIF while an e-invoice's seller block commonly
+    prints the VAT form. The Spanish identifier owner knows that prefix, so the
+    printed form is canonicalised through it; an identifier it does not accept
+    keeps its printed form and is compared as it stands, never loosened.
+    """
+    try:
+        return validate_spanish_tax_id(tax_id, runtime_tax_id_format(authority=operation))
+    except IdentityError:
+        return tax_id
+
+
 def refuse_an_issued_document_the_filer_did_not_issue(
     *,
     kind: InvoiceKind,
@@ -284,11 +305,12 @@ def refuse_an_issued_document_the_filer_did_not_issue(
             profile = load_active_taxpayer_profile(
                 workflow_state_repository().load(), schema=operation.profile_schema()
             )
+            printed_issuer = _without_printed_country_prefix(extracted_supplier_tax_id, operation=operation)
     except WizardStatusError:
         return
     # The loader raises rather than returning None, and that failure is already
     # handled by the except clause above, so the former None guard was unreachable.
-    if counterparty_is_the_filer(counterparty_tax_id=extracted_supplier_tax_id, profile=profile):
+    if counterparty_is_the_filer(counterparty_tax_id=printed_issuer, profile=profile):
         return
     raise PurchaseInvoiceEvidenceInputError(
         "this document names another issuer, so it cannot be confirmed as issued by you; "

@@ -454,12 +454,13 @@ cli:
           T háromszögügylet, S nyújtott szolgáltatás, I igénybe vett szolgáltatás,
           R vevői készlet áthelyezése, D vevői készlet visszaszállítása, C vevői készlet
           címzettcseréje'
-        preview_help: 'Számlatervezet előnézete: az összegek, az észrevételek és az
-          ítélet, amelyet a létrehozási művelet adna, bármi mentése nélkül.'
-        preview_line_help: Egy tervezeti számlasorhoz ismételhető JSON-objektum, opcionális
-          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` és
-          `iva_amount` mezőkkel. A kihagyott összeg ismeretlen marad. Használd a --taxable-base
-          helyett.
+        preview_help: 'Előnézetet ad egy számlavázlatról: azokat az összegeket, észrevételeket
+          és döntést, amelyekre a felvétel jutna, anélkül, hogy bármit mentene. A
+          partner adószáma (counterparty_nif) és a vázlat sorai (lines, sorobjektumok
+          JSON-tömbje, opcionális key, description, quantity, unit_price, iva_rate,
+          subtotal és iva_amount mezőkkel; a kihagyott összeg ismeretlen marad; a
+          --taxable-base helyett használd) egy JSON-objektumként érkeznek a --secrets-stdin
+          vagy a --secrets-fd csatornán.'
         preview_operation_date_role_help: A helyesítés által megismételt számla teljesítési
           dátumának tárolt szerepe.
         preview_printed_total_help: A dokumentumra nyomtatott végösszeg, amelyet a
@@ -615,6 +616,49 @@ cli:
         validate_help: Arányok érvényesítése az alkalmas kategóriák és korlátok szerint.
         year_help: Az az adóév, amelynek kategóriaprofiljai a törvényes arányokat
           adják. Alapértelmezés szerint az aktuális év.
+      retencion_soportada:
+        absence_invalid_input: 'Egy érték érvénytelen: ellenőrizd az adóévet, a megjegyzést
+          (legfeljebb 500 karakter) és a változatot.'
+        absence_note_help: Miért nem vont le egyetlen kifizető sem adóelőleget erre
+          a jövedelemosztályra. Kötelező.
+        attest_absence_expected_revision_help: A visszavont nyilatkozat változata,
+          amelyet felváltasz. Első nyilatkozatnál hagyd el.
+        attest_absence_help: Kijelented, hogy egy adóévben egyetlen kifizető sem vont
+          le adóelőleget egy jövedelemosztályra. Ez a saját nyilatkozatod, nem a kifizető
+          igazolása.
+        ejercicio_help: Az ejercicio (év), amelyhez a jövedelem tartozik.
+        evidence_sha256_help: Az igazolás fájljának SHA-256 értéke; payer_certificate
+          esetén kötelező.
+        group_help: Rögzítsd a kifizetőid igazolásai szerinti levonásokat.
+        importe_integro_help: A kifizető által fizetett pénzbeli jövedelem a levonás
+          előtt.
+        income_class_help: A jövedelemosztály, amelyre a kifizető levonást alkalmazott,
+          például trabajo.
+        ingreso_a_cuenta_help: A természetbeni jövedelemre a kifizető által teljesített
+          ingreso a cuenta. Teljes összegében jóváírásnak számít.
+        ingreso_a_cuenta_repercutido_help: Az ingreso a cuenta rád áthárított része.
+          Nem haladhatja meg az ingreso a cuentát.
+        invalid_input: 'Egy érték érvénytelen: ellenőrizd a kifizetői hivatkozást,
+          a revíziót és az igazolás ujjlenyomatát.'
+        list_help: Listázd egy ejercicio kifizetői rekordjait adóazonosító nélkül.
+        origin_help: 'Ki állítja az adatokat: payer_certificate vagy operator_declaration.'
+        payer_name_help: A kifizető cégneve.
+        payer_ref_help: A lista által mutatott kifizetői hivatkozás (payer_ref).
+        payer_tax_id_help: A levonást végző kifizető NIF-je.
+        record_expected_revision_help: A lista által mutatott revízió egy tárolt rekord
+          cseréjéhez. Első rekordnál hagyd el.
+        record_help: Rögzítsd vagy cseréld le egy kifizető igazolásának adatait egy
+          ejercicióra és jövedelemosztályra.
+        remove_expected_revision_help: A lista által a törlendő rekordhoz mutatott
+          revízió.
+        remove_help: Törölj egy kifizetői rekordot a lista által mutatott revízió
+          védelmében.
+        retencion_help: A kifizető által levont összeg euróban, legfeljebb két tizedesjeggyel.
+        valoracion_especie_help: A természetbeni juttatás értéke.
+        withdraw_absence_expected_revision_help: A változat, amellyel a nyilatkozatot
+          mentették.
+        withdraw_absence_help: Visszavonsz egy hiánynyilatkozatot; a mentéskori változat
+          védi.
       rule:
         actor_help: Azonosítód, amely a szabály eredeteként kerül rögzítésre.
         add_help: Osztályozási szabály hozzáadása, amely automatikusan osztályozza
@@ -637,10 +681,29 @@ cli:
         list_empty: (nincsenek tárolt szabályok)
         list_header: "prioritás\tosztályozás\tminta\trule_id"
         list_help: Tárolt osztályozási szabályok listázása prioritás szerint.
+        pattern_overrun: A minta nem tudta befejezni a főkönyv leírásainak keresését
+          az időkorláton belül, ezért nem lett mentve. Egyszerűsítsd, például kerüld
+          az ismétlésen belüli ismétlést.
         priority_help: 'Numerikus prioritás; az alacsonyabb érték kerül előbb kiértékelésre
           (alapértelmezett: 100).'
+        remove_created_at_help: A szabály létrehozási ideje a listázás szerint (ISO
+          8601, időeltolással); a szabály csak akkor törlődik, ha még ez az ideje.
+        remove_created_at_invalid: A --created-at értéke időeltolással megadott ISO
+          8601 dátum és idő legyen, ahogy a szabály listázásakor szerepel.
+        remove_help: Töröl egy mentett besorolási szabályt, például olyat, amelynek
+          a mintája nem kereshető.
+        remove_not_found: Nincs mentett szabály a(z) %{rule_id} azonosítóval. Semmi
+          sem változott.
+        remove_rule_id_help: A törlendő szabály teljes azonosítója, ahogy a rule list
+          JSON-kimenete mutatja.
+        remove_stale: 'A(z) %{rule_id} mentett szabályt újra elmentették ekkor: %{created_at},
+          ami nem az általad megadott idő. Semmi sem törlődött; listázd a szabályokat,
+          és ellenőrizd.'
         trial_help: Kipróbál egy nem mentett mintát a szabálymotorral, és megmondja,
-          a megadott tételek közül melyeket találja meg, mentés nélkül.
+          a megnevezett mozgások közül melyeket találja meg, anélkül, hogy bármit
+          mentene. A minta egy JSON-objektum description_pattern mezőjeként érkezik
+          a --secrets-stdin vagy a --secrets-fd csatornán, vagy visszhangmentes kérdésre.
+        trial_pattern_prompt: 'Kipróbálandó minta: '
         trial_transaction_id_help: Megismételhető azonosítója annak a tételnek, amelyen
           a mintát kipróbálod.
     live:
@@ -672,8 +735,9 @@ cli:
         list_help: Mentett Modelo 100 borrador pillanatképek listázása.
         modelo_100_help: Modelo 100 borrador pillanatkép-parancsok.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
-        snapshot_schema_outdated: '%{count} korábbi verzióval mentett borrador-pillanatkép
-          nem olvasható. Importáld újra a dokumentumot.'
+        snapshot_schema_outdated: '%{count} borrador-pillanatkép ebben a profilban
+          korábbi formátumban van mentve, amelyet a Cadrumo már nem olvas. Ha újra
+          importálod a dokumentumot, új, aktuális pillanatkép jön létre.'
         state_help: 'Pillanatkép-állapot szűrő: `active`, `superseded`, `discarded`
           vagy `all`.'
         view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.
@@ -3094,6 +3158,9 @@ cli:
       iva_amount_help: Opcionális IVA-összeg a soron.
       iva_rate_help: Opcionális IVA-kulcs tizedes törtként.
       notes_help: A megjegyzéseid, a tranzakcióval együtt tárolva.
+      operation_date_help: Az áfa esedékessége a LIVA 75. cikke szerint, ez választja
+        ki az áfaidőszakot (ÉÉÉÉ-HH-NN). Előlegnél a beérkezés napja. Ha kihagyod,
+        a banki dátum számít, és figyelmeztetést kapsz.
       prorrata_reference_help: IVA prorrata alapjának hivatkozása.
       prorrata_sector_help: Annak a megkülönböztetett szektornak az azonosítója (LIVA
         9.1.c és 101. cikk), amelyhez ez a bemenet tartozik; egyeznie kell egy már
@@ -3239,6 +3306,12 @@ cli:
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
         domestic_not_subject).
       iva_rate_help: IVA-kulcs tizedes törtként, pl. 0,21.
+      iva_vehicle_use_help: 'Mire használják a sor járművét, ha a LIVA 95.Tres.2.ª
+        cikke kiveszi az 50 százalékos vélelem alól: a hat, 100 százalékosnak vélelmezett
+        használat egyike (mixed_vehicle_goods_transport, paid_passenger_transport,
+        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
+        surveillance), vagy outside_presumed_classes, ha a szabály nem nevezi meg
+        a járművet.'
       llm_classified_by_label: osztályozta
       llm_confidence_label: bizonyosság
       llm_exclusive: --llm nem kombinálható a --classification vagy --file kapcsolóval;
@@ -3443,6 +3516,7 @@ cli:
       'no': Nem
       notes: Megjegyzések
       notice: Értesítés
+      operation_date: Ügylet dátuma
       output: Kimenet
       parent_id: Szülő tranzakcióazonosító
       pending: Felülvizsgálatra vár
@@ -3594,14 +3668,13 @@ cli:
         N gyermek tranzakciót).
     staged_check_category_help: Ismételhető költségkategória, amelyet egy besorolással
       vetünk össze.
-    staged_check_draft_help: 'Ismételhető JSON-objektum egy új tételhez: `key` és
-      `fields`.'
-    staged_check_help: Megválaszolja az előkészített könyvelési munkát úgy, ahogy
-      az írási műveletek fogadnák, semmit sem ment.
+    staged_check_help: Megválaszolja, hogyan fogadnák az írók az előkészített főkönyvi
+      munkát, anélkül, hogy bármit mentene. Az előkészített sorok (rows, transaction_id,
+      cells és opcionális evidence_staged és m210_staged mezőjű objektumok JSON-tömbje)
+      és az új mozgások (drafts, key és fields mezőjű objektumok JSON-tömbje) egy
+      JSON-objektumként érkeznek a --secrets-stdin vagy a --secrets-fd csatornán.
     staged_check_invalid: Minden előkészített sornak és piszkozatnak a várt alakú
       JSON-objektumnak kell lennie.
-    staged_check_row_help: 'Ismételhető JSON-objektum egy tételhez: `transaction_id`,
-      `cells`, és szükség esetén `evidence_staged` és `m210_staged`.'
     stash:
       help: Egyetlen tranzakció félretétele (`stash`) a nyilvántartásban az aktív
         profilban.
@@ -3631,6 +3704,8 @@ cli:
       iva_amount_help: Új IVA-összeg.
       iva_rate_help: Új IVA-kulcs tizedes törtként.
       notes_help: Az új megjegyzéseid.
+      operation_date_help: Az áfa új esedékessége a LIVA 75. cikke szerint (ÉÉÉÉ-HH-NN).
+        Előlegnél a beérkezés napja.
       taxable_base_help: Új ÁFA-mentes alapösszeg.
       value_date_help: Új értékdátum (ÉÉÉÉ-HH-NN).
     view:

@@ -93,6 +93,7 @@ export function valueText(
   switch (field) {
     case "booked_date":
     case "value_date":
+    case "operation_date":
       return formatDay(locale, value);
     case "direction":
       return directionLabel(t, value);

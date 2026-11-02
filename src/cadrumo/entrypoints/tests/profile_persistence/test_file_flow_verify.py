@@ -68,6 +68,7 @@ from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import
     VERIFY_PERIOD,
     VERIFY_REVISION,
     Repos,
+    calculate_baseline_130_revision,
     canonical_work_unit_period,
     registry_required_manual_casillas,
     seed_modelo_193_work_unit,
@@ -103,14 +104,7 @@ def test_verify_refuses_persisted_registry_revision_divergence(repos: Repos) -> 
     """Verification cannot interpret a stored calculation under a different schema."""
     wu_repo, cr_repo, _, _vr_repo, _bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            clock=T1,
-        )
+    revision = calculate_baseline_130_revision(work_unit)
     stale = revision.model_copy(
         update={
             "registry_snapshot_ref": revision.registry_snapshot_ref.model_copy(
@@ -160,14 +154,7 @@ def test_verify_grants_for_a_closed_past_period_real_registry(repos: Repos, monk
     wu_repo, cr_repo, _, _vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo, filing_year=2024)
 
-    with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            clock=T1,
-        )
+    revision = calculate_baseline_130_revision(work_unit)
 
     reads: list[str] = []
     load = cr_repo.load
@@ -374,14 +361,7 @@ def test_verify_grants_when_all_required_casillas_present_real_registry(
         period=work_unit.period.registry_token,
     )
 
-    with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            clock=T1,
-        )
+    revision = calculate_baseline_130_revision(work_unit)
 
     report = verify_revision(
         revision.calculation_revision_id,
@@ -531,14 +511,7 @@ def test_verify_reverify_collapses_to_existing_report_real_registry(
 
     wu_repo, cr_repo, fr_repo, _vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            clock=T1,
-        )
+    revision = calculate_baseline_130_revision(work_unit)
     seed_clean_cross_period_sources(
         work_unit,
         work_unit_repository=wu_repo,
@@ -696,14 +669,7 @@ def test_list_and_get_verification_reports_real_registry(repos: Repos) -> None:
 
     wu_repo, cr_repo, _, vr_repo, bv_repo = repos
     work_unit = seed_work_unit(wu_repo)
-    with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
-            ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
-            casilla_inputs=DEFAULT_130_BASELINE_INPUTS,
-            binding_values=DEFAULT_130_BINDING_VALUES,
-            clock=T1,
-        )
+    revision = calculate_baseline_130_revision(work_unit)
     report = verify_revision(
         revision.calculation_revision_id,
         revision=revision,

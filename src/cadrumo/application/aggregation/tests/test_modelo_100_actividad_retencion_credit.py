@@ -71,7 +71,7 @@ from ...modelo.calculation_screen import calculation_screen_stamp
 from ...modelo.printed_boxes import snapshot_printed_boxes
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
-from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
+from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
 from .renta_income_aggregation_support import _period, catalogue_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
@@ -249,6 +249,7 @@ def _resolve(
             filing_year=_YEAR,
             period=_period(_YEAR, period_code),
             revision=revision,
+            profile=cash_criterion_profile(_YEAR),
         ),
     )
 
@@ -417,6 +418,10 @@ def test_a_proven_zero_over_rows_without_withholding_passes(operation: PinnedAut
     emitted, persisted = _calculated(operation, resolution)
     (note,) = [item for item in emitted.diagnostics if item.reason == _ADVISORY_REASON]
     assert note.value_outcome is BindingValueOutcome.PROVEN_ZERO
+    # The proven zero persists, so a reopened declaration still says it stands, and it withholds nothing.
+    (proven,) = [issue for issue in persisted if issue.casilla_id == "0599"]
+    assert proven.value_outcome is BindingValueOutcome.PROVEN_ZERO
+    assert _refused_reasons(operation, (proven,)) is None
     assert _refused_reasons(operation, persisted) is None
 
 

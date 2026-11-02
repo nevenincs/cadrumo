@@ -299,10 +299,11 @@ def test_a_retention_that_disagrees_is_refused(
 ) -> None:
     settled = _confirm(runtime, operation, **statement)
 
-    # The invoice's own figure check stops it before anything is written.
-    assert settled.condition is OperationTerminalCondition.FAILED
+    # The invoice's own figure check stops it before anything is written, as a typed refusal.
+    assert settled.condition is OperationTerminalCondition.REFUSED
     assert isinstance(settled.published, OperationErrorDetailV1)
-    assert "value_error" in settled.published.model_dump_json()
+    assert settled.published.error_code == "REFUSED_INVOICE_RETENTION_FIGURES"
+    assert "value_error" not in settled.published.model_dump_json()
     assert not InvoiceCatalogueRepository(bucket_id=str(runtime.profile_id)).load().invoices
 
 

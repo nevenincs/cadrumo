@@ -132,7 +132,7 @@ def test_refused_global_sign_out_closes_connection_without_clearing_pointer(monk
     pointer = BucketPointer.selected(bucket_id=str(client.profile_id), transition_revision=1)
     monkeypatch.setattr(profile_selection, "runtime_selected_profile_id", lambda: pointer.bucket_id)
     monkeypatch.setattr(profile_selection, "runtime_login_target", lambda _: None)
-    monkeypatch.setattr(custody, "_activate_subcommand_output_language", lambda *_: None)
+    monkeypatch.setattr(custody, "activate_subcommand_output_language", lambda *_: None)
     monkeypatch.setattr(
         profile_pointer, "active_profile_pointer_transaction", lambda *_: pytest.fail("premature clear")
     )

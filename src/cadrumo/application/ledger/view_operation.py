@@ -27,7 +27,7 @@ from .history_query import LedgerHistoryQuery, read_ledger_history
 from .id_resolution import resolve_lineage_transaction
 from .list_query import LLM_DECISION_EVENT_TYPES
 from .manual_read import get_manual_transaction, ledger_transaction_result_payload
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 from .transaction_projection import LedgerTransactionProjection
 
 LEDGER_VIEW_OPERATION_DEFINITION_ID = "ledger.view"
@@ -138,8 +138,6 @@ def resolve_ledger_view_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Protect the complete transaction and its cross-period decision lineage."""
-    if request.definition_id != LEDGER_VIEW_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerViewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_VIEW_OPERATION_DEFINITION_ID, request_type=LedgerViewRequest
+    )

@@ -1,8 +1,7 @@
 """The repository-wide exit-code contract.
 
 A command's exit code is its contract with CI and with the developer. This
-module states that contract once, as data, so every repository in the fleet
-means the same thing by the same number. It is stdlib-only and imports nothing
+module states that contract once, as data. It is stdlib-only and imports nothing
 from the rest of ``dev`` so that any instrument - including one that runs
 before the virtual environment exists - can depend on it.
 
@@ -17,15 +16,13 @@ Verb classes, keyed to CONSEQUENCE:
     GATES. Read-only. A finding is a verdict and fails the build.
 ``fix``
     MUTATES. Exits :data:`OK` on success whether or not it changed anything.
-    Under :data:`FIX_STRICT_ENV` (set by CI) a fix that HAD to change
-    something exits :data:`DRIFT`, because in CI a repairable defect is an
-    uncommitted repair.
+    Under :data:`FIX_STRICT_ENV` a fix that HAD to change something exits
+    :data:`DRIFT`, because a repairable defect is then an uncommitted repair.
 ``test``
-    GATES. Additionally, a lane that ran nothing exits
-    :data:`NOTHING_SELECTED` - never :data:`OK`.
+    GATES.
 ``audit``
-    ADVISORY, except the DEPENDENCY audit, which GATES. A published advisory
-    against a pinned version is a verdict; every other scan yields a lead.
+    ADVISORY. Findings are leads, not verdicts; the dependency vulnerability
+    scan is therefore a ``check``.
 ``build``
     GATES.
 ``health``
@@ -45,8 +42,8 @@ OK = 0
 #: Generic failure: the command ran and reported a gating result.
 FAILED = 1
 
-#: `just init`: a required HOST tool is absent (L6). Reserved fleet-wide so
-#: nothing else claims it. Outside `init`, an absent executable discovered at
+#: `just init`: a required HOST tool is absent. Reserved so nothing else
+#: claims it. Outside `init`, an absent executable discovered at
 #: dispatch time is :data:`TOOL_MISSING`, which carries the shell's own
 #: command-not-found meaning and needs no lookup table.
 INIT_HOST_TOOL_MISSING = 2
@@ -59,10 +56,10 @@ INIT_STEP_FAILED = 4
 
 #: Managed content drifted from its generated form. Emitted by `fix` under
 #: :data:`FIX_STRICT_ENV`, and by `init` when the lockfile and environment
-#: disagree (L6).
+#: disagree.
 DRIFT = 5
 
-#: `just init`: the environment is held open by another process (L6).
+#: `just init`: the environment is held open by another process.
 INIT_LOCKED = 6
 
 #: A tool failed to RUN: it crashed, was misconfigured, or exited with a status
@@ -91,9 +88,8 @@ NOTHING_SELECTED = 8
 #: legible in CI logs and to anyone reading the number directly.
 TOOL_MISSING = 127
 
-#: Statuses meaning "the tool ran and reported findings". Every scanner in the
-#: fleet - ruff, bandit, vulture, deptry, jscpd, complexipy, xenon, npm audit,
-#: cargo deny - uses 1 for this. An advisory target suppresses exactly these;
+#: Statuses meaning "the tool ran and reported findings". Most scanners use 1
+#: for this; a tool that does not (vulture) states its own. An advisory target suppresses exactly these;
 #: anything else is :data:`ADVISORY_BROKEN`.
 FINDINGS_CODES = frozenset({FAILED})
 
@@ -101,11 +97,8 @@ FINDINGS_CODES = frozenset({FAILED})
 #: :data:`NOTHING_SELECTED` so an empty lane cannot read as a pass.
 PYTEST_NO_TESTS_COLLECTED = 5
 
-#: Set by CI. Makes `fix` report :data:`DRIFT` when it had to change something.
-FIX_STRICT_ENV = "VAULTSPEC_FIX_STRICT"
-
-#: Set by a lane that is legitimately allowed to collect nothing.
-ALLOW_EMPTY_ENV = "VAULTSPEC_ALLOW_EMPTY_SELECTION"
+#: Makes `fix` report :data:`DRIFT` when it had to change something.
+FIX_STRICT_ENV = "CADRUMO_FIX_STRICT"
 
 
 def advisory_result(code: int, findings: Container[int] = FINDINGS_CODES) -> int:
@@ -114,8 +107,8 @@ def advisory_result(code: int, findings: Container[int] = FINDINGS_CODES) -> int
     Args:
         code: The status the advisory tool exited with.
         findings: The statuses THIS tool uses to mean "I found something".
-            Defaults to :data:`FINDINGS_CODES`, which is right for every
-            scanner in the fleet but one: vulture reports dead code with 3 and
+            Defaults to :data:`FINDINGS_CODES`. Not every scanner uses 1:
+            vulture reports dead code with 3 and
             reserves 1 and 2 for invalid input and invalid arguments. Reading
             its 3 as breakage would silence the finding; reading its 1 as a
             finding would silence a broken invocation. A tool that does not use

@@ -27,6 +27,7 @@ from ...providers.application.tests.memory_store import MemoryProviderSettingsSt
 from ...providers.application.tests.synthetic_catalog import StaticCatalogSource
 from ...service import AgentService
 from ..launch_environment import system_environment
+from .agent_checkout_support import agent_checkout, checkout_interpreter
 
 pytestmark = [
     pytest.mark.integration,
@@ -35,7 +36,6 @@ pytestmark = [
     pytest.mark.hex_application,
 ]
 
-CHECKOUT_VARIABLE: Final = "CADRUMO_DEV_AGENT_CHECKOUT"
 _OUTPUT_LIMIT: Final = 256 * 1024
 """The admin response bound the served document must fit within."""
 _RENDER: Final = (
@@ -46,16 +46,11 @@ _RENDER: Final = (
 
 
 def _declared_document() -> dict[str, Any]:
-    named = os.environ.get(CHECKOUT_VARIABLE)
-    if named is None or not named.strip():
-        pytest.fail(f"{CHECKOUT_VARIABLE} must name a synced cadrumo-agent checkout", pytrace=False)
-    interpreter = Path(named) / ".venv" / "Scripts" / "python.exe"
-    if not interpreter.is_file():
-        pytest.fail(f"{CHECKOUT_VARIABLE} names no synced cadrumo-agent checkout", pytrace=False)
+    checkout = agent_checkout()
     completed = WindowsAgentInvocationRunner().run(
-        executable=interpreter,
+        executable=checkout_interpreter(checkout),
         arguments=("-I", "-c", _RENDER),
-        directory=Path(named),
+        directory=checkout,
         environment=system_environment(os.environ),
         timeout=60.0,
         output_limit=_OUTPUT_LIMIT,

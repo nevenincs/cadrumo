@@ -12,6 +12,11 @@ from pydantic import ValidationError
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.registered_operation import run_registered_operation
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
+from cadrumo_client.commands.secure_input import (
+    MachineSecretPayload,
+    read_machine_secret_payload,
+    select_machine_secret_channel,
+)
 
 from ...application.invoices.figures_preview_contracts import (
     INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
@@ -35,10 +40,30 @@ from ._decimal_parsing import parse_decimal_amount, parse_fraction
 from ._ledger_support import ledger_invoice_validation_no_recovery
 from .common import emit_envelope
 from .ledger_results import LedgerInvoicePreviewResult
+from .machine_secret_json_items import json_array_items
 
 _LINE_DECIMAL_FRACTIONS: Final = frozenset({"quantity", "unit_price"})
 _LINE_DECIMAL_AMOUNTS: Final = frozenset({"subtotal", "iva_amount"})
 _LINE_TEXT: Final = frozenset({"key", "description", "iva_rate", "spending_category_id", "oss_rate_kind"})
+
+
+class InvoicePreviewSecrets(MachineSecretPayload):
+    """Machine-channel draft material for ``app ledger invoice preview``.
+
+    ``counterparty_nif`` is the counterparty's tax id. ``lines`` is a JSON array of draft
+    line objects, each with optional ``key``, ``description``, ``quantity``,
+    ``unit_price``, ``iva_rate``, ``subtotal`` and ``iva_amount``. Blank is absent.
+    """
+
+    counterparty_nif: str = ""
+    lines: str = ""
+
+
+def _secret_lines(text: str) -> tuple[str, ...]:
+    try:
+        return json_array_items(text)
+    except ValueError as exc:
+        raise InvoiceValidationError("lines must be one JSON array of line objects") from exc
 
 
 def _amount(raw: str | None, *, label: str) -> PublicDecimal | None:
@@ -225,22 +250,30 @@ def invoice_preview(
     invoice_class: str | None = None,
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
-    counterparty_nif: str | None = None,
     recargo: str | None = None,
     printed_total: str | None = None,
     iva_category: IvaCategory | None = None,
     arrendamiento_local_negocio: bool = False,
     situacion_inmueble: str | None = None,
     referencia_catastral: str | None = None,
-    line: tuple[str, ...] = (),
     notes: str = "",
     stored_invoice_id: str | None = None,
     stored_grand_total: str | None = None,
     operation_date_role: str | None = None,
+    secrets_stdin: bool = False,
+    secrets_fd: int | None = None,
 ) -> None:
     """Answer one invoice draft with the figures and verdict the add operation would reach."""
     client = require_profile_client(ctx, expected_profile_id=UUID(require_active_bucket_id()))
+    selection = select_machine_secret_channel(secrets_stdin=secrets_stdin, secrets_fd=secrets_fd)
+    secrets = (
+        read_machine_secret_payload(InvoicePreviewSecrets, selection=selection)
+        if selection is not None
+        else InvoicePreviewSecrets()
+    )
+    counterparty_nif = secrets.counterparty_nif or None
     try:
+        line = _secret_lines(secrets.lines)
         request = _draft_request(
             profile_id=client.profile_id,
             kind=kind,

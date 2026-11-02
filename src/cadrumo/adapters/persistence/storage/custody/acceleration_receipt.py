@@ -172,7 +172,10 @@ class ReceiptDeletion(StrEnum):
     """What a refused receipt's deletion achieved; never silently assumed."""
 
     NOT_REQUIRED = "not_required"
-    """The receipt was bound, or there was nothing to delete."""
+    """No deletion was attempted: a reader left the receipt alone, or revocation found none.
+
+    Only the second case says anything about the keychain.
+    """
 
     DELETED = "deleted"
     """Both the keychain key and the on-disk receipt are gone."""
@@ -185,6 +188,22 @@ class ReceiptDeletion(StrEnum):
 
     RECEIPT_RETAINED = "receipt_retained"
     """The on-disk receipt survived its compare-and-clear."""
+
+    @property
+    def receipt_removed(self) -> bool:
+        """Whether the on-disk receipt is gone (or was never there to remove)."""
+        return self is not ReceiptDeletion.RECEIPT_RETAINED
+
+    @property
+    def keychain_removed(self) -> bool:
+        """Whether a revocation left no keychain key that any record could name.
+
+        Read this only on :func:`revoke_profile_sign_in`'s outcome. There
+        ``NOT_REQUIRED`` means no receipt remained and any pending retirement was
+        recovered, so no key has a locator left; on a reader's refusal it would
+        claim a removal nobody attempted.
+        """
+        return self in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED}
 
 
 class ProfileSessionResumeOutcome(BaseModel):

@@ -7,13 +7,13 @@ from datetime import UTC, datetime
 from decimal import Decimal
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
 from ....core.config import override_settings
 from ....core.operations import OperationEffect, profile_operation_subject
@@ -40,6 +40,7 @@ from ..taxation_comparison_operation import (
     build_modelo_taxation_comparison_registration,
 )
 from ..taxation_comparison_ports import TaxationComparisonPorts
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, pytest.mark.hex_application]
 
@@ -119,15 +120,13 @@ def _access_context(
     authority_operation: PinnedAuthorityOperation | None = _AUTHORITY,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=action,
         frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-        admitted_request=admitted,
         authority_operation=authority_operation,
+        admitted_request=admitted,
     )
 
 

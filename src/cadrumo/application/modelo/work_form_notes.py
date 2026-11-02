@@ -84,6 +84,40 @@ the outcome its resolver stated for a capped value, and the message its resolver
 with the language it is worded in."""
 
 
+def _derived_leading_sources(
+    revision: CalculationRevision | None, screen_outdated: bool, filed_before_grade_cap: CasillaId | None
+) -> tuple[NoteSource, ...]:
+    """The reasons derived from the revision's standing, not from a note: they lead every other source."""
+    outdated: tuple[NoteSource, ...] = (
+        ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None),)
+        if screen_outdated and revision is not None
+        else ()
+    )
+    capped: tuple[NoteSource, ...] = (
+        ((FILED_BEFORE_GRADE_CAP_REASON, filed_before_grade_cap, None, None, None, None),)
+        if filed_before_grade_cap is not None and revision is not None
+        else ()
+    )
+    return outdated + capped
+
+
+def _diagnostic_source(diagnostic: CalculationSourceDiagnostic) -> NoteSource:
+    """One held diagnostic as a note source, carrying its message only when it is worded in a language."""
+    worded = (
+        None
+        if diagnostic.message_language is None or not diagnostic.message
+        else (diagnostic.message, diagnostic.message_language)
+    )
+    return (
+        diagnostic.reason,
+        diagnostic.casilla_id,
+        durable_binding_source(diagnostic),
+        diagnostic.fact,
+        diagnostic.value_outcome,
+        worded,
+    )
+
+
 def collect_note_sources(
     revision: CalculationRevision | None,
     diagnostics: tuple[CalculationSourceDiagnostic, ...] | None,
@@ -100,29 +134,9 @@ def collect_note_sources(
 
     Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
-    stale: tuple[NoteSource, ...] = (
-        ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None),)
-        if screen_outdated and revision is not None
-        else ()
-    ) + (
-        ((FILED_BEFORE_GRADE_CAP_REASON, filed_before_grade_cap, None, None, None, None),)
-        if filed_before_grade_cap is not None and revision is not None
-        else ()
-    )
+    stale = _derived_leading_sources(revision, screen_outdated, filed_before_grade_cap)
     if diagnostics is not None:
-        return stale + tuple(
-            (
-                diagnostic.reason,
-                diagnostic.casilla_id,
-                durable_binding_source(diagnostic),
-                diagnostic.fact,
-                diagnostic.value_outcome,
-                None
-                if diagnostic.message_language is None or not diagnostic.message
-                else (diagnostic.message, diagnostic.message_language),
-            )
-            for diagnostic in diagnostics
-        )
+        return stale + tuple(_diagnostic_source(diagnostic) for diagnostic in diagnostics)
     if revision is None:
         return ()
     # A persisted note keeps the outcome its resolver stated, so a proven zero still reads as one. Its stored

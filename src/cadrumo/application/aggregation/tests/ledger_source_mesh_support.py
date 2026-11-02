@@ -18,6 +18,8 @@ from cadrumo.domain.calculations.registry.tests.published_authority import (
 from ....core.period import Period
 from ....core.secure_object_write import SecureObjectWrite
 from ....domain.bienes_inversion.register import BienesInversionIvaRegister, BienInversionIvaRecord
+from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.categories.spending_category import SpendingCategory
@@ -54,6 +56,8 @@ from ....domain.transactions.dates import transaction_eligible_date_span, transa
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
 from ....domain.usage_ratios.model import UsageRatioProfile
+from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
+from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 from ...actividad_asset.history import ActivityAssetHistory, ActivityAssetHistoryClaimResult
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReader, InvoiceCatalogueReadPorts
 from ...modelo.work_profile import ModeloWorkProfile
@@ -122,6 +126,26 @@ class StaticActivityAssetHistoryRepository(_EmptyActivityAssetHistoryRepository)
     @override
     def load(self) -> ActivityAssetHistory:
         return self._history
+
+
+def cash_criterion_profile(*years: int, extra_facts: tuple[UserProfileFact, ...] = ()) -> ModeloWorkProfile:
+    """A complete profile that elected the cash criterion for ``years``; needs the leased authority operation."""
+    operation = governed_facts_in_scope()
+    if not isinstance(operation, PinnedAuthorityOperation):
+        raise LookupError("a cash-criterion profile requires a leased authority operation in scope")
+    return ModeloWorkProfile(
+        record=create_user_profile_record(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=BUCKET_ID,
+            facts=(
+                UserProfileFact(path="identity.tax_id", value="X1234567L"),
+                *extra_facts,
+                *cash_criterion_facts(*years),
+            ),
+            context=operation.profile_create_context(),
+        ),
+        profile_decode_context=operation.profile_decode_context(),
+    )
 
 
 def _empty_catalogue_read_ports() -> InvoiceCatalogueReadPorts:
@@ -576,6 +600,7 @@ def resolve_m130(
     profile: ModeloWorkProfile | None = None,
     invoices: InvoiceCatalogueReader | None = None,
 ) -> CalculationSourceResolution:
+    profile = profile or cash_criterion_profile(2025)
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions(rows))
     return LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
@@ -604,6 +629,7 @@ def resolve_m100(
     year: int = 2025,
     invoices: InvoiceCatalogueReader | None = None,
 ) -> CalculationSourceResolution:
+    profile = profile or cash_criterion_profile(year)
     tx_repo = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     tx_repo.save(TransactionCatalogue.from_transactions(rows))
     return LedgerRentaGastosEstimacionDirectaAggregationSourceResolver(

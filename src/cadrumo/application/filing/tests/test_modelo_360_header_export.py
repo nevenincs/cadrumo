@@ -62,7 +62,7 @@ from ..projection import FilingRecordRenderContext
 from ..record_field_renderer import continuation_page_marker, format_field, render_record
 from ..record_renderer import record_render_rows
 from ..runtime import ModeloOperatorProfile
-from .export_support import schema_provider
+from .export_support import export_schema_provider
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -168,7 +168,7 @@ def _blank(campo: int) -> str:
 
 def _pagina_1(snapshot: FilingProducerSnapshot, *, extra_inputs: dict[str, ModeloInputValue] | None = None) -> str:
     """Render the published página 1 record for ``snapshot`` and return its 3400 characters."""
-    provider = schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
+    provider = export_schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
     registry_snapshot = provider.get_snapshot("360")
     (layout,) = registry_snapshot.revision.export_layouts
     (record,) = (record for record in layout.records if str(record.id) == "m360-solicitud")
@@ -222,7 +222,7 @@ def test_pagina_2_campo_2_marks_a_continuation_page_never_an_amendment(occurrenc
     van más de una página del mismo tipo". Modelo 360 has no complementaria declaration,
     so the slot follows the page occurrence and nothing else.
     """
-    provider = schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
+    provider = export_schema_provider(filing_year=_YEAR, period=_PERIOD_CODE, modelos=("360",))
     registry_snapshot = provider.get_snapshot("360")
     (layout,) = registry_snapshot.revision.export_layouts
     (record,) = (record for record in layout.records if str(record.id) == "m360-operaciones")

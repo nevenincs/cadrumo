@@ -285,7 +285,7 @@ def _compute_fifo(ledger: InventoryLedger) -> InventoryValuationResult:
     cogs_value = MONEY_ZERO
     purchase_value = MONEY_ZERO
     for movement in _sorted_movements(ledger):
-        if movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}:
+        if movement.kind.adds_costed_stock:
             unit_cost = movement.resolved_unit_cost
             layers.append(
                 StockLayer(
@@ -343,7 +343,7 @@ def _apply_weighted_average_movement(
     pools: dict[str, tuple[Decimal, Decimal]],
 ) -> tuple[Decimal, Decimal]:
     quantity, value = pools.get(movement.sku, (MONEY_ZERO, MONEY_ZERO))
-    if movement.kind in {MovementKind.OPENING, MovementKind.PURCHASE}:
+    if movement.kind.adds_costed_stock:
         unit_cost = movement.resolved_unit_cost
         movement_value = movement.quantity * unit_cost
         pools[movement.sku] = (quantity + movement.quantity, value + movement_value)

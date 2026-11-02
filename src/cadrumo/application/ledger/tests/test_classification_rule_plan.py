@@ -66,6 +66,10 @@ class _InMemoryRuleRepository(LedgerClassificationRuleRepositoryProtocol):
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return tuple(sorted(self._rules.values(), key=lambda rule: (rule.priority, rule.rule_id)))
 
+    @override
+    def delete(self, identifier: str) -> bool:
+        return self._rules.pop(identifier, None) is not None
+
 
 class _ClassificationScenario:
     """One explicit inward composition for a classification policy case."""

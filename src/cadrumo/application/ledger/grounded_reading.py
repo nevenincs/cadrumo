@@ -344,14 +344,21 @@ def _identity_candidates(
         value = getattr(draft, field, None)
         if not isinstance(value, str) or not value.strip():
             continue
+        anchor = anchors.get(field)
         claimed = role_evidence.get(field)
+        # A heading can only say whose identifier a printed token is. With no
+        # printed token (the anchor was never offered, or the check refused it)
+        # the heading is attached to nothing, and admitting it would let the
+        # value stand as its own anchor.
+        anchor_is_printed = anchor is not None and bool(anchor.strip())
         candidates.append(
             IdentityCandidate(
                 value=value,
-                anchor=anchors.get(field),
+                anchor=anchor,
                 role_evidence=(
                     claimed
-                    if (claimed is not None and claimed)
+                    if anchor_is_printed
+                    and (claimed is not None and claimed)
                     and printed_excerpt_occurs(claimed, transcription=transcription)
                     else ""
                 ),

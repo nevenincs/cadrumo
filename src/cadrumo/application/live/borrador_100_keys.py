@@ -4,7 +4,9 @@ A borrador snapshot stores values under the binding ids of the pinned Modelo 100
 revision, never under free casilla keys. The import projects each printed
 casilla through the revision's bound-casilla map to the binding that owns it;
 the tier and every read admit exactly the same set. A binding is admitted when
-the registry marks it ``aeat_prefilled``. A printed casilla no admitted binding
+the registry marks it ``aeat_prefilled``; whether an admitted value may then
+supply the binding is the binding's separate ``borrador_participation``, which
+the tier reads. A printed casilla no admitted binding
 owns is reported to the operator rather than stored or dropped, and a casilla
 two admitted bindings could own is refused because the value has no single
 owner.

@@ -1,10 +1,15 @@
-"""Persistence-adapter integration tests for Modelo 100 borrador bindings."""
+"""Persistence-adapter integration tests for Modelo 100 borrador bindings.
+
+The 2025 borrador may supply the tax-residence enum, which takes its value from
+it, and may hold the work-withholding credit, which it only cross-checks: the
+credit is the taxpayer's to evidence, so the borrador never supplies it.
+"""
 
 from __future__ import annotations
 
 import hashlib
 from collections.abc import Generator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -41,7 +46,10 @@ from ....domain.calculations.registry.binding_targets import casillas_by_binding
 from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
-from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from ....domain.user_profile.tests.general_regime_facts import (
+    GENERAL_REGIME_NATURAL_PERSON_FACTS,
+    RENTA_UNMARRIED_TAXPAYER_FACTS,
+)
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from ....tests.aeat_literal_fixtures import aeat_url, configured_path
@@ -52,7 +60,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 _BUCKET_ID = "11111111-1111-4111-8111-111111111111"
 _YEAR = 2025
 _PERIOD = "0A"
-_DECIMAL_BINDING: BindingId = "renta-certificado-trabajo-retenciones"
+_DECIMAL_BINDING: BindingId = "renta-retencion-soportada-trabajo"
 _ENUM_BINDING: BindingId = "renta-profile-tax-residence-ccaa"
 _R210_SIMULATOR_URL = aeat_url("www2", configured_path("sede_paths", "r210_simulator_open_ajax"))
 
@@ -139,10 +147,10 @@ def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
 
 
 def _zero_relation_values() -> dict[RelationId, Decimal]:
-    """Zero every relation that does not feed the casilla the borrador supplies.
+    """Zero every relation that does not feed the casilla the borrador holds.
 
     Relations share their binding's identity, and equivalent bindings of one
-    casilla must agree, so a zero filler there would contradict the borrador.
+    casilla must agree, so a zero filler there would stand in for the credit.
     """
     revision = _modelo_100_registry_snapshot().revision
     targets = casillas_by_binding(revision)
@@ -166,19 +174,44 @@ def _seed_profile_with_birth_date(objects: SecureObjectRepository) -> None:
                 UserProfileFact(path="identity.surnames", value="Operator"),
                 UserProfileFact(path="activities.description", value="economic activity"),
                 *GENERAL_REGIME_NATURAL_PERSON_FACTS,
-                UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-                UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-                UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-                UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-                UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-                UserProfileFact(path="renta_filing.declaration_type", value="1"),
-                UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+                *RENTA_UNMARRIED_TAXPAYER_FACTS,
             ),
             created_at=datetime(2026, 4, 1, tzinfo=UTC),
             updated_at=datetime(2026, 4, 1, tzinfo=UTC),
             context=_profile_creation_context_for_test(),
         ),
     )
+
+
+def _seed_work_unit_and_borrador_snapshot(
+    objects: SecureObjectRepository,
+    *,
+    work_unit_repository: WorkUnitCatalogueRepository,
+    bucket_event_repository: BucketEventHistoryRepository,
+    snapshot_repository: Borrador100SnapshotRepository,
+    operation: PinnedAuthorityOperation,
+) -> tuple[str, str]:
+    """Seed the profile, create the 2025 renta work unit and save a snapshot sourcing both bindings."""
+    _seed_profile_with_birth_date(objects)
+    work_unit = create_work_unit(
+        bucket_id=_BUCKET_ID,
+        modelo="100",
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, _PERIOD),
+        revision_id="2025",
+        ports=WorkLifecyclePorts(
+            work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
+        ),
+        operation=operation,
+    )
+    snapshot_id = _save_snapshot(
+        snapshot_repository,
+        {
+            _DECIMAL_BINDING: Decimal("125.50"),
+            _ENUM_BINDING: "madrid",
+        },
+    )
+    return work_unit.work_unit_id, snapshot_id
 
 
 def test_calculate_modelo_revision_consumes_borrador_snapshot_through_application_service(
@@ -195,24 +228,12 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
     )
-    _seed_profile_with_birth_date(objects)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
-        revision_id="2025",
-        ports=WorkLifecyclePorts(
-            work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
-        ),
+    work_unit_id, snapshot_id = _seed_work_unit_and_borrador_snapshot(
+        objects,
+        work_unit_repository=work_unit_repository,
+        bucket_event_repository=bucket_event_repository,
+        snapshot_repository=snapshot_repository,
         operation=operation,
-    )
-    snapshot_id = _save_snapshot(
-        snapshot_repository,
-        {
-            _DECIMAL_BINDING: Decimal("125.50"),
-            _ENUM_BINDING: "madrid",
-        },
     )
 
     relation_values = _zero_relation_values()
@@ -224,7 +245,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         borrador_snapshot_repository=snapshot_repository,
     ) as _calculation_ports_221:
         revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
+            work_unit_id,
             actor="operator-A",
             casilla_inputs={},
             binding_values=_non_borrador_decimal_binding_values(),
@@ -234,7 +255,9 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
             ports=_calculation_ports_221,
         )
 
-    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
+    # The borrador's 125,50 is held for comparison only: it never becomes the credit.
+    assert _DECIMAL_BINDING not in revision.binding_overrides
+    assert Decimal(revision.casilla_values["0596"]) != Decimal("125.50")
     assert revision.binding_overrides[_ENUM_BINDING] == "madrid"
     # A relation shares its binding's identity, so each id is persisted on one
     # channel only; the relation channel keeps the ids no binding supplied.
@@ -242,14 +265,14 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     assert all(Decimal(value) == Decimal("0") for value in revision.relation_overrides.values())
     assert set(revision.binding_overrides).isdisjoint(revision.relation_overrides)
     assert revision.borrador_snapshot_id == snapshot_id
-    assert revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
+    assert revision.bindings_sourced_from_borrador == (_ENUM_BINDING,)
     fresh_calculation_repository = CalculationRevisionCatalogueRepository(objects=objects)
     stored_revision = fresh_calculation_repository.load().get(revision.calculation_revision_id)
     assert stored_revision == revision
     assert stored_revision is not None
     assert stored_revision.borrador_snapshot_id == snapshot_id
-    assert stored_revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING, _ENUM_BINDING)
-    assert Decimal(stored_revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
+    assert stored_revision.bindings_sourced_from_borrador == (_ENUM_BINDING,)
+    assert _DECIMAL_BINDING not in stored_revision.binding_overrides
     assert stored_revision.relation_overrides == revision.relation_overrides
     calculation_events = [
         event
@@ -263,14 +286,11 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     assert event.payload["calculation_revision_id"] == revision.calculation_revision_id
     assert event.payload["borrador_snapshot_id"] == snapshot_id
     assert event.payload["borrador_participated"] == "true"
-    assert event.payload["borrador_binding_count"] == "2"
-    assert (
-        event.payload["borrador_bindings_trace_sha256"]
-        == hashlib.sha256("\n".join((_DECIMAL_BINDING, _ENUM_BINDING)).encode("utf-8")).hexdigest()
-    )
+    assert event.payload["borrador_binding_count"] == "1"
+    assert event.payload["borrador_bindings_trace_sha256"] == hashlib.sha256(_ENUM_BINDING.encode("utf-8")).hexdigest()
 
 
-def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_backend(
+def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_the_credit_with_its_backend(
     service_repositories: tuple[
         WorkUnitCatalogueRepository,
         CalculationRevisionCatalogueRepository,
@@ -284,24 +304,12 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
     work_unit_repository, calculation_repository, bucket_event_repository, snapshot_repository, objects = (
         service_repositories
     )
-    _seed_profile_with_birth_date(objects)
-    work_unit = create_work_unit(
-        bucket_id=_BUCKET_ID,
-        modelo="100",
-        filing_year=_YEAR,
-        period=Period.from_year_and_code(_YEAR, _PERIOD),
-        revision_id="2025",
-        ports=WorkLifecyclePorts(
-            work_unit_repository=work_unit_repository, bucket_event_repository=bucket_event_repository
-        ),
+    work_unit_id, snapshot_id = _seed_work_unit_and_borrador_snapshot(
+        objects,
+        work_unit_repository=work_unit_repository,
+        bucket_event_repository=bucket_event_repository,
+        snapshot_repository=snapshot_repository,
         operation=operation,
-    )
-    snapshot_id = _save_snapshot(
-        snapshot_repository,
-        {
-            _DECIMAL_BINDING: Decimal("125.50"),
-            _ENUM_BINDING: "madrid",
-        },
     )
     with calculation_ports_for_test(
         bucket_id=_BUCKET_ID,
@@ -311,7 +319,7 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
         borrador_snapshot_repository=snapshot_repository,
     ) as _calculation_ports_303:
         revision = calculate_modelo_revision(
-            work_unit.work_unit_id,
+            work_unit_id,
             actor="operator-A",
             casilla_inputs={},
             binding_values=_non_borrador_decimal_binding_values(),
@@ -322,6 +330,8 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_ba
             ports=_calculation_ports_303,
         )
 
-    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("125.50")
+    # The backend's credit stands; the borrador's differing 125,50 does not replace it.
+    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("1.00")
+    assert Decimal(revision.casilla_values["0596"]) == Decimal("1.00")
     assert revision.binding_overrides[_ENUM_BINDING] == "cataluna"
-    assert revision.bindings_sourced_from_borrador == (_DECIMAL_BINDING,)
+    assert revision.bindings_sourced_from_borrador == ()

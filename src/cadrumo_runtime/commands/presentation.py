@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 import logging
 from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
@@ -10,8 +9,7 @@ from typing import TYPE_CHECKING
 
 import typer
 
-from cadrumo.core.external_constants import OutputLanguage
-from cadrumo.core.i18n.render import clear_output_language_cache, output_language
+from cadrumo.core.i18n.render import output_language
 from cadrumo_client.commands.graph import CommandSpecGraph, resolve_command_target
 from cadrumo_client.commands.shared_contracts import BindingState, DefaultKind
 from cadrumo_client.commands.spec import CommandSpecNode
@@ -22,37 +20,6 @@ if TYPE_CHECKING:
     from cadrumo.application.operator_actions.models import PreconditionVerdict
     from cadrumo.application.operator_surface.manifest import OperatorSurfaceReconciliation
     from cadrumo.core.json_contract import Notice, ResolvedPreconditionAction
-
-
-def activate_subcommand_output_language(ctx: typer.Context, language: OutputLanguage | None) -> None:
-    """Apply a leaf-level language choice to this runtime invocation."""
-    if language is None:
-        return
-    from cadrumo.core.config import override_settings
-
-    ctx.with_resource(override_settings(cadrumo_output_language=language))
-    clear_output_language_cache()
-
-
-def precondition_action_lines(action: ResolvedPreconditionAction | None) -> tuple[str, ...]:
-    """Render the typed precondition action as stable machine-readable rows."""
-    if action is None:
-        return ()
-    document = action.model_dump(mode="json")
-    fields = (
-        "failed_condition_id",
-        "evidence",
-        "action",
-        "argument_bindings",
-        "missing_argument_names",
-        "conditionality",
-        "no_recovery_outcome",
-    )
-    return tuple(
-        f"precondition_action.{field}\t"
-        f"{json.dumps(document[field], ensure_ascii=False, sort_keys=True, separators=(',', ':'))}"
-        for field in fields
-    )
 
 
 def resolve_cli_precondition_action(verdict: PreconditionVerdict) -> ResolvedPreconditionAction:
@@ -345,11 +312,9 @@ def emit_envelope(
 
 
 __all__ = [
-    "activate_subcommand_output_language",
     "capture_runtime_error_context",
     "emit_envelope",
     "notice_lines",
-    "precondition_action_lines",
     "resolve_cli_precondition_action",
     "runtime_error_context",
 ]

@@ -50,7 +50,7 @@ from .test_borrador_100 import _InMemoryBorradorRepository
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 _PERIOD = Period.from_year_and_code(2023, "0A")
 _HUMAN_SOURCE = "file-import:sha256:" + "a" * 64
-_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+_CERTIFICATE = "renta-retencion-soportada-trabajo"
 # The 2023 borrador profile prints casillas 0505, 0545, 0546, 0585 and 0586. All
 # five are computed in that revision, so no admitted binding owns any of them.
 _PROFILE_CASILLAS = ("0505", "0545", "0546", "0585", "0586")
@@ -153,8 +153,8 @@ async def test_shared_canonical_view_preserves_scalars_and_withholds_query_prove
     assert human.snapshot is not None and safe.snapshot is not None
     assert human.snapshot.source_url == snapshot.source_url
     assert human.snapshot.binding_map() == safe.snapshot.binding_map() == dict(snapshot.binding_values)
-    assert safe.snapshot.binding_values[0].value == PublicDecimal(decimal="0.00")
-    assert safe.snapshot.binding_values[1].value == "madrid"
+    values = {binding.key: binding.value for binding in safe.snapshot.binding_values}
+    assert values == {_CERTIFICATE: PublicDecimal(decimal="0.00"), "renta-profile-tax-residence-ccaa": "madrid"}
     assert safe.snapshot.period.to_period() == period
     assert _HUMAN_SOURCE not in safe.model_dump_json() and "source_url" not in safe.model_dump_json()
     assert subject.repository.writes == subject.fence.entries == 0

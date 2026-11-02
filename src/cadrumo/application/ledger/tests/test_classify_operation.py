@@ -27,6 +27,7 @@ from ..action_ports import LedgerActionPorts, LedgerActionPortsFactory
 from ..classify_result_projection import project_classify_operation_result
 from ..transaction_projection import LedgerTransactionProjection
 from .ledger_input_rule_support import current_transaction
+from .recording_executor_context_support import RecordingEvents, RecordingOperands
 from .transaction_projection_support import ledger_transaction_projection
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -224,27 +225,8 @@ async def test_executor_loads_in_commit_and_passes_the_same_row_as_expected_curr
             finally:
                 in_commit = False
 
-    class Events:
-        effects: list[OperationEffect]
-
-        def __init__(self) -> None:
-            self.effects = []
-
-        async def phase(self, _phase: str) -> None:
-            return None
-
-        async def effect(self, effect: OperationEffect) -> None:
-            self.effects.append(effect)
-
-    class Operands:
-        value: BaseModel | None = None
-
-        async def put(self, operand: BaseModel, *, written_at: object) -> str:
-            self.value = operand
-            return "d" * 64
-
-    events = Events()
-    operands = Operands()
+    events = RecordingEvents()
+    operands = RecordingOperands()
     context = SimpleNamespace(
         identity=SimpleNamespace(
             definition_id=classify_requests.LEDGER_CLASSIFY_OPERATION_DEFINITION_ID,

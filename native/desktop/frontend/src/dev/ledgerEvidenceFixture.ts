@@ -561,6 +561,9 @@ type Controls = NonNullable<Window["__scenarioDocuments"]>;
 /** Every ledger the page made; the controls reach the one it uses. */
 const made = new Set<Controls>();
 
+/** The document whose confirmation reports a withheld figure the record lacks. */
+const RETENTION_READ_FILE = "factura-domestika-lettering.pdf";
+
 export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
   const { profileId, events, hex64, now } = tools;
   const readings = new Map<string, Reading>();
@@ -1274,6 +1277,11 @@ export function evidenceOperations(ledger: FixtureLedger, tools: Tools) {
         draft: draft as unknown as JsonObject,
         created: !existing,
         total_discrepancy: null,
+        // The reading withheld a figure the freshly confirmed record does not hold.
+        retention_discrepancy:
+          source.record && source.record.source_path === RETENTION_READ_FILE
+            ? { read_amount: { decimal: "9.00" }, recorded_amount: null }
+            : null,
         confirmation_id: hex64(`confirmation:${source.reference}`),
         confirmed_provenance: [],
         establishment: null,

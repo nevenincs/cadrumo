@@ -43,6 +43,7 @@ from ..history_operation import (
     build_ledger_history_typed_definition,
     build_ledger_history_typed_registration,
 )
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -90,14 +91,7 @@ def _access_context(
     profile_id: UUID = _PROFILE,
 ) -> OperationAccessContext:
     """Build a result-disclosure context for the exact registered contract."""
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.RESULT)
 
 
 def _event(

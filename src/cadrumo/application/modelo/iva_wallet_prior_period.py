@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Final, NamedTuple
 
-from ...core.iva_compensation_provenance import IvaCompensationStateProvenance
 from ...core.modelo import Modelo
 from ...core.period import Period as _Period
 from ...domain.calculations.registry.bindings_previous_filing import previous_filing_observation_requirements
@@ -14,7 +13,7 @@ from ...domain.calculations.registry.iva_compensation_annual_partition_bindings 
 )
 from ...domain.calculations.registry.relations import RegistryFoldRequirement
 from ...domain.calculations.registry.schema import RegistrySnapshot
-from ...domain.iva_compensation.carry_forward import IvaCompensationPeriodState
+from ...domain.iva_compensation.carry_forward import OPERATOR_DECLARED_PROVENANCES, IvaCompensationPeriodState
 from ...domain.modelos.work_unit import WorkUnit
 from ..calculations.binding_prefill import LocalIvaCompensationRecurrence
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
@@ -27,9 +26,6 @@ if TYPE_CHECKING:
 
 _M303_PRIOR_COMPENSATION_BINDING_ID = "modelo-303-compensacion-pendiente-anteriores"
 _M303_AVAILABLE_COMPENSATION_CASILLA_ID = M303_COMPENSATION_AVAILABLE_CASILLA
-_OPERATOR_DECLARED_PROVENANCES = frozenset(
-    {IvaCompensationStateProvenance.OPERATOR_SEED, IvaCompensationStateProvenance.OPERATOR_CORRECTION}
-)
 
 
 class _PriorPeriodCarryEvidence(NamedTuple):
@@ -144,7 +140,7 @@ def _operator_declared_carry_evidence(
     """
     if state is None:
         return _NO_PRIOR_PERIOD_OBSERVATION
-    if state.provenance not in _OPERATOR_DECLARED_PROVENANCES:
+    if state.provenance not in OPERATOR_DECLARED_PROVENANCES:
         return _PriorPeriodCarryEvidence(recurrence=None, prior_period_observation_found=True)
     return _PriorPeriodCarryEvidence(
         recurrence=LocalIvaCompensationRecurrence(

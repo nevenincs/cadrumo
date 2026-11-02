@@ -20,6 +20,7 @@ __all__ = [
     "InvoiceLinkInconsistencyError",
     "InvoiceNotFoundError",
     "InvoicePersistenceError",
+    "InvoiceRetentionFigureError",
     "InvoiceValidationError",
 ]
 
@@ -88,4 +89,13 @@ class InvoiceValidationError(InvoiceError, CoreValidationError):
     Inherits from CoreValidationError (which itself inherits from CoreError
     and ValueError) to participate in the shared CoreValidationError catch
     surface and remain compatible with pydantic validators.
+    """
+
+
+class InvoiceRetentionFigureError(InvoiceValidationError):
+    """Raised when a stated retención contradicts itself or the invoice's base.
+
+    Kept apart from the general validation failure so an operation can settle it
+    as a typed refusal: the figures are the person's to restate, nothing is wrong
+    with the system.
     """

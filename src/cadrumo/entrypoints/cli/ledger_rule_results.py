@@ -81,6 +81,10 @@ class RuleAddResult(ClassificationRulePayload):
     """
 
 
+class RuleRemoveResult(ClassificationRulePayload):
+    """JSON envelope for ``aeat app ledger rule remove``: the rule that was removed."""
+
+
 class RuleListResult(OutputSchema):
     """JSON envelope for ``aeat app ledger rule list``.
 

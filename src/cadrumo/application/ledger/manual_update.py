@@ -760,6 +760,7 @@ def command_from_patch(
         "investment_asset_id",
         current.investment_asset_id,
     )
+    iva_vehicle_use = optional_patched(patch, patch_fields, "iva_vehicle_use", current.iva_vehicle_use)
     counterparty_country = optional_patched(
         patch,
         patch_fields,
@@ -797,6 +798,7 @@ def command_from_patch(
         bucket_id=bucket_id,
         booked_date=booked_date,
         value_date=patch.value_date if "value_date" in patch_fields else raw.value_date,
+        operation_date=patch.operation_date if "operation_date" in patch_fields else current.operation_date,
         amount=amount,
         currency=currency,
         direction=direction,
@@ -823,6 +825,7 @@ def command_from_patch(
         iva_category=iva_category,
         deduction_fact_kind=deduction_fact_kind,
         investment_asset_id=investment_asset_id,
+        iva_vehicle_use=iva_vehicle_use,
         counterparty_country=counterparty_country,
         counterparty_identification_state=counterparty_identification_state,
         source_jurisdiction=(

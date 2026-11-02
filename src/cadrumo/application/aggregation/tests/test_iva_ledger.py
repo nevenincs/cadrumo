@@ -444,6 +444,7 @@ def test_mixed_business_transaction_applies_business_percentage_to_iva_and_keeps
     """
     transaction = _transaction(
         "row-mixed",
+        category_id="arrendamiento_local",
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.25"),
         taxable_base=Decimal("200.00"),
@@ -490,6 +491,7 @@ def test_outgoing_input_row_carries_legal_prorrata_reference_separately_from_obs
 def test_mixed_input_row_applies_business_percentage_before_carrying_prorrata_reference() -> None:
     transaction = _transaction(
         "row-mixed-prorrata",
+        category_id="arrendamiento_local",
         business_classification=BusinessClassification.MIXED,
         business_pct=Decimal("0.25"),
         taxable_base=Decimal("200.00"),

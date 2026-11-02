@@ -19,6 +19,7 @@ _MAX_CATEGORIES: Final = 256
 StageFieldName = Literal[
     "booked_date",
     "value_date",
+    "operation_date",
     "amount",
     "direction",
     "currency",
@@ -45,6 +46,7 @@ StageFieldName = Literal[
 DraftFieldName = Literal[
     "booked_date",
     "value_date",
+    "operation_date",
     "amount",
     "direction",
     "currency",

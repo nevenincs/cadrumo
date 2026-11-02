@@ -59,6 +59,7 @@ class LedgerAddRequest(BaseModel):
     direction: _AddDirection
     description: Annotated[str, Field(min_length=1, max_length=4096)]
     value_date: _AddOptionalDateText = None
+    operation_date: _AddOptionalDateText = None
     currency: Annotated[str, Field(min_length=1, max_length=16)] = "EUR"
     counterparty: _AddOptionalText = None
     business_classification: _AddClassification = BusinessClassification.NOT_YET_PROCESSED.value
@@ -70,6 +71,7 @@ class LedgerAddRequest(BaseModel):
     iva_category: _AddIvaCategory = None
     deduction_fact_kind: Annotated[str, Field(max_length=128)] | None = None
     investment_asset_id: _AddOptionalId = None
+    iva_vehicle_use: Annotated[str, Field(max_length=128)] | None = None
     counterparty_country: CountryCodeAlpha2 | None = None
     counterparty_identification_state: _AddEUMemberState = None
     recargo_amount: _AddOptionalDecimalText = None
@@ -87,7 +89,7 @@ class LedgerAddRequest(BaseModel):
     source_jurisdiction: Annotated[str, Field(max_length=16)] | None = None
     own_account_id: OwnAccountId | None = None
 
-    @field_validator("booked_date", "value_date")
+    @field_validator("booked_date", "value_date", "operation_date")
     @classmethod
     def _extended_iso_dates(cls, value: str | None) -> str | None:
         if value is None:

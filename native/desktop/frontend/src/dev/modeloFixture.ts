@@ -50,7 +50,10 @@ import { hex64 } from "./fixtures/ledger";
  * and `stale` answer as `fixture` does, except that the first quarter's
  * Modelo 130 is read after its check, after it was recorded as filed
  * locally, after its AEAT receipt was verified, or after the declaration
- * changed once its file for the AEAT was made. `incomplete` lists the
+ * changed once its file for the AEAT was made. `income` reads that 130 as
+ * calculated over a ledger that books the quarter's activity income, never
+ * checked, exported or filed: its capped boxes carry figures, and the
+ * calculation's notes about them. `incomplete` lists the
  * declarations of a profile nothing was ever read from the AEAT for.
  *
  * The write shapes answer that Modelo 130's writes as the application
@@ -79,13 +82,17 @@ import { hex64 } from "./fixtures/ledger";
  * language.
  * `read-only-boxes` reads every box that takes a typed value as one whose kind
  * of value has no way in yet, as a date or a year box is: the application's
- * reads of these synthetic declarations hold no such box. */
+ * reads of these synthetic declarations hold no such box.
+ * `list-notes` lists the first quarter's Modelo 130 with the sentences of the
+ * asset notes as what its calculation noted that withholds nothing: the
+ * application's list of these synthetic declarations notes none. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
   "filed",
   "receipt",
   "stale",
+  "income",
   "incomplete",
   "edit",
   "renewal",
@@ -103,6 +110,7 @@ export const MODELO_SHAPES = [
   "rebase",
   "moving",
   "read-only-boxes",
+  "list-notes",
   "refused",
   "unknown",
   "unavailable",
@@ -171,6 +179,44 @@ function withAssetNotes(
         recalculates: false,
       })),
     ],
+  };
+}
+
+type Row = ModeloDeclarationsListProjectionV1["rows"][number];
+
+/** A list stored before its rows carried calculation notes, read as the
+ * application's model reads it: a row that names none noted none. */
+function withStoredDefaults(
+  list: ModeloDeclarationsListProjectionV1,
+): ModeloDeclarationsListProjectionV1 {
+  return {
+    ...list,
+    rows: list.rows.map((row) => {
+      const stored: Omit<Row, "calculation_notes"> &
+        Partial<Pick<Row, "calculation_notes">> = row;
+      return { ...stored, calculation_notes: stored.calculation_notes ?? [] };
+    }),
+  };
+}
+
+/** The declarations list with the asset notes' sentences on the first local
+ * Modelo 130 row, as what its calculation noted that withholds nothing. */
+function withListNotes(
+  list: ModeloDeclarationsListProjectionV1,
+): ModeloDeclarationsListProjectionV1 {
+  const noted = list.rows.find(
+    (row) => row.modelo === "130" && row.opens_local_work,
+  );
+  return {
+    ...list,
+    rows: list.rows.map((row) =>
+      row === noted
+        ? {
+            ...row,
+            calculation_notes: ASSET_NOTES.map((note) => note.message),
+          }
+        : row,
+    ),
   };
 }
 
@@ -306,6 +352,7 @@ export function modeloFixture(options: Options): ModeloPort {
       case "checked":
       case "filed":
       case "stale":
+      case "income":
       case "receipt":
         return `130-1T-${shape}`;
       case "check-notes":
@@ -513,7 +560,9 @@ export function modeloFixture(options: Options): ModeloPort {
       const list = await envelope<ModeloDeclarationsListProjectionV1>(
         `declarations${shape === "incomplete" ? "-incomplete" : ""}-${language}`,
       );
-      return list ?? reject("unavailable");
+      if (!list) return reject("unavailable");
+      const read = withStoredDefaults(list);
+      return shape === "list-notes" ? withListNotes(read) : read;
     },
     async form(workUnitId, language) {
       say(`modelo form ${language}`);
