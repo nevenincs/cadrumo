@@ -159,7 +159,7 @@ def test_the_derivation_sees_the_fields_this_guard_exists_for() -> None:
 
 
 def test_the_guard_would_have_caught_the_v2_gap() -> None:
-    """Against the V2 field set, the check names the V3 facts and the later V4 ones."""
+    """Against the V2 field set, the check names the V3 facts and the later V5 ones."""
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),

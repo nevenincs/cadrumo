@@ -400,7 +400,7 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
     takes the row's base and cuota from the invoice and counts an incoming row
     as a refund, which is why the link is one of
     :data:`~cadrumo.domain.transactions.classification_origin.CLASSIFICATION_DECISION_FIELDS`.
-    From fingerprint field-set version 4 the link is hashed, so a revision sealed
+    From fingerprint field-set version 5 the link is hashed, so a revision sealed
     under that version reads as stale after the attach, which is true. The attach
     is admitted anyway, and the caller reports the cited revisions as stale so the
     operator recalculates, rather than silently accepting the write. A

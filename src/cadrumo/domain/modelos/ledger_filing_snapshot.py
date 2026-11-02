@@ -195,7 +195,7 @@ class LedgerEvidenceRow(BaseModel):
     holds for ``investment_asset_id`` and ``counterparty_identification_state``,
     which version 3 adds and which rows bundled under versions 1 and 2 carry as
     ``None``. ``operation_date`` and ``deduction_evidence_digest`` arrive with
-    version 4 on the same terms.
+    version 5 on the same terms.
 
     Enum-valued facts are stored as their canonical string ``value`` (and dates as
     ISO-8601 strings) so the record roundtrips cleanly through the strict

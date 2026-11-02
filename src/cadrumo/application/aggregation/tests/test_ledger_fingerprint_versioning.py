@@ -41,7 +41,7 @@ from ..ledger_filing_snapshot import (
     _FINGERPRINT_FIELDS_V1,
     _FINGERPRINT_FIELDS_V2,
     _FINGERPRINT_FIELDS_V3,
-    _FINGERPRINT_FIELDS_V4,
+    _FINGERPRINT_FIELDS_V5,
     CURRENT_FINGERPRINT_FIELD_SET_VERSION,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -145,16 +145,16 @@ def test_v3_appends_exactly_the_two_admission_facts_to_v2() -> None:
     )
 
 
-def test_v4_appends_the_operation_date_and_the_evidence_facts_and_is_current() -> None:
-    assert _FINGERPRINT_FIELDS_V4[: len(_FINGERPRINT_FIELDS_V3)] == _FINGERPRINT_FIELDS_V3
-    assert [label for label, _path in _FINGERPRINT_FIELDS_V4[len(_FINGERPRINT_FIELDS_V3) :]] == [
+def test_v5_appends_the_operation_date_and_the_evidence_facts_and_is_current() -> None:
+    assert _FINGERPRINT_FIELDS_V5[: len(_FINGERPRINT_FIELDS_V3)] == _FINGERPRINT_FIELDS_V3
+    assert [label for label, _path in _FINGERPRINT_FIELDS_V5[len(_FINGERPRINT_FIELDS_V3) :]] == [
         "operation_date",
         "purchase_invoice_evidence_id",
         "deduction_authority",
         "deduction_source_locator",
         "deduction_evidence_digest",
     ]
-    assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 4
+    assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 5
 
 
 @pytest.mark.parametrize("version", [1, 2, 3])
@@ -162,7 +162,7 @@ def test_the_older_field_sets_do_not_see_a_new_operation_date_or_a_detached_evid
     purchase = _purchase()
     moved = purchase.model_copy(update={"operation_date": date(2026, 3, 30), "deduction_provenance": None})
     assert row_fingerprint(moved, field_set_version=version) == row_fingerprint(purchase, field_set_version=version)
-    assert row_fingerprint(moved, field_set_version=4) != row_fingerprint(purchase, field_set_version=4)
+    assert row_fingerprint(moved, field_set_version=5) != row_fingerprint(purchase, field_set_version=5)
 
 
 def _with_admission_facts(transaction: Transaction) -> Transaction:
@@ -262,13 +262,13 @@ def test_a_version_this_build_does_not_know_is_refused_not_approximated() -> Non
     with pytest.raises(ModeloValidationError, match="unknown to this build"):
         row_fingerprint(_purchase(), field_set_version=99)
     with pytest.raises(ModeloValidationError, match="unknown to this build"):
-        row_fingerprint(_purchase(), field_set_version=5)
+        row_fingerprint(_purchase(), field_set_version=6)
 
 
 def test_a_stored_snapshot_stamped_with_an_unknown_version_is_refused_at_comparison() -> None:
     purchase = _purchase()
-    unknown = _snapshot_of(purchase).model_copy(update={"fingerprint_field_set_version": 5})
-    with pytest.raises(ModeloValidationError, match=r"known versions are \[1, 2, 3, 4\]"):
+    unknown = _snapshot_of(purchase).model_copy(update={"fingerprint_field_set_version": 6})
+    with pytest.raises(ModeloValidationError, match=r"known versions are \[1, 2, 3, 5\]"):
         evaluate_ledger_filing_staleness(unknown, _catalogue(purchase))
 
 

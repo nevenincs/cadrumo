@@ -175,7 +175,7 @@ def _transaction_drift_findings(
     :class:`TransactionCatalogueRepositoryProtocol` the evidence gate reads.
     The caller supplies the repository bound to the work unit's bucket, so the
     live side is never silently absent. The anchor's field set says what it can
-    see: from version 4 a change to the deduction evidence moves it, attaching
+    see: from version 5 a change to the deduction evidence moves it, attaching
     included, so the recovery from a deductible-evidence refusal is to attach and
     calculate again. An older anchor keeps its own narrower answer, except that an
     operation date written after it was taken is reported below: nothing could

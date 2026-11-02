@@ -10,8 +10,8 @@ two. A field added to any of them reddens this until it is placed.
 
 The exclusions are checked against an independent reading: the filing
 snapshot's fingerprint of a row's tax facts does not move when one changes.
-The fingerprint reads the link to purchase-invoice evidence from its fourth
-field set, since detaching it changes what a recalculation admits.
+The fingerprint reads the link to purchase-invoice evidence from field set
+version 5, since detaching it changes what a recalculation admits.
 """
 
 from __future__ import annotations

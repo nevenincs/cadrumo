@@ -22,7 +22,7 @@ proportionality, the IVA base/rate/amount/category, the spending and IRPF
 categories, the M210 source-jurisdiction/classification facts, the EU member
 state, the FX conversion, the lifecycle state, and (from field-set version 3)
 the bienes de inversion link and the customer's identifying Member State, and
-(from version 4) the operation date and the deduction evidence behind the row.
+(from version 5) the operation date and the deduction evidence behind the row.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
@@ -152,14 +152,15 @@ _FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
     ("counterparty_identification_state", "counterparty_identification_state"),
 )
 
-# V4 adds what a calculation reads and V3 could not see: the operation date, which
+# Version 4 is the vehicle-use field set, which must precede this one once both are
+# present; V5 extends it. V5 adds what a calculation reads and V3 could not see: the operation date, which
 # picks the row's period and rate, and the evidence behind the deduction. Without
 # the provenance a row yields no input-IVA observation, so a draft holding a 21.00
 # cuota read as current after the evidence went while recalculating it refused.
 # The purchase evidence link is hashed because a recalculation takes the row's
 # figures from that invoice, so attaching one now asks for a recalculation too.
 # Supplementary ``attachment_ids`` feed no calculation and stay out.
-_FINGERPRINT_FIELDS_V4: tuple[tuple[str, str], ...] = (
+_FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
     *_FINGERPRINT_FIELDS_V3,
     ("operation_date", "operation_date"),
     ("purchase_invoice_evidence_id", "purchase_invoice_evidence_id"),
@@ -172,14 +173,14 @@ _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: _FINGERPRINT_FIELDS_V1,
     2: _FINGERPRINT_FIELDS_V2,
     3: _FINGERPRINT_FIELDS_V3,
-    4: _FINGERPRINT_FIELDS_V4,
+    5: _FINGERPRINT_FIELDS_V5,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 4
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 5
 
 #: The first version whose hash sees a row's operation date.
-OPERATION_DATE_FIELD_SET_VERSION: Final = 4
+OPERATION_DATE_FIELD_SET_VERSION: Final = 5
 
 
 def _fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:

@@ -1,4 +1,4 @@
-"""Real-path tests for the IVA operation date, the V4 fingerprint and sealed invoices.
+"""Real-path tests for the IVA operation date, the V5 fingerprint and sealed invoices.
 
 Worked by hand: a sale of 1,000.00 at 21 % carries a cuota of 210.00, and LIVA
 art. 75.Uno places it in the quarter the operation took place. On 30 March that
