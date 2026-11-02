@@ -22,7 +22,9 @@ See Also:
 
 from __future__ import annotations
 
+from dataclasses import dataclass
 from decimal import Decimal
+from typing import Final
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
@@ -32,7 +34,7 @@ from ...domain.calculations.registry.binding_grade_cap_reach import capped_bindi
 from ...domain.calculations.registry.errors import RegistrySnapshotError
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
-from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from ...domain.modelos.calculation_revision_sources import DISAGREEMENT_REASONS, CalculationSourceIssue
 from ...domain.modelos.errors import ModeloError
 from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloPreconditionErrorMixin
@@ -61,8 +63,33 @@ _FILED_STATES: frozenset[CalculationRevisionState] = frozenset(
 )
 
 
+@dataclass(frozen=True, slots=True)
+class SourceDisagreementResolutions:
+    """The source disagreements an active operator resolution covers, by finding key.
+
+    A finding key names one disagreement together with every source's value,
+    so a resolution covers only the exact values it was recorded against; any
+    changed value is a new finding the resolution does not cover.
+    """
+
+    finding_keys: frozenset[str] = frozenset()
+
+    def covers(self, finding_key: str | None) -> bool:
+        """Whether an active resolution covers the disagreement with ``finding_key``."""
+        return finding_key is not None and finding_key in self.finding_keys
+
+
+NO_SOURCE_DISAGREEMENT_RESOLUTIONS: Final[SourceDisagreementResolutions] = SourceDisagreementResolutions()
+"""The view where no disagreement is resolved, so every one withholds."""
+
+
 def gate_refuses(
-    reason: str, binding_source: BindingSourceKind | None, outcome: BindingValueOutcome | None = None
+    reason: str,
+    binding_source: BindingSourceKind | None,
+    outcome: BindingValueOutcome | None = None,
+    *,
+    finding_key: str | None = None,
+    resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS,
 ) -> bool:
     """Whether the gate refuses on a note of ``reason`` from ``binding_source``, wherever the note names.
 
@@ -73,18 +100,30 @@ def gate_refuses(
     outcome withholds like any other. A revision whose screen is outdated, or
     one recorded as filed before screens existed that holds a capped figure, is
     refused before its notes are read, so each derived reason withholds too.
+    A disagreement between sources withholds until ``resolutions`` covers its
+    ``finding_key``.
     """
     if reason in DERIVED_GATE_REASONS:
         return True
     if reason not in GATE_REFUSED_REASONS:
         return False
+    if reason in DISAGREEMENT_REASONS:
+        return not resolutions.covers(finding_key)
     if capped_value_proven_zero(reason, outcome):
         return False
     return not (reason == "unrouted_observation" and binding_source is BindingSourceKind.LEDGER_OSS_AGGREGATION)
 
 
-def _refused_here(issue: CalculationSourceIssue) -> bool:
-    return gate_refuses(issue.reason, issue.binding_source, issue.value_outcome)
+def _refused_here(
+    issue: CalculationSourceIssue, resolutions: SourceDisagreementResolutions = NO_SOURCE_DISAGREEMENT_RESOLUTIONS
+) -> bool:
+    return gate_refuses(
+        issue.reason,
+        issue.binding_source,
+        issue.value_outcome,
+        finding_key=None if issue.disagreement is None else issue.disagreement.finding_key,
+        resolutions=resolutions,
+    )
 
 
 def blocking_calculation_issues(revision: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
@@ -393,7 +432,9 @@ def require_work_unit_calculation_unblocked(
 
 
 __all__ = [
+    "NO_SOURCE_DISAGREEMENT_RESOLUTIONS",
     "ModeloCalculationBlockedError",
+    "SourceDisagreementResolutions",
     "blocking_calculation_issues",
     "calculation_filed_before_grade_cap",
     "calculation_screen_outdated",
