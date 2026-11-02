@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d7c9cea2f484ac70c5b29dfbcfc133fdfc59a1f13bcfc9c68275254d8f4b4871'
+body_hash: 'sha256:038a9d9400bd299871742d93fad2982cc868c1abb911e759c3d5e6d362186152'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -516,6 +516,8 @@ related:
 - `S06` `verify:` `lint-imports --config .importlinter --no-cache` -> `pass`
 - `S06` `verify:` `dev.operation_contract_manifest.generate --check` -> `pass`
 - `S06` `by:` `vaultspec-high-executor`
+- `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/executor.py`
+- `S18` `verify:` `pytest retencion_soportada cli+mesh+conformance` -> `pass`
 
 ## Notes
 
