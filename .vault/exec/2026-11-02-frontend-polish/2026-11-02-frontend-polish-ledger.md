@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d79fbb44152f10871a2f2fee796e33782d2b2ea81d621b408f2f9bd46c3f298d'
+body_hash: 'sha256:939194becf07a940abde92b63fc8749e4ac564460f71fee11a4770321c9b49da'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -96,6 +96,8 @@ related:
 - `S26` `M` `native/desktop/frontend/tests/scenarios/agent-skills.spec.ts`
 - `S26` `verify:` `TypeScript targeted ESLint and formatting` -> `pass`
 - `S26` `verify:` `agent mentions and skills browser scenarios (24)` -> `pass`
+- `S08` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S08` `verify:` `Shared-control and typed-editor static review plus 87 applicable browser cases after S18` -> `pass`
 
 ## Notes
 

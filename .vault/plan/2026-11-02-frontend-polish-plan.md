@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:60774d55b2760cfd157920643382a70211fd02e62cfbef1e32cdaddb22fd51b4'
+body_hash: 'sha256:2987922975ee9dc0b53939486b7396f295621192605230c92186ac009b2141f0'
 ---
 
 # `frontend-polish` plan
@@ -49,7 +49,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S25` - Require host-requested unknown-outcome acknowledgement for exact AEAT retry scopes and prevent overlapping requests; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
 - [x] `S07` - Keep invoice grid row identity stable across unrelated editor and notification updates; `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`.
 - [x] `S18` - Repair shared suggestion visibility and combobox keyboard escape, and verify grid focus when an active column is hidden; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/tests/scenarios/`.
-- [ ] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.
+- [x] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.
 - [ ] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
 - [ ] `S10` - Complete remaining ledger workflow review across movements, invoices, documents, assets, registers and transfers; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `S19` - Preserve uncertain declaration creation across chooser changes and require authoritative settlement before another write; `native/desktop/frontend/src/components/modelo/declarations/, native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`.
