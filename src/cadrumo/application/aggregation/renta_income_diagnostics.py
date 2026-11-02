@@ -126,9 +126,8 @@ def overpaid_invoice_issues(
 
 def _receipts_within_invoice(invoice: Invoice, receipts: Sequence[Transaction]) -> bool:
     """Return whether the receipts are too few to compare or together stay within the invoice's net cash."""
-    return len(receipts) < 2 or sum((abs(row.raw.amount) for row in receipts), Decimal("0")) <= (
-        renta_income_evidence.invoice_net_cash(invoice)
-    )
+    comparison = renta_income_evidence.settlement_comparison(invoice, receipts)
+    return len(receipts) < 2 or comparison is None or comparison.cash <= comparison.owed
 
 
 def _overpaid_receipt_issues(
