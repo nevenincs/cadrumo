@@ -156,7 +156,6 @@ def test_v5_appends_the_operation_date_and_the_evidence_facts_and_is_current() -
         "deduction_source_locator",
         "deduction_evidence_digest",
     ]
-    assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 5
 
 
 @pytest.mark.parametrize("version", [1, 2, 3])
@@ -329,7 +328,7 @@ def test_a_version_this_build_does_not_know_is_refused_not_approximated() -> Non
 def test_a_stored_snapshot_stamped_with_an_unknown_version_is_refused_at_comparison() -> None:
     purchase = _purchase()
     unknown = _snapshot_of(purchase).model_copy(update={"fingerprint_field_set_version": 7})
-    with pytest.raises(ModeloValidationError, match=r"known versions are \[1, 2, 3, 5\]"):
+    with pytest.raises(ModeloValidationError, match=r"known versions are \[1, 2, 3, 5, 6\]"):
         evaluate_ledger_filing_staleness(unknown, _catalogue(purchase))
 
 
