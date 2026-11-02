@@ -2216,6 +2216,10 @@ application:
       invoice_fingerprint_drift: Your invoices changed after modelo %{modelo} %{filing_year},
         %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
         %{added_count} added). Calculate it again before verifying.
+      invoice_fingerprint_narrower_scope: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates the tracking of invoices accrued with no bank movement,
+        so Cadrumo cannot say whether those have changed since. Calculate it again
+        to start tracking them.
       invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
         them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
         cannot be shown to be current. Try again once they can be read.
