@@ -8,10 +8,8 @@ from dataclasses import (
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..ledger.read_access import resolve_ledger_exact_request_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
@@ -23,7 +21,6 @@ from ..operations.registry import (
     OperationResultProjector,
 )
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .ports import BienesInversionIvaRegisterRepositoryFactory
 from .registered_contracts import (
     BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID,
@@ -35,7 +32,6 @@ from .registered_executor import BienesInversionOperationExecutor
 from .registered_requests import (
     BienesInversionDeclareRequest,
     BienesInversionListRequest,
-    BienesInversionProfileRequest,
 )
 from .registered_result_contracts import BienesInversionDeclareProjection, BienesInversionListProjection
 from .registered_result_projection import project_bienes_inversion_declare_result, project_bienes_inversion_list_result
@@ -62,24 +58,21 @@ _SHAPES: dict[str, _OperationShape] = {
 }
 
 
+_REQUEST_TYPES = {definition_id: shape.request_type for definition_id, shape in _SHAPES.items()}
+
+
 def resolve_bienes_inversion_operation_access(
     request: OperationRequest[BaseModel],
     context: OperationAccessContext,
     /,
 ) -> ResolvedOperationAccess:
     """Bind list/declaration to the exact profile and all-period singleton scope."""
-    shape = _SHAPES.get(request.definition_id)
-    payload = request.payload
-    if (
-        shape is None
-        or type(payload) is not shape.request_type
-        or not isinstance(payload, BienesInversionProfileRequest)
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
-    if request.definition_id != BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID:
-        return resolved
-    return with_commit_action(resolved)
+    return resolve_ledger_exact_request_access(
+        request,
+        context,
+        request_types=_REQUEST_TYPES,
+        commit_definition_ids=frozenset({BIENES_INVERSION_DECLARE_OPERATION_DEFINITION_ID}),
+    )
 
 
 def _definition(

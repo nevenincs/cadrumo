@@ -13,6 +13,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
 from ...core.storage_taxonomy import StorageCategory
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
@@ -32,7 +33,7 @@ from .live_operation_execution import (
     publish_live_capture_report,
     require_exact_profile_worker,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import IvaCompensationHistoryCaptureReport
 
 IVA_WALLET_HISTORY_CAPTURE_DEFINITION_ID = "live.iva-wallet.history-capture"
@@ -186,11 +187,11 @@ def resolve_iva_wallet_history_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile history access and a fresh COMMIT fence."""
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=IVA_WALLET_HISTORY_CAPTURE_DEFINITION_ID,
-        payload_type=IvaWalletHistoryCaptureRequest,
+        request_type=IvaWalletHistoryCaptureRequest,
     )
 
 

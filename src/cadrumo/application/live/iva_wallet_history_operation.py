@@ -20,6 +20,7 @@ from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva_compensation.reconciliation import IvaCompensationDecisionReason
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
@@ -31,7 +32,6 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .iva_remote_state import list_iva_compensation_history
 from .iva_remote_state_ports import IvaRemoteStatePort
-from .live_operation_registration import resolve_whole_profile_read_access
 from .remote_state_models import (
     IvaCompensationCarryForwardLotRow,
     IvaCompensationHistoryReport,
@@ -243,8 +243,8 @@ def resolve_iva_wallet_history_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require all-period profile access for carried balances and decisions."""
-    return resolve_whole_profile_read_access(
-        request, context, definition_id=IVA_WALLET_HISTORY_OPERATION_DEFINITION_ID, payload_type=IvaWalletHistoryRequest
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=IVA_WALLET_HISTORY_OPERATION_DEFINITION_ID, request_type=IvaWalletHistoryRequest
     )
 
 

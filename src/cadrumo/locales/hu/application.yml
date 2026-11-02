@@ -1597,6 +1597,21 @@ application:
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő
         eszközt rögzít.
     calc_diagnostic_words:
+      income_class:
+        actividad_economica: Gazdasági tevékenységből származó
+        arrendamiento_inmueble_urbano: Városi ingatlan bérbeadásából származó
+        arrendamiento_inmueble_urbano_actividad: Gazdasági tevékenységként végzett
+          városi ingatlan-bérbeadásból származó
+        atribucion_actividad_economica: Hozzárendelt gazdasági tevékenységből származó
+        atribucion_capital_inmobiliario: Hozzárendelt, ingatlanból származó
+        atribucion_capital_mobiliario: Hozzárendelt, ingó tőkéből származó
+        atribucion_ganancia_patrimonial: Hozzárendelt vagyoni nyereségből származó
+        capital_mobiliario: Ingó tőkéből származó
+        ganancia_patrimonial: Vagyoni nyereségből származó
+        imputacion_aie_ute: AIE- és UTE-imputációs
+        imputacion_derechos_imagen: Képmásjog-imputációs
+        other: Egyéb
+        trabajo: Munkából származó
       named_element: „{name}”
       unnamed_element: Névtelen eszköz
     calculation_report:

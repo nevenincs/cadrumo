@@ -236,7 +236,40 @@ _FACT_KEY_ROOT: Final[str] = "application.modelo.calc_diagnostic_fact"
 _ELEMENT_NAME_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.named_element"
 _UNNAMED_ELEMENT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.unnamed_element"
 _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_unnumbered"
+_INCOME_CLASS_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "trabajo": "application.modelo.calc_diagnostic_words.income_class.trabajo",
+        "capital_mobiliario": "application.modelo.calc_diagnostic_words.income_class.capital_mobiliario",
+        "arrendamiento_inmueble_urbano": (
+            "application.modelo.calc_diagnostic_words.income_class.arrendamiento_inmueble_urbano"
+        ),
+        "arrendamiento_inmueble_urbano_actividad": (
+            "application.modelo.calc_diagnostic_words.income_class.arrendamiento_inmueble_urbano_actividad"
+        ),
+        "actividad_economica": "application.modelo.calc_diagnostic_words.income_class.actividad_economica",
+        "ganancia_patrimonial": "application.modelo.calc_diagnostic_words.income_class.ganancia_patrimonial",
+        "atribucion_capital_mobiliario": (
+            "application.modelo.calc_diagnostic_words.income_class.atribucion_capital_mobiliario"
+        ),
+        "atribucion_capital_inmobiliario": (
+            "application.modelo.calc_diagnostic_words.income_class.atribucion_capital_inmobiliario"
+        ),
+        "atribucion_actividad_economica": (
+            "application.modelo.calc_diagnostic_words.income_class.atribucion_actividad_economica"
+        ),
+        "atribucion_ganancia_patrimonial": (
+            "application.modelo.calc_diagnostic_words.income_class.atribucion_ganancia_patrimonial"
+        ),
+        "imputacion_aie_ute": "application.modelo.calc_diagnostic_words.income_class.imputacion_aie_ute",
+        "imputacion_derechos_imagen": (
+            "application.modelo.calc_diagnostic_words.income_class.imputacion_derechos_imagen"
+        ),
+    }
+)
+"""The words of each suffered-withholding income class a note names, by the token the calculation stores."""
+_OTHER_INCOME_CLASS_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic_words.income_class.other"
 _ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
+_INCOME_CLASS_VALUE: Final[str] = "income_class"
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
     {"amount", "cost", "paid", "price", "base", "remainder", "effect", "transmission_value", "net_value", "row_amount"}
@@ -325,6 +358,8 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         return format_casilla_value(date.fromisoformat(value), data_type="date", language=language)
     if name in _AMOUNT_VALUES:
         return format_casilla_value(Decimal(value), data_type="money", language=language)
+    if name == _INCOME_CLASS_VALUE:
+        return tr(_INCOME_CLASS_LOCALE_KEYS.get(value, _OTHER_INCOME_CLASS_LOCALE_KEY), locale=language.value)
     return value
 
 

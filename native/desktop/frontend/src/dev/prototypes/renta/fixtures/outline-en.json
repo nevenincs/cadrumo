@@ -1,0 +1,2111 @@
+{
+  "served": [
+    {
+      "id": "datoseconomicos-resultados",
+      "heading": {
+        "text": "DatosEconomicos/Resultados",
+        "disclosure": "technical"
+      },
+      "counts": {
+        "total": 1412,
+        "needs_input": 0,
+        "entered": 0,
+        "imported": 4,
+        "calculated": 98,
+        "overridden": 1,
+        "default_to_confirm": 0,
+        "not_applicable": 0,
+        "blocked": 0
+      },
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores",
+          "heading": {
+            "text": "calculoimpuestores",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.rdtotrabajores",
+          "heading": { "text": "rdtotrabajores", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 8,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 4,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.rdtocapitalmobiliariores",
+          "heading": {
+            "text": "rdtocapitalmobiliariores",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.inmueblesres",
+          "heading": { "text": "inmueblesres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 3,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 3,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.regestimadirectares",
+          "heading": {
+            "text": "regestimadirectares",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 6,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.regestimaobjres",
+          "heading": { "text": "regestimaobjres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 3,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.regestimaobjagricolares",
+          "heading": {
+            "text": "regestimaobjagricolares",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 3,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.regimenesespecialesres",
+          "heading": {
+            "text": "regimenesespecialesres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 9,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 9,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-2",
+          "heading": {
+            "text": "calculoimpuestores-2",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 4,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.regimenesespecialesres-2",
+          "heading": {
+            "text": "regimenesespecialesres-2",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-3",
+          "heading": {
+            "text": "calculoimpuestores-3",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.regimenesespecialesres-3",
+          "heading": {
+            "text": "regimenesespecialesres-3",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 3,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gppremiosres",
+          "heading": { "text": "gppremiosres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 6,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 6,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpfondosres",
+          "heading": { "text": "gpfondosres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpfondoscotires",
+          "heading": { "text": "gpfondoscotires", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpaccionesres",
+          "heading": { "text": "gpaccionesres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpderechosres",
+          "heading": { "text": "gpderechosres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotroscriptomonedasres",
+          "heading": {
+            "text": "gpotroscriptomonedasres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotrosinmueblesres",
+          "heading": {
+            "text": "gpotrosinmueblesres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 3,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 3,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotroselementosres",
+          "heading": {
+            "text": "gpotroselementosres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 3,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 3,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotrasgananciasres",
+          "heading": {
+            "text": "gpotrasgananciasres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotrasgananciasejerantres",
+          "heading": {
+            "text": "gpotrasgananciasejerantres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpreinversionres",
+          "heading": { "text": "gpreinversionres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.gcambioresidenciaextres",
+          "heading": {
+            "text": "gcambioresidenciaextres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.integracionres",
+          "heading": { "text": "integracionres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 8,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 8,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.baseimponibleres",
+          "heading": { "text": "baseimponibleres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.integracionres-2",
+          "heading": { "text": "integracionres-2", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.baseimponibleres-2",
+          "heading": {
+            "text": "baseimponibleres-2",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 24,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 3,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.redbaseimponibleres",
+          "heading": {
+            "text": "redbaseimponibleres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 9,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.baseliquidableres",
+          "heading": { "text": "baseliquidableres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 13,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.minimoperfamres",
+          "heading": { "text": "minimoperfamres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 14,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 6,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.datosadicionalesres",
+          "heading": {
+            "text": "datosadicionalesres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 33,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-4",
+          "heading": {
+            "text": "calculoimpuestores-4",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 142,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 4,
+            "calculated": 19,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.irpfccaares",
+          "heading": { "text": "irpfccaares", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 3,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.regularizacionres",
+          "heading": { "text": "regularizacionres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 3,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.compensacionconyugesres",
+          "heading": {
+            "text": "compensacionconyugesres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 12,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares",
+          "heading": { "text": "anexoares", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 11,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-2",
+          "heading": { "text": "anexoares-2", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 11,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-3",
+          "heading": { "text": "anexoares-3", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 7,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-5",
+          "heading": {
+            "text": "calculoimpuestores-5",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-4",
+          "heading": { "text": "anexoares-4", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 8,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-5",
+          "heading": { "text": "anexoares-5", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-6",
+          "heading": { "text": "anexoares-6", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-7",
+          "heading": { "text": "anexoares-7", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-8",
+          "heading": { "text": "anexoares-8", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 12,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-9",
+          "heading": { "text": "anexoares-9", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 48,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-10",
+          "heading": { "text": "anexoares-10", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 82,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-6",
+          "heading": {
+            "text": "calculoimpuestores-6",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.datosadicionalesanexob",
+          "heading": {
+            "text": "datosadicionalesanexob",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 224,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.deduccionautonomicares",
+          "heading": {
+            "text": "deduccionautonomicares",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 482,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexocres",
+          "heading": { "text": "anexocres", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 179,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 3,
+            "overridden": 1,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.datosadicionalesanexob-2",
+          "heading": {
+            "text": "datosadicionalesanexob-2",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 6,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.ingresodevolucionres",
+          "heading": {
+            "text": "ingresodevolucionres",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-7",
+          "heading": {
+            "text": "calculoimpuestores-7",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "datoseconomicos",
+      "heading": { "text": "DatosEconomicos", "disclosure": "technical" },
+      "counts": {
+        "total": 36,
+        "needs_input": 0,
+        "entered": 0,
+        "imported": 0,
+        "calculated": 0,
+        "overridden": 0,
+        "default_to_confirm": 0,
+        "not_applicable": 0,
+        "blocked": 0
+      },
+      "sections": [
+        {
+          "id": "datoseconomicos.general",
+          "heading": { "text": "general", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 36,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "datoseconomicos-tomadatosampliada",
+      "heading": {
+        "text": "DatosEconomicos/TomaDatosAmpliada",
+        "disclosure": "technical"
+      },
+      "counts": {
+        "total": 767,
+        "needs_input": 0,
+        "entered": 0,
+        "imported": 25,
+        "calculated": 66,
+        "overridden": 0,
+        "default_to_confirm": 0,
+        "not_applicable": 0,
+        "blocked": 0
+      },
+      "sections": [
+        {
+          "id": "datoseconomicos-tomadatosampliada.rdtotrabajo",
+          "heading": { "text": "Employment income", "disclosure": "localized" },
+          "official_heading": "Rendimientos de trabajo",
+          "counts": {
+            "total": 18,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 3,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.rdtocapitalmobiliario",
+          "heading": {
+            "text": "rdtocapitalmobiliario",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 27,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 6,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.inmuebles",
+          "heading": {
+            "text": "Real estate available to its owners, let or assigned to third parties, or used in economic activities",
+            "disclosure": "localized"
+          },
+          "official_heading": "Bienes inmuebles a disposición de sus titulares, arrendados o cedidos a terceros, o afectos a actividades económicas",
+          "counts": {
+            "total": 90,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 3,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regestimadirecta",
+          "heading": { "text": "regestimadirecta", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 55,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 18,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regestimaobj",
+          "heading": { "text": "regestimaobj", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 40,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 1,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regestimaobjagricola",
+          "heading": {
+            "text": "regestimaobjagricola",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 75,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 25,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regimenesespeciales",
+          "heading": {
+            "text": "regimenesespeciales",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 67,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 4,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gppremios",
+          "heading": { "text": "gppremios", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 25,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 2,
+            "calculated": 2,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.dt9",
+          "heading": { "text": "dt9", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpfondos",
+          "heading": {
+            "text": "Gains and losses on the transfer of investment companies and funds and of SOCIMIs",
+            "disclosure": "localized"
+          },
+          "official_heading": "Ganancias y pérdidas por la transmisión de sociedades y fondos de inversión y de SOCIMIS",
+          "counts": {
+            "total": 12,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpfondoscoti",
+          "heading": {
+            "text": "Gains and losses on the transfer of units in listed funds (ETFs) and of shares in listed index SICAVs",
+            "disclosure": "localized"
+          },
+          "official_heading": "Ganancias y pérdidas por la transmisión de participaciones de fondos cotizados (ETF) y de acciones de SICAV índice cotizadas",
+          "counts": {
+            "total": 10,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpacciones",
+          "heading": {
+            "text": "Transfer of traded shares",
+            "disclosure": "localized"
+          },
+          "official_heading": "Transmisión de acciones negociadas",
+          "counts": {
+            "total": 12,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpderechos",
+          "heading": {
+            "text": "Capital gains and losses arising from the transfer of subscription rights",
+            "disclosure": "localized"
+          },
+          "official_heading": "Ganancias y pérdidas patrimoniales derivadas de la transmisión de derechos de suscripción",
+          "counts": {
+            "total": 12,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotroscriptomonedas",
+          "heading": {
+            "text": "Capital gains and losses arising from the transfer or exchange of virtual currencies",
+            "disclosure": "localized"
+          },
+          "official_heading": "Ganancias y pérdidas patrimoniales derivadas de la transmisión o permuta de monedas virtuales",
+          "counts": {
+            "total": 12,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 4,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrosinmuebles",
+          "heading": { "text": "gpotrosinmuebles", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 35,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 2,
+            "calculated": 6,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotroselementos",
+          "heading": { "text": "gpotroselementos", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 25,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 2,
+            "calculated": 5,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrasganancias",
+          "heading": { "text": "gpotrasganancias", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrasgananciasejerant",
+          "heading": {
+            "text": "gpotrasgananciasejerant",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpreinversion",
+          "heading": { "text": "gpreinversion", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gcambioresidenciaext",
+          "heading": {
+            "text": "Capital gains on a change of residence outside Spanish territory (article 95 bis of the Tax Law)",
+            "disclosure": "localized"
+          },
+          "official_heading": "Ganancias patrimoniales por cambio de residencia fuera del territorio español (artículo 95 bis de la Ley del Impuesto)",
+          "counts": {
+            "total": 10,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regimenespecial",
+          "heading": { "text": "regimenespecial", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 2,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.redbaseimponible",
+          "heading": { "text": "redbaseimponible", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 25,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.anexoa",
+          "heading": { "text": "anexoa", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 49,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.rdtotrabajo-2",
+          "heading": { "text": "Employment income", "disclosure": "localized" },
+          "official_heading": "Rendimientos de trabajo",
+          "counts": {
+            "total": 6,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.inmuebles-2",
+          "heading": {
+            "text": "Real estate available to its owners, let or assigned to third parties, or used in economic activities",
+            "disclosure": "localized"
+          },
+          "official_heading": "Bienes inmuebles a disposición de sus titulares, arrendados o cedidos a terceros, o afectos a actividades económicas",
+          "counts": {
+            "total": 14,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 1,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotroscriptomonedas-2",
+          "heading": {
+            "text": "Capital gains and losses arising from the transfer or exchange of virtual currencies",
+            "disclosure": "localized"
+          },
+          "official_heading": "Ganancias y pérdidas patrimoniales derivadas de la transmisión o permuta de monedas virtuales",
+          "counts": {
+            "total": 22,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrosinmuebles-2",
+          "heading": {
+            "text": "gpotrosinmuebles-2",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 26,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotroselementos-2",
+          "heading": {
+            "text": "gpotroselementos-2",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 22,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrosinmuebles-3",
+          "heading": {
+            "text": "gpotrosinmuebles-3",
+            "disclosure": "technical"
+          },
+          "official_heading": null,
+          "counts": {
+            "total": 6,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regimenespecial-2",
+          "heading": { "text": "regimenespecial-2", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 17,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.inmuebles-3",
+          "heading": {
+            "text": "Real estate available to its owners, let or assigned to third parties, or used in economic activities",
+            "disclosure": "localized"
+          },
+          "official_heading": "Bienes inmuebles a disposición de sus titulares, arrendados o cedidos a terceros, o afectos a actividades económicas",
+          "counts": {
+            "total": 48,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        }
+      ]
+    },
+    {
+      "id": "other-inputs",
+      "heading": { "text": "other-inputs", "disclosure": "technical" },
+      "counts": {
+        "total": 1,
+        "needs_input": 0,
+        "entered": 1,
+        "imported": 0,
+        "calculated": 0,
+        "overridden": 0,
+        "default_to_confirm": 0,
+        "not_applicable": 0,
+        "blocked": 0
+      },
+      "sections": [
+        {
+          "id": "other-inputs.inputs",
+          "heading": { "text": "inputs", "disclosure": "technical" },
+          "official_heading": null,
+          "counts": {
+            "total": 1,
+            "needs_input": 0,
+            "entered": 1,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0
+          }
+        }
+      ]
+    }
+  ],
+  "proposed": [
+    {
+      "id": "identification",
+      "sections": [
+        {
+          "id": "datoseconomicos.general",
+          "page_id": "datoseconomicos",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 0, "failed": 0 }
+    },
+    {
+      "id": "employment",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.rdtotrabajores",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.rdtotrabajo",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.rdtotrabajo-2",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 0, "failed": 0 }
+    },
+    {
+      "id": "movable_capital",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.rdtocapitalmobiliariores",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.rdtocapitalmobiliario",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 0, "failed": 0 }
+    },
+    {
+      "id": "real_estate",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.inmueblesres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.inmuebles",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.inmuebles-2",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.inmuebles-3",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 0, "failed": 0 }
+    },
+    {
+      "id": "activities",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.regestimadirectares",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 2, "failed": 2 }
+        },
+        {
+          "id": "datoseconomicos-resultados.regestimaobjres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.regestimaobjagricolares",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.regimenesespecialesres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.regimenesespecialesres-2",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.regimenesespecialesres-3",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regestimadirecta",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 11, "failed": 11 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regestimaobj",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regestimaobjagricola",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regimenesespeciales",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 13, "failed": 13 }
+    },
+    {
+      "id": "capital_gains",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.gppremiosres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpfondosres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpfondoscotires",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpaccionesres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpderechosres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotroscriptomonedasres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotrosinmueblesres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotroselementosres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotrasgananciasres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpotrasgananciasejerantres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gpreinversionres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.gcambioresidenciaextres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gppremios",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpfondos",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpfondoscoti",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpacciones",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpderechos",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotroscriptomonedas",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrosinmuebles",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotroselementos",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrasganancias",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrasgananciasejerant",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpreinversion",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gcambioresidenciaext",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotroscriptomonedas-2",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrosinmuebles-2",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotroselementos-2",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.gpotrosinmuebles-3",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 0, "failed": 0 }
+    },
+    {
+      "id": "bases",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.integracionres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.baseimponibleres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.integracionres-2",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.baseimponibleres-2",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 3, "failed": 3 }
+        },
+        {
+          "id": "datoseconomicos-resultados.redbaseimponibleres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 1, "failed": 1 }
+        },
+        {
+          "id": "datoseconomicos-resultados.baseliquidableres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 2, "failed": 2 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.redbaseimponible",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 6, "failed": 6 }
+    },
+    {
+      "id": "minimums",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.minimoperfamres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 4, "failed": 4 }
+        }
+      ],
+      "attention": { "needs_you": 4, "failed": 4 }
+    },
+    {
+      "id": "liability",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-2",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-3",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-4",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 24, "failed": 24 }
+        },
+        {
+          "id": "datoseconomicos-resultados.irpfccaares",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 2, "failed": 2 }
+        },
+        {
+          "id": "datoseconomicos-resultados.regularizacionres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-5",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-6",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.deduccionautonomicares",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 1, "failed": 1 }
+        },
+        {
+          "id": "datoseconomicos-resultados.calculoimpuestores-7",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 27, "failed": 27 }
+    },
+    {
+      "id": "result",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.compensacionconyugesres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 1, "failed": 1 }
+        },
+        {
+          "id": "datoseconomicos-resultados.ingresodevolucionres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 1, "failed": 1 }
+    },
+    {
+      "id": "annexes",
+      "sections": [
+        {
+          "id": "datoseconomicos-resultados.datosadicionalesres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-2",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-3",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-4",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-5",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-6",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-7",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-8",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-9",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 2, "failed": 2 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexoares-10",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.datosadicionalesanexob",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-resultados.anexocres",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 1, "failed": 1 }
+        },
+        {
+          "id": "datoseconomicos-resultados.datosadicionalesanexob-2",
+          "page_id": "datoseconomicos-resultados",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.anexoa",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 3, "failed": 3 }
+    },
+    {
+      "id": "other",
+      "sections": [
+        {
+          "id": "datoseconomicos-tomadatosampliada.dt9",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regimenespecial",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "datoseconomicos-tomadatosampliada.regimenespecial-2",
+          "page_id": "datoseconomicos-tomadatosampliada",
+          "attention": { "needs_you": 0, "failed": 0 }
+        },
+        {
+          "id": "other-inputs.inputs",
+          "page_id": "other-inputs",
+          "attention": { "needs_you": 0, "failed": 0 }
+        }
+      ],
+      "attention": { "needs_you": 0, "failed": 0 }
+    }
+  ]
+}

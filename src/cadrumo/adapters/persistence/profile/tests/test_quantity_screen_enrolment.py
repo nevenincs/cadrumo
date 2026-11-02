@@ -36,6 +36,7 @@ from cadrumo.application.aggregation.modelo_bindings import LedgerRentaIncomeAgg
 from cadrumo.application.aggregation.modelo_bindings_iva import LedgerIvaAggregationSourceResolver
 from cadrumo.application.aggregation.source_mesh import CalculationSourceContext, CalculationSourceResolution
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
+from cadrumo.application.modelo.work_profile import ModeloWorkProfile
 from cadrumo.core.period import Period
 from cadrumo.domain.bienes_inversion.register import BienesInversionIvaRegister
 from cadrumo.domain.calculations.registry.schema import ModeloRevision
@@ -50,6 +51,8 @@ from cadrumo.domain.transactions.dates import transaction_eligible_date_span, tr
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
+from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
 
 from .published_authority_support import published_authority_operation
 
@@ -278,6 +281,20 @@ def _renta_net_paid_invoice() -> Transaction:
     )
 
 
+def _cash_criterion_profile(year: int) -> ModeloWorkProfile:
+    """A taxpayer who elected cobros y pagos, so the bank-dated row is placed in its quarter (RIRPF art. 7.2)."""
+    operation = published_authority_operation()
+    return ModeloWorkProfile(
+        record=create_user_profile_record(
+            setup_state=ProfileSetupState.COMPLETE,
+            profile_id=_BUCKET_ID,
+            facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *cash_criterion_facts(year)),
+            context=operation.profile_create_context(),
+        ),
+        profile_decode_context=operation.profile_decode_context(),
+    )
+
+
 def _resolve_renta(repository: TransactionCatalogueRepository) -> CalculationSourceResolution:
     repository.save(TransactionCatalogue.from_transactions((_renta_net_paid_invoice(),)))
     return LedgerRentaIncomeAggregationSourceResolver(
@@ -298,6 +315,7 @@ def _resolve_renta(repository: TransactionCatalogueRepository) -> CalculationSou
                 "ledger_renta_income_aggregation",
                 "declared_withheld_amount_sum",
             ),
+            profile=_cash_criterion_profile(2026),
         ),
     )
 

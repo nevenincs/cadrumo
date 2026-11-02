@@ -305,8 +305,12 @@ def _transaction(
     counterparty_country: str | None = None,
     counterparty_identification_state: EUMemberState | None = None,
 ) -> Transaction:
+    raw = _raw_transaction(provider_id, amount=amount)
     fields: dict[str, object] = {
-        "raw": _raw_transaction(provider_id, amount=amount),
+        "raw": raw,
+        # Stated, so the period never rests on the bank date and the source-advisory
+        # assertions in this file see only the advisories they are about.
+        "operation_date": raw.booked_date,
         "direction": direction,
         "business_classification": BusinessClassification.BUSINESS,
         "source_jurisdiction": "ES",

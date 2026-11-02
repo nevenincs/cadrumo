@@ -58,6 +58,7 @@ from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
 from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
+from .desktop_renta_keys import RENTA_FAMILIES, RENTA_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
 from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
@@ -844,6 +845,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         **ENTRY_OPTION_FAMILIES,
         **ENTRY_TOKEN_WORD_FAMILIES,
         **MODELO_CHOICE_FAMILIES,
+        **RENTA_FAMILIES,
     }
 )
 
@@ -858,6 +860,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | ENTRY_OPTION_KEYS
     | ENTRY_TOKEN_WORD_KEYS
     | MODELO_CHOICE_KEYS
+    | RENTA_KEYS
     | FINDING_KEYS
     | RULE_FINDING_KEYS
     | RATE_SLOT_KEYS

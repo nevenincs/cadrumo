@@ -1,0 +1,29 @@
+{
+  "question": {
+    "id": "irpf-activity-income-imputation-criterion",
+    "prompt": "Which criterion do you use to place your business income and expenses in a tax year? Accrual (devengo) is the usual answer.",
+    "help": "Accrual (devengo) is the usual answer: income and expenses belong to the year they arise, whatever the payment date. Cash (cobros y pagos) is an election open only if you do not keep Código de Comercio accounting (RIRPF art. 7.2); it binds you for at least three years and is stated in your return. If you are not sure, leave this blank: the activity boxes stay unresolved until you state it.",
+    "choices": [
+      {
+        "value": "devengo",
+        "label": "Accrual (devengo)",
+        "description": "The usual answer: income and expenses count in the year they arise, whatever the payment date."
+      },
+      {
+        "value": "cobros_y_pagos",
+        "label": "Cash (cobros y pagos)",
+        "description": "Only if you elected it in your return and do not keep Código de Comercio accounting; it binds you for at least three years."
+      }
+    ],
+    "proposed": "devengo"
+  },
+  "year": {
+    "id": "irpf-activity-income-imputation-year",
+    "prompt": "Which tax year (ejercicio) is this answer for? Enter four digits.",
+    "help": "The election is made year by year, so the answer is saved for that year only and the answers for other years stay as they are."
+  },
+  "accounting": {
+    "id": "irpf-codigo-comercio-accounting",
+    "prompt": "Do you keep accounting under the Código de Comercio (required or voluntary) in that tax year? If you do, cash is not open to you."
+  }
+}

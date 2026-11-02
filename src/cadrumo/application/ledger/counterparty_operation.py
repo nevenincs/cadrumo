@@ -41,7 +41,7 @@ from .counterparty_establishment_ports import (
     CounterpartyEstablishmentRepositoryFactory,
     CounterpartyEstablishmentRepositoryProtocol,
 )
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_access
 
 LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID = "ledger.counterparty"
 LEDGER_COUNTERPARTY_TAX_ID_MAX = 256
@@ -422,12 +422,13 @@ def resolve_ledger_counterparty_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile scope, and COMMIT for mutations."""
-    if request.definition_id != LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerCounterpartyRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.action == "view" else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=LEDGER_COUNTERPARTY_OPERATION_DEFINITION_ID,
+        request_type=LedgerCounterpartyRequest,
+        commits=lambda payload: payload.action != "view",
+    )
 
 
 def build_ledger_counterparty_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

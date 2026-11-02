@@ -6,16 +6,13 @@ from typing import Final
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..ledger.read_access import resolve_ledger_exact_request_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.models import OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .contracts import (
     RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_ABSENCE_REFUSAL_CODES,
@@ -50,14 +47,8 @@ def resolve_retencion_soportada_absence_operation_access(
     /,
 ) -> ResolvedOperationAccess:
     """Bind each attestation operation to the exact profile, all periods, as a committing write."""
-    request_type = _REQUEST_TYPES.get(request.definition_id)
-    payload = request.payload
-    if request_type is None or type(payload) is not request_type:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if not isinstance(payload, RetencionSoportadaAbsenceRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return with_commit_action(
-        resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
+    return resolve_ledger_exact_request_access(
+        request, context, request_types=_REQUEST_TYPES, commit_definition_ids=frozenset(_REQUEST_TYPES)
     )
 
 

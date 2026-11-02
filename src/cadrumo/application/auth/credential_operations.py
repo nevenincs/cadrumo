@@ -9,8 +9,6 @@ from uuid import UUID
 
 from pydantic import BaseModel, SecretStr
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.config import load_settings
@@ -19,15 +17,12 @@ from ...core.models import STRICT_FROZEN_CONFIG, STRICT_FROZEN_HIDDEN_INPUT_CONF
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ..operations.access_resolution import (
-    HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_declared_action,
+    resolve_human_profile_committing_access,
 )
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .certificate_sources import active_certificate_source
 from .operator_scope import active_profile_storage_span, assert_auth_recovery_not_in_progress, auth_mutation_span
 
@@ -148,15 +143,9 @@ def resolve_auth_credential_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require human authority over this exact profile and definition."""
-    if (
-        request.definition_id != AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID
-        or type(request.payload) is not AuthCredentialSaveRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if request.subject_ref != profile_operation_subject(str(context.profile_id)):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    access = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
-    require_declared_action(context, actions=access.actions)
-    return bind_operation_access_profile(
-        context, access, profile_id=context.profile_id, definition_id=request.definition_id, periods=frozenset()
+    return resolve_human_profile_committing_access(
+        request,
+        context,
+        definition_id=AUTH_CREDENTIAL_SAVE_OPERATION_DEFINITION_ID,
+        request_type=AuthCredentialSaveRequest,
     )

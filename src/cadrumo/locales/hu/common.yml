@@ -4562,6 +4562,36 @@ desktop:
     search: Keresés
     settings: Beállítások
     tui: Munkaterület
+  renta:
+    proto:
+      election:
+        save: Mentsd a választ
+        year: Adóév
+      excerpt: Ez a prototípus a valódi bevallásnak csak néhány szakaszát tartalmazza.
+        Válassz egy másik szakaszt, hogy itt lásd.
+      family:
+        boxes: Mezők, amelyekbe ezek az adatok kerülnek
+        edit: Módosítsd a profilodban
+        empty: Nincs megadva
+        profile: A profilodból
+      gap:
+        body: A háttérrendszer ezt még nem szolgálja ki, ezért az ablak semmit sem
+          mutat a helyén.
+        operation: 'Szükséges: {operation}'
+        title: Még nem érkezik
+      nav:
+        boxes: 'Mezők: {count}'
+        failed: 'Nem sikerült kiszámítani: {count}'
+        needs_you: 'Rád vár: {count}'
+        only_attention: Csak ami rád vár
+        proposed: Javasolt vázlat
+        served: Ahogy ma érkezik
+        technical: 'Technikai fejléc: az elrendezésben itt még nincs ellenőrzött fejléc'
+        title: Szakaszok
+      result:
+        composed: A háttérrendszer saját fejléc-összeállítójával megfogalmazott, nem
+          számított összeg
+        example: Más bevallásnál már így érkezik
   session:
     enter_restarts: Enter újraindítja
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
@@ -9564,6 +9594,8 @@ workspace:
         ami akadályozza a benyújtást (akadályozó: {count}).'
       title: A bevallás exportálása
       verify_first: Exportálás előtt ellenőrizd a bevallást.
+    field:
+      details: Erről a rovatról
     filed:
       read_only: 'Benyújtottként rögzítve: megtekinthető, de nem módosítható. A módosításhoz
         indítsd el a bevallás helyesbítését.'
@@ -10207,3 +10239,27 @@ workspace:
       not_applicable: nem alkalmazható
       not_known_yet: Még nem ismert
     was: 'korábban: {value}'
+  renta:
+    election:
+      proposed: Javasolt válasz
+      stated: 'Megadva erre az évre: {year}'
+      title: A tevékenységed elszámolási elve
+      undeclared: Még nem adtad meg. Az ettől függő tevékenységi mezők feloldatlanok
+        maradnak, amíg meg nem adod.
+    outline:
+      activities: Gazdasági tevékenységek
+      annexes: Mellékletek és kiegészítő adatok
+      bases: Adóalapok
+      capital_gains: Vagyoni nyereségek és veszteségek
+      credits: Levont adóelőlegek és befizetett előlegek
+      employment: Munkaviszonyból származó jövedelem
+      family: Családi egység
+      identification: Azonosítás és családi helyzet
+      liability: Adó és adókedvezmények
+      minimums: Személyi és családi minimum
+      movable_capital: Ingó tőkéből származó jövedelem
+      other: Egyéb adatok
+      real_estate: Ingatlanból származó és beszámított jövedelem
+      result: A bevallás eredménye
+    result:
+      settlement: Hogyan fizeted be, vagy hogyan kapod vissza

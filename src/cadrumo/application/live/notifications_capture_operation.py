@@ -18,6 +18,7 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_JOURNALED_PROCESS_UPDATE_CAPABILITIES, OperationOwnedResource
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest, OperationTerminalReceipt
@@ -33,11 +34,7 @@ from .live_operation_execution import (
     require_exact_profile_worker,
     require_live_executor_identity,
 )
-from .live_operation_registration import (
-    build_live_operation_definition,
-    require_live_capture_receipt,
-    resolve_whole_profile_capture_access,
-)
+from .live_operation_registration import build_live_operation_definition, require_live_capture_receipt
 from .notification_ports import NotificationsPorts
 from .notifications import PersistedNotificationsSnapshot, capture_notifications_with_outcome
 from .session import LiveSessionWriteReceipt
@@ -227,8 +224,8 @@ def resolve_notifications_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile access and a fresh local COMMIT fence."""
-    return resolve_whole_profile_capture_access(
-        request, context, definition_id=NOTIFICATIONS_CAPTURE_DEFINITION_ID, payload_type=NotificationsCaptureRequest
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=NOTIFICATIONS_CAPTURE_DEFINITION_ID, request_type=NotificationsCaptureRequest
     )
 
 

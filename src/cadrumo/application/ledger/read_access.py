@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping, Set
 from uuid import UUID
 
 from pydantic import BaseModel
@@ -20,7 +21,7 @@ from ..operations.access_resolution import (
     with_commit_action,
 )
 from ..operations.models import OperationRequest
-from ..operations.profile_guard import require_access_request_payload
+from ..operations.profile_guard import ProfileAccessPayload, require_access_request_payload
 from ..user_profile.access_errors import ProfileAccessRefusedError
 
 
@@ -107,6 +108,42 @@ def resolve_ledger_request_read_access(
     if not isinstance(profile_id, UUID):
         raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
     return resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
+
+
+def resolve_ledger_request_access[PayloadT: ProfileAccessPayload](
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    /,
+    *,
+    definition_id: str,
+    request_type: type[PayloadT],
+    commits: Callable[[PayloadT], bool],
+) -> ResolvedOperationAccess:
+    """Bind whole-profile read access for ``request_type``, adding COMMIT when ``commits`` holds for its payload."""
+    payload = require_access_request_payload(request, definition_id=definition_id, payload_type=request_type)
+    resolve = resolve_ledger_commit_access if commits(payload) else resolve_ledger_read_access
+    return resolve(request, context, profile_id=payload.profile_id, periods=frozenset())
+
+
+def resolve_ledger_exact_request_access(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    /,
+    *,
+    request_types: Mapping[str, type[BaseModel]],
+    commit_definition_ids: Set[str] = frozenset(),
+) -> ResolvedOperationAccess:
+    """Bind whole-profile read access for the payload class registered under the request's definition.
+
+    The payload must be exactly the registered class, not a subclass. The COMMIT door is added
+    only for the definitions named in ``commit_definition_ids``.
+    """
+    request_type = request_types.get(request.definition_id)
+    profile_id = getattr(request.payload, "profile_id", None)
+    if request_type is None or type(request.payload) is not request_type or not isinstance(profile_id, UUID):
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    resolved = resolve_ledger_read_access(request, context, profile_id=profile_id, periods=frozenset())
+    return with_commit_action(resolved) if request.definition_id in commit_definition_ids else resolved
 
 
 def resolve_ledger_request_commit_access(

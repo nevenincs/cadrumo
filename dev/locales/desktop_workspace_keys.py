@@ -259,6 +259,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.editor.replace_here",
         "workspace.modelo.editor.rules_incomplete",
         "workspace.modelo.editor.unreadable",
+        "workspace.modelo.field.details",
         "workspace.modelo.filed.read_only",
         "workspace.modelo.filing.add_receipt_pdf",
         "workspace.modelo.filing.add_receipt_to_confirm",

@@ -77,7 +77,7 @@ from .ratios_contracts import (
     LedgerRatiosValidateResult,
     LedgerRatiosValidationFinding,
 )
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_commit_access, resolve_ledger_request_read_access
 from .usage_ratio_repository import load_usage_ratio_profile, usage_ratio_profile_with_censo_guard
 
 _PERSON_ACTOR = "operator"
@@ -474,15 +474,12 @@ def _whole_profile_access(
     definition_id: str,
     request_type: type[_ProfileScopedRequest],
 ) -> ResolvedOperationAccess:
-    if request.definition_id != definition_id or not isinstance(request.payload, request_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = request.payload
     committing = definition_id in {
         LEDGER_RATIOS_SET_OPERATION_DEFINITION_ID,
         LEDGER_RATIOS_UNSET_OPERATION_DEFINITION_ID,
     }
-    resolve = resolve_ledger_commit_access if committing else resolve_ledger_read_access
-    return resolve(request, context, profile_id=payload.profile_id, periods=frozenset())
+    resolve = resolve_ledger_request_commit_access if committing else resolve_ledger_request_read_access
+    return resolve(request, context, definition_id=definition_id, request_type=request_type)
 
 
 def _receipt_matches(

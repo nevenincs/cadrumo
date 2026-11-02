@@ -19,6 +19,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     OperationAccessRequest,
 )
 
+from ...core.operations import profile_operation_subject
 from ...core.period import Period
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .access_port import OperationAccessResolver
@@ -454,6 +455,29 @@ HUMAN_RESUMABLE_COMMITTING_WHOLE_PROFILE_DEFINITION_RESULT_PROFILE_AND_TAX_VALUE
     requires_human=True,
     provider=Availability.NOT_REQUIRED,
 )
+
+
+def resolve_human_profile_committing_access(
+    request: OperationRequest[BaseModel],
+    context: OperationAccessContext,
+    /,
+    *,
+    definition_id: str,
+    request_type: type[BaseModel],
+) -> ResolvedOperationAccess:
+    """Bind a human's single committing run over the accessing profile for exactly ``request_type``.
+
+    Another definition or payload class is unavailable; a subject of another profile is a mismatch.
+    """
+    if request.definition_id != definition_id or type(request.payload) is not request_type:
+        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
+    if request.subject_ref != profile_operation_subject(str(context.profile_id)):
+        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
+    access = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
+    require_declared_action(context, actions=access.actions)
+    return bind_operation_access_profile(
+        context, access, profile_id=context.profile_id, definition_id=request.definition_id, periods=frozenset()
+    )
 
 
 def _registered_operation_access(

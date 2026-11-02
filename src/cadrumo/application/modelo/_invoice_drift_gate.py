@@ -36,18 +36,26 @@ if TYPE_CHECKING:
 type _InvoiceDriftObserver = Callable[[ModeloVerificationFinding, InvoiceFingerprintVerdict | None], None]
 
 
-def _message_facts(work_unit: WorkUnit, verdict: InvoiceFingerprintVerdict | None = None) -> dict[str, str | int]:
+def _message_facts(work_unit: WorkUnit) -> dict[str, str | int]:
     facts: dict[str, str | int] = {
         "modelo": str(work_unit.modelo),
         "filing_year": work_unit.filing_year,
         "period": work_unit.period.registry_token,
     }
-    if verdict is not None:
-        facts |= {
-            "changed_count": len(verdict.changed),
-            "removed_count": len(verdict.removed),
-            "added_count": len(verdict.added),
-        }
+    return facts
+
+
+def _drift_message_facts(work_unit: WorkUnit, verdict: InvoiceFingerprintVerdict) -> dict[str, str | int]:
+    # Written out whole, not merged onto the base, so the facts-guarantee gate reads
+    # every fact the drift sentence interpolates as supplied on every path.
+    facts: dict[str, str | int] = {
+        "modelo": str(work_unit.modelo),
+        "filing_year": work_unit.filing_year,
+        "period": work_unit.period.registry_token,
+        "changed_count": len(verdict.changed),
+        "removed_count": len(verdict.removed),
+        "added_count": len(verdict.added),
+    }
     return facts
 
 
@@ -108,7 +116,7 @@ def invoice_drift_findings(
         kind=ModeloVerificationFindingKind.STALE_CALCULATION,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
         message_locale_key="application.modelo.findings.invoice_fingerprint_drift",
-        message_facts=_message_facts(work_unit, verdict),
+        message_facts=_drift_message_facts(work_unit, verdict),
         legal_refs=LEDGER_DRIFT_LEGAL_REFS,
         source_refs=source_refs,
     )

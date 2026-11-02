@@ -22,12 +22,12 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.ids import RevisionId
 from ...domain.modelos.work_unit import WorkUnit
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..live.filed_observation_ports import FiledObservationProtocol
 from ..live.justificante import (
     JUSTIFICANTE_CAPTURE_SNAPSHOT_NAMESPACE,
     JustificanteCaptureSnapshotService,
 )
-from ..live.live_operation_registration import resolve_whole_profile_capture_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
@@ -350,11 +350,11 @@ def resolve_modelo_reconciliation_pull_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax disclosure and authorization for the commit."""
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=MODELO_RECONCILIATION_PULL_OPERATION_DEFINITION_ID,
-        payload_type=ModeloReconciliationPullRequest,
+        request_type=ModeloReconciliationPullRequest,
     )
 
 

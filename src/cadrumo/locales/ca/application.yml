@@ -1637,6 +1637,21 @@ application:
       row_unregistered_undated: Un moviment registra un element que no consta al teu
         registre.
     calc_diagnostic_words:
+      income_class:
+        actividad_economica: activitats econòmiques
+        arrendamiento_inmueble_urbano: arrendament d'immoble urbà
+        arrendamiento_inmueble_urbano_actividad: arrendament d'immoble urbà com a
+          activitat econòmica
+        atribucion_actividad_economica: rendes atribuïdes d'activitats econòmiques
+        atribucion_capital_inmobiliario: rendes atribuïdes de capital immobiliari
+        atribucion_capital_mobiliario: rendes atribuïdes de capital mobiliari
+        atribucion_ganancia_patrimonial: rendes atribuïdes de guanys patrimonials
+        capital_mobiliario: rendiments del capital mobiliari
+        ganancia_patrimonial: guanys patrimonials
+        imputacion_aie_ute: imputació d'AIE i UTE
+        imputacion_derechos_imagen: imputació de drets d'imatge
+        other: una altra renda
+        trabajo: rendiments del treball
       named_element: «{name}»
       unnamed_element: Un element sense nom
     calculation_report:

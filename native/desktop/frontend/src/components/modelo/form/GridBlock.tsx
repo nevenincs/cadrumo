@@ -15,6 +15,7 @@ import { BoxNoteMark } from "./BoxNoteList";
 import { notesOf } from "./boxNotes";
 import { BoxNumber } from "./BoxNumber";
 import { readOnlyReason } from "./entryField";
+import { FieldFacts } from "./FieldFacts";
 import { calm, Label, useChosenFocus } from "./FieldRow";
 import { useForm } from "./formContext";
 import { editKey, fieldKey } from "./session";
@@ -81,7 +82,7 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
       tabIndex={selected ? 0 : -1}
       aria-label={t("workspace.modelo.section.box", { box: field.box ?? "" })}
       className={cn(
-        "p-1 align-middle outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
+        "group/cell p-1 align-middle outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
         selected && "bg-selected",
       )}
       onClick={() => session.select(key)}
@@ -90,6 +91,13 @@ function GridBox({ field }: { field: PublicModeloFormField }) {
       }}
     >
       <div className="flex items-center justify-end gap-2">
+        <FieldFacts
+          field={field}
+          className={cn(
+            !selected &&
+              "invisible group-focus-within/cell:visible group-hover/cell:visible",
+          )}
+        />
         <BoxNoteMark notes={notesOf(notes, field)} />
         <BoxNumber box={field.box} size="sm" />
         {reason ? (

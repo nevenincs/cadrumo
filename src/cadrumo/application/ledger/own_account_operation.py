@@ -51,7 +51,7 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .own_account_ports import OwnAccountRepositoryFactory, OwnAccountRepositoryProtocol
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_access
 from .transaction_repository import transaction_catalogue_repository
 
 LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID = "ledger.own_account"
@@ -395,13 +395,13 @@ def resolve_ledger_own_account_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require whole-profile scope, and COMMIT for mutations."""
-    if request.definition_id != LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        LedgerOwnAccountRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.action in _READ_ACTIONS else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=LEDGER_OWN_ACCOUNT_OPERATION_DEFINITION_ID,
+        request_type=LedgerOwnAccountRequest,
+        commits=lambda payload: payload.action not in _READ_ACTIONS,
+    )
 
 
 def build_ledger_own_account_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
