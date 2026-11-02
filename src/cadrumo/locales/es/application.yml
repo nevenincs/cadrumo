@@ -2504,6 +2504,12 @@ application:
           y vuelve a calcular.
       inspection_heading: Todas las casillas, por número de casilla
       unnamed_box: Casilla sin nombre
+  operations:
+    error_detail:
+      record_fault: Un registro que ha creado Cadrumo no ha superado su propia comprobación,
+        así que no se ha podido hacer.
+      unworded: No se ha podido hacer. Su motivo aún no tiene una frase; su código
+        es {error_code}.
   overview:
     calendar:
       event:

@@ -2370,6 +2370,12 @@ application:
           then calculate again.
       inspection_heading: All boxes, in box-number order
       unnamed_box: Unnamed box
+  operations:
+    error_detail:
+      record_fault: A record Cadrumo built did not pass its own check, so this could
+        not be done.
+      unworded: This could not be done. Its reason has no sentence yet; its code is
+        {error_code}.
   overview:
     calendar:
       event:
