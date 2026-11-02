@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "aa2de4b41ed57d24fa1476435eca176608a76b61312e1e3e2218ec77916916ec",
+      "calculation_revision_id": "94c6f473eae680611702309317ebaa02f832f2e99352bb337ff3c093adc07ef5",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1696,9 +1696,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "c893b8cb682819d2a32d256aee09133d3ba5dee8ba2eab621b9e26a03fdda573",
-    "calculation_head_digest": "f65b1612ab2cb46da1a3132b7ab3af97e232b1f42c7268b184e273322cc792a9",
-    "current_calculation_revision_id": "aa2de4b41ed57d24fa1476435eca176608a76b61312e1e3e2218ec77916916ec",
+    "work_unit_record_digest": "36e9d87dc97456f15620507d60f9365ce374ca9662066d0d31b9ee4dcf90800a",
+    "calculation_head_digest": "a9ed4339c6629da80c4d999574188b0547f9a7912a21c6e5509e9f2db40e6d5a",
+    "current_calculation_revision_id": "94c6f473eae680611702309317ebaa02f832f2e99352bb337ff3c093adc07ef5",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2001,9 +2001,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:25:01.514944Z",
-    "expires_at": "2026-11-02T16:30:01.514944Z",
-    "baseline_id": "e4ad896847f4cddef8442112a47c7e921b08d0a6bc630831f82e3b1b44210e3b"
+    "issued_at": "2026-11-02T16:32:39.700500Z",
+    "expires_at": "2026-11-02T16:37:39.700500Z",
+    "baseline_id": "e7a68a8e2907be106b0f76af412b1d030f240a790ef072abf0384fb71fbf8511"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2096,7 +2096,7 @@
     "words": "La declaració encara no s'ha comprovat.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "aa2de4b41ed57d24fa1476435eca176608a76b61312e1e3e2218ec77916916ec",
+  "calculation_revision_id": "94c6f473eae680611702309317ebaa02f832f2e99352bb337ff3c093adc07ef5",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

@@ -60,7 +60,7 @@ class AmendmentRegimePolicy:
     rectificativa_effective_from: Mapping[str, date]
     pre_rectificativa_kinds: frozenset[str]
     post_rectificativa_kinds: frozenset[str]
-    later_period_adjustment_from: Mapping[str, date] = field(default_factory=dict)
+    later_period_adjustment_from: Mapping[str, date] = field(default_factory=dict[str, date])
     """Modelos whose filed return can never be amended, from the date their adjustment rule applies.
 
     Their corrections belong to a later period's return, so no amendment kind exists.

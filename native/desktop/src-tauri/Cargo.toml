@@ -79,5 +79,10 @@ objc2-foundation = { version = "0.3.2", default-features = false, features = ["s
 [lints.rust]
 unsafe_code = "forbid"
 
+# Wry 0.57.1 applies the top-level navigation policy to WKWebView subframes.
+# Keep the fix in the reproducible build until an upstream release includes it.
+[patch.crates-io]
+wry = { path = "../../vendor/wry" }
+
 [lints.clippy]
 all = "deny"

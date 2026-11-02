@@ -580,4 +580,5 @@ def test_a_consignment_is_the_sum_of_its_invoice_lines_against_the_ceiling() -> 
     assert len(validate_oss_ioss_observations([line("invoice-a:1"), line("invoice-b:1")])) == 2
     with pytest.raises(AggregationValidationError) as refused:
         validate_oss_ioss_observations([line("invoice-a:1"), line("invoice-a:2")])
+    assert refused.value.context is not None
     assert refused.value.context["consignment_value_eur"] == "200"

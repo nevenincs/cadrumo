@@ -10,7 +10,11 @@ Box identity is the registry's. A borrador snapshot stores its values under the
 binding ids of the pinned revision, and a readable snapshot is one whose every
 key the law-selected revision re-confirms, so each stored value reaches its
 casillas through that revision's own binding map. A stored key is therefore
-stable across revisions, and no label is ever matched.
+stable across revisions, and no label is ever matched. A printed box no
+binding owns, such as a calculated result, is kept beside the bindings as a
+comparison-only observation and reaches its casilla through the registry's
+continuity identity for that box. It is compared here and nowhere used as a
+calculation input.
 
 A missing capture, a refused capture and a missing calculation each have their
 own state, and so does a comparison whose sides no longer describe each other.
@@ -39,6 +43,7 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.binding_targets import bound_casilla_binding_ids
+from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision, RegistrySnapshot
 from ...domain.calculations.registry.schema_base import CasillaDataType
@@ -59,10 +64,9 @@ from ..modelo.work_form_localization import localized_text, unnamed_casilla_labe
 from ..modelo.work_form_models import ModeloFormText
 from ..modelo.work_review import ModeloWorkReview, ModeloWorkReviewCasilla, build_modelo_work_review
 from ..operations.public_scalar import PublicDecimal
-from .borrador_100 import Borrador100Snapshot, Borrador100SnapshotReading
-from .borrador_100_keys import borrador_admitted_bindings
+from .borrador_100 import Borrador100PrintedObservation, Borrador100Snapshot, Borrador100SnapshotReading
+from .borrador_100_keys import borrador_admitted_bindings, printed_box_casilla
 
-_MODELO: Final = ModeloCode("100")
 _ANNUAL: Final = "0A"
 _WORDS: Final = "application.live.borrador.comparison"
 
@@ -239,6 +243,11 @@ class _SavedCalculation:
     head: CalculationRevision
 
 
+def _annual_modelo(operation: PinnedAuthorityOperation) -> ModeloCode:
+    """Return the form the registry's role routing names for the annual income tax return."""
+    return ModeloCode(form_for_role("renta.annual", authority=operation))
+
+
 def _words(group: str, token: StrEnum, language: OutputLanguage) -> Borrador100ComparisonWords:
     return Borrador100ComparisonWords(
         token=token.value, words=tr(f"{_WORDS}.{group}.{token.value}", locale=language.value)
@@ -256,7 +265,7 @@ def _saved_calculation(
     try:
         review = build_modelo_work_review(
             sources.bucket_id,
-            _MODELO,
+            _annual_modelo(operation),
             period.filing_year,
             period,
             operation=operation,
@@ -309,7 +318,7 @@ def _stale_reasons(
     if any(item.snapshot.captured_at > snapshot.captured_at for item in reading.refused):
         reasons.append(Borrador100ComparisonStaleReason.NEWER_CAPTURE_REFUSED)
     if calculation_screen_outdated(
-        saved.head, modelo=str(_MODELO), filing_year=period.filing_year, period=period, operation=operation
+        saved.head, modelo=str(_annual_modelo(operation)), filing_year=period.filing_year, period=period, operation=operation
     ):
         reasons.append(Borrador100ComparisonStaleReason.CALCULATION_OUTDATED)
     return tuple(reasons)
@@ -353,6 +362,7 @@ def _same_kind(left: _Value, right: object) -> bool:
 @dataclass(frozen=True, slots=True)
 class _BoxSides:
     owners: tuple[BindingId, ...]
+    observation: Borrador100PrintedObservation | None
     borrador: tuple[_Value, ...]
     calculation: object | None
     row: ModeloWorkReviewCasilla | None
@@ -398,8 +408,12 @@ def _reason_with_borrador(
 def _box_reason(
     sides: _BoxSides, head: CalculationRevision, snapshot: Borrador100Snapshot
 ) -> Borrador100ComparisonReason | None:
-    """Classify one box, or ``None`` when neither side holds anything to show."""
-    if not sides.owners:
+    """Classify one box, or ``None`` when neither side holds anything to show.
+
+    A box no binding owns and no printed observation keeps was read from the
+    draft by an import that kept nothing for it.
+    """
+    if not sides.owners and sides.observation is None:
         return Borrador100ComparisonReason.BORRADOR_VALUE_NOT_KEPT
     if len(set(sides.borrador)) > 1:
         return Borrador100ComparisonReason.BORRADOR_VALUE_AMBIGUOUS
@@ -407,7 +421,7 @@ def _box_reason(
         return _reason_with_borrador(sides, sides.borrador[0], head, snapshot)
     if sides.calculation is None:
         return None
-    if sides.draft_reads_box:
+    if sides.draft_reads_box or sides.observation is not None:
         return Borrador100ComparisonReason.BORRADOR_PRINTED_NO_VALUE
     return Borrador100ComparisonReason.BORRADOR_DOES_NOT_READ_BOX
 
@@ -446,21 +460,46 @@ def _compared_boxes(revision: ModeloRevision, draft_reads: frozenset[str]) -> tu
     )
 
 
+def _observations_by_box(
+    snapshot: Borrador100Snapshot, revision: ModeloRevision
+) -> dict[str, Borrador100PrintedObservation]:
+    """Each kept printed observation under the box the law-selected revision identifies it as.
+
+    A readable snapshot's every observation resolves, because the read refuses
+    a snapshot holding one that does not.
+    """
+    boxes: dict[str, Borrador100PrintedObservation] = {}
+    for observation in snapshot.printed_observations:
+        casilla = printed_box_casilla(
+            revision, observation, captured_revision_id=snapshot.registry_snapshot_ref.revision_id
+        )
+        if casilla is not None:
+            boxes[casilla.id] = observation
+    return boxes
+
+
 def _box_sides(
     casilla: CasillaDefinition,
     *,
     admitted: Mapping[BindingId, object],
     snapshot: Borrador100Snapshot,
+    observations: Mapping[str, Borrador100PrintedObservation],
     saved: _SavedCalculation,
     review_rows: Mapping[str, ModeloWorkReviewCasilla],
     draft_reads: frozenset[str],
 ) -> _BoxSides:
     owners = tuple(owner for owner in bound_casilla_binding_ids(casilla) if owner in admitted)
+    observation = observations.get(casilla.id)
+    printed = () if observation is None or observation.value is None else (observation.value,)
     row = review_rows.get(casilla.id)
     calculated = _calculation_value(row)
     return _BoxSides(
         owners=owners,
-        borrador=tuple(snapshot.binding_values[owner] for owner in owners if owner in snapshot.binding_values),
+        observation=observation,
+        borrador=(
+            *(snapshot.binding_values[owner] for owner in owners if owner in snapshot.binding_values),
+            *printed,
+        ),
         calculation=calculated if calculated is not None else _saved_text_answer(casilla, owners, saved.head),
         row=row,
         draft_reads_box=casilla.id in draft_reads,
@@ -491,13 +530,15 @@ def _rows(
 ) -> tuple[Borrador100ComparisonRow, ...]:
     admitted = borrador_admitted_bindings(registry.revision)
     draft_reads = _draft_read_casillas(registry)
+    observations = _observations_by_box(snapshot, registry.revision)
     review_rows = {str(row.casilla_id): row for row in saved.review.casillas}
     rows: list[Borrador100ComparisonRow] = []
-    for casilla in _compared_boxes(registry.revision, draft_reads):
+    for casilla in _compared_boxes(registry.revision, draft_reads | frozenset(observations)):
         sides = _box_sides(
             casilla,
             admitted=admitted,
             snapshot=snapshot,
+            observations=observations,
             saved=saved,
             review_rows=review_rows,
             draft_reads=draft_reads,
@@ -545,7 +586,7 @@ def compare_borrador_100_with_calculation(
     at most one readable snapshot, with every refused one beside it.
     """
     period = Period.from_year_and_code(filing_year, _ANNUAL)
-    registry = operation.snapshot(str(_MODELO), filing_year=filing_year, period=period.registry_token)
+    registry = operation.snapshot(str(_annual_modelo(operation)), filing_year=filing_year, period=period.registry_token)
     snapshot = reading.readable[0] if reading.readable else None
     saved = _saved_calculation(sources, period, operation)
     stale = (

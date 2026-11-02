@@ -2479,6 +2479,13 @@ application:
         para todos los periodos que no hubo retenciones. Registra las percepciones
         de cada perceptor en el detalle de este modelo, o confirma cada periodo en
         tu perfil.'
+      xml_required_content_missing: El esquema oficial exige la casilla %{box} y no
+        tiene valor, así que la exportación rechazaría esta declaración.
+      xml_return_not_rendered: No se puede generar el fichero de la declaración a
+        partir de este cálculo, así que la exportación lo rechazaría. Revisa tus datos
+        identificativos y las cifras de la declaración.
+      xml_value_refused: La casilla %{box} tiene un valor que el esquema oficial no
+        admite, así que la exportación rechazaría esta declaración.
     help:
       constraint:
         at_least: Como mínimo {minimum}.
@@ -2574,6 +2581,9 @@ application:
           se muestra como cero.
         unresolved_operand: Esta casilla suma o lee una cifra que todavía no tiene
           valor, así que tampoco lo tiene ella. Nunca se muestra como cero.
+        waived_refund_result_unsupported: Todavía no se admite el resultado cuando
+          renuncias a cobrar la devolución, así que esta casilla no tiene valor. Nunca
+          se muestra como cero.
     quickfile:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó
@@ -2584,6 +2594,13 @@ application:
       conjunta_lower_result: 'La tributación conjunta sale más barata: tu resultado
         es {conjunta} en conjunta y {individual} en individual, una diferencia de
         {difference}.'
+      individual_branch_caveat: La cifra individual es una única declaración calculada
+        con los datos conjuntos de toda tu unidad familiar, así que solo es fiable
+        cuando una sola persona aporta los ingresos del hogar. No calcula dos declaraciones
+        separadas, una con los ingresos de cada cónyuge, y esa comparación todavía
+        no está disponible. Si en tu unidad familiar hay dos personas con ingresos,
+        toma la cifra individual como una orientación aproximada, no como el importe
+        que debes presentar.
       individual_lower_result: 'La tributación individual sale más barata: tu resultado
         es {individual} en individual y {conjunta} en conjunta, una diferencia de
         {difference}.'
@@ -2636,6 +2653,7 @@ application:
           el detalle de este modelo, o confirma cada periodo en tu perfil.
         enter_payee_payments: Introduce las percepciones de cada perceptor en el detalle
           de este modelo y vuelve a comprobar.
+        enter_required_statement: Rellena esta casilla y vuelve a calcular.
         enter_withholding_certificate: Introduce la retención que figura en el certificado
           de retenciones e ingresos a cuenta de tu pagador y vuelve a calcular.
         file_another_way: Cadrumo todavía no puede preparar esta declaración para
@@ -3042,6 +3060,17 @@ application:
         escribió nada.
       row_unknown_field: 'La sección ''%{section}'' no declara estos campos: %{unknown}.
         Campos disponibles: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Fecha de nacimiento
+        convivientes:
+          label: Número de descendientes con los que convive este ascendiente
+        fallecimiento:
+          help: Déjalo en blanco si este ascendiente no ha fallecido.
+          label: Fecha de fallecimiento
+        nif:
+          label: NIF/NIE del ascendiente (déjalo en blanco si no tiene)
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'

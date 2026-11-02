@@ -433,6 +433,69 @@ test("the documentation fixture is another origin and answers the bridge", async
   await expect(frame.locator("h1")).toHaveText("Second page");
 });
 
+test("the documentation pane offers visible Back and Forward controls", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  await target
+    .getByRole("navigation", { name: label("desktop.rail.label") })
+    .getByRole("button", { name: label("desktop.rail.docs"), exact: true })
+    .click();
+  const frame = target.frameLocator(".docs-frame");
+  const head = target.locator(".pane-docs .pane-head");
+  const back = head.getByRole("button", {
+    name: label("desktop.action.docs_back"),
+    exact: true,
+  });
+  const forward = head.getByRole("button", {
+    name: label("desktop.action.docs_forward"),
+    exact: true,
+  });
+  await expect(back).toBeVisible();
+  await expect(forward).toBeVisible();
+  await frame.getByRole("link", { name: "Second page" }).click();
+  await expect(frame.locator("h1")).toHaveText("Second page");
+  await back.click();
+  await expect(frame.locator("h1")).toHaveText("Stand-in documentation");
+  await forward.click();
+  await expect(frame.locator("h1")).toHaveText("Second page");
+
+  await calendarButton(target).click();
+  await expect(back).toHaveCount(0);
+  await expect(forward).toHaveCount(0);
+});
+
+test("documentation search and navigation do not depend on URL.origin", async ({
+  page: target,
+}) => {
+  await open(target, "signed-in");
+  const frame = target.frameLocator(".docs-frame");
+  await expect(frame.locator("h1")).toHaveText("Stand-in documentation");
+  // A custom-scheme URL reports "null" here. The fixture still serves HTTP,
+  // so make that browser API behave as it does for macOS documentation URLs.
+  await target.evaluate(() => {
+    Object.defineProperty(URL.prototype, "origin", {
+      configurable: true,
+      get: () => "null",
+    });
+  });
+  await target
+    .getByRole("button", { name: label("desktop.rail.search") })
+    .click();
+  const palette = target.getByRole("dialog", {
+    name: label("desktop.palette.label"),
+  });
+  await palette
+    .getByRole("combobox", { name: label("desktop.palette.label") })
+    .fill("sign-in");
+  const result = palette
+    .getByRole("listbox")
+    .getByRole("option", { name: /config sign-in-status/ });
+  await expect(result).toBeVisible();
+  await result.click();
+  await expect(frame.locator("h1")).toHaveText("Second page");
+});
+
 test("the output language reaches the chrome and the documentation", async ({
   page: target,
 }) => {
@@ -4734,7 +4797,7 @@ test("with the TUI hidden, the sign-in dialog leaves the keyboard in the documen
   // The window was last used with the TUI hidden.
   await open(target, "signed-in");
   await target.locator('[data-terminal="tui"] .xterm-screen').click();
-  await target.keyboard.press("Control+Shift+KeyT");
+  await target.keyboard.press("ControlOrMeta+Shift+KeyT");
   await expect(target.locator(".pane-tui")).toBeHidden();
   // Put aside: no pane holds a way in, so the pane that is shown takes it.
   await open(target, "signed-out");

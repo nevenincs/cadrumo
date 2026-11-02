@@ -14,6 +14,7 @@ from pydantic import BaseModel, Field, model_validator
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import OutputLanguage
+from ...core.filing_year import FilingYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import profile_operation_subject
@@ -36,9 +37,6 @@ PROFILE_IMPUTATION_ELECTION_SET_PHASES = (
     "user-profile.imputation-election.set.settlement",
 )
 
-_EJERCICIO_FLOOR = 1
-_EJERCICIO_CEILING = 9999
-
 type ProfileImputationStatementState = Literal["declared", "undeclared", "contradictory"]
 """What the profile states for one ejercicio: one value, nothing, or more than one value."""
 
@@ -49,7 +47,7 @@ class ProfileImputationElectionReadRequest(CredentialFreeOperationRequest):
     model_config = STRICT_FROZEN_CONFIG
 
     profile_id: UUID
-    tax_year: int = Field(ge=_EJERCICIO_FLOOR, le=_EJERCICIO_CEILING)
+    tax_year: FilingYear
     output_language: OutputLanguage = OutputLanguage.ES
 
 
@@ -65,7 +63,7 @@ class ProfileImputationElectionSetRequest(BaseModel):
     profile_id: UUID
     expected_revision: int = Field(ge=1)
     expected_content_digest: ContentDigest
-    tax_year: int = Field(ge=_EJERCICIO_FLOOR, le=_EJERCICIO_CEILING)
+    tax_year: FilingYear
     criterion: str | None = Field(default=None, max_length=64)
     codigo_comercio_accounting: str | None = Field(default=None, max_length=16)
 
@@ -117,7 +115,7 @@ class ProfileImputationElectionReadResult(BaseModel):
     profile_id: UUID
     record_revision: int = Field(ge=1)
     content_digest: ContentDigest
-    tax_year: int = Field(ge=_EJERCICIO_FLOOR, le=_EJERCICIO_CEILING)
+    tax_year: FilingYear
     criterion: ProfileImputationElectionAnswer
     codigo_comercio_accounting: ProfileImputationElectionAnswer
     criterion_statements: tuple[ProfileFieldEjercicioStatement, ...]
@@ -142,7 +140,7 @@ class ProfileImputationElectionSetResult(BaseModel):
     profile_id: UUID
     record_revision: int = Field(ge=1)
     content_digest: ContentDigest
-    tax_year: int = Field(ge=_EJERCICIO_FLOOR, le=_EJERCICIO_CEILING)
+    tax_year: FilingYear
     changed: bool
 
 
@@ -153,7 +151,7 @@ class ProfileImputationElectionSetProjection(BaseModel):
 
     profile_id: UUID
     record_revision: int = Field(ge=1)
-    tax_year: int = Field(ge=_EJERCICIO_FLOOR, le=_EJERCICIO_CEILING)
+    tax_year: FilingYear
     changed: bool
 
 

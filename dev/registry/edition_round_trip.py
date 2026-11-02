@@ -223,6 +223,7 @@ _EXCLUDED_FROM_EQUALITY: Final = frozenset(
         "family_removals",
         "family_positions",
         "cleared_families",
+        "family_disposition_removals",
         "scoped_families",
         # A restatement only stops inheritance; lifting it into the ordinary
         # delta keeps every hydrated member, which the member comparison proves.

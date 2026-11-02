@@ -35,6 +35,8 @@ from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Final, Self
 
 from cadrumo_client.contracts.view_stream import (
+    ViewClipboard,
+    ViewClipboardCommit,
     ViewClose,
     ViewDialog,
     ViewImage,
@@ -68,6 +70,7 @@ from .._playwright import BrowserContext, Page, PlaywrightError
 from .factory import default_browser_session_factory
 from .screencast import ScreencastImage, ScreencastProfile, ViewScreencast
 from .session import BrowserSession
+from .view_clipboard import ViewClipboardAdapter
 from .view_download import deliver_download, discard_download
 from .view_input import ViewInputAdapter
 from .view_login_session import ViewLoginSessionFactory
@@ -108,9 +111,11 @@ class SedeViewPage:
         self._context: BrowserContext | None = None
         self._owner: AsyncCloseable | None = None
         self._pages: list[Page] = []
+        self._openers: dict[Page, Page] = {}
         self._shown: Page | None = None
         self._screencast: ViewScreencast | None = None
         self._input: ViewInputAdapter | None = None
+        self._clipboard = ViewClipboardAdapter()
         self._show_lock = asyncio.Lock()
         self._phase = ViewPhase.BROWSING
         self._loading = False
@@ -209,6 +214,7 @@ class SedeViewPage:
         if self._closed:
             return
         self._closed = True
+        await self._clipboard.close()
         await self._detach()
         for task in tuple(self._background):
             task.cancel()
@@ -217,6 +223,7 @@ class SedeViewPage:
         for download in downloads:
             await discard_download(download)
         self._choosers.clear()
+        self._openers.clear()
         context, self._context = self._context, None
         await close_async_resources(context, self._owner, task_name="cadrumo-sede-view-close")
 
@@ -231,7 +238,7 @@ class SedeViewPage:
 
     def popup_opened(self, popup: Page, opener: Page) -> None:
         """Show the popup in the panel; its opener returns when it closes."""
-        del opener
+        self._openers[popup] = opener
         if popup in self._pages:
             return
         self._adopt(popup)
@@ -296,6 +303,10 @@ class SedeViewPage:
             await self._resize(item)
         elif isinstance(item, ViewDialog):
             await self._answer_dialog(item)
+        elif isinstance(item, ViewClipboard):
+            self._sink.send(await self._clipboard.select(self._shown, item))
+        elif isinstance(item, ViewClipboardCommit):
+            await self._clipboard.commit(item, self._shown)
         else:
             return self._dispatch_transfer(item)
         return None
@@ -426,13 +437,23 @@ class SedeViewPage:
         page.on("load", lambda _page: self._loaded(page))
 
     def _page_closed(self, page: Page) -> None:
+        opener = self._openers.pop(page, None)
+        for popup, parent in tuple(self._openers.items()):
+            if parent is page:
+                if opener is not None and not opener.is_closed():
+                    self._openers[popup] = opener
+                else:
+                    del self._openers[popup]
         if page in self._pages:
             self._pages.remove(page)
         if not self._pages:
             self._mark_lost()
             return
         if page is self._shown:
-            self._spawn(self._show(self._pages[-1]))
+            if opener is not None and opener in self._pages and not opener.is_closed():
+                self._spawn(self._show(opener))
+            else:
+                self._spawn(self._show_newest())
 
     def _navigated(self, page: Page, main_frame: bool) -> None:
         if main_frame and page is self._shown:

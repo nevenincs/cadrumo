@@ -40,8 +40,8 @@ from ..activity_asset_ledger_reconciliation import possibly_durable_expense_find
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..modelo_bindings_renta_expenses import _accrual_coverage_gap
 from ..renta_imputation import ImputationCriteria, ImputationFilingHistory
+from ..renta_income_diagnostics import rectification_diagnostics
 from ..renta_income_evidence import income_withheld_amount
-from ..renta_income_ledger import rectification_diagnostics
 from ..renta_ledger import _classify_renta_transaction
 from ..renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 from ..source_mesh import CalculationSourceContext, CalculationSourceResolution

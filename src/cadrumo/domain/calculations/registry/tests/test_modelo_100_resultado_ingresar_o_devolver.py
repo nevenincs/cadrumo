@@ -4,8 +4,9 @@ The official record design names the element RESINGDEV "Resultado a ingresar o
 a devolver (casilla [0670] o casilla [0695] de la declaración)". The box is the
 result of the return unless the spouse compensation suspends part of an amount
 payable, in which case it is the remainder payable. A refund waived for that
-compensation has no registry formula for its remainder, so it must refuse
-rather than state an amount.
+compensation has no registry formula for its remainder, so only this box is
+left without a value, for a typed reason, and never stated as an amount; every
+other box still calculates.
 """
 
 from __future__ import annotations
@@ -20,8 +21,8 @@ from .....core.aggregation import BindingSourceKind
 from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from ..bindings import resolve_available_bound_inputs_by_casilla_id
-from ..errors import RegistryValidationError
 from ..formula_runtime import RegistryCalculationResult, calculate_registry_snapshot
+from ..formula_runtime_ops import RegistryUnresolvedOutcomeReason
 from ..ids import BindingId
 from ..schema import RegistrySnapshot
 from ..schema_input_kind import InputKind
@@ -110,6 +111,18 @@ def test_a_suspended_payable_makes_the_box_the_remainder_payable(snapshot: Regis
     assert result.values[_AMOUNT_PAYABLE_OR_REFUNDABLE] != result.values[_RESULT_OF_THE_RETURN]
 
 
-def test_a_waived_refund_is_refused_because_its_remainder_has_no_formula(snapshot: RegistrySnapshot) -> None:
-    with pytest.raises(RegistryValidationError, match="precondition"):
-        _calculate(snapshot, withheld=Decimal("20000.00"), inputs={_WAIVED_REFUND: Decimal("100.00")})
+def test_a_waived_refund_leaves_only_the_box_unresolved_for_a_typed_reason(snapshot: RegistrySnapshot) -> None:
+    result = _calculate(snapshot, withheld=Decimal("20000.00"), inputs={_WAIVED_REFUND: Decimal("100.00")})
+
+    assert _AMOUNT_PAYABLE_OR_REFUNDABLE not in result.values
+    (outcome,) = result.unresolved_outcomes
+    assert outcome.casilla_id == _AMOUNT_PAYABLE_OR_REFUNDABLE
+    assert outcome.reason is RegistryUnresolvedOutcomeReason.WAIVED_REFUND_RESULT_UNSUPPORTED
+    assert outcome.formula_id == "renta-resultado-ingresar-o-devolver"
+    assert outcome.operand_casilla_refs == (_WAIVED_REFUND,)
+    assert result.values[_WAIVED_REFUND] == Decimal("100.00")
+    assert result.values[_RESULT_OF_THE_RETURN] < 0
+    assert (
+        result.values[_RESULT_OF_THE_RETURN]
+        == _calculate(snapshot, withheld=Decimal("20000.00")).values[_RESULT_OF_THE_RETURN]
+    )

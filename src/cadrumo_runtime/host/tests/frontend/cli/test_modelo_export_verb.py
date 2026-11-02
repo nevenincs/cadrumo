@@ -19,6 +19,7 @@ from cadrumo.adapters.persistence.profile.tests.filing_report_support import see
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_cli_backend as _isolated_cli_backend
 from cadrumo.application.filing.producer_snapshot import M202_UNSUPPORTED_PRODUCER_IDS
+from cadrumo.application.modelo.calculation_screen import calculation_screen_stamp
 from cadrumo.application.modelo.operation_shared import MODELO_EXPORT_OPERATION_DEFINITION_ID
 from cadrumo.application.modelo.tests.registry_revision import active_registry_revision_id
 from cadrumo.application.modelo.work_export_contracts import ModeloExportRequest
@@ -28,6 +29,7 @@ from cadrumo.application.operations.frontend_requests import (
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.workflow.persistence import workflow_state_repository
+from cadrumo.core.authority_grade import RegistryAuthorityGrade
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.errors.error_codes import get_registered_error_code_by_code
 from cadrumo.core.i18n.render import tr
@@ -43,6 +45,7 @@ from cadrumo.domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
+from cadrumo.domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.repository import upsert_work_unit
 from cadrumo.domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -73,6 +76,16 @@ def _export_operator(seed_profile: ProfileSeeder) -> None:
 
 def _invoke(args: Sequence[str]) -> Result:
     return invoke_cached_cli(args)
+
+
+def _calculated_screen_stamp(
+    *, modelo: str, filing_year: int, period: str, operation: PinnedAuthorityOperation
+) -> CalculationScreenStamp:
+    """Return the stamp a calculation of this target persists; a seeded revision stands in for that calculation."""
+    snapshot = operation.snapshot(
+        modelo, filing_year=filing_year, period=period, grade=RegistryAuthorityGrade.CALCULATION
+    )
+    return calculation_screen_stamp(snapshot, operation=operation)
 
 
 def _seed_work_unit_only(
@@ -172,6 +185,7 @@ def _seed_verified_revision_without_inputs(
         updated_at=now,
     )
     WorkUnitCatalogueRepository().save(upsert_work_unit(WorkUnitCatalogueRepository().load(), work_unit))
+    screen_stamp = _calculated_screen_stamp(modelo=modelo, filing_year=filing_year, period=period, operation=operation)
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id={},
@@ -179,6 +193,7 @@ def _seed_verified_revision_without_inputs(
         casilla_values={},
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     revision = CalculationRevision(
         calculation_revision_id=calculation_revision_id,
@@ -196,6 +211,7 @@ def _seed_verified_revision_without_inputs(
         verified_by="operator",
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -315,6 +331,7 @@ def _seed_modelo_111_revisions(
     now = datetime.now(UTC)
     revision_ids: list[str] = []
     revisions: list[CalculationRevision] = []
+    screen_stamp = _calculated_screen_stamp(modelo="111", filing_year=filing_year, period=period, operation=operation)
     for index, state_value in enumerate(states):
         inputs = {**_MODELO_111_INPUTS, _M111_CASILLA_03: f"{180 + index}.25"}
         calculation_revision_id = derive_calculation_revision_id(
@@ -324,6 +341,7 @@ def _seed_modelo_111_revisions(
             casilla_values={},
             filing_instance_evidence=None,
             source_provenance=(),
+            screen_stamp=screen_stamp,
         )
         revision_ids.append(calculation_revision_id)
         revisions.append(
@@ -350,6 +368,7 @@ def _seed_modelo_111_revisions(
                 filed_by="operator" if state_value is CalculationRevisionState.PRESENTADO else None,
                 filing_instance_evidence=None,
                 source_provenance=(),
+                screen_stamp=screen_stamp,
             ),
         )
 
@@ -402,6 +421,9 @@ def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOpe
     # is the one the Emilio export profile declares.
     binding_overrides = {_M202_2023_2024_PRIOR_PAYMENTS_BINDING: "0", _M202_INCN_PRIOR_12_MONTHS_BINDING: "500000"}
     casilla_values = {_M202_CASILLA_01: Decimal("0")}
+    screen_stamp = _calculated_screen_stamp(
+        modelo="202", filing_year=_PRE_B2_LAST_EXERCISE, period="1P", operation=operation
+    )
     calculation_revision_id = derive_calculation_revision_id(
         work_unit_id=work_unit_id,
         input_values_by_casilla_id=inputs,
@@ -409,6 +431,7 @@ def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOpe
         casilla_values=casilla_values,
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     now = datetime.now(UTC)
     work_unit = WorkUnit(
@@ -449,6 +472,7 @@ def _seed_exportable_modelo_202_pre_b2_revision(*, operation: PinnedAuthorityOpe
         verified_by="Emilio",
         filing_instance_evidence=None,
         source_provenance=(),
+        screen_stamp=screen_stamp,
     )
     cr_repo = CalculationRevisionCatalogueRepository()
     cr_repo.save(upsert_calculation_revision(cr_repo.load(), revision))
@@ -491,6 +515,8 @@ def test_export_modelo_111_end_to_end_writes_file_with_composed_headers(
     assert "CSV cotejo" in result.output
     assert out.exists()
     assert out.stat().st_size > 0
+    # The seeded box 03 of 180.25 euros, written in cents as the fixed-width design carries amounts.
+    assert b"18025" in out.read_bytes()
 
 
 def test_export_modelo_111_emilio_legal_entity_uses_profile_identity_name(

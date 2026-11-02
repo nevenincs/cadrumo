@@ -459,6 +459,7 @@ def export_draft(
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    states_whole_return: bool = False,
 ) -> _DeclaracionExportResult: ...
 @overload
 def export_draft(
@@ -472,6 +473,7 @@ def export_draft(
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    states_whole_return: bool = False,
 ) -> _FilingExportConsumedResult: ...
 def export_draft(
     draft: ModeloDraft,
@@ -484,6 +486,7 @@ def export_draft(
     product_software_identity: AeatProductSoftwareIdentity | None = None,
     schema_provider: RegistrySchemaAccessor | None = None,
     mutation_writer: Callable[[Callable[[], None]], None] | None = None,
+    states_whole_return: bool = False,
 ) -> _DeclaracionExportResult | _FilingExportConsumedResult:
     """Write an approved draft to a local fichero-BOE file and return a receipt.
 
@@ -513,6 +516,9 @@ def export_draft(
             other modelo.
         schema_provider: Optional registry schema provider override.
         mutation_writer: Admit the actual atomic file write after rendering and validation.
+        states_whole_return: The payload is a filer's whole return, so it is held to the
+            required content of its official schema before reaching either destination.
+            A bare draft render states only part of one and is judged on its values alone.
 
     Returns:
         A :class:`DeclaracionExportResult` with the output path, digest,
@@ -547,6 +553,8 @@ def export_draft(
         product_software_identity=product_software_identity,
     )
     casilla_provenance = _validate_prepared_export(draft, prepared=prepared, payload=payload)
+    if states_whole_return:
+        refuse_incomplete_xml_export(prepared.layout, draft=draft, payload=payload, schema_provider=prepared.provider)
     if output_path is not None:
         return _write_prepared_export(
             draft,
@@ -591,8 +599,7 @@ def refuse_incomplete_xml_export(
 ) -> None:
     """Refuse a filer's rendered XML declaration that omits what its official XSD requires.
 
-    A layout of another format carries no such schema and passes through. A work-unit
-    export calls this on its staged bytes, so a refused declaration is never published.
+    A layout of another format carries no such schema and passes through.
 
     Args:
         layout: The layout the payload was rendered through, if the revision declares one.
@@ -605,6 +612,45 @@ def refuse_incomplete_xml_export(
     """
     if layout is not None and layout.format is ExportLayoutFormat.XML_DICTIONARY:
         refuse_incomplete_xml_dictionary_payload(layout, draft=draft, payload=payload, schema_provider=schema_provider)
+
+
+def refuse_xml_export_content(
+    draft: ModeloDraft,
+    *,
+    dictionary_values: Mapping[str, object] | None,
+    schema_provider: RegistrySchemaAccessor,
+) -> None:
+    """Refuse, without keeping any byte, what :func:`export_draft` would refuse in an XML return's content.
+
+    Verification calls this before the draft is approved: the same render and the same
+    required-content check answer, so it cannot grant a return the export then refuses.
+    A layout of another format holds no such content and passes through.
+
+    Args:
+        draft: The draft the revision would export.
+        dictionary_values: Values addressed by dictionary field id, as the export composes them.
+        schema_provider: Resolves the layout's dictionary and XSD sources.
+
+    Raises:
+        ModeloApplicationError: A value breaks its schema, or required content is absent.
+        FilingExportError: The declaration cannot be rendered at all.
+    """
+    layout = _select_export_layout(
+        draft,
+        subview=schema_provider.get_subview(draft.modelo),
+        registry_snapshot=schema_provider.get_snapshot(draft.modelo),
+    )
+    if layout.format is not ExportLayoutFormat.XML_DICTIONARY:
+        return
+    payload = render_xml_dictionary_layout(
+        layout,
+        draft=draft,
+        headers={},
+        aux_version=aeat_aux_version(),
+        dictionary_values=dictionary_values,
+        schema_provider=schema_provider,
+    )
+    refuse_incomplete_xml_export(layout, draft=draft, payload=payload, schema_provider=schema_provider)
 
 
 def export_layout_renderability_reason_code(
@@ -694,6 +740,11 @@ def _render_export_layout(
     if layout.format is ExportLayoutFormat.XML_DICTIONARY:
         if xml_aux_version is None:
             raise FilingExportValidationError("XML dictionary export requires a canonical Aux/VERSION token")
+        refuse_written_shared_owners(
+            layout,
+            registry_snapshot=registry_snapshot,
+            casilla_values={value.casilla_id: value.value for value in draft.values},
+        )
         return render_xml_dictionary_layout(
             layout,
             draft=draft,
@@ -906,5 +957,6 @@ __all__ = [
     "_preflight_projection_plan",
     "export_draft",
     "refuse_incomplete_xml_export",
+    "refuse_xml_export_content",
     "render_filing_layout",
 ]

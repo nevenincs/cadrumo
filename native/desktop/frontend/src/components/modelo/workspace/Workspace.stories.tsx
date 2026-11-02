@@ -18,6 +18,7 @@ const UNITS = {
   "303": "b650ba021eda8c3082ea9d66d8be078c7c6247610af8772ddd48d75b604198f6",
   "347": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
   "390": "af66ad3c64bd5b1a6d6670a20a645c9966136f578c4209d2eab1e83d69f16aa3",
+  "100": "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4",
 } as const;
 
 const language = (globals: Record<string, unknown>) =>
@@ -144,5 +145,52 @@ export const History: Story = {
   name: "130 · History view, read unavailable in the scenario",
   render: (_, { globals }) => (
     <Screen modelo="130" view="history" locale={language(globals)} />
+  ),
+};
+
+export const Modelo100Unresolved: Story = {
+  name: "100 · salaried, withholding credits unresolved",
+  render: (_, { globals }) => (
+    <Screen modelo="100" locale={language(globals)} />
+  ),
+};
+
+export const Modelo100Check: Story = {
+  name: "100 · Check view with the credits unresolved",
+  render: (_, { globals }) => (
+    <Screen modelo="100" view="check" locale={language(globals)} />
+  ),
+};
+
+export const Modelo100ToPay: Story = {
+  name: "100 · salaried, certificate in the register, result to pay",
+  render: (_, { globals }) => (
+    <Screen modelo="100" shape="renta-pay" locale={language(globals)} />
+  ),
+};
+
+export const Modelo100ToRefund: Story = {
+  name: "100 · salaried, certificate in the register, result to refund",
+  render: (_, { globals }) => (
+    <Screen modelo="100" shape="renta-refund" locale={language(globals)} />
+  ),
+};
+
+export const Modelo100Activity: Story = {
+  name: "100 · self-employed, result not calculated",
+  render: (_, { globals }) => (
+    <Screen modelo="100" shape="renta-activity" locale={language(globals)} />
+  ),
+};
+
+export const Modelo100Sources: Story = {
+  name: "100 · Sources view with the register's credits",
+  render: (_, { globals }) => (
+    <Screen
+      modelo="100"
+      shape="renta-pay"
+      view="sources"
+      locale={language(globals)}
+    />
   ),
 };

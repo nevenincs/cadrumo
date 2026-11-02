@@ -202,6 +202,8 @@ def test_dr369_page_indicator_follows_the_page_even_for_amendment_evidence(
     assert (field.offset, field.length, field.required, field.presence_marker) == (55, 1, True, _CONTINUATION)
     context = FilingRecordRenderContext(registry_snapshot=snapshot, layout=layout, record=record, occurrence=occurrence)
 
-    marker = continuation_page_marker(_approved_131_draft(("722",)), typed_producer_snapshot(complementaria=True), context)
+    marker = continuation_page_marker(
+        _approved_131_draft(("722",)), typed_producer_snapshot(complementaria=True), context
+    )
 
     assert format_field(field, marker if marker is not None else " ") == expected

@@ -4600,7 +4600,9 @@ export type ModeloFormInspectionReason =
  * `address` is where choosing the line leads: the box the form shows, or with
  * `in_records` the table whose records carry the value; `None` when the line
  * leads nowhere on the form. `surface` is the area of the application that
- * owns the value, when one does.
+ * owns the value, when one does: for a line about a box it is the area its
+ * primary source belongs to, so a credit the withholding register supplies
+ * leads to that register and never to a place to type it.
  */
 export type ModeloFormIssueLine = {
   level: ModeloFormAttention;
@@ -6121,7 +6123,9 @@ export type ModeloSpreadsheetExportRequest = {
  *
  * `recommendation_reason` is the closed token of why the mode is recommended;
  * `recommendation_reason_words` is the same reason in words naming the results
- * it compares, in `words_language`.
+ * it compares, in `words_language`; `individual_branch_caveat` states in the
+ * same language why the individual figure is reliable only for a single-earner
+ * household.
  */
 export type ModeloTaxationComparisonProjection = {
   result_version: 2;
@@ -8170,7 +8174,9 @@ export type RefundElection = "compensar" | "devolver";
  * Closed reason catalogue for typed formula outcomes with no Decimal value.
  */
 export type RegistryUnresolvedOutcomeReason =
-  "m210-baseline-tipo-deferred" | "m210-convenio-rate-missing";
+  | "m210-baseline-tipo-deferred"
+  | "m210-convenio-rate-missing"
+  | "waived-refund-result-unsupported";
 
 export type RelationId = string;
 

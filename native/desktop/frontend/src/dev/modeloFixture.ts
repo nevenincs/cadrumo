@@ -88,7 +88,15 @@ import { hex64 } from "./fixtures/ledger";
  * offers to open them.
  * `list-notes` lists the first quarter's Modelo 130 with the sentences of the
  * asset notes as what its calculation noted that withholds nothing: the
- * application's list of these synthetic declarations notes none. */
+ * application's list of these synthetic declarations notes none.
+ *
+ * The `renta` shapes list the declarations of a synthetic filer whose 2025
+ * Modelo 100 is open, each read whole as the application served it.
+ * `renta` is a salaried filer with no withholding certificate in the
+ * register, so the credits and the totals that read them are unresolved;
+ * `renta-pay` and `renta-refund` are the same filer with a certificate that
+ * leaves a result to pay or to refund; `renta-activity` is a self-employed
+ * filer whose activity income the ledger books. */
 export const MODELO_SHAPES = [
   "fixture",
   "checked",
@@ -115,6 +123,10 @@ export const MODELO_SHAPES = [
   "moving",
   "read-only-boxes",
   "list-notes",
+  "renta",
+  "renta-pay",
+  "renta-refund",
+  "renta-activity",
   "refused",
   "unknown",
   "unavailable",
@@ -124,6 +136,16 @@ export type ModeloShape = (typeof MODELO_SHAPES)[number];
 
 /** The declaration whose later states the `checked` and `filed` shapes read. */
 const LATER_STATES = "130-1T";
+
+/** The 2025 Modelo 100, whose filer the `renta` shapes choose. */
+const RENTA = "100-0A";
+
+/** The filer's form a `renta` shape reads: the salaried filer without a
+ * certificate is the declaration itself. */
+const rentaForm = (shape: ModeloShape): string =>
+  shape.startsWith("renta-")
+    ? `${RENTA}-${shape.slice("renta-".length)}`
+    : RENTA;
 
 /** Every box a form's pages hold. */
 function fields(node: unknown): PublicModeloFormField[] {
@@ -433,7 +455,12 @@ export function modeloFixture(options: Options): ModeloPort {
   const admittedBy = new Map<string, string>();
   const readForm = async (workUnitId: string, language: OutputLanguage) => {
     const name = await formName(workUnitId);
-    const read = name === LATER_STATES ? laterState() : name;
+    const read =
+      name === LATER_STATES
+        ? laterState()
+        : name === RENTA
+          ? rentaForm(shape)
+          : name;
     const form =
       read &&
       (await envelope<ModeloWorkbenchFormProjectionV1>(
@@ -602,7 +629,13 @@ export function modeloFixture(options: Options): ModeloPort {
       say(`modelo declarations ${language}`);
       await answer();
       const list = await envelope<ModeloDeclarationsListProjectionV1>(
-        `declarations${shape === "incomplete" ? "-incomplete" : ""}-${language}`,
+        `declarations${
+          shape === "incomplete"
+            ? "-incomplete"
+            : shape.startsWith("renta")
+              ? "-renta"
+              : ""
+        }-${language}`,
       );
       if (!list) return reject("unavailable");
       const read = withStoredDefaults(list);

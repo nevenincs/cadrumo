@@ -1690,7 +1690,7 @@ type = "object"
 required = false
 sensitivity = "identity"
 effective_dated = true
-description = "Datos de cada ascendiente que da derecho al mínimo por ascendientes, guardados como renta_family.ascendiente.{n}: NIF, apellidos y nombre, fecha de nacimiento, clave de discapacidad, número de descendientes con los que convive y fecha de fallecimiento."
+description = "Details of each ascendant who gives entitlement to the ascendant minimum, stored as renta_family.ascendiente.{n}: NIF, surnames and name, birth date, official disability code, number of descendants the ascendant lives with and date of death."
 legal_refs = ["ley-35-2006:art-59"]
 
 [[sections.fields]]

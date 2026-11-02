@@ -268,6 +268,17 @@ _EXEMPT: Final[Mapping[str, str]] = {
         "material. Rewording the description to dodge the keyword would remove exactly the "
         "sentence telling a reader when the field is required."
     ),
+    "renta_family.ascendiente": (
+        "Matches on 'clave' only through its DESCRIPTION, which lists the 'clave de "
+        "discapacidad' among the facts stored for each ascendiente: the disability code the "
+        "Modelo 100 printed form asks for beside each ascendiente who gives the right to the "
+        "minimo por ascendientes, in the code sense of 'clave' rather than the password "
+        "sense. The field is an object whose sub-values are family facts the filer states "
+        "to AEAT in the return (NIF, names, birth date, disability code, cohabiting "
+        "descendants, death date); none authenticates anything, and the object keeps its "
+        "identity class like the descendant family beside it. Rewording the description to "
+        "dodge the keyword would drop the official name of the stored fact."
+    ),
     "attribution_entity_socios.country_of_residence": (
         "Matches on 'clave' only through its DESCRIPTION, which names the clave that governs "
         "it -- the field itself is an ISO country code written at positions 79-80 of the same "

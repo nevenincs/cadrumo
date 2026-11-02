@@ -7,10 +7,12 @@ the rows below it. Rows are numbered from one in stored order, the row-set
 channel's coordinate.
 
 The rows alone cannot tell a filer who declared none from one who has not
-answered. The object's stated count can: when the count is stated, or rows are
-stored, the resolver records a source trace naming the boxes the binding feeds.
-That trace is the persisted positive fact a reader needs to show an empty group
-as declared empty; without it the group stays unknown.
+answered. The object's stated count can, but only when it is exactly zero: when
+rows are stored, or the count is stated as zero, the resolver records a source
+trace naming the boxes the binding feeds. That trace is the persisted positive
+fact a reader needs to show an empty group as declared empty. A non-zero count
+with no stored rows is a household the filer has described but not entered, so it
+records no trace and the group stays unknown, like an unanswered one.
 """
 
 from __future__ import annotations
@@ -19,7 +21,7 @@ import re
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
@@ -69,9 +71,14 @@ def _row_value(value: UserProfileFactValue) -> RowBindingValue | None:
     return text or None
 
 
-def _count_is_stated(selector: ProfileRowsSelector, fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+def _count_is_stated_zero(selector: ProfileRowsSelector, fact_index: Mapping[str, UserProfileFactValue]) -> bool:
     value = fact_index.get(selector.count_path)
-    return value is not None and str(value).strip() != ""
+    if value is None or isinstance(value, bool):
+        return False
+    try:
+        return Decimal(str(value).strip()) == 0
+    except InvalidOperation:
+        return False
 
 
 def _bound_casillas(snapshot: RegistrySnapshot, binding_id: BindingId) -> tuple[CasillaId, ...]:
@@ -95,7 +102,7 @@ def resolve_profile_row_values(
 
     Returns:
         The row values keyed by binding and row index, and one source trace per
-        binding whose rows are stored or whose object states a count.
+        binding whose rows are stored or whose object states a count of zero.
     """
     values: dict[RowBindingKey, RowBindingValue] = {}
     provenance: list[CalculationSourceProvenance] = []
@@ -110,7 +117,7 @@ def resolve_profile_row_values(
             value = None if raw is None else _row_value(raw)
             if value is not None:
                 values[(binding.id, position)] = value
-        if not indexes and not _count_is_stated(selector, fact_index):
+        if not indexes and not _count_is_stated_zero(selector, fact_index):
             continue
         provenance.append(
             CalculationSourceProvenance(

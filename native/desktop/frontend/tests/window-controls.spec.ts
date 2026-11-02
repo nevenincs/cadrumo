@@ -64,7 +64,7 @@ test("window controls use authenticated commands and native presentation", async
                     { maximized: false, fullscreen: false, chrome: "custom" },
                     {
                       get(target, name) {
-                        if (name === "fullscreen")
+                        if (name === "maximized")
                           throw new Error("private-react-canary");
                         return Reflect.get(target, name);
                       },

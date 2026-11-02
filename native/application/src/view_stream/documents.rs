@@ -34,6 +34,7 @@ pub const MAX_TITLE_LENGTH: usize = 1024;
 pub const MAX_DIALOG_MESSAGE_LENGTH: usize = 2048;
 pub const MAX_PROMPT_TEXT_LENGTH: usize = 1024;
 pub const MAX_TEXT_INPUT_LENGTH: usize = 256;
+pub const MAX_CLIPBOARD_BYTES: usize = 16 * 1024;
 pub const MAX_KEY_LENGTH: usize = 32;
 pub const MAX_WHEEL_DELTA: i32 = 10_000;
 /// The modifier bitmask as CDP spells it: Alt 1, Control 2, Meta 4, Shift 8.
@@ -466,6 +467,8 @@ pub enum ViewDownstream {
     State(ViewState),
     #[serde(rename = "view.notice")]
     Notice(ViewNotice),
+    #[serde(rename = "view.clipboard_selection")]
+    ClipboardSelection(ViewClipboardSelection),
     #[serde(rename = "view.closed")]
     Closed(ViewClosed),
     #[serde(rename = "view.download")]
@@ -494,6 +497,7 @@ impl ViewDownstream {
             Self::Image(document) => document.validate(),
             Self::State(document) => document.validate(),
             Self::Notice(document) => document.validate(),
+            Self::ClipboardSelection(document) => document.validate(),
             Self::Closed(_) => Ok(()),
             Self::Download(document) => document.validate(),
             Self::FileChooser(document) => document.validate(),
@@ -509,6 +513,7 @@ impl ViewDownstream {
             Self::Image(_) => "view.image",
             Self::State(_) => "view.state",
             Self::Notice(_) => "view.notice",
+            Self::ClipboardSelection(_) => "view.clipboard_selection",
             Self::Closed(_) => "view.closed",
             Self::Download(_) => "view.download",
             Self::FileChooser(_) => "view.file_chooser",
@@ -532,6 +537,59 @@ pub struct ViewCredit {
 impl ViewCredit {
     pub fn validate(&self) -> Result<(), Violation> {
         require((1..=CREDIT_MAX_IMAGES).contains(&self.images))
+    }
+}
+
+/// The only clipboard actions the desktop may ask of the focused page.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum ViewClipboardAction {
+    Copy,
+    Cut,
+}
+
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ViewClipboard {
+    pub request_id: u32,
+    pub action: ViewClipboardAction,
+}
+
+impl ViewClipboard {
+    pub fn validate(&self) -> Result<(), Violation> {
+        require(self.request_id >= 1)
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ViewClipboardSelection {
+    pub request_id: u32,
+    pub text: Option<String>,
+}
+
+impl ViewClipboardSelection {
+    pub fn validate(&self) -> Result<(), Violation> {
+        require(
+            self.request_id >= 1
+                && self
+                    .text
+                    .as_ref()
+                    .is_none_or(|text| !text.is_empty() && text.len() <= MAX_CLIPBOARD_BYTES),
+        )
+    }
+}
+
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub struct ViewClipboardCommit {
+    pub request_id: u32,
+    pub apply: bool,
+}
+
+impl ViewClipboardCommit {
+    pub fn validate(&self) -> Result<(), Violation> {
+        require(self.request_id >= 1)
     }
 }
 
@@ -844,6 +902,10 @@ pub enum ViewUpstream {
     Credit(ViewCredit),
     #[serde(rename = "view.input")]
     Input(ViewInput),
+    #[serde(rename = "view.clipboard")]
+    Clipboard(ViewClipboard),
+    #[serde(rename = "view.clipboard_commit")]
+    ClipboardCommit(ViewClipboardCommit),
     #[serde(rename = "view.navigate")]
     Navigate(ViewNavigate),
     #[serde(rename = "view.resize")]
@@ -871,6 +933,8 @@ impl ViewUpstream {
         match self {
             Self::Credit(document) => document.validate(),
             Self::Input(document) => document.event.validate(),
+            Self::Clipboard(document) => document.validate(),
+            Self::ClipboardCommit(document) => document.validate(),
             Self::Navigate(_) => Ok(()),
             Self::Resize(document) => document.validate(),
             Self::Dialog(document) => document.validate(),
@@ -898,6 +962,8 @@ impl ViewUpstream {
         match self {
             Self::Credit(_) => "view.credit",
             Self::Input(_) => "view.input",
+            Self::Clipboard(_) => "view.clipboard",
+            Self::ClipboardCommit(_) => "view.clipboard_commit",
             Self::Navigate(_) => "view.navigate",
             Self::Resize(_) => "view.resize",
             Self::Dialog(_) => "view.dialog",
@@ -916,6 +982,9 @@ redacted_debug!(
     ViewState,
     ViewDialogPrompt,
     ViewNotice,
+    ViewClipboard,
+    ViewClipboardSelection,
+    ViewClipboardCommit,
     ViewDownload,
     ViewFileChooser,
     ViewDownstream,

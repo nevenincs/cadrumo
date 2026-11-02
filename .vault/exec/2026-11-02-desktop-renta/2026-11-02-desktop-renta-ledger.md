@@ -5,40 +5,14 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:31ab64dc173088e36287bb44d3379cb06c747ab973b4257b9b6c9e0d70fe6eec'
+body_hash: 'sha256:cbf3e2f2c2ab85e070123f34151fbd33d85696578eff97bd438ef57db26455bb'
 related:
   - "[[2026-11-02-desktop-renta-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
-
 # `desktop-renta` ledger
 
 ## Changes
-
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S09` `A` `src/cadrumo/application/user_profile/family_rows.py`
 - `S09` `M` `src/cadrumo/application/user_profile/overview.py`
@@ -195,6 +169,9 @@ related:
 - `S02` `verify:` `pytest household projection outline headings` -> `pass`
 - `S02` `verify:` `just check-registry-gate` -> `pass`
 - `S02` `by:` `opus-medium`
+- `S23` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S23` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S23` `by:` `sonnet-high`
 
 ## Notes
 
@@ -209,3 +186,4 @@ related:
 - `S05` Commit cf12f70032; field already carried the withholding surface, issue lines now take the primary source surface
 - `S12` Commit 208a60e27b; also fixed pre-existing ledger admitted ordering and regenerated stale modeloContract.ts; Rust profile Field lacks `ejercicio_answer` and `country_options`
 - `S02` Work landed across 526ca3d9a1, 75044c208a, be43f09bca and 586b72dcf8; disability deductions stay flat; `apellidos_nombre` and `discapacidad_clave` unwritten; ascendiente object added without a writer
+- `S23` Commit 2a52318aee; dated amendment, no devengo preselection

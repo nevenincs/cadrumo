@@ -299,6 +299,50 @@ async def test_sede_view_shows_a_popup_and_returns_to_its_opener_when_it_closes(
 
 
 @pytest.mark.asyncio
+async def test_sede_view_returns_to_opener_instead_of_another_sibling_popup(tmp_path: Path) -> None:
+    site = _Site()
+    first_url = site.page("/first.html", "<title>First</title>")
+    second_url = site.page("/second.html", "<title>Second</title>")
+    _home(
+        site,
+        f'<a id="first" target="_blank" href="{first_url}">first</a>'
+        f'<a id="second" target="_blank" href="{second_url}">second</a>',
+    )
+    async with _view(tmp_path, site) as running:
+        opener = running.page
+        await opener.click("#first")
+        await until(lambda: any(state.path == "/first.html" for state in running.sink.of(ViewState)))
+        await opener.click("#second")
+        await until(lambda: any(state.path == "/second.html" for state in running.sink.of(ViewState)))
+        second = running.view.context.pages[-1]
+        before = len(running.sink.of(ViewState))
+        await second.close()
+        await until(lambda: any(state.path == "/" for state in running.sink.of(ViewState)[before:]))
+        assert len(running.view.context.pages) == 2
+        assert not running.browsing.done()
+
+
+@pytest.mark.asyncio
+async def test_sede_view_nested_popup_returns_to_live_ancestor_when_opener_closed(tmp_path: Path) -> None:
+    site = _Site()
+    child_url = site.page("/child.html", "<title>Child</title>")
+    parent_url = site.page("/parent.html", f'<a id="child" target="_blank" href="{child_url}">child</a>')
+    _home(site, f'<a id="parent" target="_blank" href="{parent_url}">parent</a>')
+    async with _view(tmp_path, site) as running:
+        await running.page.click("#parent")
+        await until(lambda: any(state.path == "/parent.html" for state in running.sink.of(ViewState)))
+        parent = running.view.context.pages[-1]
+        await parent.click("#child")
+        await until(lambda: any(state.path == "/child.html" for state in running.sink.of(ViewState)))
+        child = running.view.context.pages[-1]
+        await parent.close()
+        before = len(running.sink.of(ViewState))
+        await child.close()
+        await until(lambda: any(state.path == "/" for state in running.sink.of(ViewState)[before:]))
+        assert not running.browsing.done()
+
+
+@pytest.mark.asyncio
 async def test_sede_view_ends_on_the_windows_close_and_on_its_last_page_closing(tmp_path: Path) -> None:
     site = _Site()
     _home(site, "<title>Inicio</title>")

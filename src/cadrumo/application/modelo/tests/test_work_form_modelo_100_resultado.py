@@ -62,3 +62,31 @@ def test_once_calculated_the_box_shows_its_amount_as_calculated_and_not_as_a_hel
     assert not field.takes_typed_value
     assert not field.unattributed
     assert str(field.value) == "-250.00"
+
+
+def test_a_calculation_that_left_the_box_without_a_value_serves_it_as_could_not_calculate(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A waived refund leaves only this box unresolved: its neighbours keep their figures and it is never a zero."""
+    form = built_form(
+        operation,
+        "100",
+        2025,
+        "0A",
+        held={"0003": Decimal("30000.00"), "0670": Decimal("-19000.00")},
+        calculated=True,
+    )
+    result = form_casilla(form, "0670")
+    field = form_casilla(form, _BOX)
+
+    assert result.origin is ModeloFormOrigin.CALCULATED
+    assert str(result.value) == "-19000.00"
+    assert field.origin is ModeloFormOrigin.CALCULATION_FAILED
+    assert field.value is None
+    assert not field.held_zero
+    assert form.counts.could_not_calculate >= 1
+    assert sum(group.counts.could_not_calculate for group in form.outline) == form.counts.could_not_calculate
+    group = next(
+        group for group in form.outline if "datoseconomicos-resultados.ingresodevolucionres" in group.section_ids
+    )
+    assert group.counts.could_not_calculate >= 1

@@ -33,6 +33,9 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
         RegistryUnresolvedOutcomeReason.M210_CONVENIO_RATE_MISSING.value: (
             "application.modelo.projection_words.casilla_reason.m210_convenio_rate_missing"
         ),
+        RegistryUnresolvedOutcomeReason.WAIVED_REFUND_RESULT_UNSUPPORTED.value: (
+            "application.modelo.projection_words.casilla_reason.waived_refund_result_unsupported"
+        ),
     }
 )
 """The sentence of each reason a computed box can be left without a value."""
