@@ -245,6 +245,38 @@ def mutate_encrypted_secure_object_json(
         )
 
 
+def restamp_secure_object_schema_version(
+    engine: Engine,
+    *,
+    row_statement: Select[SecureObjectRow],
+    schema_version: int,
+    mutate: Callable[[dict[str, Any]], None],
+) -> None:
+    """Rewrite one real secure-object row as if an earlier or later build had written it.
+
+    Decrypts under the stored identity-bound associated data, applies the
+    caller's document mutation, then re-encrypts under associated data bound to
+    ``schema_version`` and stamps the row column with it. The result is a row
+    the current build cannot have written, produced without bypassing the AEAD.
+    """
+    with session_scope(engine) as session:
+        row = session.execute(row_statement).scalar_one()
+        object_key = bytes(row.object_key)
+        document = json.loads(
+            decrypt_secure_object_payload(
+                bytes(row.payload),
+                associated_data=secure_object_payload_aad(row.namespace, object_key, row.schema_version),
+            ).decode("utf-8"),
+        )
+        assert isinstance(document, dict), "encrypted secure-object payload must decode to a JSON object"
+        mutate(document)
+        row.payload = encrypt_secure_object_payload(
+            json.dumps(document).encode("utf-8"),
+            associated_data=secure_object_payload_aad(row.namespace, object_key, schema_version),
+        )
+        row.schema_version = schema_version
+
+
 def reset_secure_object_store(repository: SecureObjectRepository) -> None:
     """Truncate every per-test row from a shared bucket's secure-object store.
 

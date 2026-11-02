@@ -289,10 +289,7 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
         destination = cast("DeclarationsDestinationIdV1", event.row_key.value)
         availability = self.controller.destination_availability(destination)
         notice = self.query_one("#declarations-refusal", Static)
-        if availability.value not in {
-            DeclarationsWorkspaceAvailability.AVAILABLE.value,
-            DeclarationsWorkspaceAvailability.STALE.value,
-        }:
+        if not availability.is_observable:
             notice.update(self._refusal_copy(destination))
             return True
         self.requested_target = self.controller.target(destination)
@@ -326,10 +323,7 @@ class DeclarationsWorkspaceScreen(AccountChromeScreen):
     def action_back(self) -> None:
         """Return an area to the Declarations overview; leave the workspace only from the overview."""
         # An overview that cannot open would bounce Back straight back here.
-        overview_opens = self.controller.destination_availability("declarations.overview") in {
-            DeclarationsWorkspaceAvailability.AVAILABLE,
-            DeclarationsWorkspaceAvailability.STALE,
-        }
+        overview_opens = self.controller.destination_availability("declarations.overview").is_observable
         if self.IS_WORKSPACE_OVERVIEW or not overview_opens:
             self.dismiss(None)
             return
@@ -419,10 +413,7 @@ class DeclarationsCalendarController:
         self, scope: DeclarationsCalendarScopeV1, query: str
     ) -> tuple[DeclarationsCalendarEntryRefV1, ...]:
         """Apply closed scope semantics and Unicode AND search to safe fields only."""
-        aeat_observable = self.source(DeclarationsCalendarSource.AEAT_EVIDENCE).availability in {
-            HomeAvailability.AVAILABLE,
-            HomeAvailability.STALE,
-        }
+        aeat_observable = self.source(DeclarationsCalendarSource.AEAT_EVIDENCE).availability.is_observable
         rows = [
             row for row in self.projection.entries if _scope_matches(row, scope, self.projection.as_of, aeat_observable)
         ]

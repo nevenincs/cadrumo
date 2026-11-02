@@ -435,10 +435,7 @@ def _project_agenda(
             entry.period.registry_token,
         ),
     )[:3]
-    evidence_observable = evidence_state.availability in {
-        HomeAvailability.AVAILABLE,
-        HomeAvailability.STALE,
-    }
+    evidence_observable = evidence_state.availability.is_observable
     return tuple(_project_agenda_entry(entry, evidence_observable=evidence_observable) for entry in ordered)
 
 

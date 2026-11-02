@@ -29,6 +29,7 @@ from ....core.ledger_sort import LedgerSortField, LedgerSortOrder
 from ....domain.transactions.enums import BusinessClassification
 from ..components.widgets import ContentDataTable
 from .categorisation_common import (
+    OPERATOR_CLASSIFICATIONS,
     CategorisationScreen,
     StagedChangeV1,
     action,
@@ -46,14 +47,6 @@ from .controller import LedgerWorkspaceController
 
 BULK_PAGE_SIZE: Final = 200
 """The most entries the screen reads and renders at once."""
-
-BULK_CLASSIFICATIONS: Final[tuple[BusinessClassification, ...]] = (
-    BusinessClassification.BUSINESS,
-    BusinessClassification.PERSONAL,
-    BusinessClassification.MIXED,
-    BusinessClassification.REVIEWED_EXCLUDED,
-)
-"""The decisions a bulk classification can record."""
 
 _ANY_STATUS: Final = "any"
 
@@ -162,7 +155,7 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
         )
         yield heading("tui.ledger.categorisation.bulk.target_heading")
         yield Select[str](
-            tuple((classification_label(item.value), item.value) for item in BULK_CLASSIFICATIONS),
+            tuple((classification_label(item.value), item.value) for item in OPERATOR_CLASSIFICATIONS),
             value=BusinessClassification.BUSINESS.value,
             allow_blank=False,
             id="categorisation-bulk-classification",
@@ -343,4 +336,4 @@ class LedgerBulkClassifyScreen(CategorisationScreen):
         self.paint_tables()
 
 
-__all__ = ["BULK_CLASSIFICATIONS", "BULK_PAGE_SIZE", "LedgerBulkClassifyScreen", "bulk_csv", "bulk_result_text"]
+__all__ = ["BULK_PAGE_SIZE", "LedgerBulkClassifyScreen", "bulk_csv", "bulk_result_text"]

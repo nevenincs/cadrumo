@@ -24,7 +24,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator
 
 from ....core.casilla_id import CasillaId
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.filing_year import FilingYear
+from ....core.filing_year import FilingYear, is_four_digit_year
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ....core.period import Period, PeriodError
@@ -142,7 +142,7 @@ class InboundDeclaracionObservation(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _ejercicio_is_a_four_digit_year(cls, value: str) -> str:
-        if not (value.isascii() and value.isdigit() and 1000 <= int(value) <= 9999):
+        if not (value.isascii() and value.isdigit() and is_four_digit_year(int(value))):
             raise ValueError("ejercicio must be a four-digit year")
         return value
 

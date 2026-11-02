@@ -37,6 +37,7 @@ from ....core.modelo import Modelo
 from ....core.period import Period
 from ....core.prior_domiciliation_election import PriorDomiciliationElection
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.filing.errors import FilingExportValidationError
 from ....domain.filing.protocols import ModeloInputScalar, ModeloInputValue
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -296,3 +297,86 @@ def test_a_landlord_files_one_inmueble_record_per_leased_premises_and_the_leases
     assert declarante[144:160] == " 000000002541000"
     assert declarante[160:169] == "000000002"
     assert declarante[169:185] == " 000000001936000"
+
+
+def _export_with_inputs(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+    invoices: tuple[Invoice, ...],
+    extra_inputs: dict[str, ModeloInputValue],
+) -> list[str]:
+    provider = build_runtime_schema_provider(
+        filing_year=_YEAR,
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        modelos=("347",),
+        operation=operation,
+    )
+    draft = build_draft(
+        modelo="347",
+        period=Period.from_year_and_code(_YEAR, "0A"),
+        profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="DECLARANTE PRUEBA"),
+        inputs={**_resolved_inputs(operation, invoices), **extra_inputs},
+        schema_provider=provider,
+    ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
+    output_path = tmp_path / "modelo-347-2025.txt"
+    export_draft(
+        draft,
+        output_path=output_path,
+        producer_snapshot=m151_producer_snapshot().model_copy(update={"modelo": Modelo("347")}),
+        prior_domiciliation_election=PriorDomiciliationElection.KEEP,
+        product_software_identity=None,
+        schema_provider=provider,
+    )
+    return output_path.read_bytes().decode("iso-8859-1").splitlines()
+
+
+@pytest.mark.parametrize(
+    ("casilla_id", "value"),
+    [
+        ("contraparte.importe-metalico", "7000"),
+        ("contraparte.operacion-seguro", "X"),
+        ("contraparte.numero-convocatoria-bdns", "123456"),
+    ],
+)
+def test_a_single_valued_casilla_is_refused_instead_of_copied_onto_every_counterparty_row(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+    casilla_id: str,
+    value: str,
+) -> None:
+    """Two counterparties exceed the floor, so one typed value has no row to belong to."""
+    with pytest.raises(FilingExportValidationError) as raised:
+        _export_with_inputs(operation, tmp_path, _ordinary_invoices(), {casilla_id: value})
+
+    context = raised.value.context
+    assert context is not None
+    assert context["casilla_ids"] == (casilla_id,)
+    assert context["row_count"] == 2
+    assert not (tmp_path / "modelo-347-2025.txt").exists()
+
+
+def test_absent_or_zero_single_valued_casillas_leave_every_row_without_cash(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+) -> None:
+    typed_cash: tuple[dict[str, ModeloInputValue], ...] = ({}, {"contraparte.importe-metalico": "0"})
+    for typed in typed_cash:
+        lines = _export_with_inputs(operation, tmp_path, _ordinary_invoices(), typed)
+        declarados = [line for line in lines[1:] if line[75] == "D"]
+        assert len(declarados) == 2
+        # Positions 101-115 are the cash amount: 13 integer and 2 decimal digits.
+        assert {line[100:115] for line in declarados} == {"000000000000000"}
+
+
+def test_a_single_counterparty_row_carries_the_typed_cash_amount(
+    operation: PinnedAuthorityOperation,
+    tmp_path: Path,
+) -> None:
+    only_one = (_domestic("V-1", InvoiceKind.ISSUED, "B12345674", "CLIENTE NACIONAL SL", "8000.00"),)
+
+    lines = _export_with_inputs(operation, tmp_path, only_one, {"contraparte.importe-metalico": "7000"})
+
+    declarados = [line for line in lines[1:] if line[75] == "D"]
+    assert len(declarados) == 1
+    # 7000 euros in positions 101-115: 13 integer digits, then 2 decimal digits.
+    assert declarados[0][100:115] == "000000000700000"

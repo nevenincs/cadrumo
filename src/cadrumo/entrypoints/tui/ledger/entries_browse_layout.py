@@ -90,17 +90,30 @@ _COLUMNS: Final[tuple[tuple[str, str, int], ...]] = (
 )
 
 
-def visible_columns(width: int) -> tuple[tuple[str, str, int], ...]:
+def fit_columns(
+    columns: tuple[tuple[str, str, int], ...],
+    width: int,
+) -> tuple[tuple[str, str, int], ...]:
     """Take columns in priority order while their headers and floors still fit the terminal."""
     taken: list[tuple[str, str, int]] = []
     used = 0
-    for column in _COLUMNS:
+    for column in columns:
+        # The header is a floor on the rendered column, not merely a label: a
+        # column narrower than its own heading is widened to fit it, so
+        # budgeting the authored width alone under-counts every column whose
+        # translated heading is longer. Two cells of padding per column, plus
+        # one for the scrollbar.
         cost = max(column[2], len(tr(column[1]))) + 2
         if used + cost > width - 1:
             break
         taken.append(column)
         used += cost
     return tuple(taken)
+
+
+def visible_columns(width: int) -> tuple[tuple[str, str, int], ...]:
+    """Take the browser columns that fit the terminal width."""
+    return fit_columns(_COLUMNS, width)
 
 
 def row_cells(row: LedgerTransactionReviewProjection, marked: Mapping[str, str]) -> dict[str, str]:

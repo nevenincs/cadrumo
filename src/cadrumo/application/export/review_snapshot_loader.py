@@ -20,7 +20,7 @@ from ...domain.modelos.calculation_revision import (
 )
 from ...domain.modelos.filing_record import ModeloRecord
 from ...domain.modelos.work_unit import WorkUnit
-from ..modelo.calculation_note_gate import blocking_calculation_issues, calculation_screen_outdated
+from ..modelo.calculation_note_gate import blocking_calculation_issues, saved_calculation_screen_outdated
 from ..modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
 from .review_form_data import capture_review_form
 from .review_snapshot import (
@@ -68,7 +68,7 @@ def build_calculation_review_snapshot(
     _assert_ledger_fingerprints(revision)
     saved_form = capture_review_form(revision)
     findings = _review_findings(revision, saved_form is not None)
-    if operation is not None and calculation_screen_outdated(
+    if operation is not None and saved_calculation_screen_outdated(
         revision,
         modelo=str(work_unit.modelo),
         filing_year=work_unit.filing_year,

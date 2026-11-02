@@ -346,3 +346,42 @@ def test_a_filed_revision_without_a_screen_stamp_is_not_calculated_again(persist
 
     assert summary.state is DeclarationSummaryState.RECORDED and not summary.calculation_outdated
     assert row.next_step is DeclarationListNextStep.NONE
+
+
+# Hand-derived: the 150,00 and 360,00 retenciones of two invoiced receipts in a Modelo 130 casilla 06.
+_CAPPED_FIGURE = Decimal("510.00")
+
+
+def _filed_before_the_cap(persisted: SeededOperatorWork, figure: Decimal, *, stamped: bool = False):
+    head = persisted.require_head()
+    assert head.screen_stamp is not None
+    return head.model_copy(
+        update={
+            "state": CalculationRevisionState.PRESENTADO,
+            "screen_stamp": head.screen_stamp if stamped else None,
+            "casilla_values": {**head.casilla_values, "06": figure},
+        }
+    )
+
+
+def test_a_filed_revision_from_before_the_cap_with_a_capped_figure_is_calculated_again(
+    persisted: SeededOperatorWork,
+) -> None:
+    summary, row = _next_step(persisted, _filed_before_the_cap(persisted, _CAPPED_FIGURE), recorded=True)
+
+    assert summary.state is DeclarationSummaryState.RECORDED and summary.filed_before_grade_cap
+    assert not summary.calculation_outdated
+    assert row.next_step is DeclarationListNextStep.RECALCULATE and row.opens_local_work
+
+
+def test_a_filed_revision_from_before_the_cap_with_a_zero_or_a_stamp_stays_recorded(
+    persisted: SeededOperatorWork,
+) -> None:
+    for head in (
+        _filed_before_the_cap(persisted, Decimal(0)),
+        _filed_before_the_cap(persisted, _CAPPED_FIGURE, stamped=True),
+    ):
+        summary, row = _next_step(persisted, head, recorded=True)
+
+        assert summary.state is DeclarationSummaryState.RECORDED and not summary.filed_before_grade_cap
+        assert row.next_step is DeclarationListNextStep.NONE

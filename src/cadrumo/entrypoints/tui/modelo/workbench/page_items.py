@@ -29,6 +29,7 @@ from typing import Final
 from .....application.modelo.source_policy import SourceFamily
 from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import (
+    FED_BY_A_SOURCE,
     ModeloFormBindingInputsBlock,
     ModeloFormBlock,
     ModeloFormContextFieldBlock,
@@ -99,9 +100,6 @@ class WorkbenchFilter(StrEnum):
 
 
 _RECORD_FAMILIES: Final[frozenset[SourceFamily]] = frozenset({SourceFamily.RECORDS, SourceFamily.REGISTERS})
-_FROM_SOURCE_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
-)
 _NO_AMOUNT_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {
         ModeloFormOrigin.NOT_APPLICABLE,
@@ -116,7 +114,7 @@ _NO_AMOUNT_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
 
 def _from_records(field: ModeloFormField) -> bool:
     source = field.source
-    return field.origin in _FROM_SOURCE_ORIGINS and source is not None and source.family in _RECORD_FAMILIES
+    return field.origin in FED_BY_A_SOURCE and source is not None and source.family in _RECORD_FAMILIES
 
 
 def _holds_amount(field: ModeloFormField) -> bool:

@@ -14,6 +14,7 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory, DisclosurePermission
 
 from ...core.errors.hierarchy import pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -42,7 +43,7 @@ class ModeloHistoryTimelineRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     modelo: str = Field(min_length=1, max_length=16)
-    year: int | None = Field(default=None, ge=1900, le=9999)
+    year: FourDigitYear | None = None
     period: str | None = Field(default=None, min_length=1, max_length=32)
 
 
@@ -82,7 +83,7 @@ class ModeloHistoryTimelineProjection(BaseModel):
     authority_generation: ContentDigest
     profile_id: UUID
     modelo: str = Field(min_length=1, max_length=16)
-    year: int | None = Field(default=None, ge=1900, le=9999)
+    year: FourDigitYear | None = None
     period: str | None = Field(default=None, min_length=1, max_length=32)
     count: int = Field(ge=0)
     events: tuple[ModeloTimelineEvent, ...]

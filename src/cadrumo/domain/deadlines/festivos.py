@@ -48,7 +48,7 @@ from typing import TYPE_CHECKING, Annotated, Final, Self
 from pydantic import BaseModel, Field, GetCoreSchemaHandler, NonNegativeInt, StringConstraints
 from pydantic_core import CoreSchema, core_schema
 
-from ...core.filing_year import FILING_YEAR_MIN
+from ...core.filing_year import FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.registry_token import RegistryToken
 from ..calculations.registry.errors import RegistryValidationError
@@ -169,8 +169,6 @@ class DeadlineHolidayCoverage(StrEnum):
 
 _SHORT_TEXT_MAX_LENGTH: Final = 200
 _BUSINESS_DAY_SEARCH = 14
-_FIRST_CALENDAR_YEAR: Final = FILING_YEAR_MIN
-_LAST_CALENDAR_YEAR: Final = 2100
 
 _NonEmptyShortString = Annotated[
     str,
@@ -204,7 +202,7 @@ class HolidayCalendar(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    year: Annotated[int, Field(ge=_FIRST_CALENDAR_YEAR, le=_LAST_CALENDAR_YEAR)]
+    year: FourDigitYear
     boe_ref: _NonEmptyShortString
     boe_url: str | None = None
     national: tuple[Holiday, ...] = Field(default_factory=tuple)

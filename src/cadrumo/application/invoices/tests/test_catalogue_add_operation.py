@@ -165,7 +165,7 @@ def test_undeclared_registry_tokens_are_validation_refusals(overrides: dict[str,
     assert len(ports.invoice_repository.load()) == 0
 
 
-def test_a_date_the_registry_does_not_serve_is_a_typed_refusal_and_writes_nothing(monkeypatch) -> None:
+def test_an_invoice_older_than_the_filing_years_is_kept_as_a_dated_record(monkeypatch) -> None:
     monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
     monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
     ports = in_memory_catalogue_creation_ports()
@@ -185,6 +185,32 @@ def test_a_date_the_registry_does_not_serve_is_a_typed_refusal_and_writes_nothin
             definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
             subject_ref=profile_operation_subject(str(_PROFILE)),
             payload=_request(taxable_base=None, iva_rate=None, lines=(line,), issued_at=floor - timedelta(days=1)),
+        )
+        result = asyncio.run(InvoiceAddExecutor(lambda *, bucket_id: ports).execute(request, context))
+
+    assert not isinstance(result, OperationRefusalEvidence)
+    assert [invoice.issued_at for invoice in ports.invoice_repository.load()] == [floor - timedelta(days=1)]
+
+
+def test_a_date_the_registry_does_not_serve_is_a_typed_refusal_and_writes_nothing(monkeypatch) -> None:
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(add_operation, "require_active_bucket_id", lambda: str(_PROFILE))
+    ports = in_memory_catalogue_creation_ports()
+    line = InvoiceAddLine(
+        description="Service",
+        quantity=PublicDecimal(decimal="1"),
+        unit_price=PublicDecimal(decimal="100.00"),
+        subtotal=PublicDecimal(decimal="100.00"),
+        iva_rate="RATE_21",
+        iva_amount=PublicDecimal(decimal="21.00"),
+    )
+
+    with private_authority_lease() as authority_operation:
+        context = _Context(authority_operation)
+        request = OperationRequest[InvoiceAddRequest](
+            definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID,
+            subject_ref=profile_operation_subject(str(_PROFILE)),
+            payload=_request(taxable_base=None, iva_rate=None, lines=(line,), issued_at=date(2020, 12, 31)),
         )
         result = asyncio.run(InvoiceAddExecutor(lambda *, bucket_id: ports).execute(request, context))
 

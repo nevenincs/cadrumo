@@ -1078,7 +1078,7 @@ fn no_identifier_code_or_path_reaches_the_window() {
     let status = json!({"bucket_id": "11111111-2222-4333-8444-555555555555", "status": {
         "contract_version": 1, "observed_at": "2026-10-29T10:00:00Z",
         "filed_declaration_years": [2025], "iva_wallet_years": [2025], "areas": areas}});
-    let served = status_reply("p", &status, std::time::SystemTime::now()).unwrap();
+    let served = status_reply("p", &status).unwrap();
     leaks(&serde_json::to_string(&served).unwrap());
     let names: Vec<&str> = served.areas.iter().map(|a| a.area).collect();
     assert_eq!(
@@ -1101,7 +1101,7 @@ fn no_identifier_code_or_path_reaches_the_window() {
     assert_eq!(served.areas[5].update, "import");
     let mut unknown_area = status.clone();
     unknown_area["status"]["areas"][0]["area"] = json!("payroll");
-    assert!(status_reply("p", &unknown_area, std::time::SystemTime::now()).is_err());
+    assert!(status_reply("p", &unknown_area).is_err());
     assert_eq!(served.borrador_years, [2025]);
 
     let mut run = Run::new(&everything());
@@ -1167,7 +1167,7 @@ fn a_refused_borrador_capture_is_named_by_state_and_count_without_its_tokens() {
         {"snapshot_id": "b", "reason": "generation_retired"}
     ]);
     let status = json!({"status": {"areas": [refused, other, partial]}});
-    let served = status_reply("p", &status, std::time::SystemTime::now()).unwrap();
+    let served = status_reply("p", &status).unwrap();
     assert_eq!(served.areas[0].state, "capture_refused");
     assert!(served.areas[0].counts.is_empty());
     assert_eq!(served.areas[1].state, "unavailable");
@@ -1224,34 +1224,15 @@ fn a_borrador_import_passes_the_served_outcome_through() {
 }
 
 #[test]
-fn the_borrador_years_are_the_served_ones_or_the_last_six_before_this_year() {
+fn the_borrador_years_are_only_the_served_ones() {
     let served = json!({"status": {"filed_declaration_years": [2023, 2025, 2024, 2025]}});
-    let now = std::time::SystemTime::now();
-    assert_eq!(borrador_years(&served, now), [2025, 2024, 2023]);
-    // 2026-10-29T00:00:00Z: the latest Borrador on offer is for 2025.
-    let in_2026 = std::time::UNIX_EPOCH + std::time::Duration::from_secs(1_793_232_000);
+    assert_eq!(borrador_years(&served), [2025, 2024, 2023]);
     for none in [
         json!({"status": {"filed_declaration_years": []}}),
         json!({"status": {}}),
         json!({"status": {"filed_declaration_years": [25]}}),
     ] {
-        assert_eq!(
-            borrador_years(&none, in_2026),
-            [2025, 2024, 2023, 2022, 2021, 2020],
-            "{none}"
-        );
-    }
-    // Year boundaries in UTC, from the proleptic calendar's own dates.
-    for (seconds, year) in [
-        (0, 1970),
-        (951_782_400, 2000),   // 2000-02-29
-        (978_307_199, 2000),   // 2000-12-31T23:59:59Z
-        (978_307_200, 2001),   // 2001-01-01
-        (1_767_225_599, 2025), // 2025-12-31T23:59:59Z
-        (1_767_225_600, 2026), // 2026-01-01
-        (4_107_542_400, 2100), // 2100-03-01
-    ] {
-        assert_eq!(calendar_year(seconds), year, "{seconds}");
+        assert!(borrador_years(&none).is_empty(), "{none}");
     }
 }
 

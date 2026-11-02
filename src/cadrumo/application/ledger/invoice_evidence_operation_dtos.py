@@ -39,7 +39,7 @@ from ..ledger.establishment_ladder import (
     EstablishmentRung,
     RegistrationEstablishmentConflict,
 )
-from ..ledger.evidence_draft import PrintedTotalDiscrepancy
+from ..ledger.evidence_draft import PrintedTotalDiscrepancy, RetentionReadingDiscrepancy
 from ..ledger.invoice_confirmation import InvoiceConfirmationResult
 from ..ledger.invoice_draft_records import (
     DraftDiscrepancyFinding,
@@ -632,6 +632,27 @@ class PrintedTotalDiscrepancyProjectionV1(BaseModel):
         )
 
 
+class RetentionReadingDiscrepancyProjectionV1(BaseModel):
+    """Public account of a withheld figure the document reads and the record does not hold."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    read_rate: PublicDecimal | None = None
+    read_amount: PublicDecimal
+    recorded_rate: PublicDecimal | None = None
+    recorded_amount: PublicDecimal | None = None
+
+    @classmethod
+    def from_discrepancy(cls, value: RetentionReadingDiscrepancy) -> Self:
+        """Copy the reading and the record, without choosing between them."""
+        return cls(
+            read_rate=_decimal(value.read_rate),
+            read_amount=PublicDecimal(decimal=str(value.read_amount)),
+            recorded_rate=_decimal(value.recorded_rate),
+            recorded_amount=_decimal(value.recorded_amount),
+        )
+
+
 class InvoiceConfirmationProjectionV1(BaseModel):
     """Lossless public confirmation result with both draft and operator views."""
 
@@ -641,6 +662,7 @@ class InvoiceConfirmationProjectionV1(BaseModel):
     draft: InvoiceDraftProjectionV1
     created: bool
     total_discrepancy: PrintedTotalDiscrepancyProjectionV1 | None = None
+    retention_discrepancy: RetentionReadingDiscrepancyProjectionV1 | None = None
     confirmation_id: Hex16Str | None = None
     confirmed_provenance: _ProvenanceRows = ()
     establishment: ConfirmedEstablishmentProjectionV1 | None = None
@@ -657,6 +679,11 @@ class InvoiceConfirmationProjectionV1(BaseModel):
                 None
                 if result.total_discrepancy is None
                 else PrintedTotalDiscrepancyProjectionV1.from_discrepancy(result.total_discrepancy)
+            ),
+            retention_discrepancy=(
+                None
+                if result.retention_discrepancy is None
+                else RetentionReadingDiscrepancyProjectionV1.from_discrepancy(result.retention_discrepancy)
             ),
             confirmation_id=result.confirmation_id,
             confirmed_provenance=tuple(
