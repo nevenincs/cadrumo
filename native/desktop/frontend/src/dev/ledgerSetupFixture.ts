@@ -48,6 +48,7 @@ const ENTRY_OPTION_FAMILIES = {
   ],
 };
 import { assetOperations } from "./assetsFixture";
+import { withholdingOperations } from "./ledgerWithholdingFixture";
 import { RATIO_ELIGIBLE_FIXTURE, ratioWording } from "./fixtures/ledgerRatios";
 import type {
   FixtureLedger,
@@ -219,7 +220,7 @@ type Book = {
 
 /** The scenario ledger's setup answers, held beside the movements. */
 export function setupOperations(ledger: FixtureLedger, tools: Tools) {
-  const { profileId, hex64, events, now } = tools;
+  const { profileId, today, hex64, events, now } = tools;
   const ratios = new Map<string, string>([["telefonia_fija", "0.5"]]);
   const counterparties = new Map<string, JsonObject>([
     [
@@ -2251,6 +2252,16 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       throw new SetupStopped(reason, detail);
     },
   });
+  const withholding = withholdingOperations({
+    profileId,
+    today,
+    now,
+    hex64,
+    invalid,
+    stop: (reason, detail) => {
+      throw new SetupStopped(reason, detail);
+    },
+  });
   const reads: Partial<Record<LedgerDefinitionId, Handler>> = {
     "ledger.rule.list": (request) => {
       fromKeys(request, []);
@@ -2452,6 +2463,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       };
     },
     ...provisional.reads,
+    ...withholding.reads,
   };
   const writes: Partial<Record<LedgerDefinitionId, Handler>> = {
     "ledger.rule.add": addRule,
@@ -2494,6 +2506,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     "ledger.bienes_inversion.declare": declareCapital,
     ...inventoryWrites,
     ...provisional.writes,
+    ...withholding.writes,
     "ledger.participation.rebuild": (request) => {
       fromKeys(request, []);
       return {

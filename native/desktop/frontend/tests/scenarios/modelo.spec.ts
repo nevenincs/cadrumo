@@ -424,6 +424,29 @@ test("the check draws each asset note as its own line to read, asking for nothin
   expect(read.verdict.status).toBe("blocked");
 });
 
+test("a check line whose source is the suffered withholding opens that register in the Ledger", async ({
+  page: target,
+}) => {
+  await openDeclaration(target, "130", { shape: "withholding-link" });
+  await tab(target, "workspace.modelo.step.review").click();
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.surface.open.withholding"),
+    })
+    .click();
+  // The Ledger opens on Registers, on the withholding area.
+  await expect(target.locator(".ledger-setup-registers")).toBeVisible();
+  await expect(
+    target.getByRole("tab", {
+      name: label("desktop.ledger.registers.area.withholding"),
+      exact: true,
+    }),
+  ).toHaveAttribute("aria-selected", "true");
+  await expect(
+    target.locator(".ledger-withholding-class").first(),
+  ).toBeVisible();
+});
+
 test("a file made before the declaration changed is out of date and is to be made again", async ({
   page: target,
 }) => {

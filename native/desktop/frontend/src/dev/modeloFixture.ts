@@ -83,6 +83,9 @@ import { hex64 } from "./fixtures/ledger";
  * `read-only-boxes` reads every box that takes a typed value as one whose kind
  * of value has no way in yet, as a date or a year box is: the application's
  * reads of these synthetic declarations hold no such box.
+ * `withholding-link` reads the checked first quarter with one more blocking
+ * line whose source is the suffered-withholding records, so the Check tab
+ * offers to open them.
  * `list-notes` lists the first quarter's Modelo 130 with the sentences of the
  * asset notes as what its calculation noted that withholds nothing: the
  * application's list of these synthetic declarations notes none. */
@@ -102,6 +105,7 @@ export const MODELO_SHAPES = [
   "export-cutoff-unverified",
   "export-notes",
   "check-notes",
+  "withholding-link",
   "export-unknown",
   "correction-refused",
   "correction-unknown",
@@ -178,6 +182,35 @@ function withAssetNotes(
         from_calculation: true,
         recalculates: false,
       })),
+    ],
+  };
+}
+
+/** A form read with one blocking line whose figures come from the payers'
+ * withholding certificates, which the Check tab can open. */
+function withWithholdingLine(
+  form: ModeloWorkbenchFormProjectionV1,
+): ModeloWorkbenchFormProjectionV1 {
+  return {
+    ...form,
+    issue_lines: [
+      {
+        level: "blocks",
+        box: null,
+        where: null,
+        message:
+          "The withholding payers took from your income is not recorded yet.",
+        action:
+          "Record the payers' certificates or state that none was withheld.",
+        detail: null,
+        technical: "withholding_not_recorded",
+        address: null,
+        in_records: false,
+        surface: "withholding",
+        from_calculation: false,
+        recalculates: false,
+      },
+      ...form.issue_lines,
     ],
   };
 }
@@ -356,6 +389,7 @@ export function modeloFixture(options: Options): ModeloPort {
       case "receipt":
         return `130-1T-${shape}`;
       case "check-notes":
+      case "withholding-link":
         return "130-1T-checked";
       case "correction-refused":
       case "correction-unknown":
@@ -403,6 +437,8 @@ export function modeloFixture(options: Options): ModeloPort {
     if (!form) return reject("refused", { reason: "profile_mismatch" });
     if (shape === "read-only-boxes")
       return withReadOnlyBoxes(form, options.translate(language));
+    if (shape === "withholding-link" && name === LATER_STATES)
+      return withWithholdingLine(form);
     return shape === "check-notes" && name === LATER_STATES
       ? withAssetNotes(form, options.translate(language))
       : form;
