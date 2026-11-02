@@ -47,7 +47,7 @@ from ...core.period import Period
 from ...core.time.utc import UtcInstant, parse_iso_datetime
 from ...core.type_guards import is_object_list_or_tuple
 from ..filing_evidence import FilingEvidenceReference
-from .codes import ModeloCode
+from .codes import ModeloCode, coerce_modelo_code
 from .errors import ModeloValidationError
 from .filing_text import EvidenceReference, FilingNotes, ModeloActorLabel
 
@@ -533,11 +533,7 @@ class ModeloRecord(BaseModel):
     @classmethod
     @pydantic_validation_boundary
     def _coerce_modelo(cls, value: object) -> ModeloCode:
-        if isinstance(value, ModeloCode):
-            return value
-        if isinstance(value, str):
-            return ModeloCode(value)
-        raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
+        return coerce_modelo_code(value)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

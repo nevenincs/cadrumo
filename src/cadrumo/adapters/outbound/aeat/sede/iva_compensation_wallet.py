@@ -19,8 +19,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING, NoReturn
 from urllib.parse import urljoin, urlsplit
 
-from pydantic import AnyUrl
-
 from .....core.async_cleanup import close_async_resources
 from .....core.config import Settings, load_settings
 from .....core.directory_scan import scan_directory
@@ -30,10 +28,6 @@ from .....core.logging import get_logger
 from .....core.paths import select_filesystem_retention_survivors
 from .....core.period import Period
 from .....core.time.clock import now
-from .....domain.calculations.registry.remote_state_guard import (
-    RemoteOperation,
-    assert_remote_operation_allowed,
-)
 from .._html import parse_html
 from .._playwright import PlaywrightError
 from .._representation_gate import (
@@ -41,7 +35,14 @@ from .._representation_gate import (
     wait_for_own_name_representation_selector,
 )
 from ..browser.factory import DefaultBrowserSession, default_browser_session_factory
-from ._adapter_utils import assert_read_landing, is_aeat_auth_gate_redirect, landed_origin, redacted_url
+from ._adapter_utils import (
+    assert_query_browser_action_for,
+    assert_read_http_for,
+    assert_read_landing,
+    is_aeat_auth_gate_redirect,
+    landed_origin,
+    redacted_url,
+)
 from ._auth_state import storage_state_for_session
 from ._browser_constants import (
     PLAYWRIGHT_WAIT_DOMCONTENTLOADED as _WAIT_DOMCONTENTLOADED,
@@ -1010,17 +1011,11 @@ def _assert_read_landing(page: Page) -> None:
 
 
 def _assert_read_http(method: str, url: str) -> None:
-    assert_remote_operation_allowed(
-        IVA_COMPENSATION_WALLET_READ_POLICY,
-        RemoteOperation(kind="http", method=method, url=AnyUrl(url)),
-    )
+    assert_read_http_for(IVA_COMPENSATION_WALLET_READ_POLICY, method, url)
 
 
 def _assert_read_browser_action(action: str) -> None:
-    assert_remote_operation_allowed(
-        IVA_COMPENSATION_WALLET_READ_POLICY,
-        RemoteOperation(kind="browser_action", action=action),
-    )
+    assert_query_browser_action_for(IVA_COMPENSATION_WALLET_READ_POLICY, action)
 
 
 __all__ = [

@@ -73,7 +73,7 @@ _CHIP_MARKS: Final[Mapping[ModeloFormAttention, WorkbenchMark]] = MappingProxyTy
         ModeloFormAttention.CHECK: CHECK_MARK,
     }
 )
-_URGENT_CHIPS: Final[frozenset[ModeloFormAttention]] = frozenset(
+URGENT_CHIPS: Final[frozenset[ModeloFormAttention]] = frozenset(
     {ModeloFormAttention.BLOCKS, ModeloFormAttention.MISSING}
 )
 """Chips the result line never drops to keep itself on one line: it takes a second line first."""
@@ -291,7 +291,7 @@ def fit_result_line(
         return line
     line = ResultLine(view.short_text, view.stale, chips, file=file)
     kept = list(chips)
-    while kept and kept[-1].level not in _URGENT_CHIPS and cell_len(line.text()) > width:
+    while kept and kept[-1].level not in URGENT_CHIPS and cell_len(line.text()) > width:
         kept.pop()
         line = ResultLine(view.short_text, view.stale, tuple(kept), file=file)
     if cell_len(line.text()) <= width:
