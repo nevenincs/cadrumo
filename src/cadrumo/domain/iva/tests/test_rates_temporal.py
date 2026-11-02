@@ -23,7 +23,7 @@ from ...calculations.registry.facts.schema import GovernedFact
 from ...calculations.registry.governed_fact_scope import validating_governed_facts
 from ...calculations.registry.tests.authority_fakes import FakeAuthorityComponentReader
 from ..errors import IvaRateNotFoundError, IvaRateOverlapError
-from ..lookup import lookup_rate, rate_kinds_for_declared_rate, resolve_iva_rate
+from ..lookup import lookup_rate, rate_kinds_for_declared_rate, resolve_iva_rate, tier_rates_within
 from ..rates import load_iva_rate_table
 from ..schema import EUMemberState, IvaRateKind
 
@@ -515,3 +515,43 @@ def test_the_zero_exemption_does_not_leak_into_the_dated_temporary_rates(
             f"{withdrawn} must not resolve in 2025 -- the temporary windows closed, and a date-blind fix "
             "would silently re-admit a rate the statute withdrew"
         )
+
+
+def test_tier_rates_within_lists_each_rate_of_a_span_in_force_order() -> None:
+    """The boundary day decides: a span ending the day before a change holds one rate."""
+    with bundled_indexed_authority().operation() as operation:
+        fact = operation.governed_fact("iva-rate-schedule")
+        changes = [
+            (variant, selectors)
+            for variant in fact.variants
+            if variant.valid_to is not None
+            and (selectors := {selector.name: selector.value for selector in variant.selectors})["kind"] == "general"
+            and selectors["rate_role"] == "ordinary"
+        ]
+        assert changes
+        for variant, selectors in changes:
+            member_state = EUMemberState.from_registry(str(selectors["member_state"]))
+            before = variant.valid_to
+            assert before is not None
+            after = before + timedelta(days=1)
+            old = lookup_rate(member_state, _GENERAL, before, operation=operation).pct
+            new = lookup_rate(member_state, _GENERAL, after, operation=operation).pct
+            assert tier_rates_within(member_state, _GENERAL, before, before, operation=operation) == (old,)
+            assert tier_rates_within(member_state, _GENERAL, after, after, operation=operation) == (new,)
+            expected = (old,) if old == new else (old, new)
+            assert tier_rates_within(member_state, _GENERAL, before, after, operation=operation) == expected
+
+
+def test_tier_rates_within_is_empty_where_the_table_has_no_rate() -> None:
+    """A span no variant reaches has no rate, which is not a rate of zero."""
+    with bundled_indexed_authority().operation() as operation:
+        fact = operation.governed_fact("iva-rate-schedule")
+        starts = [
+            variant.valid_from
+            for variant in fact.variants
+            if variant.valid_from is not None
+            and {selector.name: selector.value for selector in variant.selectors}.get("member_state") == "de"
+        ]
+        day = min(starts) - timedelta(days=1)
+        rates = tier_rates_within(EUMemberState.from_registry("de"), _GENERAL, day, day, operation=operation)
+    assert rates == ()

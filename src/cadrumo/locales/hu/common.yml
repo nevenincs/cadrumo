@@ -163,6 +163,10 @@ aggregation:
         Modelo 369 országkódja, ezért szolgáltatásai nem vallhatók be ezen a nyomtatványon.
       exterior_detail_not_representable: A nem uniós séma nem tud minden sort vagy
         mezőt megjeleníteni. A folytatás előtt ellenőrizd a részleteket.
+      exterior_rate_change_devengo_undeclared: Egy OSS/IOSS számlán nincs teljesítési
+        dátum, és a fogyasztás szerinti tagállam adómértéke ebben a negyedévben megváltozott,
+        ezért a kiállítás dátumából nem állapítható meg, melyik adómérték alkalmazandó.
+        Rögzítsd a teljesítési dátumot a számlán.
       exterior_rate_kind_unsupported: Az egyablakos rendszer külső sémája csak a fogyasztás
         szerinti tagállam általános vagy kedvezményes adómértékével nyújtott szolgáltatásokat
         fogadja el. A megadott megfigyelés más adómérték-típust jelöl, amely ebben

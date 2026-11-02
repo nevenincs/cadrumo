@@ -171,6 +171,10 @@ aggregation:
         declarar en este modelo.
       exterior_detail_not_representable: El diseño del régimen exterior no puede representar
         todas las filas o todos sus campos. Revisa el detalle antes de continuar.
+      exterior_rate_change_devengo_undeclared: Una factura OSS/IOSS no tiene fecha
+        de operación y el tipo del Estado miembro de consumo cambió durante este trimestre,
+        por lo que su fecha de emisión no permite saber qué tipo se aplica. Registra
+        la fecha de operación en la factura.
       exterior_rate_kind_unsupported: El régimen exterior de la ventanilla única sólo
         admite servicios al tipo general o reducido del Estado miembro de consumo.
         La observación aportada declara otro tipo de gravamen, que no puede agregarse
