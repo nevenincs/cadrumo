@@ -8,7 +8,6 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 from uuid import UUID
 
-from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion
 from cadrumo.adapters.persistence.storage.errors import StorageError
 from cadrumo.adapters.persistence.storage.profile_persistence_composition import composed_profile_persistence_ports
 from cadrumo.application.user_profile.automation_custody_port import AutomationSecretStore
@@ -92,8 +91,8 @@ def revoke_reset_sign_in(
         raise AutomationCustodyError(AutomationCustodyCode.NEEDS_USER)
     deletion, _ = host.revoke_human_sign_in(kind=SessionRetirementKind.REVOKED)
     return HumanSignInRevocationResult(
-        receipt_removed=deletion is not ReceiptDeletion.RECEIPT_RETAINED,
-        keychain_removed=deletion in {ReceiptDeletion.DELETED, ReceiptDeletion.NOT_REQUIRED},
+        receipt_removed=deletion.receipt_removed,
+        keychain_removed=deletion.keychain_removed,
     )
 
 

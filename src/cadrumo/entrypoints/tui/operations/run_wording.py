@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
+from cadrumo_client.contracts.contracts import SENT_ACT_UNKNOWN_OUTCOME_REFUSALS, RefusalError
 from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedError
 
 from ....core.errors.error_codes import resolve_error_message
@@ -42,13 +42,10 @@ def problem_text(problem: RequestFieldProblem) -> str:
     return tr("tui.operations.form.error.choice")
 
 
-_UNKNOWN_OUTCOME_CODES = frozenset({RefusalCode.TIMEOUT, RefusalCode.CONNECTION_CLOSED})
-
-
 def failure_text(error: CadrumoError) -> str:
     """Explain a submission refusal and any unresolved outcome."""
     message = resolve_error_message(error)
-    if isinstance(error, RefusalError) and error.reason in _UNKNOWN_OUTCOME_CODES:
+    if isinstance(error, RefusalError) and error.reason in SENT_ACT_UNKNOWN_OUTCOME_REFUSALS:
         return f"{tr('tui.operations.run.unknown')}\n{message}"
     if isinstance(error, FrontendRefusedError) and error.request_faults:
         # The runtime's request model refused a payload the form's own check let through.

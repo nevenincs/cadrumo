@@ -188,11 +188,11 @@ class LedgerLinkExecutor:
         except InvoiceLinkError as error:
             reason = _invoice_link_refusal_reason(error, payload)
             if tracker.attempt_count or tracker.has_possible_write or reason is None:
-                await settle_export_link_failure(tracker, context, confirmed_effect=OperationEffect.UPDATED)
+                await settle_export_link_failure(tracker, context, incomplete=False)
                 raise
             return await _publish_link_refusal(request, payload, context, reason)
         except BaseException:
-            await settle_export_link_failure(tracker, context, confirmed_effect=OperationEffect.UPDATED)
+            await settle_export_link_failure(tracker, context, incomplete=False)
             raise
         if _link_result_requires_refusal(projection, tracker):
             raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)

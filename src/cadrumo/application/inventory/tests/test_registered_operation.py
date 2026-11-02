@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import asyncio
 from contextlib import asynccontextmanager
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta, timezone
 from decimal import Decimal
 from typing import cast, get_args
 from uuid import UUID
@@ -157,6 +157,16 @@ def test_closing_authority_request_round_trips_a_stored_actor_longer_than_64(act
     assert len(actor) > 64
     assert request.decision.actor == actor
     assert request.to_domain() == stored
+
+
+def test_closing_authority_request_refuses_a_non_utc_decision_instant() -> None:
+    decision = build_inventory_conformance_closing_authority_record("inventory-closing-seed").decision
+    offset = datetime(2026, 3, 1, 12, 0, tzinfo=timezone(timedelta(hours=2)))
+
+    with pytest.raises(ValidationError) as refused:
+        InventoryClosingAuthorityDecisionRequest.model_validate({**dict(decision), "decided_at": offset})
+
+    assert [error["loc"] for error in refused.value.errors()] == [("decided_at",)]
 
 
 def test_closing_authority_request_refuses_an_actor_over_128() -> None:

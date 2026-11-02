@@ -104,12 +104,6 @@ class _Writes(LedgerCommitAttemptTracker):
         with self._count_lock:
             self._count += 1
 
-    def effect(self, *, incomplete: bool) -> OperationEffect:
-        """Retain earlier writes when a later stage refuses or becomes uncertain."""
-        if self.has_uncertain_write:
-            return OperationEffect.UNKNOWN
-        return OperationEffect.of_confirmed_writes(wrote=self.confirmed_write, incomplete=incomplete)
-
 
 def _admit_quickfile_request(request: OperationRequest[QuickfileRequest], context: OperationExecutorContext) -> None:
     payload = request.payload

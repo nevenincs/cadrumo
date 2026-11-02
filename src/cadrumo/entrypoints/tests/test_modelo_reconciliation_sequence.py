@@ -14,7 +14,7 @@ import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import AbstractContextManager, asynccontextmanager, nullcontext
 from dataclasses import dataclass
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 from typing import cast
@@ -28,9 +28,6 @@ from ...adapters.outbound.aeat.sede.schema import (
     FiledDeclaracionObservation,
     ObservedCasillaValue,
 )
-from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.profile.modelo_reconciliation import ModeloReconciliationPersistence
 from ...adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from ...adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
@@ -68,7 +65,6 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
-from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.public_period import PublicPeriod
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
@@ -85,6 +81,7 @@ from ..justificante_composition import build_justificante_capture_service, load_
 from ..live_state_composition import compose_filed_observation_persistence_ports
 from . import modelo_operation_test_support
 from . import registered_executor_case_support as conformance
+from .supervised_operation_rig import build_supervised_operation
 from .test_modelo_reconciliation_frontend_parity import _session_host
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -301,24 +298,10 @@ def test_a_client_captures_then_reconciles_with_the_identifier_the_capture_retur
                 build_modelo_reconciliation_pull_registration(pull_definition),
             ),
         )
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
-            registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path, objects=profile.repository, authority=authority, registry=registry, now=_NOW
         )
-        run = _Run(
-            supervisor, registry, OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
-        )
+        run = _Run(supervisor, registry, result_service)
 
         async def sequence():
             captured_terminal, captured = await run.execute(

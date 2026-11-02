@@ -24,7 +24,7 @@ from cadrumo.application.auth.operation_definitions import AuthConfigureOperatio
 from cadrumo.application.auth.sync_readiness import AuthSyncReadiness
 from cadrumo.application.operations.schema_identity import OperationSchemaIdentityV1
 from cadrumo.application.user_profile.overview import ProfileOverview
-from cadrumo.core.auth_provider import AuthProviderKind, ClaveMovilRoute
+from cadrumo.core.auth_provider import PASSWORD_CREDENTIAL_PROVIDERS, AuthProviderKind, ClaveMovilRoute
 from cadrumo.core.diagnostic_log import diagnostic_event
 from cadrumo.core.logging import get_logger
 from cadrumo.core.operations import OperationTerminalCondition, profile_operation_subject
@@ -210,11 +210,7 @@ class AeatAuthClient:
 
     async def _save_credential(self, provider: AuthProviderKind, secret: bytearray | None) -> None:
         """Persist the selected credential and always wipe its encoded frame."""
-        if (
-            secret is not None
-            and len(secret) > 0
-            and provider in {AuthProviderKind.CERTIFICATE, AuthProviderKind.CLAVE_PERMANENTE}
-        ):
+        if secret is not None and len(secret) > 0 and provider in PASSWORD_CREDENTIAL_PROVIDERS:
             encoded = bytearray(json.dumps({"password": secret.decode("utf-8")}), "utf-8")
             credential_provider = "certificate" if provider is AuthProviderKind.CERTIFICATE else "clave_permanente"
             try:

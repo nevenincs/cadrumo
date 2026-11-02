@@ -22,14 +22,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 from enum import StrEnum
 
-from ...core.period import Period, PeriodKind
+from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
-from ...domain.iva.m303_settlement import m303_cadence_liquidation_periods
+from ...domain.iva.m303_settlement import M303_LIQUIDATION_CADENCES, m303_cadence_liquidation_periods
 from .observations_repository import CalculationObservationRepositoryProtocol, ObservationEnvelopePayload
 from .revision_carry_gate import revision_carry_outcome
-
-_M303_CADENCES: tuple[PeriodKind, ...] = (PeriodKind.QUARTERLY, PeriodKind.MONTHLY)
 
 
 class M303SettlementObservationState(StrEnum):
@@ -65,7 +63,7 @@ def m303_annual_settlement_observation(
     modelo = form_for_role("iva.periodic")
     terminals: tuple[Period, ...] = tuple(
         periods[-1]
-        for kind in _M303_CADENCES
+        for kind in M303_LIQUIDATION_CADENCES
         if (periods := m303_cadence_liquidation_periods(filing_year, kind, authority=operation))
     )
     filed: tuple[tuple[Period, ObservationEnvelopePayload], ...] = tuple(

@@ -23,7 +23,13 @@ from cadrumo.core.time.clock import now
 from cadrumo_client.contracts.access_refusals import AccessAllowed, AccessDenialCode, OperationResponseScopeAllowed
 from cadrumo_client.contracts.access_vocabulary import AccessAction
 from cadrumo_client.contracts.automation_codes import AutomationCustodyError
-from cadrumo_client.contracts.contracts import ByteChannel, RefusalCode, RefusalError, ServerHello
+from cadrumo_client.contracts.contracts import (
+    ACCEPT_REFUSALS_THAT_KEEP_LISTENING,
+    ByteChannel,
+    RefusalCode,
+    RefusalError,
+    ServerHello,
+)
 from cadrumo_client.contracts.profile_access import AccessRefusal
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 from cadrumo_client.transport.frame_io import read_document, read_secret, write_document, write_document_transfer
@@ -143,11 +149,7 @@ class WorkerAuthorizationServer:
                     try:
                         channel = self._endpoint.accept(timeout=None, wakes=(self._stop,))
                     except RefusalError as error:
-                        if error.reason in {
-                            RefusalCode.TIMEOUT,
-                            RefusalCode.PEER_UNTRUSTED,
-                            RefusalCode.CONNECTION_CLOSED,
-                        }:
+                        if error.reason in ACCEPT_REFUSALS_THAT_KEEP_LISTENING:
                             continue
                         raise
                     # A connection the worker just closed may not have handed back its slot yet.

@@ -45,7 +45,7 @@ _OTHER_PERIOD_SORT_RANK = 100
 #: than generating credit in a filed period. Both members belong here: the
 #: retired ``status`` literal wrote one token for a seed AND a correction, so
 #: branching on it silently treated the two as one path.
-_OPERATOR_DECLARED_PROVENANCES = frozenset(
+OPERATOR_DECLARED_PROVENANCES = frozenset(
     {
         IvaCompensationStateProvenance.OPERATOR_SEED,
         IvaCompensationStateProvenance.OPERATOR_CORRECTION,
@@ -401,7 +401,7 @@ def _append_state_carry_forward_lot(
 def _state_carry_forward_amount(state: IvaCompensationPeriodState) -> Decimal:
     if state.generated_amount > ZERO:
         return state.generated_amount
-    if state.provenance in _OPERATOR_DECLARED_PROVENANCES:
+    if state.provenance in OPERATOR_DECLARED_PROVENANCES:
         return state.available_end_amount
     return ZERO
 
@@ -587,6 +587,7 @@ def _expiry_review_state(
 
 
 __all__ = [
+    "OPERATOR_DECLARED_PROVENANCES",
     "IvaCompensationCarryForwardLot",
     "IvaCompensationCarryForwardReport",
     "IvaCompensationExpiryReviewState",

@@ -11,11 +11,12 @@ enum/Decimal channel mismatch is rejected at the binding boundary.
 
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 
 import pytest
 
+from cadrumo.domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
 from ....core.aggregation import BindingSourceKind
@@ -79,13 +80,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
             # M100 2025 added age_at_year_end date binding + declaration-type
             # and derived marriage facts. Seed minimum values so M100 calculate
             # resolves the profile-sourced bindings.
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            *RENTA_UNMARRIED_TAXPAYER_FACTS,
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

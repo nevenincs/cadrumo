@@ -20,6 +20,7 @@ from cadrumo.adapters.persistence.operations.secure_references import (
 )
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.authorization import OperationExecutionAuthority
 from cadrumo.application.operations.frontend_contracts import OperationResultProjectionResultV1
 from cadrumo.application.operations.frontend_requests import OperationResultProjectionRequestV1
 from cadrumo.application.operations.models import OperationRequest
@@ -55,6 +56,7 @@ def build_supervised_operation(
     authority: PinnedAuthorityOperation,
     registry: OperationRegistry,
     now: datetime,
+    execution_authority: OperationExecutionAuthority | None = None,
 ) -> SupervisedOperation:
     """Return a supervisor with fixed owner and lease token, journalled under ``tmp_path``."""
     durable_root = tmp_path / "operations"
@@ -72,6 +74,7 @@ def build_supervised_operation(
         lease_token_factory=lambda: "2" * 64,
         clock=lambda: now,
         lease_duration=timedelta(minutes=5),
+        execution_authority=execution_authority,
     )
     result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
     return SupervisedOperation(journal, leases, operands, supervisor, result_service)

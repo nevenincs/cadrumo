@@ -7,8 +7,9 @@ from decimal import Decimal
 from typing import TYPE_CHECKING, Literal
 from uuid import UUID
 
-from pydantic import BaseModel, Field, model_validator
+from pydantic import BaseModel, Field, field_validator
 
+from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.identity.digest import ContentDigest
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -396,10 +397,9 @@ class InventoryClosingAuthorityDecisionRequest(BaseModel):
     decided_at: datetime
     evidence: tuple[InventoryClosingDecisionEvidence, ...] = Field(min_length=1)
 
-    @model_validator(mode="after")
-    def _decision_timestamp_is_utc(self) -> InventoryClosingAuthorityDecisionRequest:
-        validate_utc_aware(self.decided_at)
-        return self
+    _decision_timestamp_is_utc = field_validator("decided_at", mode="after")(
+        pydantic_validation_boundary(validate_utc_aware)
+    )
 
 
 class InventoryPriorClosingLinkRequest(BaseModel):
@@ -511,7 +511,7 @@ class InventoryClosingAuthorityRecordInput(BaseModel):
             reason=self.decision.reason,
             actor=self.decision.actor if actor is None else actor,
             source_command=self.decision.source_command,
-            decided_at=validate_utc_aware(self.decision.decided_at),
+            decided_at=self.decision.decided_at,
             evidence=self.decision.evidence,
         )
         physical = self.physical_observation
