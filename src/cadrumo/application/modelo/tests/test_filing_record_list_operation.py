@@ -6,7 +6,7 @@ import asyncio
 from datetime import UTC, datetime
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
@@ -14,7 +14,6 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     OperationAccessRequest,
 )
@@ -51,6 +50,7 @@ from ..filing_record_list_operation import (
     build_modelo_filing_record_list_registration,
 )
 from ..verification_repository_ports import VerificationRepositoryBundle
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -171,13 +171,11 @@ def _access_context(
     admitted: OperationAccessRequest | None = None,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=action,
         frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
         authority_operation=operation,
         admitted_request=admitted,
     )
