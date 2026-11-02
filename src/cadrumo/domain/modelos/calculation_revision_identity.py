@@ -81,7 +81,9 @@ def _detail_row_payload(row: ModeloDetailRow) -> dict[str, object]:
         d.update(row_type=row.row_type, nif=row.nif, nombre=row.nombre, numero_afiliacion=row.numero_afiliacion)
         for month in row.cotizaciones:
             d[f"month_{month.month:02d}_status"] = month.status
-            d[f"month_{month.month:02d}_amount"] = None if month.amount is None else _detail_row_amount_text(month.amount)
+            d[f"month_{month.month:02d}_amount"] = (
+                None if month.amount is None else _detail_row_amount_text(month.amount)
+            )
         return dict(sorted(d.items()))
     for field_name, field_value in row.model_dump().items():
         if isinstance(field_value, Decimal):
