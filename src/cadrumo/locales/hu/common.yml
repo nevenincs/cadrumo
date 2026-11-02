@@ -3494,6 +3494,12 @@ desktop:
       reference: Hivatkozás
       reference_hint: Az engedély vagy javaslat, amelyen alapul
       refusal:
+        gross_declaration_absent: 'A nyilvántartás elutasította a törlést: erre az
+          időszakra nincs bruttó bejelentés.'
+        gross_declaration_duplicate: 'A nyilvántartás elutasította a bejelentést:
+          erre az időszakra már van bruttó bejelentés.'
+        gross_declaration_sector_unknown: 'A nyilvántartás elutasította a bejelentést:
+          ez az ágazat nem bejelentett megkülönböztetett ágazat.'
         provenance_not_electable: 'Nem elfogadva: ez a forrás számított, nem választható.'
         provenance_required: 'Nem elfogadva: add meg, honnan származik a százalék.'
         reference_not_permitted: 'Nem elfogadva: ennek a forrásnak nincs hivatkozható

@@ -344,7 +344,7 @@ def require_domiciliation_before_cutoff(
     message_key = "errors.refused.refused_modelo_domiciliation_past_cutoff"
     if isinstance(resolution, DerivedPaymentCutoff):
         context["payment_cutoff_rule"] = f"{resolution.clause.variant_id}, {resolution.procedure.variant_id}"
-        message_key = f"{message_key}_derived"
+        message_key = "errors.refused.refused_modelo_domiciliation_past_cutoff_derived"
     raise ModeloDomiciliationPastCutoffError(translated_message=message_key, context=context)
 
 

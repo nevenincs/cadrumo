@@ -277,6 +277,10 @@ def _list_projection(profile_id: UUID, register: ProrrataRegister) -> ProrrataLi
         sectors=tuple(
             ProrrataSectorDefinitionProjection.from_definition(definition) for definition in register.sector_definitions
         ),
+        gross_declarations=tuple(
+            ProrrataGrossDeclarationProjection.from_declaration(declaration)
+            for declaration in register.gross_declarations
+        ),
         count=len(register.entries),
     )
 

@@ -33,6 +33,7 @@ from decimal import Decimal
 
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
+from ...core.external_constants import OutputLanguage
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.form_codes import form_for_role
@@ -282,6 +283,7 @@ def _especial_mandatory_diagnostics(
                 reason="prorrata_especial_obligatoria",
                 source_kind=_ESPECIAL_MANDATORY_SOURCE_KIND,
                 message=notice.message,
+                message_language=OutputLanguage.ES,
                 # Advisory-asserted: this diagnostic holds no casilla (the annual
                 # comparison runs across the whole ejercicio's ledger, not one
                 # revision casilla), and its message -- built by
@@ -301,6 +303,7 @@ def _especial_mandatory_diagnostics(
         CalculationSourceDiagnostic(
             reason="prorrata_especial_check_unavailable",
             source_kind=_ESPECIAL_MANDATORY_SOURCE_KIND,
+            message_language=OutputLanguage.ES,
             message=(
                 f"La prorrata especial puede ser obligatoria en {filing_year} (LIVA art. 103.Dos.2.º: "
                 f"cuando la deducción por prorrata general excede {exceso} la de la regla especial). "

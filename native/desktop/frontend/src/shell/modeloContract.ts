@@ -536,6 +536,7 @@ export type CalculationSourceDiagnosticSnapshot = {
   source_kind: string;
   binding_source: BindingSourceKind | null;
   message: string;
+  message_language: OutputLanguage | null;
   remedy: string | null;
   resolver_id: string | null;
   source_ref: string | null;
@@ -4305,7 +4306,10 @@ export type ModeloFormBlocker = {
  * stands, whatever its attention says, so the editor withholds them too
  * (`blocking_calculation_notes`), as it does for a note at the blocking level.
  * `fact` is what this note says about its own subject, when its reason alone
- * does not.
+ * does not. `message` is the calculation's own account of this note, as its
+ * resolver worded it for the filer and the calculate result carries it, in the
+ * form's language; `None` when it wrote none in that language, or when only
+ * the note that persists with the calculation is known.
  */
 export type ModeloFormCalculationNote = {
   reason: string;
@@ -4315,6 +4319,7 @@ export type ModeloFormCalculationNote = {
   withholds_filing: boolean;
   fact: CalculationNoteFact | null;
   element_names: [string, string][];
+  message: string | null;
 };
 
 /**

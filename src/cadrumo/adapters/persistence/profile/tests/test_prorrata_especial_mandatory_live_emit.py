@@ -43,6 +43,7 @@ from .....application.aggregation.source_mesh import CalculationSourceDiagnostic
 from .....application.modelo.calculation_diagnostics import collect_bucket_aggregation_advisory_diagnostics
 from .....application.modelo.prorrata_regularizacion_advisory import collect_prorrata_regularizacion_diagnostics
 from .....application.prorrata_register.service import ProrrataRegisterService
+from .....core.external_constants import OutputLanguage
 from .....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeductionFactKind
 from .....core.modelo import Modelo
 from .....core.prorrata_register import (
@@ -232,6 +233,8 @@ def test_fires_for_fully_classified_general_bucket_with_breach(
     assert diagnostic.reason == "prorrata_especial_obligatoria"
     assert diagnostic.source_kind == "prorrata_especial_mandatory"
     assert str(_EJERCICIO) in diagnostic.message
+    # The message is Spanish prose for the filer, so a Spanish form shows it beside the catalogue's sentence.
+    assert diagnostic.message_language is OutputLanguage.ES
     # Both regime totals ride in the verbatim message, and the general total
     # genuinely exceeds the especial total (a real breach, law-derived).
     amounts = _parenthesised_amounts(diagnostic.message)
@@ -305,6 +308,7 @@ def test_prompt_for_general_bucket_with_unclassified_row(
     assert "--input-classification" in diagnostic.message
     assert "elect-especial" in diagnostic.message
     assert "1 operaciones sin clasificar" in diagnostic.message
+    assert diagnostic.message_language is OutputLanguage.ES
     # No fabricated amount: the prompt carries no monetary figure.
     assert not _parenthesised_amounts(diagnostic.message)
 

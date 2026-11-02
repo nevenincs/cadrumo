@@ -131,7 +131,8 @@ class ModeloFormIssueLine(BaseModel):
     message: str = Field(min_length=1)
     #: What to do, as one sentence that says so.
     action: str = Field(min_length=1)
-    #: What this kind of finding means; ``None`` for a calculation note that states no facts of its own.
+    #: What this kind of finding means; for a calculation note that states no facts of its own, the account
+    #: the calculation wrote, or ``None`` when it wrote none.
     detail: str | None
     #: The codes, facts and references, for the filer who asks for technical details.
     technical: str = Field(min_length=1)
@@ -388,8 +389,10 @@ def _note_line(note: ModeloFormCalculationNote, context: _Context) -> ModeloForm
     field, box_text, codes = _note_identifiers(note, context)
     what = context.say(what_locale_key(note.reason), box=box_text)
     # What this note is about comes first, so it is read without opening anything; the kind explains it.
+    # A note without facts keeps its catalogue sentence first, and the calculation's own account follows it:
+    # that account is the resolver's, worded when the calculation ran.
     message, detail = (
-        (what, None)
+        (what, note.message)
         if note.fact is None
         else (note_fact_text(note.fact, element_names=note.element_names, locale=context.language), what)
     )

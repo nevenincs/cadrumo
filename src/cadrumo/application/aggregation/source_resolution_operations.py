@@ -18,6 +18,7 @@ from typing import Protocol
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
+from ...core.external_constants import OutputLanguage
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
 from ...domain.calculations.record_row_membership import ClosedRecordRowSet
@@ -95,8 +96,12 @@ def unresolved_binding_diagnostics(
     binding_ids: tuple[BindingId, ...],
     resolver_id: str,
     message: str,
+    message_language: OutputLanguage | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
-    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one."""
+    """One diagnostic per unresolved binding, naming the box the binding fills when it fills one.
+
+    ``message_language`` is the language ``message`` was worded in for the filer, when it was.
+    """
     return tuple(
         CalculationSourceDiagnostic(
             reason="unresolved_binding",
@@ -105,6 +110,7 @@ def unresolved_binding_diagnostics(
             binding_id=binding_id,
             casilla_id=sole_bound_casilla(revision, binding_id),
             message=message,
+            message_language=message_language,
         )
         for binding_id in binding_ids
     )
