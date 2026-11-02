@@ -193,6 +193,10 @@ NEEDS_ATTENTION: Final[frozenset[ModeloFormOrigin]] = frozenset(
 ASKS_FOR_A_VALUE: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.NEEDS_INPUT, ModeloFormOrigin.DEFAULT_TO_CONFIRM}
 )
+#: Origins of a box a source feeds, whether the source has filled it yet or not.
+FED_BY_A_SOURCE: Final[frozenset[ModeloFormOrigin]] = frozenset(
+    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
+)
 
 
 def field_standing(
@@ -1187,6 +1191,7 @@ def section_fields(section: ModeloFormSection) -> tuple[ModeloFormField, ...]:
 __all__ = [
     "ABSENT_FROM_ADMISSION",
     "ASKS_FOR_A_VALUE",
+    "FED_BY_A_SOURCE",
     "NEEDS_ATTENTION",
     "ORIGIN_STANDINGS",
     "ModeloFormAddressV1",
