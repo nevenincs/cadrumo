@@ -48,7 +48,7 @@ from .declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
 )
 from .value_presentation import format_casilla_value
-from .work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .work_form_models import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResult, ModeloFormResultDirection
 from .work_form_wording import date_text
 
 
@@ -356,7 +356,7 @@ def _valued_result_words(result: ModeloFormResult, value: Decimal, language: Out
         key = "workspace.modelo.header.result.choice_pending"
     if result.direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
         return tr(key, amount=amount, locale=locale)
-    if result.direction in {ModeloFormResultDirection.NIL, ModeloFormResultDirection.NEGATIVE}:
+    if result.direction in AMOUNTLESS_RESULT_DIRECTIONS:
         return tr(key, locale=locale)
     return tr(key, locale=locale) + " · " + amount
 
