@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:fe89d2dc31af1aff720154e3df3da063c1f49159176efd108613c2455f9b74c2'
+body_hash: 'sha256:5b63cac6ff859afa2467c8787cc4d30de5f851cb1e04c192958f1b02be0056e4'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -563,6 +563,19 @@ related:
 - `S29` `verify:` `lint-imports` -> `pass`
 - `S29` `verify:` `ruff check/format` -> `pass`
 - `S29` `by:` `standard-implementer`
+- `S06` `M` `docs/_sequences/contracts/explanation/how-renta-is-assembled/renta-assembly-provenance.seq`
+- `S06` `M` `docs/_sequences/contracts/how-to/filing-readiness/filing-readiness-project-refine.seq`
+- `S06` `M` `docs/_sequences/contracts/how-to/modelo-100/modelo-100-export-file.seq`
+- `S06` `M` `docs/_sequences/contracts/how-to/modelo-100/modelo-100-inspect-inputs.seq`
+- `S06` `M` `docs/_sequences/contracts/how-to/modelo-100/modelo-100-renta-2025.seq`
+- `S06` `M` `docs/_sequences/contracts/how-to/review-calculation-values/review-values-relation.seq`
+- `S06` `M` `docs/_sequences/explanation/how-renta-is-assembled/renta-assembly-provenance.json`
+- `S06` `M` `docs/_sequences/how-to/modelo-100/modelo-100-export-file.json`
+- `S06` `M` `docs/_sequences/how-to/modelo-100/modelo-100-inspect-inputs.json`
+- `S06` `M` `docs/_sequences/how-to/modelo-100/modelo-100-renta-2025.json`
+- `S06` `M` `docs/_sequences/how-to/review-calculation-values/review-values-relation.json`
+- `S06` `verify:` `python -m dev.docs.sequences check (six sequences)` -> `pass`
+- `S06` `by:` `implementer`
 
 ## Notes
 
