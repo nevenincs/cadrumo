@@ -98,7 +98,7 @@ def test_no_spanish_date_since_the_first_edition_is_left_to_projection(operation
         )
         assert windows[0][0] == _FIRST_DAY_OF_16
         for (_start, end), (next_start, _next_end) in pairwise(windows):
-            assert end + timedelta(days=1) == next_start, kind
+            assert end is not None and end + timedelta(days=1) == next_start, kind
 
 
 def test_a_date_before_every_edition_reads_the_first(operation: PinnedAuthorityOperation) -> None:
