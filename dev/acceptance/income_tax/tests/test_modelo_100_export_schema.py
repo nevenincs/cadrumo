@@ -243,8 +243,11 @@ def _refused_by_verification(revision: CalculationRevision) -> tuple[ModeloVerif
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
     assert report.granted_verificado_completo is False
-    findings: tuple[ModeloVerificationFinding, ...] = tuple(report.findings)
-    return tuple(finding for finding in findings if finding.message_locale_key == _REQUIRED_CONTENT_FINDING)
+    return tuple(
+        finding
+        for finding in report.findings
+        if isinstance(finding, ModeloVerificationFinding) and finding.message_locale_key == _REQUIRED_CONTENT_FINDING
+    )
 
 
 def _sealed(revision: CalculationRevision, objects: SecureObjectRepository) -> None:
