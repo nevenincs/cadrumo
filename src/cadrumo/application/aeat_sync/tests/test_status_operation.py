@@ -116,8 +116,8 @@ class _BorradorRepository:
     def list_snapshots(self) -> tuple[Borrador100Snapshot, ...]:
         return tuple(sorted(self._snapshots.values(), key=lambda item: (item.captured_at, item.snapshot_id)))
 
-    def outdated_stored_snapshot_count(self) -> int:
-        return self.outdated
+    def list_snapshots_with_outdated_count(self) -> tuple[tuple[Borrador100Snapshot, ...], int]:
+        return self.list_snapshots(), self.outdated
 
     def save(self, snapshot: Borrador100Snapshot) -> None:
         self._snapshots[snapshot.snapshot_id] = snapshot

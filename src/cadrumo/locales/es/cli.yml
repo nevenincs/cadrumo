@@ -683,7 +683,8 @@ cli:
         modelo_100_help: Comandos de snapshots del borrador del modelo 100
         snapshot_id_help: Id del snapshot (o prefijo no ambiguo)
         snapshot_schema_outdated: Hay %{count} captura(s) de borrador guardada(s)
-          con una versión anterior que no se pueden leer. Importa de nuevo el documento.
+          en este perfil con un formato anterior que Cadrumo ya no lee. Si importas
+          de nuevo el documento, se crea una captura actual.
         state_help: 'Filtro de estado del snapshot: `active`, `superseded`, `discarded`
           o `all`'
         view_help: Mostrar un snapshot del borrador del modelo 100
