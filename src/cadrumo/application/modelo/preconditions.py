@@ -500,6 +500,11 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
     ),
     _profile(
         "modelo.work.verify",
+        "modelo.work.verify.scheme_period.matches",
+        "modelo.work.verify.scheme_period.contradicted",
+    ),
+    _profile(
+        "modelo.work.verify",
         "modelo.work.verify.oss_evidence.present",
         "modelo.work.verify.oss_evidence.missing",
     ),

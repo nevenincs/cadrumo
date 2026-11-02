@@ -2285,6 +2285,9 @@ application:
         enough to file it.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
+      scheme_period_contradicted: The value {entered} in {binding_id} contradicts
+        this work's period, which is {expected}. Correct it or open the work for the
+        right period.
       selected_option_requires_nonzero: The selected option requires a nonzero value
         in this field.
       selected_option_requires_zero: The selected option requires an explicit zero

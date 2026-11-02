@@ -2427,6 +2427,9 @@ application:
         per presentar-lo.
       registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
         de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
+      scheme_period_contradicted: El valor {entered} de {binding_id} contradiu el
+        període d'aquest treball, que és {expected}. Corregeix-lo o obre el treball
+        del període correcte.
       selected_option_requires_nonzero: L’opció seleccionada exigeix un valor diferent
         de zero en aquest camp.
       selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit

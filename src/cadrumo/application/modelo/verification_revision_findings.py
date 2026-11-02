@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from ...core.aggregation import BindingSourceKind
 from ...core.casilla_id import CasillaId
 from ...core.operator_action_enums import ActionEvidenceProvenance
+from ...domain.calculations.registry.export_scheme_period import contradicts_scheme_period, scheme_period_value
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_revision import (
@@ -226,6 +227,52 @@ def resolve_verification_snapshot(
         return None
 
 
+def append_scheme_period_findings(
+    *,
+    work_unit: WorkUnit,
+    target: CalculationRevision,
+    snapshot: RegistrySnapshot,
+    findings: list[ModeloVerificationFinding],
+    failures_by_finding_id: dict[int, ModeloPreconditionFailure],
+) -> None:
+    """Block an entered period row that disagrees with the period the work unit files.
+
+    The export prints the work unit's period, so such a value could never reach
+    the file; it means the operator believes this return covers another period.
+
+    Parameter types: ``target`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`),
+    ``snapshot`` (:class:`~cadrumo.domain.calculations.registry.schema.RegistrySnapshot`).
+    """
+    for layout in snapshot.revision.export_layouts:
+        for record in layout.records:
+            for field in record.fields:
+                entered = None if field.binding is None else target.binding_overrides.get(field.binding)
+                if not contradicts_scheme_period(field, work_unit.period, entered):
+                    continue
+                finding = ModeloVerificationFinding(
+                    kind=ModeloVerificationFindingKind.BLOCKING_RULE,
+                    severity=ModeloVerificationFindingSeverity.BLOCKING,
+                    message_locale_key="application.modelo.findings.scheme_period_contradicted",
+                    message_facts={
+                        "binding_id": str(field.binding),
+                        "entered": str(entered),
+                        "expected": str(scheme_period_value(field, work_unit.period)),
+                    },
+                    legal_refs=tuple(field.legal_refs) or WORKFLOW_GATE_LEGAL_REFS,
+                    source_refs=tuple(field.source_refs),
+                )
+                findings.append(finding)
+                failures_by_finding_id[id(finding)] = build_verification_precondition_failure(
+                    calculation_revision_id=target.calculation_revision_id,
+                    work_unit_id=target.work_unit_id,
+                    condition_id="modelo.work.verify.scheme_period.matches",
+                    scenario_id="modelo.work.verify.scheme_period.contradicted",
+                    evidence_id="modelo.work.verify.scheme_period",
+                    evidence_values={"modelo": str(work_unit.modelo), "binding_id": str(field.binding)},
+                    provenance=ActionEvidenceProvenance.APPLICATION_STATE,
+                )
+
+
 def append_oss_verification_finding(
     *,
     work_unit: WorkUnit,
@@ -439,6 +486,13 @@ def collect_revision_verification_findings(
     append_iva_compensation_annual_source_evidence_finding(
         work_unit=work_unit,
         target=target,
+        findings=findings,
+        failures_by_finding_id=failures_by_finding_id,
+    )
+    append_scheme_period_findings(
+        work_unit=work_unit,
+        target=target,
+        snapshot=snapshot,
         findings=findings,
         failures_by_finding_id=failures_by_finding_id,
     )

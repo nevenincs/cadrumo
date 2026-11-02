@@ -2378,6 +2378,9 @@ application:
         a benyújtáshoz.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
+      scheme_period_contradicted: A(z) {binding_id} mező {entered} értéke ellentmond
+        e munka időszakának, amely {expected}. Javítsd, vagy nyisd meg a megfelelő
+        időszak munkáját.
       selected_option_requires_nonzero: A kiválasztott lehetőséghez ebben a mezőben
         nullától eltérő érték szükséges.
       selected_option_requires_zero: A kiválasztott lehetőséghez ebben a mezőben kifejezetten

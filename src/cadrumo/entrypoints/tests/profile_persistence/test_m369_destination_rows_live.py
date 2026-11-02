@@ -140,7 +140,7 @@ _UNION = _Scenario(
     b"<T36904>",
     222,
     "iva.union.cuota-total",
-    {"regimen": "MOSS", "categoria": "D", "1-declarante-pais": "ES", "2-ejercicio-y-periodo-tipo-de-periodo": "T"},
+    {"regimen": "MOSS", "categoria": "D", "1-declarante-pais": "ES"},
     "1",
     "modelo-369-union-t36904",
 )
@@ -160,7 +160,6 @@ _IMPORT = _Scenario(
         "1-declarante-numero-de-operador-en-el-regimen-nioss": "IM7240000001",
         "1-actua-a-traves-de-intermediario": "1",
         "1-no-de-identificacion-del-intermediario-niossin": "IN7240000001",
-        "2-ejercicio-y-periodo-tipo-de-periodo": "M",
     },
     "2",
     "modelo-369-importacion-t36910",
@@ -243,6 +242,8 @@ def _calculate(
     scenario: _Scenario,
     invoices: tuple[Invoice, ...],
     operation: PinnedAuthorityOperation,
+    *,
+    extra_rows: dict[str, Decimal] | None = None,
 ) -> tuple[BucketAggregationCalculationResult, WorkUnit]:
     wu_repo = WorkUnitCatalogueRepository(objects=objects)
     cr_repo = CalculationRevisionCatalogueRepository(objects=objects)
@@ -270,7 +271,7 @@ def _calculate(
         result = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=ports,
-            binding_values=_period_rows(scenario),
+            binding_values={**_period_rows(scenario), **(extra_rows or {})},
             enum_binding_values={f"{scenario.fichero}.{key}": value for key, value in scenario.declarant.items()},
             clock=_T1,
         )
@@ -278,12 +279,8 @@ def _calculate(
 
 
 def _period_rows(scenario: _Scenario) -> dict[str, Decimal]:
-    """The numeric header rows; only the Exterior layout derives its exercise and period from the work."""
-    rows = {f"{scenario.fichero}.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0")}
-    if scenario is not _EXTERIOR:
-        rows[f"{scenario.fichero}.2-ejercicio-y-periodo-ejercicio"] = Decimal(_YEAR)
-        rows[f"{scenario.fichero}.2-ejercicio-y-periodo-periodo"] = Decimal(scenario.period_number)
-    return rows
+    """The one header row the operator answers; every regime derives its exercise and period from the work."""
+    return {f"{scenario.fichero}.2-ejercicio-y-periodo-declaracion-sin-actividad": Decimal("0")}
 
 
 def _cuota_bindings(scenario: _Scenario) -> list[str]:
@@ -620,6 +617,49 @@ def test_an_ordinary_single_page_return_leaves_every_page_indicator_blank(
     ]
     assert markers
     assert {field.value for field in markers} == {" "}
+
+
+@pytest.mark.parametrize(
+    ("scenario", "printed"),
+    [(_EXTERIOR, b"2026T01"), (_UNION, b"2026T01"), (_IMPORT, b"2026M02")],
+    ids=_ids,
+)
+def test_the_period_rows_print_the_work_units_period_when_nobody_entered_them(
+    objects: SecureObjectRepository,
+    tmp_path: Path,
+    scenario: _Scenario,
+    printed: bytes,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """DR369: Ejercicio (4), Tipo de periodo (1), Periodo (2), consecutive on each regime's first page."""
+    result, _ = _calculate(
+        objects, scenario, (_invoice(scenario, "OSS-P", "FR", "general", "100.00", "20.00"),), operation
+    )
+    assert _verify(result).granted_verificado_completo is True
+    wire = _export(objects, tmp_path, scenario, result)
+    assert printed in wire[wire.index(scenario.page_tag) : wire.index(scenario.page_tag) + scenario.first_position]
+
+
+@pytest.mark.parametrize("scenario", _SCENARIOS, ids=_ids)
+def test_an_entered_period_contradicting_the_work_blocks_verification_by_name(
+    objects: SecureObjectRepository,
+    scenario: _Scenario,
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    result, _ = _calculate(
+        objects,
+        scenario,
+        (_invoice(scenario, "OSS-W", "FR", "general", "100.00", "20.00"),),
+        operation,
+        extra_rows={f"{scenario.fichero}.2-ejercicio-y-periodo-ejercicio": Decimal(_YEAR + 1)},
+    )
+    report = _verify(result)
+    assert report.granted_verificado_completo is False
+    assert "application.modelo.findings.scheme_period_contradicted" in {
+        finding.message_locale_key for finding in report.findings
+    }
 
 
 def _published_rows(scenario: _Scenario, operation: PinnedAuthorityOperation) -> tuple[Invoice, ...]:
