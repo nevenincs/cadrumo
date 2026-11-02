@@ -19,7 +19,7 @@ from ....core.resources.bundled_data import bundled_path
 from ....core.text_fold import normalise_corpus_text
 from ...calculations.registry.eu_member_state_catalogue import require_eu_member_state
 from ..errors import IvaRateNotFoundError
-from ..lookup import lookup_rate
+from ..lookup import lookup_published_rate, lookup_rate
 from ..rates import load_iva_rate_table
 from ..schema import EUMemberState, IvaRateKind, IvaRateRecord
 
@@ -319,7 +319,7 @@ def test_rate_lookup_crosses_each_grounded_change_boundary() -> None:
             operation=_authority_operation_for_test,
         ).pct == Decimal("12")
         with pytest.raises(IvaRateNotFoundError):
-            lookup_rate(
+            lookup_published_rate(
                 require_eu_member_state("DE"),
                 IvaRateKind("general"),
                 date(2025, 6, 30),
@@ -332,6 +332,6 @@ def test_rate_lookup_crosses_each_grounded_change_boundary() -> None:
             require_eu_member_state("NL"),
         ):
             with pytest.raises(IvaRateNotFoundError):
-                lookup_rate(
+                lookup_published_rate(
                     member_state, IvaRateKind("zero"), date(2026, 7, 13), operation=_authority_operation_for_test
                 )
