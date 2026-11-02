@@ -7,9 +7,9 @@ tier: L1
 related:
   - '[[2026-09-21-retenciones-workflow-observation-payment-contract-adr]]'
   - '[[2026-09-23-retenciones-workflow-evidence-capture-scope-adr]]'
-modified: '2026-09-24'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:4444c741d2bb3b55eeb5424f769cb1c43eeda07cc4af574aa745b0193058be9b'
+body_hash: 'sha256:6e61ce3947973d6dbbf4a33ed756780970afb5d490955e2d8fd765796b7116b0'
 ---
 
 # `retenciones-workflow` plan
@@ -36,11 +36,11 @@ S05 outcome, 2026-09-24: not settled, so the block stays. RIRPF art. 94.1 settle
 - [ ] `S04` - prove multi-source rows, exclusions, missing-store advisories, pull and calculate parity and 2025 export byte parity for one pending and one settled row; `src/cadrumo/application/aggregation/tests`.
 - [x] `S05` - ground whether the payment-year settled row repeats the withholding amounts, and lift the filing-export block only when the official design settles it; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.
 - [x] `S06` - attach a structured advisory naming modelo 193, the base and withholding fields and the missing-authority reason to every settled-prior-accrual row, so the unresolved payment-year amounts reach the handoff instead of reading as settled; `src/cadrumo/application/aggregation/m193_phase_materialization.py`.
-- [ ] `S07` - fail closed for a monthly withholding filer: when the canonical obligation schedule makes the filer's Modelo 111 or 123 monthly, refuse capture into a quarterly window and have the 190 and 193 annual sources return a structured refusal naming the modelo, the monthly periods and the reason instead of a quarterly-only total, proven with a monthly filer; `src/cadrumo/application/aggregation/withholding_source.py and the three capture producers`.
+- [x] `S07` - fail closed for a monthly withholding filer: when the canonical obligation schedule makes the filer's Modelo 111 or 123 monthly, refuse capture into a quarterly window and have the 190 and 193 annual sources return a structured refusal naming the modelo, the monthly periods and the reason instead of a quarterly-only total, proven with a monthly filer; `src/cadrumo/application/aggregation/withholding_source.py and the three capture producers`.
 - [ ] `S08` - support monthly withholding filers end to end: place captured withholding in the filer's monthly window through the canonical period vocabulary and schedule, read monthly and quarterly windows in the 190 and 193 annual sources, and remove the S07 refusal; `src/cadrumo/application/aggregation and the retencion observations adapter`.
 - [x] `S09` - refuse Modelo 193 export at the export boundary while its calculated revision carries a settled-prior-accrual row, with a typed reason and no command action, because the phase row's filing-export flag is read by nothing and so blocks nothing; `src/cadrumo/application/modelo/export.py`.
-- [ ] `S10` - refuse local work file for a Modelo 193 revision carrying a settled row with the export gate's check, and add a non-blocking verify finding so the operator learns before exporting or filing; `src/cadrumo/application/modelo filing and verification actions`.
-- [ ] `S11` - persist the accrual year on each calculation source reference as an additive optional field so the 193 gates detect settled rows exactly, falling back to the conservative accrual-year rule for revisions without it; `src/cadrumo/domain/modelos calculation revision source references`.
+- [x] `S10` - refuse local work file for a Modelo 193 revision carrying a settled row with the export gate's check, and add a non-blocking verify finding so the operator learns before exporting or filing; `src/cadrumo/application/modelo filing and verification actions`.
+- [x] `S11` - persist the accrual year on each calculation source reference as an additive optional field so the 193 gates detect settled rows exactly, falling back to the conservative accrual-year rule for revisions without it; `src/cadrumo/domain/modelos calculation revision source references`.
 
 ## Parallelization
 

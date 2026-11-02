@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#taxpayer-bank-accounts'
 date: '2026-10-04'
-modified: '2026-10-04'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4c854b00f166609b71c61578f407c4e07110d75b5585293f021be3cec75f4879'
+body_hash: 'sha256:5b6deca6bce4416d9164acf8025dda2ef7ff5d6d54eeadea1fcf5d5c40e2cc6d'
 related:
   - "[[2026-10-04-taxpayer-bank-accounts-plan]]"
 ---
@@ -399,6 +399,10 @@ related:
 - `S19` `verify:` `ruff check, ruff format, ty on touched files` -> `pass`
 - `S19` `verify:` `dev.tui visual review: render modelo-export-accounts and modelo-export-result-account at default viewports in both themes (16 frames, no failures, no missing glyphs or geometry findings), frames inspected for masking, scroll reach and layout; inventory now covers WorkbenchExportScreen and ModeloExportResultScreen` -> `pass`
 - `S19` `by:` `lane-e`
+- `S16` `verify:` `locator-check: m360_solicitud_operation.py:61; _modelo_m360_command_specs.py:78` -> `pass`
+- `S16` `by:` `plan-closure`
+- `S30` `verify:` `locator-check: test_continuation_page_marker_export.py exists (not re-run)` -> `pass`
+- `S30` `by:` `plan-closure`
 
 ## Notes
 

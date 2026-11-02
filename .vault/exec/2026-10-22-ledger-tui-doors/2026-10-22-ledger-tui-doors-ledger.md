@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#ledger-tui-doors'
 date: '2026-10-22'
-modified: '2026-10-23'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:080f67fb06c12c468c86abda1b11e5bb75401390ba38a0dd452266d5b2d32d49'
+body_hash: 'sha256:eb98feddfd28e5c366ca4699f3d8060baca3bfbf68ce332313633acd49839673'
 related:
   - "[[2026-10-22-ledger-tui-doors-plan]]"
 ---
@@ -515,6 +515,8 @@ related:
 - `S27` `verify:` `lint-imports 30 contracts` -> `pass`
 - `S27` `verify:` `HEAD modules via old-code plugin fail 7 of 8 new cases` -> `pass`
 - `S27` `by:` `vaultspec-high-executor`
+- `S27` `verify:` `locator-check: workspace_screen.py:144-151; own_accounts.py:457-470` -> `pass`
+- `S27` `by:` `plan-closure`
 
 ## Notes
 

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#registry-edition-authoring'
 date: '2026-09-09'
-modified: '2026-10-03'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:61b84e6a35e56cb34a4103c0989b0ed27be10a3898458b735df6309d6186b088'
+body_hash: 'sha256:5c41b5ff93204dceb682b75be2a84270fef1aa3c727aaf84c8bd8ca3d5d36b26'
 related:
   - "[[2026-09-09-registry-edition-authoring-plan]]"
 ---
@@ -575,6 +575,18 @@ related:
 - `S65` `verify:` `uv run --no-sync python -m dev.registry.pipeline publish-authority` -> `pass`
 
 - `S71` `T`
+- `S19` `verify:` `locator-check: delta_minimality restating_modelos=0` -> `pass`
+- `S19` `by:` `plan-closure`
+- `S20` `verify:` `locator-check: delta_minimality restating_modelos=0` -> `pass`
+- `S20` `by:` `plan-closure`
+- `S21` `verify:` `locator-check: delta_minimality restating_modelos=0` -> `pass`
+- `S21` `by:` `plan-closure`
+- `S22` `verify:` `locator-check: delta_minimality restating_modelos=0` -> `pass`
+- `S22` `by:` `plan-closure`
+- `S23` `verify:` `locator-check: delta_minimality restating_modelos=0` -> `pass`
+- `S23` `by:` `plan-closure`
+- `S26` `verify:` `locator-check: delta_minimality restating_modelos=0` -> `pass`
+- `S26` `by:` `plan-closure`
 
 ## Notes
 

@@ -14,9 +14,9 @@ related:
   - '[[2026-10-12-live-agent-evaluation-adr]]'
   - '[[2026-10-04-runtime-manager-architecture-adr]]'
   - '[[2026-10-15-native-package-ci-adr]]'
-modified: '2026-10-17'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:0ad26ebe7ecfcac59ff1f3a6d2b535b6aee79b38c2a95dde20dc738e0b60c739'
+body_hash: 'sha256:36adbd07c410bfbac0babcd0d4e996c001284381928d18dd735863ac36cc13cb'
 ---
 
 # `startup-service-repair` plan
@@ -35,8 +35,8 @@ S10 follows direct inspection of the completed product snapshot: the copied runt
 
 ## Steps
 
-- [ ] `S01` - Preserve actionable agent CLI and native startup errors and invocation timing; `src/cadrumo_agent_service/main.py, src/cadrumo_agent_service/service.py, src/cadrumo_agent_service/host/store_lifecycle.py, src/cadrumo_agent_service/host/tests/test_service_failure.py, native/application/src/diagnostics/service.rs, native/desktop frontend records and agent retry surfaces, owning tests`.
-- [ ] `S02` - Coalesce sign-in observations and make agent retry supervision responsive and bounded; `native/desktop/src-tauri/src/shell/sign_in, native/desktop/src-tauri/src/agent/supervisor.rs`.
+- [x] `S01` - Preserve actionable agent CLI and native startup errors and invocation timing; `src/cadrumo_agent_service/main.py, src/cadrumo_agent_service/service.py, src/cadrumo_agent_service/host/store_lifecycle.py, src/cadrumo_agent_service/host/tests/test_service_failure.py, native/application/src/diagnostics/service.rs, native/desktop frontend records and agent retry surfaces, owning tests`.
+- [x] `S02` - Coalesce sign-in observations and make agent retry supervision responsive and bounded; `native/desktop/src-tauri/src/shell/sign_in, native/desktop/src-tauri/src/agent/supervisor.rs`.
 - [ ] `S03` - Verify corrected launch environment and service diagnostics in the rebuilt Windows package; `native/tests/environment_launch_probe.py, dev/runtime_lifecycle/agent_live.py, build/windows-x64 and build/windows-installers-x64, direct non-GUI service/runtime/provider-home and live-provider validation using manifest-verified independent copies`.
 - [ ] `S04` - Diagnose and repair profile worker deadline cascades and distinguish ordinary client closes from refusals; `src/cadrumo/adapters/local_runtime/profile_worker_transport.py, src/cadrumo/adapters/local_runtime/server_connection_handling.py, src/cadrumo/adapters/persistence/storage/custody/_kdf_worker_supervision.py, owning tests`.
 - [ ] `S05` - Preserve the declared external CLI binary directories across service, gateway and worker launches; `native/application-environment.toml, native/CONTRACT.md, native/platform/src/launch.rs, src/cadrumo_agent_service/host/launch_environment.py and tests, dev/packaging/native/environment_conformance.py and tests, packaged CLI resolution verification`.

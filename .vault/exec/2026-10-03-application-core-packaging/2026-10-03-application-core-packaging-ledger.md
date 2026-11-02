@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#application-core-packaging'
 date: '2026-10-03'
-modified: '2026-10-14'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:89f2be3ddb70124e378d3fb901353f4282ff2efad28d860462bf3bbb7e2dd02e'
+body_hash: 'sha256:cc680f16e8149a4e77cace5cac14d9d1f17f2f5c4e9a9f5a72ce4a95e1f7ee3d'
 related:
   - "[[2026-10-03-application-core-packaging-plan]]"
 ---
@@ -109,6 +109,10 @@ related:
 - `S10` `verify:` `Ruff check and format for six changed Python files` -> `pass`
 - `S10` `verify:` `Fresh process backend eagerly imports Windows verifier and leaf path helper` -> `pass`
 - `S10` `verify:` `CMake Release verify-package with development binary; Python native acceptance and Rust80distribution probe` -> `pass`
+- `S07` `verify:` `locator-check: native/platform/src/storage.rs:557` -> `pass`
+- `S07` `by:` `plan-closure`
+- `S08` `verify:` `locator-check: native/application/src/component.rs:402` -> `pass`
+- `S08` `by:` `plan-closure`
 
 ## Notes
 

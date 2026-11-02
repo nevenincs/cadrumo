@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-shell'
 date: '2026-10-04'
-modified: '2026-10-12'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:cf86d64029790966aed68f068ab4bac37f4ba2d2e27ddcb384304d074500560b'
+body_hash: 'sha256:1d39d89c2a1b84b4d09d4ebfb2b3a37aa8cfd21c202da10f7431bdb08a8b7e69'
 related:
   - "[[2026-10-04-desktop-shell-plan]]"
 ---
@@ -547,6 +547,10 @@ related:
 - `S10` `verify:` `pytest collect-only native authentication selects one test` -> `pass`
 - `S10` `verify:` `just show test-runtime-auth` -> `pass`
 - `S10` `verify:` `just test-runtime-auth agent Session0 native desktop prerequisite` -> `fail`
+- `S01` `verify:` `locator-check: native/desktop/scripts/configuration.mjs:167-169` -> `pass`
+- `S01` `by:` `plan-closure`
+- `S16` `verify:` `locator-check: custody_specs.py:134-136; shell/sign_in/mod.rs; 2026-10-24 desktop-shell ADR amendment` -> `pass`
+- `S16` `by:` `plan-closure`
 
 ## Notes
 

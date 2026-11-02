@@ -10,9 +10,9 @@ related:
   - '[[2026-08-24-modelo-edit-contract-adr]]'
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
   - '[[2026-10-05-desktop-design-system-adr]]'
-modified: '2026-10-24'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:c7989c53a31c78029f81bfd8725e5ca05f8b24603c2fe3598275986cc23dab63'
+body_hash: 'sha256:cc298e0435b0b43c70aa678f6f610dcc6e3ec41a45ce237137e9b50fa9d65930'
 ---
 
 # `desktop-modelo-workspace` plan
@@ -102,7 +102,7 @@ Promote the round-3 prototype into product components on the application's field
 - [x] `P04.S53` - Act on a rebase report only from an evaluated preflight, render the export offer's review package availability, and correct the staged field's comment; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
 - [x] `P04.S55` - Recover from a refused renewal as the application allows, by re-reading the form and checking the held changes on its fresh baseline, remove the renewal-keyed report branch, and let a check that loses the renewal claim adopt the renewal's outcome; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
 - [x] `P04.S57` - Re-read once after a refused renewal and say the declaration is still changing on a second stale check, as the TUI does, and key the notice by the box rather than its edit address; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
-- [ ] `P04.S59` - Clear the still-changing stop when the review opens, and renew only for the latest check on the current baseline; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
+- [x] `P04.S59` - Clear the still-changing stop when the review opens, and renew only for the latest check on the current baseline; `native/desktop/frontend/src/components/modelo/dialogs/useEditReview.ts`.
 
 ### Phase `P05` - Proof
 
@@ -110,7 +110,7 @@ Prove the workspace in the browser and the packaged window over real envelopes, 
 
 - [x] `P05.S27` - Add Playwright scenarios over regenerated envelopes: refused 390, held-zero and filled 130, check findings, stale export, recorded with and without receipt, hub AEAT-only and maybe rows, all four languages, missing-key and raw-identifier gates, axe; `native/desktop/frontend/tests/modelo.spec.ts`.
 - [ ] `P05.S28` - Check in the packaged window that no declaration data reaches storage, logs or diagnostics and that sign-out discards it; `native/desktop/tests/`.
-- [ ] `P05.S29` - Review the integrated work against this plan, the decision and the frozen prototype, and record findings in the feature audit; `.vault/audit/`.
+- [x] `P05.S29` - Review the integrated work against this plan, the decision and the frozen prototype, and record findings in the feature audit; `.vault/audit/`.
 - [x] `P05.S47` - Add scenario answers from real envelopes for apply, renewal, export, recording, receipt and correction, and specs proving staged edits survive a renewal, an unknown apply holds until a re-read and a recorded filing differs from a verified receipt; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [x] `P05.S51` - Produce renewal envelopes from real staged changes with kept, changed and dropped outcomes and prove the window renders and applies each; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 - [x] `P05.S54` - Produce the stale preflight with the held changes and prove the real two-preflight renewal sequence renews once and keeps the dropped notice; `native/desktop/frontend/tests/scenarios/modelo.spec.ts`.

@@ -8,9 +8,9 @@ related:
   - '[[2026-09-23-calendar-obligations-holiday-jurisdiction-adr]]'
   - '[[2026-06-04-calendar-live-filing-integration-adr]]'
   - '[[2026-06-05-calendar-filing-semantics-adr]]'
-modified: '2026-09-24'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:392ebfeea44c8922812e48270d8c0d348f80d2e8346b1bf84698c57aaf1387a5'
+body_hash: 'sha256:af36579d23306c30b7c0c4903e134157ca07844fd033494b02497d8e30ca3b09'
 ---
 
 # `calendar-obligations` plan
@@ -34,7 +34,7 @@ S01 and S02 implement the accepted `2026-09-23-calendar-obligations-holiday-juri
 - [x] `S07` - Persist and report the authority build identity so a stale generation names its drifted input, cut over with one queued republish; `src/cadrumo/domain/calculations/registry/authority_store.py, dev/registry/compiler/authority_database.py, dev/registry/pipeline/authority_publication.py and owning tests`.
 - [x] `S08` - Stop the workbench calendar from re-deriving generation-constant data on every build; `src/cadrumo/application/overview/calendar_warnings.py, src/cadrumo/domain/deadlines/festivos.py and owning tests`.
 - [x] `S09` - Resolve a static inspection's casilla labels in one locale-catalogue window; `src/cadrumo/core/i18n/locale_catalogue.py, src/cadrumo/application/modelo/workspace.py, workspace_producers.py and owning tests`.
-- [ ] `S10` - Gate Modelo 136 on a declared unwithheld special-levy prize (LIRPF DA 33.7) so an undeclared profile is undetermined, not obliged, then refresh filing-calendar with a seed active through 2025; `src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml, modelos/136 applicability, user_profile schema.toml, domain/deadlines profiles, docs/_sequences seeds and filing-calendar goldens`.
+- [x] `S10` - Gate Modelo 136 on a declared unwithheld special-levy prize (LIRPF DA 33.7) so an undeclared profile is undetermined, not obliged, then refresh filing-calendar with a seed active through 2025; `src/cadrumo/_data/registry/aeat/facts/0139-modelo-payer-applicability-facts.toml, modelos/136 applicability, user_profile schema.toml, domain/deadlines profiles, docs/_sequences seeds and filing-calendar goldens`.
 
 ## Parallelization
 

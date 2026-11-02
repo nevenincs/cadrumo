@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-agent-host'
 date: '2026-10-13'
-modified: '2026-10-14'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:12a2219f67f61ade42b91c1dfb62169f14cb9c978c047b1e91cffd56a1c93d55'
+body_hash: 'sha256:7ab53398b0a9d57883cb62ae6de8219658ae0184d085fdfb407da55e2ec6e055'
 related:
   - "[[2026-10-13-desktop-agent-host-plan]]"
 ---
@@ -51,6 +51,8 @@ related:
 - `S05` `A` `native/desktop/frontend/tests/live/tsconfig.json`
 - `S05` `A` `native/desktop/frontend/tests/live/README.md`
 - `S06` `M` `justfile`
+- `S04` `verify:` `locator-check: native/desktop/src-tauri/src/agent/session.rs:1327` -> `pass`
+- `S04` `by:` `plan-closure`
 
 ## Notes
 

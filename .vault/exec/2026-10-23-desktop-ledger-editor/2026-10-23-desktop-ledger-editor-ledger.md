@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-ledger-editor'
 date: '2026-10-23'
-modified: '2026-10-25'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:0cd4d3c57d947a434622fea2031da9e87fedc8062afa39a06907951941d8c8ce'
+body_hash: 'sha256:eeae05a2c3bfb4516b3d1b379570b80f800485febd3fe124942d5b68fbe64c60'
 related:
   - "[[2026-10-23-desktop-ledger-editor-plan]]"
 ---
@@ -830,6 +830,12 @@ related:
 - `S17` `M` `native/desktop/src-tauri/src/shell/settle.rs`
 - `S17` `M` `native/desktop/src-tauri/src/shell/relay.rs`
 - `S17` `verify:` `cmake --build build/windows-x64 --config Debug --target desktop-host-unit-test` -> `pass`
+- `S01` `verify:` `locator-check: native/desktop/src-tauri/src/shell/ledger/mod.rs:474-495` -> `pass`
+- `S01` `by:` `plan-closure`
+- `S10` `verify:` `locator-check: ledger/inspector MovementInspector.tsx, SelectionInspector.tsx` -> `pass`
+- `S10` `by:` `plan-closure`
+- `S17` `verify:` `locator-check: .vault/audit/2026-10-24-desktop-ledger-editor-audit.md:1197,1655` -> `pass`
+- `S17` `by:` `plan-closure`
 
 ## Notes
 

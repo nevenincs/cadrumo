@@ -17,9 +17,9 @@ related:
   - '[[2026-06-30-ledger-add-idempotency-adr]]'
   - '[[2026-07-05-ledger-latency-budget-adr]]'
   - '[[2026-10-09-desktop-titlebar-adr]]'
-modified: '2026-10-31'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:4bec6dcb648f187354a32755c26280bcbe1a47025851c611281a026f21f2e75b'
+body_hash: 'sha256:8937080f265ac754ed5a309cc64d1529c3b3e22f16e78a80ecf7e23fa804bb98'
 ---
 
 # `desktop-ledger-editor` plan
@@ -36,7 +36,7 @@ The work adds a Ledger page to the desktop shell and a host channel for the ledg
 
 Give the window a closed, typed way to run the ledger family's registered operations over the held person relay, with file tokens and secret bodies, and a scenario host that answers it from synthetic data.
 
-- [ ] `P01.S01` - Add the ledger host module: admitted ledger definition list checked against the contract manifest, submit and settle, review read and digest-bound answer, cancel, and registration in the command list; `native/desktop/src-tauri/src/shell/ledger/`.
+- [x] `P01.S01` - Add the ledger host module: admitted ledger definition list checked against the contract manifest, submit and settle, review read and digest-bound answer, cancel, and registration in the command list; `native/desktop/src-tauri/src/shell/ledger/`.
 - [x] `P01.S02` - Add native file and save dialogs and window drag-drop that issue session-bound file tokens, and the own-account secret raw body; `native/desktop/src-tauri/src/shell/ledger/`.
 - [x] `P01.S03` - Add the ledger contract types, the optional ledger Host port and its Tauri wiring; `native/desktop/frontend/src/ipc/contract.ts`.
 - [x] `P01.S04` - Answer the ledger port in the scenario host from an in-memory synthetic ledger with refusal, unknown and review cases; `native/desktop/frontend/src/dev/`.
@@ -56,7 +56,7 @@ Build the Ledger page and its sections from the reviewed prototype, at parity wi
 - [x] `P03.S07` - Add the Ledger page to the shell: layout page, rail item, actions, palette contribution, first-pane wiring and states; `native/desktop/frontend/src/App.tsx`.
 - [x] `P03.S08` - Build the Movements grid with readiness strip, toolbar, filters, sort, grouping, columns and saved views; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S09` - Add staged editing: cell editors, paste and fill, undo and redo, changes tray, review and apply with per-row outcomes; `native/desktop/frontend/src/components/ledger/`.
-- [ ] `P03.S10` - Add the movement inspector for one row and for a selection, with classification, documents, invoice link, history, declarations and actions; `native/desktop/frontend/src/components/ledger/`.
+- [x] `P03.S10` - Add the movement inspector for one row and for a selection, with classification, documents, invoice link, history, declarations and actions; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S11` - Add the import and export dialogs; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S12` - Add the Invoices section with catalogue grid and invoice editor; `native/desktop/frontend/src/components/ledger/`.
 - [x] `P03.S13` - Add the Documents and Matching sections; `native/desktop/frontend/src/components/ledger/`.
@@ -69,7 +69,7 @@ Localise every string, prove accessibility, behaviour and performance, and revie
 
 - [x] `P04.S15` - Declare and translate every ledger chrome string in four locales; `dev/locales/desktop_chrome.py`.
 - [x] `P04.S16` - Add scenario, accessibility, keyboard, privacy and benchmark tests for the Ledger page; `native/desktop/frontend/tests/scenarios/`.
-- [ ] `P04.S17` - Review the integrated feature against this plan and its decision; `.vault/audit/`.
+- [x] `P04.S17` - Review the integrated feature against this plan and its decision; `.vault/audit/`.
 
 ## Parallelization
 

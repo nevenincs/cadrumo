@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#provider-settings'
 date: '2026-10-13'
-modified: '2026-10-14'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e5ec5123832a2cbf424d771c227d2238eeadd6fa484b8ce848821c3b6474617'
+body_hash: 'sha256:a75c8347dc8785e2ab7c5e9ac1861289f04f88e4d90f144763b4138ebd9b054c'
 related:
   - "[[2026-10-13-provider-settings-plan]]"
 ---
@@ -95,6 +95,14 @@ related:
 - `S09` `verify:` `frontend tsc --noEmit, eslint and prettier on the changed files` -> `pass`
 - `S09` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16)` -> `pass`
 - `S09` `by:` `implementation-high`
+- `S13` `verify:` `locator-check: agent_process.py:166` -> `pass`
+- `S13` `by:` `plan-closure`
+- `S14` `verify:` `locator-check: credential_frame.py:66` -> `pass`
+- `S14` `by:` `plan-closure`
+- `S17` `verify:` `locator-check: host/controller.py:134` -> `pass`
+- `S17` `by:` `plan-closure`
+- `S18` `verify:` `locator-check: launch_environment.py:317 (agent side not read)` -> `pass`
+- `S18` `by:` `plan-closure`
 
 ## Notes
 

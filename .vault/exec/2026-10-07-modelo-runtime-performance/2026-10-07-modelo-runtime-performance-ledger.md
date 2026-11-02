@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#modelo-runtime-performance'
 date: '2026-10-07'
-modified: '2026-10-14'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:d654d39d52d6b5243cbdb92255e6c2fa6ecd5a468526de62d2323b924de007e0'
+body_hash: 'sha256:202638e5c2d39555833c3f8b7f0b952579b11935990f955d842a8ae019ebda1f'
 related:
   - "[[2026-10-07-modelo-runtime-performance-plan]]"
 ---
@@ -694,6 +694,26 @@ related:
 - `S33` `M` `src/cadrumo/locales/hu/application.yml`
 - `S33` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_runtime_operation_error_detail.py::test_profile_requirement_explanation_survives_recorded_detail` -> `pass`
 - `S33` `verify:` `pytest src/cadrumo/entrypoints/cli/tests/test_overview_profile_refusal_end_to_end.py` -> `pass`
+- `S11` `verify:` `locator-check: operation_authority.py:330` -> `pass`
+- `S11` `by:` `plan-closure`
+- `S12` `verify:` `locator-check: workbench_read.py:185-186` -> `pass`
+- `S12` `by:` `plan-closure`
+- `S16` `verify:` `locator-check: dev/docs/sequences/checks.py:340-343` -> `pass`
+- `S16` `by:` `plan-closure`
+- `S21` `verify:` `locator-check: dev/registry/edition_delta_planning.py:84` -> `pass`
+- `S21` `by:` `plan-closure`
+- `S24` `verify:` `locator-check: dev/registry/registry_collapse_comparison.py:63` -> `pass`
+- `S24` `by:` `plan-closure`
+- `S26` `verify:` `locator-check: no tuples() in _secure_object_writes.py` -> `pass`
+- `S26` `by:` `plan-closure`
+- `S27` `verify:` `locator-check: lifecycle_guard.py:70` -> `pass`
+- `S27` `by:` `plan-closure`
+- `S31` `verify:` `locator-check: filing_actions.py:173` -> `pass`
+- `S31` `by:` `plan-closure`
+- `S32` `verify:` `locator-check: verification_actions.py:110` -> `pass`
+- `S32` `by:` `plan-closure`
+- `S33` `verify:` `locator-check: user_profile/preflight.py:45` -> `pass`
+- `S33` `by:` `plan-closure`
 
 ## Notes
 

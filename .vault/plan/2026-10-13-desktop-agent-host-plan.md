@@ -8,9 +8,9 @@ related:
   - '[[2026-10-13-desktop-agent-host-live-lane-adr]]'
   - '[[2026-10-12-desktop-agent-host-adr]]'
   - '[[2026-10-13-desktop-agent-host-live-lane-review-audit]]'
-modified: '2026-10-19'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:588de3292ec0c3daba82a8caf5a99f89de9f07e78479461cefbca9e82727b2d7'
+body_hash: 'sha256:e5d85e43aeaf9455530aafb79597003d0961b16b07e684f7d7c1e2bf43a5df72'
 ---
 
 # `desktop-agent-host` plan
@@ -46,7 +46,7 @@ Open dependencies outside this plan:
 - [ ] `S01` - Gate every person act and admission door on one person-frontend predicate, add the agent-host frontend, and prove the door-by-frontend matrix; `src/cadrumo/application/operations/person_acts.py`.
 - [ ] `S02` - Build the agent launcher that resumes the sign-in and starts the packaged cadrumo-agent inside a kill-on-close process scope on ephemeral ports; the source-tree start and its served-root lane guard are retired by operator ruling 2026-10-19; `src/cadrumo/entrypoints/cli/agent_host/`.
 - [x] `S03` - Supervise the launcher from the desktop host in a Job Object and stop it on every sign-in, profile and window trigger; `native/desktop/src-tauri/src/agent/`.
-- [ ] `S04` - Serve the agent session to the webview through a gateway client, stream frames mapped onto session events over a Tauri channel, and the closed command list; `native/desktop/src-tauri/src/agent/`.
+- [x] `S04` - Serve the agent session to the webview through a gateway client, stream frames mapped onto session events over a Tauri channel, and the closed command list; `native/desktop/src-tauri/src/agent/`.
 - [x] `S05` - Drive the packaged desktop over WebView2 remote debugging with the shared agent specs, with no-survivor and key-pattern scans; `native/desktop/frontend/tests/live/`.
 - [x] `S06` - Add the desktop agent live recipe that builds the lane, creates and marks a fresh root, and runs the live specs; `justfile`.
 - [ ] `S07` - Run stage 1 acceptance live and record its evidence; `native/desktop/frontend/tests/live/`.
