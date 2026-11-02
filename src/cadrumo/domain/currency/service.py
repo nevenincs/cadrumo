@@ -10,7 +10,7 @@ and no euro amount, so a caller can never read a zero into a filing.
 
 from __future__ import annotations
 
-from datetime import date
+from datetime import date, timedelta
 from decimal import Decimal
 from typing import Protocol
 
@@ -111,6 +111,34 @@ class CurrencyNormalizationService:
             rate_date=rate_date,
             rate_observation_date=lookup.observation_date,
         )
+
+
+def published_eur_rate_on_day_or_next(
+    currency: str,
+    day: date,
+    *,
+    rate_provider: ExchangeRateProvider,
+) -> EurRateLookup:
+    """Return the rate published for ``day`` or else for the day after it, and no other.
+
+    LIVA arts. 163 noniesdecies.Uno.c), duovicies.Uno.c) and septvicies.Uno.c)
+    convert at the rate of the period's last day "o, si no hubiera publicación
+    correspondiente a ese día, del día siguiente". A provider's own fallback
+    reaches back to the last prior publication, so its answer counts only when
+    its observation is the day asked for. Neither day publishing is answered as a
+    missing rate: the Law does not say to keep looking.
+    """
+    for candidate in (day, day + timedelta(days=1)):
+        lookup = rate_provider.lookup_eur_rate(currency, candidate)
+        if lookup.status is EurRateLookupStatus.UNSUPPORTED_CURRENCY:
+            return lookup
+        if lookup.status is EurRateLookupStatus.FOUND and lookup.observation_date == candidate:
+            return lookup
+    return EurRateLookup(
+        status=EurRateLookupStatus.MISSING_RATE,
+        rate_date=day,
+        source=rate_provider.rate_source_id,
+    )
 
 
 def resolve_fx_conversion_stamp(

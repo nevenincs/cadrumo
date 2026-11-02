@@ -44,7 +44,7 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 
 
 def _option(
-    *, name: str, declaration: str, value: ValueContract, default: ParameterDefault, help_key: TranslationKey
+    *, name: str, declaration: str, value: ValueContract, default: ParameterDefault, help_key: str
 ) -> OptionSpec:
     """Build one ordinary non-flag option."""
     return OptionSpec(
@@ -52,7 +52,7 @@ def _option(
         declarations=(declaration,),
         value=value,
         default=default,
-        help_key=help_key,
+        help_key=TranslationKey(help_key),
         metavar=None,
         is_flag=False,
         flag_value=None,
@@ -65,13 +65,13 @@ def _option(
     )
 
 
-def _argument(*, name: str, help_key: TranslationKey) -> ArgumentSpec:
+def _argument(*, name: str, help_key: str) -> ArgumentSpec:
     """Build one required positional text argument."""
     return ArgumentSpec(
         name=name,
         value=TEXT_VALUE,
         default=_REQUIRED,
-        help_key=help_key,
+        help_key=TranslationKey(help_key),
         metavar=None,
         constraint=ParameterConstraint(),
         show_default=True,

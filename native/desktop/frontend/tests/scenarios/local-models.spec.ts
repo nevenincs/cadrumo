@@ -18,6 +18,11 @@ test.beforeEach(() => {
 });
 
 const LOCAL = "local_api";
+declare global {
+  interface Window {
+    __localAiReadRelease?: () => void;
+  }
+}
 const ADDED = "synthetic-named:test";
 const localLane = catalogLanes(FIXTURE_CATALOG).find(
   (lane) => lane.id === LOCAL,
@@ -99,6 +104,124 @@ test("the list holds the catalog's recommended models alone, with no capability 
   ).toHaveCount(0);
   expect(await storedList(target)).toEqual([]);
 });
+
+test("a failed local model list can be read again without resetting it", async ({
+  page: target,
+}) => {
+  await open(target);
+  await target.evaluate(() => {
+    window.__fixtureLocalModelsRead = async () => {
+      throw Object.assign(new Error("fixture read failure"), {
+        code: "agent_gateway_503",
+      });
+    };
+  });
+  const lane = await openLane(target);
+  await expect(lane.getByRole("alert")).toContainText(
+    label("desktop.providers.local_models_failed"),
+  );
+  await target.evaluate(() => {
+    window.__fixtureLocalModelsRead = () =>
+      new Promise<void>((resolve) => {
+        window.__localAiReadRelease = resolve;
+      });
+  });
+  await lane
+    .getByRole("button", { name: label("desktop.agent.retry"), exact: true })
+    .click();
+  await expect(lane).toContainText(
+    label("desktop.providers.local_models_loading"),
+  );
+  await expect(
+    lane.getByRole("button", {
+      name: label("desktop.agent.retry"),
+      exact: true,
+    }),
+  ).toHaveCount(0);
+  await expect
+    .poll(() => target.evaluate(() => Boolean(window.__localAiReadRelease)))
+    .toBe(true);
+  await target.evaluate(() => {
+    window.__fixtureLocalModelsRead = undefined;
+    window.__localAiReadRelease!();
+  });
+  await expect(
+    lane.locator("[data-slot=local-models] li[data-model]"),
+  ).toHaveCount(localLane.recommended.length);
+  expect(
+    (await calls(target)).some((call) =>
+      call.startsWith("agentLocalModelsReset"),
+    ),
+  ).toBe(false);
+});
+
+for (const source of ["catalog", "settings"] as const) {
+  test(`Local AI ${source} failure stays distinct from an empty lane list and can retry`, async ({
+    page: target,
+  }) => {
+    await open(target, "partial");
+    const setup = target.getByRole("dialog", {
+      name: label("desktop.setup.title"),
+    });
+    const localAi = setup.locator('[data-setup-element="local_ai"]');
+    await expect(localAi).toBeVisible();
+    await expect
+      .poll(() => target.evaluate(() => Boolean(window.__fixtureAgentSession)))
+      .toBe(true);
+    await target.evaluate((source) => {
+      if (source === "settings") {
+        window.__scenarioProviderSignIn!.failNextSettingsRead();
+        return;
+      }
+      const session = window.__fixtureAgentSession!;
+      const read = session.providerCatalog;
+      session.providerCatalog = async () => {
+        await new Promise<void>((resolve) => {
+          window.__localAiReadRelease = resolve;
+        });
+        session.providerCatalog = read;
+        throw Object.assign(new Error("fixture catalog failure"), {
+          code: "agent_gateway_503",
+        });
+      };
+    }, source);
+    await localAi
+      .getByRole("button", {
+        name: label("desktop.setup.item.local_ai"),
+        exact: true,
+      })
+      .click();
+    if (source === "catalog") {
+      await expect(localAi.getByRole("status")).toContainText(
+        label("desktop.providers.local_models_loading"),
+      );
+      await expect(localAi).not.toContainText(
+        label("desktop.providers.local_models_none"),
+      );
+      await expect
+        .poll(() => target.evaluate(() => Boolean(window.__localAiReadRelease)))
+        .toBe(true);
+      await target.evaluate(() => window.__localAiReadRelease!());
+    }
+    await expect(
+      localAi
+        .getByRole("alert")
+        .filter({ hasText: label("desktop.providers.load_failed") }),
+    ).toBeVisible();
+    await expect(localAi).not.toContainText(
+      label("desktop.providers.local_models_none"),
+    );
+    await expect(localAi.locator('[data-setup-row="local_ai"]')).toBeVisible();
+    await localAi
+      .getByRole("alert")
+      .filter({ hasText: label("desktop.providers.load_failed") })
+      .getByRole("button", { name: label("desktop.agent.retry"), exact: true })
+      .click();
+    await expect(
+      localAi.locator("[data-slot=local-models] li[data-model]"),
+    ).toHaveCount(localLane.recommended.length);
+  });
+}
 
 test("a model added by name joins the list after the recommended ones and is stored", async ({
   page: target,

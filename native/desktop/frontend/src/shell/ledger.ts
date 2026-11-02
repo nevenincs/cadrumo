@@ -97,6 +97,8 @@ import type {
   ProrrataSettleSectorRequest,
   ProrrataDeclareGrossRequest,
   ProrrataRemoveGrossRequest,
+  WithholdingAbsenceListRequest,
+  WithholdingAbsenceListResult,
   WithholdingAbsenceResult,
   WithholdingAttestRequest,
   WithholdingListRequest,
@@ -212,6 +214,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.restore",
   "ledger.retencion_soportada.attest_absence",
   "ledger.retencion_soportada.list",
+  "ledger.retencion_soportada.list_absences",
   "ledger.retencion_soportada.record",
   "ledger.retencion_soportada.remove",
   "ledger.retencion_soportada.withdraw_absence",
@@ -873,6 +876,31 @@ export type LedgerInvoiceMatchRequest = {
   staged: LedgerInvoiceMatchStagedLink[];
   invoice_id?: string | null;
   transaction_id?: string | null;
+  /** Links to state the differences of; they take nothing from the
+   * suggestions. */
+  judge?: LedgerInvoiceMatchStagedLink[];
+};
+/** One way a judged movement and invoice do not agree; the fields besides
+ * `kind` are the kind's own and null otherwise. */
+export type LedgerInvoiceMatchMismatch = {
+  kind: "amount" | "currency" | "counterparty" | "linked_elsewhere";
+  /** `amount`: the magnitude of the movement's amount less what the invoice
+   * settles for. */
+  difference: { decimal: string } | null;
+  /** `currency`: the movement's currency. */
+  movement: string | null;
+  /** `currency`: the invoice's currency. */
+  invoice: string | null;
+  /** `linked_elsewhere`: how many other movements already hold the invoice. */
+  count: number | null;
+};
+/** What stands against one named link; `found` is false when the movement or
+ * the invoice is gone. */
+export type LedgerInvoiceMatchJudgement = {
+  transaction_id: string;
+  invoice_id: string;
+  found: boolean;
+  mismatches: LedgerInvoiceMatchMismatch[];
 };
 /** One movement and one invoice that settle each other, and the evidence the
  * pair stands on. */
@@ -909,6 +937,8 @@ export type LedgerInvoiceMatchResult = {
       }[]
     | null;
   movement_choices: { transaction_id: string; settles: boolean }[] | null;
+  /** One judgement per link named in `judge`, in the order named. */
+  judgements: LedgerInvoiceMatchJudgement[];
 };
 /** Unsaved parts of a movement. No amount on the last asks what the others leave. */
 export type LedgerSplitCheckRequest = {
@@ -2256,6 +2286,7 @@ export interface LedgerRequests {
   "ledger.prorrata.declare_gross": ProrrataDeclareGrossRequest;
   "ledger.prorrata.remove_gross": ProrrataRemoveGrossRequest;
   "ledger.retencion_soportada.list": WithholdingListRequest;
+  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListRequest;
   "ledger.retencion_soportada.record": WithholdingRecordRequest;
   "ledger.retencion_soportada.remove": WithholdingRemoveRequest;
   "ledger.retencion_soportada.attest_absence": WithholdingAttestRequest;
@@ -2370,6 +2401,7 @@ export interface LedgerResults {
   "ledger.prorrata.declare_gross": ProrrataMutationResult;
   "ledger.prorrata.remove_gross": ProrrataMutationResult;
   "ledger.retencion_soportada.list": WithholdingListResult;
+  "ledger.retencion_soportada.list_absences": WithholdingAbsenceListResult;
   "ledger.retencion_soportada.record": WithholdingMutationResult;
   "ledger.retencion_soportada.remove": WithholdingMutationResult;
   "ledger.retencion_soportada.attest_absence": WithholdingAbsenceResult;

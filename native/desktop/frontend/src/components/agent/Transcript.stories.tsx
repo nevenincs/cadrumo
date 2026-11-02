@@ -231,7 +231,7 @@ const meta = {
     },
   },
   args: { items: EXCHANGE, onRetry: NOOP, followNewest: true, width: "column" },
-  render: ({ width, ...args }: Args, { globals }) => (
+  render: ({ width, ...args }: Args) => (
     <div
       className={cn(
         "flex h-dvh flex-col border-r bg-background",
@@ -241,7 +241,7 @@ const meta = {
       <p className="shrink-0 px-3 py-2 text-xs text-muted-foreground">
         {TRANSCRIPT_NOTE}
       </p>
-      <Transcript {...args} locale={String(globals.locale)} />
+      <Transcript {...args} />
     </div>
   ),
 } satisfies Meta<Args>;
@@ -326,7 +326,7 @@ export const InColumn: Story = {
             title="IVA del tercer trimestre"
             subtitle="Fixture Deep · High"
           />
-          <Transcript {...args} locale={locale} />
+          <Transcript {...args} />
           <div className="shrink-0 p-3 pt-0">
             <Composer
               locale={locale}

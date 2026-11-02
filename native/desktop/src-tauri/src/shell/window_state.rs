@@ -179,6 +179,7 @@ impl WindowStates {
                 );
             }
         }
+        self.track(window);
         let states = self.clone();
         let tracked = window.clone();
         window.on_window_event(move |event| match event {
@@ -191,7 +192,10 @@ impl WindowStates {
     /// Records the normal placement; a maximized or minimized window keeps
     /// the placement it had before.
     fn track<R: Runtime>(&self, window: &Window<R>) {
-        if window.is_maximized().unwrap_or(true) || window.is_minimized().unwrap_or(true) {
+        if window.is_maximized().unwrap_or(true)
+            || window.is_minimized().unwrap_or(true)
+            || window.is_fullscreen().unwrap_or(true)
+        {
             return;
         }
         let (Ok(position), Ok(size)) = (window.outer_position(), window.inner_size()) else {
@@ -213,7 +217,11 @@ impl WindowStates {
 
     fn close<R: Runtime>(&self, window: &Window<R>) {
         self.track(window);
-        let maximized = window.is_maximized().unwrap_or(false);
+        let maximized = if window.is_fullscreen().unwrap_or(true) {
+            self.lock().get(window.label()).is_some_and(|p| p.maximized)
+        } else {
+            window.is_maximized().unwrap_or(false)
+        };
         let snapshot = {
             let mut placements = self.lock();
             match placements.get_mut(window.label()) {

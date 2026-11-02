@@ -349,3 +349,36 @@ dates of the modelos that declare a filing-window clause, today Modelo 303 and M
   dated windows only.
 - Review whether the taxpayer-territory shift (art. 30.6) applied by the effective-deadline
   service is right for electronic filing given art. 31.3.
+
+## Amendment 2026-11-02 (3): national-only shift of filing closes
+
+Ruled by the operator on 2026-11-02, settling the last follow-up of amendment (2). The
+accepted body and the two earlier amendments are unchanged except where this section
+governs: the effective close of a filing window.
+
+### Ruling
+
+- A filing close moves to the next business day only for Saturdays, Sundays and the
+  national días inhábiles of the AGE calendar. A regional (CCAA) or local holiday never
+  moves a filing close, for any filer.
+- Ley 39/2015 art. 31.3 governs electronic filing at the sede and excludes art. 30.6, so
+  the filer's territory has no bearing on the close. The AEAT Calendario del Contribuyente
+  wording that a regional or local holiday moves the close was weighed and not followed.
+- Every surface reads the same effective close: calculate, the work form, the
+  declarations calendar and list, the overview and the workbench. No taxpayer territory
+  enters the deadline path.
+- The domiciliación cutoff is a different procedure and keeps the territory its registry
+  declaration names (amendment 2026-11-01).
+
+### Wording this section qualifies
+
+- Amendment (2): "The filer's territory is applied afterwards by the effective-deadline
+  service, whose behaviour is unchanged" no longer holds; `closes_on` on the national
+  basis is the close every surface shifts, with no territory step.
+- Amendment (2), follow-up: the art. 30.6 review is settled by this section.
+
+### Follow-up recorded, not decided here
+
+- The public-holiday facts still cite `ley-39-2015:art-30.6` in their `legal_refs`; the
+  registry owner should review the citation against this ruling.
+- `CalendarCcaaCatalogue.territory_for_tax_residence` has no caller outside its own test.

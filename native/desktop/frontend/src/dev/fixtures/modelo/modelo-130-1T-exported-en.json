@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+      "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
       "language": "en",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -64,8 +64,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.devengo",
@@ -99,8 +102,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
@@ -578,8 +584,11 @@
                 "overridden": 1,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
@@ -843,8 +852,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-iii-total-liquidacion",
@@ -1295,8 +1307,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.ingreso",
@@ -1320,8 +1335,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.complementaria",
@@ -1361,8 +1379,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -1374,9 +1395,43 @@
             "overridden": 1,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
+        }
+      ],
+      "outline": [
+        {
+          "id": "dr-13001",
+          "heading": {
+            "text": "Page 1 · Instalment payment",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dr-13001.identificacion",
+            "dr-13001.devengo",
+            "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
+            "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
+            "dr-13001.liquidacion-3-iii-total-liquidacion",
+            "dr-13001.ingreso",
+            "dr-13001.complementaria"
+          ],
+          "counts": {
+            "total": 19,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 2,
+            "calculated": 11,
+            "overridden": 1,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
         }
       ],
       "working_figures": [
@@ -1456,7 +1511,9 @@
         "overridden": 1,
         "default_to_confirm": 0,
         "not_applicable": 0,
-        "blocked": 0
+        "blocked": 0,
+        "needs_you": 0,
+        "could_not_calculate": 0
       },
       "progress": {
         "state": "complete",
@@ -1591,8 +1648,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-02T09:26:44.255864Z",
-        "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+        "exported_at": "2026-11-02T16:33:10.439522Z",
+        "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
         "current": true
       },
       "edit_closure": null,
@@ -1609,7 +1666,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1644,9 +1701,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "77fa80a73b120f2250004eb75a779bf2e0767971ad8ce2ac433f3b3b7fb5e283",
-    "calculation_head_digest": "dcfabca48f951797dfc269ef852c7d07f24c4b7bd259a501dc712d5b28fef1d4",
-    "current_calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+    "work_unit_record_digest": "95b6a32bc5cfd6ae7bba22923ac2a917235f32ee3a7b731b8c4f9761538d7130",
+    "calculation_head_digest": "f14ee90153f9231254b3439bc216209eecd6357062b911e90d2e3580eed8efbe",
+    "current_calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1949,9 +2006,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:26:48.304934Z",
-    "expires_at": "2026-11-02T09:31:48.304934Z",
-    "baseline_id": "683aae4dd887dec57a40aeb9782615ceec9776b632c341e34a8a8eead8509abc"
+    "issued_at": "2026-11-02T16:33:18.210111Z",
+    "expires_at": "2026-11-02T16:38:18.210111Z",
+    "baseline_id": "7da35a9ce5501a58564fd4c14c6d80b89a82dcd94fef4af162cc6a4be42f5319"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1961,7 +2018,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-02T09:26:44.255864Z",
+    "file_created_at": "2026-11-02T16:33:10.439522Z",
     "receipt_to_add": false
   },
   "header": {
@@ -1987,7 +2044,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-02T09:26:44.255864Z",
+      "exported_at": "2026-11-02T16:33:10.439522Z",
       "created_on": "Nov 2, 2026",
       "current": true,
       "words": "File created on Nov 2, 2026"
@@ -2015,8 +2072,8 @@
     "words": "The check passed.",
     "unapplied_words": "The saved calculation passed its check; your changes are not applied."
   },
-  "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
-  "verification_report_id": "8988638e6722d5796a0b3f72f4a6ddcfdf6bd2e56d8d98ea9db7638693055a0f",
+  "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+  "verification_report_id": "ba530f77fd23b7fc8772753431ae62ad2cd34aba5e7bc9cc35c567f16d7e5d57",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",

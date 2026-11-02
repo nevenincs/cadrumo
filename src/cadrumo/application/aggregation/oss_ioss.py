@@ -32,6 +32,7 @@ from typing import Annotated, ClassVar, NamedTuple
 from pydantic import BaseModel, Field, StringConstraints
 
 from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole, InvoiceDevengoRank
+from ...core.external_constants import DEFAULT_CURRENCY
 from ...core.hashing import content_hash_hex
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.bucket import BucketId
@@ -52,12 +53,16 @@ from ...domain.calculations.registry.manual_input_selector import ManualInputPro
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_base import CasillaDataType, DateAxis
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
+from ...domain.currency.errors import ExchangeRateProviderError
+from ...domain.currency.models import EurRateLookupStatus
+from ...domain.currency.service import published_eur_rate_on_day_or_next
 from ...domain.invoices.enums import iva_rate_kind
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.classification import TransactionKind, require_transaction_kind
 from ...domain.iva.lookup import lookup_rate, tier_rates_within
 from ...domain.iva.oss import OssIossRegime, require_oss_ioss_regime, resolve_oss_ioss_regime_catalogue
 from ...domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
+from ..exchange_rate_provider import exchange_rate_provider
 from ..invoices.catalogue_reads_ports import (
     BucketBoundCatalogueReader,
     InvoiceCatalogueReadPersistenceError,
@@ -237,6 +242,40 @@ def validate_oss_ioss_observation(
     )
 
 
+def _refuse_consignments_over_ceiling(
+    observations: Sequence[OssIossLedgerObservation],
+    *,
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Refuse a consignment whose value is above its regime's published intrinsic-value ceiling.
+
+    One invoice is read as one consignment, the unit the law limits, so its lines
+    are summed; the line identifier carries the invoice as its leading segment.
+    The base includes any shipping the invoice charged in its lines, which can
+    refuse a consignment the law admits but never admits one it excludes.
+    """
+    consignments: dict[tuple[str, str], Decimal] = {}
+    dated: dict[tuple[str, str], date] = {}
+    for observation in observations:
+        key = (observation.regime, observation.ledger_id.split(":", 1)[0])
+        consignments[key] = consignments.get(key, Decimal("0")) + observation.base_amount
+        dated[key] = observation.transaction_date
+    for key, value in consignments.items():
+        regime, invoice_id = key
+        catalogue = resolve_oss_ioss_regime_catalogue(effective_date=dated[key], authority=operation)
+        ceiling = catalogue.definition(regime).intrinsic_value_ceiling_eur
+        if ceiling is not None and value > Decimal(ceiling):
+            raise AggregationValidationError(
+                tr("aggregation.oss_ioss.errors.consignment_exceeds_ceiling"),
+                context={
+                    "invoice_id": invoice_id,
+                    "regime": regime,
+                    "consignment_value_eur": str(value),
+                    "intrinsic_value_ceiling_eur": ceiling,
+                },
+            )
+
+
 def validate_oss_ioss_observations(
     candidates: Iterable[OssIossLedgerCandidate],
     *,
@@ -256,7 +295,9 @@ def validate_oss_ioss_observations(
     if operation is None:
         with bundled_indexed_authority().operation() as indexed_operation:
             return validate_oss_ioss_observations(candidates, operation=indexed_operation)
-    return tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
+    observations = tuple(validate_oss_ioss_observation(candidate, operation=operation) for candidate in candidates)
+    _refuse_consignments_over_ceiling(observations, operation=operation)
+    return observations
 
 
 def aggregate_oss_ioss_bindings(
@@ -325,25 +366,28 @@ def _detail_binding_values(
 
 
 _MODELO_369_PROJECTION_FACT_ID = "modelo-369-exterior-oss-projection-catalogue"
-_ROW_SHAPES: tuple[tuple[tuple[int, CasillaDataType], ...], ...] = (
+_ROW_SHAPES: tuple[tuple[CasillaDataType, ...], ...] = (
     (
-        (2, CasillaDataType.TEXT),
-        (5, CasillaDataType.DECIMAL),
-        (1, CasillaDataType.TEXT),
-        (17, CasillaDataType.MONEY),
-        (17, CasillaDataType.MONEY),
+        CasillaDataType.TEXT,
+        CasillaDataType.DECIMAL,
+        CasillaDataType.TEXT,
+        CasillaDataType.MONEY,
+        CasillaDataType.MONEY,
     ),
     (
-        (2, CasillaDataType.TEXT),
-        (15, CasillaDataType.TEXT),
-        (2, CasillaDataType.TEXT),
-        (5, CasillaDataType.DECIMAL),
-        (1, CasillaDataType.TEXT),
-        (17, CasillaDataType.MONEY),
-        (17, CasillaDataType.MONEY),
+        CasillaDataType.TEXT,
+        CasillaDataType.TEXT,
+        CasillaDataType.TEXT,
+        CasillaDataType.DECIMAL,
+        CasillaDataType.TEXT,
+        CasillaDataType.MONEY,
+        CasillaDataType.MONEY,
     ),
 )
 """The two line layouts of DR369's lists: destination first, or establishment first.
+
+Columns are told apart by data type and contiguity alone; each column's width is
+whatever the revision's own wire geometry declares.
 
 Only the first can be projected; the second names a permanent establishment or a
 dispatch state the invoice does not record, and is enumerated solely to close it.
@@ -601,14 +645,14 @@ def _record_row_slots(revision: ModeloRevision, record_id: str) -> tuple[tuple[B
 
 def _fields_match_shape(
     fields: Sequence[tuple[int, int, CasillaDataType, BindingId]],
-    shape: tuple[tuple[int, CasillaDataType], ...],
+    shape: tuple[CasillaDataType, ...],
 ) -> bool:
     """Say whether the leading fields are one contiguous line of this shape."""
     if len(fields) < len(shape):
         return False
     offset = fields[0][0]
     for (field_offset, length, data_type, _), expected in zip(fields, shape, strict=False):
-        if field_offset != offset or (length, data_type) != expected:
+        if field_offset != offset or data_type is not expected:
             return False
         offset += length
     return True
@@ -756,13 +800,14 @@ def _candidate_for_invoice_line(
     *,
     line_index: int,
     devengo_date: date,
+    period_last_day: date,
 ) -> OssIossLedgerCandidate | None:
     """Project one invoice line into an OSS/IOSS candidate, or ``None`` when not applicable.
 
     The regime / destination checks mean the line is not an OSS/IOSS
     operation at all -- correctly silent, nothing to declare. A line that
     passes both IS a real, declarable OSS/IOSS operation, so a missing
-    rate_kind or a missing euro conversion from that point on REFUSES rather
+    rate_kind or a missing period-close rate from that point on REFUSES rather
     than silently drops it. A would-be-silently-dropped declarable line is a
     hard stop, not an advisory beside a smaller-but-green figure.
     """
@@ -782,26 +827,11 @@ def _candidate_for_invoice_line(
                 "iva_rate": line.iva_rate.value,
             },
         )
-    # OSS/IOSS is cross-border EU B2C by definition, where invoicing in the
-    # destination Member State's own currency (PLN, SEK, DKK, HUF, CZK, RON,
-    # BGN...) is the ORDINARY case, not an edge case. line.subtotal /
-    # line.iva_amount are native to invoice.currency (InvoiceLine carries no
-    # currency of its own); base_amount/iva_amount on the candidate are
-    # documented as EUR, so this converts through the same fx_rate resolution
-    # the invoice-level totals already use (line_amount_eur) rather than the
-    # invoice-line's raw native fields.
-    base_amount_eur = invoice.line_amount_eur(line.subtotal)
-    iva_amount_eur = invoice.line_amount_eur(line.iva_amount)
-    if base_amount_eur is None or iva_amount_eur is None:
-        raise AggregationValidationError(
-            tr("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"),
-            context={
-                "invoice_id": invoice.invoice_id,
-                "invoice_number": invoice.invoice_number,
-                "currency": invoice.currency,
-                "line_index": str(line_index),
-            },
-        )
+    # OSS/IOSS is cross-border B2C, where invoicing in the destination's own
+    # currency is the ordinary case. Art. 163 noniesdecies, duovicies and
+    # septvicies fix one rate for the whole return, the period's last day, so the
+    # rate stamped on the invoice at its operation date does not apply here.
+    rate = _period_close_rate(invoice, line_index=line_index, last_day=period_last_day)
     return OssIossLedgerCandidate(
         ledger_id=f"{invoice.invoice_id}:{line_index}",
         transaction_date=devengo_date,
@@ -810,9 +840,34 @@ def _candidate_for_invoice_line(
         rate_kind=rate_kind,
         invoice_direction=invoice.kind,
         transaction_kind=invoice.oss_transaction_kind,
-        base_amount=base_amount_eur,
-        iva_amount=iva_amount_eur,
+        base_amount=line.subtotal if rate is None else round_to_cents(line.subtotal * rate),
+        iva_amount=line.iva_amount if rate is None else round_to_cents(line.iva_amount * rate),
     )
+
+
+def _period_close_rate(invoice: Invoice, *, line_index: int, last_day: date) -> Decimal | None:
+    """Return the ECB rate the return converts this invoice at, or ``None`` for a euro invoice."""
+    if invoice.currency == DEFAULT_CURRENCY:
+        return None
+    context = {
+        "invoice_id": invoice.invoice_id,
+        "invoice_number": invoice.invoice_number,
+        "currency": invoice.currency,
+        "line_index": str(line_index),
+        "rate_date": last_day.isoformat(),
+    }
+    try:
+        lookup = published_eur_rate_on_day_or_next(invoice.currency, last_day, rate_provider=exchange_rate_provider())
+    except ExchangeRateProviderError as exc:
+        # An unreachable authority answers nothing about the rate: the same refusal, never a default.
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"), context=context
+        ) from exc
+    if lookup.status is not EurRateLookupStatus.FOUND or lookup.rate is None:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.invoice_line_currency_unconverted"), context=context
+        )
+    return lookup.rate
 
 
 class OssIossInvoiceProjection(BaseModel):
@@ -845,7 +900,15 @@ def _project_oss_invoice(invoice: Invoice, projection_period: Period) -> list[Os
     return [
         candidate
         for index, line in enumerate(invoice.lines, start=1)
-        if (candidate := _candidate_for_invoice_line(invoice, line, line_index=index, devengo_date=devengo_date))
+        if (
+            candidate := _candidate_for_invoice_line(
+                invoice,
+                line,
+                line_index=index,
+                devengo_date=devengo_date,
+                period_last_day=projection_period.end_date,
+            )
+        )
         is not None
     ]
 

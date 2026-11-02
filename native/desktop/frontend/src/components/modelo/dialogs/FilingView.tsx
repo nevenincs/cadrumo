@@ -29,6 +29,7 @@ import type {
   ExportLayoutFormat,
   ModeloExportArtefact,
   ModeloExportRequest,
+  ModeloExportRequestField,
   ModeloFormArtefactOption,
   ModeloFormElection,
   ModeloWorkbenchFormProjectionV1,
@@ -98,16 +99,6 @@ const STAGE_TONE: Record<Stage["state"], string> = {
 const FILING_FORMAT: Record<ExportLayoutFormat, ModeloSaveFormat> = {
   fixed_width: "boe",
   xml_dictionary: "xml",
-};
-
-/** The request field each election the export asks is sent in. */
-const ELECTION_FIELD: Record<
-  ModeloFormElection,
-  Extract<keyof ModeloExportRequest, `${ModeloFormElection}_election`>
-> = {
-  refund: "refund_election",
-  payment: "payment_election",
-  prior_domiciliation: "prior_domiciliation_election",
 };
 
 /** The save format each copy is written as. */
@@ -211,15 +202,21 @@ export function FilingView({
     Partial<Record<ModeloFormElection, string>>
   >({});
   const elections = offer?.asks_elections ? offer.elections : [];
+  // Only an answerable election is sent, in the request field the read model
+  // names; one with no answer and no default leaves the export to resolve it.
   const answered = Object.fromEntries(
-    elections.map((question) => [
-      ELECTION_FIELD[question.election],
-      answers[question.election] ?? question.default,
-    ]),
-  ) as Pick<
-    ModeloExportRequest,
-    "refund_election" | "payment_election" | "prior_domiciliation_election"
-  >;
+    elections.flatMap((question) => {
+      const answer = answers[question.election] ?? question.default;
+      return question.state === "available" && answer !== null
+        ? [[question.request_field, answer]]
+        : [];
+    }),
+  ) as Partial<Pick<ModeloExportRequest, ModeloExportRequestField>>;
+  // An election the result makes meaningless is not asked; one that applies
+  // but cannot be answered now says why.
+  const shown = elections.filter(
+    (question) => question.state !== "not_applicable",
+  );
   // The file this view last saved, while it is still shown here.
   const [saved, setSaved] = useState<{ token: FileToken; write: Write } | null>(
     null,
@@ -571,33 +568,50 @@ export function FilingView({
             {file.words}
           </Alert>
         )}
-        {elections.length > 0 && !recorded && (
+        {shown.length > 0 && !recorded && (
           <div className="grid grid-cols-1 gap-3 @3xl:grid-cols-2">
-            {elections.map((question) => {
+            {shown.map((question) => {
               const id = `election-${question.election}`;
               return (
                 <div key={question.election} className="flex flex-col gap-1">
                   <label htmlFor={id} className="text-sm text-muted-foreground">
                     {question.words}
                   </label>
-                  <NativeSelect
-                    id={id}
-                    controlSize="sm"
-                    disabled={quiet}
-                    value={answers[question.election] ?? question.default}
-                    onChange={(event) =>
-                      setAnswers((now) => ({
-                        ...now,
-                        [question.election]: event.target.value,
-                      }))
-                    }
-                  >
-                    {question.choices.map((choice) => (
-                      <option key={choice.value} value={choice.value}>
-                        {choice.words}
-                      </option>
-                    ))}
-                  </NativeSelect>
+                  {question.state === "available" ? (
+                    <NativeSelect
+                      id={id}
+                      controlSize="sm"
+                      disabled={quiet}
+                      value={
+                        answers[question.election] ?? question.default ?? ""
+                      }
+                      onChange={(event) =>
+                        setAnswers((now) => ({
+                          ...now,
+                          [question.election]: event.target.value,
+                        }))
+                      }
+                    >
+                      {question.default === null &&
+                        answers[question.election] === undefined && (
+                          <option value="" disabled />
+                        )}
+                      {question.choices.map((choice) => (
+                        <option key={choice.value} value={choice.value}>
+                          {choice.words}
+                        </option>
+                      ))}
+                    </NativeSelect>
+                  ) : (
+                    <p id={id} className="text-sm">
+                      {question.state_words}
+                    </p>
+                  )}
+                  {question.state === "available" && question.help && (
+                    <p className="text-xs text-muted-foreground">
+                      {question.help}
+                    </p>
+                  )}
                 </div>
               );
             })}

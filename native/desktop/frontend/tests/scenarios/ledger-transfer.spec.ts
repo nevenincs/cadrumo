@@ -3,6 +3,17 @@ import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { label } from "../support/strings";
 
+declare global {
+  interface Window {
+    __transferGate?: {
+      release?: () => void;
+      tokens: string[];
+      forgotten: string[];
+      sends: number;
+    };
+  }
+}
+
 // The Ledger page's Import and Export dialogs over the scenario host's
 // made-up ledger: a bank statement previewed and applied exactly as read,
 // an invoice book, documents, and an export whose file is chosen last.
@@ -63,6 +74,137 @@ async function chooseKind(dialog: Locator, kind: string) {
   await dialog
     .getByRole("radio", { name: label(`desktop.ledger.import.kind.${kind}`) })
     .click();
+}
+
+for (const kind of ["import", "export"] as const) {
+  test(`closing ${kind} while its native picker waits releases late file tokens`, async ({
+    page: target,
+  }) => {
+    await openLedger(target);
+    await target.evaluate(() => {
+      const gate = (window.__transferGate = {
+        tokens: [] as string[],
+        forgotten: [] as string[],
+        sends: 0,
+      } as NonNullable<Window["__transferGate"]>);
+      window.__fixtureLedgerFiles = {
+        forgotten: (tokens) => {
+          gate.forgotten.push(...tokens);
+        },
+        picked: async (answer) => {
+          gate.tokens.push(...answer.files.map((file) => file.token));
+          await new Promise<void>((resolve) => {
+            gate.release = resolve;
+          });
+          return answer;
+        },
+      };
+    });
+    await button(head(target), `desktop.ledger.action.${kind}`).click();
+    const dialog =
+      kind === "import" ? importDialog(target) : exportDialog(target);
+    await button(
+      dialog,
+      `desktop.ledger.${kind}.${kind === "import" ? "choose_files" : "choose_file"}`,
+    ).click();
+    await expect
+      .poll(() =>
+        target.evaluate(() => Boolean(window.__transferGate?.release)),
+      )
+      .toBe(true);
+    await button(dialog, `desktop.ledger.${kind}.cancel`).click();
+    await expect(dialog).toHaveCount(0);
+    await target.evaluate(() => window.__transferGate!.release!());
+    await expect
+      .poll(() =>
+        target.evaluate(() => {
+          const gate = window.__transferGate!;
+          return (
+            gate.tokens.length > 0 &&
+            gate.tokens.every((token) => gate.forgotten.includes(token))
+          );
+        }),
+      )
+      .toBe(true);
+    await button(head(target), `desktop.ledger.action.${kind}`).click();
+    if (kind === "export")
+      await expect(dialog.locator(".ledger-export-file")).toHaveText(
+        label("desktop.ledger.export.no_file"),
+      );
+    else
+      await expect(
+        dialog
+          .getByRole("list", { name: label("desktop.ledger.import.chosen") })
+          .getByRole("listitem"),
+      ).toHaveCount(0);
+  });
+}
+
+for (const outcome of ["settled", "unknown"] as const) {
+  test(`a pending ${outcome} export keeps its destination and cannot be dismissed`, async ({
+    page: target,
+  }) => {
+    await openLedger(target);
+    await target.evaluate((outcome) => {
+      const port = window.__fixtureLedger!;
+      const gate = (window.__transferGate = {
+        tokens: [] as string[],
+        forgotten: [] as string[],
+        sends: 0,
+      } as NonNullable<Window["__transferGate"]>);
+      const submit = port.submit;
+      window.__fixtureLedgerFiles = {
+        forgotten: (tokens) => {
+          gate.forgotten.push(...tokens);
+        },
+      };
+      port.submit = async (definition, payload) => {
+        if (definition === "ledger.export") {
+          gate.sends++;
+          await new Promise<void>((resolve) => {
+            gate.release = resolve;
+          });
+        }
+        return submit(definition, payload);
+      };
+      if (outcome === "unknown")
+        window.__scenarioLedger!.nextWrites(["unknown"]);
+    }, outcome);
+    await button(head(target), "desktop.ledger.action.export").click();
+    const dialog = exportDialog(target);
+    await button(dialog, "desktop.ledger.export.choose_file").click();
+    await expect(dialog.locator(".ledger-export-file")).toHaveText(/\.csv$/);
+    const destination = await dialog.locator(".ledger-export-file").innerText();
+    await dialog.locator(".ledger-export-send").click();
+    await expect
+      .poll(() => target.evaluate(() => window.__transferGate?.sends))
+      .toBe(1);
+    await expect(button(dialog, "desktop.ledger.export.cancel")).toBeDisabled();
+    await expect(
+      button(dialog, "desktop.ledger.export.change_file"),
+    ).toBeDisabled();
+    await target.keyboard.press("Escape");
+    await expect(dialog).toBeVisible();
+    await button(dialog, "desktop.ledger.export.close").click();
+    await expect(dialog).toBeVisible();
+    await expect(dialog.locator(".ledger-export-file")).toHaveText(destination);
+    expect(
+      await target.evaluate(() => window.__transferGate!.forgotten),
+    ).toEqual([]);
+    await target.evaluate(() => window.__transferGate!.release!());
+    await expect(dialog).toContainText(
+      label(
+        `desktop.ledger.export.${outcome === "settled" ? "done" : "unknown"}`,
+      ),
+    );
+    if (outcome === "unknown") {
+      await button(dialog, "desktop.ledger.export.cancel").click();
+      await expect(target.locator(".ledger-paused")).toBeVisible();
+      expect(
+        await target.evaluate(() => window.__transferGate!.forgotten),
+      ).toEqual([]);
+    }
+  });
 }
 
 const fileRow = (dialog: Locator, name: string) =>

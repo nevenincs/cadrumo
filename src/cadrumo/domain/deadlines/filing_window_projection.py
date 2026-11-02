@@ -11,8 +11,7 @@ facts, resolved through canonical governed-fact temporal selection:
 * ``deadlines.filing-close-inhabil-shift``: the extension of a nominal close
   that falls on an inhábil day to the next día hábil (Ley 39/2015 art. 30.5,
   reached through its DA 1ª.2 and Ley 58/2003 art. 7.2), counted on the national
-  calendar. The filer's territory is applied later by the effective-deadline
-  service and is never part of a window's close.
+  calendar, the only calendar that moves an electronic filing close (art. 31.3).
 
 A window is projected only where the law-selected revision's filing schedule
 declares the period: the schedule decides that an obligation exists, the clause
@@ -500,7 +499,7 @@ def _project_scheduled_window(
     if not _calendar_available(nominal.year, calendars=calendars, operation=operation):
         return unavailable
     try:
-        shift = shift_deadline(nominal, modelo=modelo, ccaa_code=None, calendars=calendars, operation=operation)
+        shift = shift_deadline(nominal, modelo=modelo, calendars=calendars, operation=operation)
     except DeadlineValidationError:
         # The close year classifies, so a refusal here is the walk entering the
         # following year; that is a calendar gap only when the year is unpublished.

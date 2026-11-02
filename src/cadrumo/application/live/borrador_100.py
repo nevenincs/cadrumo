@@ -17,10 +17,12 @@ from typing import Annotated, Literal, Protocol, cast, override
 
 from pydantic import BaseModel, Field, PlainSerializer, PlainValidator, StringConstraints, TypeAdapter, model_validator
 
+from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.filing_year import FilingYear
 from ...core.hashing import content_hash_hex
 from ...core.identity.bucket import BucketId
+from ...core.identity.continuidad import ContinuidadId
 from ...core.identity.hex_ids import SnapshotId
 from ...core.modelo import Modelo
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
@@ -31,7 +33,12 @@ from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ..calculations.revision_carry_gate import revision_carry_outcome
-from .borrador_100_keys import borrador_keys_not_admitted, require_borrador_keys_admitted
+from .borrador_100_keys import (
+    borrador_keys_not_admitted,
+    require_borrador_keys_admitted,
+    require_printed_observations_resolve,
+    unresolved_printed_observations,
+)
 from .errors import LiveApplicationInputError
 from .snapshot_base import (
     SnapshotLifecycleState,
@@ -108,6 +115,57 @@ type _BorradorBindingValues = Annotated[
 ]
 
 
+def _encode_printed_value(value: _BorradorValue | None) -> dict[str, str] | None:
+    if value is None:
+        return None
+    return encode_borrador_binding_values({"printed": value})["printed"]
+
+
+def _decode_printed_value(raw: object) -> _BorradorValue | None:
+    return None if raw is None else _decode_borrador_binding_value(raw)
+
+
+type _PrintedValue = Annotated[
+    _BorradorValue | None,
+    PlainValidator(_decode_printed_value),
+    PlainSerializer(_encode_printed_value, when_used="json"),
+]
+
+
+class Borrador100ObservationGrade(StrEnum):
+    """The evidentiary grade of a value kept from an imported AEAT draft."""
+
+    AEAT_PRINTED_DRAFT = "aeat_printed_draft"
+    """The AEAT printed it in a draft; it is neither an authenticated filing nor a local result."""
+
+
+class Borrador100PrintedObservation(BaseModel):
+    """One box the AEAT printed in the draft, kept only to be compared with the local calculation.
+
+    A printed observation is never a calculation input: it supplies no binding,
+    becomes no filing fact and overrides no binding value, because the
+    calculation replays ``binding_values`` alone. ``casilla_id`` is the box as
+    the pinned revision numbers it; ``continuidad_id`` is the registry's
+    identity for that box across revisions, absent where the registry declares
+    none. ``value`` is ``None`` when the draft printed the box blank, which is
+    not zero.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    casilla_id: CasillaId
+    continuidad_id: ContinuidadId | None
+    value: _PrintedValue
+    grade: Borrador100ObservationGrade = Borrador100ObservationGrade.AEAT_PRINTED_DRAFT
+
+
+def encode_borrador_printed_observations(
+    observations: tuple[Borrador100PrintedObservation, ...],
+) -> list[dict[str, object]]:
+    """Return the stored form of ``observations``, ordered by casilla."""
+    return [observation.model_dump(mode="json") for observation in sorted(observations, key=lambda row: row.casilla_id)]
+
+
 BorradorSourceUrl = Annotated[str, StringConstraints(min_length=1, max_length=2048)]
 """The sede address a borrador snapshot was captured from."""
 
@@ -138,6 +196,7 @@ class Borrador100Snapshot(BaseModel):
     source_url: BorradorSourceUrl
     state: SnapshotLifecycleState
     binding_values: _BorradorBindingValues = Field(default_factory=dict)
+    printed_observations: tuple[Borrador100PrintedObservation, ...] = ()
     superseded_by_snapshot_id: SnapshotId | None = None
     discarded_at: datetime | None = None
     discarded_by: str = Field(default="", max_length=128)
@@ -161,6 +220,9 @@ class Borrador100Snapshot(BaseModel):
             discarded_by=self.discarded_by,
             discard_reason=self.discard_reason,
         )
+        printed = tuple(observation.casilla_id for observation in self.printed_observations)
+        if printed != tuple(sorted(set(printed))):
+            raise ValueError("borrador printed observations must be ordered by casilla and unique")
         blank_keys = sorted(key for key in self.binding_values if not key.strip())
         if blank_keys:
             raise LiveApplicationInputError(
@@ -178,6 +240,8 @@ class Borrador100SnapshotRefusalReason(StrEnum):
     stored key is a free casilla key or a binding the revision does not admit.
     ``COORDINATE_OUTSIDE_SUPPORT`` means the stored filing year lies outside the
     registry support envelope, which resolves no snapshot for it.
+    ``PRINTED_OBSERVATIONS_UNRESOLVED`` means a kept printed value names a box
+    the law-selected revision no longer identifies through registry continuity.
     Either way the snapshot is kept as stored and the document has to be
     imported again.
     """
@@ -185,12 +249,14 @@ class Borrador100SnapshotRefusalReason(StrEnum):
     REGISTRY_COORDINATE_UNCONFIRMED = "registry_coordinate_unconfirmed"
     BINDING_KEYS_NOT_ADMITTED = "binding_keys_not_admitted"
     COORDINATE_OUTSIDE_SUPPORT = "coordinate_outside_support"
+    PRINTED_OBSERVATIONS_UNRESOLVED = "printed_observations_unresolved"
 
 
 Borrador100SnapshotRefusalReasonValue = Literal[
     Borrador100SnapshotRefusalReason.REGISTRY_COORDINATE_UNCONFIRMED,
     Borrador100SnapshotRefusalReason.BINDING_KEYS_NOT_ADMITTED,
     Borrador100SnapshotRefusalReason.COORDINATE_OUTSIDE_SUPPORT,
+    Borrador100SnapshotRefusalReason.PRINTED_OBSERVATIONS_UNRESOLVED,
 ]
 """The same refusal reasons where a CLI payload must accept the plain token."""
 
@@ -238,6 +304,10 @@ def borrador_100_snapshot_refusal(
         return Borrador100SnapshotRefusalReason.COORDINATE_OUTSIDE_SUPPORT
     if borrador_keys_not_admitted(snapshot.binding_values, revision):
         return Borrador100SnapshotRefusalReason.BINDING_KEYS_NOT_ADMITTED
+    if unresolved_printed_observations(
+        revision, snapshot.printed_observations, captured_revision_id=snapshot.registry_snapshot_ref.revision_id
+    ):
+        return Borrador100SnapshotRefusalReason.PRINTED_OBSERVATIONS_UNRESOLVED
     return None
 
 
@@ -264,6 +334,9 @@ def require_borrador_100_snapshot_coordinates_current(
         period=snapshot.period.registry_token,
     ).revision
     require_borrador_keys_admitted(snapshot.binding_values, revision)
+    require_printed_observations_resolve(
+        revision, snapshot.printed_observations, captured_revision_id=snapshot.registry_snapshot_ref.revision_id
+    )
     return snapshot
 
 
@@ -289,13 +362,16 @@ def derive_borrador_100_snapshot_id(
     registry_snapshot_ref: RegistrySnapshotRef,
     source_url: str,
     binding_values: Mapping[BindingId, _BorradorValue],
+    printed_observations: tuple[Borrador100PrintedObservation, ...] = (),
 ) -> str:
     """Return the content-addressed id for one Modelo 100 borrador document.
 
     The id covers what the document says: its coordinate, the pinned registry
-    revision, the source (which names the PDF digest for a file import) and the
-    projected values. The capture instant is not part of it, so importing the
-    same document again resolves to the snapshot already stored.
+    revision, the source (which names the PDF digest for a file import), the
+    projected values and the printed values kept for comparison. The capture
+    instant is not part of it, so importing the same document again resolves
+    to the snapshot already stored. A document with no kept printed value keeps
+    the identity it had before printed values were kept.
     """
     if (
         registry_snapshot_ref.modelo != form_for_role("renta.annual")
@@ -303,16 +379,17 @@ def derive_borrador_100_snapshot_id(
         or registry_snapshot_ref.period != period.registry_token
     ):
         raise ValueError("borrador snapshot identity coordinate must match registry_snapshot_ref")
-    return content_hash_hex(
-        {
-            "modelo": Modelo("100").value,
-            "filing_year": filing_year,
-            "period": period.registry_token,
-            "registry_snapshot_ref": registry_snapshot_ref.model_dump(mode="json"),
-            "source_url": source_url,
-            "binding_values": encode_borrador_binding_values(binding_values),
-        },
-    )
+    identity: dict[str, object] = {
+        "modelo": Modelo("100").value,
+        "filing_year": filing_year,
+        "period": period.registry_token,
+        "registry_snapshot_ref": registry_snapshot_ref.model_dump(mode="json"),
+        "source_url": source_url,
+        "binding_values": encode_borrador_binding_values(binding_values),
+    }
+    if printed_observations:
+        identity["printed_observations"] = encode_borrador_printed_observations(printed_observations)
+    return content_hash_hex(identity)
 
 
 class Borrador100SnapshotRepository(SnapshotRepository[Borrador100Snapshot], Protocol):
@@ -340,6 +417,7 @@ class _Borrador100CaptureRequest(BaseModel):
     captured_at: datetime
     source_url: str
     binding_values: Mapping[BindingId, _BorradorValue]
+    printed_observations: tuple[Borrador100PrintedObservation, ...] = ()
 
 
 class Borrador100CaptureOutcome(StrEnum):
@@ -413,6 +491,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         source_url: str,
         binding_values: Mapping[BindingId, _BorradorValue],
         operation: PinnedAuthorityOperation | None = None,
+        printed_observations: tuple[Borrador100PrintedObservation, ...] = (),
     ) -> Borrador100Snapshot:
         """Capture one document and return the snapshot it resolved to."""
         return self.capture_with_outcome(
@@ -422,6 +501,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
             source_url=source_url,
             binding_values=binding_values,
             operation=operation,
+            printed_observations=printed_observations,
         ).snapshot
 
     def capture_with_outcome(
@@ -433,12 +513,15 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
         source_url: str,
         binding_values: Mapping[BindingId, _BorradorValue],
         operation: PinnedAuthorityOperation | None = None,
+        printed_observations: tuple[Borrador100PrintedObservation, ...] = (),
     ) -> Borrador100Capture:
         """Capture one document and report whether it was stored or resolved to a stored snapshot.
 
         Raises:
             LiveApplicationInputError: Before any write, when a key is not a
-                binding the pinned revision admits to a borrador snapshot.
+                binding the pinned revision admits to a borrador snapshot, or
+                when a printed observation names a box the revision does not
+                identify or a box an admitted binding owns.
         """
         if operation is None:
             with bundled_indexed_authority().operation() as pinned:
@@ -449,6 +532,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
                     source_url=source_url,
                     binding_values=binding_values,
                     operation=pinned,
+                    printed_observations=printed_observations,
                 )
         selected = operation.snapshot(
             Modelo("100").value,
@@ -462,8 +546,15 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
             captured_at=captured_at,
             source_url=source_url,
             binding_values=binding_values,
+            printed_observations=tuple(sorted(printed_observations, key=lambda row: row.casilla_id)),
         )
         require_borrador_keys_admitted(request.binding_values, selected.revision)
+        require_printed_observations_resolve(
+            selected.revision,
+            request.printed_observations,
+            captured_revision_id=selected.snapshot_ref.revision_id,
+            refuse_owned_casillas=True,
+        )
         snapshot, written = self._capture_with_lifecycle_status(request)
         return Borrador100Capture(snapshot=snapshot, outcome=_capture_outcome(snapshot, written=written))
 
@@ -580,6 +671,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
             registry_snapshot_ref=capture.registry_snapshot_ref,
             source_url=capture.source_url,
             binding_values=capture.binding_values,
+            printed_observations=capture.printed_observations,
         )
 
     @override
@@ -600,6 +692,7 @@ class Borrador100SnapshotService(SnapshotService[Borrador100Snapshot, _Borrador1
             source_url=capture.source_url,
             state=SnapshotLifecycleState.ACTIVE,
             binding_values=dict(capture.binding_values),
+            printed_observations=capture.printed_observations,
         )
 
     @override
@@ -632,6 +725,8 @@ __all__ = [
     "Borrador100Capture",
     "Borrador100CaptureOutcome",
     "Borrador100CaptureOutcomeValue",
+    "Borrador100ObservationGrade",
+    "Borrador100PrintedObservation",
     "Borrador100RefusedSnapshot",
     "Borrador100Snapshot",
     "Borrador100SnapshotReading",
@@ -644,5 +739,6 @@ __all__ = [
     "borrador_100_snapshot_refusal",
     "derive_borrador_100_snapshot_id",
     "encode_borrador_binding_values",
+    "encode_borrador_printed_observations",
     "require_borrador_100_snapshot_coordinates_current",
 ]

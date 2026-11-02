@@ -1,3 +1,4 @@
+import settings from "virtual:operational-settings";
 import {
   useEffect,
   useMemo,
@@ -10,7 +11,7 @@ import {
 } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import type { DataGridHandle, GridRow } from "@/components/ui/data-grid";
+import type { DataGridHandle, GridRow } from "@/components/ui/dataGridTypes";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -154,8 +155,6 @@ import { movementHiding, withoutHiding } from "./movementReveal";
 import type { MovementsView } from "./useMovementsView";
 import type { ImportedBatches } from "../../../shell/ledgerImports";
 
-/** How long a confirmation stays on screen. */
-const TOAST_MS = 4000;
 /** Above this many movements classified otherwise, Personal, which asks
  * nothing else, asks once before it changes them. */
 const OVERWRITE_ASK = 5;
@@ -792,7 +791,10 @@ export function MovementsSection({
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    const timer = window.setTimeout(
+      () => setToast(null),
+      settings.ledger_toast_ms,
+    );
     return () => window.clearTimeout(timer);
   }, [toast]);
   const [spoken, setSpoken] = useState("");

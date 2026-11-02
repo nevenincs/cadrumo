@@ -375,6 +375,8 @@ export function ImportDialog({
   const count = (value: number) => formatCount(locale, value);
   const heading = useRef<HTMLHeadingElement>(null);
   const issued = useRef(new Set<string>());
+  const generation = useRef(0);
+  const pickingNow = useRef(false);
   const [step, setStep] = useState<Step>("what");
   const [kind, setKind] = useState<ImportKind>("bank");
   const [files, setFilesNow] = useState<PickedFile[]>([]);
@@ -418,6 +420,7 @@ export function ImportDialog({
   useEffect(() => {
     const held = issued.current;
     return () => {
+      generation.current += 1;
       if (held.size > 0)
         void port
           .forgetFiles([...held] as PickedFile["token"][])
@@ -463,6 +466,13 @@ export function ImportDialog({
     let active = true;
     void port
       .observeDrops(PURPOSE[kind], (signal) => {
+        if (!active) {
+          if (signal.kind === "dropped")
+            void port
+              .forgetFiles(signal.files.map((file) => file.token))
+              .catch(() => {});
+          return;
+        }
         if (signal.kind === "over") setOver(true);
         else if (signal.kind === "left") setOver(false);
         else {
@@ -482,6 +492,9 @@ export function ImportDialog({
   }, [port, step, kind]);
 
   const pick = async (how: FilePick) => {
+    if (pickingNow.current) return;
+    pickingNow.current = true;
+    const mine = generation.current;
     setPicking(true);
     setPickFailed(false);
     try {
@@ -490,14 +503,22 @@ export function ImportDialog({
         how,
         t(`desktop.ledger.import.filter.${kind}`),
       );
+      if (mine !== generation.current) {
+        void port
+          .forgetFiles(picks.files.map((file) => file.token))
+          .catch(() => {});
+        return;
+      }
       take(picks.files, picks.refused);
     } catch {
-      setPickFailed(true);
+      if (mine === generation.current) setPickFailed(true);
     } finally {
-      setPicking(false);
+      pickingNow.current = false;
+      if (mine === generation.current) setPicking(false);
     }
   };
   const chooseKind = (next: ImportKind) => {
+    if (pickingNow.current) return;
     forget(files.map((file) => file.token));
     setFiles([]);
     setLeftOut(0);
@@ -800,7 +821,10 @@ export function ImportDialog({
         <Button variant="ghost" onClick={onClose}>
           {t("desktop.ledger.import.cancel")}
         </Button>
-        <Button disabled={!ready} onClick={() => void startPreview()}>
+        <Button
+          disabled={!ready || picking}
+          onClick={() => !pickingNow.current && void startPreview()}
+        >
           {t("desktop.ledger.import.preview")}
         </Button>
       </>
@@ -1072,7 +1096,7 @@ function WhatStep({
           onValueChange={(next) => onKind(next as ImportKind)}
         >
           {IMPORT_KINDS.map((value) => (
-            <SegmentedControlItem key={value} value={value}>
+            <SegmentedControlItem key={value} value={value} disabled={picking}>
               {t(`desktop.ledger.import.kind.${value}`)}
             </SegmentedControlItem>
           ))}

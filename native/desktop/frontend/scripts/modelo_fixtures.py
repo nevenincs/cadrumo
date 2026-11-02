@@ -59,6 +59,7 @@ RELAY_SOURCES: tuple[Path, ...] = (
     FRONTEND.parent / "src-tauri" / "src" / "shell" / "relay.rs",
     FRONTEND.parent / "src-tauri" / "src" / "agent" / "person.rs",
     FRONTEND.parents[1] / "application" / "src" / "person_operations.rs",
+    FRONTEND.parents[1] / "application" / "src" / "person_operations" / "protocol.rs",
 )
 
 #: The declarations the envelopes read: modelo, period, and whether it is calculated first.
@@ -127,7 +128,25 @@ UNREADABLE_ENTRY = "doce"
 CORRECTION_REASON = "A deductible expense was left out."
 #: A synthetic AEAT justificante for a Modelo 130 of the first quarter of 2026.
 JUSTIFICANTE_130 = ("tests", "fixtures", "justificantes", "modelo_130_2026Q1.pdf")
-HELP_BOXES: Mapping[str, tuple[str, ...]] = {"130": ("01", "03", "07", "19"), "303": ("27", "71")}
+HELP_BOXES: Mapping[str, tuple[str, ...]] = {
+    "130": ("01", "03", "07", "19"),
+    "303": ("27", "71"),
+    "100": ("0596", "0670"),
+}
+
+#: The tax year and period of the Renta the envelopes read.
+RENTA_YEAR = 2025
+RENTA_PERIOD = "0A"
+#: What the filer answers for the 2025 Renta: the earlier year's negative general base, and whether direct
+#: estimation is normal. The calculation refuses without both.
+RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
+    ("renta-base-liquidable-negativa-general-anterior", "0"),
+    ("renta-modelo-100-estimacion-directa-es-normal", "1"),
+)
+#: The boxes a salaried filer states: the cash remuneration and the Social Security contributions, as typed.
+RENTA_SALARY_BOXES: tuple[str, str] = ("0003", "0013")
+#: A synthetic payer whose withholding certificate the register holds.
+RENTA_PAYER_TAX_ID = "B12345674"
 
 
 # -- wire types ---------------------------------------------------------------
@@ -181,7 +200,8 @@ def relay_bound(name: str) -> int:
     constants: dict[str, str] = {}
     for source in RELAY_SOURCES:
         for constant, expression in _RUST_CONSTANT.findall(source.read_text("utf-8")):
-            constants.setdefault(constant, expression.strip())
+            # rustfmt wraps a long expression over lines, which Python cannot parse as one.
+            constants.setdefault(constant, " ".join(expression.split()))
     if name not in constants:
         raise SystemExit(f"no relay source declares {name}")
     return _usize(constants[name], constants)
@@ -856,6 +876,144 @@ def _write_list(directory: Path, work: Any, name: str) -> None:
             subject_ref=profile_operation_subject(bucket_id),
         )
         _write(directory, f"{name}-{language}.json", listed)
+
+
+# -- the Renta ------------------------------------------------------------------
+#
+# The 2025 Modelo 100 of synthetic filers, each its own profile, calculated with the two answers the calculation
+# refuses without. Nothing is cut: every form is read whole, and a box the application cannot work out stays
+# unresolved in it. The declarations are data: a change to what a filer states, or a new filer, is one line here.
+
+
+@dataclass(frozen=True, slots=True)
+class RentaFiler:
+    """One synthetic filer of the 2025 Renta and what the profile holds for the declaration."""
+
+    #: The envelope's name after ``modelo-100-0A``; empty for the declaration the scenarios open.
+    envelope: str
+    #: The IRPF income categories the profile declares, comma separated as the setup answer states them.
+    categories: str
+    #: The cash remuneration and the Social Security contributions typed into the form, where the filer is salaried.
+    salary: tuple[str, str] | None = None
+    #: The withholding the payer's certificate states and the register holds, where there is a certificate.
+    certified: Decimal | None = None
+    #: Activity income booked in the profile's ledger for the year.
+    ledger_income: Decimal | None = None
+
+
+RENTA_FILERS: tuple[RentaFiler, ...] = (
+    # Salaried, with income from savings and a capital gain declared, and no certificate in the register:
+    # the three withholding credits and the totals that read them stay unresolved.
+    RentaFiler("", "trabajo,capital_mobiliario,ganancias_patrimoniales", salary=("30000", "1900")),
+    # Salaried, one certificate in the register: a credit smaller than the tax, so the result is to pay.
+    RentaFiler("pay", "trabajo", salary=("30000", "1900"), certified=Decimal("2000.00")),
+    # The same income with a certificate stating more than the tax: the result is to refund.
+    RentaFiler("refund", "trabajo", salary=("30000", "1900"), certified=Decimal("6000.00")),
+    # Self-employed, with the year's activity income booked in the ledger.
+    RentaFiler("activity", "actividad_economica", ledger_income=Decimal("40000.00")),
+)
+
+
+@contextmanager
+def _renta_seeded(tmp: Path, filer: RentaFiler) -> Generator[Any]:
+    """One synthetic profile whose first declaration is the filer's 2025 Modelo 100, not yet calculated."""
+    from cadrumo.domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
+    from cadrumo.domain.user_profile.values import UserProfileFact
+    from cadrumo.entrypoints.adapter_composition import profile_adapter_composition
+    from cadrumo.entrypoints.tests.modelo_operator_work_storage import seeded_operator_work
+
+    facts = (
+        UserProfileFact(path="taxpayer_type.irpf_income_categories", value=filer.categories),
+        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        *RENTA_UNMARRIED_TAXPAYER_FACTS,
+    )
+    with (
+        profile_adapter_composition(),
+        seeded_operator_work(
+            tmp, modelo="100", filing_year=RENTA_YEAR, period_code=RENTA_PERIOD, extra_facts=facts
+        ) as work,
+    ):
+        yield work
+
+
+def _record_certificate(work: Any, filer: RentaFiler) -> None:
+    """Store the payer's withholding certificate in the register, as the register's one write door stores it."""
+    from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
+    from cadrumo.core.retencion_soportada import RetencionSoportadaClase
+
+    if filer.certified is None or filer.salary is None:
+        return
+    seed_payer_certificate(
+        operation=work.operation,
+        taxpayer_tax_id=MAIN_TAX_ID,
+        ejercicio=RENTA_YEAR,
+        payer_tax_id=RENTA_PAYER_TAX_ID,
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=filer.certified,
+        importe_integro_dinerario=Decimal(filer.salary[0]),
+    )
+
+
+def _calculate_renta(work: Any, filer: RentaFiler) -> None:
+    """Calculate the filer's declaration through the registered calculation, with the answers it refuses without."""
+    from cadrumo.application.modelo.calculation_operation import ModeloWorkCalculateExecutor
+    from cadrumo.application.modelo.calculation_request_fields import (
+        ModeloCalculationInputFieldsV1,
+        ModeloCalculationOverride,
+    )
+    from cadrumo.application.modelo.operation_shared import MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID
+    from cadrumo.application.modelo.work_calculation_contracts import (
+        ModeloWorkCalculateCallerContext,
+        ModeloWorkCalculateRequest,
+    )
+    from cadrumo.application.operations.models import OperationIdentity, OperationRequest
+    from cadrumo.entrypoints.adapter_composition_ports import build_attachment_store
+
+    executor = ModeloWorkCalculateExecutor(
+        calculation_action_ports_factory=lambda **_: work.ports,
+        attachment_store_factory=build_attachment_store,
+    )
+    stated = zip(RENTA_SALARY_BOXES, filer.salary, strict=True) if filer.salary is not None else ()
+    request = OperationRequest(
+        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        subject_ref=work.work_unit_id,
+        payload=ModeloWorkCalculateRequest(
+            work_unit_id=work.work_unit_id,
+            actor=ACTOR,
+            caller_context=ModeloWorkCalculateCallerContext.EXPLICIT,
+            inputs=ModeloCalculationInputFieldsV1(
+                binding_overrides=tuple(
+                    ModeloCalculationOverride(key=key, value=value) for key, value in RENTA_ANSWERS
+                ),
+                casilla_overrides=tuple(ModeloCalculationOverride(key=box, value=value) for box, value in stated),
+            ),
+        ),
+    )
+    identity = OperationIdentity(
+        operation_id="e" * 64,
+        definition_id=MODELO_WORK_CALCULATE_OPERATION_DEFINITION_ID,
+        subject_ref=work.work_unit_id,
+    )
+    context = _ReadContext(identity=identity, authority_operation=work.operation)
+    asyncio.run(executor.execute(request, cast(Any, context)))
+
+
+def _write_renta(directory: Path) -> None:
+    """Read every filer's 2025 Modelo 100 in every language, and the declarations list of the first filer."""
+    from cadrumo.adapters.persistence.profile.tests.m130_source_support import seed_m130_income_transaction
+
+    for number, filer in enumerate(RENTA_FILERS):
+        with tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp, _renta_seeded(Path(tmp), filer) as work:
+            _record_certificate(work, filer)
+            if filer.ledger_income is not None:
+                seed_m130_income_transaction(
+                    amount=filer.ledger_income, filing_year=RENTA_YEAR, source_key="desktop-renta"
+                )
+            _calculate_renta(work, filer)
+            suffix = f"-{filer.envelope}" if filer.envelope else ""
+            _write_form(directory, work, f"modelo-100-{RENTA_PERIOD}{suffix}", with_help=number == 0)
+            if number == 0:
+                _write_list(directory, work, "declarations-renta")
 
 
 # -- writes ---------------------------------------------------------------------
@@ -1635,6 +1793,7 @@ def write_envelopes(directory: Path) -> None:
         _verify(stale)
         _write_form(directory, stale, "modelo-130-1T-stale")
         _write_rebase(directory, stale)
+    _write_renta(directory)
 
 
 # -- check --------------------------------------------------------------------

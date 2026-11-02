@@ -51,7 +51,6 @@ from ...domain.deadlines.engine import DeadlineEngine as _DeadlineEngine
 from ...domain.deadlines.engine import ScheduleProducer as _ScheduleProducer
 from ...domain.deadlines.engine import classify_obligation_status as _classify_obligation_status
 from ...domain.deadlines.errors import NoDeadlineWindowsError as _NoDeadlineWindowsError
-from ...domain.deadlines.festivos import CalendarCCAA as _CalendarCCAA
 from ...domain.deadlines.festivos import DeadlineHolidayCoverage as _DeadlineHolidayCoverage
 from ...domain.deadlines.filing_window_projection import (
     ProjectedFilingWindowCloseUnavailable as _ProjectedFilingWindowCloseUnavailable,
@@ -132,7 +131,6 @@ def _window_intersects_range(
     nominal_closes_on: date,
     *,
     modelo: str,
-    holiday_territory: _CalendarCCAA | None,
     calendar_range: _OverviewCalendarRange,
     operation: PinnedAuthorityOperation,
 ) -> bool:
@@ -150,7 +148,6 @@ def _window_intersects_range(
     deadline = _effective_filing_deadline(
         nominal_closes_on,
         modelo=modelo,
-        holiday_territory=holiday_territory,
         operation=operation,
     )
     return deadline.closes_on >= calendar_range.from_date
@@ -160,7 +157,6 @@ def _entry_intersects_range(
     obligation: _ModeloDeadline | _CloseUnknownModeloDeadline,
     calendar_range: _OverviewCalendarRange,
     *,
-    holiday_territory: _CalendarCCAA | None,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     """Return whether ``obligation``'s filing window, to its effective close date, intersects the range.
@@ -176,7 +172,6 @@ def _entry_intersects_range(
         obligation.opens_on,
         obligation.closes_on,
         modelo=obligation.modelo,
-        holiday_territory=holiday_territory,
         calendar_range=calendar_range,
         operation=operation,
     )
@@ -252,7 +247,6 @@ def _work_unit_intersects_range(
     unit: _WorkUnit,
     calendar_range: _OverviewCalendarRange,
     *,
-    holiday_territory: _CalendarCCAA | None,
     operation: PinnedAuthorityOperation,
 ) -> bool:
     resolution = _registry_window_for_work_unit(unit, operation=operation)
@@ -263,7 +257,6 @@ def _work_unit_intersects_range(
         opens_on,
         closes_on,
         modelo=str(unit.modelo),
-        holiday_territory=holiday_territory,
         calendar_range=calendar_range,
         operation=operation,
     )
@@ -366,7 +359,6 @@ def _annotate_entry_with_work_unit(
 def _calendar_entry_from_work_unit(
     unit: _WorkUnit,
     *,
-    holiday_territory: _CalendarCCAA | None,
     today: date,
     due_soon_days: int,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
@@ -412,7 +404,6 @@ def _calendar_entry_from_work_unit(
     )
     return _calendar_entry_from_obligation(
         obligation,
-        holiday_territory=holiday_territory,
         filing_evidence=effective_filing_evidence,
         live_censo_verified_profile_keys=live_censo_verified_profile_keys,
         today=today,
@@ -426,7 +417,6 @@ def _merge_work_units_into_entries(
     *,
     work_units: tuple[_WorkUnit, ...],
     calendar_range: _OverviewCalendarRange,
-    holiday_territory: _CalendarCCAA | None,
     today: date,
     due_soon_days: int,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
@@ -454,14 +444,12 @@ def _merge_work_units_into_entries(
         if not _work_unit_intersects_range(
             unit,
             calendar_range,
-            holiday_territory=holiday_territory,
             operation=operation,
         ):
             continue
         merged.append(
             _calendar_entry_from_work_unit(
                 unit,
-                holiday_territory=holiday_territory,
                 today=today,
                 due_soon_days=due_soon_days,
                 filing_evidence=filing_evidence,
@@ -503,32 +491,14 @@ def shift_reason_statement(shift_reason: str) -> str:
     return " + ".join(_shift_reason_part_statement(part) for part in shift_reason.split(" + "))
 
 
-def holiday_coverage_statement(
-    coverage: _DeadlineHolidayCoverage, territory: str | None, language: _OutputLanguage | None = None
-) -> str:
+def holiday_coverage_statement(coverage: _DeadlineHolidayCoverage, language: _OutputLanguage | None = None) -> str:
     """Return the localized statement of which holidays an effective close date accounts for.
 
-    Every frontend renders this one statement, so none can describe a
-    national-only or unverified date as final. ``language`` renders it, the
-    configured output language when not given.
+    Every frontend renders this one statement, so none can describe an
+    unverified date as final. ``language`` renders it, the configured output
+    language when not given.
     """
     locale = None if language is None else language.value
-    if coverage is _DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY:
-        if territory is None:
-            return _tr(
-                "application.overview.calendar.holiday_coverage.national_and_territory_without_name", locale=locale
-            )
-        return _tr(
-            "application.overview.calendar.holiday_coverage.national_and_territory", territory=territory, locale=locale
-        )
-    if coverage is _DeadlineHolidayCoverage.TERRITORY_UNVERIFIED:
-        if territory is None:
-            return _tr(
-                "application.overview.calendar.holiday_coverage.territory_unverified_without_name", locale=locale
-            )
-        return _tr(
-            "application.overview.calendar.holiday_coverage.territory_unverified", territory=territory, locale=locale
-        )
     if coverage is _DeadlineHolidayCoverage.NATIONAL_ONLY:
         return _tr("application.overview.calendar.holiday_coverage.national_only", locale=locale)
     if coverage is _DeadlineHolidayCoverage.NOT_SHIFTED:
@@ -589,7 +559,6 @@ def _calendar_entry_from_close_unknown(
         adjusted_closes_on=obligation.nominal_closes_on,
         shift_reason=_CALENDAR_UNAVAILABLE_SHIFT_REASON,
         holiday_coverage=_DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
-        holiday_territory=None,
         payment_cutoff_on=None,
         evaluated_on=today,
         days_overdue=None,
@@ -609,7 +578,6 @@ def _calendar_entry_from_close_unknown(
 def _calendar_entry_from_obligation(
     obligation: _ModeloDeadline,
     *,
-    holiday_territory: _CalendarCCAA | None,
     filing_evidence: tuple[_OverviewCalendarFilingEvidence, ...],
     live_censo_verified_profile_keys: tuple[str, ...] | None,
     today: date,
@@ -620,7 +588,6 @@ def _calendar_entry_from_obligation(
     deadline = _effective_filing_deadline(
         obligation.closes_on,
         modelo=obligation.modelo,
-        holiday_territory=holiday_territory,
         operation=operation,
     )
     adjusted = deadline.closes_on
@@ -670,7 +637,6 @@ def _calendar_entry_from_obligation(
         holiday_refs=deadline.holiday_refs,
         jurisdictions=deadline.jurisdictions,
         holiday_coverage=holiday_coverage,
-        holiday_territory=(holiday_territory if holiday_coverage.names_territory else None),
         payment_cutoff_on=obligation.payment_cutoff_on,
         evaluated_on=today,
         days_overdue=(today - adjusted).days if status is _ObligationStatus.OVERDUE else None,
@@ -755,7 +721,6 @@ def _calendar_obligation_projection(
     intersects_range = _entry_intersects_range(
         obligation,
         calendar_range,
-        holiday_territory=profile.holiday_territory,
         operation=operation,
     )
     filing_year = obligation.period.filing_year
@@ -798,7 +763,6 @@ def _calendar_obligation_projection(
     else:
         entry = _calendar_entry_from_obligation(
             obligation,
-            holiday_territory=profile.holiday_territory,
             filing_evidence=filing_evidence,
             live_censo_verified_profile_keys=live_censo_verified_profile_keys,
             today=today,
@@ -956,7 +920,6 @@ def build_overview_calendar(
         tuple(entries),
         work_units=work_units,
         calendar_range=calendar_range,
-        holiday_territory=profile.holiday_territory,
         today=today,
         due_soon_days=due_soon_days,
         filing_evidence=filing_evidence,

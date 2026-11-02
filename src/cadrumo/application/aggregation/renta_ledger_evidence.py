@@ -16,6 +16,7 @@ from .currency_predicates import (
     effective_eur_iva_amount,
     effective_eur_taxable_base,
 )
+from .renta_income_evidence import settlement_comparison
 from .renta_ledger_models import RentaLedgerAggregationIssue, RentaLedgerAggregationIssueReason
 
 
@@ -33,15 +34,15 @@ def purchase_invoice_evidence_payload(
     *,
     invoices: InvoiceCatalogue,
     bucket_id: str,
-    transaction_id: str,
-    purchase_invoice_evidence_id: str | None,
-    category_id: str | None,
-    transaction_amount: Decimal,
+    transaction: Transaction,
 ) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
     """Validate a linked purchase invoice and extract its EUR totals.
 
     Takes ``invoices`` as a :class:`InvoiceCatalogue`.
     """
+    transaction_id = transaction.transaction_id
+    purchase_invoice_evidence_id = transaction.purchase_invoice_evidence_id
+    category_id = transaction.category_id
     if purchase_invoice_evidence_id is None:
         return _PurchaseInvoiceEvidencePayload()
     invoice = invoices.get(purchase_invoice_evidence_id)
@@ -62,10 +63,8 @@ def purchase_invoice_evidence_payload(
         return reference_issue
     return _purchase_invoice_payload_for_totals(
         invoice,
-        transaction_id=transaction_id,
+        transaction=transaction,
         purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-        category_id=category_id,
-        transaction_amount=transaction_amount,
     )
 
 
@@ -143,43 +142,35 @@ def _purchase_invoice_reference_issue(
 def _purchase_invoice_payload_for_totals(
     invoice: Invoice,
     *,
-    transaction_id: str,
+    transaction: Transaction,
     purchase_invoice_evidence_id: str,
-    category_id: str | None,
-    transaction_amount: Decimal,
 ) -> _PurchaseInvoiceEvidencePayload | RentaLedgerAggregationIssue:
-    """Reconcile EUR totals and project the linked invoice's evidence payload."""
-    # invoice.grand_total is denominated in invoice.currency (native), while
-    # transaction_amount is the caller's already-EUR-converted eur_amount (see
-    # effective_eur_amount). Comparing them directly mixes currencies: a
-    # legitimate foreign-currency invoice would compare its native total
-    # against a converted EUR figure and mismatch even when the two documents
-    # agree, so this compares grand_total_eur instead. An invoice that cannot
-    # itself resolve a EUR total (foreign currency, unconverted) has no EUR
-    # figure to compare or fold in, so it is refused the same way rather than
-    # silently treated as a domestic-currency match.
-    invoice_grand_total_eur = invoice.grand_total_eur
-    if invoice_grand_total_eur is None or transaction_amount != invoice_grand_total_eur:
+    """Reconcile the payment with the invoice and project the invoice's EUR totals.
+
+    The comparison is the one every linked invoice reads, tolerance included: what the
+    invoice leaves to be paid, against the movement in the one currency that needs no
+    rate or else in EUR. An invoice with no EUR value has no figure to fold in, so it is
+    refused however its own-currency figures compare.
+    """
+    comparison = settlement_comparison(invoice, (transaction,))
+    base_total_eur = invoice.base_total_eur
+    iva_total_eur = invoice.iva_total_eur
+    if comparison is None or base_total_eur is None or iva_total_eur is None:
         return RentaLedgerAggregationIssue(
-            transaction_id=transaction_id,
+            transaction_id=transaction.transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,
-            category_id=category_id,
+            category_id=transaction.category_id,
+            reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
+            detail="linked invoice or transaction has no EUR value to compare or fold in",
+        )
+    if not comparison.settled:
+        return RentaLedgerAggregationIssue(
+            transaction_id=transaction.transaction_id,
+            purchase_invoice_evidence_id=purchase_invoice_evidence_id,
+            category_id=transaction.category_id,
             reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
             detail="linked transaction amount does not match invoice grand total",
         )
-    # invoice.base_total / invoice.iva_total are native-currency (same
-    # currency as invoice.currency); the EUR-safe *_eur properties are the
-    # ones that already exist for exactly this purpose (used correctly in
-    # invoice_retencion.py). base_total_eur cannot be None here: the
-    # grand_total_eur check above already proved the invoice resolves to EUR.
-    base_total_eur = invoice.base_total_eur
-    iva_total_eur = invoice.iva_total_eur
-    if base_total_eur is None or iva_total_eur is None:
-        msg = (
-            f"purchase invoice {purchase_invoice_evidence_id} resolves a EUR grand total but no EUR "
-            "base or cuota; its EUR-equivalent totals disagree with one another"
-        )
-        raise ValueError(msg)
     return _PurchaseInvoiceEvidencePayload(
         invoice_issue_date=invoice.issued_at,
         taxable_base=base_total_eur,

@@ -323,14 +323,14 @@ fn filing_calendar(
 }
 
 impl ProfileHost {
-    async fn profile_of(person: &crate::agent::person::HeldPerson) -> Result<String> {
+    pub(super) async fn profile_of(person: &crate::agent::person::HeldPerson) -> Result<String> {
         Ok(Self::identity(person).await?["profile_id"]
             .as_str()
             .ok_or_else(protocol)?
             .to_owned())
     }
     /// Rejects an answer read while the window's account changed underneath.
-    async fn still_held(
+    pub(super) async fn still_held(
         &self,
         person: &crate::agent::person::HeldPerson,
         profile: &str,

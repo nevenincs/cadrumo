@@ -23,7 +23,12 @@ from ....domain.modelos.codes import ModeloCode
 from ....domain.modelos.verification_report import ModeloVerificationFinding
 from ..calculation_note_gate import calculation_screen_outdated
 from ..edit_admission import RESPONSIBLE_OWNER
-from ..edit_models import ModeloEditDomainRefusalV1, ModeloEditRefusalCode, ModeloEditRefusedV1
+from ..edit_models import (
+    ModeloEditDomainRefusalV1,
+    ModeloEditPermittedSurfaceEntryV1,
+    ModeloEditRefusalCode,
+    ModeloEditRefusedV1,
+)
 from ..work_form import build_modelo_work_form
 from ..work_form_models import ModeloFormCasillaAddressV1, ModeloFormField, ModeloWorkForm
 from ..work_form_service import ModeloWorkFormLoadV1, modelo_form_snapshot
@@ -49,11 +54,18 @@ def built_form(
     findings: tuple[ModeloVerificationFinding, ...] = (),
     language: OutputLanguage = OutputLanguage.EN,
     revision: CalculationRevision | None = None,
+    known_truths: Mapping[str, bool] | None = None,
+    permitted_surface: tuple[ModeloEditPermittedSurfaceEntryV1, ...] | None = None,
+    calculated: bool = False,
 ) -> ModeloWorkForm:
     """Build a form whose ``held`` boxes carry the calculation's values; ``entered`` ``None`` is an unknown record.
 
     ``revision`` is the calculation the form shows, whose notes the form carries; ``None`` before any.
     Whether its screen is outdated is the calculation-note gate's own answer, as the form service asks it.
+    ``known_truths`` are the filer's yes-or-no profile facts by boolean binding; ``None`` states none.
+    ``permitted_surface`` is the edit admission's surface; ``None`` offers nothing for editing.
+    ``calculated`` says the work unit has a calculation although no revision is shown: a computed box
+    that holds nothing is then one the calculation could not work out.
     """
     snapshot = form_snapshot(operation, modelo, year, code)
     values = held or {}
@@ -65,7 +77,13 @@ def built_form(
         period=Period.from_year_and_code(year, code),
         registry_revision_id=snapshot.revision.id,
         work_unit_id="e" * 64,
-        calculation_revision_id=None if revision is None else revision.calculation_revision_id,
+        calculation_revision_id=(
+            "f" * 64
+            if calculated and revision is None
+            else None
+            if revision is None
+            else revision.calculation_revision_id
+        ),
         lifecycle_state=lifecycle,
         verification_outcome=None,
         progress=ModeloWorkProgress(state=ModeloWorkProgressState.UNDEFINED),
@@ -83,10 +101,11 @@ def built_form(
         snapshot=snapshot,
         layout=operation.form_layout(modelo, snapshot.revision.id),
         revision=revision,
-        permitted_surface=None,
+        permitted_surface=permitted_surface,
         entered_casilla_ids=None if entered is None else frozenset(validated_casilla_id(item) for item in entered),
         overridden_binding_ids=None if entered is None else frozenset(),
         language=language,
+        known_truths=known_truths,
         calculation_screen_outdated=revision is not None
         and calculation_screen_outdated(
             revision, modelo=modelo, filing_year=year, period=Period.from_year_and_code(year, code), operation=operation

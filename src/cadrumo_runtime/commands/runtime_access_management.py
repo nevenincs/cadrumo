@@ -40,6 +40,7 @@ from cadrumo_client.commands.secure_input import (
     select_machine_secret_channel,
 )
 from cadrumo_client.contracts.access_vocabulary import DisclosurePageRequest
+from cadrumo_client.contracts.automation_codes import AutomationReviewRefusal
 from cadrumo_client.transport.automation_decision import AutomationDecision, run_automation_decision
 from cadrumo_client.transport.automation_inventory import read_automation_inventory
 from cadrumo_client.transport.frontend_client import FrontendClient
@@ -165,6 +166,7 @@ def automation_list(ctx: typer.Context, output_language: OutputLanguage | None =
             f"grants\t{len(inventory.grants)}",
             *(
                 f"grant\t{item.grant_id}\t{item.state.value}\t{item.expires_at.isoformat()}"
+                f"\t{item.use.value}\t{item.label or ''}"
                 for item in inventory.grants
             ),
             f"keys\t{len(inventory.keys)}",
@@ -203,7 +205,7 @@ def automation_disclosures(
         raise _refused(error) from error
     page = completed.projection.disclosure_page
     if page is None:
-        raise CliRefusedBoundaryError(translated_message="cli.config.profile.automation.review_not_found")
+        raise _review_not_found()
     emit_envelope(
         ctx,
         command="config.profile.automation.disclosures",
@@ -234,13 +236,23 @@ def _review(client: FrontendClient, request_id: UUID) -> tuple[OperationId, Auto
         raise _refused(error) from error
     matching = tuple(item for item in completed.projection.requests if item.receipt.request_id == request_id)
     if len(matching) != 1 or matching[0].receipt.profile_id != client.profile_id:
-        raise CliRefusedBoundaryError(translated_message="cli.config.profile.automation.review_not_found")
+        raise _review_not_found()
     return completed.operation_id, matching[0]
+
+
+def _review_not_found() -> CliRefusedBoundaryError:
+    return CliRefusedBoundaryError(
+        translated_message="cli.config.profile.automation.review_not_found",
+        context={"reason": AutomationReviewRefusal.REVIEW_NOT_FOUND.value},
+    )
 
 
 def _review_digest(review: AutomationReviewProjection, supplied: str) -> None:
     if supplied != review.receipt.review_digest:
-        raise CliRefusedBoundaryError(translated_message="cli.config.profile.automation.review_digest_mismatch")
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.automation.review_digest_mismatch",
+            context={"reason": AutomationReviewRefusal.REVIEW_DIGEST_MISMATCH.value},
+        )
 
 
 def _scope_lines(scope: AutomationScopeProjection) -> tuple[str, ...]:
@@ -405,7 +417,10 @@ def automation_deny(
     """Revoke one key, one grant, or all profile automation."""
     client = _client(ctx, requested_language=output_language)
     if kind not in {"key", "grant", "all"} or ((kind != "all") != (target_id is not None)):
-        raise CliRefusedBoundaryError(translated_message="cli.config.profile.automation.deny.target_mismatch")
+        raise CliRefusedBoundaryError(
+            translated_message="cli.config.profile.automation.deny.target_mismatch",
+            context={"reason": AutomationReviewRefusal.TARGET_MISMATCH.value},
+        )
     denial_kind = AutomationDenialKind(kind)
     try:
         receipt = client.deny_automation(denial_kind, target_id=target_id)

@@ -997,6 +997,60 @@ application:
           a mezőket.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Egyezik
+          differ: Eltér
+          not_comparable: Nem hasonlítható össze
+          only_in_borrador: Csak az AEAT-tervezetben
+          only_in_calculation: Csak a számításodban
+        evidence:
+          borrador: Az AEAT nyomtatta a tervezetébe, te pedig ide importáltad. Ez
+            megfigyelés, nem hitelesített bevallás.
+          calculation: Ezen a számítógépen számoltuk ki a nyilvántartásaid alapján.
+            Helyi eredmény, nem az AEAT-nál benyújtott bevallás.
+        reason:
+          borrador_does_not_read_box: A tervezet importálása nem olvassa be ezt a
+            rovatot, így a hiányzó tervezetérték semmit sem mond róla.
+          borrador_printed_no_value: A számításodban van érték, de az AEAT-tervezet
+            ennél a rovatnál nem mutat semmit.
+          borrador_value_ambiguous: Az AEAT-tervezetben több érték is szerepel ennél
+            a rovatnál, így nem hasonlítható össze.
+          borrador_value_not_kept: Az AEAT-tervezet mutatja ezt a rovatot, de az importálás
+            nem őrzi meg az értékét, így nem hasonlítható össze.
+          calculation_blocked: A számításod nem tudta meghatározni ezt a rovatot,
+            így nem hasonlítható össze.
+          calculation_has_no_value: Az AEAT-tervezet értéket mutat, de a számításodban
+            ennél a rovatnál nincs érték.
+          calculation_not_applicable: A számításod szerint ez a rovat rád nem vonatkozik,
+            az AEAT-tervezet mégis értéket mutat.
+          not_applicable_zero: Az AEAT-tervezet nullát mutat, a számításod pedig azt,
+            hogy ez a rovat rád nem vonatkozik.
+          same_value: Az AEAT-tervezetben és a számításodban ugyanaz az érték szerepel.
+          taken_from_borrador: A számításod ezt az értéket az AEAT-tervezetből vette
+            át, így az egyezés nem erősíti meg függetlenül.
+          value_kinds_differ: Az egyik oldalon összeg, a másikon szöveg szerepel,
+            így nem hasonlíthatók össze.
+          values_differ: Az AEAT-tervezetben és a számításodban eltérő érték szerepel.
+        stale:
+          calculation_outdated: A szabályok a számításod mentése után megváltoztak,
+            ezért újra kell számolni.
+          calculation_used_other_capture: A számításod egy másik AEAT-tervezetből
+            készült, mint amelyet itt összehasonlítunk.
+          newer_capture_refused: Egy később importált tervezeted tárolva van, de nem
+            olvasható, ezért ez az összehasonlítás egy korábbit használ.
+        status:
+          capture_refused: Erre az évre vannak tárolt AEAT-tervezetek, de a jelenlegi
+            szabályok szerint egyik sem olvasható; importáld újra a tervezetet.
+          compared: Az importált AEAT-tervezetet és a mentett számításodat rovatonként
+            összehasonlítottuk.
+          no_calculation: Ennek a bevallásnak még nincs mentett számítása, így a tervezet
+            nem hasonlítható össze; előbb számold ki.
+          no_capture: Erre az évre nem importáltál AEAT-tervezetet, így nincs mit
+            összehasonlítani.
+          stale: Mindkettőt beolvastuk, de már nem felelnek meg egymásnak; számold
+            újra, vagy importáld újra a tervezetet, mielőtt erre az összehasonlításra
+            hagyatkozol.
       errors:
         binding_keys_not_admitted: 'Ez a tárolt borrador olyan kulcsok alatt tart
           értékeket, amelyeket a nyomtatványdefiníciók nem fogadnak el, ezért nem
@@ -1786,6 +1840,9 @@ application:
       amendment_kind_not_permitted: 'A kért módosítási típus ({requested_kind}) jogilag
         nem elérhető a Modelo {modelo} bevalláshoz, {filing_year} adóévhez, {period}
         időszakhoz. Az ehhez az időszakhoz elfogadott típusok: {accepted_kinds}.'
+      amendment_later_period_only: A(z) {modelo} modell {filing_year}. évi {period}
+        időszakában a már benyújtott bevallás nem javítható. A kiigazítást egy későbbi
+        időszak bevallásában végezd el.
       amendment_registry_root_missing: A(z) %{missing_path} közzétett hatósági generáció
         hiányzik; a módosítási felülírások nem érvényesíthetők.
       amendment_registry_snapshot_unresolved: A Modelo %{modelo} nyomtatvány, %{filing_year}
@@ -2233,6 +2290,11 @@ application:
       iva_compensation_annual_source_evidence_failure: A Modelo 390-hez szükség van
         az év Modelo 303 bevallásainak adataira, és ezekkel kapcsolatban még %{source_issue_count}
         megoldatlan probléma van, ezért ez a bevallás nem fejezhető be.
+      iva_cuota_disagrees_with_rate: A(z) %{transaction_date} dátumú IVA-bejegyzés
+        %{recorded_cuota} EUR IVA-összeget rögzít, de a(z) %{base_amount} EUR alap
+        %{iva_rate_percent}%-os kulcs mellett %{expected_cuota} EUR-t ad. Javítsd
+        az IVA-összeget, az alapot vagy a kulcsot, majd számolj újra, mielőtt ellenőrzöd
+        ezt a nyilatkozatot.
       iva_import_document_unrecordable: A %{transaction_date} dátumú, %{transaction_amount}
         %{transaction_currency} összegű tételhez a behozatal vámáru-nyilatkozata szükséges.
         A Cadrumo ezt egyelőre nem tudja rögzíteni, ezért a bevallás nem mehet át
@@ -2462,11 +2524,41 @@ application:
           profiladata nem támogatott típusú: %{value_type}.'
         enum_boolean_invalid: A(z) %{binding_id} értékforrás profiladata logikai értékre
           oldódott fel; a logikai adatok nem érvényes kulcsok.
+    projection_words:
+      binding_unresolved: Ehhez az értékhez a nyilvántartásaidból nem sikerült értéket
+        kiszámolni, ezért feloldatlan marad, és nem számít nullának. Rögzítsd a hiányzó
+        igazolást, majd vetíts újra.
+      casilla_reason:
+        m210_baseline_tipo_deferred: Ehhez a rovathoz az ilyen jellegű jövedelem általános
+          adókulcsa kell, amely az adóévre még nincs megalapozva, ezért nincs értéke.
+        m210_convenio_rate_missing: Ehhez a rovathoz a kettős adóztatást kizáró egyezmény
+          szerinti kulcs kell az országra és a jövedelem fajtájára, de ez nem elérhető,
+          ezért nincs értéke.
+        other: Ezt a rovatot nem sikerült kiszámolni, ezért nincs értéke. Soha nem
+          jelenik meg nullaként.
+        unresolved_operand: Ez a rovat olyan értéket ad össze vagy olvas, amelynek
+          még nincs értéke, ezért neki sincs. Soha nem jelenik meg nullaként.
+        waived_refund_result_unsupported: A visszatérítésről való lemondás esetén
+          kapott eredményt még nem támogatjuk, ezért ennek a rovatnak nincs értéke.
+          Soha nem jelenik meg nullaként.
     quickfile:
       stage_incomplete: A `quickfile` %{stage} szakasza %{status} állapottal fejeződött
         be.
       stage_refused: 'A `quickfile` a(z) %{stage} szakasznál leállt: a szakaszt %{error_code}
         kóddal elutasították.'
+    taxation_comparison_words:
+      below_materiality: A két eredmény {difference} összeggel tér el, ami kevesebb,
+        mint {threshold}, ezért bármelyik adózási mód megfelelő.
+      conjunta_lower_result: 'A közös adózás kedvezőbb: az eredményed közösen {conjunta},
+        egyénileg {individual}, a különbség {difference}.'
+      individual_branch_caveat: Az egyéni összeg egyetlen bevallás, amelyet a teljes
+        családi egységed összesített adataiból számoltunk, ezért csak akkor megbízható,
+        ha a család jövedelmét egyetlen személy keresi. Nem számol két külön bevallást,
+        egyet-egyet a házastársak saját jövedelméből, és ez az összehasonlítás egyelőre
+        nem érhető el. Ha a családodban ketten keresnek, az egyéni összeget tekintsd
+        durva tájékoztatásnak, nem a benyújtandó összegnek.
+      individual_lower_result: 'Az egyéni adózás kedvezőbb: az eredményed egyénileg
+        {individual}, közösen {conjunta}, a különbség {difference}.'
     value_date:
       month_01: jan.
       month_02: febr.
@@ -2559,18 +2651,10 @@ application:
       holiday_coverage:
         calendar_unavailable: az ünnepnapi naptár nem érhető el; az eredeti határidő
           nincs ellenőrizve
-        national_and_territory: országos és %{territory} ünnepnapok ellenőrizve; helyi
-          ünnepnapok nincsenek ellenőrizve
-        national_and_territory_without_name: országos és az alkalmazandó regionális
-          ünnepnapok ellenőrizve; a helyi ünnepnapok nincsenek ellenőrizve
-        national_only: csak országos ünnepnapok; regionális és helyi ünnepnapok nincsenek
-          ellenőrizve
+        national_only: a hétvégék és az országos munkaszüneti napok ellenőrizve; a
+          regionális és helyi ünnepnapok nem tolják el a benyújtási határidőt
         not_shifted: ennél a nyomtatványnál a határidő munkaszüneti nap miatt nem
           tolódik
-        territory_unverified: csak országos ünnepnapok; %{territory} idei regionális
-          ünnepnapjai nincsenek ellenőrizve, a helyi ünnepnapok sem
-        territory_unverified_without_name: csak országos ünnepnapok; az alkalmazandó
-          regionális naptár nincs ellenőrizve; a helyi ünnepnapok sincsenek ellenőrizve
       shift:
         business_day: Munkanap
         calendar_unavailable: Naptár nem elérhető
@@ -2929,6 +3013,18 @@ application:
         történt írás.
       row_unknown_field: 'A(z) ''%{section}'' szakasz nem deklarálja ezeket a mezőket:
         %{unknown}. Elérhető mezők: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Születési dátum
+        convivientes:
+          label: Azoknak a leszármazottaknak a száma, akikkel ez a felmenő együtt
+            él
+        fallecimiento:
+          help: Hagyd üresen, ha ez a felmenő nem hunyt el.
+          label: A halálozás dátuma
+        nif:
+          label: A felmenő adószáma (NIF/NIE) (hagyd üresen, ha nincs)
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'

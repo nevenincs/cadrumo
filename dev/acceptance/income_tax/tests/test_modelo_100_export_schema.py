@@ -35,12 +35,10 @@ from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from cadrumo.domain.modelos.errors import ModeloExportError
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFinding, ModeloVerificationFindingSeverity
+from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
-from cadrumo.entrypoints.tests.profile_persistence.general_iva_profile_facts_support import (
-    GENERAL_REGIME_NATURAL_PERSON_FACTS,
-    renta_single_taxpayer_facts,
-)
+from cadrumo.entrypoints.tests.profile_persistence.general_iva_profile_facts_support import renta_single_taxpayer_facts
 from cadrumo.entrypoints.tests.profile_persistence.test_derived_aggregate_override_real_path import _descendants
 from cadrumo.entrypoints.tests.profile_persistence.test_e2e_imputation_calculate_to_export import (
     _CASH,
@@ -49,6 +47,7 @@ from cadrumo.entrypoints.tests.profile_persistence.test_e2e_imputation_calculate
     _OPERATOR_SCOPE_PORTS,
     _autonomaworkflow_profile,
     _persist_ledger,
+    _register_refund_account,
     _verify_and_export,
     modelo_export_ports_for_test,
     ready_clave_settings,
@@ -143,6 +142,8 @@ def _seed_filer(*, criterion: str, family: tuple[UserProfileFact, ...] = ()) -> 
 
 
 def _calculate(objects: SecureObjectRepository, *, activity_key: str | None) -> CalculationRevision:
+    # The filer's result is a refund, so the export's account page needs the designated account.
+    _register_refund_account(objects)
     _persist_ledger(objects)
     _seed_prior_year_m100(objects)
     for period, result in _OFFICIAL_M130_C19.items():
@@ -163,10 +164,11 @@ def _calculate(objects: SecureObjectRepository, *, activity_key: str | None) -> 
             operation=operation,
             clock=_T0,
         )
+    stated_activity_key = activity_key is not None and activity_key != ""
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         unit.work_unit_id,
         binding_values=_m100_non_relation_zero_bindings(),
-        text_casilla_inputs={_box("TACT"): activity_key} if activity_key is not None else None,
+        text_casilla_inputs={_box("TACT"): activity_key} if stated_activity_key else None,
         work_unit_repository=units,
         calculation_repository=CalculationRevisionCatalogueRepository(objects=objects),
         clock=_T0,

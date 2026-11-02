@@ -12,7 +12,7 @@ import type {
   DataGridHandle,
   EditorContext,
   GridRow,
-} from "@/components/ui/data-grid";
+} from "@/components/ui/dataGridTypes";
 import type { CellRange } from "@/components/ui/dataGridModel";
 import { chordMatches, type ChordKeys } from "@/shared/chords";
 import { REDO_CHORDS, REVIEW_CHORDS, UNDO_CHORD } from "../ledgerChords";

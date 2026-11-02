@@ -2,7 +2,7 @@ import { memo, useEffect, useRef } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/components/ui/cn";
-import { DataGridText } from "@/components/ui/data-grid";
+import { DataGridText } from "@/components/ui/data-grid-text";
 import { Icon, type IconName } from "@/components/ui/icon";
 import {
   Tooltip,

@@ -28,6 +28,7 @@ from ..wizard.persistence import project_answers
 from ..workflow.profile_bucket_scan import read_profile_bucket_by_id
 from ..workflow.profile_health import ProfileHealthStatus, assess_profile_record_health
 from .commands import ProfileValidationIssue, ProfileValidationReport
+from .family_rows import family_row_items
 from .overview import build_profile_overview
 from .profile_record_repository import ProfileRecordRepository
 from .projections import record_to_path_values
@@ -270,6 +271,8 @@ def _build_page_source(
         return () if value is None else (ProfileViewFactItem(path=PROFILE_OUTPUT_LANGUAGE_PATH, value=value),)
     if request.page_kind is ProfileViewPageKind.QUESTIONS:
         return profile_question_items(build_setup_flow(authority_operation), record_to_path_values(record))
+    if request.page_kind is ProfileViewPageKind.FAMILY_ROWS:
+        return family_row_items(record_to_path_values(record), schema=schema, operation=authority_operation)
     if request.page_kind in {ProfileViewPageKind.ISSUES, ProfileViewPageKind.READINESS_ISSUES}:
         return _build_issue_source(request, record, report)
     if request.page_kind is ProfileViewPageKind.STATUS:

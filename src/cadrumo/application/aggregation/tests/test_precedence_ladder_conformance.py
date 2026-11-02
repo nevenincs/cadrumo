@@ -19,10 +19,20 @@ they are the behavioural anchor, not a restatement of the ladder literal.
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.authored_editions import newest_authored_edition
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
+
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import validated_casilla_id
+from ...modelo.action_errors import ModeloAggregationBindingError
+from ...modelo.calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ...modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
+from ...modelo.edit_admission import permitted_binding_entry
+from ...modelo.edit_models import ModeloEditNonWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableReason
 from ..source_precedence import CALLER_OVERRIDE_PRECEDENCE_LADDER, CallerOverrideDisposition, precedence_ladder_sources
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
@@ -82,6 +92,7 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
                 BindingSourceKind.M349_INTRACOMMUNITY_OPERATION,
                 BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY,
                 BindingSourceKind.INVENTORY,
+                BindingSourceKind.RETENCION_SOPORTADA,
             },
         )
         == BUCKET_AGGREGATION_LOCK_SOURCES
@@ -98,3 +109,41 @@ def test_frozen_disposition_membership_matches_aggregation_taxonomy() -> None:
         )
         == CALLER_OVERRIDABLE_CARRY_SOURCES
     )
+
+
+def _m100_revision():
+    return published_snapshot("100", filing_year=newest_authored_edition("100"), period="0A").revision
+
+
+@pytest.mark.usefixtures("operation")
+def test_a_caller_cannot_state_a_suffered_withholding_credit_before_the_mesh_runs() -> None:
+    """The payer records own casilla 0596: neither its binding nor the box takes a caller value."""
+    revision = _m100_revision()
+    with pytest.raises(ModeloAggregationBindingError):
+        reject_caller_overrides_of_source_bindings(
+            revision=revision,
+            owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
+            caller_binding_values={"renta-retencion-soportada-trabajo": Decimal("1.00")},
+            caller_casilla_inputs={},
+            subject_leaf_key="modelo.work.calculate",
+        )
+    with pytest.raises(ModeloAggregationBindingError):
+        reject_caller_overrides_of_source_bindings(
+            revision=revision,
+            owned_sources=BUCKET_AGGREGATION_LOCK_SOURCES,
+            caller_binding_values={},
+            caller_casilla_inputs={validated_casilla_id("0596"): Decimal("1.00")},
+            subject_leaf_key="modelo.work.calculate",
+        )
+
+
+@pytest.mark.usefixtures("operation")
+def test_the_editor_reports_a_suffered_withholding_binding_as_source_locked() -> None:
+    """The edit surface reads the same ladder, so the override is locked, not undecided."""
+    revision = _m100_revision()
+    binding = next(item for item in revision.bindings if item.id == "renta-retencion-soportada-trabajo")
+
+    entry = permitted_binding_entry(binding, revision=revision)
+
+    assert isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
+    assert entry.reason is ModeloEditNonWritableReason.SOURCE_LOCKED

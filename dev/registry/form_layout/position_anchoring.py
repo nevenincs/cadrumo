@@ -32,6 +32,7 @@ from .generation_constants import (
     _LABEL_MATCH_MARGIN,
 )
 from .generation_models import _Build, _Position
+from .official_repeats import official_repeats
 from .official_text import clean_official_text, description_path, node_slug
 
 
@@ -92,10 +93,24 @@ def _dictionary_position_parts(entry: XmlDictionaryEntry) -> tuple[tuple[str, ..
     return containers, page
 
 
+def _asterisk_casilla(entry: XmlDictionaryEntry, box_token: str, asterisk_casillas: frozenset[str]) -> str | None:
+    """Name the casilla of an identification box the dictionary prints as ``*NN``.
+
+    The dictionary gives such a box no numeric casilla. Its field id is the
+    casilla's id when the revision declares that casilla as an asterisk box, so
+    the line itself anchors it; the printed number is not compared, because it
+    is renumbered between editions while the field id is not.
+    """
+    if entry.casilla_id is not None or not box_token.startswith("*"):
+        return None
+    return entry.field_id if entry.field_id in asterisk_casillas else None
+
+
 def _dictionary_position(
     build: _Build,
     entry: XmlDictionaryEntry,
     described: Mapping[str, tuple[str, str]],
+    asterisk_casillas: frozenset[str],
 ) -> _Position:
     containers, page = _dictionary_position_parts(entry)
     box_token, text = described.get(entry.field_id, ("", ""))
@@ -109,6 +124,9 @@ def _dictionary_position(
     )
     if entry.casilla_id is not None:
         position.casilla_ids.append(entry.casilla_id)
+    asterisk = _asterisk_casilla(entry, box_token, asterisk_casillas)
+    if asterisk is not None:
+        position.casilla_ids.append(asterisk)
     return position
 
 
@@ -129,7 +147,9 @@ def _dictionary_positions(
     described = _dictionary_descriptions(payload)
     build.used_dictionary = True
     build.design_sources.append(FormDesignSource(source_ref=str(source.id), sha256=sha256_file(path)))
-    build.positions.extend(_dictionary_position(build, entry, described) for entry in entries)
+    asterisk_casillas = frozenset(casilla.id for casilla in build.revision.casillas if casilla.number.startswith("*"))
+    build.positions.extend(_dictionary_position(build, entry, described, asterisk_casillas) for entry in entries)
+    build.repeats.update(official_repeats(layout, sources, data_root))
 
 
 def _index_position_anchors(build: _Build) -> None:

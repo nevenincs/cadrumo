@@ -275,7 +275,10 @@ fn remove(path: &Path, release: Option<&str>) -> MaintenanceResult {
             vec![plan.contract.manager_member()?.under(&plan.prefix)]
         };
         for batch in files.chunks(256) {
-            if !windows::file_users(batch).map_err(native_error)?.is_empty() {
+            if !windows::restart_manager::file_users(batch)
+                .map_err(native_error)?
+                .is_empty()
+            {
                 return Err(Error::Busy);
             }
         }

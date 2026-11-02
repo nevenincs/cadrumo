@@ -71,7 +71,12 @@ class Borrador100ImportRequest(BaseModel):
 
 
 class Borrador100QuerySummary(BaseModel):
-    """Reviewed metadata without source URLs or printed evidence strings."""
+    """Reviewed metadata without source URLs or printed evidence strings.
+
+    ``binding_count`` counts the values kept under bindings;
+    ``printed_observation_count`` counts the printed boxes kept only for
+    comparison, so a draft holding only printed results is not empty.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     snapshot_id: SnapshotId
@@ -79,6 +84,7 @@ class Borrador100QuerySummary(BaseModel):
     period: PublicPeriod
     captured_at: datetime
     binding_count: Annotated[int, Field(ge=0)]
+    printed_observation_count: NonNegativeInt = 0
     state: SnapshotLifecycleState
 
     @model_validator(mode="after")
@@ -284,8 +290,10 @@ class Borrador100QueryProjection(BaseModel):
 class Borrador100ImportProjection(BaseModel):
     """Complete human import facts and canonical parser warnings.
 
-    ``unowned_casillas`` lists printed casillas that no borrador-admitted binding
-    of the pinned revision owns; their values were read but not stored.
+    ``observed_casillas`` lists printed casillas kept only for comparison with
+    the local calculation: no borrador-admitted binding owns them and they are
+    never a calculation input. ``unowned_casillas`` lists printed casillas the
+    pinned revision does not declare; their values were read but not stored.
     ``outcome`` says whether the document was stored or resolved to a snapshot
     already stored for it, including a superseded or discarded one.
     """
@@ -298,6 +306,7 @@ class Borrador100ImportProjection(BaseModel):
     artefact_kind: Borrador100ArtefactKind
     source_pdf_sha256: ContentDigest
     blank_casillas: tuple[CasillaId, ...]
+    observed_casillas: tuple[CasillaId, ...] = ()
     unowned_casillas: tuple[CasillaId, ...] = ()
     warnings: tuple[str, ...]
     outcome: Borrador100CaptureOutcome
@@ -312,6 +321,10 @@ class Borrador100ImportProjection(BaseModel):
             raise ValueError("unowned casillas must be sorted and unique")
         if set(self.unowned_casillas) & set(self.blank_casillas):
             raise ValueError("a casilla cannot be both blank and unowned")
+        if self.observed_casillas != tuple(sorted(set(self.observed_casillas))):
+            raise ValueError("observed casillas must be sorted and unique")
+        if set(self.observed_casillas) & set(self.unowned_casillas):
+            raise ValueError("a casilla cannot be both observed and unowned")
         if not Decimal("0") <= Decimal(self.extraction_coverage.decimal) <= Decimal("1"):
             raise ValueError("borrador coverage must be a unit fraction")
         if _OUTCOME_STATES[self.outcome] is not self.snapshot.state:
@@ -357,6 +370,7 @@ def summarize_borrador_100(snapshot: Borrador100Snapshot) -> Borrador100QuerySum
         period=PublicPeriod.from_period(snapshot.period),
         captured_at=snapshot.captured_at,
         binding_count=len(snapshot.binding_values),
+        printed_observation_count=len(snapshot.printed_observations),
         state=snapshot.state,
     )
 

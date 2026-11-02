@@ -266,11 +266,7 @@ export function dueWords(
 }
 
 /** What a deadline's holiday check covered, when it did not cover all. */
-const COVERAGE_KINDS: ReadonlySet<string> = new Set([
-  "national_only",
-  "calendar_unavailable",
-  "territory_unverified",
-]);
+const COVERAGE_KINDS: ReadonlySet<string> = new Set(["calendar_unavailable"]);
 
 export const coverageWords = (coverage: string, locale: string) =>
   COVERAGE_KINDS.has(coverage)

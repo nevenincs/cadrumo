@@ -328,7 +328,7 @@ fn an_own_account_change_comes_only_as_a_raw_object_to_add_or_update() {
     );
     // Dropping the request overwrites its text.
     let mut kept = own_account_body(&raw(r#"{"action":"add","iban":"ES00"}"#)).unwrap();
-    cadrumo_application::person_operations::wipe(&mut kept.0);
+    cadrumo_application::person_operations::sensitive::wipe(&mut kept.0);
     assert_eq!(kept.0["iban"], "");
 }
 

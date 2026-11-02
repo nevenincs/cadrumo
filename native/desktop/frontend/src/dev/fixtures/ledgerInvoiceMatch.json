@@ -1053,6 +1053,273 @@
         "invoice_choices": null,
         "movement_choices": null
       }
+    },
+    {
+      "name": "a bare legal form names no counterparty, so it does not lift a candidate",
+      "invoices": [
+        {
+          "number": "F-1",
+          "kind": "issued",
+          "base": "1500.00",
+          "retention": "225.00",
+          "issued": "2026-10-01",
+          "party": "Papeleria Trazo SL"
+        },
+        {
+          "number": "F-2",
+          "kind": "issued",
+          "base": "100.00",
+          "issued": "2026-10-01",
+          "party": "Acme SL"
+        }
+      ],
+      "movements": [
+        {
+          "name": "bare",
+          "amount": "1590.00",
+          "direction": "INCOMING",
+          "on": "2026-10-03",
+          "description": "TRANSFERENCIA",
+          "counterparty": "SL",
+          "currency": "EUR"
+        },
+        {
+          "name": "named",
+          "amount": "121.00",
+          "direction": "INCOMING",
+          "on": "2026-10-02",
+          "description": "TRANSFERENCIA",
+          "counterparty": "Acme",
+          "currency": "EUR"
+        }
+      ],
+      "staged": [],
+      "totals": {
+        "F-1": "1815.00",
+        "F-2": "121.00"
+      },
+      "settlements": {
+        "F-1": "1590.00",
+        "F-2": "121.00"
+      },
+      "answer": {
+        "suggestions": [
+          {
+            "movement": "bare",
+            "invoice": "F-1",
+            "number": false,
+            "gap": 2,
+            "counterparty": false,
+            "ambiguous": false,
+            "ties": [],
+            "others": []
+          },
+          {
+            "movement": "named",
+            "invoice": "F-2",
+            "number": false,
+            "gap": 1,
+            "counterparty": true,
+            "ambiguous": false,
+            "ties": [],
+            "others": []
+          }
+        ],
+        "invoice_choices": null,
+        "movement_choices": null
+      }
+    },
+    {
+      "name": "a link states where its sides differ: the settlement within a cent, a shared currency, the movement's own counterparty, other holders",
+      "invoices": [
+        {
+          "number": "F-1",
+          "kind": "issued",
+          "base": "1500.00",
+          "retention": "225.00",
+          "issued": "2026-10-01",
+          "party": "Papeleria Trazo SL"
+        },
+        {
+          "number": "F-2",
+          "kind": "received",
+          "base": "30.00",
+          "issued": "2026-10-01",
+          "party": "Papeleria Trazo SL",
+          "linked": true
+        },
+        {
+          "number": "F-3",
+          "kind": "received",
+          "base": "100.00",
+          "issued": "2026-10-01",
+          "party": "Acme Ltd",
+          "currency": "USD"
+        }
+      ],
+      "movements": [
+        {
+          "name": "ok",
+          "amount": "1590.00",
+          "direction": "INCOMING",
+          "on": "2026-10-02",
+          "description": "TRANSFERENCIA",
+          "counterparty": "Trazo",
+          "currency": "EUR",
+          "cited": true
+        },
+        {
+          "name": "off",
+          "amount": "1500.00",
+          "direction": "INCOMING",
+          "on": "2026-10-02",
+          "description": "TRANSFERENCIA",
+          "counterparty": "Imprenta Turia",
+          "currency": "EUR",
+          "cited": true
+        },
+        {
+          "name": "cent",
+          "amount": "1590.01",
+          "direction": "INCOMING",
+          "on": "2026-10-02",
+          "description": "TRANSFERENCIA",
+          "counterparty": null,
+          "currency": "EUR",
+          "cited": true
+        },
+        {
+          "name": "bare",
+          "amount": "1590.00",
+          "direction": "INCOMING",
+          "on": "2026-10-02",
+          "description": "TRANSFERENCIA",
+          "counterparty": "SL",
+          "currency": "EUR",
+          "cited": true
+        },
+        {
+          "name": "euro",
+          "amount": "121.00",
+          "direction": "OUTGOING",
+          "on": "2026-10-02",
+          "description": "TRANSFERENCIA",
+          "counterparty": "Acme Ltd",
+          "currency": "EUR",
+          "cited": true
+        },
+        {
+          "name": "two",
+          "amount": "36.30",
+          "direction": "OUTGOING",
+          "on": "2026-10-02",
+          "description": "TRANSFERENCIA",
+          "counterparty": "Papeleria Trazo SL",
+          "currency": "EUR",
+          "cited": true
+        }
+      ],
+      "staged": [],
+      "judge": [
+        ["ok", "F-1"],
+        ["off", "F-1"],
+        ["cent", "F-1"],
+        ["bare", "F-1"],
+        ["euro", "F-3"],
+        ["two", "F-2"]
+      ],
+      "totals": {
+        "F-1": "1815.00",
+        "F-2": "36.30",
+        "F-3": "121.00"
+      },
+      "settlements": {
+        "F-1": "1590.00",
+        "F-2": "36.30",
+        "F-3": "121.00"
+      },
+      "answer": {
+        "suggestions": [],
+        "invoice_choices": null,
+        "movement_choices": null,
+        "judgements": [
+          {
+            "movement": "ok",
+            "invoice": "F-1",
+            "found": true,
+            "mismatches": []
+          },
+          {
+            "movement": "off",
+            "invoice": "F-1",
+            "found": true,
+            "mismatches": [
+              {
+                "kind": "amount",
+                "difference": "90.00",
+                "movement": null,
+                "invoice": null,
+                "count": null
+              },
+              {
+                "kind": "counterparty",
+                "difference": null,
+                "movement": null,
+                "invoice": null,
+                "count": null
+              }
+            ]
+          },
+          {
+            "movement": "cent",
+            "invoice": "F-1",
+            "found": true,
+            "mismatches": []
+          },
+          {
+            "movement": "bare",
+            "invoice": "F-1",
+            "found": true,
+            "mismatches": [
+              {
+                "kind": "counterparty",
+                "difference": null,
+                "movement": null,
+                "invoice": null,
+                "count": null
+              }
+            ]
+          },
+          {
+            "movement": "euro",
+            "invoice": "F-3",
+            "found": true,
+            "mismatches": [
+              {
+                "kind": "currency",
+                "difference": null,
+                "movement": "EUR",
+                "invoice": "USD",
+                "count": null
+              }
+            ]
+          },
+          {
+            "movement": "two",
+            "invoice": "F-2",
+            "found": true,
+            "mismatches": [
+              {
+                "kind": "linked_elsewhere",
+                "difference": null,
+                "movement": null,
+                "invoice": null,
+                "count": 1
+              }
+            ]
+          }
+        ]
+      }
     }
   ]
 }

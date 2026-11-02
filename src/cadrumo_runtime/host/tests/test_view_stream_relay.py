@@ -38,6 +38,10 @@ from cadrumo_client.contracts.view_stream import (
     KeyInput,
     ViewAttachGranted,
     ViewAttachRequest,
+    ViewClipboard,
+    ViewClipboardAction,
+    ViewClipboardCommit,
+    ViewClipboardSelection,
     ViewClose,
     ViewClosed,
     ViewClosedReason,
@@ -163,7 +167,7 @@ class _Window:
     def read(self) -> object:
         return self.reader.read(deadline=time.monotonic() + 5)
 
-    def send(self, document: ViewCredit | ViewNavigate) -> None:
+    def send(self, document: ViewCredit | ViewNavigate | ViewClipboard | ViewClipboardCommit) -> None:
         write_view_document(self.client, document, deadline=time.monotonic() + 5)
 
     def quiet(self) -> bool:
@@ -706,6 +710,19 @@ def test_view_person_input_reaches_the_worker_and_runtime_stop_unbinds(lane: _La
     _wait_until(lambda: lane.sink.ended)
 
 
+def test_clipboard_request_reply_and_commit_stay_on_the_view_stream(lane: _Lane) -> None:
+    window = lane.attach()
+    request = ViewClipboard(request_id=7, action=ViewClipboardAction.CUT)
+    window.send(request)
+    assert lane.sink.receive(timeout=5) == request
+    selected = ViewClipboardSelection(request_id=7, text="synthetic selection")
+    lane.sink.send(selected)
+    assert window.read() == selected
+    commit = ViewClipboardCommit(request_id=7, apply=False)
+    window.send(commit)
+    assert lane.sink.receive(timeout=5) == commit
+
+
 def _key_presses(count: int) -> list[ViewInput]:
     """Alternating presses and releases, so a dropped one would leave a key held down."""
     return [
@@ -721,12 +738,19 @@ def _key_presses(count: int) -> list[ViewInput]:
     ]
 
 
-def _type_all(window: _Window, presses: list[ViewInput], *, seconds: float) -> Thread:
+def _type_all(
+    window: _Window, presses: list[ViewInput], *, seconds: float, refusals: list[RefusalCode] | None = None
+) -> Thread:
     """Send every press from the window on its own thread, each write waiting up to ``seconds``."""
 
     def type_all() -> None:
-        for press in presses:
-            write_view_document(window.client, press, deadline=time.monotonic() + seconds)
+        try:
+            for press in presses:
+                write_view_document(window.client, press, deadline=time.monotonic() + seconds)
+        except RefusalError as ended:
+            if refusals is None:
+                raise
+            refusals.append(ended.reason)
 
     typing = Thread(target=type_all, daemon=True)
     typing.start()
@@ -872,7 +896,8 @@ def test_view_whose_worker_is_gone_while_input_is_held_ends_promptly(tmp_path: P
         relay.bind_worker(profile_id=identity.binding.profile_id, bind=bind, channel=channel)
         runtime.listen()
         window = views.attach()
-        typing = _type_all(window, _key_presses(_HELD_PRESSES), seconds=60)
+        write_refusals: list[RefusalCode] = []
+        typing = _type_all(window, _key_presses(_HELD_PRESSES), seconds=60, refusals=write_refusals)
         time.sleep(_HELD_SECONDS)
         assert relay.worker_bind(operation_id) is not None, "the held input ended the view"
         assert typing.is_alive(), "the input was never held back up to the window"
@@ -894,6 +919,7 @@ def test_view_whose_worker_is_gone_while_input_is_held_ends_promptly(tmp_path: P
         _wait_until(lambda: relay.worker_bind(operation_id) is None, seconds=2)
         typing.join(timeout=2)
         assert not typing.is_alive()
+        assert write_refusals == [RefusalCode.CONNECTION_CLOSED]
         assert time.monotonic() - gone < 2
     finally:
         relay.close()

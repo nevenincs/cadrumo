@@ -32,6 +32,7 @@ export type ListOutcome = { kind: "saved" } | { kind: "refused"; code: string };
 
 export type LocalModelLists = {
   snapshot: ListSnapshot;
+  retry: () => void;
   /** The key of the change being made, if one is. */
   busy: string | null;
   /** The last outcome per key. */
@@ -94,5 +95,9 @@ export function useLocalModels(
     [snapshot],
   );
 
-  return { snapshot, busy, outcomes, change };
+  const retry = useCallback(() => {
+    setSnapshot({ kind: "loading" });
+    setReads((count) => count + 1);
+  }, []);
+  return { snapshot, retry, busy, outcomes, change };
 }

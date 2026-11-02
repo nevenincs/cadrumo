@@ -1322,6 +1322,9 @@ errors:
       rectificativa del model 303 amb la casella 111 necessita una elecció sobre la
       domiciliació anterior (mantenir-la, o anul·lar-la o modificar-la); no se n'ha
       indicat cap, així que no s'ha escrit res. Tria'n una i torna a exportar.
+    refused_modelo_instalment_election: 'Aquesta declaració no es pot pagar en dos
+      terminis: cal un resultat a ingressar, que no sigui rectificativa i es presenti
+      dins de termini i, si domicilies el segon termini, un compte espanyol teu.'
     refused_modelo_ledger_evidence_recapture: No es pot tornar a agrupar l'evidència
       d'aquesta declaració perquè els assentaments comptables que la sustenten han
       canviat des que es va segellar. Torna a calcular la declaració; la recaptura

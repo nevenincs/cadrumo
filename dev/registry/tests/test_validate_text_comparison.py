@@ -44,3 +44,13 @@ def test_compiler_refuses_text_literal_as_numeric_formula_result(nested):
     failures = validate_text_comparison_operands("test", formula, revision=revision)
     assert len(failures) == 1
     assert "text_literal may only be an operand of text_equal" in failures[0]
+
+
+@pytest.mark.parametrize(("reason", "refused"), [("waived-refund-result-unsupported", False), ("not-a-reason", True)])
+def test_compiler_admits_a_text_literal_only_as_a_known_unresolved_outcome_reason(reason, refused):
+    revision = load_modelo_directory(Path("src/cadrumo/_data/registry/aeat/modelos/369")).revisions["esquema-exterior"]
+    expression = FormulaExpression(op="unresolved_outcome", args=(FormulaExpression(text_literal=reason),))
+    formula = revision.formulas[0].model_copy(update={"expression": expression})
+    failures = validate_text_comparison_operands("test", formula, revision=revision)
+    assert bool(failures) is refused
+    assert not refused or "unknown reason" in failures[0]

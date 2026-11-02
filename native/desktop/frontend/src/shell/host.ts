@@ -119,6 +119,8 @@ export type Setup = {
 export interface Host {
   readonly censo?: import("./profileCenso").CensoPort;
   readonly userProfile?: import("./userProfile").UserProfilePort;
+  readonly profileCompanions?: import("./profileHousehold").ProfileCompanionPort;
+  readonly borrador?: import("./borrador").BorradorPort;
   readonly aeatSync?: import("./aeatSync").AeatSyncPort;
   readonly aeatSyncResults?: import("./aeatSyncResults").AeatSyncResultsPort;
   readonly aeatSyncRun?: import("./aeatSyncRun").AeatSyncRunPort;

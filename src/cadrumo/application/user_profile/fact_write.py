@@ -58,6 +58,7 @@ class ProfileFactWriteDoor(StrEnum):
     MANAGER_DESCENDANTS = "manager.descendants"
     CLI_PLANTILLA_MEDIA = "cli.plantilla_media"
     MANAGER_PLANTILLA_MEDIA = "manager.plantilla_media"
+    MANAGER_IMPUTATION_ELECTION = "manager.imputation_election"
 
 
 def _effective(record: UserProfileRecord) -> dict[str, object]:

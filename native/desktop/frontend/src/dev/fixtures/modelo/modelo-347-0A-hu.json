@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "0A" },
       "registry_revision_id": "2025-y-siguientes",
       "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-      "calculation_revision_id": "ee00954c8529227aec7c728cbc8e1b92852b23da211c5aef5ad04298de7fbd9d",
+      "calculation_revision_id": "404ba1e740cb4cfd87fb7b4be37dcf221550ccad270049aea2b4f0e6780aa5ad",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -119,8 +119,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "m347-declarante.contacto",
@@ -258,8 +261,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "m347-declarante.declaracion",
@@ -463,8 +469,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "m347-declarante.resumen",
@@ -524,8 +533,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "m347-declarante.firma",
@@ -734,8 +746,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -747,7 +762,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -1021,8 +1038,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -1034,7 +1054,9 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
         },
@@ -1140,8 +1162,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": null
             }
           ],
           "counts": {
@@ -1153,9 +1178,82 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
+        }
+      ],
+      "outline": [
+        {
+          "id": "m347-declarante",
+          "heading": { "text": "Összesítő lap", "disclosure": "localized" },
+          "section_ids": [
+            "m347-declarante.identificacion",
+            "m347-declarante.contacto",
+            "m347-declarante.declaracion",
+            "m347-declarante.resumen",
+            "m347-declarante.firma"
+          ],
+          "counts": {
+            "total": 9,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "m347-declarado",
+          "heading": {
+            "text": "Személyek és szervezetek",
+            "disclosure": "localized"
+          },
+          "section_ids": ["m347-declarado.general"],
+          "counts": {
+            "total": 0,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
+        },
+        {
+          "id": "m347-inmueble",
+          "heading": {
+            "text": "Üzlethelyiségek bérbeadása",
+            "disclosure": "localized"
+          },
+          "section_ids": ["m347-inmueble.general"],
+          "counts": {
+            "total": 0,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": null
         }
       ],
       "working_figures": [
@@ -1220,7 +1318,9 @@
         "overridden": 0,
         "default_to_confirm": 0,
         "not_applicable": 0,
-        "blocked": 0
+        "blocked": 0,
+        "needs_you": 0,
+        "could_not_calculate": 0
       },
       "progress": {
         "state": "in_progress",
@@ -1302,7 +1402,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1337,9 +1437,9 @@
     "period_filing_year": 2026,
     "period_code": "0A",
     "work_unit_id": "f8b5118f6aa31dfa3ba496cc98360941661880792b4f29c991453f94e77e97da",
-    "work_unit_record_digest": "0ca7d4b46421363313c86b87cb2e91d0bb68a045ec8a58b16f8bf318e0bc2e23",
-    "calculation_head_digest": "16616ed82627913ec240d0c07e9ab0bbda62bcaed030ee186aacd2b4600a7b55",
-    "current_calculation_revision_id": "ee00954c8529227aec7c728cbc8e1b92852b23da211c5aef5ad04298de7fbd9d",
+    "work_unit_record_digest": "834f7f625780e35fd02badb61ed7339d67e6af0e1ef34fb17c99fde455a4f8e3",
+    "calculation_head_digest": "275a89e74addc9eb7009004a671cc6aee5c1f58ab97edc09969a927a2246a652",
+    "current_calculation_revision_id": "404ba1e740cb4cfd87fb7b4be37dcf221550ccad270049aea2b4f0e6780aa5ad",
     "law_selected_revision_id": "2025-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-347-2025-y-siguientes",
@@ -2060,9 +2160,9 @@
     ],
     "permitted_surface_digest": "c258bc8ca1f53449315c27e6a6e73d340ff63f1c625609083c5d48dde37106ae",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:25:03.447263Z",
-    "expires_at": "2026-11-02T09:30:03.447263Z",
-    "baseline_id": "761334bd39817f04bfc60eb1001e3de85b6cabdae5b4a7df6dcedc9267b655ec"
+    "issued_at": "2026-11-02T16:29:02.723660Z",
+    "expires_at": "2026-11-02T16:34:02.723660Z",
+    "baseline_id": "c7224a4e0bd68c56765fec3a71698e6a9789f15100a3b38f8454d3704aee2838"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2097,7 +2197,7 @@
     "words": "A bevallást még nem ellenőrizték.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "ee00954c8529227aec7c728cbc8e1b92852b23da211c5aef5ad04298de7fbd9d",
+  "calculation_revision_id": "404ba1e740cb4cfd87fb7b4be37dcf221550ccad270049aea2b4f0e6780aa5ad",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

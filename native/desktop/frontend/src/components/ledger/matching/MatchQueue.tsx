@@ -1,3 +1,4 @@
+import settings from "virtual:operational-settings";
 import { useEffect, useId, useMemo, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
@@ -38,11 +39,6 @@ import {
 } from "./matchingWords";
 import { useMatchingFacts, type Facts } from "./useMatchingFacts";
 
-const TOAST_MS = 4000;
-/** How many evidence chips a queue item shows; the rest are in its
- * accessible description. */
-const SHOWN_CHIPS = 2;
-
 export type AffectedDeclaration = LedgerStatusResult["stale_filings"][number];
 
 const movementAmount = (locale: string, row: LedgerRow) =>
@@ -53,8 +49,8 @@ const movementAmount = (locale: string, row: LedgerRow) =>
 function Chips({ t, pair }: { t: Translate; pair: MatchPair }) {
   return (
     <span className="flex flex-wrap gap-1">
-      {pair.chips.slice(0, SHOWN_CHIPS).map((chip) => (
-        <Badge key={chip.kind} className="ledger-match-chip">
+      {pair.chips.map((chip) => (
+        <Badge key={chip.kind} className="ledger-match-chip whitespace-normal">
           {chipText(t, chip)}
         </Badge>
       ))}
@@ -428,7 +424,10 @@ export function MatchQueue({
   const [toast, setToast] = useState<string | null>(null);
   useEffect(() => {
     if (!toast) return;
-    const timer = window.setTimeout(() => setToast(null), TOAST_MS);
+    const timer = window.setTimeout(
+      () => setToast(null),
+      settings.ledger_toast_ms,
+    );
     return () => window.clearTimeout(timer);
   }, [toast]);
   const actions = stage.content.actions;

@@ -49,6 +49,8 @@ import {
   type ProviderSignInFixtureControls,
 } from "./providerSettingsFixture";
 import {
+  ADVISED_CALENDAR,
+  ADVICE_ONLY_CALENDAR,
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
   CLOSE_UNKNOWN_CALENDAR,
@@ -135,6 +137,8 @@ const EVIDENCE_CALENDAR: typeof FIXTURE_CALENDAR = {
   ],
 };
 export const CALENDAR_SHAPES = {
+  advice: ADVISED_CALENDAR,
+  advice_only: ADVICE_ONLY_CALENDAR,
   behind: BEHIND_CALENDAR,
   ahead: AHEAD_CALENDAR,
   straddling: STRADDLING_CALENDAR,
@@ -211,6 +215,21 @@ function closeWindow() {
  * `closed` only says the native window would have.
  */
 function windowFixture(): NonNullable<Host["window"]> {
+  let fullscreen = false;
+  let changed:
+    | ((state: {
+        maximized: boolean;
+        fullscreen: boolean;
+        chrome: "custom";
+        nativeControls: null;
+      }) => void)
+    | null = null;
+  const presentation = () => ({
+    maximized: false,
+    fullscreen,
+    chrome: "custom" as const,
+    nativeControls: null,
+  });
   window.__scenarioWindow = {
     systemClose: closeWindow,
     actions: () => [...windowActions],
@@ -219,6 +238,10 @@ function windowFixture(): NonNullable<Host["window"]> {
   return {
     action(action) {
       windowActions.push(action);
+      if (action === "toggle_fullscreen" || action === "leave_fullscreen") {
+        fullscreen = action === "toggle_fullscreen" ? !fullscreen : false;
+        changed?.(presentation());
+      }
       // `close` raises the same close the system does.
       if (action === "close") closeWindow();
       else if (action === "close_now") {
@@ -228,13 +251,11 @@ function windowFixture(): NonNullable<Host["window"]> {
       return Promise.resolve();
     },
     observe(listener) {
-      listener({
-        maximized: false,
-        fullscreen: false,
-        chrome: "custom",
-        nativeControls: null,
+      changed = listener;
+      listener(presentation());
+      return Promise.resolve(() => {
+        if (changed === listener) changed = null;
       });
-      return Promise.resolve(() => undefined);
     },
     guardClose(asking) {
       const listener = () => asking();

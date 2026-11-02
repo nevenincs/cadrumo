@@ -158,3 +158,24 @@ def test_cycle_hidden_behind_a_conditional_is_rejected(form_source):
     )
     with pytest.raises(CalcSheetsEngineError, match="cycle"):
         conditional_missing_input_guard(expression, formulas={"03": expression}, layout=plan_layout(snapshot.revision))
+
+
+def test_a_declared_unresolved_branch_is_an_unknown_in_the_workbook_and_missing_when_it_is_taken(form_source):
+    snapshot, _ = form_source
+    layout = plan_layout(snapshot.revision)
+    expression = FormulaExpression(
+        op="if_then_else",
+        args=(
+            FormulaExpression(casilla_id="01"),
+            FormulaExpression(casilla_id="02"),
+            FormulaExpression(
+                op="unresolved_outcome", args=(FormulaExpression(text_literal="waived-refund-result-unsupported"),)
+            ),
+        ),
+    )
+    predicate = layout.entradas_cells["01"].qualified()
+    amount = layout.entradas_cells["02"].qualified()
+    assert translate_formula(expression, layout=layout) == f"IF(({predicate})<>0,{amount},NA())"
+    assert conditional_missing_input_guard(expression, formulas={}, layout=layout) == (
+        f"IF(ISBLANK({predicate}),TRUE,IF(({predicate})<>0,ISBLANK({amount}),TRUE))"
+    )

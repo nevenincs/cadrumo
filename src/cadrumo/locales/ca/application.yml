@@ -1013,6 +1013,59 @@ application:
           tu.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Coincideixen
+          differ: Difereixen
+          not_comparable: No es poden comparar
+          only_in_borrador: Només a l’esborrany de l’AEAT
+          only_in_calculation: Només al teu càlcul
+        evidence:
+          borrador: L’AEAT el va imprimir al seu esborrany i el vas importar aquí.
+            És una observació, no una declaració autenticada.
+          calculation: Calculat en aquest equip a partir dels teus registres. És local,
+            no una presentació davant l’AEAT.
+        reason:
+          borrador_does_not_read_box: La importació de l’esborrany no llegeix aquesta
+            casella, així que la manca d’un valor de l’esborrany no en diu res.
+          borrador_printed_no_value: El teu càlcul té un valor, però l’esborrany de
+            l’AEAT no n’imprimeix cap en aquesta casella.
+          borrador_value_ambiguous: L’esborrany de l’AEAT té més d’un valor per a
+            aquesta casella, així que no es pot comparar.
+          borrador_value_not_kept: L’esborrany de l’AEAT imprimeix aquesta casella,
+            però la importació no en desa el valor, així que no es pot comparar.
+          calculation_blocked: El teu càlcul no va poder resoldre aquesta casella,
+            així que no es pot comparar.
+          calculation_has_no_value: L’esborrany de l’AEAT imprimeix un valor, però
+            el teu càlcul no en té cap en aquesta casella.
+          calculation_not_applicable: El teu càlcul mostra que aquesta casella no
+            et correspon, però l’esborrany de l’AEAT imprimeix un valor.
+          not_applicable_zero: L’esborrany de l’AEAT imprimeix zero i el teu càlcul
+            mostra que aquesta casella no et correspon.
+          same_value: L’esborrany de l’AEAT i el teu càlcul tenen el mateix valor.
+          taken_from_borrador: El teu càlcul va prendre aquest valor de l’esborrany
+            de l’AEAT, així que la coincidència no el confirma de manera independent.
+          value_kinds_differ: Un costat té un import i l’altre un text, així que no
+            es poden comparar.
+          values_differ: L’esborrany de l’AEAT i el teu càlcul tenen valors diferents.
+        stale:
+          calculation_outdated: Les regles van canviar després de desar el teu càlcul,
+            així que cal recalcular-lo.
+          calculation_used_other_capture: El teu càlcul es va fer a partir d’un esborrany
+            de l’AEAT diferent del que es compara aquí.
+          newer_capture_refused: Hi ha desat un esborrany que vas importar més tard,
+            però no es pot llegir, així que aquesta comparació en fa servir un d’anterior.
+        status:
+          capture_refused: Hi ha esborranys de l’AEAT desats per a aquest any, però
+            cap no es pot llegir amb les regles actuals; torna a importar l’esborrany.
+          compared: S’han comparat casella per casella l’esborrany de l’AEAT que vas
+            importar i el teu càlcul desat.
+          no_calculation: Aquesta declaració encara no té cap càlcul desat, així que
+            l’esborrany no es pot comparar; calcula-la primer.
+          no_capture: No has importat cap esborrany de l’AEAT per a aquest any, així
+            que no hi ha res a comparar.
+          stale: S’han llegit tots dos, però ja no es corresponen; recalcula o torna
+            a importar l’esborrany abans de refiar-te d’aquesta comparació.
       errors:
         binding_keys_not_admitted: 'Aquest esborrany desat té valors amb claus que
           les definicions del model no admeten, així que no es pot fer servir; torna
@@ -1827,6 +1880,9 @@ application:
       amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind}
         no està legalment disponible per al model {modelo}, exercici {filing_year},
         període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
+      amendment_later_period_only: El model {modelo} de l'exercici {filing_year} i
+        període {period} no admet corregir una autoliquidació ja presentada. Practica
+        l'ajust en l'autoliquidació d'un període posterior.
       amendment_registry_root_missing: La generació publicada de l'autoritat %{missing_path}
         no existeix; no es poden validar les sobreescriptures de la rectificació.
       amendment_registry_snapshot_unresolved: No s'han pogut resoldre les definicions
@@ -2281,6 +2337,11 @@ application:
         dades dels teus models 303 de l'any, i encara hi ha %{source_issue_count}
         incidència(es) pendent(s) amb aquestes dades, així que aquesta declaració
         no es pot completar.
+      iva_cuota_disagrees_with_rate: L'entrada d'IVA amb data %{transaction_date}
+        registra una quota de %{recorded_cuota} EUR, però la seva base de %{base_amount}
+        EUR al tipus del %{iva_rate_percent} % dona %{expected_cuota} EUR. Corregeix
+        la quota, la base o el tipus i torna a calcular abans de comprovar aquesta
+        declaració.
       iva_import_document_unrecordable: L'apunt del %{transaction_date} per %{transaction_amount}
         %{transaction_currency} necessita la declaració duanera de la importació.
         Cadrumo encara no pot registrar-la, de manera que aquesta declaració no pot
@@ -2509,10 +2570,44 @@ application:
           canal decimal %{binding_id} té un tipus no suportat: %{value_type}.'
         enum_boolean_invalid: La dada de perfil per a l'origen de valor %{binding_id}
           ha resolt a booleà; els booleans no són claus vàlides.
+    projection_words:
+      binding_unresolved: No s'ha pogut treure cap valor per a aquesta xifra a partir
+        dels teus registres, així que queda sense resoldre en lloc de comptar com
+        a zero. Registra l'evidència que falta i torna a projectar.
+      casilla_reason:
+        m210_baseline_tipo_deferred: Aquesta casella necessita el tipus de gravamen
+          general d'aquesta classe de renda, que encara no està fonamentat per a l'exercici,
+          així que no té valor.
+        m210_convenio_rate_missing: Aquesta casella necessita el tipus del conveni
+          per evitar la doble imposició segons el país i la classe de renda, que no
+          està disponible, així que no té valor.
+        other: Aquesta casella no s'ha pogut calcular, així que no té valor. Mai es
+          mostra com a zero.
+        unresolved_operand: Aquesta casella suma o llegeix una xifra que encara no
+          té valor, així que ella tampoc no en té. Mai es mostra com a zero.
+        waived_refund_result_unsupported: Encara no s'admet el resultat quan renuncies
+          a cobrar la devolució, així que aquesta casella no té valor. Mai es mostra
+          com a zero.
     quickfile:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha
         rebutjat amb %{error_code}.'
+    taxation_comparison_words:
+      below_materiality: Els dos resultats difereixen en {difference}, menys de {threshold},
+        així que tant se val quina de les dues modalitats triïs.
+      conjunta_lower_result: 'La tributació conjunta surt més barata: el teu resultat
+        és {conjunta} en conjunta i {individual} en individual, una diferència de
+        {difference}.'
+      individual_branch_caveat: La xifra individual és una única declaració calculada
+        amb les dades conjuntes de tota la teva unitat familiar, així que només és
+        fiable quan una sola persona aporta els ingressos de la llar. No calcula dues
+        declaracions separades, una amb els ingressos de cada cònjuge, i aquesta comparació
+        encara no està disponible. Si a la teva unitat familiar hi ha dues persones
+        amb ingressos, pren la xifra individual com una orientació aproximada, no
+        com l'import que has de presentar.
+      individual_lower_result: 'La tributació individual surt més barata: el teu resultat
+        és {individual} en individual i {conjunta} en conjunta, una diferència de
+        {difference}.'
     value_date:
       month_01: de gen.
       month_02: de febr.
@@ -2600,17 +2695,9 @@ application:
       holiday_coverage:
         calendar_unavailable: calendari de festius no disponible; el termini original
           no s'ha comprovat
-        national_and_territory: festius nacionals i de %{territory} comprovats; festius
-          locals sense comprovar
-        national_and_territory_without_name: festius nacionals i autonòmics aplicables
-          comprovats; festius locals sense comprovar
-        national_only: només festius nacionals; festius autonòmics i locals sense
-          comprovar
+        national_only: dissabtes, diumenges i dies inhàbils estatals comprovats; els
+          festius autonòmics i locals no mouen el termini de presentació
         not_shifted: el termini d'aquest model no es trasllada per dies inhàbils
-        territory_unverified: només festius nacionals; els festius autonòmics de %{territory}
-          d'aquest any no s'han comprovat i els locals no es comproven
-        territory_unverified_without_name: només festius nacionals; el calendari autonòmic
-          aplicable no està verificat; els festius locals no es comproven
       shift:
         business_day: Dia hàbil
         calendar_unavailable: Calendari no disponible
@@ -2978,6 +3065,17 @@ application:
         escrit res.
       row_unknown_field: 'La secció ''%{section}'' no declara aquests camps: %{unknown}.
         Camps disponibles: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Data de naixement
+        convivientes:
+          label: Nombre de descendents amb els quals conviu aquest ascendent
+        fallecimiento:
+          help: Deixa-ho en blanc si aquest ascendent no ha mort.
+          label: Data de defunció
+        nif:
+          label: NIF/NIE de l'ascendent (deixa'l en blanc si no en té)
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'

@@ -457,10 +457,7 @@ impl Diagnostics {
     /// Records the host's final outcome, once: the first path to reach it (a platform
     /// exit hook or the return path) owns the recorded code.
     pub fn host_stopped(&self, code: i32) {
-        if self
-            .stopped
-            .swap(true, std::sync::atomic::Ordering::SeqCst)
-        {
+        if self.stopped.swap(true, std::sync::atomic::Ordering::SeqCst) {
             return;
         }
         self.record(

@@ -457,6 +457,9 @@ cli:
           neveznie egy tétel és egy számla teljes azonosítóját.
         match_invoice_help: 'Egy számla teljes azonosítója: csak azt a számlát mérlegeli,
           és felsorolja a kiállítási napjához közeli nyitott tételeket.'
+        match_judge_help: Ismételhető kapcsolat, amelyet a véglegessé tétel előtt
+          összevet, TÉTEL:SZÁMLA alakban; mindegyikhez visszaadja, miben nem egyezik
+          a két oldala.
         match_staged_help: Ismételhető, előkészített, nem mentett kapcsolat TÉTEL:SZÁMLA
           alakban; egyik sem kínálható fel másnak.
         match_transaction_help: 'Egy tétel teljes azonosítója: csak annak javaslatát

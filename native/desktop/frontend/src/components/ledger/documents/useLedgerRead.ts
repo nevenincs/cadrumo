@@ -4,7 +4,14 @@
 // asked is dropped. What it reads lives in this hook's memory and goes with
 // the profile.
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import type {
   LedgerDefinitionId,
   LedgerPort,
@@ -33,48 +40,81 @@ export function useLedgerRead<D extends LedgerDefinitionId>(
   payload: LedgerRequest<D> | null,
   key = "",
 ): { read: Read<LedgerResult<D>>; reread(): void } {
-  const [read, setRead] = useState<Read<LedgerResult<D>>>({
-    phase: "reading",
-    value: null,
-  });
+  const available = payload !== null;
+  const identity = useMemo(
+    () => ({ port, reader, definition, key, available }),
+    [port, reader, definition, key, available],
+  );
+  const [stored, setStored] = useState<{
+    identity: typeof identity;
+    read: Read<LedgerResult<D>>;
+  }>({ identity, read: { phase: "reading", value: null } });
   const [wanted, setWanted] = useState(0);
   // The page's re-read after a write it could not settle reads this again.
   const { round } = useWritePause();
-  const asked = useRef(0);
-  const held = useRef({ reader, key });
   const latest = useRef(payload);
   latest.current = payload;
+  const generation = useRef(0);
+  // A hidden or replaced view stops accepting replies at commit, before passive cleanup.
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [identity, shown, wanted, round],
+  );
 
   useEffect(() => {
-    if (held.current.reader !== reader || held.current.key !== key) {
-      held.current = { reader, key };
-      setRead({ phase: "reading", value: null });
-    }
+    const { port, reader, definition } = identity;
     const asking = latest.current;
-    if (!shown || reader === null || asking === null) return;
-    asked.current += 1;
-    const mine = asked.current;
-    setRead((before) => ({
-      phase: "reading",
-      value: before.phase === "failed" ? null : before.value,
+    if (!shown || reader === null || asking === null) {
+      setStored((before) =>
+        before.identity === identity
+          ? before
+          : { identity, read: { phase: "reading", value: null } },
+      );
+      return;
+    }
+    let active = true;
+    const mine = generation.current;
+    setStored((before) => ({
+      identity,
+      read: {
+        phase: "reading",
+        value:
+          before.identity === identity && before.read.phase !== "failed"
+            ? before.read.value
+            : null,
+      },
     }));
     void port
       .submit(definition, asking)
       .then((outcome) => {
-        if (mine !== asked.current) return;
+        if (!active || mine !== generation.current) return;
         const answer = readAnswer(outcome);
-        setRead(
-          answer.kind === "answer"
-            ? { phase: "ready", value: answer.result }
-            : { phase: "failed", failure: answer.failure, value: null },
-        );
+        setStored({
+          identity,
+          read:
+            answer.kind === "answer"
+              ? { phase: "ready", value: answer.result }
+              : { phase: "failed", failure: answer.failure, value: null },
+        });
       })
       .catch((error: unknown) => {
-        if (mine !== asked.current) return;
-        setRead({ phase: "failed", failure: readFailure(error), value: null });
+        if (!active || mine !== generation.current) return;
+        setStored({
+          identity,
+          read: { phase: "failed", failure: readFailure(error), value: null },
+        });
       });
-  }, [port, reader, shown, definition, key, wanted, round]);
+    return () => {
+      active = false;
+    };
+  }, [identity, shown, wanted, round]);
 
   const reread = useCallback(() => setWanted((count) => count + 1), []);
+  const read: Read<LedgerResult<D>> =
+    reader !== null && available && stored.identity === identity
+      ? stored.read
+      : { phase: "reading", value: null };
   return { read, reread };
 }

@@ -71,6 +71,7 @@ from .work_form_models import (
     ModeloFormInspectionReason,
     ModeloFormLayoutProvenance,
     ModeloFormOrigin,
+    ModeloFormOutlineGroup,
     ModeloFormRateUnit,
     ModeloFormSourceGroup,
     ModeloFormStanding,
@@ -291,6 +292,7 @@ class PublicModeloFormSection(BaseModel):
     official_heading: str | None
     blocks: tuple[PublicModeloFormBlock, ...]
     counts: ModeloFormCounts
+    applies: bool | None
 
 
 class PublicModeloFormPage(BaseModel):
@@ -344,6 +346,7 @@ class PublicModeloWorkForm(BaseModel):
     inspection_reason: ModeloFormInspectionReason | None
     seed_source: FormLayoutSeedSource | None
     pages: tuple[PublicModeloFormPage, ...]
+    outline: tuple[ModeloFormOutlineGroup, ...]
     working_figures: tuple[PublicModeloFormField, ...]
     unplaced: tuple[PublicModeloFormUnplacedField, ...]
     result_addresses: tuple[CasillaId, ...]

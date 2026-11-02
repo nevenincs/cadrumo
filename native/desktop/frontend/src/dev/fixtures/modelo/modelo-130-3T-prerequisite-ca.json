@@ -61,8 +61,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.devengo",
@@ -93,8 +96,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
@@ -584,8 +590,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
@@ -849,8 +858,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-iii-total-liquidacion",
@@ -1301,8 +1313,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.ingreso",
@@ -1326,8 +1341,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.complementaria",
@@ -1367,8 +1385,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -1380,9 +1401,43 @@
             "overridden": 0,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
+        }
+      ],
+      "outline": [
+        {
+          "id": "dr-13001",
+          "heading": {
+            "text": "Pàgina 1 · Pagament fraccionat",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dr-13001.identificacion",
+            "dr-13001.devengo",
+            "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
+            "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
+            "dr-13001.liquidacion-3-iii-total-liquidacion",
+            "dr-13001.ingreso",
+            "dr-13001.complementaria"
+          ],
+          "counts": {
+            "total": 19,
+            "needs_input": 0,
+            "entered": 0,
+            "imported": 0,
+            "calculated": 0,
+            "overridden": 0,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
         }
       ],
       "working_figures": [
@@ -1462,7 +1517,9 @@
         "overridden": 0,
         "default_to_confirm": 0,
         "not_applicable": 0,
-        "blocked": 0
+        "blocked": 0,
+        "needs_you": 0,
+        "could_not_calculate": 0
       },
       "progress": {
         "state": "in_progress",
@@ -1596,7 +1653,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1936,9 +1993,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:25:38.222502Z",
-    "expires_at": "2026-11-02T09:30:38.222502Z",
-    "baseline_id": "aadbc799651cf61e40c6f2b951ccd0159876d2c2acbcdd50e56fc0329cc8a65d"
+    "issued_at": "2026-11-02T16:30:16.991603Z",
+    "expires_at": "2026-11-02T16:35:16.991603Z",
+    "baseline_id": "6d1e42fc5540a1037d2896adcd1296ce6324b2da452905f54e5abdd58a1ed9b6"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,

@@ -1,9 +1,9 @@
-import { useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import type { AgentSession } from "./agentSession";
 import { useAgentRead } from "./agentViews";
 import { catalogLanes, type CatalogLane } from "./localModelLanes";
 import type { LocalModelHost } from "./localModels";
-import { useProviderSettings, type ProviderSettings } from "./providerSettings";
+import type { ProviderSettings } from "./providerSettings";
 
 // The local AI's model lists outside the agent column: the lanes that need
 // no key, as the profile's provider settings name them, with the models
@@ -21,6 +21,8 @@ export type LocalAiSource = {
 export type LocalAiLanes = {
   lanes: CatalogLane[];
   host: LocalModelHost | null;
+  status: "loading" | "failed" | "ready";
+  retry: () => void;
 };
 
 /**
@@ -34,30 +36,32 @@ export function useLocalAiLanes(
   again: number,
 ): LocalAiLanes {
   const session = source?.session ?? null;
+  const providerSettings = source?.providerSettings ?? null;
   const reader = source?.reader ?? null;
-  const settings = useProviderSettings(
-    source?.providerSettings,
-    reader,
-    active && source !== null,
-    0,
+  const [retries, setRetries] = useState(0);
+  const request = useMemo(
+    () => ({ session, providerSettings, reader, again, retries }),
+    [session, providerSettings, reader, again, retries],
   );
-  const readCatalog = useMemo(
-    () =>
-      active && session && reader !== null
-        ? () => session.providerCatalog()
-        : null,
-    [active, session, reader],
-  );
-  const catalog = useAgentRead(readCatalog, again);
-  const lanes = useMemo(() => {
-    if (catalog.kind !== "ready" || settings.read.kind !== "ready") return [];
-    const keyless = new Set(
-      settings.read.value.providers
-        .filter((lane) => lane.authKind === "none")
-        .map((lane) => lane.id),
-    );
-    return catalogLanes(catalog.value).filter((lane) => keyless.has(lane.id));
-  }, [catalog, settings.read]);
+  const readLanes = useMemo(() => {
+    const { session, providerSettings, reader } = request;
+    if (!active || !session || !providerSettings || reader === null)
+      return null;
+    return async () => {
+      const [catalog, settings] = await Promise.all([
+        session.providerCatalog(),
+        providerSettings.status(),
+      ]);
+      const keyless = new Set(
+        settings.providers
+          .filter((lane) => lane.auth_kind === "none")
+          .map((lane) => lane.id),
+      );
+      return catalogLanes(catalog).filter((lane) => keyless.has(lane.id));
+    };
+  }, [active, request]);
+  const read = useAgentRead(readLanes);
+  const retry = useCallback(() => setRetries((count) => count + 1), []);
   const host = useMemo((): LocalModelHost | null => {
     if (
       !session?.localModels ||
@@ -73,5 +77,15 @@ export function useLocalAiLanes(
       reset: session.resetLocalModels.bind(session),
     };
   }, [session]);
-  return { lanes, host };
+  return {
+    lanes: read.kind === "ready" ? read.value : [],
+    host,
+    status:
+      read.kind === "ready"
+        ? "ready"
+        : read.kind === "loading"
+          ? "loading"
+          : "failed",
+    retry,
+  };
 }

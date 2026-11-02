@@ -20,6 +20,7 @@ from cadrumo_client.contracts.access_vocabulary import (
     AuthorityState,
     Availability,
 )
+from cadrumo_client.contracts.enrollment_proposal import GrantLabel
 
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.time.utc import UtcInstant
@@ -56,6 +57,7 @@ class AutomationGrant(BaseModel):
     expires_at: UtcInstant
     unattended: bool
     allow_os_lock: bool
+    label: GrantLabel | None = None
 
     @model_validator(mode="after")
     def _validate_interval(self) -> AutomationGrant:

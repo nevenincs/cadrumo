@@ -489,6 +489,8 @@ export type CalculationSourceDiagnosticSnapshot = {
     | "ungrounded_income_substrate"
     | "unusable_sales_invoice_evidence"
     | "devengo_date_proxy_attribution"
+    | "iva_row_placed_on_movement_date"
+    | "iva_operation_date_after_movement"
     | "oss_no_live_source"
     | "withholding_detail_absent"
     | "missing_transaction_evidence"
@@ -931,27 +933,18 @@ export type CrossPeriodDependencyOrigin =
 /**
  * Which holiday layers were checked when a close date was adjusted.
  *
- * A deadline also moves for a holiday of the taxpayer's autonomous community
- * or municipality (Ley 39/2015 art. 30.6). Municipal holidays are never
- * checked because the registry has no source for them, so no state claims
- * complete coverage.
+ * An electronic filing close moves only for weekends and the national
+ * inhábiles (Ley 39/2015 art. 31.3, which excludes art. 30.6), so the national
+ * calendar is the complete rule for every filer.
  *
- * * `NATIONAL_AND_TERRITORY` — weekends, national holidays and the taxpayer's
- * autonomous-community holidays were checked. * `TERRITORY_UNVERIFIED` — the
- * taxpayer's territory is known but its regional holidays for the year are not
- * verified in the registry, so only weekends and national holidays were
- * applied. * `NATIONAL_ONLY` — the taxpayer's territory is not established, so
- * only weekends and national holidays were checked. * `NOT_SHIFTED` — the
- * modelo's deadline does not move for non-working days, so no calendar
- * applies. * `CALENDAR_UNAVAILABLE` — the holiday calendar could not be
- * resolved and the original close date was kept unverified.
+ * * `NATIONAL_ONLY` — weekends and national inhábiles were checked; the
+ * adjusted date is final. * `NOT_SHIFTED` — the modelo's deadline does not
+ * move for non-working days, so no calendar applies. * `CALENDAR_UNAVAILABLE`
+ * — the holiday calendar could not be resolved and the original close date was
+ * kept unverified.
  */
 export type DeadlineHolidayCoverage =
-  | "national_and_territory"
-  | "territory_unverified"
-  | "national_only"
-  | "not_shifted"
-  | "calendar_unavailable";
+  "national_only" | "not_shifted" | "calendar_unavailable";
 
 /**
  * The work order a filer sees in the portfolio.
@@ -3950,9 +3943,11 @@ export type ModeloExportPublicResultV3 = {
  * location rather than content. The exported bytes never enter the request or
  * the result.
  *
- * The three elections are the declaration-shaping choices the command line
- * also accepts, with the same neutral defaults, so one revision exports as the
- * same declaration type from either surface.
+ * The refund, payment and prior-domiciliation elections are the declaration-
+ * shaping choices the command line also accepts, with the same neutral
+ * defaults, so one revision exports as the same declaration type from either
+ * surface. The instalment election defaults to paying at once, as the command
+ * line exports.
  *
  * `actor` is recorded as sent for a person's session. An automation's session
  * is recorded under its own session label, whatever the request carries.
@@ -3962,6 +3957,7 @@ export type ModeloExportRequest = {
   output_path: string;
   refund_election?: RefundElection;
   payment_election?: PaymentElection;
+  instalment_election?: PaymentInstalmentElection;
   prior_domiciliation_election?: PriorDomiciliationElection;
   charge_account_id?: string | null;
   refund_account_id?: string | null;
@@ -3970,6 +3966,14 @@ export type ModeloExportRequest = {
   report_language?: OutputLanguage;
   actor: string;
 };
+
+export type ModeloExportRequestField =
+  | "refund_election"
+  | "payment_election"
+  | "prior_domiciliation_election"
+  | "instalment_election"
+  | "charge_account_id"
+  | "refund_account_id";
 
 /**
  * Complete canonical fichero-BOE receipt, excluding the locally written bytes.
@@ -4350,6 +4354,13 @@ export type ModeloFormCasillaAddressV1 = {
  * `needs_input` and `default_to_confirm` count what is still to do, so a
  * declaration recorded as filed counts none of either: nothing on it can be
  * entered or confirmed any more, and changing it starts a correction.
+ *
+ * `needs_you` and `could_not_calculate` are the attention a navigator shows.
+ * `needs_you` counts every box whose standing asks the filer to act (a value
+ * to give or confirm, a box the calculation could not work out, a blocker), so
+ * it is what a section still asks of the filer. `could_not_calculate` counts
+ * the boxes among them the last calculation could not produce. A box can count
+ * in both.
  */
 export type ModeloFormCounts = {
   total: number;
@@ -4361,6 +4372,8 @@ export type ModeloFormCounts = {
   default_to_confirm: number;
   not_applicable: number;
   blocked: number;
+  needs_you: number;
+  could_not_calculate: number;
 };
 
 /**
@@ -4368,9 +4381,9 @@ export type ModeloFormCounts = {
  *
  * `nominal_closes_on` is the date the registry declares; `closes_on` is the
  * date after the business-day shift, and `holiday_coverage` says which
- * holidays that shift accounted for, so a date computed without the filer's
- * regional holidays is never passed off as final. Exactly one of
- * `days_remaining` and `days_overdue` is set, counted from `reference_on`.
+ * holidays that shift accounted for, so a date computed without its holiday
+ * calendar is never passed off as final. Exactly one of `days_remaining` and
+ * `days_overdue` is set, counted from `reference_on`.
  */
 export type ModeloFormDeadline = {
   closes_on: string;
@@ -4426,7 +4439,13 @@ export type ModeloFormEditability =
 /**
  * One declaration-shaping choice an export asks.
  */
-export type ModeloFormElection = "refund" | "payment" | "prior_domiciliation";
+export type ModeloFormElection =
+  | "refund"
+  | "payment"
+  | "prior_domiciliation"
+  | "instalment"
+  | "charge_account"
+  | "refund_account";
 
 /**
  * One answer an election takes: the value the export request carries, and its
@@ -4438,15 +4457,46 @@ export type ModeloFormElectionChoice = {
 };
 
 /**
- * One election the export asks, pre-set to its neutral default and never
- * blank.
+ * One election the export asks, its state, and its answers pre-set to the
+ * neutral default.
+ *
+ * An available question carries its choices; its `default` is one of them, or
+ * `None` when no answer is neutral (an account nothing designates), and the
+ * export then resolves the register's designation. A question that is not
+ * applicable or unavailable carries its reason and its words instead, no
+ * choices and no default, and is not sent. `request_field` is the export
+ * request field an answer is sent in.
  */
 export type ModeloFormElectionQuestion = {
   election: ModeloFormElection;
+  request_field: ModeloExportRequestField;
   words: string;
-  default: string;
+  state: ModeloFormElectionState;
+  reason: ModeloFormElectionReason | null;
+  state_words: string | null;
+  help: string | null;
+  default: string | null;
   choices: ModeloFormElectionChoice[];
 };
+
+/**
+ * Why an election is not applicable or cannot be answered now.
+ */
+export type ModeloFormElectionReason =
+  | "nothing_to_pay"
+  | "nothing_to_refund"
+  | "result_unknown"
+  | "amendment"
+  | "past_filing_window"
+  | "filing_window_unknown"
+  | "no_open_account"
+  | "no_spanish_account";
+
+/**
+ * Whether the filer can answer an election now.
+ */
+export type ModeloFormElectionState =
+  "available" | "not_applicable" | "unavailable";
 
 /**
  * The latest file exported for this declaration, and whether it was made from
@@ -4550,7 +4600,9 @@ export type ModeloFormInspectionReason =
  * `address` is where choosing the line leads: the box the form shows, or with
  * `in_records` the table whose records carry the value; `None` when the line
  * leads nowhere on the form. `surface` is the area of the application that
- * owns the value, when one does.
+ * owns the value, when one does: for a line about a box it is the area its
+ * primary source belongs to, so a credit the withholding register supplies
+ * leads to that register and never to a place to type it.
  */
 export type ModeloFormIssueLine = {
   level: ModeloFormAttention;
@@ -4618,6 +4670,22 @@ export type ModeloFormOrigin =
   | "cleared"
   | "default_to_confirm"
   | "entered";
+
+/**
+ * One group of the form's navigation outline: a heading and the sections it
+ * gathers, in order.
+ *
+ * `section_ids` are `id` values, every section of the form's pages in exactly
+ * one group. `counts` roll up the boxes of those sections; `applies` is `True`
+ * when any of them applies, `False` when none does, and `None` otherwise.
+ */
+export type ModeloFormOutlineGroup = {
+  id: string;
+  heading: ModeloFormText;
+  section_ids: string[];
+  counts: ModeloFormCounts;
+  applies: boolean | null;
+};
 
 /**
  * The unit a rate is stated in.
@@ -5355,7 +5423,8 @@ export type ModeloProfileRefusalCause =
  *
  * A box in `unresolved_casillas` or bound by a binding in
  * `unresolved_bindings` has no value, and never appears in
- * `casilla_observations`.
+ * `casilla_observations`. The words of both lists are in `words_language`, the
+ * language the worker's catalogue rendered them in.
  */
 export type ModeloProjectOperationProjection = {
   result_version: 2;
@@ -5371,6 +5440,7 @@ export type ModeloProjectOperationProjection = {
   m100_projection: ProjectM100SummaryProjection;
   unresolved_bindings: ProjectUnresolvedBindingProjection[];
   unresolved_casillas: ProjectUnresolvedCasillaProjection[];
+  words_language: OutputLanguage;
 };
 
 /**
@@ -6050,9 +6120,15 @@ export type ModeloSpreadsheetExportRequest = {
 
 /**
  * Bounded comparison with the single-earner scope caveat intact.
+ *
+ * `recommendation_reason` is the closed token of why the mode is recommended;
+ * `recommendation_reason_words` is the same reason in words naming the results
+ * it compares, in `words_language`; `individual_branch_caveat` states in the
+ * same language why the individual figure is reliable only for a single-earner
+ * household.
  */
 export type ModeloTaxationComparisonProjection = {
-  result_version: 1;
+  result_version: 2;
   profile_id: string;
   work_unit_id: string;
   filing_year: number;
@@ -6064,7 +6140,9 @@ export type ModeloTaxationComparisonProjection = {
   individual_resultado: string;
   delta_resultado: string;
   recommendation: TaxationRecommendation;
-  recommendation_reason: string;
+  recommendation_reason: TaxationRecommendationReason;
+  recommendation_reason_words: string;
+  words_language: OutputLanguage;
   individual_branch_single_earner_only: true;
   individual_branch_caveat: string;
 };
@@ -7132,6 +7210,13 @@ export type OwnAccountRole = "charge" | "refund";
 export type PaymentElection = "ingreso" | "domiciliacion" | "cuenta_corriente";
 
 /**
+ * Whether a positive result is paid at once or in two instalments, and how the
+ * second is paid.
+ */
+export type PaymentInstalmentElection =
+  "single" | "two_instalments_second_debited" | "two_instalments_second_paid";
+
+/**
  * Implemented aggregation-contributor families owned by
  * `cadrumo.application.aggregation`.
  *
@@ -7206,6 +7291,10 @@ export type ProjectM130AccumulatedProjection = {
 /**
  * One source-owned binding left without a value, named by its box and closed
  * tokens.
+ *
+ * `words` says why it has no value and what puts that right, and
+ * `source_words` names its source in a few words (`None` for a source kind the
+ * product does not know); both are in the projection's `words_language`.
  */
 export type ProjectUnresolvedBindingProjection = {
   binding_id: string;
@@ -7213,15 +7302,21 @@ export type ProjectUnresolvedBindingProjection = {
   source_kind: string;
   reason: string;
   note: string | null;
+  source_words: string | null;
+  words: string;
 };
 
 /**
  * One computed box with no value, and the grounding of the formula that would
  * compute it.
+ *
+ * `reason_words` says why it has no value, in the projection's
+ * `words_language`.
  */
 export type ProjectUnresolvedCasillaProjection = {
   casilla_id: string;
   reason: string;
+  reason_words: string;
   formula_id: string;
   legal_refs: string[];
   source_refs: string[];
@@ -7732,6 +7827,7 @@ export type PublicModeloFormSection = {
   official_heading: string | null;
   blocks: PublicModeloFormBlock[];
   counts: ModeloFormCounts;
+  applies: boolean | null;
 };
 
 /**
@@ -7781,6 +7877,7 @@ export type PublicModeloWorkForm = {
   inspection_reason: ModeloFormInspectionReason | null;
   seed_source: FormLayoutSeedSource | null;
   pages: PublicModeloFormPage[];
+  outline: ModeloFormOutlineGroup[];
   working_figures: PublicModeloFormField[];
   unplaced: PublicModeloFormUnplacedField[];
   result_addresses: CasillaId[];
@@ -8077,7 +8174,9 @@ export type RefundElection = "compensar" | "devolver";
  * Closed reason catalogue for typed formula outcomes with no Decimal value.
  */
 export type RegistryUnresolvedOutcomeReason =
-  "m210-baseline-tipo-deferred" | "m210-convenio-rate-missing";
+  | "m210-baseline-tipo-deferred"
+  | "m210-convenio-rate-missing"
+  | "waived-refund-result-unsupported";
 
 export type RelationId = string;
 
@@ -8188,6 +8287,15 @@ export type SubjectTaxId = string;
  * than one euro.
  */
 export type TaxationRecommendation = "conjunta" | "individual" | "indifferent";
+
+/**
+ * Why the comparison recommends what it does, as a closed token.
+ *
+ * The words for a reason, with the amounts it rests on, are served by
+ * `taxation_comparison_words`.
+ */
+export type TaxationRecommendationReason =
+  "conjunta_lower_result" | "individual_lower_result" | "below_materiality";
 
 export type TransactionId = string;
 

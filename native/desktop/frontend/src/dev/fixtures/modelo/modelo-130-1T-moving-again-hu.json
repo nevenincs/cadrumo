@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "7917ba8c592d4e250777e15c0db17ba1871795886dbad28f758972df978b7fc2",
+      "calculation_revision_id": "8d2d9777e4dcc5ba42f500f27ebd409fd3ed3bc1b73eb52f9edf9cf653a01762",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -64,8 +64,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.devengo",
@@ -99,8 +102,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
@@ -581,8 +587,11 @@
                 "overridden": 1,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
@@ -846,8 +855,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.liquidacion-3-iii-total-liquidacion",
@@ -1298,8 +1310,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.ingreso",
@@ -1323,8 +1338,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             },
             {
               "id": "dr-13001.complementaria",
@@ -1364,8 +1382,11 @@
                 "overridden": 0,
                 "default_to_confirm": 0,
                 "not_applicable": 0,
-                "blocked": 0
-              }
+                "blocked": 0,
+                "needs_you": 0,
+                "could_not_calculate": 0
+              },
+              "applies": true
             }
           ],
           "counts": {
@@ -1377,9 +1398,43 @@
             "overridden": 1,
             "default_to_confirm": 0,
             "not_applicable": 0,
-            "blocked": 0
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
           },
           "applicability_words": null
+        }
+      ],
+      "outline": [
+        {
+          "id": "dr-13001",
+          "heading": {
+            "text": "1. oldal · Adóelőleg",
+            "disclosure": "localized"
+          },
+          "section_ids": [
+            "dr-13001.identificacion",
+            "dr-13001.devengo",
+            "dr-13001.liquidacion-3-i-actividades-econ-estim-directa",
+            "dr-13001.liquidacion-3-ii-actividades-agricolas-ga-829910",
+            "dr-13001.liquidacion-3-iii-total-liquidacion",
+            "dr-13001.ingreso",
+            "dr-13001.complementaria"
+          ],
+          "counts": {
+            "total": 19,
+            "needs_input": 0,
+            "entered": 2,
+            "imported": 2,
+            "calculated": 11,
+            "overridden": 1,
+            "default_to_confirm": 0,
+            "not_applicable": 0,
+            "blocked": 0,
+            "needs_you": 0,
+            "could_not_calculate": 0
+          },
+          "applies": true
         }
       ],
       "working_figures": [
@@ -1459,7 +1514,9 @@
         "overridden": 1,
         "default_to_confirm": 0,
         "not_applicable": 0,
-        "blocked": 0
+        "blocked": 0,
+        "needs_you": 0,
+        "could_not_calculate": 0
       },
       "progress": {
         "state": "in_progress",
@@ -1604,8 +1661,8 @@
       "aeat_data": null,
       "filing": null,
       "last_export": {
-        "exported_at": "2026-11-02T09:26:44.255864Z",
-        "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+        "exported_at": "2026-11-02T16:33:10.439522Z",
+        "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
         "current": false
       },
       "edit_closure": null,
@@ -1622,7 +1679,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
+      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1657,9 +1714,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "dd583e5d4be3dc295cd21341cee54d698ea27cce66ca22915ed02ac5d2a76c61",
-    "calculation_head_digest": "26a348a1c39c41288669d118abccae3191b835ccaf382cb66ca59761e119c163",
-    "current_calculation_revision_id": "7917ba8c592d4e250777e15c0db17ba1871795886dbad28f758972df978b7fc2",
+    "work_unit_record_digest": "7a6bac4f0adcb423659fdad2cb96b6993f02021d68224ef56da541ae9b1dbc40",
+    "calculation_head_digest": "11cb366f89b33d6429e2aec09c466e291b0a96cc9ef7e8bccf24ddc9b333545a",
+    "current_calculation_revision_id": "8d2d9777e4dcc5ba42f500f27ebd409fd3ed3bc1b73eb52f9edf9cf653a01762",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1962,9 +2019,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T09:28:00.772410Z",
-    "expires_at": "2026-11-02T09:33:00.772410Z",
-    "baseline_id": "7ad026712960af862af6737bdbebcb855147aba7089df158e10818d1ee7b948d"
+    "issued_at": "2026-11-02T16:35:43.253354Z",
+    "expires_at": "2026-11-02T16:40:43.253354Z",
+    "baseline_id": "43d44efa450b1f21cbb9d2c7a8ac08e523d45c3fa44e91480ebbff9553f6f50b"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1974,7 +2031,7 @@
     "count": 0,
     "findings_lead": false,
     "recorded_at": null,
-    "file_created_at": "2026-11-02T09:26:44.255864Z",
+    "file_created_at": "2026-11-02T16:33:10.439522Z",
     "receipt_to_add": false
   },
   "header": {
@@ -2003,7 +2060,7 @@
       "help": null
     },
     "file": {
-      "exported_at": "2026-11-02T09:26:44.255864Z",
+      "exported_at": "2026-11-02T16:33:10.439522Z",
       "created_on": "2026. nov. 2.",
       "current": false,
       "words": "A(z) 2026. nov. 2. napi fájl elavult. Hozd létre újra."
@@ -2035,7 +2092,7 @@
     "words": "A bevallást még nem ellenőrizték.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "7917ba8c592d4e250777e15c0db17ba1871795886dbad28f758972df978b7fc2",
+  "calculation_revision_id": "8d2d9777e4dcc5ba42f500f27ebd409fd3ed3bc1b73eb52f9edf9cf653a01762",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

@@ -396,6 +396,18 @@ def compose_user_profile_history_operation(inputs: OperationCompositionInputs) -
     )
 
 
+def compose_user_profile_imputation_election_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
+    """Compose the user profile imputation election read and change."""
+    from ..application.user_profile.imputation_election_operation import (
+        build_imputation_election_definitions,
+        build_imputation_election_registrations,
+    )
+
+    del inputs
+    definitions = build_imputation_election_definitions()
+    return built(definitions, build_imputation_election_registrations(definitions))
+
+
 def compose_user_profile_google_configuration_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose user profile google configuration operation."""
     from ..application.user_profile.google_configuration_operation import (

@@ -1,0 +1,189 @@
+---
+tags:
+  - '#exec'
+  - '#desktop-renta'
+date: '2026-11-02'
+modified: '2026-11-02'
+body_schema: 'body-v2'
+body_hash: 'sha256:cbf3e2f2c2ab85e070123f34151fbd33d85696578eff97bd438ef57db26455bb'
+related:
+  - "[[2026-11-02-desktop-renta-plan]]"
+---
+
+# `desktop-renta` ledger
+
+## Changes
+
+- `S09` `A` `src/cadrumo/application/user_profile/family_rows.py`
+- `S09` `M` `src/cadrumo/application/user_profile/overview.py`
+- `S09` `M` `src/cadrumo/application/user_profile/view_operation.py`
+- `S09` `M` `src/cadrumo/application/user_profile/view_reader.py`
+- `S09` `A` `src/cadrumo/application/user_profile/tests/test_family_rows.py`
+- `S09` `A` `src/cadrumo/adapters/persistence/operations/tests/test_profile_view_family_rows.py`
+- `S09` `verify:` `pytest test_family_rows test_profile_view_family_rows` -> `pass`
+- `S09` `verify:` `ruff ty lint-imports` -> `pass`
+- `S09` `by:` `sonnet-high`
+- `S08` `A` `src/cadrumo/application/user_profile/imputation_election_contracts.py`
+- `S08` `A` `src/cadrumo/application/user_profile/imputation_election_service.py`
+- `S08` `A` `src/cadrumo/application/user_profile/imputation_election_operation.py`
+- `S08` `A` `src/cadrumo/adapters/persistence/profile/tests/test_imputation_election_operation.py`
+- `S08` `M` `src/cadrumo/application/user_profile/question_view.py`
+- `S08` `M` `src/cadrumo/application/user_profile/profile_operation_access.py`
+- `S08` `M` `src/cadrumo/application/user_profile/fact_write.py`
+- `S08` `M` `src/cadrumo/application/user_profile/tests/test_fact_write_door_contract.py`
+- `S08` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S08` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S08` `M` `src/cadrumo/entrypoints/operation_composition_general.py`
+- `S08` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/registered_executor_conformance_expectations.py`
+- `S08` `M` `src/cadrumo/entrypoints/tests/registered_executor_payload_profile_support.py`
+- `S08` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.json`
+- `S08` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S08` `verify:` `pytest test_imputation_election_operation` -> `pass`
+- `S08` `verify:` `ruff ty lint-imports` -> `pass`
+- `S08` `verify:` `python -m dev.quality.types` -> `fail`
+- `S08` `by:` `opus-medium`
+- `S06` `A` `src/cadrumo/application/modelo/projection_words.py`
+- `S06` `A` `src/cadrumo/application/modelo/taxation_comparison_words.py`
+- `S06` `M` `src/cadrumo/application/modelo/projection.py`
+- `S06` `M` `src/cadrumo/application/modelo/projection_operation.py`
+- `S06` `M` `src/cadrumo/application/modelo/taxation_comparison.py`
+- `S06` `M` `src/cadrumo/application/modelo/taxation_comparison_operation.py`
+- `S06` `A` `src/cadrumo/application/modelo/tests/test_projection_words.py`
+- `S06` `A` `src/cadrumo/application/modelo/tests/test_taxation_comparison_words.py`
+- `S06` `M` `src/cadrumo/entrypoints/cli/modelo_projection_commands.py`
+- `S06` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S06` `verify:` `pytest projection and comparison words` -> `pass`
+- `S06` `verify:` `relay_contracts.py --check` -> `pass`
+- `S06` `by:` `sonnet-high`
+- `S10` `A` `src/cadrumo/application/live/borrador_100_comparison.py`
+- `S10` `A` `src/cadrumo/application/live/borrador_100_comparison_operation.py`
+- `S10` `A` `src/cadrumo/application/live/tests/test_borrador_100_comparison_operation.py`
+- `S10` `A` `src/cadrumo/entrypoints/tests/profile_persistence/test_borrador_100_comparison.py`
+- `S10` `M` `src/cadrumo/entrypoints/live_borrador_operation_composition.py`
+- `S10` `M` `src/cadrumo/entrypoints/operation_composition_live.py`
+- `S10` `M` `src/cadrumo/entrypoints/operation_composition.py`
+- `S10` `M` `src/cadrumo/application/operations/access_facts.py`
+- `S10` `M` `src/cadrumo/entrypoints/cli/command_operation_table.py`
+- `S10` `M` `src/cadrumo/entrypoints/tests/conformance_live_borrador_support.py`
+- `S10` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S10` `M` `src/cadrumo/locales/en/application.yml`
+- `S10` `verify:` `pytest borrador comparison` -> `pass`
+- `S10` `verify:` `ruff ty basedpyright pyrefly lint-imports` -> `pass`
+- `S10` `by:` `opus-medium`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/revision.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`
+- `S04` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S04` `A` `src/cadrumo/domain/calculations/registry/tests/test_modelo_100_resultado_ingresar_o_devolver.py`
+- `S04` `A` `src/cadrumo/application/modelo/tests/test_work_form_modelo_100_resultado.py`
+- `S04` `verify:` `pytest resultado ingresar o devolver and work form resultado` -> `pass`
+- `S04` `verify:` `dev.registry.conformance valid` -> `pass`
+- `S04` `by:` `sonnet-high`
+- `S01` `A` `dev/registry/form_layout/outline_groups.py`
+- `S01` `A` `dev/registry/form_layout/outline_groups.toml`
+- `S01` `M` `dev/registry/form_layout/generator.py`
+- `S01` `M` `dev/registry/form_layout/serialization.py`
+- `S01` `M` `dev/locales/_registry_scanner.py`
+- `S01` `A` `src/cadrumo/application/modelo/work_form_outline.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_counts.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_models.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_layout.py`
+- `S01` `M` `src/cadrumo/application/modelo/work_form_localization.py`
+- `S01` `M` `src/cadrumo/domain/calculations/registry/schema_form_layouts.py`
+- `S01` `M` `src/cadrumo/locales/es/modelo/schema/100.yml`
+- `S01` `A` `src/cadrumo/application/modelo/tests/test_work_form_outline.py`
+- `S01` `A` `dev/registry/form_layout/tests/test_form_layout_outline_groups.py`
+- `S01` `M` `src/cadrumo/entrypoints/tui/modelo/workbench/tests/workbench_fixture.py`
+- `S01` `verify:` `pytest test_work_form_outline` -> `pass`
+- `S01` `verify:` `ruff ty` -> `pass`
+- `S01` `by:` `opus-medium`
+- `S07` `A` `src/cadrumo/core/payment_instalment_election.py`
+- `S07` `A` `src/cadrumo/application/modelo/export_settlement.py`
+- `S07` `M` `src/cadrumo/core/result_disposition.py`
+- `S07` `M` `src/cadrumo/_data/registry/aeat/facts/0159-modelo-result-casillas.toml`
+- `S07` `M` `src/cadrumo/application/modelo/export.py`
+- `S07` `M` `src/cadrumo/application/modelo/export_accounts.py`
+- `S07` `M` `src/cadrumo/application/modelo/work_form_export_offer.py`
+- `S07` `M` `src/cadrumo/application/modelo/work_export_contracts.py`
+- `S07` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S07` `M` `native/desktop/frontend/scripts/modelo_fixtures.py`
+- `S07` `A` `src/cadrumo/application/modelo/tests/test_export_settlement.py`
+- `S07` `A` `src/cadrumo/core/tests/test_payment_instalment_election.py`
+- `S07` `verify:` `pytest export settlement focused` -> `pass`
+- `S07` `verify:` `relay_contracts.py --check` -> `pass`
+- `S07` `by:` `opus-medium`
+- `S03` `A` `src/cadrumo/application/modelo/calculation_required_inputs.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_context.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_field_state.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_field_projection.py`
+- `S03` `M` `src/cadrumo/application/modelo/work_form_service.py`
+- `S03` `M` `src/cadrumo/domain/calculations/registry/formula_initial_values.py`
+- `S03` `A` `src/cadrumo/application/modelo/tests/test_work_form_calculation_required.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/work_form_fixture.py`
+- `S03` `M` `src/cadrumo/application/modelo/tests/test_work_form_descriptors.py`
+- `S03` `M` `dev/registry/form_layout/page_sections.py`
+- `S03` `M` `dev/registry/form_layout/outline_groups.py`
+- `S03` `verify:` `pytest test_work_form_calculation_required test_work_form_descriptors` -> `pass`
+- `S03` `verify:` `ruff ty lint-imports` -> `pass`
+- `S03` `by:` `sonnet-high`
+- `S05` `M` `src/cadrumo/application/modelo/work_form_issue_lines.py`
+- `S05` `A` `src/cadrumo/application/modelo/tests/test_work_form_withholding_correction.py`
+- `S05` `verify:` `pytest test_work_form_withholding_correction test_work_form_issue_lines` -> `pass`
+- `S05` `by:` `sonnet-high`
+- `S12` `A` `native/desktop/src-tauri/src/shell/user_profile/household.rs`
+- `S12` `A` `native/desktop/src-tauri/src/shell/user_profile/election.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/user_profile/wire.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/user_profile.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/user_profile/views.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/aeat_sync/admitted.rs`
+- `S12` `A` `native/desktop/src-tauri/src/shell/aeat_sync/borrador.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/aeat_sync/mod.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/aeat_sync/tests.rs`
+- `S12` `M` `native/desktop/src-tauri/src/shell/ledger/admitted.rs`
+- `S12` `A` `native/desktop/frontend/src/shell/profileHousehold.ts`
+- `S12` `A` `native/desktop/frontend/src/shell/borrador.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/userProfile.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/host.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/tauriHost.ts`
+- `S12` `M` `native/desktop/frontend/src/ipc/contract.ts`
+- `S12` `M` `native/desktop/frontend/src/shell/modeloContract.ts`
+- `S12` `verify:` `cmake --build build/windows-x64 --target desktop-host-unit-test` -> `pass`
+- `S12` `verify:` `relay_contracts.py --check` -> `pass`
+- `S12` `by:` `sonnet-high`
+- `S02` `A` `.vault/adr/2026-11-02-desktop-renta-renta-family-canonical-adr.md`
+- `S02` `A` `dev/registry/form_layout/official_repeats.py`
+- `S02` `M` `dev/registry/form_layout/page_sections.py`
+- `S02` `M` `dev/registry/form_layout/position_anchoring.py`
+- `S02` `M` `dev/registry/form_layout/official_headings.toml`
+- `S02` `M` `dev/registry/compiler/form_layout_integrity.py`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2022/bindings/0001-declarations.toml`
+- `S02` `M` `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/form_layouts/0001-form-layout.toml`
+- `S02` `M` `src/cadrumo/domain/calculations/registry/profile_bindings.py`
+- `S02` `A` `src/cadrumo/application/modelo/profile_row_binding.py`
+- `S02` `M` `src/cadrumo/application/modelo/work_form_records.py`
+- `S02` `M` `src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml`
+- `S02` `A` `src/cadrumo/application/modelo/tests/test_work_form_household_rows.py`
+- `S02` `verify:` `pytest household projection outline headings` -> `pass`
+- `S02` `verify:` `just check-registry-gate` -> `pass`
+- `S02` `by:` `opus-medium`
+- `S23` `M` `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`
+- `S23` `verify:` `vaultspec-core vault check all --feature export-parity` -> `pass`
+- `S23` `by:` `sonnet-high`
+
+## Notes
+
+- `S09` Ascendants served `not_served` because the schema has no `renta_family.ascendiente;` manifest regeneration lands with the S08 batch
+- `S08` Type and import gate failures are in other Steps' in-flight files; ADR says wizard preselects devengo but code has no default, left for operator
+- `S06` Landed inside combined commit 0b26ec31c6 with S01, S07 and S10 files; `compare_taxation` `individual_branch_caveat` is still English-only
+- `S10` Landed in combined commit 0b26ec31c6; a complexity fix is uncommitted pending another session's merge; drafts keep values only for 0596/0597/0603 and ZCCAD, and 2024-2025 have no extraction profile
+- `S04` Landed in combined commit 0b26ec31c6; waived refund (0694>0) refuses the whole calculation pending operator choice
+- `S01` Production code landed in 0b26ec31c6, locales in 6c2a0bcea3/dbb45caf39, tests in 75044c208a/be43f09bca, TUI fixture in cd55c3d714; `outline_groups.py` imports private `_heading_key;` S02 new pages lack headings
+- `S07` Landed mostly in 0b26ec31c6 and be43f09bca, rest in bd8f02cb85; TUI workbench and CLI lack the instalment choice; 60 percent rounding advisory; 0693/0694 suspension and renuncia not handled
+- `S03` Commits 570b5ea76f and heading-key cleanup 6be552467c; cross-period carries for 130/131/303 left unmarked pending operator
+- `S05` Commit cf12f70032; field already carried the withholding surface, issue lines now take the primary source surface
+- `S12` Commit 208a60e27b; also fixed pre-existing ledger admitted ordering and regenerated stale modeloContract.ts; Rust profile Field lacks `ejercicio_answer` and `country_options`
+- `S02` Work landed across 526ca3d9a1, 75044c208a, be43f09bca and 586b72dcf8; disability deductions stay flat; `apellidos_nombre` and `discapacidad_clave` unwritten; ascendiente object added without a writer
+- `S23` Commit 2a52318aee; dated amendment, no devengo preselection

@@ -2,12 +2,9 @@ import { useMemo, useState, type ReactNode, type RefObject } from "react";
 import { Alert } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  DataGrid,
-  DataGridText,
-  type GridColumn,
-  type GridRow,
-} from "@/components/ui/data-grid";
+import { DataGrid } from "@/components/ui/data-grid";
+import { DataGridText } from "@/components/ui/data-grid-text";
+import { type GridColumn, type GridRow } from "@/components/ui/dataGridTypes";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Input } from "@/components/ui/input";
@@ -24,6 +21,7 @@ import {
 import { cn } from "@/components/ui/cn";
 import { PaneHeader, type PaneControl } from "../../PaneHeader";
 import type { ModeloPort } from "../../../shell/modelo";
+import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
 import type {
   DeclarationListGroup,
   ModeloDeclarationListRowV1 as Row,
@@ -637,6 +635,9 @@ export function DeclarationsPage({
           }}
           port={port}
           targets={list.creation_targets}
+          holds={modeloWritesFor(memory.current)}
+          onReload={reread}
+          refreshing={read.phase === "reading"}
           rows={rows}
           start={creating || null}
           onOpen={onOpen}

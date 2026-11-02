@@ -18,8 +18,9 @@ from collections.abc import Collection, Iterable, Mapping
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
-from typing import Final
+from typing import Final, Literal
 
+from ...core.parsing.codes import IsoCurrencyCode
 from ..transactions.classification_effects import takes_changes, takes_invoice
 from ..transactions.models import Transaction
 from .models import Invoice
@@ -32,12 +33,12 @@ from .service import (
 
 #: Paid up to this many days before the invoice's date still ranks by the gap; earlier ranks after
 #: every payment made on or after issue.
-EARLY_PAYMENT_DAYS: Final = 3
+EARLY_RANK_GAP_DAYS: Final = 3
 _LATE_RANK: Final = 1000
 #: How far from an invoice's issue day the by-hand movement choice looks.
-PICK_WINDOW_DAYS: Final = 10
+PICK_HORIZON_DAYS: Final = 10
 #: A number shorter than this is not told apart from other digits in a description.
-_MIN_REFERENCE_LENGTH: Final = 4
+_SHORTEST_REFERENCE_DIGITS: Final = 4
 
 _NOT_COMPARED: Final = re.compile(r"[^A-Z0-9]+")
 
@@ -70,7 +71,7 @@ def _reference(text: str) -> str:
 def names_invoice_number(transaction: Transaction, invoice: Invoice) -> bool:
     """Return whether the description names the invoice's number, a too short one never counting."""
     number = _reference(invoice.invoice_number)
-    return len(number) >= _MIN_REFERENCE_LENGTH and number in _reference(transaction.raw.description)
+    return len(number) >= _SHORTEST_REFERENCE_DIGITS and number in _reference(transaction.raw.description)
 
 
 def days_after_issue(transaction: Transaction, invoice: Invoice) -> int:
@@ -117,7 +118,7 @@ def _pair(transaction: Transaction, invoice: Invoice) -> PaymentPair | None:
         counterparty=counterparty,
         rank=(
             0 if number else 1,
-            abs(gap) if gap >= -EARLY_PAYMENT_DAYS else _LATE_RANK - gap,
+            abs(gap) if gap >= -EARLY_RANK_GAP_DAYS else _LATE_RANK - gap,
             0 if counterparty else 1,
             abs(transaction.raw.amount - invoice_settlement(invoice)),
         ),
@@ -269,7 +270,7 @@ def movement_choices(
         and transaction.transaction_id not in staged
         and transaction.direction is invoice_settling_direction(invoice.kind)
         and transaction.raw.currency == invoice.currency
-        and abs(days_after_issue(transaction, invoice)) <= PICK_WINDOW_DAYS
+        and abs(days_after_issue(transaction, invoice)) <= PICK_HORIZON_DAYS
     ]
     found.sort(
         key=lambda transaction: (
@@ -284,16 +285,73 @@ def movement_choices(
     )
 
 
+type LinkDifferenceKind = Literal["amount", "currency", "counterparty", "linked_elsewhere"]
+
+
+@dataclass(frozen=True, slots=True)
+class LinkDifference:
+    """One way a movement and an invoice a person means to link permanently do not agree."""
+
+    kind: LinkDifferenceKind
+    #: The magnitude of the movement's amount less what the invoice settles for; set for ``amount``.
+    difference: Decimal | None = None
+    #: The movement's currency; set for ``currency``.
+    movement_currency: IsoCurrencyCode | None = None
+    #: The invoice's currency; set for ``currency``.
+    invoice_currency: IsoCurrencyCode | None = None
+    #: How many other movements already hold the invoice; set for ``linked_elsewhere``.
+    count: int | None = None
+
+
+def link_differences(transaction: Transaction, invoice: Invoice) -> tuple[LinkDifference, ...]:
+    """Return where a movement does not agree with the invoice it is to be linked to.
+
+    The amount is read against what the invoice settles for, within the link tolerance, and only
+    in a shared currency, as two currencies have no difference to state. The counterparty is the
+    movement's own and is judged by the one overlap reading; a movement that names none, or an
+    invoice that does not, says nothing to differ from. Another movement already holding the invoice
+    is stated with its count.
+    """
+    found: list[LinkDifference] = []
+    if transaction.raw.currency != invoice.currency:
+        found.append(
+            LinkDifference(
+                kind="currency",
+                movement_currency=transaction.raw.currency,
+                invoice_currency=invoice.currency,
+            )
+        )
+    else:
+        difference = abs(transaction.raw.amount - invoice_settlement(invoice))
+        if difference > INVOICE_MATCH_TOLERANCE:
+            found.append(LinkDifference(kind="amount", difference=difference))
+    named = transaction.raw.counterparty
+    if (
+        named is not None
+        and named.strip()
+        and invoice.counterparty_name.strip()
+        and not counterparties_overlap(invoice.counterparty_name, named)
+    ):
+        found.append(LinkDifference(kind="counterparty"))
+    elsewhere = sum(1 for linked in invoice.linked_transaction_ids if linked != transaction.transaction_id)
+    if elsewhere:
+        found.append(LinkDifference(kind="linked_elsewhere", count=elsewhere))
+    return tuple(found)
+
+
 __all__ = [
-    "EARLY_PAYMENT_DAYS",
-    "PICK_WINDOW_DAYS",
+    "EARLY_RANK_GAP_DAYS",
+    "PICK_HORIZON_DAYS",
     "InvoiceChoice",
+    "LinkDifference",
+    "LinkDifferenceKind",
     "MovementChoice",
     "PaymentPair",
     "PaymentSuggestion",
     "can_take_invoice",
     "days_after_issue",
     "invoice_choices",
+    "link_differences",
     "movement_choices",
     "names_invoice_number",
     "payment_date",

@@ -74,7 +74,7 @@ def with_deadline(
     deadline = ModeloFormDeadline(
         closes_on=closes,
         nominal_closes_on=closes - timedelta(days=shifted_by),
-        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY,
+        holiday_coverage=DeadlineHolidayCoverage.NATIONAL_ONLY,
         reference_on=REFERENCE_DAY,
         days_remaining=days_left,
         days_overdue=None if days_left is not None else days_late or 1,

@@ -20,6 +20,11 @@ export type AeatSyncResultsMode =
   | "failed"
   /** The last read of some data ended without a known answer. */
   | "unknown"
+  | "failed_empty"
+  | "unknown_empty"
+  | "refresh_failed"
+  | "retry_unknown"
+  | "retry_pending"
   /** The results cannot be read. */
   | "unavailable";
 
@@ -146,6 +151,21 @@ const notifications: NotificationRow[] = [
 function served(mode: AeatSyncResultsMode): AeatSyncResults {
   const years = { borrador_years: [...DEMO_BORRADOR_YEARS] };
   switch (mode) {
+    case "failed_empty":
+    case "unknown_empty": {
+      const outcome = mode === "failed_empty" ? "failed" : "unknown";
+      const previous = served(outcome);
+      return {
+        ...previous,
+        areas: previous.areas.map((area) =>
+          area.area === "filed" || area.area === "notifications"
+            ? { ...area, outcome, new_count: 0, changed_count: 0 }
+            : area,
+        ),
+        filed: [],
+        notifications: [],
+      };
+    }
     case "mixed":
       return {
         areas: [
@@ -193,6 +213,9 @@ function served(mode: AeatSyncResultsMode): AeatSyncResults {
         ...years,
       };
     case "failed":
+    case "refresh_failed":
+    case "retry_unknown":
+    case "retry_pending":
       return {
         areas: [
           summary("census", {
@@ -254,8 +277,16 @@ export function aeatSyncResultsFixture(
   importResult: BorradorImportResult["outcome"] = "captured",
   unowned = 0,
 ): AeatSyncResultsPort {
+  let reads = 0;
+  let retries = 0;
   return {
     results() {
+      reads += 1;
+      if (
+        (mode === "refresh_failed" || mode === "retry_unknown") &&
+        reads === 2
+      )
+        return Promise.reject({ code: "unavailable" });
       try {
         return Promise.resolve(served(mode));
       } catch {
@@ -263,9 +294,13 @@ export function aeatSyncResultsFixture(
       }
     },
     retry(_profile, area, part, acknowledgedUnknown) {
+      retries += 1;
       say(
         `aeatSyncResults.retry ${area} ${part ?? "all"} acknowledged=${acknowledgedUnknown}`,
       );
+      if (mode === "retry_pending") return new Promise<void>(() => undefined);
+      if (mode === "retry_unknown" && retries === 1)
+        return Promise.reject({ code: "unknown" });
       return Promise.resolve();
     },
     pickBorrador() {

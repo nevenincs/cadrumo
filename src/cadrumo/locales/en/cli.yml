@@ -434,6 +434,8 @@ cli:
           MOVEMENT:INVOICE, each in full.
         match_invoice_help: 'Full id of one invoice: weigh only that invoice and list
           the open movements near its issue day.'
+        match_judge_help: Repeatable link to compare before it is made permanent,
+          as MOVEMENT:INVOICE; each comes back with where its two sides do not agree.
         match_staged_help: Repeatable link staged and not saved, as MOVEMENT:INVOICE;
           neither is offered to anything else.
         match_transaction_help: 'Full id of one movement: return only its suggestion

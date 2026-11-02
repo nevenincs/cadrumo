@@ -955,6 +955,59 @@ application:
           the labels did not cover stay empty: %{fields}. Fill them in yourself.'
   live:
     borrador:
+      comparison:
+        classification:
+          agree: Agree
+          differ: Differ
+          not_comparable: Cannot be compared
+          only_in_borrador: Only in the AEAT draft
+          only_in_calculation: Only in your calculation
+        evidence:
+          borrador: Printed by the AEAT in its draft and imported here. It is an observation,
+            not an authenticated filing.
+          calculation: Worked out on this computer from your records. It is local,
+            not a filing with the AEAT.
+        reason:
+          borrador_does_not_read_box: The draft import does not read this box, so
+            a missing draft value says nothing about it.
+          borrador_printed_no_value: Your calculation holds a value, but the AEAT
+            draft prints none for this box.
+          borrador_value_ambiguous: The AEAT draft holds more than one value for this
+            box, so it cannot be compared.
+          borrador_value_not_kept: The AEAT draft prints this box, but the import
+            keeps no value for it, so it cannot be compared.
+          calculation_blocked: Your calculation could not settle this box, so it cannot
+            be compared.
+          calculation_has_no_value: The AEAT draft prints a value, but your calculation
+            holds none for this box.
+          calculation_not_applicable: Your calculation shows this box does not apply
+            to you, but the AEAT draft prints a value.
+          not_applicable_zero: The AEAT draft prints zero, and your calculation shows
+            this box does not apply to you.
+          same_value: The AEAT draft and your calculation hold the same value.
+          taken_from_borrador: Your calculation took this value from the AEAT draft,
+            so the agreement does not confirm it independently.
+          value_kinds_differ: One side holds an amount and the other a text, so they
+            cannot be compared.
+          values_differ: The AEAT draft and your calculation hold different values.
+        stale:
+          calculation_outdated: The rules changed after your calculation was saved,
+            so it needs recalculating.
+          calculation_used_other_capture: Your calculation was worked out from a different
+            AEAT draft than the one compared here.
+          newer_capture_refused: A draft you imported later is stored but cannot be
+            read, so this comparison uses an earlier one.
+        status:
+          capture_refused: AEAT drafts are stored for this year, but none can be read
+            under the current rules; import the draft again.
+          compared: Your imported AEAT draft and your saved calculation were compared
+            box by box.
+          no_calculation: This declaration has no saved calculation yet, so the draft
+            cannot be compared; calculate it first.
+          no_capture: You have not imported an AEAT draft for this year, so there
+            is nothing to compare.
+          stale: Both were read, but they no longer describe each other, so recalculate
+            or import the draft again before you rely on this comparison.
       errors:
         binding_keys_not_admitted: 'This stored borrador holds values under keys the
           modelo definitions do not admit, so it cannot be used; import the document
@@ -1731,6 +1784,9 @@ application:
       amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
         is not legally available for modelo {modelo} filing year {filing_year} period
         {period}. Accepted kinds for this period: {accepted_kinds}.'
+      amendment_later_period_only: Modelo {modelo} for year {filing_year} period {period}
+        cannot correct a return already filed. Make the adjustment in the return of
+        a later period.
       amendment_registry_root_missing: The published authority generation %{missing_path}
         is missing; amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: The modelo definitions for modelo %{modelo},
@@ -2146,6 +2202,10 @@ application:
       iva_compensation_annual_source_evidence_failure: Modelo 390 needs figures from
         your modelo 303 returns for the year, and %{source_issue_count} issue(s) with
         them are still open, so this declaration cannot be completed.
+      iva_cuota_disagrees_with_rate: The VAT entry dated %{transaction_date} records
+        a cuota of %{recorded_cuota} EUR, but its base of %{base_amount} EUR at a
+        rate of %{iva_rate_percent}% gives %{expected_cuota} EUR. Correct the cuota,
+        the base or the rate, then calculate again before checking this declaration.
       iva_import_document_unrecordable: The entry dated %{transaction_date} for %{transaction_amount}
         %{transaction_currency} needs a customs declaration for the import. Cadrumo
         cannot yet record it, so this declaration cannot pass the check. File this
@@ -2366,10 +2426,38 @@ application:
           %{binding_id} has unsupported value type %{value_type}.
         enum_boolean_invalid: The profile fact for value source %{binding_id} resolved
           to a boolean; boolean facts are not valid keys.
+    projection_words:
+      binding_unresolved: No value could be worked out for this figure from your records,
+        so it stays unresolved instead of counting as zero. Record the missing evidence,
+        then project again.
+      casilla_reason:
+        m210_baseline_tipo_deferred: This box needs the general rate for this kind
+          of income, which is not yet grounded for the year, so it has no value.
+        m210_convenio_rate_missing: This box needs the tax-treaty rate for the country
+          and the kind of income, which is not available, so it has no value.
+        other: This box could not be worked out, so it has no value. It is never shown
+          as zero.
+        unresolved_operand: This box adds up or reads a figure that has no value yet,
+          so it has none either. It is never shown as zero.
+        waived_refund_result_unsupported: The result when a refund is waived is not
+          supported yet, so this box has no value. It is never shown as zero.
     quickfile:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
         with %{error_code}.'
+    taxation_comparison_words:
+      below_materiality: The two results differ by {difference}, less than {threshold},
+        so either filing mode is acceptable.
+      conjunta_lower_result: 'Joint filing comes out lower: your result is {conjunta}
+        jointly and {individual} individually, a difference of {difference}.'
+      individual_branch_caveat: The individual figure is a single return worked out
+        from your whole household's combined inputs, so it is only reliable when one
+        person earns the household's income. It does not work out two separate returns,
+        one on each spouse's own income, and that comparison is not available yet.
+        If two people in your household earn income, read the individual figure as
+        a rough guide, not as the amount to file.
+      individual_lower_result: 'Individual filing comes out lower: your result is
+        {individual} individually and {conjunta} jointly, a difference of {difference}.'
     value_date:
       month_01: Jan
       month_02: Feb
@@ -2459,16 +2547,9 @@ application:
       holiday_coverage:
         calendar_unavailable: holiday calendar unavailable; the original deadline
           has not been checked
-        national_and_territory: national and %{territory} holidays checked; local
-          holidays not checked
-        national_and_territory_without_name: national and applicable regional holidays
-          checked; local holidays not checked
-        national_only: national holidays only; regional and local holidays not checked
+        national_only: weekends and national non-working days checked; regional and
+          local holidays do not move a filing deadline
         not_shifted: this modelo's deadline does not move for non-working days
-        territory_unverified: national holidays only; %{territory} regional holidays
-          for this year have not been checked, and local holidays are not checked
-        territory_unverified_without_name: national holidays only; the applicable
-          regional calendar is unverified; local holidays are not checked
       shift:
         business_day: Business day
         calendar_unavailable: Calendar unavailable
@@ -2823,6 +2904,17 @@ application:
         was written.
       row_unknown_field: 'Section ''%{section}'' declares no such fields: %{unknown}.
         Available fields: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Date of birth
+        convivientes:
+          label: Number of descendants this ascendant lives with
+        fallecimiento:
+          help: Leave blank if this ascendant has not died.
+          label: Date of death
+        nif:
+          label: Ascendant's NIF/NIE (leave blank if none)
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'

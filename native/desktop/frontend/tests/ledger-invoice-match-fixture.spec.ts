@@ -83,6 +83,12 @@ for (const scenario of recorded.scenarios) {
           ? byNumber.get(focus.invoice)!.invoice_id
           : null,
         transaction_id: focus.movement ?? null,
+        judge: ((scenario as { judge?: string[][] }).judge ?? []).map(
+          ([movementName, number]) => ({
+            transaction_id: movementName!,
+            invoice_id: byNumber.get(number!)!.invoice_id,
+          }),
+        ),
       },
       rows,
       invoices,
@@ -114,6 +120,19 @@ for (const scenario of recorded.scenarios) {
           movement: choice.transaction_id,
           settles: choice.settles,
         })) ?? null,
+      ...((scenario as { judge?: string[][] }).judge
+        ? {
+            judgements: answer.judgements.map((judgement) => ({
+              movement: judgement.transaction_id,
+              invoice: numberOf.get(judgement.invoice_id),
+              found: judgement.found,
+              mismatches: judgement.mismatches.map((each) => ({
+                ...each,
+                difference: each.difference?.decimal ?? null,
+              })),
+            })),
+          }
+        : {}),
     }).toEqual(scenario.answer);
     expect(answer.window_days).toBe(10);
   });

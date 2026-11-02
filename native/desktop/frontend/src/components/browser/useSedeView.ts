@@ -1,5 +1,9 @@
 import { useCallback, useEffect, useReducer, useRef, useState } from "react";
-import type { SedeViewInput, SedeViewVerb } from "../../ipc/contract";
+import type {
+  SedeClipboardAction,
+  SedeViewInput,
+  SedeViewVerb,
+} from "../../ipc/contract";
 import {
   sedeViewFailure,
   type SedeViewEvent,
@@ -154,6 +158,11 @@ export function useSedeView({
     }, []),
     navigate: useCallback(
       (verb: SedeViewVerb) => refused(session.current?.navigate(verb)),
+      [refused],
+    ),
+    clipboard: useCallback(
+      (action: SedeClipboardAction) =>
+        refused(session.current?.clipboard(action)),
       [refused],
     ),
     answerDialog: useCallback(

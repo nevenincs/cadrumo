@@ -28,7 +28,11 @@ from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ...domain.transactions.classification_rule import RULE_PATTERN_ENTRY_MAX_LENGTH
 from .allocate_operation import LEDGER_ALLOCATE_RATIO_ID_MAX
 from .classify_requests import LEDGER_CLASSIFY_SHORT_TEXT_MAX
-from .counterparty_operation import LEDGER_COUNTERPARTY_NOTE_MAX, LEDGER_COUNTERPARTY_TAX_ID_MAX
+from .counterparty_operation import (
+    LEDGER_COUNTERPARTY_ASSERTED_BY_MAX,
+    LEDGER_COUNTERPARTY_NOTE_MAX,
+    LEDGER_COUNTERPARTY_TAX_ID_MAX,
+)
 from .evidence import LEDGER_EVIDENCE_LABEL_MAX, LEDGER_EVIDENCE_TEXT_MAX
 from .invoice_evidence_operation import INVOICE_EVIDENCE_LABEL_MAX, INVOICE_EVIDENCE_NOTE_MAX
 from .own_account_operation import (
@@ -57,6 +61,7 @@ type TextLimitName = Literal[
     "own_account_swift_bic",
     "counterparty_tax_id",
     "counterparty_note",
+    "counterparty_asserted_by",
     "confirm_label",
     "confirm_note",
     "own_account_label",
@@ -145,6 +150,7 @@ _TEXT_LIMITS: Final[tuple[LedgerEntryTextLimit, ...]] = (
     LedgerEntryTextLimit(name="own_account_swift_bic", max=LEDGER_OWN_ACCOUNT_SWIFT_BIC_MAX),
     LedgerEntryTextLimit(name="counterparty_tax_id", max=LEDGER_COUNTERPARTY_TAX_ID_MAX),
     LedgerEntryTextLimit(name="counterparty_note", max=LEDGER_COUNTERPARTY_NOTE_MAX),
+    LedgerEntryTextLimit(name="counterparty_asserted_by", max=LEDGER_COUNTERPARTY_ASSERTED_BY_MAX),
     LedgerEntryTextLimit(name="confirm_label", max=INVOICE_EVIDENCE_LABEL_MAX),
     LedgerEntryTextLimit(name="confirm_note", max=INVOICE_EVIDENCE_NOTE_MAX),
     LedgerEntryTextLimit(name="own_account_label", max=LEDGER_OWN_ACCOUNT_LABEL_MAX),

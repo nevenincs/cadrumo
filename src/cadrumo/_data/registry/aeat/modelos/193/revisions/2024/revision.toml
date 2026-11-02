@@ -28,6 +28,8 @@ source_refs = ["aeat-dr-193-2024", "aeat-modelo-193-procedure"]
 family_storage_baseline = "2023"
 scoped_families = ["export_layouts", "workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
+family_disposition_removals = ["dependency_classifications", "extraction_profiles"]
+
 [revisions."2024".family_dispositions.parameters]
 reason = """
 A parameter holds a regulatory value a formula of this revision applies -- a rate, a threshold, a coefficient. Modelo 193 applies none: both of its formulas are op = 'copy', carrying the annual modelo 123 base and retenciones relations into the resumen casillas, and a copy applies nothing to what it copies. The retention rates reaching these figures were set by the retenedor at payment time under RD 439/2007 art. 90 and consumed by the quarterly modelo 123; this annual resumen receives the \

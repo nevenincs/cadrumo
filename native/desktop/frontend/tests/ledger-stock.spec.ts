@@ -1,59 +1,65 @@
 import "./support/servedLimits";
 import { expect, test } from "@playwright/test";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { buildPath } from "../../scripts/build-paths.mjs";
 import {
-  BOOK_FIELDS,
-  blankExtra,
-  blankMovement,
-  blankProof,
   bookListed,
   bookName,
   bookRequest as buildBook,
-  bookTouched,
-  CLOSING_FIELDS,
   closingLanded,
   closingRequest as buildClosing,
-  closingTouched,
-  COST_FIELDS,
-  COUNT_FIELDS,
-  CORRECT_FIELDS,
   correctRequest as buildCorrect,
-  DESCRIBE_FIELDS,
   describeRequest,
   changeLanded,
-  draftOfMovement,
-  EMPTY_BOOK,
-  EMPTY_CLOSING,
-  historyRows,
-  LABEL_FAMILY,
   movementCorrectionRequest as buildMovementCorrection,
   restoreRequest,
   retireRequest as buildRetire,
   reverseRequest as buildReverse,
-  EXTRA_FIELDS,
-  MOVEMENT_FIELDS,
   movementCounted,
-  NO_VOCABULARY,
   movementRequest as buildMovement,
-  movementTouched,
-  offersOf,
-  PRICE_FIELDS,
-  plays,
-  priceKinds,
   proofFromKept,
-  PROOF_SLOTS,
-  slotKinds,
-  vocabularyOf,
-  wordOf,
+} from "../src/components/ledger/assets/stockModel";
+import {
+  blankExtra,
+  blankMovement,
+  blankProof,
+  bookTouched,
+  closingTouched,
+  draftOfMovement,
+  EMPTY_BOOK,
+  EMPTY_CLOSING,
+  movementTouched,
   type ClosingDraft,
-  type Offers,
   type MovementDraft,
   type ProofDraft,
+} from "../src/components/ledger/assets/stockDraft";
+import {
+  BOOK_FIELDS,
+  CLOSING_FIELDS,
+  COST_FIELDS,
+  COUNT_FIELDS,
+  CORRECT_FIELDS,
+  DESCRIBE_FIELDS,
+  EXTRA_FIELDS,
+  MOVEMENT_FIELDS,
+  PRICE_FIELDS,
+  PROOF_SLOTS,
   type StockField,
-} from "../src/components/ledger/assets/stockModel";
+} from "../src/components/ledger/assets/stockFieldDefinitions";
+import { slotKinds } from "../src/components/ledger/assets/stockVocabulary";
+import { historyRows } from "../src/components/ledger/assets/stockHistory";
+import {
+  LABEL_FAMILY,
+  NO_VOCABULARY,
+  offersOf,
+  plays,
+  priceKinds,
+  vocabularyOf,
+  wordOf,
+  type Offers,
+} from "../src/components/ledger/assets/stockVocabulary";
 import type {
   InventoryBook,
   InventoryEvidenceAddResult,
@@ -560,10 +566,14 @@ const DEVELOPMENT_WORDS: Record<(typeof LANGUAGES)[number], RegExp> = {
   hu: /(?<!\p{L})(válasz(?!t)|kérés|olvas|dokumentum|azonosító|json|backend|token|payload|jogosultság)/iu,
 };
 
-/** Every chrome key the panel names, whole in its source, and the families the
- * panel builds a key from. */
-function namedKeys(): { whole: string[]; families: string[] } {
-  const source = ["StockPane.tsx", "stockModel.ts"]
+/** All authored inventory modules, including extracted definitions and forms. */
+function stockSources(): string {
+  return readdirSync(
+    new URL("../src/components/ledger/assets/", import.meta.url),
+  )
+    .filter(
+      (file) => /^stock.*\.tsx?$/i.test(file) && !file.includes(".stories."),
+    )
     .map((file) =>
       readFileSync(
         fileURLToPath(
@@ -573,6 +583,12 @@ function namedKeys(): { whole: string[]; families: string[] } {
       ),
     )
     .join("\n");
+}
+
+/** Every chrome key the panel names, whole in its source, and the families the
+ * panel builds a key from. */
+function namedKeys(): { whole: string[]; families: string[] } {
+  const source = stockSources();
   const found = [
     ...source.matchAll(
       /["'`]((?:desktop\.ledger|application\.inventory\.labels)\.[A-Za-z0-9_.]+)["'`$]/g,
@@ -655,16 +671,7 @@ test("a stored token is worded, and one without a word is unknown, never the tok
 });
 
 test("the panel holds no list of the choices the backend serves", () => {
-  const source = ["StockPane.tsx", "stockModel.ts"]
-    .map((file) =>
-      readFileSync(
-        fileURLToPath(
-          new URL(`../src/components/ledger/assets/${file}`, import.meta.url),
-        ),
-        "utf8",
-      ),
-    )
-    .join("\n");
+  const source = stockSources();
   // The parts a form treats specially are read from the roles the options
   // read gives, so no value is named. ``physical_count`` is also the name of
   // a field of the closing request.

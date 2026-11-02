@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { failureCode } from "../errors";
 import { questionnaireFaults } from "./agentClarification";
 import type {
@@ -871,29 +878,35 @@ export function useLiveConversation({
  * null until it has said. */
 export function useAgentStatus(
   session: AgentSession | undefined,
+  reader: string | null,
   enabled: boolean,
 ): AgentServiceStatus | null {
-  const disabledSinceObservation = useRef(false);
+  const owner = useMemo(
+    () => ({ session, reader, enabled }),
+    [session, reader, enabled],
+  );
+  const generation = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [owner],
+  );
   const [state, setState] = useState<{
-    for: AgentSession | null;
+    for: typeof owner | null;
     status: AgentServiceStatus | null;
   }>({ for: null, status: null });
   useEffect(() => {
-    if (!session || !enabled) {
-      // A status belongs to one continuous observation of one session. In
-      // particular, Ready from before sign-out cannot be reused when the same
-      // window becomes readable again while the supervisor restarts.
-      disabledSinceObservation.current = true;
-      setState({ for: null, status: null });
-      return;
-    }
-    disabledSinceObservation.current = false;
+    const { session, reader, enabled } = owner;
+    if (!session || reader === null || !enabled) return;
+    const mine = generation.current;
     let alive = true;
     let heard = false;
     let stop: (() => void) | null = null;
     const hear = (status: AgentServiceStatus) => {
       heard = true;
-      if (alive) setState({ for: session, status });
+      if (alive && mine === generation.current)
+        setState({ for: owner, status });
     };
     session.observeStatus(hear).then(
       (unsubscribe) => {
@@ -906,7 +919,8 @@ export function useAgentStatus(
     // status that cannot be read is not known, and nothing says otherwise.
     session.status().then(
       (status) => {
-        if (alive && !heard) setState({ for: session, status });
+        if (alive && !heard && mine === generation.current)
+          setState({ for: owner, status });
       },
       () => undefined,
     );
@@ -914,11 +928,8 @@ export function useAgentStatus(
       alive = false;
       stop?.();
     };
-  }, [session, enabled]);
-  return session &&
-    enabled &&
-    !disabledSinceObservation.current &&
-    state.for === session
+  }, [owner]);
+  return session && reader !== null && enabled && state.for === owner
     ? state.status
     : null;
 }

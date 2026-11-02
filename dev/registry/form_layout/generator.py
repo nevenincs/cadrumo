@@ -29,7 +29,9 @@ export records become repeating groups, never flattened rows.
 
 Where a design names a part in no form the ladder can read, a reviewer's quote
 of the official words (``official_headings.toml``) heads it, after the quote is
-verified on the cited line of a source the revision cites.
+verified on the cited line of a source the revision cites. Where a reviewer
+grouped a revision's sections for navigation (``outline_groups.toml``), the
+layout carries that outline.
 """
 
 from __future__ import annotations
@@ -58,6 +60,7 @@ from .generation_models import _Build
 from .heading_quotes import _quoted_pages
 from .official_form_pages import OfficialFormUnavailableError
 from .official_headings import QuotedHeading, read_official_headings
+from .outline_groups import read_outline_groups
 from .page_assembly import _build_pages
 from .page_placement import _placements
 from .position_anchoring import (
@@ -237,6 +240,7 @@ def generate_revision_layout(
         design_sources=tuple(build.design_sources),
         pages=tuple(pages),
         placements=_placements(build, section_of, shown, {} if continued is None else continued.aliases),
+        outline=read_outline_groups().for_revision(modelo_id, str(revision.id)),
     )
     # Context and row projections depend on the blocks being published, which
     # may differ from the previous layout carried by the input revision.

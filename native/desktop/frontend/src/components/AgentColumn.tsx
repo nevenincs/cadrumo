@@ -330,7 +330,7 @@ export function AgentColumn({
     setView((held) => ({ ...held, ...next }));
 
   const readable = agent !== undefined && reader !== null && shown;
-  const status = useAgentStatus(session, readable);
+  const status = useAgentStatus(session, reader, readable);
   const ready = status?.state === "ready";
   // A signed-in profile can precede its agent service. Reopening this gate
   // also refreshes reads after the service has recovered.
@@ -343,10 +343,10 @@ export function AgentColumn({
   const wanted = historyOpen || conversationId !== null;
   const readConversations = useMemo(
     () =>
-      serviceReadable && agent && (historyOpen || wanted)
+      reader !== null && serviceReadable && agent && (historyOpen || wanted)
         ? () => agent.conversations()
         : null,
-    [serviceReadable, agent, historyOpen, wanted],
+    [reader, serviceReadable, agent, historyOpen, wanted],
   );
   // Asked again once a reply has finished, for a title the agent gave.
   const conversations = useAgentRead(readConversations, revision);
@@ -505,11 +505,17 @@ export function AgentColumn({
   // which are listed but cannot be chosen; the catalog is read again once the
   // agent is ready.
   const starting = status?.state === "starting";
-  const readCatalog = useMemo(
-    () =>
-      (ready || starting) && session ? () => session.providerCatalog() : null,
-    [ready, starting, session],
+  const [catalogRetry, setCatalogRetry] = useState(0);
+  const catalogRequest = useMemo(
+    () => ({ reader, ready, starting, session, retry: catalogRetry }),
+    [reader, ready, starting, session, catalogRetry],
   );
+  const readCatalog = useMemo(() => {
+    const { reader, ready, starting, session } = catalogRequest;
+    return reader !== null && (ready || starting) && session
+      ? () => session.providerCatalog()
+      : null;
+  }, [catalogRequest]);
   // Setup and provider settings invalidate the catalog independently.
   const [catalogAgain, setCatalogAgain] = useState(0);
   // Reads asked for while the service was busy.
@@ -573,6 +579,7 @@ export function AgentColumn({
     readCatalog ? readingHost : null,
     rememberedRecord,
     catalogAgain + settings.changes + opened + listChanges,
+    reader,
   );
   const offer = useMemo(() => {
     if (catalog.kind !== "ready") return null;
@@ -1228,6 +1235,16 @@ export function AgentColumn({
                                   <LocalAi
                                     key={lane.id}
                                     lanes={listed ? [listed] : []}
+                                    status={
+                                      catalog.kind === "ready"
+                                        ? "ready"
+                                        : catalog.kind === "loading"
+                                          ? "loading"
+                                          : "failed"
+                                    }
+                                    onRetry={() =>
+                                      setCatalogRetry((count) => count + 1)
+                                    }
                                     host={localModelHost}
                                     locale={locale}
                                     onRemoved={removed}
@@ -1236,6 +1253,16 @@ export function AgentColumn({
                                   <LocalModels
                                     key={lane.id}
                                     lane={listed}
+                                    laneStatus={
+                                      catalog.kind === "ready"
+                                        ? "ready"
+                                        : catalog.kind === "loading"
+                                          ? "loading"
+                                          : "failed"
+                                    }
+                                    onRetryLane={() =>
+                                      setCatalogRetry((count) => count + 1)
+                                    }
                                     host={localModelHost}
                                     locale={locale}
                                     onRemoved={removed}
@@ -1405,7 +1432,6 @@ export function AgentColumn({
             )}
             <Transcript
               items={history.value}
-              locale={locale}
               onOpenProviderSettings={openSettings}
               onOpenLink={(url) => {
                 // Cadrumo's own addresses never reach the browser.

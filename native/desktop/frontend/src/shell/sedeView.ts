@@ -9,6 +9,7 @@ import type {
   SedeViewInput,
   SedeViewMessage,
   SedeViewVerb,
+  SedeClipboardAction,
 } from "../ipc/contract";
 
 /** The panel's size in CSS pixels, and the device pixel ratio. */
@@ -31,6 +32,8 @@ export type SedeViewSession = {
   /** Forwards one input event of the person. */
   input(event: SedeViewInput): Promise<void>;
   navigate(verb: SedeViewVerb): Promise<void>;
+  /** Explicit copy or cut of the focused browser selection. Text stays native. */
+  clipboard(action: SedeClipboardAction): Promise<void>;
   resize(size: SedeViewSize): Promise<void>;
   /** One for each image message received, drawn or not. */
   credit(): Promise<void>;

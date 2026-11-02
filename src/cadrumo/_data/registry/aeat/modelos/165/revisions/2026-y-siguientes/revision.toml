@@ -56,11 +56,6 @@ reason = "Modelo 165 is an informative certification declaration. Its 2026 desig
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
 source_refs = ["enrolled-modelo-165-procedure", "aeat-dr-165-2026"]
 
-[revisions."2026-y-siguientes".family_dispositions.live_cross_references]
-reason = "A live cross-reference records an AEAT surface Cadrumo reads at runtime. Modelo 165 declares no such adapter, host, method, or read-only operation, so this revision has no live surface to describe."
-legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]
-source_refs = ["enrolled-modelo-165-procedure"]
-
 [revisions."2026-y-siguientes".family_dispositions.parameters]
 reason = "Parameters hold regulatory values consumed by formulas. Because this informative revision declares no formula, it has no rate, threshold, coefficient, or other parameter consumer to ground."
 legal_refs = ["orden-hap-2455-2013:art-1", "ley-58-2003:art-93"]

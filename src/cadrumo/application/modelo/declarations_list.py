@@ -612,23 +612,19 @@ def existing_declaration(
 
 
 _UNSETTLED_COVERAGE: Final[frozenset[DeadlineHolidayCoverage]] = frozenset(
-    {
-        DeadlineHolidayCoverage.NATIONAL_ONLY,
-        DeadlineHolidayCoverage.TERRITORY_UNVERIFIED,
-        DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE,
-    }
+    {DeadlineHolidayCoverage.CALENDAR_UNAVAILABLE}
 )
-"""Holiday coverage that leaves an effective deadline short of final: a regional holiday may still move it."""
+"""Holiday coverage that leaves an effective deadline short of final: the holiday calendar could not be read."""
 
 
 def deadline_note_words(rows: tuple[DeclarationListRow, ...], language: OutputLanguage) -> str | None:
-    """Say which holidays the listed deadlines leave out, when an open deadline is not final; ``None`` otherwise."""
+    """Say that an open deadline is not final when its holiday calendar was not checked; ``None`` otherwise."""
     for row in rows:
         calendar = row.calendar
         remaining, overdue = row_days(row)
         open_deadline = remaining is not None or overdue is not None
         if calendar is not None and open_deadline and calendar.holiday_coverage in _UNSETTLED_COVERAGE:
-            return holiday_coverage_statement(calendar.holiday_coverage, calendar.holiday_territory, language)
+            return holiday_coverage_statement(calendar.holiday_coverage, language)
     return None
 
 

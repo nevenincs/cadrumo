@@ -1,18 +1,21 @@
 import { useMemo, useRef, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Combobox } from "@/components/ui/combobox";
+import { DataGrid } from "@/components/ui/data-grid";
 import {
-  DataGrid,
-  DataGridRowCheckbox,
-  DataGridSelectAll,
   DataGridText,
   DataGridTextEditor,
-  DataTable,
+} from "@/components/ui/data-grid-text";
+import {
+  DataGridRowCheckbox,
+  DataGridSelectAll,
+} from "@/components/ui/data-grid-selection";
+import { DataTable, type TableRow } from "@/components/ui/data-table";
+import {
   type DataGridHandle,
   type GridColumn,
   type GridRow,
-  type TableRow,
-} from "@/components/ui/data-grid";
+} from "@/components/ui/dataGridTypes";
 import type { CellRange } from "@/components/ui/dataGridModel";
 import { EmptyState } from "@/components/ui/empty";
 import { formatDay } from "@/shared/dateFormats";
@@ -68,9 +71,11 @@ function cellText(row: SampleRow, column: string): string {
 export function DataGridHarness({
   count,
   grouped = false,
+  columnControls = false,
 }: {
   count: number;
   grouped?: boolean;
+  columnControls?: boolean;
 }) {
   const grid = useRef<DataGridHandle>(null);
   const locale = useStrings().locale ?? "en";
@@ -83,6 +88,7 @@ export function DataGridHarness({
   const [widths, setWidths] = useState<Record<string, number>>({});
   const [order, setOrder] = useState<string[] | null>(null);
   const [folded, setFolded] = useState<ReadonlySet<string>>(new Set());
+  const [categoryHidden, setCategoryHidden] = useState(false);
 
   const columns = useMemo(() => {
     const all: GridColumn<SampleRow>[] = [
@@ -152,7 +158,7 @@ export function DataGridHarness({
             emptyLabel="No category matches"
             hint="Type to search the categories."
             onCommit={(value, via) => context.commit(value, via)}
-            onCancel={(via) => context.cancel(via === "escape")}
+            onCancel={(via) => context.cancel(via !== "outside")}
           />
         ),
       },
@@ -177,14 +183,16 @@ export function DataGridHarness({
         ),
       },
     ];
-    const sized = all.map((column) =>
-      widths[column.id] === undefined
-        ? column
-        : { ...column, width: widths[column.id] as number, grow: undefined },
-    );
+    const sized = all
+      .filter((column) => !categoryHidden || column.id !== "category")
+      .map((column) =>
+        widths[column.id] === undefined
+          ? column
+          : { ...column, width: widths[column.id] as number, grow: undefined },
+      );
     if (!order) return sized;
     return order.flatMap((id) => sized.filter((column) => column.id === id));
-  }, [widths, order, locale]);
+  }, [widths, order, locale, categoryHidden]);
 
   const sorted = useMemo(() => {
     if (!sort) return data;
@@ -242,120 +250,129 @@ export function DataGridHarness({
       .join("\n");
 
   return (
-    <DataGrid
-      ref={grid}
-      label="Movements"
-      columns={columns}
-      rows={rows}
-      positionLabel={(row, total) => `Row ${row} of ${total}`}
-      sort={sort}
-      onSort={(column) => {
-        record(`sort ${column}`);
-        setSort((current) =>
-          current?.column === column
-            ? current.direction === "asc"
-              ? { column, direction: "desc" }
-              : null
-            : { column, direction: "asc" },
-        );
-      }}
-      selection={selection}
-      onSelectionChange={(next, cause) => {
-        record(`select ${cause} ${next.size}`);
-        setSelection(next);
-      }}
-      onActivate={(key) => record(`activate ${key}`)}
-      onCommit={(key, column, value) => {
-        record(`commit ${key} ${column} ${JSON.stringify(value)}`);
-        setData((current) =>
-          current.map((row) => {
-            if (row.id !== key) return row;
-            if (column === "description")
-              return {
-                ...row,
-                description: String(value ?? ""),
-                changed: true,
-              };
-            if (column === "category")
-              return {
-                ...row,
-                category: value === null ? null : String(value),
-                changed: true,
-              };
-            if (column === "amount") {
-              const amount = Number(value);
-              return Number.isFinite(amount) && value !== null
-                ? { ...row, amount, changed: true }
-                : row;
-            }
-            return row;
-          }),
-        );
-      }}
-      onMenu={(key, column) => record(`menu ${key} ${column ?? "-"}`)}
-      onToggleSection={(key) => {
-        record(`toggle ${key}`);
-        setFolded((current) => {
-          const next = new Set(current);
-          if (next.has(key)) next.delete(key);
-          else next.add(key);
-          return next;
-        });
-      }}
-      onCopy={(range) => {
-        record(`copy ${range.rows.length}x${range.columns.length}`);
-        return tsv(range);
-      }}
-      onPaste={(range, text) =>
-        record(`paste ${range.rows.length}x${range.columns.length} ${text}`)
-      }
-      onFill={(range, direction) =>
-        record(`fill ${direction} ${range.rows.length}x${range.columns.length}`)
-      }
-      onColumnResize={(column, width) => {
-        record(`resize ${column} ${width.toFixed(2)}`);
-        setWidths((current) => ({ ...current, [column]: width }));
-      }}
-      onColumnOrder={(next) => {
-        record(`order ${next.join(",")}`);
-        setOrder(next);
-      }}
-      rowState={(key) => {
-        const row = byId.get(key);
-        return row
-          ? { changed: row.changed, refused: row.refused, locked: row.locked }
-          : undefined;
-      }}
-      describeRow={(key) => {
-        const row = byId.get(key);
-        if (!row) return undefined;
-        const parts = [
-          row.locked && "Sealed: Modelo 303 2026 1T",
-          row.changed && "Staged change",
-          row.refused && "Refused",
-        ].filter(Boolean);
-        return parts.length ? parts.join(" · ") : undefined;
-      }}
-      describeCell={(key, column) => {
-        const row = byId.get(key);
-        if (!row) return undefined;
-        if (row.refused && column === "category")
-          return {
-            text: "Refused: this category does not apply to the period",
-            invalid: true,
-          };
-        if (row.changed && column === "amount")
-          return { text: "changed, was 0.00" };
-        return undefined;
-      }}
-      empty={
-        <EmptyState
-          icon="search"
-          heading="No movements"
-          description="Nothing matches the filters."
-        />
-      }
-    />
+    <>
+      <DataGrid
+        ref={grid}
+        label="Movements"
+        columns={columns}
+        rows={rows}
+        positionLabel={(row, total) => `Row ${row} of ${total}`}
+        sort={sort}
+        onSort={(column) => {
+          record(`sort ${column}`);
+          setSort((current) =>
+            current?.column === column
+              ? current.direction === "asc"
+                ? { column, direction: "desc" }
+                : null
+              : { column, direction: "asc" },
+          );
+        }}
+        selection={selection}
+        onSelectionChange={(next, cause) => {
+          record(`select ${cause} ${next.size}`);
+          setSelection(next);
+        }}
+        onActivate={(key) => record(`activate ${key}`)}
+        onCommit={(key, column, value) => {
+          record(`commit ${key} ${column} ${JSON.stringify(value)}`);
+          setData((current) =>
+            current.map((row) => {
+              if (row.id !== key) return row;
+              if (column === "description")
+                return {
+                  ...row,
+                  description: String(value ?? ""),
+                  changed: true,
+                };
+              if (column === "category")
+                return {
+                  ...row,
+                  category: value === null ? null : String(value),
+                  changed: true,
+                };
+              if (column === "amount") {
+                const amount = Number(value);
+                return Number.isFinite(amount) && value !== null
+                  ? { ...row, amount, changed: true }
+                  : row;
+              }
+              return row;
+            }),
+          );
+        }}
+        onMenu={(key, column) => record(`menu ${key} ${column ?? "-"}`)}
+        onToggleSection={(key) => {
+          record(`toggle ${key}`);
+          setFolded((current) => {
+            const next = new Set(current);
+            if (next.has(key)) next.delete(key);
+            else next.add(key);
+            return next;
+          });
+        }}
+        onCopy={(range) => {
+          record(`copy ${range.rows.length}x${range.columns.length}`);
+          return tsv(range);
+        }}
+        onPaste={(range, text) =>
+          record(`paste ${range.rows.length}x${range.columns.length} ${text}`)
+        }
+        onFill={(range, direction) =>
+          record(
+            `fill ${direction} ${range.rows.length}x${range.columns.length}`,
+          )
+        }
+        onColumnResize={(column, width) => {
+          record(`resize ${column} ${width.toFixed(2)}`);
+          setWidths((current) => ({ ...current, [column]: width }));
+        }}
+        onColumnOrder={(next) => {
+          record(`order ${next.join(",")}`);
+          setOrder(next);
+        }}
+        rowState={(key) => {
+          const row = byId.get(key);
+          return row
+            ? { changed: row.changed, refused: row.refused, locked: row.locked }
+            : undefined;
+        }}
+        describeRow={(key) => {
+          const row = byId.get(key);
+          if (!row) return undefined;
+          const parts = [
+            row.locked && "Sealed: Modelo 303 2026 1T",
+            row.changed && "Staged change",
+            row.refused && "Refused",
+          ].filter(Boolean);
+          return parts.length ? parts.join(" · ") : undefined;
+        }}
+        describeCell={(key, column) => {
+          const row = byId.get(key);
+          if (!row) return undefined;
+          if (row.refused && column === "category")
+            return {
+              text: "Refused: this category does not apply to the period",
+              invalid: true,
+            };
+          if (row.changed && column === "amount")
+            return { text: "changed, was 0.00" };
+          return undefined;
+        }}
+        empty={
+          <EmptyState
+            icon="search"
+            heading="No movements"
+            description="Nothing matches the filters."
+          />
+        }
+      />
+      {columnControls && (
+        <button type="button" onClick={() => setCategoryHidden(true)}>
+          Hide category
+        </button>
+      )}
+    </>
   );
 }
 

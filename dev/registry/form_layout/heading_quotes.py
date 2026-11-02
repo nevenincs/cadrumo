@@ -20,7 +20,7 @@ from .column_vocabulary import shared_column_key
 from .generation_models import _Build
 from .official_headings import OfficialHeadingRefusedError, QuotedHeading, verify_quote
 from .official_text import node_slug
-from .page_sections import _column_heading_key, _heading_key
+from .page_sections import column_form_heading_key, form_heading_key
 
 
 def _quoted_column[C: (FormGridColumn, FormRepeatingColumn)](build: _Build, column: C, quote: QuotedHeading) -> C:
@@ -28,7 +28,7 @@ def _quoted_column[C: (FormGridColumn, FormRepeatingColumn)](build: _Build, colu
         raise OfficialHeadingRefusedError(f"{quote.describe()}: the design already names this column")
     key = shared_column_key(quote.text) or column.key
     return column.model_copy(
-        update={"official_heading": quote.text, "heading_key": _column_heading_key(build.modelo_id, key)}
+        update={"official_heading": quote.text, "heading_key": column_form_heading_key(build.modelo_id, key)}
     )
 
 
@@ -56,7 +56,7 @@ def _quoted_section(
         if section.official_heading is not None:
             raise OfficialHeadingRefusedError(f"{quote.describe()}: the design already names this section")
         update["official_heading"] = quote.text
-        update["heading_key"] = _heading_key(build.modelo_id, "section", node_slug(quote.text))
+        update["heading_key"] = form_heading_key(build.modelo_id, "section", node_slug(quote.text))
     return section.model_copy(update=update)
 
 

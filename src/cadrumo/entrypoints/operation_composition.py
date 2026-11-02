@@ -108,6 +108,7 @@ from .operation_composition_general import (
     compose_user_profile_censal_preview_operation,
     compose_user_profile_google_configuration_operation,
     compose_user_profile_history_operation,
+    compose_user_profile_imputation_election_operation,
     compose_user_profile_operations,
     compose_user_profile_recovery_revoke_operation,
     compose_user_profile_recovery_status_operation,
@@ -173,6 +174,7 @@ from .operation_composition_ledger import (
     compose_workflow_run_read_operation,
 )
 from .operation_composition_live import (
+    compose_live_borrador_100_compare_operation,
     compose_live_borrador_100_operation,
     compose_live_expedientes_capture_operation,
     compose_live_expedientes_read_operation,
@@ -326,6 +328,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.ledger.track_operation": compose_ledger_track_operation,
     "application.ledger.update_operation": compose_ledger_update_operation,
     "application.ledger.view_operation": compose_ledger_view_operation,
+    "application.live.borrador_100_comparison_operation": compose_live_borrador_100_compare_operation,
     "application.live.borrador_100_operation": compose_live_borrador_100_operation,
     "application.live.expedientes_capture_operation": compose_live_expedientes_capture_operation,
     "application.live.expedientes_read_operation": compose_live_expedientes_read_operation,
@@ -415,6 +418,7 @@ _OPERATION_COMPOSITION_GROUPS: Mapping[str, _GroupComposer] = {
     "application.user_profile.censal_preview_operation": compose_user_profile_censal_preview_operation,
     "application.user_profile.google_configuration_operation": compose_user_profile_google_configuration_operation,
     "application.user_profile.history_operation": compose_user_profile_history_operation,
+    "application.user_profile.imputation_election_operation": compose_user_profile_imputation_election_operation,
     "application.user_profile.operations": compose_user_profile_operations,
     "application.user_profile.recovery_revoke_operation": compose_user_profile_recovery_revoke_operation,
     "application.user_profile.recovery_status_operation": compose_user_profile_recovery_status_operation,

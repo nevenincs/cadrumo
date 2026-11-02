@@ -11,7 +11,7 @@ import type { Suggestion } from "@/components/ui/suggestions";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/components/ui/cn";
 import { Combobox, type ComboboxOption } from "@/components/ui/combobox";
-import type { EditorContext } from "@/components/ui/data-grid";
+import type { EditorContext } from "@/components/ui/dataGridTypes";
 import { commitKeyOf, type CommitKey } from "@/components/ui/dataGridModel";
 import { Icon } from "@/components/ui/icon";
 import {
@@ -428,7 +428,7 @@ export function ChoiceEditor({
           via,
         )
       }
-      onCancel={(via) => context.cancel(via === "escape")}
+      onCancel={(via) => context.cancel(via !== "outside")}
     />
   );
 }

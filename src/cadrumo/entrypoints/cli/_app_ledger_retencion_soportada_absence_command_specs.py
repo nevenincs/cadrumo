@@ -37,7 +37,7 @@ _LEAF_INVOCATION: Final[InvocationSpec] = InvocationSpec(
 
 
 def _option(
-    *, name: str, declaration: str, value: ValueContract, default: ParameterDefault, help_key: TranslationKey
+    *, name: str, declaration: str, value: ValueContract, default: ParameterDefault, help_key: str
 ) -> OptionSpec:
     """Build one ordinary non-flag option."""
     return OptionSpec(

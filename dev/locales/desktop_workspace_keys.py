@@ -20,7 +20,7 @@ def _composed_families(
     from cadrumo.domain.deadlines.festivos import DeadlineHolidayCoverage
     from cadrumo.domain.modelos.verification_report import VerificationCompletenessStatus
 
-    complete = {DeadlineHolidayCoverage.NATIONAL_AND_TERRITORY, DeadlineHolidayCoverage.NOT_SHIFTED}
+    complete = {DeadlineHolidayCoverage.NATIONAL_ONLY, DeadlineHolidayCoverage.NOT_SHIFTED}
     return {
         "workspace.declarations.holiday_coverage.": values(c for c in DeadlineHolidayCoverage if c not in complete),
         "workspace.declarations.list.group.": values(
@@ -168,7 +168,7 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.declarations.due.days_late",
         "workspace.declarations.due.days_left",
         "workspace.declarations.due.on",
-        "workspace.declarations.hub.holidays_national_only",
+        "workspace.declarations.hub.holidays_unchecked",
         "workspace.declarations.list.all_recorded",
         "workspace.declarations.list.column.deadline",
         "workspace.declarations.list.column.declaration",
@@ -361,6 +361,12 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "workspace.modelo.period.annual",
         "workspace.modelo.rate.printed_by_form",
         "workspace.modelo.read_again",
+        "workspace.modelo.write_hold.unknown",
+        "workspace.modelo.write_hold.check_status",
+        "workspace.modelo.write_hold.unresolved",
+        "workspace.modelo.write_hold.reload_needed",
+        "workspace.modelo.write_hold.saved_unread",
+        "workspace.modelo.write_hold.reload_list",
         "workspace.modelo.rebase.changed",
         "workspace.modelo.rebase.dropped",
         "workspace.modelo.rebase.moved",

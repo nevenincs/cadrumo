@@ -3,6 +3,7 @@ import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import { IconButton } from "@/components/ui/icon-button";
 import { PaneHeaderFrame } from "@/components/ui/pane-header";
+import { useDockedPane } from "./docking/PaneChrome";
 
 export type PaneControl = {
   id: string;
@@ -65,6 +66,14 @@ export function PaneHeader({
    * the room between and give it up before the title is cut. */
   children?: ReactNode;
 }) {
+  const docked = useDockedPane();
+  if (docked) {
+    return children ? (
+      <PaneHeaderFrame className="pane-head pane-tools">
+        {children}
+      </PaneHeaderFrame>
+    ) : null;
+  }
   return (
     <PaneHeaderFrame className="pane-head" onToggleMaximize={onToggleMaximize}>
       {status && <SessionDot phase={status.phase} />}

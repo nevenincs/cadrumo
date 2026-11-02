@@ -234,7 +234,14 @@ class DuplicationResult:
         )
 
 
-def jscpd_command(npx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS, *, tests: bool = False) -> list[str]:
+def jscpd_command(
+    npx: str,
+    source_roots: Sequence[Path] = _SOURCE_ROOTS,
+    *,
+    tests: bool = False,
+    format_name: str = "python",
+    ignore: str | None = None,
+) -> list[str]:
     r"""Build the one jscpd command line.
 
     Each of ``source_roots`` is passed via :meth:`~pathlib.PurePath.as_posix`
@@ -249,17 +256,18 @@ def jscpd_command(npx: str, source_roots: Sequence[Path] = _SOURCE_ROOTS, *, tes
         _JSCPD_SPEC,
         *(source_root.as_posix() for source_root in source_roots),
         "--format",
-        "python",
+        format_name,
         "--min-lines",
         "6",
         "--min-tokens",
         "80",
         "--max-size",
-        "250kb",
+        "250kb" if format_name == "python" else "100mb",
+        *(("--max-lines", "10000000") if format_name != "python" else ()),
         *(("--pattern", _JSCPD_TEST_PATTERN) if tests else ()),
         "--ignore",
-        _JSCPD_TEST_IGNORE if tests else _JSCPD_IGNORE,
-        "--gitignore",
+        ignore if ignore is not None else _JSCPD_TEST_IGNORE if tests else _JSCPD_IGNORE,
+        *(("--gitignore",) if format_name == "python" else ()),
         "--reporters",
         "console",
         "--noTips",
@@ -409,6 +417,8 @@ def run_duplication_scan(
     timeout: float = _JSCPD_TIMEOUT_SECONDS,
     which: Callable[[str], str | None] = shutil.which,
     tests: bool = False,
+    format_name: str = "python",
+    ignore: str | None = None,
 ) -> DuplicationResult:
     """Run jscpd over ``source_roots`` and classify the outcome.
 
@@ -431,7 +441,7 @@ def run_duplication_scan(
 
     try:
         completed = run_command(
-            jscpd_command(npx, source_roots, tests=tests),
+            jscpd_command(npx, source_roots, tests=tests, format_name=format_name, ignore=ignore),
             errors="replace",
             cwd=repo_root,
             timeout_seconds=timeout,
@@ -447,7 +457,7 @@ def run_duplication_scan(
         return DuplicationResult.unavailable(f"jscpd exited {completed.returncode}: {tail}")
 
     result = classify_jscpd_output(completed.stdout)
-    if result.outcome is not DuplicationOutcome.CLONES:
+    if result.outcome is not DuplicationOutcome.CLONES or format_name != "python":
         return result
     return classify_clone_spans(result, repo_root)
 
