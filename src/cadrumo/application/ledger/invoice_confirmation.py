@@ -791,6 +791,7 @@ def _build_confirmed_invoice_candidate(
         series=resolved_series,
         rectifies_invoice_number=resolved_rectifies,
         recargo_amount=resolved_recargo_amount,
+        suplido_amount=draft.suplidos_amount,
         lines=confirmed_lines,
         rate_provider=catalogue_creation_ports.rate_provider,
     )

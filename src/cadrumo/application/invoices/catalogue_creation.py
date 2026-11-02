@@ -321,6 +321,7 @@ def _apply_operator_asserted_invoice_facts(
     series: str | None,
     rectifies_invoice_number: str | None,
     recargo_amount: Decimal | None,
+    suplido_amount: Decimal | None,
     iva_category: IvaCategory | None,
     operation_type: IntracomOperationType | None,
     operation_date: date | None,
@@ -335,6 +336,8 @@ def _apply_operator_asserted_invoice_facts(
         invoice_payload["rectifies_invoice_number"] = rectifies_invoice_number
     if recargo_amount is not None:
         invoice_payload["recargo_amount"] = format(recargo_amount, "f")
+    if suplido_amount is not None:
+        invoice_payload["suplido_amount"] = format(suplido_amount, "f")
     if iva_category is not None:
         invoice_payload["iva_category"] = iva_category.value
     _require_operation_type_where_the_category_cannot_settle_it(
@@ -401,6 +404,7 @@ def build_catalogue_invoice(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo_amount: Decimal | None = None,
+    suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
@@ -445,8 +449,9 @@ def build_catalogue_invoice(
     vocabulary the writer could not speak.
 
     The recargo rides INSIDE ``grand_total`` (LIVA art. 161) while a retención
-    is settled outside it, which is why only the recargo enters the totals
-    identity. The model re-checks that identity exactly, so a stated recargo
+    is settled outside it, which is why only the recargo and the suplido enter
+    the totals identity. A suplido (LIVA art. 78.Tres.3.º) is carried in the
+    total but is no part of the base or the cuota. The model re-checks that identity exactly, so a stated recargo
     the lines do not support refuses rather than being balanced silently.
 
     ``business_premises_lease`` states that an issued invoice documents the
@@ -478,6 +483,7 @@ def build_catalogue_invoice(
                 series=series,
                 rectifies_invoice_number=rectifies_invoice_number,
                 recargo_amount=recargo_amount,
+                suplido_amount=suplido_amount,
                 business_premises_lease=business_premises_lease,
                 lines=lines,
                 rate_provider=rate_provider,
@@ -506,6 +512,7 @@ def build_catalogue_invoice(
         series=series,
         rectifies_invoice_number=rectifies_invoice_number,
         recargo_amount=recargo_amount,
+        suplido_amount=suplido_amount,
         business_premises_lease=business_premises_lease,
         lines=lines,
         rate_provider=rate_provider,
@@ -536,6 +543,7 @@ def _build_pinned_catalogue_invoice(
     series: str | None = None,
     rectifies_invoice_number: str | None = None,
     recargo_amount: Decimal | None = None,
+    suplido_amount: Decimal | None = None,
     business_premises_lease: BusinessPremisesLease | None = None,
     lines: Sequence[InvoiceLine] | None = None,
     rate_provider: CatalogueInvoiceRateProviderPort,
@@ -583,7 +591,7 @@ def _build_pinned_catalogue_invoice(
         # while a retencion is settled outside it, which is why only the recargo
         # appears here. The model re-checks this identity exactly, so a caller that
         # states a recargo the lines do not support is refused rather than balanced.
-        grand_total = computed_grand_total(base_total, iva_total, recargo_amount)
+        grand_total = computed_grand_total(base_total, iva_total, recargo_amount) + (suplido_amount or Decimal(0))
         invoice_payload: dict[str, object] = {
             "bucket_id": bucket_id,
             "kind": kind.value,
@@ -606,6 +614,7 @@ def _build_pinned_catalogue_invoice(
             series=series,
             rectifies_invoice_number=rectifies_invoice_number,
             recargo_amount=recargo_amount,
+            suplido_amount=suplido_amount,
             iva_category=iva_category,
             operation_type=operation_type,
             operation_date=operation_date,

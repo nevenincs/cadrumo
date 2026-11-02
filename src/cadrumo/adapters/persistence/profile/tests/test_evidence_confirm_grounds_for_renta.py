@@ -195,7 +195,7 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
     tmp_path: Path,
     invoice_authority: InvoiceAuthorityFixture,
 ) -> None:
-    """From the document's bytes to the income path: 1210.00 - 150.00 = 1060.00 reaches the bank.
+    """From the document's bytes to the income path: 1255.00 - 150.00 = 1105.00 reaches the bank.
 
     The declared figure is the document's, and it comes back once: the derivation is
     the invoice's rather than an inference from the cash added to it.
@@ -219,7 +219,7 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
                 provider_transaction_id="cobro-1",
                 booked_date=invoice.issued_at,
                 value_date=invoice.issued_at,
-                amount=Decimal("1060.00"),
+                amount=Decimal("1105.00"),
                 currency="EUR",
                 counterparty="Cliente Ejemplo SA",
                 description="cobro factura",
@@ -254,6 +254,11 @@ def test_a_read_retention_makes_the_net_cash_match_the_linked_invoice(
     withheld = income_withheld_amount(linked_transaction, evidence=payload)
 
     assert refusal is None
+    assert invoice.suplido_amount == Decimal("45.00")
+    assert invoice.grand_total == Decimal("1255.00")
+    # A suplido is no part of the taxable base or the cuota.
+    assert payload.taxable_base == Decimal("1000.00")
+    assert payload.iva_amount == Decimal("210.00")
     assert payload.retencion_amount == Decimal("150.00")
     assert withheld[0] == Decimal("150.00")
     assert withheld[1] is LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE
