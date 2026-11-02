@@ -751,8 +751,12 @@ def _apply_ubl_tax_totals(root: Element, parsed: ParsedEInvoice) -> None:
     A subtotal naming IRPF inside ``cac:TaxTotal`` is not IVA whatever element
     carries it. UBL's own place for a withholding is ``cac:WithholdingTaxTotal``, so
     this one is recorded as a withheld figure that was not read.
+
+    Only the document's own ``cac:TaxTotal`` children are read: UBL 2.1 lets an
+    invoice line carry one too, and counting it beside the document's would
+    state the same tax twice.
     """
-    for tax_total in _find_all(root, "TaxTotal"):
+    for tax_total in (child for child in root if _local(child.tag) == "TaxTotal"):
         subtotals = _find_all(tax_total, "TaxSubtotal")
         irpf = [row for row in subtotals if any(_names_irpf(token) for token in _ubl_subtotal_scheme_tokens(row))]
         parsed.withheld_taxes.extend(_ubl_withheld_tax(row, is_irpf=False) for row in irpf)
