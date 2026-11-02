@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:bd8615370fe5342d70c1498060683773abf1630c8f2cff61beb52aab0bf144d6'
+body_hash: 'sha256:f8b86fd8fcd3acb93fc2b8a0a7849f8221d47a7b27455a981d0e0c8169dd00ef'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -312,6 +312,68 @@ related:
 - `S15` `verify:` `pytest focused (report export, review loader, gate, borrador)` -> `pass`
 - `S15` `verify:` `just check-style` -> `pass`
 - `S15` `verify:` `just check-format` -> `pass`
+- `S17` `A` `src/cadrumo/core/retencion_soportada.py`
+- `S17` `A` `src/cadrumo/domain/renta/retencion_soportada.py`
+- `S17` `A` `src/cadrumo/domain/calculations/registry/retencion_soportada_bindings.py`
+- `S17` `A` `src/cadrumo/application/aggregation/retencion_soportada_repository.py`
+- `S17` `A` `src/cadrumo/application/aggregation/retencion_soportada_source.py`
+- `S17` `A` `src/cadrumo/adapters/persistence/profile/retencion_soportada_records.py`
+- `S17` `A` `src/cadrumo/adapters/persistence/profile/tests/test_retencion_soportada_records.py`
+- `S17` `A` `src/cadrumo/domain/calculations/registry/tests/test_retencion_soportada_bindings.py`
+- `S17` `A` `src/cadrumo/domain/renta/tests/test_retencion_soportada_record.py`
+- `S17` `M` `src/cadrumo/core/aggregation.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/binding_provider.py`
+- `S17` `M` `src/cadrumo/domain/calculations/registry/binding_provider_registration.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/storage/namespace_registry.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/storage/tests/test_namespace_registry.py`
+- `S17` `M` `src/cadrumo/application/modelo/calculation_action_ports.py`
+- `S17` `M` `src/cadrumo/application/modelo/calculation_route.py`
+- `S17` `M` `src/cadrumo/application/modelo/calculation_source_mesh_actions.py`
+- `S17` `M` `src/cadrumo/application/modelo/data_inventory.py`
+- `S17` `M` `src/cadrumo/application/modelo/source_policy.py`
+- `S17` `M` `src/cadrumo/application/state_projection_models.py`
+- `S17` `M` `src/cadrumo/entrypoints/adapter_composition_work_ports.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/profile_persistence/file_flow_test_support.py`
+- `S17` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_bienes_inversion_regularizacion_source_mesh_enrollment.py`
+- `S17` `M` `src/cadrumo/adapters/persistence/storage/_profile_custody_carry.py`
+- `S17` `M` `dev/registry/compiler/validate_bindings.py`
+- `S17` `M` `src/cadrumo/core/errors/registry/_application_ledger.py`
+- `S17` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S17` `M` `dev/quality/metadata/import_load_targets.json`
+- `S17` `M` `src/cadrumo/_data/operations/contract_manifest.json`
+- `S17` `M` `src/cadrumo/locales/en/cli.yml`
+- `S17` `M` `src/cadrumo/locales/en/common.yml`
+- `S17` `M` `src/cadrumo/locales/en/docs.yml`
+- `S17` `M` `src/cadrumo/locales/en/flows.yml`
+- `S17` `M` `src/cadrumo/locales/en/errors.yml`
+- `S17` `M` `src/cadrumo/locales/es/cli.yml`
+- `S17` `M` `src/cadrumo/locales/es/common.yml`
+- `S17` `M` `src/cadrumo/locales/es/docs.yml`
+- `S17` `M` `src/cadrumo/locales/es/flows.yml`
+- `S17` `M` `src/cadrumo/locales/es/errors.yml`
+- `S17` `M` `src/cadrumo/locales/ca/cli.yml`
+- `S17` `M` `src/cadrumo/locales/ca/common.yml`
+- `S17` `M` `src/cadrumo/locales/ca/docs.yml`
+- `S17` `M` `src/cadrumo/locales/ca/flows.yml`
+- `S17` `M` `src/cadrumo/locales/ca/errors.yml`
+- `S17` `M` `src/cadrumo/locales/hu/cli.yml`
+- `S17` `M` `src/cadrumo/locales/hu/common.yml`
+- `S17` `M` `src/cadrumo/locales/hu/docs.yml`
+- `S17` `M` `src/cadrumo/locales/hu/flows.yml`
+- `S17` `M` `src/cadrumo/locales/hu/errors.yml`
+- `S17` `verify:` `pytest retencion_soportada tests (3 modules, 42 tests)` -> `pass`
+- `S17` `verify:` `pytest focused regression set, 659 of 660` -> `fail`
+- `S17` `verify:` `just check-style` -> `pass`
+- `S17` `verify:` `just check-format` -> `pass`
+- `S17` `verify:` `just check-types` -> `fail`
+- `S17` `verify:` `lint-imports` -> `pass`
+- `S17` `verify:` `dev.registry.conformance valid` -> `pass`
+- `S17` `verify:` `just check-bindings` -> `pass`
+- `S17` `verify:` `just check-secure-store-write-paths` -> `pass`
+- `S17` `verify:` `just check-persistence-write-paths` -> `pass`
+- `S17` `verify:` `operation_contract_manifest --check` -> `pass`
+- `S17` `by:` `high-implementation`
 
 ## Notes
 
@@ -337,3 +399,4 @@ related:
 - `S14` regression fix
 - `S14` final review fix
 - `S15` final review fix
+- `S17` Both failures pre-exist S17 and touch no S17 path: `test_exception_base_hygiene` names unrelated builtin-rooted classes, and check-types reports 2 basedpyright diagnostics in `invoice_filing_fingerprint.py.` check-locales is unavailable on an absent desktop.ledger.inspector key outside S17. The bundled registry declares no `retencion_soportada` binding yet, so production writes refuse `family_not_declared` until S06.
