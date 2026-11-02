@@ -1980,6 +1980,13 @@ application:
       export_revision_state_refused: A(z) %{calculation_revision_id} mentett számítás
         nincs ellenőrzött és teljes, illetve benyújtottként rögzített állapotban,
         ezért nem exportálható.
+      export_settlement_unknown: Az exportálás nem tudja megadni, hogyan rendeződik
+        a bevallás, mert az eredménye nincs kiszámítva. Számítsd ki a bevallást, és
+        exportáld újra.
+      export_settlement_unsupported: 'Az exportálás nem tudja megadni, hogyan rendeződik
+        a bevallás: a rendezett összeg nem abba az irányba mutat, mint az eredmény,
+        például amikor az eredmény egy részét a házastársad visszatérítése ellen felfüggesztik.
+        A hivatalos fájl ezt nem tudja kifejezni.'
       export_unsupported: A Modelo %{modelo} nyomtatvány nem exportálható fichero-BOE
         fájlba, mert %{reason}. A számítás, az ellenőrzés és az általad őrzött benyújtási
         rekordok létezhetnek, de ez a parancs ehhez a nyomtatványhoz nem tud AEAT

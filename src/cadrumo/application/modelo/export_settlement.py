@@ -182,7 +182,7 @@ def settlement_dictionary_values(
     if disposition is None:
         return {}
     if settlement.refusal is not None:
-        raise _uncomposed(disposition, cause=settlement.refusal.value)
+        raise _settlement_refused(disposition, settlement.refusal)
     values: dict[str, object] = {DISPOSITION_FIELD: disposition.value}
     if disposition in _STATED_ALONE:
         return values
@@ -255,6 +255,20 @@ def _refund_values(amount: Decimal, refund_account: RefundAccount | None) -> dic
         )
         values.update({field: text or None for field, text in zip(_FOREIGN_BANK_FIELDS, bank, strict=True)})
     return values
+
+
+_REFUSAL_MESSAGES: Final = {
+    SettlementRefusal.RESULT_UNKNOWN: "application.modelo.errors.export_settlement_unknown",
+    SettlementRefusal.SETTLEMENT_UNSUPPORTED: "application.modelo.errors.export_settlement_unsupported",
+}
+
+
+def _settlement_refused(disposition: ResultDisposition, refusal: SettlementRefusal) -> ModeloExportError:
+    """Refuse with the settlement's own message: the generic write failure would read as a disk problem."""
+    return ModeloExportError(
+        translated_message=_REFUSAL_MESSAGES[refusal],
+        context={"cause": refusal.value, "result_disposition": disposition.value},
+    )
 
 
 def _uncomposed(disposition: ResultDisposition, *, cause: str) -> ModeloExportError:

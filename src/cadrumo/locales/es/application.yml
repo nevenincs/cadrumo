@@ -2016,6 +2016,13 @@ application:
       export_revision_state_refused: El cálculo guardado %{calculation_revision_id}
         no está comprobado y completo, ni registrado como presentado, y no se puede
         exportar.
+      export_settlement_unknown: La exportación no puede indicar cómo se liquida la
+        declaración porque su resultado no está calculado. Calcula la declaración
+        y vuelve a exportarla.
+      export_settlement_unsupported: 'La exportación no puede indicar cómo se liquida
+        la declaración: el importe liquidado no va en el mismo sentido que el resultado,
+        como cuando una parte del resultado se suspende contra la devolución de tu
+        cónyuge. El fichero oficial no tiene forma de expresarlo.'
       export_unsupported: El modelo %{modelo} no se puede exportar a fichero-BOE porque
         %{reason}. El cálculo, la comprobación y los registros de presentación que
         guardas pueden existir, pero este comando no puede producir un fichero para

@@ -163,6 +163,7 @@ def test_a_suspended_part_is_refused_because_the_remainder_is_not_computed(
 
         assert settled.refusal is SettlementRefusal.SETTLEMENT_UNSUPPORTED, year
         assert refused.value.context == {"cause": "settlement_unsupported", "result_disposition": "I"}, year
+        assert refused.value.translated_message == "application.modelo.errors.export_settlement_unsupported", year
 
 
 def test_a_suspended_part_left_blank_is_nothing_as_the_calculation_reads_it(
@@ -174,8 +175,10 @@ def test_a_suspended_part_left_blank_is_nothing_as_the_calculation_reads_it(
         values: dict[CasillaId, object] = {_RESULT: Decimal("900.00"), _SUSPENDED: None}
 
         settled = declared_settlement("100", revision, values, disposition=None)
+        never_keyed = declared_settlement("100", revision, {_RESULT: Decimal("900.00")}, disposition=None)
 
         assert settled.amount == Decimal("900.00") and settled.refusal is None, year
+        assert never_keyed == settled, year
 
 
 def test_a_refund_is_paid_out_from_the_result(operation: PinnedAuthorityOperation) -> None:
