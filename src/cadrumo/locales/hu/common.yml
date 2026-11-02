@@ -197,6 +197,9 @@ aggregation:
         számláját helyesbíti. Ez a 369-es modell korábbi időszakokra vonatkozó helyesbítései
         közé tartozik, és a terv e mezője itt nem fogad negatív összeget. Nem történt
         export; vallsd be közvetlenül a Sede felületén.
+      rectificativa_target_ambiguous: Egy OSS/IOSS helyesbítő számla olyan számot
+        nevez meg, amely több rögzített számlán szerepel, így nem tudható, melyik
+        sort helyesbíti. Tedd egyedivé a számlaszámokat, vagy javítsd a hivatkozást.
       rectificativa_target_differs: Egy OSS/IOSS helyesbítő számla rendszere, ügylettípusa
         vagy tagállama eltér a helyesbített számláétól, így nem vonható le annak sorából.
         Ellenőrizd mindkét számlát.

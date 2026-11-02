@@ -76,7 +76,7 @@ from ..invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
-from ..invoices.source_observations import is_rectificativa, rectified_invoice
+from ..invoices.source_observations import is_rectificativa, rectified_invoices
 from .errors import AggregationValidationError
 from .invoice_devengo import (
     devengo_proxy_attribution_diagnostics,
@@ -994,12 +994,18 @@ class OssIossInvoiceProjection(BaseModel):
 def _corrected_invoice_devengo(invoice: Invoice, catalogue: InvoiceCatalogue, projection_period: Period) -> date:
     """Return the devengo of the invoice a correction takes its lines off, or refuse what it cannot reach."""
     context = {"invoice_id": invoice.invoice_id, "invoice_number": invoice.invoice_number}
-    target = rectified_invoice(invoice, catalogue)
-    if target is None:
+    candidates = rectified_invoices(invoice, catalogue)
+    if not candidates:
         raise AggregationValidationError(
             tr("aggregation.oss_ioss.errors.rectificativa_target_unknown"),
             context=context,
         )
+    if len(candidates) > 1:
+        raise AggregationValidationError(
+            tr("aggregation.oss_ioss.errors.rectificativa_target_ambiguous"),
+            context=context,
+        )
+    target = candidates[0]
     if (
         target.oss_ioss_regime != invoice.oss_ioss_regime
         or target.oss_transaction_kind != invoice.oss_transaction_kind

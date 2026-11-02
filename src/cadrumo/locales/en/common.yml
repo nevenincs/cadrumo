@@ -191,6 +191,9 @@ aggregation:
         of another period. It belongs in Modelo 369's corrections of earlier periods,
         and that field of the design does not take a negative amount here. Nothing
         was exported; declare it directly on the Sede.
+      rectificativa_target_ambiguous: An OSS/IOSS corrective invoice names a number
+        that more than one recorded invoice carries, so the row it corrects is not
+        known. Make the invoice numbers unique or correct the reference.
       rectificativa_target_differs: An OSS/IOSS corrective invoice has a different
         regime, operation kind or Member State from the invoice it corrects, so it
         cannot come off that row. Check both invoices.

@@ -3,12 +3,15 @@
 An invoice stores every total as a non-negative magnitude, with the direction in its
 class, so the income projection has to apply the class. Worked by hand:
 
-- F1: 1.000,00 base + 210,00 IVA - 150,00 retencion = 1.060,00 banked.
+- F1: 1.000,00 base + 210,00 IVA, no retencion = 1.210,00 banked.
 - R1: 200,00 base + 42,00 IVA = 242,00 refunded, naming F1.
 - Under accrual the year holds 1.000,00 - 200,00 = 800,00, whether or not R1's refund is linked.
 
 No source in the corpus says which year a correction reduces when it comes after the year
 of its invoice, so that case refuses rather than choosing a year.
+
+Nor does one say what is left of the credit when the invoice corrected states a retencion,
+so that refuses too rather than reducing it in proportion or leaving it whole.
 """
 
 from __future__ import annotations
@@ -172,6 +175,20 @@ def _resolve(
 _ACCRUAL_YEAR = ((_LATER, _DEVENGO),)
 
 
+def _unretained(invoice: Invoice) -> Invoice:
+    """Return the invoice with no retencion, because a correction of one that has it refuses."""
+    return Invoice.model_validate(
+        {**invoice.model_dump(exclude={"invoice_id"}), "retention_rate": None, "retention_amount": None}
+    )
+
+
+def _paid_unretained() -> tuple[Transaction, Invoice]:
+    """Return F1 with no retencion, 1.210,00 banked, and the receipt that collects it."""
+    amount = Decimal("1210.00")
+    invoice = _unretained(_issued(_F1_DATE, linked=(_receipt(_F1_DATE, amount=amount).transaction_id,)))
+    return _receipt(_F1_DATE, invoice_id=invoice.invoice_id, amount=amount), invoice
+
+
 def _blocked_because(resolution: CalculationSourceResolution, token: str) -> bool:
     return any(
         item.binding_id == _INCOME_0171 and item.reason == "unresolved_binding" and token in item.message
@@ -180,14 +197,14 @@ def _blocked_because(resolution: CalculationSourceResolution, token: str) -> boo
 
 
 def test_an_unlinked_rectificativa_reduces_the_income_of_its_year(operation: PinnedAuthorityOperation) -> None:
-    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    row, first = _paid_unretained()
     resolution = _resolve(operation, _ACCRUAL_YEAR, rows=(row,), invoices=(first, _rectificativa(_R1_DATE)))
     assert resolution.binding_values[_INCOME_0171] == _NETTED
     assert _INCOME_0171 not in _unresolved_bindings(resolution)
 
 
 def test_a_rectificativa_with_its_refund_linked_still_reduces_the_income(operation: PinnedAuthorityOperation) -> None:
-    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    row, first = _paid_unretained()
     unlinked = _refund(_R1_DATE)
     corrected = _rectificativa(_R1_DATE, linked=(unlinked.transaction_id,))
     refund = _refund(_R1_DATE, invoice_id=corrected.invoice_id)
@@ -197,7 +214,7 @@ def test_a_rectificativa_with_its_refund_linked_still_reduces_the_income(operati
 
 
 def test_a_rectificativa_reduces_an_unpaid_invoice_too(operation: PinnedAuthorityOperation) -> None:
-    resolution = _resolve(operation, _ACCRUAL_YEAR, invoices=(_issued(_F1_DATE), _rectificativa(_R1_DATE)))
+    resolution = _resolve(operation, _ACCRUAL_YEAR, invoices=(_unretained(_issued(_F1_DATE)), _rectificativa(_R1_DATE)))
     assert resolution.binding_values[_INCOME_0171] == _NETTED
 
 
@@ -206,7 +223,7 @@ def test_the_instalment_nets_from_the_quarter_the_correction_accrues(
     operation: PinnedAuthorityOperation, period: str, expected: Decimal
 ) -> None:
     """F1 accrues in February and R1 in May, so only the cumulative windows reaching May net it."""
-    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    row, first = _paid_unretained()
     resolution = _resolve(
         operation,
         _ACCRUAL_YEAR,
@@ -220,7 +237,7 @@ def test_the_instalment_nets_from_the_quarter_the_correction_accrues(
 
 def test_two_rectificativas_of_one_invoice_both_reduce_it(operation: PinnedAuthorityOperation) -> None:
     """1.000,00 - 200,00 - 100,00 = 700,00."""
-    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    row, first = _paid_unretained()
     second = _rectificativa(date(_LATER, 6, 1), base=Decimal("100.00"), number="R-2")
     resolution = _resolve(operation, _ACCRUAL_YEAR, rows=(row,), invoices=(first, _rectificativa(_R1_DATE), second))
     assert resolution.binding_values[_INCOME_0171] == Decimal("700.00")
@@ -247,7 +264,7 @@ def test_a_correction_whose_invoice_is_not_recorded_refuses(operation: PinnedAut
 
 def test_a_correction_above_its_invoice_refuses(operation: PinnedAuthorityOperation) -> None:
     """A figure larger than the original cannot be a reduction of it, and may be a replacement."""
-    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    row, first = _paid_unretained()
     excessive = _rectificativa(_R1_DATE, base=Decimal("1200.00"))
     resolution = _resolve(operation, _ACCRUAL_YEAR, rows=(row,), invoices=(first, excessive))
     assert resolution.binding_values[_INCOME_0171] == Decimal("1000.00")
@@ -255,7 +272,7 @@ def test_a_correction_above_its_invoice_refuses(operation: PinnedAuthorityOperat
 
 
 def test_two_corrections_adding_up_above_their_invoice_refuse(operation: PinnedAuthorityOperation) -> None:
-    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    row, first = _paid_unretained()
     second = _rectificativa(date(_LATER, 6, 1), base=Decimal("900.00"), number="R-2")
     resolution = _resolve(operation, _ACCRUAL_YEAR, rows=(row,), invoices=(first, _rectificativa(_R1_DATE), second))
     assert resolution.binding_values[_INCOME_0171] == Decimal("1000.00")
@@ -275,7 +292,7 @@ def test_a_receipt_linked_to_a_rectificativa_refuses_under_accrual(operation: Pi
 
     F1 1000 less R1 200 is 800; the receipt of R1 stays out of the income it could not be read into.
     """
-    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    row, first = _paid_unretained()
     unlinked = _receipt(_R1_DATE, amount=Decimal("242.00"))
     corrected = _rectificativa(_R1_DATE, linked=(unlinked.transaction_id,))
     inbound = _receipt(_R1_DATE, invoice_id=corrected.invoice_id, amount=Decimal("242.00"))
@@ -286,7 +303,7 @@ def test_a_receipt_linked_to_a_rectificativa_refuses_under_accrual(operation: Pi
 
 def test_the_netted_reading_is_named_for_the_operator(operation: PinnedAuthorityOperation) -> None:
     """RD 1619/2012 art. 15.5 lets a rectificativa state the correction or the result, and the record does not say."""
-    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    row, first = _paid_unretained()
     resolution = _resolve(operation, _ACCRUAL_YEAR, rows=(row,), invoices=(first, _rectificativa(_R1_DATE)))
     (advisory,) = [item for item in resolution.diagnostics if item.source_ref == "renta-rectificativa:netted"]
     assert advisory.reason == "unsettled_legal_reading"

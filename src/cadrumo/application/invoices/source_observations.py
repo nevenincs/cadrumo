@@ -513,22 +513,22 @@ def is_rectificativa(invoice: Invoice) -> bool:
     return invoice.invoice_class == invoice_class_rectificativa()
 
 
-def rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue) -> Invoice | None:
-    """Return the ordinary invoice the correction names, read by its kind, bucket, counterparty and number.
+def rectified_invoices(rectificativa: Invoice, invoices: InvoiceCatalogue) -> tuple[Invoice, ...]:
+    """Return every ordinary invoice the correction could name, read by its kind, bucket, counterparty and number.
 
     A simplified invoice names no customer, so a correction naming one can still be its correction.
+    A correction records the number it names and not that invoice's series, its own being the
+    separate one RD 1619/2012 art. 6.1.a gives corrections, so more than one answer stays
+    unresolved and each caller refuses it.
     """
-    return next(
-        (
-            invoice
-            for invoice in invoices.values()
-            if invoice.kind is rectificativa.kind
-            and invoice.bucket_id == rectificativa.bucket_id
-            and not is_rectificativa(invoice)
-            and invoice.counterparty_tax_id in (None, rectificativa.counterparty_tax_id)
-            and invoice.invoice_number == rectificativa.rectifies_invoice_number
-        ),
-        None,
+    return tuple(
+        invoice
+        for invoice in invoices.values()
+        if invoice.kind is rectificativa.kind
+        and invoice.bucket_id == rectificativa.bucket_id
+        and not is_rectificativa(invoice)
+        and invoice.counterparty_tax_id in (None, rectificativa.counterparty_tax_id)
+        and invoice.invoice_number == rectificativa.rectifies_invoice_number
     )
 
 
