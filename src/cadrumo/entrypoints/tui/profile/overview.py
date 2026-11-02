@@ -79,12 +79,16 @@ if TYPE_CHECKING:
     from textual.timer import Timer
     from textual.widgets.data_table import ColumnKey
 
+    from ....application.user_profile.field_help import ProfileFieldEjercicioAnswer
     from ....application.user_profile.overview import ProfileFieldView, ProfileOverview
     from ....domain.user_profile.plantilla_media import PlantillaMediaState, PlantillaMediaYear
 
 
 type ProfileFieldPersist = Callable[[str, str, int, str], ProfileOverview]
 """The one-field write door: path, value, and the revision and digest the edit was made against."""
+
+type ProfileEjercicioPersist = Callable[[ProfileFieldEjercicioAnswer, str, str, int, str], ProfileOverview]
+"""The dated write door: the field's questions, its answer, the ejercicio, and the edit's revision and digest."""
 
 
 """The profile field deciding what language this page is written in.
@@ -186,6 +190,7 @@ class ProfileManagerScreen(
         overview: ProfileOverview,
         *,
         persist: ProfileFieldPersist,
+        persist_ejercicio: ProfileEjercicioPersist | None = None,
         add_row: Callable[[str, Mapping[str, str], int, str], ProfileOverview] | None = None,
         update_row: Callable[[str, str, Mapping[str, str], Sequence[str], int, str], ProfileOverview] | None = None,
         remove_row: Callable[[str, str, int, str], ProfileOverview] | None = None,
@@ -245,6 +250,8 @@ class ProfileManagerScreen(
         reloaded overview rather than ``None`` is what keeps the screen
         from ever displaying its own optimistic guess — whatever the store
         made of the value is what appears."""
+        self._persist_ejercicio = persist_ejercicio
+        """Writes one answer stated per ejercicio; a host supplying none refuses such an edit."""
         self._add_row = add_row
         self._update_row = update_row
         self._remove_row = remove_row
@@ -551,6 +558,7 @@ class ProfileManagerScreen(
 
 
 __all__ = [
+    "ProfileEjercicioPersist",
     "ProfileFieldPersist",
     "ProfileManagerScreen",
 ]

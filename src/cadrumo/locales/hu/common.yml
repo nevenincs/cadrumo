@@ -4442,6 +4442,9 @@ desktop:
       adatokat, majd nyisd meg újra a mezőt. A piszkozatodat nem mentettük.
     dismiss: Elrejtés
     edit_field: '{field} szerkesztése'
+    ejercicio: Adóév
+    ejercicio_help: "Az év, amelyre ez a válasz szól. A többi év megtartja a sajátját."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: Nincs a szűrőknek megfelelő adat. Próbálj más keresést vagy szakaszt.
     entries_count: 'Bejegyzések: {count}'
     entries_none: Még nincs bejegyzés

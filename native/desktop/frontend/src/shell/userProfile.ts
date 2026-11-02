@@ -13,6 +13,13 @@ export type ProfileField = {
   help: string[] | null;
   about: string;
   row_index: string | null;
+  /** Set on a detail stated per ejercicio: the wizard questions that answer
+   * it, and what each ejercicio states so far. */
+  ejercicio_answer?: {
+    question_id: string;
+    year_question_id: string;
+    statements: { ejercicio: number; value: string }[];
+  } | null;
 };
 export type ProfileSection = {
   key: string;
@@ -34,6 +41,10 @@ export type UserProfile = {
 };
 export type ProfileEdit =
   | { kind: "field"; path: string; value: string }
+  | {
+      kind: "ejercicio_answer";
+      values: { question_id: string; value: string }[];
+    }
   | {
       kind: "add_row";
       section_key: string;

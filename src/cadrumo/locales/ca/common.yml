@@ -4462,6 +4462,9 @@ desktop:
       revisa les dades actualitzades i torna a obrir el camp. No s’ha desat l’esborrany.
     dismiss: Descarta l’avís
     edit_field: Edita {field}
+    ejercicio: Exercici
+    ejercicio_help: "L'any que declara aquesta resposta. Els altres conserven la seva."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: Cap dada coincideix amb aquests filtres. Prova una altra cerca o secció.
     entries_count: 'Registres: {count}'
     entries_none: Encara no hi ha registres

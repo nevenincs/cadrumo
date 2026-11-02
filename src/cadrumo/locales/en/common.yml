@@ -4397,6 +4397,9 @@ desktop:
       details, and open the field again. Your draft has not been saved.
     dismiss: Dismiss
     edit_field: Edit {field}
+    ejercicio: Tax year
+    ejercicio_help: "The year this answer states. Other years keep theirs."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: No details match these filters. Try another search or section.
     entries_count: 'Entries: {count}'
     entries_none: No entries yet

@@ -457,12 +457,23 @@ pub struct Change {
     expected_content_digest: String,
     edit: Edit,
 }
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+struct QuestionAnswer {
+    question_id: String,
+    value: String,
+}
 #[derive(Deserialize)]
 #[serde(tag = "kind", rename_all = "snake_case", deny_unknown_fields)]
 enum Edit {
     Field {
         path: String,
         value: String,
+    },
+    /// A detail stated per ejercicio, answered through its wizard questions so
+    /// the answer for one year leaves the others standing.
+    EjercicioAnswer {
+        values: Vec<QuestionAnswer>,
     },
     AddRow {
         section_key: String,
@@ -605,6 +616,9 @@ impl Edit {
                     "user-profile.field-mutation",
                     json!({"path":path,"value":value}),
                 )
+            }
+            Self::EjercicioAnswer { values } if values.len() == 2 => {
+                ("user-profile.patch", json!({"values":values}))
             }
             Self::AddRow {
                 section_key,
@@ -969,6 +983,27 @@ mod tests {
                 "refused"
             );
         }
+    }
+
+    #[test]
+    fn a_detail_stated_per_ejercicio_is_answered_through_its_two_questions() {
+        let digest = "a".repeat(64);
+        let values = json!([
+            {"question_id":"criterion","value":"devengo"},
+            {"question_id":"year","value":"2024"}
+        ]);
+        let request = prepared(json!({"kind":"ejercicio_answer","values":values})).unwrap();
+        assert_eq!(request.definition, "user-profile.patch");
+        assert_eq!(
+            request.payload,
+            json!({"profile_id":PROFILE_ID,"expected_revision":3,
+                "expected_content_digest":digest,"values":values})
+        );
+        assert_eq!(
+            refusal(json!({"kind":"ejercicio_answer",
+                "values":[{"question_id":"criterion","value":"devengo"}]})),
+            "refused"
+        );
     }
 
     #[test]

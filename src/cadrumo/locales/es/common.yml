@@ -4460,6 +4460,9 @@ desktop:
       datos actualizados y vuelve a abrir el campo. Tu borrador no se ha guardado.
     dismiss: Descartar el aviso
     edit_field: Editar {field}
+    ejercicio: Ejercicio
+    ejercicio_help: "El año que declara esta respuesta. Los demás conservan la suya."
+    ejercicio_stated: '{ejercicio}: {value}'
     empty: Ningún dato coincide con estos filtros. Prueba otra búsqueda o sección.
     entries_count: 'Registros: {count}'
     entries_none: Aún no hay registros

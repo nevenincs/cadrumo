@@ -14,12 +14,16 @@ from cadrumo.application.operator_actions.models import ActionReference
 from cadrumo.application.user_profile.acquisition_sources import ProfileAcquisitionSourceKey, ProfileAcquisitionSourceV1
 from cadrumo.application.user_profile.censal_operation import CENSAL_OPERATION_DEFINITION_ID
 from cadrumo.application.user_profile.completeness import AUTH_PROVIDER_PATH, CLAVE_MOVIL_ROUTE_PATH
+from cadrumo.application.user_profile.field_help import ProfileFieldEjercicioAnswer
 from cadrumo.application.user_profile.overview import ProfileOverview
 from cadrumo.application.user_profile.profile_operation_contracts import (
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileFieldMutationOperationRequest,
     ProfileMutationOperationProjection,
+    ProfilePatchOperationProjection,
+    ProfilePatchOperationRequest,
+    ProfilePatchValue,
     ProfilePlantillaMediaOperationProjection,
     ProfilePlantillaMediaOperationRequest,
     ProfilePlantillaMediaRemove,
@@ -216,6 +220,22 @@ class ProfileManagerClientComposition:
                 value=value,
             ),
             ProfileMutationOperationProjection,
+        )
+
+    def _ejercicio_answer(
+        self, answer: ProfileFieldEjercicioAnswer, value: str, ejercicio: str, revision: int, digest: str
+    ) -> ProfileOverview:
+        return self._mutate(
+            ProfilePatchOperationRequest(
+                profile_id=self.profile_id,
+                expected_revision=revision,
+                expected_content_digest=digest,
+                values=(
+                    ProfilePatchValue(question_id=answer.question_id, value=value),
+                    ProfilePatchValue(question_id=answer.year_question_id, value=ejercicio),
+                ),
+            ),
+            ProfilePatchOperationProjection,
         )
 
     def _auth_field(self, path: str, value: str, revision: int, digest: str) -> ProfileViewCollection:
@@ -463,6 +483,7 @@ class ProfileManagerClientComposition:
         screen = ProfileManagerScreen(
             overview,
             persist=self._field,
+            persist_ejercicio=self._ejercicio_answer,
             add_row=self._add_row,
             update_row=self._update_row,
             remove_row=self._remove_row,
