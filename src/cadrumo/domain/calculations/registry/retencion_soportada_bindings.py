@@ -162,7 +162,9 @@ def credit_casilla_ids(revision: ModeloRevision) -> frozenset[CasillaId]:
     or no formula targeting it, so a credit binding there is refused rather
     than admitted by default.
     """
-    totals = frozenset(casilla.id for casilla in revision.casillas if casilla.semantic_role == TOTAL_PAGOS_A_CUENTA_ROLE)
+    totals = frozenset(
+        casilla.id for casilla in revision.casillas if casilla.semantic_role == TOTAL_PAGOS_A_CUENTA_ROLE
+    )
     return frozenset(
         operand
         for formula in revision.formulas
