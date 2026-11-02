@@ -115,22 +115,26 @@ def _undated_changes_with_effect(
     from .projections import record_to_path_values
 
     stored = record_to_path_values(current)
-    dated_paths = {fact.path for fact in current.facts if fact.valid_from is not None or fact.valid_to is not None}
+    dated_paths = {fact.path for fact in current.facts if _is_dated(fact)}
     kept: list[UserProfileFact] = []
     for change in changes:
-        if change.valid_from is not None or change.valid_to is not None:
+        if _is_dated(change):
             kept.append(change)
-        elif change.path in dated_paths and change.value is not None and stored.get(change.path) == _token(change):
             continue
-        elif change.path in dated_paths or change.path in EJERCICIO_STATED_PROFILE_PATHS:
+        if change.path in dated_paths and change.value is not None and stored.get(change.path) == _token(change):
+            continue
+        if change.path in dated_paths or change.path in EJERCICIO_STATED_PROFILE_PATHS:
             raise ProfileSchemaValidationError(
                 f"profile field {change.path} is stated per ejercicio and this change names none",
                 context={"field": change.path},
                 translated_message="application.user_profile.errors.profile_field_needs_ejercicio",
             )
-        else:
-            kept.append(change)
+        kept.append(change)
     return tuple(kept)
+
+
+def _is_dated(fact: UserProfileFact) -> bool:
+    return fact.valid_from is not None or fact.valid_to is not None
 
 
 def _token(fact: UserProfileFact) -> str:

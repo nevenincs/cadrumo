@@ -410,18 +410,27 @@ def _particle_missing(particle: Element[str], present: frozenset[str]) -> Iterat
     """Walk one particle; an optional group or a choice requires only what it has begun."""
     local_name = _local_name(particle)
     if local_name == "element":
-        name = particle.get("name")
-        if name is not None and name not in present and particle.get("minOccurs", "1") != "0":
-            yield name
+        if _element_missing(particle, present):
+            yield str(particle.get("name"))
         return
     if not _particle_touched(particle, present) and particle.get("minOccurs", "1") == "0":
         return
-    members = tuple(item for item in particle if _local_name(item) in {"element", *_CONTENT_GROUP_TAGS})
-    if local_name == "choice":
-        touched = tuple(item for item in members if _particle_touched(item, present))
-        members = touched[:1] or members[:1]
-    for member in members:
+    for member in _walked_members(particle, present):
         yield from _particle_missing(member, present)
+
+
+def _walked_members(particle: Element[str], present: frozenset[str]) -> tuple[Element[str], ...]:
+    """Return the members a group requires: all of a sequence, only the begun (else first) of a choice."""
+    members = tuple(item for item in particle if _local_name(item) in {"element", *_CONTENT_GROUP_TAGS})
+    if _local_name(particle) == "choice":
+        touched = tuple(item for item in members if _particle_touched(item, present))
+        return touched[:1] or members[:1]
+    return members
+
+
+def _element_missing(particle: Element[str], present: frozenset[str]) -> bool:
+    name = particle.get("name")
+    return name is not None and name not in present and particle.get("minOccurs", "1") != "0"
 
 
 def _particle_touched(particle: Element[str], present: frozenset[str]) -> bool:

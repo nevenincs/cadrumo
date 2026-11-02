@@ -1,5 +1,4 @@
 import { useMemo } from "react";
-import type { ModeloPort } from "../../../shell/modelo";
 import type {
   ModeloFormAddressV1,
   ModeloWorkbenchFormProjectionV1,
@@ -8,14 +7,13 @@ import type {
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import { Credits } from "./Credits";
-import { creditFields, dependentFields } from "./credits";
+import { creditFields, dependentFields } from "./creditBoxes";
 import { Estimate } from "./Estimate";
 import {
   estimateFigure,
   observedValue,
-  useEstimate,
-  type SendWrite,
-} from "./estimate";
+  type EstimateRead,
+} from "./estimateRead";
 import type { FormSession } from "../form/session";
 
 /**
@@ -26,9 +24,7 @@ import type { FormSession } from "../form/session";
 export function CreditsPanel({
   envelope,
   session,
-  port,
-  run,
-  readRegion,
+  estimate,
   locale,
   onGo,
   onOpenSurface,
@@ -36,11 +32,9 @@ export function CreditsPanel({
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   session: FormSession;
-  port: ModeloPort;
-  run: SendWrite;
-  /** Reads the region the profile states, or null where it states none; none
-   * where this window has no profile to ask. */
-  readRegion?: () => Promise<string | null>;
+  /** The estimate as asked for so far, and how to ask; held by the workspace
+   * so it stays when another view is shown. */
+  estimate: { read: EstimateRead; ask: (() => void) | null };
   locale: string;
   onGo(address: ModeloFormAddressV1): void;
   onOpenSurface(surface: OpenableSurface): void;
@@ -53,12 +47,6 @@ export function CreditsPanel({
     () => dependentFields(session.placed, credits),
     [session.placed, credits],
   );
-  const estimate = useEstimate({
-    port,
-    year: form.filing_year,
-    region: readRegion,
-    run,
-  });
   const projection =
     estimate.read.phase === "ready" ? estimate.read.projection : null;
   const inEstimate = (field: PublicModeloFormField) => {

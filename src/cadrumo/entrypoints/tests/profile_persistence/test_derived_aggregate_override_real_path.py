@@ -39,7 +39,7 @@ call time, so a patched module attribute would not be observed by it anyway.
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -65,7 +65,6 @@ from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.ids import BindingId
 from cadrumo.domain.calculations.registry.tests.published_authority import published_profile_schema
-from cadrumo.domain.contribuyente.descendant import DescendantInfo
 from cadrumo.domain.contribuyente.descendant_facts import descendant_facts_from_list
 from cadrumo.domain.user_profile.errors import ProfileSchemaValidationError
 from cadrumo.domain.user_profile.values import UserProfileFact
@@ -75,6 +74,7 @@ from cadrumo.entrypoints.adapter_composition_work_ports import (
 )
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from .eligible_descendants_support import eligible_descendants
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -95,20 +95,6 @@ _DERIVED_PATH = f"renta_family.descendientes_minimos_aggregate_{_YEAR}"
 #: sub-euro remainder of 0.37. The test still asserts sentinel != computed at
 #: runtime rather than relying on this reasoning alone.
 _SENTINEL = Decimal("4321.37")
-
-
-def _descendants() -> tuple[DescendantInfo, ...]:
-    """Two descendants born well before the filing year, both living with the taxpayer.
-
-    An unambiguously Art. 58.1-eligible pair that produces a non-zero estatal
-    aggregate the sentinel has to visibly displace. Callers build it inside a
-    pinned authority scope because the default relationship is a registry
-    projection.
-    """
-    return (
-        DescendantInfo(birth_date=date(2010, 3, 4)),
-        DescendantInfo(birth_date=date(2014, 9, 18)),
-    )
 
 
 #: The single binding the M100 estimación-directa régimen predicate needs set for
@@ -165,7 +151,7 @@ def _active_profile(tmp_path: Path) -> Iterator[None]:
         isolated_profile_storage_root(tmp_path=tmp_path),
         open_test_profile_session(_BUCKET),
     ):
-        overrides = dict(descendant_facts_from_list(_descendants()))
+        overrides = dict(descendant_facts_from_list(eligible_descendants()))
         # The surrounding renta facts the M100 annual revision needs to evaluate at
         # all. None of them touches the Art. 58 aggregate; they exist so the
         # calculation reaches casilla 0513 rather than refusing earlier.

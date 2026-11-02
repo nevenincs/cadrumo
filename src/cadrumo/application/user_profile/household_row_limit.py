@@ -11,10 +11,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Final
 
 from ...domain.calculations.registry.profile_bindings import ProfileProvider
-from ...domain.calculations.registry.schema_form_layouts import FormRepeatingGroupBlock
+from ...domain.calculations.registry.schema_form_layouts import FormLayoutDefinition, FormRepeatingGroupBlock
 
 if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+    from ...domain.calculations.registry.ids import BindingId
 
 _HOUSEHOLD_MODELO: Final = "100"
 _ANNUAL_PERIOD: Final = "0A"
@@ -35,14 +36,18 @@ def declared_household_row_limit(operation: PinnedAuthorityOperation, *, object_
         and binding.provider.rows is not None
         and binding.provider.rows.object_path == object_path
     }
-    limits = [
+    limits = _repeat_limits(layout, reading)
+    return min(limits) if limits else None
+
+
+def _repeat_limits(layout: FormLayoutDefinition, reading: set[BindingId]) -> list[int]:
+    return [
         block.max_rows
         for page in layout.pages
         for section in page.sections
         for block in section.blocks
         if isinstance(block, FormRepeatingGroupBlock) and block.binding_id in reading and block.max_rows is not None
     ]
-    return min(limits) if limits else None
 
 
 __all__ = ["declared_household_row_limit"]

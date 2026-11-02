@@ -707,13 +707,20 @@ def _slot_matches_export_field(provider: object, field: ExportFieldDefinition | 
     )
 
 
+def _export_fields_by_binding(revision: ModeloRevision, record_id: str) -> dict[BindingId, ExportFieldDefinition]:
+    """Return the one pinned export record's bound fields, refusing an absent or repeated record."""
+    records = [record for layout in revision.export_layouts for record in layout.records if record.id == record_id]
+    if len(records) != 1:
+        raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
+    return {field.binding: field for field in records[0].fields if field.binding is not None}
+
+
 def _require_wire_geometry(revision: ModeloRevision, record_id: str, slots: tuple[tuple[BindingId, ...], ...]) -> None:
     """Require each slot to be the export field of the pinned record at the same position."""
-    records = [record for layout in revision.export_layouts for record in layout.records if record.id == record_id]
+    fields = _export_fields_by_binding(revision, record_id)
     bindings = {binding.id: binding for binding in revision.bindings}
-    if len(records) != 1 or len(bindings) != len(revision.bindings):
+    if len(bindings) != len(revision.bindings):
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
-    fields = {field.binding: field for field in records[0].fields if field.binding is not None}
     for binding_id in (binding for row in slots for binding in row):
         if not _slot_matches_export_field(bindings[binding_id].provider, fields.get(binding_id)):
             raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
@@ -728,7 +735,9 @@ def _require_slot_coverage(
         raise AggregationValidationError(tr("aggregation.oss_ioss.errors.detail_not_representable"))
 
 
-def _layout_hydrated_revision(context: CalculationSourceContext, *, operation: PinnedAuthorityOperation) -> ModeloRevision:
+def _layout_hydrated_revision(
+    context: CalculationSourceContext, *, operation: PinnedAuthorityOperation
+) -> ModeloRevision:
     """Return the context's revision carrying its export layouts."""
     if context.revision.export_layouts:
         return context.revision
