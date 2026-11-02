@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:f713ab32eada072a36c122b63c68ea831d12690db637c29ea92c005b128ff769'
+body_hash: 'sha256:a77eea19d7ad5e84628bcdfc7ddbc513784def773355a0040a97b6e06e06a45c'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -237,6 +237,11 @@ related:
 - `S31` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
 - `S31` `verify:` `canonical 218-envelope generation and validation` -> `pass`
 - `S31` `verify:` `117 Modelo scenarios including four-language context boxes` -> `pass`
+- `S40` `M` `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx`
+- `S40` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S40` `verify:` `15 filing receipt comparison browser scenarios` -> `pass`
+- `S40` `verify:` `TypeScript scoped ESLint Prettier` -> `pass`
+- `S40` `verify:` `Terra review and shared-hold visual inspection` -> `pass`
 
 ## Notes
 

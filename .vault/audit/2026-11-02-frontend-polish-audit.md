@@ -260,6 +260,12 @@ The five-file Python batch passed 158 cases; its remaining test passed after tho
 
 PASS for S31. RecordsBlock renders the backend's context-fact box numbers alongside their returned values. The canonical 218-envelope refresh now includes the current contract, and all 117 Modelo browser cases passed in 20261102T221404Z-60704, including the Modelo 347 context-box assertions in all four supported languages. Subsequent export-offer type simplification preserves the fixture wire shape and passes canonical validation. RecordsBlock implementation was already retained in the corrective merge; this closes its generation and regression verification.
 
+### s40-filing-explanations-review | low | One shared refusal preserves each affected action's explanation
+
+PASS for S40. FilingView presents the common export hold once above its action sections and links matching unavailable actions and named sections through `aria-describedby`. Only exact repeated text disappears. Distinct file, record and copy refusals remain, as do stale-file provenance and receipt state; comparison is not associated with the export hold. The earlier implementation also hid a distinct file refusal whenever any export hold existed; that reason now remains visible.
+
+All 15 focused filing, receipt and comparison scenarios passed in 20261102T231110Z-60104, including shared-description assertions, distinct-refusal preservation and four-language receipt comparisons. The shared-hold screenshot was inspected: the warning and Open Check action precede the file card; the stale-file notice and available PDF comparison remain visible. TypeScript and scoped ESLint/Prettier pass. Terra reviewed information preservation against the Sol brief and found no blocker. The first browser attempt timed out during canonical server startup while unrelated lanes saturated the machine; no case ran in that attempt. The passing batch ran after all owners confirmed the quiet window.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

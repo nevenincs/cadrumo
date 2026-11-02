@@ -604,7 +604,7 @@ test("a check line whose source is the suffered withholding opens that register 
 
 test("a file made before a conflicting edit stays out of date until its export hold is resolved", async ({
   page: target,
-}) => {
+}, info) => {
   const read = form("130-1T-stale");
   if (!read.header.file || read.header.file.current)
     throw new Error("the stale 130 has no out-of-date file");
@@ -626,14 +626,106 @@ test("a file made before a conflicting edit stays out of date until its export h
   expect(read.header.export_hold?.reason).toBe("blocks");
   if (!read.header.export_hold)
     throw new Error("the changed 130 has no export hold");
+  const words = read.header.export_hold.words;
+  await expect(target.getByText(words, { exact: true })).toHaveCount(1);
+  for (const key of [
+    "workspace.modelo.filing.export_again",
+    "workspace.modelo.filing.record_as_filed",
+    "workspace.modelo.filing.copy.package.action",
+  ]) {
+    const action = target.getByRole("button", {
+      name: label(key),
+      exact: true,
+    });
+    await expect(action).toBeDisabled();
+    await expect(action).toHaveAccessibleDescription(words);
+  }
   await expect(
-    target
-      .getByRole("region", {
-        name: label("workspace.modelo.filing.file_title"),
-        exact: true,
-      })
-      .getByText(read.header.export_hold.words, { exact: true }),
-  ).toBeVisible();
+    target.getByRole("region", {
+      name: label("workspace.modelo.filing.file_title"),
+      exact: true,
+    }),
+  ).toHaveAccessibleDescription(words);
+  await expect(
+    target.getByRole("region", {
+      name: label("workspace.modelo.filing.after_filed_title"),
+      exact: true,
+    }),
+  ).toHaveAccessibleDescription(words);
+  await expect(
+    target.getByRole("region", {
+      name: label("workspace.modelo.filing.compare_declaration_title"),
+      exact: true,
+    }),
+  ).not.toHaveAttribute("aria-describedby");
+  await target.screenshot({ path: info.outputPath("filing-shared-hold.png") });
+  await target
+    .getByRole("button", {
+      name: label("workspace.modelo.filing.open_check"),
+      exact: true,
+    })
+    .click();
+  await expect(tab(target, "workspace.modelo.step.review")).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+});
+
+test("a filing action keeps its distinct refusal beside the shared export hold", async ({
+  page: target,
+}) => {
+  const grid = await openList(target, { shape: "stale" });
+  const separate = "A separate filing requirement remains unresolved.";
+  await target.evaluate((words) => {
+    const port = window.__fixtureModelo!;
+    const original = port.form;
+    port.form = async (...args) => {
+      const read = await original(...args);
+      if (!read.export_offer)
+        throw new Error("The fixture has no export offer");
+      return {
+        ...read,
+        export_offer: {
+          ...read.export_offer,
+          artefacts: read.export_offer.artefacts.map((option) =>
+            option.artefact === "fichero_boe"
+              ? { ...option, availability: { ...option.availability, words } }
+              : option,
+          ),
+        },
+      };
+    };
+  }, separate);
+  const local = list().rows.find(
+    (row) => row.modelo === "130" && row.opens_local_work,
+  );
+  if (!local) throw new Error("The fixture has no local 130");
+  await target
+    .getByRole("searchbox", {
+      name: label("desktop.declarations.search.label"),
+      exact: true,
+    })
+    .fill("130");
+  await rowsOf(grid, "130")
+    .filter({ hasText: local.period_words ?? local.modelo_title })
+    .filter({ hasText: local.state_words })
+    .first()
+    .dblclick();
+  await tab(target, "workspace.modelo.filing.title").click();
+  const region = target.getByRole("region", {
+    name: label("workspace.modelo.filing.file_title"),
+    exact: true,
+  });
+  await expect(region.getByText(separate, { exact: true })).toBeVisible();
+  await expect(
+    region.getByRole("button", {
+      name: label("workspace.modelo.filing.export_again"),
+      exact: true,
+    }),
+  ).toBeDisabled();
+  const hold = form("130-1T-stale").header.export_hold;
+  if (!hold) throw new Error("The fixture has no export hold");
+  await expect(target.getByText(hold.words, { exact: true })).toHaveCount(1);
 });
 
 test("a filing recorded without a verified receipt asks for it", async ({

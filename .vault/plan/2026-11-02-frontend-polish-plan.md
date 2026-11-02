@@ -19,7 +19,7 @@ related:
   - '[[2026-10-23-desktop-modelo-workspace-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:0ef1d40be20850e6904f4d2218258b3809020429b036c0aaf1585623a74e00b3'
+body_hash: 'sha256:fc0e4c8c0590c9a62b960807b9f97c64bc8bc8c1b28e4db5efa03b4713468c64'
 ---
 
 # `frontend-polish` plan
@@ -81,7 +81,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S37` - Show refused browser input once per view without storing or replaying person input; `native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/dev/sedeViewFixture.ts, native/desktop/frontend/tests/scenarios/sede-browser.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [x] `S38` - Recover failed log subscriptions in place with current-owner isolation; `native/desktop/frontend/src/shell/useHostLogs.ts, native/desktop/frontend/src/components/RecordList.tsx, native/desktop/frontend/src/components/HostRecordList.tsx, native/desktop/frontend/src/dev/, native/desktop/frontend/tests/scenarios/logs.spec.ts, dev/locales/, src/cadrumo/locales/`.
 - [ ] `S39` - Expose served IVA wallet balances and explicit managed operations with profile-scoped outcome holds; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modeloWriteHolds.ts, native/desktop/frontend/src/dev/modeloFixture.ts, native/desktop/frontend/scripts/modelo_fixtures.py, native/desktop/frontend/tests/scenarios/modelo*.spec.ts, dev/locales/, src/cadrumo/locales/`.
-- [ ] `S40` - Show identical filing block explanations once while retaining action-specific refusal and accessible associations; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
+- [x] `S40` - Show identical filing block explanations once while retaining action-specific refusal and accessible associations; `native/desktop/frontend/src/components/modelo/dialogs/FilingView.tsx, native/desktop/frontend/tests/scenarios/modelo.spec.ts`.
 
 ## Parallelization
 
