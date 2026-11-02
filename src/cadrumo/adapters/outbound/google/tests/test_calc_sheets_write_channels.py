@@ -27,7 +27,7 @@ class _Request:
 
 
 class _Values:
-    def batchUpdate(self, *, spreadsheetId: str, body: dict[str, Any]) -> _Request:  # noqa: N802 - Google API name
+    def batchUpdate(self, *, body: dict[str, Any], **_selector: str) -> _Request:  # noqa: N802 - Google API name
         return _Request("values", body)
 
 
@@ -38,7 +38,7 @@ class _Sheets:
     def values(self) -> _Values:
         return _Values()
 
-    def batchUpdate(self, *, spreadsheetId: str, body: dict[str, Any]) -> _Request:  # noqa: N802 - Google API name
+    def batchUpdate(self, *, body: dict[str, Any], **_selector: str) -> _Request:  # noqa: N802 - Google API name
         return _Request("structure", body)
 
 
@@ -88,7 +88,9 @@ def test_only_generated_formulas_use_user_entered_input() -> None:
 
     _write_plan_values(execute=recorder, sheets=_Sheets(), spreadsheet_id="sheet", plan=plan)
 
-    by_input = {request.body["valueInputOption"]: request for request, _, _ in recorder.calls if request.kind == "values"}
+    by_input = {
+        request.body["valueInputOption"]: request for request, _, _ in recorder.calls if request.kind == "values"
+    }
     assert set(by_input) == {"RAW", "USER_ENTERED"}
     entered = _cells(by_input["USER_ENTERED"].body)
     assert len(entered) == len(plan.formula_cells)

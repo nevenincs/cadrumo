@@ -74,7 +74,6 @@ from ..aggregation.source_mesh import (
     CalculationSourceResolution,
 )
 from ..user_profile.projections import profile_fact_index
-from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
@@ -89,6 +88,7 @@ from .profile_derived_facts import (
     inject_derived_state_attribution_facts,
     inject_ordinary_work_maritime_facts,
 )
+from .profile_row_binding import profile_row_bindings, resolve_profile_row_values
 
 _BOUND_CHANNEL_CASILLA_DATA_TYPES = NUMERIC_CASILLA_DATA_TYPES | {CasillaDataType.BOOLEAN}
 _PROFILE_RESOLVER_ID = "profile"

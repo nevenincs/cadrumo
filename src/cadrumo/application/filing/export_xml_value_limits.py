@@ -367,9 +367,7 @@ def _particle_touched(particle: Element[str], present: frozenset[str]) -> bool:
     if _local_name(particle) == "element":
         return particle.get("name") in present
     return any(
-        _particle_touched(item, present)
-        for item in particle
-        if _local_name(item) in {"element", *_CONTENT_GROUP_TAGS}
+        _particle_touched(item, present) for item in particle if _local_name(item) in {"element", *_CONTENT_GROUP_TAGS}
     )
 
 

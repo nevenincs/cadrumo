@@ -122,14 +122,21 @@ def test_a_row_object_that_does_not_repeat_is_refused_at_hydration() -> None:
 
 def test_a_row_object_beside_a_scalar_key_is_refused_at_hydration() -> None:
     with pytest.raises(ValidationError, match="exactly one of"):
-        family_binding({**_ROWS, **_SCALAR, "repeating": True}, data_type="text", channel="row_set", aggregation={"op": "rows"})
+        family_binding(
+            {**_ROWS, **_SCALAR, "repeating": True}, data_type="text", channel="row_set", aggregation={"op": "rows"}
+        )
 
 
 @pytest.mark.parametrize(
     "rows",
     [
         {"object_path": "renta_family.descendiente", "leaf": "nif"},
-        {"object_path": "renta_family.descendiente", "leaf": "nif", "count_path": "renta_family.descendientes_count", "index": 0},
+        {
+            "object_path": "renta_family.descendiente",
+            "leaf": "nif",
+            "count_path": "renta_family.descendientes_count",
+            "index": 0,
+        },
         {"object_path": "descendiente", "leaf": "nif", "count_path": "renta_family.descendientes_count"},
         {"object_path": "renta_family.descendiente", "leaf": "NIF", "count_path": "renta_family.descendientes_count"},
     ],
