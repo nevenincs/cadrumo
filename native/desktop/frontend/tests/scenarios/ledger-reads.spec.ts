@@ -112,6 +112,7 @@ for (const mode of ["documents", "setup"] as const) {
         render();
         const unchangedRequests = pending.length;
         dom.flushSync(refresh);
+        await turn();
         const duringRefresh = commits.at(-1);
         const replaced = pending.at(-1)!;
         const firstNewKey = render({ requestKey: "next-key" });
@@ -127,6 +128,7 @@ for (const mode of ["documents", "setup"] as const) {
         } else dom.flushSync(refresh);
         const withdrawn = pending.at(-1)!;
         const firstDisabled = render({ available: false });
+        await turn();
         const afterWithdrawal = commits.length;
         withdrawn.resolve(answer("withdrawn"));
         await turn();
@@ -135,6 +137,7 @@ for (const mode of ["documents", "setup"] as const) {
         render({ available: true });
         const hiddenRead = pending.at(-1)!;
         render(mode === "documents" ? { shown: false } : { reader: null });
+        await turn();
         const afterHide = commits.length;
         hiddenRead.reject(new Error("hidden failure"));
         await turn();

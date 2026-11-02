@@ -60,7 +60,7 @@ export function useLedgerRead<D extends LedgerDefinitionId>(
     () => () => {
       generation.current += 1;
     },
-    [identity, shown],
+    [identity, shown, wanted, round],
   );
 
   useEffect(() => {
