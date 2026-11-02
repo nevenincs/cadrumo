@@ -13,8 +13,10 @@ independent argument. Persisted cross-catalogue workflows belong in
 
 from __future__ import annotations
 
+import re
 from bisect import bisect_left
 from decimal import Decimal
+from typing import Final
 
 from pydantic import BaseModel, Field, ValidationError, field_validator
 
@@ -24,6 +26,7 @@ from ...core.identity.transaction_ids import TransactionId
 from ...core.invoice_link import LinkInconsistencyDirection
 from ...core.logging import get_logger
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.text_fold import fold_diacritics
 from ..iva.schema import InvoiceKind
 from ..transactions.enums import TransactionDirection
 from ..transactions.models import Transaction, TransactionCatalogue
@@ -50,6 +53,34 @@ _LOGGER = get_logger(__name__)
 #: loosen every rounding check in the codebase.
 INVOICE_MATCH_TOLERANCE = Decimal("0.01")
 
+#: The legal forms a counterparty name may end in, folded as :func:`_names_no_party` folds. Thousands
+#: of unrelated companies share one, so a name that is only a legal form tells no party apart.
+_BARE_LEGAL_FORMS: Final[frozenset[str]] = frozenset(
+    {
+        "aie",
+        "cb",
+        "coop",
+        "gmbh",
+        "inc",
+        "llc",
+        "ltd",
+        "sa",
+        "sal",
+        "sau",
+        "sc",
+        "scoop",
+        "scp",
+        "sl",
+        "sll",
+        "slne",
+        "slp",
+        "slu",
+        "sociedadanonima",
+        "sociedadlimitada",
+    }
+)
+_NOT_COMPARED_IN_LEGAL_FORM: Final = re.compile(r"[^a-z0-9]+")
+
 
 class ReconciliationSuggestion(BaseModel):
     """Immutable suggestion emitted by the reconciliation heuristic.
@@ -58,8 +89,8 @@ class ReconciliationSuggestion(BaseModel):
         invoice_id: Stable invoice identifier.
         transaction_id: Candidate transaction identifier.
         amount_match: Whether the sign-aware amount matches within tolerance.
-        counterparty_match: Whether the counterparty name overlaps
-            (case-insensitive substring match either direction).
+        counterparty_match: Whether the counterparty name overlaps, by
+            :func:`counterparties_overlap`.
         score: Confidence in the inclusive ``0..1`` range.
     """
 
@@ -164,8 +195,9 @@ def suggest_reconciliations(
     Only unlinked invoices (empty ``linked_transaction_ids``) and
     transactions whose ``invoice_id`` is ``None`` are considered.
     Suggestions are emitted only when the amount matches within
-    ``amount_tolerance``. Counterparty similarity acts as a score-boost
-    (case-insensitive substring match) but is never sufficient on its
+    ``amount_tolerance`` in the invoice's own currency: the same figure in
+    another currency is a different amount. Counterparty similarity acts as a
+    score-boost (:func:`counterparties_overlap`) but is never sufficient on its
     own.
 
     Args:
@@ -282,7 +314,7 @@ def counterparties_overlap(invoice_counterparty: str, transaction_counterparty: 
     """Return whether both counterparties have a non-empty overlapping name.
 
     The one reading of "the same party" for proposing a link: case-insensitive, either name
-    inside the other. A blank name overlaps nothing.
+    inside the other. A blank name, or one that is only a legal form, overlaps nothing.
     """
     invoice_name = invoice_counterparty.strip().lower()
     if transaction_counterparty is None or not invoice_name:
@@ -291,7 +323,14 @@ def counterparties_overlap(invoice_counterparty: str, transaction_counterparty: 
     # ``bool(transaction_name)`` guards against the empty-string case; without it
     # ``"" in invoice_name`` returns True and grants a false-positive
     # 0.5 score boost.
-    return bool(transaction_name) and (invoice_name in transaction_name or transaction_name in invoice_name)
+    if not transaction_name or _names_no_party(invoice_name) or _names_no_party(transaction_name):
+        return False
+    return invoice_name in transaction_name or transaction_name in invoice_name
+
+
+def _names_no_party(name: str) -> bool:
+    """Return whether a lowercase name is only a legal form, however it is punctuated or spaced."""
+    return _NOT_COMPARED_IN_LEGAL_FORM.sub("", fold_diacritics(name)) in _BARE_LEGAL_FORMS
 
 
 def _reconciliation_counterparty_matches(invoice: Invoice, transaction: Transaction) -> bool:
@@ -310,8 +349,11 @@ def _suggestion_for_pair(
     *,
     amount_tolerance: Decimal,
 ) -> ReconciliationSuggestion | None:
-    """Build one suggestion when a candidate pair satisfies flow and amount."""
-    if transaction.direction is not invoice_settling_direction(invoice.kind):
+    """Build one suggestion when a candidate pair satisfies flow, currency and amount."""
+    if (
+        transaction.direction is not invoice_settling_direction(invoice.kind)
+        or transaction.raw.currency != invoice.currency
+    ):
         return None
     amount_match = _reconciliation_amount_matches(
         invoice,
