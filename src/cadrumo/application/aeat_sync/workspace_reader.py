@@ -98,6 +98,8 @@ _AEAT_SOURCES: Final[frozenset[AeatSyncWorkspaceSource]] = frozenset(
 _NEVER_PULLED: Final[str] = "workbench.aeat_sync.never_pulled"
 _CAPTURE_REFUSED: Final[NamespacedId] = "aeat_sync.status.capture_refused"
 """Every stored capture of the area was refused, so none can date it."""
+_SNAPSHOT_SCHEMA_OUTDATED: Final[NamespacedId] = "aeat_sync.status.snapshot_schema_outdated"
+"""Every stored capture of the area was written under an older storage schema, so none can be read."""
 _READER_NOT_COMPOSED: Final[str] = "workbench.aeat_sync.local_reader_not_composed"
 """A local authority exists, but this session did not compose its reader.
 
@@ -813,6 +815,7 @@ class AeatSyncStatusSources:
     iva_wallet_captured_at: UtcInstant | None = None
     borrador_imported_at: UtcInstant | None = None
     borrador_refused: tuple[AeatSyncRefusedSnapshotV1, ...] = ()
+    borrador_outdated: int = 0
     identity_checked_at: UtcInstant | None = None
     unreadable: Mapping[AeatSyncStatusArea, NamespacedId] = field(default_factory=lambda: MappingProxyType({}))
 
@@ -827,6 +830,7 @@ def _area_status(
     unread_notification_count: int | None = None,
     filed_rows: tuple[AeatSyncFiledRowV1, ...] | None = None,
     refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...] = (),
+    outdated_stored_snapshots: int = 0,
 ) -> AeatSyncAreaStatusV1:
     """Judge one area against its backend-owned horizon.
 
@@ -853,6 +857,16 @@ def _area_status(
             last_attempt_at=last_attempt_at,
             last_attempt_succeeded=last_attempt_succeeded,
             refused_snapshots=refused_snapshots,
+            outdated_stored_snapshots=outdated_stored_snapshots,
+        )
+    if captured_at is None and outdated_stored_snapshots:
+        return AeatSyncAreaStatusV1(
+            area=area,
+            state=AeatSyncAreaState.UNAVAILABLE,
+            refusal=_SNAPSHOT_SCHEMA_OUTDATED,
+            last_attempt_at=last_attempt_at,
+            last_attempt_succeeded=last_attempt_succeeded,
+            outdated_stored_snapshots=outdated_stored_snapshots,
         )
     if captured_at is None:
         return AeatSyncAreaStatusV1(
@@ -899,6 +913,7 @@ def _captured_area_status(
         filed_periods=None if filed_rows is None else _filed_period_counts(filed_rows),
         filed_rows=filed_rows,
         refused_snapshots=refused_snapshots,
+        outdated_stored_snapshots=outdated_stored_snapshots,
     )
 
 
@@ -1075,6 +1090,7 @@ def read_aeat_sync_status(
                 captured_at=sources.borrador_imported_at,
                 refusal=sources.unreadable.get(AeatSyncStatusArea.BORRADOR_100),
                 refused_snapshots=sources.borrador_refused,
+                outdated_stored_snapshots=sources.borrador_outdated,
             ),
         ),
         filed_declaration_years=filed_declaration_years,

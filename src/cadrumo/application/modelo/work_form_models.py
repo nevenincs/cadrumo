@@ -67,7 +67,7 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     VerificationCompletenessStatus,
 )
-from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
+from .calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, FILED_BEFORE_GRADE_CAP_REASON
 from .calculation_report import CalculationReportRowRole
 from .edit_apply_scalar_contracts import ModeloEditWireScalar, wire_scalar_value
 from .source_policy import SourceFamily, SourceOverridePolicy, SourcePolicyV1, SourceSurface
@@ -1108,6 +1108,15 @@ class ModeloWorkForm(_FormModel):
         return any(
             issue.finding.kind is ModeloVerificationFindingKind.STALE_CALCULATION for issue in self.issues
         ) or any(note.reason == CALCULATION_SCREEN_OUTDATED_REASON for note in self.calculation_notes)
+
+    @property
+    def filed_before_grade_cap(self) -> bool:
+        """Whether the declaration was recorded before screens existed with a figure in a capped box.
+
+        Its export is refused until it is calculated again, checked and recorded
+        anew, so the form offers that recalculation in place of the recorded state.
+        """
+        return any(note.reason == FILED_BEFORE_GRADE_CAP_REASON for note in self.calculation_notes)
 
     @property
     def blocking_calculation_notes(self) -> tuple[ModeloFormCalculationNote, ...]:

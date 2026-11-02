@@ -1270,6 +1270,12 @@ application:
           no en les teves dades.
         what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
           de les xifres.
+      filed_before_grade_cap:
+        what: Vas registrar aquesta declaració abans de les comprovacions actuals
+          de les seves xifres, i una de les seves caselles té una xifra que aquestes
+          comprovacions retenen, així que no pots exportar-la tal com està.
+        what_to_do: Torna a calcular la declaració, comprova-la i registra-la una
+          altra vegada; el nou registre substitueix aquest.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció

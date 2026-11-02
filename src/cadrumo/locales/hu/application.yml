@@ -1233,6 +1233,12 @@ application:
         what: A Cadrumo hibát talált a nyilatkozat felépítésében, nem az adataidban.
         what_to_do: A nyilvántartásaidban nincs mit változtatnod. Jelezd a hibát,
           mielőtt a számokra támaszkodnál.
+      filed_before_grade_cap:
+        what: Ezt a bevallást a számadatok jelenlegi ellenőrzései előtt rögzítetted,
+          és az egyik mezője olyan összeget tartalmaz, amelyet ezek az ellenőrzések
+          visszatartanak, ezért ebben a formában nem exportálhatod.
+        what_to_do: Számold újra a bevallást, ellenőrizd, majd rögzítsd újra; az új
+          rögzítés felváltja ezt.
       inferred_retencion_excluded_from_credit:
         what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
           összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél

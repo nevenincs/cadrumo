@@ -754,6 +754,8 @@ class AeatSyncAreaStatusV1(BaseModel):
     filed_rows: tuple[AeatSyncFiledRowV1, ...] | None = None
     """Each declaration the counts count, served with them and only with them."""
     refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...] = ()
+    outdated_stored_snapshots: NonNegativeInt = 0
+    """Stored Borrador 100 rows written under an older storage schema; they cannot be read or named."""
 
     @field_validator("last_brought_at", "last_attempt_at")
     @classmethod
@@ -775,6 +777,7 @@ class AeatSyncAreaStatusV1(BaseModel):
             raise ValueError("a possibly stale area requires its horizon")
         self._validate_counts(brought=brought)
         self._validate_refused_snapshots()
+        self._validate_outdated_snapshots()
         return self
 
     def _validate_refused_snapshots(self) -> None:
@@ -788,6 +791,15 @@ class AeatSyncAreaStatusV1(BaseModel):
         ids = tuple(item.snapshot_id for item in self.refused_snapshots)
         if ids != tuple(sorted(set(ids))):
             raise ValueError("refused captures must be sorted and unique")
+
+    def _validate_outdated_snapshots(self) -> None:
+        """Require outdated stored rows to belong to a Borrador 100 store that holds them."""
+        if not self.outdated_stored_snapshots:
+            return
+        if self.area is not AeatSyncStatusArea.BORRADOR_100:
+            raise ValueError("only Borrador 100 counts outdated stored snapshots")
+        if self.state is AeatSyncAreaState.NEVER_BROUGHT:
+            raise ValueError("an area with an outdated stored snapshot was brought")
 
     def _validate_counts(self, *, brought: bool) -> None:
         """Require counts to belong to a captured area of the matching kind."""

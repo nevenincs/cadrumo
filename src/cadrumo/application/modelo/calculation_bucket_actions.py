@@ -70,7 +70,6 @@ from .calculation_diagnostics import collect_bucket_aggregation_advisory_diagnos
 from .calculation_notes import (
     CALCULATION_NOTES,
     PRINTED_BOX_REASONS,
-    capped_value_proven_zero,
     durable_binding_source,
     with_element_names,
 )
@@ -836,9 +835,7 @@ def _durable_binding_gate_reason(diagnostic: CalculationSourceDiagnostic) -> _Du
     if diagnostic.reason == "unhandled_binding_source":
         return "unhandled_binding_source"
     if diagnostic.reason == "advisory_binding_value":
-        # A proven zero withholds nothing, so it stays with this calculation's held notes.
-        if capped_value_proven_zero(diagnostic.reason, diagnostic.value_outcome):
-            return None
+        # A proven zero persists with its stated outcome, which keeps it from withholding anything.
         return "advisory_binding_value"
     return _durable_invoice_source_reason(diagnostic)
 
@@ -890,6 +887,7 @@ def unrouted_source_issues(
                 resolver_id=diagnostic.resolver_id,
                 source_ref=diagnostic.source_ref,
                 fact=diagnostic.fact,
+                value_outcome=diagnostic.value_outcome if reason == "advisory_binding_value" else None,
             ),
         )
     return tuple(issues)
