@@ -21,6 +21,7 @@ from cadrumo.core.external_constants import SUPPORTED_OUTPUT_LANGUAGES, OutputLa
 from cadrumo.core.i18n.render import lookup_translation
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteSentence
+from cadrumo.domain.user_profile.values import UserProfileFact
 
 from .projection_m130_seeding_support import run_projection
 
@@ -36,7 +37,14 @@ _OPERAND_KEY = "application.modelo.projection_words.casilla_reason.unresolved_op
 def test_an_unresolved_credit_and_the_totals_computed_from_it_are_served_in_every_language(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    result = run_projection(tmp_path, operation, income_categories="actividad_economica,trabajo")
+    # The activity's epigraph is outside group 861, so it is not an urban rental and the only credit left
+    # without evidence is the declared work income's.
+    result = run_projection(
+        tmp_path,
+        operation,
+        income_categories="actividad_economica,trabajo",
+        profile_facts=(UserProfileFact(path="activities.iae_epigraph", value="844"),),
+    )
     generation = operation.generation.logical_generation
 
     served: dict[str, ModeloProjectOperationProjection] = {}
