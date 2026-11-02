@@ -37,6 +37,7 @@ docs:
       prorrata_regularizacion: from your prorrata regularisation
       purchase_invoice_evidence: from the supporting documents of your received invoices
       relation_prefill: from a related modelo's result
+      retencion_soportada: from the withholding your payers' certificates report
       retenciones_aggregation: from the withholdings you recorded
       withholding: from the withholdings you recorded
       withholding296: from the modelo 296 withholdings per recipient

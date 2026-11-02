@@ -941,6 +941,7 @@ cli:
           regularizacion_bienes_inversion: regularització de béns d’inversió
           regularizacion_prorrata: regularització de prorrata
           retencion: retenció
+          retencion_soportada: retenció suportada d'un pagador
           withholding296_perceptor: perceptor de la declaració de retencions
         relation_input_channel: "%{binding_id}\talimentada per la relació %{relation_id}\t\
           fes servir --relation %{relation_id}=VALUE"

@@ -29,6 +29,7 @@ from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
 from ..aggregation.source_mesh import (
     ModeloSourceResolver,
 )
+from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_profile import ProfileSourceResolver
 from ..aggregation.withholding_source import WithholdingSourceResolver
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver
@@ -123,6 +124,7 @@ _CANONICAL_RESOLVER_STAGES: tuple[tuple[CalculationRouteResolverStage, type[Mode
     ("mesh", OssIossLedgerSourceResolver),
     ("mesh", RetencionesAggregationSourceResolver),
     ("mesh", WithholdingSourceResolver),
+    ("mesh", RetencionSoportadaSourceResolver),
     ("mesh", InvoiceCatalogueSourceResolver),
     ("mesh", ForeignAssetsAggregationSourceResolver),
     ("mesh", AtribucionMemberSourceResolver),

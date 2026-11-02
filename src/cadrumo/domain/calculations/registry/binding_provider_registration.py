@@ -109,6 +109,7 @@ from .profile_bindings import ProfileProvider, validate_profile_binding
 from .prorrata_regularizacion_bindings import ProrrataRegularizacionProvider, validate_prorrata_regularizacion_binding
 from .relation_prefill_bindings import RelationPrefillProvider, validate_relation_prefill_binding
 from .relations import validate_relation_prefill_fold_arity
+from .retencion_soportada_bindings import RetencionSoportadaProvider, validate_retencion_soportada_binding
 from .retenciones_bindings import RetencionesAggregationProvider, validate_retenciones_aggregation_binding
 from .withholding296_bindings import Withholding296Provider, validate_withholding296_binding_selector_shape
 from .withholding_bindings import WithholdingProvider, validate_withholding_binding_selector_shape
@@ -609,6 +610,20 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         origins=frozenset({TerminalOriginClass.PERCEPTOR_OBSERVATION}),
         output="scalar_and_rows",
         resolver_id="retenciones_aggregation",
+        stage="mesh",
+    ),
+    _filing_grade(
+        BindingSourceKind.RETENCION_SOPORTADA,
+        RetencionSoportadaProvider,
+        validate_retencion_soportada_binding,
+        # Withholding the taxpayer suffered, one record per payer: a payer
+        # certificate, or the operator's declaration where no certificate is
+        # held. Never PERCEPTOR_OBSERVATION, which is the withholding-agent side.
+        channels=_MONEY_CHANNELS,
+        ops=frozenset({BindingAggregationOp.SUM}),
+        origins=frozenset({TerminalOriginClass.PAYER_CERTIFICATE, TerminalOriginClass.OPERATOR_INPUT}),
+        output="scalar",
+        resolver_id="retencion_soportada",
         stage="mesh",
     ),
     _filing_grade(

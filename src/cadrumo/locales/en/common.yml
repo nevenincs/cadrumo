@@ -186,6 +186,16 @@ aggregation:
         (for example --year 2024 --period 1T).
       unsupported_period: Annual period is required for Modelo 100 income aggregation
         (e.g. 2024-0A).
+  retencion_soportada:
+    errors:
+      ejercicio_unsupported: The ejercicio of this record is outside the filing years
+        Cadrumo supports.
+      family_not_declared: The Modelo 100 revision for this ejercicio reads no withholding
+        suffered, so the record would never reach a calculation.
+      identity_mismatch: The record does not match the payer, income class or certificate
+        already stored for it.
+      own_tax_id: The payer's tax ID (NIF) is your own; withholding you practise yourself
+        is not a credit in your favour.
   retenciones:
     errors:
       filing_year_out_of_range: Filing year %{filing_year} is outside the supported
