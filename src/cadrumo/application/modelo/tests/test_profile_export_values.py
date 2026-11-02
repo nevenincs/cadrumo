@@ -87,6 +87,7 @@ def _resolve(*facts: UserProfileFact, operation: PinnedAuthorityOperation) -> di
         resolve_profile_export_values(
             _export_bindings(),
             bucket_id=_BUCKET,
+            filing_year=2024,
             profile_record=_record(facts),
             schema=published_profile_schema(),
             operation=operation,

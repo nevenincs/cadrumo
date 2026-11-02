@@ -217,3 +217,30 @@ export const FilingRecordUnknown: Story = {
     />
   ),
 };
+
+export const FilingCutoffUnverified: Story = {
+  name: "Export and record · direct debit whose cutoff was not checked",
+  render: (_, { globals }) => (
+    <Filing
+      locale={globals.locale}
+      declaration={`${M130}-exported`}
+      shape="export-cutoff-unverified"
+    />
+  ),
+  play: async ({ canvasElement, globals }) => {
+    const t = translator(String(globals.locale));
+    const page = within(canvasElement.ownerDocument.body);
+    const again = await page.findByRole(
+      "button",
+      { name: t("workspace.modelo.filing.export_again") },
+      { timeout: READ_WAIT },
+    );
+    await waitFor(() => expect(again).toBeEnabled(), { timeout: READ_WAIT });
+    await userEvent.click(again);
+    await page.findByText(
+      t("tui.modelo.export.result.warning.cutoff_unverified"),
+      undefined,
+      { timeout: READ_WAIT },
+    );
+  },
+};

@@ -58,6 +58,7 @@ from ..iva.schema import (
     IvaExemptionArticle,
     default_iva_cash_accounting_treatment,
 )
+from ..iva.vehicle_use import IvaVehicleUse
 from .cash_accounting_validation import validate_cash_accounting_axis
 from .classification_origin import ClassificationOrigin
 from .enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -628,6 +629,7 @@ class Transaction(BaseModel):
     deduction_fact_kind: IvaDeductionFactKind | None = None
     deduction_provenance: IvaDeductionClassificationProvenance | None = None
     investment_asset_id: str | None = None
+    iva_vehicle_use: IvaVehicleUse | None = None
     rectifies_ledger_id: str | None = None
     exemption_article: IvaExemptionArticle | None = None
     counterparty_country: str | None = None

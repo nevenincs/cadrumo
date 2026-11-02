@@ -162,13 +162,17 @@ def compose_invoices_catalogue_update_operation(inputs: OperationCompositionInpu
 
 def compose_invoice_figures_preview_operation(inputs: OperationCompositionInputs) -> OperationGroupBuild:
     """Compose the read that answers an invoice draft with the backend's own figures."""
+    from ..adapters.persistence.profile.catalogue_creation import CatalogueCreationRateProviderAdapter
+    from ..application.exchange_rate_provider import exchange_rate_provider
     from ..application.invoices.figures_preview_operation import (
         build_invoice_figures_preview_definition,
         build_invoice_figures_preview_registration,
     )
 
     del inputs
-    definition = build_invoice_figures_preview_definition()
+    definition = build_invoice_figures_preview_definition(
+        lambda: CatalogueCreationRateProviderAdapter(provider=exchange_rate_provider())
+    )
     return built((definition,), (build_invoice_figures_preview_registration(definition),))
 
 
@@ -480,17 +484,23 @@ def compose_ledger_rule_operation(inputs: OperationCompositionInputs) -> Operati
         build_ledger_rule_list_definition,
         build_ledger_rule_list_registration,
     )
+    from ..application.ledger.rule_remove_operation import (
+        build_ledger_rule_remove_definition,
+        build_ledger_rule_remove_registration,
+    )
 
     rules, caller = inputs.ledger_rules(), inputs.execution_caller_reader
     add = build_ledger_rule_add_definition(rules, execution_caller_reader=caller)
     listing = build_ledger_rule_list_definition(rules)
     apply = build_ledger_rule_apply_definition(inputs.ledger_actions(), rules, execution_caller_reader=caller)
+    remove = build_ledger_rule_remove_definition(rules)
     return built(
-        (add, listing, apply),
+        (add, listing, apply, remove),
         (
             build_ledger_rule_add_registration(add),
             build_ledger_rule_list_registration(listing),
             build_ledger_rule_apply_registration(apply),
+            build_ledger_rule_remove_registration(remove),
         ),
     )
 

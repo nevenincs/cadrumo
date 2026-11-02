@@ -48,7 +48,7 @@ from .declarations_workspace_contracts import (
     DeclarationsWorkspaceZone,
 )
 from .value_presentation import format_casilla_value
-from .work_form_models import ModeloFormResult, ModeloFormResultDirection
+from .work_form_models import AMOUNTLESS_RESULT_DIRECTIONS, ModeloFormResult, ModeloFormResultDirection
 from .work_form_wording import date_text
 
 
@@ -275,16 +275,23 @@ def _local_step(row: DeclarationListRow) -> DeclarationListNextStep:
     return DeclarationListNextStep.CONTINUE
 
 
+def _needs_recalculation(row: DeclarationListRow) -> bool:
+    """Whether the note gate refuses the row's calculation: stale, or recorded before screens capped a figure."""
+    summary = None if row.declaration is None else row.declaration.summary
+    if summary is None:
+        return False
+    if summary.filed_before_grade_cap and row.state == "recorded":
+        return True
+    return summary.calculation_outdated and row.state not in _CLOSED_STATES
+
+
 def next_step(row: DeclarationListRow) -> DeclarationListNextStep | None:
     """The step the row offers: fixing what blocks it, starting a due return, or opening its local work.
 
     A calculation the note gate refuses as stale is calculated again first, as the form's next step is,
     and so is a declaration recorded before screens existed whose export the gate refuses for a capped figure.
     """
-    summary = None if row.declaration is None else row.declaration.summary
-    if summary is not None and summary.filed_before_grade_cap and row.state == "recorded":
-        return DeclarationListNextStep.RECALCULATE
-    if summary is not None and summary.calculation_outdated and row.state not in _CLOSED_STATES:
+    if _needs_recalculation(row):
         return DeclarationListNextStep.RECALCULATE
     if row.state == "blocked":
         return DeclarationListNextStep.FIX
@@ -356,7 +363,7 @@ def _valued_result_words(result: ModeloFormResult, value: Decimal, language: Out
         key = "workspace.modelo.header.result.choice_pending"
     if result.direction is ModeloFormResultDirection.TO_DEDUCT_LATER:
         return tr(key, amount=amount, locale=locale)
-    if result.direction in {ModeloFormResultDirection.NIL, ModeloFormResultDirection.NEGATIVE}:
+    if result.direction in AMOUNTLESS_RESULT_DIRECTIONS:
         return tr(key, locale=locale)
     return tr(key, locale=locale) + " · " + amount
 

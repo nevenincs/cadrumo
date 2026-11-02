@@ -12,12 +12,20 @@ from cadrumo_client.contracts.access_vocabulary import AccessAction, Availabilit
 
 from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ...operations.access_resolution import OperationAccessContext
+from ...invoices.catalogue_remove_operation import InvoiceRemoveRequest
+from ...operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ...operations.models import OperationRequest
 from ...operations.registry import OperationFrontendProjection, OperationPublicDefinitionRegistrationV1
 from ...user_profile.access_errors import ProfileAccessRefusedError
 from ..action_ports import LedgerActionPorts
-from ..read_access import resolve_ledger_commit_access, resolve_ledger_read_access, resolve_ledger_request_read_access
+from ..read_access import (
+    resolve_ledger_commit_access,
+    resolve_ledger_exact_request_access,
+    resolve_ledger_read_access,
+    resolve_ledger_request_access,
+    resolve_ledger_request_commit_access,
+    resolve_ledger_request_read_access,
+)
 from ..remove_operation import (
     LEDGER_REMOVE_OPERATION_DEFINITION_ID,
     LedgerRemoveRequest,
@@ -115,3 +123,162 @@ def test_request_read_access_refuses_another_definition() -> None:
         )
 
     assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+def test_request_read_access_refuses_another_payload_type_before_the_profile() -> None:
+    registration = _registration()
+    foreign = LedgerRemoveRequest(profile_id=_OTHER_PROFILE, transaction_id="a" * 64)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_ledger_request_read_access(
+            _request(foreign),
+            _context(registration),
+            definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+            request_type=InvoiceRemoveRequest,
+        )
+
+    assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+def test_request_read_access_refuses_a_foreign_payload_profile() -> None:
+    registration = _registration()
+    foreign = LedgerRemoveRequest(profile_id=_OTHER_PROFILE, transaction_id="a" * 64)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_ledger_request_read_access(
+            _request(foreign),
+            _context(registration),
+            definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+            request_type=LedgerRemoveRequest,
+        )
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_request_read_access_refuses_a_subject_of_another_profile() -> None:
+    registration = _registration()
+    request = OperationRequest[BaseModel](
+        definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_OTHER_PROFILE)),
+        payload=_remove_payload(),
+    )
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        resolve_ledger_request_read_access(
+            request,
+            _context(registration),
+            definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+            request_type=LedgerRemoveRequest,
+        )
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+def test_request_commit_access_is_the_request_read_scope_plus_the_commit_door() -> None:
+    registration = _registration()
+    request = _request(_remove_payload())
+    context = _context(registration)
+
+    read = resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID, request_type=LedgerRemoveRequest
+    )
+    commit = resolve_ledger_request_commit_access(
+        request, context, definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID, request_type=LedgerRemoveRequest
+    )
+
+    assert commit.request == read.request
+    assert commit.policy.actions == read.policy.actions | {AccessAction.COMMIT}
+
+
+class _RemoveRequestSubclass(LedgerRemoveRequest):
+    pass
+
+
+def _exact(
+    request: OperationRequest[BaseModel], *, commit: bool = False, context: OperationAccessContext | None = None
+) -> ResolvedOperationAccess:
+    return resolve_ledger_exact_request_access(
+        request,
+        context or _context(_registration()),
+        request_types={LEDGER_REMOVE_OPERATION_DEFINITION_ID: LedgerRemoveRequest},
+        commit_definition_ids=frozenset({LEDGER_REMOVE_OPERATION_DEFINITION_ID}) if commit else frozenset(),
+    )
+
+
+def test_exact_request_access_binds_the_whole_profile_read_scope() -> None:
+    request = _request(_remove_payload())
+    context = _context(_registration())
+
+    assert _exact(request, context=context) == resolve_ledger_read_access(
+        request, context, profile_id=_PROFILE, periods=frozenset()
+    )
+
+
+def test_exact_request_access_adds_the_commit_door_only_for_the_named_definitions() -> None:
+    request = _request(_remove_payload())
+
+    read = _exact(request)
+    commit = _exact(request, commit=True)
+
+    assert AccessAction.COMMIT not in read.policy.actions
+    assert commit.policy.actions == read.policy.actions | {AccessAction.COMMIT}
+
+
+def test_exact_request_access_refuses_an_unregistered_definition_and_a_subclassed_payload() -> None:
+    subclassed = _RemoveRequestSubclass(profile_id=_PROFILE, transaction_id="a" * 64)
+    for refused_request in (
+        _request(_remove_payload(), definition_id="ledger.reset"),
+        _request(subclassed),
+        _request(InvoiceRemoveRequest(profile_id=_PROFILE, invoice_id="a" * 64)),
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            _exact(refused_request)
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE
+
+
+def test_exact_request_access_refuses_a_foreign_payload_profile() -> None:
+    foreign = LedgerRemoveRequest(profile_id=_OTHER_PROFILE, transaction_id="a" * 64)
+
+    with pytest.raises(ProfileAccessRefusedError) as refused:
+        _exact(_request(foreign))
+
+    assert refused.value.reason is AccessDenialCode.PROFILE_MISMATCH
+
+
+_CONTEXT = _context(_registration())
+
+
+def _conditional(request: OperationRequest[BaseModel], *, commits: bool) -> ResolvedOperationAccess:
+    return resolve_ledger_request_access(
+        request,
+        _CONTEXT,
+        definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+        request_type=LedgerRemoveRequest,
+        commits=lambda payload: commits and payload.transaction_id == "a" * 64,
+    )
+
+
+def test_conditional_request_access_adds_the_commit_door_only_when_the_payload_commits() -> None:
+    request = _request(_remove_payload())
+
+    read = _conditional(request, commits=False)
+    commit = _conditional(request, commits=True)
+
+    assert read == resolve_ledger_read_access(request, _CONTEXT, profile_id=_PROFILE, periods=frozenset())
+    assert commit.policy.actions == read.policy.actions | {AccessAction.COMMIT}
+
+
+def test_conditional_request_access_refuses_before_asking_whether_the_payload_commits() -> None:
+    for refused_request in (
+        _request(_remove_payload(), definition_id="ledger.reset"),
+        _request(InvoiceRemoveRequest(profile_id=_PROFILE, invoice_id="a" * 64)),
+    ):
+        with pytest.raises(ProfileAccessRefusedError) as refused:
+            resolve_ledger_request_access(
+                refused_request,
+                _CONTEXT,
+                definition_id=LEDGER_REMOVE_OPERATION_DEFINITION_ID,
+                request_type=LedgerRemoveRequest,
+                commits=lambda _payload: pytest.fail("the commit predicate ran for a refused request"),
+            )
+        assert refused.value.reason is AccessDenialCode.OPERATION_UNAVAILABLE

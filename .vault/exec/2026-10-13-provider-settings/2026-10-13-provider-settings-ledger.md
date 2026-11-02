@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#provider-settings'
 date: '2026-10-13'
-modified: '2026-10-14'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5e5ec5123832a2cbf424d771c227d2238eeadd6fa484b8ce848821c3b6474617'
+body_hash: 'sha256:20a1433b1e3038ce6766018b22186b888a5c6edeea8e4e3fa85e41c830b7c498'
 related:
   - "[[2026-10-13-provider-settings-plan]]"
 ---
@@ -95,6 +95,20 @@ related:
 - `S09` `verify:` `frontend tsc --noEmit, eslint and prettier on the changed files` -> `pass`
 - `S09` `verify:` `pytest dev/locales/tests/test_desktop_chrome.py (16)` -> `pass`
 - `S09` `by:` `implementation-high`
+- `S13` `verify:` `locator-check: agent_process.py:166` -> `pass`
+- `S13` `by:` `plan-closure`
+- `S14` `verify:` `locator-check: credential_frame.py:66` -> `pass`
+- `S14` `by:` `plan-closure`
+- `S17` `verify:` `locator-check: host/controller.py:134` -> `pass`
+- `S17` `by:` `plan-closure`
+- `S18` `verify:` `locator-check: launch_environment.py:317 (agent side not read)` -> `pass`
+- `S18` `by:` `plan-closure`
+- `S10` `verify:` `locator-check: .vault/adr/2026-10-13-provider-settings-adr.md` -> `pass`
+- `S10` `by:` `plan-closure`
+- `S15` `verify:` `locator-check: .vault/adr/2026-10-13-provider-settings-adr.md` -> `pass`
+- `S15` `by:` `plan-closure`
+- `S23` `verify:` `locator-check: .vault/adr/2026-10-13-provider-settings-adr.md` -> `pass`
+- `S23` `by:` `plan-closure`
 
 ## Notes
 
@@ -107,3 +121,6 @@ related:
 - `S04` rows recorded retroactively on 2026-10-14 from git history; the Step was closed without a ledger row; landed in acd546f3a1; the committed catalog copy was later replaced by the run-time agent declaration in 26934b4841
 - `S21` rows recorded retroactively on 2026-10-14 from git history; the Step was closed without a ledger row; coordination Step whose changes were made by BUILD2 in the cadrumo-agent repository, outside this repository's history; paths are the Step's declared scope
 - `S09` bridge, locale and manifest parts of the `runtime_unavailable` code landed inside checkpoint 7fa669db8b; the contract reference now states the run-time lane declaration instead of a provider table
+- `S10` Superseded by provider-settings ADR line 62: administration on the desktop channel only
+- `S15` Superseded by provider-settings ADR line 79; `dev/desktop_agent_live/lane.py:5-6`
+- `S23` Superseded by provider-settings ADR line 79; `dev/desktop_agent_live/lane.py:5-6`

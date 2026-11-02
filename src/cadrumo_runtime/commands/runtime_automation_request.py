@@ -21,6 +21,7 @@ from cadrumo_client.commands.access_management_payloads import (
     ConfigProfileAutomationCreateResult,
 )
 from cadrumo_client.commands.errors import CliRefusedBoundaryError
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.commands.secure_input import (
     MachineSecretPayload,
@@ -37,7 +38,7 @@ from cadrumo_client.transport.frontend_client_contracts import FrontendRefusedEr
 from cadrumo_client.transport.installed_client import open_installed_client
 
 from .automation_admission import require_automation_change_credential_reference
-from .presentation import activate_subcommand_output_language, emit_envelope
+from .presentation import emit_envelope
 from .profile_language import resolve_runtime_profile_output_language
 from .profile_support import require_active_profile_pointer
 

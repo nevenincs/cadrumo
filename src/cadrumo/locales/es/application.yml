@@ -837,6 +837,8 @@ application:
         counterparty_country_invalid: No es un código de país de dos letras que el
           libro reconozca.
         counterparty_name_blank: El nombre de la contraparte no puede quedar en blanco.
+        counterparty_name_too_long: El nombre de la contraparte admite hasta {limit}
+          caracteres.
         counterparty_tax_id_invalid: Este NIF no es válido para el país de la contraparte.
         counterparty_tax_id_required: Esta factura necesita el NIF de la contraparte.
           Solo una factura simplificada emitida puede prescindir de él.
@@ -888,6 +890,12 @@ application:
           siga vinculada a transacciones: %{linked_transaction_ids}. No existe un
           comando de desvinculación: elimina esas transacciones con `aeat app ledger
           remove`, lo que libera el vínculo, y elimina después la factura.'
+        sealed_invoice_refused: La factura %{invoice_id} la leyó el Modelo %{modelo}
+          de %{filing_year} %{period} (%{revision_state}, revisión %{calculation_revision_id}),
+          así que se rechaza este cambio para que esas cifras sigan siendo ciertas.
+          Si no se ha presentado, descarta ese trabajo con `aeat app modelo work discard`
+          y vuelve a calcular. Si se ha presentado, emite una factura rectificativa
+          y presenta una complementaria o sustitutiva.
     linking:
       errors:
         linked_invoice_not_found: No se encontró la factura %{invoice_id} después
@@ -1323,6 +1331,17 @@ application:
           justificante.
         what_to_do: Revisa los registros de IVA de todo el año, añade el justificante
           que falte y vuelve a calcular.
+      iva_operation_date_after_movement:
+        what: Algunas filas del libro tienen una fecha de la operación posterior a
+          la bancaria. Si ese dinero era un anticipo, su IVA se devengó al cobrarlo.
+        what_to_do: En un anticipo, pon como fecha de la operación la del cobro, registra
+          el resto en su propia fila y vuelve a calcular.
+      iva_row_placed_on_movement_date:
+        what: Algunas filas del libro no tienen la fecha de la operación, así que
+          su fecha bancaria ha elegido el periodo del IVA. El IVA se devenga cuando
+          se realiza la operación, no cuando se mueve el dinero.
+        what_to_do: Añade la fecha de la operación a las filas de final de periodo
+          y vuelve a calcular.
       iva_selected_scope_evidence_failure:
         what: Los registros que sustentan el IVA de esta declaración no tienen justificante
           o no cuadran.
@@ -2340,6 +2359,21 @@ application:
         ni justificante adjunto. Adjúntalo al apunte de tus registros.
       transaction_evidence_missing_output: Una factura emitida con IVA repercutido
         no tiene justificante. Adjúntalo al apunte de tus registros.
+      undetermined_mixed_use_contributor: El cálculo guardado del modelo %{modelo}
+        de %{filing_year}, periodo %{period}, contó %{rows} gasto(s) de uso mixto
+        sin categoría de gasto por la parte indicada. Si calculas ahora, quedarán
+        retenidos hasta que les asignes la categoría. Los valores guardados no han
+        cambiado.
+      withholding_count_exceeds_summary_perceptors: El modelo %{source_modelo} del
+        %{period} de %{filing_year} cuenta %{declared_perceptors} perceptor(es) en
+        la casilla %{casilla_id}, pero el modelo %{modelo} solo recoge %{summary_perceptors}
+        perceptor(es) distinto(s) en todo el año. Toda persona contada en esa casilla
+        debe figurar en el resumen anual. Añade los perceptores que faltan al detalle
+        de este modelo o corrige el recuento del modelo %{source_modelo}.
+      withholding_count_not_cross_checked: 'No se ha podido comparar el modelo %{modelo}
+        de %{filing_year} con el modelo %{source_modelo} en %{unchecked_periods},
+        porque no consta ninguna declaración de esos periodos. Periodos comparados:
+        %{checked_periods}. Esto no significa que no pagaras a nadie en ellos.'
       withholding_detail_absent_against_ledger_evidence: 'El modelo %{modelo} de %{filing_year}
         no declara ninguna percepción para ningún perceptor, pero tus registros recogen
         rentas sometidas a retención pagadas ese año: %{contradicting_invoice_count}
@@ -2923,6 +2957,9 @@ application:
       edit_missing_modelo_requirements: 'Los datos de identidad están completos, pero
         este perfil declara IVA y aún le faltan campos obligatorios del Modelo 303.
         Añade estos flags al mismo comando y vuelve a ejecutarlo: %{missing_flags}.'
+      imputation_year_required: 'El criterio de imputación y la respuesta sobre el
+        Código de Comercio se indican cada uno para un ejercicio. Añade este indicador
+        y vuelve a ejecutar el comando: %{missing_flags}.'
       persist_patch_unknown_question_id: El parche del asistente referencia un id
         de pregunta desconocido.
       profile_flag_required: El asistente requiere --profile NAME (sin alternativa

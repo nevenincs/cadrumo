@@ -28,6 +28,7 @@ from ...core.operations import (
 from ..operations.access_resolution import (
     ADMISSION_REPLAY_ACTIONS,
     OBSERVATION_DISCLOSING_ACTIONS,
+    OPERATION_LIFECYCLE_ACTIONS,
     OperationAccessContext,
     ResolvedOperationAccess,
     bind_operation_access,
@@ -100,18 +101,7 @@ def _resolve_access(
         context,
         profile_id=context.profile_id,
         definition_id=operation_id,
-        actions=frozenset(
-            {
-                AccessAction.SUBMIT,
-                AccessAction.START,
-                AccessAction.RESUME,
-                AccessAction.OBSERVE,
-                AccessAction.RESULT,
-                AccessAction.CANCEL,
-                AccessAction.DETACH,
-                permission,
-            }
-        ),
+        actions=OPERATION_LIFECYCLE_ACTIONS | frozenset({permission}),
         disclosures=disclosures,
         periods=frozenset(),
         period_independent=True,

@@ -46,8 +46,11 @@ profile:
       surnames: Surnames or company name for export headers
       tax_id: Tax identifier (NIF/CIF/DNI/NIE) for the active profile
     irpf:
+      activity_income_imputation_criterion: Which criterion places your business income
+        and expenses in a tax year?
       art109_activity_income_withholding_ge_70pct: Art. 109 70% activity-income coverage
         exception applies
+      codigo_comercio_accounting: Do you keep Código de Comercio accounting?
       estimation_regime: IRPF estimation regime
       special_regime: IRPF special regime (Beckham Law / Art. 93 LIRPF)
       special_regime_start_date: Special regime election date (YYYY-MM-DD)
@@ -256,6 +259,13 @@ profile:
         tax_id:
           label: Tax ID (NIF/NIE/CIF)
       irpf:
+        activity_income_cash_criterion_elected:
+          label: Cash criterion stated in the return
+        activity_income_imputation_criterion:
+          choices:
+            cobros_y_pagos: When paid or collected (art. 7.2 RIRPF)
+            devengo: On an accrual basis
+          label: Income and expense timing
         activity_kind:
           choices:
             profesional: Professional activity
@@ -263,6 +273,8 @@ profile:
           label: Activity type
         art109_activity_income_withholding_ge_70pct:
           label: Meets Art. 109 RIRPF 70% exception
+        codigo_comercio_accounting:
+          label: Keeps Código de Comercio accounting
         estimation_regime:
           choices:
             directa_normal: Direct assessment, normal

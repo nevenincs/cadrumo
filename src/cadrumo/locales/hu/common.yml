@@ -211,8 +211,8 @@ aggregation:
         használd az operator_declaration eredetet.
       ejercicio_unsupported: A rekord ejercicio-ja kívül esik a Cadrumo által támogatott
         bevallási éveken.
-      family_not_declared: Az ejercicio Modelo 100 változata nem olvas elszenvedett
-        levonást, így a rekord soha nem jutna el egy számításhoz.
+      family_not_declared: Az adóév Modelo 100 változata nem olvas elszenvedett levonást,
+        így a rekord soha nem jutna el egy számításhoz.
       identity_mismatch: A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemtípussal
         vagy igazolással.
       not_found: Ehhez az ejercicióhoz, jövedelemosztályhoz és kifizetői hivatkozáshoz
@@ -1178,6 +1178,8 @@ desktop:
     close: Bevallások bezárása
     loading: A bevallásaid beolvasása…
     maximize: Bevallások teljes méretben
+    notes:
+      label: Amit a legutóbbi számítás feljegyzett
     position: '{row}/{count}. bevallás'
     read_failed: A Cadrumo nem tudta beolvasni a bevallásaidat.
     retry: Próbáld újra
@@ -2284,6 +2286,10 @@ desktop:
       remove_attached: Előbb válaszd le a tételéről
       remove_note: A bejegyzés és tárolt másolata törlődik a nyilvántartásból.
       remove_title: Törlöd ezt a bejegyzést?
+      retention_differs: A dokumentum {read} levont összeget jelez; a számla {recorded}
+        összeget rögzít.
+      retention_unrecorded: A dokumentum {read} levont összeget jelez; a számla nem
+        rögzít levonást.
       save: Mentés
       say_direction: Add meg, hogy kaptad vagy kiállítottad őket
       source:
@@ -2501,7 +2507,7 @@ desktop:
       without_staged: Exportálás nélkülük
     failed: A naplót nem sikerült beolvasni.
     field:
-      art_104_tres_exclusion: 104.Tres. cikk szerinti kizárás
+      art_104_tres_exclusion: 104.Tres cikk szerinti kizárás
       attachment_ids: Mellékletek
       booked_date: Könyvelési dátum
       business_pct: Üzleti arány
@@ -2512,6 +2518,7 @@ desktop:
       input_classification: Beszerzés felhasználása
       investment_asset_id: Beruházási javak
       m210_income_classification: 210-es modell jövedelme
+      operation_date: Ügylet dátuma
       own_account_id: Számla
       prorrata_reference: Arányosítási hivatkozás
       prorrata_sector_id: Arányosítási ágazat
@@ -3523,6 +3530,7 @@ desktop:
     prorrata:
       accepted: 'Elfogadott: {provenances}.'
       action:
+        declare_gross: Bruttó levonható adó bejelentése
         declare_sector: Ágazat bejelentése
         elect_especial: Különleges választása
         elect_general: Általános választása
@@ -3547,6 +3555,8 @@ desktop:
       evidence: Bizonyíték hivatkozása
       evidence_hint: A választás vagy a visszavonás dokumentuma
       form:
+        declare_gross: 'Korábbi elszámolás bruttó levonható adójának bejelentése:
+          {ejercicio}'
         declare_sector: Elkülönült ágazat bejelentése
         elect_especial: 'Különleges prorrata választása: {ejercicio}'
         elect_general: 'Általános prorrata választása: {ejercicio}'
@@ -3554,6 +3564,27 @@ desktop:
         seed: '{ejercicio} átvétele az előző évből'
         seed_sector: 'Ágazat ideiglenes prorratájának átvétele: {ejercicio}'
         settle_sector: 'Ágazat végleges prorratájának elszámolása: {ejercicio}'
+      gross:
+        column:
+          evidence: Dokumentum
+          gross_cuota: Bruttó adó
+          period: Időszak
+        empty: Egyetlen elszámolási időszakra sincs bruttó összeg bejelentve.
+        evidence: Igazoló dokumentum
+        evidence_hint: Hivatkozás a saját dokumentumodra, amely alátámasztja az összeget.
+        gross_cuota: Bruttó levonható adó
+        gross_cuota_hint: A prorrata előtt, euróban, legfeljebb két tizedesjeggyel.
+        period: Elszámolási időszak
+        remove: Törlés
+        remove_confirm: A bejelentés törlése
+        remove_of: A(z) {liquidation} időszakra bejelentett bruttó összeg törlése
+        remove_what: Törlöd a(z) {liquidation} időszakra bejelentett bruttó összeget?
+        replace: Az ugyanerre az időszakra és ágazatra már bejelentett bruttó összeg
+          cseréje
+        title: Korábbi elszámolások bruttó levonható adója
+        what: Egy korábbi, kézzel felvitt elszámolás bruttó levonható adója a prorrata
+          előtt, olyan időszakra, amelyhez a főkönyv nem tartalmaz előzetesen felszámított
+          adót.
       kind:
         definitiva: Végleges
         provisional: Ideiglenes
@@ -3705,6 +3736,7 @@ desktop:
         accounts: Saját számlák
         capital: Beruházási javak
         prorrata: Prorrata
+        withholding: Levonások
       areas: A nyilvántartások részei
     retry: Újra
     reveal:
@@ -4066,6 +4098,88 @@ desktop:
       to_match: Párosítandó
     window:
       partial: A csoportosítás és az összegek a teljes beolvasásra várnak.
+    withholding:
+      absence:
+        not_listed: A korábbi jelzések még nem listázhatók. Itt azok jelennek meg,
+          amelyeket ebben az ablakban tettél vagy vontál vissza.
+        title: Nincs levonás
+        what: Jelezd, hogy ebben az évben egy jövedelemosztályban egyetlen kifizető
+          sem vont le.
+      action:
+        attest: Nincs levonás jelzése
+        record: Igazolás rögzítése
+      amount:
+        importe_integro_dinerario: Bruttó pénzbeli összeg
+        ingreso_a_cuenta: Előlegbefizetés
+        ingreso_a_cuenta_repercutido: Áthárított előlegbefizetés
+        retencion: Levonás
+        valoracion_especie: Természetbeni érték
+      attested_on: 'Jelezve: {date}'
+      changes: A(z) {ejercicio} évi igazolások módosításai
+      column:
+        class: Jövedelemosztály
+        document: Dokumentum
+        especie: Természetbeni
+        ingreso: Előleg
+        integro: Bruttó pénzbeli
+        note: Megjegyzés
+        origin: Forrás
+        pago: Jóváírás
+        payer: Kifizető
+        repercutido: Áthárított
+        retencion: Levonás
+        state: Állapot
+      correct_hint: Egy igazolás javításához távolítsd el, és rögzítsd újra.
+      document: Az igazolás dokumentuma (nem kötelező)
+      document_hint: A Dokumentumokban tárolt dokumentum. Az ujjlenyomatát úgy rögzítjük,
+        ahogy megadod, és a tárolt dokumentummal még nem vetjük össze.
+      document_none: Még nincs tárolt dokumentum
+      document_not: Nincs dokumentum
+      ejercicio: Év
+      empty: Nincs rögzített igazolás a(z) {ejercicio} évre.
+      form:
+        attest: Nincs levonás jelzése a(z) {ejercicio} évre
+        record: Igazolás rögzítése a(z) {ejercicio} évre
+      income_class: Jövedelemosztály
+      note: Megjegyzés
+      note_hint: Miért nem volt levonás ebben az osztályban.
+      origin:
+        operator_declaration: Saját nyilatkozatod
+        payer_certificate: A kifizető igazolása
+      origin_label: A számok forrása
+      payer_legal_name: A kifizető neve (nem kötelező)
+      payer_ref: '{ref} kifizető'
+      payer_tax_id: A kifizető adóazonosítója
+      payer_tax_id_hint: A rögzítéssel együtt kerül elküldésre a kifizető azonosításához.
+        Nem jelenik meg újra.
+      refusal:
+        already_attested: Ehhez az osztályhoz már van jelzés.
+        certificate_fingerprint_required: A kifizetői igazoláshoz kell a dokumentuma.
+        ejercicio_unsupported: Ez az év nem támogatott.
+        family_not_declared: Ez a jövedelemosztály nincs bejelentve erre az évre.
+        identity_mismatch: A kifizető adatai nem egyeznek az ezen a hivatkozáson tárolt
+          rekorddal.
+        not_attested: Ehhez az osztályhoz nincs visszavonható jelzés.
+        not_found: Ez az igazolás már nincs tárolva.
+        own_tax_id: A kifizető adóazonosítója a tiéd.
+        records_present: Ebben az osztályban rögzítettél igazolásokat, ezért nem jelezhető,
+          hogy nincs egy sem.
+        repercutido_exceeds_ingreso_a_cuenta: Az áthárított előlegbefizetés nem haladhatja
+          meg az előlegbefizetést.
+        stale_revision: A rekord megváltozott, mióta listáztad. Olvasd be újra, és
+          próbáld meg még egyszer.
+        taxpayer_tax_id_unknown: A saját adóazonosítód még nincs a profilodban.
+        validation: Néhány szám vagy mező nem fogadható el.
+      remove: Eltávolítás
+      remove_confirm: Igazolás eltávolítása
+      remove_of: '{payer} igazolásának eltávolítása'
+      remove_what: Eltávolítod {payer} igazolását ({class})?
+      title: Levonási igazolások
+      what: Rögzítsd, mennyit vont le az egyes kifizető a jövedelmedből, ahogyan az
+        igazolása mutatja, vagy jelezd, hogy egy jövedelemosztályban nem volt levonás.
+      withdraw: Visszavonás
+      withdraw_of: A(z) {class} jelzésének visszavonása
+      withdrawn_on: 'Visszavonva: {date}'
   logs:
     all_loggers: Minden naplózó
     all_origins: Minden forrás
@@ -4122,6 +4236,8 @@ desktop:
     none_unread: A legutóbbi szinkronizáláskor nem volt olvasatlan
     unread: '{count} olvasatlan'
   modelo:
+    box_notes:
+      label: Amit a számítás erről a rovatról feljegyzett
     correction:
       kind_label: A helyesbítés fajtája
       motive_label: A helyesbítés oka
@@ -4436,6 +4552,36 @@ desktop:
     search: Keresés
     settings: Beállítások
     tui: Munkaterület
+  renta:
+    proto:
+      election:
+        save: Mentsd a választ
+        year: Adóév
+      excerpt: Ez a prototípus a valódi bevallásnak csak néhány szakaszát tartalmazza.
+        Válassz egy másik szakaszt, hogy itt lásd.
+      family:
+        boxes: Mezők, amelyekbe ezek az adatok kerülnek
+        edit: Módosítsd a profilodban
+        empty: Nincs megadva
+        profile: A profilodból
+      gap:
+        body: A háttérrendszer ezt még nem szolgálja ki, ezért az ablak semmit sem
+          mutat a helyén.
+        operation: 'Szükséges: {operation}'
+        title: Még nem érkezik
+      nav:
+        boxes: 'Mezők: {count}'
+        failed: 'Nem sikerült kiszámítani: {count}'
+        needs_you: 'Rád vár: {count}'
+        only_attention: Csak ami rád vár
+        proposed: Javasolt vázlat
+        served: Ahogy ma érkezik
+        technical: 'Technikai fejléc: az elrendezésben itt még nincs ellenőrzött fejléc'
+        title: Szakaszok
+      result:
+        composed: A háttérrendszer saját fejléc-összeállítójával megfogalmazott, nem
+          számított összeg
+        example: Más bevallásnál már így érkezik
   session:
     enter_restarts: Enter újraindítja
     exit_line: '[A folyamat {code} kóddal kilépett. Nyomd meg az Entert az újraindításhoz.]'
@@ -7187,6 +7333,7 @@ tui:
           iva_category: IVA-kategória
           iva_rate: IVA-kulcs (például 0.21)
           notes: Megjegyzések
+          operation_date: Ügylet dátuma (ÉÉÉÉ-HH-NN)
           own_account_id: Saját számla (acc-01)
           prorrata_reference: Prorrata hivatkozás
           prorrata_sector: Prorrata ágazat
@@ -8185,6 +8332,7 @@ tui:
         iva_amount: IVA összege (nem kötelező)
         iva_rate: IVA-kulcs (nem kötelező)
         notes: Megjegyzések
+        operation_date: Ügylet dátuma (ÉÉÉÉ-HH-NN, nem kötelező)
         taxable_base: Adóalap (nem kötelező)
         value_date: Értéknap (ÉÉÉÉ-HH-NN, nem kötelező)
       update_refused: 'A módosítást elutasította: {detail}'
@@ -10079,3 +10227,27 @@ workspace:
       not_applicable: nem alkalmazható
       not_known_yet: Még nem ismert
     was: 'korábban: {value}'
+  renta:
+    election:
+      proposed: Javasolt válasz
+      stated: 'Megadva erre az évre: {year}'
+      title: A tevékenységed elszámolási elve
+      undeclared: Még nem adtad meg. Az ettől függő tevékenységi mezők feloldatlanok
+        maradnak, amíg meg nem adod.
+    outline:
+      activities: Gazdasági tevékenységek
+      annexes: Mellékletek és kiegészítő adatok
+      bases: Adóalapok
+      capital_gains: Vagyoni nyereségek és veszteségek
+      credits: Levont adóelőlegek és befizetett előlegek
+      employment: Munkaviszonyból származó jövedelem
+      family: Családi egység
+      identification: Azonosítás és családi helyzet
+      liability: Adó és adókedvezmények
+      minimums: Személyi és családi minimum
+      movable_capital: Ingó tőkéből származó jövedelem
+      other: Egyéb adatok
+      real_estate: Ingatlanból származó és beszámított jövedelem
+      result: A bevallás eredménye
+    result:
+      settlement: Hogyan fizeted be, vagy hogyan kapod vissza

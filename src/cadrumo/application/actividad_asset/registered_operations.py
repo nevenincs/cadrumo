@@ -17,8 +17,8 @@ from ...core.operations import (
     OperationTerminalCondition,
     profile_operation_subject,
 )
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..ledger.read_access import resolve_ledger_request_commit_access, resolve_ledger_request_read_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
     OperationCapabilities,
@@ -153,18 +153,8 @@ def _require_access(
     request_type: type[_ActivityAssetRequest],
     mutation: bool,
 ) -> ResolvedOperationAccess:
-    if request.definition_id != definition_id or not isinstance(request.payload, request_type):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = request.payload
-    resolved = resolve_ledger_read_access(
-        request,
-        context,
-        profile_id=payload.profile_id,
-        periods=frozenset(),
-    )
-    if not mutation:
-        return resolved
-    return with_commit_action(resolved)
+    resolve = resolve_ledger_request_commit_access if mutation else resolve_ledger_request_read_access
+    return resolve(request, context, definition_id=definition_id, request_type=request_type)
 
 
 def resolve_activity_asset_access(

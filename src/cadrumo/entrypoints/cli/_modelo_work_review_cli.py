@@ -6,13 +6,14 @@ import json
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import submitted_operation_error
 from cadrumo_client.contracts.contracts import RefusalCode
 
 from ...core.external_constants import OutputLanguage
 from ...domain.modelos.codes import ModeloCode
 from ._modelo_rendering import verification_findings_notices
-from .common import activate_subcommand_output_language, emit_envelope
+from .common import emit_envelope
 from .modelo_results import WorkReviewPayload, WorkReviewResult
 from .operation_modelo_metadata import read_modelo_work_unit
 from .operation_modelo_work_review import read_modelo_work_review

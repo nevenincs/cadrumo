@@ -514,6 +514,8 @@ errors:
       Comprueba tu conexión a internet y vuelve a intentarlo.
     fail_outbound_storage_unavailable: El servicio de almacenamiento está temporalmente
       no disponible. Espera unos minutos y vuelve a intentarlo.
+    fail_pattern_search_unavailable: La búsqueda de patrones no pudo iniciarse o entenderse,
+      así que no se buscó nada.
     fail_review_source_load: El archivo de origen existe pero no se pudo interpretar.
     fail_sancion_arithmetic: Los importes impresos en el documento de sanción no cuadran
       entre sí.
@@ -760,6 +762,8 @@ errors:
     internal_cli_unexpected_boundary: El comando falló por un error interno inesperado,
       no por un problema de datos almacenados. Consulta los registros de diagnóstico
       para ver qué falló.
+    internal_domiciliation_calendar_gap: 'Error interno: un año del calendario no
+      pudo clasificar sus días.'
     internal_flow_copy_resolution: 'Error interno: el flujo guiado no pudo resolver
       sus textos de presentación.'
     internal_flow_validator_registry: 'Error interno: el registro de validadores del
@@ -1110,6 +1114,8 @@ errors:
     refused_calculations_casilla_constraint: Un valor de casilla calculado queda fuera
       de los límites declarados para esa casilla. Revisa los datos de entrada del
       cálculo.
+    refused_classification_rule_search: No se pudo buscar con una regla guardada,
+      así que no se cambió nada.
     refused_cli_boundary: El comando rechazó la solicitud.
     refused_cli_log_level_resolution: Las opciones de nivel de registro indicadas
       son contradictorias. Usa solo una de --quiet, --verbose o --debug.
@@ -1191,6 +1197,9 @@ errors:
       y el año indicados.
     refused_inventory_service_input: Un dato indicado infringe el contrato del inventario.
       Corrige la entrada y vuelve a intentarlo.
+    refused_invoice_retention_figures: La retención indicada se contradice o no encaja
+      con la base imponible de la factura. Indica de nuevo el tipo y el importe de
+      modo que el importe sea la base por el tipo.
     refused_iva_compensation_decimal_parse: 'Rechazado: el importe de compensación
       de IVA no se pudo interpretar como decimal.'
     refused_iva_compensation_year_range: 'Rechazado: el ejercicio de compensación
@@ -1354,6 +1363,9 @@ errors:
     refused_outbound_storage_validation: Los parámetros de la operación de almacenamiento
       no superaron la validación.
     refused_output_format: El formato de salida solicitado no es compatible.
+    refused_pattern_search_overrun: La búsqueda con tu patrón no terminó dentro de
+      su límite, así que se detuvo.
+    refused_pattern_search_unreadable: No se pudo leer el patrón.
     refused_pension_reduccion_computation: La comprobación de la reducción de un plan
       de pensiones (DT 12ª LIRPF) recibió un importe que incumple una condición numérica.
       Corrige los importes indicados.

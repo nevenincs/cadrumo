@@ -12,10 +12,11 @@ related:
   - '[[2026-06-03-modelo-export-workbook-parity-adr]]'
   - '[[2026-06-03-modelo-export-evidence-parity-adr]]'
   - '[[2026-06-03-modelo-export-visual-design-adr]]'
-modified: '2026-10-07'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:1a3818d5b4fe4d72c1f5ec4fb412e3833606038349699c1f585defd8df32778e'
+body_hash: 'sha256:9ebfb4f26094ed03891cc0e802d37a190550ed7df0d9171a6e0d583f8d14ad89'
 ---
+
 # `google-outbound-review` plan
 
 ## Description
@@ -32,9 +33,9 @@ S01 freezes shared snapshot/admission/publication interfaces before dependent in
 
 ## Steps
 
-- [ ] `S01` - Freeze immutable review snapshot, artifact admission and publication receipt interfaces under the integration owner; `src/cadrumo/application/export/review_snapshot.py (new), managed_artifact_ports.py (new), publication_receipt.py (new)`.
+- [x] `S01` - Freeze immutable review snapshot, artifact admission and publication receipt interfaces under the integration owner; `src/cadrumo/application/export/review_snapshot.py (new), managed_artifact_ports.py (new), publication_receipt.py (new)`.
 - [ ] `S02` - Enforce profile-bound containment and direct marked creation for every Google request and retry; `src/cadrumo/adapters/outbound/google/{root_folder,drive_entries,api,calc_sheets_apply}.py and adapters/outbound/storage/{factory,_google_drive}.py`.
-- [ ] `S03` - Retire public Google pull, remote calculation and verify enrollment while preserving released records and offline export; `src/cadrumo/application/modelo/modelo_spreadsheet_operation.py, modelo_spreadsheet_executor.py and entrypoints/{modelo_spreadsheet_operation_composition.py,cli/_modelo_spreadsheet_command_specs.py}`.
+- [x] `S03` - Retire public Google pull, remote calculation and verify enrollment while preserving released records and offline export; `src/cadrumo/application/modelo/modelo_spreadsheet_operation.py, modelo_spreadsheet_executor.py and entrypoints/{modelo_spreadsheet_operation_composition.py,cli/_modelo_spreadsheet_command_specs.py}`.
 - [ ] `S04` - Implement backup inventory and isolated recovery policy only after custody proposal acceptance; `src/cadrumo/adapters/outbound/storage/{mirror_push,mirror_manifest}.py and adapters/persistence/storage/secure_object_namespaces.py and entrypoints/profile_archive_operation_composition.py`.
 - [ ] `S05` - Render selected calculation and ledger snapshots as immutable native review publications with external notes; `src/cadrumo/application/export/google_operation.py and application/storage/calc_sheets/workbook_export.py and bounded renderer/style owners`.
 - [ ] `S06` - Build reproducible evidence packages from pinned snapshots and verified original payloads; `src/cadrumo/application/evidence/service.py and application/modelo/audit_operation.py and entrypoints/modelo_audit_operation_composition.py and new snapshot builder/payload loader`.

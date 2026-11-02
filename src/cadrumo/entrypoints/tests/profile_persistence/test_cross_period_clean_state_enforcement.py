@@ -71,11 +71,6 @@ from ....domain.contribuyente.entity_type import EntityType
 from ....domain.deadlines.models import (
     CrossPeriodGroupMemberRoster,
     IrpfIncomeCategory,
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
 )
 from ....domain.modelos.calculation_repository import upsert_calculation_revision
 from ....domain.modelos.calculation_revision import (
@@ -104,6 +99,7 @@ from ....domain.modelos.verification_repository import upsert_verification_repor
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import build_calculation_action_ports, build_filing_action_ports
+from .verification_substance_support import general_iva_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -145,25 +141,6 @@ _DECLARED_CROSS_PERIOD_PROFILE_IDS = {
     ("202", "2P"): "20200000-0000-4000-8000-000000000202",
     ("200", "0A"): "20000000-0000-4000-8000-000000000200",
 }
-
-
-def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.from_registry("common_regime"),
-            regime_composition=M303RegimeComposition.from_registry("general"),
-            redeme_enrolled=False,
-            cash_accounting_regime_enrolled=False,
-            voluntary_sii_enrolled=False,
-            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
-        ),
-    )
 
 
 def _seed_ready_profile(bucket_id: str, objects: SecureObjectRepository | None = None, *, modelo: str = "390") -> None:
@@ -467,10 +444,10 @@ def test_export_refuses_verified_cross_period_revision_without_clean_sources(
                     output_path=tmp_path / "modelo-180.txt",
                     actor="operator-test",
                 ),
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 export_ports=modelo_export_ports_for_test(
                     bucket_id=profile.bucket_id,
-                    taxpayer_tax_id=workflow_profile().tax_id,
+                    taxpayer_tax_id=general_iva_workflow_profile().tax_id,
                 ),
                 operation=operation,
                 clock=_CLOCK,
@@ -502,7 +479,7 @@ def test_file_refuses_verified_cross_period_revision_without_clean_sources(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 operation=operation,
                 clock=_CLOCK,
             )
@@ -546,7 +523,7 @@ def test_file_refuses_declared_cross_period_modelos_without_clean_sources(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 operation=operation,
                 clock=_CLOCK,
             )
@@ -572,7 +549,7 @@ def test_verify_modelo_303_reports_clean_state_blocker_for_carry_forward_depende
                 certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
                 verification_repositories=build_test_verification_repository_bundle(),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 settings=ready_clave_settings("X1234567L"),
                 clock=_CLOCK,
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
@@ -604,7 +581,7 @@ def test_verify_salaried_taxpayer_m100_has_no_cross_period_withholding_block(
             period="0A",
             operation=operation,
         )
-        salaried = workflow_profile().model_copy(
+        salaried = general_iva_workflow_profile().model_copy(
             update={
                 "entity_type": EntityType.from_registry("natural_person"),
                 "irpf_income_categories": frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
@@ -690,7 +667,7 @@ def test_verify_salaried_taxpayer_m100_with_zero_prior_bin_is_complete(
         assert Decimal(revision.casilla_values[retenciones_trabajo_casilla]) == retenciones_trabajo_amount
         assert Decimal(revision.binding_overrides[retenciones_trabajo_binding]) == retenciones_trabajo_amount
         revision_id = revision.calculation_revision_id
-        salaried = workflow_profile().model_copy(
+        salaried = general_iva_workflow_profile().model_copy(
             update={
                 "entity_type": EntityType.from_registry("natural_person"),
                 "irpf_income_categories": frozenset({IrpfIncomeCategory.from_registry("trabajo")}),
@@ -905,7 +882,7 @@ def test_file_modelo_390_passes_clean_state_with_imported_bound_justificantes(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 operation=operation,
                 clock=_CLOCK,
             ).record
@@ -980,7 +957,7 @@ def test_file_refuses_modelo_353_when_expected_member_roster_is_incomplete(
                 operator_scope_ports=_OPERATOR_SCOPE_PORTS,
                 ports=build_filing_action_ports(bucket_id=profile.bucket_id, operation=operation),
                 actor="operator-test",
-                workflow_profile=workflow_profile(),
+                workflow_profile=general_iva_workflow_profile(),
                 operation=operation,
                 cross_period_expected_member_sets=(
                     CrossPeriodExpectedMemberSet(
@@ -1052,7 +1029,7 @@ def test_file_uses_profile_group_roster_for_modelo_353_member_fan_in(
             period=_GROUP_PERIOD,
             operation=operation,
         )
-        filing_profile = workflow_profile().model_copy(
+        filing_profile = general_iva_workflow_profile().model_copy(
             update={
                 "cross_period_group_member_rosters": (
                     CrossPeriodGroupMemberRoster(

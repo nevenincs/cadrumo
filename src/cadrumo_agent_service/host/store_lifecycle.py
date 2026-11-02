@@ -43,7 +43,7 @@ from cadrumo.core.logging import get_logger
 from cadrumo_client.contracts.contracts import RefusalError
 from cadrumo_client.contracts.deadline_budget import OrchestrationTimeoutError, TimeoutDeadline
 
-from .controller import AgentHostError, AgentHostRefusal, AgentLaunch
+from .controller import CALLER_ENDED_REFUSALS, AgentHostError, AgentHostRefusal, AgentLaunch
 
 _LOGGER = get_logger(__name__)
 
@@ -324,7 +324,7 @@ class AgentStoreLifecycle:
                 output_limit=STORE_OUTPUT_MAX_BYTES,
             )
         except AgentHostError as error:
-            if error.reason in {AgentHostRefusal.CANCELLED, AgentHostRefusal.TIMEOUT}:
+            if error.reason in CALLER_ENDED_REFUSALS:
                 raise
             raise _refused(step, StoreOutcome.RUN_FAILED, cause=error) from error
         except OrchestrationTimeoutError as error:

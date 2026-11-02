@@ -225,24 +225,36 @@ def _duplicate_calculation_secure_writes(
 def _refreshed_draft_fingerprint(
     existing: CalculationRevision,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    ledger_filing_snapshot: LedgerFilingSnapshot | None,
     *,
     now: datetime,
 ) -> CalculationRevision | None:
     """Return the draft re-pinned to what this calculation read, when that moved.
 
-    An invoice edit that moves no casilla derives the same revision id. Without
-    this the operator's recalculation would land on the stored draft and leave it
-    reporting drift that no further recalculation could clear.
+    An invoice or ledger edit that moves no casilla derives the same revision id.
+    Without this the operator's recalculation would land on the stored draft and
+    leave it reporting drift that no further recalculation could clear.
     """
-    if existing.state is not CalculationRevisionState.BORRADOR or invoice_fingerprint is None:
+    if existing.state is not CalculationRevisionState.BORRADOR:
         return None
+    update: dict[str, object] = {}
     recorded = existing.invoice_fingerprint
-    if recorded is not None and (
-        recorded.field_set_version == invoice_fingerprint.field_set_version
-        and recorded.snapshot_fingerprint == invoice_fingerprint.snapshot_fingerprint
+    if invoice_fingerprint is not None and (
+        recorded is None
+        or recorded.field_set_version != invoice_fingerprint.field_set_version
+        or recorded.snapshot_fingerprint != invoice_fingerprint.snapshot_fingerprint
     ):
+        update["invoice_fingerprint"] = invoice_fingerprint
+    anchor = existing.ledger_filing_snapshot
+    if ledger_filing_snapshot is not None and (
+        anchor is None
+        or anchor.fingerprint_field_set_version != ledger_filing_snapshot.fingerprint_field_set_version
+        or anchor.snapshot_fingerprint != ledger_filing_snapshot.snapshot_fingerprint
+    ):
+        update["ledger_filing_snapshot"] = ledger_filing_snapshot
+    if not update:
         return None
-    return existing.model_copy(update={"invoice_fingerprint": invoice_fingerprint, "updated_at": now})
+    return existing.model_copy(update={**update, "updated_at": now})
 
 
 def _persist_duplicate_calculation_revision(
@@ -252,6 +264,7 @@ def _persist_duplicate_calculation_revision(
     revisions_revision_id: str,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    ledger_filing_snapshot: LedgerFilingSnapshot | None,
     revision_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
@@ -272,7 +285,7 @@ def _persist_duplicate_calculation_revision(
         revision_id=revision_id,
         additional_secure_object_writes_for_revision=additional_secure_object_writes_for_revision,
     )
-    refreshed = _refreshed_draft_fingerprint(existing, invoice_fingerprint, now=now)
+    refreshed = _refreshed_draft_fingerprint(existing, invoice_fingerprint, ledger_filing_snapshot, now=now)
     if refreshed is not None:
         calculation_repository.save_with_secure_object_writes(
             upsert_calculation_revision(revisions, refreshed),
@@ -601,6 +614,7 @@ def _load_calculation_publication_target(
     operation: PinnedAuthorityOperation,
     calculation_repository: CalculationRevisionCatalogueRepositoryProtocol,
     invoice_fingerprint: InvoiceFingerprintSnapshot | None,
+    ledger_filing_snapshot: LedgerFilingSnapshot | None,
     revision_id: str,
     work_unit: WorkUnit,
     work_units: WorkUnitCatalogue,
@@ -620,6 +634,7 @@ def _load_calculation_publication_target(
         revisions_revision_id=revisions_revision_id,
         calculation_repository=calculation_repository,
         invoice_fingerprint=invoice_fingerprint,
+        ledger_filing_snapshot=ledger_filing_snapshot,
         revision_id=revision_id,
         work_unit=work_unit,
         work_units=work_units,
@@ -713,6 +728,7 @@ def persist_calculation_revision(
         operation=operation,
         calculation_repository=calculation_repository,
         invoice_fingerprint=invoice_fingerprint,
+        ledger_filing_snapshot=ledger_filing_snapshot,
         revision_id=revision_id,
         work_unit=work_unit,
         work_units=work_units,

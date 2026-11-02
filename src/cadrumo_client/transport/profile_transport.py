@@ -89,20 +89,13 @@ class ProfileTransport(ProfileOperationsTransport):
         deadline: float,
     ) -> PasswordResetPrepared | AccessRefusal:
         """Capture a predecessor on this exact verified connection."""
-        with self._exchange(deadline=deadline):
-            try:
-                if self._closed:
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                reply = self._reply(request.request_id, deadline=deadline).root
-                if not isinstance(reply, PasswordResetPrepared | AccessRefusal):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                if isinstance(reply, PasswordResetPrepared) and reply.profile_id != request.profile_id:
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return reply
-            except BaseException as error:
-                self._close_after_failure(error)
-                raise
+        return self._request_reply(
+            request,
+            request.request_id,
+            (PasswordResetPrepared, AccessRefusal),
+            deadline=deadline,
+            admits=lambda reply: not isinstance(reply, PasswordResetPrepared) or reply.profile_id == request.profile_id,
+        )
 
     def password_reset(
         self,
@@ -139,20 +132,13 @@ class ProfileTransport(ProfileOperationsTransport):
 
     def sign_in_status(self, request: SignInStatusRequest, *, deadline: float) -> SignInStatusReply | AccessRefusal:
         """Observe presence through the same correlated, credential-free exchange."""
-        with self._exchange(deadline=deadline):
-            try:
-                if self._closed:
-                    raise RefusalError(RefusalCode.CONNECTION_CLOSED)
-                write_document(self._channel, request, deadline=deadline)
-                result = self._reply(request.request_id, deadline=deadline).root
-                if not isinstance(result, SignInStatusReply | AccessRefusal):
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                if isinstance(result, SignInStatusReply) and result.profile_id != request.profile_id:
-                    raise RefusalError(RefusalCode.INVALID_FRAME)
-                return result
-            except BaseException as error:
-                self._close_after_failure(error)
-                raise
+        return self._request_reply(
+            request,
+            request.request_id,
+            (SignInStatusReply, AccessRefusal),
+            deadline=deadline,
+            admits=lambda reply: not isinstance(reply, SignInStatusReply) or reply.profile_id == request.profile_id,
+        )
 
     def active_profile(self, request: ActiveProfileRequest, *, deadline: float) -> ActiveProfileReply | AccessRefusal:
         """Ask which profile is selected and signed in, through a correlated, credential-free exchange."""

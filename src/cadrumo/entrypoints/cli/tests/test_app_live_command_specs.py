@@ -232,7 +232,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
         value=DeferredTarget("builtins", "int"),
         default=ParameterDefault.value(None),
         help_key="cli.app.live.from_year_help",
-        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+        constraint=ParameterConstraint(minimum=1000, maximum=9999),
     )
     _assert_shared_option_contract(
         _OPTIONAL_YEAR_TO_OPTION,
@@ -241,7 +241,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
         value=DeferredTarget("builtins", "int"),
         default=ParameterDefault.value(None),
         help_key="cli.app.live.to_year_help",
-        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+        constraint=ParameterConstraint(minimum=1000, maximum=9999),
     )
     _assert_shared_option_contract(
         _OPTIONAL_YEAR_OPTION,
@@ -250,7 +250,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
         value=DeferredTarget("builtins", "int"),
         default=ParameterDefault.value(None),
         help_key="cli.app.live.year_help",
-        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+        constraint=ParameterConstraint(minimum=1000, maximum=9999),
     )
     _assert_shared_option_contract(
         _OUTPUT_ROOT_OPTION,
@@ -271,7 +271,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
         value=DeferredTarget("builtins", "int"),
         default=ParameterDefault.required(),
         help_key="cli.app.live.borrador.filing_year_help",
-        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+        constraint=ParameterConstraint(minimum=1000, maximum=9999),
     )
     _assert_shared_option_contract(
         _REQUIRED_MODELO_OPTION,
@@ -298,7 +298,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
         value=DeferredTarget("builtins", "int"),
         default=ParameterDefault.required(),
         help_key="cli.app.live.from_year_help",
-        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+        constraint=ParameterConstraint(minimum=1000, maximum=9999),
     )
     _assert_shared_option_contract(
         _REQUIRED_YEAR_OPTION,
@@ -307,7 +307,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
         value=DeferredTarget("builtins", "int"),
         default=ParameterDefault.required(),
         help_key="cli.app.live.year_help",
-        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+        constraint=ParameterConstraint(minimum=1000, maximum=9999),
     )
     _assert_shared_option_contract(
         _REQUIRED_YEAR_TO_OPTION,
@@ -316,7 +316,7 @@ def test_live_shared_support_contracts_are_independently_pinned() -> None:
         value=DeferredTarget("builtins", "int"),
         default=ParameterDefault.required(),
         help_key="cli.app.live.to_year_help",
-        constraint=ParameterConstraint(minimum=2000, maximum=2099),
+        constraint=ParameterConstraint(minimum=1000, maximum=9999),
     )
 
 

@@ -133,7 +133,6 @@ def test_an_unconsumed_binding_below_the_floor_is_not_counted_and_one_at_the_flo
         "authority": "supported_filing_years",
         "floor": 2022,
         "horizon": 2022,
-        "hard_ceiling": None,
     }
 
 

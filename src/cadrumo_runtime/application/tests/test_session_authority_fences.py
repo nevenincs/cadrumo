@@ -17,7 +17,7 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import SecretBytes
 
-from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGenerationCustody
+from cadrumo.adapters.persistence.storage.custody.sign_in_generation import SignInGeneration, SignInGenerationCustody
 from cadrumo.adapters.persistence.storage.custody.tests.enrollment_support import (
     PROFILE_INPUT,
     changed,
@@ -53,8 +53,16 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest
 from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
+from ..automation_lifecycle_service import AutomationLifecycleService
 from ..session_authority_contracts import SessionAuthorityFacts
-from ._session_authority_support import AdmissionOwner, Subject, lifecycle, lock_native_login, session_published
+from ._session_authority_support import (
+    AdmissionOwner,
+    Subject,
+    lifecycle,
+    lock_native_login,
+    retry_incomplete_cleanup_then_close,
+    session_published,
+)
 
 pytestmark = [
     pytest.mark.integration,
@@ -379,23 +387,7 @@ async def test_api_preparation_exit_failure_preserves_primary_and_retryable_inst
     assert owner.retired.count(attempted) == 1
     cleanup = primary.__dict__.get("async_cleanup_error")
     assert isinstance(cleanup, AsyncResourceCleanupError)
-    with pytest.raises(AsyncResourceCleanupError) as incomplete:
-        await cleanup.retry_cleanup()
-    assert owner.retired.count(attempted) == 2
-    owner.failed_retirements.clear()
-    await incomplete.value.retry_cleanup()
-    assert owner.retired.count(attempted) == 3
-    status = subject.authority.status(
-        connection_id=subject.connection,
-        session_id=attempted,
-        published_authority=Availability.AVAILABLE,
-        provider=Availability.NOT_REQUIRED,
-    )
-    assert isinstance(status, ProfileAccessStatus)
-    assert not status.credential_authenticated and status.session_id is None
-    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
-    await subject.authority.close()
-    assert owner.retired.count(attempted) == 3
+    await retry_incomplete_cleanup_then_close(subject, owner, cleanup, attempted)
 
 
 def test_revocation_serializes_against_material_release_and_retires_the_winning_admission(subject: Subject) -> None:
@@ -689,10 +681,10 @@ def test_refused_profile_recovery_preserves_sign_in_generation(subject: Subject,
     assert subject.store.profile_lock_state().globally_locked
 
 
-@pytest.mark.parametrize("selected_grants", [False, True], ids=["human-only", "selected-automation"])
-def test_failed_recovery_publication_keeps_revocation_and_allows_retry(
-    subject: Subject, monkeypatch: pytest.MonkeyPatch, selected_grants: bool
-) -> None:
+def _locked_for_recovery(
+    subject: Subject, *, selected_grants: bool
+) -> tuple[AutomationLifecycleService, SignInGenerationCustody, SignInGeneration, AutomationResumeRequest]:
+    """Lock the profile with one admitted API grant and return the service, generation custody and resume request."""
     api = subject.admit()
     human = subject.authority.admit_human(connection_id=subject.connection)
     assert isinstance(api, AccessSession) and api.grant_id is not None
@@ -709,6 +701,14 @@ def test_failed_recovery_publication_keeps_revocation_and_allows_retry(
         lock_generation=subject.owner.current.profile.lock_generation,
         grants=frozenset({api.grant_id}) if selected_grants else frozenset(),
     )
+    return service, generation, before, selection
+
+
+@pytest.mark.parametrize("selected_grants", [False, True], ids=["human-only", "selected-automation"])
+def test_failed_recovery_publication_keeps_revocation_and_allows_retry(
+    subject: Subject, monkeypatch: pytest.MonkeyPatch, selected_grants: bool
+) -> None:
+    service, generation, before, selection = _locked_for_recovery(subject, selected_grants=selected_grants)
 
     def refuse_publication(*_args: object, **_kwargs: object) -> None:
         # Inject at the existing custody publication boundary, after the real
@@ -739,22 +739,7 @@ def test_failed_recovery_publication_keeps_revocation_and_allows_retry(
 def test_recovery_retries_after_grants_publish_but_unlock_fails(
     subject: Subject, monkeypatch: pytest.MonkeyPatch, retry_observation: str
 ) -> None:
-    api = subject.admit()
-    human = subject.authority.admit_human(connection_id=subject.connection)
-    assert isinstance(api, AccessSession) and api.grant_id is not None
-    assert isinstance(human, AccessSession)
-    service = lifecycle(subject, human)
-    service.deny(
-        AutomationDenial(request_id=uuid4(), binding=subject.store.binding, kind=AutomationDenialKind.PROFILE_LOCK)
-    )
-    generation = SignInGenerationCustody(root=subject.store.root, binding=subject.store.binding)
-    before = generation.establish().current
-    selection = AutomationResumeRequest(
-        request_id=uuid4(),
-        profile_id=subject.store.binding.profile_id,
-        lock_generation=subject.owner.current.profile.lock_generation,
-        grants=frozenset({api.grant_id}),
-    )
+    service, generation, before, selection = _locked_for_recovery(subject, selected_grants=True)
 
     def refuse_unlock(*_args: object, **_kwargs: object) -> None:
         raise AutomationCustodyError(AutomationCustodyCode.CONFLICT)

@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "18dbf696540fc6e0da25bfc5cadc258be63850501ebca6168c7fe62ae7cd2a87",
+      "calculation_revision_id": "e07aa6016b516f67eb36f69dadfa0aca1dd879770ddef858fcd252d14c7160a9",
       "language": "ca",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1479,6 +1479,28 @@
           "fact": null,
           "element_names": [],
           "message": null
+        },
+        {
+          "reason": "advisory_binding_value",
+          "attention": "info",
+          "casilla_id": "06",
+          "box": "06",
+          "withholds_filing": false,
+          "fact": {
+            "sentence": "advisory_value_proven_zero",
+            "values": [
+              ["amount", "0"],
+              [
+                "binding",
+                "modelo-130-actividad-economica-retenciones-cumulative"
+              ],
+              ["box", "06"]
+            ],
+            "element_refs": [],
+            "row_refs": []
+          },
+          "element_names": [],
+          "message": null
         }
       ],
       "calculation_notes_held": true,
@@ -1582,9 +1604,9 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "0919302f638829c8c7bf4483f355b3af7845fdee3860cb70f9508fc4a1bb7c8f",
+      "contract_set_digest": "5c345e68cdcf0c4c6cd766e3e8657d72bae0d2eb4b38cc5dad92b3e3cdbfbeb1",
       "operation_definition_id": "modelo.edit.apply",
-      "definition_contract_digest": "57d9ab030b9861527117df250660488031eb2fc941547097d945db79feb547eb",
+      "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
         "schema_id": "modelo.edit.apply.request",
         "schema_version": 2,
@@ -1608,7 +1630,7 @@
       "financial_operand_schema": {
         "schema_id": "modelo.edit.submission",
         "schema_version": 1,
-        "schema_fingerprint": "c2de1e743c21145b11a0d8d342617f90404b240711fcfadd721600d8163ac565"
+        "schema_fingerprint": "81d858dbdb0c3ec407c65875b61e6e19bfac3277ea0e99a220e9aa2e783e7ee5"
       }
     },
     "bucket_id": "13000000-0000-4000-8000-000000000730",
@@ -1617,9 +1639,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "72b580c789546aa84cbf153397381591c33ec03983414162ca699b4daa808f4e",
-    "calculation_head_digest": "bb695df6ba832590df37aec8e26713cdda290d2519b8d9b97f956ddcbc99a0d1",
-    "current_calculation_revision_id": "18dbf696540fc6e0da25bfc5cadc258be63850501ebca6168c7fe62ae7cd2a87",
+    "work_unit_record_digest": "6064f123cef9d054c744d6a5deb4c64c16ac601669707c7f133d4b1db408a5f9",
+    "calculation_head_digest": "b7d9f96a7e6f487c2d70fc0461710f3fe29ce17b21a7aee72139a2fb54455312",
+    "current_calculation_revision_id": "e07aa6016b516f67eb36f69dadfa0aca1dd879770ddef858fcd252d14c7160a9",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -1922,9 +1944,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T01:05:36.249351Z",
-    "expires_at": "2026-11-02T01:10:36.249351Z",
-    "baseline_id": "29c844f94b7a25674a1d5b24af250998ac11ed1c9952eb40472a2adfaf607161"
+    "issued_at": "2026-11-02T08:56:30.297939Z",
+    "expires_at": "2026-11-02T09:01:30.297939Z",
+    "baseline_id": "41e73350908e60191325647b37d30fe7e0dc8d4520de83bf1d48c5fd8288dc2d"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -1996,6 +2018,20 @@
       "surface": null,
       "from_calculation": true,
       "recalculates": false
+    },
+    {
+      "level": "info",
+      "box": "06",
+      "where": "Retencions i ingressos a compte",
+      "message": "Casella 06: el zero es manté, perquè en el període no hi ha cap xifra el període de la qual pugui ser dubtós.",
+      "action": "Què cal fer: Compara la xifra amb els teus registres i amb el certificat del pagador. Mentre estigui en espera, Cadrumo no pot comprovar, exportar ni registrar aquesta declaració; una versió posterior que confirmi el període l'alliberarà.",
+      "detail": "Una xifra d'una casella es basa en una lectura que Cadrumo encara no pot confirmar: pots veure-la i previsualitzar-la, però no comprovar, exportar ni registrar la declaració amb ella.",
+      "technical": "Detalls tècnics: advisory_binding_value · 06",
+      "address": { "kind": "casilla", "casilla_id": "06" },
+      "in_records": false,
+      "surface": null,
+      "from_calculation": true,
+      "recalculates": false
     }
   ],
   "verdict": {
@@ -2003,7 +2039,7 @@
     "words": "La declaració encara no s'ha comprovat.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "18dbf696540fc6e0da25bfc5cadc258be63850501ebca6168c7fe62ae7cd2a87",
+  "calculation_revision_id": "e07aa6016b516f67eb36f69dadfa0aca1dd879770ddef858fcd252d14c7160a9",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

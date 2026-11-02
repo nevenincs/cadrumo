@@ -2,15 +2,15 @@
   "result_version": 1,
   "profile_id": "13000000-0000-4000-8000-000000000730",
   "record": {
-    "filing_record_id": "bd4529898a12a44fc8c67b7ba8a6d65fa12453b24a0ecf3f89c593ea6c86bd67",
+    "filing_record_id": "045fa643567d0176df21c462fde51bcc460374bc17a87bb99c83be2464df4a43",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+    "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
     "bucket_id": "13000000-0000-4000-8000-000000000730",
     "modelo": "130",
     "filing_year": 2026,
     "period": { "filing_year": 2026, "code": "1T" },
     "member_nif": null,
-    "filed_at": "2026-11-02T01:35:15.579783Z",
+    "filed_at": "2026-11-02T09:26:04.796817Z",
     "filed_by": "operator:desktop-modelo",
     "notes": null,
     "origin": "local",
@@ -33,9 +33,7 @@
     },
     "amends_filing_record_id": null,
     "settlement": null,
-    "source_transaction_ids": [
-      "2772b693b839b0267080536403e73a7c10b5a3df8a1367acf3849e04e8bb2c5d"
-    ]
+    "source_transaction_ids": []
   },
   "unit": {
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
@@ -46,20 +44,20 @@
     "revision_id": "2019-y-siguientes",
     "name": "130-2026-1T",
     "created_at": "2026-04-02T09:00:00Z",
-    "updated_at": "2026-11-02T01:35:15.579783Z",
+    "updated_at": "2026-11-02T09:26:04.796817Z",
     "state": "borrador",
     "discarded_at": null,
     "discarded_by": null,
     "discard_reason": null,
-    "current_calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
-    "filed_calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
-    "current_filing_record_id": "bd4529898a12a44fc8c67b7ba8a6d65fa12453b24a0ecf3f89c593ea6c86bd67",
+    "current_calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+    "filed_calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
+    "current_filing_record_id": "045fa643567d0176df21c462fde51bcc460374bc17a87bb99c83be2464df4a43",
     "causante_ccaa": null
   },
   "calculation": {
     "bucket_id": "13000000-0000-4000-8000-000000000730",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+    "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
     "registry_snapshot_ref": {
       "modelo": "130",
       "revision_id": "2019-y-siguientes",
@@ -71,32 +69,32 @@
     "period": { "filing_year": 2026, "code": "1T" },
     "state": "presentado",
     "casilla_values": [
-      { "key": "01", "value": { "decimal": "12000.00" } },
+      { "key": "01", "value": { "decimal": "0" } },
       { "key": "02", "value": { "decimal": "0" } },
-      { "key": "03", "value": { "decimal": "12000.00" } },
-      { "key": "04", "value": { "decimal": "2400.00" } },
+      { "key": "03", "value": { "decimal": "0.00" } },
+      { "key": "04", "value": { "decimal": "0.00" } },
       { "key": "05", "value": { "decimal": "0" } },
       { "key": "06", "value": { "decimal": "0" } },
-      { "key": "07", "value": { "decimal": "2400.00" } },
+      { "key": "07", "value": { "decimal": "0.00" } },
       { "key": "08", "value": { "decimal": "0" } },
       { "key": "09", "value": { "decimal": "0.00" } },
       { "key": "10", "value": { "decimal": "0" } },
       { "key": "11", "value": { "decimal": "0.00" } },
-      { "key": "12", "value": { "decimal": "2400.00" } },
+      { "key": "12", "value": { "decimal": "0.00" } },
       { "key": "13", "value": { "decimal": "0.00" } },
-      { "key": "14", "value": { "decimal": "2400.00" } },
+      { "key": "14", "value": { "decimal": "0.00" } },
       { "key": "15", "value": { "decimal": "0.00" } },
       { "key": "16", "value": { "decimal": "0" } },
-      { "key": "17", "value": { "decimal": "2400.00" } },
+      { "key": "17", "value": { "decimal": "0.00" } },
       { "key": "18", "value": { "decimal": "0" } },
-      { "key": "19", "value": { "decimal": "2400.00" } },
+      { "key": "19", "value": { "decimal": "0.00" } },
       { "key": "saldo-negativo-fin-periodo", "value": { "decimal": "0.00" } }
     ],
     "observations": [
       {
         "casilla_id": "01",
         "value_kind": "decimal",
-        "value": { "decimal": "12000.00" },
+        "value": { "decimal": "0" },
         "formula_id": null,
         "op": null,
         "operand_refs": [],
@@ -136,12 +134,12 @@
       {
         "casilla_id": "03",
         "value_kind": "decimal",
-        "value": { "decimal": "12000.00" },
+        "value": { "decimal": "0.00" },
         "formula_id": "modelo-130-rendimiento-neto",
         "op": "subtract",
         "operand_refs": ["01", "02"],
         "operand_casilla_refs": ["01", "02"],
-        "operand_values": [{ "decimal": "12000.00" }, { "decimal": "0" }],
+        "operand_values": [{ "decimal": "0" }, { "decimal": "0" }],
         "legal_refs": [
           "rd-439-2007:art-110",
           "orden-eha-672-2007:art-1",
@@ -154,7 +152,7 @@
       {
         "casilla_id": "04",
         "value_kind": "decimal",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "formula_id": "modelo-130-pago-fraccionado-directa",
         "op": "max",
         "operand_refs": [
@@ -162,7 +160,7 @@
           "irpf.direct_estimation_fractional_payment_rate"
         ],
         "operand_casilla_refs": ["03"],
-        "operand_values": [{ "decimal": "12000.00" }, { "decimal": "20" }],
+        "operand_values": [{ "decimal": "0.00" }, { "decimal": "20" }],
         "legal_refs": [
           "rd-439-2007:art-110",
           "orden-eha-672-2007:art-1",
@@ -211,13 +209,13 @@
       {
         "casilla_id": "07",
         "value_kind": "decimal",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "formula_id": "modelo-130-resultado-apartado-i",
         "op": "subtract",
         "operand_refs": ["04", "05", "06"],
         "operand_casilla_refs": ["04", "05", "06"],
         "operand_values": [
-          { "decimal": "2400.00" },
+          { "decimal": "0.00" },
           { "decimal": "0" },
           { "decimal": "0" }
         ],
@@ -305,12 +303,12 @@
       {
         "casilla_id": "12",
         "value_kind": "decimal",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "formula_id": "modelo-130-suma-parciales",
         "op": "max",
         "operand_refs": ["07", "11"],
         "operand_casilla_refs": ["07", "11"],
-        "operand_values": [{ "decimal": "2400.00" }, { "decimal": "0.00" }],
+        "operand_values": [{ "decimal": "0.00" }, { "decimal": "0.00" }],
         "legal_refs": [
           "rd-439-2007:art-110",
           "orden-eha-672-2007:art-1",
@@ -351,12 +349,12 @@
       {
         "casilla_id": "14",
         "value_kind": "decimal",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "formula_id": "modelo-130-neto-tras-minoracion",
         "op": "subtract",
         "operand_refs": ["12", "13"],
         "operand_casilla_refs": ["12", "13"],
-        "operand_values": [{ "decimal": "2400.00" }, { "decimal": "0.00" }],
+        "operand_values": [{ "decimal": "0.00" }, { "decimal": "0.00" }],
         "legal_refs": [
           "rd-439-2007:art-110",
           "orden-eha-672-2007:art-1",
@@ -374,7 +372,7 @@
         "op": "min",
         "operand_refs": ["modelo-130-resultados-negativos-anteriores", "14"],
         "operand_casilla_refs": ["14"],
-        "operand_values": [{ "decimal": "0" }, { "decimal": "2400.00" }],
+        "operand_values": [{ "decimal": "0" }, { "decimal": "0.00" }],
         "legal_refs": [
           "rd-439-2007:art-110",
           "orden-eha-672-2007:art-1",
@@ -405,13 +403,13 @@
       {
         "casilla_id": "17",
         "value_kind": "decimal",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "formula_id": "modelo-130-diferencia",
         "op": "subtract",
         "operand_refs": ["14", "15", "16"],
         "operand_casilla_refs": ["14", "15", "16"],
         "operand_values": [
-          { "decimal": "2400.00" },
+          { "decimal": "0.00" },
           { "decimal": "0.00" },
           { "decimal": "0" }
         ],
@@ -445,12 +443,12 @@
       {
         "casilla_id": "19",
         "value_kind": "decimal",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "formula_id": "modelo-130-resultado-final",
         "op": "subtract",
         "operand_refs": ["17", "18"],
         "operand_casilla_refs": ["17", "18"],
-        "operand_values": [{ "decimal": "2400.00" }, { "decimal": "0" }],
+        "operand_values": [{ "decimal": "0.00" }, { "decimal": "0" }],
         "legal_refs": [
           "rd-439-2007:art-110",
           "orden-eha-672-2007:art-1",
@@ -468,7 +466,7 @@
         "op": "max",
         "operand_refs": ["17"],
         "operand_casilla_refs": ["17"],
-        "operand_values": [{ "decimal": "2400.00" }],
+        "operand_values": [{ "decimal": "0.00" }],
         "legal_refs": [
           "rd-439-2007:art-110",
           "orden-eha-672-2007:art-1",
@@ -483,7 +481,7 @@
       {
         "role": "key_figure",
         "casilla_id": "03",
-        "value": { "decimal": "12000.00" },
+        "value": { "decimal": "0.00" },
         "label_keys": [
           "modelo.schema.130.revision.2019-y-siguientes.casilla.03.label"
         ]
@@ -491,7 +489,7 @@
       {
         "role": "key_figure",
         "casilla_id": "04",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "label_keys": [
           "modelo.schema.130.revision.2019-y-siguientes.casilla.04.label"
         ]
@@ -499,7 +497,7 @@
       {
         "role": "key_figure",
         "casilla_id": "07",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "label_keys": [
           "modelo.schema.130.revision.2019-y-siguientes.casilla.07.label"
         ]
@@ -523,7 +521,7 @@
       {
         "role": "key_figure",
         "casilla_id": "12",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "label_keys": [
           "modelo.schema.130.revision.2019-y-siguientes.casilla.12.label"
         ]
@@ -539,7 +537,7 @@
       {
         "role": "key_figure",
         "casilla_id": "14",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "label_keys": [
           "modelo.schema.130.revision.2019-y-siguientes.casilla.14.label"
         ]
@@ -547,7 +545,7 @@
       {
         "role": "key_figure",
         "casilla_id": "17",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "label_keys": [
           "modelo.schema.130.revision.2019-y-siguientes.casilla.17.label"
         ]
@@ -555,7 +553,7 @@
       {
         "role": "key_figure",
         "casilla_id": "19",
-        "value": { "decimal": "2400.00" },
+        "value": { "decimal": "0.00" },
         "label_keys": [
           "modelo.schema.130.revision.2019-y-siguientes.casilla.19.label"
         ]
@@ -563,17 +561,6 @@
     ],
     "detail_rows": [],
     "source_provenance": [
-      {
-        "resolver_id": "ledger_renta_income_aggregation",
-        "resolved_binding_source": "ledger_renta_income_aggregation",
-        "contributor_source_kind": "ledger_renta_income_aggregation",
-        "contributor_binding_source": "ledger_renta_income_aggregation",
-        "lineage_role": "primary",
-        "source_ref": "transaction:2772b693b839b0267080536403e73a7c10b5a3df8a1367acf3849e04e8bb2c5d",
-        "parent_source_ref": null,
-        "fingerprint": null,
-        "dependency_treatment": ""
-      },
       {
         "resolver_id": "previous_filing",
         "resolved_binding_source": "previous_filing",
@@ -597,7 +584,7 @@
       },
       {
         "key": "modelo-130-actividad-economica-ingresos-cumulative",
-        "value": "12000"
+        "value": "0"
       },
       {
         "key": "modelo-130-actividad-economica-retenciones-cumulative",
@@ -608,16 +595,16 @@
     ],
     "relation_overrides": [],
     "input_values_by_casilla_id": [
-      { "key": "01", "value": "12000" },
+      { "key": "01", "value": "0" },
       { "key": "02", "value": "0" },
       { "key": "05", "value": "0" },
       { "key": "06", "value": "0" }
     ],
-    "created_at": "2026-11-02T01:35:13.804686Z",
-    "updated_at": "2026-11-02T01:35:15.579783Z",
-    "verified_at": "2026-11-02T01:35:14.529024Z",
+    "created_at": "2026-11-02T09:26:02.051536Z",
+    "updated_at": "2026-11-02T09:26:04.796817Z",
+    "verified_at": "2026-11-02T09:26:02.504263Z",
     "verified_by": "operator:desktop-modelo",
-    "filed_at": "2026-11-02T01:35:15.579783Z",
+    "filed_at": "2026-11-02T09:26:04.796817Z",
     "filed_by": "operator:desktop-modelo",
     "superseded_at": null
   },
@@ -1034,12 +1021,12 @@
   "correction": {
     "language": "en",
     "filed": {
-      "filing_record_id": "bd4529898a12a44fc8c67b7ba8a6d65fa12453b24a0ecf3f89c593ea6c86bd67",
+      "filing_record_id": "045fa643567d0176df21c462fde51bcc460374bc17a87bb99c83be2464df4a43",
       "modelo_title": "Modelo 130 · IRPF instalment payment, direct assessment",
       "period_words": "1st quarter 2026",
       "declaration_kind": "original",
       "declaration_kind_words": "Original",
-      "filed_at": "2026-11-02T01:35:15.579783Z",
+      "filed_at": "2026-11-02T09:26:04.796817Z",
       "filed_on": "Nov 2, 2026"
     },
     "kinds": [
@@ -1066,8 +1053,8 @@
         "label": "Income",
         "help": "Total cumulative business income for the tax year.",
         "data_type": "money",
-        "filed_value": "12000",
-        "filed_value_text": "12,000.00 €",
+        "filed_value": "0",
+        "filed_value_text": "0.00 €",
         "edit_address": { "kind": "correction", "casilla_id": "01" },
         "grammar": {
           "data_type": "money",
@@ -1136,8 +1123,8 @@
         "label": "Net yield",
         "help": "Net yield from direct-estimation economic activities, calculated as income minus expenses.",
         "data_type": "money",
-        "filed_value": "12000",
-        "filed_value_text": "12,000.00 €",
+        "filed_value": "0",
+        "filed_value_text": "0.00 €",
         "edit_address": { "kind": "correction", "casilla_id": "03" },
         "grammar": {
           "data_type": "money",
@@ -1171,8 +1158,8 @@
         "label": "Fractional payment amount",
         "help": "Fractional payment amount for direct-estimation activities before prior payments and withholdings.",
         "data_type": "money",
-        "filed_value": "2400",
-        "filed_value_text": "2,400.00 €",
+        "filed_value": "0",
+        "filed_value_text": "0.00 €",
         "edit_address": { "kind": "correction", "casilla_id": "04" },
         "grammar": {
           "data_type": "money",
@@ -1270,8 +1257,8 @@
         "label": "Partial result of Section I",
         "help": "Partial Section I result after subtracting prior payments and withholdings from the direct-estimation fractional payment.",
         "data_type": "money",
-        "filed_value": "2400",
-        "filed_value_text": "2,400.00 €",
+        "filed_value": "0",
+        "filed_value_text": "0.00 €",
         "edit_address": { "kind": "correction", "casilla_id": "07" },
         "grammar": {
           "data_type": "money",
@@ -1435,8 +1422,8 @@
         "label": "Sum of partial results",
         "help": "Sum of the partial results from Sections I and II.",
         "data_type": "money",
-        "filed_value": "2400",
-        "filed_value_text": "2,400.00 €",
+        "filed_value": "0",
+        "filed_value_text": "0.00 €",
         "edit_address": { "kind": "correction", "casilla_id": "12" },
         "grammar": {
           "data_type": "money",
@@ -1501,8 +1488,8 @@
         "label": "Net amount after reduction",
         "help": "Amount remaining after applying the net-yield reduction.",
         "data_type": "money",
-        "filed_value": "2400",
-        "filed_value_text": "2,400.00 €",
+        "filed_value": "0",
+        "filed_value_text": "0.00 €",
         "edit_address": { "kind": "correction", "casilla_id": "14" },
         "grammar": {
           "data_type": "money",
@@ -1600,8 +1587,8 @@
         "label": "Difference",
         "help": "Difference after applying prior-quarter negative results and any main-residence deduction.",
         "data_type": "money",
-        "filed_value": "2400",
-        "filed_value_text": "2,400.00 €",
+        "filed_value": "0",
+        "filed_value_text": "0.00 €",
         "edit_address": { "kind": "correction", "casilla_id": "17" },
         "grammar": {
           "data_type": "money",
@@ -1666,8 +1653,8 @@
         "label": "Final result",
         "help": "Final Modelo 130 amount payable after all deductions and prior self-assessments.",
         "data_type": "money",
-        "filed_value": "2400",
-        "filed_value_text": "2,400.00 €",
+        "filed_value": "0",
+        "filed_value_text": "0.00 €",
         "edit_address": { "kind": "correction", "casilla_id": "19" },
         "grammar": {
           "data_type": "money",

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#language-sync'
 date: '2026-10-15'
-modified: '2026-10-17'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:b25fe37ba7029828fcc83f661f56c8ee38d0aca1d932c658c4884a266456d1b6'
+body_hash: 'sha256:4939983f3c881ced9c2e2ca89e90f0b6ec1c01e8d2d5be4dc988cda73f3d1925'
 related:
   - "[[2026-10-15-language-sync-plan]]"
 ---
@@ -180,6 +180,8 @@ related:
 - `S03` `verify:` `cmake --build build/desktop-windows-x64 --config Release --target desktop-host-build (after final frontend correction)` -> `pass`
 - `S01` `verify:` `just test-sequence-goldens-gate --changed-files (130-path manifest) --jobs 3 (fresh descriptor;33divergences)` -> `fail`
 - `S01` `verify:` `dev.docs.sequences check --sequence profile-setup-output-language (diagnostic reproduction)` -> `fail`
+- `S01` `verify:` `locator-check: output_language_hint.py:1-7; profile_language.py:24,43` -> `pass`
+- `S01` `by:` `plan-closure`
 
 ## Notes
 

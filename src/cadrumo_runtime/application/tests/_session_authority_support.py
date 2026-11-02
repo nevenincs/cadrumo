@@ -8,6 +8,7 @@ from datetime import timedelta
 from typing import override
 from uuid import UUID, uuid4
 
+import pytest
 from pydantic import SecretBytes
 
 from cadrumo.adapters.persistence.storage.custody.acceleration_receipt import ReceiptDeletion, revoke_profile_sign_in
@@ -35,8 +36,9 @@ from cadrumo.application.user_profile.operations import (
     build_user_profile_operation_registrations,
 )
 from cadrumo.application.user_profile.session_retirement import SessionRetirement
+from cadrumo.core.async_cleanup import AsyncResourceCleanupError
 from cadrumo.core.time.utc import UtcInstant
-from cadrumo_client.contracts.access_refusals import AccessDenied, ProfileAccessStatus
+from cadrumo_client.contracts.access_refusals import AccessDenialCode, AccessDenied, ProfileAccessStatus
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     Availability,
@@ -332,6 +334,29 @@ def attended_tree(subject: Subject) -> tuple[AccessSession, AccessSession, Acces
     )
     assert isinstance(child, AccessSession) and child.kind is SessionKind.ATTENDED
     return api, human, child, recipient
+
+
+async def retry_incomplete_cleanup_then_close(
+    subject: Subject, owner: AdmissionOwner, cleanup: AsyncResourceCleanupError, attempted: UUID
+) -> None:
+    """Retry a failed candidate retirement twice, then show the status is unauthenticated and close retires nothing more."""
+    with pytest.raises(AsyncResourceCleanupError) as incomplete:
+        await cleanup.retry_cleanup()
+    assert owner.retired.count(attempted) == 2
+    owner.failed_retirements.clear()
+    await incomplete.value.retry_cleanup()
+    assert owner.retired.count(attempted) == 3
+    status = subject.authority.status(
+        connection_id=subject.connection,
+        session_id=attempted,
+        published_authority=Availability.AVAILABLE,
+        provider=Availability.NOT_REQUIRED,
+    )
+    assert isinstance(status, ProfileAccessStatus)
+    assert not status.credential_authenticated and status.session_id is None
+    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
+    await subject.authority.close()
+    assert owner.retired.count(attempted) == 3
 
 
 class RecoveryClock:

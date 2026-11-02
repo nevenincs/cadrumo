@@ -1,3 +1,4 @@
+import { cn } from "@/components/ui/cn";
 import { Icon, type IconName } from "@/components/ui/icon";
 import {
   Tooltip,
@@ -61,7 +62,8 @@ export function AttentionMark({ entry }: { entry: ModeloFormAttentionCount }) {
   );
 }
 
-/** A glyph that says one thing, with its words for the reader. */
+/** A glyph that says one thing, with its words for the reader. The label
+ * sits on the wrapper because the icon itself stays hidden from readers. */
 export function GlyphMark({
   icon,
   words,
@@ -72,12 +74,12 @@ export function GlyphMark({
   className?: string;
 }) {
   return (
-    <Icon
-      name={icon}
-      size="xs"
+    <span
       role="img"
       aria-label={words}
-      className={className}
-    />
+      className={cn("inline-flex shrink-0", className)}
+    >
+      <Icon name={icon} size="xs" />
+    </span>
   );
 }

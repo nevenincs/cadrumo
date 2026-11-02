@@ -43,6 +43,7 @@ from ..filing_selection_operation import (
 from ..metadata_projection import ModeloWorkMetadataSnapshot
 from ..verification_repository_ports import VerificationRepositoryBundle
 from .filing_source_support import filing_source
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -119,13 +120,11 @@ def _access_context(
     profile_id: UUID = _PROFILE,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=AccessAction.SUBMIT,
         frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
         authority_operation=operation,
     )
 

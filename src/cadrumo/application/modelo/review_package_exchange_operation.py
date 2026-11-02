@@ -447,17 +447,6 @@ def _exchange(
     raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
 
 
-def _failed_exchange_writer_effect(tracker: LedgerCommitAttemptTracker) -> OperationEffect:
-    """Preserve uncertainty ahead of confirmed partial writes when exchange fails."""
-    return (
-        OperationEffect.UNKNOWN
-        if tracker.has_uncertain_write
-        else OperationEffect.PARTIAL
-        if tracker.confirmed_write
-        else OperationEffect.NONE
-    )
-
-
 class ReviewPackageExchangeExecutor:
     """Settle each concrete key/artifact/audit/replay writer before result release."""
 
@@ -501,7 +490,7 @@ class ReviewPackageExchangeExecutor:
                     work, tracker=tracker, context=context, task_name=request.definition_id
                 )
             except BaseException:
-                effect = _failed_exchange_writer_effect(tracker)
+                effect = tracker.effect(incomplete=True)
                 await context.events.effect(effect)
                 raise
             if tracker.has_uncertain_write:

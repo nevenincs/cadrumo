@@ -9,8 +9,7 @@ Two populations are asserted:
    target suppresses FINDINGS and never suppresses a tool that failed to RUN.
 2. No justfile recipe re-implements a swallow by hand. `; exit 0`, a trailing
    bare `exit 0`, and `|| true` all map every non-zero status onto success,
-   which is the defect the structural `advisory=True` mechanism exists to
-   replace. A `$LASTEXITCODE` test on a standalone recipe line is also
+   which is the defect `advisory_result` exists to replace. A `$LASTEXITCODE` test on a standalone recipe line is also
    rejected: `just` runs each such line as its own shell process, so the
    variable is unset and the guard is dead code that reads as load-bearing.
 """
@@ -24,7 +23,6 @@ import pytest
 
 from dev.exit_codes import (
     ADVISORY_BROKEN,
-    ALLOW_EMPTY_ENV,
     DRIFT,
     FAILED,
     FINDINGS_CODES,
@@ -179,9 +177,8 @@ def test_the_codes_are_distinct() -> None:
     assert len(codes) == len(set(codes))
 
 
-def test_the_environment_switches_are_named_once() -> None:
-    assert FIX_STRICT_ENV == "VAULTSPEC_FIX_STRICT"
-    assert ALLOW_EMPTY_ENV == "VAULTSPEC_ALLOW_EMPTY_SELECTION"
+def test_the_fix_strict_switch_carries_the_product_prefix() -> None:
+    assert FIX_STRICT_ENV == "CADRUMO_FIX_STRICT"
 
 
 # --- 2. no hand-rolled swallows in any justfile -------------------------------
@@ -199,8 +196,8 @@ def test_no_recipe_swallows_a_failure_by_hand() -> None:
                     rel = path.relative_to(ROOT).as_posix()
                     offences.append(f"{rel}:{number}: {why}\n    {line.strip()}")
     assert not offences, (
-        "Express advisory intent structurally with `advisory=True` in the "
-        "toolchain table, which suppresses findings only. See "
+        "Express advisory intent through `advisory_result`, which suppresses "
+        "findings only and never a tool that could not run. See "
         "dev/EXIT-CODES.md.\n" + "\n".join(offences)
     )
 
@@ -219,7 +216,7 @@ def test_no_dead_lastexitcode_guard() -> None:
     assert not offences, (
         "`just` runs each standalone recipe line in its own shell process, so "
         "$LASTEXITCODE is unset and this guard never fires. Move the logic "
-        "into dev/ and let the runner own the exit code. See "
+        "into dev/ and let that module own the exit code. See "
         "dev/EXIT-CODES.md.\n" + "\n".join(offences)
     )
 

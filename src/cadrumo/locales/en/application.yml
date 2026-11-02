@@ -783,6 +783,7 @@ application:
         counterparty_country_invalid: This is not a two-letter country code the ledger
           recognises.
         counterparty_name_blank: The counterparty's name cannot be blank.
+        counterparty_name_too_long: A counterparty's name holds up to {limit} characters.
         counterparty_tax_id_invalid: This tax ID is not valid for the counterparty's
           country.
         counterparty_tax_id_required: This invoice needs the counterparty's tax ID.
@@ -831,6 +832,11 @@ application:
           linked to transactions: %{linked_transaction_ids}. There is no unlink command:
           remove those transactions with `aeat app ledger remove`, which releases
           the link, then remove the invoice.'
+        sealed_invoice_refused: Invoice %{invoice_id} was read by the Modelo %{modelo}
+          of %{filing_year} %{period} (%{revision_state}, revision %{calculation_revision_id}),
+          so this change is refused to keep those figures true. If it has not been
+          filed, discard that work with `aeat app modelo work discard` and calculate
+          again. If it has, issue a corrective invoice and file an amendment.
     linking:
       errors:
         linked_invoice_not_found: Invoice %{invoice_id} was not found after applying
@@ -1243,6 +1249,17 @@ application:
           missing proof.
         what_to_do: Check the VAT records of the whole year, add the missing proof,
           then calculate again.
+      iva_operation_date_after_movement:
+        what: Some ledger rows have an operation date after their bank date. If that
+          money was an advance, its IVA fell due when it was collected.
+        what_to_do: For an advance, set the operation date to the collection date
+          and record the balance as its own row, then calculate again.
+      iva_row_placed_on_movement_date:
+        what: Some ledger rows have no operation date, so their bank date chose the
+          IVA period. IVA falls due when the operation takes place, not when the money
+          moves.
+        what_to_do: Add the operation date to rows near the end of a period, then
+          calculate again.
       iva_selected_scope_evidence_failure:
         what: The records behind the VAT in this declaration are missing proof or
           do not add up.
@@ -2206,6 +2223,20 @@ application:
         or receipt attached. Attach it to the entry in your records.
       transaction_evidence_missing_output: An issued invoice on which you charge VAT
         has no supporting document. Attach it to the entry in your records.
+      undetermined_mixed_use_contributor: The stored %{modelo} calculation for %{filing_year},
+        period %{period}, counted %{rows} mixed-use expense(s) with no spending category
+        at their stated share. Calculating now would hold them back until you assign
+        the category. The stored values have not changed.
+      withholding_count_exceeds_summary_perceptors: Modelo %{source_modelo} %{period}
+        %{filing_year} counts %{declared_perceptors} payee(s) in box %{casilla_id},
+        but modelo %{modelo} names only %{summary_perceptors} different payee(s) for
+        the whole year. Everyone counted in that box must appear on the annual summary.
+        Add the missing payees to this modelo's detail, or correct the count on modelo
+        %{source_modelo}.
+      withholding_count_not_cross_checked: 'Modelo %{modelo} %{filing_year} could
+        not be compared with modelo %{source_modelo} for %{unchecked_periods}, because
+        no declaration is recorded for those periods. Compared periods: %{checked_periods}.
+        This does not mean nobody was paid in them.'
       withholding_detail_absent_against_ledger_evidence: 'Modelo %{modelo} %{filing_year}
         declares no payments to anyone, but your records show payments subject to
         withholding made that year: %{contradicting_invoice_count} received invoice(s)
@@ -2772,6 +2803,9 @@ application:
       edit_missing_modelo_requirements: 'The identity details are complete, but this
         profile declares IVA and still lacks required Modelo 303 fields. Add these
         flags to the same command and run it again: %{missing_flags}.'
+      imputation_year_required: 'The imputation criterion and the Código de Comercio
+        answer are each stated for one tax year. Add this flag and run the command
+        again: %{missing_flags}.'
       persist_patch_unknown_question_id: Wizard patch references an unknown question
         id.
       profile_flag_required: Wizard requires --profile NAME (no implicit 'default'

@@ -39,14 +39,13 @@ from cadrumo.application.modelo.work_verification_contracts import (
     ModeloWorkVerifyPublicResultV2,
     ModeloWorkVerifyRequest,
 )
-from cadrumo.application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from cadrumo.application.operations.access_resolution import resolve_operation_access
 from cadrumo.application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
     OperationResultProjectionSuccessV1,
 )
 from cadrumo.application.operations.models import OperationRequest
 from cadrumo.application.operations.public_scalar import PublicDecimal
-from cadrumo.application.operations.registry import OperationFrontendProjection
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.application.user_profile.operation_access_policy import operation_scope_refusal
 from cadrumo.core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
@@ -59,11 +58,12 @@ from cadrumo.entrypoints.tests.modelo_operation_test_support import (
     seeded_modelo_verification_report,
 )
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 
 from ..adapter_composition_work_ports import build_calculation_action_ports, build_verification_repository_bundle
 from .registered_executor_case_support import OperationRuntimeCloseWitness, conformance_operation_runtime
 from .registered_executor_seeding_support import _seeded_modelo_filing_record
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -90,15 +90,7 @@ def test_verification_projects_persisted_report_and_authoritative_noop(
         request = OperationRequest(definition_id="modelo.work.verify", subject_ref=unit.work_unit_id, payload=payload)
         contract = registry.lookup_public_contract(request.definition_id)
         assert contract.result_schema is not None
-        context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
-        )
+        context = operation_access_context(contract, profile_id=profile_id, authority_operation=operation)
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.request.periods == frozenset({unit.period})
         assert AccessAction.COMMIT in access.policy.actions
@@ -192,15 +184,7 @@ def test_revision_snapshot_reads_exact_historical_revision_under_sealed_period(
             payload=payload,
         )
         contract = registry.lookup_public_contract(request.definition_id)
-        submit_context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
-        )
+        submit_context = operation_access_context(contract, profile_id=profile_id, authority_operation=operation)
         submitted_access = resolve_operation_access(registry=registry, request=request, context=submit_context)
         assert submitted_access.request.periods == frozenset({unit.period})
         assert AccessAction.COMMIT not in submitted_access.policy.actions
@@ -298,15 +282,7 @@ def test_amendment_access_uses_exact_filing_source_profile_subject_and_period(
             payload=payload,
         )
         contract = registry.lookup_public_contract(request.definition_id)
-        context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
-        )
+        context = operation_access_context(contract, profile_id=profile_id, authority_operation=operation)
 
         access = resolve_operation_access(registry=registry, request=request, context=context)
 
@@ -358,15 +334,7 @@ def test_unfiltered_revision_inventory_requires_all_periods_and_returns_complete
             payload=payload,
         )
         contract = registry.lookup_public_contract(request.definition_id)
-        context = OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=AccessAction.SUBMIT,
-            frontend=OperationFrontendProjection.CLI,
-            contract=contract,
-            published_authority=Availability.AVAILABLE,
-            authority_operation=operation,
-        )
+        context = operation_access_context(contract, profile_id=profile_id, authority_operation=operation)
         access = resolve_operation_access(registry=registry, request=request, context=context)
         assert access.request.period_independent is True
         assert access.request.periods == frozenset()

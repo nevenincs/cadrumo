@@ -1209,6 +1209,8 @@ desktop:
     close: Cerrar declaraciones
     loading: Leyendo tus declaraciones…
     maximize: Maximizar declaraciones
+    notes:
+      label: Lo que ha anotado el último cálculo
     position: Declaración {row} de {count}
     read_failed: Cadrumo no ha podido leer tus declaraciones.
     retry: Volver a intentarlo
@@ -2303,6 +2305,10 @@ desktop:
       remove_attached: Primero sepáralo de su movimiento
       remove_note: El registro y su copia guardada salen del libro.
       remove_title: ¿Eliminar este registro?
+      retention_differs: El documento indica {read} retenidos; la factura registra
+        {recorded}.
+      retention_unrecorded: El documento indica {read} retenidos; la factura no registra
+        retención.
       save: Guardar
       say_direction: Indica si los recibiste o los emitiste
       source:
@@ -2535,6 +2541,7 @@ desktop:
       input_classification: Uso de la adquisición
       investment_asset_id: Bien de inversión
       m210_income_classification: Renta del modelo 210
+      operation_date: Fecha de la operación
       own_account_id: Cuenta
       prorrata_reference: Referencia de prorrata
       prorrata_sector_id: Sector de prorrata
@@ -3550,6 +3557,7 @@ desktop:
     prorrata:
       accepted: 'Se acepta: {provenances}.'
       action:
+        declare_gross: Declarar una cuota bruta
         declare_sector: Declarar un sector
         elect_especial: Optar por la especial
         elect_general: Optar por la general
@@ -3574,6 +3582,7 @@ desktop:
       evidence: Referencia del justificante
       evidence_hint: El documento de la opción o de su revocación
       form:
+        declare_gross: Declarar la cuota deducible bruta de una liquidación de {ejercicio}
         declare_sector: Declarar un sector diferenciado
         elect_especial: Optar por la prorrata especial en {ejercicio}
         elect_general: Optar por la prorrata general en {ejercicio}
@@ -3581,6 +3590,26 @@ desktop:
         seed: Tomar {ejercicio} del año anterior
         seed_sector: Tomar la prorrata provisional de un sector en {ejercicio}
         settle_sector: Liquidar la prorrata definitiva de un sector en {ejercicio}
+      gross:
+        column:
+          evidence: Documento
+          gross_cuota: Cuota bruta
+          period: Periodo
+        empty: No hay ninguna cuota bruta declarada para ningún periodo de liquidación.
+        evidence: Documento justificativo
+        evidence_hint: Referencia a tu propio documento que respalda el importe.
+        gross_cuota: Cuota deducible bruta
+        gross_cuota_hint: Antes de la prorrata, en euros con hasta dos decimales.
+        period: Periodo de liquidación
+        remove: Eliminar
+        remove_confirm: Eliminar la declaración
+        remove_of: Eliminar la cuota bruta declarada para {liquidation}
+        remove_what: ¿Eliminar la cuota bruta que declaraste para {liquidation}?
+        replace: Sustituir la cuota bruta ya declarada para el mismo periodo y sector
+        title: Cuota deducible bruta de liquidaciones anteriores
+        what: La cuota deducible bruta, antes de la prorrata, de una liquidación anterior
+          que introdujiste a mano, para un periodo del que el libro no tiene ninguna
+          cuota soportada.
       kind:
         definitiva: Definitiva
         provisional: Provisional
@@ -3733,6 +3762,7 @@ desktop:
         accounts: Cuentas propias
         capital: Bienes de inversión
         prorrata: Prorrata
+        withholding: Retenciones
       areas: Apartados de registros
     retry: Reintentar
     reveal:
@@ -4099,6 +4129,88 @@ desktop:
       to_match: Por conciliar
     window:
       partial: Los grupos y los totales esperan a que se lea todo.
+    withholding:
+      absence:
+        not_listed: Las indicaciones anteriores aún no se pueden listar. Aquí se muestran
+          las que hagas o retires en esta ventana.
+        title: Sin retenciones
+        what: Indica que ningún pagador retuvo en una clase de renta este año.
+      action:
+        attest: Indicar sin retenciones
+        record: Anotar certificado
+      amount:
+        importe_integro_dinerario: Importe íntegro dinerario
+        ingreso_a_cuenta: Ingreso a cuenta
+        ingreso_a_cuenta_repercutido: Ingreso a cuenta repercutido
+        retencion: Retención
+        valoracion_especie: Valoración en especie
+      attested_on: Indicado el {date}
+      changes: Cambios en los certificados de {ejercicio}
+      column:
+        class: Clase de renta
+        document: Documento
+        especie: En especie
+        ingreso: A cuenta
+        integro: Íntegro dinerario
+        note: Nota
+        origin: Origen
+        pago: Crédito
+        payer: Pagador
+        repercutido: Repercutido
+        retencion: Retención
+        state: Estado
+      correct_hint: Para corregir un certificado, quítalo y anótalo de nuevo.
+      document: Documento del certificado (opcional)
+      document_hint: Un documento guardado en Documentos. Su huella se anota tal como
+        la das y todavía no se comprueba con el documento guardado.
+      document_none: Aún no hay documentos guardados
+      document_not: Sin documento
+      ejercicio: Año
+      empty: No hay certificados anotados para {ejercicio}.
+      form:
+        attest: Indicar sin retenciones en {ejercicio}
+        record: Anotar un certificado de {ejercicio}
+      income_class: Clase de renta
+      note: Nota
+      note_hint: Por qué esta clase no tuvo retenciones.
+      origin:
+        operator_declaration: Tu propia declaración
+        payer_certificate: Certificado del pagador
+      origin_label: Origen de las cifras
+      payer_legal_name: Nombre del pagador (opcional)
+      payer_ref: Pagador {ref}
+      payer_tax_id: NIF del pagador
+      payer_tax_id_hint: Se envía con el registro para identificar al pagador. No
+        se vuelve a mostrar.
+      refusal:
+        already_attested: Esta clase ya tiene una indicación.
+        certificate_fingerprint_required: El certificado de un pagador necesita su
+          documento.
+        ejercicio_unsupported: Este año no es compatible.
+        family_not_declared: Esta clase de renta no está declarada para este año.
+        identity_mismatch: Los datos del pagador no coinciden con el registro guardado
+          con esta referencia.
+        not_attested: Esta clase no tiene ninguna indicación que retirar.
+        not_found: Ese certificado ya no está guardado.
+        own_tax_id: El NIF del pagador es el tuyo.
+        records_present: Hay certificados anotados en esta clase, así que no se puede
+          indicar que no tiene ninguno.
+        repercutido_exceeds_ingreso_a_cuenta: El ingreso a cuenta repercutido no puede
+          superar el ingreso a cuenta.
+        stale_revision: El registro cambió desde que lo listaste. Léelo de nuevo e
+          inténtalo otra vez.
+        taxpayer_tax_id_unknown: Tu propio NIF todavía no está en tu perfil.
+        validation: Algunas cifras o campos no se admiten.
+      remove: Quitar
+      remove_confirm: Quitar certificado
+      remove_of: Quitar el certificado de {payer}
+      remove_what: ¿Quitar el certificado de {payer} en {class}?
+      title: Certificados de retenciones
+      what: Anota las retenciones que cada pagador te practicó, tal como las indica
+        su certificado, o indica que una clase de renta no tiene ninguna.
+      withdraw: Retirar
+      withdraw_of: Retirar la indicación de {class}
+      withdrawn_on: Retirado el {date}
   logs:
     all_loggers: Todos los registradores
     all_origins: Todos los orígenes
@@ -4155,6 +4267,8 @@ desktop:
     none_unread: Ninguno sin leer en la última sincronización
     unread: '{count} sin leer'
   modelo:
+    box_notes:
+      label: Lo que el cálculo ha anotado sobre esta casilla
     correction:
       kind_label: Tipo de corrección
       motive_label: Motivo de la rectificación
@@ -4462,6 +4576,37 @@ desktop:
     search: Buscar
     settings: Ajustes
     tui: Espacio de trabajo
+  renta:
+    proto:
+      election:
+        save: Guarda la respuesta
+        year: Ejercicio
+      excerpt: Este prototipo solo contiene algunos apartados de la declaración real.
+        Elige otro apartado para verlo aquí.
+      family:
+        boxes: Casillas que alimentan estos datos
+        edit: Cámbialo en tu perfil
+        empty: Sin indicar
+        profile: De tu perfil
+      gap:
+        body: El backend aún no sirve esto, así que la ventana no muestra nada en
+          su lugar.
+        operation: 'Necesita: {operation}'
+        title: Aún no se sirve
+      nav:
+        boxes: 'Casillas: {count}'
+        failed: 'No se pudo calcular: {count}'
+        needs_you: 'Te necesita: {count}'
+        only_attention: Solo lo que te necesita
+        proposed: Esquema propuesto
+        served: Tal como se sirve hoy
+        technical: 'Encabezado técnico: el diseño aún no tiene aquí un encabezado
+          revisado'
+        title: Apartados
+      result:
+        composed: Cifra redactada por el propio generador de cabecera del backend,
+          no calculada
+        example: Forma que ya se sirve para otra declaración
   session:
     enter_restarts: Intro lo reinicia
     exit_line: '[El proceso terminó con el código {code}. Pulsa Intro para volver
@@ -7227,6 +7372,7 @@ tui:
           iva_category: Categoría de IVA
           iva_rate: Tipo de IVA (por ejemplo 0.21)
           notes: Notas
+          operation_date: Fecha de la operación (AAAA-MM-DD)
           own_account_id: Cuenta propia (acc-01)
           prorrata_reference: Referencia de prorrata
           prorrata_sector: Sector de prorrata
@@ -8236,6 +8382,7 @@ tui:
         iva_amount: Cuota de IVA (opcional)
         iva_rate: Tipo de IVA (opcional)
         notes: Notas
+        operation_date: Fecha de la operación (AAAA-MM-DD, opcional)
         taxable_base: Base imponible (opcional)
         value_date: Fecha valor (AAAA-MM-DD, opcional)
       update_refused: 'El cambio se ha rechazado: {detail}'
@@ -10126,3 +10273,27 @@ workspace:
       not_applicable: no aplica
       not_known_yet: Aún no se sabe
     was: 'antes: {value}'
+  renta:
+    election:
+      proposed: Respuesta propuesta
+      stated: Indicado para {year}
+      title: Criterio de imputación de tu actividad
+      undeclared: Aún no lo has indicado. Las casillas de actividad que dependen de
+        él siguen sin resolver hasta que lo indiques.
+    outline:
+      activities: Actividades económicas
+      annexes: Anexos e información adicional
+      bases: Bases imponibles y liquidables
+      capital_gains: Ganancias y pérdidas patrimoniales
+      credits: Retenciones y pagos a cuenta
+      employment: Rendimientos del trabajo
+      family: Unidad familiar
+      identification: Identificación y situación familiar
+      liability: Cuotas íntegras y deducciones
+      minimums: Mínimo personal y familiar
+      movable_capital: Rendimientos del capital mobiliario
+      other: Otros datos
+      real_estate: Rendimientos del capital inmobiliario e imputaciones de renta
+      result: Resultado de la declaración
+    result:
+      settlement: Cómo se paga o se devuelve

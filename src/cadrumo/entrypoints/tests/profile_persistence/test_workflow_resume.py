@@ -568,12 +568,8 @@ def test_resume_is_idempotent_for_a_persistently_aborted_run(tmp_path: Path) -> 
     assert first.resumed_from_run_id == second.resumed_from_run_id == run_id
 
 
-def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None:
-    """``find_latest_run_for_period`` resolves the newest persisted run for
-    a ``(modelo, period)`` pair, so an operator who only knows the
-    work unit's modelo and period can discover the run id without
-    holding the 16-character hash by hand."""
-
+def _save_earlier_and_later_runs() -> tuple[WorkflowResult, WorkflowResult]:
+    """Persist two aborted runs of the same Modelo 130 first-quarter obligation, the second two days later."""
     earlier = _aborted_result(
         run_id="a" * 16,
         reason=WorkflowAbortReason.SITE_UNAVAILABLE,
@@ -586,6 +582,16 @@ def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None
     ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
     _save_run(earlier)
     _save_run(later)
+    return earlier, later
+
+
+def test_find_latest_run_for_period_returns_newest_match(tmp_path: Path) -> None:
+    """``find_latest_run_for_period`` resolves the newest persisted run for
+    a ``(modelo, period)`` pair, so an operator who only knows the
+    work unit's modelo and period can discover the run id without
+    holding the 16-character hash by hand."""
+
+    _earlier, later = _save_earlier_and_later_runs()
 
     resolved = _find_latest_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))
     assert resolved.run_id == later.run_id
@@ -638,18 +644,7 @@ def test_find_unique_run_for_period_returns_single_match(tmp_path: Path) -> None
 
 
 def test_find_unique_run_for_period_refuses_multiple_matches_with_candidate_guidance(tmp_path: Path) -> None:
-    earlier = _aborted_result(
-        run_id="a" * 16,
-        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
-    ).model_copy(update={"started_at": datetime(2026, 4, 10, 9, 0, tzinfo=UTC)})
-    later = _aborted_result(
-        run_id="b" * 16,
-        reason=WorkflowAbortReason.SITE_UNAVAILABLE,
-        obligation=_obligation("130", Period.from_year_and_code(2026, "1T")),
-    ).model_copy(update={"started_at": datetime(2026, 4, 12, 9, 0, tzinfo=UTC)})
-    _save_run(earlier)
-    _save_run(later)
+    earlier, later = _save_earlier_and_later_runs()
 
     with pytest.raises(WorkflowResumeRunAmbiguousError) as raised:
         _find_unique_run_for_period(modelo="130", period=Period.from_year_and_code(2026, "1T"))

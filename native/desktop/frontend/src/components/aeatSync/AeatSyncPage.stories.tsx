@@ -47,4 +47,9 @@ type Story = StoryObj<typeof Page>;
 
 export const Mixed: Story = { args: { mode: "mixed" } };
 export const NeverBrought: Story = { args: { mode: "never" } };
+/** The saved Borrador cannot be used: its standing and the count of what
+ * the host refused. */
+export const BorradorCaptureRefused: Story = {
+  args: { mode: "capture_refused" },
+};
 export const Unavailable: Story = { args: { mode: "unavailable" } };

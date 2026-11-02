@@ -822,6 +822,7 @@ application:
         counterparty_country_invalid: Ez nem olyan kétbetűs országkód, amelyet a főkönyv
           felismer.
         counterparty_name_blank: A partner neve nem maradhat üresen.
+        counterparty_name_too_long: A partner neve legfeljebb {limit} karakter lehet.
         counterparty_tax_id_invalid: Ez az adószám nem érvényes a partner országában.
         counterparty_tax_id_required: Ehhez a számlához kell a partner adószáma. Csak
           a kiállított factura simplificada lehet meg nélküle.
@@ -869,6 +870,12 @@ application:
           kapcsolódik: %{linked_transaction_ids}. Nincs kapcsolatbontó parancs: töröld
           ezeket a tranzakciókat az `aeat app ledger remove` paranccsal, ami feloldja
           a kapcsolatot, majd töröld a számlát.'
+        sealed_invoice_refused: A(z) %{invoice_id} számlát beolvasta a(z) %{modelo}
+          modell (%{filing_year} %{period}, %{revision_state}, %{calculation_revision_id}
+          változat), ezért ezt a módosítást elutasítottuk, hogy azok a számok igazak
+          maradjanak. Ha még nincs benyújtva, vesd el ezt a munkát az `aeat app modelo
+          work discard` paranccsal, és számolj újra. Ha már benyújtottad, állíts ki
+          helyesbítő számlát, és nyújts be önellenőrzést.
     linking:
       errors:
         linked_invoice_not_found: A(z) %{invoice_id} számla nem található a kapcsolás
@@ -1282,6 +1289,16 @@ application:
           épül, amelyekből hiányzik az igazolás.
         what_to_do: Nézd át az egész év áfa-nyilvántartását, pótold a hiányzó igazolást,
           majd számolj újra.
+      iva_operation_date_after_movement:
+        what: Néhány főkönyvi sor ügyleti dátuma későbbi a banki dátumánál. Ha ez
+          a pénz előleg volt, az áfája a beérkezéskor vált esedékessé.
+        what_to_do: Előlegnél add meg ügyleti dátumként a beérkezés napját, a fennmaradó
+          részt rögzítsd külön sorban, majd számolj újra.
+      iva_row_placed_on_movement_date:
+        what: Néhány főkönyvi sornak nincs ügyleti dátuma, ezért a banki dátuma választotta
+          ki az áfaidőszakot. Az áfa az ügylet teljesítésekor esedékes, nem a pénzmozgáskor.
+        what_to_do: Add meg az ügylet dátumát az időszak végén lévő soroknál, majd
+          számolj újra.
       iva_selected_scope_evidence_failure:
         what: Az ebben a nyilatkozatban szereplő áfa alapjául szolgáló nyilvántartásokból
           hiányzik az igazolás, vagy nem egyeznek.
@@ -2297,6 +2314,21 @@ application:
       transaction_evidence_missing_output: Egy felszámított IVA-t tartalmazó kiállított
         számlához nincs alátámasztó bizonylat. Csatold a nyilvántartásaid megfelelő
         tételéhez.
+      undetermined_mixed_use_contributor: A(z) %{modelo} modell %{filing_year}. évi,
+        %{period} időszakra mentett számítása %{rows} vegyes használatú kiadást a
+        megadott arányban vett figyelembe költségkategória nélkül. Ha most számolsz,
+        ezek visszatartásra kerülnek, amíg meg nem adod a kategóriát. A mentett értékek
+        nem változtak.
+      withholding_count_exceeds_summary_perceptors: A Modelo %{source_modelo} (%{filing_year},
+        %{period}) a(z) %{casilla_id} mezőben %{declared_perceptors} kedvezményezettet
+        számol, de a Modelo %{modelo} az egész évre csak %{summary_perceptors} különböző
+        kedvezményezettet tartalmaz. Az éves összesítőben szerepelnie kell mindenkinek,
+        akit ez a mező számol. Vedd fel a hiányzó kedvezményezetteket ennek a modelónak
+        a részletezőjébe, vagy javítsd a számot a Modelo %{source_modelo} bevallásban.
+      withholding_count_not_cross_checked: 'A Modelo %{modelo} (%{filing_year}) nem
+        volt összevethető a Modelo %{source_modelo} bevallással a következő időszakokra:
+        %{unchecked_periods}, mert ezekről nincs rögzített bevallás. Összevetett időszakok:
+        %{checked_periods}. Ez nem jelenti azt, hogy ezekben senkinek sem fizettél.'
       withholding_detail_absent_against_ledger_evidence: 'A Modelo %{modelo} (%{filing_year})
         egyetlen kedvezményezettnek sem jelent be kifizetést, de a nyilvántartásaid
         szerint abban az évben adólevonás alá eső kifizetések történtek: %{contradicting_invoice_count}
@@ -2877,6 +2909,9 @@ application:
       edit_missing_modelo_requirements: 'Az azonosító adatok teljesek, de ez a profil
         IVA-t vall be, és még hiányoznak a Modelo 303 kötelező mezői. Add hozzá ezeket
         a kapcsolókat ugyanahhoz a parancshoz, és futtasd újra: %{missing_flags}.'
+      imputation_year_required: 'Az elszámolási elvet és a Código de Comercio-választ
+        egy-egy adóévre kell megadni. Add hozzá ezt a kapcsolót, és futtasd újra a
+        parancsot: %{missing_flags}.'
       persist_patch_unknown_question_id: A varázsló javítása ismeretlen kérdésazonosítóra
         hivatkozik.
       profile_flag_required: A varázslóhoz --profile NÉV szükséges (nincs implicit

@@ -10,13 +10,13 @@ from decimal import Decimal
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.persistence.profile.actividad_asset import ActividadAssetHistoryRepository
 from ...adapters.persistence.profile.invoices import InvoiceCatalogueRepository
@@ -36,7 +36,7 @@ from ...application.ledger.known_values_operation import (
 from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...application.operations.models import OperationIdentity, OperationRequest
 from ...application.operations.owner import OperationExecutorContext
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.ledger_known_values import LedgerKnownValueKind
 from ...core.operations import OperationEffect, profile_operation_subject
@@ -67,6 +67,7 @@ from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ...domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ..invoice_inspection_composition import build_invoice_inspection_read_ports
 from ..ledger_action_composition import compose_ledger_read_ports
+from .supervised_operation_rig import operation_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -443,14 +444,8 @@ def _registration(*, context_profile: UUID = _PROFILE) -> tuple[OperationRegistr
     )
     registration = build_ledger_known_values_registration(definition)
     registry = OperationRegistry(definitions=(definition,), public_registrations=(registration,))
-    return registry, OperationAccessContext(
-        profile_id=context_profile,
-        destination_id=uuid4(),
-        action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-        admitted_request=None,
+    return registry, operation_access_context(
+        registration.contract, profile_id=context_profile, action=AccessAction.RESULT
     )
 
 

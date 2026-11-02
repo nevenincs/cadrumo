@@ -510,6 +510,98 @@ test("a prorrata election is refused until it names its document", async ({
   );
 });
 
+test("the prorrata register lists a declared gross cuota and removes it once confirmed", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openSetup(target, "registers");
+  await area(target, "desktop.ledger.registers.area.prorrata");
+  const gross = target.locator(".ledger-prorrata-gross");
+  const row = gross.locator(".ledger-prorrata-gross-table tr", {
+    hasText: "LIQ-2026-1T",
+  });
+  // The period, the cuota as the register serves it and its document.
+  await expect(row).toContainText("2026");
+  await expect(row).toContainText("1T");
+  await expect(row).toContainText("1,234.56");
+  await row
+    .getByRole("button", {
+      name: label("desktop.ledger.prorrata.gross.remove_of", {
+        liquidation: "2026 · 1T",
+      }),
+    })
+    .click();
+  // Nothing is removed until the person confirms.
+  const confirmation = gross.locator(".ledger-prorrata-gross-removing");
+  await expect(confirmation).toContainText(
+    label("desktop.ledger.prorrata.gross.remove_what", {
+      liquidation: "2026 · 1T",
+    }),
+  );
+  await expect(row).toBeVisible();
+  await confirmation
+    .getByRole("button", {
+      name: label("desktop.ledger.prorrata.gross.remove_confirm"),
+    })
+    .click();
+  await expect(gross.locator(".ledger-prorrata-gross-empty")).toHaveText(
+    label("desktop.ledger.prorrata.gross.empty"),
+  );
+  await expect(confirmation).toBeHidden();
+  await expect(target.locator(".setup-call-line")).toBeHidden();
+});
+
+test("a gross cuota is declared, refused while one stands and replaced when asked", async ({
+  page: target,
+}) => {
+  await openLedger(target);
+  await openSetup(target, "registers");
+  await area(target, "desktop.ledger.registers.area.prorrata");
+  const declare = async (period: string, amount: string, replace = false) => {
+    const opened = target.locator(".ledger-prorrata-form");
+    if (!(await opened.isVisible()))
+      await button(
+        target,
+        "desktop.ledger.prorrata.action.declare_gross",
+      ).click();
+    const form = target.locator(".ledger-prorrata-form");
+    await field(form, "desktop.ledger.prorrata.gross.period").selectOption(
+      period,
+    );
+    await field(form, "desktop.ledger.prorrata.gross.gross_cuota").fill(amount);
+    await field(form, "desktop.ledger.prorrata.gross.evidence").fill(
+      `LIQ-2026-${period}`,
+    );
+    const replacing = field(form, "desktop.ledger.prorrata.gross.replace");
+    if ((await replacing.isChecked()) !== replace)
+      await replacing.setChecked(replace);
+    await form
+      .getByRole("button", {
+        name: label("desktop.ledger.prorrata.action.declare_gross"),
+      })
+      .click();
+    return form;
+  };
+  const table = target.locator(".ledger-prorrata-gross-table");
+
+  const form = await declare("2T", "500");
+  await expect(form).toBeHidden();
+  const row = table.locator("tr", { hasText: "LIQ-2026-2T" });
+  await expect(row).toContainText("500.00");
+
+  // The register keeps the cuota it holds until the person asks to replace it.
+  await declare("2T", "600");
+  await expect(target.locator(".setup-call-line")).toContainText(
+    label("desktop.ledger.prorrata.refusal.gross_declaration_duplicate"),
+  );
+  await expect(row).toContainText("500.00");
+  await declare("2T", "600", true);
+  await expect(target.locator(".ledger-prorrata-form")).toBeHidden();
+  await expect(row).toContainText("600.00");
+  await expect(row).not.toContainText("500.00");
+  await expect(table.locator("tr", { hasText: "LIQ-2026-2T" })).toHaveCount(1);
+});
+
 for (const language of ["en", "es", "ca", "hu"]) {
   test(`the register's name, kind, method and state words are whole and unclipped in ${language}`, async ({
     page: target,
@@ -834,10 +926,246 @@ for (const scheme of ["light", "dark"] as const)
     await area(target, "desktop.ledger.registers.area.prorrata");
     await expect(target.locator(".ledger-prorrata-table")).toBeVisible();
     expect(await audit(target)).toEqual([]);
+    await area(target, "desktop.ledger.registers.area.withholding");
+    await expect(target.locator(".ledger-withholding-table")).toBeVisible();
+    expect(await audit(target)).toEqual([]);
     await openSetup(target, "health");
     await expect(target.locator(".ledger-health-status")).toBeVisible();
     expect(await audit(target)).toEqual([]);
   });
+
+/** Opens Setup › Registers › Withholding. */
+async function openWithholding(target: Page) {
+  await openLedger(target);
+  await openSetup(target, "registers");
+  await area(target, "desktop.ledger.registers.area.withholding");
+  await expect(
+    target.locator(".ledger-withholding-class").first(),
+  ).toBeVisible();
+}
+
+const withholdingForm = (target: Page) =>
+  target.locator(".ledger-withholding-form");
+
+/** A made-up payer tax ID, which no real taxpayer holds. */
+const PAYER_TAX_ID = "A58818501";
+
+test("the withholding register lists a payer's certificate under its class and reads an empty year as empty", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  const group = target.locator(".ledger-withholding-class").first();
+  // The class is worded as the backend served it, the payer by name, and the
+  // figures as the register holds them.
+  await expect(group.getByRole("heading")).toHaveText("Employment income");
+  const row = group.locator(".ledger-withholding-table tr", {
+    hasText: "Empresa Ejemplo SL",
+  });
+  await expect(row).toContainText("30,000.00");
+  await expect(row).toContainText("4,500.00");
+  await expect(row).toContainText(
+    label("desktop.ledger.withholding.origin.payer_certificate"),
+  );
+  // No attestation can be listed yet, and the page says so.
+  await expect(target.locator(".ledger-withholding-listing-gap")).toHaveText(
+    label("desktop.ledger.withholding.absence.not_listed"),
+  );
+  await target
+    .getByRole("group", { name: label("desktop.ledger.withholding.ejercicio") })
+    .getByRole("button", {
+      name: label("desktop.ledger.period.year_previous"),
+      exact: true,
+    })
+    .click();
+  await expect(target.locator(".ledger-withholding-empty")).toHaveText(
+    label("desktop.ledger.withholding.empty", { ejercicio: 2025 }),
+  );
+  await expect(target.locator(".ledger-withholding-class")).toHaveCount(0);
+});
+
+test("a certificate is recorded, and the payer's tax ID is nowhere in the window afterwards", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  await button(target, "desktop.ledger.withholding.action.record").click();
+  const form = withholdingForm(target);
+  const submit = button(form, "desktop.ledger.withholding.action.record");
+  // Nothing is chosen for the person, and the figures start at zero.
+  await expect(submit).toHaveAttribute("aria-disabled", "true");
+  await expect(
+    field(form, "desktop.ledger.withholding.amount.retencion"),
+  ).toHaveValue("0.00");
+  await field(form, "desktop.ledger.withholding.income_class").selectOption(
+    "capital_mobiliario",
+  );
+  await field(form, "desktop.ledger.withholding.payer_tax_id").fill(
+    PAYER_TAX_ID,
+  );
+  await field(form, "desktop.ledger.withholding.payer_legal_name").fill(
+    "Banco de Ejemplo SA",
+  );
+  await field(form, "desktop.ledger.withholding.amount.retencion").fill(
+    "150.00",
+  );
+  await field(form, "desktop.ledger.withholding.origin_label").selectOption(
+    "operator_declaration",
+  );
+  await submit.click();
+  await expect(form).toBeHidden();
+  const row = target.locator(".ledger-withholding-table tr", {
+    hasText: "Banco de Ejemplo SA",
+  });
+  await expect(row).toContainText("150.00");
+  // The class is shown as its token while the backend serves no label.
+  await expect(
+    target
+      .locator(".ledger-withholding-class")
+      .filter({ has: row })
+      .getByRole("heading"),
+  ).toHaveText("capital_mobiliario");
+  const held = await target.evaluate(
+    (taxId) => ({
+      page: document.documentElement.outerHTML.includes(taxId),
+      fields: [...document.querySelectorAll("input, textarea")].some((input) =>
+        (input as HTMLInputElement).value.includes(taxId),
+      ),
+      storage: [localStorage, sessionStorage].some((store) =>
+        Object.keys(store).some((key) =>
+          (store.getItem(key) ?? "").includes(taxId),
+        ),
+      ),
+    }),
+    PAYER_TAX_ID,
+  );
+  expect(held).toEqual({ page: false, fields: false, storage: false });
+});
+
+test("a refused certificate shows the backend's words, or the pane's own when it served none, and keeps the form", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  await button(target, "desktop.ledger.withholding.action.record").click();
+  const form = withholdingForm(target);
+  await field(form, "desktop.ledger.withholding.income_class").selectOption(
+    "trabajo",
+  );
+  await field(form, "desktop.ledger.withholding.payer_tax_id").fill(
+    PAYER_TAX_ID,
+  );
+  await field(form, "desktop.ledger.withholding.amount.ingreso_a_cuenta").fill(
+    "20",
+  );
+  await field(
+    form,
+    "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
+  ).fill("30");
+  await field(form, "desktop.ledger.withholding.origin_label").selectOption(
+    "operator_declaration",
+  );
+  const submit = button(form, "desktop.ledger.withholding.action.record");
+  await submit.click();
+  // The served words, as served.
+  await expect(target.locator(".setup-call-line")).toContainText(
+    "The payment on account passed on to you cannot be more than the payment on account.",
+  );
+  await expect(form).toBeVisible();
+  await expect(
+    field(form, "desktop.ledger.withholding.payer_tax_id"),
+  ).toHaveValue(PAYER_TAX_ID);
+  // A refusal with no words served is said in the pane's own.
+  await field(
+    form,
+    "desktop.ledger.withholding.amount.ingreso_a_cuenta_repercutido",
+  ).fill("0");
+  await field(form, "desktop.ledger.withholding.origin_label").selectOption(
+    "payer_certificate",
+  );
+  await submit.click();
+  await expect(target.locator(".setup-call-line")).toContainText(
+    label(
+      "desktop.ledger.withholding.refusal.certificate_fingerprint_required",
+    ),
+  );
+  await expect(form).toBeVisible();
+});
+
+test("a certificate is removed only once the person confirms, against the revision listed", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  const row = target.locator(".ledger-withholding-table tr", {
+    hasText: "Empresa Ejemplo SL",
+  });
+  await row
+    .getByRole("button", {
+      name: label("desktop.ledger.withholding.remove_of", {
+        payer: "Empresa Ejemplo SL",
+      }),
+    })
+    .click();
+  const confirmation = target.locator(".ledger-withholding-removing");
+  await expect(confirmation).toContainText(
+    label("desktop.ledger.withholding.remove_what", {
+      payer: "Empresa Ejemplo SL",
+      class: "Employment income",
+    }),
+  );
+  await expect(confirmation).toContainText(
+    label("desktop.ledger.withholding.correct_hint"),
+  );
+  await expect(row).toBeVisible();
+  await confirmation
+    .getByRole("button", {
+      name: label("desktop.ledger.withholding.remove_confirm"),
+    })
+    .click();
+  await expect(target.locator(".ledger-withholding-empty")).toBeVisible();
+  await expect(confirmation).toBeHidden();
+  await expect(target.locator(".setup-call-line")).toBeHidden();
+});
+
+test("an income class is stated to have no withholding and the statement is withdrawn", async ({
+  page: target,
+}) => {
+  await openWithholding(target);
+  await button(target, "desktop.ledger.withholding.action.attest").click();
+  const form = withholdingForm(target);
+  const submit = button(form, "desktop.ledger.withholding.action.attest");
+  await expect(submit).toHaveAttribute("aria-disabled", "true");
+  await field(form, "desktop.ledger.withholding.income_class").selectOption(
+    "ganancia_patrimonial",
+  );
+  await field(form, "desktop.ledger.withholding.note").fill(
+    "No sales this year.",
+  );
+  await submit.click();
+  await expect(form).toBeHidden();
+  const attested = target.locator(".ledger-withholding-attested");
+  const row = attested.locator("tr", { hasText: "ganancia_patrimonial" });
+  // The statement is shown as the backend returned it.
+  await expect(row).toContainText("No sales this year.");
+  await expect(row).toContainText(/Stated on/);
+  const withdraw = row.getByRole("button", {
+    name: label("desktop.ledger.withholding.withdraw_of", {
+      class: "ganancia_patrimonial",
+    }),
+  });
+  await withdraw.click();
+  await expect(row).toContainText(/Withdrawn on/);
+  // A withdrawn statement offers nothing more.
+  await expect(withdraw).toHaveCount(0);
+  // A class with certificates cannot be stated to have none.
+  await button(target, "desktop.ledger.withholding.action.attest").click();
+  const again = withholdingForm(target);
+  await field(again, "desktop.ledger.withholding.income_class").selectOption(
+    "trabajo",
+  );
+  await field(again, "desktop.ledger.withholding.note").fill("None.");
+  await button(again, "desktop.ledger.withholding.action.attest").click();
+  await expect(target.locator(".setup-call-line")).toContainText(
+    label("desktop.ledger.withholding.refusal.records_present"),
+  );
+});
 
 test("Health for another period counts only that period's own check, and says so until it is checked", async ({
   page: target,

@@ -499,6 +499,7 @@ def ledger_view(ctx: typer.Context, transaction_id: str) -> None:
         f"{tr('cli.ledger.labels.id')}\t{transaction_payload.transaction_id}",
         f"{tr('cli.ledger.labels.date')}\t{transaction_payload.date}",
         f"{tr('cli.ledger.labels.value_date')}\t{_field(transaction_payload.value_date)}",
+        f"{tr('cli.ledger.labels.operation_date')}\t{_field(transaction_payload.operation_date)}",
         f"{tr('cli.ledger.labels.amount')}\t{transaction_payload.amount}",
         f"{tr('cli.ledger.labels.currency')}\t{_field(transaction_payload.currency)}",
         f"{tr('cli.ledger.labels.direction')}\t{_field(transaction_payload.direction)}",

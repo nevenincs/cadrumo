@@ -58,6 +58,7 @@ from .desktop_ledger_catalogue_keys import DESKTOP_LEDGER_CATALOGUE_KEYS
 from .desktop_ledger_document_keys import DESKTOP_LEDGER_DOCUMENT_KEYS
 from .desktop_ledger_workflow_keys import DESKTOP_LEDGER_WORKFLOW_KEYS
 from .desktop_modelo_choice_keys import MODELO_CHOICE_FAMILIES, MODELO_CHOICE_KEYS
+from .desktop_renta_keys import RENTA_FAMILIES, RENTA_KEYS
 from .desktop_workspace_keys import WORKSPACE_FAMILIES, WORKSPACE_KEYS
 from .errors import LocaleError
 from .invoice_figures_preview_keys import FINDING_KEYS, RATE_SLOT_KEYS, RULE_FINDING_KEYS
@@ -620,6 +621,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         "desktop.ledger.field.": (
             "booked_date",
             "value_date",
+            "operation_date",
             "currency",
             "business_pct",
             "usage_ratio_id",
@@ -752,6 +754,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "revoke_especial",
             "seed_sector",
             "settle_sector",
+            "declare_gross",
         ),
         "desktop.ledger.prorrata.form.": (
             "seed",
@@ -761,6 +764,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "revoke_especial",
             "seed_sector",
             "settle_sector",
+            "declare_gross",
         ),
         "desktop.ledger.prorrata.refusal.": (
             "validation",
@@ -786,7 +790,40 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "usage_ratio_home_area",
             "usage_ratio_personal",
         ),
-        "desktop.ledger.registers.area.": ("accounts", "prorrata", "capital"),
+        "desktop.ledger.registers.area.": ("accounts", "prorrata", "capital", "withholding"),
+        "desktop.ledger.withholding.action.": ("record", "attest"),
+        "desktop.ledger.withholding.amount.": (
+            "importe_integro_dinerario",
+            "valoracion_especie",
+            "retencion",
+            "ingreso_a_cuenta",
+            "ingreso_a_cuenta_repercutido",
+        ),
+        "desktop.ledger.withholding.column.": (
+            "integro",
+            "especie",
+            "retencion",
+            "ingreso",
+            "repercutido",
+            "pago",
+        ),
+        "desktop.ledger.withholding.form.": ("record", "attest"),
+        "desktop.ledger.withholding.origin.": ("payer_certificate", "operator_declaration"),
+        "desktop.ledger.withholding.refusal.": (
+            "own_tax_id",
+            "ejercicio_unsupported",
+            "family_not_declared",
+            "identity_mismatch",
+            "stale_revision",
+            "repercutido_exceeds_ingreso_a_cuenta",
+            "certificate_fingerprint_required",
+            "taxpayer_tax_id_unknown",
+            "not_found",
+            "validation",
+            "records_present",
+            "already_attested",
+            "not_attested",
+        ),
         "desktop.ledger.rules.area.": ("rules", "ratios", "counterparties", "diagnostics"),
         "desktop.ledger.rules.refusal.": (
             "empty_pattern",
@@ -802,6 +839,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
         **ENTRY_OPTION_FAMILIES,
         **ENTRY_TOKEN_WORD_FAMILIES,
         **MODELO_CHOICE_FAMILIES,
+        **RENTA_FAMILIES,
     }
 )
 
@@ -816,6 +854,7 @@ DESKTOP_CHROME_KEYS: Final[frozenset[str]] = (
     | ENTRY_OPTION_KEYS
     | ENTRY_TOKEN_WORD_KEYS
     | MODELO_CHOICE_KEYS
+    | RENTA_KEYS
     | FINDING_KEYS
     | RULE_FINDING_KEYS
     | RATE_SLOT_KEYS
@@ -876,8 +915,16 @@ def shell_key_references(source: Path) -> tuple[frozenset[str], frozenset[str]]:
 def shell_named_keys(
     literals: frozenset[str], templates: frozenset[str], families: Mapping[str, tuple[str, ...]]
 ) -> frozenset[str]:
-    """Return every key named, expanding the templates that have a declared family."""
-    return literals | {f"{prefix}{member}" for prefix in templates & families.keys() for member in families[prefix]}
+    """Return every key named, expanding the templates that have a declared family.
+
+    A prefix whose served members join it without a separator, such as
+    ``desktop.example.s`` before ``1``, is a literal in the source; naming a declared family
+    prefix is naming the family, not a catalogue leaf.
+    """
+    named_prefixes = (templates | literals) & families.keys()
+    return (literals - families.keys()) | {
+        f"{prefix}{member}" for prefix in named_prefixes for member in families[prefix]
+    }
 
 
 def shell_drift(

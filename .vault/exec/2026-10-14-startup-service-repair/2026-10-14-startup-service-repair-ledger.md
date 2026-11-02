@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#startup-service-repair'
 date: '2026-10-14'
-modified: '2026-10-17'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:eee65e3c28a40cf37a364760558a3b61215d1f1db3cb49d663ed737458666619'
+body_hash: 'sha256:c81f209945e4825ab3c24c54904e3235cb0e566a51a22ea7ea189fbb8089bfe3'
 related:
   - "[[2026-10-14-startup-service-repair-plan]]"
 ---
@@ -167,6 +167,10 @@ related:
 - `S10` `verify:` `isolated same-cohort runtime service and agent imports four modules` -> `pass`
 - `S10` `verify:` `all35 service modules and runtime session holder match current source` -> `pass`
 - `S10` `verify:` `previously missing profile_language and session holder local import closure` -> `pass`
+- `S01` `verify:` `locator-check: src/cadrumo_agent_service/service_startup.py:352` -> `pass`
+- `S01` `by:` `plan-closure`
+- `S02` `verify:` `locator-check: native/desktop/src-tauri/src/agent/supervisor.rs:755` -> `pass`
+- `S02` `by:` `plan-closure`
 
 ## Notes
 

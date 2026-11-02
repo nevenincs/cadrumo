@@ -21,7 +21,8 @@ dates, amount magnitude, currency, direction, business classification and
 proportionality, the IVA base/rate/amount/category, the spending and IRPF
 categories, the M210 source-jurisdiction/classification facts, the EU member
 state, the FX conversion, the lifecycle state, and (from field-set version 3)
-the bienes de inversion link and the customer's identifying Member State.
+the bienes de inversion link and the customer's identifying Member State, and
+(from version 5) the operation date and the deduction evidence behind the row.
 Cosmetic fields (description, counterparty, notes) are deliberately excluded so
 staleness fires on material change, not on a relabel.
 
@@ -141,24 +142,53 @@ _FINGERPRINT_FIELDS_V2: tuple[tuple[str, str], ...] = (
 # text is its ``value``), so ``_normalise`` already renders them
 # deterministically and without a repr.
 #
-# The non-writable facts the IVA resolvers also read (``operation_date``, the
-# criterio de caja fields, ``exemption_article``, ``rectifies_ledger_id``) stay
-# out until a write path can change them; the write-path coverage test fails
-# the moment one can, which forces the next version rather than a silent gap.
+# The non-writable facts the IVA resolvers also read (the criterio de caja
+# fields, ``exemption_article``, ``rectifies_ledger_id``) stay out until a write
+# path can change them; the write-path coverage test fails the moment one can,
+# which forces the next version rather than a silent gap.
 _FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
     *_FINGERPRINT_FIELDS_V2,
     ("investment_asset_id", "investment_asset_id"),
     ("counterparty_identification_state", "counterparty_identification_state"),
 )
 
+# Version 4 is unassigned: V5 follows V3 directly.
+# V5 adds what a calculation reads and V3 could not see: the operation date, which
+# picks the row's period and rate, and the evidence behind the deduction. Without
+# the provenance a row yields no input-IVA observation, so a draft holding a 21.00
+# cuota read as current after the evidence went while recalculating it refused.
+# The purchase evidence link is hashed because a recalculation takes the row's
+# figures from that invoice, so attaching one now asks for a recalculation too.
+# Supplementary ``attachment_ids`` feed no calculation and stay out.
+_FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V3,
+    ("operation_date", "operation_date"),
+    ("purchase_invoice_evidence_id", "purchase_invoice_evidence_id"),
+    ("deduction_authority", "deduction_provenance.authority"),
+    ("deduction_source_locator", "deduction_provenance.source_locator"),
+    ("deduction_evidence_digest", "deduction_provenance.evidence_digest"),
+)
+
+# V6 adds ``iva_vehicle_use``: the statement moves a vehicle row's deducted cuota
+# (LIVA art. 95.Tres.2.ª) without moving any amount V5 watches.
+_FINGERPRINT_FIELDS_V6: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V5,
+    ("iva_vehicle_use", "iva_vehicle_use"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: _FINGERPRINT_FIELDS_V1,
     2: _FINGERPRINT_FIELDS_V2,
     3: _FINGERPRINT_FIELDS_V3,
+    5: _FINGERPRINT_FIELDS_V5,
+    6: _FINGERPRINT_FIELDS_V6,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 3
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 6
+
+#: The first version whose hash sees a row's operation date.
+OPERATION_DATE_FIELD_SET_VERSION: Final = 5
 
 
 def _fingerprint_fields(field_set_version: int) -> tuple[tuple[str, str], ...]:
@@ -307,11 +337,14 @@ def _evidence_row(
     """
     raw = transaction.raw
     m210_classification = transaction.m210_income_classification
+    deduction_provenance = transaction.deduction_provenance
     return LedgerEvidenceRow(
         transaction_id=transaction.transaction_id,
         fingerprint=row_fingerprint(transaction),
         booked_date=raw.booked_date.isoformat(),
         value_date=raw.value_date.isoformat() if raw.value_date is not None else None,
+        operation_date=transaction.operation_date.isoformat() if transaction.operation_date is not None else None,
+        deduction_evidence_digest=deduction_provenance.evidence_digest if deduction_provenance is not None else None,
         amount=raw.amount,
         currency=raw.currency,
         direction=transaction.direction.value,
@@ -341,6 +374,7 @@ def _evidence_row(
         m210_asset_or_right_id=(m210_classification.asset_or_right_id if m210_classification is not None else None),
         counterparty_country=transaction.counterparty_country,
         investment_asset_id=transaction.investment_asset_id,
+        iva_vehicle_use=_enum_value(transaction.iva_vehicle_use),
         counterparty_identification_state=_enum_value(transaction.counterparty_identification_state),
         fx_rate=transaction.fx_rate,
         value_in_eur=transaction.value_in_eur,
@@ -520,6 +554,7 @@ def stale_filed_revisions(
 
 
 __all__ = [
+    "OPERATION_DATE_FIELD_SET_VERSION",
     "FiledRegisterReader",
     "assert_evidence_covers_snapshot",
     "compute_ledger_filing_evidence",

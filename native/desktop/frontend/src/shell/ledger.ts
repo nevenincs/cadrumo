@@ -96,6 +96,14 @@ import type {
   ProrrataSettleSectorRequest,
   ProrrataDeclareGrossRequest,
   ProrrataRemoveGrossRequest,
+  WithholdingAbsenceResult,
+  WithholdingAttestRequest,
+  WithholdingListRequest,
+  WithholdingListResult,
+  WithholdingMutationResult,
+  WithholdingRecordRequest,
+  WithholdingRemoveRequest,
+  WithholdingWithdrawRequest,
 } from "./ledgerSetup";
 
 /** The definitions the host admits, mirroring its closed list. */
@@ -199,10 +207,16 @@ export const LEDGER_DEFINITIONS = [
   "ledger.remove",
   "ledger.reset",
   "ledger.restore",
+  "ledger.retencion_soportada.attest_absence",
+  "ledger.retencion_soportada.list",
+  "ledger.retencion_soportada.record",
+  "ledger.retencion_soportada.remove",
+  "ledger.retencion_soportada.withdraw_absence",
   "ledger.review",
   "ledger.rule.add",
   "ledger.rule.apply",
   "ledger.rule.list",
+  "ledger.rule.remove",
   "ledger.rule.trial",
   "ledger.split.manual",
   "ledger.split.review",
@@ -385,6 +399,7 @@ export type LedgerTransaction = {
   date: string;
   booked_date: string;
   value_date: string | null;
+  operation_date: string | null;
   amount: string;
   currency: string;
   direction: string;
@@ -607,6 +622,7 @@ export type LedgerAddRequest = {
   direction: string;
   description: string;
   value_date?: string | null;
+  operation_date?: string | null;
   currency?: string;
   counterparty?: string | null;
   business_classification?: string;
@@ -1912,6 +1928,13 @@ export type EvidenceConfirmResult = {
       recorded_total: PublicDecimal;
       difference: PublicDecimal;
     } | null;
+    /** A withheld figure the document reads that the record does not hold. */
+    retention_discrepancy?: {
+      read_rate?: PublicDecimal | null;
+      read_amount: PublicDecimal;
+      recorded_rate?: PublicDecimal | null;
+      recorded_amount?: PublicDecimal | null;
+    } | null;
     confirmation_id?: string | null;
     confirmed_provenance?: FieldProvenance[];
     establishment?: JsonObject | null;
@@ -2147,6 +2170,11 @@ export interface LedgerRequests {
   "ledger.prorrata.settle_sector": ProrrataSettleSectorRequest;
   "ledger.prorrata.declare_gross": ProrrataDeclareGrossRequest;
   "ledger.prorrata.remove_gross": ProrrataRemoveGrossRequest;
+  "ledger.retencion_soportada.list": WithholdingListRequest;
+  "ledger.retencion_soportada.record": WithholdingRecordRequest;
+  "ledger.retencion_soportada.remove": WithholdingRemoveRequest;
+  "ledger.retencion_soportada.attest_absence": WithholdingAttestRequest;
+  "ledger.retencion_soportada.withdraw_absence": WithholdingWithdrawRequest;
   "ledger.bienes_inversion.list": Record<string, never>;
   "ledger.bienes_inversion.declare": CapitalGoodDeclareRequest;
   "ledger.inventory.list": Record<string, never>;
@@ -2253,6 +2281,11 @@ export interface LedgerResults {
   "ledger.prorrata.settle_sector": ProrrataMutationResult;
   "ledger.prorrata.declare_gross": ProrrataMutationResult;
   "ledger.prorrata.remove_gross": ProrrataMutationResult;
+  "ledger.retencion_soportada.list": WithholdingListResult;
+  "ledger.retencion_soportada.record": WithholdingMutationResult;
+  "ledger.retencion_soportada.remove": WithholdingMutationResult;
+  "ledger.retencion_soportada.attest_absence": WithholdingAbsenceResult;
+  "ledger.retencion_soportada.withdraw_absence": WithholdingAbsenceResult;
   "ledger.bienes_inversion.list": CapitalGoodsListResult;
   "ledger.bienes_inversion.declare": CapitalGoodDeclareResult;
   "ledger.inventory.list": InventoryListResult;

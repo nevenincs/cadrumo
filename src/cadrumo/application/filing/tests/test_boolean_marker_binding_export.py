@@ -30,7 +30,7 @@ from ..export import export_draft
 from ..producer_snapshot import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ..record_field_renderer import _binding_field_value, format_field
 from ..runtime import ModeloOperatorProfile
-from .export_support import _PERIOD, _schema_provider, _typed_producer_snapshot
+from .export_support import EXPORT_PERIOD, export_schema_provider, typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -43,7 +43,7 @@ _PAGE_ONE_OPEN = b"<T13101000>"
 
 
 def _exported_page_one_marker(tmp_path: Path, binding: str, position: int, answer: str | None) -> str:
-    base = _typed_producer_snapshot(complementaria=False)
+    base = typed_producer_snapshot(complementaria=False)
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("131"),
         taxpayer_tax_id=base.taxpayer_tax_id,
@@ -56,7 +56,7 @@ def _exported_page_one_marker(tmp_path: Path, binding: str, position: int, answe
         charge_account=None,
         m303_filing_facts=None,
     )
-    provider = _schema_provider(filing_year=2026, period="1T", modelos=("131",))
+    provider = export_schema_provider(filing_year=2026, period="1T", modelos=("131",))
     inputs: dict[str, ModeloInputValue] = {
         validated_casilla_id("03", surface="test_m131_marker.casilla"): Decimal("1000"),
         validated_casilla_id("05", surface="test_m131_marker.casilla"): Decimal("500"),
@@ -69,7 +69,7 @@ def _exported_page_one_marker(tmp_path: Path, binding: str, position: int, answe
         inputs[binding] = answer
     draft = build_draft(
         modelo="131",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Export registry test"),
         inputs=inputs,
         schema_provider=provider,

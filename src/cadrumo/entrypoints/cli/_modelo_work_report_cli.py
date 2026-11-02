@@ -21,6 +21,7 @@ from typing import Final
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.registered_operation_errors import invalid_completion_error
 
 from ...application.modelo.calculation_report_document import require_calculation_summary_pdf_available
@@ -40,7 +41,7 @@ from ...core.i18n.render import tr
 from ...core.json_contract import Notice, NoticeSeverity
 from ...domain.filing.software_identity import AeatSoftwareIdentityGrade
 from ._modelo_cli_support import validate_trusted_public_key
-from .common import activate_subcommand_output_language, emit_envelope
+from .common import emit_envelope
 from .modelo_results import WorkReportResult, WorkReportVerifyResult
 
 __all__ = ["work_report", "work_report_verify"]

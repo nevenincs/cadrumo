@@ -28,12 +28,10 @@ from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_classification import classification_rule_in_scope
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 from .transaction_repository import transaction_catalogue_repository
 
 LEDGER_RULE_TRIAL_OPERATION_DEFINITION_ID: Final = "ledger.rule.trial"
-
-_MAX_TRANSACTIONS: Final = 50_000
 
 RuleTrialOutcome = Literal["matched", "empty_pattern", "invalid_pattern", "too_long", "overrun"]
 
@@ -45,7 +43,7 @@ class LedgerRuleTrialRequest(BaseModel):
 
     profile_id: UUID
     description_pattern: str
-    transaction_ids: Annotated[tuple[str, ...], Field(max_length=_MAX_TRANSACTIONS)] = ()
+    transaction_ids: Annotated[tuple[str, ...], Field(max_length=50_000)] = ()
 
 
 class LedgerRuleTrialResult(BaseModel):
@@ -101,6 +99,17 @@ def try_rule_pattern(
     except PatternSearchUnreadableError:
         return LedgerRuleTrialResult(profile_id=profile_id, outcome="invalid_pattern")
     return _matched_result(profile_id, active, winners)
+
+
+def rule_pattern_overruns_ledger(bucket_id: str, description_pattern: str) -> bool:
+    """Return whether the bounded matcher gives up on the pattern over this profile's active descriptions.
+
+    Those are the texts a later apply would search, so a pattern that outruns the
+    matcher here would keep every apply refused for as long as the rule stayed stored.
+    """
+    catalogue = transaction_catalogue_repository(bucket_id=bucket_id).load()
+    answer = try_rule_pattern(UUID(bucket_id), description_pattern, catalogue.transactions)
+    return answer.outcome == "overrun"
 
 
 def _matched_result(
@@ -188,11 +197,9 @@ def resolve_ledger_rule_trial_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind the read to the exact profile, as every ledger read is."""
-    if request.definition_id != LEDGER_RULE_TRIAL_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerRuleTrialRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_RULE_TRIAL_OPERATION_DEFINITION_ID, request_type=LedgerRuleTrialRequest
+    )
 
 
 def build_ledger_rule_trial_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:
@@ -215,5 +222,6 @@ __all__ = [
     "build_ledger_rule_trial_definition",
     "build_ledger_rule_trial_registration",
     "resolve_ledger_rule_trial_access",
+    "rule_pattern_overruns_ledger",
     "try_rule_pattern",
 ]

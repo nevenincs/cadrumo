@@ -9,9 +9,9 @@ related:
   - '[[2026-10-04-desktop-shell-adr]]'
   - '[[2026-10-23-desktop-ledger-editor-adr]]'
   - '[[2026-10-27-profile-field-remap-iva-usage-share-adr]]'
-modified: '2026-11-01'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:d077dbc1ef0ad867be11c1e72bf25543a11d756a2e44aaf21cbd1c61163b1584'
+body_hash: 'sha256:0bd2b05168f14bee4e1449aa979669fb00ec2ef1ba1ca896001c608c540f38c1'
 ---
 
 # `profile-field-remap` plan
@@ -43,9 +43,9 @@ Decision coverage: field deletion is routine execution under `2026-08-10-current
 - [x] `S05` - apply the usage ratio exactly once through the category rule evaluator for annual Renta and Modelo 130 (user ruling 2026-10-27: the ledger usage-ratio store and registry rule own the ratio; a row business_pct no longer scales usage-ratio categories), proven by tests through the real resolvers; `src/cadrumo/application/aggregation/renta_ledger.py`.
 - [x] `S06` - amend the desktop shell ADR: the window holds no domain data or domain logic and only remaps values the backend serves to CLI and TUI; `.vault/adr/2026-10-04-desktop-shell-adr.md`.
 - [x] `S07` - serve the ledger entry vocabularies (country, currency, deduction fact kind, Modelo 210 income type and payer mode) from `ledger.entry-options` and offer them in the ledger forms; `src/cadrumo/application/ledger/entry_options_operation.py`.
-- [ ] `S13` - replace the remaining frontend spending-category, IVA and IRPF lists and usage-ratio category lists with served backend vocabularies; `native/desktop/frontend/src/shell/ledgerVocabulary.ts`.
+- [x] `S13` - replace the remaining frontend spending-category, IVA and IRPF lists and usage-ratio category lists with served backend vocabularies; `native/desktop/frontend/src/shell/ledgerVocabulary.ts`.
 - [ ] `S08` - replace frontend classification availability, field routes, clearing and identity rules with backend-served contract data; `native/desktop/frontend/src/shell/ledgerCommands.ts`.
-- [ ] `S09` - replace frontend invoice arithmetic, retention, validation facts and the IVA rate table with a backend invoice preview operation; `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts`.
+- [x] `S09` - replace frontend invoice arithmetic, retention, validation facts and the IVA rate table with a backend invoice preview operation; `native/desktop/frontend/src/components/ledger/invoices/invoiceModel.ts`.
 - [ ] `S10` - replace frontend rule-pattern matching, percent and period grammar with backend previews and served grammar; `native/desktop/frontend/src/components/ledger/setup/setupModel.ts`.
 - [x] `S11` - ground the IVA deductibility of home-office suministros in official AEAT or DGT criteria and correct the IVA share, which today carries the IRPF-only 0.30 factor (user ruling 2026-10-27: ground first); `src/cadrumo/application/aggregation/iva_ledger.py`.
 - [x] `S12` - audit every category deductibility rule (IRPF proportionality, statutory multiplier, IVA treatment, citations, locale notes) against bundled official sources and correct each wrong rule (user instruction 2026-10-27: fix all deductibility rules); `src/cadrumo/_data/registry/aeat/facts/0064-categories-profile.toml`.

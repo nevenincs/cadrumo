@@ -42,6 +42,7 @@ from .....core.authority_grade import RegistryAuthorityGrade
 from .....core.money.rounding import round_to_cents
 from ..formula_runtime import calculate_registry_snapshot
 from ..temporal import select_revision
+from ._modelo_131_modulos_engine_support import excess_adjusted_modulos, progressive_bracket_coefficient
 from .published_authority import published_legal_reference, published_snapshot
 from .registry_tree import bundled_registry_tree
 
@@ -101,16 +102,7 @@ def _coeficiente_tramos(base: Decimal) -> Decimal:
     independently transcribed here rather than re-derived from the formula
     under test.
     """
-    if base <= Decimal("0"):
-        return Decimal("0")
-    for lower, upper, rate in _TRAMOS_ASALARIADOS:
-        if upper is None or base <= upper:
-            cumulative = Decimal("0")
-            for prior_lower, prior_upper, prior_rate in _TRAMOS_ASALARIADOS:
-                if prior_upper is not None and prior_upper <= lower:
-                    cumulative += prior_rate * (prior_upper - prior_lower)
-            return cumulative + rate * (base - lower)
-    raise AssertionError("unreachable: open-ended top tramo always matches")
+    return progressive_bracket_coefficient(base, _TRAMOS_ASALARIADOS)
 
 
 def _expected_minorado_no_inversion(previo: Decimal, *, modulo_1: Decimal, modulo_1_coefficient: Decimal) -> Decimal:
@@ -122,9 +114,7 @@ def _expected_minorado_no_inversion(previo: Decimal, *, modulo_1: Decimal, modul
 
 def _expected_modulos(minorado: Decimal, *, cuantia: Decimal | None) -> Decimal:
     """Reproduce Fase 3ª (índice corrector de exceso only)."""
-    if cuantia is None or minorado <= cuantia:
-        return minorado
-    return round_to_cents(cuantia + _INDICE_EXCESO * (minorado - cuantia))
+    return excess_adjusted_modulos(minorado, cuantia=cuantia, indice=_INDICE_EXCESO)
 
 
 def _run_hfp_1359_engine(

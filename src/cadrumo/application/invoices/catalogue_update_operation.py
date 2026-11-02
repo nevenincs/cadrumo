@@ -17,8 +17,9 @@ from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import OperationEffect
 from ...core.time.clock import now
 from ...domain.invoices.enums import PaymentStatus
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ...domain.invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
+from ..ledger.read_access import resolve_ledger_request_commit_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
 from ..operations.models import OperationRequest
@@ -42,7 +43,7 @@ class InvoiceUpdateValues(BaseModel):
     """Wire-safe correction values; selection is carried by the patch field mask."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
-    counterparty_name: str | None = None
+    counterparty_name: str | None = Field(default=None, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
     counterparty_country: str | None = None
     notes: str | None = None
     payment_status: PaymentStatus | None = None
@@ -199,12 +200,9 @@ def resolve_invoice_update_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile ledger rights and a fresh commit fence."""
-    if request.definition_id != INVOICE_UPDATE_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InvoiceUpdateRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    return with_commit_action(resolved)
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=INVOICE_UPDATE_OPERATION_DEFINITION_ID, request_type=InvoiceUpdateRequest
+    )
 
 
 def build_invoice_update_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

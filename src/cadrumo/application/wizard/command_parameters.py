@@ -56,6 +56,7 @@ _ENTITY_TYPE_CHOICE_VALUES: list[str] = []
 _LEGAL_ENTITY_FORM_CHOICE_VALUES: list[str] = []
 _IRPF_INCOME_CATEGORY_CHOICE_VALUES: list[str] = []
 _IRPF_ESTIMATION_REGIME_CHOICE_VALUES: list[str] = []
+_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICE_VALUES: list[str] = []
 _THIRD_PARTY_DECLARATION_ROLE_CHOICE_VALUES: list[str] = []
 _IRPF_SPECIAL_REGIME_CHOICE_VALUES: list[str] = []
 _SITUACION_FAMILIAR_CHOICE_VALUES: list[str] = []
@@ -356,6 +357,20 @@ SETUP_OPTION_INFOS: dict[str, typer.models.OptionInfo | None] = {
         click_type=_choice(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         metavar=_choice_metavar(_IRPF_ESTIMATION_REGIME_CHOICE_VALUES),
         help=tr("wizard.setup.flags.irpf-estimation-regime.help"),
+    ),
+    "irpf-activity-income-imputation-criterion": typer.Option(
+        "--irpf-activity-income-imputation-criterion",
+        click_type=_choice(_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICE_VALUES),
+        metavar=_choice_metavar(_IRPF_ACTIVITY_INCOME_IMPUTATION_CRITERION_CHOICE_VALUES),
+        help=tr("wizard.setup.flags.irpf-activity-income-imputation-criterion.help"),
+    ),
+    "irpf-activity-income-imputation-year": typer.Option(
+        "--irpf-activity-income-imputation-year",
+        help=tr("wizard.setup.flags.irpf-activity-income-imputation-year.help"),
+    ),
+    "irpf-codigo-comercio-accounting": typer.Option(
+        "--irpf-codigo-comercio-accounting/--no-irpf-codigo-comercio-accounting",
+        help=tr("wizard.setup.flags.irpf-codigo-comercio-accounting.help"),
     ),
     "irpf-special-regime": typer.Option(
         "--irpf-special-regime",

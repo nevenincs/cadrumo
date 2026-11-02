@@ -53,6 +53,7 @@ from ...domain.iva.schema import (
     IvaRateKind,
     spanish_eu_member_state,
 )
+from ...domain.iva.vehicle_use import IvaVehicleUse
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.models import Transaction
@@ -447,12 +448,16 @@ def iva_category_deductible_proportion(
     - ``degree_of_use``: the row's share.
     - ``bien_inversion_degree_of_use``: a MIXED row deducts its share only when
       the good's value makes it a bien de inversión (LIVA art. 108.Dos.5.º).
-    - ``vehicle_presumption``: the presumed share of LIVA art. 95.Tres.2.ª,
-      for a BUSINESS row as well, because booking the vehicle in the activity
-      is no proof of a higher degree of use (LIVA art. 95.Tres.4.ª).
+    - ``vehicle_presumption``: what LIVA art. 95.Tres.2.ª presumes for the row's
+      stated vehicle use, and otherwise the category's general presumption. It
+      displaces a MIXED row's stated share and a BUSINESS row's whole one alike:
+      neither the stated figure nor booking the vehicle in the activity proves a
+      degree of use (art. 95.Tres.4.ª), and a proven one is regularized, not
+      deducted up front (art. 95.Tres.3.ª).
 
-    A row without a category, or whose category the pinned authority does not
-    declare, keeps its own share.
+    A BUSINESS row without a category, or whose category the pinned authority
+    does not declare, keeps its own share. A MIXED one never reaches this
+    function: :func:`iva_mixed_use_treatment_is_undetermined` refuses it first.
 
     Args:
         transaction: The received ledger row.
@@ -470,7 +475,10 @@ def iva_category_deductible_proportion(
         return proportion
     mixed = transaction.business_classification is BusinessClassification.MIXED
     if rule.share is IvaMixedUseShare.VEHICLE_PRESUMPTION:
-        return rule.presumed_share
+        stated = transaction.iva_vehicle_use
+        if stated is None:
+            return rule.presumed_share
+        return _stated_vehicle_use_share(stated, proportion, operation_date=operation_date, operation=operation)
     if not mixed or rule.share is IvaMixedUseShare.DEGREE_OF_USE:
         return proportion
     if rule.share is IvaMixedUseShare.BIEN_INVERSION_DEGREE_OF_USE:
@@ -478,6 +486,33 @@ def iva_category_deductible_proportion(
         threshold = _bien_inversion_threshold(operation_date=operation_date, operation=operation)
         return proportion if base is not None and base >= threshold else None
     return None
+
+
+def iva_mixed_use_treatment_is_undetermined(
+    transaction: Transaction,
+    *,
+    year: int,
+    operation: PinnedAuthorityOperation,
+) -> bool:
+    """Return whether a MIXED received row's deduction cannot be decided from its category.
+
+    LIVA art. 95 denies a deduction for simultaneous use unless the good is a bien
+    de inversión or follows one, and the category is the typed statement of which
+    it is. Without one the row's share is not a degree of use the law recognises,
+    and zero is not established either.
+
+    Args:
+        transaction: The received ledger row.
+        year: The filing year whose category profiles apply.
+        operation: The caller-owned authority generation.
+
+    Returns:
+        ``True`` for a MIXED row whose category declares no IVA treatment under
+        ``operation``; ``False`` otherwise.
+    """
+    if transaction.business_classification is not BusinessClassification.MIXED:
+        return False
+    return _category_iva_mixed_use_rule(transaction, year=year, operation=operation) is None
 
 
 def _category_iva_mixed_use_rule(
@@ -498,6 +533,35 @@ def _category_iva_mixed_use_rule(
     except RegistryValidationError:
         return None
     return resolve_category_profile(category, year, operation=operation).proportionality.iva_mixed_use
+
+
+_VEHICLE_USE_TREATMENT_FACT_ID: Final = "liva-art-95-vehicle-use-treatment"
+_VEHICLE_USE_AT_DEGREE_OF_USE: Final = "degree_of_use"
+
+
+def _stated_vehicle_use_share(
+    stated: IvaVehicleUse,
+    proportion: Decimal,
+    *,
+    operation_date: date,
+    operation: PinnedAuthorityOperation,
+) -> Decimal:
+    """Return what the registry's treatment of a stated vehicle use deducts, for the row's date."""
+    resolved = operation.resolve_governed_fact(
+        MappingFactQuery(
+            fact_id=_VEHICLE_USE_TREATMENT_FACT_ID,
+            date_axis=DateAxis.TRANSACTION_DATE,
+            effective_date=operation_date,
+        )
+    )
+    if not isinstance(resolved, ResolvedMappingFact):
+        raise RegistryValidationError(f"{_VEHICLE_USE_TREATMENT_FACT_ID} must resolve to a mapping")
+    treatment = next((entry.value for entry in resolved.payload.entries if entry.key == stated.value), None)
+    if treatment == _VEHICLE_USE_AT_DEGREE_OF_USE:
+        return proportion
+    if not isinstance(treatment, str):
+        raise RegistryValidationError(f"{_VEHICLE_USE_TREATMENT_FACT_ID} declares no treatment for {stated.value!r}")
+    return Decimal(treatment)
 
 
 _BIEN_INVERSION_THRESHOLD_FACT_ID: Final = "iva-bien-inversion-escaso-valor-threshold"

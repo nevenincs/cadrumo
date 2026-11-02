@@ -834,6 +834,7 @@ application:
         counterparty_country_invalid: No és un codi de país de dues lletres que el
           llibre reconegui.
         counterparty_name_blank: El nom de la contrapart no pot quedar en blanc.
+        counterparty_name_too_long: El nom de la contrapart admet fins a {limit} caràcters.
         counterparty_tax_id_invalid: Aquest NIF no és vàlid per al país de la contrapart.
         counterparty_tax_id_required: Aquesta factura necessita el NIF de la contrapart.
           Només una factura simplificada emesa en pot prescindir.
@@ -885,6 +886,12 @@ application:
           continuï vinculada a transaccions: %{linked_transaction_ids}. No hi ha cap
           ordre de desvinculació: elimina aquestes transaccions amb `aeat app ledger
           remove`, cosa que allibera el vincle, i elimina després la factura.'
+        sealed_invoice_refused: La factura %{invoice_id} la va llegir el Model %{modelo}
+          de %{filing_year} %{period} (%{revision_state}, revisió %{calculation_revision_id}),
+          així que es rebutja aquest canvi perquè aquestes xifres continuïn sent certes.
+          Si no s'ha presentat, descarta aquest treball amb `aeat app modelo work
+          discard` i torna a calcular. Si s'ha presentat, emet una factura rectificativa
+          i presenta una complementària o substitutiva.
     linking:
       errors:
         linked_invoice_not_found: No s'ha trobat la factura %{invoice_id} després
@@ -1320,6 +1327,18 @@ application:
           justificant.
         what_to_do: Revisa els registres d'IVA de tot l'any, afegeix el justificant
           que falti i torna a calcular.
+      iva_operation_date_after_movement:
+        what: Algunes files del llibre tenen una data de l'operació posterior a la
+          bancària. Si aquests diners eren una bestreta, el seu IVA es va meritar
+          en cobrar-la.
+        what_to_do: En una bestreta, posa com a data de l'operació la del cobrament,
+          registra la resta en una fila pròpia i torna a calcular.
+      iva_row_placed_on_movement_date:
+        what: Algunes files del llibre no tenen la data de l'operació, així que la
+          seva data bancària ha triat el període de l'IVA. L'IVA es merita quan es
+          fa l'operació, no quan es mou el diner.
+        what_to_do: Afegeix la data de l'operació a les files de final de període
+          i torna a calcular.
       iva_selected_scope_evidence_failure:
         what: Els registres que sustenten l'IVA d'aquesta declaració no tenen justificant
           o no quadren.
@@ -2344,6 +2363,20 @@ application:
         ni justificant adjunt. Adjunta'l a l'apunt dels teus registres.
       transaction_evidence_missing_output: Una factura emesa amb IVA repercutit no
         té justificant. Adjunta'l a l'apunt dels teus registres.
+      undetermined_mixed_use_contributor: El càlcul desat del model %{modelo} de %{filing_year},
+        període %{period}, va comptar %{rows} despesa(es) d'ús mixt sense categoria
+        de despesa per la part indicada. Si calcules ara, quedaran retingudes fins
+        que els assignis la categoria. Els valors desats no han canviat.
+      withholding_count_exceeds_summary_perceptors: El model %{source_modelo} del
+        %{period} de %{filing_year} compta %{declared_perceptors} perceptor(s) a la
+        casella %{casilla_id}, però el model %{modelo} només recull %{summary_perceptors}
+        perceptor(s) diferent(s) en tot l'any. Tota persona comptada en aquesta casella
+        ha de figurar al resum anual. Afegeix els perceptors que falten al detall
+        d'aquest model o corregeix el recompte del model %{source_modelo}.
+      withholding_count_not_cross_checked: 'No s''ha pogut comparar el model %{modelo}
+        de %{filing_year} amb el model %{source_modelo} a %{unchecked_periods}, perquè
+        no consta cap declaració d''aquests períodes. Períodes comparats: %{checked_periods}.
+        Això no vol dir que no paguessis ningú en aquests períodes.'
       withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} de %{filing_year}
         no declara cap percepció per a cap perceptor, però els teus registres recullen
         rendes sotmeses a retenció pagades aquell any: %{contradicting_invoice_count}
@@ -2926,6 +2959,9 @@ application:
       edit_missing_modelo_requirements: 'Les dades d''identitat són completes, però
         aquest perfil declara IVA i encara li falten camps obligatoris del Model 303.
         Afegeix aquests flags a la mateixa ordre i torna a executar-la: %{missing_flags}.'
+      imputation_year_required: 'El criteri d''imputació i la resposta sobre el Código
+        de Comercio s''indiquen cadascun per a un exercici. Afegeix aquest indicador
+        i torna a executar l''ordre: %{missing_flags}.'
       persist_patch_unknown_question_id: El pedaç de l'assistent referència un id
         de pregunta desconegut.
       profile_flag_required: L'assistent requereix --profile NAME (sense alternativa

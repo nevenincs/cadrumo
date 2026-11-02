@@ -54,7 +54,7 @@ from ..producer_snapshot import GeneralFilingProfileFacts, build_filing_producer
 from ..projection import FilingRecordRenderContext
 from ..record_field_renderer import continuation_page_marker, format_field
 from ..runtime import ModeloOperatorProfile
-from .export_support import _PERIOD, _schema_provider, _typed_producer_snapshot
+from .export_support import EXPORT_PERIOD, export_schema_provider, typed_producer_snapshot
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -111,7 +111,7 @@ def test_a_complementaria_writes_blank_on_its_first_page_and_c_on_a_further_one(
 ) -> None:
     snapshot, layout, record, field = _shipped(modelo, filing_year, period, record_id, field_id)
     context = FilingRecordRenderContext(registry_snapshot=snapshot, layout=layout, record=record, occurrence=occurrence)
-    complementaria = _typed_producer_snapshot(complementaria=True)
+    complementaria = typed_producer_snapshot(complementaria=True)
     assert complementaria.amendment_evidence is not None
     assert complementaria.amendment_evidence.is_complementaria
 
@@ -136,7 +136,7 @@ _DPA_OPEN = b"<T131DPA00>"
 def _approved_131_draft(epigrafes: tuple[str, ...]):
     return build_draft(
         modelo="131",
-        period=_PERIOD,
+        period=EXPORT_PERIOD,
         profile=ModeloOperatorProfile(tax_id="12345678Z", display_name="Export registry test"),
         inputs={
             _M131_RENDIMIENTO_MODULOS: Decimal("1000"),
@@ -146,12 +146,12 @@ def _approved_131_draft(epigrafes: tuple[str, ...]):
             "modelo-131.dpa.epigrafe-iae": list(epigrafes),
             "modelo-131.did.iban": "ES9121000418450200051332",
         },
-        schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     ).model_copy(update={"status": ModeloDraftStatus.APROBADO})
 
 
 def test_a_modelo_131_complementaria_export_marks_only_its_second_dpa_page(tmp_path: Path) -> None:
-    complementaria = _typed_producer_snapshot(complementaria=True)
+    complementaria = typed_producer_snapshot(complementaria=True)
     snapshot = build_filing_producer_snapshot(
         modelo=Modelo("131"),
         taxpayer_tax_id=complementaria.taxpayer_tax_id,
@@ -172,7 +172,7 @@ def test_a_modelo_131_complementaria_export_marks_only_its_second_dpa_page(tmp_p
         producer_snapshot=snapshot,
         product_software_identity=development_mock_software_identity(),
         prior_domiciliation_election=PriorDomiciliationElection.KEEP,
-        schema_provider=_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
+        schema_provider=export_schema_provider(filing_year=2026, period="1T", modelos=("131",)),
     )
 
     payload = output_path.read_bytes()

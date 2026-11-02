@@ -2,9 +2,11 @@
 
 Runs the production registry and supervisor over the bundled Facturae specimen,
 a real encrypted attachment read by the deterministic structured reader. The
-document prints a base of 1000.00, IVA 21 % of 210.00 and a 15 % retención of
-150.00, so 1000.00 x 15 / 100 = 150.00 and the cash due on base plus cuota is
-1210.00 - 150.00 = 1060.00.
+document prints a base of 1000.00, IVA 21 % of 210.00, a 15 % retención of
+150.00 and a suplido of 45.00, so 1000.00 x 15 / 100 = 150.00. A suplido (LIVA
+art. 78.Tres.3.º) stays out of the base and the cuota but is owed to whoever
+advanced it, so the total is 1000.00 + 210.00 + 45.00 = 1255.00 and the cash due
+is 1255.00 - 150.00 = 1105.00, the specimen's printed TotalExecutableAmount.
 """
 
 from __future__ import annotations
@@ -161,19 +163,19 @@ _WITHHELD_BLOCK = (
 def test_a_reading_left_alone_reaches_the_invoice(
     runtime: OperationRuntime, operation: PinnedAuthorityOperation
 ) -> None:
-    """The document's 15 % of 1000.00 is kept, so the cash due is 1210.00 - 150.00."""
+    """The document's 15 % of 1000.00 is kept, so the cash due is 1255.00 - 150.00."""
     settled = _confirm(runtime, operation)
 
     assert settled.condition is OperationTerminalCondition.SUCCEEDED
-    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1060.00"))
+    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1105.00"))
 
 
 def test_a_person_overrides_the_reading(runtime: OperationRuntime, operation: PinnedAuthorityOperation) -> None:
-    # 7 % of 1000.00 is 70.00, so the cash due is 1210.00 - 70.00.
+    # 7 % of 1000.00 is 70.00, so the cash due is 1255.00 - 70.00.
     settled = _confirm(runtime, operation, retention_points="7", retention_amount="70.00")
 
     assert settled.condition is OperationTerminalCondition.SUCCEEDED
-    assert _stored_retention(runtime) == (Decimal("0.07"), Decimal("70.00"), Decimal("1140.00"))
+    assert _stored_retention(runtime) == (Decimal("0.07"), Decimal("70.00"), Decimal("1185.00"))
 
 
 def test_a_document_with_no_retention_keeps_none_rather_than_zero(
@@ -188,7 +190,7 @@ def test_a_document_with_no_retention_keeps_none_rather_than_zero(
     settled = _confirm(runtime, operation, source=source, expected_reading=None)
 
     assert settled.condition is OperationTerminalCondition.SUCCEEDED
-    assert _stored_retention(runtime) == (None, None, Decimal("1210.00"))
+    assert _stored_retention(runtime) == (None, None, Decimal("1255.00"))
 
 
 def test_a_disagreeing_reading_blocks_until_answered_and_then_keeps_only_the_amount(
@@ -207,7 +209,7 @@ def test_a_disagreeing_reading_blocks_until_answered_and_then_keeps_only_the_amo
 
     answered = _confirm(runtime, operation, source=source, expected_reading=Decimal("140.00"), answer_findings=True)
     assert answered.condition is OperationTerminalCondition.SUCCEEDED
-    assert _stored_retention(runtime) == (None, Decimal("140.00"), Decimal("1070.00"))
+    assert _stored_retention(runtime) == (None, Decimal("140.00"), Decimal("1115.00"))
 
 
 def test_reconfirming_an_invoice_that_predates_the_reading_changes_nothing_and_says_so(
@@ -224,7 +226,7 @@ def test_reconfirming_an_invoice_that_predates_the_reading_changes_nothing_and_s
     settled = _confirm(runtime, operation)
 
     assert settled.condition is OperationTerminalCondition.SUCCEEDED
-    assert _stored_retention(runtime) == (None, None, Decimal("1210.00"))
+    assert _stored_retention(runtime) == (None, None, Decimal("1255.00"))
     assert isinstance(settled.published, LedgerEvidenceConfirmProjection)
     report = settled.published.confirmation.retention_discrepancy
     assert report is not None
@@ -240,7 +242,7 @@ def test_reconfirming_with_a_stated_retention_still_refuses(
     settled = _confirm(runtime, operation, retention_points="7", retention_amount="70.00")
 
     assert settled.condition is OperationTerminalCondition.FAILED
-    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1060.00"))
+    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1105.00"))
 
 
 def test_reconfirming_unchanged_is_a_no_op_with_nothing_to_report(
@@ -253,7 +255,7 @@ def test_reconfirming_unchanged_is_a_no_op_with_nothing_to_report(
     assert settled.condition is OperationTerminalCondition.SUCCEEDED
     assert isinstance(settled.published, LedgerEvidenceConfirmProjection)
     assert settled.published.confirmation.retention_discrepancy is None
-    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1060.00"))
+    assert _stored_retention(runtime) == (Decimal("0.15"), Decimal("150.00"), Decimal("1105.00"))
 
 
 @pytest.mark.parametrize(
@@ -275,7 +277,7 @@ def test_a_stated_retention_is_kept_on_either_scale(
 
     assert settled.condition is OperationTerminalCondition.SUCCEEDED
     amount = Decimal(statement["retention_amount"])
-    assert _stored_retention(runtime) == (rate, amount, Decimal("1210.00") - amount)
+    assert _stored_retention(runtime) == (rate, amount, Decimal("1255.00") - amount)
 
 
 @pytest.mark.parametrize(
@@ -299,10 +301,11 @@ def test_a_retention_that_disagrees_is_refused(
 ) -> None:
     settled = _confirm(runtime, operation, **statement)
 
-    # The invoice's own figure check stops it before anything is written.
-    assert settled.condition is OperationTerminalCondition.FAILED
+    # The invoice's own figure check stops it before anything is written, as a typed refusal.
+    assert settled.condition is OperationTerminalCondition.REFUSED
     assert isinstance(settled.published, OperationErrorDetailV1)
-    assert "value_error" in settled.published.model_dump_json()
+    assert settled.published.error_code == "REFUSED_INVOICE_RETENTION_FIGURES"
+    assert "value_error" not in settled.published.model_dump_json()
     assert not InvoiceCatalogueRepository(bucket_id=str(runtime.profile_id)).load().invoices
 
 

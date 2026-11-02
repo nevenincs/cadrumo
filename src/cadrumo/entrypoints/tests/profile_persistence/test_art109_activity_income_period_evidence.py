@@ -1,9 +1,12 @@
 """Art. 109 current-period activity-income coverage tests.
 
 The advisory is built by the verification finding collector from the quarter's
-persisted ledger rows. The activity boxes stay calculation grade until the
-imputation criterion is grounded, so verify itself refuses the calculation on
-box 01 for now.
+persisted ledger rows. The rows are bank movements linking no invoice, which only
+the cobros y pagos criterion places in a quarter (RIRPF art. 7.2), so the profile
+declares that election for 2026 under its directa normal regime. That grounds
+boxes 01 and 02, but every verified quarter holds a withheld receipt, and box 06
+(activity withholding) stays calculation grade, so verify refuses on box 06 while
+the advisories are still collected for the calculation.
 """
 
 from __future__ import annotations
@@ -22,6 +25,7 @@ from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCata
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
+from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import upsert_test_profile_facts
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -40,13 +44,13 @@ from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
 from cadrumo.entrypoints.tests.profile_persistence.verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
 from cadrumo.entrypoints.tests.profile_persistence.verification_substance_support import (
-    _CASILLA_01,
     _CASILLA_05,
     _CASILLA_06,
     _CASILLA_08,
@@ -236,6 +240,9 @@ def test_art109_period_evidence_fails_closed_when_gross_only_receipt_cannot_prov
 def objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         _seed_ready_profile(bucket_id=_BUCKET_ID)
+        upsert_test_profile_facts(
+            _BUCKET_ID, (fact for fact in cash_criterion_facts(2026) if fact.path != "irpf.estimation_regime")
+        )
         yield profile.repository
 
 
@@ -333,18 +340,17 @@ def _collect_art109_findings(
     ]
 
 
-def _verify_refuses_capped_box_01(
+def _verify_refuses_capped_box_06(
     objects: SecureObjectRepository,
     *,
     transactions: tuple[Transaction, ...],
     profile_flag: bool,
     operation: PinnedAuthorityOperation,
 ) -> list[ModeloVerificationFinding]:
-    """Assert verify refuses on capped box 01, and return the advisories still built for the calculation."""
+    """Assert verify refuses on capped box 06, and return the advisories still built for the calculation."""
     _, revision = _calculate_over_quarter_ledger(objects, transactions=transactions, operation=operation)
-    assert any(
-        issue.reason == _ADVISORY_BINDING_VALUE and issue.casilla_id == _CASILLA_01 for issue in revision.source_issues
-    ), revision.source_issues
+    capped = {issue.casilla_id for issue in revision.source_issues if issue.reason == _ADVISORY_BINDING_VALUE}
+    assert capped == {_CASILLA_06}, revision.source_issues
     with (
         pytest.raises(ModeloCalculationBlockedError) as refused,
         bundled_indexed_authority().operation() as verify_operation,
@@ -363,15 +369,14 @@ def _verify_refuses_capped_box_01(
         )
     context = refused.value.context or {}
     assert context["reason"] == _ADVISORY_BINDING_VALUE
-    assert context["box"] == "01"
+    assert context["box"] == "06"
     return _collect_art109_findings(objects, revision=revision, profile_flag=profile_flag)
 
 
 def test_verify_art109_advisory_uses_proven_period_evidence_when_profile_flag_is_false(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The activity boxes stay calculation grade until the imputation criterion is grounded."""
-    findings = _verify_refuses_capped_box_01(
+    findings = _verify_refuses_capped_box_06(
         objects,
         transactions=_positive_threshold_transactions(),
         profile_flag=False,
@@ -384,8 +389,7 @@ def test_verify_art109_advisory_uses_proven_period_evidence_when_profile_flag_is
 def test_verify_art109_advisory_proven_below_threshold_overrides_declared_profile_flag(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The activity boxes stay calculation grade until the imputation criterion is grounded."""
-    findings = _verify_refuses_capped_box_01(
+    findings = _verify_refuses_capped_box_06(
         objects,
         transactions=_below_threshold_transactions(),
         profile_flag=True,
@@ -398,8 +402,7 @@ def test_verify_art109_advisory_proven_below_threshold_overrides_declared_profil
 def test_verify_art109_advisory_keeps_declared_profile_fact_when_period_evidence_is_insufficient(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The activity boxes stay calculation grade until the imputation criterion is grounded."""
-    findings = _verify_refuses_capped_box_01(
+    findings = _verify_refuses_capped_box_06(
         objects,
         transactions=_insufficient_transactions(),
         profile_flag=True,

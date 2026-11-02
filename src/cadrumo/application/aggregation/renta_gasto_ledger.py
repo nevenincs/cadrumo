@@ -36,8 +36,9 @@ against rules built by :func:`~.renta_ledger.resolve_category_deduction_rules`.
 A usage-ratio category (home-office suministros) is therefore
 apportioned once, by the operator's ratio and the rule's statutory multiplier,
 whatever the row's classification; a MIXED row's stored ``business_pct`` scales
-every other category. A row declaring no category has no rule to run and
-contributes its classification fraction of the base.
+every other category. A row declaring no category is refused, as the annual
+pipeline refuses it: the payment is computed on the same rendimiento neto
+(RIRPF art. 110.1.a), and no deduction rule can run without knowing the expense.
 
 This module does NOT reuse the annual pipeline's invoice-evidence
 reconciliation or its annual window, which are constraint-shape-divergent from
@@ -66,6 +67,8 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation, 
 from ...domain.categories.profile import CategoryProfile
 from ...domain.categories.spending_category import SpendingCategory
 from ...domain.contribuyente.ccaa import CCAA
+from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import (
     RentaDeductibilityStatus,
@@ -85,6 +88,7 @@ from . import _shared_issue_reasons
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from ._renta_business_eligibility import (
+    RentaExpenseAdvisory,
     exclusive_business_use,
     renta_expense_business_proportion,
     row_scaling_proportion,
@@ -100,9 +104,18 @@ from .errors import AggregationValidationError
 # Intra-package reuse of the sibling ledger's category-rule construction and
 # resolvers, permitted by the architecture rule; the cross-package boundary is
 # enforced elsewhere.
+from .renta_imputation import (
+    ImputationCriteria,
+    ImputationUnresolved,
+    impute_row,
+    linked_accrual_date,
+    rows_left_out_summary,
+    rows_touching_window,
+)
 from .renta_ledger import (
     CategoryRuleRefusal,
     RentaCategoryDeductionRules,
+    accepted_row_advisory,
     refusal_issue_reason,
     resolve_category_deduction_rules,
     resolve_category_rule,
@@ -129,12 +142,17 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
 
     UNSUPPORTED_CURRENCY = _shared_issue_reasons.UNSUPPORTED_CURRENCY
     OUTSIDE_PERIOD = _shared_issue_reasons.OUTSIDE_PERIOD
+    # RIRPF art. 7 cannot place the row in an ejercicio; it enters no box.
+    IMPUTATION_UNRESOLVED = "imputation_unresolved"
     # A BUSINESS / MIXED expense with no declared IVA-exclusive base imponible:
     # the gross transfer includes indirect tax recovered elsewhere,
     # which is NOT a Renta gasto, so it cannot be aggregated IVA-exclusively. The
     # row is surfaced (no silent over-declaration of gastos) rather than
     # gross-folded; the operator tags it with a taxable_base via classify.
     MISSING_TAXABLE_BASE = "missing_taxable_base"
+    # An expense with no spending category: no deduction rule can run on it, and
+    # the gasto is not zero either, so the row is held back.
+    MISSING_CATEGORY = _shared_issue_reasons.MISSING_CATEGORY
     # The row's category rule could not be evaluated or refused the row. Each
     # is a declarable gasto the rule dropped, so it is surfaced, never summed
     # at full value in place of the rule.
@@ -210,6 +228,8 @@ class RentaGastoLedgerAggregation(
     """
 
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
+    advisories: tuple[RentaExpenseAdvisory, ...] = ()
+    """Rows that keep their figure under a reading of the law the operator should review."""
 
 
 def aggregate_renta_gasto_ledger_from_repositories(
@@ -226,6 +246,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
     operation: PinnedAuthorityOperation | None = None,
     ownership_share: Decimal | None = None,
     register_owned_transaction_ids: frozenset[str] = frozenset(),
+    criteria: ImputationCriteria | None = None,
+    invoices: InvoiceCatalogue | None = None,
 ) -> RentaGastoLedgerAggregation:
     """Load the transaction catalogue and aggregate a cumulative expense window.
 
@@ -257,6 +279,8 @@ def aggregate_renta_gasto_ledger_from_repositories(
                 operation=indexed_operation,
                 ownership_share=ownership_share,
                 register_owned_transaction_ids=register_owned_transaction_ids,
+                criteria=criteria,
+                invoices=invoices,
             )
     repository = transaction_repository
     if repository.bucket_id != bucket_id:
@@ -268,7 +292,23 @@ def aggregate_renta_gasto_ledger_from_repositories(
     # out-of-window remainder comes from the plaintext date index and is
     # reported uniformly as ``OUTSIDE_PERIOD``.
     window = cumulative_year_to_date_window(period)
-    partition = repository.partition_by_date_range(window.start, window.end)
+    left_out: OutOfWindowTransactionSummary | None = None
+    if criteria is None or invoices is None:
+        partition = repository.partition_by_date_range(window.start, window.end)
+        catalogue = partition.in_window
+    else:
+        # A row's date may be its invoice's, so a row banked outside the window can belong in it.
+        partition = None
+        whole_catalogue = repository.load()
+        catalogue = rows_touching_window(
+            whole_catalogue,
+            invoices,
+            kind=InvoiceKind.RECEIVED,
+            invoice_id_of=lambda row: row.purchase_invoice_evidence_id,
+            start=window.start,
+            end=window.end,
+        )
+        left_out = rows_left_out_summary(whole_catalogue, catalogue)
     iva_deduction_ratio = resolve_iva_deduction_ratio(
         bucket_id=bucket_id,
         ejercicio=period.filing_year,
@@ -277,7 +317,7 @@ def aggregate_renta_gasto_ledger_from_repositories(
         operation=operation,
     )
     result = aggregate_renta_gasto_ledger(
-        partition.in_window,
+        catalogue,
         bucket_id=bucket_id,
         period=period,
         iva_deduction_ratio=iva_deduction_ratio,
@@ -294,9 +334,14 @@ def aggregate_renta_gasto_ledger_from_repositories(
         operation=operation,
         ownership_share=ownership_share,
         register_owned_transaction_ids=register_owned_transaction_ids,
+        criteria=criteria,
+        invoices=invoices,
     )
-    out_of_window_summary = partition.out_of_window_summary or OutOfWindowTransactionSummary.from_index_entries(
-        partition.out_of_window,
+    out_of_window_summary = (
+        left_out
+        if partition is None
+        else partition.out_of_window_summary
+        or OutOfWindowTransactionSummary.from_index_entries(partition.out_of_window)
     )
     return result.model_copy(
         update={"out_of_window_summary": out_of_window_summary},
@@ -320,6 +365,8 @@ def aggregate_renta_gasto_ledger(
     operation: PinnedAuthorityOperation | None = None,
     ownership_share: Decimal | None = None,
     register_owned_transaction_ids: frozenset[str] = frozenset(),
+    criteria: ImputationCriteria | None = None,
+    invoices: InvoiceCatalogue | None = None,
 ) -> RentaGastoLedgerAggregation:
     """Aggregate OUTGOING deductible-expense transactions into a selected target.
 
@@ -355,6 +402,9 @@ def aggregate_renta_gasto_ledger(
         register_owned_transaction_ids: The ledger rows the activity-asset
             register declares as an asset's acquisition; the register deducts
             them through its amortization schedule.
+        criteria: The dated imputation election that places each row; ``None``
+            keeps the bank date, for a caller not consulting the profile.
+        invoices: The catalogue whose received invoices date a row under accrual.
 
     Returns a :class:`RentaGastoLedgerAggregation` covering the cumulative
     fiscal window. ``period`` must be quarterly; the cumulative window extends
@@ -379,6 +429,8 @@ def aggregate_renta_gasto_ledger(
                 operation=indexed_operation,
                 ownership_share=ownership_share,
                 register_owned_transaction_ids=register_owned_transaction_ids,
+                criteria=criteria,
+                invoices=invoices,
             )
     window = cumulative_year_to_date_window(period)
     rules = resolve_category_deduction_rules(
@@ -398,6 +450,7 @@ def aggregate_renta_gasto_ledger(
 
     observations: list[RentaGastoObservation] = []
     issues: list[RentaGastoLedgerAggregationIssue] = []
+    advisories: list[RentaExpenseAdvisory] = []
 
     for transaction in transactions.values():
         if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE:
@@ -409,6 +462,8 @@ def aggregate_renta_gasto_ledger(
             target_casilla_id=target_casilla_id,
             accept_activity_marker=accept_activity_marker,
             rules=rules,
+            criteria=criteria,
+            invoices=invoices,
         )
         if outcome is None:
             continue
@@ -416,6 +471,9 @@ def aggregate_renta_gasto_ledger(
             issues.append(outcome.model_copy(update={"category_id": transaction.category_id}))
         else:
             observations.append(outcome)
+            advisory = accepted_row_advisory(transaction, rules=rules)
+            if advisory is not None:
+                advisories.append(advisory)
 
     observations = _apply_statutory_cap_trims(observations, rules=rules)
     casilla_aggregation = _gasto_casilla_aggregation(
@@ -429,6 +487,7 @@ def aggregate_renta_gasto_ledger(
         observations=tuple(observations),
         issues=tuple(issues),
         casilla_aggregation=casilla_aggregation,
+        advisories=tuple(advisories),
     )
 
 
@@ -440,6 +499,8 @@ def _classify_gasto_transaction(
     target_casilla_id: CasillaId,
     accept_activity_marker: bool,
     rules: RentaCategoryDeductionRules,
+    criteria: ImputationCriteria | None = None,
+    invoices: InvoiceCatalogue | None = None,
 ) -> RentaGastoObservation | RentaGastoLedgerAggregationIssue | None:
     """Filter one ledger transaction against the selected expense pipeline.
 
@@ -476,16 +537,36 @@ def _classify_gasto_transaction(
     if proportion is None:
         return None
 
+    filing_date = _imputed_gasto_date(transaction, criteria=criteria, invoices=invoices)
+    if isinstance(filing_date, ImputationUnresolved):
+        cash = transaction.raw.value_date or transaction.raw.booked_date
+        if not cumulative_start <= cash <= cumulative_end:
+            return RentaGastoLedgerAggregationIssue(
+                transaction_id=transaction_id,
+                reason=RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD,
+                detail=f"payment of {cash} is outside the cumulative gasto window",
+            )
+        # RIRPF art. 110.1.a computes the payment on the annual rendimiento neto, and the annual
+        # pipeline judges the category first: the row needs its category whichever year it lands in.
+        refusal = _category_refusal(transaction, rules=rules)
+        if refusal is not None:
+            return refusal
+        return RentaGastoLedgerAggregationIssue(
+            transaction_id=transaction_id,
+            reason=RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
+            detail=f"{filing_date.value}: payment of {cash} cannot be placed in an ejercicio",
+        )
+    if criteria is not None and not cumulative_start <= filing_date <= cumulative_end:
+        return None
     gate_issue = _gasto_gate_issue(
         transaction,
         transaction_id=transaction_id,
         cumulative_start=cumulative_start,
         cumulative_end=cumulative_end,
+        filing_date=filing_date,
     )
     if gate_issue is not None:
         return gate_issue
-
-    filing_date = transaction.raw.value_date or transaction.raw.booked_date
 
     # Both taxable_base and iva_amount are denominated in the row's NATIVE
     # currency (see domain.transactions.tests.test_gross_invariant), so a
@@ -504,65 +585,49 @@ def _classify_gasto_transaction(
         raise ValueError(msg)
     eur_iva_amount = effective_eur_iva_amount(transaction)
 
-    category_id = transaction.category_id or None
-    if category_id is None:
-        # A row marked business by classification alone declares no category, so
-        # there is no category rule to run; it contributes its classification
-        # fraction of the base.
-        deductible_amount = _classification_deductible_amount(
-            eur_base=eur_base,
-            eur_iva_amount=eur_iva_amount,
-            iva_deduction_ratio=rules.context.iva_deduction_ratio,
-            proportion=proportion,
-        )
-    else:
-        evaluated = _category_rule_deductible_amount(
-            transaction,
-            category_id=category_id,
-            eur_base=eur_base,
-            eur_iva_amount=eur_iva_amount,
-            proportion=proportion,
-            rules=rules,
-        )
-        if isinstance(evaluated, RentaGastoLedgerAggregationIssue):
-            return evaluated
-        deductible_amount = evaluated
+    evaluated = _category_rule_deductible_amount(
+        transaction,
+        eur_base=eur_base,
+        eur_iva_amount=eur_iva_amount,
+        proportion=proportion,
+        rules=rules,
+    )
+    if isinstance(evaluated, RentaGastoLedgerAggregationIssue):
+        return evaluated
     return RentaGastoObservation(
         transaction_id=transaction_id,
         target_casilla_id=target_casilla_id,
-        deductible_amount=deductible_amount,
+        deductible_amount=evaluated,
         filing_date=filing_date,
-        category_id=category_id,
+        category_id=transaction.category_id,
     )
 
 
-def _classification_deductible_amount(
+def _category_refusal(
+    transaction: Transaction,
     *,
-    eur_base: Decimal,
-    eur_iva_amount: Decimal | None,
-    iva_deduction_ratio: Decimal | None,
-    proportion: Decimal,
-) -> Decimal:
-    """Return the EUR base, plus any non-recoverable IVA, scaled by the business fraction.
-
-    Recovered indirect tax is not a Renta gasto, so the IVA-exclusive base
-    imponible is the deductible gasto by default. When the activity's
-    IVA-deduction ratio is known and less than full, the non-recoverable share of
-    iva_amount joins the base (PGC NRV 12.ª) -- the same rule
-    ``domain.renta.ledger_expenses._deductible_basis_amount`` applies on the
-    category-rule side: only when BOTH iva_amount and the ratio are known, else
-    the historic base-only figure stands.
-    """
-    deductible_base = eur_base
-    if eur_iva_amount is not None and iva_deduction_ratio is not None:
-        deductible_base += eur_iva_amount * (Decimal("1") - iva_deduction_ratio)
-    return deductible_base * proportion
+    rules: RentaCategoryDeductionRules,
+) -> RentaGastoLedgerAggregationIssue | None:
+    """Return the issue for a row whose category cannot answer for its expense, or ``None`` when it can."""
+    resolved = resolve_category_rule(
+        transaction.category_id,
+        profiles=rules.profiles,
+        region_overrides=rules.region_overrides,
+        context=rules.context,
+        profile_year=rules.profile_year,
+    )
+    if not isinstance(resolved, CategoryRuleRefusal):
+        return None
+    return RentaGastoLedgerAggregationIssue(
+        transaction_id=transaction.transaction_id,
+        reason=RentaGastoLedgerAggregationIssueReason(resolved.reason),
+        detail=resolved.detail,
+    )
 
 
 def _category_rule_deductible_amount(
     transaction: Transaction,
     *,
-    category_id: str,
     eur_base: Decimal,
     eur_iva_amount: Decimal | None,
     proportion: Decimal,
@@ -578,7 +643,7 @@ def _category_rule_deductible_amount(
     """
     transaction_id = transaction.transaction_id
     resolved = resolve_category_rule(
-        category_id,
+        transaction.category_id,
         profiles=rules.profiles,
         region_overrides=rules.region_overrides,
         context=rules.context,
@@ -650,15 +715,30 @@ def _apply_statutory_cap_trims(
     ]
 
 
+def _imputed_gasto_date(
+    transaction: Transaction,
+    *,
+    criteria: ImputationCriteria | None,
+    invoices: InvoiceCatalogue | None,
+) -> date | ImputationUnresolved:
+    """Place one payment by the dated election, or by its bank date when no election is consulted."""
+    cash = transaction.raw.value_date or transaction.raw.booked_date
+    if criteria is None:
+        return cash
+    evidence_id = transaction.purchase_invoice_evidence_id
+    invoice = None if invoices is None or evidence_id is None else invoices.get(evidence_id)
+    return impute_row(cash, linked_accrual_date(invoice, kind=InvoiceKind.RECEIVED), criteria)
+
+
 def _gasto_gate_issue(
     transaction: Transaction,
     *,
     transaction_id: str,
     cumulative_start: date,
     cumulative_end: date,
+    filing_date: date,
 ) -> RentaGastoLedgerAggregationIssue | None:
     """Return the first downstream issue for an eligible gasto transaction."""
-    filing_date = transaction.raw.value_date or transaction.raw.booked_date
     if not (cumulative_start <= filing_date <= cumulative_end):
         return RentaGastoLedgerAggregationIssue(
             transaction_id=transaction_id,

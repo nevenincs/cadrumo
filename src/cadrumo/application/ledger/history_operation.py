@@ -44,6 +44,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .history_query import LedgerHistoryQuery, LedgerHistoryV1, read_ledger_history
 from .id_resolution import resolve_lineage_transaction
+from .read_access import resolve_ledger_request_read_access
 from .read_ports import LedgerReadPortsFactory
 
 LEDGER_HISTORY_OPERATION_DEFINITION_ID = "ledger.history"
@@ -360,21 +361,15 @@ def resolve_ledger_history_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require complete-period authority because edit and sibling history span periods."""
-    return _resolve_history_access(request, context, definition_id=LEDGER_HISTORY_OPERATION_DEFINITION_ID)
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_HISTORY_OPERATION_DEFINITION_ID, request_type=LedgerHistoryRequest
+    )
 
 
 def resolve_ledger_history_typed_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Admit the typed history as the history is admitted."""
-    return _resolve_history_access(request, context, definition_id=LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID)
-
-
-def _resolve_history_access(
-    request: OperationRequest[BaseModel], context: OperationAccessContext, *, definition_id: str
-) -> ResolvedOperationAccess:
-    from .read_access import resolve_ledger_read_access
-
-    if request.definition_id != definition_id or not isinstance(request.payload, LedgerHistoryRequest):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=LEDGER_HISTORY_TYPED_OPERATION_DEFINITION_ID, request_type=LedgerHistoryRequest
+    )

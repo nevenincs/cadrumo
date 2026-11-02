@@ -99,53 +99,55 @@ class _RefusalRoute:
     A route whose value is absent from the refusal is an invalid refusal.
     """
 
-    message: str
+    message_key: str
     context: Mapping[str, str]
 
 
-_SEED_BLOCKED = _RefusalRoute("cli.app.ledger.prorrata.seed_blocked", {"detail": "blocking_detail"})
+_SEED_BLOCKED = _RefusalRoute(message_key="cli.app.ledger.prorrata.seed_blocked", context={"detail": "blocking_detail"})
 _PROVENANCE_ACCEPTED = {"provenance": "provenance", "accepted": "accepted"}
 _EJERCICIO = {"ejercicio": "ejercicio"}
 _SECTOR_EJERCICIO = {"ejercicio": "ejercicio", "sector_id": "sector_id"}
 
 _REFUSAL_ROUTES: Final[Mapping[str, _RefusalRoute]] = {
-    "validation": _RefusalRoute(_DEFAULT_REFUSAL_MESSAGE, {"detail": "detail"}),
+    "validation": _RefusalRoute(message_key=_DEFAULT_REFUSAL_MESSAGE, context={"detail": "detail"}),
     "provenance_required": _RefusalRoute(
-        "cli.app.ledger.prorrata.provenance_requires_evidence",
-        {"accepted": "accepted"},
+        message_key="cli.app.ledger.prorrata.provenance_requires_evidence",
+        context={"accepted": "accepted"},
     ),
     "provenance_not_electable": _RefusalRoute(
-        "cli.app.ledger.prorrata.provenance_not_electable",
-        _PROVENANCE_ACCEPTED,
+        message_key="cli.app.ledger.prorrata.provenance_not_electable",
+        context=_PROVENANCE_ACCEPTED,
     ),
     "reference_required": _RefusalRoute(
-        "cli.app.ledger.prorrata.reference_required",
-        {"provenance": "provenance"},
+        message_key="cli.app.ledger.prorrata.reference_required",
+        context={"provenance": "provenance"},
     ),
-    "reference_not_permitted": _RefusalRoute("cli.app.ledger.prorrata.reference_not_permitted", {}),
+    "reference_not_permitted": _RefusalRoute(message_key="cli.app.ledger.prorrata.reference_not_permitted", context={}),
     "seed_source_blocked": _SEED_BLOCKED,
     "seed_existing_blocked": _SEED_BLOCKED,
     "seed_source_absent": _RefusalRoute(
-        "cli.app.ledger.prorrata.seed_source_absent",
-        {"prior_ejercicio": "prior_ejercicio", "ejercicio": "ejercicio"},
+        message_key="cli.app.ledger.prorrata.seed_source_absent",
+        context={"prior_ejercicio": "prior_ejercicio", "ejercicio": "ejercicio"},
     ),
     "regulated_override_standing": _RefusalRoute(
-        "cli.app.ledger.prorrata.seed_regulated_override_standing",
-        {"provenance": "existing_provenance", "ejercicio": "ejercicio"},
+        message_key="cli.app.ledger.prorrata.seed_regulated_override_standing",
+        context={"provenance": "existing_provenance", "ejercicio": "ejercicio"},
     ),
     "sector_prior_definitive_absent": _RefusalRoute(
-        "cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
-        {"prior_ejercicio": "prior_ejercicio", **_SECTOR_EJERCICIO},
+        message_key="cli.app.ledger.prorrata.seed_sector_prior_definitive_absent",
+        context={"prior_ejercicio": "prior_ejercicio", **_SECTOR_EJERCICIO},
     ),
     "sector_settlement_entry_absent": _RefusalRoute(
-        "cli.app.ledger.prorrata.settle_sector_entry_absent",
-        _SECTOR_EJERCICIO,
+        message_key="cli.app.ledger.prorrata.settle_sector_entry_absent",
+        context=_SECTOR_EJERCICIO,
     ),
-    "gross_declaration_duplicate": _RefusalRoute("cli.app.ledger.prorrata.gross_duplicate", _EJERCICIO),
-    "gross_declaration_absent": _RefusalRoute("cli.app.ledger.prorrata.gross_absent", _EJERCICIO),
+    "gross_declaration_duplicate": _RefusalRoute(
+        message_key="cli.app.ledger.prorrata.gross_duplicate", context=_EJERCICIO
+    ),
+    "gross_declaration_absent": _RefusalRoute(message_key="cli.app.ledger.prorrata.gross_absent", context=_EJERCICIO),
     "gross_declaration_sector_unknown": _RefusalRoute(
-        "cli.app.ledger.prorrata.gross_sector_unknown",
-        _SECTOR_EJERCICIO,
+        message_key="cli.app.ledger.prorrata.gross_sector_unknown",
+        context=_SECTOR_EJERCICIO,
     ),
 }
 
@@ -276,7 +278,7 @@ def _raise_refusal(
     route = _REFUSAL_ROUTES.get(refusal.reason)
     context = _route_context(route, _refusal_values(refusal, provenance)) if route is not None else {}
     _raise_prorrata_refusal(
-        route.message if route is not None else _DEFAULT_REFUSAL_MESSAGE,
+        route.message_key if route is not None else _DEFAULT_REFUSAL_MESSAGE,
         operation_id=operation_id,
         refusal=refusal,
         completion=completion,

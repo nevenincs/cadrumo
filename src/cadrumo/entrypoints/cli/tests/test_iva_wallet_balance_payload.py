@@ -85,8 +85,8 @@ def test_payload_refuses_an_amount_the_report_could_not_produce(field: str, malf
         _payload(**{field: malformed})
 
 
-@pytest.mark.parametrize("bad_year", [1900, 0, 2100, -1])
-def test_payload_refuses_a_reference_year_outside_the_canonical_window(bad_year: int) -> None:
+@pytest.mark.parametrize("bad_year", [999, 0, 10000, -1])
+def test_payload_refuses_a_reference_year_not_written_with_four_digits(bad_year: int) -> None:
     with pytest.raises(ValidationError):
         _payload(as_of_year=bad_year)
     with pytest.raises(ValidationError):
@@ -101,7 +101,7 @@ def test_payload_refuses_a_negative_lot_count(bad_count: int) -> None:
         _report(lot_count=bad_count)
 
 
-@pytest.mark.parametrize("bad_expiry", [1899, 10000])
+@pytest.mark.parametrize("bad_expiry", [999, 10000])
 def test_payload_refuses_an_out_of_range_next_expiry_year(bad_expiry: int) -> None:
     with pytest.raises(ValidationError):
         _payload(next_expiry_year=bad_expiry)

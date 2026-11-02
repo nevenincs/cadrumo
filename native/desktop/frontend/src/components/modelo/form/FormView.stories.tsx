@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
 import { useEffect, useRef, useState } from "react";
-import { modeloFixture } from "@/dev/modeloFixture";
+import { waitFor } from "storybook/test";
+import { modeloFixture, type ModeloShape } from "@/dev/modeloFixture";
 import { translator } from "../../../shell/strings";
 import type { ModeloPort } from "../../../shell/modelo";
 import type {
@@ -68,10 +69,12 @@ function Form({
   modelo,
   locale,
   setup,
+  shape = "fixture",
 }: {
   modelo: keyof typeof UNITS;
   locale: OutputLanguage;
   setup?: Setup;
+  shape?: ModeloShape;
 }) {
   const port = useRef<ModeloPort | null>(null);
   port.current ??= modeloFixture({
@@ -79,7 +82,7 @@ function Form({
     translate: translator,
     wait: async () => undefined,
     signedIn: () => true,
-    shape: "fixture",
+    shape,
   });
   const [envelope, setEnvelope] =
     useState<ModeloWorkbenchFormProjectionV1 | null>(null);
@@ -117,6 +120,22 @@ type Story = StoryObj;
 export const OnePage: Story = {
   name: "130 · one page, boxes that could not be calculated",
   render: (_, { globals }) => <Form modelo="130" locale={language(globals)} />,
+};
+
+export const BoxNotes: Story = {
+  name: "130 · what the calculation noted beside a box",
+  render: (_, { globals }) => (
+    <Form modelo="130" locale={language(globals)} shape="income" />
+  ),
+  play: async ({ canvasElement }) => {
+    await waitFor(
+      () => {
+        if (!canvasElement.querySelector("[data-level]"))
+          throw new Error("the box notes are not drawn yet");
+      },
+      { timeout: 15_000 },
+    );
+  },
 };
 
 export const Staged: Story = {

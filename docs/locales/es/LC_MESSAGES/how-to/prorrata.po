@@ -7,7 +7,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: CADRUMO 0.2.1\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-10-31 22:16+0100\n"
+"POT-Creation-Date: 2026-11-02 11:23+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: es\n"
@@ -102,18 +102,64 @@ msgstr ""
 "sectores diferenciados."
 
 #: ../../how-to/prorrata.md:33
+msgid "Provisional and definitive percentage"
+msgstr "Porcentaje provisional y definitivo"
+
+#: ../../how-to/prorrata.md:35
+msgid "Prorrata works with two percentages for each year:"
+msgstr "La prorrata trabaja con dos porcentajes por año:"
+
+#: ../../how-to/prorrata.md:37
+msgid ""
+"The **provisional percentage** is the one you elect or carry forward. The"
+" periods before the last one deduct input VAT at this percentage (LIVA "
+"art. 105.Uno and 105.Dos)."
+msgstr ""
+"El **porcentaje provisional** es el que eliges o arrastras. Los periodos "
+"anteriores al último deducen el IVA soportado a este porcentaje (LIVA "
+"art. 105.Uno y 105.Dos)."
+
+#: ../../how-to/prorrata.md:40
+msgid ""
+"The **definitive percentage** is calculated at the end of the year from "
+"the year's full-year volumes of operations with and without the right to "
+"deduct (LIVA art. 104.Dos). It is never taken from a single quarter. The "
+"tool reads those volumes from the annual volume casillas of the "
+"settlement period's calculation; if they are not declared, it reports "
+"that instead of guessing."
+msgstr ""
+"El **porcentaje definitivo** se calcula al final del año a partir de los "
+"volúmenes de operaciones del año completo, con y sin derecho a deducir "
+"(LIVA art. 104.Dos). Nunca se toma de un solo trimestre. La herramienta "
+"lee esos volúmenes de las casillas de volumen anual del cálculo del "
+"periodo de liquidación; si no están declarados, lo indica en lugar de "
+"adivinar."
+
+#: ../../how-to/prorrata.md:46
+msgid ""
+"The register stores both. The provisional percentage is the election; the"
+" definitive one is recorded on the year's entry once it is settled. A "
+"year's definitive percentage seeds the next year's provisional one with "
+"`prorrata seed`."
+msgstr ""
+"El registro guarda ambos. El porcentaje provisional es la elección; el "
+"definitivo se anota en el apunte del año una vez liquidado. El porcentaje"
+" definitivo de un año alimenta el provisional del siguiente con `prorrata"
+" seed`."
+
+#: ../../how-to/prorrata.md:51
 msgid "Elect general prorrata"
 msgstr "Elige la prorrata general"
 
-#: ../../how-to/prorrata.md:35
+#: ../../how-to/prorrata.md:53
 msgid "Elect the year's general percentage:"
 msgstr "Elige el porcentaje general del año:"
 
-#: ../../how-to/prorrata.md:41
+#: ../../how-to/prorrata.md:59
 msgid "`--ejercicio` is the filing year the election covers."
 msgstr "`--ejercicio` es el ejercicio de presentación que cubre la elección."
 
-#: ../../how-to/prorrata.md:42
+#: ../../how-to/prorrata.md:60
 msgid ""
 "`--percentage` is the provisional deduction percentage, 0 to 100 (LIVA "
 "art. 104.Uno + 105.Uno)."
@@ -121,7 +167,7 @@ msgstr ""
 "`--percentage` es el porcentaje de deducción provisional, de 0 a 100 "
 "(LIVA art. 104.Uno + 105.Uno)."
 
-#: ../../how-to/prorrata.md:44
+#: ../../how-to/prorrata.md:62
 msgid ""
 "`--provenance` and `--reference` name the document the percentage stands "
 "on: `inicio_actividad` for a start-of-activity proposal (LIVA art. "
@@ -134,7 +180,7 @@ msgstr ""
 "autorizado por la AEAT (LIVA art. 105.Dos). La herramienta rechaza un "
 "porcentaje introducido a mano sin ambos."
 
-#: ../../how-to/prorrata.md:48
+#: ../../how-to/prorrata.md:66
 msgid ""
 "To carry the prior year's definitive percentage (LIVA art. 105.Uno), run "
 "`aeat app ledger prorrata seed --ejercicio <year>` instead. It reads the "
@@ -147,15 +193,15 @@ msgstr ""
 "anterior que ya está guardada, y se niega a continuar si ninguna "
 "liquidación guardada lleva un porcentaje definitivo."
 
-#: ../../how-to/prorrata.md:53
+#: ../../how-to/prorrata.md:71
 msgid "Elect especial prorrata and classify inputs"
 msgstr "Elige la prorrata especial y clasifica el IVA soportado"
 
-#: ../../how-to/prorrata.md:55
+#: ../../how-to/prorrata.md:73
 msgid "Elect especial for the year:"
 msgstr "Elige la especial para el año:"
 
-#: ../../how-to/prorrata.md:61
+#: ../../how-to/prorrata.md:79
 msgid ""
 "Here `--percentage` is the common-use percentage, the rate applied to "
 "shared inputs (LIVA art. 106.Uno regla 3.ª / art. 104.Dos). The same "
@@ -170,15 +216,15 @@ msgstr ""
 "este año. Omítela para registrar que sigue vigente el régimen ya "
 "aplicable."
 
-#: ../../how-to/prorrata.md:67
+#: ../../how-to/prorrata.md:85
 msgid "Then tag each input entry with its use when you add it:"
 msgstr "Después, etiqueta cada apunte de IVA soportado con su uso al añadirlo:"
 
-#: ../../how-to/prorrata.md:73
+#: ../../how-to/prorrata.md:91
 msgid "`--input-classification` takes one value:"
 msgstr "`--input-classification` toma un valor:"
 
-#: ../../how-to/prorrata.md:75
+#: ../../how-to/prorrata.md:93
 msgid ""
 "`exclusively_deductible` - the input serves only operations that grant "
 "the right to deduct; it deducts in full."
@@ -186,7 +232,7 @@ msgstr ""
 "`exclusively_deductible`: el IVA soportado sirve solo a operaciones que "
 "dan derecho a deducir; se deduce por completo."
 
-#: ../../how-to/prorrata.md:77
+#: ../../how-to/prorrata.md:95
 msgid ""
 "`exclusively_non_deductible` - the input serves only operations that do "
 "not; it deducts nothing."
@@ -194,13 +240,13 @@ msgstr ""
 "`exclusively_non_deductible`: el IVA soportado sirve solo a operaciones "
 "que no dan ese derecho; no se deduce nada."
 
-#: ../../how-to/prorrata.md:79
+#: ../../how-to/prorrata.md:97
 msgid "`common` - the input is shared; it deducts at the common-use percentage."
 msgstr ""
 "`common`: el IVA soportado es compartido; se deduce al porcentaje de uso "
 "común."
 
-#: ../../how-to/prorrata.md:81
+#: ../../how-to/prorrata.md:99
 msgid ""
 "Tag an input but elect no especial for that year and the tool warns the "
 "tag is inert: the input deducts under the general percentage. The "
@@ -213,7 +259,7 @@ msgstr ""
 "elección, así que imprime ese aviso. Elige la especial para que la "
 "etiqueta surta efecto."
 
-#: ../../how-to/prorrata.md:86
+#: ../../how-to/prorrata.md:104
 msgid ""
 "The tag only sets how much of a deductible input deducts. An input "
 "deducts only when its row also carries `--deduction-kind` on `ledger add`"
@@ -227,11 +273,11 @@ msgstr ""
 "una factura de compra vinculada como justificante. Consulta [Adjuntar "
 "facturas y recibos a los movimientos](ledger-evidence.md)."
 
-#: ../../how-to/prorrata.md:91
+#: ../../how-to/prorrata.md:109
 msgid "Declare a differentiated sector"
 msgstr "Declara un sector diferenciado"
 
-#: ../../how-to/prorrata.md:93
+#: ../../how-to/prorrata.md:111
 msgid ""
 "Declare a differentiated sector when part of the activity has its own "
 "deduction regime (LIVA arts. 9.1.c / 101):"
@@ -239,7 +285,7 @@ msgstr ""
 "Declara un sector diferenciado cuando parte de la actividad tenga su "
 "propio régimen de deducción (LIVA arts. 9.1.c / 101):"
 
-#: ../../how-to/prorrata.md:100
+#: ../../how-to/prorrata.md:118
 msgid ""
 "`--sector-id` is a stable id that the register entries and the entries in"
 " your records reference."
@@ -247,7 +293,7 @@ msgstr ""
 "`--sector-id` es un id estable al que se refieren las entradas del "
 "registro y los apuntes de tus registros."
 
-#: ../../how-to/prorrata.md:101
+#: ../../how-to/prorrata.md:119
 msgid ""
 "`--letra` is the LIVA art. 9.1.c subparagraph that makes the sector "
 "differentiated: `a`, `b`, `c`, or `d`."
@@ -255,7 +301,7 @@ msgstr ""
 "`--letra` es la letra del art. 9.1.c de la LIVA que hace diferenciado al "
 "sector: `a`, `b`, `c` o `d`."
 
-#: ../../how-to/prorrata.md:103
+#: ../../how-to/prorrata.md:121
 msgid ""
 "`--activity-code` is a CNAE or IAE code grouped into the sector. Repeat "
 "it for each code; give at least one."
@@ -263,7 +309,7 @@ msgstr ""
 "`--activity-code` es un código CNAE o IAE agrupado en el sector. Repítelo"
 " por cada código; indica al menos uno."
 
-#: ../../how-to/prorrata.md:106
+#: ../../how-to/prorrata.md:124
 msgid ""
 "Scope an election to a sector with `--sector`, and tag an entry's sector "
 "with `--sector` on `ledger add`:"
@@ -271,7 +317,7 @@ msgstr ""
 "Delimita una elección a un sector con `--sector`, y etiqueta el sector de"
 " un apunte con `--sector` en `ledger add`:"
 
-#: ../../how-to/prorrata.md:113
+#: ../../how-to/prorrata.md:131
 msgid ""
 "Tag an entry with a sector you have not declared and the tool warns the "
 "tag is unmatched: the input deducts at the common-use percentage until "
@@ -285,7 +331,7 @@ msgstr ""
 "ejemplo grabado parte sin ningún sector declarado, así que imprime ese "
 "aviso. Declara primero el sector o corrige el id."
 
-#: ../../how-to/prorrata.md:118
+#: ../../how-to/prorrata.md:136
 msgid ""
 "Three more commands manage a sector's percentage. `prorrata seed-sector` "
 "seeds a sector's provisional percentage from its own prior-year "
@@ -304,11 +350,148 @@ msgstr ""
 "del año anterior, y requiere `--evidence-reference`. Ejecuta cada uno con"
 " `--help` para ver sus opciones."
 
-#: ../../how-to/prorrata.md:126
+#: ../../how-to/prorrata.md:144
+msgid "Regularise in the last period (casilla 44)"
+msgstr "Regulariza en el último periodo (casilla 44)"
+
+#: ../../how-to/prorrata.md:146
+msgid ""
+"The settlement period of the year is the 4th quarter, or month 12 for a "
+"monthly filer. In that Modelo 303 the two percentages split the work in "
+"two:"
+msgstr ""
+"El periodo de liquidación del año es el 4.º trimestre, o el mes 12 si "
+"presentas mensualmente. En ese Modelo 303 los dos porcentajes se reparten"
+" el trabajo:"
+
+#: ../../how-to/prorrata.md:149
+msgid ""
+"The settlement period's own input VAT deducts at the **definitive** "
+"percentage, through the ledger, like any other period's input VAT at its "
+"percentage."
+msgstr ""
+"El IVA soportado del propio periodo de liquidación se deduce al "
+"porcentaje **definitivo**, a través del libro, como el IVA soportado de "
+"cualquier otro periodo a su porcentaje."
+
+#: ../../how-to/prorrata.md:152
+msgid ""
+"Casilla 44 (`Regularización prorrata por porcentaje definitivo`, LIVA "
+"art. 105.Cuatro) regularises only the **earlier** periods of the year. "
+"For each of them the tool takes the gross deductible input VAT, applies "
+"the definitive percentage, and subtracts the deduction that period "
+"actually practised at the provisional percentage. The difference, "
+"positive or negative, goes into casilla 44."
+msgstr ""
+"La casilla 44 (`Regularización prorrata por porcentaje definitivo`, LIVA "
+"art. 105.Cuatro) regulariza solo los periodos **anteriores** del año. "
+"Para cada uno, la herramienta toma el IVA soportado deducible bruto, "
+"aplica el porcentaje definitivo y resta la deducción que ese periodo "
+"practicó realmente al porcentaje provisional. La diferencia, positiva o "
+"negativa, va a la casilla 44."
+
+#: ../../how-to/prorrata.md:159
+msgid ""
+"The tool re-derives each earlier period's gross input VAT from your "
+"ledger and reads the deduction it practised from that period's filed "
+"observation. The Modelo 390 regularisation field restates the filed "
+"settlement casilla 44."
+msgstr ""
+"La herramienta vuelve a calcular el IVA soportado bruto de cada periodo "
+"anterior a partir de tu libro y lee la deducción que practicó de la "
+"observación presentada de ese periodo. El campo de regularización del "
+"Modelo 390 repite la casilla 44 de la liquidación presentada."
+
+#: ../../how-to/prorrata.md:163
+msgid ""
+"If a source is missing or contradicts another, casilla 44 stays "
+"unresolved and the calculation reports a finding that names the cause. "
+"Nothing defaults to zero. See [Unresolved findings](#unresolved-"
+"findings)."
+msgstr ""
+"Si falta una fuente o contradice a otra, la casilla 44 queda sin resolver"
+" y el cálculo informa de un hallazgo que nombra la causa. Nada se rellena"
+" con cero por defecto. Consulta [Hallazgos sin resolver](#unresolved-"
+"findings)."
+
+#: ../../how-to/prorrata.md:167
+msgid "Declare a gross base for periods entered by hand"
+msgstr "Declara una base bruta para los periodos introducidos a mano"
+
+#: ../../how-to/prorrata.md:169
+msgid ""
+"An earlier period you filed outside Cadrumo, or entered by hand, may have"
+" no deductible input VAT in the ledger. The tool then cannot re-derive "
+"its gross base. Declare it yourself, per period and, where you declared "
+"sectors, per sector:"
+msgstr ""
+"Un periodo anterior que presentaste fuera de Cadrumo, o introdujiste a "
+"mano, puede no tener IVA soportado deducible en el libro. Entonces la "
+"herramienta no puede volver a calcular su base bruta. Declárala tú, por "
+"periodo y, si declaraste sectores, por sector:"
+
+#: ../../how-to/prorrata.md:178
+msgid ""
+"`--amount` is the gross deductible input VAT of that period before "
+"prorrata, in euros with at most two decimals."
+msgstr ""
+"`--amount` es el IVA soportado deducible bruto de ese periodo antes de la"
+" prorrata, en euros con un máximo de dos decimales."
+
+#: ../../how-to/prorrata.md:180
+msgid ""
+"`--evidence` names your own document that backs the amount. It is "
+"required."
+msgstr ""
+"`--evidence` nombra tu propio documento que respalda el importe. Es "
+"obligatorio."
+
+#: ../../how-to/prorrata.md:181
+msgid ""
+"`--sector` scopes the declaration to a declared differentiated sector; "
+"omit it for the whole-activity entry."
+msgstr ""
+"`--sector` limita la declaración a un sector diferenciado declarado; "
+"omítelo para el apunte de toda la actividad."
+
+#: ../../how-to/prorrata.md:183
+msgid ""
+"`--replace` replaces a declaration already held for the same period and "
+"sector. Without it, a second declaration for the same period is refused."
+msgstr ""
+"`--replace` sustituye una declaración que ya exista para el mismo periodo"
+" y sector. Sin él, se rechaza una segunda declaración para el mismo "
+"periodo."
+
+#: ../../how-to/prorrata.md:186
+msgid ""
+"A declaration is your own statement, recorded with the provenance "
+"`operator_declared`. It is not an AEAT observation. The regularisation "
+"uses it only for a period whose ledger holds no deductible input. Where "
+"the ledger does hold input, the ledger wins and must agree with your "
+"declaration; a disagreement becomes a finding."
+msgstr ""
+"Una declaración es una manifestación tuya, registrada con la procedencia "
+"`operator_declared`. No es una observación de la AEAT. La regularización "
+"solo la usa para un periodo cuyo libro no tiene IVA soportado deducible. "
+"Donde el libro sí tiene IVA soportado, prevalece el libro y debe "
+"coincidir con tu declaración; una discrepancia se convierte en un "
+"hallazgo."
+
+#: ../../how-to/prorrata.md:192
+msgid ""
+"Remove a declaration with `aeat app ledger prorrata remove-gross "
+"--ejercicio <year> --period 1T`, adding `--sector` for a sector entry."
+msgstr ""
+"Elimina una declaración con `aeat app ledger prorrata remove-gross "
+"--ejercicio <year> --period 1T`, añadiendo `--sector` para el apunte de "
+"un sector."
+
+#: ../../how-to/prorrata.md:195
 msgid "Read the settlement advisories"
 msgstr "Lee los avisos de la liquidación"
 
-#: ../../how-to/prorrata.md:128
+#: ../../how-to/prorrata.md:197
 msgid ""
 "When you calculate the year-end Modelo 303 for the 4th quarter "
 "settlement, the tool may surface an advisory that does not block filing:"
@@ -316,7 +499,7 @@ msgstr ""
 "Cuando calculas el Modelo 303 de fin de año para la liquidación del 4.º "
 "trimestre, la herramienta puede mostrar un aviso que no impide presentar:"
 
-#: ../../how-to/prorrata.md:131
+#: ../../how-to/prorrata.md:200
 msgid ""
 "**Especial may be mandatory** - when the taxpayer computes under general "
 "prorrata and the deduction under general exceeds the deduction under "
@@ -333,11 +516,11 @@ msgstr ""
 "te pide que los clasifiques. La comprobación no se ejecuta en un registro"
 " con sectores declarados."
 
-#: ../../how-to/prorrata.md:138
+#: ../../how-to/prorrata.md:207
 msgid "Two more warnings appear when you add a row, not at settlement:"
 msgstr "Al añadir una fila aparecen otros dos avisos, no en la liquidación:"
 
-#: ../../how-to/prorrata.md:140
+#: ../../how-to/prorrata.md:209
 msgid ""
 "**Inert classification** - an `--input-classification` tag set with no "
 "especial election for that year."
@@ -345,13 +528,13 @@ msgstr ""
 "**Clasificación inerte**: una etiqueta `--input-classification` "
 "establecida sin elección de la especial para ese año."
 
-#: ../../how-to/prorrata.md:142
+#: ../../how-to/prorrata.md:211
 msgid "**Unmatched sector** - a `--sector` tag naming a sector not yet declared."
 msgstr ""
 "**Sector sin correspondencia**: una etiqueta `--sector` que nombra un "
 "sector aún no declarado."
 
-#: ../../how-to/prorrata.md:144
+#: ../../how-to/prorrata.md:213
 msgid ""
 "These are notes, not refusals. Read them alongside the [calculation "
 "inputs](review-calculation-values.md) before you [check the filing"
@@ -361,19 +544,128 @@ msgstr ""
 "](review-calculation-values.md) antes de [comprobar la presentación"
 "](verification-reports.md)."
 
-#: ../../how-to/prorrata.md:148
+#: ../../how-to/prorrata.md:217
 msgid "Review the register"
 msgstr "Revisa el registro"
 
-#: ../../how-to/prorrata.md:150
-msgid "List every election and declared sector on the active profile:"
-msgstr "Lista todas las elecciones y los sectores declarados del perfil activo:"
+#: ../../how-to/prorrata.md:219
+msgid ""
+"List every election, declared sector and declared gross base on the "
+"active profile:"
+msgstr ""
+"Lista todas las elecciones, los sectores declarados y las bases brutas "
+"declaradas del perfil activo:"
 
-#: ../../how-to/prorrata.md:156
+#: ../../how-to/prorrata.md:226
+msgid ""
+"Each declared gross base shows its period, sector (if any), gross amount,"
+" provenance (`operator_declared`), evidence reference and declaration "
+"time. The text output prints one `gross` line per declaration, after the "
+"entries and sectors. `--format json` carries the same fields under "
+"`gross_declarations`."
+msgstr ""
+"Cada base bruta declarada muestra su periodo, sector (si lo hay), importe"
+" bruto, procedencia (`operator_declared`), referencia de la prueba y "
+"momento de la declaración. La salida de texto imprime una línea `gross` "
+"por declaración, después de los apuntes y los sectores. `--format json` "
+"incluye los mismos campos en `gross_declarations`."
+
+#: ../../how-to/prorrata.md:231
+msgid "Unresolved findings"
+msgstr "Hallazgos sin resolver"
+
+#: ../../how-to/prorrata.md:233
+msgid ""
+"The regularisation never fills a gap with a guess. When it cannot "
+"calculate casilla 44 it leaves the box unresolved and reports a finding. "
+"The common ones mean:"
+msgstr ""
+"La regularización nunca rellena un hueco con una suposición. Cuando no "
+"puede calcular la casilla 44, deja la casilla sin resolver e informa de "
+"un hallazgo. Los más habituales significan:"
+
+#: ../../how-to/prorrata.md:237
+msgid ""
+"**Annual volumes not declared** - declare the year's volumes of "
+"operations with and without the right to deduct, so the definitive "
+"percentage can be calculated."
+msgstr ""
+"**Volúmenes anuales no declarados**: declara los volúmenes de operaciones"
+" del año con y sin derecho a deducir, para poder calcular el porcentaje "
+"definitivo."
+
+#: ../../how-to/prorrata.md:240
+msgid ""
+"**Provisional percentage missing** - elect or seed a percentage, or file "
+"the prior year's settlement so it can be carried."
+msgstr ""
+"**Falta el porcentaje provisional**: elige o genera un porcentaje, o "
+"presenta la liquidación del año anterior para poder arrastrarlo."
+
+#: ../../how-to/prorrata.md:242
+msgid ""
+"**Earlier liquidations not filed** - the regularisation covers the year's"
+" earlier periods; each one must be filed in Cadrumo or have a declared "
+"gross base."
+msgstr ""
+"**Liquidaciones anteriores sin presentar**: la regularización abarca los "
+"periodos anteriores del año; cada uno debe estar presentado en Cadrumo o "
+"tener una base bruta declarada."
+
+#: ../../how-to/prorrata.md:245
+msgid ""
+"**Gross base unknown or disagreeing** - the ledger holds no deductible "
+"input for a period that declared some, or the ledger and your declaration"
+" differ. Record the input, or declare or replace the gross base."
+msgstr ""
+"**Base bruta desconocida o discrepante**: el libro no tiene IVA soportado"
+" deducible de un periodo que declaró alguno, o el libro y tu declaración "
+"difieren. Registra el IVA soportado, o declara o sustituye la base bruta."
+
+#: ../../how-to/prorrata.md:248
+msgid ""
+"**Ledger and filed liquidation diverge** - the input VAT at the "
+"provisional percentage does not reproduce what the period filed. "
+"Reconcile them first."
+msgstr ""
+"**El libro y la liquidación presentada divergen**: el IVA soportado al "
+"porcentaje provisional no reproduce lo que presentó el periodo. "
+"Concílialos primero."
+
+#: ../../how-to/prorrata.md:250
+msgid ""
+"**Sector definitive percentage missing** - settle each sector with "
+"`prorrata settle-sector` before regularising."
+msgstr ""
+"**Falta el porcentaje definitivo del sector**: liquida cada sector con "
+"`prorrata settle-sector` antes de regularizar."
+
+#: ../../how-to/prorrata.md:253
+msgid ""
+"Fix the named cause and recalculate. A finding that asks you to calculate"
+" the box yourself means the case is outside what the tool derives."
+msgstr ""
+"Corrige la causa indicada y vuelve a calcular. Un hallazgo que te pide "
+"calcular la casilla por tu cuenta significa que el caso queda fuera de lo"
+" que la herramienta deriva."
+
+#: ../../how-to/prorrata.md:256
+msgid ""
+"Nothing here files or submits anything. The register, the percentages and"
+" the declared gross bases are stored locally with the profile, and the "
+"calculation only fills casilla 44 in a local draft. Filing and any AEAT "
+"submission stay with you."
+msgstr ""
+"Nada de esto presenta ni envía nada. El registro, los porcentajes y las "
+"bases brutas declaradas se guardan localmente con el perfil, y el cálculo"
+" solo rellena la casilla 44 en un borrador local. La presentación y "
+"cualquier envío a la AEAT siguen en tus manos."
+
+#: ../../how-to/prorrata.md:261
 msgid "Next steps"
 msgstr "Próximos pasos"
 
-#: ../../how-to/prorrata.md:158
+#: ../../how-to/prorrata.md:263
 msgid ""
 "[Classify transactions](classify-transactions.md) so each input carries "
 "the data prorrata needs."
@@ -381,7 +673,7 @@ msgstr ""
 "[Clasificar movimientos](classify-transactions.md) para que cada IVA "
 "soportado lleve los datos que la prorrata necesita."
 
-#: ../../how-to/prorrata.md:160
+#: ../../how-to/prorrata.md:265
 msgid ""
 "[Review calculation inputs](review-calculation-values.md) to see the "
 "deducted amounts."
@@ -389,7 +681,7 @@ msgstr ""
 "[Revisar las entradas de cálculo](review-calculation-values.md) para ver "
 "los importes deducidos."
 
-#: ../../how-to/prorrata.md:162
+#: ../../how-to/prorrata.md:267
 msgid ""
 "[Prepare a Modelo 303 VAT filing](modelo-303.md) and [the annual Modelo "
 "390 summary](modelo-390.md)."

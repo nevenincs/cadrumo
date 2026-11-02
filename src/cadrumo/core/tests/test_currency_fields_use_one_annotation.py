@@ -160,6 +160,13 @@ DECLARED_EXCEPTIONS: dict[str, str] = {
         "malformed NIF and date; refusing it at the request boundary would "
         "mask the other two behind the first"
     ),
+    "application/invoices/figures_preview_contracts.py::currency": (
+        "an invoice draft preview answers a malformed code as a closed rule "
+        "finding (would_refuse, with the offending field named) beside the other "
+        "findings, judged by normalise_iso_4217_currency; the operation schema "
+        "contract forbids the folding annotation, and a refusing one would reject "
+        "the whole preview ahead of the rest of the findings"
+    ),
     "application/ledger/update_contracts.py::currency": (
         "a canonical-text patch whose sibling date and decimal fields REFUSE "
         "non-canonical text rather than normalising it, which _canonical_currency "

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#desktop-modelo-workspace'
 date: '2026-10-23'
-modified: '2026-10-25'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:5cf73e82b598f17862fc0276f0b7e8a3bf73b008d478c74932f3ce589e540384'
+body_hash: 'sha256:c777310c348370754b3028632e7e69a5408a8660c3d5ccefdb4b4b45d2aa9bcb'
 related:
   - "[[2026-10-23-desktop-modelo-workspace-plan]]"
 ---
@@ -849,6 +849,10 @@ related:
 - `S58` `verify:` `playwright full modelo suite` -> `pass`
 - `S58` `verify:` `playwright accessibility Modelo surfaces` -> `pass`
 - `S58` `by:` `opus-p05-lane`
+- `S59` `verify:` `locator-check: dialogs/useEditReview.ts:143-150` -> `pass`
+- `S59` `by:` `plan-closure`
+- `S29` `verify:` `locator-check: .vault/audit/2026-10-24-desktop-modelo-workspace-audit.md:60` -> `pass`
+- `S29` `by:` `plan-closure`
 
 ## Notes
 

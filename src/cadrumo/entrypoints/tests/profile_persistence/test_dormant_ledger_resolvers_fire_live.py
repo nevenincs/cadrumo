@@ -34,6 +34,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from cadrumo.domain.transactions.models import Transaction, TransactionCatalogue
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from cadrumo.entrypoints.tests.profile_persistence._dormant_resolver_live_support import (
     _T0,
     _T1,
@@ -105,7 +106,7 @@ _M130_MANUAL_INPUTS: dict[CasillaId, Decimal] = {
 @pytest.fixture
 def m130_objects(tmp_path: Path) -> Iterator[SecureObjectRepository]:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_M130_BUCKET) as profile:
-        _seed_ready_profile(profile.repository, bucket_id=_M130_BUCKET)
+        _seed_ready_profile(profile.repository, bucket_id=_M130_BUCKET, extra_facts=cash_criterion_facts(_M130_YEAR))
         yield profile.repository
 
 

@@ -35,9 +35,9 @@ from pydantic import SecretStr
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import tr
 from cadrumo.core.json_contract import Notice, NoticeSeverity
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
 from cadrumo_client.commands.secure_input import MachineSecretPayload
 
-from .presentation import activate_subcommand_output_language as _activate_subcommand_output_language
 from .presentation import emit_envelope
 
 

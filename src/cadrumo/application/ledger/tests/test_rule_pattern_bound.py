@@ -5,7 +5,8 @@ from __future__ import annotations
 import asyncio
 import re
 import time
-from collections.abc import Coroutine
+from collections.abc import AsyncGenerator, Coroutine
+from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime
 from decimal import Decimal
 from pathlib import Path
@@ -40,6 +41,12 @@ from ..rule_operation import (
     LEDGER_RULE_APPLY_OPERATION_DEFINITION_ID,
     LedgerRuleAddExecutor,
     LedgerRuleApplyExecutor,
+)
+from ..rule_remove_operation import (
+    LEDGER_RULE_REMOVE_OPERATION_DEFINITION_ID,
+    LedgerRuleRemoveExecutor,
+    LedgerRuleRemoveProjection,
+    LedgerRuleRemoveRequest,
 )
 from ..rule_repository import LedgerClassificationRuleRepositoryProtocol
 from ..rule_results import LEDGER_RULE_VALIDATION_REFUSAL_CODE
@@ -106,7 +113,7 @@ def _rule(pattern: str, priority: int) -> LedgerClassificationRule:
 
 class _Rules:
     def __init__(self, *rules: LedgerClassificationRule) -> None:
-        self._rules = rules
+        self._rules: tuple[LedgerClassificationRule, ...] = rules
         self.saved: list[LedgerClassificationRule] = []
 
     def save(self, payload: LedgerClassificationRule) -> None:
@@ -114,6 +121,14 @@ class _Rules:
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return self._rules
+
+    def delete(self, identifier: str) -> bool:
+        kept = tuple(rule for rule in self._rules if rule.rule_id != identifier)
+        self.deleted = len(kept) != len(self._rules)
+        self._rules = kept
+        return self.deleted
+
+    deleted = False
 
 
 class _Movements:
@@ -146,6 +161,11 @@ def _ports(movements: _Movements, operation: object) -> LedgerActionPorts:
     )
 
 
+@asynccontextmanager
+async def _irreversible_section() -> AsyncGenerator[None]:
+    yield
+
+
 def _context(definition_id: str) -> tuple[OperationExecutorContext, list[OperationEffect], list[BaseModel]]:
     effects: list[OperationEffect] = []
     operands: list[BaseModel] = []
@@ -172,6 +192,7 @@ def _context(definition_id: str) -> tuple[OperationExecutorContext, list[Operati
             authority_operation=cast(PinnedAuthorityOperation, object()),
             events=SimpleNamespace(phase=phase, effect=effect),
             operands=SimpleNamespace(put=put),
+            cancellation=SimpleNamespace(irreversible_section=_irreversible_section),
         ),
     )
     return context, effects, operands
@@ -365,3 +386,94 @@ def test_adding_a_pattern_the_engine_will_not_take_refuses_typed_and_saves_nothi
     assert rules.saved == []
     projection = cast(LedgerRuleAddExecutionResult, operands[0]).projection
     assert (projection.outcome, projection.validation_code) == ("validation_error", code)
+
+
+def test_adding_a_pattern_that_overruns_the_ledger_refuses_typed_and_saves_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    context, effects, operands = _context(LEDGER_RULE_ADD_OPERATION_DEFINITION_ID)
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    monkeypatch.setattr(
+        rule_trial_operation, "transaction_catalogue_repository", lambda *, bucket_id: _Movements(_row(_STUCK_TEXT))
+    )
+    rules = _Rules()
+
+    request = OperationRequest[LedgerRuleAddRequest](
+        definition_id=LEDGER_RULE_ADD_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=LedgerRuleAddRequest(
+            profile_id=_PROFILE, description_pattern=_CATASTROPHIC, classification=BusinessClassification.BUSINESS
+        ),
+    )
+    result, elapsed, longest = _run_watching_the_loop(
+        LedgerRuleAddExecutor(lambda *, bucket_id: rules).execute(request, context)
+    )
+
+    assert isinstance(result, OperationRefusalEvidence)
+    assert effects == [OperationEffect.NONE]
+    assert rules.saved == []
+    projection = cast(LedgerRuleAddExecutionResult, operands[0]).projection
+    assert (projection.outcome, projection.validation_code) == ("validation_error", "pattern_overrun")
+    assert elapsed < 8
+    assert longest < _MOST_THE_LOOP_MAY_STALL
+
+
+def _remove(
+    monkeypatch: pytest.MonkeyPatch, rules: _Rules, *, rule_id: str, created_at: datetime
+) -> tuple[list[OperationEffect], LedgerRuleRemoveProjection]:
+    context, effects, operands = _context(LEDGER_RULE_REMOVE_OPERATION_DEFINITION_ID)
+    monkeypatch.setattr(profile_guard, "require_active_bucket_id", lambda: str(_PROFILE))
+    request = OperationRequest[LedgerRuleRemoveRequest](
+        definition_id=LEDGER_RULE_REMOVE_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(_PROFILE)),
+        payload=LedgerRuleRemoveRequest(profile_id=_PROFILE, rule_id=rule_id, expected_created_at=created_at),
+    )
+    asyncio.run(LedgerRuleRemoveExecutor(lambda *, bucket_id: rules).execute(request, context))
+    return effects, cast(LedgerRuleRemoveProjection, operands[0])
+
+
+def test_a_stored_overrunning_rule_can_be_removed_and_apply_then_runs(monkeypatch: pytest.MonkeyPatch) -> None:
+    culprit = _rule(_CATASTROPHIC, 2)
+    kept = _rule("^nada$", 1)
+    rules = _Rules(kept, culprit)
+
+    effects, answer = _remove(monkeypatch, rules, rule_id=culprit.rule_id, created_at=culprit.created_at)
+
+    assert effects == [OperationEffect.UNKNOWN, OperationEffect.UPDATED]
+    assert answer.outcome == "removed"
+    assert answer.rule is not None and answer.rule.rule_id == culprit.rule_id
+    assert rules.list_rules() == (kept,)
+    rows = _Movements(_row(_STUCK_TEXT))
+    assert (
+        plan_classification_rules(
+            bucket_id=str(_PROFILE),
+            ports=_ports(rows, object()),
+            rule_repository=rules,
+        ).rules_evaluated
+        == 1
+    )
+
+
+def test_removal_is_refused_when_the_rule_was_saved_again_since_it_was_listed(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    stored = _rule(_CATASTROPHIC, 2)
+    rules = _Rules(stored)
+
+    effects, answer = _remove(monkeypatch, rules, rule_id=stored.rule_id, created_at=datetime(2020, 1, 1, tzinfo=UTC))
+
+    assert effects == [OperationEffect.NONE]
+    assert answer.outcome == "stale"
+    assert rules.list_rules() == (stored,)
+    assert not rules.deleted
+
+
+def test_removing_a_rule_that_is_not_stored_changes_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    stored = _rule("^nada$", 1)
+    rules = _Rules(stored)
+
+    effects, answer = _remove(monkeypatch, rules, rule_id="e" * 64, created_at=stored.created_at)
+
+    assert effects == [OperationEffect.NONE]
+    assert (answer.outcome, answer.rule) == ("not_found", None)
+    assert rules.list_rules() == (stored,)

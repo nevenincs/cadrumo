@@ -51,6 +51,7 @@ from pathlib import Path
 from typing import Any
 
 import pytest
+from defusedxml import ElementTree as DefusedElementTree
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
 from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
@@ -60,6 +61,7 @@ from cadrumo.adapters.persistence.profile.modelos_calculation import Calculation
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from cadrumo.adapters.persistence.profile.tests.justificante_metadata import persist_justificante_metadata
+from cadrumo.adapters.persistence.profile.tests.modelo_export_ports_support import modelo_export_ports_for_test
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
@@ -72,13 +74,15 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
-from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+from cadrumo.application.modelo.export import export_modelo_revision
+from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.external_import_actions import import_external_filing_evidence
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
+from cadrumo.core.package_version import PACKAGE_VERSION
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
@@ -110,6 +114,7 @@ from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
 from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+from ....domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
 
@@ -134,18 +139,6 @@ def _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         )
 
 
-def _assert_verify_refused_by_capped_ledger_box(calculation_revision_id: str, **kwargs: Any) -> None:
-    """Verify refuses a revision whose capped ledger income box carries a blocking advisory note.
-
-    The ledger income and expense bindings are capped at calculation grade until
-    the year an accrual-dated invoice belongs to is grounded, so a window with
-    income is withheld before any verification report exists.
-    """
-    with pytest.raises(ModeloCalculationBlockedError) as refused:
-        _verify_modelo_revision(calculation_revision_id, **kwargs)
-    assert (refused.value.context or {})["reason"] == "advisory_binding_value"
-
-
 def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     for key in (
         "work_unit_repository",
@@ -159,6 +152,11 @@ def _verify_modelo_revision(calculation_revision_id: str, **kwargs: Any) -> Any:
     kwargs.setdefault("verification_repositories", build_test_verification_repository_bundle())
     with bundled_indexed_authority().operation() as operation:
         return verify_modelo_revision_with_preconditions(calculation_revision_id, operation=operation, **kwargs).report
+
+
+def _export_modelo_revision(command: Any, **kwargs: Any) -> Any:
+    with bundled_indexed_authority().operation() as operation:
+        return export_modelo_revision(command, operation=operation, **kwargs)
 
 
 def _import_external_filing_evidence(**kwargs: Any) -> Any:
@@ -587,6 +585,7 @@ def _seed_taxpayer_profile() -> None:
             *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),
+            *cash_criterion_facts(_YEAR),
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -727,16 +726,16 @@ def test_a_locally_filed_quarter_records_the_kind_its_revision_states(
     assert stored.filing_kind.source_locator.startswith("local-filing:")
 
 
-def test_verify_refuses_autonoma_m100_whose_ledger_income_is_capped_despite_official_m130_observations(
+def test_verify_accepts_autonoma_m100_with_official_m130_observations(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """An internally consistent M100/2024 draft is calculated, then refused at verify by the income cap.
+    """An internally consistent M100/2024 draft passes verify replay.
 
     The annual activity values are produced from real persisted ledger rows,
     and 0604 is folded from four imported AEAT-attested M130 observations.
-    Verify would rebuild the filing draft from the stored calculation revision,
-    but the ledger income binding is capped, so it refuses with
-    ``advisory_binding_value`` before any replay.
+    Verify then rebuilds the filing draft from the stored calculation revision
+    and must accept the computed 0224/0529/0531 formula traces instead of
+    treating them as manual casillas.
     """
     _seed_taxpayer_profile()
     _persist_autonoma_style_ledger(secure_objects)
@@ -758,9 +757,7 @@ def test_verify_refuses_autonoma_m100_whose_ledger_income_is_capped_despite_offi
         Decimal("0"),
     )
 
-    # The 12.000,00 of activity income reaches the capped income box 0171, so the
-    # draft is consistent but withheld from verification until the cap is lifted.
-    _assert_verify_refused_by_capped_ledger_box(
+    report = _verify_modelo_revision(
         annual.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
@@ -770,11 +767,16 @@ def test_verify_refuses_autonoma_m100_whose_ledger_income_is_capped_despite_offi
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
 
+    assert report.calculation_revision_id == annual.calculation_revision_id
+    assert report.granted_verificado_completo is True, report.findings
+    assert not [finding for finding in report.findings if finding.severity.value == "blocking"]
 
-def test_autonoma_m100_salary_certificate_retenciones_reach_total_pagos_but_verify_is_capped(
+
+def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_total_pagos(
     secure_objects: SecureObjectRepository,
+    tmp_path: Path,
 ) -> None:
-    """The salary withholding of the payer's certificate reaches the total of pagos; verify is refused by the income cap."""
+    """Verified salary withholding from the payer's certificate replays through verify and XML export."""
     _seed_taxpayer_profile()
     _persist_autonoma_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
@@ -804,9 +806,7 @@ def test_autonoma_m100_salary_certificate_retenciones_reach_total_pagos_but_veri
     assert Decimal(annual.casilla_values[_M100_PAGOS_CASILLA]) == Decimal("1520.00")
     assert Decimal(annual.casilla_values[_M100_TOTAL_PAGOS_CASILLA]) == Decimal("6020.00")
 
-    # Verification, and the XML export that follows it, are withheld by the capped
-    # income box 0171: the 12.000,00 of activity income is accrual-dated.
-    _assert_verify_refused_by_capped_ledger_box(
+    report = _verify_modelo_revision(
         annual.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
@@ -815,6 +815,35 @@ def test_autonoma_m100_salary_certificate_retenciones_reach_total_pagos_but_veri
         settings=ready_clave_settings(_TAX_ID),
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
+
+    assert report.calculation_revision_id == annual.calculation_revision_id
+    assert report.granted_verificado_completo is True, report.findings
+    assert not [finding for finding in report.findings if finding.severity.value == "blocking"]
+
+    # ``Aux/VERSION`` names this product build, not the selected authority.
+    # The export boundary derives it from PACKAGE_VERSION and writes a complete
+    # mandatory Aux block before dictionary-addressed financial meaning.
+    output = tmp_path / "modelo-100-2024-0A.xml"
+    receipt = _export_modelo_revision(
+        ModeloExportCommand(
+            calculation_revision_id=annual.calculation_revision_id,
+            output_path=output,
+            actor="autonoma-cli-rerun",
+        ),
+        workflow_profile=_autonomaworkflow_profile(),
+        export_ports=modelo_export_ports_for_test(
+            bucket_id=_BUCKET_ID,
+            taxpayer_tax_id=_TAX_ID,
+            secure_objects=secure_objects,
+        ),
+    )
+
+    payload = output.read_bytes()
+    root = DefusedElementTree.fromstring(payload)
+    assert receipt.output_path == output
+    assert receipt.byte_size == len(payload)
+    assert root.findtext("./Aux/Idioma") == "E"
+    assert root.findtext("./Aux/VERSION") == PACKAGE_VERSION.replace(".", "")
 
 
 def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
@@ -845,17 +874,24 @@ def test_m100_base_only_gate_still_blocks_missing_renta_taxable_base(
     assert exc_info.value.context["reason"] == "missing_taxable_base"
 
 
-def test_verify_refuses_chain_carrying_non_official_prior_year_before_the_cross_period_gate(
+def test_verify_gate_blocks_chain_carrying_non_official_prior_year(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Verify refuses the ledger chain before the cross-period gate can report.
+    """The operator verify gate refuses verificado-completo on the ledger chain.
 
-    The M130 quarters and the prior-year M100/2023 carry were filed locally with
-    the NON-official ``app_filing`` source_kind, which would raise a blocking
-    ``cross_period_dependency_unclean`` finding naming the non-official quarterly
-    filing. The annual draft's capped ledger income box 0171 refuses first, with
-    ``advisory_binding_value``, so no verification report is produced and the
-    cross-period finding is not reachable on this chain until the cap is lifted.
+    Completes the operator flow calculate → VERIFY on the same vertical, and
+    proves the cross-period clean-state safety invariant fires end-to-end: the
+    M130 quarters and the prior-year M100/2023 carry were filed locally through
+    ``persist_filed_revision_observation`` with the NON-official ``app_filing``
+    source_kind. Filing a dependent period (M100/2024) whose upstream evidence is
+    local-only — not an external AEAT justificante / CSV register / live capture —
+    must NOT be granted verificado-completo. The verify gate therefore returns a
+    BLOCKING ``cross_period_dependency_unclean`` finding naming the non-official
+    prior-year filing (modelo 100 / 2023), per
+    ``no-silent-under-declaration`` and
+    ``sensitive-financial-data-secure-storage-only``. This is the correct refusal, not a defect: it
+    proves the chain reaches the verify gate and the safety guard engages on a
+    real ledger-derived multi-period chain.
     """
     _seed_taxpayer_profile()
     _persist_autonoma_style_ledger(secure_objects)
@@ -864,7 +900,7 @@ def test_verify_refuses_chain_carrying_non_official_prior_year_before_the_cross_
         _calculate_and_file_m130_quarter(secure_objects, period=period)
     annual = _calculate_m100_annual(secure_objects)
 
-    _assert_verify_refused_by_capped_ledger_box(
+    report = _verify_modelo_revision(
         annual.calculation_revision_id,
         certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
         verification_repositories=build_test_verification_repository_bundle(),
@@ -873,3 +909,25 @@ def test_verify_refuses_chain_carrying_non_official_prior_year_before_the_cross_
         settings=ready_clave_settings("X1234567L"),
         operator_scope_ports=_OPERATOR_SCOPE_PORTS,
     )
+
+    assert report.calculation_revision_id == annual.calculation_revision_id
+    # The chain carries non-official (app_filing) upstream evidence, so the gate
+    # must NOT grant verificado-completo.
+    assert report.granted_verificado_completo is False
+    unclean = [
+        finding
+        for finding in report.findings
+        if finding.kind.value == "cross_period_dependency_unclean" and finding.severity.value == "blocking"
+    ]
+    assert unclean, (
+        f"verify gate must raise a BLOCKING cross_period_dependency_unclean finding "
+        f"for the non-official prior-year carry; got {report.findings}"
+    )
+    assert any(
+        finding.message_locale_key == "application.modelo.findings.cross_period_dependency_unclean"
+        and finding.message_facts.get("source_modelo") == "130"
+        and finding.message_facts.get("source_filing_year") == 2024
+        and finding.message_facts.get("source_period") == "1T"
+        and "missing_current_filing_record" in str(finding.message_facts.get("blocker_codes", "")).split("|")
+        for finding in unclean
+    ), f"the unclean finding must name the missing official M130 quarterly filing record; got {unclean}"

@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#google-outbound-review'
 date: '2026-10-05'
-modified: '2026-10-07'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4b8efbd614bbd404235113329c950f0fb3ff5bb329f51ffe7883257be52c467d'
+body_hash: 'sha256:e040da565bf468a01a0fdd72771930d03aebaf18a579cbf31b1f0fb93069f0d8'
 related:
   - "[[2026-10-05-google-outbound-review-plan]]"
 ---
@@ -146,6 +146,10 @@ related:
 - `S04` `verify:` `receipt-write effect declaration regression before fix 20261005T191011.110319Z-pytest-88124-194002f5` -> `fail`
 - `S04` `verify:` `archive operation suite19 tests 20261005T191028.687064Z-pytest-89308-4e3be067` -> `pass`
 - `S04` `verify:` `targeted Ruff format lint and ty archive operation owners` -> `pass`
+- `S01` `verify:` `locator-check: export/review_snapshot.py:30` -> `pass`
+- `S01` `by:` `plan-closure`
+- `S03` `verify:` `locator-check: _modelo_spreadsheet_command_specs.py:3` -> `pass`
+- `S03` `by:` `plan-closure`
 
 ## Notes
 

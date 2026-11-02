@@ -11,9 +11,9 @@ related:
   - '[[2026-07-02-agent-harness-refoundation-adr]]'
   - '[[2026-10-04-application-sign-in-adr]]'
   - '[[2026-10-13-agent-attachments-adr]]'
-modified: '2026-10-21'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:831fc362d026efba2a9af9289f4f11a1b05c56142258356886cc89e175b0f264'
+body_hash: 'sha256:ec8435d6dfd9410ea1ee0e2534be88734987c00ed3e5facb60f4932333f6467d'
 ---
 
 # `agent-service-boundary` plan
@@ -32,9 +32,9 @@ The tax root `src/cadrumo` has zero LLM-agent or harness awareness. The sibling 
 
 - [ ] `S01` - Reconcile existing ADRs and canonical ownership guidance; `.vault/adr, .vaultspec/rules, .vaultspec/skills/cadrumo-start`.
 - [ ] `S02` - Introduce generic runtime custody, session and peer contracts and remove agent-specific runtime behavior; `src/cadrumo, src/cadrumo_mcp/runtime_client`.
-- [ ] `S03` - Migrate agent orchestration, credentials, stores and conversation policy to a separate service, rename src/cadrumo_harness to src/cadrumo_mcp, and delete the authored agent content and its serving surface with no compatibility facade: _data/agent, _resources, resources, _skill_metadata, workspace, mcp/operating_layer, the harness_load tool, the cadrumo://skill and cadrumo://rule resources, the materialisation flag, dev/packaging/claude_plugin.py and the build-claude-plugin recipe; `src/cadrumo_agent_service (new), src/cadrumo_mcp, dev/packaging, justfile, transferred tests and locales`.
-- [ ] `S04` - Adapt native desktop and deterministic development consumers to the verified service and person channel; `native, dev/runtime_lifecycle, dev/packaging/native`.
-- [ ] `S05` - Reconcile package manifests, dependency boundaries, shared inventories and locale loading; `pyproject.toml, native package contracts, dev/quality, shared resources`.
+- [x] `S03` - Migrate agent orchestration, credentials, stores and conversation policy to a separate service, rename src/cadrumo_harness to src/cadrumo_mcp, and delete the authored agent content and its serving surface with no compatibility facade: _data/agent, _resources, resources, _skill_metadata, workspace, mcp/operating_layer, the harness_load tool, the cadrumo://skill and cadrumo://rule resources, the materialisation flag, dev/packaging/claude_plugin.py and the build-claude-plugin recipe; `src/cadrumo_agent_service (new), src/cadrumo_mcp, dev/packaging, justfile, transferred tests and locales`.
+- [x] `S04` - Adapt native desktop and deterministic development consumers to the verified service and person channel; `native, dev/runtime_lifecycle, dev/packaging/native`.
+- [x] `S05` - Reconcile package manifests, dependency boundaries, shared inventories and locale loading; `pyproject.toml, native package contracts, dev/quality, shared resources`.
 - [ ] `S06` - Review and verify the integrated boundary, reconcile final governance source links, and confirm the former harness_load consumers are resolved: the advertised orientation core of 2026-07-08-mcp-progressive-discovery-adr P1 and the identity-read set of 2026-07-08-mcp-identity-linked-operation-adr I1 and I2; `.tmp/agent-boundary-audit, .vaultspec, affected production surface`.
 
 ## Parallelization

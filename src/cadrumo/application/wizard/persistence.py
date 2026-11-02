@@ -45,6 +45,7 @@ from .descendant_group import (
     DESCENDANTS_COUNT_PAGE_ID,
     DESCENDANTS_GROUP_ID,
 )
+from .imputation_election import ELECTION_QUESTION_IDS
 from .models import WizardFlow, WizardQuestion
 
 WizardPersistMode = Literal["create", "edit"]
@@ -123,7 +124,7 @@ def profile_values_from_patch(flow: WizardFlow, supplied: Mapping[str, str]) -> 
                 translated_message="application.wizard.errors.persist_patch_unknown_question_id",
                 context={"question_id": question_id},
             )
-        if question.profile_key is None:
+        if question.profile_key is None or question.id in ELECTION_QUESTION_IDS:
             continue
         validated = validate_widget_answer(question, raw)
         if not validated:

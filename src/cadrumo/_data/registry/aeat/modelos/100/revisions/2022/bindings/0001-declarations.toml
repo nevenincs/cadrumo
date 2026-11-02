@@ -72,7 +72,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-27", "ley-35-2006:art-28"]
 source_refs = ["lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "lirpf-cuota-chain-authority"
@@ -88,7 +87,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -108,7 +106,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -128,7 +125,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -148,7 +144,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -170,14 +165,12 @@ required_text = ["estimación directa", "rendimiento neto"]
 # Modelo 100 renta-income observation is built against the income casilla 0171,
 # and casilla 0599 names this binding directly.
 #
-# The value is ADVISORY, not filing grade. RIRPF art. 79 imputes a retencion to
-# the period in which its income is imputed, and activity income is imputed on
-# accrual by default (LIRPF art. 14.1.b) unless the taxpayer opts for the cash
-# criterion (RIRPF art. 7.2). The ledger places each row on its bank date,
-# which matches only the cash criterion, and which ejercicio credits an invoice
-# whose payment and accrual years differ is not yet grounded. The grade cap
-# keeps calculation and preview showing the figure, and refuses checking,
-# export and local filing unless it is a proven zero.
+# The value is ADVISORY, not filing grade. The resolver now dates each row by the
+# declared RIRPF art. 7 criterion and credits only withholding on a linked, wholly
+# paid invoice, but the credit reconciliation and the fourth-quarter Modelo 130
+# casilla 06 cross-check do not yet run over it, and rental activity rows are not
+# yet excluded. The grade cap keeps calculation and preview showing the figure, and
+# refuses checking, export and local filing unless it is a proven zero.
 [[revisions."2022".bindings]]
 id = "renta-ledger-actividad-retenciones-0599"
 provider = { kind = "ledger_renta_income_aggregation", modelo = "100", target_casilla_id = "0171", fact = "declared_withheld_amount_sum" }
@@ -536,7 +529,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -556,7 +548,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -576,7 +567,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -596,7 +586,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -616,7 +605,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -636,7 +624,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -656,7 +643,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -696,7 +682,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-renta-2022-manual-parte1", "lirpf-cuota-chain-authority"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
@@ -1017,3 +1002,19 @@ source_refs = ["aeat-renta-2022-manual-parte1"]
 [[revisions."2022".bindings.source_citations]]
 source_ref = "aeat-renta-2022-manual-parte1"
 required_text = ["Ganancias y pérdidas patrimoniales"]
+
+# Casilla 0169 states the RIRPF art. 7.2 cash election in each estimacion directa
+# activity block (E1ITEMP; AEAT Manual Renta, ch. 6). The election covers every
+# activity and the ledger fills one block, so one value serves. The fact is derived
+# from the dated criterion for the ejercicio; unset leaves the box unresolved.
+[[revisions."2022".bindings]]
+id = "renta-profile-activity-cash-criterion-0169"
+provider = { kind = "profile", profile_key = "irpf.activity_income_cash_criterion_elected", xsd_path = "/DatosEconomicos/TomaDatosAmpliada/RegEstimaDirecta/ActividadEstDirecta/E1ITEMP", dictionary_field = "E1ITEMP" }
+value = { data_type = "boolean", channel = "boolean" }
+aggregation = { op = "copy" }
+legal_refs = ["rd-439-2007:art-7"]
+source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-xsd", "aeat-renta-2022-manual-parte1"]
+
+[[revisions."2022".bindings.source_citations]]
+source_ref = "aeat-renta-2022-manual-parte1"
+required_text = ["criterio de cobros y pagos"]

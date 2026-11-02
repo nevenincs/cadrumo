@@ -14,6 +14,7 @@ import {
   findingsState,
   holdsUpdate,
   recordUpdate,
+  readCorrection,
   resolutionOf,
   sameReading,
 } from "../src/components/ledger/documents/documentsModel";
@@ -359,4 +360,24 @@ test("a record's correction sends only what changed and clears with a blank", ()
       update.request,
     ),
   ).toBe(true);
+});
+
+test("a supplied finding value is held to the confirmation's served bound, and to none while it serves nothing", () => {
+  const bound = servedLimits.text_limits.find(
+    (found) => found.name === "confirm_label",
+  )!.max;
+  const supplied = (value: string) =>
+    resolutionOf(blocker, { action: "supply_value", value, note: "" });
+  expect(supplied("x".repeat(bound))).not.toBeNull();
+  expect(supplied("x".repeat(bound + 1))).toBeNull();
+  try {
+    holdLedgerLimits(null);
+    expect(supplied("x")).toBeNull();
+    expect(readCorrection("invoice_number", "x")).toEqual({
+      kind: "refused",
+      refusal: { key: "limits_unavailable", raw: "x" },
+    });
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
 });

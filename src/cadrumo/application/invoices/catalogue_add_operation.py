@@ -37,8 +37,8 @@ from ...domain.invoices.enums import InvoiceClass, IvaRate, iva_rate_slots_on
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.models import Invoice, InvoiceLine
 from ...domain.iva.schema import IvaCategory
-from ..ledger.read_access import resolve_ledger_read_access
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess, with_commit_action
+from ..ledger.read_access import resolve_ledger_request_commit_access
+from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.error_detail import operation_refusal_words
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
@@ -453,12 +453,9 @@ def resolve_invoice_add_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile ledger rights and a fresh COMMIT grant."""
-    if request.definition_id != INVOICE_ADD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InvoiceAddRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolved = resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
-    return with_commit_action(resolved)
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=INVOICE_ADD_OPERATION_DEFINITION_ID, request_type=InvoiceAddRequest
+    )
 
 
 def build_invoice_add_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

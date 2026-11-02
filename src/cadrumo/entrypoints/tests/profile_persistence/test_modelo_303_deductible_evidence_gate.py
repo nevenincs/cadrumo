@@ -66,7 +66,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
-from ....domain.deadlines.models import IVARegime, TaxpayerProfile
+from ....domain.deadlines.models import TaxpayerProfile
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.schema import InvoiceKind
 from ....domain.iva_compensation.reconciliation import IvaCompensationReconciliationDecision
@@ -98,6 +98,7 @@ from ...adapter_composition_work_ports import (
 )
 from .general_iva_profile_facts_support import general_iva_profile_facts
 from .ledger_drift_support import raw_transaction
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_inward_operator_scope_ports_for_active_route()
 
@@ -235,15 +236,7 @@ def _store_profile(objects: SecureObjectRepository) -> None:
 
 
 def workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id=_TAX_ID,
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        activity_start_date=date(_YEAR, 1, 1),
-    )
+    return plain_workflow_profile(tax_id=_TAX_ID, activity_start_date=date(_YEAR, 1, 1))
 
 
 def _wallet_decision() -> IvaCompensationReconciliationDecision:
@@ -349,6 +342,28 @@ def _repositories(
     )
 
 
+def _calculate_work_unit(
+    work_unit_id: str, *, bucket_id: str, decision: IvaCompensationReconciliationDecision | None = None
+) -> CalculationRevision:
+    with bundled_indexed_authority().operation() as operation:
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+            work_unit_id,
+            ports=build_calculation_action_ports(bucket_id=bucket_id, operation=operation),
+            actor="operator",
+            binding_values={
+                "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
+                "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
+            },
+            iva_compensation_decision=decision,
+            clock=_CALCULATED_AT,
+            filing_instance_evidence=general_m303_filing_evidence(
+                Period.from_year_and_code(_YEAR, _PERIOD),
+                reference="test:m303-deductible-evidence-gate",
+                operation=operation,
+            ),
+        ).revision
+
+
 def _calculate_irene_revision(
     objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
 ) -> tuple[
@@ -388,8 +403,18 @@ def _calculate_irene_revision(
     )
     decision = _wallet_decision()
     IvaWalletDecisionRepository(objects=objects).save_decision(decision)
+    revision = _calculate_work_unit(work_unit.work_unit_id, bucket_id=work_unit.bucket_id, decision=decision)
+    return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
+
+
+def _recalculate_after_a_ledger_write(
+    revision: CalculationRevision, *, wu_repo: WorkUnitCatalogueRepository
+) -> CalculationRevision:
+    """Take a new baseline: the facts moved, so the draft must read them again."""
+    work_unit = wu_repo.load().get(revision.work_unit_id)
+    assert work_unit is not None
     with bundled_indexed_authority().operation() as operation:
-        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
+        return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=work_unit.bucket_id, operation=operation),
             actor="operator",
@@ -397,13 +422,11 @@ def _calculate_irene_revision(
                 "modelo-303-compensacion-pendiente-anteriores": Decimal("0.00"),
                 "modelo-303-autoconsumo-promotor-base": Decimal("0.00"),
             },
-            iva_compensation_decision=decision,
             clock=_CALCULATED_AT,
             filing_instance_evidence=general_m303_filing_evidence(
                 work_unit.period, reference="test:m303-deductible-evidence-gate", operation=operation
             ),
         ).revision
-    return revision, sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo
 
 
 def _persist_legacy_verified_revision(
@@ -589,6 +612,10 @@ def test_modelo_303_verify_uses_attached_purchase_invoice_evidence(
         reloaded = tx_repo.load().get(purchase.transaction_id)
         assert reloaded is not None
         assert reloaded.purchase_invoice_evidence_id == evidence.record.evidence_id
+        assert (
+            _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo).calculation_revision_id
+            == revision.calculation_revision_id
+        )
 
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision_with_preconditions(
@@ -712,6 +739,13 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         reloaded = tx_repo.load().get(purchase.transaction_id)
         assert reloaded is not None
         assert reloaded.invoice_id == created.invoice.invoice_id
+        # An invoice entered in the period after the calculation moves the invoice
+        # baseline, so the draft reads the catalogue again before it can be verified.
+        revision = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
+
+        # The invoice joined the period after the calculation read its invoices,
+        # so verification refuses the draft until the operator calculates again.
+        revision = _calculate_work_unit(revision.work_unit_id, bucket_id=_BUCKET_ID)
 
         with bundled_indexed_authority().operation() as operation:
             report = verify_modelo_revision_with_preconditions(
@@ -779,10 +813,10 @@ def test_modelo_303_verify_and_file_credit_a_linked_validated_invoice(
         assert tuple(filing_repo.load().values()) != ()
 
 
-def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
+def test_a_blocked_verify_is_recoverable_by_attaching_recalculating_and_verifying_again(
     tmp_path: Path, *, operation: PinnedAuthorityOperation
 ) -> None:
-    """The recovery the whole promotion rests on: block, attach, re-verify, grant.
+    """The recovery the whole promotion rests on: block, attach, recalculate, grant.
 
     The sibling test above attaches BEFORE the first verify, which was the only
     ordering that ever worked. This one drives the ordering an operator actually
@@ -794,6 +828,10 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
     It also pins that the idempotent re-verify guard does not fire here. That
     guard keys on a non-BORRADOR state, so a blocked revision must stay BORRADOR
     for the second verify to do real work rather than return the first report.
+
+    Evidence is a watched fact, so verifying straight after the attach reports
+    drift. Recalculating the same figures keeps the content-addressed id and moves
+    only the draft's baseline, which is what leaves the path recoverable.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID) as profile:
         revision, _sale, purchase, wu_repo, cr_repo, filing_repo, vr_repo, event_repo, tx_repo = (
@@ -844,6 +882,12 @@ def test_a_blocked_verify_is_recoverable_by_attaching_and_verifying_again(
                 ports=ports,
                 occurred_at=_VERIFIED_AT,
             )
+
+        drifted = _verify()
+        assert drifted.granted_verificado_completo is False
+        assert any("drift" in finding.message_locale_key for finding in drifted.findings)
+        recalculated = _recalculate_after_a_ledger_write(revision, wu_repo=wu_repo)
+        assert recalculated.calculation_revision_id == revision.calculation_revision_id
 
         granted = _verify()
         assert granted.granted_verificado_completo is True

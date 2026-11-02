@@ -22,10 +22,19 @@ import {
 const driver = resolve(import.meta.dirname, "../scripts/ledger-contract.mjs");
 const shipped = resolve(import.meta.dirname, "../src/shell/ledgerContract.ts");
 
+// Playwright colours its workers' output with FORCE_COLOR, and a developer's
+// shell may set NO_COLOR; node warns on stderr when both reach it. The driver
+// is checked without either, so stderr carries only what the driver wrote.
+const driverEnvironment = () => {
+  const { FORCE_COLOR: _force, NO_COLOR: _none, ...rest } = process.env;
+  return rest;
+};
+
 const check = (target: string) =>
   spawnSync("node", [driver, "--check", "--target", target], {
     encoding: "utf8",
     windowsHide: true,
+    env: driverEnvironment(),
   });
 
 test("the shipped contract matches what the Python models generate", () => {

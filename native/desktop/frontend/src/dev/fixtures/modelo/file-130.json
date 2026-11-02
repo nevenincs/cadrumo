@@ -1,15 +1,15 @@
 {
   "result_version": 2,
   "record": {
-    "filing_record_id": "bd4529898a12a44fc8c67b7ba8a6d65fa12453b24a0ecf3f89c593ea6c86bd67",
+    "filing_record_id": "045fa643567d0176df21c462fde51bcc460374bc17a87bb99c83be2464df4a43",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+    "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
     "bucket_id": "13000000-0000-4000-8000-000000000730",
     "modelo": "130",
     "filing_year": 2026,
     "period": { "filing_year": 2026, "code": "1T" },
     "member_nif": null,
-    "filed_at": "2026-11-02T01:35:15.579783Z",
+    "filed_at": "2026-11-02T09:26:04.796817Z",
     "filed_by": "operator:desktop-modelo",
     "notes": null,
     "origin": "local",
@@ -22,14 +22,12 @@
     "external_evidence": null,
     "amends_filing_record_id": null,
     "settlement": null,
-    "source_transaction_ids": [
-      "2772b693b839b0267080536403e73a7c10b5a3df8a1367acf3849e04e8bb2c5d"
-    ]
+    "source_transaction_ids": []
   },
   "advisories": {
     "version": 1,
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+    "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
     "modelo": "130",
     "filing_year": 2026,
     "period": "1T",
@@ -37,8 +35,8 @@
     "m184_socio_handoffs": []
   },
   "published": true,
-  "filing_record_id": "bd4529898a12a44fc8c67b7ba8a6d65fa12453b24a0ecf3f89c593ea6c86bd67",
+  "filing_record_id": "045fa643567d0176df21c462fde51bcc460374bc17a87bb99c83be2464df4a43",
   "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-  "calculation_revision_id": "90d51aa590afa80274571749c514ffa87707a039a8d3c2ac942bf21d0cc2cbde",
+  "calculation_revision_id": "be6c00415fdbd31429c1d1228f0922bed44dee944709756784e2f35151a561c6",
   "handoff_required": true
 }

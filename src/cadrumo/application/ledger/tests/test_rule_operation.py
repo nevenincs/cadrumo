@@ -8,13 +8,13 @@ from contextlib import asynccontextmanager
 from datetime import UTC, date, datetime, timedelta, timezone
 from types import SimpleNamespace
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....application.ledger.action_ports import LedgerActionPorts
 from ....application.ledger.actions_common import save_transaction_catalogue_and_events
@@ -73,6 +73,7 @@ from ..rule_operation import (
     build_ledger_rule_list_registration,
 )
 from ..rule_results import LEDGER_RULE_VALIDATION_REFUSAL_CODE
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -137,6 +138,9 @@ class _EmptyRuleRepository:
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         self.list_calls += 1
         return ()
+
+    def delete(self, identifier: str) -> bool:
+        raise AssertionError(f"dry-run must not delete a rule: {identifier}")
 
 
 def _executor_ports(
@@ -228,13 +232,8 @@ def _access_context(
     profile_id: UUID = _PROFILE,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=frontend,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+    return registration_access_context(
+        registration, profile_id=profile_id, action=AccessAction.SUBMIT, frontend=frontend
     )
 
 
@@ -631,6 +630,9 @@ class _RuleRepositoryProbe:
 
     def list_rules(self) -> tuple[LedgerClassificationRule, ...]:
         return tuple(self.saved)
+
+    def delete(self, identifier: str) -> bool:
+        raise AssertionError(f"adding a rule must not delete one: {identifier}")
 
 
 def test_rule_add_save_uses_the_same_precise_writer_fence() -> None:

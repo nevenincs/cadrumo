@@ -15,13 +15,13 @@ from pydantic import BaseModel, ConfigDict, Field, NonNegativeInt, model_validat
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.errors.hierarchy import CadrumoError
 from ...core.filed_history_discovery_signal import FiledHistoryDiscoverySignal
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.deadlines.models import TaxpayerProfile
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
@@ -35,7 +35,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .filed_capture_queries import list_filed_data, list_filed_data_bulk
 from .filed_data import FiledDataListingRow
 from .filed_data_ports import FiledDataCapturePort
-from .filed_history_discovery import FiledHistoryDiscoveryReport, discover_filed_history
+from .filed_history_discovery import FiledHistoryDiscoveryReport, discover_filed_history, resolve_discovery_profile
 from .filed_history_operation import FiledHistoryBrowserResourcesFactory, FiledHistoryProviderPreflight
 from .live_operation_execution import (
     own_provider_browser,
@@ -43,7 +43,7 @@ from .live_operation_execution import (
     require_exact_profile_worker,
     track_capture_session,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import FiledDataCaptureFailureRow
 
 FILED_LIST_DEFINITION_ID = "live.filed-list"
@@ -178,17 +178,6 @@ class FiledReadCompositionFactory(Protocol):
 
 
 FiledReadProfileResolver = Callable[[PinnedAuthorityOperation], TaxpayerProfile | None]
-
-
-def _resolve_active_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile | None:
-    """Use the pinned profile schema; preserve discovery before profile setup."""
-    from ..wizard.status import load_active_taxpayer_profile
-    from ..workflow.persistence import workflow_state_repository
-
-    try:
-        return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
-    except CadrumoError:
-        return None
 
 
 def _list_row_in_scope(row: FiledDataListingRow, payload: FiledListRequest) -> bool:
@@ -353,7 +342,7 @@ def build_filed_discover_definition(
     composition_factory: FiledReadCompositionFactory,
     browser_resources_factory: FiledHistoryBrowserResourcesFactory,
     provider_preflight: FiledHistoryProviderPreflight,
-    profile_resolver: FiledReadProfileResolver = _resolve_active_profile,
+    profile_resolver: FiledReadProfileResolver = resolve_discovery_profile,
 ) -> OperationDefinition:
     """Declare read-only, recorded register/profile grid discovery."""
 
@@ -428,8 +417,8 @@ def resolve_filed_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile authority for the register row range, plus COMMIT for a provider-session save."""
-    return resolve_whole_profile_capture_access(
-        request, context, definition_id=FILED_LIST_DEFINITION_ID, payload_type=FiledListRequest
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=FILED_LIST_DEFINITION_ID, request_type=FiledListRequest
     )
 
 
@@ -437,8 +426,8 @@ def resolve_filed_discover_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile authority for expectation disclosure, plus COMMIT for a provider-session save."""
-    return resolve_whole_profile_capture_access(
-        request, context, definition_id=FILED_DISCOVER_DEFINITION_ID, payload_type=FiledDiscoverRequest
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=FILED_DISCOVER_DEFINITION_ID, request_type=FiledDiscoverRequest
     )
 
 

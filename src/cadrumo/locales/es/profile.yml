@@ -45,8 +45,11 @@ profile:
       surnames: Apellidos o razón social para cabeceras de exportación
       tax_id: Identificador fiscal (NIF/CIF/DNI/NIE) para declaraciones
     irpf:
+      activity_income_imputation_criterion: ¿Qué criterio imputa los ingresos y gastos
+        de tu actividad a cada ejercicio?
       art109_activity_income_withholding_ge_70pct: Aplica la excepción Art. 109 por
         cobertura del 70% de ingresos de actividad
+      codigo_comercio_accounting: ¿Llevas contabilidad ajustada al Código de Comercio?
       estimation_regime: Régimen de estimación IRPF
       special_regime: Régimen especial IRPF (Ley Beckham / Art. 93 LIRPF)
       special_regime_start_date: Fecha de inicio del régimen especial (AAAA-MM-DD)
@@ -255,6 +258,13 @@ profile:
         tax_id:
           label: NIF/NIE/CIF de identificación
       irpf:
+        activity_income_cash_criterion_elected:
+          label: Criterio de cobros y pagos consignado en la declaración
+        activity_income_imputation_criterion:
+          choices:
+            cobros_y_pagos: Cobros y pagos (art. 7.2 RIRPF)
+            devengo: Devengo
+          label: Criterio de imputación de ingresos y gastos
         activity_kind:
           choices:
             profesional: Actividad profesional
@@ -262,6 +272,8 @@ profile:
           label: Tipo de actividad
         art109_activity_income_withholding_ge_70pct:
           label: Cumple la excepción del 70 % del art. 109 RIRPF
+        codigo_comercio_accounting:
+          label: Llevas contabilidad ajustada al Código de Comercio
         estimation_regime:
           choices:
             directa_normal: Estimación directa normal

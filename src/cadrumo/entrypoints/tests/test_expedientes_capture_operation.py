@@ -5,21 +5,18 @@ from __future__ import annotations
 import asyncio
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
-from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live import expedientes as expedientes_module
 from ...application.live.expedientes import PersistedExpedientesSnapshot
@@ -45,9 +42,7 @@ from ...application.operations.frontend_requests import (
 )
 from ...application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
-from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
-from ...application.operations.supervisor import OperationSupervisor
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.operations import (
     OperationEffect,
@@ -58,7 +53,12 @@ from ...core.operations import (
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
-from .supervised_operation_rig import assert_foreign_profile_refused, run_to_terminal
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    operation_access_context,
+    run_to_terminal,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -103,13 +103,8 @@ def _declaration(modelo: str = "303") -> ExpedientesDeclaration:
 
 
 def _access_context(profile_id: UUID, contract: Any) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-        contract=contract,
-        published_authority=Availability.AVAILABLE,
+    return operation_access_context(
+        contract, profile_id=profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
     )
 
 
@@ -195,23 +190,14 @@ def test_single_capture_is_profile_bound_guarded_deduplicated_and_supervised(
         from ...application.live import expedientes_capture_operation as capture_module
 
         monkeypatch.setattr(capture_module, "require_active_bucket_id", lambda: profile.bucket_id)
-        durable_root = tmp_path / "operations"
-        journal = OperationJournalRepository(storage_root=durable_root)
-        operands = operation_secure_reference_repository(objects=profile.repository)
-        supervisor = OperationSupervisor(
-            authority_operation=authority,
+        _, _, _, supervisor, result_service = build_supervised_operation(
+            tmp_path=tmp_path,
+            objects=profile.repository,
+            authority=authority,
             registry=registry,
-            journal=journal,
-            event_stream=journal,
-            leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-            operands=operands,
-            owner_id="1" * 64,
-            lease_token_factory=lambda: "2" * 64,
-            clock=lambda: _NOW,
-            lease_duration=timedelta(minutes=5),
+            now=_NOW,
             execution_authority=RecordingExecutionAuthority(events),
         )
-        result_service = OperationResultProjectionService(reader=journal, registry=registry, operands=operands)
 
         async def run(operation_id: str) -> tuple[OperationPersistedSnapshot, BaseModel]:
             submitted_id = await supervisor.submit(request, operation_id=operation_id)

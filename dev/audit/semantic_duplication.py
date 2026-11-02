@@ -247,6 +247,37 @@ def detect_enum_subset(modules: Sequence[Module]) -> list[Candidate]:
     ]
 
 
+def _scarce_literals(modules: Sequence[Module]) -> set[object]:
+    """Return the literals stated in more than one module but in few enough to be scarce."""
+    sites_by_literal: dict[object, set[str]] = collections.defaultdict(set)
+    for module in modules:
+        for scope in module.literal_scopes:
+            for literal in scope:
+                sites_by_literal[literal].add(module.relative)
+    return {literal for literal, sites in sites_by_literal.items() if 1 < len(sites) <= _SCARCE_LITERAL_CEILING}
+
+
+def _sites_by_scarce_pair(modules: Sequence[Module], scarce: set[object]) -> dict[tuple[object, object], set[str]]:
+    """Return, per pair of scarce literals met in one scope, the modules stating that pair."""
+    sites_by_pair: dict[tuple[object, object], set[str]] = collections.defaultdict(set)
+    for module in modules:
+        for scope in module.literal_scopes:
+            for pair in itertools.combinations(sorted(scope & scarce, key=repr), 2):
+                sites_by_pair[pair].add(module.relative)
+    return sites_by_pair
+
+
+def _shared_literals_by_site_pair(
+    sites_by_pair: dict[tuple[object, object], set[str]],
+) -> dict[tuple[str, str], set[object]]:
+    """Return, per pair of modules, the literals of every literal pair both state."""
+    shared: dict[tuple[str, str], set[object]] = collections.defaultdict(set)
+    for pair, sites in sites_by_pair.items():
+        for site_pair in itertools.combinations(sorted(sites), 2):
+            shared[site_pair].update(pair)
+    return shared
+
+
 def detect_scarce_literal(modules: Sequence[Module]) -> list[Candidate]:
     """Module pairs that each state the same two or more SCARCE literals TOGETHER.
 
@@ -259,21 +290,8 @@ def detect_scarce_literal(modules: Sequence[Module]) -> list[Candidate]:
     function or top-level statement on both sides; two values hundreds of lines apart
     are not one rule, and counting them made every large module collide with every other.
     """
-    sites_by_literal: dict[object, set[str]] = collections.defaultdict(set)
-    for module in modules:
-        for scope in module.literal_scopes:
-            for literal in scope:
-                sites_by_literal[literal].add(module.relative)
-    scarce = {literal for literal, sites in sites_by_literal.items() if 1 < len(sites) <= _SCARCE_LITERAL_CEILING}
-    sites_by_pair: dict[tuple[object, object], set[str]] = collections.defaultdict(set)
-    for module in modules:
-        for scope in module.literal_scopes:
-            for pair in itertools.combinations(sorted(scope & scarce, key=repr), 2):
-                sites_by_pair[pair].add(module.relative)
-    shared: dict[tuple[str, str], set[object]] = collections.defaultdict(set)
-    for pair, sites in sites_by_pair.items():
-        for site_pair in itertools.combinations(sorted(sites), 2):
-            shared[site_pair].update(pair)
+    scarce = _scarce_literals(modules)
+    shared = _shared_literals_by_site_pair(_sites_by_scarce_pair(modules, scarce))
     return [
         Candidate(
             detector="scarce_literal",
@@ -283,6 +301,29 @@ def detect_scarce_literal(modules: Sequence[Module]) -> list[Candidate]:
         )
         for site_pair, literals in shared.items()
     ]
+
+
+def _call_marks(call: ast.Call) -> list[str]:
+    """Return the callee and keyword marks of one call expression."""
+    marks: list[str] = []
+    func = call.func
+    name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
+    if name is not None and name:
+        marks.append(f"call:{name}/{len(call.args)}")
+    # A keyword is the callee's vocabulary, so a second author cannot rename it.
+    marks.extend(f"kw:{keyword.arg}" for keyword in call.keywords if keyword.arg is not None)
+    return marks
+
+
+def _node_marks(inner: ast.AST) -> list[str]:
+    """Return the behaviour marks one syntax node contributes to a call fingerprint."""
+    if isinstance(inner, ast.Call):
+        return _call_marks(inner)
+    if isinstance(inner, ast.Constant) and _meaningful_literal(inner):
+        return [f"lit:{inner.value!r}"]
+    if isinstance(inner, ast.Compare):
+        return [f"cmp:{type(op).__name__}" for op in inner.ops]
+    return []
 
 
 def _call_fingerprint(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset[str]:
@@ -297,17 +338,7 @@ def _call_fingerprint(node: ast.FunctionDef | ast.AsyncFunctionDef) -> frozenset
     for inner in ast.walk(node):
         if id(inner) in documentation:
             continue
-        if isinstance(inner, ast.Call):
-            func = inner.func
-            name = func.id if isinstance(func, ast.Name) else getattr(func, "attr", None)
-            if name is not None and name:
-                marks.add(f"call:{name}/{len(inner.args)}")
-            # A keyword is the callee's vocabulary, so a second author cannot rename it.
-            marks.update(f"kw:{keyword.arg}" for keyword in inner.keywords if keyword.arg is not None)
-        elif isinstance(inner, ast.Constant) and _meaningful_literal(inner):
-            marks.add(f"lit:{inner.value!r}")
-        elif isinstance(inner, ast.Compare):
-            marks.update(f"cmp:{type(op).__name__}" for op in inner.ops)
+        marks.update(_node_marks(inner))
     return frozenset(marks)
 
 

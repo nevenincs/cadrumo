@@ -1,10 +1,12 @@
 """Registered read that answers an invoice draft with the backend's own figures and verdict.
 
 A complete draft runs the same construction the add operation runs, so the
-verdict is acceptance's own. Nothing can persist: this path holds no repository,
-and its exchange-rate source never leaves the process. A foreign-currency draft
-is therefore checked unstamped, which changes neither its validity nor its id,
-because a stamp enters only the euro projections.
+verdict is acceptance's own. Nothing can persist: this path holds no repository.
+A foreign-currency draft resolves its euro conversion through the same rate
+source as add. A rate the source cannot find leaves the draft unstamped, as add
+does, which changes neither its validity nor its id; a source that cannot be
+reached fails the read with add's own rate error, which is neither a
+would-accept nor a would-refuse answer.
 
 A duplicate is decided at commit against the stored catalogue, so a preview
 that would accept can still meet a ``duplicate_invoice`` refusal on add.
@@ -17,7 +19,7 @@ record, so its verdict covers only the facts the request states; see
 from __future__ import annotations
 
 import asyncio
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from datetime import date
 from decimal import Decimal, DecimalException
 
@@ -34,7 +36,6 @@ from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import reading_dated_facts_below_support
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
-from ...domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ...domain.invoices.errors import InvoiceValidationError
 from ...domain.invoices.figures import (
     DatedRateSlot,
@@ -47,8 +48,9 @@ from ...domain.invoices.figures import (
     compute_invoice_figures,
     compute_line_figures,
     dated_rate_slots,
+    rate_refusal_finding,
 )
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt, require_succeeded_terminal_receipt
@@ -64,6 +66,7 @@ from .catalogue_add_operation import (
     invoice_add_lease,
     invoice_date_outside_registry_support,
 )
+from .catalogue_creation_ports import CatalogueInvoiceRateProviderPort
 from .figures_preview_contracts import (
     INVALID_INVOICE_REFUSAL,
     INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
@@ -92,21 +95,6 @@ from .figures_preview_rule_findings import (
     rule_finding_of,
     with_refusing_rule,
 )
-
-_NO_RATE_SOURCE = "no-rate-source"
-
-
-class _NoRateSource:
-    """Answer no rate for every currency, so a preview never leaves the process."""
-
-    @property
-    def rate_source_id(self) -> str:
-        """Name this source for the port; an unfound rate stamps nothing with it."""
-        return _NO_RATE_SOURCE
-
-    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
-        """Report the rate as missing, which leaves the record unstamped."""
-        return EurRateLookup(status=EurRateLookupStatus.MISSING_RATE, rate_date=rate_date, source=_NO_RATE_SOURCE)
 
 
 def _decimal(value: PublicDecimal | None) -> Decimal | None:
@@ -177,15 +165,6 @@ def _rate_undeclared_finding(token: str) -> FigureFinding:
     )
 
 
-def _slot_refusal_finding(line: InvoiceFiguresPreviewLine, slot: DatedRateSlot, on_date: date) -> FigureFinding:
-    return FigureFinding(
-        FigureFindingCode.LINE_RATE_COVERAGE_GAP if slot.coverage_gap else FigureFindingCode.LINE_RATE_NOT_IN_FORCE,
-        f"line rate {line.iva_rate} is not available on {on_date.isoformat()}",
-        ("iva_rate",),
-        values={"slot": str(slot.slot), "on_date": on_date.isoformat()},
-    )
-
-
 def _line_figures(
     line: InvoiceFiguresPreviewLine,
     slots: tuple[DatedRateSlot, ...] | None,
@@ -205,7 +184,7 @@ def _line_figures(
         if slot is None:
             rate_findings = (_rate_undeclared_finding(line.iva_rate),)
         elif not slot.in_force:
-            rate_findings = (_slot_refusal_finding(line, slot, on_date),)
+            rate_findings = (rate_refusal_finding(slot.slot, on_date, coverage_gap=slot.coverage_gap),)
     if not rate_findings:
         return figures
     return LineFigures(
@@ -296,6 +275,7 @@ def _validated_invoice_id(
     lines: tuple[InvoiceAddLine, ...],
     *,
     operation: PinnedAuthorityOperation,
+    rate_provider: CatalogueInvoiceRateProviderPort,
 ) -> str:
     """Run the add operation's own construction; nothing it returns is persisted."""
     if (
@@ -339,7 +319,7 @@ def _validated_invoice_id(
         business_premises_lease=invoice_add_lease(payload, authority_operation=operation),
         profile=profile,
         authority_operation=operation,
-        rate_provider=_NoRateSource(),
+        rate_provider=rate_provider,
     )
     return invoice.invoice_id
 
@@ -368,6 +348,7 @@ def _verdict(
     on_date: date,
     *,
     operation: PinnedAuthorityOperation,
+    rate_provider: CatalogueInvoiceRateProviderPort,
 ) -> Verdict:
     """Answer a complete draft by acceptance itself: a refusal code, or the invoice's id."""
     try:
@@ -377,7 +358,9 @@ def _verdict(
             if code is None:
                 raise InternalInvariantError("a complete invoice draft has an unknown figure and no finding")
             return Verdict(code)
-        return Verdict(invoice_id=_validated_invoice_id(request, add_lines, operation=operation))
+        return Verdict(
+            invoice_id=_validated_invoice_id(request, add_lines, operation=operation, rate_provider=rate_provider)
+        )
     except RegistryValidationError:
         # Caught first: it is a CoreValidationError, and corrupt authority must stay a failure.
         if invoice_date_outside_registry_support(on_date, operation):
@@ -414,9 +397,10 @@ def _draft_verdict(
     rule_findings: tuple[LocatedRuleFinding, ...],
     *,
     operation: PinnedAuthorityOperation,
+    rate_provider: CatalogueInvoiceRateProviderPort,
 ) -> Verdict:
     if request.stored is None:
-        return _verdict(request, lines, every_finding, on_date, operation=operation)
+        return _verdict(request, lines, every_finding, on_date, operation=operation, rate_provider=rate_provider)
     return _correction_verdict(request.stored, every_finding, rule_findings)
 
 
@@ -446,6 +430,7 @@ def preview_invoice_figures(
     request: InvoiceFiguresPreviewRequest,
     *,
     operation: PinnedAuthorityOperation,
+    rate_provider: CatalogueInvoiceRateProviderPort,
 ) -> InvoiceFiguresPreviewResult:
     """Answer one draft from the figures owner and, when complete, from acceptance itself.
 
@@ -456,13 +441,14 @@ def preview_invoice_figures(
     is a projection; a declared legal start after the date still answers nothing.
     """
     with reading_dated_facts_below_support():
-        return _preview_invoice_figures(request, operation=operation)
+        return _preview_invoice_figures(request, operation=operation, rate_provider=rate_provider)
 
 
 def _preview_invoice_figures(
     request: InvoiceFiguresPreviewRequest,
     *,
     operation: PinnedAuthorityOperation,
+    rate_provider: CatalogueInvoiceRateProviderPort,
 ) -> InvoiceFiguresPreviewResult:
     """Answer one draft inside the reach its date needs.
 
@@ -481,7 +467,9 @@ def _preview_invoice_figures(
     verdict = (
         Verdict()
         if missing
-        else _draft_verdict(request, lines, every_finding, on_date, rule_findings, operation=operation)
+        else _draft_verdict(
+            request, lines, every_finding, on_date, rule_findings, operation=operation, rate_provider=rate_provider
+        )
     )
     rule_findings = _with_other_rule_finding(with_refusing_rule(rule_findings, verdict), verdict, every_finding)
     return InvoiceFiguresPreviewResult(
@@ -503,8 +491,16 @@ def _preview_invoice_figures(
     )
 
 
+type InvoiceFiguresPreviewRateProviderFactory = Callable[[], CatalogueInvoiceRateProviderPort]
+"""Return the rate source add uses, called inside the worker on each read."""
+
+
 class InvoiceFiguresPreviewExecutor:
     """Answer one draft inside the exact profile's worker."""
+
+    def __init__(self, rate_provider_factory: InvoiceFiguresPreviewRateProviderFactory) -> None:
+        """Bind the factory of the rate source that add resolves a foreign currency through."""
+        self._rate_provider_factory = rate_provider_factory
 
     async def execute(
         self,
@@ -527,6 +523,7 @@ class InvoiceFiguresPreviewExecutor:
             preview_invoice_figures,
             request.payload,
             operation=context.authority_operation,
+            rate_provider=self._rate_provider_factory(),
         )
         return await context.operands.put(InvoiceFiguresPreviewExecutionResult(result=answer), written_at=now())
 
@@ -544,7 +541,9 @@ def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     return result.result
 
 
-def build_invoice_figures_preview_definition() -> OperationDefinition:
+def build_invoice_figures_preview_definition(
+    rate_provider_factory: InvoiceFiguresPreviewRateProviderFactory,
+) -> OperationDefinition:
     """Declare the exact-profile read; a draft's figures stay in encrypted custody."""
     return build_single_phase_definition(
         definition_id=INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
@@ -552,7 +551,7 @@ def build_invoice_figures_preview_definition() -> OperationDefinition:
         subject_reference=OperationSubjectReferenceV1.profile(),
         result_type=InvoiceFiguresPreviewExecutionResult,
         executor_type=InvoiceFiguresPreviewExecutor,
-        build=InvoiceFiguresPreviewExecutor,
+        build=lambda: InvoiceFiguresPreviewExecutor(rate_provider_factory),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES,
     )
 
@@ -561,11 +560,12 @@ def resolve_invoice_figures_preview_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind the read to the exact profile, as every ledger read is."""
-    if request.definition_id != INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InvoiceFiguresPreviewRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request,
+        context,
+        definition_id=INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
+        request_type=InvoiceFiguresPreviewRequest,
+    )
 
 
 def build_invoice_figures_preview_registration(
@@ -582,6 +582,7 @@ def build_invoice_figures_preview_registration(
 
 __all__ = [
     "InvoiceFiguresPreviewExecutor",
+    "InvoiceFiguresPreviewRateProviderFactory",
     "build_invoice_figures_preview_definition",
     "build_invoice_figures_preview_registration",
     "preview_invoice_figures",

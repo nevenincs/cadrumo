@@ -28,7 +28,7 @@ from ...actividad_asset.tests.register_support import MemoryRepository
 from ..modelo_bindings import LedgerRentaIncomeAggregationSourceResolver
 from ..renta_income_ledger import RentaIncomeLedgerAggregationIssueReason, aggregate_renta_income_ledger
 from ..source_mesh import CalculationSourceContext, CalculationSourceDiagnostic, CalculationSourceResolution
-from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository
+from .ledger_source_mesh_support import InMemoryTransactionCatalogueRepository, cash_criterion_profile
 from .renta_income_aggregation_support import (
     _M130_RETENCIONES_BINDING,
     _M130_RETENCIONES_CASILLA,
@@ -407,6 +407,7 @@ def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() ->
         filing_year=2026,
         period=_period(2026, "1T"),
         revision=_m130_2026_q1_revision(),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)
@@ -454,6 +455,7 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
         filing_year=2026,
         period=_period(2026, "1T"),
         revision=income_only,
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)
@@ -487,6 +489,7 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
             filing_year=2026,
             period=_period(2026, "1T"),
             revision=_m130_2026_q1_revision(),
+            profile=cash_criterion_profile(2026),
         ),
     )
     assert not [
@@ -648,6 +651,7 @@ def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory() -> None
         filing_year=2026,
         period=_period(2026, "1T"),
         revision=_m130_2026_q1_revision(),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)
@@ -685,6 +689,7 @@ def test_substrate_declared_income_raises_no_ungrounded_advisory() -> None:
         filing_year=2026,
         period=_period(2026, "1T"),
         revision=_m130_2026_q1_revision(),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)
@@ -719,6 +724,7 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each() -> None:
         filing_year=2026,
         period=_period(2026, "1T"),
         revision=_m130_2026_q1_revision(),
+        profile=cash_criterion_profile(2026),
     )
 
     resolution = _income_resolver(transactions).resolve(context)

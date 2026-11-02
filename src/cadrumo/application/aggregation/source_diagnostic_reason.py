@@ -88,6 +88,11 @@ CalculationSourceDiagnosticReason = Literal[
     # quarter boundary and invoiced in the next one is declared in the wrong
     # period by exactly this substitution.
     "devengo_date_proxy_attribution",
+    # A ledger row whose period rests on its bank date because no operation date
+    # is recorded, and a row whose recorded operation date falls after the money.
+    # Both are the operator's to judge: LIVA art. 75.Uno against 75.Dos.
+    "iva_row_placed_on_movement_date",
+    "iva_operation_date_after_movement",
     "oss_no_live_source",
     # An annual withholding summary whose per-perceptor-clave detail store holds
     # NO observation for the year. The bound percepciones count is still

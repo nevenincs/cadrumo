@@ -45,6 +45,7 @@ from ...domain.calculations.registry.prorrata_exclusions import require_art104_t
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.iva.vehicle_use import IvaVehicleUse
 from ...domain.transactions.enums import TRANSFER_ALLOWED_STATES, BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -193,6 +194,10 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     bucket_id: BucketId
     booked_date: date
     value_date: date | None = None
+    #: The LIVA art. 75 devengo date of what this row settles, as the operator
+    #: states it. Absent means the IVA placement falls back to the bank movement
+    #: date and says so. Never derived from a bank date.
+    operation_date: date | None = None
     amount: Decimal
     currency: IsoCurrencyCode = DEFAULT_CURRENCY
     direction: TransactionDirection
@@ -224,6 +229,9 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     #: because the register record is declared separately, after the ledger row
     #: exists, and nothing in the movement itself identifies the asset.
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
+    #: What the row's vehicle is, where LIVA art. 95.Tres.2.ª treats it apart from the
+    #: general presumption. Read only for a category under that presumption.
+    iva_vehicle_use: IvaVehicleUse | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
@@ -287,9 +295,11 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
             )
         forbidden = {
             "category_id": self.category_id,
+            "operation_date": self.operation_date,
             "iva_category": self.iva_category,
             "deduction_fact_kind": self.deduction_fact_kind,
             "investment_asset_id": self.investment_asset_id,
+            "iva_vehicle_use": self.iva_vehicle_use,
             "taxable_base": self.taxable_base,
             "iva_rate": self.iva_rate,
             "iva_amount": self.iva_amount,
@@ -315,6 +325,7 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
 
     booked_date: date | None = None
     value_date: date | None = None
+    operation_date: date | None = None
     amount: Decimal | None = None
     # The create command validates this and the patch did not, so an operator
     # could not CREATE a row with a malformed currency but could EDIT one into
@@ -340,6 +351,9 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     iva_category: IvaCategory | None = None
     deduction_fact_kind: IvaDeductionFactKind | None = None
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
+    #: What the row's vehicle is, where LIVA art. 95.Tres.2.ª treats it apart from the
+    #: general presumption. Read only for a category under that presumption.
+    iva_vehicle_use: IvaVehicleUse | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None
@@ -393,6 +407,7 @@ class LedgerTransactionPayload(_LedgerCountryCodeModel):
     date: IsoDateText
     booked_date: IsoDateText
     value_date: str | None = None
+    operation_date: str | None = None
     amount: str = Field(min_length=1)
     currency: IsoCurrencyCode
     direction: str = Field(min_length=1)
@@ -942,6 +957,7 @@ class LedgerExportRow(BaseModel):
     invoice_id: str = ""
     booked_date: IsoDateText
     value_date: str = ""
+    operation_date: str = ""
     effective_date: IsoDateText
     amount: NonEmptyStr
     currency: IsoCurrencyCode
@@ -987,7 +1003,7 @@ class LedgerExportRow(BaseModel):
             raise ValueError("must be an ISO-8601 date")
         return value
 
-    @field_validator("value_date")
+    @field_validator("value_date", "operation_date")
     @classmethod
     @pydantic_validation_boundary
     def _validate_optional_iso_date(cls, value: str) -> str:

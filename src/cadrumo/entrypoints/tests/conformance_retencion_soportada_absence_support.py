@@ -1,12 +1,10 @@
-"""Suffered-withholding absence attestation operations through the real supervisor matrix."""
+"""Suffered-withholding absence attestations through the real supervisor matrix."""
 
 from __future__ import annotations
 
 from datetime import UTC, datetime
 
-from ...application.aggregation.retencion_soportada_absence_repository import (
-    attest_retencion_soportada_absence,
-)
+from ...application.aggregation.retencion_soportada_absence_repository import attest_retencion_soportada_absence
 from ...application.retencion_soportada_absence.contracts import (
     RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
@@ -35,26 +33,25 @@ from .conformance_family_contract import (
 )
 
 _EJERCICIO = 2025
-_CLASS = RetencionSoportadaClase.CAPITAL_MOBILIARIO
-_NOTE = "Synthetic note: no payer withheld."
+_CLASS = RetencionSoportadaClase.TRABAJO
+_NOTE = "No payer withheld on this class in the ejercicio."
 
 
 def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
     definition_id = context.definition.definition_id
     subject = profile_operation_subject(str(context.profile_id))
     ports = build_retencion_soportada_absence_ports(profile_id=context.profile_id, operation=context.operation)
-    attestations = ports.attestations
+    identity = (_EJERCICIO, _CLASS)
+    attestation = RetencionSoportadaAbsence(
+        ejercicio=_EJERCICIO,
+        income_class=_CLASS,
+        note=_NOTE,
+        attested_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
+    )
 
     def seed() -> str:
         return attest_retencion_soportada_absence(
-            RetencionSoportadaAbsence(
-                ejercicio=_EJERCICIO,
-                income_class=_CLASS,
-                note=_NOTE,
-                attested_at=datetime(2026, 4, 2, 9, 0, tzinfo=UTC),
-            ),
-            ports=ports,
-            expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+            attestation, ports=ports, expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID
         )
 
     if definition_id == RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID:
@@ -62,11 +59,17 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         def verify_attest(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(RetencionSoportadaAbsenceMutationProjection)
             assert result.outcome == "attested"
+            assert result.profile_id == context.profile_id
+            assert result.refusal is None
             assert result.attestation is not None
-            ((stored, revision_id),) = attestations.list_revisioned(_EJERCICIO)
-            assert stored.note == _NOTE
+            stored, revision_id = ports.attestations.load_revisioned(identity)
+            assert stored is not None
             assert stored.state is RetencionSoportadaAbsenceState.ACTIVE
+            assert stored.note == _NOTE
             assert result.attestation.revision_id == revision_id
+            assert result.attestation.note == _NOTE
+            assert result.attestation.state is RetencionSoportadaAbsenceState.ACTIVE
+            assert ports.records.load_records(_EJERCICIO) == ()
 
         return ConformancePreparation(
             subject,
@@ -82,11 +85,18 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         def verify_withdraw(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(RetencionSoportadaAbsenceMutationProjection)
             assert result.outcome == "withdrawn"
+            assert result.profile_id == context.profile_id
+            assert result.refusal is None
             assert result.attestation is not None
-            ((stored, stored_revision),) = attestations.list_revisioned(_EJERCICIO)
+            stored, stored_revision_id = ports.attestations.load_revisioned(identity)
+            assert stored is not None
             assert stored.state is RetencionSoportadaAbsenceState.WITHDRAWN
-            assert stored_revision != revision_id
-            assert result.attestation.revision_id == stored_revision
+            assert stored.withdrawn_at is not None
+            assert stored.attested_at == attestation.attested_at
+            assert stored_revision_id != revision_id
+            assert result.attestation.revision_id == stored_revision_id
+            assert result.attestation.state is RetencionSoportadaAbsenceState.WITHDRAWN
+            assert result.attestation.withdrawn_at == stored.withdrawn_at
 
         return ConformancePreparation(
             subject,
@@ -105,12 +115,14 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
         def verify_list(outcome: ConformanceOutcome) -> None:
             result = outcome.resolve_result(RetencionSoportadaAbsenceListProjection)
             assert result.profile_id == context.profile_id
+            assert result.ejercicio == _EJERCICIO
             (row,) = result.attestations
             assert row.income_class is _CLASS
             assert row.income_class_label
+            assert row.note == _NOTE
             assert row.revision_id == revision_id
             assert row.state is RetencionSoportadaAbsenceState.ACTIVE
-            assert attestations.list_revisioned(_EJERCICIO)[0][1] == revision_id
+            assert ports.attestations.load_revisioned(identity)[1] == revision_id
 
         return ConformancePreparation(
             subject,
@@ -118,7 +130,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             verify=verify_list,
         )
 
-    raise AssertionError(f"unsupported absence attestation conformance definition: {definition_id}")
+    raise AssertionError(f"unsupported suffered-withholding absence conformance definition: {definition_id}")
 
 
 RETENCION_SOPORTADA_ABSENCE_CONFORMANCE_FAMILY = ConformanceFamily(

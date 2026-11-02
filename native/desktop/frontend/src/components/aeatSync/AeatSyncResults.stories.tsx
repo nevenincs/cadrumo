@@ -20,6 +20,8 @@ type Args = {
   mode: AeatSyncResultsMode | "loading";
   picked?: "file" | "cancelled";
   imported?: BorradorImportResult["outcome"];
+  /** Boxes the import read but did not keep. */
+  unowned?: number;
 };
 
 const noop = () => undefined;
@@ -28,6 +30,7 @@ function Page({
   mode,
   picked,
   imported,
+  unowned,
   language,
 }: Args & { language: string }) {
   const port = useRef<AeatSyncResultsPort | null>(null);
@@ -37,7 +40,7 @@ function Page({
           ...aeatSyncResultsFixture("mixed", noop),
           results: () => new Promise(noop),
         }
-      : aeatSyncResultsFixture(mode, noop, picked, imported);
+      : aeatSyncResultsFixture(mode, noop, picked, imported, unowned);
   return (
     <div className="mx-auto flex h-full min-h-0 w-full max-w-3xl flex-col p-4">
       <Results
@@ -97,5 +100,41 @@ export const BorradorNothingFound: Story = {
 /** The import failed. */
 export const BorradorFailed: Story = {
   args: { mode: "mixed", picked: "file", imported: "failed" },
+  play: importPdf,
+};
+
+/** The import was stored, but a newer Borrador is already the one in use. */
+export const BorradorCapturedSuperseded: Story = {
+  args: { mode: "mixed", picked: "file", imported: "captured_superseded" },
+  play: importPdf,
+};
+/** The same file was imported before and is still the one in use. */
+export const BorradorAlreadyActive: Story = {
+  args: { mode: "mixed", picked: "file", imported: "already_active" },
+  play: importPdf,
+};
+/** The same file was imported before and has since been replaced. */
+export const BorradorResolvedSuperseded: Story = {
+  args: { mode: "mixed", picked: "file", imported: "resolved_superseded" },
+  play: importPdf,
+};
+/** The same file was imported before and was discarded. */
+export const BorradorResolvedDiscarded: Story = {
+  args: { mode: "mixed", picked: "file", imported: "resolved_discarded" },
+  play: importPdf,
+};
+/** Some boxes were read but not kept: the singular wording. */
+export const BorradorOneUnowned: Story = {
+  args: { mode: "mixed", picked: "file", imported: "captured", unowned: 1 },
+  play: importPdf,
+};
+/** Several boxes were read but not kept: the plural wording. */
+export const BorradorManyUnowned: Story = {
+  args: {
+    mode: "mixed",
+    picked: "file",
+    imported: "captured_superseded",
+    unowned: 7,
+  },
   play: importPdf,
 };

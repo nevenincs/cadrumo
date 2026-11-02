@@ -620,7 +620,7 @@ _XLS_HEADER: list[object] = [
 ]
 
 
-def test_a_legacy_xls_book_reads_and_imports_like_the_same_xlsx_book(
+def test_an_xls_book_reads_and_imports_like_the_same_xlsx_book(
     tmp_path: Path,
     authority_operation: object,
 ) -> None:
@@ -661,7 +661,7 @@ def test_a_legacy_xls_book_reads_and_imports_like_the_same_xlsx_book(
     assert invoice.invoice_number == "BULK-XLS-001"
 
 
-def test_a_legacy_xls_formula_cell_refuses_the_book_like_xlsx(tmp_path: Path) -> None:
+def test_an_xls_formula_cell_refuses_the_book_like_xlsx(tmp_path: Path) -> None:
     """A formula's cached result in an .xls book is refused, never read as the taxable base."""
     xls_path = tmp_path / "formula.xls"
     xls_path.write_bytes(
@@ -684,7 +684,7 @@ def test_a_legacy_xls_formula_cell_refuses_the_book_like_xlsx(tmp_path: Path) ->
     assert (context["row"], context["column"]) == ("2", "5")
 
 
-def test_an_unreadable_legacy_xls_book_refuses_as_an_unreadable_table(tmp_path: Path) -> None:
+def test_an_unreadable_xls_book_refuses_as_an_unreadable_table(tmp_path: Path) -> None:
     """Bytes that are not an Excel 97-2003 workbook refuse before any row is read."""
     xls_path = tmp_path / "broken.xls"
     xls_path.write_bytes(b"not a workbook")
@@ -693,3 +693,36 @@ def test_an_unreadable_legacy_xls_book_refuses_as_an_unreadable_table(tmp_path: 
         read_bulk_invoice_import_source(xls_path)
 
     assert refused.value.translated_message == "application.invoices.bulk_import.errors.unreadable_table"
+
+
+def _retention_rate_row(rate: str, tmp_path: Path):
+    """Return the real import result for one received row stating a retención rate."""
+    rows = _csv_source(
+        "counterparty_nif,counterparty_name,invoice_number,invoice_date,taxable_base,iva_rate,retencion_amount,retencion_rate\n"
+        f"{_CIF},Papeleria Sol SL,BULK-R-001,2026-05-01,100.00,21,1.00,{rate}\n",
+        tmp_path,
+    )
+    with _in_memory_ports() as ports:
+        return import_invoices_from_rows(
+            rows, bucket_id=_BUCKET_ID, kind=InvoiceKind.RECEIVED, declared_country="ES", ports=ports
+        )
+
+
+def test_a_bare_retention_rate_of_one_is_refused_as_ambiguous(tmp_path: Path, authority_operation: object) -> None:
+    """``1`` is one per cent or the whole, so the row is refused naming the rate column."""
+    del authority_operation
+
+    result = _retention_rate_row("1", tmp_path)
+
+    assert result.created == 0
+    assert [failure.field for failure in result.refused] == ["retencion_rate"]
+
+
+def test_a_marked_retention_rate_of_one_is_one_per_cent(tmp_path: Path, authority_operation: object) -> None:
+    """``1%`` names points unambiguously and reads as the fraction one hundredth."""
+    del authority_operation
+
+    result = _retention_rate_row("1%", tmp_path)
+
+    assert result.refused == ()
+    assert result.created == 1

@@ -459,12 +459,13 @@ cli:
           A adquisicions, T lliuraments triangulars, S serveis prestats, I serveis
           adquirits, R transferències de béns en consigna, D devolucions de béns en
           consigna, C substitucions del destinatari en consigna'
-        preview_help: 'Previsualitza un esborrany de factura: les xifres, els avisos
-          i el veredicte que assoliria l''operació d''alta, sense desar res.'
-        preview_line_help: Objecte JSON repetible per a una línia de l'esborrany,
-          amb `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal`
-          i `iva_amount` opcionals. Una xifra que ometis queda sense conèixer. Fes-lo
-          servir en lloc de --taxable-base.
+        preview_help: 'Previsualitza un esborrany de factura: les xifres, les troballes
+          i el veredicte que assoliria l''operació d''alta, sense desar res. El NIF
+          de la contrapart (counterparty_nif) i les línies de l''esborrany (lines,
+          una matriu JSON d''objectes de línia amb key, description, quantity, unit_price,
+          iva_rate, subtotal i iva_amount opcionals; una xifra omesa queda desconeguda;
+          usa-la en lloc de --taxable-base) arriben com un objecte JSON per --secrets-stdin
+          o --secrets-fd.'
         preview_operation_date_role_help: Funció desada de la data d'operació de la
           factura que repeteix una correcció.
         preview_printed_total_help: El total imprès al document, que es compara amb
@@ -686,10 +687,28 @@ cli:
         list_header: "prioritat\tclassificació\tpatró\trule_id"
         list_help: Llista les regles de classificació emmagatzemades ordenades per
           prioritat.
+        pattern_overrun: El patró no ha pogut acabar de cercar a les descripcions
+          d'aquest llibre dins del seu límit de temps, així que no s'ha desat. Simplifica'l,
+          per exemple evitant repeticions dins de repeticions.
         priority_help: Prioritat numèrica; un valor menor s'avalua primer (per defecte
           100).
+        remove_created_at_help: Data de creació de la regla tal com apareix al llistat
+          (ISO 8601 amb desfasament); la regla només s'elimina si encara la té.
+        remove_created_at_invalid: --created-at ha de ser una data i hora ISO 8601
+          amb desfasament, tal com consta al llistat de la regla.
+        remove_help: Elimina una regla de classificació desada, per exemple una el
+          patró de la qual no es pot cercar.
+        remove_not_found: Cap regla desada té l'id %{rule_id}. No s'ha canviat res.
+        remove_rule_id_help: Id complet de la regla que vols eliminar, tal com el
+          mostra la sortida JSON de rule list.
+        remove_stale: La regla desada %{rule_id} es va tornar a desar el %{created_at},
+          que no és la data que has indicat. No s'ha eliminat res; consulta el llistat
+          de regles i comprova-la.
         trial_help: Prova un patró sense desar amb el motor de regles i indica quins
-          moviments dels indicats troba, sense desar res.
+          dels moviments indicats troba, sense desar res. El patró arriba com el camp
+          description_pattern d'un objecte JSON per --secrets-stdin o --secrets-fd,
+          o en una petició sense eco.
+        trial_pattern_prompt: 'Patró que provar: '
         trial_transaction_id_help: Identificador repetible d'un moviment on provar
           el patró.
     live:
@@ -3178,6 +3197,9 @@ cli:
       iva_amount_help: Import d'IVA de la transacció
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
       notes_help: Les teves notes, desades amb el moviment
+      operation_date_help: Data de la meritació de l'IVA segons l'art. 75 LIVA, que
+        tria el període de l'IVA (AAAA-MM-DD). En una bestreta, la data del cobrament.
+        Si l'omets es fa servir la data bancària i se t'avisa.
       prorrata_reference_help: Referència de prorrata d'IVA
       prorrata_sector_help: Identificador del sector diferenciat (arts. 9.1.c i 101
         LIVA) al qual pertany aquest input; ha de coincidir amb un sector ja declarat.
@@ -3322,6 +3344,11 @@ cli:
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
         domestic_not_subject)
       iva_rate_help: Tipus d'IVA com a decimal, per exemple 0.21
+      iva_vehicle_use_help: 'Per a què s''usa el vehicle de la fila, quan l''art.
+        95.Tres.2.ª LIVA l''aparta de la presumpció del 50 per 100: un dels sis usos
+        presumits al 100 per 100 (mixed_vehicle_goods_transport, paid_passenger_transport,
+        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
+        surveillance) o outside_presumed_classes si aquesta regla no anomena el vehicle.'
       llm_classified_by_label: classificat-per
       llm_confidence_label: confiança
       llm_exclusive: --llm no es pot combinar amb --classification ni --file; la via
@@ -3533,6 +3560,7 @@ cli:
       'no': 'No'
       notes: Notes
       notice: Avís
+      operation_date: Data de l'operació
       output: Sortida
       parent_id: id_pare
       pending: Pendents de revisió
@@ -3677,14 +3705,13 @@ cli:
       yes_help: Confirma la divisió de la transacció
     staged_check_category_help: Categoria de despesa repetible que es contrasta amb
       una classificació.
-    staged_check_draft_help: 'Objecte JSON repetible per a un moviment nou: `key`
-      i `fields`.'
-    staged_check_help: Respon a la feina preparada del llibre com la prendrien les
-      escriptures, sense desar res.
+    staged_check_help: Respon al treball preparat del llibre com l'acceptarien els
+      escriptors, sense desar res. Les files preparades (rows, una matriu JSON d'objectes
+      amb transaction_id, cells i, opcionals, evidence_staged i m210_staged) i els
+      moviments nous (drafts, una matriu JSON d'objectes amb key i fields) arriben
+      com un objecte JSON per --secrets-stdin o --secrets-fd.
     staged_check_invalid: Cada fila i esborrany preparats han de ser un objecte JSON
       amb la forma esperada.
-    staged_check_row_help: 'Objecte JSON repetible per a un moviment: `transaction_id`,
-      `cells` i, si escau, `evidence_staged` i `m210_staged`.'
     stash:
       help: Apartar un moviment dels teus registres al perfil actiu
       id_help: Id del moviment a apartar
@@ -3712,6 +3739,8 @@ cli:
       iva_amount_help: Nou import d'IVA
       iva_rate_help: Nou tipus d'IVA com a decimal
       notes_help: Les teves notes noves
+      operation_date_help: Nova data de la meritació de l'IVA segons l'art. 75 LIVA
+        (AAAA-MM-DD). En una bestreta, la data del cobrament.
       taxable_base_help: Nou import de base imposable
       value_date_help: Nova data valor (AAAA-MM-DD)
     view:

@@ -12,9 +12,9 @@ related:
   - '[[2026-10-04-modelo-360-solicitud-custody-adr]]'
   - '[[2026-06-10-ledger-amount-direction-adr]]'
   - '[[2026-07-01-determinism-replay-residual-adr]]'
-modified: '2026-10-04'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:77df0c3e7fe2709e9c0885b9c219d6f6b9a22e9e677795caa83095739d23f642'
+body_hash: 'sha256:fd558baf5c0f11045a8e02cac3a21debef5382937b33e4eb318890cb6442abf2'
 ---
 
 # `taxpayer-bank-accounts` plan
@@ -67,7 +67,7 @@ Gives Modelo 360 its grounded DEVOLUCION disposition, reconciles its account wit
 
 - [x] `P04.S14` - replace the INGRESO fallback with a fixed DEVOLUCION spec for 360, a refusal for header-declaring modelos without a spec, and an absent disposition elsewhere, allowing absence in receipts and events; `src/cadrumo/core/result_disposition.py, src/cadrumo/application/modelo/result_disposition_resolution.py`.
 - [x] `P04.S15` - replace the embedded 360 refund account with an own-account reference or an embedded representante account and turn a missing account or BIC into a typed refusal; `src/cadrumo/application/filing/producer_snapshot_m360.py, producer_snapshot.py, src/cadrumo/application/modelo/export.py, src/cadrumo/adapters/persistence/profile/modelo_360_solicitud.py`.
-- [ ] `P04.S16` - add a registered operation and CLI to declare, list and remove 360 solicitudes; `src/cadrumo/application/modelo/, src/cadrumo/entrypoints/cli/, src/cadrumo/locales/*/cli.yml`.
+- [x] `P04.S16` - add a registered operation and CLI to declare, list and remove 360 solicitudes; `src/cadrumo/application/modelo/, src/cadrumo/entrypoints/cli/, src/cadrumo/locales/*/cli.yml`.
 - [x] `P04.S28` - ground and fix the remaining 360 pagina 2 defects against DR360 v2.1: whether the C indicator means a complementaria or a continuation page (DR353 reads it as continuation), why a one-operation solicitud refuses on the operation-2 fields, and accepting ISO operation dates rendered as DDMMAAAA, with byte tests through the real export builder; `src/cadrumo/application/filing/producer_snapshot_m360.py, dev/registry/pipeline/ (360 export tree), src/cadrumo/adapters/persistence/profile/tests/test_modelo_360_solicitud_export.py`.
 
 ### Phase `P05` - remaining 303 export fixes
@@ -75,7 +75,7 @@ Gives Modelo 360 its grounded DEVOLUCION disposition, reconciles its account wit
 Closes the 303 refusals that are account-adjacent but not solved by the register itself.
 
 - [x] `P05.S17` - default the prior-domiciliation election to KEEP for 303 exports and keep the explicit requirement only where a rectificativa states casilla 111; `src/cadrumo/application/modelo/export.py`.
-- [ ] `P05.S30` - replace the amendment-driven C page marker on the 131, 232, 303 and 353 page indicators with the continuation-page marker 360 now uses, grounding each against its official design, so a complementaria no longer prints C on a first page; prove first-page blank and continuation C bytes through the real export builder; `src/cadrumo/application/filing/, dev/registry/mappings/ and the affected export trees`.
+- [x] `P05.S30` - replace the amendment-driven C page marker on the 131, 232, 303 and 353 page indicators with the continuation-page marker 360 now uses, grounding each against its official design, so a complementaria no longer prints C on a first page; prove first-page blank and continuation C bytes through the real export builder; `src/cadrumo/application/filing/, dev/registry/mappings/ and the affected export trees`.
 - [ ] `P05.S31` - author payment_cutoff_on for the quarterly and monthly 303 deadline windows from the official domiciliacion calendar so a domiciliacion past the cutoff refuses instead of only advising, and republish the authority; `src/cadrumo/_data/registry/aeat/modelos/303/ deadline windows`.
 
 ### Phase `P06` - TUI ledger setup and elections

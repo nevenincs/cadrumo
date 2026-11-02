@@ -18,7 +18,6 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.decimal.grammar import DECIMAL_TEXT_MAX_LENGTH, try_parse_canonical_decimal
-from ...core.hashing import canonical_json_bytes
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.operations import (
     OperationEffect,
@@ -36,6 +35,7 @@ from ..operations.models import (
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.result_size import refuse_oversized_result
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .actions_common import display_decimal
@@ -51,7 +51,7 @@ from .evidence import (
 from .evidence_port_identity import require_exact_evidence_ports
 from .evidence_ports import LedgerEvidencePortsFactory
 from .evidence_read_operation import LedgerEvidenceRecordProjection
-from .read_access import resolve_ledger_commit_access
+from .read_access import resolve_ledger_request_commit_access
 
 LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID = "ledger.evidence.add"
 LEDGER_EVIDENCE_ADD_PHASE = LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID
@@ -366,8 +366,7 @@ def _require_record_identity(record: PurchaseInvoiceEvidence, *, bucket_id: str,
 
 
 def _check_result_size(result: BaseModel) -> None:
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES - 128:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, _MAX_RESULT_BYTES - 128)
 
 
 def _project_result(result: BaseModel, receipt: OperationTerminalReceipt, /) -> BaseModel:
@@ -418,11 +417,12 @@ def resolve_ledger_evidence_add_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax-value disclosure and COMMIT for evidence add."""
-    if request.definition_id != LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerEvidenceAddRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_commit_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_commit_access(
+        request,
+        context,
+        definition_id=LEDGER_EVIDENCE_ADD_OPERATION_DEFINITION_ID,
+        request_type=LedgerEvidenceAddRequest,
+    )
 
 
 def build_ledger_evidence_add_registration(

@@ -48,6 +48,7 @@ const ENTRY_OPTION_FAMILIES = {
   ],
 };
 import { assetOperations } from "./assetsFixture";
+import { withholdingOperations } from "./ledgerWithholdingFixture";
 import { RATIO_ELIGIBLE_FIXTURE, ratioWording } from "./fixtures/ledgerRatios";
 import type {
   FixtureLedger,
@@ -189,6 +190,14 @@ type Prorrata = {
   con: string | null;
   sin: string | null;
 };
+type GrossDeclaration = {
+  ejercicio: number;
+  period: string;
+  sector_id: string | null;
+  gross: string;
+  evidence: string;
+  declared_at: string;
+};
 type Book = {
   actividad_id: string;
   year: number;
@@ -211,7 +220,7 @@ type Book = {
 
 /** The scenario ledger's setup answers, held beside the movements. */
 export function setupOperations(ledger: FixtureLedger, tools: Tools) {
-  const { profileId, hex64, events, now } = tools;
+  const { profileId, today, hex64, events, now } = tools;
   const ratios = new Map<string, string>([["telefonia_fija", "0.5"]]);
   const counterparties = new Map<string, JsonObject>([
     [
@@ -245,6 +254,16 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     },
   ];
   const sectors: { sector_id: string; letra: string; codes: string[] }[] = [];
+  const grossDeclarations: GrossDeclaration[] = [
+    {
+      ejercicio: 2026,
+      period: "1T",
+      sector_id: null,
+      gross: "1234.56",
+      evidence: "LIQ-2026-1T",
+      declared_at: "2026-02-10T09:00:00Z",
+    },
+  ];
   const capital: JsonObject[] = [
     {
       identifier: "BI-2024-01",
@@ -840,6 +859,15 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     letra: found.letra,
     member_activity_codes: found.codes,
   });
+  const grossOf = (found: GrossDeclaration): JsonObject => ({
+    ejercicio: found.ejercicio,
+    period: found.period,
+    sector_id: found.sector_id,
+    gross_cuota: decimal(found.gross),
+    evidence_reference: found.evidence,
+    provenance: "operator_declared",
+    declared_at: found.declared_at,
+  });
   const prorrataResult = (
     operation: string,
     extra: JsonObject = {},
@@ -849,6 +877,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     outcome: "success",
     entry: null,
     sector_definition: null,
+    gross_declaration: null,
     seed_source: null,
     findings: [],
     prior_ejercicio: null,
@@ -967,6 +996,18 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     return prorrataResult(operation, { entry: entryOf(entry) });
   }
 
+  const findGross = (
+    ejercicio: number,
+    period: string,
+    sector: string | null,
+  ) =>
+    grossDeclarations.find(
+      (found) =>
+        found.ejercicio === ejercicio &&
+        found.period === period &&
+        found.sector_id === sector,
+    );
+
   const prorrataWrites: Record<string, Handler> = {
     "ledger.prorrata.seed": (request) => {
       fromKeys(request, ["ejercicio"]);
@@ -1071,6 +1112,79 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         "evidence_reference",
       ]);
       return elect("revoke_especial", request);
+    },
+    "ledger.prorrata.declare_gross": (request) => {
+      fromKeys(request, [
+        "ejercicio",
+        "period",
+        "sector_id",
+        "gross_cuota",
+        "evidence_reference",
+        "replace",
+      ]);
+      const ejercicio = whole(request.ejercicio);
+      const period = required(request.period);
+      const sector = text(request.sector_id);
+      const gross = decimalOf(request.gross_cuota);
+      const evidence = required(request.evidence_reference);
+      if (request.replace !== undefined && typeof request.replace !== "boolean")
+        return invalid();
+      if (!sectorKnown(sector))
+        return prorrataRefusal(
+          "declare_gross",
+          VALIDATION,
+          "gross_declaration_sector_unknown",
+          `Sector ${sector} is not a declared differentiated sector.`,
+          { ejercicio, sector_id: sector },
+        );
+      const existing = findGross(ejercicio, period, sector);
+      if (existing && request.replace !== true)
+        return prorrataRefusal(
+          "declare_gross",
+          VALIDATION,
+          "gross_declaration_duplicate",
+          `A gross declaration already exists for ${period}.`,
+          { ejercicio, sector_id: sector },
+        );
+      const declared: GrossDeclaration = {
+        ejercicio,
+        period,
+        sector_id: sector,
+        gross,
+        evidence,
+        declared_at: now(),
+      };
+      if (existing)
+        grossDeclarations.splice(
+          grossDeclarations.indexOf(existing),
+          1,
+          declared,
+        );
+      else grossDeclarations.push(declared);
+      return prorrataResult("declare_gross", {
+        gross_declaration: grossOf(declared),
+        count: grossDeclarations.length,
+      });
+    },
+    "ledger.prorrata.remove_gross": (request) => {
+      fromKeys(request, ["ejercicio", "period", "sector_id"]);
+      const ejercicio = whole(request.ejercicio);
+      const period = required(request.period);
+      const sector = text(request.sector_id);
+      const existing = findGross(ejercicio, period, sector);
+      if (!existing)
+        return prorrataRefusal(
+          "remove_gross",
+          VALIDATION,
+          "gross_declaration_absent",
+          `No gross declaration exists for ${period}.`,
+          { ejercicio, sector_id: sector },
+        );
+      grossDeclarations.splice(grossDeclarations.indexOf(existing), 1);
+      return prorrataResult("remove_gross", {
+        gross_declaration: grossOf(existing),
+        count: grossDeclarations.length,
+      });
     },
     "ledger.prorrata.seed_sector": (request) => {
       fromKeys(request, ["ejercicio", "sector_id"]);
@@ -2138,6 +2252,16 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       throw new SetupStopped(reason, detail);
     },
   });
+  const withholding = withholdingOperations({
+    profileId,
+    today,
+    now,
+    hex64,
+    invalid,
+    stop: (reason, detail) => {
+      throw new SetupStopped(reason, detail);
+    },
+  });
   const reads: Partial<Record<LedgerDefinitionId, Handler>> = {
     "ledger.rule.list": (request) => {
       fromKeys(request, []);
@@ -2249,6 +2373,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
             };
           }),
         sectors: sectors.map(sectorOf),
+        gross_declarations: grossDeclarations.map(grossOf),
         count: prorrata.length,
       };
     },
@@ -2338,6 +2463,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       };
     },
     ...provisional.reads,
+    ...withholding.reads,
   };
   const writes: Partial<Record<LedgerDefinitionId, Handler>> = {
     "ledger.rule.add": addRule,
@@ -2380,6 +2506,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     "ledger.bienes_inversion.declare": declareCapital,
     ...inventoryWrites,
     ...provisional.writes,
+    ...withholding.writes,
     "ledger.participation.rebuild": (request) => {
       fromKeys(request, []);
       return {

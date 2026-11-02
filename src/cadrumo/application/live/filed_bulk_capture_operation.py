@@ -11,6 +11,7 @@ from ...core.bucket_pointer import require_active_bucket_id
 from ...core.filing_year import FilingYear
 from ...core.operations import OperationEffect
 from ...core.storage_taxonomy import StorageCategory
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_SECURE_INPUT_PROCESS_UPDATE_CAPABILITIES,
@@ -39,7 +40,7 @@ from .live_operation_execution import (
     publish_live_capture_report,
     require_exact_profile_worker,
 )
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .remote_state_models import BulkFiledDataCaptureReport, FiledCapturePairOutcome
 
 FILED_BULK_CAPTURE_DEFINITION_ID = "live.filed-capture.bulk"
@@ -199,10 +200,17 @@ class FiledBulkCaptureExecutor:
                 on_session_write=session_receipt,
                 operation=context.authority_operation,
             )
-        effect = OperationEffect.UPDATED if report.sync_run_ref is not None else OperationEffect.NONE
         return await publish_live_capture_report(
-            context, report, result_phase=_PHASES[2], effect=session_receipt.combine(effect)
+            context,
+            report,
+            result_phase=_PHASES[2],
+            effect=session_receipt.combine(bulk_capture_effect(report)),
         )
+
+
+def bulk_capture_effect(report: BulkFiledDataCaptureReport) -> OperationEffect:
+    """Report an update only when the sweep recorded a sync run; a preview or empty sweep wrote nothing."""
+    return OperationEffect.UPDATED if report.sync_run_ref is not None else OperationEffect.NONE
 
 
 def build_filed_bulk_capture_definition(
@@ -233,8 +241,8 @@ def resolve_filed_bulk_capture_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile access for a sweep that may cross any period."""
-    return resolve_whole_profile_capture_access(
-        request, context, definition_id=FILED_BULK_CAPTURE_DEFINITION_ID, payload_type=FiledBulkCaptureRequest
+    return resolve_ledger_request_commit_access(
+        request, context, definition_id=FILED_BULK_CAPTURE_DEFINITION_ID, request_type=FiledBulkCaptureRequest
     )
 
 

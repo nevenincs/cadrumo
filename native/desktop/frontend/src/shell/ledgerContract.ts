@@ -74,6 +74,37 @@ export const IMPORT_ISSUES = [
 ] as const;
 export type ImportIssue = (typeof IMPORT_ISSUES)[number];
 
+/** The income classes a payer's withholding certificate is recorded under. */
+export const WITHHOLDING_INCOME_CLASSES = [
+  "trabajo",
+  "capital_mobiliario",
+  "arrendamiento_inmueble_urbano",
+  "arrendamiento_inmueble_urbano_actividad",
+  "actividad_economica",
+  "ganancia_patrimonial",
+  "atribucion_capital_mobiliario",
+  "atribucion_capital_inmobiliario",
+  "atribucion_actividad_economica",
+  "atribucion_ganancia_patrimonial",
+  "imputacion_aie_ute",
+  "imputacion_derechos_imagen",
+] as const;
+export type WithholdingIncomeClass =
+  (typeof WITHHOLDING_INCOME_CLASSES)[number];
+export const isWithholdingIncomeClass = (
+  id: string,
+): id is WithholdingIncomeClass =>
+  (WITHHOLDING_INCOME_CLASSES as readonly string[]).includes(id);
+
+/** Who states the figures of a recorded payer certificate. */
+export const WITHHOLDING_ORIGINS = [
+  "payer_certificate",
+  "operator_declaration",
+] as const;
+export type WithholdingOrigin = (typeof WITHHOLDING_ORIGINS)[number];
+export const isWithholdingOrigin = (id: string): id is WithholdingOrigin =>
+  (WITHHOLDING_ORIGINS as readonly string[]).includes(id);
+
 /** The classifications that decide a movement; the others are dispositions. */
 export const DECIDED_CLASSIFICATIONS = [
   "BUSINESS",
@@ -173,6 +204,7 @@ export const FIELDS_LOCKED_BY_DIRECTION: Readonly<
     "iva_amount",
     "iva_category",
     "iva_rate",
+    "operation_date",
     "taxable_base",
     "usage_ratio_id",
   ],
@@ -219,6 +251,7 @@ export const FIELDS_DROPPED_BY_PERSONAL = [
   "irpf_category",
   "iva_amount",
   "iva_rate",
+  "iva_vehicle_use",
   "m210_income_classification",
   "prorrata_reference",
   "recargo_amount",
@@ -292,6 +325,7 @@ export const MONTH_CODES = [
 export const LEDGER_UPDATE_FIELDS = [
   "booked_date",
   "value_date",
+  "operation_date",
   "amount",
   "direction",
   "currency",

@@ -118,6 +118,9 @@ def _parse_optional_bool_token(value: object, *, field_name: str) -> OptionalWiz
     raise ValueError(f"{field_name} must be a boolean, blank, or a recognised canonical token")
 
 
+_EJERCICIO_DIGITS: Final[int] = 4
+"""Digits of an ejercicio as the setup flow states it."""
+
 PROFILE_OUTPUT_LANGUAGE_PATH: Final[str] = "preferences.output_language"
 """Dotted profile-record path for the setup flow's output-language answer."""
 
@@ -244,6 +247,12 @@ class SetupAnswers(BaseModel):
     modelo_111_no_retenciones_periods: str = ""
     modelo_115_no_relevant_payment_periods: str = ""
     irpf_estimation_regime: OptionalIrpfEstimationRegime = ""
+    irpf_activity_income_imputation_criterion: str = ""
+    """RIRPF art. 7 criterion the taxpayer states for ``irpf_activity_income_imputation_year``; blank when unstated."""
+    irpf_activity_income_imputation_year: str = ""
+    """Four-digit ejercicio the criterion and the accounting answer below are stated for."""
+    irpf_codigo_comercio_accounting: OptionalWizardBool = ""
+    """Three-state fact: whether Codigo de Comercio accounting is kept in that ejercicio, or blank when unanswered."""
     irpf_activity_kind: OptionalIrpfActivityKind = ""
     irpf_special_regime: OptionalIrpfSpecialRegime = ""
     """IRPF special-regime axis. Blank for the general regime."""
@@ -334,6 +343,24 @@ class SetupAnswers(BaseModel):
     @pydantic_validation_boundary
     def _parse_optional_payer_fact_bool(cls, value: object) -> OptionalWizardBool:
         return _parse_optional_bool_token(value, field_name="payer applicability fact")
+
+    @field_validator("irpf_codigo_comercio_accounting", mode="before")
+    @classmethod
+    @pydantic_validation_boundary
+    def _parse_optional_commercial_accounting_bool(cls, value: object) -> OptionalWizardBool:
+        return _parse_optional_bool_token(value, field_name="irpf_codigo_comercio_accounting")
+
+    @field_validator("irpf_activity_income_imputation_year")
+    @classmethod
+    @pydantic_validation_boundary
+    def _validate_irpf_activity_income_imputation_year(cls, value: str) -> str:
+        if value == "":
+            return value
+        if len(value) != _EJERCICIO_DIGITS or not (value.isascii() and value.isdigit()) or int(value) < 1:
+            raise ValueError(
+                f"irpf_activity_income_imputation_year must be a four-digit ejercicio (YYYY), got {value!r}"
+            )
+        return value
 
     @field_validator("premio_loteria_gravamen_especial_trimestres")
     @classmethod

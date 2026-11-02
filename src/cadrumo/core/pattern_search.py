@@ -28,6 +28,7 @@ from typing import IO, Any, Final, cast
 
 from .child_console import child_console_creation_flags
 from .config import load_settings
+from .errors.hierarchy import CadrumoError
 from .package_interpreter import isolated_interpreter_command
 from .storage_environment import ChildEnvironmentProfile, child_environment
 from .storage_taxonomy import StorageCategory
@@ -52,7 +53,7 @@ _CHILD_CPU_SECONDS: Final = 60
 _CHILD_MEMORY_BYTES: Final = 1024 * 1024 * 1024
 
 
-class PatternSearchOverrunError(Exception):
+class PatternSearchOverrunError(CadrumoError):
     """A pattern outran the batch's budget, or the child's memory; the child has been ended."""
 
     def __init__(self, pattern_index: int) -> None:
@@ -61,7 +62,7 @@ class PatternSearchOverrunError(Exception):
         self.pattern_index = pattern_index
 
 
-class PatternSearchUnreadableError(Exception):
+class PatternSearchUnreadableError(CadrumoError):
     """The child's ``re`` could not read a pattern."""
 
     def __init__(self, pattern_index: int) -> None:
@@ -70,7 +71,7 @@ class PatternSearchUnreadableError(Exception):
         self.pattern_index = pattern_index
 
 
-class PatternSearchUnavailableError(Exception):
+class PatternSearchUnavailableError(CadrumoError):
     """The child could not be started, contained or understood, so nothing was searched."""
 
 
@@ -86,13 +87,13 @@ if sys.platform == "win32":
 
     from .windows_job_object import (
         JOB_OBJECT_EXTENDED_LIMIT_INFORMATION_CLASS,
+        JOB_OBJECT_LIMIT_ACTIVE_PROCESS,
         JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE,
+        JOB_OBJECT_LIMIT_PROCESS_MEMORY,
+        JOB_OBJECT_LIMIT_PROCESS_TIME,
+        JOB_OBJECT_TIME_UNITS_PER_SECOND,
         JobObjectExtendedLimitInformation,
     )
-
-    _JOB_LIMIT_PROCESS_TIME: Final = 0x00000002
-    _JOB_LIMIT_ACTIVE_PROCESS: Final = 0x00000008
-    _JOB_LIMIT_PROCESS_MEMORY: Final = 0x00000100
 
     class _Containment:
         """A kill-on-close Job Object holding exactly the one child, ended with its last handle."""
@@ -105,12 +106,14 @@ if sys.platform == "win32":
                 raise PatternSearchUnavailableError("the pattern search job could not be created")
             self._handle: int = int(handle)
             information = JobObjectExtendedLimitInformation()
-            information.BasicLimitInformation.PerProcessUserTimeLimit = _CHILD_CPU_SECONDS * 10_000_000
+            information.BasicLimitInformation.PerProcessUserTimeLimit = (
+                _CHILD_CPU_SECONDS * JOB_OBJECT_TIME_UNITS_PER_SECOND
+            )
             information.BasicLimitInformation.ActiveProcessLimit = 1
             information.BasicLimitInformation.LimitFlags = (
-                _JOB_LIMIT_PROCESS_TIME
-                | _JOB_LIMIT_ACTIVE_PROCESS
-                | _JOB_LIMIT_PROCESS_MEMORY
+                JOB_OBJECT_LIMIT_PROCESS_TIME
+                | JOB_OBJECT_LIMIT_ACTIVE_PROCESS
+                | JOB_OBJECT_LIMIT_PROCESS_MEMORY
                 | JOB_OBJECT_LIMIT_KILL_ON_JOB_CLOSE
             )
             information.ProcessMemoryLimit = _CHILD_MEMORY_BYTES

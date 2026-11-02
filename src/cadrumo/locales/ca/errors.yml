@@ -517,6 +517,8 @@ errors:
       Comprova la connexió a internet i torna-ho a provar.
     fail_outbound_storage_unavailable: El servei d'emmagatzematge no està disponible
       temporalment. Espera uns minuts i torna-ho a provar.
+    fail_pattern_search_unavailable: La cerca de patrons no s'ha pogut iniciar o entendre,
+      així que no s'ha cercat res.
     fail_review_source_load: El fitxer d'origen existeix però no s'ha pogut interpretar.
     fail_sancion_arithmetic: Els imports impresos al document de sanció no quadren
       entre ells.
@@ -768,6 +770,8 @@ errors:
     internal_cli_unexpected_boundary: L'ordre ha fallat per un error intern inesperat,
       no per un problema de dades emmagatzemades. Consulta els registres de diagnòstic
       per veure què ha fallat.
+    internal_domiciliation_calendar_gap: 'Error intern: un any del calendari no ha
+      pogut classificar els seus dies.'
     internal_flow_copy_resolution: 'Error intern: el flux guiat no ha pogut resoldre
       els seus textos de presentació.'
     internal_flow_validator_registry: 'Error intern: el registre de validadors del
@@ -1118,6 +1122,8 @@ errors:
     refused_calculations_casilla_constraint: Un valor de casella calculat queda fora
       dels límits declarats per a aquesta casella. Revisa les dades d'entrada del
       càlcul.
+    refused_classification_rule_search: No s'ha pogut cercar amb una regla desada,
+      així que no s'ha canviat res.
     refused_cli_boundary: L'ordre ha rebutjat la sol·licitud.
     refused_cli_log_level_resolution: Les opcions de nivell de registre indicades
       són contradictòries. Fes servir només una de --quiet, --verbose o --debug.
@@ -1198,6 +1204,9 @@ errors:
       i l'any indicats.
     refused_inventory_service_input: Una dada indicada infringeix el contracte de
       l'inventari. Corregeix l'entrada i torna-ho a provar.
+    refused_invoice_retention_figures: La retenció indicada es contradiu o no encaixa
+      amb la base imposable de la factura. Indica de nou el tipus i l'import de manera
+      que l'import sigui la base pel tipus.
     refused_iva_compensation_decimal_parse: 'Refusat: l''import de compensació d''IVA
       no s''ha pogut interpretar com a decimal.'
     refused_iva_compensation_year_range: 'Refusat: l''exercici de compensació d''IVA
@@ -1361,6 +1370,9 @@ errors:
     refused_outbound_storage_validation: Els paràmetres de l'operació d'emmagatzematge
       no han superat la validació.
     refused_output_format: El format de sortida sol·licitat no és compatible.
+    refused_pattern_search_overrun: La cerca amb el teu patró no ha acabat dins del
+      seu límit, així que s'ha aturat.
+    refused_pattern_search_unreadable: No s'ha pogut llegir el patró.
     refused_pension_reduccion_computation: Una entrada del càlcul de reducció fiscal
       per pensions ha incomplert una condició numèrica; corregeix els imports indicats.
     refused_profile_already_exists: Ja existeix un perfil amb aquestes dades.

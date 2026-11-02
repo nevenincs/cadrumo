@@ -51,13 +51,10 @@ from .....application.ledger.models import ManualLedgerTransactionPatch
 from .....core.casilla_id import CasillaId, validated_casilla_id
 from .....core.period import Period
 from .....domain.calculations.registry.authority import PinnedAuthorityOperation
-from .....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from .....domain.iva.schema import IvaCategory
 from .....domain.modelos.calculation_revision import (
     CalculationRevision,
     CalculationRevisionCatalogue,
-    CalculationRevisionState,
-    derive_calculation_revision_id,
 )
 from .....domain.modelos.codes import ModeloCode
 from .....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
@@ -73,6 +70,7 @@ from ..transactions import TransactionCatalogueRepository
 from .ledger_action_create_support import ledger_ports_for_test
 from .published_authority_support import published_authority_operation
 from .secure_objects_fixture import secure_objects
+from .verified_ledger_revision_support import verified_303_ledger_revision
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_persistence_adapter]
 
@@ -146,37 +144,14 @@ def _verified_revision(snapshot, tx_id: str, *, operation: PinnedAuthorityOperat
     filing_instance_evidence = general_m303_filing_evidence(
         _FILING_PERIOD, reference="test:ledger-modelo-staleness", operation=operation
     )
-    revision_id = derive_calculation_revision_id(
-        work_unit_id=work_unit_id,
-        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
-        binding_overrides={},
-        casilla_values={_REVISION_CASILLA: Decimal("1")},
-        source_transaction_ids=(tx_id,),
-        filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
-    )
-    return CalculationRevision(
-        calculation_revision_id=revision_id,
+    return verified_303_ledger_revision(
         work_unit_id=work_unit_id,
         registry_snapshot_ref=registry_snapshot_ref,
-        state=CalculationRevisionState.VERIFICADO_COMPLETO,
-        input_values_by_casilla_id={_REVISION_CASILLA: "1"},
-        binding_overrides={},
-        source_transaction_ids=(tx_id,),
-        casilla_values={_REVISION_CASILLA: Decimal("1")},
-        observations=registry_grounded_observations(
-            modelo="303",
-            filing_year=2025,
-            period=_FILING_PERIOD.registry_token,
-            casilla_values={_REVISION_CASILLA: Decimal("1")},
-        ),
-        created_at=_NOW,
-        updated_at=_NOW,
-        verified_at=_NOW,
-        verified_by="operator",
-        ledger_filing_snapshot=snapshot,
         filing_instance_evidence=filing_instance_evidence,
-        source_provenance=(),
+        tx_id=tx_id,
+        period=_FILING_PERIOD,
+        at=_NOW,
+        ledger_filing_snapshot=snapshot,
     )
 
 

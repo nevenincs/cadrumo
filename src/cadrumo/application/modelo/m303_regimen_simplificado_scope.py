@@ -19,6 +19,7 @@ from .preconditions import ModeloPreconditionFailure, build_modelo_precondition_
 from .profile_readiness_gate import load_modelo_work_profile
 from .work_profile import ModeloWorkProfile
 
+_SIMPLIFIED_ONLY_COMPOSITION = "simplified"
 _READINESS_SUBJECT_LEAF_KEY = "modelo.work.calculate"
 _READINESS_SCENARIO_PREFIX = "modelo.work.calculate.m303_profile_readiness"
 
@@ -126,8 +127,18 @@ def m303_regimen_simplificado_annual_summary_applies_to_profile(profile: Taxpaye
     return not m303_regimen_simplificado_scope_for_profile(profile).is_not_claimed
 
 
+def m303_general_regime_claimed(composition: str | None) -> bool:
+    """Whether a stored IVA composition leaves the general regime reaching the filer.
+
+    Only the registry's simplified-only composition excludes it; an absent
+    composition proves nothing, so the general regime stays claimed.
+    """
+    return composition != _SIMPLIFIED_ONLY_COMPOSITION
+
+
 __all__ = [
     "active_taxpayer_profile",
+    "m303_general_regime_claimed",
     "m303_regimen_simplificado_annual_summary_applies",
     "m303_regimen_simplificado_annual_summary_applies_to_profile",
     "m303_regimen_simplificado_scope_for_composition",

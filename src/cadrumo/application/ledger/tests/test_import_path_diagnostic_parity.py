@@ -78,6 +78,19 @@ def _both_paths(raws: tuple[RawTransaction, ...]) -> tuple[int, int, int, int]:
     return (verify.imported_count, verify.skipped_count, len(plan.imported), len(plan.skipped_refs))
 
 
+def test_an_imported_row_keeps_the_operation_date_its_source_states_and_invents_none() -> None:
+    raws = (_raw("stated", description="venta uno"), _raw("silent", description="venta dos"))
+    plan = evaluate_import_rows(
+        bucket_id="preview",
+        catalogue=TransactionCatalogue(),
+        parsed_rows=(
+            ParsedLedgerRowFake(raw=raws[0], direction=TransactionDirection.OUTGOING, operation_date=date(2026, 3, 30)),
+            ParsedLedgerRowFake(raw=raws[1], direction=TransactionDirection.OUTGOING),
+        ),
+    )
+    assert sorted(row.operation_date is None for row in plan.imported) == [False, True]
+
+
 def test_the_fixture_rows_share_a_signature_without_colliding_on_the_key() -> None:
     """Anchor test: the divergence only exists for this exact shape.
 

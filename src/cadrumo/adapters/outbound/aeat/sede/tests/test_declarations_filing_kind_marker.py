@@ -19,7 +19,7 @@ from ......application.filing.draft_construction import build_draft
 from ......application.filing.export import export_draft
 from ......application.filing.producer_snapshot import GeneralFilingProfileFacts, build_filing_producer_snapshot
 from ......application.filing.runtime import ModeloOperatorProfile
-from ......application.filing.tests.export_support import _schema_provider, _typed_producer_snapshot
+from ......application.filing.tests.export_support import export_schema_provider, typed_producer_snapshot
 from ......application.live.filed_observation_persistence import filed_observation_filing_kind
 from ......core.casilla_id import validated_casilla_id
 from ......core.modelo import Modelo
@@ -199,7 +199,7 @@ def _m131_multi_activity_file(
     tmp_path: Path, *, complementaria: bool, filing_year: int = 2026, period: str = "1T"
 ) -> bytes:
     """Export a two-activity Modelo 131 fichero through the real renderer."""
-    template = _typed_producer_snapshot(complementaria=complementaria)
+    template = typed_producer_snapshot(complementaria=complementaria)
     producer_snapshot = build_filing_producer_snapshot(
         modelo=Modelo("131"),
         taxpayer_tax_id=template.taxpayer_tax_id,
@@ -212,7 +212,7 @@ def _m131_multi_activity_file(
         charge_account=None,
         m303_filing_facts=None,
     )
-    provider = _schema_provider(filing_year=filing_year, period=period, modelos=("131",))
+    provider = export_schema_provider(filing_year=filing_year, period=period, modelos=("131",))
     draft = build_draft(
         modelo="131",
         period=Period.from_year_and_code(filing_year, period),

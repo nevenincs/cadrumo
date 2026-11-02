@@ -1202,6 +1202,8 @@ desktop:
     close: Tanca les declaracions
     loading: S'estan llegint les teves declaracions…
     maximize: Maximitza les declaracions
+    notes:
+      label: El que ha anotat l'últim càlcul
     position: Declaració {row} de {count}
     read_failed: Cadrumo no ha pogut llegir les teves declaracions.
     retry: Torna-ho a provar
@@ -2307,6 +2309,10 @@ desktop:
       remove_attached: Primer separa'l del seu moviment
       remove_note: El registre i la seva còpia desada surten del llibre.
       remove_title: Vols eliminar aquest registre?
+      retention_differs: El document indica {read} retinguts; la factura registra
+        {recorded}.
+      retention_unrecorded: El document indica {read} retinguts; la factura no registra
+        cap retenció.
       save: Desa
       say_direction: Indica si els vas rebre o emetre
       source:
@@ -2536,6 +2542,7 @@ desktop:
       input_classification: Ús de l'adquisició
       investment_asset_id: Bé d'inversió
       m210_income_classification: Renda del model 210
+      operation_date: Data de l'operació
       own_account_id: Compte
       prorrata_reference: Referència de prorrata
       prorrata_sector_id: Sector de prorrata
@@ -3550,6 +3557,7 @@ desktop:
     prorrata:
       accepted: 'S''accepta: {provenances}.'
       action:
+        declare_gross: Declara una quota bruta
         declare_sector: Declara un sector
         elect_especial: Opta per l'especial
         elect_general: Opta per la general
@@ -3574,6 +3582,7 @@ desktop:
       evidence: Referència del justificant
       evidence_hint: El document de l'opció o de la seva revocació
       form:
+        declare_gross: Declara la quota deduïble bruta d'una liquidació de {ejercicio}
         declare_sector: Declara un sector diferenciat
         elect_especial: Opta per la prorrata especial el {ejercicio}
         elect_general: Opta per la prorrata general el {ejercicio}
@@ -3581,6 +3590,26 @@ desktop:
         seed: Pren {ejercicio} de l'any anterior
         seed_sector: Pren la prorrata provisional d'un sector el {ejercicio}
         settle_sector: Liquida la prorrata definitiva d'un sector el {ejercicio}
+      gross:
+        column:
+          evidence: Document
+          gross_cuota: Quota bruta
+          period: Període
+        empty: No hi ha cap quota bruta declarada per a cap període de liquidació.
+        evidence: Document justificatiu
+        evidence_hint: Referència al teu propi document que justifica l'import.
+        gross_cuota: Quota deduïble bruta
+        gross_cuota_hint: Abans de la prorrata, en euros amb fins a dos decimals.
+        period: Període de liquidació
+        remove: Elimina
+        remove_confirm: Elimina la declaració
+        remove_of: Elimina la quota bruta declarada per a {liquidation}
+        remove_what: Vols eliminar la quota bruta que vas declarar per a {liquidation}?
+        replace: Substitueix la quota bruta ja declarada per al mateix període i sector
+        title: Quota deduïble bruta de liquidacions anteriors
+        what: La quota deduïble bruta, abans de la prorrata, d'una liquidació anterior
+          que vas introduir a mà, per a un període del qual el llibre no té cap quota
+          suportada.
       kind:
         definitiva: Definitiva
         provisional: Provisional
@@ -3733,6 +3762,7 @@ desktop:
         accounts: Comptes propis
         capital: Béns d'inversió
         prorrata: Prorrata
+        withholding: Retencions
       areas: Apartats de registres
     retry: Torna-ho a provar
     reveal:
@@ -4098,6 +4128,89 @@ desktop:
       to_match: Per conciliar
     window:
       partial: Els grups i els totals esperen que es llegeixi tot.
+    withholding:
+      absence:
+        not_listed: Les indicacions anteriors encara no es poden llistar. Aquí es
+          mostren les que facis o retiris en aquesta finestra.
+        title: Sense retencions
+        what: Indica que cap pagador no va retenir en una classe de renda aquest any.
+      action:
+        attest: Indica sense retencions
+        record: Anota un certificat
+      amount:
+        importe_integro_dinerario: Import íntegre dinerari
+        ingreso_a_cuenta: Ingrés a compte
+        ingreso_a_cuenta_repercutido: Ingrés a compte repercutit
+        retencion: Retenció
+        valoracion_especie: Valoració en espècie
+      attested_on: Indicat el {date}
+      changes: Canvis als certificats de {ejercicio}
+      column:
+        class: Classe de renda
+        document: Document
+        especie: En espècie
+        ingreso: A compte
+        integro: Íntegre dinerari
+        note: Nota
+        origin: Origen
+        pago: Crèdit
+        payer: Pagador
+        repercutido: Repercutit
+        retencion: Retenció
+        state: Estat
+      correct_hint: Per corregir un certificat, treu-lo i anota'l de nou.
+      document: Document del certificat (opcional)
+      document_hint: Un document desat a Documents. La seva empremta s'anota tal com
+        la dónes i encara no es comprova amb el document desat.
+      document_none: Encara no hi ha documents desats
+      document_not: Sense document
+      ejercicio: Any
+      empty: No hi ha cap certificat anotat per a {ejercicio}.
+      form:
+        attest: Indica sense retencions a {ejercicio}
+        record: Anota un certificat de {ejercicio}
+      income_class: Classe de renda
+      note: Nota
+      note_hint: Per què aquesta classe no va tenir retencions.
+      origin:
+        operator_declaration: La teva pròpia declaració
+        payer_certificate: Certificat del pagador
+      origin_label: Origen de les xifres
+      payer_legal_name: Nom del pagador (opcional)
+      payer_ref: Pagador {ref}
+      payer_tax_id: NIF del pagador
+      payer_tax_id_hint: S'envia amb el registre per identificar el pagador. No es
+        torna a mostrar.
+      refusal:
+        already_attested: Aquesta classe ja té una indicació.
+        certificate_fingerprint_required: El certificat d'un pagador necessita el
+          seu document.
+        ejercicio_unsupported: Aquest any no és compatible.
+        family_not_declared: Aquesta classe de renda no està declarada per a aquest
+          any.
+        identity_mismatch: Les dades del pagador no coincideixen amb el registre desat
+          amb aquesta referència.
+        not_attested: Aquesta classe no té cap indicació per retirar.
+        not_found: Aquest certificat ja no està desat.
+        own_tax_id: El NIF del pagador és el teu.
+        records_present: Hi ha certificats anotats en aquesta classe, de manera que
+          no es pot indicar que no en té cap.
+        repercutido_exceeds_ingreso_a_cuenta: L'ingrés a compte repercutit no pot
+          superar l'ingrés a compte.
+        stale_revision: El registre ha canviat des que el vas llistar. Torna'l a llegir
+          i prova-ho de nou.
+        taxpayer_tax_id_unknown: El teu propi NIF encara no és al teu perfil.
+        validation: Algunes xifres o camps no s'admeten.
+      remove: Treu
+      remove_confirm: Treu el certificat
+      remove_of: Treu el certificat de {payer}
+      remove_what: Vols treure el certificat de {payer} a {class}?
+      title: Certificats de retencions
+      what: Anota les retencions que cada pagador et va practicar, tal com les indica
+        el seu certificat, o indica que una classe de renda no en té cap.
+      withdraw: Retira
+      withdraw_of: Retira la indicació de {class}
+      withdrawn_on: Retirat el {date}
   logs:
     all_loggers: Tots els registradors
     all_origins: Tots els orígens
@@ -4154,6 +4267,8 @@ desktop:
     none_unread: Cap sense llegir a l'última sincronització
     unread: '{count} sense llegir'
   modelo:
+    box_notes:
+      label: El que el càlcul ha anotat sobre aquesta casella
     correction:
       kind_label: Tipus de correcció
       motive_label: Motiu de la rectificació
@@ -4464,6 +4579,37 @@ desktop:
     search: Cerca
     settings: Configuració
     tui: Espai de treball
+  renta:
+    proto:
+      election:
+        save: Desa la resposta
+        year: Exercici
+      excerpt: Aquest prototip només conté alguns apartats de la declaració real.
+        Tria un altre apartat per veure'l aquí.
+      family:
+        boxes: Caselles que alimenten aquestes dades
+        edit: Canvia-ho al teu perfil
+        empty: Sense indicar
+        profile: Del teu perfil
+      gap:
+        body: El backend encara no serveix això, així que la finestra no mostra res
+          al seu lloc.
+        operation: 'Necessita: {operation}'
+        title: Encara no se serveix
+      nav:
+        boxes: 'Caselles: {count}'
+        failed: 'No s''ha pogut calcular: {count}'
+        needs_you: 'Et necessita: {count}'
+        only_attention: Només el que et necessita
+        proposed: Esquema proposat
+        served: Tal com se serveix avui
+        technical: 'Encapçalament tècnic: el disseny encara no hi té un encapçalament
+          revisat'
+        title: Apartats
+      result:
+        composed: Xifra redactada pel generador de capçalera del mateix backend, no
+          calculada
+        example: Forma que ja se serveix per a una altra declaració
   session:
     enter_restarts: Retorn el reinicia
     exit_line: '[El procés ha acabat amb el codi {code}. Prem Retorn per tornar a
@@ -7220,6 +7366,7 @@ tui:
           iva_category: Categoria d'IVA
           iva_rate: Tipus d'IVA (per exemple 0.21)
           notes: Notes
+          operation_date: Data de l'operació (AAAA-MM-DD)
           own_account_id: Compte propi (acc-01)
           prorrata_reference: Referència de prorrata
           prorrata_sector: Sector de prorrata
@@ -8222,6 +8369,7 @@ tui:
         iva_amount: Quota d'IVA (opcional)
         iva_rate: Tipus d'IVA (opcional)
         notes: Notes
+        operation_date: Data de l'operació (AAAA-MM-DD, opcional)
         taxable_base: Base imposable (opcional)
         value_date: Data valor (AAAA-MM-DD, opcional)
       update_refused: 'El canvi s''ha rebutjat: {detail}'
@@ -10120,3 +10268,27 @@ workspace:
       not_applicable: no s'aplica
       not_known_yet: Encara no se sap
     was: 'abans: {value}'
+  renta:
+    election:
+      proposed: Resposta proposada
+      stated: Indicat per a {year}
+      title: Criteri d'imputació de la teva activitat
+      undeclared: Encara no l'has indicat. Les caselles d'activitat que en depenen
+        continuen sense resoldre fins que l'indiquis.
+    outline:
+      activities: Activitats econòmiques
+      annexes: Annexos i informació addicional
+      bases: Bases imposables i liquidables
+      capital_gains: Guanys i pèrdues patrimonials
+      credits: Retencions i pagaments a compte
+      employment: Rendiments del treball
+      family: Unitat familiar
+      identification: Identificació i situació familiar
+      liability: Quotes íntegres i deduccions
+      minimums: Mínim personal i familiar
+      movable_capital: Rendiments del capital mobiliari
+      other: Altres dades
+      real_estate: Rendiments del capital immobiliari i imputacions de renda
+      result: Resultat de la declaració
+    result:
+      settlement: Com es paga o es retorna

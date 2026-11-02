@@ -28,7 +28,6 @@ from cadrumo.application.user_profile.access_contracts import (
     AccessSession,
     ProfileAccessBinding,
     SessionKind,
-    SessionState,
 )
 from cadrumo.application.user_profile.access_errors import ProfileAccessRefusedError
 from cadrumo.core.config import override_settings
@@ -36,7 +35,6 @@ from cadrumo.core.storage_taxonomy import StorageCategory
 from cadrumo.core.time.clock import frozen_clock, now
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
 from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...bucket.errors import BucketLockedError
@@ -50,7 +48,7 @@ from .. import profile_worker_custody
 from ..active_session import current_active_bucket_session, get_active_master_key
 from ..bucket_session import BucketSession
 from ..profile_worker_custody import ProfileWorkerCustody
-from .profile_worker_identity_support import published_capsule_identity
+from .profile_worker_identity_support import published_capsule_identity, worker_lease
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -75,34 +73,7 @@ class _Clock:
 
 
 def _lease(identity: ProfileWorkerIdentity, clock: _Clock, kind: SessionKind, *, minutes: int) -> AccessSession:
-    human = kind is SessionKind.HUMAN
-    issued = now()
-    return AccessSession(
-        session_id=uuid4(),
-        binding=identity.binding,
-        runtime_boot_id=identity.runtime_boot_id,
-        profile_lock_generation=0,
-        connection_id=uuid4(),
-        client_id=uuid4(),
-        kind=kind,
-        originating_login_id="synthetic-os-login" if human else None,
-        state=SessionState.ACTIVE,
-        scope=AccessScope(
-            operations=frozenset(),
-            actions=frozenset(AccessAction),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=False,
-        ),
-        grant_id=None if human else uuid4(),
-        grant_generation=None if human else 1,
-        key_id=None if human else uuid4(),
-        key_generation=None if human else 1,
-        issued_at=issued,
-        issued_monotonic=clock.monotonic(),
-        expires_at=issued + timedelta(minutes=minutes),
-    )
+    return worker_lease(identity, kind=kind, minutes=minutes, issued_monotonic=clock.monotonic())
 
 
 def _reissued(lease: AccessSession, clock: _Clock, *, minutes: int) -> AccessSession:

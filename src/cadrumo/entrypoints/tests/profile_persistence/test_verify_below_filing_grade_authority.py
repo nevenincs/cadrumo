@@ -30,7 +30,7 @@ from cadrumo.core.identity.hex_ids import CalculationRevisionId
 from cadrumo.core.period import Period
 from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperation
 from cadrumo.domain.calculations.registry.errors import RegistryValidationError
-from cadrumo.domain.deadlines.models import IVARegime, TaxpayerProfile
+from cadrumo.domain.deadlines.models import TaxpayerProfile
 from cadrumo.domain.modelos.calculation_revision import CalculationRevisionState
 from cadrumo.domain.modelos.verification_report import ModeloVerificationFindingSeverity
 from cadrumo.domain.modelos.work_unit import WorkUnit
@@ -43,6 +43,7 @@ from ..modelo_gate_bucket_support import (
     calculate_without_inputs,
     seed_ready_capital_payer_profile,
 )
+from .verification_substance_support import workflow_profile as plain_workflow_profile
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -94,15 +95,7 @@ def _calculate(bucket: _Bucket) -> CalculationRevisionId:
 
 
 def _workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id=_TAX_ID,
-        iva_regime=IVARegime("GENERAL"),
-        activity_start_date=date(2020, 1, 1),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-    )
+    return plain_workflow_profile(tax_id=_TAX_ID, activity_start_date=date(2020, 1, 1))
 
 
 def test_the_revision_under_test_is_published_below_filing_grade(*, operation: PinnedAuthorityOperation) -> None:

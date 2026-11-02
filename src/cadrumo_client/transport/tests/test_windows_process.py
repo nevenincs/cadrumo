@@ -274,6 +274,26 @@ def test_terminate_returns_only_after_every_member_process_object_is_signaled(tm
             win32api.CloseHandle(handle)
 
 
+async def _assert_owner_death_ends_members(owner: asyncio.subprocess.Process, handles: list[int]) -> None:
+    import win32event
+
+    owner.kill()
+    await asyncio.wait_for(owner.wait(), timeout=5)
+    for handle in handles:
+        assert win32event.WaitForSingleObject(handle, 2000) == win32event.WAIT_OBJECT_0
+
+
+async def _reap_owner(owner: asyncio.subprocess.Process, handles: list[int]) -> None:
+    import win32api
+
+    if owner.returncode is None:
+        owner.kill()
+    _output, errors = await asyncio.wait_for(owner.communicate(), timeout=5)
+    for handle in handles:
+        win32api.CloseHandle(handle)
+    assert not errors, errors.decode(errors="replace")
+
+
 @pytest.mark.asyncio
 async def test_abrupt_owner_death_closes_job_without_graceful_callbacks(tmp_path: Path) -> None:
     import win32api
@@ -291,17 +311,9 @@ async def test_abrupt_owner_death_closes_job_without_graceful_callbacks(tmp_path
             handle = win32api.OpenProcess(0x100000, False, pid)
             handles.append(handle)
             assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
-        owner.kill()
-        await asyncio.wait_for(owner.wait(), timeout=5)
-        for handle in handles:
-            assert win32event.WaitForSingleObject(handle, 2000) == win32event.WAIT_OBJECT_0
+        await _assert_owner_death_ends_members(owner, handles)
     finally:
-        if owner.returncode is None:
-            owner.kill()
-        _output, errors = await asyncio.wait_for(owner.communicate(), timeout=5)
-        for handle in handles:
-            win32api.CloseHandle(handle)
-        assert not errors, errors.decode(errors="replace")
+        await _reap_owner(owner, handles)
 
 
 @pytest.mark.asyncio
@@ -333,17 +345,9 @@ async def test_actual_chromium_descendants_end_on_abrupt_owner_death(tmp_path: P
             handle = win32api.OpenProcess(0x100000, False, pid)
             handles.append(handle)
             assert win32event.WaitForSingleObject(handle, 0) == win32event.WAIT_TIMEOUT
-        owner.kill()
-        await asyncio.wait_for(owner.wait(), timeout=5)
-        for handle in handles:
-            assert win32event.WaitForSingleObject(handle, 2000) == win32event.WAIT_OBJECT_0
+        await _assert_owner_death_ends_members(owner, handles)
     finally:
-        if owner.returncode is None:
-            owner.kill()
-        _output, errors = await asyncio.wait_for(owner.communicate(), timeout=5)
-        for handle in handles:
-            win32api.CloseHandle(handle)
-        assert not errors, errors.decode(errors="replace")
+        await _reap_owner(owner, handles)
 
 
 class _UnpublishedLaunchFacts(BaseModel):

@@ -10,7 +10,7 @@ from __future__ import annotations
 
 from collections.abc import Generator
 from contextlib import contextmanager
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
 from pathlib import Path
 
@@ -38,6 +38,7 @@ from ....domain.calculations.registry.ids import BindingId, RelationId
 from ....domain.calculations.registry.relations import relation_prefill_bindings_for_period
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.modelos.errors import ModeloError
+from ....domain.user_profile.tests.general_regime_facts import RENTA_UNMARRIED_TAXPAYER_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact, UserProfileRecord
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from .file_flow_test_support import calculation_ports_for_test
@@ -96,13 +97,7 @@ def _profile_with_ccaa(ccaa: str) -> UserProfileRecord:
             UserProfileFact(path="iva.voluntary_sii_enrolled", value=False),
             UserProfileFact(path="iva.hydrocarbon_deposit_advance_payment_deduction_entitled", value=False),
             UserProfileFact(path="tax_residence.ccaa", value=ccaa),
-            UserProfileFact(path="renta_taxpayer.birth_date", value=date(1980, 3, 15)),
-            UserProfileFact(path="renta_taxpayer.marital_status", value="1"),
-            UserProfileFact(path="renta_taxpayer.marriage_full_year", value=False),
-            UserProfileFact(path="renta_taxpayer.marriage_month_start", value=Decimal("0")),
-            UserProfileFact(path="renta_taxpayer.marriage_month_end", value=Decimal("0")),
-            UserProfileFact(path="renta_filing.declaration_type", value="1"),
-            UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
+            *RENTA_UNMARRIED_TAXPAYER_FACTS,
         ),
         created_at=_CLOCK,
         updated_at=_CLOCK,

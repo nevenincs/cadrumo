@@ -39,8 +39,8 @@ and repairs missing binaries or Linux libraries. System installations require
 root or passwordless sudo on Linux. Authority publication reuses a generation
 that still matches the source data and supported artifact format.
 
-**Fail-fast, and complete in what it reports.** Unlike the fleet's `-all`
-aggregates, which run every step because they chain independent inspectors,
+**Fail-fast, and complete in what it reports.** Unlike aggregates such as
+`check-code`, which run every step because they chain independent inspectors,
 the shared bootstrap phases form a dependency chain. The tooling phase runs
 executables out of the environment the Python phase created. Initialization stops at
 the first failing phase, and records the phases it did not attempt as `skipped`
@@ -50,9 +50,9 @@ with the upstream cause named. A non-zero `setup` names exactly one cause.
 `.init-report.json` when the environment does not exist yet — the path is
 always printed). The report covers Python and repository tooling. Browser,
 RAG, authority, and product configuration steps report through their own commands.
-`VAULTSPEC_INIT_JSON=1`, or `--json`, additionally streams
+`CADRUMO_INIT_JSON=1`, or `--json`, additionally streams
 NDJSON events on stdout while human prose stays on stderr. Exit codes come from
-`dev/exit_codes.py` and are identical fleet-wide:
+`dev/exit_codes.py`:
 
 | Code | Meaning                                                                  |
 | ---- | ------------------------------------------------------------------------ |
@@ -99,8 +99,7 @@ RAG resources. `setup-browser` can repair browser resources independently.
 
 ## Layout
 
-The initialization runtime follows the fleet contract. `plan.py` owns this
-repository's phase data; no setup module owns Git-hook installation.
+`plan.py` owns this repository's phase data; no setup module owns Git-hook installation.
 
 | File          | Role                                                           |
 | ------------- | -------------------------------------------------------------- |

@@ -8,12 +8,11 @@ from collections.abc import Callable
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
+from cadrumo_client.contracts.projection_pages import PROJECTION_RESULT_MAX_BYTES
 
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_exact_request_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import OperationRequest, OperationTerminalReceipt
@@ -21,6 +20,7 @@ from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.result_size import refuse_oversized_result
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .live_operation_execution import publish_live_read_report, require_exact_profile_worker
 from .live_operation_registration import build_live_operation_definition, require_live_read_receipt
@@ -46,7 +46,6 @@ _LIST_PHASES = ("verify-list.read", "verify-list.result")
 _VIEW_PHASES = ("verify-view.read", "verify-view.result")
 _LATEST_PHASES = ("verify-latest.read", "verify-latest.result")
 _MAX_VERIFY_LIST_ROWS = 16_384
-_RESULT_DOCUMENT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 VerifyObservationPersistenceFactory = Callable[[str], VerifyObservationPersistencePort]
 
 
@@ -69,8 +68,7 @@ def _summary(observation: VerifyObservation) -> VerifyObservationSummaryPublicV1
 
 
 def _require_bounded_result(result: BaseModel) -> None:
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, PROJECTION_RESULT_MAX_BYTES)
 
 
 class VerifyListExecutor:
@@ -309,44 +307,31 @@ def _project_latest(result: BaseModel, receipt: OperationTerminalReceipt, /) -> 
     return projection
 
 
-def _resolve_read_access(
-    request: OperationRequest[BaseModel], context: OperationAccessContext, definition_id: str
-) -> ResolvedOperationAccess:
-    if definition_id == VERIFY_LIST_DEFINITION_ID:
-        request_type = VerifyListRequest
-    elif definition_id == VERIFY_VIEW_DEFINITION_ID:
-        request_type = VerifyViewRequest
-    elif definition_id == VERIFY_LATEST_DEFINITION_ID:
-        request_type = VerifyLatestRequest
-    else:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if request.definition_id != definition_id or type(request.payload) is not request_type:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    payload = request.payload
-    if not isinstance(payload, (VerifyListRequest, VerifyViewRequest, VerifyLatestRequest)):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=payload.profile_id, periods=frozenset())
-
-
 def resolve_verify_list_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile TAX_VALUES authority for filtered verify history."""
-    return _resolve_read_access(request, context, VERIFY_LIST_DEFINITION_ID)
+    return resolve_ledger_exact_request_access(
+        request, context, request_types={VERIFY_LIST_DEFINITION_ID: VerifyListRequest}
+    )
 
 
 def resolve_verify_view_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile TAX_VALUES authority for one local verify row."""
-    return _resolve_read_access(request, context, VERIFY_VIEW_DEFINITION_ID)
+    return resolve_ledger_exact_request_access(
+        request, context, request_types={VERIFY_VIEW_DEFINITION_ID: VerifyViewRequest}
+    )
 
 
 def resolve_verify_latest_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require exact-profile TAX_VALUES authority for the latest verify row."""
-    return _resolve_read_access(request, context, VERIFY_LATEST_DEFINITION_ID)
+    return resolve_ledger_exact_request_access(
+        request, context, request_types={VERIFY_LATEST_DEFINITION_ID: VerifyLatestRequest}
+    )
 
 
 def build_verify_list_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

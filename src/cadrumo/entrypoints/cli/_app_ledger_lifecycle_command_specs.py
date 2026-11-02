@@ -238,6 +238,7 @@ LEDGER_LIFECYCLE_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             _required_text_argument("transaction_id", "cli.ledger.update.id_help"),
             _optional_text_option("booked_date", ("--date",), "cli.ledger.update.date_help"),
             _optional_text_option("value_date", ("--value-date",), "cli.ledger.update.value_date_help"),
+            _optional_text_option("operation_date", ("--operation-date",), "cli.ledger.update.operation_date_help"),
             _optional_text_option("amount", ("--amount",), "cli.ledger.update.amount_help"),
             OptionSpec(
                 name="direction",

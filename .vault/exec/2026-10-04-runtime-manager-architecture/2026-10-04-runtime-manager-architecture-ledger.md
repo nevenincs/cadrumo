@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#runtime-manager-architecture'
 date: '2026-10-04'
-modified: '2026-10-09'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:4db12cba8d0c89cc4e312a2da79a4aa44cca21b88cbd35ccabcb6a8e98f69f78'
+body_hash: 'sha256:32f95333a2c8596f3005f8ce0be42a1786bc4442524314aa55a61521ecbc3fb5'
 related:
   - "[[2026-10-04-runtime-manager-architecture-plan]]"
 ---
@@ -778,6 +778,12 @@ related:
 - `S31` `verify:` `feature vault check errors0 warnings2` -> `pass`
 - `S31` `verify:` `plan check expected phase-order warning` -> `pass`
 - `S31` `verify:` `repository-wide vault check all two unrelated record errors and47warnings` -> `fail`
+- `S12` `verify:` `locator-check: native/manager/src/ipc.rs:22-28` -> `pass`
+- `S12` `by:` `plan-closure`
+- `S13` `verify:` `locator-check: windows_tray.rs:153, preferences.rs:25,38` -> `pass`
+- `S13` `by:` `plan-closure`
+- `S15` `verify:` `locator-check: connection_remedies.py:13` -> `pass`
+- `S15` `by:` `plan-closure`
 
 ## Notes
 

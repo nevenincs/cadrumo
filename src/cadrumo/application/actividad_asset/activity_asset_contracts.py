@@ -91,8 +91,6 @@ ACTIVITY_ASSET_REFUSAL_CODES = frozenset(
 
 ActivityAssetId = Annotated[str, Field(min_length=1, max_length=128)]
 
-ActivityAssetTaxYear = FourDigitYear
-
 ActivityAssetRefusalCode = Literal[
     "REFUSED_ACTIVIDAD_ASSET_VALIDATION",
     "REFUSED_ACTIVIDAD_ASSET_UNSUPPORTED",
@@ -141,7 +139,7 @@ class ActivityAssetAcceleratedDa18Facts(BaseModel):
 
     asset_id: ActivityAssetId
     method: Annotated[str, Field(min_length=1, max_length=64)]
-    tax_year: ActivityAssetTaxYear
+    tax_year: FourDigitYear
     legal_reference: Annotated[str, Field(min_length=1, max_length=128)]
 
     @classmethod
@@ -363,7 +361,7 @@ class ActivityAssetFormOptionsRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     asset_kind: AssetKind
-    tax_year: ActivityAssetTaxYear
+    tax_year: FourDigitYear
 
 
 class ActivityAssetAcquisitionCandidatesRequest(CredentialFreeOperationRequest):
@@ -380,7 +378,7 @@ class ActivityAssetFilingHandoffRequest(CredentialFreeOperationRequest):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    tax_year: ActivityAssetTaxYear
+    tax_year: FourDigitYear
     m130_period: Annotated[str, Field(min_length=1, max_length=16)] | None = None
     """The Modelo 130 period to project, or null to project the Modelo 100 boxes alone."""
     output_language: OutputLanguage = DEFAULT_OUTPUT_LANGUAGE

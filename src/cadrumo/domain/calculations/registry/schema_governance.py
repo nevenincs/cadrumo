@@ -81,11 +81,12 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime, timedelta
 
+from ....core.filing_year import FOUR_DIGIT_YEAR_LAST
 from ....core.revision_review import REVIEWED_REVISION_REVIEW_STATUSES, RevisionReviewStatus
 from .errors import RegistryValidationError
 from .ids import RevisionId
 
-REVISION_REVIEW_DATE_CEILING: date = date.max
+REVISION_REVIEW_DATE_CEILING: date = date(FOUR_DIGIT_YEAR_LAST, 12, 31)
 """Exclusive upper bound on a governance stamp's ``reviewed_at`` signoff date.
 
 A signoff dated beyond any living reviewer's horizon is not a signoff: it is a

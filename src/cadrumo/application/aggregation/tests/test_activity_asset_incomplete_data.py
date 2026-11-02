@@ -24,6 +24,7 @@ from cadrumo.domain.renta.actividad_asset.lifecycle import (
     OpeningAmortizationHistory,
     OpeningHistoryStatus,
 )
+from cadrumo.domain.user_profile.tests.imputation_criterion_facts import cash_criterion_facts
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 
@@ -79,7 +80,7 @@ def _profile(operation, *facts: UserProfileFact) -> ModeloWorkProfile:
         record=_create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=BUCKET_ID,
-            facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *facts),
+            facts=(UserProfileFact(path="identity.tax_id", value="X1234567L"), *facts, *cash_criterion_facts(2025)),
             context=_profile_creation_context_for_test(),
         ),
         profile_decode_context=operation.profile_decode_context(),

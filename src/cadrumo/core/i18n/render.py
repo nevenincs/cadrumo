@@ -740,11 +740,20 @@ def _interpolate_with_status(
     try:
         return rendered.format(**values), True
     except (KeyError, IndexError, ValueError) as exc:
+        # Formatting errors can quote private interpolation values in their
+        # arguments or causes. Keep only the builtin category and stack frames.
+        if isinstance(exc, KeyError):
+            diagnostic_error: KeyError | IndexError | ValueError = KeyError()
+        elif isinstance(exc, IndexError):
+            diagnostic_error = IndexError()
+        else:
+            diagnostic_error = ValueError()
+        diagnostic_error = diagnostic_error.with_traceback(exc.__traceback__)
         _logger().debug(
             "i18n: unable to interpolate locale key %s; returning partially rendered value (%s)",
             translation_key,
             type(exc).__name__,
-            exc_info=True,
+            exc_info=(type(diagnostic_error), diagnostic_error, diagnostic_error.__traceback__),
         )
         return rendered, False
 

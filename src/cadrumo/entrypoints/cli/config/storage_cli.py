@@ -24,6 +24,8 @@ from typing import TYPE_CHECKING, Final
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language as _activate_subcommand_output_language
+
 from ....application.operator_actions.models import ActionReference
 from ....application.storage_management.documents import (
     ConfigStorageCheckResult,
@@ -35,7 +37,6 @@ from ....application.storage_management.documents import (
 from ....core.i18n.render import tr
 from ....core.json_contract import Notice, NoticeSeverity
 from ....core.storage_taxonomy import StorageArea
-from ..common import activate_subcommand_output_language as _activate_subcommand_output_language
 from ..common import emit_envelope, resolve_notice_action
 
 if TYPE_CHECKING:

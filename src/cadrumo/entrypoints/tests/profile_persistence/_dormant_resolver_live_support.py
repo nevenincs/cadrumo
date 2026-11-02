@@ -25,12 +25,14 @@ _READY_PROFILE_FACTS: tuple[UserProfileFact, ...] = general_iva_profile_facts(
 )
 
 
-def _seed_ready_profile(objects: SecureObjectRepository, *, bucket_id: str) -> None:
+def _seed_ready_profile(
+    objects: SecureObjectRepository, *, bucket_id: str, extra_facts: tuple[UserProfileFact, ...] = ()
+) -> None:
     seed_test_profile_record(
         _create_profile_record_for_test(
             setup_state=ProfileSetupState.COMPLETE,
             profile_id=bucket_id,
-            facts=_READY_PROFILE_FACTS,
+            facts=(*_READY_PROFILE_FACTS, *extra_facts),
             created_at=_T0,
             updated_at=_T0,
             context=_profile_creation_context_for_test(),

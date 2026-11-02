@@ -79,7 +79,6 @@ provider = { kind = "ledger_renta_income_aggregation", modelo = "130", target_ca
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-27", "ley-35-2006:art-28"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-130-instructions"
@@ -117,10 +116,10 @@ applicability = { kind = "non_calculation", reason = "application_calculation_ha
 value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95"]
-# The ledger keys each income row by its bank date, which imputes the retención
-# to the right period only under the RIRPF art. 7.2 cash-criterion election
-# (RIRPF art. 79; LIRPF art. 14.1.b). Until the resolver reads the elected
-# criterion the figure is advisory: calculation and preview show it, and
+# The resolver dates each row by the declared criterion, but it still credits a
+# linked invoice's retencion in its accrual window even when the receipt arrives
+# after the quarter's cut-off (RIRPF art. 110.3.a reads "practicadas"; TEAC
+# 00/03187/2011), so the figure stays advisory: calculation and preview show it, and
 # checking, export and local filing refuse it unless it is a proven zero.
 grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
@@ -144,7 +143,6 @@ value = { data_type = "money", channel = "decimal" }
 aggregation = { op = "sum" }
 legal_refs = ["rd-439-2007:art-110", "orden-eha-672-2007:art-1", "ley-35-2006:art-99", "rd-439-2007:art-95", "ley-35-2006:art-28", "ley-35-2006:art-30"]
 source_refs = ["aeat-dr-130-2019-v12", "aeat-modelo-130-instructions"]
-grade_cap = { grade = "calculation", reason = "imputation_period_ungrounded", legal_refs = ["rd-439-2007:art-79", "rd-439-2007:art-7", "ley-35-2006:art-14"] }
 
 [[revisions."2019-y-siguientes".bindings.source_citations]]
 source_ref = "aeat-modelo-130-instructions"

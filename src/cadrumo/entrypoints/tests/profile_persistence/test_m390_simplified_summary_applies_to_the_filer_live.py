@@ -14,10 +14,12 @@ Real encrypted catalogues, real registry snapshot, the live calculation mesh.
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
+from decimal import Decimal
 
 import pytest
 
 from cadrumo.adapters.persistence.profile.buckets import BucketEventHistoryRepository
+from cadrumo.adapters.persistence.profile.calculation_observations import CalculationObservationRepository
 from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_filing import ModeloRecordCatalogueRepository
@@ -28,6 +30,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.application.calculations.m303_regimen_simplificado_annual_summary import (
     M303RegimenSimplificadoAnnualSummaryHandoffError,
 )
+from cadrumo.application.calculations.observations_repository import APP_FILING_SOURCE_KIND, ResultDispositionProjection
 from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -35,14 +38,22 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.core.aggregation import BindingSourceKind
+from cadrumo.core.casilla_id import validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.core.result_disposition import ResultDisposition
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
+from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
+from cadrumo.domain.calculations.registry.iva_compensation_annual_partition_bindings import (
+    M303_COMPENSATION_RESULTADO_CASILLA,
+)
+from cadrumo.domain.calculations.registry.tests.registry_observations import registry_grounded_observations
 from cadrumo.domain.user_profile.tests.profile_creation_authority import (
     profile_creation_context_for_test as _profile_creation_context_for_test,
 )
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact
 from cadrumo.domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
 from cadrumo.entrypoints.tests.profile_persistence.file_flow_test_support import calculation_ports_for_test
+from cadrumo.entrypoints.tests.profile_persistence.observation_seeding_support import save_stamped_observation
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
 from ....adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
@@ -54,6 +65,12 @@ _YEAR = 2025
 _T0 = datetime(2026, 8, 14, 9, 0, tzinfo=UTC)
 _T1 = datetime(2026, 8, 14, 10, 0, tzinfo=UTC)
 _SUMMARY = BindingSourceKind.M303_REGIMEN_SIMPLIFICADO_ANNUAL_SUMMARY
+_GENERAL_REGIME_303_TOTALS = (
+    "iva.cuota-devengada-total",
+    "iva.cuota-deducible-total",
+    "iva.resultado-regimen-general",
+)
+_PRORRATA_REGULARIZACION = validated_casilla_id("44")
 
 __all__ = ["secure_objects"]
 
@@ -128,6 +145,35 @@ def _calculate_m390(secure_objects: SecureObjectRepository) -> BucketAggregation
         )
 
 
+def _seed_filed_general_regime_quarters() -> None:
+    """File the year's four 303s with nothing owed: a general-regime 390 reconciles against them."""
+    repository = CalculationObservationRepository()
+    totals = {
+        **{validated_casilla_id(casilla): Decimal("0.00") for casilla in _GENERAL_REGIME_303_TOTALS},
+        M303_COMPENSATION_RESULTADO_CASILLA: Decimal("0.00"),
+    }
+    for period in ("1T", "2T", "3T", "4T"):
+        casillas = {**totals, _PRORRATA_REGULARIZACION: Decimal("0.00")} if period == "4T" else totals
+        save_stamped_observation(
+            repository,
+            RegistryModeloObservation(
+                modelo="303",
+                filing_year=_YEAR,
+                period=period,
+                observations=registry_grounded_observations(
+                    modelo="303", filing_year=_YEAR, period=period, casilla_values=casillas
+                ),
+            ),
+            source_kind=APP_FILING_SOURCE_KIND,
+            captured_at=_T0,
+            result_disposition=ResultDispositionProjection(
+                disposition=ResultDisposition.NEGATIVA,
+                provenance_kind="app_filing",
+                provenance_locator=f"test-local-filing:{_YEAR}:{period}",
+            ),
+        )
+
+
 def test_a_general_regime_filer_is_not_told_the_simplified_boxes_are_missing(
     secure_objects: SecureObjectRepository,
 ) -> None:
@@ -138,6 +184,7 @@ def test_a_general_regime_filer_is_not_told_the_simplified_boxes_are_missing(
         if binding.source is _SUMMARY
     }
     assert len(summary_bindings) == 10, "Modelo 390 declares boxes 74 to 83 from the simplified summary"
+    _seed_filed_general_regime_quarters()
 
     result = _calculate_m390(secure_objects)
 

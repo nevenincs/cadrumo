@@ -218,6 +218,16 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
         ),
     ),
     (
+        "cadrumo.domain.invoices.errors.InvoiceRetentionFigureError",
+        ErrorCode(
+            code="REFUSED_INVOICE_RETENTION_FIGURES",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_invoice_retention_figures",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
         "cadrumo.domain.invoices.errors.InvoiceValidationError",
         ErrorCode(
             code="ERROR_INVOICE_VALIDATION",

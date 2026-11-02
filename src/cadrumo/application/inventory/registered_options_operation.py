@@ -32,7 +32,7 @@ from ...domain.contribuyente.inventory.records import (
     MovementKind,
     ValuationMethod,
 )
-from ..ledger.read_access import resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_READ_CAPABILITIES
 from ..operations.models import (
@@ -195,11 +195,9 @@ def resolve_inventory_options_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind the read to the exact profile, as every inventory read is."""
-    if request.definition_id != INVENTORY_OPTIONS_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, InventoryOptionsRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request, context, definition_id=INVENTORY_OPTIONS_OPERATION_DEFINITION_ID, request_type=InventoryOptionsRequest
+    )
 
 
 def build_inventory_options_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

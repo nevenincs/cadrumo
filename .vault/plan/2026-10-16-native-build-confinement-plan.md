@@ -6,9 +6,9 @@ date: '2026-10-16'
 tier: L1
 related:
   - '[[2026-10-03-application-packaging-interpreter-foundation-adr]]'
-modified: '2026-10-17'
+modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:730e399d2577cd9a7e4c0e3cb59efb19c31200fac16ea823e6b68729bb322b06'
+body_hash: 'sha256:e4fb41ad3ef20e27ecc897347219da37b2b6dd83bec908bb0ad67588714c8b11'
 ---
 
 # `native-build-confinement` plan
@@ -21,8 +21,8 @@ The current user instruction authorizes a complete native build writer audit and
 
 ## Steps
 
-- [ ] `S01` - Remove repository-managed uv and tool environment provisioning; `justfile, uv tool-path declarations and samples/workflows, docs build defaults, conftest.py, src/cadrumo/conftest.py, dev/test_runs, related Python packaging/release build destinations and owner-aware cleanup, release workflow cohort paths, packaging/authority/hatch_build.py and covering tests`.
-- [ ] `S02` - Confine native documentation and verification scratch and prevent source dependency installation during builds; `dev/packaging/native writer CLIs, build_directory.py, docs and verification helpers, CMake root and native/cmake, native/desktop frontend prerequisites and build/test wrappers, native/CONTRACT.md, build skill references and covering tests`.
+- [x] `S01` - Remove repository-managed uv and tool environment provisioning; `justfile, uv tool-path declarations and samples/workflows, docs build defaults, conftest.py, src/cadrumo/conftest.py, dev/test_runs, related Python packaging/release build destinations and owner-aware cleanup, release workflow cohort paths, packaging/authority/hatch_build.py and covering tests`.
+- [x] `S02` - Confine native documentation and verification scratch and prevent source dependency installation during builds; `dev/packaging/native writer CLIs, build_directory.py, docs and verification helpers, CMake root and native/cmake, native/desktop frontend prerequisites and build/test wrappers, native/CONTRACT.md, build skill references and covering tests`.
 
 ## Parallelization
 

@@ -51,7 +51,7 @@ def test_ordered_candidates_known_suffix_leads_with_declared_provider(tmp_path: 
     """Known suffixes take precedence before content sniffing."""
     cases = (
         ("xlsx", ".xlsx", b"PK\x03\x04 workbook container sample", XlsxProvider),
-        ("xls", ".xls", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1 legacy workbook sample", XlsProvider),
+        ("xls", ".xls", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1 XLS workbook sample", XlsProvider),
         ("ofx", ".ofx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
         ("qfx", ".qfx", b"<OFX><BANKMSGSRSV1></BANKMSGSRSV1></OFX>", OfxProvider),
         ("csv", ".csv", b"date,description,amount\n", CsvProvider),
@@ -77,7 +77,7 @@ def test_ordered_candidates_unknown_suffix_magic_bytes_lead_with_declared_provid
     """Unknown suffixes fall through to the documented magic-byte dispatch."""
     cases = (
         ("zip-magic", b"PK\x03\x04 workbook container sample", XlsxProvider),
-        ("ole2-magic", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1 legacy workbook sample", XlsProvider),
+        ("ole2-magic", b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1 XLS workbook sample", XlsProvider),
         ("ofx-envelope", b"<?xml version='1.0'?><OFX><BODY/></OFX>", OfxProvider),
         ("banktranlist-marker", b"<HEADER/>\n<BANKTRANLIST>" + b"x" * 50, OfxProvider),
     )

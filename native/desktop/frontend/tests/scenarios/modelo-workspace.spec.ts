@@ -1,4 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
+import { readFileSync } from "node:fs";
+import type { ModeloWorkbenchFormProjectionV1 } from "../../src/shell/modeloContract";
 import { label } from "../support/strings";
 
 // One declaration's workspace over the scenario's modelo family, which
@@ -144,5 +146,47 @@ test("a calculation whose settlement was not seen is unknown and holds", async (
   await expect(alert).toBeVisible();
   await expect(
     alert.getByRole("button", { name: label("workspace.modelo.read_again") }),
+  ).toBeVisible();
+});
+
+test("what the calculation noted about a box is said beside it, at its level", async ({
+  page: target,
+}) => {
+  const read = JSON.parse(
+    readFileSync(
+      new URL(
+        "../../src/dev/fixtures/modelo/modelo-130-1T-income-en.json",
+        import.meta.url,
+      ),
+      "utf8",
+    ),
+  ) as ModeloWorkbenchFormProjectionV1;
+  const noted = read.issue_lines.find(
+    (line) =>
+      line.from_calculation &&
+      line.address?.kind === "casilla" &&
+      !line.in_records,
+  )!;
+  const elsewhere = read.issue_lines.find(
+    (line) => line.from_calculation && line.address === null,
+  )!;
+  const casilla =
+    noted.address?.kind === "casilla" ? noted.address.casilla_id : "";
+  await openDeclaration(target, "130", "income");
+  await tab(target, "desktop.modelo.view.form").click();
+  const notes = workspace(target)
+    .locator(`[data-key="c:${casilla}"]`)
+    .getByRole("list", { name: label("desktop.modelo.box_notes.label") });
+  await expect(notes).toContainText(noted.message);
+  await expect(notes).toContainText(
+    label(`workspace.modelo.level.${noted.level}`),
+  );
+  // A note that names no box is not drawn beside one: the check lists it.
+  await expect(
+    workspace(target).getByText(elsewhere.message, { exact: true }),
+  ).toHaveCount(0);
+  await tab(target, "workspace.modelo.step.review").click();
+  await expect(
+    workspace(target).getByText(elsewhere.message, { exact: true }),
   ).toBeVisible();
 });

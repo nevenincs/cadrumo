@@ -41,7 +41,7 @@ from ..filing.producer_snapshot_m360 import (
     Modelo360SolicitudRegister,
 )
 from ..ledger.own_account_ports import OwnAccountRepositoryFactory
-from ..ledger.read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from ..ledger.read_access import resolve_ledger_request_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES
 from ..operations.fenced_result import publish_fenced_result
@@ -363,13 +363,13 @@ def resolve_modelo_360_solicitud_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require whole-profile scope, and COMMIT for a declaration or removal."""
-    if request.definition_id != MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload,
-        Modelo360SolicitudRequest,
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.action in _READ_ACTIONS else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=MODELO_360_SOLICITUD_OPERATION_DEFINITION_ID,
+        request_type=Modelo360SolicitudRequest,
+        commits=lambda payload: payload.action not in _READ_ACTIONS,
+    )
 
 
 def build_modelo_360_solicitud_registration(

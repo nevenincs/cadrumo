@@ -38,6 +38,7 @@ from ....domain.usage_ratios.service import derive_home_office_ratios_from_censo
 from ..storage.secure_object_namespaces import USAGE_RATIO_PROFILE_NAMESPACE
 
 if TYPE_CHECKING:  # pragma: no cover — import-cycle guard
+    from ....core.secure_object_write import SecureObjectWrite
     from ....domain.calculations.registry.authority import PinnedAuthorityOperation
     from ..storage.sql.secure_objects import SecureObjectRepository
 
@@ -45,6 +46,7 @@ __all__ = [
     "load_usage_ratios",
     "load_usage_ratios_with_censo_guard",
     "save_usage_ratios",
+    "save_usage_ratios_with_secure_object_writes",
 ]
 
 _LOGGER = get_logger(__name__)
@@ -167,25 +169,18 @@ def save_usage_ratios(
         bucket_id: Profile bucket identifier.
         objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
     """
-    from ..storage.envelope.contract import Envelope
     from ..storage.runtime_repository import secure_object_repository_for_bucket
 
-    envelope = Envelope[UsageRatioProfile](
-        schema_version=_USAGE_RATIO_VERSION,
-        written_at=now(),
-        classification=_USAGE_RATIO_SENSITIVITY,
-        payload=profile,
-    )
-    object_key = usage_ratios_object_key(bucket_id)
     repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)
+    write = _usage_ratio_write(profile, bucket_id=bucket_id)
     try:
         repository.save(
-            namespace=_USAGE_RATIO_NAMESPACE,
-            object_key=object_key,
-            classification=_USAGE_RATIO_SENSITIVITY,
-            schema_version=_USAGE_RATIO_VERSION,
-            written_at=envelope.written_at,
-            payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+            namespace=write.namespace,
+            object_key=write.object_key,
+            classification=write.classification,
+            schema_version=write.schema_version,
+            written_at=write.written_at,
+            payload=write.payload,
         )
     except OSError as exc:
         _LOGGER.error("usage-ratios database write failed", exc_info=True)
@@ -193,6 +188,65 @@ def save_usage_ratios(
             f"unable to write usage-ratio profile: {exc.__class__.__name__}: {exc}",
         ) from exc
     _LOGGER.info("saved %s usage ratios to secure database bucket_id=%s", len(profile.ratios), bucket_id)
+
+
+def _usage_ratio_write(profile: UsageRatioProfile, *, bucket_id: str) -> SecureObjectWrite:
+    """Return the secure-object upsert that persists ``profile`` for ``bucket_id``."""
+    from ....core.secure_object_write import SecureObjectWrite
+    from ..storage.envelope.contract import Envelope
+
+    envelope = Envelope[UsageRatioProfile](
+        schema_version=_USAGE_RATIO_VERSION,
+        written_at=now(),
+        classification=_USAGE_RATIO_SENSITIVITY,
+        payload=profile,
+    )
+    return SecureObjectWrite(
+        namespace=_USAGE_RATIO_NAMESPACE,
+        object_key=usage_ratios_object_key(bucket_id),
+        classification=_USAGE_RATIO_SENSITIVITY,
+        schema_version=_USAGE_RATIO_VERSION,
+        written_at=envelope.written_at,
+        payload=envelope.model_dump_json().encode(UTF_8_ENCODING),
+    )
+
+
+def save_usage_ratios_with_secure_object_writes(
+    profile: UsageRatioProfile,
+    extra_writes: tuple[SecureObjectWrite, ...],
+    *,
+    bucket_id: str,
+    objects: SecureObjectRepository | None = None,
+) -> None:
+    """Persist the usage-ratio profile and ``extra_writes`` in one SQL unit of work.
+
+    The profile row and the extra rows (the audit event history) share the
+    bucket's one secure-object database, so the batch commits both or neither.
+    A guarded extra write that lost its revision race raises the storage
+    conflict, leaving the profile row unwritten as well.
+
+    Args:
+        profile: The usage-ratio profile to persist.
+        extra_writes: Additional prepared secure-object writes committed with it.
+        bucket_id: Profile bucket identifier.
+        objects: Optional :class:`SecureObjectRepository` override; resolved from settings when absent.
+    """
+    from ..storage.runtime_repository import secure_object_repository_for_bucket
+
+    repository = objects if objects is not None else secure_object_repository_for_bucket(bucket_id)
+    try:
+        repository.apply_batch((_usage_ratio_write(profile, bucket_id=bucket_id), *extra_writes))
+    except OSError as exc:
+        _LOGGER.error("usage-ratios database batch write failed", exc_info=True)
+        raise UsageRatioPersistenceError(
+            f"unable to write usage-ratio profile: {exc.__class__.__name__}: {exc}",
+        ) from exc
+    _LOGGER.info(
+        "saved %s usage ratios with %s co-committed writes bucket_id=%s",
+        len(profile.ratios),
+        len(extra_writes),
+        bucket_id,
+    )
 
 
 def load_usage_ratios_with_censo_guard(

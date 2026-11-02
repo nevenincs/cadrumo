@@ -3,33 +3,28 @@
 from __future__ import annotations
 
 from collections.abc import Iterator
-from datetime import UTC, date, datetime
+from datetime import UTC, datetime
 from decimal import Decimal
-from pathlib import Path
 from typing import cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ....domain.transactions.enums import (
-    BusinessClassification,
     SplitRole,
-    TransactionDirection,
     TransactionLifecycleState,
 )
 from ....domain.transactions.errors import TransactionValidationError
 from ....domain.transactions.lineage_models import SplitLineage
 from ....domain.transactions.models import Transaction, TransactionCatalogue
-from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ...operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ...operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -38,6 +33,8 @@ from .. import merge_operation as operation
 from ..action_ports import LedgerActionPorts
 from ..models import MergeTransactionsResult
 from .full_catalogue_commit_harness import FullCatalogueCommitHarness
+from .personal_manual_row_support import personal_outgoing_manual_row
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -76,44 +73,11 @@ def _access_context(
     *,
     profile_id: UUID = _PROFILE,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.SUBMIT)
 
 
 def _transaction(provider_id: str) -> Transaction:
-    raw = RawTransaction(
-        provider_transaction_id=provider_id,
-        booked_date=date(2026, 5, 2),
-        value_date=None,
-        amount=Decimal("10.00"),
-        currency="EUR",
-        counterparty="Vendor SL",
-        description=provider_id,
-        provenance=RawProvenance(
-            source_path=Path(__file__),
-            source_sha256="c" * 64,
-            source_row_index=1,
-            source_format=SourceFormat.MANUAL,
-            ingested_at=datetime(2026, 5, 4, 9, 30, tzinfo=UTC),
-            provider_name="test",
-        ),
-        raw_fields={"source": "test"},
-    )
-    return Transaction.model_validate(
-        {
-            "raw": raw,
-            "direction": TransactionDirection.OUTGOING,
-            "business_classification": BusinessClassification.PERSONAL,
-            "source_jurisdiction": "ES",
-            "group_label": None,
-        },
-    )
+    return personal_outgoing_manual_row(provider_id, amount=Decimal("10.00"), description=provider_id)
 
 
 def _canonical_result() -> tuple[MergeTransactionsResult, tuple[Transaction, ...], TransactionCatalogue]:

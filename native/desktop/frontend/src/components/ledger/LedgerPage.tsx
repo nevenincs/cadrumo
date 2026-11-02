@@ -80,7 +80,10 @@ import type { OpenRuleFromSelection } from "../../shell/ledgerCommands";
 import { HealthSection } from "./setup/HealthSection";
 import { AssetsSection } from "./assets/AssetsSection";
 import { StockPane } from "./assets/StockPane";
-import { RegistersSection } from "./setup/RegistersSection";
+import {
+  RegistersSection,
+  type RegistersArea,
+} from "./setup/RegistersSection";
 import { RuleDialog, type RuleDialogTarget } from "./setup/RuleDialog";
 import { RulesSection, type RulesArea } from "./setup/RulesSection";
 import type { SetupProps } from "./setup/setupProps";
@@ -112,6 +115,9 @@ const TOAST_MS = 4000;
 export type LedgerMemory = {
   period?: LedgerPeriod | null;
   movements?: MovementsMemory;
+  /** The Registers area another part of the window asked the page to open
+   * on; it is forgotten once the page leaves Registers. */
+  registersArea?: RegistersArea;
 };
 
 /**
@@ -185,8 +191,16 @@ export function LedgerPage({
   const setSection = (next: LedgerSection) => {
     setPeriodOpen(false);
     if (next !== "rules") setRulesArea(undefined);
+    if (next !== "registers") memory.current.registersArea = undefined;
     onViewChange((current) => ({ ...current, section: next }));
   };
+  // An area asked for belongs to the visit it was asked for.
+  useEffect(
+    () => () => {
+      memory.current.registersArea = undefined;
+    },
+    [memory],
+  );
   const openRatios = () => {
     setRulesArea("ratios");
     setSection("rules");
@@ -577,7 +591,13 @@ export function LedgerPage({
         initialArea={rulesArea}
       />
     );
-  else if (section === "registers") body = <RegistersSection {...setupProps} />;
+  else if (section === "registers")
+    body = (
+      <RegistersSection
+        {...setupProps}
+        initialArea={memory.current.registersArea}
+      />
+    );
   else if (section === "assets")
     body = (
       <AssetsSection

@@ -24,6 +24,7 @@ from pathlib import Path
 import pytest
 
 from ....core.config import Settings, load_settings
+from ....core.confirmation_gate import ConfirmationBlockReason
 from ....core.document_shape import DocumentShape
 from ....core.draft_discrepancy import DraftDiscrepancyKind
 from ....core.errors.error_codes import build_error_envelope
@@ -37,6 +38,7 @@ from ....domain.iva.regime_legend import resolve_regime_legends
 # The MODULE object, not names from it: the tests below scope an attribute
 # on it. `from .. import <module>` is the relative form that yields one.
 from .. import invoice_draft_extraction as invoice_draft_extraction_module
+from ..confirmation_gate import confirmation_blockers
 from ..document_transcription import DocumentTranscription, TranscriberIdentity
 from ..evidence_errors import PurchaseInvoiceEvidenceInputError, PurchaseInvoiceEvidenceReaderError
 from ..evidence_input import EvidenceInput
@@ -856,3 +858,66 @@ class TestTheReadingPathAdmitsOnlyRoleEvidenceTheDocumentPrints:
         assert all(not candidate.role_evidence for candidate in candidates), (
             "the grounding stage must drop a claim the document does not carry"
         )
+
+
+_UNPRINTED_SUPPLIER_DOCUMENT = (
+    "FACTURA 2026-0142\n"
+    "Proveedor: EJEMPLO SL\n"
+    "Cliente: ESTUDIO SL B17283946\n"
+    "Base imponible 2.000,00 EUR\n"
+    "TOTAL 2.420,00 EUR\n"
+)
+"""A page whose supplier heading is printed but whose supplier identifier is not."""
+
+
+def _ground_unprinted_supplier(*, anchor: str | None) -> InvoiceDraft:
+    """Ground a draft naming a checksum-valid supplier NIF the page never prints."""
+    draft = InvoiceDraft(
+        supplier_tax_id="B12345674",
+        customer_tax_id=_FILER_CIF,
+        provenance=(
+            FieldProvenance(
+                field="supplier_tax_id",
+                origin=FieldOrigin.TEXT_LAYER,
+                grounding=FieldGroundingOutcome.UNANCHORED,
+                anchor=anchor,
+                role_evidence="Proveedor:",
+            ),
+        ),
+    )
+    transcription = DocumentTranscription(
+        text=_UNPRINTED_SUPPLIER_DOCUMENT,
+        page_count=1,
+        source_content_sha256="d" * 64,
+        transcriber=TranscriberIdentity(
+            transport=LOCAL_TRANSPORT_LABEL,
+            origin=FieldOrigin.TEXT_LAYER,
+            name="pdfplumber",
+            revision="gate",
+        ),
+    )
+    with _indexed_authority_for_test().operation() as operation:
+        return ground_draft_against_transcription(
+            draft=draft,
+            transcription=transcription,
+            legends=_registry_legends(operation),
+            taxpayer_tax_id=_FILER_CIF,
+            operation=operation,
+        )
+
+
+@pytest.mark.parametrize("anchor", ["B12345674", None], ids=["refused_anchor", "no_anchor_offered"])
+def test_a_printed_heading_cannot_promote_a_tax_id_the_page_never_prints(anchor: str | None) -> None:
+    """Two 2,000 EUR invoices from a supplier recorded under an invented NIF would
+    otherwise reach Modelo 347 as one counterparty; the heading alone must not
+    stand in for the identifier's own printed form."""
+    grounded = _ground_unprinted_supplier(anchor=anchor)
+
+    supplier = next(e for e in grounded.provenance if e.field == "supplier_tax_id")
+    assert supplier.grounding is not FieldGroundingOutcome.ANCHORED
+    assert supplier.anchor is None
+    assert DraftDiscrepancyKind.ROLE_UNRESOLVED in {f.kind for f in grounded.discrepancies}
+    assert any(
+        blocker.reason is ConfirmationBlockReason.UNRESOLVED_DIRECTION and blocker.field == "supplier_tax_id"
+        for blocker in confirmation_blockers(grounded)
+    )

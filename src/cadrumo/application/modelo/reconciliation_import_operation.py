@@ -29,7 +29,7 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ...domain.modelos.codes import ModeloCode, ModeloCodeText
-from ..ledger.read_access import resolve_ledger_commit_access
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import RECORDED_NON_IDEMPOTENT_JOURNALED_UPDATE_CAPABILITIES
 from ..operations.execution_actor import OperationExecutionCallerReader, execution_actor_label
@@ -41,7 +41,7 @@ from ..operations.models import (
 )
 from ..operations.operation_definition import OperationDefinition, OperationExecutorFactory
 from ..operations.owner import OperationExecutorContext
-from ..operations.profile_guard import require_access_request_profile_payload, require_operation_profile
+from ..operations.profile_guard import require_operation_profile
 from ..operations.registry import (
     OperationPublicDefinitionRegistrationV1,
     OperationReconciliationPolicy,
@@ -527,13 +527,12 @@ def resolve_modelo_reconciliation_import_access(
     /,
 ) -> ResolvedOperationAccess:
     """Require whole-profile tax disclosure and authorize the local commit."""
-    payload = require_access_request_profile_payload(
+    return resolve_ledger_request_commit_access(
         request,
+        context,
         definition_id=MODELO_RECONCILIATION_IMPORT_OPERATION_DEFINITION_ID,
-        payload_type=ModeloReconciliationImportRequest,
-        access_profile_id=context.profile_id,
+        request_type=ModeloReconciliationImportRequest,
     )
-    return resolve_ledger_commit_access(request, context, profile_id=payload.profile_id, periods=frozenset())
 
 
 def build_modelo_reconciliation_import_registration(

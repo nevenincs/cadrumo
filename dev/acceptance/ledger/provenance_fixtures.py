@@ -275,24 +275,24 @@ def invoice_delimited_writer(rows: tuple[InvoiceRow, ...], *, delimiter: str) ->
     return lambda path: _write_delimited(path, _INVOICE_COLUMNS, [row.values() for row in rows], delimiter)
 
 
-def _write_legacy_workbook(path: Path, header: tuple[str, ...], rows: list[tuple[object, ...]]) -> None:
+def _write_xls_workbook(path: Path, header: tuple[str, ...], rows: list[tuple[object, ...]]) -> None:
     from cadrumo.tests.xls_fixtures import xls_workbook_bytes
 
     path.write_bytes(xls_workbook_bytes([("Sheet1", [list(header), *(list(row) for row in rows)])]))
 
 
-def statement_legacy_workbook_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], None]:
+def statement_xls_workbook_writer(rows: tuple[StatementRow, ...]) -> Callable[[Path], None]:
     """Write a generic-header Excel 97-2003 statement with typed date and amount cells."""
 
     def cells(row: StatementRow) -> tuple[object, ...]:
         return (date(_YEAR, 3, row.day), row.payee, row.description, float(row.amount), "EUR", row.external_id)
 
-    return lambda path: _write_legacy_workbook(path, _STATEMENT_CSV_HEADER, [cells(row) for row in rows])
+    return lambda path: _write_xls_workbook(path, _STATEMENT_CSV_HEADER, [cells(row) for row in rows])
 
 
-def invoice_legacy_workbook_writer(rows: tuple[InvoiceRow, ...]) -> Callable[[Path], None]:
+def invoice_xls_workbook_writer(rows: tuple[InvoiceRow, ...]) -> Callable[[Path], None]:
     """Write an Excel 97-2003 invoice book with the header on worksheet row 1."""
-    return lambda path: _write_legacy_workbook(path, _INVOICE_COLUMNS, [row.values() for row in rows])
+    return lambda path: _write_xls_workbook(path, _INVOICE_COLUMNS, [row.values() for row in rows])
 
 
 def invoice_workbook_writer(rows: tuple[InvoiceRow, ...]) -> Callable[[Path], None]:
@@ -316,7 +316,7 @@ def _statement_case(
     elif file_format == "xlsx":
         writer, locator_kind, locator = statement_workbook_writer(rows), "physical_row", target_position + 1
     elif file_format == "xls":
-        writer, locator_kind, locator = statement_legacy_workbook_writer(rows), "physical_row", target_position + 1
+        writer, locator_kind, locator = statement_xls_workbook_writer(rows), "physical_row", target_position + 1
     elif file_format in {"ofx", "qfx"}:
         writer, locator_kind, locator = statement_ofx_writer(rows), "transaction_ordinal", target_position
     elif file_format == "pdf":
@@ -357,7 +357,7 @@ def _invoice_case(
     elif file_format in {"xlsx", "xlsm"}:
         writer = invoice_workbook_writer(rows)
     elif file_format == "xls":
-        writer = invoice_legacy_workbook_writer(rows)
+        writer = invoice_xls_workbook_writer(rows)
     else:
         raise ValueError(f"unsupported synthetic invoice-book format {file_format}")
     return ProvenanceCase(

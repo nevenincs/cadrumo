@@ -80,13 +80,6 @@ from ....domain.calculations.registry.tests.registry_observations import (
     registry_grounded_modelo_observation,
     revision_id_for_coordinates,
 )
-from ....domain.deadlines.models import (
-    IVARegime,
-    M303RegimeComposition,
-    M303TaxTerritory,
-    ModeloIVAProfile,
-    TaxpayerProfile,
-)
 from ....domain.invoices.enums import IvaRate, PaymentStatus, iva_rate_percentage
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.invoices.tests.catalogue_support import build_invoice_catalogue
@@ -106,9 +99,9 @@ from ....tests.env_scope import ready_clave_settings
 from ...adapter_composition_work_ports import build_calculation_action_ports
 from .file_flow_test_support import seed_m130_activity
 from .observation_seeding_support import save_stamped_observation
+from .verification_substance_support import general_iva_workflow_profile
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
-
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint, pytest.mark.usefixtures("operation")]
 
@@ -245,25 +238,6 @@ def _seed_ready_profile(*, profile_id: str) -> None:
             facts=_READY_PROFILE_FACTS,
             created_at=_CLOCK,
             updated_at=_CLOCK,
-        ),
-    )
-
-
-def _workflow_profile() -> TaxpayerProfile:
-    return TaxpayerProfile(
-        tax_id="X1234567L",
-        iva_regime=IVARegime("GENERAL"),
-        has_employees=False,
-        pays_rent_with_retencion=False,
-        does_intracomunitario=False,
-        bienes_extranjero_above_threshold=False,
-        iva=ModeloIVAProfile(
-            tax_territory=M303TaxTerritory.from_registry("common_regime"),
-            regime_composition=M303RegimeComposition.from_registry("general"),
-            redeme_enrolled=False,
-            cash_accounting_regime_enrolled=False,
-            voluntary_sii_enrolled=False,
-            hydrocarbon_deposit_advance_payment_deduction_entitled=False,
         ),
     )
 
@@ -610,8 +584,8 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
 ) -> None:
     """Q1's carried saldo is capped at Q2's positive casilla 14, leaving casilla 17 at zero.
 
-    The activity boxes stay calculation grade until the imputation criterion is grounded,
-    so verify refuses the calculation on box 01 rather than granting it complete.
+    The declared cobros y pagos criterion grounds boxes 01 and 02, but box 06 carries Q1's
+    162,00 activity withholding, which stays calculation grade, so verify refuses on box 06.
     """
     _wu_repo, _cr_repo, _bv_repo, obs_repo, _vr_repo, _filing_repo = repos
     _seed_sofia_q1_invoiced_receipt()
@@ -696,14 +670,14 @@ def test_sofia_q2_carry_forward_caps_to_positive_c14_and_verifies(
             certificate_secret_backend_factory=build_test_certificate_secret_backend_factory(),
             verification_repositories=build_test_verification_repository_bundle(),
             actor="operator-test",
-            workflow_profile=_workflow_profile(),
+            workflow_profile=general_iva_workflow_profile(),
             settings=ready_clave_settings("X1234567L"),
             clock=_CLOCK,
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
         )
     context = refused.value.context or {}
     assert context["reason"] == "advisory_binding_value"
-    assert context["box"] == "01"
+    assert context["box"] == "06"
 
 
 # Shared parity-fixture inputs (named so the expected casilla-05 identity is

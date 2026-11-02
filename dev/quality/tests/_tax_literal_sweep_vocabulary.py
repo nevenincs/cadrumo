@@ -50,7 +50,7 @@ _MECHANICS_OWNERS: Final = (
     "core/decimal/",
     "core/errors/",
     "core/identity/",
-    "core/legacy_workbook.py",
+    "core/xls_workbook.py",
     "core/log_",
     "core/logging.py",
     "core/paths.py",

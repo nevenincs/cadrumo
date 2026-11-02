@@ -21,6 +21,8 @@ from .submission_payload import MINIMUM_JSON_DOCUMENT_BYTES
 # the 64 KiB transport frame, while reducing repeated projection work.
 PROJECTION_PAGE_BYTES = 32_768
 PROJECTION_DOCUMENT_MAX_BYTES = 16_777_216
+# A result refused above this size leaves headroom below the document bound for what the page envelope adds.
+PROJECTION_RESULT_MAX_BYTES = PROJECTION_DOCUMENT_MAX_BYTES - 4_096
 
 
 class ProjectionPageRequest(BaseModel):

@@ -7,21 +7,16 @@ from uuid import UUID
 
 from pydantic import BaseModel
 
-from cadrumo_client.contracts.access_refusals import AccessDenialCode
-
 from ...core.auth_provider import AuthProviderKind
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ..operations.access_resolution import (
-    HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS,
     OperationAccessContext,
     ResolvedOperationAccess,
-    bind_operation_access_profile,
-    require_declared_action,
+    resolve_human_profile_committing_access,
 )
 from ..operations.models import OperationRequest, OperationTerminalReceipt
 from ..operator_actions.models import PreconditionVerdict
-from ..user_profile.access_errors import ProfileAccessRefusedError
 from .operation_definitions import AUTH_CONFIGURE_OPERATION_DEFINITION_ID, AuthConfigureOperationRequest
 from .operator_result_projections import incomplete_auth_configuration_verdict
 from .operator_results import AuthConfigureResult
@@ -74,17 +69,11 @@ def resolve_auth_configure_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require human profile authority at every provider configuration boundary."""
-    if (
-        request.definition_id != AUTH_CONFIGURE_OPERATION_DEFINITION_ID
-        or type(request.payload) is not AuthConfigureOperationRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    if request.subject_ref != profile_operation_subject(str(context.profile_id)):
-        raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
-    access_profile = HUMAN_SINGLE_RUN_COMMITTING_PERIOD_INDEPENDENT_DEFINITION_RESULT_PROFILE_VALUES_ACCESS
-    require_declared_action(context, actions=access_profile.actions)
-    return bind_operation_access_profile(
-        context, access_profile, profile_id=context.profile_id, definition_id=request.definition_id, periods=frozenset()
+    return resolve_human_profile_committing_access(
+        request,
+        context,
+        definition_id=AUTH_CONFIGURE_OPERATION_DEFINITION_ID,
+        request_type=AuthConfigureOperationRequest,
     )
 
 

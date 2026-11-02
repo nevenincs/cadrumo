@@ -180,6 +180,7 @@ REVIEWED_SPANISH_SPELLINGS: frozenset[str] = frozenset(
         "registral",
         "Confírmalo",
         "revísalo",
+        "Simplifícala",
         "intracomunitaria",
         "recapitulativa",
         "minoración",

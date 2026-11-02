@@ -35,6 +35,7 @@ BUSINESS_DEPENDENT_FIELDS: Final[frozenset[str]] = frozenset(
         "irpf_category",
         "m210_income_classification",
         "prorrata_reference",
+        "iva_vehicle_use",
     }
 )
 """What only a business-bearing classification keeps."""

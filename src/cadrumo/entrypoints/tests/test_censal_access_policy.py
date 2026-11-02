@@ -37,6 +37,8 @@ from cadrumo_client.contracts.access_vocabulary import (
     DisclosurePermission,
 )
 
+from .supervised_operation_rig import operation_access_context
+
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
 
@@ -74,13 +76,11 @@ def _context(
     action: AccessAction,
     frontend: OperationFrontendProjection = OperationFrontendProjection.CLI,
 ) -> OperationAccessContext:
-    return OperationAccessContext(
+    return operation_access_context(
+        registry.lookup_public_contract(CENSAL_OPERATION_DEFINITION_ID),
         profile_id=profile_id,
-        destination_id=uuid4(),
         action=action,
         frontend=frontend,
-        contract=registry.lookup_public_contract(CENSAL_OPERATION_DEFINITION_ID),
-        published_authority=Availability.AVAILABLE,
     )
 
 

@@ -251,6 +251,7 @@ _LOCAL_WRITES: Final = (
     "ledger.restore",
     "ledger.rule.add",
     "ledger.rule.apply",
+    "ledger.rule.remove",
     "ledger.split.manual",
     "ledger.stash",
     "ledger.update",

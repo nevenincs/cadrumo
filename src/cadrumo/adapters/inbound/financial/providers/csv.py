@@ -76,6 +76,7 @@ class CsvColumnMap(BaseModel):
     Attributes:
         booked_date: Aliases for the posting date column.
         value_date: Aliases for the value date column.
+        operation_date: Aliases for a column that states the tax devengo date.
         amount: Aliases for the signed amount column.
         currency: Aliases for the optional currency column.
         description: Aliases for the free-form description column.
@@ -87,6 +88,7 @@ class CsvColumnMap(BaseModel):
 
     booked_date: tuple[str, ...]
     value_date: tuple[str, ...] = ()
+    operation_date: tuple[str, ...] = ()
     amount: tuple[str, ...]
     direction: tuple[str, ...] = ("direction",)
     currency: tuple[str, ...] = ()
@@ -119,6 +121,9 @@ STATEMENT_COLUMNS = CsvColumnMap(
         "datum",
     ),
     value_date=("fecha valor", "data valor", "value date", "started date", "valuta", "wertstellung"),
+    # "fecha operacion" above is when the bank recorded the movement, so it stays
+    # a booking date: only a header naming the devengo itself is taken as one.
+    operation_date=("fecha de devengo", "fecha devengo", "data de meritacio", "data de meritació", "tax point date"),
     amount=("importe", "importe euros", "import", "amount", "betrag"),
     currency=("moneda", "divisa", "currency", "wahrung", "waehrung"),
     description=(
@@ -246,6 +251,7 @@ class ParsedTabularTransactionRow:
     provider_transaction_id: str
     booked_date: date
     value_date: date | None
+    operation_date: date | None
     amount: Decimal
     direction: TransactionDirection | None
     currency: str
@@ -630,6 +636,11 @@ def parse_tabular_transaction_row(
     if value_date_resolved is not None:
         value_date_header, value_raw = value_date_resolved
         value_date = parse_date_value(value_raw, day_first=conventions.day_first, label=value_date_header)
+    operation_date_resolved = _typed_value_and_header_from_aliases(typed_fields, lookup, columns.operation_date)
+    operation_date: date | None = None
+    if operation_date_resolved is not None:
+        operation_date_header, operation_raw = operation_date_resolved
+        operation_date = parse_date_value(operation_raw, day_first=conventions.day_first, label=operation_date_header)
     amount = parse_statement_amount(
         _required_typed_value(typed_fields, lookup, columns.amount, "amount", required_field_context),
         decimal_separator=conventions.decimal_separator,
@@ -647,6 +658,7 @@ def parse_tabular_transaction_row(
         provider_transaction_id=transaction_id,
         booked_date=booked_date,
         value_date=value_date,
+        operation_date=operation_date,
         amount=amount,
         direction=direction,
         currency=currency,
@@ -688,9 +700,11 @@ def build_provider_row(
         description=parsed.description,
         raw_fields=raw_fields,
     )
-    if parsed.direction is not None:
-        return ParsedLedgerRow(raw=built.raw, direction=parsed.direction)
-    return built
+    return ParsedLedgerRow(
+        raw=built.raw,
+        direction=parsed.direction if parsed.direction is not None else built.direction,
+        operation_date=parsed.operation_date,
+    )
 
 
 def _value_from_aliases(

@@ -127,7 +127,7 @@ def build_rule_apply_search_refusal(
     return LedgerRuleApplyProjection(
         profile_id=profile_id,
         outcome="validation_error",
-        validation_code=error.code,
+        validation_code=error.reason,
         validation_messages=(
             f"classification rule {error.rule_id} could not be searched with within its bound; nothing was changed",
         ),

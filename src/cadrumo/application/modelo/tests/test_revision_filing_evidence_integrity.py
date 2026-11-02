@@ -114,8 +114,8 @@ def _identity_caller_modules() -> tuple[Path, ...]:
     return modules
 
 
-def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
-    """Omission syntax is forbidden across production and test identity callers."""
+def _identity_calls_omitting(keyword_name: str) -> list[str]:
+    """Locate every revision-identity call, outside its defining module, that does not pass ``keyword_name``."""
     omissions: list[str] = []
     for path in _identity_caller_modules():
         if path.name == "calculation_revision.py":
@@ -127,10 +127,14 @@ def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
             name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)
             if name != "derive_calculation_revision_id":
                 continue
-            if not any(keyword.arg == "filing_instance_evidence" for keyword in node.keywords):
+            if not any(keyword.arg == keyword_name for keyword in node.keywords):
                 omissions.append(f"{path.relative_to(_SOURCE_ROOT)}:{node.lineno}")
+    return omissions
 
-    assert omissions == []
+
+def test_all_revision_id_calls_explicitly_select_filing_evidence() -> None:
+    """Omission syntax is forbidden across production and test identity callers."""
+    assert _identity_calls_omitting("filing_instance_evidence") == []
 
 
 def test_revision_id_filing_evidence_has_no_default_and_cannot_be_omitted() -> None:
@@ -149,21 +153,7 @@ def test_revision_id_filing_evidence_has_no_default_and_cannot_be_omitted() -> N
 
 def test_all_revision_id_calls_explicitly_select_source_provenance() -> None:
     """Every identity caller records either the canonical trace or explicit emptiness."""
-    omissions: list[str] = []
-    for path in _identity_caller_modules():
-        if path.name == "calculation_revision.py":
-            continue
-        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
-        for node in ast.walk(tree):
-            if not isinstance(node, ast.Call):
-                continue
-            name = node.func.id if isinstance(node.func, ast.Name) else getattr(node.func, "attr", None)
-            if name != "derive_calculation_revision_id":
-                continue
-            if not any(keyword.arg == "source_provenance" for keyword in node.keywords):
-                omissions.append(f"{path.relative_to(_SOURCE_ROOT)}:{node.lineno}")
-
-    assert omissions == []
+    assert _identity_calls_omitting("source_provenance") == []
 
 
 def test_revision_id_source_provenance_has_no_default_and_cannot_be_omitted() -> None:

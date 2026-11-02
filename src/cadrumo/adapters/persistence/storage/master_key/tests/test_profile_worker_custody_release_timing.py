@@ -14,7 +14,7 @@ from __future__ import annotations
 import json
 import logging
 import sys
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from threading import Thread
 from typing import override
@@ -25,20 +25,12 @@ from sqlalchemy import event
 from sqlalchemy.engine.interfaces import DBAPIConnection
 from sqlalchemy.pool import ConnectionPoolEntry
 
-from cadrumo.application.user_profile.access_contracts import (
-    AccessSession,
-    SessionKind,
-    SessionState,
-)
 from cadrumo.core.classification.policies import SensitivityClass
 from cadrumo.core.config import override_settings
 from cadrumo.core.logging import flush_logging
 from cadrumo.core.secure_object_write import SecureObjectWrite
-from cadrumo.core.time.clock import now
 from cadrumo.tests.audited_process import run_audited_process
 from cadrumo.tests.hang_guard import HANG_GUARD_SECONDS
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope
-from cadrumo_client.contracts.worker_identity import ProfileWorkerIdentity
 
 from ...errors import StorageValidationError
 from ...profile_persistence_composition import composed_profile_persistence_ports
@@ -49,7 +41,7 @@ from ...tests.secure_sql import isolated_profile_storage_root
 from ..active_session import current_active_bucket_session
 from ..bucket_session import KEY_RELEASE_PHASE_EVENT, BucketSession
 from ..profile_worker_custody import ProfileWorkerCustody
-from .profile_worker_identity_support import published_capsule_identity
+from .profile_worker_identity_support import published_capsule_identity, worker_lease
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_persistence_adapter]
 
@@ -81,36 +73,6 @@ class _PhaseRecords(logging.Handler):
             }
             for record in sorted(self._records.values(), key=lambda record: record.created)
         ]
-
-
-def _lease(identity: ProfileWorkerIdentity) -> AccessSession:
-    issued = now()
-    return AccessSession(
-        session_id=uuid4(),
-        binding=identity.binding,
-        runtime_boot_id=identity.runtime_boot_id,
-        profile_lock_generation=0,
-        connection_id=uuid4(),
-        client_id=uuid4(),
-        kind=SessionKind.HUMAN,
-        originating_login_id="synthetic-os-login",
-        state=SessionState.ACTIVE,
-        scope=AccessScope(
-            operations=frozenset(),
-            actions=frozenset(AccessAction),
-            disclosures=frozenset(),
-            periods=None,
-            allow_period_independent=True,
-            allow_delegation=False,
-        ),
-        grant_id=None,
-        grant_generation=None,
-        key_id=None,
-        key_generation=None,
-        issued_at=issued,
-        issued_monotonic=0.0,
-        expires_at=issued + timedelta(minutes=15),
-    )
 
 
 def _fill_store() -> None:
@@ -165,7 +127,7 @@ def _exercise(tmp_path: Path) -> None:
         with override_settings(cadrumo_storage_root=root, cadrumo_active_profile=str(profile_id)):
             custody = ProfileWorkerCustody(identity, storage_root=root, monotonic=lambda: 0.0)
             try:
-                admitted = _lease(identity)
+                admitted = worker_lease(identity)
                 custody.install(admitted, bytearray(derive_test_bucket_key(str(profile_id), purpose="dek")))
                 _fill_store()
                 session = current_active_bucket_session()

@@ -20,7 +20,7 @@ from ..operations.owner import OperationExecutorContext
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
 from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..user_profile.access_errors import ProfileAccessRefusedError
-from .read_access import resolve_ledger_read_access
+from .read_access import resolve_ledger_request_read_access
 from .staged_check import check_staged_work
 from .staged_check_contracts import (
     LEDGER_STAGED_CHECK_OPERATION_DEFINITION_ID,
@@ -104,11 +104,12 @@ def resolve_ledger_staged_check_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Bind the read to the exact profile, as every ledger read is."""
-    if request.definition_id != LEDGER_STAGED_CHECK_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerStagedCheckRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    return resolve_ledger_read_access(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_read_access(
+        request,
+        context,
+        definition_id=LEDGER_STAGED_CHECK_OPERATION_DEFINITION_ID,
+        request_type=LedgerStagedCheckRequest,
+    )
 
 
 def build_ledger_staged_check_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

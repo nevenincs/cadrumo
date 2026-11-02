@@ -30,6 +30,7 @@ from ...core.spanish_postcode import is_spanish_postcode
 from ...core.type_guards import is_object_list_or_tuple
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_identity
 from .errors import WizardValidationError
+from .imputation_election import YEAR_QUESTION_ID
 from .models import WizardQuestion, WizardWidget
 
 _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
@@ -37,11 +38,17 @@ _TAX_ID_QUESTION_IDS: frozenset[str] = frozenset({"tax-id", "spouse-tax-id"})
 _POSTCODE_QUESTION_IDS: frozenset[str] = frozenset({"address-postcode"})
 """Question ids whose answer must be a Spanish 5-digit postcode."""
 
+_YEAR_QUESTION_IDS: frozenset[str] = frozenset({YEAR_QUESTION_ID})
+"""Question ids whose answer must be a four-digit ejercicio."""
+
+_EJERCICIO_DIGITS: Final[int] = 4
+
 WIZARD_VALIDATION_REASON_CODES: Final[tuple[str, ...]] = (
     "blank_text",
     "select_unknown",
     "invalid_tax_id",
     "invalid_postcode",
+    "invalid_year",
     "blank_secret",
     "invalid_confirm",
     "select_without_choices",
@@ -125,6 +132,14 @@ def _validate_text_postcode(value: str, raw: str, question: WizardQuestion) -> N
         raise _fail(question, "invalid_postcode", raw=raw)
 
 
+def _validate_text_year(value: str, raw: str, question: WizardQuestion) -> None:
+    """Require a four-digit ejercicio; the digits stay text so no leading zero is lost."""
+    if not value or question.id not in _YEAR_QUESTION_IDS:
+        return
+    if len(value) != _EJERCICIO_DIGITS or not (value.isascii() and value.isdigit()) or int(value) < 1:
+        raise _fail(question, "invalid_year", raw=raw)
+
+
 def validate_text(raw: str, question: WizardQuestion) -> str:
     """Return the trimmed text answer; reject blank required strings.
 
@@ -148,6 +163,7 @@ def validate_text(raw: str, question: WizardQuestion) -> str:
     _validate_text_choice(value, raw, question)
     _validate_text_tax_id(value, raw, question)
     _validate_text_postcode(value, raw, question)
+    _validate_text_year(value, raw, question)
     return value
 
 

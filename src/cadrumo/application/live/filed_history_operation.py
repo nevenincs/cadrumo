@@ -41,6 +41,7 @@ from ...domain.deadlines.models import TaxpayerProfile
 from ..auth.certificate_secret_backend import CertificateSecretBackendFactory
 from ..auth.operator_scope_ports import OperatorScopePorts
 from ..auth.protocols import BrowserSessionFactoryPort
+from ..ledger.read_access import resolve_ledger_request_commit_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
 from ..operations.capabilities import (
     OperationBaselinePolicy,
@@ -61,7 +62,7 @@ from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRep
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .errors import LiveApplicationInputError
 from .filed_data_ports import FiledDataCapturePort, FiledEffectGuard
-from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
+from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome, resolve_discovery_profile
 from .filed_history_events import (
     FILED_HISTORY_PHASE_DECLARATION_CAPTURE,
     FILED_HISTORY_PHASE_DISCOVERY,
@@ -76,7 +77,7 @@ from .filed_history_events import (
 from .filed_history_pull import pull_filed_history
 from .filed_observation_ports import FiledObservationPersistencePorts
 from .iva_remote_state_ports import IvaRemoteStatePort
-from .live_operation_registration import build_live_operation_definition, resolve_whole_profile_capture_access
+from .live_operation_registration import build_live_operation_definition
 from .notification_ports import NotificationsPorts
 from .session import LiveSessionWriteReceipt, SessionWriteReporter
 
@@ -274,19 +275,6 @@ type FiledHistoryBrowserResourcesFactory = Callable[[], FiledHistoryBrowserResou
 def _unconfigured_provider_preflight(profile_id: UUID, operation: PinnedAuthorityOperation) -> None:
     del profile_id, operation
     raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
-
-
-def _resolve_active_filed_history_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile | None:
-    """Load the selected profile through its canonical internal projection."""
-    from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
-    from ..workflow.persistence import workflow_state_repository
-
-    try:
-        return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
-    except WizardStatusError:
-        # Filed history still has a truthful AEAT register-options path when the
-        # active profile has not declared sufficient taxpayer facts yet.
-        return None
 
 
 async def _pull_recorded_filed_history(
@@ -493,7 +481,7 @@ class FiledHistoryOperationExecutor:
         composition_factory: FiledHistoryCompositionFactory,
         browser_resources_factory: FiledHistoryBrowserResourcesFactory,
         pull: FiledHistoryPull = _pull_recorded_filed_history,
-        profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
+        profile_resolver: FiledHistoryProfileResolver = resolve_discovery_profile,
         provider_preflight: FiledHistoryProviderPreflight = _unconfigured_provider_preflight,
     ) -> None:
         """Initialize this public contract."""
@@ -560,7 +548,7 @@ def build_filed_history_operation_definition(
     composition_factory: FiledHistoryCompositionFactory,
     browser_resources_factory: FiledHistoryBrowserResourcesFactory,
     pull: FiledHistoryPull = _pull_recorded_filed_history,
-    profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
+    profile_resolver: FiledHistoryProfileResolver = resolve_discovery_profile,
     provider_preflight: FiledHistoryProviderPreflight = _unconfigured_provider_preflight,
 ) -> OperationDefinition:
     """Bind entrypoint-owned persistence to the canonical operation contract."""
@@ -616,11 +604,11 @@ def resolve_filed_history_access(
     Provider readiness is checked by the bound worker before browser I/O; the
     runtime's access policy cannot infer it from an automation request.
     """
-    return resolve_whole_profile_capture_access(
+    return resolve_ledger_request_commit_access(
         request,
         context,
         definition_id=FILED_HISTORY_OPERATION_DEFINITION_ID,
-        payload_type=FiledHistoryOperationRequest,
+        request_type=FiledHistoryOperationRequest,
     )
 
 

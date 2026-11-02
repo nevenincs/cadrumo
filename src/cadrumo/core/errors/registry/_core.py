@@ -478,4 +478,34 @@ DECLARED_ERROR_CODES: tuple[tuple[str, ErrorCode], ...] = (
             runbook_id=None,
         ),
     ),
+    (
+        "cadrumo.core.pattern_search.PatternSearchOverrunError",
+        ErrorCode(
+            code="REFUSED_PATTERN_SEARCH_OVERRUN",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_pattern_search_overrun",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.pattern_search.PatternSearchUnreadableError",
+        ErrorCode(
+            code="REFUSED_PATTERN_SEARCH_UNREADABLE",
+            category=ErrorCategory.REFUSED,
+            message_key="errors.refused.refused_pattern_search_unreadable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
+    (
+        "cadrumo.core.pattern_search.PatternSearchUnavailableError",
+        ErrorCode(
+            code="FAIL_PATTERN_SEARCH_UNAVAILABLE",
+            category=ErrorCategory.FAIL,
+            message_key="errors.fail.fail_pattern_search_unavailable",
+            retryable=False,
+            runbook_id=None,
+        ),
+    ),
 )

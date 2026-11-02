@@ -16,6 +16,7 @@ from uuid import UUID
 
 import typer
 
+from cadrumo_client.commands.output import activate_subcommand_output_language
 from cadrumo_client.commands.profile_binding import require_profile_client
 from cadrumo_client.contracts.contracts import RefusalCode, RefusalError
 
@@ -60,7 +61,7 @@ from ._modelo_rendering import (
 from ._modelo_rendering import (
     verification_report_payload as _verification_report_payload,
 )
-from .common import activate_subcommand_output_language, no_active_profile_refusal
+from .common import no_active_profile_refusal
 from .operation_modelo_amendment import read_modelo_work_filing_record, run_modelo_work_amendment
 from .operation_modelo_metadata import read_modelo_work_unit
 from .operation_modelo_taxation_comparison import compare_modelo_taxation
@@ -89,7 +90,9 @@ def work_compare_taxation(
 
     The registered operation records its receipt but persists no calculation revision.
     """
-    from .common import activate_subcommand_output_language, emit_envelope
+    from cadrumo_client.commands.output import activate_subcommand_output_language
+
+    from .common import emit_envelope
 
     activate_subcommand_output_language(ctx, output_language)
 

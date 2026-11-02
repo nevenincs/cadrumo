@@ -3,20 +3,18 @@
 from __future__ import annotations
 
 import asyncio
-from datetime import UTC, datetime, timedelta
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.outbound.aeat.auth.errors import AeatSessionExpiredError
 from ...adapters.outbound.aeat.sede.errors import SedeFailureMode, SedeNavigationError
 from ...adapters.persistence.operations.journal import OperationJournalRepository
-from ...adapters.persistence.operations.lease import OperationLeaseFilesystemRepository
-from ...adapters.persistence.operations.secure_references import operation_secure_reference_repository
 from ...adapters.persistence.profile.tests.profile_registration import register_minimal_profile
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live import verify as verify_module
@@ -32,14 +30,14 @@ from ...application.live.verify_capture_operation import (
     build_verify_capture_registration,
     resolve_verify_capture_access,
 )
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.frontend_requests import (
     OperationResultProjectionSuccessV1,
 )
 from ...application.operations.models import OperationRequest
 from ...application.operations.persistence.journal import OperationPersistedSnapshot
 from ...application.operations.projection_services import OperationResultProjectionService
-from ...application.operations.registry import OperationFrontendProjection, OperationRegistry
+from ...application.operations.registry import OperationRegistry
 from ...application.operations.supervisor import OperationSupervisor
 from ...application.user_profile.access_errors import ProfileAccessRefusedError
 from ...core.identity_check_verdict import IdentityCheckVerdict
@@ -51,7 +49,13 @@ from ...core.operations import (
 )
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowserResources
-from .supervised_operation_rig import cli_submit_context, run_to_terminal, settle_and_project
+from .supervised_operation_rig import (
+    build_supervised_operation,
+    cli_submit_context,
+    operation_access_context,
+    run_to_terminal,
+    settle_and_project,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -95,20 +99,12 @@ def _supervisor(
     authority: PinnedAuthorityOperation,
     execution_authority: FencedExecutionAuthority,
 ) -> tuple[OperationSupervisor, OperationJournalRepository, Any]:
-    durable_root = tmp_path / "operations"
-    journal = OperationJournalRepository(storage_root=durable_root)
-    operands = operation_secure_reference_repository(objects=profile_repository)
-    supervisor = OperationSupervisor(
-        authority_operation=authority,
+    journal, _, operands, supervisor, _ = build_supervised_operation(
+        tmp_path=tmp_path,
+        objects=profile_repository,
+        authority=authority,
         registry=registry,
-        journal=journal,
-        event_stream=journal,
-        leases=OperationLeaseFilesystemRepository(storage_root=durable_root),
-        operands=operands,
-        owner_id="1" * 64,
-        lease_token_factory=lambda: "2" * 64,
-        clock=lambda: _NOW,
-        lease_duration=timedelta(minutes=5),
+        now=_NOW,
         execution_authority=execution_authority,
     )
     return supervisor, journal, operands
@@ -477,12 +473,5 @@ def test_capture_access_refuses_a_foreign_profile_subject() -> None:
     with pytest.raises(ProfileAccessRefusedError):
         resolve_verify_capture_access(
             request,
-            OperationAccessContext(
-                profile_id=_PROFILE_ID,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
-                frontend=OperationFrontendProjection.CLI,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
-            ),
+            operation_access_context(registration.contract, profile_id=_PROFILE_ID),
         )

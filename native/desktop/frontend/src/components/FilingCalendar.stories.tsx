@@ -4,6 +4,7 @@ import { accountFixture, refused, SIGNED_OUT } from "@/dev/fixtures/account";
 import {
   AHEAD_CALENDAR,
   BEHIND_CALENDAR,
+  CLOSE_UNKNOWN_CALENDAR,
   EMPTY_CALENDAR,
   FIXTURE_CALENDAR,
   FIXTURE_TODAY,
@@ -130,6 +131,22 @@ export const PaneMonths: Story = {
 export const PaneList: Story = {
   name: "In a pane: the list",
   args: { pane: true, view: "list" },
+};
+
+// Windows whose close the product could not work out: no day is drawn, and
+// the row says only the earliest it can close.
+export const CloseUnknown: Story = {
+  name: "Close unknown: months and list",
+  args: { state: { kind: "ready", calendar: CLOSE_UNKNOWN_CALENDAR } },
+};
+
+export const CloseUnknownPane: Story = {
+  name: "Close unknown: in a pane, the list",
+  args: {
+    state: { kind: "ready", calendar: CLOSE_UNKNOWN_CALENDAR },
+    pane: true,
+    view: "list",
+  },
 };
 
 export const Refreshing: Story = { args: { refreshing: true } };

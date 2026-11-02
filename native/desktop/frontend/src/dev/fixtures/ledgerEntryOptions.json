@@ -562,6 +562,7 @@
       }
     ],
     "rule_pattern_max": 2048,
+    "payment_id_pattern": "^[0-9a-f]{64}$",
     "text_limits": [
       {
         "name": "split_parts",
@@ -614,6 +615,26 @@
       {
         "name": "counterparty_note",
         "max": 4096
+      },
+      {
+        "name": "confirm_label",
+        "max": 2048
+      },
+      {
+        "name": "confirm_note",
+        "max": 16384
+      },
+      {
+        "name": "own_account_label",
+        "max": 128
+      },
+      {
+        "name": "own_account_currency",
+        "max": 16
+      },
+      {
+        "name": "invoice_counterparty_name",
+        "max": 256
       }
     ]
   }

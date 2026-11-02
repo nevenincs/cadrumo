@@ -28,7 +28,7 @@ from ..user_profile.access_errors import ProfileAccessRefusedError
 from .action_ports import LedgerActionPortsFactory, require_exact_ledger_action_ports
 from .actions_lifecycle import reset_ledger_catalogue
 from .models import LedgerCatalogueResetReport
-from .read_access import resolve_ledger_commit_access, resolve_ledger_read_access
+from .read_access import resolve_ledger_request_access
 from .removal_receipt_projection import (
     MAX_LEDGER_REMOVAL_RECEIPT_ITEMS,
     MAX_LEDGER_REMOVAL_RECEIPT_REASON_LENGTH,
@@ -194,12 +194,13 @@ def resolve_ledger_reset_access(
     request: OperationRequest[BaseModel], context: OperationAccessContext, /
 ) -> ResolvedOperationAccess:
     """Require whole-profile access and COMMIT for a confirmed reset."""
-    if request.definition_id != LEDGER_RESET_OPERATION_DEFINITION_ID or not isinstance(
-        request.payload, LedgerResetRequest
-    ):
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-    resolve = resolve_ledger_read_access if request.payload.dry_run else resolve_ledger_commit_access
-    return resolve(request, context, profile_id=request.payload.profile_id, periods=frozenset())
+    return resolve_ledger_request_access(
+        request,
+        context,
+        definition_id=LEDGER_RESET_OPERATION_DEFINITION_ID,
+        request_type=LedgerResetRequest,
+        commits=lambda payload: not payload.dry_run,
+    )
 
 
 def build_ledger_reset_registration(definition: OperationDefinition) -> OperationPublicDefinitionRegistrationV1:

@@ -1165,6 +1165,8 @@ desktop:
     close: Close declarations
     loading: Reading your declarations…
     maximize: Maximize declarations
+    notes:
+      label: What the latest calculation noted
     position: Declaration {row} of {count}
     read_failed: Cadrumo could not read your declarations.
     retry: Try again
@@ -2263,6 +2265,10 @@ desktop:
       remove_attached: Detach it from its movement first
       remove_note: The record and its stored copy leave the ledger.
       remove_title: Remove this record?
+      retention_differs: The document states {read} withheld; the invoice records
+        {recorded}.
+      retention_unrecorded: The document states {read} withheld; the invoice records
+        no retention.
       save: Save
       say_direction: Say whether you received or issued them
       source:
@@ -2491,6 +2497,7 @@ desktop:
       input_classification: Input use
       investment_asset_id: Investment asset
       m210_income_classification: Modelo 210 income
+      operation_date: Operation date
       own_account_id: Account
       prorrata_reference: Prorrata reference
       prorrata_sector_id: Prorrata sector
@@ -3498,6 +3505,7 @@ desktop:
     prorrata:
       accepted: 'Accepted: {provenances}.'
       action:
+        declare_gross: Declare a gross cuota
         declare_sector: Declare a sector
         elect_especial: Elect especial
         elect_general: Elect general
@@ -3522,6 +3530,7 @@ desktop:
       evidence: Evidence reference
       evidence_hint: The document of the option or its revocation
       form:
+        declare_gross: Declare the gross deductible cuota of a liquidation of {ejercicio}
         declare_sector: Declare a differentiated sector
         elect_especial: Elect prorrata especial for {ejercicio}
         elect_general: Elect prorrata general for {ejercicio}
@@ -3529,6 +3538,26 @@ desktop:
         seed: Seed {ejercicio} from the prior year
         seed_sector: Seed a sector's provisional prorrata for {ejercicio}
         settle_sector: Settle a sector's definitive prorrata for {ejercicio}
+      gross:
+        column:
+          evidence: Document
+          gross_cuota: Gross cuota
+          period: Period
+        empty: No gross cuota is declared for any liquidation period.
+        evidence: Supporting document
+        evidence_hint: Reference to your own document that supports the amount.
+        gross_cuota: Gross deductible cuota
+        gross_cuota_hint: Before prorrata, in euros with up to two decimals.
+        period: Liquidation period
+        remove: Remove
+        remove_confirm: Remove the declaration
+        remove_of: Remove the gross cuota declared for {liquidation}
+        remove_what: Remove the gross cuota you declared for {liquidation}?
+        replace: Replace the gross cuota already declared for the same period and
+          sector
+        title: Gross deductible cuota of earlier liquidations
+        what: The gross deductible cuota, before prorrata, of an earlier liquidation
+          you entered by hand, for a period the ledger holds no input for.
       kind:
         definitiva: Final
         provisional: Provisional
@@ -3679,6 +3708,7 @@ desktop:
         accounts: Own accounts
         capital: Bienes de inversión
         prorrata: Prorrata
+        withholding: Withholding
       areas: Registers areas
     retry: Retry
     reveal:
@@ -4035,6 +4065,87 @@ desktop:
       to_match: To match
     window:
       partial: Grouping and totals wait for the whole window.
+    withholding:
+      absence:
+        not_listed: Statements made earlier cannot be listed yet. Those you make or
+          withdraw in this window are shown here.
+        title: No withholding
+        what: State that no payer withheld on an income class this year.
+      action:
+        attest: State no withholding
+        record: Record certificate
+      amount:
+        importe_integro_dinerario: Gross cash amount
+        ingreso_a_cuenta: Payment on account
+        ingreso_a_cuenta_repercutido: Payment on account passed on
+        retencion: Withholding
+        valoracion_especie: Value in kind
+      attested_on: Stated on {date}
+      changes: Changes to the {ejercicio} certificates
+      column:
+        class: Income class
+        document: Document
+        especie: In kind
+        ingreso: On account
+        integro: Gross cash
+        note: Note
+        origin: Source
+        pago: Credit
+        payer: Payer
+        repercutido: Passed on
+        retencion: Withholding
+        state: State
+      correct_hint: To correct a certificate, remove it and record it again.
+      document: Certificate document (optional)
+      document_hint: A document stored under Documents. Its fingerprint is recorded
+        as given and is not yet checked against the stored document.
+      document_none: No documents stored yet
+      document_not: No document
+      ejercicio: Year
+      empty: No certificates recorded for {ejercicio}.
+      form:
+        attest: State no withholding for {ejercicio}
+        record: Record a certificate for {ejercicio}
+      income_class: Income class
+      note: Note
+      note_hint: Why this class had no withholding.
+      origin:
+        operator_declaration: Your own statement
+        payer_certificate: Payer certificate
+      origin_label: Source of the figures
+      payer_legal_name: Payer name (optional)
+      payer_ref: Payer {ref}
+      payer_tax_id: Payer tax ID
+      payer_tax_id_hint: Sent with the record to identify the payer. It is not shown
+        again.
+      refusal:
+        already_attested: This class already has a statement.
+        certificate_fingerprint_required: A payer certificate needs its document.
+        ejercicio_unsupported: This year is not supported.
+        family_not_declared: This income class is not declared for this year.
+        identity_mismatch: The payer details do not match the record stored under
+          this reference.
+        not_attested: This class has no statement to withdraw.
+        not_found: That certificate is no longer stored.
+        own_tax_id: The payer's tax ID is your own.
+        records_present: Certificates are recorded for this class, so it cannot be
+          stated as having none.
+        repercutido_exceeds_ingreso_a_cuenta: The payment on account passed on cannot
+          exceed the payment on account.
+        stale_revision: The record changed since it was listed. Read it again and
+          retry.
+        taxpayer_tax_id_unknown: Your own tax ID is not in your profile yet.
+        validation: Some of the figures or fields are not accepted.
+      remove: Remove
+      remove_confirm: Remove certificate
+      remove_of: Remove the certificate of {payer}
+      remove_what: Remove the certificate of {payer} under {class}?
+      title: Withholding certificates
+      what: Record the withholding each payer took from your income, as their certificate
+        states it, or state that an income class has none.
+      withdraw: Withdraw
+      withdraw_of: Withdraw the statement for {class}
+      withdrawn_on: Withdrawn on {date}
   logs:
     all_loggers: All loggers
     all_origins: All origins
@@ -4090,6 +4201,8 @@ desktop:
     none_unread: None unread at the last sync
     unread: '{count} unread'
   modelo:
+    box_notes:
+      label: What the calculation noted about this box
     correction:
       kind_label: Kind of correction
       motive_label: Reason for the rectification
@@ -4395,6 +4508,35 @@ desktop:
     search: Search
     settings: Settings
     tui: Workspace
+  renta:
+    proto:
+      election:
+        save: Save the answer
+        year: Tax year
+      excerpt: This prototype holds only some sections of the real declaration. Choose
+        another section to see it here.
+      family:
+        boxes: Boxes these facts feed
+        edit: Change it in your profile
+        empty: Not given
+        profile: From your profile
+      gap:
+        body: The backend does not serve this yet, so the window shows nothing in
+          its place.
+        operation: 'Needs: {operation}'
+        title: Not served yet
+      nav:
+        boxes: 'Boxes: {count}'
+        failed: 'Could not calculate: {count}'
+        needs_you: 'Needs you: {count}'
+        only_attention: Only what needs you
+        proposed: Proposed outline
+        served: As served today
+        technical: 'Technical heading: the layout has no reviewed heading here yet'
+        title: Sections
+      result:
+        composed: Figure worded by the backend's own header builder, not calculated
+        example: Shape already served for another declaration
   session:
     enter_restarts: Enter restarts
     exit_line: '[Process exited with code {code}. Press Enter to start again.]'
@@ -7082,6 +7224,7 @@ tui:
           iva_category: IVA category
           iva_rate: IVA rate (for example 0.21)
           notes: Notes
+          operation_date: Operation date (YYYY-MM-DD)
           own_account_id: Own account (acc-01)
           prorrata_reference: Prorrata reference
           prorrata_sector: Prorrata sector
@@ -8066,6 +8209,7 @@ tui:
         iva_amount: VAT amount (optional)
         iva_rate: VAT rate (optional)
         notes: Notes
+        operation_date: Operation date (YYYY-MM-DD, optional)
         taxable_base: Taxable base (optional)
         value_date: Value date (YYYY-MM-DD, optional)
       update_refused: 'The change was refused: {detail}'
@@ -9938,3 +10082,27 @@ workspace:
       not_applicable: n/a
       not_known_yet: Not known yet
     was: was {value}
+  renta:
+    election:
+      proposed: Proposed answer
+      stated: Stated for {year}
+      title: Imputation criterion for your activity
+      undeclared: Not stated yet. The activity boxes that depend on it stay unresolved
+        until you state it.
+    outline:
+      activities: Economic activities
+      annexes: Annexes and additional information
+      bases: Taxable bases
+      capital_gains: Capital gains and losses
+      credits: Withholding and payments on account
+      employment: Employment income
+      family: Family unit
+      identification: Identification and family situation
+      liability: Tax liability and deductions
+      minimums: Personal and family minimum
+      movable_capital: Income from movable capital
+      other: Other inputs
+      real_estate: Real estate income and imputed income
+      result: Result of the return
+    result:
+      settlement: How it is paid or refunded

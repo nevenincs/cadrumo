@@ -24,26 +24,3 @@ subdirectory, so the same repository carries the Scoop side at no extra cost.
 The result is that the account's distribution-repository count is **one at one product
 and one at a hundred**: a new product adds one formula file and one manifest file and
 creates nothing.
-
-## What this file used to say, and why that mattered
-
-This README previously stated that "this directory makes the repository its own Scoop
-bucket" and that "no separate bucket repository exists or needs to be created". Both
-were false. `nevenincs/homebrew-tap` is the shared account repository the Homebrew
-formula and Scoop manifest are generated toward; nothing is committed here.
-
-The claim was not harmless. It described the opposite architecture from the one this
-repository targets, in the one file a maintainer reads first when asking where the
-manifest goes. A reader trusting this file would have gone looking for an in-repo
-manifest that is never written.
-
-## Note for the vaultspec products
-
-vaultspec-core and vaultspec-rag currently ship their channels **in-repo**, each
-repository acting as its own bucket and tap. That works, but it costs the
-one-argument tap form: because those repositories are not named `homebrew-*`, they
-require `brew tap nevenincs/vaultspec-core https://github.com/nevenincs/vaultspec-core`
-rather than `brew tap nevenincs/tap`.
-
-The two models are both defensible and the choice between them is open. It is recorded
-here so the difference is a decision rather than a drift.

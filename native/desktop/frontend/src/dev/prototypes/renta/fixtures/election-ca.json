@@ -1,0 +1,29 @@
+{
+  "question": {
+    "id": "irpf-activity-income-imputation-criterion",
+    "prompt": "Quin criteri fas servir per imputar a cada exercici els ingressos i les despeses de la teva activitat? El més habitual és la meritació.",
+    "help": "La meritació és el més habitual: els ingressos i les despeses pertanyen a l'exercici en què es generen, sigui quina sigui la data de cobrament o pagament. Cobraments i pagaments és una opció que només pots fer servir si no portes comptabilitat ajustada al Código de Comercio (art. 7.2 RIRPF); et vincula almenys tres anys i es manifesta a la declaració. Si no n'estàs segur, deixa-ho en blanc: les caselles d'activitat queden sense resoldre fins que ho indiquis.",
+    "choices": [
+      {
+        "value": "devengo",
+        "label": "Meritació",
+        "description": "El més habitual: els ingressos i les despeses compten a l'exercici en què es generen, sigui quina sigui la data de cobrament o pagament."
+      },
+      {
+        "value": "cobros_y_pagos",
+        "label": "Cobraments i pagaments",
+        "description": "Només si l'has triat a la declaració i no portes comptabilitat ajustada al Código de Comercio; et vincula almenys tres anys."
+      }
+    ],
+    "proposed": "devengo"
+  },
+  "year": {
+    "id": "irpf-activity-income-imputation-year",
+    "prompt": "Per a quin exercici és aquesta resposta? Escriu quatre xifres.",
+    "help": "L'opció es tria exercici a exercici, de manera que la resposta es desa només per a aquest exercici i les d'altres exercicis no canvien."
+  },
+  "accounting": {
+    "id": "irpf-codigo-comercio-accounting",
+    "prompt": "Portes comptabilitat ajustada al Código de Comercio (obligatòria o voluntària) en aquest exercici? Si és així, no pots fer servir cobraments i pagaments."
+  }
+}

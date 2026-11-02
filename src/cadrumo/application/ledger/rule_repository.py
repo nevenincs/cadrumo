@@ -36,6 +36,10 @@ class LedgerClassificationRuleRepositoryProtocol(Protocol):
         """Return rules in application precedence order."""
         ...
 
+    def delete(self, identifier: str) -> bool:
+        """Remove the rule stored under its content-addressed id; return whether one was removed."""
+        ...
+
 
 class LedgerClassificationRuleRepositoryFactory(Protocol):
     """Construct a classification-rule repository for one profile bucket."""

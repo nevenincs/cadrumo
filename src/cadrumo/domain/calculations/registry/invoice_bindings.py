@@ -16,6 +16,7 @@ from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.filing_year import FilingYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
+from ...invoices.party_limits import INVOICE_COUNTERPARTY_NAME_MAX_LENGTH
 from ._invoice_row_materialization import (
     InvoiceGrouping,
     build_invoice_rows,
@@ -145,7 +146,7 @@ class InvoiceObservation(BaseModel):
     rectified_year: FilingYear | None = None
     rectified_period: str | None = Field(default=None, max_length=16)
     rectified_base_previous: Decimal | None = None
-    party_legal_name: str | None = Field(default=None, max_length=256)
+    party_legal_name: str | None = Field(default=None, max_length=INVOICE_COUNTERPARTY_NAME_MAX_LENGTH)
     cash_accounting_operation: bool = False
     """The operation falls under the régimen especial del criterio de caja (LIVA arts. 163 decies ff.).
 

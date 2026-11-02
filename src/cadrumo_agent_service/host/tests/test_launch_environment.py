@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import re
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from uuid import UUID
 
@@ -68,17 +69,28 @@ def _write_package_manifest(root: Path, *, packages: str, executable: str) -> No
     )
 
 
+def _launch_environment(
+    tmp_path: Path, *, python: Path | None, received: Mapping[str, str], sys_platform: str
+) -> dict[str, str]:
+    return agent_launch_environment(
+        storage_root=tmp_path / "storage",
+        agent_root=tmp_path / "agent",
+        relay=tmp_path / "cadrumo-mcp",
+        aeat=None,
+        python=python,
+        received=received,
+        sys_platform=sys_platform,
+    )
+
+
 @pytest.mark.parametrize(
     ("platform", "name"), [("win32", "cadrumo_external_bin_dirs"), ("linux", "CADRUMO_EXTERNAL_BIN_DIRS")]
 )
 def test_declared_provider_binary_directories_reach_the_native_agent_host(
     tmp_path: Path, platform: str, name: str
 ) -> None:
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
+    environment = _launch_environment(
+        tmp_path,
         python=None,
         received={name: str(tmp_path), "CODEX_HOME": "private-account", "API_KEY": "private-key"},
         sys_platform=platform,
@@ -116,14 +128,8 @@ def test_packaged_node_bin_precedes_declared_provider_binary_directories(
     node.touch()
     provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
 
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
-        python=python,
-        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
-        sys_platform=platform,
+    environment = _launch_environment(
+        tmp_path, python=python, received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins}, sys_platform=platform
     )
 
     expected_directories = separator.join((str(node.parent), str(tmp_path / "codex"), str(tmp_path / "claude")))
@@ -154,14 +160,8 @@ def test_missing_packaged_node_keeps_declared_provider_directories_without_phant
     _write_package_manifest(python.parent, packages=packages_relative, executable=python_name)
     provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
 
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
-        python=python,
-        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
-        sys_platform=platform,
+    environment = _launch_environment(
+        tmp_path, python=python, received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins}, sys_platform=platform
     )
 
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
@@ -192,14 +192,8 @@ def test_missing_or_malformed_package_manifest_never_injects_node_directory(
         manifest_path.write_text("{", encoding="utf-8")
     provider_bins = separator.join((str(tmp_path / "codex"), str(tmp_path / "claude")))
 
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
-        python=python,
-        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
-        sys_platform=platform,
+    environment = _launch_environment(
+        tmp_path, python=python, received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins}, sys_platform=platform
     )
 
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
@@ -224,14 +218,8 @@ def test_manifest_package_path_cannot_escape_the_python_root(
     node.touch()
     provider_bins = str(tmp_path / "codex")
 
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
-        python=python,
-        received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins},
-        sys_platform=platform,
+    environment = _launch_environment(
+        tmp_path, python=python, received={EXTERNAL_BIN_DIRECTORIES_VARIABLE: provider_bins}, sys_platform=platform
     )
 
     assert environment[EXTERNAL_BIN_DIRECTORIES_VARIABLE] == provider_bins
@@ -439,11 +427,8 @@ def test_agent_diagnostic_capture_level(tmp_path: Path, override: str | None, ex
 
 @pytest.mark.parametrize("platform", ["win32", "linux"])
 def test_the_agent_reaches_the_supervised_local_ai_server_and_no_inherited_one(tmp_path: Path, platform: str) -> None:
-    environment = agent_launch_environment(
-        storage_root=tmp_path / "storage",
-        agent_root=tmp_path / "agent",
-        relay=tmp_path / "cadrumo-mcp",
-        aeat=None,
+    environment = _launch_environment(
+        tmp_path,
         python=None,
         received={OLLAMA_BASE_URL_VARIABLE: "http://127.0.0.1:1", "OLLAMA_HOST": "192.0.2.1:1"},
         sys_platform=platform,

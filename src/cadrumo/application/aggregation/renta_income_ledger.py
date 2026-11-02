@@ -38,16 +38,18 @@ from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.money.rounding import round_to_cents
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...core.tipos_actividad import TipoActividad
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.invoices.catalogue import InvoiceCatalogue
+from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.date_partition import OutOfWindowTransactionSummary
 from ...domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.models import Transaction, TransactionCatalogue
 from ..invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
-from . import _renta_income_evidence, _shared_issue_reasons
+from . import _shared_issue_reasons, renta_income_evidence
 from ._grouping import cumulative_year_to_date_window, fold_casilla_observations
 from ._models import CasillaAggregation, LedgerAggregationResultBase
 from .business_proportion import business_proportion
@@ -55,6 +57,16 @@ from .catalogue_read_binding import require_catalogue_reads_bound_to
 from .concepto_ingreso_admission import row_counts_toward_volumen_de_ingresos
 from .currency_predicates import effective_eur_amount, effective_eur_taxable_base, is_non_eur_without_conversion
 from .errors import AggregationPeriodError
+from .renta_imputation import (
+    ActivityImputationCriterion,
+    ImputationCriteria,
+    ImputationUnresolved,
+    impute_row,
+    invoice_accrual_date,
+    linked_accrual_date,
+    rows_left_out_summary,
+    rows_touching_window,
+)
 from .source_mesh import DIAGNOSTIC_MESSAGE_MAX_LENGTH, CalculationSourceDiagnostic
 
 # Registry authority: selected Renta income model, target, selector, and binding
@@ -84,6 +96,9 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
     # Nómina / trabajo entries belong to a separate income category and must
     # not feed an activity-income target.
     TRABAJO_INCOME = "trabajo_income"
+    # RIRPF art. 7 cannot place the row: no criterion, no accrual date, or a
+    # criterion change that would compute it nowhere. The row enters no box.
+    IMPUTATION_UNRESOLVED = "imputation_unresolved"
 
 
 #: The traceable-exclusion ``detail`` annotation: elides rather than refusing.
@@ -94,9 +109,12 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
 #: Shortening the sentence is strictly the lesser loss.
 
 
+_CAPITAL_SUBSIDY_CONCEPT = "subvencion_capital"
+
 _DERIVED_WITHHOLDING_MARKERS: frozenset[LedgerWithholdingDerivation] = frozenset(
     {
         LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
+        LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT,
         LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA,
         LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
     },
@@ -159,7 +177,7 @@ class RentaIncomeObservation(BaseModel):
     filing_date: date
     source_jurisdiction: str | None = None
     grounding: LedgerIncomeGrounding
-    sales_invoice_refusal: _renta_income_evidence.SalesInvoiceEvidenceRefusal | None = None
+    sales_invoice_refusal: renta_income_evidence.SalesInvoiceEvidenceRefusal | None = None
 
     @model_validator(mode="after")
     def _grounding_matches_declared_base(self) -> Self:
@@ -256,6 +274,54 @@ class UnadmittedActivityIncome(BaseModel):
     """
 
 
+class AccruedUnpaidIncome(BaseModel):
+    """The part of an issued invoice accruing in the window that no receipt has settled.
+
+    Income under accrual whether or not it is collected, so a part-paid invoice
+    counts wholly in its accrual year: its receipts carry their share and this the
+    rest. It carries no withholding: the right to deduct one arises only on payment
+    (RIRPF art. 78.1; TEAC 00/03187/2011), so what the invoice states on the unpaid
+    part is held in ``withholding_unpaid`` and reported.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    invoice_id: str
+    target_casilla_id: CasillaId
+    base: Decimal
+    withholding_unpaid: Decimal = Decimal("0")
+
+    @property
+    def transaction_id(self) -> str:
+        """Name the income row by its invoice; an unpaid invoice has no ledger row."""
+        return f"invoice:{self.invoice_id}"
+
+    @property
+    def gross_amount(self) -> Decimal:
+        """Return the IVA-exclusive base, the income the invoice accrues."""
+        return self.base
+
+    @property
+    def taxable_base_amount(self) -> Decimal:
+        """Return the invoice base."""
+        return self.base
+
+    @property
+    def withheld_amount(self) -> Decimal:
+        """Return zero: nothing is deductible before payment."""
+        return Decimal("0")
+
+    @property
+    def withheld_derivation(self) -> LedgerWithholdingDerivation:
+        """Say nothing enters the credit from this row."""
+        return LedgerWithholdingDerivation.NONE_WITHHELD
+
+    @property
+    def grounding(self) -> LedgerIncomeGrounding:
+        """Say the figure rests on a declared base."""
+        return LedgerIncomeGrounding.SUBSTRATE_DECLARED
+
+
 class RentaIncomeLedgerAggregation(
     LedgerAggregationResultBase[RentaIncomeObservation, RentaIncomeLedgerAggregationIssue],
 ):
@@ -275,6 +341,183 @@ class RentaIncomeLedgerAggregation(
 
     out_of_window_summary: OutOfWindowTransactionSummary | None = None
     unadmitted_activity_income: UnadmittedActivityIncome | None = None
+    accrued_unpaid: tuple[AccruedUnpaidIncome, ...] = ()
+
+
+def _accrued_unpaid_income(
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    window_start: date,
+    window_end: date,
+    target_casilla_id: CasillaId,
+    criteria: ImputationCriteria,
+) -> tuple[AccruedUnpaidIncome, ...]:
+    """Return what the issued invoices accruing in the window leave unsettled by their active receipts."""
+    if criteria.usable(window_end.year) is not ActivityImputationCriterion.DEVENGO:
+        return ()
+    active = {
+        transaction.transaction_id: transaction
+        for transaction in transactions.values()
+        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+    }
+    found: list[AccruedUnpaidIncome] = []
+    for invoice in invoices.values():
+        accrual = invoice_accrual_date(invoice)
+        if (
+            invoice.kind is not InvoiceKind.ISSUED
+            or invoice.bucket_id != bucket_id
+            or invoice.currency != "EUR"
+            or accrual is None
+            or not window_start <= accrual <= window_end
+        ):
+            continue
+        receipts = [active[row] for row in invoice.linked_transaction_ids if row in active]
+        shares = [renta_income_evidence.part_payment_share(invoice, receipt) for receipt in receipts]
+        if None in shares:
+            continue
+        retencion = invoice.retention_amount or Decimal("0")
+        base_left = invoice.base_total - sum(
+            (round_to_cents(invoice.base_total * share) for share in shares if share is not None), Decimal("0")
+        )
+        retencion_left = retencion - sum(
+            (round_to_cents(retencion * share) for share in shares if share is not None), Decimal("0")
+        )
+        if base_left > 0:
+            found.append(
+                AccruedUnpaidIncome(
+                    invoice_id=invoice.invoice_id,
+                    target_casilla_id=target_casilla_id,
+                    base=base_left,
+                    withholding_unpaid=max(retencion_left, Decimal("0")),
+                )
+            )
+    return tuple(found)
+
+
+def _overpaid_invoice_issues(
+    transactions: TransactionCatalogue, invoices: InvoiceCatalogue, *, bucket_id: str
+) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
+    """Refuse to place receipts that together exceed what their invoice leaves to be paid."""
+    collected: dict[str, list[Transaction]] = {}
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE and transaction.invoice_id is not None:
+            collected.setdefault(transaction.invoice_id, []).append(transaction)
+    issues: list[RentaIncomeLedgerAggregationIssue] = []
+    for invoice_id, receipts in collected.items():
+        invoice = invoices.get(invoice_id)
+        if invoice is None or invoice.kind is not InvoiceKind.ISSUED or invoice.bucket_id != bucket_id:
+            continue
+        if len(receipts) < 2 or sum((abs(row.raw.amount) for row in receipts), Decimal("0")) <= (
+            renta_income_evidence.invoice_net_cash(invoice)
+        ):
+            continue
+        issues.extend(
+            RentaIncomeLedgerAggregationIssue(
+                transaction_id=row.transaction_id,
+                reason=RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
+                detail=(
+                    f"{ImputationUnresolved.OVERPAID_INVOICE.value}: receipts exceed invoice {invoice.invoice_number}"
+                ),
+            )
+            for row in receipts
+        )
+    return tuple(issues)
+
+
+def accrued_withholding_unpaid_diagnostics(
+    accrued: Sequence[AccruedUnpaidIncome], *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report the withholding imputed to the window that stays undeductible until its income is paid."""
+    unpaid = [row for row in accrued if row.withholding_unpaid > 0]
+    if not unpaid:
+        return ()
+    total = sum((row.withholding_unpaid for row in unpaid), Decimal("0"))
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"{len(unpaid)} accrued invoice(s) state {total} EUR of retencion on income not yet collected. "
+                "It belongs to this ejercicio (RIRPF art. 79) but is not deductible until paid (art. 78.1; "
+                "TEAC 00/03187/2011), so it is left out of the credit."
+            ),
+            source_ref="accrued_withholding_unpaid",
+        ),
+    )
+
+
+def part_payment_diagnostics(
+    observations: Sequence[RentaIncomeObservation], *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report the part payments whose base and retencion are a pro rata share, not a stated figure."""
+    allocated = [
+        row for row in observations if row.withheld_derivation is LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT
+    ]
+    if not allocated:
+        return ()
+    total = sum((row.withheld_amount for row in allocated), Decimal("0"))
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"{len(allocated)} part payment(s) carry {total} EUR of retencion shared pro rata from their "
+                "invoices (RIRPF arts. 78.1 and 95.1). It stays out of the credit until the payer states it."
+            ),
+            source_ref="part_payment_allocated",
+        ),
+    )
+
+
+def rectification_diagnostics(
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    year: int,
+    criteria: ImputationCriteria,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name each retencion paid after the return of its accrual year was filed.
+
+    The withholding stays in the year its income accrued (RIRPF art. 79) and the right
+    to deduct it arises on payment, so TEAC 00/03187/2011 recovers it by rectifying that
+    year (LGT art. 120.3), never by crediting it in the year of payment.
+    """
+    findings: list[CalculationSourceDiagnostic] = []
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE or transaction.invoice_id is None:
+            continue
+        invoice = invoices.get(transaction.invoice_id)
+        if invoice is None or invoice.bucket_id != bucket_id or invoice.retention_amount in (None, 0):
+            continue
+        accrual = linked_accrual_date(invoice, kind=InvoiceKind.ISSUED)
+        if accrual is None or criteria.usable(accrual.year) is not ActivityImputationCriterion.DEVENGO:
+            continue
+        cash = transaction.raw.value_date or transaction.raw.booked_date
+        filed_on = criteria.filings.filed_on.get(accrual.year)
+        if filed_on is None or cash <= filed_on or year not in {accrual.year, cash.year}:
+            continue
+        share = renta_income_evidence.part_payment_share(invoice, transaction)
+        amount = invoice.retention_amount if share is None else round_to_cents(invoice.retention_amount * share)
+        findings.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind="ledger_renta_income_aggregation",
+                resolver_id=resolver_id,
+                source_ref=f"invoice:{invoice.invoice_id}",
+                message=(
+                    f"Invoice {invoice.invoice_number}: {amount} EUR of retencion was paid on {cash}, after the "
+                    f"return of {accrual.year} was filed on {filed_on}. Claim it by an autoliquidacion rectificativa "
+                    f"of {accrual.year} (TEAC 00/03187/2011; LGT art. 120.3); it is never credited in {cash.year}."
+                ),
+            )
+        )
+    return tuple(findings)
 
 
 def _load_income_invoices(
@@ -300,13 +543,39 @@ def aggregate_renta_income_ledger_from_repositories(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the transaction catalogue and aggregate a cumulative income window.
+
+    With ``criteria`` a row's date may be its invoice's, so the whole catalogue
+    is read; without them the window's bank rows are.
 
     Returns a :class:`RentaIncomeLedgerAggregation`.
     """
     require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
     invoices = _load_income_invoices(ports=ports)
+    if criteria is not None:
+        window = cumulative_year_to_date_window(period)
+        whole_catalogue = ports.transaction_reader.load()
+        touching = rows_touching_window(
+            whole_catalogue,
+            invoices,
+            kind=InvoiceKind.ISSUED,
+            invoice_id_of=lambda row: row.invoice_id,
+            start=window.start,
+            end=window.end,
+        )
+        return aggregate_renta_income_ledger(
+            touching,
+            invoices,
+            bucket_id=bucket_id,
+            period=period,
+            modelo=modelo,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            criteria=criteria,
+        ).model_copy(update={"out_of_window_summary": rows_left_out_summary(whole_catalogue, touching)})
     # Only the cumulative in-window subset is decrypted and classified. The
     # out-of-window remainder comes from the plaintext date index and is
     # reported uniformly as ``OUTSIDE_PERIOD``.
@@ -340,6 +609,7 @@ def aggregate_renta_income_ledger(
     target_casilla_id: CasillaId,
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate incoming professional-income transactions into a selected target.
 
@@ -359,6 +629,8 @@ def aggregate_renta_income_ledger(
         target_casilla_id: Registry-selected output casilla for professional income.
         activity_category_matcher: Predicate for activity-category transactions.
         employment_category_matcher: Predicate for employment-category transactions.
+        criteria: The dated imputation election that places each row; ``None``
+            keeps the bank date, for a caller that does not consult the profile.
 
     Returns a :class:`RentaIncomeLedgerAggregation` covering the
     cumulative fiscal window. ``period`` must be quarterly. The cumulative
@@ -385,6 +657,7 @@ def aggregate_renta_income_ledger(
             target_casilla_id=target_casilla_id,
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
+            criteria=criteria,
         )
         if outcome is None:
             continue
@@ -402,8 +675,26 @@ def aggregate_renta_income_ledger(
         modelo=modelo,
         period=window.period,
         observations=tuple(observations),
-        issues=tuple(issues),
+        issues=(
+            *issues,
+            *(
+                ()
+                if criteria is None
+                else _overpaid_invoice_issues(transactions, resolved_invoices, bucket_id=bucket_id)
+            ),
+        ),
         casilla_aggregation=casilla_aggregation,
+        accrued_unpaid=()
+        if criteria is None
+        else _accrued_unpaid_income(
+            transactions,
+            resolved_invoices,
+            bucket_id=bucket_id,
+            window_start=window.start,
+            window_end=window.end,
+            target_casilla_id=target_casilla_id,
+            criteria=criteria,
+        ),
     )
 
 
@@ -416,6 +707,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     ports: InvoiceCatalogueReadPorts,
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Load the catalogue and aggregate an annual activity-income window.
 
@@ -429,6 +721,27 @@ def aggregate_renta_m100_income_ledger_from_repositories(
     # reported uniformly as ``OUTSIDE_PERIOD``. Non-annual periods fall back to
     # the unfiltered load so the aggregation's own period validation still
     # raises the same error.
+    if criteria is not None:
+        whole_catalogue = ports.transaction_reader.load()
+        touching = rows_touching_window(
+            whole_catalogue,
+            invoices,
+            kind=InvoiceKind.ISSUED,
+            invoice_id_of=lambda row: row.invoice_id,
+            start=date(period.filing_year, 1, 1),
+            end=period.end_date,
+        )
+        return aggregate_renta_m100_income_ledger(
+            touching,
+            invoices,
+            bucket_id=bucket_id,
+            period=period,
+            modelo=modelo,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            criteria=criteria,
+        ).model_copy(update={"out_of_window_summary": rows_left_out_summary(whole_catalogue, touching)})
     if period.kind is not PeriodKind.ANNUAL:
         return aggregate_renta_m100_income_ledger(
             ports.transaction_reader.load(),
@@ -439,6 +752,7 @@ def aggregate_renta_m100_income_ledger_from_repositories(
             target_casilla_id=target_casilla_id,
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
+            criteria=criteria,
         )
     partition = ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date)
     result = aggregate_renta_m100_income_ledger(
@@ -469,6 +783,7 @@ def aggregate_renta_m100_income_ledger(
     target_casilla_id: CasillaId,
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeLedgerAggregation:
     """Aggregate annual activity-income from a :class:`TransactionCatalogue` into a selected target.
 
@@ -502,6 +817,7 @@ def aggregate_renta_m100_income_ledger(
         target_casilla_id=target_casilla_id,
         activity_category_matcher=activity_category_matcher,
         employment_category_matcher=employment_category_matcher,
+        criteria=criteria,
     )
     observations = list(projected.observations)
     issues = list(projected.issues)
@@ -515,8 +831,26 @@ def aggregate_renta_m100_income_ledger(
         modelo=modelo,
         period=period,
         observations=tuple(observations),
-        issues=tuple(issues),
+        issues=(
+            *issues,
+            *(
+                ()
+                if criteria is None
+                else _overpaid_invoice_issues(transactions, resolved_invoices, bucket_id=bucket_id)
+            ),
+        ),
         casilla_aggregation=casilla_aggregation,
+        accrued_unpaid=()
+        if criteria is None
+        else _accrued_unpaid_income(
+            transactions,
+            resolved_invoices,
+            bucket_id=bucket_id,
+            window_start=window_start,
+            window_end=window_end,
+            target_casilla_id=target_casilla_id,
+            criteria=criteria,
+        ),
     )
 
 
@@ -734,6 +1068,7 @@ def _project_income_onto_casilla(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     admits: Callable[[Transaction], bool] | None = None,
+    criteria: ImputationCriteria | None = None,
 ) -> _ProjectedIncome:
     """Classify a catalogue once and re-target every eligible observation.
 
@@ -758,6 +1093,8 @@ def _project_income_onto_casilla(
             wants. A rejected row is still CLASSIFIED, so its income can be
             counted, but it contributes to ``unadmitted`` rather than to
             ``observations``.
+        criteria: The dated imputation election that places each row, or
+            ``None`` to keep the bank date.
 
     Returns:
         The projected observations, the issues raised along the way, and the
@@ -779,6 +1116,7 @@ def _project_income_onto_casilla(
             target_casilla_id=target_casilla_id,
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
+            criteria=criteria,
         )
         if outcome is None:
             continue
@@ -807,6 +1145,7 @@ def _classify_income_transaction(
     target_casilla_id: CasillaId,
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
+    criteria: ImputationCriteria | None = None,
 ) -> RentaIncomeObservation | RentaIncomeLedgerAggregationIssue | None:
     """Filter one ledger transaction against the selected income pipeline.
 
@@ -839,12 +1178,22 @@ def _classify_income_transaction(
     # ``effective_eur_amount`` usage in ``renta_ledger.py``).
     gross_amount = effective_eur_amount(transaction) * proportion
 
-    filing_date_or_issue = _income_filing_date_or_issue(
-        transaction,
-        cumulative_start=cumulative_start,
-        cumulative_end=cumulative_end,
+    filing_date_or_issue = (
+        _income_filing_date_or_issue(
+            transaction,
+            cumulative_start=cumulative_start,
+            cumulative_end=cumulative_end,
+        )
+        if criteria is None
+        else _imputed_income_date_or_issue(
+            transaction,
+            invoices=invoices,
+            cumulative_start=cumulative_start,
+            cumulative_end=cumulative_end,
+            criteria=criteria,
+        )
     )
-    if isinstance(filing_date_or_issue, RentaIncomeLedgerAggregationIssue):
+    if filing_date_or_issue is None or isinstance(filing_date_or_issue, RentaIncomeLedgerAggregationIssue):
         return filing_date_or_issue
     filing_date = filing_date_or_issue
 
@@ -856,6 +1205,7 @@ def _classify_income_transaction(
         gross_amount=gross_amount,
         filing_date=filing_date,
         target_casilla_id=target_casilla_id,
+        allocate_part_payments=criteria is not None,
     )
 
 
@@ -911,10 +1261,8 @@ def _income_business_proportion_or_issue(
     )
     if proportion is not None:
         return proportion
-    reason = (
-        RentaIncomeLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-        if transaction.business_classification is BusinessClassification.PERSONAL
-        else RentaIncomeLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    reason = RentaIncomeLedgerAggregationIssueReason(
+        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return RentaIncomeLedgerAggregationIssue(
         transaction_id=transaction.transaction_id,
@@ -940,6 +1288,46 @@ def _income_filing_date_or_issue(
     )
 
 
+def _imputed_income_date_or_issue(
+    transaction: Transaction,
+    *,
+    invoices: InvoiceCatalogue,
+    cumulative_start: date,
+    cumulative_end: date,
+    criteria: ImputationCriteria,
+) -> date | RentaIncomeLedgerAggregationIssue | None:
+    """Place one receipt by the dated election; a row this window has no claim on returns ``None``."""
+    cash = transaction.raw.value_date or transaction.raw.booked_date
+    invoice = None if transaction.invoice_id is None else invoices.get(transaction.invoice_id)
+    accrual = linked_accrual_date(invoice, kind=InvoiceKind.ISSUED)
+    in_window = cumulative_start <= cash <= cumulative_end or (
+        accrual is not None and cumulative_start <= accrual <= cumulative_end
+    )
+    imputed = impute_row(cash, accrual, criteria)
+    # A capital subsidy follows its asset's amortization under either criterion, and no
+    # ledger row carries a schedule: AEAT Manual Renta, ch. 6, citing STS 398/2022.
+    if str(transaction.concepto_ingreso) == _CAPITAL_SUBSIDY_CONCEPT:
+        imputed = ImputationUnresolved.CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN
+    # A shared receipt of an invoice whose figures cannot be shared out stands for nothing known.
+    elif (
+        invoice is not None
+        and accrual is not None
+        and len(invoice.linked_transaction_ids) != 1
+        and criteria.usable(accrual.year) is ActivityImputationCriterion.DEVENGO
+        and renta_income_evidence.part_payment_share(invoice, transaction) is None
+    ):
+        imputed = ImputationUnresolved.ACCRUAL_UNKNOWN
+    if isinstance(imputed, ImputationUnresolved):
+        if not in_window:
+            return None
+        return RentaIncomeLedgerAggregationIssue(
+            transaction_id=transaction.transaction_id,
+            reason=RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
+            detail=f"{imputed.value}: receipt of {cash} cannot be placed in an ejercicio",
+        )
+    return imputed if cumulative_start <= imputed <= cumulative_end else None
+
+
 def _income_observation(
     transaction: Transaction,
     *,
@@ -949,16 +1337,18 @@ def _income_observation(
     gross_amount: Decimal,
     filing_date: date,
     target_casilla_id: CasillaId,
+    allocate_part_payments: bool = False,
 ) -> RentaIncomeObservation:
     """Enrich an eligible income row with invoice evidence and withholding."""
     transaction_id = transaction.transaction_id
 
     # taxable_base carries the IVA-exclusive base imponible when set; it
     # feeds the taxable_base_sum fact path for the rendimiento-neto binding.
-    evidence, evidence_refusal = _renta_income_evidence.sales_invoice_evidence_payload(
+    evidence, evidence_refusal = renta_income_evidence.sales_invoice_evidence_payload(
         invoices=invoices,
         bucket_id=bucket_id,
         transaction=transaction,
+        allocate_part_payments=allocate_part_payments,
     )
 
     # The linked invoice's own base takes precedence over the transaction's tax
@@ -979,7 +1369,7 @@ def _income_observation(
     # retención derived from the undivided base stayed whole.
     taxable_base_amount: Decimal | None = None if declared_base is None else declared_base * proportion
 
-    withheld = _renta_income_evidence.income_withheld_amount(transaction, evidence=evidence)
+    withheld = renta_income_evidence.income_withheld_amount(transaction, evidence=evidence)
 
     return RentaIncomeObservation(
         transaction_id=transaction_id,
@@ -1020,7 +1410,7 @@ def unusable_sales_invoice_diagnostics(
     degrades to a count instead of raising out of the diagnostic and taking the
     calculation down with it.
     """
-    by_reason: dict[_renta_income_evidence.SalesInvoiceEvidenceRefusal, list[RentaIncomeObservation]] = {}
+    by_reason: dict[renta_income_evidence.SalesInvoiceEvidenceRefusal, list[RentaIncomeObservation]] = {}
     for observation in observations:
         if observation.sales_invoice_refusal is not None:
             by_reason.setdefault(observation.sales_invoice_refusal, []).append(observation)

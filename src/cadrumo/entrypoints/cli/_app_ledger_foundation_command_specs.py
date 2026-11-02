@@ -87,6 +87,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
             _required_text_option("description", ("--description",), "cli.ledger.add.description_help"),
             _optional_text_option("value_date", ("--value-date",), "cli.ledger.add.value_date_help"),
+            _optional_text_option("operation_date", ("--operation-date",), "cli.ledger.add.operation_date_help"),
             OptionSpec(
                 name="currency",
                 declarations=("--currency",),
@@ -135,6 +136,11 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
                 "investment_asset_id",
                 ("--investment-asset-id",),
                 "cli.ledger.classify.investment_asset_id_help",
+            ),
+            _optional_text_option(
+                "iva_vehicle_use",
+                ("--iva-vehicle-use",),
+                "cli.ledger.classify.iva_vehicle_use_help",
             ),
             _optional_text_option(
                 "counterparty_country", ("--counterparty-country",), "cli.ledger.classify.counterparty_country_help"

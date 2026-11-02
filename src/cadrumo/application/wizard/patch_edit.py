@@ -18,6 +18,7 @@ from ..user_profile.filing_baseline import missing_filing_baseline_flag_groups
 from ..user_profile.profile_record_repository import ProfileRecordRepository
 from ..user_profile.projections import record_to_path_values
 from .errors import WizardMissingFlagError, WizardPreconditionCondition, wizard_no_action_verdict
+from .imputation_election import ELECTION_QUESTION_IDS, election_changes
 from .models import WizardFlow
 from .persistence import profile_values_from_patch, project_answers, serialise_answers
 
@@ -99,12 +100,19 @@ def refuse_foral_ccaa(
 
 
 def cleared_profile_paths(flow: WizardFlow, supplied: Mapping[str, str]) -> tuple[str, ...]:
-    """Retain explicit blank optional answers as clear operations."""
+    """Retain explicit blank optional answers as clear operations.
+
+    The dated election answers are not here: clearing one clears one ejercicio,
+    which :func:`~cadrumo.application.wizard.imputation_election.election_changes` states.
+    """
     questions = {question.id: question for section in flow.sections for question in section.questions}
     return tuple(
         question.profile_key
         for question_id, raw in supplied.items()
-        if (question := questions.get(question_id)) is not None and question.profile_key is not None and not raw.strip()
+        if (question := questions.get(question_id)) is not None
+        and question.profile_key is not None
+        and question.id not in ELECTION_QUESTION_IDS
+        and not raw.strip()
     )
 
 
@@ -136,6 +144,7 @@ def validate_profile_patch(
     return (
         *(UserProfileFact(path=path, value=value) for path, value in patched_values.items()),
         *(UserProfileFact(path=path, value=None) for path in cleared_paths),
+        *election_changes(flow, supplied),
     )
 
 

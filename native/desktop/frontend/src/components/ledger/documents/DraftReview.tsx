@@ -51,6 +51,7 @@ import type {
   LedgerRow,
 } from "../../../shell/ledger";
 import type { StageEvent, StageState } from "../../../shell/ledgerStage";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import { readAnswer } from "../../../shell/ledgerWindow";
 import { useNavigationGuard } from "../../../shell/navigation/hooks";
 import { provisionActionOf } from "../../../shell/provisioningRecovery";
@@ -343,6 +344,8 @@ function Finding({
   printed: string | null;
 }) {
   const group = useId();
+  const noteLimit = useTextLimit("confirm_note");
+  const valueLimit = useTextLimit("confirm_label");
   const answered = resolutionOf(blocker, answer) !== null;
   const candidates = blocker.candidates ?? [];
   const current = answer ?? { action: "attest", value: "", note: "" };
@@ -382,7 +385,7 @@ function Finding({
           <TextEditor
             id={`${group}-note`}
             controlSize="sm"
-            maxLength={2048}
+            maxLength={noteLimit ?? undefined}
             value={answer?.action === "attest" ? answer.note : ""}
             onChange={(note) => onAnswer({ action: "attest", value: "", note })}
           />
@@ -460,7 +463,7 @@ function Finding({
           <TextEditor
             id={`${group}-value`}
             controlSize="sm"
-            maxLength={1024}
+            maxLength={valueLimit ?? undefined}
             value={answer.value}
             onChange={(value) => onAnswer({ ...answer, value })}
           />
@@ -475,7 +478,7 @@ function Finding({
             id={`${group}-note`}
             controlSize="sm"
             rows={2}
-            maxLength={2048}
+            maxLength={noteLimit ?? undefined}
             value={answer.note}
             onChange={(note) => onAnswer({ ...answer, note })}
           />
@@ -847,6 +850,34 @@ export function DraftReview({
                 confirmed.confirmation.total_discrepancy.recorded_total.decimal,
               ),
             })}
+          </Alert>
+        )}
+        {confirmed.confirmation.retention_discrepancy && (
+          <Alert
+            tone="warning"
+            icon={<Icon name="alert" />}
+            className="ledger-draft-retention-differs"
+          >
+            {confirmed.confirmation.retention_discrepancy.recorded_amount
+              ? t("desktop.ledger.documents.retention_differs", {
+                  read: formatAmount(
+                    locale,
+                    confirmed.confirmation.retention_discrepancy.read_amount
+                      .decimal,
+                  ),
+                  recorded: formatAmount(
+                    locale,
+                    confirmed.confirmation.retention_discrepancy.recorded_amount
+                      .decimal,
+                  ),
+                })
+              : t("desktop.ledger.documents.retention_unrecorded", {
+                  read: formatAmount(
+                    locale,
+                    confirmed.confirmation.retention_discrepancy.read_amount
+                      .decimal,
+                  ),
+                })}
           </Alert>
         )}
         {linkStaged ? (

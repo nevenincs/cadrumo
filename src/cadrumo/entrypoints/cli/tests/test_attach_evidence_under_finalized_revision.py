@@ -334,14 +334,15 @@ def test_stale_revision_advisory_names_no_harmful_recovery_verb(
     assert notices[0].context["actionability"] == "finalized_revision_has_no_safe_recovery_action"
 
 
-def test_evidence_fields_are_not_transaction_identity_or_tax_facts(
+def test_evidence_is_not_transaction_identity_and_only_the_current_field_set_hashes_it(
     profile: TestRuntimeProfile,
     pdf_file: Path,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    # The invariant the exemption rests on, pinned directly against the two
-    # canonical contracts. If a future change makes evidence part of the id or of
-    # the filing fingerprint, the exemption is no longer sound and this fails.
+    # The attach is admitted because evidence is no part of the row's identity,
+    # and no part of the tax facts the field sets before version 4 hash. The
+    # current field set does watch the deduction evidence, so a draft recalculates
+    # after an attach and an older anchor stays as quiet as it was.
     transaction_id = _deductible_expense_row(profile, idempotency_key="evidence-not-identity")
     before = _transactions(profile).load().get(transaction_id)
     assert before is not None
@@ -361,7 +362,8 @@ def test_evidence_fields_are_not_transaction_identity_or_tax_facts(
     assert after.purchase_invoice_evidence_id is not None
 
     assert derive_transaction_id(after.raw) == derive_transaction_id(before.raw)
-    assert row_fingerprint(after) == row_fingerprint(before)
+    assert row_fingerprint(after, field_set_version=3) == row_fingerprint(before, field_set_version=3)
+    assert row_fingerprint(after) != row_fingerprint(before)
 
     # Anti-tautology: a genuine tax fact DOES move the fingerprint, so the
     # equality above is a real property of evidence rather than of the helper.

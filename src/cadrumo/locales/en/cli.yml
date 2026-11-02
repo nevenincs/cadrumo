@@ -432,10 +432,11 @@ cli:
           of goods, T triangular supplies, S services supplied, I services acquired,
           R call-off-stock transfers, D call-off-stock returns, C call-off-stock substitutions'
         preview_help: 'Preview an invoice draft: the figures, findings and verdict
-          the add operation would reach, without saving anything.'
-        preview_line_help: Repeatable JSON object for one draft line, with optional
-          `key`, `description`, `quantity`, `unit_price`, `iva_rate`, `subtotal` and
-          `iva_amount`. A figure left out stays unknown. Use it instead of --taxable-base.
+          the add operation would reach, without saving anything. The counterparty
+          tax id (counterparty_nif) and the draft lines (lines, a JSON array of line
+          objects with optional key, description, quantity, unit_price, iva_rate,
+          subtotal and iva_amount; a figure left out stays unknown; use it instead
+          of --taxable-base) arrive as one JSON object on --secrets-stdin or --secrets-fd.'
         preview_operation_date_role_help: Stored role of the operation date on the
           invoice a correction restates.
         preview_printed_total_help: The total printed on the document, compared with
@@ -643,9 +644,27 @@ cli:
         list_empty: (no rules stored)
         list_header: "priority\tclassification\tpattern\trule_id"
         list_help: List stored classification rules ordered by priority.
+        pattern_overrun: The pattern could not finish searching this ledger's descriptions
+          within its time bound, so it was not saved. Simplify it, for example by
+          avoiding repetition nested inside repetition.
         priority_help: Numeric priority; lower value is evaluated first (default 100).
+        remove_created_at_help: Creation time of the rule as listed (ISO 8601 with
+          offset); the rule is removed only if it still has it.
+        remove_created_at_invalid: --created-at must be an ISO 8601 date and time
+          with an offset, as listed for the rule.
+        remove_help: Remove one stored classification rule, for example one whose
+          pattern cannot be searched.
+        remove_not_found: No stored rule has the id %{rule_id}. Nothing was changed.
+        remove_rule_id_help: Full id of the rule to remove, as shown by the JSON output
+          of rule list.
+        remove_stale: The stored rule %{rule_id} was saved again at %{created_at},
+          which is not the time you gave. Nothing was removed; list the rules and
+          check it.
         trial_help: Try an unsaved pattern with the rule engine and say which of the
-          named movements it finds, without saving anything.
+          named movements it finds, without saving anything. The pattern arrives as
+          the description_pattern field of one JSON object on --secrets-stdin or --secrets-fd,
+          or at a no-echo prompt.
+        trial_pattern_prompt: 'Pattern to try: '
         trial_transaction_id_help: Repeatable id of a movement to try the pattern
           on.
     live:
@@ -2958,6 +2977,9 @@ cli:
       iva_amount_help: Optional IVA amount on the row
       iva_rate_help: Optional IVA rate as a decimal fraction
       notes_help: Your notes, stored with the transaction
+      operation_date_help: Date the IVA fell due under LIVA art. 75, which picks the
+        IVA period (YYYY-MM-DD). For an advance, the collection date. Leave it out
+        and the bank date is used, with a warning.
       prorrata_reference_help: IVA prorrata substrate reference
       prorrata_sector_help: Differentiated-sector id (LIVA arts. 9.1.c / 101) to which
         this input belongs; it must match an already declared sector.
@@ -3097,6 +3119,12 @@ cli:
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
         domestic_not_subject)
       iva_rate_help: IVA rate as a decimal, for example 0.21
+      iva_vehicle_use_help: 'What the row''s vehicle is used for, where LIVA art.
+        95.Tres.2.ª treats it apart from the 50 per cent presumption: one of the six
+        uses presumed 100 per cent (mixed_vehicle_goods_transport, paid_passenger_transport,
+        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
+        surveillance) or outside_presumed_classes for a vehicle that rule does not
+        name.'
       llm_classified_by_label: classified-by
       llm_confidence_label: confidence
       llm_exclusive: --llm cannot be combined with --classification or --file; the
@@ -3296,6 +3324,7 @@ cli:
       'no': 'No'
       notes: Notes
       notice: Notice
+      operation_date: Operation date
       output: Output
       parent_id: Parent transaction id
       pending: Pending review
@@ -3438,14 +3467,13 @@ cli:
       yes_help: Confirm the split (transitions the parent to SPLIT and persists N
         child transactions)
     staged_check_category_help: Repeatable spending category to judge against a classification.
-    staged_check_draft_help: 'Repeatable JSON object for one new movement: `key` and
-      `fields`.'
     staged_check_help: Answer staged ledger work the way the writers would take it,
-      without saving anything.
+      without saving anything. The staged rows (rows, a JSON array of objects with
+      transaction_id, cells and optional evidence_staged and m210_staged) and new
+      movements (drafts, a JSON array of objects with key and fields) arrive as one
+      JSON object on --secrets-stdin or --secrets-fd.
     staged_check_invalid: Each staged row and draft must be a JSON object of the expected
       shape.
-    staged_check_row_help: 'Repeatable JSON object for one movement: `transaction_id`,
-      `cells` and optional `evidence_staged` and `m210_staged`.'
     stash:
       help: Set aside (stash) one transaction from your records in the active profile
       id_help: Id of the transaction to set aside
@@ -3472,6 +3500,8 @@ cli:
       iva_amount_help: New IVA amount
       iva_rate_help: New IVA rate as a decimal fraction
       notes_help: Your new notes
+      operation_date_help: New date the IVA fell due under LIVA art. 75 (YYYY-MM-DD).
+        For an advance, the collection date.
       taxable_base_help: New IVA-exclusive base amount
       value_date_help: New value date (YYYY-MM-DD)
     view:

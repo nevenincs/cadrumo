@@ -3,9 +3,9 @@ tags:
   - '#exec'
   - '#retenciones-workflow'
 date: '2026-09-24'
-modified: '2026-10-03'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:86e89fd829bab14230e826a7068959f443cf3b8ed172bf807c4f4d886f913b33'
+body_hash: 'sha256:9d2d8d564b716a11055a1b41ad8ba637aabe10d363cb02a9a3da6878dd311ac0'
 related:
   - "[[2026-09-24-retenciones-workflow-plan]]"
 ---
@@ -39,6 +39,12 @@ related:
 - `S03` `M` `dev/registry/tests/test_modelo_193_registry.py`
 - `S03` `verify:` `inspect_authoring_candidate publication_valid 0 findings; test_modelo_193_registry and generated export trees anchor test 43` -> `pass`
 - `S05` `M` `src/cadrumo/application/aggregation/m193_phase_materialization.py`
+- `S07` `verify:` `locator-check: withholding_source.py:299` -> `pass`
+- `S07` `by:` `plan-closure`
+- `S10` `verify:` `locator-check: m193_settled_row_gate.py:74-75` -> `pass`
+- `S10` `by:` `plan-closure`
+- `S11` `verify:` `locator-check: calculation_revision_sources.py:75,97 source_filing_year` -> `pass`
+- `S11` `by:` `plan-closure`
 
 ## Notes
 

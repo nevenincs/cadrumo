@@ -38,7 +38,9 @@ import {
   type GrammarRefusal,
   type LedgerPeriod,
 } from "../../../shell/ledgerGrammar";
+import { textLimit } from "../../../shell/ledgerLimits";
 import { heldDecimal } from "../../../shared/numbers";
+import { ledgerLimits } from "../../../shell/ledgerLimits";
 
 // ---- Vocabularies -----------------------------------------------------------
 
@@ -117,7 +119,7 @@ function decimalField(
 /** A one-line text field: its value, or its problem. */
 function textField(
   raw: string,
-  max?: number,
+  max?: number | null,
 ): { value: string | null; problem: Problem | null } {
   const parsed = parseLine(raw, max);
   if (parsed.kind === "refused")
@@ -373,7 +375,10 @@ export function readDraft(
   const retention = readRetention(draft.retentionRate, draft.retentionAmount);
   note("retention_rate", retention.rateProblem);
   note("retention_amount", retention.amountProblem);
-  const name = textField(draft.counterpartyName, 512);
+  const name = textField(
+    draft.counterpartyName,
+    textLimit("invoice_counterparty_name"),
+  );
   note("counterparty_name", name.problem);
   const country = draft.country.trim();
   if (country !== "" && !COUNTRY.test(country))
@@ -769,11 +774,12 @@ export type CorrectionCheck = {
   request: InvoiceUpdateRequest | null;
 };
 
-const HEX64 = /^[0-9a-f]{64}$/;
-
-/** Whether `text` has the shape of a payment id: a transaction id, 64 lowercase
- * hex digits. */
-export const isPaymentId = (text: string) => HEX64.test(text);
+/** Whether `text` has the shape of a payment id, as the ledger serves it; null
+ * where it serves none. */
+export const isPaymentId = (text: string): boolean | null => {
+  const pattern = ledgerLimits()?.payment_id_pattern;
+  return pattern === undefined ? null : new RegExp(pattern).test(text);
+};
 
 /** The correction a draft makes to `invoice`, field by field. Only the fields
  * the update accepts are ever sent, and only those that changed. A change
@@ -866,7 +872,13 @@ export function checkCorrection(
       : { warnings: {}, general: [] };
   const paymentId = draft.paymentId.trim().toLowerCase();
   if (paymentId !== "") {
-    if (!isPaymentId(paymentId))
+    const shaped = isPaymentId(paymentId);
+    if (shaped === null)
+      problems.payment_id = grammar({
+        key: "limits_unavailable",
+        raw: paymentId,
+      });
+    else if (!shaped)
       problems.payment_id = { kind: "rule", rule: "payment_id_shape" };
     else set("payment_id", paymentId);
   }

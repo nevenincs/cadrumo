@@ -1,4 +1,5 @@
-import "./support/servedLimits";
+import { servedLimits } from "./support/servedLimits";
+import { holdLedgerLimits } from "../src/shell/ledgerLimits";
 import { expect, test } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -15,6 +16,7 @@ import {
 import {
   NO_FILTER,
   checkCorrection,
+  isPaymentId,
   checkDraft,
   correctionOf,
   correctionPreview,
@@ -457,7 +459,7 @@ test("a date that strands a rate is a finding on that line", () => {
 });
 
 test("before the registry's rates, the served finding stands and no rate is invented", () => {
-  const check = checked(filled({ issuedAt: "2021-06-01" }), "before_registry");
+  const check = checked(filled({ issuedAt: "2020-12-31" }), "before_registry");
   expect(answer("before_registry").rate_slots).toEqual([]);
   expect(check.request).toBeNull();
   expect(check.findings.general.map(({ code }) => code)).toEqual([
@@ -964,4 +966,32 @@ test("the catalogue filters by kind, class, payment, links, period and words", (
   expect(
     ids(sortCatalogue(catalogue, { key: "date", direction: "desc" })),
   ).toEqual(["A-1093", "F-2026-002", "F-2026-001"]);
+});
+
+test("a payment id is read against the shape the ledger serves, and not at all while it serves none", () => {
+  const stored = invoice({});
+  const draft = correctionOf(stored);
+  const id = "ab".repeat(32);
+  expect(
+    checkCorrection(
+      stored,
+      { ...draft, paymentId: id.toUpperCase() },
+      null,
+      CORRECTIVE,
+    ).request?.patch.values.payment_id,
+  ).toBe(id);
+  expect(isPaymentId("ab".repeat(31))).toBe(false);
+  try {
+    holdLedgerLimits(null);
+    expect(isPaymentId(id)).toBeNull();
+    expect(
+      checkCorrection(stored, { ...draft, paymentId: id }, null, CORRECTIVE)
+        .problems.payment_id,
+    ).toEqual({
+      kind: "grammar",
+      refusal: { key: "limits_unavailable", raw: id },
+    });
+  } finally {
+    holdLedgerLimits(servedLimits);
+  }
 });

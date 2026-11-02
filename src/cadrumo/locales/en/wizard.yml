@@ -34,6 +34,7 @@ wizard:
     invalid_postcode: 'Invalid postcode for %{prompt_key}: %{raw}. A Spanish postcode
       is 5 digits (province code 01-52 followed by three digits).'
     invalid_tax_id: 'Invalid NIF/CIF/DNI/NIE for %{prompt_key}: %{raw}. %{detail}'
+    invalid_year: 'Invalid tax year for %{prompt_key}: %{raw}. Use four digits (YYYY).'
     select_unknown: 'Unrecognised value for %{flag} (%{prompt_key}): %{raw}. Valid
       options: %{choices}.'
     select_without_choices: Question %{prompt_key} declares no select options.
@@ -308,6 +309,18 @@ wizard:
         help: Net turnover (importe neto de la cifra de negocios) over the prior 12
           months, in euros. Above 6,000,000 EUR Modelo 202 mandates the Art. 40.3
           LIS modality; below it both modalities are available. Optional.
+      irpf-activity-income-imputation-criterion:
+        help: 'RIRPF art. 7 criterion for activity income and expenses in the tax
+          year given by --irpf-activity-income-imputation-year: devengo (the usual
+          answer) or cobros_y_pagos (cash; binds for three years; not with Código
+          de Comercio accounting).'
+      irpf-activity-income-imputation-year:
+        help: Four-digit tax year (ejercicio) the imputation criterion and the Código
+          de Comercio answer are stated for. Required with either; the answers for
+          other years are kept.
+      irpf-codigo-comercio-accounting:
+        help: Declare whether you keep Código de Comercio accounting in the tax year
+          given by --irpf-activity-income-imputation-year.
       irpf-estimation-regime:
         help: IRPF estimation regime for economic-activity income
       irpf-income-categories:
@@ -519,6 +532,31 @@ wizard:
         prompt: Conducts intra-EU operations
       has-employees:
         prompt: Do you have employees and pay salaries subject to withholding?
+      irpf-activity-income-imputation-criterion:
+        choices:
+          cobros-y-pagos:
+            description: Only if you elected it in your return and do not keep Código
+              de Comercio accounting; it binds you for at least three years.
+            label: Cash (cobros y pagos)
+          devengo:
+            description: 'The usual answer: income and expenses count in the year
+              they arise, whatever the payment date.'
+            label: Accrual (devengo)
+        help: 'Accrual (devengo) is the usual answer: income and expenses belong to
+          the year they arise, whatever the payment date. Cash (cobros y pagos) is
+          an election open only if you do not keep Código de Comercio accounting (RIRPF
+          art. 7.2); it binds you for at least three years and is stated in your return.
+          If you are not sure, leave this blank: the activity boxes stay unresolved
+          until you state it.'
+        prompt: Which criterion do you use to place your business income and expenses
+          in a tax year? Accrual (devengo) is the usual answer.
+      irpf-activity-income-imputation-year:
+        help: The election is made year by year, so the answer is saved for that year
+          only and the answers for other years stay as they are.
+        prompt: Which tax year (ejercicio) is this answer for? Enter four digits.
+      irpf-codigo-comercio-accounting:
+        prompt: Do you keep accounting under the Código de Comercio (required or voluntary)
+          in that tax year? If you do, cash is not open to you.
       irpf-estimation-regime:
         choices:
           directa-normal:
