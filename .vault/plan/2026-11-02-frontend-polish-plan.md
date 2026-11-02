@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:971674e8b6d11006af2df54418a049566703ff1ea7f79e57d9ce9f94c340bae9'
+body_hash: 'sha256:138ba002ce3a05f92eaa195523ac5ed6551bcde7254cbc5bd11ea7301528468d'
 ---
 
 # `frontend-polish` plan
@@ -58,7 +58,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [ ] `S11` - Complete modelo workflow review from declaration selection through editing, review, calculation, export and reconciliation; `native/desktop/frontend/src/components/modelo/, native/desktop/frontend/src/shell/modelo.ts`.
 - [x] `S23` - Keep AEAT progress uncertainty visible before the first snapshot and after a failed observation of completed work; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/shell/aeatSyncRun.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
 - [x] `S24` - Recover refused Sede dialog answers and viewport updates without replaying uncertain person input; `native/desktop/frontend/src/components/browser/useSedeView.ts, native/desktop/frontend/tests/scenarios/sede-browser.spec.ts, native/desktop/frontend/src/dev/`.
-- [ ] `S12` - Complete AEAT and browser workflow review including preparation, progress, outcomes, notifications and calendar interactions; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/components/calendar/`.
+- [x] `S12` - Complete AEAT and browser workflow review including preparation, progress, outcomes, notifications and calendar interactions; `native/desktop/frontend/src/components/aeatSync/, native/desktop/frontend/src/components/browser/, native/desktop/frontend/src/components/calendar/`.
 - [ ] `S13` - Complete agent conversation, approval, clarification, attachments, documents and skills workflow review; `native/desktop/frontend/src/components/agent/, native/desktop/frontend/src/shell/agentPermission.ts, native/desktop/frontend/src/shell/agentClarification.ts`.
 - [ ] `S14` - Complete settings, provider, model and provisioning workflow review; `native/desktop/frontend/src/components/settings/, native/desktop/frontend/src/components/setup/, native/desktop/frontend/src/shell/provisioning.ts`.
 - [ ] `S15` - Complete diagnostics, logs, terminals, documentation, search and command-palette review; `native/desktop/frontend/src/components/RecordList.tsx, native/desktop/frontend/src/components/TerminalPane.tsx, native/desktop/frontend/src/components/DocsFrame.tsx, native/desktop/frontend/src/components/CommandPalette.tsx`.

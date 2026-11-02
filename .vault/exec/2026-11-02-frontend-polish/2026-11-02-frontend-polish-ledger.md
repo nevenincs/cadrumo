@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:1a7437d6b5a08e5e1fc071c102d68c9563c2a64d1bc56f128d4f24c0bd861f29'
+body_hash: 'sha256:2606d8356962fef02e2f9ffe031ece888c59a2c6f70858bc8ebd42d6cf829241'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -220,6 +220,8 @@ related:
 - `S38` `M` `native/desktop/frontend/tests/scenarios/logs.spec.ts`
 - `S38` `verify:` `17 logs scenarios 20261102T221404Z-60704` -> `pass`
 - `S38` `verify:` `TypeScript scoped ESLint Prettier canonical chrome` -> `pass`
+- `S12` `M` `.vault/audit/2026-11-02-frontend-polish-audit.md`
+- `S12` `verify:` `44 AEAT six calendar profile-view and31 browser scenarios` -> `pass`
 
 ## Notes
 
