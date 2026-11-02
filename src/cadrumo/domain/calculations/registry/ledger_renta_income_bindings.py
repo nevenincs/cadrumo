@@ -532,6 +532,7 @@ def unrouted_ledger_renta_income_quantities(
 # the recorded fact a credit against the cuota rests on.
 _INFERRED_WITHHOLDING_DERIVATIONS: frozenset[LedgerWithholdingDerivation] = frozenset(
     {
+        LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT,
         LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA,
         LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
     },

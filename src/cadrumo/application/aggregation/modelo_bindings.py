@@ -103,6 +103,7 @@ from .modelo_bindings_actividad_assets import (
 )
 from .renta_imputation import (
     ImputationCriteria,
+    ImputationFilingHistory,
     accruing_invoices,
     declared_imputation_criteria,
     imputation_blocking_diagnostics,
@@ -110,6 +111,9 @@ from .renta_imputation import (
 )
 from .renta_income_ledger import (
     RentaIncomeLedgerAggregation,
+    accrued_withholding_unpaid_diagnostics,
+    part_payment_diagnostics,
+    rectification_diagnostics,
     RentaIncomeLedgerAggregationIssueReason,
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
@@ -234,9 +238,11 @@ class LedgerRentaIncomeAggregationSourceResolver:
         ports: InvoiceCatalogueReadPorts,
         activity_asset_history_repository: ActivityAssetHistoryRepository,
         transaction_repository: TransactionCatalogueRepositoryProtocol,
+        imputation_filings: Callable[[CalculationSourceContext], ImputationFilingHistory] | None = None,
     ) -> None:
         """Bind the catalogue ports and the register, whose bajas can add income to Modelos 130 and 131."""
         self._ports = ports
+        self._imputation_filings = imputation_filings
         self._activity_asset_history_repository = activity_asset_history_repository
         self._transaction_repository = transaction_repository
 
@@ -256,7 +262,10 @@ class LedgerRentaIncomeAggregationSourceResolver:
         # narrows the rows first -- to the art. 110.1.c activity set, and away from
         # the subvenciones de capital and indemnizaciones that article excludes.
         target_casilla_id = _renta_income_target_casilla(context)
-        criteria = declared_imputation_criteria(context.profile.record if context.profile is not None else None)
+        criteria = declared_imputation_criteria(
+            context.profile.record if context.profile is not None else None,
+            self._imputation_filings(context) if self._imputation_filings is not None else None,
+        )
         with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = _activity_category_matcher(operation)
@@ -382,6 +391,16 @@ class LedgerRentaIncomeAggregationSourceResolver:
                 source_kind="ledger_renta_income_aggregation",
                 resolver_id=self.resolver_id,
                 suppressed_reasons=frozenset({RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED}),
+            )
+            + accrued_withholding_unpaid_diagnostics(aggregation.accrued_unpaid, resolver_id=self.resolver_id)
+            + part_payment_diagnostics(aggregation.observations, resolver_id=self.resolver_id)
+            + rectification_diagnostics(
+                self._ports.transaction_reader.load(),
+                self._ports.invoice_reader.load(),
+                bucket_id=context.bucket_id,
+                year=context.filing_year,
+                criteria=criteria,
+                resolver_id=self.resolver_id,
             )
             + (
                 ()

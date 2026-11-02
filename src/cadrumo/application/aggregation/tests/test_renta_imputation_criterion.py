@@ -100,14 +100,14 @@ def _profile(operation: PinnedAuthorityOperation, facts: tuple[UserProfileFact, 
     )
 
 
-def _receipt(on: date, *, invoice_id: str | None = None) -> Transaction:
+def _receipt(on: date, *, invoice_id: str | None = None, amount: Decimal = _BANKED) -> Transaction:
     return Transaction.model_validate(
         {
             "raw": RawTransaction(
                 provider_transaction_id=f"cobro-{on.isoformat()}",
                 booked_date=on,
                 value_date=on,
-                amount=_BANKED,
+                amount=amount,
                 currency="EUR",
                 counterparty="Cliente SL",
                 description="cobro factura",
@@ -301,16 +301,6 @@ def test_an_advance_receipt_has_no_accrual_to_stand_on(operation: PinnedAuthorit
     assert _INCOME_0171 in _unresolved_bindings(resolution)
 
 
-def test_a_part_paid_invoice_cannot_stand_for_its_accrued_base_under_accrual(
-    operation: PinnedAuthorityOperation,
-) -> None:
-    first, second = _receipt(date(_LATER, 2, 1)), _receipt(date(_LATER, 3, 1))
-    invoice = _issued(date(_LATER, 1, 15), linked=(first.transaction_id, second.transaction_id))
-    rows = (_receipt(date(_LATER, 2, 1), invoice_id=invoice.invoice_id),)
-    resolution = _resolve(operation, _declared((_LATER, _DEVENGO)), rows=rows, invoices=(invoice,), year=_LATER)
-    assert _INCOME_0171 in _unresolved_bindings(resolution)
-
-
 @pytest.mark.parametrize(
     ("period", "criterion", "expected"),
     [
@@ -400,16 +390,22 @@ def test_contradictory_criteria_in_one_year_read_as_undeclared() -> None:
     assert criteria.declared(_LATER) is None
 
 
-def _expense_row(on: date, *, evidence_id: str | None) -> Transaction:
+def _expense_row(
+    on: date,
+    *,
+    evidence_id: str | None,
+    amount: Decimal = Decimal("121.00"),
+    base: Decimal = Decimal("100.00"),
+) -> Transaction:
     return Transaction.model_validate(
         {
-            "raw": ledger_raw_transaction(f"gasto-{on.isoformat()}", booked_date=on, amount=Decimal("121.00")),
+            "raw": ledger_raw_transaction(f"gasto-{on.isoformat()}", booked_date=on, amount=amount),
             "direction": TransactionDirection.OUTGOING,
             "group_label": None,
             "business_classification": BusinessClassification.BUSINESS,
             "source_jurisdiction": "ES",
             "purchase_invoice_evidence_id": evidence_id,
-            "taxable_base": Decimal("100.00"),
+            "taxable_base": base,
             "category_id": SpendingCategory.from_registry("asesoria_fiscal").value,
             "classified_at": datetime(2025, 4, 6, 13, 0, tzinfo=UTC),
             "classified_by": "manual",

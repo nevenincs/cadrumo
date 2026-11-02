@@ -77,6 +77,7 @@ from ..user_profile.projections import profile_fact_index
 from .profile_derived_facts import (
     ProfileBindingResolutionError,
     declared_profile_selectors,
+    inject_derived_cash_election_fact,
     family_fact_context,
     inject_derived_anualidades_eligibility_facts,
     inject_derived_autonomic_deduccion_facts,
@@ -422,6 +423,7 @@ def _load_profile_facts(
     family_context = family_fact_context(snapshot, operation=operation)
     inject_derived_marriage_facts(fact_index, snapshot.filing_year)
     inject_ordinary_work_maritime_facts(fact_index)
+    inject_derived_cash_election_fact(fact_index, record, snapshot.filing_year, operation=operation)
     declared_selectors = declared_profile_selectors(snapshot.revision)
     inject_derived_anualidades_eligibility_facts(
         fact_index,

@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from datetime import date
 from decimal import Decimal
@@ -36,6 +36,7 @@ from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.iva.schema import InvoiceKind
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.renta.ledger_expenses import RentaDeductibleExpenseObservation
+from ...domain.transactions.enums import TransactionLifecycleState
 from ...domain.transactions.models import TransactionCatalogue
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
 from ..actividad_asset.history import ActivityAssetHistory
@@ -90,6 +91,7 @@ from .renta_gasto_ledger import (
 )
 from .renta_imputation import (
     ActivityImputationCriterion,
+    ImputationFilingHistory,
     accruing_invoices,
     declared_imputation_criteria,
     imputation_blocking_diagnostics,
@@ -189,12 +191,14 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         usage_ratio_profile_loader: UsageRatioProfileLoader,
         activity_asset_history_repository: ActivityAssetHistoryRepository,
+        imputation_filings: Callable[[CalculationSourceContext], ImputationFilingHistory] | None = None,
     ) -> None:
         """Initialize the resolver with its required catalogue read capabilities."""
         self._ports = ports
         self._prorrata_register_repository = prorrata_register_repository
         self._usage_ratio_profile_loader = usage_ratio_profile_loader
         self._activity_asset_history_repository = activity_asset_history_repository
+        self._imputation_filings = imputation_filings
 
     def _aggregate(
         self,
@@ -228,7 +232,10 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                     operation=operation,
                     ownership_share=dwelling_ownership_share(asset_history.revisions),
                     register_owned_transaction_ids=register_acquisition_transaction_ids(asset_history.revisions),
-                    criteria=declared_imputation_criteria(profile.record if profile is not None else None),
+                    criteria=declared_imputation_criteria(
+                        profile.record if profile is not None else None,
+                        self._imputation_filings(context) if self._imputation_filings is not None else None,
+                    ),
                 )
         except (InvoiceCatalogueReadPersistenceError, *STORAGE_DEGRADATION_ERRORS) as exc:
             return storage_degradation_resolution(
@@ -401,6 +408,7 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 period=aggregation.period,
                 invoices=self._ports.invoice_reader.load(),
                 transactions=self._ports.transaction_reader.load(),
+                filings=self._imputation_filings(context) if self._imputation_filings is not None else None,
             )
             + register_owned_acquisition_diagnostics(
                 register_owned,
@@ -483,14 +491,16 @@ def _expense_imputation_diagnostics(
     period: Period,
     invoices: InvoiceCatalogue,
     transactions: TransactionCatalogue,
+    filings: ImputationFilingHistory | None = None,
 ) -> tuple[CalculationSourceDiagnostic, ...]:
     """Withhold the expense boxes while a row or an unpaid received invoice cannot be placed.
 
     Under accrual a received invoice with no payment still accrues, but only a
-    ledger row carries the category and business share that decide its box, so
-    it stays unresolved rather than entering a box it was never classified for.
+    ledger row carries the category and business share that decide its box, so an
+    unpaid invoice, or the unpaid part of one, stays unresolved rather than entering
+    a box it was never classified for. A row for that part clears the finding.
     """
-    criteria = declared_imputation_criteria(context.profile.record if context.profile is not None else None)
+    criteria = declared_imputation_criteria(context.profile.record if context.profile is not None else None, filings)
     with source_context_operation(context):
         accruing = accruing_invoices(
             invoices.values(),
@@ -499,11 +509,21 @@ def _expense_imputation_diagnostics(
             start=date(period.filing_year, 1, 1),
             end=period.end_date,
         )
-    evidenced = {row.purchase_invoice_evidence_id for row in transactions.values()}
+    covered: dict[str, Decimal] = {}
+    for row in transactions.values():
+        if row.purchase_invoice_evidence_id is not None and row.lifecycle_state is TransactionLifecycleState.ACTIVE:
+            covered[row.purchase_invoice_evidence_id] = covered.get(
+                row.purchase_invoice_evidence_id, Decimal("0")
+            ) + (row.taxable_base or Decimal("0"))
     unpaid = tuple(
-        f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
+        (
+            f"accrual_unclassified: received invoice {invoice.invoice_number} has no ledger row"
+            if invoice.invoice_id not in covered
+            else f"accrual_part_paid: received invoice {invoice.invoice_number} accrues {invoice.base_total} "
+            f"but its ledger rows state {covered[invoice.invoice_id]}; add a row for the rest"
+        )
         for invoice in accruing
-        if invoice.invoice_id not in evidenced
+        if covered.get(invoice.invoice_id, Decimal("-1")) < invoice.base_total
         and criteria.usable(period.filing_year) is ActivityImputationCriterion.DEVENGO
     )
     return imputation_blocking_diagnostics(
@@ -613,6 +633,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         prorrata_register_repository: ProrrataRegisterRepositoryProtocol,
         usage_ratio_profile_loader: UsageRatioProfileLoader,
         activity_asset_history_repository: ActivityAssetHistoryRepository,
+        imputation_filings: Callable[[CalculationSourceContext], ImputationFilingHistory] | None = None,
     ) -> None:
         """Bind repositories used to resolve Renta expense sources."""
         self._transaction_repository = transaction_repository
@@ -620,6 +641,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
         self._prorrata_register_repository = prorrata_register_repository
         self._usage_ratio_profile_loader = usage_ratio_profile_loader
         self._activity_asset_history_repository = activity_asset_history_repository
+        self._imputation_filings = imputation_filings
 
     def _possibly_durable_findings(
         self,
@@ -676,7 +698,10 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                     operation=operation,
                     ownership_share=dwelling_ownership_share(asset_history.revisions),
                     register_owned_transaction_ids=register_acquisition_transaction_ids(asset_history.revisions),
-                    criteria=declared_imputation_criteria(profile_record),
+                    criteria=declared_imputation_criteria(
+                        profile_record,
+                        self._imputation_filings(context) if self._imputation_filings is not None else None,
+                    ),
                     invoices=invoices,
                 )
                 classification = classify_ledger_expenses_against_asset_register(
@@ -780,6 +805,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                 period=aggregation_period,
                 invoices=invoices,
                 transactions=self._transaction_repository.load(),
+                filings=self._imputation_filings(context) if self._imputation_filings is not None else None,
             )
             + register_owned_acquisition_diagnostics(
                 register_owned,

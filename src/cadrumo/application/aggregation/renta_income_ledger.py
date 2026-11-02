@@ -38,6 +38,7 @@ from ...core.casilla_id import CasillaId
 from ...core.i18n.translatable import Translatable as tr
 from ...core.identity.transaction_ids import TransactionId
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
+from ...core.money.rounding import round_to_cents
 from ...core.period import Period, PeriodKind
 from ...core.prose_elision import IssueDetail
 from ...core.tipos_actividad import TipoActividad
@@ -108,9 +109,12 @@ class RentaIncomeLedgerAggregationIssueReason(StrEnum):
 #: Shortening the sentence is strictly the lesser loss.
 
 
+_CAPITAL_SUBSIDY_CONCEPT = "subvencion_capital"
+
 _DERIVED_WITHHOLDING_MARKERS: frozenset[LedgerWithholdingDerivation] = frozenset(
     {
         LedgerWithholdingDerivation.DECLARED_ON_LINKED_INVOICE,
+        LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT,
         LedgerWithholdingDerivation.INFERRED_FROM_DECLARED_CUOTA,
         LedgerWithholdingDerivation.INFERRED_FROM_CATEGORY_ZERO_CUOTA,
     },
@@ -271,10 +275,13 @@ class UnadmittedActivityIncome(BaseModel):
 
 
 class AccruedUnpaidIncome(BaseModel):
-    """An issued invoice accruing in the window with no receipt yet: income under accrual.
+    """The part of an issued invoice accruing in the window that no receipt has settled.
 
-    It carries no withholding: the right to deduct one arises only on payment
-    (RIRPF art. 78.1; TEAC 00/03187/2011).
+    Income under accrual whether or not it is collected, so a part-paid invoice
+    counts wholly in its accrual year: its receipts carry their share and this the
+    rest. It carries no withholding: the right to deduct one arises only on payment
+    (RIRPF art. 78.1; TEAC 00/03187/2011), so what the invoice states on the unpaid
+    part is held in ``withholding_unpaid`` and reported.
     """
 
     model_config = _STRICT_FROZEN
@@ -282,6 +289,7 @@ class AccruedUnpaidIncome(BaseModel):
     invoice_id: str
     target_casilla_id: CasillaId
     base: Decimal
+    withholding_unpaid: Decimal = Decimal("0")
 
     @property
     def transaction_id(self) -> str:
@@ -346,11 +354,11 @@ def _accrued_unpaid_income(
     target_casilla_id: CasillaId,
     criteria: ImputationCriteria,
 ) -> tuple[AccruedUnpaidIncome, ...]:
-    """Return the issued invoices accruing in the window that no active ledger row collects."""
+    """Return what the issued invoices accruing in the window leave unsettled by their active receipts."""
     if criteria.usable(window_end.year) is not ActivityImputationCriterion.DEVENGO:
         return ()
     active = {
-        transaction.transaction_id
+        transaction.transaction_id: transaction
         for transaction in transactions.values()
         if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
     }
@@ -358,19 +366,158 @@ def _accrued_unpaid_income(
     for invoice in invoices.values():
         accrual = invoice_accrual_date(invoice)
         if (
-            invoice.kind is InvoiceKind.ISSUED
-            and invoice.bucket_id == bucket_id
-            and invoice.currency == "EUR"
-            and accrual is not None
-            and window_start <= accrual <= window_end
-            and not active.intersection(invoice.linked_transaction_ids)
+            invoice.kind is not InvoiceKind.ISSUED
+            or invoice.bucket_id != bucket_id
+            or invoice.currency != "EUR"
+            or accrual is None
+            or not window_start <= accrual <= window_end
         ):
+            continue
+        receipts = [active[row] for row in invoice.linked_transaction_ids if row in active]
+        shares = [_renta_income_evidence.part_payment_share(invoice, receipt) for receipt in receipts]
+        if None in shares:
+            continue
+        retencion = invoice.retention_amount or Decimal("0")
+        base_left = invoice.base_total - sum(
+            (round_to_cents(invoice.base_total * share) for share in shares if share is not None), Decimal("0")
+        )
+        retencion_left = retencion - sum(
+            (round_to_cents(retencion * share) for share in shares if share is not None), Decimal("0")
+        )
+        if base_left > 0:
             found.append(
                 AccruedUnpaidIncome(
-                    invoice_id=invoice.invoice_id, target_casilla_id=target_casilla_id, base=invoice.base_total
+                    invoice_id=invoice.invoice_id,
+                    target_casilla_id=target_casilla_id,
+                    base=base_left,
+                    withholding_unpaid=max(retencion_left, Decimal("0")),
                 )
             )
     return tuple(found)
+
+
+def _overpaid_invoice_issues(
+    transactions: TransactionCatalogue, invoices: InvoiceCatalogue, *, bucket_id: str
+) -> tuple[RentaIncomeLedgerAggregationIssue, ...]:
+    """Refuse to place receipts that together exceed what their invoice leaves to be paid."""
+    collected: dict[str, list[Transaction]] = {}
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is TransactionLifecycleState.ACTIVE and transaction.invoice_id is not None:
+            collected.setdefault(transaction.invoice_id, []).append(transaction)
+    issues: list[RentaIncomeLedgerAggregationIssue] = []
+    for invoice_id, receipts in collected.items():
+        invoice = invoices.get(invoice_id)
+        if invoice is None or invoice.kind is not InvoiceKind.ISSUED or invoice.bucket_id != bucket_id:
+            continue
+        if len(receipts) < 2 or sum((abs(row.raw.amount) for row in receipts), Decimal("0")) <= (
+            _renta_income_evidence.invoice_net_cash(invoice)
+        ):
+            continue
+        issues.extend(
+            RentaIncomeLedgerAggregationIssue(
+                transaction_id=row.transaction_id,
+                reason=RentaIncomeLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
+                detail=f"{ImputationUnresolved.OVERPAID_INVOICE.value}: receipts exceed invoice {invoice.invoice_number}",
+            )
+            for row in receipts
+        )
+    return tuple(issues)
+
+
+def accrued_withholding_unpaid_diagnostics(
+    accrued: Sequence[AccruedUnpaidIncome], *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report the withholding imputed to the window that stays undeductible until its income is paid."""
+    unpaid = [row for row in accrued if row.withholding_unpaid > 0]
+    if not unpaid:
+        return ()
+    total = sum((row.withholding_unpaid for row in unpaid), Decimal("0"))
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"{len(unpaid)} accrued invoice(s) state {total} EUR of retencion on income not yet collected. "
+                "It belongs to this ejercicio (RIRPF art. 79) but is not deductible until paid (art. 78.1; "
+                "TEAC 00/03187/2011), so it is left out of the credit."
+            ),
+            source_ref="accrued_withholding_unpaid",
+        ),
+    )
+
+
+def part_payment_diagnostics(
+    observations: Sequence[RentaIncomeObservation], *, resolver_id: str
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Report the part payments whose base and retencion are a pro rata share, not a stated figure."""
+    allocated = [
+        row
+        for row in observations
+        if row.withheld_derivation is LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT
+    ]
+    if not allocated:
+        return ()
+    total = sum((row.withheld_amount for row in allocated), Decimal("0"))
+    return (
+        CalculationSourceDiagnostic(
+            reason="source_issue",
+            source_kind="ledger_renta_income_aggregation",
+            resolver_id=resolver_id,
+            message=(
+                f"{len(allocated)} part payment(s) carry {total} EUR of retencion shared pro rata from their "
+                "invoices (RIRPF arts. 78.1 and 95.1). It stays out of the credit until the payer states it."
+            ),
+            source_ref="part_payment_allocated",
+        ),
+    )
+
+
+def rectification_diagnostics(
+    transactions: TransactionCatalogue,
+    invoices: InvoiceCatalogue,
+    *,
+    bucket_id: str,
+    year: int,
+    criteria: ImputationCriteria,
+    resolver_id: str,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Name each retencion paid after the return of its accrual year was filed.
+
+    The withholding stays in the year its income accrued (RIRPF art. 79) and the right
+    to deduct it arises on payment, so TEAC 00/03187/2011 recovers it by rectifying that
+    year (LGT art. 120.3), never by crediting it in the year of payment.
+    """
+    findings: list[CalculationSourceDiagnostic] = []
+    for transaction in transactions.values():
+        if transaction.lifecycle_state is not TransactionLifecycleState.ACTIVE or transaction.invoice_id is None:
+            continue
+        invoice = invoices.get(transaction.invoice_id)
+        if invoice is None or invoice.bucket_id != bucket_id or not invoice.retention_amount:
+            continue
+        accrual = linked_accrual_date(invoice, kind=InvoiceKind.ISSUED)
+        if accrual is None or criteria.usable(accrual.year) is not ActivityImputationCriterion.DEVENGO:
+            continue
+        cash = transaction.raw.value_date or transaction.raw.booked_date
+        filed_on = criteria.filings.filed_on.get(accrual.year)
+        if filed_on is None or cash <= filed_on or year not in {accrual.year, cash.year}:
+            continue
+        share = _renta_income_evidence.part_payment_share(invoice, transaction)
+        amount = invoice.retention_amount if share is None else round_to_cents(invoice.retention_amount * share)
+        findings.append(
+            CalculationSourceDiagnostic(
+                reason="source_issue",
+                source_kind="ledger_renta_income_aggregation",
+                resolver_id=resolver_id,
+                source_ref=f"invoice:{invoice.invoice_id}",
+                message=(
+                    f"Invoice {invoice.invoice_number}: {amount} EUR of retencion was paid on {cash}, after the "
+                    f"return of {accrual.year} was filed on {filed_on}. Claim it by an autoliquidacion rectificativa "
+                    f"of {accrual.year} (TEAC 00/03187/2011; LGT art. 120.3); it is never credited in {cash.year}."
+                ),
+            )
+        )
+    return tuple(findings)
 
 
 def _load_income_invoices(
@@ -528,7 +675,7 @@ def aggregate_renta_income_ledger(
         modelo=modelo,
         period=window.period,
         observations=tuple(observations),
-        issues=tuple(issues),
+        issues=(*issues, *(() if criteria is None else _overpaid_invoice_issues(transactions, resolved_invoices, bucket_id=bucket_id))),
         casilla_aggregation=casilla_aggregation,
         accrued_unpaid=()
         if criteria is None
@@ -677,7 +824,7 @@ def aggregate_renta_m100_income_ledger(
         modelo=modelo,
         period=period,
         observations=tuple(observations),
-        issues=tuple(issues),
+        issues=(*issues, *(() if criteria is None else _overpaid_invoice_issues(transactions, resolved_invoices, bucket_id=bucket_id))),
         casilla_aggregation=casilla_aggregation,
         accrued_unpaid=()
         if criteria is None
@@ -1044,6 +1191,7 @@ def _classify_income_transaction(
         gross_amount=gross_amount,
         filing_date=filing_date,
         target_casilla_id=target_casilla_id,
+        allocate_part_payments=criteria is not None,
     )
 
 
@@ -1144,12 +1292,17 @@ def _imputed_income_date_or_issue(
         accrual is not None and cumulative_start <= accrual <= cumulative_end
     )
     imputed = impute_row(cash, accrual, criteria)
-    # A receipt part-paying an invoice cannot stand for its accrued base.
-    if (
+    # A capital subsidy follows its asset's amortization under either criterion, and no
+    # ledger row carries a schedule: AEAT Manual Renta, ch. 6, citing STS 398/2022.
+    if str(transaction.concepto_ingreso) == _CAPITAL_SUBSIDY_CONCEPT:
+        imputed = ImputationUnresolved.CAPITAL_SUBSIDY_SCHEDULE_UNKNOWN
+    # A shared receipt of an invoice whose figures cannot be shared out stands for nothing known.
+    elif (
         invoice is not None
         and accrual is not None
         and len(invoice.linked_transaction_ids) != 1
         and criteria.usable(accrual.year) is ActivityImputationCriterion.DEVENGO
+        and _renta_income_evidence.part_payment_share(invoice, transaction) is None
     ):
         imputed = ImputationUnresolved.ACCRUAL_UNKNOWN
     if isinstance(imputed, ImputationUnresolved):
@@ -1172,6 +1325,7 @@ def _income_observation(
     gross_amount: Decimal,
     filing_date: date,
     target_casilla_id: CasillaId,
+    allocate_part_payments: bool = False,
 ) -> RentaIncomeObservation:
     """Enrich an eligible income row with invoice evidence and withholding."""
     transaction_id = transaction.transaction_id
@@ -1182,6 +1336,7 @@ def _income_observation(
         invoices=invoices,
         bucket_id=bucket_id,
         transaction=transaction,
+        allocate_part_payments=allocate_part_payments,
     )
 
     # The linked invoice's own base takes precedence over the transaction's tax

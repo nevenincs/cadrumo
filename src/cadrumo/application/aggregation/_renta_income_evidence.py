@@ -20,6 +20,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.money.rounding import round_to_cents
 from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.decomposition import decompose_invoice
+from ...domain.invoices.models import Invoice
 from ...domain.iva.components import category_cuota_is_zero_by_law
 from ...domain.iva.schema import InvoiceKind
 from ...domain.transactions.irpf_categories import has_activity_irpf_category
@@ -70,6 +71,34 @@ class _SalesInvoiceEvidencePayload(BaseModel):
     taxable_base: Decimal | None = None
     iva_amount: Decimal | None = None
     retencion_amount: Decimal | None = None
+    allocated_to_part_payment: bool = False
+
+
+def invoice_net_cash(invoice: Invoice) -> Decimal:
+    """Return what the customer owes the bank account: the total less the retención it remits itself."""
+    return invoice.grand_total - (invoice.retention_amount or Decimal("0"))
+
+
+def part_payment_share(invoice: Invoice, transaction: Transaction) -> Decimal | None:
+    """Return the share of ``invoice`` this receipt settles, or ``None`` when it is no part payment.
+
+    The share is cash over what the invoice leaves to be paid, base + IVA - retención.
+    A receipt settling the whole invoice alone, or exceeding it, is no part payment,
+    and foreign-currency or ungrounded figures cannot be shared out.
+    """
+    net = invoice_net_cash(invoice)
+    cash = abs(transaction.raw.amount)
+    if (
+        invoice.currency != "EUR"
+        or transaction.raw.currency != "EUR"
+        or transaction.transaction_id not in invoice.linked_transaction_ids
+        or net <= Decimal("0")
+        or cash > net
+        or (cash == net and len(invoice.linked_transaction_ids) == 1)
+        or not decompose_invoice(invoice).is_grounded
+    ):
+        return None
+    return cash / net
 
 
 def sales_invoice_evidence_payload(
@@ -77,6 +106,7 @@ def sales_invoice_evidence_payload(
     invoices: InvoiceCatalogue,
     bucket_id: str,
     transaction: Transaction,
+    allocate_part_payments: bool = False,
 ) -> tuple[_SalesInvoiceEvidencePayload, SalesInvoiceEvidenceRefusal | None]:
     """Return the figures a linked sales invoice contributes, or why it is refused.
 
@@ -110,6 +140,17 @@ def sales_invoice_evidence_payload(
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.UNSUPPORTED_KIND
     if transaction_id not in invoice.linked_transaction_ids:
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.LINK_NOT_RECIPROCAL
+    share = part_payment_share(invoice, transaction) if allocate_part_payments else None
+    if share is not None:
+        return (
+            _SalesInvoiceEvidencePayload(
+                taxable_base=round_to_cents(invoice.base_total * share),
+                iva_amount=round_to_cents(invoice.iva_total * share),
+                retencion_amount=round_to_cents((invoice.retention_amount or Decimal("0")) * share),
+                allocated_to_part_payment=True,
+            ),
+            None,
+        )
     if len(invoice.linked_transaction_ids) != 1:
         return _SalesInvoiceEvidencePayload(), SalesInvoiceEvidenceRefusal.PARTIAL_OR_MULTI_TRANSACTION
     expected_cash = invoice.grand_total - (invoice.retention_amount or Decimal("0"))
@@ -181,6 +222,8 @@ def income_withheld_amount(
     """
     if not has_activity_irpf_category(transaction.irpf_category, direction=transaction.direction):
         return _WithheldInference(Decimal("0"), LedgerWithholdingDerivation.NOT_APPLICABLE)
+    if evidence is not None and evidence.allocated_to_part_payment and evidence.retencion_amount:
+        return _WithheldInference(evidence.retencion_amount, LedgerWithholdingDerivation.ALLOCATED_ON_PART_PAYMENT)
     # Declared-first: a retención the linked invoice states is the document's
     # figure; the inference below reconstructs one from what reached the bank.
     if evidence is not None and evidence.retencion_amount is not None and evidence.retencion_amount > Decimal("0"):

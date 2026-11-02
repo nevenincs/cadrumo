@@ -684,6 +684,14 @@ class LedgerWithholdingDerivation(StrEnum):
     below it, because a declared figure beats a derived one.
     """
 
+    ALLOCATED_ON_PART_PAYMENT = "allocated_on_part_payment"
+    """The linked invoice's retención, shared to this receipt by the part it settles.
+
+    Each payment is its own withholding event (RIRPF arts. 78.1 and 95.1), but
+    no source read fixes how a part payment splits between IVA and base, so the
+    pro rata share stays out of the credit and is reported until the payer states it.
+    """
+
     INFERRED_FROM_DECLARED_CUOTA = "inferred_from_declared_cuota"
     """Derived as invoice gross minus cash, with the cuota read from the row."""
 

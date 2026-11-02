@@ -943,6 +943,18 @@ legal_refs = [
 ]
 
 [[sections.fields]]
+key = "activity_income_cash_criterion_elected"
+type = "boolean"
+required = false
+sensitivity = "financial"
+effective_dated = false
+description = "Whether the return states the cobros_y_pagos election (Modelo 100 casilla 0169), derived for the ejercicio from the dated activity_income_imputation_criterion and only under estimacion directa. Never entered: absent means the criterion is undeclared or the block does not apply."
+model_selectors = ["irpf.activity_income_cash_criterion_elected"]
+legal_refs = [
+    "rd-439-2007:art-7",
+]
+
+[[sections.fields]]
 key = "codigo_comercio_accounting"
 type = "boolean"
 required = false

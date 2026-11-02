@@ -677,7 +677,7 @@ fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0169" }
-fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"] }
+fields = { source_refs = ["aeat-dr-100-2022-dictionary", "aeat-dr-100-2022-input-dictionary", "aeat-dr-100-2022-xsd"], input_kind = "bound", binding = "renta-profile-activity-cash-criterion-0169" }
 
 [[revisions."2022".casilla_overrides]]
 selector = { revision = "2021", id = "0170" }
