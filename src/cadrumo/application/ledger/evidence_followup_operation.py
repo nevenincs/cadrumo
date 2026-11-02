@@ -15,7 +15,6 @@ from ...core.async_cleanup import await_cancellation_complete
 from ...core.bucket_pointer import require_active_bucket_id
 from ...core.confirmation_gate import ConfirmationBlockReason, ReviewAdvisoryKind
 from ...core.draft_discrepancy import DraftDiscrepancyKind
-from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect, profile_operation_subject
 from ...core.time.clock import now
 from ...domain.attachments.errors import AttachmentNotFoundError, AttachmentValidationError
@@ -24,6 +23,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.iva.regime_legend import resolve_regime_legends
 from ..operations.models import OperationRequest
 from ..operations.owner import OperationExecutorContext
+from ..operations.result_size import refuse_oversized_result
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .attachment_review import get_attachment_review_item, list_attachment_review_queue
 from .confirmation_gate import ConfirmationBlocker, confirmation_blockers
@@ -102,8 +102,7 @@ def _require_worker_identity[PayloadT: BaseModel](
 
 def _check_result_size(result: BaseModel) -> None:
     """Refuse an oversized complete result instead of silently omitting rows."""
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _MAX_RESULT_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, _MAX_RESULT_BYTES)
 
 
 async def _capture_result[ProjectionT: BaseModel](
