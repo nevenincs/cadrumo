@@ -3693,6 +3693,7 @@ desktop:
         accounts: Own accounts
         capital: Bienes de inversión
         prorrata: Prorrata
+        withholding: Withholding
       areas: Registers areas
     retry: Retry
     reveal:
@@ -4049,6 +4050,87 @@ desktop:
       to_match: To match
     window:
       partial: Grouping and totals wait for the whole window.
+    withholding:
+      absence:
+        not_listed: Statements made earlier cannot be listed yet. Those you make or
+          withdraw in this window are shown here.
+        title: No withholding
+        what: State that no payer withheld on an income class this year.
+      action:
+        attest: State no withholding
+        record: Record certificate
+      amount:
+        importe_integro_dinerario: Gross cash amount
+        ingreso_a_cuenta: Payment on account
+        ingreso_a_cuenta_repercutido: Payment on account passed on
+        retencion: Withholding
+        valoracion_especie: Value in kind
+      attested_on: Stated on {date}
+      changes: Changes to the {ejercicio} certificates
+      column:
+        class: Income class
+        document: Document
+        especie: In kind
+        ingreso: On account
+        integro: Gross cash
+        note: Note
+        origin: Source
+        pago: Credit
+        payer: Payer
+        repercutido: Passed on
+        retencion: Withholding
+        state: State
+      correct_hint: To correct a certificate, remove it and record it again.
+      document: Certificate document (optional)
+      document_hint: A document stored under Documents. Its fingerprint is recorded
+        as given and is not yet checked against the stored document.
+      document_none: No documents stored yet
+      document_not: No document
+      ejercicio: Year
+      empty: No certificates recorded for {ejercicio}.
+      form:
+        attest: State no withholding for {ejercicio}
+        record: Record a certificate for {ejercicio}
+      income_class: Income class
+      note: Note
+      note_hint: Why this class had no withholding.
+      origin:
+        operator_declaration: Your own statement
+        payer_certificate: Payer certificate
+      origin_label: Source of the figures
+      payer_legal_name: Payer name (optional)
+      payer_ref: Payer {ref}
+      payer_tax_id: Payer tax ID
+      payer_tax_id_hint: Sent with the record to identify the payer. It is not shown
+        again.
+      refusal:
+        already_attested: This class already has a statement.
+        certificate_fingerprint_required: A payer certificate needs its document.
+        ejercicio_unsupported: This year is not supported.
+        family_not_declared: This income class is not declared for this year.
+        identity_mismatch: The payer details do not match the record stored under
+          this reference.
+        not_attested: This class has no statement to withdraw.
+        not_found: That certificate is no longer stored.
+        own_tax_id: The payer's tax ID is your own.
+        records_present: Certificates are recorded for this class, so it cannot be
+          stated as having none.
+        repercutido_exceeds_ingreso_a_cuenta: The payment on account passed on cannot
+          exceed the payment on account.
+        stale_revision: The record changed since it was listed. Read it again and
+          retry.
+        taxpayer_tax_id_unknown: Your own tax ID is not in your profile yet.
+        validation: Some of the figures or fields are not accepted.
+      remove: Remove
+      remove_confirm: Remove certificate
+      remove_of: Remove the certificate of {payer}
+      remove_what: Remove the certificate of {payer} under {class}?
+      title: Withholding certificates
+      what: Record the withholding each payer took from your income, as their certificate
+        states it, or state that an income class has none.
+      withdraw: Withdraw
+      withdraw_of: Withdraw the statement for {class}
+      withdrawn_on: Withdrawn on {date}
   logs:
     all_loggers: All loggers
     all_origins: All origins

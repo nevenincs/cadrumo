@@ -3722,6 +3722,7 @@ desktop:
         accounts: Saját számlák
         capital: Beruházási javak
         prorrata: Prorrata
+        withholding: Levonások
       areas: A nyilvántartások részei
     retry: Újra
     reveal:
@@ -4083,6 +4084,88 @@ desktop:
       to_match: Párosítandó
     window:
       partial: A csoportosítás és az összegek a teljes beolvasásra várnak.
+    withholding:
+      absence:
+        not_listed: A korábbi jelzések még nem listázhatók. Itt azok jelennek meg,
+          amelyeket ebben az ablakban tettél vagy vontál vissza.
+        title: Nincs levonás
+        what: Jelezd, hogy ebben az évben egy jövedelemosztályban egyetlen kifizető
+          sem vont le.
+      action:
+        attest: Nincs levonás jelzése
+        record: Igazolás rögzítése
+      amount:
+        importe_integro_dinerario: Bruttó pénzbeli összeg
+        ingreso_a_cuenta: Előlegbefizetés
+        ingreso_a_cuenta_repercutido: Áthárított előlegbefizetés
+        retencion: Levonás
+        valoracion_especie: Természetbeni érték
+      attested_on: 'Jelezve: {date}'
+      changes: A(z) {ejercicio} évi igazolások módosításai
+      column:
+        class: Jövedelemosztály
+        document: Dokumentum
+        especie: Természetbeni
+        ingreso: Előleg
+        integro: Bruttó pénzbeli
+        note: Megjegyzés
+        origin: Forrás
+        pago: Jóváírás
+        payer: Kifizető
+        repercutido: Áthárított
+        retencion: Levonás
+        state: Állapot
+      correct_hint: Egy igazolás javításához távolítsd el, és rögzítsd újra.
+      document: Az igazolás dokumentuma (nem kötelező)
+      document_hint: A Dokumentumokban tárolt dokumentum. Az ujjlenyomatát úgy rögzítjük,
+        ahogy megadod, és a tárolt dokumentummal még nem vetjük össze.
+      document_none: Még nincs tárolt dokumentum
+      document_not: Nincs dokumentum
+      ejercicio: Év
+      empty: Nincs rögzített igazolás a(z) {ejercicio} évre.
+      form:
+        attest: Nincs levonás jelzése a(z) {ejercicio} évre
+        record: Igazolás rögzítése a(z) {ejercicio} évre
+      income_class: Jövedelemosztály
+      note: Megjegyzés
+      note_hint: Miért nem volt levonás ebben az osztályban.
+      origin:
+        operator_declaration: Saját nyilatkozatod
+        payer_certificate: A kifizető igazolása
+      origin_label: A számok forrása
+      payer_legal_name: A kifizető neve (nem kötelező)
+      payer_ref: '{ref} kifizető'
+      payer_tax_id: A kifizető adóazonosítója
+      payer_tax_id_hint: A rögzítéssel együtt kerül elküldésre a kifizető azonosításához.
+        Nem jelenik meg újra.
+      refusal:
+        already_attested: Ehhez az osztályhoz már van jelzés.
+        certificate_fingerprint_required: A kifizetői igazoláshoz kell a dokumentuma.
+        ejercicio_unsupported: Ez az év nem támogatott.
+        family_not_declared: Ez a jövedelemosztály nincs bejelentve erre az évre.
+        identity_mismatch: A kifizető adatai nem egyeznek az ezen a hivatkozáson tárolt
+          rekorddal.
+        not_attested: Ehhez az osztályhoz nincs visszavonható jelzés.
+        not_found: Ez az igazolás már nincs tárolva.
+        own_tax_id: A kifizető adóazonosítója a tiéd.
+        records_present: Ebben az osztályban rögzítettél igazolásokat, ezért nem jelezhető,
+          hogy nincs egy sem.
+        repercutido_exceeds_ingreso_a_cuenta: Az áthárított előlegbefizetés nem haladhatja
+          meg az előlegbefizetést.
+        stale_revision: A rekord megváltozott, mióta listáztad. Olvasd be újra, és
+          próbáld meg még egyszer.
+        taxpayer_tax_id_unknown: A saját adóazonosítód még nincs a profilodban.
+        validation: Néhány szám vagy mező nem fogadható el.
+      remove: Eltávolítás
+      remove_confirm: Igazolás eltávolítása
+      remove_of: '{payer} igazolásának eltávolítása'
+      remove_what: Eltávolítod {payer} igazolását ({class})?
+      title: Levonási igazolások
+      what: Rögzítsd, mennyit vont le az egyes kifizető a jövedelmedből, ahogyan az
+        igazolása mutatja, vagy jelezd, hogy egy jövedelemosztályban nem volt levonás.
+      withdraw: Visszavonás
+      withdraw_of: A(z) {class} jelzésének visszavonása
+      withdrawn_on: 'Visszavonva: {date}'
   logs:
     all_loggers: Minden naplózó
     all_origins: Minden forrás

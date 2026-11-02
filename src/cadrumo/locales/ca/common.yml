@@ -3744,6 +3744,7 @@ desktop:
         accounts: Comptes propis
         capital: Béns d'inversió
         prorrata: Prorrata
+        withholding: Retencions
       areas: Apartats de registres
     retry: Torna-ho a provar
     reveal:
@@ -4109,6 +4110,89 @@ desktop:
       to_match: Per conciliar
     window:
       partial: Els grups i els totals esperen que es llegeixi tot.
+    withholding:
+      absence:
+        not_listed: Les indicacions anteriors encara no es poden llistar. Aquí es
+          mostren les que facis o retiris en aquesta finestra.
+        title: Sense retencions
+        what: Indica que cap pagador no va retenir en una classe de renda aquest any.
+      action:
+        attest: Indica sense retencions
+        record: Anota un certificat
+      amount:
+        importe_integro_dinerario: Import íntegre dinerari
+        ingreso_a_cuenta: Ingrés a compte
+        ingreso_a_cuenta_repercutido: Ingrés a compte repercutit
+        retencion: Retenció
+        valoracion_especie: Valoració en espècie
+      attested_on: Indicat el {date}
+      changes: Canvis als certificats de {ejercicio}
+      column:
+        class: Classe de renda
+        document: Document
+        especie: En espècie
+        ingreso: A compte
+        integro: Íntegre dinerari
+        note: Nota
+        origin: Origen
+        pago: Crèdit
+        payer: Pagador
+        repercutido: Repercutit
+        retencion: Retenció
+        state: Estat
+      correct_hint: Per corregir un certificat, treu-lo i anota'l de nou.
+      document: Document del certificat (opcional)
+      document_hint: Un document desat a Documents. La seva empremta s'anota tal com
+        la dónes i encara no es comprova amb el document desat.
+      document_none: Encara no hi ha documents desats
+      document_not: Sense document
+      ejercicio: Any
+      empty: No hi ha cap certificat anotat per a {ejercicio}.
+      form:
+        attest: Indica sense retencions a {ejercicio}
+        record: Anota un certificat de {ejercicio}
+      income_class: Classe de renda
+      note: Nota
+      note_hint: Per què aquesta classe no va tenir retencions.
+      origin:
+        operator_declaration: La teva pròpia declaració
+        payer_certificate: Certificat del pagador
+      origin_label: Origen de les xifres
+      payer_legal_name: Nom del pagador (opcional)
+      payer_ref: Pagador {ref}
+      payer_tax_id: NIF del pagador
+      payer_tax_id_hint: S'envia amb el registre per identificar el pagador. No es
+        torna a mostrar.
+      refusal:
+        already_attested: Aquesta classe ja té una indicació.
+        certificate_fingerprint_required: El certificat d'un pagador necessita el
+          seu document.
+        ejercicio_unsupported: Aquest any no és compatible.
+        family_not_declared: Aquesta classe de renda no està declarada per a aquest
+          any.
+        identity_mismatch: Les dades del pagador no coincideixen amb el registre desat
+          amb aquesta referència.
+        not_attested: Aquesta classe no té cap indicació per retirar.
+        not_found: Aquest certificat ja no està desat.
+        own_tax_id: El NIF del pagador és el teu.
+        records_present: Hi ha certificats anotats en aquesta classe, de manera que
+          no es pot indicar que no en té cap.
+        repercutido_exceeds_ingreso_a_cuenta: L'ingrés a compte repercutit no pot
+          superar l'ingrés a compte.
+        stale_revision: El registre ha canviat des que el vas llistar. Torna'l a llegir
+          i prova-ho de nou.
+        taxpayer_tax_id_unknown: El teu propi NIF encara no és al teu perfil.
+        validation: Algunes xifres o camps no s'admeten.
+      remove: Treu
+      remove_confirm: Treu el certificat
+      remove_of: Treu el certificat de {payer}
+      remove_what: Vols treure el certificat de {payer} a {class}?
+      title: Certificats de retencions
+      what: Anota les retencions que cada pagador et va practicar, tal com les indica
+        el seu certificat, o indica que una classe de renda no en té cap.
+      withdraw: Retira
+      withdraw_of: Retira la indicació de {class}
+      withdrawn_on: Retirat el {date}
   logs:
     all_loggers: Tots els registradors
     all_origins: Tots els orígens
