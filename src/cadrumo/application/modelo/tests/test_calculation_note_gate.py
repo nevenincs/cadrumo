@@ -10,11 +10,13 @@ blocking note passes.
 from __future__ import annotations
 
 from datetime import UTC, datetime
+from decimal import Decimal
 from typing import get_args
 
 import pytest
 
 from ....core.aggregation import BindingSourceKind
+from ....core.casilla_id import validated_casilla_id
 from ....core.config import override_settings
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
 from ....domain.modelos.calculation_revision import (
@@ -22,7 +24,13 @@ from ....domain.modelos.calculation_revision import (
     CalculationRevisionState,
     derive_calculation_revision_id,
 )
-from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from ....domain.modelos.calculation_revision_sources import DISAGREEMENT_REASONS, CalculationSourceIssue
+from ....domain.modelos.source_disagreement import (
+    DisagreementDecimalValue,
+    SourceDisagreementEntry,
+    SourceDisagreementFact,
+    SourceDisagreementRole,
+)
 from ..calculation_note_gate import (
     ModeloCalculationBlockedError,
     blocking_calculation_issues,
@@ -55,7 +63,7 @@ def _revision(*issues: CalculationSourceIssue) -> CalculationRevision:
             source_provenance=(),
         ),
         work_unit_id=_WORK_UNIT,
-        registry_snapshot_ref=RegistrySnapshotRef(modelo="130", revision_id="2026", modelo_year=2026, period="1T"),
+        registry_snapshot_ref=_SNAPSHOT_REF,
         state=CalculationRevisionState.BORRADOR,
         casilla_values={},
         observations=(),
@@ -67,9 +75,48 @@ def _revision(*issues: CalculationSourceIssue) -> CalculationRevision:
     )
 
 
+_SNAPSHOT_REF = RegistrySnapshotRef(modelo="130", revision_id="2026", modelo_year=2026, period="1T")
+
+
+def _disagreement() -> SourceDisagreementFact:
+    """A carried value an operator's value replaced, on a box the filing reaches."""
+    casilla = validated_casilla_id("03")
+    return SourceDisagreementFact.of(
+        modelo=_SNAPSHOT_REF.modelo,
+        filing_year=_SNAPSHOT_REF.modelo_year,
+        period=_SNAPSHOT_REF.period,
+        work_unit_id=_WORK_UNIT,
+        registry_revision_id=_SNAPSHOT_REF.revision_id,
+        inputs_digest="d" * 64,
+        key=str(casilla),
+        value_channel="decimal",
+        reached_casillas=(casilla,),
+        sources=(
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.BACKEND,
+                source_family="ledger_renta_aggregation",
+                value=DisagreementDecimalValue.of(Decimal("120.00")),
+            ),
+            SourceDisagreementEntry(
+                role=SourceDisagreementRole.CALLER,
+                source_family="operator_input",
+                value=DisagreementDecimalValue.of(Decimal("125.00")),
+            ),
+        ),
+        selected_role=SourceDisagreementRole.CALLER,
+    )
+
+
 def _issue(reason: str, **fields: object) -> CalculationSourceIssue:
+    disagreement = {"disagreement": _disagreement()} if reason in DISAGREEMENT_REASONS else {}
     return CalculationSourceIssue.model_validate(
-        {"reason": reason, "binding_source": None, "message": f"the calculation noticed {reason}", **fields}
+        {
+            "reason": reason,
+            "binding_source": None,
+            "message": f"the calculation noticed {reason}",
+            **disagreement,
+            **fields,
+        }
     )
 
 

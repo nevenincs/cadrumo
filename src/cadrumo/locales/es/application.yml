@@ -1459,6 +1459,17 @@ application:
           periodo, así que Cadrumo no ha calculado ese impuesto.
         what_to_do: No tienes que hacer nada si no hiciste ese tipo de ventas. Si
           las hiciste, escribe tú los importes.
+      precedence_tier_divergence:
+        what: Dos fuentes tienen valores distintos para una cifra que llega a la casilla
+          {box}, y Cadrumo ha usado la que tiene prioridad.
+        what_to_do: Compara las fuentes y corrige la que esté mal; después vuelve
+          a calcular. La comprobación, la exportación y el registro esperan hasta
+          que coincidan.
+      precedence_tier_divergence_advisory:
+        what: Dos fuentes tienen valores distintos para una cifra de trabajo, y Cadrumo
+          ha usado la que tiene prioridad.
+        what_to_do: Compara las fuentes y corrige la que esté mal. Ninguna casilla
+          exportada depende de esta cifra.
       prior_payment_minoracion_not_captured:
         what: La minoración que viene de pagos anteriores no está anotada en la casilla
           {box}.

@@ -322,6 +322,8 @@ aggregation:
       owned_sources_blank: Source mesh owned sources must not contain blank source
         kinds.
       owned_sources_duplicate: Source mesh owned sources must be unique.
+      precedence_tier_out_of_order: Calculation sources were overlaid out of their
+        precedence order.
       proven_zero_value_not_zero: A source resolver stated a proven zero for a binding
         whose value is not zero.
       provenance_binding_source_mismatch: The source kind declared on the origin row
