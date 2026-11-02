@@ -13,9 +13,10 @@ related:
   - '[[2026-11-02-operation-refusal-words-adr]]'
   - '[[2026-11-01-export-parity-income-imputation-criterion-adr]]'
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
+  - '[[2026-11-02-desktop-renta-renta-family-canonical-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:8b21a68a05627ca3fb0287811d3e42a9b36894c34c9a467b006f2c3e602f0d94'
+body_hash: 'sha256:55e630a77d599dbd115c22d71affc34681ee99b7af2d7978ff4a6ea36a8e0b0b'
 ---
 
 # `desktop-renta` plan
@@ -49,18 +50,19 @@ The design prototypes are the Storybook stories under `Prototypes/Renta/` in `na
 The application serves every word, grouping and state the Renta workspace draws, so the window computes nothing.
 
 - [x] `P01.S01` - [Opus medium] serve a Renta outline from the registry: reviewed localized headings for the 75 technical sections, outline groups, page and section applicability, and section attention counts that roll up needs-you and could-not-calculate boxes; `src/cadrumo/application/modelo/work_form.py`.
-- [x] `P01.S02` - [Opus medium] serve descendant, ascendant and patrimonial row groups from the canonical renta_family profile objects (operator ruling 2026-11-02: renta_family.descendiente and ascendiente are canonical; repoint the bindings to them), with a generic generator rule for official repeating elements bounded by the design's repeat limits, row values filled by the profile resolver, and an unfilled group read as unknown rather than empty; `dev/registry/form_layout`.
+- [ ] `P01.S02` - [Opus medium] serve descendant, ascendant and patrimonial row groups from the canonical renta_family profile objects (operator ruling 2026-11-02: renta_family.descendiente and ascendiente are canonical; repoint the bindings to them), with a generic generator rule for official repeating elements bounded by the design's repeat limits, row values filled by the profile resolver, and an unfilled group read as unknown rather than empty; `dev/registry/form_layout`.
 - [x] `P01.S03` - [Sonnet high] mark the answers the calculation refuses without (1388 earlier negative base, 0168 normal direct estimation) as needing the filer instead of optional; `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P01.S04` - [Sonnet high] correct box 0700 so it is not served as an editable optional value left at zero without a formula; `src/cadrumo/_data/registry/aeat/modelos/100`.
 - [x] `P01.S05` - [Sonnet high] serve the correction surface on the withholding boxes 0596, 0597 and 0603 so the window can route them to the withholding register; `src/cadrumo/application/modelo/work_form.py`.
-- [x] `P01.S06` - [Sonnet high] serve words in every locale for modelo.project version 2 unresolved_bindings and unresolved_casillas and for compare_taxation recommendation reasons; `src/cadrumo/application/modelo/projection_operation.py`.
-- [x] `P01.S07` - [Opus medium] serve Modelo 100 settlement elections in the export offer: refund account, direct debit and the 60/40 split; `src/cadrumo/application/modelo/export.py`.
+- [ ] `P01.S06` - [Sonnet high] serve words in every locale for modelo.project version 2 unresolved_bindings and unresolved_casillas and for compare_taxation recommendation reasons; `src/cadrumo/application/modelo/projection_operation.py`.
+- [ ] `P01.S07` - [Opus medium] serve Modelo 100 settlement elections in the export offer: refund account, direct debit and the 60/40 split; `src/cadrumo/application/modelo/export.py`.
 - [x] `P01.S08` - [Opus medium] register a profile operation that reads and writes the dated imputation criterion per tax year with the wizard's served words; `src/cadrumo/application/wizard/imputation_election.py`.
 - [x] `P01.S09` - [Sonnet high] serve declaration_type choices and the descendant and ascendant arrays in user-profile.view; `src/cadrumo/application/user_profile`.
 - [x] `P01.S10` - [Opus medium] add a borrador-versus-calculation comparison read over the captured Borrador 100 and the saved calculation; `src/cadrumo/application/live`.
 - [ ] `P01.S21` - [Sonnet high] degrade a waived refund (0694 above zero) to an unresolved box 0700 with a served reason instead of refusing the whole 2025 calculation; `src/cadrumo/_data/registry/aeat/modelos/100/revisions/2025/formulas/0001-declarations.toml`.
 - [ ] `P01.S22` - [Opus medium] keep the Borrador 100 printed result values as comparison-only observations (never calculation inputs) and author the 2024 and 2025 borrador extraction profiles so the borrador comparison has values to compare; `src/cadrumo/adapters/inbound/borrador`.
-- [ ] `P01.S23` - [Sonnet high] reconcile the imputation-criterion ADR wording with the implemented rule that an unstated year stays undeclared and is never preselected as devengo; `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`.
+- [x] `P01.S23` - [Sonnet high] reconcile the imputation-criterion ADR wording with the implemented rule that an unstated year stays undeclared and is never preselected as devengo; `.vault/adr/2026-11-01-export-parity-income-imputation-criterion-adr.md`.
+- [ ] `P01.S24` - [Sonnet high] add a profile writer for renta_family.ascendiente rows mirroring user-profile.descendants, with the four-row cap from the 2025 design and NIF validation, and admit it in the desktop relay; `src/cadrumo/application/user_profile`.
 
 ### Phase `P02` - contracts and fixtures
 
