@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from typing import Annotated, Final, Literal
+from typing import Annotated, Final, Literal, get_args
 from uuid import UUID
 
 from pydantic import BaseModel, Field, model_validator
@@ -13,8 +13,7 @@ from ...domain.transactions.classification_effects import LifecycleAction
 LEDGER_STAGED_CHECK_OPERATION_DEFINITION_ID: Final = "ledger.staged.check"
 
 # A review can hold every movement a profile has loaded, and each row is short.
-_MAX_ROWS: Final = 50_000
-_MAX_DRAFTS: Final = 1_000
+_MAX_DRAFTS: Final = 1_024
 _MAX_CATEGORIES: Final = 256
 
 StageFieldName = Literal[
@@ -95,7 +94,7 @@ class LedgerStagedRow(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     transaction_id: _Key
-    cells: Annotated[tuple[LedgerStagedCell, ...], Field(max_length=24)] = ()
+    cells: Annotated[tuple[LedgerStagedCell, ...], Field(max_length=len(get_args(StageFieldName)))] = ()
     evidence_staged: bool = False
     m210_staged: bool = False
 
@@ -121,7 +120,7 @@ class LedgerStagedDraft(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     key: _Key
-    fields: Annotated[tuple[LedgerStagedDraftField, ...], Field(max_length=25)] = ()
+    fields: Annotated[tuple[LedgerStagedDraftField, ...], Field(max_length=len(get_args(DraftFieldName)))] = ()
 
 
 class LedgerStagedCheckRequest(BaseModel):
@@ -130,7 +129,7 @@ class LedgerStagedCheckRequest(BaseModel):
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
     profile_id: UUID
-    rows: Annotated[tuple[LedgerStagedRow, ...], Field(max_length=_MAX_ROWS)] = ()
+    rows: Annotated[tuple[LedgerStagedRow, ...], Field(max_length=50_000)] = ()
     drafts: Annotated[tuple[LedgerStagedDraft, ...], Field(max_length=_MAX_DRAFTS)] = ()
     categories: Annotated[tuple[_Key, ...], Field(max_length=_MAX_CATEGORIES)] = ()
 

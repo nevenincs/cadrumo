@@ -33,8 +33,6 @@ from .transaction_repository import transaction_catalogue_repository
 
 LEDGER_RULE_TRIAL_OPERATION_DEFINITION_ID: Final = "ledger.rule.trial"
 
-_MAX_TRANSACTIONS: Final = 50_000
-
 RuleTrialOutcome = Literal["matched", "empty_pattern", "invalid_pattern", "too_long", "overrun"]
 
 
@@ -45,7 +43,7 @@ class LedgerRuleTrialRequest(BaseModel):
 
     profile_id: UUID
     description_pattern: str
-    transaction_ids: Annotated[tuple[str, ...], Field(max_length=_MAX_TRANSACTIONS)] = ()
+    transaction_ids: Annotated[tuple[str, ...], Field(max_length=50_000)] = ()
 
 
 class LedgerRuleTrialResult(BaseModel):
