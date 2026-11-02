@@ -26,6 +26,7 @@ from ...domain.modelos.verification_report import ModeloVerificationFindingSever
 from ...domain.modelos.work_unit import WorkUnitState
 from .calculation_note_gate import (
     blocking_calculation_issues,
+    calculation_filed_before_grade_cap,
     calculation_screen_outdated,
     proven_zero_calculation_issues,
 )
@@ -67,6 +68,9 @@ class DeclarationSummary(BaseModel):
     calculation_outdated: bool = False
     #: The facts of each capped value the calculation proved to be zero: they withhold nothing and are shown.
     proven_zero_notes: tuple[CalculationNoteFact, ...] = ()
+    #: Whether the revision was recorded as filed before screens existed with a figure in a capped box, so its
+    #: export is refused until it is calculated again and recorded anew; a recalculation is then its next step.
+    filed_before_grade_cap: bool = False
     technical_reason: str | None = Field(default=None, exclude=True, repr=False)
 
 
@@ -104,6 +108,16 @@ def declaration_summary(
     blockers, checked = _verification_summary(head, verification)
     try:
         outdated, blockers, checked = _gated_by_calculation(declaration, head, operation, blockers, checked)
+        filed_before_cap = head.state is CalculationRevisionState.PRESENTADO and (
+            calculation_filed_before_grade_cap(
+                head,
+                modelo=str(declaration.modelo),
+                filing_year=declaration.filing_year,
+                period=declaration.period,
+                operation=operation,
+            )
+            is not None
+        )
         state = _summary_state(declaration, head, blockers, checked)
         result = settlement_result_values(
             str(declaration.modelo), snapshot.revision, head.casilla_values, declaration.period
@@ -117,6 +131,7 @@ def declaration_summary(
         result=result,
         is_correction=head.amendment_identity is not None,
         calculation_outdated=outdated,
+        filed_before_grade_cap=filed_before_cap,
         proven_zero_notes=tuple(issue.fact for issue in proven_zero_calculation_issues(head) if issue.fact is not None),
     )
 

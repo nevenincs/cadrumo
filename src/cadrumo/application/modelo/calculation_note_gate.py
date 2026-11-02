@@ -22,9 +22,13 @@ See Also:
 
 from __future__ import annotations
 
+from decimal import Decimal
+
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
+from ...core.casilla_id import CasillaId
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
+from ...domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
 from ...domain.calculations.registry.schema import RegistrySnapshot
 from ...domain.modelos.calculation_revision import CalculationRevision, CalculationRevisionState
 from ...domain.modelos.calculation_revision_sources import CalculationSourceIssue
@@ -33,6 +37,8 @@ from ...domain.modelos.work_unit import WorkUnit
 from .action_errors import ModeloPreconditionErrorMixin
 from .calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
+    DERIVED_GATE_REASONS,
+    FILED_BEFORE_GRADE_CAP_REASON,
     GATE_REFUSED_REASONS,
     capped_value_proven_zero,
     what_locale_key,
@@ -63,10 +69,11 @@ def gate_refuses(
     step all decide with. An unrouted one-stop-shop row is the Modelo 369
     check's to decide. ``outcome`` is what the resolver stated beside a capped
     value: a proven zero withholds nothing, and a capped value without a stated
-    outcome withholds like any other. A revision whose screen is outdated is
-    refused before its notes are read, so its derived reason withholds too.
+    outcome withholds like any other. A revision whose screen is outdated, or
+    one recorded as filed before screens existed that holds a capped figure, is
+    refused before its notes are read, so each derived reason withholds too.
     """
-    if reason == CALCULATION_SCREEN_OUTDATED_REASON:
+    if reason in DERIVED_GATE_REASONS:
         return True
     if reason not in GATE_REFUSED_REASONS:
         return False
@@ -176,6 +183,52 @@ def calculation_screen_outdated(
     return _screen_outdated(revision, snapshot, operation)
 
 
+def _filed_before_grade_cap(
+    revision: CalculationRevision, snapshot: RegistrySnapshot, operation: PinnedAuthorityOperation
+) -> CasillaId | None:
+    """The first box a capped binding reaches that a filed, unstamped ``revision`` holds a figure in, or ``None``.
+
+    A revision recorded as filed before screen stamps existed was never screened
+    for grade caps, so a box a capped binding reaches may hold a figure the cap
+    would withhold. A proven zero is the one value that cannot be such a figure;
+    a box with no value at all is unresolved, so it refuses too.
+    """
+    if revision.state not in _FILED_STATES or revision.screen_stamp is not None:
+        return None
+    reach = capped_binding_reach(snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot))
+    for capped in reach.values():
+        for casilla_id in capped.casilla_ids:
+            value = revision.casilla_values.get(casilla_id)
+            if value is None or Decimal(value) != 0:
+                return casilla_id
+    return None
+
+
+def calculation_filed_before_grade_cap(
+    revision: CalculationRevision,
+    *,
+    modelo: str,
+    filing_year: int,
+    period: Period,
+    operation: PinnedAuthorityOperation,
+) -> CasillaId | None:
+    """The box whose figure keeps a revision filed before screens existed from being exported, or ``None``.
+
+    It is the condition the export gate refuses with
+    ``filed_before_grade_cap``. The form and the declarations list ask it to
+    offer a recalculation exactly where the export refuses. A revision filed
+    with a stamp, or with no figure in a capped box, is never refused this way.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
+    """
+    if revision.state not in _FILED_STATES or revision.screen_stamp is not None:
+        return None
+    snapshot = _screened_snapshot(operation, modelo=modelo, filing_year=filing_year, period=period)
+    return _filed_before_grade_cap(revision, snapshot, operation)
+
+
 def _refuse_outdated_screen(revision: CalculationRevision, *, action: str) -> ModeloCalculationBlockedError:
     return ModeloCalculationBlockedError(
         translated_message=calculation_screen_outdated_message_key(),
@@ -223,10 +276,13 @@ def require_work_unit_calculation_unblocked(
     a calculation under ``operation``'s pinned authority would carry: its notes
     were screened against other declarations, so it is refused before its notes
     are read. A revision already recorded as filed keeps its history and is not
-    screened again, but a blocking note it carries still refuses.
+    screened again, but a blocking note it carries still refuses, and so does a
+    figure in a capped box of a revision filed before screen stamps existed
+    (:func:`calculation_filed_before_grade_cap`).
 
     Raises:
-        ModeloCalculationBlockedError: The revision is stale or carries a blocking note.
+        ModeloCalculationBlockedError: The revision is stale, was filed before screens with a capped figure,
+            or carries a blocking note.
 
     See Also:
         :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
@@ -235,13 +291,26 @@ def require_work_unit_calculation_unblocked(
     filed = revision.state in _FILED_STATES
     snapshot = (
         None
-        if filed
+        if filed and revision.screen_stamp is not None
         else _screened_snapshot(
             operation, modelo=str(work_unit.modelo), filing_year=work_unit.filing_year, period=work_unit.period
         )
     )
     if snapshot is not None and _screen_outdated(revision, snapshot, operation):
         raise _refuse_outdated_screen(revision, action=action)
+    capped_box = None if snapshot is None else _filed_before_grade_cap(revision, snapshot, operation)
+    if snapshot is not None and capped_box is not None:
+        box = snapshot_printed_boxes(operation, snapshot).number(capped_box)
+        raise ModeloCalculationBlockedError(
+            translated_message=what_locale_key(FILED_BEFORE_GRADE_CAP_REASON),
+            context={
+                "action": action,
+                "calculation_revision_id": revision.calculation_revision_id,
+                "reason": FILED_BEFORE_GRADE_CAP_REASON,
+                "reasons": FILED_BEFORE_GRADE_CAP_REASON,
+                **({} if box is None else {"box": box}),
+            },
+        )
     if not blocking_calculation_issues(revision):
         return
     if snapshot is None:
@@ -254,6 +323,7 @@ def require_work_unit_calculation_unblocked(
 __all__ = [
     "ModeloCalculationBlockedError",
     "blocking_calculation_issues",
+    "calculation_filed_before_grade_cap",
     "calculation_screen_outdated",
     "gate_refuses",
     "proven_zero_calculation_issues",

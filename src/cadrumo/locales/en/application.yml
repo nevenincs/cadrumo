@@ -1194,6 +1194,12 @@ application:
           data.
         what_to_do: Nothing to change in your records. Report it before you rely on
           the figures.
+      filed_before_grade_cap:
+        what: This declaration was recorded before the current checks on its figures,
+          and one of its boxes holds a figure those checks hold back, so you cannot
+          export it as it stands.
+        what_to_do: Calculate the declaration again, check it and record it again;
+          the new record replaces this one.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
