@@ -299,3 +299,31 @@ def test_a_rectificativa_does_not_touch_a_year_under_cash(operation: PinnedAutho
     row, first = _paid_invoice(_F1_DATE, _F1_DATE)
     resolution = _resolve(operation, ((_LATER, _CASH),), rows=(row,), invoices=(first, _rectificativa(_R1_DATE)))
     assert resolution.binding_values[_INCOME_0171] == Decimal("1000.00")
+
+
+def _refunded_correction() -> tuple[Transaction, Invoice]:
+    unlinked = _refund(_R1_DATE)
+    corrected = _rectificativa(_R1_DATE, linked=(unlinked.transaction_id,))
+    return _refund(_R1_DATE, invoice_id=corrected.invoice_id), corrected
+
+
+def test_a_refund_on_a_correction_under_cash_refuses_in_the_year_it_was_paid(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """RIRPF art. 7.2 and the manual place cobros and pagos; none says a refund nets against income."""
+    row, first = _paid_invoice(_F1_DATE, _F1_DATE)
+    refund, corrected = _refunded_correction()
+    resolution = _resolve(operation, ((_LATER, _CASH),), rows=(row, refund), invoices=(first, corrected))
+    assert resolution.binding_values[_INCOME_0171] == Decimal("1000.00")
+    assert _blocked_because(resolution, "rectificativa_refund_under_cash")
+
+
+def test_a_cash_year_without_the_refund_is_not_blocked_by_it(operation: PinnedAuthorityOperation) -> None:
+    """The refund was paid in the later year, so the earlier year's 1.000,00 stands unblocked."""
+    on = date(_EARLIER, 2, 1)
+    row, first = _paid_invoice(on, on)
+    refund, corrected = _refunded_correction()
+    criteria = ((_EARLIER, _CASH), (_LATER, _CASH))
+    earlier = _resolve(operation, criteria, rows=(row, refund), invoices=(first, corrected), year=_EARLIER)
+    assert earlier.binding_values[_INCOME_0171] == Decimal("1000.00")
+    assert _INCOME_0171 not in _unresolved_bindings(earlier)

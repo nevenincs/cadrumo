@@ -41,6 +41,7 @@ from ...domain.calculations.registry.travel_agency_mediation import (
     is_travel_agency_air_passenger_transport,
 )
 from ...domain.deadlines.models import TaxpayerProfile
+from ...domain.invoices.catalogue import InvoiceCatalogue
 from ...domain.invoices.enums import invoice_class_rectificativa, resolve_invoice_legal_mention
 from ...domain.invoices.models import Invoice
 from ...domain.iva.flow import derive_flow_for_classification, is_inversion_sujeto_pasivo_flow
@@ -510,6 +511,25 @@ def _m347_reverse_charge_recipient(invoice: Invoice) -> bool:
 def is_rectificativa(invoice: Invoice) -> bool:
     """Whether the invoice is a factura rectificativa, by the registry's invoice-class token."""
     return invoice.invoice_class == invoice_class_rectificativa()
+
+
+def rectified_invoice(rectificativa: Invoice, invoices: InvoiceCatalogue) -> Invoice | None:
+    """Return the ordinary invoice the correction names, read by its kind, bucket, counterparty and number.
+
+    A simplified invoice names no customer, so a correction naming one can still be its correction.
+    """
+    return next(
+        (
+            invoice
+            for invoice in invoices.values()
+            if invoice.kind is rectificativa.kind
+            and invoice.bucket_id == rectificativa.bucket_id
+            and not is_rectificativa(invoice)
+            and invoice.counterparty_tax_id in (None, rectificativa.counterparty_tax_id)
+            and invoice.invoice_number == rectificativa.rectifies_invoice_number
+        ),
+        None,
+    )
 
 
 def _m347_netted_amount(invoice: Invoice, amount: Decimal) -> Decimal:

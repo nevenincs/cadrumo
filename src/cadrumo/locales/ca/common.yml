@@ -193,6 +193,23 @@ aggregation:
         el tipus de l'Estat membre de consum va canviar durant aquest període, de
         manera que la data d'emissió no permet saber quin tipus s'aplica. Registra
         la data d'operació a la factura.
+      rate_tier_ambiguous: Dos tipus del mateix tram de l'Estat membre de destinació
+        donen aquesta mateixa quota, així que no se sap quin tipus escriure a la fila.
+        Revisa la línia de la factura.
+      rectificativa_above_row: 'Les factures rectificatives OSS/IOSS resten més del
+        que declara la fila que corregeixen. Revisa''n els imports: potser indiquen
+        el resultat després de la correcció i no la reducció.'
+      rectificativa_outside_period: Una factura rectificativa OSS/IOSS corregeix una
+        factura d'un altre període. Correspon a les correccions de períodes anteriors
+        del model 369, i aquest camp del disseny no admet aquí un import negatiu.
+        No s'ha exportat res; declara-ho directament a la Seu.
+      rectificativa_target_differs: Una factura rectificativa OSS/IOSS té un altre
+        règim, una altra classe d'operació o un altre Estat membre que la factura
+        que corregeix, així que no es pot restar de la seva fila. Revisa les dues
+        factures.
+      rectificativa_target_unknown: Una factura rectificativa OSS/IOSS anomena una
+        factura que no està registrada, així que no se sap quina fila corregeix. Registra
+        aquesta factura o corregeix la referència.
   per_modelo:
     errors:
       unsupported_modelo: Model no admès per a l'agregació per model

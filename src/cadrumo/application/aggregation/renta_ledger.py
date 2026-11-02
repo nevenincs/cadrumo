@@ -33,6 +33,7 @@ from ...core.casilla_id import CasillaId
 from ...core.decimal.constants import ZERO
 from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
+from ...core.money.rounding import round_to_cents
 from ...core.period import Period, PeriodKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...domain.calculations.registry.errors import RegistryValidationError
@@ -99,6 +100,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority_artifact import ProfileDecodeContext
 
 from .renta_imputation import ImputationCriteria, ImputationUnresolved, impute_ledger_row
+from .renta_income_diagnostics import received_rectificativa_reading
 from .renta_ledger_evidence import iva_amount_for, purchase_invoice_evidence_payload, taxable_base_for
 from .renta_ledger_models import (
     RentaLedgerAggregationIssue,
@@ -845,6 +847,16 @@ def aggregate_renta_ledger_expenses(
             if advisory is not None:
                 advisories.append(advisory)
 
+    if criteria is not None:
+        corrected = received_rectificativa_reading(
+            invoices,
+            transactions,
+            bucket_id=bucket_id,
+            window_start=date(resolved_period.filing_year, 1, 1),
+            window_end=resolved_period.end_date,
+            criteria=criteria,
+        )
+        observations = _net_received_corrections(observations, corrected.fractions)
     observations = _apply_statutory_cap_trims(observations, rules=rules)
     casilla_aggregation = _casilla_aggregation(resolved_period, observations, modelo=modelo)
     return RentaLedgerExpenseAggregation(
@@ -1114,6 +1126,21 @@ def _apply_statutory_cap_trims(
     return [
         _trimmed_observation(observation, trims[observation.observation_id])
         if observation.observation_id in trims
+        else observation
+        for observation in observations
+    ]
+
+
+def _net_received_corrections(
+    observations: list[RentaDeductibleExpenseObservation], fractions: Mapping[str, Decimal]
+) -> list[RentaDeductibleExpenseObservation]:
+    """Take off each row what the corrections remove from its invoice, before any statutory cap reads it."""
+    return [
+        _trimmed_observation(
+            observation,
+            round_to_cents(observation.deductible_amount * (Decimal("1") - fractions[observation.invoice_id])),
+        )
+        if observation.invoice_id is not None and observation.invoice_id in fractions
         else observation
         for observation in observations
     ]

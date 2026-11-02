@@ -47,6 +47,7 @@ from ..invoices.catalogue_reads_ports import (
     InvoiceCatalogueReadPersistenceError,
     InvoiceCatalogueReadPorts,
 )
+from ..invoices.source_observations import is_rectificativa
 from ..ledger.usage_ratio_repository import UsageRatioProfileLoader
 from ..user_profile.usage_ratio_resolution import resolve_effective_usage_ratios
 from ._modelo_bindings_invoice_iva import out_of_window_summary_diagnostics
@@ -102,6 +103,7 @@ from .renta_imputation import (
     imputation_blocking_diagnostics,
     ledger_sum_outcome,
 )
+from .renta_income_diagnostics import received_rectificativa_netting_diagnostics, received_rectificativa_reading
 from .renta_income_evidence import taxable_base_comparison
 from .renta_ledger import aggregate_renta_ledger_expenses_from_repositories
 from .renta_ledger_models import (
@@ -582,7 +584,8 @@ def _unpaid_received_invoice_details(
     return tuple(
         detail
         for invoice in accruing
-        if (detail := _accrual_coverage_gap(invoice, rows_by_invoice.get(invoice.invoice_id, ()))) is not None
+        if not is_rectificativa(invoice)
+        and (detail := _accrual_coverage_gap(invoice, rows_by_invoice.get(invoice.invoice_id, ()))) is not None
     )
 
 
@@ -619,7 +622,17 @@ def _expense_imputation_diagnostics(
     unpaid = _unpaid_received_invoice_details(
         accruing, _received_invoice_rows(transactions), criteria, period.filing_year
     )
-    return imputation_blocking_diagnostics(
+    corrected = received_rectificativa_reading(
+        invoices,
+        transactions,
+        bucket_id=context.bucket_id,
+        window_start=date(period.filing_year, 1, 1),
+        window_end=period.end_date,
+        criteria=criteria,
+    )
+    return received_rectificativa_netting_diagnostics(
+        corrected.netted, source_kind=source_kind, resolver_id=resolver_id
+    ) + imputation_blocking_diagnostics(
         source_kind=source_kind,
         resolver_id=resolver_id,
         revision=context.revision,
@@ -627,7 +640,7 @@ def _expense_imputation_diagnostics(
         criteria=criteria,
         year=period.filing_year,
         activity_present=bool(rows_present or accruing or unresolved),
-        unresolved_details=(*unresolved, *unpaid),
+        unresolved_details=(*unresolved, *unpaid, *corrected.refused),
     )
 
 

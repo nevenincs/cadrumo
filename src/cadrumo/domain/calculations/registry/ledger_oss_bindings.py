@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Iterable, Sequence
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated, Literal, Self
 
 from pydantic import BaseModel, BeforeValidator, Field, field_validator, model_validator
@@ -41,6 +42,13 @@ def _coerce_registry_eu_member_state(value: object) -> EUMemberState:
     return require_eu_member_state(value, effective_date=today_madrid())
 
 
+class OssLineEffect(StrEnum):
+    """What a line's magnitudes do to its destination and rate."""
+
+    SUPPLY = "supply"
+    CORRECTION = "correction"
+
+
 class OssIossLedgerObservation(BaseModel):
     """One factual ledger line tagged with substrate-grounded classification.
 
@@ -65,6 +73,7 @@ class OssIossLedgerObservation(BaseModel):
         base_amount: Taxable base in EUR.
         iva_amount: IVA amount in EUR (already applied at the
             destination MS rate per OSS / IOSS rules).
+        effect: Whether the amounts add a supply or take a correction off one.
     """
 
     model_config = STRICT_FROZEN_CONFIG
@@ -78,6 +87,17 @@ class OssIossLedgerObservation(BaseModel):
     transaction_kind: TransactionKind
     base_amount: Decimal
     iva_amount: Decimal
+    effect: OssLineEffect = OssLineEffect.SUPPLY
+
+    @property
+    def signed_base_amount(self) -> Decimal:
+        """Return the base as it counts towards a sum: a correction takes off what a supply adds."""
+        return -self.base_amount if self.effect is OssLineEffect.CORRECTION else self.base_amount
+
+    @property
+    def signed_iva_amount(self) -> Decimal:
+        """Return the cuota as it counts towards a sum: a correction takes off what a supply adds."""
+        return -self.iva_amount if self.effect is OssLineEffect.CORRECTION else self.iva_amount
 
     @model_validator(mode="after")
     def _validate_registry_regime(self) -> Self:
@@ -208,8 +228,8 @@ def _oss_aggregate(
     selector: LedgerOssProvider,
 ) -> Decimal:
     if selector.fact == LedgerIvaFact.IVA_AMOUNT_SUM:
-        return sum((observation.iva_amount for observation in matched), Decimal("0"))
-    return sum((observation.base_amount for observation in matched), Decimal("0"))
+        return sum((observation.signed_iva_amount for observation in matched), Decimal("0"))
+    return sum((observation.signed_base_amount for observation in matched), Decimal("0"))
 
 
 def resolve_ledger_oss_aggregation_binding_values(

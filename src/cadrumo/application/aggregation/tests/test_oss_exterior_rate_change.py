@@ -21,9 +21,8 @@ from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.invoices.enums import IvaRate, PaymentStatus, operation_performed_role
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
-from ....domain.iva.errors import IvaRateNotFoundError
 from ....domain.iva.oss import OssIossRegime
-from ....domain.iva.schema import EUMemberState, InvoiceKind, IvaRateKind
+from ....domain.iva.schema import InvoiceKind, IvaRateKind
 from ....domain.transactions.date_partition import LedgerDatePartition
 from ....domain.transactions.models import TransactionCatalogue
 from ...invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
@@ -342,7 +341,9 @@ def test_declared_devengo_beside_an_undated_other_state_is_not_refused(operation
     assert _occupied_rows(resolution) == [1, 2]
 
 
-def test_date_outside_the_published_table_is_refused_not_priced_at_zero(operation: PinnedAuthorityOperation) -> None:
+def test_date_outside_the_published_table_reads_the_nearest_edition_and_says_so(
+    operation: PinnedAuthorityOperation,
+) -> None:
     change = rate_change_inside_a_quarter(operation)
     variants = ordinary_general_variants(operation)[change.member_state]
     first_published = min(variant.valid_from or date.max for variant in variants)
@@ -356,11 +357,9 @@ def test_date_outside_the_published_table_is_refused_not_priced_at_zero(operatio
         pct=change.pct_before,
     )
 
-    with pytest.raises(IvaRateNotFoundError) as refused:
-        _resolve(operation, exterior_period(uncovered), (invoice,))
+    resolution = _resolve(operation, exterior_period(uncovered), (invoice,))
 
-    assert refused.value.context is not None
-    assert refused.value.context["member_state"] == EUMemberState.from_registry(change.member_state).value
+    assert [diagnostic.source_ref for diagnostic in resolution.diagnostics] == ["rate_date_projected"]
 
 
 def test_rows_of_one_country_and_code_are_told_apart_only_by_their_percentage(
