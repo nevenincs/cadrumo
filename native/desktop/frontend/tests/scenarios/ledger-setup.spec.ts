@@ -340,6 +340,29 @@ test("an unsaved pattern is answered by the backend, and without an answer the s
   );
   await expect(save).toHaveAttribute("aria-disabled", "true");
   await expect(expression).toHaveValue("NOT RECORDED");
+  // No answer is said, the draft stays, and it can be asked again.
+  const failed = dialog.locator(".ledger-rule-trial-failed");
+  await expect(failed).toContainText(
+    label("desktop.ledger.rules.trial_failed"),
+  );
+  await failed
+    .getByRole("button", { name: label("desktop.ledger.rules.trial_retry") })
+    .click();
+  await expect(failed).toBeVisible();
+  await expect(expression).toHaveValue("NOT RECORDED");
+
+  // The backend's own answers: one that could not compile, one too costly.
+  await expression.fill("a{99999999999}");
+  await expect(failed).toBeHidden();
+  await expect(dialog).toContainText(
+    label("desktop.ledger.rules.expression_unread"),
+  );
+  await expect(save).toHaveAttribute("aria-disabled", "true");
+  await expression.fill("(.+)+#");
+  await expect(dialog).toContainText(
+    label("desktop.ledger.rules.expression_overrun"),
+  );
+  await expect(save).toHaveAttribute("aria-disabled", "true");
 
   await expression.fill(String.raw`PAPELERIA\s+TRAZO`);
   await expect(save).not.toHaveAttribute("aria-disabled", "true");

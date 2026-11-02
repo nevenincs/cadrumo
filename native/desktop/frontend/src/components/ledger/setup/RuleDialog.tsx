@@ -23,6 +23,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import type { LedgerPort, LedgerRow } from "../../../shell/ledger";
 import type { RuleSeed } from "../../../shell/ledgerCommands";
+import { useLedgerLimits } from "../../../shell/ledgerLimits";
 import { useRuleTrial } from "../../../shell/ledgerRuleTrial";
 import type { LedgerRuleRow } from "../../../shell/ledgerSetup";
 import type { StageEvent } from "../../../shell/ledgerStage";
@@ -167,7 +168,20 @@ export function RuleDialog({
   const pattern = advanced ? expression.trim() : wordsPattern(words);
   const trial = useRuleTrial(port, pattern, rows);
   const answered = trial.kind === "answer" && pattern !== "";
-  const patternBroken = answered && trial.result.outcome === "invalid_pattern";
+  const limits = useLedgerLimits();
+  const refusedOutcome = answered ? trial.result.outcome : null;
+  const patternRefusal =
+    refusedOutcome === "invalid_pattern"
+      ? t("desktop.ledger.rules.expression_unread")
+      : refusedOutcome === "overrun"
+        ? t("desktop.ledger.rules.expression_overrun")
+        : refusedOutcome === "too_long"
+          ? limits
+            ? t("desktop.ledger.rules.expression_too_long", {
+                max: limits.rule_pattern_max,
+              })
+            : t("desktop.ledger.rules.expression_unread")
+          : null;
   const found =
     answered && rows && trial.result.outcome === "matched"
       ? trial.result
@@ -322,11 +336,7 @@ export function RuleDialog({
             <EditorField
               label={t("desktop.ledger.rules.expression")}
               hint={t("desktop.ledger.rules.expression_hint")}
-              error={
-                patternBroken
-                  ? t("desktop.ledger.rules.expression_unread")
-                  : null
-              }
+              error={patternRefusal}
             >
               {(control) => (
                 <TextEditor
@@ -344,6 +354,7 @@ export function RuleDialog({
             <EditorField
               label={t("desktop.ledger.rules.words")}
               hint={t("desktop.ledger.rules.words_hint")}
+              error={patternRefusal}
             >
               {(control) => (
                 <TextEditor
@@ -446,6 +457,19 @@ export function RuleDialog({
               </Label>
             </span>
           </div>
+          {trial.kind === "failed" && pattern !== "" && (
+            <Alert
+              tone="warning"
+              role="alert"
+              icon={<Icon name="unknown" />}
+              className="ledger-rule-trial-failed"
+            >
+              <span>{t("desktop.ledger.rules.trial_failed")}</span>{" "}
+              <Button variant="ghost" onClick={trial.retry}>
+                {t("desktop.ledger.rules.trial_retry")}
+              </Button>
+            </Alert>
+          )}
           <CallLine call={saved} refusal={refusal} />
         </div>
         <DialogFooter>
