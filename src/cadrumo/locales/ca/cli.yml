@@ -420,6 +420,11 @@ cli:
         country_code_help: 'Codi de país ISO 3166-1 alfa-2 de la contrapart. Obligatori:
           determina l''encaminament de totes dues informatives, per això mai no es
           dóna per suposat.'
+        duplicate_help: Respon quina factura desada pot ser ja un document, sense
+          escriure res.
+        duplicate_invalid: El tipus de factura i les dades del document han de tenir
+          la forma esperada.
+        duplicate_kind_help: 'Sentit de la factura: issued o received.'
         euro_rate_unavailable_message: No s'ha trobat cap tipus de canvi a euros per
           a {currency} el {date}, així que la factura s'ha registrat sense valor en
           euros i queda fora dels totals en euros fins que s'hi afegeixi un tipus.
@@ -3707,6 +3712,11 @@ cli:
       read_evidence_help: Llegeix la factura adjunta de la transacció en local i alimenta-la
         al proposant de divisió --llm.
       yes_help: Confirma la divisió de la transacció
+    split_check_help: Respon sobre parts de divisió sense desar tal com les acceptaria
+      qui les escriu, sense escriure res.
+    split_check_id_help: Id complet del moviment que es divideix.
+    split_check_invalid: Cada part ha de ser un objecte JSON amb la forma esperada,
+      per a un id de moviment complet.
     staged_check_category_help: Categoria de despesa repetible que es contrasta amb
       una classificació.
     staged_check_help: Respon al treball preparat del llibre com l'acceptarien els

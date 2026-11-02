@@ -144,6 +144,7 @@ class LedgerStagedRowPayload(OutputSchema):
     classified: bool
     takes_expense_category: bool
     takes_share: bool
+    category_askable: bool
     category_settable: bool
     category_on_income: bool
     takes_changes: bool
@@ -180,6 +181,38 @@ class LedgerRuleTrialEnvelope(OutputSchema):
     outcome: str
     hits: list[str]
     pending: list[str]
+
+
+class LedgerInvoiceDuplicateEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger invoice duplicate``."""
+
+    invoice_id: str | None
+    basis: str | None
+
+
+class LedgerSplitCheckProblemPayload(OutputSchema):
+    """The first thing the split writer would refuse in the parts asked about."""
+
+    kind: str
+    index: int | None
+    max: int | None
+    difference: str | None
+    over: bool | None
+
+
+class LedgerSplitCheckChildPayload(OutputSchema):
+    """One part as the split writer takes it."""
+
+    amount: str
+    description: str
+
+
+class LedgerSplitCheckEnvelope(OutputSchema):
+    """JSON envelope for ``aeat app ledger split-check``."""
+
+    remainder: str | None
+    problem: LedgerSplitCheckProblemPayload | None
+    children: list[LedgerSplitCheckChildPayload]
 
 
 class LedgerStagedCheckEnvelope(OutputSchema):
@@ -999,6 +1032,7 @@ __all__ = [
     "LedgerExcludeResult",
     "LedgerHistoryEventPayload",
     "LedgerHistoryResult",
+    "LedgerInvoiceDuplicateEnvelope",
     "LedgerInvoicePreviewFactPayload",
     "LedgerInvoicePreviewFigurePayload",
     "LedgerInvoicePreviewFindingPayload",
@@ -1019,6 +1053,9 @@ __all__ = [
     "LedgerReviewResult",
     "LedgerReviewRowPayload",
     "LedgerRuleTrialEnvelope",
+    "LedgerSplitCheckChildPayload",
+    "LedgerSplitCheckEnvelope",
+    "LedgerSplitCheckProblemPayload",
     "LedgerSplitChildIdPayload",
     "LedgerSplitChildProposalPayload",
     "LedgerSplitResult",

@@ -8,6 +8,7 @@
 // only: never in storage, a log line or an error message.
 
 import type {
+  LedgerPreflightReason,
   EvidenceUpdateField,
   InvoiceUpdateField,
   LedgerUpdateField,
@@ -175,6 +176,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.inventory.retire",
   "ledger.inventory.valuation.preview",
   "ledger.invoice.add",
+  "ledger.invoice.duplicate",
   "ledger.invoice.import",
   "ledger.invoice.list",
   "ledger.invoice.preview",
@@ -221,6 +223,7 @@ export const LEDGER_DEFINITIONS = [
   "ledger.rule.list",
   "ledger.rule.remove",
   "ledger.rule.trial",
+  "ledger.split.check",
   "ledger.split.manual",
   "ledger.split.review",
   "ledger.staged.check",
@@ -842,6 +845,46 @@ export type LedgerRuleTrialResult = {
   hits: string[];
   pending: string[];
 };
+/** What a document states, as read or corrected. */
+export type LedgerInvoiceDuplicateRequest = {
+  kind: InvoiceKind;
+  invoice_number: string | null;
+  counterparty_tax_id: string | null;
+  invoice_date: string | null;
+  grand_total: string | null;
+};
+/** The stored invoice the document may already be, and what they share. */
+export type LedgerInvoiceDuplicateResult = {
+  profile_id: string;
+  invoice_id: string | null;
+  basis: "number" | "party_day_total" | null;
+};
+/** Unsaved parts of a movement. No amount on the last asks what the others leave. */
+export type LedgerSplitCheckRequest = {
+  transaction_id: string;
+  parts: { amount: string | null; description: string }[];
+};
+/** What is left for the last part, the first thing the split writer would
+ * refuse, and the parts as it takes them. */
+export type LedgerSplitCheckResult = {
+  profile_id: string;
+  remainder: string | null;
+  problem: {
+    kind:
+      | "gone"
+      | "not_active"
+      | "count"
+      | "amount"
+      | "description"
+      | "description_long"
+      | "sum";
+    index: number | null;
+    max: number | null;
+    difference: string | null;
+    over: boolean | null;
+  } | null;
+  children: { amount: string; description: string }[];
+};
 export type LedgerStagedCheckRequest = {
   rows: LedgerStagedRow[];
   drafts: LedgerStagedDraft[];
@@ -873,6 +916,7 @@ export type LedgerStagedRowAnswer = {
   classified: boolean;
   takes_expense_category: boolean;
   takes_share: boolean;
+  category_askable: boolean;
   category_settable: boolean;
   category_on_income: boolean;
   takes_changes: boolean;
@@ -1094,25 +1138,6 @@ export type LedgerStatusResult = {
   }[];
 };
 
-export type LedgerPreflightReason =
-  | "missing_business_classification"
-  | "missing_category"
-  | "missing_taxable_base"
-  | "missing_iva_amount"
-  | "missing_iva_rate"
-  | "missing_eur_tax_substrate"
-  | "missing_counterparty_identification_state"
-  | "domestic_identification_on_intra_community_transaction"
-  | "eu_member_state_on_export_transaction"
-  | "missing_counterparty_establishment_on_export"
-  | "inadmissible_deduction_classification"
-  | "missing_proportionality_reference"
-  | "unsupported_currency"
-  | "unsupported_period"
-  | "censo_ratio_mismatch"
-  | "missing_home_office_afectacion"
-  | "anomaly_non_declarable_iva_category"
-  | "anomaly_non_declarable_recargo_equivalencia";
 export type LedgerPreflightRequest = { period: PublicPeriod };
 export type LedgerPreflightResult = {
   profile_id: string;
@@ -1928,6 +1953,7 @@ export type EvidenceConfirmResult = {
     draft: EvidenceDraft;
     /** False where the catalogue already held this confirmation. */
     created: boolean;
+    likely_duplicate_invoice_id?: string | null;
     total_discrepancy?: {
       printed_total: PublicDecimal;
       recorded_total: PublicDecimal;
@@ -2116,6 +2142,8 @@ export interface LedgerRequests {
   "ledger.invoice.add": InvoiceAddRequest;
   "ledger.invoice.preview": InvoicePreviewRequest;
   "ledger.rule.trial": LedgerRuleTrialRequest;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateRequest;
+  "ledger.split.check": LedgerSplitCheckRequest;
   "ledger.staged.check": LedgerStagedCheckRequest;
   "ledger.invoice.update": InvoiceUpdateRequest;
   "ledger.invoice.remove": InvoiceRemoveRequest;
@@ -2229,6 +2257,8 @@ export interface LedgerResults {
   "ledger.invoice.add": InvoiceAddResult;
   "ledger.invoice.preview": InvoicePreviewResult;
   "ledger.rule.trial": LedgerRuleTrialResult;
+  "ledger.invoice.duplicate": LedgerInvoiceDuplicateResult;
+  "ledger.split.check": LedgerSplitCheckResult;
   "ledger.staged.check": LedgerStagedCheckResult;
   "ledger.invoice.update": InvoiceUpdateResult;
   "ledger.invoice.remove": InvoiceRemoveResult;

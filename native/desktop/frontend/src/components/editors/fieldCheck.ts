@@ -79,7 +79,7 @@ export function checkField(field: FieldSpec, raw: string): Parsed<string> {
         ? parseFractionPercent(raw)
         : parsePoints(raw);
     case "taxId":
-      return parseLine(raw, 64);
+      return parseLine(raw, LINE_LIMIT);
     case "iban": {
       const iban = ibanText(raw);
       if (iban === "") return { kind: "empty" };

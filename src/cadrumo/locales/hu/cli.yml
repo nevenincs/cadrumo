@@ -413,6 +413,11 @@ cli:
           és a kataszteri azonosító mezővel rögzítheted az ingatlan adatait.
         country_code_help: 'Az ügyfél ISO 3166-1 alfa-2 országkódja. Kötelező: mindkét
           adatszolgáltatás útválasztását meghatározza, ezért soha nem feltételezzük.'
+        duplicate_help: Megválaszolja, melyik tárolt számla lehet már a dokumentum,
+          és nem ír semmit.
+        duplicate_invalid: A számla típusának és a dokumentum adatainak a várt alakúnak
+          kell lenniük.
+        duplicate_kind_help: 'A számla iránya: issued vagy received.'
         euro_rate_unavailable_message: Nem található euró árfolyam {currency} pénznemre
           {date} napra, ezért a számla euróérték nélkül került rögzítésre, és kimarad
           az eurós összesítésekből, amíg árfolyam nem kerül hozzá.
@@ -3678,6 +3683,11 @@ cli:
         át a --llm felosztásjavaslónak.
       yes_help: A felosztás megerősítése (a szülőt SPLIT állapotba viszi és megőriz
         N gyermek tranzakciót).
+    split_check_help: Megválaszolja a nem mentett felosztási részeket úgy, ahogy a
+      felosztás írója elfogadná őket, és nem ír semmit.
+    split_check_id_help: A felosztandó tétel teljes azonosítója.
+    split_check_invalid: Minden résznek a várt alakú JSON-objektumnak kell lennie,
+      teljes tételazonosítóval.
     staged_check_category_help: Ismételhető költségkategória, amelyet egy besorolással
       vetünk össze.
     staged_check_help: Megválaszolja, hogyan fogadnák az írók az előkészített főkönyvi

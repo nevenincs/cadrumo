@@ -18,6 +18,7 @@ import type {
   CapitalGoodDeclareResult,
 } from "../../../shell/ledgerSetup";
 import type { LedgerRow } from "../../../shell/ledger";
+import { takesCapitalGoodAcquisition } from "../../../shell/ledgerContract";
 import { LEDGER_PAGE_SIZE } from "../../../shell/ledgerWindow";
 import { vocabularyEmpty } from "../movements/movementWords";
 import { useVocabulary } from "../suggestions/SuggestionsProvider";
@@ -117,7 +118,8 @@ export function CapitalGoodsPane({ port, reader, locale, rows }: SetupProps) {
       .map((row) => row.transaction)
       .filter(
         (found) =>
-          found.direction === "OUTGOING" && !used.has(found.transaction_id),
+          takesCapitalGoodAcquisition(found.direction) &&
+          !used.has(found.transaction_id),
       )
       .map((found) => ({
         value: found.transaction_id,

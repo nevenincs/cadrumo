@@ -7,15 +7,13 @@
 
 import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import type { LedgerPort, LedgerRow, LedgerRuleTrialResult } from "./ledger";
+import { LatestAnswerSession, type LatestAnswer } from "./ledgerLatestAnswer";
 import { readAnswer } from "./ledgerWindow";
 
 /** How long typing rests before the pattern is asked about. */
 const REST_MS = 250;
 
-export type RuleTrial =
-  | { kind: "waiting" }
-  | { kind: "failed" }
-  | { kind: "answer"; result: LedgerRuleTrialResult };
+export type RuleTrial = LatestAnswer<LedgerRuleTrialResult>;
 
 export type RuleTrialView = RuleTrial & { retry(): void };
 
@@ -24,16 +22,8 @@ export type RuleTrialQuestion = {
   ids: readonly string[];
 };
 
-const WAITING: RuleTrial = { kind: "waiting" };
-
-const sameQuestion = (
-  one: RuleTrialQuestion | null,
-  other: RuleTrialQuestion | null,
-) =>
-  one !== null &&
-  other !== null &&
-  one.pattern === other.pattern &&
-  one.ids === other.ids;
+const sameQuestion = (one: RuleTrialQuestion, other: RuleTrialQuestion) =>
+  one.pattern === other.pattern && one.ids === other.ids;
 
 async function askRuleTrial(
   port: LedgerPort,
@@ -54,97 +44,15 @@ async function askRuleTrial(
   }
 }
 
-export class RuleTrialSession {
-  private view = WAITING;
-  private readonly listeners = new Set<() => void>();
-  private wanted: RuleTrialQuestion | null = null;
-  private settled: { question: RuleTrialQuestion; trial: RuleTrial } | null =
-    null;
-  private sending = false;
-  private timer: ReturnType<typeof setTimeout> | null = null;
-  private running = true;
-
+export class RuleTrialSession extends LatestAnswerSession<
+  RuleTrialQuestion,
+  LedgerRuleTrialResult
+> {
   constructor(
-    private readonly ask: (question: RuleTrialQuestion) => Promise<RuleTrial>,
-    private readonly restMs = REST_MS,
-  ) {}
-
-  readonly subscribe = (listener: () => void) => {
-    this.listeners.add(listener);
-    return () => {
-      this.listeners.delete(listener);
-    };
-  };
-  readonly snapshot = () => this.view;
-
-  want(question: RuleTrialQuestion): void {
-    if (sameQuestion(question, this.wanted)) return;
-    this.clearTimer();
-    this.wanted = question.pattern === "" ? null : question;
-    this.publish();
-    if (this.wanted === null || this.isSettled(this.wanted)) return;
-    this.timer = setTimeout(() => {
-      this.timer = null;
-      this.send();
-    }, this.restMs);
-  }
-
-  /** Asks again about a question whose answer failed. */
-  retry(): void {
-    if (this.settled?.trial.kind === "failed") this.settled = null;
-    this.clearTimer();
-    this.publish();
-    this.send();
-  }
-
-  start(): void {
-    this.running = true;
-  }
-  stop(): void {
-    this.running = false;
-    this.clearTimer();
-    // A later start asks again rather than waiting on a timer now gone.
-    this.wanted = null;
-  }
-
-  private isSettled(question: RuleTrialQuestion): boolean {
-    return sameQuestion(question, this.settled?.question ?? null);
-  }
-
-  private clearTimer(): void {
-    if (this.timer !== null) clearTimeout(this.timer);
-    this.timer = null;
-  }
-
-  private send(): void {
-    const asked = this.wanted;
-    if (!this.running || this.sending || !asked || this.isSettled(asked))
-      return;
-    this.sending = true;
-    void this.ask(asked)
-      .catch((): RuleTrial => ({ kind: "failed" }))
-      .then((trial) => this.settle(asked, trial));
-  }
-
-  private settle(asked: RuleTrialQuestion, trial: RuleTrial): void {
-    this.sending = false;
-    if (!this.running) return;
-    // Only the latest question's reply counts; the one that overtook it is
-    // asked about now unless typing is still resting.
-    if (!sameQuestion(asked, this.wanted)) {
-      if (this.timer === null) this.send();
-      return;
-    }
-    this.settled = { question: asked, trial };
-    this.publish();
-  }
-
-  private publish(): void {
-    this.view =
-      this.wanted && this.isSettled(this.wanted)
-        ? this.settled!.trial
-        : WAITING;
-    this.listeners.forEach((listener) => listener());
+    ask: (question: RuleTrialQuestion) => Promise<RuleTrial>,
+    restMs = REST_MS,
+  ) {
+    super(ask, sameQuestion, restMs, (question) => question.pattern === "");
   }
 }
 

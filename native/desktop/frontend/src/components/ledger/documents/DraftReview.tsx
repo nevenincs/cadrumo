@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { CountryEditor } from "@/components/editors/CountryEditor";
+import { useInvoiceDuplicate } from "../../../shell/ledgerInvoiceDuplicate";
 import { CurrencyEditor } from "@/components/editors/CurrencyEditor";
 import { NotesEditor } from "@/components/editors/NotesEditor";
 import { TextEditor } from "@/components/editors/TextEditor";
@@ -85,7 +86,7 @@ import {
   DERIVED_FIELDS,
   confirmation,
   countryAdmitted,
-  duplicateOf,
+  duplicateQuestion,
   entrySpec,
   fieldWidth,
   provenanceOf,
@@ -622,10 +623,20 @@ export function DraftReview({
   const draft = view?.draft ?? null;
   const blockers = view?.blockers ?? [];
   const actions = stage.content.actions;
-  const duplicate = useMemo(
-    () => (draft ? duplicateOf(draft, kind, corrections, invoices) : null),
-    [draft, kind, corrections, invoices],
+  const duplicateAsked = useMemo(
+    () => (draft ? duplicateQuestion(draft, kind, corrections) : null),
+    [draft, kind, corrections],
   );
+  const duplicateCheck = useInvoiceDuplicate(port, duplicateAsked, invoices);
+  const duplicateId =
+    duplicateCheck.kind === "answer" ? duplicateCheck.result.invoice_id : null;
+  const duplicate =
+    invoices?.find((invoice) => invoice.invoice_id === duplicateId) ?? null;
+  // The answer names an invoice the list has yet to bring, or has not come.
+  const duplicateUnread =
+    duplicateAsked !== null &&
+    (duplicateCheck.kind !== "answer" ||
+      (duplicateId !== null && duplicate === null));
 
   /** Reads the document again, here or off this computer, and binds the
    * confirmation to that reading. A reading that differs from the one
@@ -699,6 +710,7 @@ export function DraftReview({
           country,
           corrections,
           duplicate,
+          duplicateUnread,
           confirmAnyway: anyway,
         })
       : draft
@@ -712,6 +724,7 @@ export function DraftReview({
             country,
             corrections,
             duplicate,
+            duplicateUnread,
             confirmAnyway: anyway,
           })
         : null;
@@ -734,6 +747,7 @@ export function DraftReview({
       country,
       corrections,
       duplicate,
+      duplicateUnread,
       confirmAnyway: anyway,
     });
     if (ready.kind !== "ready") return;
@@ -1444,6 +1458,19 @@ export function DraftReview({
             </Field>
           )}
         </div>
+        {duplicateCheck.kind === "failed" && duplicateAsked && (
+          <Alert
+            tone="warning"
+            role="alert"
+            icon={<Icon name="unknown" />}
+            className="ledger-draft-duplicate-failed"
+          >
+            <span>{t("desktop.ledger.documents.duplicate_check_failed")}</span>{" "}
+            <Button variant="ghost" onClick={duplicateCheck.retry}>
+              {t("desktop.ledger.documents.duplicate_check_retry")}
+            </Button>
+          </Alert>
+        )}
         {duplicate && (
           <Alert
             tone="warning"
