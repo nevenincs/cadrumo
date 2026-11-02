@@ -65,7 +65,7 @@ if TYPE_CHECKING:
     from ...domain.calculations.registry.authority import PinnedAuthorityOperation
     from ...domain.modelos.filing_record import ModeloRecord
     from ...domain.modelos.work_unit import WorkUnit
-    from ..live.borrador_100 import Borrador100SnapshotReading
+    from ..live.borrador_100 import Borrador100RefusedSnapshot, Borrador100Snapshot, Borrador100SnapshotReading
     from ..live.notifications import PersistedNotificationsSnapshot
     from ..live.verify import VerifyObservation
     from ..overview.evidence import AeatCalendarEvidenceSources, CalendarEvidenceReadOutcome
@@ -141,6 +141,34 @@ def _notification_capture(snapshot: PersistedNotificationsSnapshot | None) -> Ae
     )
 
 
+def _mark_tax_id_missing(unreadable: dict[AeatSyncStatusArea, NamespacedId], tax_id: str | None) -> None:
+    """Name the tax-number areas unreadable for a missing tax number, keeping a store failure's reason."""
+    if tax_id is None:
+        unreadable.setdefault(AeatSyncStatusArea.FILED_DECLARATIONS, _TAX_ID_MISSING)
+        unreadable.setdefault(AeatSyncStatusArea.IDENTITY_CHECKS, _TAX_ID_MISSING)
+
+
+def _refused_snapshot_rows(
+    refused: tuple[Borrador100RefusedSnapshot, ...],
+) -> tuple[AeatSyncRefusedSnapshotV1, ...]:
+    """Project each refused Borrador 100 snapshot, ordered by snapshot id."""
+    return tuple(
+        sorted(
+            (AeatSyncRefusedSnapshotV1(snapshot_id=item.snapshot.snapshot_id, reason=item.reason) for item in refused),
+            key=lambda item: item.snapshot_id,
+        )
+    )
+
+
+def _split_borrador_reading(
+    reading: Borrador100SnapshotReading | None,
+) -> tuple[tuple[Borrador100Snapshot, ...], tuple[Borrador100RefusedSnapshot, ...]]:
+    """Return the readable and refused snapshots; no reading holds neither."""
+    if reading is None:
+        return (), ()
+    return reading.readable, reading.refused
+
+
 def _latest_identity_check(observations: tuple[VerifyObservation, ...]) -> UtcInstant | None:
     """An unknown verdict got no answer and cannot establish a captured check."""
     return max(
@@ -174,9 +202,7 @@ def load_aeat_sync_status(
 
     tax_areas = (AeatSyncStatusArea.FILED_DECLARATIONS, AeatSyncStatusArea.IDENTITY_CHECKS)
     tax_id = guarded(tax_areas, ports.profile_tax_id, None)
-    if tax_id is None:
-        unreadable.setdefault(AeatSyncStatusArea.FILED_DECLARATIONS, _TAX_ID_MISSING)
-        unreadable.setdefault(AeatSyncStatusArea.IDENTITY_CHECKS, _TAX_ID_MISSING)
+    _mark_tax_id_missing(unreadable, tax_id)
 
     filed_areas = (AeatSyncStatusArea.FILED_DECLARATIONS,)
     census = guarded((AeatSyncStatusArea.CENSUS,), ports.census_observation, None)
@@ -196,8 +222,7 @@ def load_aeat_sync_status(
     if notifications is not None:
         _require_bucket(bucket_id, notifications.bucket_id)
     borrador_reading = guarded((AeatSyncStatusArea.BORRADOR_100,), ports.borrador_snapshots, None)
-    borrador = () if borrador_reading is None else borrador_reading.readable
-    borrador_refused = () if borrador_reading is None else borrador_reading.refused
+    borrador, borrador_refused = _split_borrador_reading(borrador_reading)
     _require_bucket(
         bucket_id,
         *(snapshot.bucket_id for snapshot in borrador),
@@ -219,15 +244,7 @@ def load_aeat_sync_status(
         notifications=_notification_capture(notifications),
         iva_wallet_captured_at=guarded((AeatSyncStatusArea.IVA_WALLET,), ports.iva_wallet_captured_at, None),
         borrador_imported_at=max((snapshot.captured_at for snapshot in borrador), default=None),
-        borrador_refused=tuple(
-            sorted(
-                (
-                    AeatSyncRefusedSnapshotV1(snapshot_id=item.snapshot.snapshot_id, reason=item.reason)
-                    for item in borrador_refused
-                ),
-                key=lambda item: item.snapshot_id,
-            )
-        ),
+        borrador_refused=_refused_snapshot_rows(borrador_refused),
         identity_checked_at=_latest_identity_check(identity),
         unreadable=unreadable,
     )

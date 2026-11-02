@@ -195,6 +195,14 @@ def _validate_refused_shape(
         raise ValueError("refused borrador snapshots must be sorted and unique")
     if set(refused_ids) & {row.snapshot_id for row in rows}:
         raise ValueError("a borrador snapshot cannot be both listed and refused")
+    _validate_refused_for_kind(kind, refused, filing_year)
+
+
+def _validate_refused_for_kind(
+    kind: Borrador100ReadKind,
+    refused: tuple[Borrador100RefusedSnapshotSummary, ...],
+    filing_year: int | None,
+) -> None:
     if kind == "view" and refused:
         raise ValueError("a view refuses its snapshot rather than listing it")
     if kind == "latest" and any(
