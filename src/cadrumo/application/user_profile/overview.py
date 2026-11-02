@@ -62,6 +62,7 @@ from ...domain.user_profile.labels import (
 from ...domain.user_profile.schema import ProfileFieldCodeList, ProfileFieldType, derived_selector_for_path
 from ...domain.user_profile.setup_answers import PROFILE_OUTPUT_LANGUAGE_PATH
 from ...domain.user_profile.values import ProfileSetupState
+from ..wizard.models import WizardWidget
 from .completeness import (
     conditional_profile_missing_required,
     conditional_profile_required_paths,
@@ -178,6 +179,44 @@ class ProfileFieldChoice(BaseModel):
 _NO_CODE_LISTS: Final[Mapping[ProfileFieldCodeList, tuple[str, ...]]] = MappingProxyType[
     ProfileFieldCodeList, tuple[str, ...]
 ]({})
+_NO_WIZARD_CHOICES: Final[Mapping[str, tuple[ProfileFieldChoice, ...]]] = MappingProxyType[
+    str, tuple[ProfileFieldChoice, ...]
+]({})
+_PICK_ONE_WIDGETS: Final[frozenset[WizardWidget]] = frozenset({WizardWidget.SELECT, WizardWidget.TEXT})
+"""Wizard widgets whose choices are alternatives for one answer.
+
+A checkbox's choices are members of a comma-joined list, which is not an answer
+a field typed as a single string can be picked from.
+"""
+
+
+def profile_wizard_choice_sets(flow: WizardFlow | None) -> Mapping[str, tuple[ProfileFieldChoice, ...]]:
+    """Return, per profile path, the pick-one choices the setup wizard asks it with.
+
+    A field the schema declares as plain text can still have a closed answer
+    set that only the wizard knows: the Modelo 100 declaration type and the
+    disability grades are official codes whose words live in the wizard's
+    copy. Joining those choices onto the path serves the words the wizard asks
+    with from their one producer, so no surface keeps a vocabulary of its own.
+
+    Args:
+        flow: The setup flow built for the caller's pinned authority, so the
+            codes are the vocabulary the same generation validates. Without it
+            no path has wizard choices.
+
+    Returns:
+        One entry per path a pick-one question writes and offers choices for.
+    """
+    if flow is None:
+        return _NO_WIZARD_CHOICES
+    return {
+        question.profile_key: tuple(
+            ProfileFieldChoice(value=choice.value, label=tr(choice.label)) for choice in question.choices
+        )
+        for section in flow.sections
+        for question in section.questions
+        if question.profile_key is not None and question.choices and question.widget in _PICK_ONE_WIDGETS
+    }
 
 
 def profile_field_choices(
@@ -463,6 +502,7 @@ def _field_view(
     row_index: str | None = None,
     conditionally_required: frozenset[str] = frozenset(),
     code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
+    wizard_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> ProfileFieldView:
     """Pair one path with the field declaring it and whatever the record holds there.
 
@@ -484,6 +524,11 @@ def _field_view(
     raw = values.get(path)
     masked = mask_profile_field(path=path, label=field.description, sensitivity=field.sensitivity)
     present = profile_value_is_present(raw)
+    # The schema's own closed set wins; the wizard's words fill in only for a
+    # field the schema leaves as typed text.
+    choices = profile_field_choices(field, path=f"{section_key}.{field.key}") or wizard_choices.get(
+        f"{section_key}.{field.key}", ()
+    )
     return ProfileFieldView(
         path=path,
         label=f"{profile_field_label(section_key, field) or tr('flows.manager.field_unavailable')}{label_suffix}",
@@ -495,7 +540,7 @@ def _field_view(
         required=field.required or path in conditionally_required,
         field_type=field.type,
         country_options=() if field.code_list is None else code_lists.get(field.code_list, ()),
-        choices=profile_field_choices(field, path=f"{section_key}.{field.key}"),
+        choices=choices,
         help=help_lines,
         about=field.description,
         row_index=row_index,
@@ -508,6 +553,7 @@ def _repeatable_section_views(
     present: frozenset[str],
     field_help: Mapping[str, tuple[str, ...]],
     code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
+    wizard_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> list[ProfileFieldView]:
     """Expand one repeatable section into a row group per instance it holds.
 
@@ -532,6 +578,7 @@ def _repeatable_section_views(
             help_lines=field_help.get(f"{section.key}.{field.key}"),
             row_index=row or None,
             code_lists=code_lists,
+            wizard_choices=wizard_choices,
         )
         for row in rows
         for field in section.fields
@@ -702,6 +749,7 @@ def _section_field_views(
     derived_selectors: Iterable[ProfileDerivedSelectorDefinition] = (),
     conditionally_required: frozenset[str] = frozenset(),
     code_lists: Mapping[ProfileFieldCodeList, tuple[str, ...]] = _NO_CODE_LISTS,
+    wizard_choices: Mapping[str, tuple[ProfileFieldChoice, ...]] = _NO_WIZARD_CHOICES,
 ) -> list[ProfileFieldView]:
     """Every row one section contributes, expanding whatever repeats.
 
@@ -711,7 +759,7 @@ def _section_field_views(
     exists to prevent, reintroduced at the point of entry.
     """
     if section.repeatable:
-        return _repeatable_section_views(section, values, present, field_help, code_lists)
+        return _repeatable_section_views(section, values, present, field_help, code_lists, wizard_choices)
     views: list[ProfileFieldView] = []
     for field in section.fields:
         if derived_selector_for_path(f"{section.key}.{field.key}", derived_selectors) is not None:
@@ -728,6 +776,7 @@ def _section_field_views(
                 help_lines=field_help.get(f"{section.key}.{field.key}"),
                 conditionally_required=conditionally_required,
                 code_lists=code_lists,
+                wizard_choices=wizard_choices,
             ),
         )
     return views
@@ -782,6 +831,7 @@ def build_profile_overview(
     resolved_schema = profile_schema_for_record(record, schema=schema)
     values = record_to_path_values(record)
     field_help = _NO_FIELD_HELP if flow is None else profile_field_help(flow)
+    wizard_choices = profile_wizard_choice_sets(flow)
     ejercicio_answers = _NO_EJERCICIO_ANSWERS if flow is None else profile_field_ejercicio_answers(flow, record.facts)
 
     sections: list[ProfileSectionView] = []
@@ -821,6 +871,7 @@ def build_profile_overview(
                         resolved_schema.derived_selectors,
                         conditionally_required,
                         code_lists,
+                        wizard_choices,
                     )
                 ),
             ),
@@ -850,5 +901,6 @@ __all__ = [
     "build_profile_overview",
     "mask_profile_field",
     "profile_field_choices",
+    "profile_wizard_choice_sets",
     "resolve_profile_field_label_for_path",
 ]
