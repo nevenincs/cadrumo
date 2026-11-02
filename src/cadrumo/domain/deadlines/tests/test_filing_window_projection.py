@@ -24,6 +24,7 @@ from datetime import date, timedelta
 
 import pytest
 
+from ....core.modelo import Modelo
 from ....core.period import Period
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...contribuyente.entity_type import EntityType
@@ -304,7 +305,7 @@ def test_the_engine_reports_an_unknown_close_as_unknown_and_never_overdue(
     schedule = DeadlineEngine().compute(_iva_profile(), 2027, today=date(2028, 12, 31))
 
     unknown = {(item.modelo, item.period.registry_token): item for item in schedule.close_unknown_obligations}
-    first_quarter = unknown[("303", "1T")]
+    first_quarter = unknown[(Modelo("303"), "1T")]
     assert first_quarter.status is ObligationStatus.UNKNOWN
     assert first_quarter.opens_on == date(2027, 4, 1)
     assert first_quarter.nominal_closes_on == date(2027, 4, 20)

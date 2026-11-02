@@ -59,6 +59,7 @@ def _overdue_context() -> tuple[WorkUnit, Period, date, date]:
     window = resolve_filing_window(_MODELO, _FILING_YEAR, period)
     assert window is not None, "registry must carry an M130 1T 2026 deadline window"
     closes_on = window.closes_on
+    assert closes_on is not None, "the M130 1T 2026 window must carry a close date"
     reference_on = closes_on + timedelta(days=40)
     return _work_unit(period), period, closes_on, reference_on
 
@@ -139,6 +140,7 @@ def test_in_time_deadline_posture_has_no_conditional_rate_preview() -> None:
     window = resolve_filing_window(_MODELO, _FILING_YEAR, period)
     assert window is not None
     closes_on = window.closes_on
+    assert closes_on is not None, "the M130 1T 2026 window must carry a close date"
     reference_on = closes_on - timedelta(days=5)
 
     posture = modelo_work_deadline_posture(_work_unit(period), reference_on=reference_on)

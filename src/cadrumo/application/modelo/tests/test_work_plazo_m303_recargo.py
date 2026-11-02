@@ -100,6 +100,7 @@ def test_late_m303_quarter_surfaces_unassessed_rate_preview() -> None:
             window = resolve_filing_window("303", filing_year, period)
             assert window is not None, f"registry must carry an {case_id} window"
             closes_on = window.closes_on
+            assert closes_on is not None, case_id
 
             reference_today = closes_on + timedelta(days=40)
             work_unit = _work_unit_for(quarter, filing_year)
@@ -145,6 +146,7 @@ def test_in_time_m303_quarter_is_silent() -> None:
         window = resolve_filing_window("303", filing_year, period)
         assert window is not None, case_id
         closes_on = window.closes_on
+        assert closes_on is not None, case_id
 
         reference_today = closes_on - timedelta(days=5)
         work_unit = _work_unit_for(quarter, filing_year)

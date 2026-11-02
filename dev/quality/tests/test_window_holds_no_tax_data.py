@@ -114,7 +114,7 @@ def read_facts() -> Facts:
                     fraction = iva_rate_percentage(slot, day)
                 except IvaRateNotFoundError:  # a slot not in force on this day has no rate to read
                     fraction = None
-                if fraction:
+                if fraction is not None and fraction != 0:
                     rates.update({fraction.normalize(), (fraction * 100).normalize()})
     return Facts({name: frozenset(tokens) for name, tokens in vocabularies.items()}, frozenset(rates))
 
@@ -290,10 +290,11 @@ def _literal_like(tokens: list[Token], index: int) -> bool:
 
 def _literal_chain(tokens: list[Token], token: Token) -> Iterator[int]:
     """Yield the literal brackets enclosing ``token``, innermost first, stopping at the first body or call."""
-    parent = token.parent
+    parent: int = token.parent
     while parent >= 0 and _literal_like(tokens, parent):
         yield parent
-        parent = tokens[parent].parent
+        enclosing: Token = tokens[parent]
+        parent = enclosing.parent
 
 
 def _value(text: str) -> Decimal | None:
@@ -360,9 +361,11 @@ def rate_hits(tokens: list[Token], facts: Facts) -> list[Hit]:
 
 
 _STOP: Final = frozenset(
-    {"+", "-", "*", "/", "%", ",", ";", ")", "]", "}", "?", ":", "=", "==", "===", "!=", "!==", "<", ">"}
+    {
+        *("+", "-", "*", "/", "%", ",", ";", ")", "]", "}", "?", ":", "=", "==", "===", "!=", "!==", "<", ">"),
+        *("<=", ">=", "&&", "||", "??", "=>", "(", "[", "{"),
+    }
 )
-_STOP |= {"<=", ">=", "&&", "||", "??", "=>", "(", "[", "{"}
 _HELPER: Final = re.compile(r"^(?:timesTo\w*|multiplyBy\w*|mulDecimal\w*|\w+ToCent)$")
 _POWER_OF_TEN: Final = re.compile(r"^10*n$")
 
