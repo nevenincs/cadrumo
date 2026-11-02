@@ -4317,7 +4317,14 @@ desktop:
       next_attention: A következő rovat, amely rád vár (amíg a nyomtatványon van a
         fókusz)
     outline:
+      collapse_all: Összes csoport összecsukása
+      could_not_calculate: 'Nem számítható ki: {count}'
+      does_not_apply: Nem alkalmazandó
+      expand_all: Összes csoport kibontása
+      hide_not_applicable: A nem alkalmazandók elrejtése
       label: A nyomtatvány vázlata
+      may_apply: Csak ha rád vonatkozik
+      needs_you: 'Rád vár: {count}'
     rename:
       name: Név
       save: Név mentése
@@ -9674,9 +9681,20 @@ workspace:
         past_filing_window: A benyújtási határidő lejárt, a két részletben fizetéshez
           pedig azon belül kell benyújtanod a bevallást.
         result_unknown: 'Előbb számold ki a bevallást: az eredménye dönt erről.'
+        settlement_unsupported: A bevallás által rendezett összeg nem az eredményével
+          azonos irányú, például ha a teljes fizetendő összeget a házastársad visszatérítésének
+          terhére felfüggeszted. A hivatalos fájl ezt nem tudja rögzíteni, ezért itt
+          nem rendezhető.
       file_format:
         fixed_width: AEAT-fájl a rögzített szélességű BOE-formátumban
         xml_dictionary: AEAT XML-fájl
+      instalment:
+        advisory: 'Tájékoztató jellegű: a Cadrumo az első részletet centre kerekíti,
+          a maradékot a második részlethez adja. Hivatalos szabály nem mondja meg,
+          melyik részlethez tartozik egy cent, ezért fizetés előtt ellenőrizd mindkét
+          összeget a Renta WEB-ben.'
+        first: 'Első részlet, a %{share}% a benyújtáskor: %{amount}'
+        second: 'Második részlet, a fennmaradó %{share}%: %{amount}'
       resolve_first: 'A fájl létrehozása vagy a benyújtás rögzítése előtt oldd meg,
         ami akadályozza a benyújtást (akadályozó: {count}).'
       title: A bevallás exportálása

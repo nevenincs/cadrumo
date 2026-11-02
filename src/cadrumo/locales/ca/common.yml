@@ -4349,7 +4349,14 @@ desktop:
       move: Moure's entre caselles
       next_attention: Següent casella que et necessita (amb el formulari enfocat)
     outline:
+      collapse_all: Plegar tots els grups
+      could_not_calculate: 'No s''ha pogut calcular: {count}'
+      does_not_apply: No s'aplica
+      expand_all: Desplegar tots els grups
+      hide_not_applicable: Amagar el que no s'aplica
       label: Esquema del formulari
+      may_apply: Només si se t'aplica
+      needs_you: 'Et necessita: {count}'
     rename:
       name: Nom
       save: Desar el nom
@@ -9718,9 +9725,19 @@ workspace:
         past_filing_window: El termini de presentació ha acabat, i pagar en dos terminis
           exigeix presentar la declaració dins d'aquest termini.
         result_unknown: 'Calcula abans la declaració: el seu resultat ho decideix.'
+        settlement_unsupported: L'import que liquida aquesta declaració no va en el
+          mateix sentit que el seu resultat, com quan suspens tot l'import a ingressar
+          a càrrec de la devolució del teu cònjuge. El fitxer oficial no permet indicar-ho,
+          així que no es pot liquidar aquí.
       file_format:
         fixed_width: Fitxer de l'AEAT amb el disseny de registre BOE d'amplada fixa
         xml_dictionary: Fitxer XML de l'AEAT
+      instalment:
+        advisory: 'Orientatiu: Cadrumo arrodoneix el primer termini al cèntim i deixa
+          la resta per al segon. Cap norma oficial no indica a quin termini va un
+          cèntim, així que comprova tots dos imports a Renta WEB abans de pagar.'
+        first: 'Primer termini, el %{share} % en presentar: %{amount}'
+        second: 'Segon termini, el %{share} % restant: %{amount}'
       resolve_first: 'Resol el que impedeix presentar abans de generar el fitxer o
         registrar la presentació (impedeixen presentar: {count}).'
       title: Exporta la declaració
