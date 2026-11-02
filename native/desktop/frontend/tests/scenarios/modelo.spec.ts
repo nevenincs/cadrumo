@@ -311,6 +311,37 @@ test("a Modelo 130 recorded as filed shows its proven-zero quarter as zero", asy
   ).toBeVisible();
 });
 
+test("a box shows the help the read serves for it, and its details in words only", async ({
+  page: target,
+}) => {
+  const all = fields(form("130-1T").form.form.pages);
+  const helped = all.find((field) => field.box && field.help);
+  if (!helped?.help) throw new Error("the 130 serves no help for any box");
+  await openDeclaration(target, "130");
+  const row = boxRow(target, helped.box!);
+  // The help sits under the box's words on the form itself.
+  await expect(row).toContainText(helped.help);
+  await row
+    .getByRole("button", { name: label("workspace.modelo.field.details") })
+    .click();
+  const facts = target.getByRole("dialog", {
+    name: label("workspace.modelo.field.details"),
+  });
+  await expect(facts).toContainText(helped.label.text);
+  await expect(facts).toContainText(helped.help);
+  // Legal references and the formula are served as identifiers: never drawn.
+  for (const reference of helped.legal_refs)
+    await expect(facts).not.toContainText(reference);
+  const said = await facts.innerText();
+  expect(
+    RAW.flatMap(([kind, source]) =>
+      [...said.matchAll(new RegExp(source, "g"))].map(
+        (match) => `${kind}: ${match[0]}`,
+      ),
+    ),
+  ).toEqual([]);
+});
+
 test("a box whose kind of value cannot be typed says why on the form", async ({
   page: target,
 }) => {
@@ -350,7 +381,8 @@ test("a box whose kind of value cannot be typed says why on the form", async ({
     name: label("workspace.modelo.section.box", { box: inGrid.box }),
   });
   await expect(cell).not.toContainText(reason);
-  await cell.locator("button").hover();
+  // The box's own face, not the button beside it that opens its details.
+  await cell.locator("button:not([data-field-facts])").hover();
   await expect(target.getByRole("tooltip")).toContainText(reason);
 });
 

@@ -11,6 +11,7 @@ import { BoxNoteList } from "./BoxNoteList";
 import { notesOf } from "./boxNotes";
 import { BoxNumber } from "./BoxNumber";
 import { readOnlyReason } from "./entryField";
+import { FieldFacts, FieldHelp } from "./FieldFacts";
 import { useForm } from "./formContext";
 import { ORIGIN_LOOK, TONE_TEXT } from "./originLook";
 import { confirmIntent, editKey, fieldKey, type StagedEdit } from "./session";
@@ -89,8 +90,8 @@ export function useChosenFocus<E extends HTMLElement>(
   return ref;
 }
 
-/** One box on its own line: its printed number, its words, its value and
- * where the value comes from. */
+/** One box on its own line: its printed number, its words with the help the
+ * read serves for it, its value and where the value comes from. */
 export function FieldRow({ field }: { field: PublicModeloFormField }) {
   const t = useStrings();
   const form = useForm();
@@ -124,8 +125,14 @@ export function FieldRow({ field }: { field: PublicModeloFormField }) {
       <span role="gridcell">
         <BoxNumber box={field.box} />
       </span>
-      <span role="gridcell" className="min-w-0 text-base leading-snug">
-        <Label text={field.label} />
+      <span role="gridcell" className="flex min-w-0 flex-col gap-0.5 py-1">
+        <span className="flex items-start gap-1 text-base leading-snug">
+          <span className="min-w-0">
+            <Label text={field.label} />
+          </span>
+          <FieldFacts field={field} className="-my-0.5 shrink-0" />
+        </span>
+        <FieldHelp field={field} full={selected} />
       </span>
       <span role="gridcell" className="flex justify-end">
         <ValueCell

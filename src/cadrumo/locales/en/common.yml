@@ -9436,6 +9436,8 @@ workspace:
         the filing (blocking: {count}).'
       title: Export the declaration
       verify_first: Check the declaration before exporting it.
+    field:
+      details: About this box
     filed:
       read_only: 'Recorded as filed: you can look at it but not change it. To change
         it, start a correction of this declaration.'

@@ -166,7 +166,10 @@ export function SectionView({
       (entries) => {
         if (entries.some((entry) => entry.isIntersecting)) setNear(true);
       },
-      { rootMargin: "1200px 0px" },
+      // The form scrolls inside its own panel; measured against the window,
+      // a section below the panel's edge is clipped and the margin never
+      // reaches it.
+      { root: element.closest("[data-modelo-form]"), rootMargin: "1200px 0px" },
     );
     observer.observe(element);
     return () => observer.disconnect();

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from "@storybook/react-vite";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { FormView } from "@/components/modelo/form/FormView";
+import { openChosenFacts } from "@/components/modelo/form/FormView.stories";
 import { useFormSession } from "@/components/modelo/form/session";
 import type { ModeloWorkbenchFormProjectionV1 } from "@/shell/modeloContract";
 import { withSections, type Language } from "./fixtures";
@@ -13,13 +14,21 @@ import { languageOf, useFixture } from "./useFixture";
 function Loaded({
   envelope,
   language,
+  choose,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   language: Language;
+  choose?: string;
 }) {
   const port = useMemo(() => prototypePort(envelope), [envelope]);
   const session = useFormSession({ envelope, port, language });
   const [details, setDetails] = useState(false);
+  const chose = useRef(false);
+  useEffect(() => {
+    if (chose.current || !choose) return;
+    chose.current = true;
+    session.selectBox(choose);
+  }, [session, choose]);
   return (
     <div className="flex h-full min-h-0 flex-col bg-background">
       <FormView
@@ -32,7 +41,15 @@ function Loaded({
   );
 }
 
-function Drawn({ language, section }: { language: Language; section: string }) {
+function Drawn({
+  language,
+  section,
+  choose,
+}: {
+  language: Language;
+  section: string;
+  choose?: string;
+}) {
   const form = useFixture("form", language);
   const envelope = useMemo(
     () => (form ? withSections(form, [section]) : null),
@@ -44,6 +61,7 @@ function Drawn({ language, section }: { language: Language; section: string }) {
       key={`${language}-${section}`}
       envelope={envelope}
       language={language}
+      choose={choose}
     />
   );
 }
@@ -83,4 +101,28 @@ export const Liability: Story = {
       section="datoseconomicos-resultados.calculoimpuestores-4"
     />
   ),
+};
+
+export const BoxHelp: Story = {
+  name: "Liability, a box's help and details",
+  render: (_, { globals }) => (
+    <Drawn
+      language={languageOf(globals)}
+      section="datoseconomicos-resultados.calculoimpuestores-4"
+      choose="0582"
+    />
+  ),
+  play: ({ canvasElement }) => openChosenFacts(canvasElement),
+};
+
+export const BoxWithoutHelp: Story = {
+  name: "Employment income, a box the read gives no help",
+  render: (_, { globals }) => (
+    <Drawn
+      language={languageOf(globals)}
+      section="datoseconomicos-resultados.rdtotrabajores"
+      choose="0019"
+    />
+  ),
+  play: ({ canvasElement }) => openChosenFacts(canvasElement),
 };
