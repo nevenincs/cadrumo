@@ -445,7 +445,9 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
     for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
         if binding_id in resolved_binding_values or annual_casilla in resolved_annual_casillas:
             continue
-        if _calculated_decimal(casilla_values.get(annual_casilla)) == ZERO:
+        annual_value = casilla_values.get(annual_casilla)
+        if annual_value is not None and _calculated_decimal(annual_value) == ZERO:
+            # Only a calculated zero proves no fold-in is owed; an absent annual box is unknown.
             continue
         missing_relations.append(relation_id)
         missing_bindings.append(binding_id)
@@ -467,7 +469,7 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
             "missing_303_periods": missing_periods,
             "missing_303_reconciliation_bindings": tuple(missing_bindings),
             "zero_reconciliation_casillas_at_risk": tuple(missing_targets),
-            "nonzero_annual_casillas": tuple(missing_annuals),
+            "annual_casillas_not_proven_zero": tuple(missing_annuals),
         },
         precondition_failure=build_modelo_precondition_failure(
             subject_leaf_key="modelo.work.calculate",
