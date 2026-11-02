@@ -55,7 +55,14 @@ from cadrumo_client.contracts.sign_in_outcomes import ProfileLoginOutcome
 
 from ..automation_lifecycle_service import AutomationLifecycleService
 from ..session_authority_contracts import SessionAuthorityFacts
-from ._session_authority_support import AdmissionOwner, Subject, lifecycle, lock_native_login, session_published
+from ._session_authority_support import (
+    AdmissionOwner,
+    Subject,
+    lifecycle,
+    lock_native_login,
+    retry_incomplete_cleanup_then_close,
+    session_published,
+)
 
 pytestmark = [
     pytest.mark.integration,
@@ -380,23 +387,7 @@ async def test_api_preparation_exit_failure_preserves_primary_and_retryable_inst
     assert owner.retired.count(attempted) == 1
     cleanup = primary.__dict__.get("async_cleanup_error")
     assert isinstance(cleanup, AsyncResourceCleanupError)
-    with pytest.raises(AsyncResourceCleanupError) as incomplete:
-        await cleanup.retry_cleanup()
-    assert owner.retired.count(attempted) == 2
-    owner.failed_retirements.clear()
-    await incomplete.value.retry_cleanup()
-    assert owner.retired.count(attempted) == 3
-    status = subject.authority.status(
-        connection_id=subject.connection,
-        session_id=attempted,
-        published_authority=Availability.AVAILABLE,
-        provider=Availability.NOT_REQUIRED,
-    )
-    assert isinstance(status, ProfileAccessStatus)
-    assert not status.credential_authenticated and status.session_id is None
-    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
-    await subject.authority.close()
-    assert owner.retired.count(attempted) == 3
+    await retry_incomplete_cleanup_then_close(subject, owner, cleanup, attempted)
 
 
 def test_revocation_serializes_against_material_release_and_retires_the_winning_admission(subject: Subject) -> None:

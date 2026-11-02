@@ -48,7 +48,13 @@ from cadrumo_client.contracts.automation_codes import AutomationCustodyCode, Aut
 from cadrumo_client.contracts.automation_lifecycle import AutomationResumeRequest
 
 from ..session_authority_contracts import SessionAuthorityFacts
-from ._session_authority_support import AdmissionOwner, Subject, lifecycle
+from ._session_authority_support import (
+    AdmissionOwner,
+    Subject,
+    attended_tree,
+    lifecycle,
+    retry_incomplete_cleanup_then_close,
+)
 
 pytestmark = [
     pytest.mark.integration,
@@ -270,20 +276,7 @@ def test_observed_clock_rollback_requires_new_admission(subject: Subject, clock:
 
 
 def test_attended_logout_is_irreversible_and_does_not_revoke_independent_api(subject: Subject) -> None:
-    api = subject.admit()
-    human = subject.authority.admit_human(connection_id=subject.connection)
-    assert isinstance(api, AccessSession) and api.grant_id is not None
-    assert isinstance(human, AccessSession)
-    recipient = uuid4()
-    subject.owner.connections[recipient] = api.client_id
-    child = subject.authority.delegate(
-        connection_id=subject.connection,
-        parent_session_id=human.session_id,
-        recipient_connection_id=recipient,
-        grant_id=api.grant_id,
-        scope=human.scope,
-    )
-    assert isinstance(child, AccessSession) and child.kind is SessionKind.ATTENDED
+    api, human, child, recipient = attended_tree(subject)
     assert child.originating_login_id == human.originating_login_id
     before = subject.owner.current.context
     other_login = changed(before.login_contexts[0], login_id="another-verified-login")
@@ -434,23 +427,7 @@ async def test_failed_human_binding_preserves_primary_and_retryable_candidate_re
     assert isinstance(cleanup, AsyncResourceCleanupError)
     assert owner.retired.count(attempted) == 1
 
-    with pytest.raises(AsyncResourceCleanupError) as incomplete:
-        await cleanup.retry_cleanup()
-    assert owner.retired.count(attempted) == 2
-    owner.failed_retirements.clear()
-    await incomplete.value.retry_cleanup()
-    assert owner.retired.count(attempted) == 3
-    status = subject.authority.status(
-        connection_id=subject.connection,
-        session_id=attempted,
-        published_authority=Availability.AVAILABLE,
-        provider=Availability.NOT_REQUIRED,
-    )
-    assert isinstance(status, ProfileAccessStatus)
-    assert not status.credential_authenticated and status.session_id is None
-    assert status.denial is AccessDenialCode.AUTHENTICATION_REQUIRED
-    await subject.authority.close()
-    assert owner.retired.count(attempted) == 3
+    await retry_incomplete_cleanup_then_close(subject, owner, cleanup, attempted)
 
 
 @pytest.mark.asyncio
