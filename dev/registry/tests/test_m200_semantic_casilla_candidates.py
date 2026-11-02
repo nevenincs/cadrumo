@@ -3,6 +3,7 @@ from __future__ import annotations
 import ast
 import inspect
 import re
+from collections.abc import Mapping
 from pathlib import Path
 
 import pytest
@@ -19,7 +20,7 @@ from ..analysis.m200_record_design_support import record_design_field_index, rec
 from ..compiler.authority import compiled_bundled_authority
 from ..conformance.modelo_200_echoes import MODELO_200_ECHO_CELLS
 from ..pipeline.record_design_intermediate import RecordDesignIntermediateField, load_record_design_intermediate
-from ..pipeline.semantic_map import load_semantic_map_for_revision, semantic_anchor_key
+from ..pipeline.semantic_map import SemanticMapEntry, load_semantic_map_for_revision, semantic_anchor_key
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_core]
 
@@ -257,9 +258,9 @@ def test_current_casilla_identity_beats_later_sibling_filler() -> None:
     assert proposed_id == "01683"
 
 
-def _printed_number(fields, entry) -> str:
+def _printed_number(fields: Mapping[tuple[object, ...], RecordDesignIntermediateField], entry: SemanticMapEntry) -> str:
     (number,) = re.findall(r"\[([0-9]+)\]", fields[semantic_anchor_key(entry.anchor)].normalized_description)
-    return number.lstrip("0")
+    return str(number).lstrip("0")
 
 
 def _casilla_entries(target_map):
@@ -339,7 +340,7 @@ def test_shared_owner_ignores_the_printed_number_match_that_hides_it(target_iden
     """Teeth: two sheets printing one number with one owner pass every number check, and are still reported."""
     target_map, target_design, declarations, placements = target_identity_inputs
     fields = record_design_field_index(target_design)
-    numbers: dict[str, list] = {}
+    numbers: dict[str, list[SemanticMapEntry]] = {}
     for entry in _casilla_entries(target_map):
         numbers.setdefault(_printed_number(fields, entry), []).append(entry)
     worklist_before = _classify(target_map, target_design, declarations, placements)
