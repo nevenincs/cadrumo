@@ -10,7 +10,8 @@ through the real calculation-note gate, which export and local filing call, and
 the real work-form service, which the TUI and MCP read:
 
 * the calculation succeeds, casilla 06 carries the invoices' stated retención
-  and the revision carries one blocking ``advisory_binding_value`` note;
+  and the revision carries one blocking ``advisory_binding_value`` note for it,
+  beside the one the capped income casilla 01 carries for the same receipts;
 * the revision is stamped with the current screen, and calculating the same
   inputs again addresses the same content-addressed revision;
 * the form shows the note and withholds the file, and offers neither the check
@@ -20,8 +21,9 @@ the real work-form service, which the TUI and MCP read:
   unchecked revision before reaching it;
 * the review workbook, a preview, shows the capped figure with the note's
   sentence beside it rather than refusing it;
-* a quarter whose receipts carry no retención proves casilla 06 zero, carries
-  no blocking note and passes the gate.
+* a quarter whose receipts carry no retención proves casilla 06 zero and
+  carries no note for it; the income those receipts bring is capped on casilla
+  01, so the gate still refuses through that box.
 
 Every figure is invoice arithmetic worked out here, with synthetic data.
 """
@@ -115,6 +117,7 @@ _ZERO_YEAR: Final = 2025
 _QUARTER: Final = "1T"
 _M130_REVISION: Final = "2019-y-siguientes"
 _RETENCIONES_BOX: CasillaId = validated_casilla_id("06")
+_INCOME_BOX: CasillaId = validated_casilla_id("01")
 _REASON: Final = "advisory_binding_value"
 
 # Hand-derived invoice arithmetic at the general 15 % professional rate (RIRPF art. 95.1)
@@ -383,8 +386,15 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
         revision = _calculate(work_unit, operation)
 
         assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == _STATED_RETENCION
-        (note,) = [issue for issue in revision.source_issues if issue.reason == _REASON]
-        assert note.casilla_id == _RETENCIONES_BOX
+        assert {issue.casilla_id for issue in revision.source_issues if issue.reason == _REASON} == {
+            _INCOME_BOX,
+            _RETENCIONES_BOX,
+        }
+        (note,) = [
+            issue
+            for issue in revision.source_issues
+            if issue.reason == _REASON and issue.casilla_id == _RETENCIONES_BOX
+        ]
         assert note.source_ref == "modelo-130-actividad-economica-retenciones-cumulative"
         snapshot = operation.snapshot("130", filing_year=_CAPPED_YEAR, period=_QUARTER)
         assert revision.screen_stamp is not None
@@ -393,8 +403,11 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
         assert _calculate(work_unit, operation).calculation_revision_id == revision.calculation_revision_id
 
         load = _form(secure_objects, _CAPPED_YEAR, operation)
-        (shown,) = [item for item in load.form.calculation_notes if item.reason == _REASON]
-        assert shown.withholds_filing and shown.box == "06"
+        # The expense casilla 02 states a proven zero beside them, which shows but withholds nothing.
+        withholding_boxes = {
+            item.box for item in load.form.calculation_notes if item.reason == _REASON and item.withholds_filing
+        }
+        assert withholding_boxes == {"01", "06"}
         assert form_next_step(load.form, verified=load.verified, filed=load.filed).action not in {
             ModeloFormNextAction.VERIFY,
             ModeloFormNextAction.EXPORT,
@@ -404,7 +417,7 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
         with pytest.raises(ModeloCalculationBlockedError) as refused:
             _verify(revision, operation)
         assert (refused.value.context or {})["reason"] == _REASON
-        assert (refused.value.context or {})["box"] == "06"
+        assert (refused.value.context or {})["box"] in {"01", "06"}
         assert _gate_reasons(work_unit, revision, operation) == {
             action: _REASON for action in ("verify", "export", "file")
         }
@@ -417,7 +430,8 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
             assert sentence is not None
             notes = _review_notes_by_box(revision, language, operation)
             assert notes["06"] == sentence, language
-            assert {box for box, note in notes.items() if note} == {"06"}, language
+            assert notes["01"] == sentence, language
+            assert {box for box, note in notes.items() if note} == {"01", "06"}, language
 
         # The export and the recording each refuse the unchecked revision before their gate is reached.
         with pytest.raises(CalculationRevisionStateError):
@@ -458,9 +472,19 @@ def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(
         revision = _calculate(work_unit, operation)
 
         assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == Decimal("0")
-        assert [issue for issue in revision.source_issues if issue.reason == _REASON] == []
-        assert _gate_reasons(work_unit, revision, operation) == {}
+        # Casilla 06 is proven zero and states no note; the 2.000,00 of income the same
+        # receipt brings is capped on casilla 01 and still withholds the file.
+        assert [
+            issue
+            for issue in revision.source_issues
+            if issue.reason == _REASON and issue.casilla_id == _RETENCIONES_BOX
+        ] == []
+        assert {issue.casilla_id for issue in revision.source_issues if issue.reason == _REASON} == {_INCOME_BOX}
+        assert _gate_reasons(work_unit, revision, operation) == {
+            action: _REASON for action in ("verify", "export", "file")
+        }
         load = _form(secure_objects, _ZERO_YEAR, operation)
-        assert not [item for item in load.form.calculation_notes if item.withholds_filing]
+        assert {item.box for item in load.form.calculation_notes if item.withholds_filing} == {"01"}
         notes = _review_notes_by_box(revision, OutputLanguage.ES, operation)
-        assert "06" in notes and not any(notes.values())
+        assert "06" in notes and not notes["06"]
+        assert {box for box, note in notes.items() if note} == {"01"}

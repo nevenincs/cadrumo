@@ -1469,10 +1469,10 @@ application:
         ezért nem szerepel benne.'
       activity_undeclared: '{element}: a vásárlásához nincs tevékenységtípus, és egy
         másik eszközöd mezőgazdasági, ezért nem mezőgazdaságiként számít.'
-      advisory_imputation_period_ungrounded: 'A(z) {box} mező: {amount} levont adóelőleg
-        függőben van, mert nincs megerősítve, melyik időszakhoz tartozik. A levonás
-        annak a jövedelemnek az időszakához tartozik, amelyből levonták (RIRPF 79.
-        cikk), a nyilvántartásod pedig minden befizetést a bankba érkezés napjával
+      advisory_imputation_period_ungrounded: 'A(z) {box} mező: {amount} összeg függőben
+        van, mert nincs megerősítve, melyik időszakhoz tartozik. A tevékenység bevételei
+        és kiadásai a teljesítéskor számítanak, a levonás pedig a jövedelmével együtt (RIRPF 79.
+        cikk), a nyilvántartásod viszont minden tételt a bankba érkezés napjával
         datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad (RIRPF
         7.2. cikk; LIRPF 14.1.b cikk).'
       advisory_value_proven_zero: 'A(z) {box} mező: a nulla érvényes, mert az időszakban
