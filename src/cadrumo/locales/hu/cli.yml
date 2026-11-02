@@ -927,6 +927,7 @@ cli:
           regularizacion_bienes_inversion: tárgyi eszközök korrekciója
           regularizacion_prorrata: prorrata-korrekció
           retencion: levonás
+          retencion_soportada: kifizetőtől elszenvedett levonás
           withholding296_perceptor: visszatartás-bevallás kedvezményezettje
         relation_input_channel: "%{binding_id}\ta(z) %{relation_id} reláció tölti\
           \ fel\thasználd: --relation %{relation_id}=VALUE"

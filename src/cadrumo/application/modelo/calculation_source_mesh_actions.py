@@ -497,6 +497,7 @@ def _resolve_mesh_families(
     )
     from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
     from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+    from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
     from ..aggregation.withholding_source import WithholdingSourceResolver
     from ..calculations.iva_compensation_annual_partition import IvaCompensationAnnualPartitionSourceResolver
     from ..calculations.m115_no_relevant_payments import m115_no_relevant_payment_periods_for_bucket
@@ -559,6 +560,7 @@ def _resolve_mesh_families(
                 retencion_ports=ports.retencion_observation_ports,
             )
         ),
+        resolve_declared(RetencionSoportadaSourceResolver(ports=ports.retencion_soportada_ports)),
         resolve_declared(
             InvoiceCatalogueSourceResolver(
                 ports=ports.invoice_source_ports,
