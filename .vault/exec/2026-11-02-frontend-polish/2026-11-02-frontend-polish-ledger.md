@@ -5,40 +5,16 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:712b7f95bbe46e2db9229f7ded121f0db6d59a3bdb2518b1e287962691be0abb'
+body_hash: 'sha256:41866fe6369cdc2a475fe655ede45e05a293c36ea44bb2264bfb2c15015b5518'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
 
-<!-- Machine-owned, whole file: `vaultspec-core vault exec log` creates it
-     on first use and appends every row; never hand-edit it. Add no
-     frontmatter fields. Wiki-links belong in `related:` only.
-
-     ONE ledger per plan, the only execution artifact. Each row's first
-     column names its Step. -->
 
 # `frontend-polish` ledger
 
 ## Changes
 
-<!-- MECHANICAL LOG, append-only, one row per path touched per Step, written
-     by `--row`:
-       - `S##` `A` `path`   added
-       - `S##` `M` `path`   modified
-       - `S##` `D` `path`   deleted
-       - `S##` `R` `old` -> `new`   renamed
-     Paths are repo-relative, in backticks. No prose: the Step row states the
-     intent and the commit carries the diff.
-
-     Optional per-Step rows, written by `--verify` and `--by`:
-       - `S##` `verify:` `<command>` -> `pass` | `fail`
-       - `S##` `by:` `<persona>`
-
-     Rows are appended in Step order and never rewritten. Only rows in this
-     section register a Step as covered. `--note` adds a `## Notes` section
-     ONLY on exception (data loss, skipped work, a scaffold left in code, a
-     persistent failure), one `S##`-prefixed line each; it is otherwise
-     omitted. -->
 
 - `S02` `M` `native/desktop/frontend/src/components/modelo/declarations/useDeclarationsList.ts`
 - `S02` `M` `native/desktop/frontend/src/dev/main.tsx`
@@ -60,6 +36,13 @@ related:
 - `S22` `verify:` `Playwright docking tabs/splits/floating plus setup light/dark accessibility (3 cases)` -> `pass`
 - `S02` `verify:` `final declarations deferred-response cases including interrupted refresh (2)` -> `pass`
 - `S02` `verify:` `final npx tsc --noEmit and scoped Prettier` -> `pass`
+- `S03` `M` `native/desktop/frontend/src/shell/providerSettings.ts`
+- `S03` `M` `native/desktop/frontend/src/shell/agentViews.ts`
+- `S03` `M` `native/desktop/frontend/src/dev/main.tsx`
+- `S03` `A` `native/desktop/frontend/tests/scenarios/provider-reads.spec.ts`
+- `S03` `verify:` `TypeScript and targeted provider read ESLint` -> `pass`
+- `S03` `verify:` `provider-reads deferred response scenarios (7)` -> `pass`
+- `S03` `verify:` `selected provider settings save/refusal/reopen/switch/sign-in scenarios (7)` -> `pass`
 
 ## Notes
 

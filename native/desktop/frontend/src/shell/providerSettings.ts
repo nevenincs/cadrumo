@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useLayoutEffect, useMemo, useRef, useState } from "react";
 import type {
   ProviderOutcome,
   ProviderSecret,
@@ -194,15 +194,23 @@ export function useProviderSettings(
   open: boolean,
   opened: number,
 ): ProviderSettingsView {
+  const owner = useMemo(() => ({ host, reader }), [host, reader]);
+  const generation = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      generation.current += 1;
+    },
+    [owner],
+  );
   const [state, setState] = useState({
-    reader,
+    owner,
     again: 0,
     changes: 0,
     busyId: null as string | null,
     outcomes: {} as Record<string, ProviderOutcome>,
   });
-  if (state.reader !== reader)
-    setState({ reader, again: 0, changes: 0, busyId: null, outcomes: {} });
+  if (state.owner !== owner)
+    setState({ owner, again: 0, changes: 0, busyId: null, outcomes: {} });
   const readStatus = useMemo(
     () => (host && reader !== null ? () => host.status() : null),
     [host, reader],
@@ -270,7 +278,8 @@ export function useProviderSettings(
     ) => Promise<ProviderSettingsRecord>,
   ) => {
     const revision = revisionOf(providerId);
-    if (!host || revision === undefined) return;
+    if (!host || reader === null || revision === undefined) return;
+    const mine = generation.current;
     setState((held) => ({
       ...held,
       busyId: providerId,
@@ -280,28 +289,39 @@ export function useProviderSettings(
     }));
     act(host, revision).then(
       () =>
-        setState((held) => ({
-          ...held,
-          busyId: null,
-          again: held.again + 1,
-          changes: held.changes + 1,
-        })),
+        setState((held) =>
+          mine !== generation.current
+            ? held
+            : {
+                ...held,
+                busyId: null,
+                again: held.again + 1,
+                changes: held.changes + 1,
+              },
+        ),
       (error: unknown) => {
         const code = failureCode(error);
         const outcome: ProviderOutcome =
           code === "committed_readback_failed"
             ? { kind: "saved_unread" }
             : { kind: "refused", code };
-        setState((held) => ({
-          ...held,
-          busyId: null,
-          outcomes: { ...held.outcomes, [providerId]: outcome },
-          // Saved all the same, so what depends on it is read again.
-          changes:
-            outcome.kind === "saved_unread" ? held.changes + 1 : held.changes,
-          // A record changed elsewhere is shown as it is now.
-          again: code === "revision_conflict" ? held.again + 1 : held.again,
-        }));
+        setState((held) =>
+          mine !== generation.current
+            ? held
+            : {
+                ...held,
+                busyId: null,
+                outcomes: { ...held.outcomes, [providerId]: outcome },
+                // Saved all the same, so what depends on it is read again.
+                changes:
+                  outcome.kind === "saved_unread"
+                    ? held.changes + 1
+                    : held.changes,
+                // A record changed elsewhere is shown as it is now.
+                again:
+                  code === "revision_conflict" ? held.again + 1 : held.again,
+              },
+        );
       },
     );
   };
