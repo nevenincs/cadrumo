@@ -159,6 +159,48 @@ def test_a_stated_zero_count_proves_the_group_empty(operation: PinnedAuthorityOp
         assert (group.rows_known, group.rows) == (True, ())
 
 
+@pytest.mark.parametrize("count", ["1", "2", "15"])
+def test_a_stated_non_zero_count_without_rows_stays_unknown(operation: PinnedAuthorityOperation, count: str) -> None:
+    record = _record(
+        UserProfileFact(path="renta_family.descendientes_count", value=count),
+        UserProfileFact(path="renta_family.ascendientes_count", value=count),
+    )
+
+    revision = _calculated(operation, record)
+
+    for group_id in ("hijo-rows", "ascendiente-rows"):
+        group = _group(operation, revision, group_id)
+        assert (group.rows_known, group.rows) == (False, ())
+
+
+def test_a_zero_count_that_is_not_plain_text_zero_still_proves_the_group_empty(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    record = _record(UserProfileFact(path="renta_family.descendientes_count", value="0.00"))
+
+    revision = _calculated(operation, record)
+
+    assert (_group(operation, revision, "hijo-rows").rows_known, _group(operation, revision, "hijo-rows").rows) == (
+        True,
+        (),
+    )
+    assert _group(operation, revision, "ascendiente-rows").rows_known is False
+
+
+def test_a_count_larger_than_the_stored_rows_serves_the_stored_rows(operation: PinnedAuthorityOperation) -> None:
+    child = DescendantInfo(birth_date=date(2019, 3, 14), convive_con_contribuyente=True, nif="12345678Z")
+    facts = (
+        *_descendant_facts(operation, (child,)),
+        UserProfileFact(path="renta_family.descendientes_count", value="3"),
+    )
+
+    revision = _calculated(operation, _record(*facts))
+
+    group = _group(operation, revision, "hijo-rows")
+    assert group.rows_known is True
+    assert [row.index for row in group.rows] == [1]
+
+
 def test_one_descendant_is_one_row_with_its_stored_facts_and_unknown_cells_elsewhere(
     operation: PinnedAuthorityOperation,
 ) -> None:

@@ -39,10 +39,6 @@ import {
 } from "./matchingWords";
 import { useMatchingFacts, type Facts } from "./useMatchingFacts";
 
-/** How many evidence chips a queue item shows; the rest are in its
- * accessible description. */
-const SHOWN_CHIPS = 2;
-
 export type AffectedDeclaration = LedgerStatusResult["stale_filings"][number];
 
 const movementAmount = (locale: string, row: LedgerRow) =>
@@ -53,8 +49,8 @@ const movementAmount = (locale: string, row: LedgerRow) =>
 function Chips({ t, pair }: { t: Translate; pair: MatchPair }) {
   return (
     <span className="flex flex-wrap gap-1">
-      {pair.chips.slice(0, SHOWN_CHIPS).map((chip) => (
-        <Badge key={chip.kind} className="ledger-match-chip">
+      {pair.chips.map((chip) => (
+        <Badge key={chip.kind} className="ledger-match-chip whitespace-normal">
           {chipText(t, chip)}
         </Badge>
       ))}

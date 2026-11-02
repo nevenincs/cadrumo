@@ -695,6 +695,14 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
     ]);
     const action = required(request.action);
     if (!["view", "confirm", "withdraw"].includes(action)) invalid();
+    if (action !== "confirm" && text(request.note)) invalid();
+    if (
+      action === "confirm" &&
+      (!text(request.asserted_by) ||
+        (!text(request.territorial_scope) &&
+          !text(request.identification_state)))
+    )
+      invalid();
     const tax = required(request.tax_identifier).toUpperCase();
     const country = text(request.country_code);
     const state = text(request.identification_state);
@@ -708,7 +716,7 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
         canonical_tax_identifier: tax,
         territorial_scope: text(request.territorial_scope),
         identification_state: state,
-        asserted_by: "person",
+        asserted_by: text(request.asserted_by),
         asserted_at: now(),
         note: text(request.note) ?? "",
       };
@@ -719,37 +727,40 @@ export function setupOperations(ledger: FixtureLedger, tools: Tools) {
       facts = null;
       changed = true;
     }
-    const prefix = tax.slice(0, 2);
-    const evidenced = /^[A-Z]{2}$/.test(prefix) && prefix !== "ES";
+    const evidenced = text(request.evidenced_scope);
     return {
       profile_id: profileId,
       action,
       tax_identifier: tax,
       country_code: country,
       evidenced_scope: text(request.evidenced_scope),
-      facts: facts as JsonValue,
-      resolution: {
-        territorial_scope:
-          (facts?.territorial_scope as string | null | undefined) ??
-          (evidenced ? "eu_member" : null),
-        territorial_source: facts
-          ? "operator_assertion"
-          : evidenced
-            ? "document_evidence"
-            : null,
-        identification_state:
-          (facts?.identification_state as string | null | undefined) ?? null,
-        identification_source: facts?.identification_state
-          ? "operator_assertion"
+      facts: action === "confirm" ? (facts as JsonValue) : null,
+      resolution:
+        action === "view"
+          ? {
+              territorial_scope:
+                (facts?.territorial_scope as string | null | undefined) ??
+                evidenced,
+              territorial_source: facts?.territorial_scope
+                ? "operator_assertion"
+                : evidenced
+                  ? "document_evidence"
+                  : null,
+              identification_state:
+                (facts?.identification_state as string | null | undefined) ??
+                null,
+              identification_source: facts?.identification_state
+                ? "operator_assertion"
+                : null,
+              confirmed_scope: null,
+              evidenced_scope: null,
+              contradiction_detail: null,
+            }
           : null,
-        confirmed_scope:
-          (facts?.territorial_scope as string | null | undefined) ?? null,
-        evidenced_scope: evidenced ? "eu_member" : null,
-        contradiction_detail: null,
-      },
       recorded: action === "confirm" ? true : null,
       withdrawn: action === "withdraw" ? changed : null,
       changed,
+      conflict_context: null,
     };
   }
 

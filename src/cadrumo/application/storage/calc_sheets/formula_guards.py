@@ -49,7 +49,7 @@ class _ConditionalGuardCompiler:
             self._validate_dependencies(arg, visiting)
 
     def _branches(self, node: FormulaExpression, visited: frozenset[str]) -> bool:
-        if node.op in ("if_then_else", "require_condition", "record_row_unused", "text_equal"):
+        if node.op in ("if_then_else", "require_condition", "record_row_unused", "text_equal", "unresolved_outcome"):
             return True
         if node.casilla_id is not None and node.casilla_id in self._formulas:
             if node.casilla_id in visited:
@@ -81,6 +81,8 @@ class _ConditionalGuardCompiler:
         return self._combine(parts)
 
     def _visit(self, node: FormulaExpression, visited: frozenset[str]) -> tuple[str, bool]:
+        if node.op == "unresolved_outcome":
+            return "TRUE", True
         if node.op in ("record_row_unused", "text_equal"):
             return f"ISERROR({translate_formula(node, layout=self._layout)})", True
         if node.op == "require_condition":

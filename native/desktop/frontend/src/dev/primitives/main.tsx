@@ -12,6 +12,9 @@ import { DataGridHarness, DataTableHarness } from "./DataGridHarness";
 import { EditorHarness } from "./EditorHarness";
 import { LayersHarness } from "./LayersHarness";
 import { LedgerExportHarness } from "./LedgerExportHarness";
+import recordedEntryOptions from "../fixtures/ledgerEntryOptions.json";
+import { holdLedgerLimits } from "../../shell/ledgerLimits";
+import type { LedgerEntryLimits } from "../../shell/ledgerSetup";
 
 import "virtual:desktop-palette.css";
 
@@ -20,6 +23,9 @@ const scheme = params.get("scheme") === "dark" ? "dark" : "light";
 document.documentElement.dataset.scheme = scheme;
 const count = Math.max(0, Math.trunc(Number(params.get("rows") ?? 40) || 0));
 const harness = params.get("harness");
+// This standalone editor has no ledger host; use its recorded served limits.
+if (harness === "editor")
+  holdLedgerLimits(recordedEntryOptions.limits as LedgerEntryLimits);
 
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
   <StrictMode>
@@ -39,7 +45,11 @@ ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
             staged={Math.max(0, Math.trunc(Number(params.get("staged")) || 0))}
           />
         ) : (
-          <DataGridHarness count={count} grouped={params.has("grouped")} />
+          <DataGridHarness
+            count={count}
+            grouped={params.has("grouped")}
+            columnControls={params.has("columnControls")}
+          />
         )}
       </main>
     </TooltipProvider>

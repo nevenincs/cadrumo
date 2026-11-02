@@ -321,6 +321,8 @@ declare global {
     __fixtureAgentSession?: AgentSession;
     /** The same session's read projections, for controlled transport delays. */
     __fixtureAgentViews?: AgentViews;
+    /** Intercepts list reads inside the method, including bound host copies. */
+    __fixtureLocalModelsRead?: () => Promise<void>;
     __fixtureAgentDrop?: (signal: AgentDropSignal) => void;
     /** Every resolution of a questionnaire the page has handed the host, in
      * order, whether the agent took it or not. */
@@ -1152,6 +1154,7 @@ export function fixtureAgent({
     async localModels() {
       say("agentLocalModels");
       await check();
+      await window.__fixtureLocalModelsRead?.();
       return listSnapshot();
     },
     async addLocalModel(lane, model, expectedRevision) {

@@ -66,6 +66,7 @@ from cadrumo.domain.transactions.own_accounts import (
 )
 from cadrumo.domain.user_profile.tests.profile_creation_authority import profile_creation_context_for_test
 from cadrumo.domain.user_profile.values import ProfileSetupState, UserProfileFact, create_user_profile_record
+from cadrumo.tests.env_scope import ready_clave_settings
 
 from .test_e2e_ledger_m130_quarters_to_m100_annual import (
     _BUCKET_ID,
@@ -98,7 +99,6 @@ from .test_e2e_ledger_m130_quarters_to_m100_annual import (
     _m100_non_relation_zero_bindings,
     _seed_prior_year_m100,
     _verify_modelo_revision,
-    ready_clave_settings,
 )
 
 __all__ = ["secure_objects"]
@@ -168,10 +168,9 @@ def _persist_ledger(objects: SecureObjectRepository) -> None:
 
 
 def _seed_profile(criterion: str) -> None:
-    from .test_e2e_ledger_m130_quarters_to_m100_annual import (
-        GENERAL_REGIME_NATURAL_PERSON_FACTS,
-        renta_single_taxpayer_facts,
-    )
+    from cadrumo.domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
+
+    from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 
     dated = tuple(
         UserProfileFact.model_validate(

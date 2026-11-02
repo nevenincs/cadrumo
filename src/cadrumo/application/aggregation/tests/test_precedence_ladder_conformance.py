@@ -31,7 +31,7 @@ from ....core.casilla_id import validated_casilla_id
 from ...modelo.action_errors import ModeloAggregationBindingError
 from ...modelo.calculation_source_guards import reject_caller_overrides_of_source_bindings
 from ...modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES, CALLER_OVERRIDABLE_CARRY_SOURCES
-from ...modelo.edit_admission import _binding_entry
+from ...modelo.edit_admission import permitted_binding_entry
 from ...modelo.edit_models import ModeloEditNonWritableBindingOverrideSurfaceEntryV1, ModeloEditNonWritableReason
 from ..source_precedence import CALLER_OVERRIDE_PRECEDENCE_LADDER, CallerOverrideDisposition, precedence_ladder_sources
 
@@ -143,7 +143,7 @@ def test_the_editor_reports_a_suffered_withholding_binding_as_source_locked() ->
     revision = _m100_revision()
     binding = next(item for item in revision.bindings if item.id == "renta-retencion-soportada-trabajo")
 
-    entry = _binding_entry(binding, revision=revision)
+    entry = permitted_binding_entry(binding, revision=revision)
 
     assert isinstance(entry, ModeloEditNonWritableBindingOverrideSurfaceEntryV1)
     assert entry.reason is ModeloEditNonWritableReason.SOURCE_LOCKED

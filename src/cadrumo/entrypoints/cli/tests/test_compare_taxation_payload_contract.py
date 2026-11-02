@@ -151,7 +151,5 @@ def test_payload_covers_every_canonical_amount_and_scope_field() -> None:
     """
     canonical = set(TaxationComparisonResult.model_fields)
     transported = set(WorkCompareTaxationResult.model_fields)
-    # The caveat PROSE rides the envelope notices channel, not the result.
-    expected_missing = {"individual_branch_caveat"}
-
-    assert canonical - transported == expected_missing
+    # The caveat PROSE rides the envelope notices channel, and the domain result holds only the flag.
+    assert canonical - transported == set()

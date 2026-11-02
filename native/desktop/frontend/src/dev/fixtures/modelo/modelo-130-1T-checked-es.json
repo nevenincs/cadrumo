@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
+      "calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
       "language": "es",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1748,9 +1748,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "7b2d188a1c18b19eb6621da6a2c1f03c24ec9b0e21330355956eb826bd95637c",
-    "calculation_head_digest": "7db20cfd95c26f3c8e8be15fd78540bb5b49c38c820ccac4fa6729cb43131824",
-    "current_calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
+    "work_unit_record_digest": "be0f03991f54fcbcf0cd9bbba46d80f10fd614e7298a3eda9aa81d71cf5230b1",
+    "calculation_head_digest": "2011f4d63d0194fa1dd4a1e0f3209a386fcdfc4c86e709cd87e10f3edb8d12f1",
+    "current_calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2053,9 +2053,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:23:42.700356Z",
-    "expires_at": "2026-11-02T16:28:42.700356Z",
-    "baseline_id": "cfc919f4654a9731468e843fe1fc9ad4d064a8b9118f845600b8df48019a687f"
+    "issued_at": "2026-11-02T16:30:06.254013Z",
+    "expires_at": "2026-11-02T16:35:06.254013Z",
+    "baseline_id": "9178288430e3cf8ecb612420183eaa0405d04b4e430601d0ba21223ada8c8a8f"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2162,7 +2162,7 @@
     "words": "La comprobación encontró algo que impide presentar.",
     "unapplied_words": null
   },
-  "calculation_revision_id": "3c5f45311b5317beed3e36eb2ff83fccbd2ff19c34b8f4cb2bc9dce47c0b2587",
+  "calculation_revision_id": "3d1673860635882cb52fe29f42cf68d67b6d8b041bb6582dfd1208543834eb3a",
   "verification_report_id": null,
   "asks_m303_evidence": false,
   "asks_modelo_390": false,

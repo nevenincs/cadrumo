@@ -9,7 +9,7 @@ use super::{
     Refused,
     gateway::Client,
     session::{document_record, plain_name},
-    supervisor::Gateway,
+    supervisor::protocol::Gateway,
 };
 use serde::Serialize;
 use serde_json::Value;

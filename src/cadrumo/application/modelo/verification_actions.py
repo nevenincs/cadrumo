@@ -17,6 +17,7 @@ from ...core.identity.hex_ids import CalculationRevisionId
 from ...core.time.clock import now as _utc_now
 from ...domain.buckets.event import BucketEventObjectType, BucketEventType
 from ...domain.buckets.protocols import BucketEventHistoryRepositoryProtocol
+from ...domain.calculations.registry.errors import RegistryFailureCondition, RegistryValidationError
 from ...domain.deadlines.models import TaxpayerProfile
 from ...domain.modelos.calculation_repository import upsert_calculation_revision
 from ...domain.modelos.calculation_revision import (
@@ -218,7 +219,18 @@ def _prepare_verification_profile(
     _require_persisted_required_bindings_resolved(
         work_unit=work_unit, revision=target, action="verify", operation=operation
     )
-    require_work_unit_calculation_unblocked(work_unit=work_unit, revision=target, action="verify", operation=operation)
+    try:
+        require_work_unit_calculation_unblocked(
+            work_unit=work_unit, revision=target, action="verify", operation=operation
+        )
+    except RegistryValidationError as refused:
+        # The note gate screens against the filing-grade snapshot. Authority below
+        # filing grade cannot be screened, and verification reports it as its
+        # blocking finding from the same snapshot request, so the attempt still
+        # persists a report that grants nothing.
+        failure = refused.registry_failure
+        if failure is None or failure.condition is not RegistryFailureCondition.SNAPSHOT_AUTHORITY_GRADE_SUFFICIENT:
+            raise
 
     return checked_profile
 

@@ -14,6 +14,7 @@ from . import _formula_runtime_m131 as _m131
 from . import formula_runtime_m100 as _m100
 from ._formula_operator_contracts import require_formula_operator_arity
 from .errors import RegistryValidationError
+from .formula_runtime_ops import RegistryUnresolvedOutcomeReason, UnresolvedFormulaOutcomeError
 from .formula_runtime_ops import UnresolvedFormulaDependencyError as _UnresolvedFormulaDependencyError
 from .formula_runtime_ops import evaluate_args_op as _evaluate_args_op
 from .formula_runtime_ops import numeric_casilla_value as _numeric_casilla_value
@@ -425,6 +426,23 @@ def _evaluate_require_condition(expression: FormulaExpression, ctx: EvalContext)
     return evaluate_with_context(expression.args[1], ctx)
 
 
+def _evaluate_unresolved_outcome(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
+    """Leave the target without a value for the typed reason its literal names.
+
+    The branch is declared in the registry instead of refusing the whole
+    calculation: only the target is unresolved, every other box still resolves.
+    """
+    token = expression.args[0].text_literal
+    try:
+        reason = RegistryUnresolvedOutcomeReason(token)
+    except ValueError:
+        raise RegistryValidationError(
+            f"formula op 'unresolved_outcome' names unknown reason {token!r}",
+            context={"reason": str(token)},
+        ) from None
+    raise UnresolvedFormulaOutcomeError(reason, context={"filing_year": str(ctx.filing_year)})
+
+
 def _evaluate_age_at_year_end(expression: FormulaExpression, ctx: EvalContext) -> Decimal:
     """Compute age at the fiscal year-end from a date-channel binding.
 
@@ -536,6 +554,7 @@ SPECIALIZED_EXPRESSION_EVALUATORS: dict[str, _FormulaExpressionEvaluator] = {
     "lookup_bracket_by_entity_type": _evaluate_lookup_bracket_by_entity_type,
     "if_then_else": _evaluate_if_then_else,
     "require_condition": _evaluate_require_condition,
+    "unresolved_outcome": _evaluate_unresolved_outcome,
     "text_equal": _evaluate_text_equal,
     "record_row_unused": _evaluate_record_row_unused,
     "age_at_year_end": _evaluate_age_at_year_end,

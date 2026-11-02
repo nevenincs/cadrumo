@@ -19,6 +19,7 @@ from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.schema import ModeloRevision
 from ...domain.calculations.registry.schema_extraction import ExtractionProfileDefinition, ExtractionSurface
 from ...domain.calculations.registry.tax_id_runtime import validate_runtime_spanish_tax_id
+from .borrador_100 import Borrador100PrintedObservation
 from .borrador_100_keys import project_printed_casillas
 from .borrador_100_operation_ports import (
     Borrador100ArtefactKind,
@@ -34,8 +35,10 @@ class PreparedBorrador100Import:
     """Validated observed values; no retained PDF bytes or local source path.
 
     ``binding_values`` holds each printed value under the binding that owns its
-    casilla in the pinned revision. ``unowned_casillas`` lists printed casillas
-    no borrador-admitted binding owns: they are reported, not stored.
+    casilla in the pinned revision. ``printed_observations`` keeps every other
+    printed box the revision declares, comparison-only and never a calculation
+    input. ``unowned_casillas`` lists printed casillas the revision does not
+    declare: they are reported, not stored.
     """
 
     extraction_profile_id: str
@@ -43,6 +46,7 @@ class PreparedBorrador100Import:
     artefact_kind: Borrador100ArtefactKind
     source_pdf_sha256: ContentDigest
     binding_values: Mapping[BindingId, Decimal | str]
+    printed_observations: tuple[Borrador100PrintedObservation, ...]
     blank_casillas: tuple[CasillaId, ...]
     unowned_casillas: tuple[CasillaId, ...]
     warnings: tuple[str, ...]
@@ -75,13 +79,17 @@ def prepare_borrador_100_import(
     coverage = _require_parser_receipt(observation, profile=profile, digest=digest, filing_year=filing_year)
     _require_document_belongs_to_profile(observation.tax_id, profile_tax_id())
     printed, blanks = _collect_printed_values(profile, observation.values)
-    projection = project_printed_casillas(revision, printed)
+    projection = project_printed_casillas(revision, printed, blank=blanks)
     return PreparedBorrador100Import(
         extraction_profile_id=profile.id,
         extraction_coverage=coverage,
         artefact_kind=observation.artefact_kind,
         source_pdf_sha256=digest,
         binding_values=MappingProxyType(dict(projection.binding_values)),
+        printed_observations=tuple(
+            Borrador100PrintedObservation(casilla_id=box.casilla_id, continuidad_id=box.continuidad_id, value=box.value)
+            for box in projection.observed
+        ),
         blank_casillas=tuple(sorted(blanks)),
         unowned_casillas=projection.unowned_casillas,
         warnings=observation.warnings,

@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:77d215e1c66cd7eaa2c5a320944d2c80ea70b56206cb08b5fb9f023fce3c51e0'
+body_hash: 'sha256:045e9f44f8eb29a15d2b27c6751d670195c8d5b49f59d73eb365101976762251'
 ---
 
 # `frontend-polish` plan
@@ -43,13 +43,14 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S22` - Restore a single main landmark around the dock workspace and verify full-window accessibility; `native/desktop/frontend/src/components/docking/DockWorkspace.tsx, native/desktop/frontend/tests/scenarios/docking.spec.ts, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`.
 - [x] `S02` - Prevent obsolete declarations-list reads from overwriting shared workspace cache invalidation; `native/desktop/frontend/src/components/modelo/declarations/`.
 - [x] `S03` - Retire stale provider mutation results and prevent old reads from replacing newly accepted settings; `native/desktop/frontend/src/shell/providerSettings.ts, native/desktop/frontend/src/shell/agentViews.ts`.
-- [ ] `S04` - Bind reading-model selections and agent observations to the current reader lifecycle; `native/desktop/frontend/src/shell/readingModel.ts, native/desktop/frontend/src/shell/agentLive.ts, native/desktop/frontend/src/components/AgentColumn.tsx`.
-- [ ] `S05` - Show every available matching-evidence chip without extra disclosure controls; `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`.
-- [ ] `S06` - Distinguish failed AEAT result refreshes and unavailable empty outcomes from confirmed empty observations; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/shell/aeatSyncResults.ts`.
-- [ ] `S07` - Keep invoice grid row identity stable across unrelated editor and notification updates; `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`.
-- [ ] `S18` - Repair shared suggestion visibility and combobox keyboard escape, and verify grid focus when an active column is hidden; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/tests/scenarios/`.
-- [ ] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.
-- [ ] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
+- [x] `S04` - Bind reading-model selections and agent observations to the current reader lifecycle; `native/desktop/frontend/src/shell/readingModel.ts, native/desktop/frontend/src/shell/agentLive.ts, native/desktop/frontend/src/components/AgentColumn.tsx`.
+- [x] `S05` - Show every available matching-evidence chip without extra disclosure controls; `native/desktop/frontend/src/components/ledger/matching/MatchQueue.tsx`.
+- [x] `S06` - Distinguish failed AEAT result refreshes and unavailable empty outcomes from confirmed empty observations; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/shell/aeatSyncResults.ts`.
+- [x] `S25` - Require host-requested unknown-outcome acknowledgement for exact AEAT retry scopes and prevent overlapping requests; `native/desktop/frontend/src/components/aeatSync/Results.tsx, native/desktop/frontend/src/dev/aeatSyncResultsFixture.ts, native/desktop/frontend/tests/scenarios/aeat-sync.spec.ts`.
+- [x] `S07` - Keep invoice grid row identity stable across unrelated editor and notification updates; `native/desktop/frontend/src/components/ledger/invoices/InvoicesSection.tsx`.
+- [x] `S18` - Repair shared suggestion visibility and combobox keyboard escape, and verify grid focus when an active column is hidden; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/tests/scenarios/`.
+- [x] `S08` - Complete shared-control and typed-editor review for duplication, keyboard access, focus and narrow layouts; `native/desktop/frontend/src/components/ui/, native/desktop/frontend/src/components/editors/`.
+- [x] `S09` - Complete profile, account and authentication workflow review for clear forms, validation and safe transitions; `native/desktop/frontend/src/components/profile/, native/desktop/frontend/src/components/SignIn.tsx, native/desktop/frontend/src/components/AccountMenu.tsx`.
 - [ ] `S10` - Complete remaining ledger workflow review across movements, invoices, documents, assets, registers and transfers; `native/desktop/frontend/src/components/ledger/`.
 - [ ] `S19` - Preserve uncertain declaration creation across chooser changes and require authoritative settlement before another write; `native/desktop/frontend/src/components/modelo/declarations/, native/desktop/frontend/tests/scenarios/modelo-declarations.spec.ts`.
 - [ ] `S20` - Keep modelo writes held across navigation and failed post-write refresh, preserving unknown settlement and list invalidation; `native/desktop/frontend/src/components/modelo/workspace/, native/desktop/frontend/src/components/modelo/filing/, native/desktop/frontend/tests/scenarios/modelo*.spec.ts`.
@@ -63,6 +64,11 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [ ] `S15` - Complete diagnostics, logs, terminals, documentation, search and command-palette review; `native/desktop/frontend/src/components/RecordList.tsx, native/desktop/frontend/src/components/TerminalPane.tsx, native/desktop/frontend/src/components/DocsFrame.tsx, native/desktop/frontend/src/components/CommandPalette.tsx`.
 - [ ] `S16` - Measure cross-surface read, rendering, subscription and retained-state costs and implement justified improvements; `native/desktop/frontend/src/shell/, native/desktop/frontend/scripts/benchmark.mjs, native/desktop/frontend/tests/`.
 - [ ] `S17` - Verify integrated workflows and close the complete surface coverage audit; `native/desktop/frontend/tests/, native/desktop/tests/, .vault/audit/`.
+- [x] `S26` - Make every sent attachment name and skill path readable by keyboard and touch; `native/desktop/frontend/src/components/agent/Transcript.tsx, native/desktop/frontend/src/components/agent/SkillDialog.tsx, native/desktop/frontend/tests/scenarios/agent*.spec.ts`.
+- [x] `S27` - Preserve import and export file tokens across pending picker and export outcomes; `native/desktop/frontend/src/components/ledger/transfer/, native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts, native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`.
+- [x] `S28` - Bind counterparty decisions to exact lookup identity and expose real confirmation, conflict and unresolved outcomes; `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx, native/desktop/frontend/src/shell/ledgerSetup.ts, native/desktop/frontend/src/dev/, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts, src/cadrumo/application/ledger/entry_limits.py, src/cadrumo/application/ledger/counterparty_operation.py, src/cadrumo/application/ledger/tests/test_entry_limits.py, dev/locales/, src/cadrumo/locales/`.
+- [x] `S29` - Distinguish pending and failed Local AI discovery from no lanes and offer model-list read recovery; `native/desktop/frontend/src/shell/localAiLanes.ts, native/desktop/frontend/src/shell/localModels.ts, native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/src/components/setup/LocalAi.tsx, native/desktop/frontend/src/components/setup/ProvisioningPanel.tsx, native/desktop/frontend/src/components/settings/LocalModels.tsx, native/desktop/frontend/src/dev/agentFixtureHost.ts, native/desktop/frontend/tests/scenarios/local-models.spec.ts`.
+- [x] `S30` - Render palette search results only for their query and distinguish unavailable search; `native/desktop/frontend/src/components/CommandPalette.tsx, native/desktop/frontend/tests/scenarios/palette.spec.ts, dev/locales/`.
 
 ## Parallelization
 

@@ -647,6 +647,15 @@ class ModeloRevision(RegistryRevisionDeclaration):
     family_dispositions: Annotated[Mapping[str, _SchemaFamilyDispositionDeclaration], MANIFEST_ONLY, FROZEN_MAPPING] = (
         Field(default_factory=dict, validate_default=True)
     )
+    family_disposition_removals: Annotated[tuple[str, ...], MANIFEST_ONLY] = Field(
+        default=(),
+        exclude_if=lambda value: not value,
+        description=(
+            "Schema families whose disposition, inherited from the declared predecessor, this edition deletes. "
+            "Omitting a disposition inherits it; only a removal here withdraws it. The family must be inherited "
+            "at this point and must not also be authored in this edition."
+        ),
+    )
     restated_families: Annotated[tuple[RestatedFamilyDeclaration, ...], MANIFEST_ONLY] = Field(
         default=(),
         exclude_if=lambda value: not value,
@@ -734,11 +743,18 @@ class ModeloRevision(RegistryRevisionDeclaration):
         law does not require what the revision already declares, which is a
         contradiction the coverage projection would have to arbitrate.
         """
+        self._validate_family_disposition_removals()
         for family in self.family_dispositions:
             if family not in REVISION_SCHEMA_FAMILY_FIELDS:
                 raise RegistryValidationError(
                     f"revision {self.id!r} declares a family disposition for {family!r}, which is not a schema "
                     f"family; enrolled families are {sorted(REVISION_SCHEMA_FAMILY_FIELDS)!r}",
+                )
+            if getattr(self, family) and self.family_dispositions[family].inherited_from is not None:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} inherits a not-applicable disposition for family {family!r} from "
+                    f"{self.family_dispositions[family].inherited_from!r} but declares "
+                    f"{len(getattr(self, family))} of them; list {family!r} in family_disposition_removals",
                 )
             if getattr(self, family):
                 raise RegistryValidationError(
@@ -746,6 +762,24 @@ class ModeloRevision(RegistryRevisionDeclaration):
                     f"{len(getattr(self, family))} of them; drop the disposition or drop the content",
                 )
         return self
+
+    def _validate_family_disposition_removals(self) -> None:
+        """Refuse a removal that names no schema family, repeats one, or contradicts an authored disposition."""
+        seen: set[str] = set()
+        for family in self.family_disposition_removals:
+            if family not in REVISION_SCHEMA_FAMILY_FIELDS:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} removes a family disposition for {family!r}, which is not a schema "
+                    f"family; enrolled families are {sorted(REVISION_SCHEMA_FAMILY_FIELDS)!r}",
+                )
+            if family in seen:
+                raise RegistryValidationError(f"revision {self.id!r} removes the disposition for {family!r} twice")
+            seen.add(family)
+            held = self.family_dispositions.get(family)
+            if held is not None and held.inherited_from is None:
+                raise RegistryValidationError(
+                    f"revision {self.id!r} both removes and authors the disposition for {family!r}",
+                )
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

@@ -13,6 +13,7 @@ import type {
   DocsSearchResult,
   DocsTheme,
 } from "../ipc/contract";
+import { onDocsOrigin } from "../shell/docsOrigin";
 
 const CHANNEL = "cadrumo-desktop";
 const VERSION = 1;
@@ -101,7 +102,7 @@ function readResults(
       return null;
     }
     // A result may only point back into the documentation.
-    if (url.origin !== origin) return null;
+    if (!onDocsOrigin(url, origin)) return null;
     const ranges = Array.isArray(r.ranges)
       ? (r.ranges as unknown[]).filter(
           (range): range is [number, number] =>
@@ -336,7 +337,7 @@ export const DocsFrame = forwardRef<DocsFrameApi, Props>(
           } catch {
             return false;
           }
-          if (target.origin !== origin || target.href.length > MAX_URL)
+          if (!onDocsOrigin(target, origin) || target.href.length > MAX_URL)
             return false;
           post("command", { name: "navigate", url: target.href });
           return true;

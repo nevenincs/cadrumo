@@ -79,9 +79,12 @@ test("each movement shows its one best invoice with the evidence it stands on", 
   await openQueue(target);
   const turia = item(target, "TRANSF IMPRENTA TURIA");
   await expect(turia).toContainText("GT-2026-0917");
-  await expect(turia.locator(".ledger-match-chip").first()).toHaveText(
+  await expect(turia.locator(".ledger-match-chip")).toHaveText([
     label("desktop.ledger.matching.chip.number"),
-  );
+    label("desktop.ledger.matching.chip.after", { count: 18 }),
+    label("desktop.ledger.matching.chip.counterparty"),
+    label("desktop.ledger.matching.chip.amount"),
+  ]);
   await expect(turia).not.toHaveAttribute("data-ambiguous", "true");
   await expect(turia.locator(".ledger-match-link")).toHaveAccessibleDescription(
     label("desktop.ledger.matching.link_named", {

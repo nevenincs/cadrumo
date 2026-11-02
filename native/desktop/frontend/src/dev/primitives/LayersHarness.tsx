@@ -44,7 +44,7 @@ const SUGGESTIONS = ["Alpha", "Alpine", "Beta"].map((word) => ({
 
 /** Every kind of layer that can open inside a dialog, for the browser tests of
  * who gets Escape. */
-function Layers() {
+function Layers({ tallSuggestions = false }: { tallSuggestions?: boolean }) {
   const [day, setDay] = useState("2026-03-14");
   const [text, setText] = useState("");
   const [choice, setChoice] = useState<string | null>(null);
@@ -62,7 +62,15 @@ function Layers() {
           id="text"
           value={text}
           onChange={setText}
-          suggestions={SUGGESTIONS}
+          suggestions={
+            tallSuggestions
+              ? Array.from({ length: 8 }, (_, index) => ({
+                  value: `Choice ${index + 1}`,
+                  label: `Choice ${index + 1}: a deliberately long supplier name that wraps within the suggestion panel`,
+                  note: "Additional supplied detail makes this option taller without changing the input focus.",
+                }))
+              : SUGGESTIONS
+          }
         />
       </Field>
       <EditorField label="Choice" error={refused ? "Choose another." : null}>
@@ -162,7 +170,7 @@ export function LayersHarness({ params }: { params: URLSearchParams }) {
         <DialogContent>
           <DialogTitle>Layers</DialogTitle>
           <DialogDescription>Each opens over this dialog.</DialogDescription>
-          <Layers />
+          <Layers tallSuggestions={params.has("tallSuggestions")} />
         </DialogContent>
       </Dialog>
       <Sheet>
@@ -172,7 +180,7 @@ export function LayersHarness({ params }: { params: URLSearchParams }) {
         <SheetContent closeLabel="Close">
           <SheetTitle>Sheet</SheetTitle>
           <SheetDescription>Each opens over this sheet.</SheetDescription>
-          <Layers />
+          <Layers tallSuggestions={params.has("tallSuggestions")} />
         </SheetContent>
       </Sheet>
       <output data-testid="leaves">{leaves}</output>

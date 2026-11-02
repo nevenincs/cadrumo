@@ -34,6 +34,8 @@ type ComboboxOption = {
   keywords?: readonly string[];
 };
 
+type CancelKey = "escape" | "outside" | "tab" | "shift-tab";
+
 type ComboboxProps = {
   /** Names the search field and the list. */
   label: string;
@@ -41,8 +43,8 @@ type ComboboxProps = {
   options: readonly ComboboxOption[];
   /** The value chosen, and how: Enter, Tab either way, or the pointer. */
   onCommit: (value: string, via: CommitKey) => void;
-  /** Left by Escape, or by a press outside it. */
-  onCancel?: (via: "escape" | "outside") => void;
+  /** Escape or an unselectable Tab restores the owner; outside interaction keeps its focus. */
+  onCancel?: (via: CancelKey) => void;
   /** Shown when no option matches what was typed. */
   emptyLabel: string;
   /** What was typed to open it, as the first search. */
@@ -207,16 +209,18 @@ function Combobox({
     if (triggered) setOpen(false);
   };
   const choose = (chosen: string, via: CommitKey) => {
-    const option = options.find((entry) => entry.value === chosen);
+    const option = groups
+      .flatMap((group) => group.options)
+      .find((entry) => entry.value === chosen);
     if (!option || option.disabled) return;
     close();
     setQuery("");
     onCommit(option.value, via);
   };
-  const cancel = () => {
+  const cancel = (via: CancelKey = escaped.current ? "escape" : "outside") => {
     close();
     setQuery("");
-    onCancel?.(escaped.current ? "escape" : "outside");
+    onCancel?.(via);
     escaped.current = false;
   };
 
@@ -279,7 +283,14 @@ function Combobox({
             if (how !== "tab" && how !== "shift-tab") return;
             event.preventDefault();
             event.stopPropagation();
-            choose(highlight, how);
+            const selectable = groups.some((group) =>
+              group.options.some(
+                (option) => option.value === highlight && !option.disabled,
+              ),
+            );
+            // An unmatched query exits without inventing a value, like an empty typed editor.
+            if (selectable) choose(highlight, how);
+            else cancel(how);
           }}
         >
           <CommandInput

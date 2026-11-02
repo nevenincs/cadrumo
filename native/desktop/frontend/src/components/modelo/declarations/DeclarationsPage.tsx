@@ -21,6 +21,7 @@ import {
 import { cn } from "@/components/ui/cn";
 import { PaneHeader, type PaneControl } from "../../PaneHeader";
 import type { ModeloPort } from "../../../shell/modelo";
+import { modeloWritesFor } from "../../../shell/modeloWriteHolds";
 import type {
   DeclarationListGroup,
   ModeloDeclarationListRowV1 as Row,
@@ -634,6 +635,9 @@ export function DeclarationsPage({
           }}
           port={port}
           targets={list.creation_targets}
+          holds={modeloWritesFor(memory.current)}
+          onReload={reread}
+          refreshing={read.phase === "reading"}
           rows={rows}
           start={creating || null}
           onOpen={onOpen}

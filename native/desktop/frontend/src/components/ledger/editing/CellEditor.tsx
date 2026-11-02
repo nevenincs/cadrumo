@@ -428,7 +428,7 @@ export function ChoiceEditor({
           via,
         )
       }
-      onCancel={(via) => context.cancel(via === "escape")}
+      onCancel={(via) => context.cancel(via !== "outside")}
     />
   );
 }

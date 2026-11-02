@@ -117,6 +117,33 @@ def test_the_crate_closure_follows_path_dependencies_of_every_target_but_not_tes
     ]
 
 
+def test_path_patches_and_their_dependencies_move_the_desktop_identity(build: Path, checkout: Path) -> None:
+    manifest = checkout / "native/desktop/src-tauri/Cargo.toml"
+    manifest.write_text(
+        manifest.read_text(encoding="utf-8")
+        + '\n[patch.crates-io]\nwry = { path = "../../vendor/wry" }\n'
+        + 'registry-only = "1.0"\nother-registry = { version = "2.0" }\n',
+        encoding="utf-8",
+    )
+    _write(checkout / "native/vendor/wry/Cargo.toml", '[dependencies]\nhelper = { path = "../helper" }\n')
+    _write(checkout / "native/vendor/wry/src/lib.rs", "// wry\n")
+    _write(checkout / "native/vendor/helper/Cargo.toml", "[dependencies]\n")
+    _write(checkout / "native/vendor/helper/src/lib.rs", "// helper\n")
+    closure = crate_closure(("native/desktop/src-tauri",), root=checkout)
+    assert "native/vendor/wry" in closure
+    assert "native/vendor/helper" in closure
+
+    before = _ids(build, checkout)
+    _write(checkout / "native/vendor/wry/src/lib.rs", "// changed wry\n")
+    after_patch = _ids(build, checkout)
+    assert after_patch["desktop"] != before["desktop"]
+    assert {name: after_patch[name] for name in ("interpreter", "manager", "installer")} == {
+        name: before[name] for name in ("interpreter", "manager", "installer")
+    }
+    _write(checkout / "native/vendor/helper/src/lib.rs", "// changed helper\n")
+    assert _ids(build, checkout)["desktop"] != after_patch["desktop"]
+
+
 def test_embedded_components_resolve_first() -> None:
     assert resolution_order(["desktop"]) == ["desktop"]
     assert resolution_order(["manager"]) == ["manager"]

@@ -2340,6 +2340,13 @@ application:
         for modelo %{source_modelo} is empty, and you have not confirmed for every
         period that nothing was withheld. Enter the payments for each payee in this
         modelo''s detail, or confirm each period in your profile.'
+      xml_required_content_missing: Box %{box} is required by the official schema
+        and has no value, so the export would refuse this declaration.
+      xml_return_not_rendered: The declaration file can't be built from this calculation,
+        so the export would refuse it. Check your identity details and the figures
+        in the declaration.
+      xml_value_refused: Box %{box} holds a value the official schema doesn't admit,
+        so the export would refuse this declaration.
     help:
       constraint:
         at_least: At least {minimum}.
@@ -2432,6 +2439,8 @@ application:
           as zero.
         unresolved_operand: This box adds up or reads a figure that has no value yet,
           so it has none either. It is never shown as zero.
+        waived_refund_result_unsupported: The result when a refund is waived is not
+          supported yet, so this box has no value. It is never shown as zero.
     quickfile:
       stage_incomplete: The `quickfile` %{stage} stage finished with status %{status}.
       stage_refused: '`quickfile` stopped at the %{stage} stage: the stage was refused
@@ -2441,6 +2450,12 @@ application:
         so either filing mode is acceptable.
       conjunta_lower_result: 'Joint filing comes out lower: your result is {conjunta}
         jointly and {individual} individually, a difference of {difference}.'
+      individual_branch_caveat: The individual figure is a single return worked out
+        from your whole household's combined inputs, so it is only reliable when one
+        person earns the household's income. It does not work out two separate returns,
+        one on each spouse's own income, and that comparison is not available yet.
+        If two people in your household earn income, read the individual figure as
+        a rough guide, not as the amount to file.
       individual_lower_result: 'Individual filing comes out lower: your result is
         {individual} individually and {conjunta} jointly, a difference of {difference}.'
     value_date:
@@ -2494,6 +2509,7 @@ application:
           detail, or confirm each period in your profile.
         enter_payee_payments: Enter the payments for each payee in this modelo's detail,
           then check again.
+        enter_required_statement: Enter this box, then calculate again.
         enter_withholding_certificate: Enter the withholding shown on your payer's
           certificado de retenciones e ingresos a cuenta, then calculate again.
         file_another_way: Cadrumo cannot yet prepare this declaration for filing.
@@ -2888,6 +2904,17 @@ application:
         was written.
       row_unknown_field: 'Section ''%{section}'' declares no such fields: %{unknown}.
         Available fields: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Date of birth
+        convivientes:
+          label: Number of descendants this ascendant lives with
+        fallecimiento:
+          help: Leave blank if this ascendant has not died.
+          label: Date of death
+        nif:
+          label: Ascendant's NIF/NIE (leave blank if none)
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'

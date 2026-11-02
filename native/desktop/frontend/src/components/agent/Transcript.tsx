@@ -12,7 +12,6 @@ import { cn } from "@/components/ui/cn";
 import { EmptyState } from "@/components/ui/empty";
 import { Icon } from "@/components/ui/icon";
 import { Spinner } from "@/components/ui/spinner";
-import { listOf } from "@/shared/lists";
 import { describedGap } from "../../shell/compose";
 import { useStrings, type Translate } from "../../shell/strings";
 import { AgentTextAction } from "./AgentAction";
@@ -45,39 +44,43 @@ function toolWords(t: Translate): Record<ToolActivityState, string> {
 }
 
 /** The files that went with a message, read-only, above its bubble. */
-function SentFiles({
-  files,
-  locale,
-}: {
-  files: readonly SentFile[];
-  locale: string;
-}) {
+function SentFiles({ files }: { files: readonly SentFile[] }) {
   const t = useStrings();
   const shown = files.slice(0, FILES_SHOWN);
   const folded = files.slice(FILES_SHOWN);
+  const fileBadge = (file: SentFile) => (
+    <li key={file.id} className="min-w-0 max-w-full">
+      <Badge className="min-h-control-xs max-w-full min-w-0 whitespace-normal">
+        <Icon name={KIND_GLYPH[file.kind]} size="xs" />
+        <span className="wrap-anywhere">{file.name}</span>
+      </Badge>
+    </li>
+  );
   return (
     <ul
       aria-label={t("desktop.agent.sent_files")}
       className="flex max-w-full flex-wrap justify-end gap-1"
     >
-      {shown.map((file) => (
-        <li key={file.id} title={file.name} className="min-w-0">
-          <Badge className="h-control-xs max-w-40 min-w-0">
-            <Icon name={KIND_GLYPH[file.kind]} size="xs" />
-            <span className="truncate">{file.name}</span>
-          </Badge>
-        </li>
-      ))}
+      {shown.map(fileBadge)}
       {folded.length > 0 && (
-        <li
-          title={listOf(
-            locale,
-            folded.map((file) => file.name),
-          )}
-        >
-          <Badge className="h-control-xs">
-            {t("desktop.agent.more_files", { count: folded.length })}
-          </Badge>
+        <li className="min-w-0 max-w-full">
+          <details className="group">
+            <summary className="flex min-h-control-xs cursor-pointer list-none items-center justify-end gap-1 rounded-sm text-xs text-muted-foreground hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-2">
+              {t("desktop.agent.more_files", { count: folded.length })}
+              <Icon
+                name="chevronDown"
+                size="xs"
+                className="group-open:rotate-180"
+              />
+            </summary>
+            <ul
+              tabIndex={0}
+              aria-label={t("desktop.agent.sent_files")}
+              className="mt-1 flex max-h-48 max-w-full flex-wrap justify-end gap-1 overflow-y-auto rounded-sm focus-visible:outline-2 focus-visible:-outline-offset-2"
+            >
+              {folded.map(fileBadge)}
+            </ul>
+          </details>
         </li>
       )}
     </ul>
@@ -93,9 +96,9 @@ function SentSkills({ skills }: { skills: readonly string[] }) {
       className="flex max-w-full flex-wrap justify-end gap-1"
     >
       {skills.map((name) => (
-        <li key={name} title={name} className="min-w-0">
-          <Badge className="h-control-xs max-w-60 min-w-0">
-            <span className="truncate font-mono">/{name}</span>
+        <li key={name} className="min-w-0 max-w-full">
+          <Badge className="min-h-control-xs max-w-full min-w-0 whitespace-normal">
+            <span className="font-mono wrap-anywhere">/{name}</span>
           </Badge>
         </li>
       ))}
@@ -105,10 +108,8 @@ function SentSkills({ skills }: { skills: readonly string[] }) {
 
 const PersonTurn = memo(function PersonTurn({
   message,
-  locale,
 }: {
   message: Extract<TranscriptMessage, { kind: "person" }>;
-  locale: string;
 }) {
   const t = useStrings();
   const files = message.files ?? [];
@@ -119,7 +120,7 @@ const PersonTurn = memo(function PersonTurn({
         aria-label={t("desktop.agent.you_said")}
         className="flex min-w-0 flex-col items-end gap-1"
       >
-        {files.length > 0 && <SentFiles files={files} locale={locale} />}
+        {files.length > 0 && <SentFiles files={files} />}
         {skills.length > 0 && <SentSkills skills={skills} />}
         {message.text && (
           <p className="max-w-full rounded-lg bg-accent px-3 py-2 whitespace-pre-wrap text-foreground wrap-anywhere">
@@ -373,7 +374,6 @@ const ToolRow = memo(function ToolRow({
  */
 export function Transcript({
   items,
-  locale,
   emptyHint,
   onRetry,
   onOpenProviderSettings,
@@ -381,7 +381,6 @@ export function Transcript({
   followNewest = true,
 }: {
   items: readonly TranscriptItem[];
-  locale: string;
   /** What an empty conversation says in place of the default hint. */
   emptyHint?: string;
   /** Ask again for a failed reply. Without it, Retry says it is not
@@ -465,7 +464,7 @@ export function Transcript({
           <ol className="mt-auto grid gap-4 px-3 py-4">
             {items.map((item) =>
               item.kind === "person" ? (
-                <PersonTurn key={item.id} message={item} locale={locale} />
+                <PersonTurn key={item.id} message={item} />
               ) : item.kind === "agent" ? (
                 <AgentTurn
                   key={item.id}

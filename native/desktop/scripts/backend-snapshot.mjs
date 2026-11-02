@@ -24,6 +24,7 @@ const PATH_CRATES = [
   "manager",
   "launch_guard",
   "interpreter_host",
+  "vendor/wry",
 ];
 // The interpreter host crate compiles these C host sources into the Cadrumo binary.
 const INTERPRETER_SOURCES = [

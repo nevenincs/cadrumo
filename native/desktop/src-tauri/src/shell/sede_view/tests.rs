@@ -1,6 +1,6 @@
 use super::*;
 use cadrumo_application::view_stream::documents::{
-    PointerAction, PointerButton, PointerInput, TextInput, ViewImage,
+    PointerAction, PointerButton, PointerInput, TextInput, ViewClipboardSelection, ViewImage,
 };
 use serde_json::{Value, json};
 use std::{path::PathBuf, sync::Condvar};
@@ -83,6 +83,12 @@ impl Lane for FakeLane {
     }
     fn navigate(&self, verb: ViewNavigateVerb) -> Sent {
         self.note(format!("navigate:{verb:?}"))
+    }
+    fn clipboard(&self, request_id: u32, action: ViewClipboardAction) -> Sent {
+        self.note(format!("clipboard:{request_id}:{action:?}"))
+    }
+    fn clipboard_commit(&self, request_id: u32, apply: bool) -> Sent {
+        self.note(format!("clipboard_commit:{request_id}:{apply}"))
     }
     fn resize(&self, css_width: u32, css_height: u32, _scale: f64) -> Sent {
         self.note(format!("resize:{css_width}x{css_height}"))
@@ -355,6 +361,83 @@ fn rig() -> Rig {
     };
     rig.wait_for_message("opened");
     rig
+}
+
+#[test]
+fn clipboard_reply_is_private_and_correlated_to_the_current_request() {
+    let rig = rig();
+    let view = rig.host.view(rig.id).unwrap();
+    let selected = view.clone();
+    let waiting = thread::spawn(move || {
+        selected.selected_text(ViewClipboardAction::Copy, Duration::from_secs(1))
+    });
+    rig.wait_for_call("clipboard:1:Copy");
+    rig.lane()
+        .push(ViewEvent::ClipboardSelection(ViewClipboardSelection {
+            request_id: 2,
+            text: Some("wrong".into()),
+        }));
+    rig.lane()
+        .push(ViewEvent::ClipboardSelection(ViewClipboardSelection {
+            request_id: 1,
+            text: Some("right".into()),
+        }));
+    assert_eq!(waiting.join().unwrap().unwrap(), (1, "right".into()));
+    assert_eq!(rig.window.kinds(), ["opened"]);
+}
+
+#[test]
+fn timed_out_cut_releases_the_worker_selection_without_commit() {
+    let rig = rig();
+    let view = rig.host.view(rig.id).unwrap();
+    assert_eq!(
+        view.selected_text(ViewClipboardAction::Cut, Duration::from_millis(50))
+            .unwrap_err()
+            .code,
+        "unavailable"
+    );
+    rig.wait_for_call("clipboard:1:Cut");
+    rig.wait_for_call("clipboard_commit:1:false");
+    assert!(lock(&view.clipboard_wait).is_none());
+}
+
+#[test]
+fn cut_commit_follows_only_a_successful_native_write() {
+    let rig = rig();
+    let host = rig.host.clone();
+    let id = rig.id;
+    let failed = thread::spawn(move || {
+        host.clipboard_with(id, ViewClipboardAction::Cut, |_| {
+            Err(failure("unavailable"))
+        })
+    });
+    rig.wait_for_call("clipboard:1:Cut");
+    rig.lane()
+        .push(ViewEvent::ClipboardSelection(ViewClipboardSelection {
+            request_id: 1,
+            text: Some("synthetic".into()),
+        }));
+    assert_eq!(failed.join().unwrap().unwrap_err().code, "unavailable");
+    rig.wait_for_call("clipboard_commit:1:false");
+
+    let host = rig.host.clone();
+    let written = Arc::new(Mutex::new(None));
+    let stored = written.clone();
+    let succeeded = thread::spawn(move || {
+        host.clipboard_with(id, ViewClipboardAction::Cut, |text| {
+            *lock(&stored) = Some(text);
+            Ok(())
+        })
+    });
+    rig.wait_for_call("clipboard:2:Cut");
+    rig.lane()
+        .push(ViewEvent::ClipboardSelection(ViewClipboardSelection {
+            request_id: 2,
+            text: Some("synthetic".into()),
+        }));
+    succeeded.join().unwrap().unwrap();
+    rig.wait_for_call("clipboard_commit:2:true");
+    assert_eq!(lock(&written).as_deref(), Some("synthetic"));
 }
 
 fn scratch(name: &str) -> PathBuf {

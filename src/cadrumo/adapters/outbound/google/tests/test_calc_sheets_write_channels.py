@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from types import SimpleNamespace
-from typing import TYPE_CHECKING, Any, cast
+from typing import Any
 from uuid import UUID
 
 import pytest
@@ -15,11 +15,6 @@ from .....application.storage.calc_sheets.tests.review_fixture import review_lab
 from .....domain.calculations.registry.tests.published_authority import published_snapshot
 from ..api import RequestRetryPolicy
 from ..calc_sheets_apply import _apply_plan_structural_requests, _write_plan_values
-
-if TYPE_CHECKING:
-    from googleapiclient._apis.sheets.v4.resources import SheetsResource
-
-    from ..api import GoogleRequestExecutor
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -52,16 +47,6 @@ class _Recorder:
         return {}
 
 
-def _executor(recorder: _Recorder) -> GoogleRequestExecutor:
-    """Present the recording double as the executor boundary the writers take."""
-    return cast("GoogleRequestExecutor", recorder)
-
-
-def _sheets() -> SheetsResource:
-    """Present the minimal Sheets double as the resource the writers take."""
-    return cast("SheetsResource", _Sheets())
-
-
 def _review_plan():
     return build_review_workbook(
         review_snapshot(),
@@ -79,7 +64,7 @@ def test_formula_looking_text_is_sent_raw_and_numbers_stay_numbers() -> None:
     plan = _review_plan()
     recorder: Any = _Recorder()
 
-    _write_plan_values(execute=_executor(recorder), sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
+    _write_plan_values(execute=recorder, sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
 
     literal_request, _, _ = recorder.calls[0]
     assert literal_request.body["valueInputOption"] == "RAW"
@@ -97,7 +82,7 @@ def test_only_generated_formulas_use_user_entered_input() -> None:
     assert plan.formula_cells
     recorder: Any = _Recorder()
 
-    _write_plan_values(execute=_executor(recorder), sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
+    _write_plan_values(execute=recorder, sheets=_sheets(), spreadsheet_id="sheet", plan=plan)
 
     by_input = {
         request.body["valueInputOption"]: request for request, _, _ in recorder.calls if request.kind == "values"
@@ -114,7 +99,7 @@ def test_structural_batch_that_creates_unkeyed_metadata_is_never_transport_retri
     recorder: Any = _Recorder()
 
     _apply_plan_structural_requests(
-        execute=_executor(recorder),
+        execute=recorder,
         sheets=_sheets(),
         spreadsheet_id="sheet",
         spreadsheet={},

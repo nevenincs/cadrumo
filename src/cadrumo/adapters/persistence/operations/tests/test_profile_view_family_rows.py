@@ -136,9 +136,12 @@ def test_descendants_are_served_as_stored_rows_in_the_wizard_words(tmp_path: Pat
     assert all(fact.path == f"renta_family.descendiente.0.{fact.leaf}" and not fact.masked for fact in first.facts)
     # Facts the row never stated are absent rather than served as zero or false.
     assert {fact.leaf for fact in second.facts} == {"birth_date", "convivencia"}
+    assert descendants.label == tr("profile.schema.field.renta_family.descendiente.label", locale=language)
     assert ascendants.group_key == "renta_family.ascendiente"
-    assert ascendants.state is ProfileFamilyGroupState.NOT_SERVED
-    assert ascendants.row_count == 0 and not ascendants.leaves
+    assert ascendants.label == tr("profile.schema.field.renta_family.ascendiente.label", locale=language)
+    assert ascendants.state is ProfileFamilyGroupState.UNKNOWN
+    assert ascendants.stated_count is None and ascendants.row_count == 0
+    assert {leaf.leaf for leaf in ascendants.leaves} == {"nif", "birth_date", "fallecimiento", "convivientes"}
 
 
 def test_no_stated_descendants_is_unknown_not_an_empty_household(tmp_path: Path) -> None:
@@ -160,6 +163,50 @@ def test_a_stated_count_of_zero_is_declared_none(tmp_path: Path) -> None:
     assert isinstance(descendants, ProfileViewFamilyGroupItem)
     assert descendants.state is ProfileFamilyGroupState.NONE_DECLARED
     assert descendants.stated_count == "0" and descendants.row_count == 0
+
+
+@pytest.mark.parametrize("language", SUPPORTED_OUTPUT_LANGUAGES)
+def test_ascendants_are_served_as_stored_rows_in_the_family_words(tmp_path: Path, language: str) -> None:
+    facts = (
+        UserProfileFact(path="renta_family.ascendientes_count", value="1"),
+        UserProfileFact(path="renta_family.ascendiente.0.nif", value="12345678Z"),
+        UserProfileFact(path="renta_family.ascendiente.0.birth_date", value="1950-02-03"),
+        UserProfileFact(path="renta_family.ascendiente.0.convivientes", value="2"),
+    )
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register_profile(facts=facts)
+        items = _read(profile_id, ProfileViewPageKind.FAMILY_ROWS, language)
+    descendants, ascendants, row = items
+    assert isinstance(descendants, ProfileViewFamilyGroupItem) and isinstance(ascendants, ProfileViewFamilyGroupItem)
+    assert isinstance(row, ProfileViewFamilyRowItem)
+    assert descendants.state is ProfileFamilyGroupState.UNKNOWN
+    assert ascendants.state is ProfileFamilyGroupState.ROWS
+    assert ascendants.row_count == 1 and ascendants.stated_count == "1"
+    leaves = {leaf.leaf: leaf for leaf in ascendants.leaves}
+    assert leaves["birth_date"].label == tr(
+        "application.user_profile.family_rows.ascendiente.birth_date.label", locale=language
+    )
+    assert leaves["fallecimiento"].help == tr(
+        "application.user_profile.family_rows.ascendiente.fallecimiento.help", locale=language
+    )
+    assert row.group_key == "renta_family.ascendiente" and row.row_index == "0"
+    assert {fact.leaf: fact.value for fact in row.facts} == {
+        "nif": "12345678Z",
+        "birth_date": "1950-02-03",
+        "convivientes": "2",
+    }
+    assert all(fact.path == f"renta_family.ascendiente.0.{fact.leaf}" and not fact.masked for fact in row.facts)
+
+
+def test_a_stated_count_of_zero_ascendants_is_declared_none_and_leaves_descendants_unknown(tmp_path: Path) -> None:
+    with isolated_profile_storage_root(tmp_path=tmp_path):
+        profile_id = _register_profile(facts=(UserProfileFact(path="renta_family.ascendientes_count", value="0"),))
+        items = _read(profile_id, ProfileViewPageKind.FAMILY_ROWS, "en")
+    descendants, ascendants = items
+    assert isinstance(descendants, ProfileViewFamilyGroupItem) and isinstance(ascendants, ProfileViewFamilyGroupItem)
+    assert descendants.state is ProfileFamilyGroupState.UNKNOWN
+    assert ascendants.state is ProfileFamilyGroupState.NONE_DECLARED
+    assert ascendants.stated_count == "0" and ascendants.row_count == 0
 
 
 def test_family_rows_page_keeps_the_revision_pin(tmp_path: Path) -> None:

@@ -409,6 +409,80 @@ export const SCENARIOS: readonly Scenario[] = [
   },
   {
     ...base,
+    id: "aeat-sync-failed-empty",
+    title: "AEAT data: unavailable empty results",
+    summary: "Failed reads provide no declaration or notification rows.",
+    aeatUpdate: { run: "partial_failure", results: "failed_empty" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-unknown-empty",
+    title: "AEAT data: unknown empty results",
+    summary: "Unconfirmed reads provide no declaration or notification rows.",
+    aeatUpdate: { run: "unknown", results: "unknown_empty" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-refresh-failed",
+    title: "AEAT data: a saved-results refresh fails",
+    summary:
+      "The second local read fails; reloading recovers the saved results.",
+    aeatUpdate: { run: "partial_failure", results: "refresh_failed" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-retry-unknown",
+    title: "AEAT data: retry outcome is unknown",
+    summary:
+      "The host requires retry acknowledgement and the saved-result read fails.",
+    aeatUpdate: { run: "partial_failure", results: "retry_unknown" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-retry-pending",
+    title: "AEAT data: a retry request is pending",
+    summary: "The host has not yet answered the retry request.",
+    aeatUpdate: { run: "partial_failure", results: "retry_pending" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
+    id: "aeat-sync-empty",
+    title: "AEAT data: confirmed empty results",
+    summary: "Completed reads found no declarations or notifications.",
+    aeatUpdate: { run: "nothing_found", results: "empty" },
+    signIn: {
+      status: { ...signedOut, state: "present" },
+      profile: "Ana Soler",
+      submit: { kind: "accept" },
+    },
+  },
+  {
+    ...base,
     id: "aeat-sync-quiet",
     title: "AEAT data: nothing new",
     summary: "An update ends and AEAT had nothing new.",

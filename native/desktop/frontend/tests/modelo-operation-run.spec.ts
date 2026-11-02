@@ -134,6 +134,7 @@ test("rejections are told apart by what reached the runtime", async () => {
     kind: "refused",
     operationId: "op-6",
     reason: null,
+    words: null,
   });
   expect(await after(rejection("refused"))).toEqual({
     kind: "not_sent",
@@ -164,5 +165,6 @@ test("a settled refusal names its operation", async () => {
     kind: "refused",
     operationId: "op-8",
     reason: "operation_denied",
+    words: null,
   });
 });

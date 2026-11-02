@@ -106,7 +106,7 @@ function Review({
         <ul className="grid gap-0.5 font-mono text-sm">
           {skill.files.map((file) => (
             <li key={file.path} className="flex min-w-0 gap-3">
-              <span className="min-w-0 flex-1 truncate">{file.path}</span>
+              <span className="min-w-0 flex-1 wrap-anywhere">{file.path}</span>
               <span className="shrink-0 text-muted-foreground">
                 {formatSize(locale, file.bytes)}
               </span>

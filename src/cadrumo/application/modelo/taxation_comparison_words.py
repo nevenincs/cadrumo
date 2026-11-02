@@ -1,4 +1,4 @@
-"""The words a taxation comparison serves for its recommendation, with the amounts it rests on."""
+"""The words a taxation comparison serves for its recommendation and its scope caveat."""
 
 from __future__ import annotations
 
@@ -30,6 +30,8 @@ _REASON_LOCALE_KEYS: Final[Mapping[TaxationRecommendationReason, str]] = Mapping
 )
 """The catalogue sentence of each reason; every reason has one."""
 
+_INDIVIDUAL_BRANCH_CAVEAT_LOCALE_KEY: Final = "application.modelo.taxation_comparison_words.individual_branch_caveat"
+
 
 def _money(value: Decimal, language: OutputLanguage) -> str:
     return format_casilla_value(value, data_type="money", language=language)
@@ -59,4 +61,16 @@ def recommendation_reason_words(
     )
 
 
-__all__ = ["recommendation_reason_words"]
+def individual_branch_caveat_words(language: OutputLanguage) -> str:
+    """State in ``language`` the scope limit of the individual figure.
+
+    The individual run reuses the single input set assembled for the unidad
+    familiar, so it models only a single-earner household and does not work out
+    two separate spouse returns. A two-earner comparison needs a per-spouse
+    income axis that does not exist yet, so this disclosure accompanies every
+    comparison and keeps the individual figure from being read as authoritative.
+    """
+    return tr(_INDIVIDUAL_BRANCH_CAVEAT_LOCALE_KEY, locale=language.value)
+
+
+__all__ = ["individual_branch_caveat_words", "recommendation_reason_words"]

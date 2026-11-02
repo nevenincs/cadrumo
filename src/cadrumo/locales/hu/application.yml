@@ -2437,6 +2437,13 @@ application:
         meg minden időszakra, hogy nem történt levonás. Rögzítsd a kedvezményezettenkénti
         kifizetéseket a nyomtatvány részletezésében, vagy erősítsd meg az egyes időszakokat
         a profilodban.'
+      xml_required_content_missing: A hivatalos séma megköveteli a(z) %{box} rovatot,
+        de nincs értéke, ezért az exportálás elutasítaná ezt a bevallást.
+      xml_return_not_rendered: Ebből a számításból nem készíthető el a bevallás fájlja,
+        ezért az exportálás elutasítaná. Ellenőrizd az azonosító adataidat és a bevallás
+        összegeit.
+      xml_value_refused: A(z) %{box} rovat olyan értéket tartalmaz, amelyet a hivatalos
+        séma nem enged meg, ezért az exportálás elutasítaná ezt a bevallást.
     help:
       constraint:
         at_least: Legalább {minimum}.
@@ -2531,6 +2538,9 @@ application:
           jelenik meg nullaként.
         unresolved_operand: Ez a rovat olyan értéket ad össze vagy olvas, amelynek
           még nincs értéke, ezért neki sincs. Soha nem jelenik meg nullaként.
+        waived_refund_result_unsupported: A visszatérítésről való lemondás esetén
+          kapott eredményt még nem támogatjuk, ezért ennek a rovatnak nincs értéke.
+          Soha nem jelenik meg nullaként.
     quickfile:
       stage_incomplete: A `quickfile` %{stage} szakasza %{status} állapottal fejeződött
         be.
@@ -2541,6 +2551,12 @@ application:
         mint {threshold}, ezért bármelyik adózási mód megfelelő.
       conjunta_lower_result: 'A közös adózás kedvezőbb: az eredményed közösen {conjunta},
         egyénileg {individual}, a különbség {difference}.'
+      individual_branch_caveat: Az egyéni összeg egyetlen bevallás, amelyet a teljes
+        családi egységed összesített adataiból számoltunk, ezért csak akkor megbízható,
+        ha a család jövedelmét egyetlen személy keresi. Nem számol két külön bevallást,
+        egyet-egyet a házastársak saját jövedelméből, és ez az összehasonlítás egyelőre
+        nem érhető el. Ha a családodban ketten keresnek, az egyéni összeget tekintsd
+        durva tájékoztatásnak, nem a benyújtandó összegnek.
       individual_lower_result: 'Az egyéni adózás kedvezőbb: az eredményed egyénileg
         {individual}, közösen {conjunta}, a különbség {difference}.'
     value_date:
@@ -2596,6 +2612,7 @@ application:
           profilodban.
         enter_payee_payments: Rögzítsd a kedvezményezettenkénti kifizetéseket a nyomtatvány
           részletezésében, majd ellenőrizd újra.
+        enter_required_statement: Töltsd ki ezt a rovatot, majd számolj újra.
         enter_withholding_certificate: Írd be a kifizetőd igazolásán (certificado
           de retenciones e ingresos a cuenta) szereplő levont adót (retención), majd
           számolj újra.
@@ -2996,6 +3013,18 @@ application:
         történt írás.
       row_unknown_field: 'A(z) ''%{section}'' szakasz nem deklarálja ezeket a mezőket:
         %{unknown}. Elérhető mezők: %{fields}.'
+    family_rows:
+      ascendiente:
+        birth_date:
+          label: Születési dátum
+        convivientes:
+          label: Azoknak a leszármazottaknak a száma, akikkel ez a felmenő együtt
+            él
+        fallecimiento:
+          help: Hagyd üresen, ha ez a felmenő nem hunyt el.
+          label: A halálozás dátuma
+        nif:
+          label: A felmenő adószáma (NIF/NIE) (hagyd üresen, ha nincs)
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'

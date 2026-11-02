@@ -998,6 +998,9 @@ desktop:
         refused: La AEAT lo rechazó.
         session_ended: Acceso caducado.
         unavailable: La AEAT no está disponible ahora mismo.
+      refresh_failed: No se han podido volver a cargar los resultados guardados. Se
+        muestran los resultados anteriores.
+      reload: Volver a cargar resultados
       retry: Inténtalo de nuevo
       retry_failed: No se pudo iniciar. Inténtalo de nuevo.
       retry_named: 'Inténtalo de nuevo: {name}'
@@ -2099,12 +2102,21 @@ desktop:
       to_classify: '{count} por clasificar'
     counterparty:
       answer: Valores actuales del libro
+      asserted_by: Tu nombre
+      asserted_by_hint: Las confirmaciones nuevas usan este nombre. Las existentes
+        conservan el nombre y la fecha originales.
+      attribution_kept: La confirmación sigue figurando a nombre de {name}.
       confirm: Confirmar
       confirmed: Confirmada
+      conflict: Estos valores no se han confirmado porque contradicen una confirmación
+        existente. Tu borrador se conserva.
       country: País
       established: Establecida
+      not_applied: La confirmación devuelta no contiene todos los valores que has
+        introducido. Tu borrador se conserva.
       not_confirmed: Aún no
       note: Nota
+      proposed: Tu valor propuesto
       scope:
         es_canarias: Canarias
         es_ceuta_melilla: Ceuta y Melilla
@@ -2114,7 +2126,7 @@ desktop:
       scope_label: Establecida en
       source:
         document_evidence: según documentos
-        operator_assertion: confirmado por ti
+        operator_assertion: Confirmado por un operador
         profile_authority: según tu perfil
       state: Estado de identificación a efectos del IVA
       tax_id: Identificación fiscal (NIF)
@@ -2124,7 +2136,8 @@ desktop:
       view: Consultar
       withdraw: Retirar…
       withdraw_confirm: Retirar la confirmación
-      withdraw_what: Retira tu confirmación; el libro vuelve a basarse en los documentos.
+      withdraw_what: Retira tu confirmación. Otras fuentes pueden seguir aportando
+        estos valores.
     density:
       comfortable: Filas holgadas
     describe:
@@ -10363,3 +10376,14 @@ workspace:
       not_applicable: no aplica
       not_known_yet: Aún no se sabe
     was: 'antes: {value}'
+    write_hold:
+      check_status: Comprobar estado
+      reload_list: Volver a cargar la lista de declaraciones
+      reload_needed: La solicitud ha finalizado. Vuelve a cargar los datos antes de
+        hacer más cambios.
+      saved_unread: El cambio se ha guardado, pero no se ha podido cargar su resultado.
+        Vuelve a cargar los datos antes de hacer más cambios.
+      unknown: El resultado no está confirmado. La solicitud puede haber surtido efecto.
+        Los cambios quedan en pausa.
+      unresolved: Cadrumo no puede confirmar el resultado de esta solicitud en esta
+        sesión. Los cambios siguen en pausa.

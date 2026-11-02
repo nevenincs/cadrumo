@@ -43,13 +43,6 @@ family_storage_baseline = "2025"
 scoped_families = ["workbook_parity_refs", "verification_expectations", "completeness_manifest"]
 
 
-[revisions."2026-y-siguientes".family_dispositions.live_cross_references]
-reason = """
-A live cross-reference declares an AEAT surface this application READS at runtime, together with the guard policy, allowed hosts and methods, and forbidden actions that keep the read read-only. It is a statement about what Cadrumo operates, not about what the law requires. Cadrumo operates no live surface for Modelo 210: no adapter under adapters/outbound/aeat references this modelo, and the application never performs live AEAT submission in any case, so there is no host to allow, no method to \
-bound and no guard policy to declare. Should a Modelo 210 consulta reader ever be built, this disposition must be replaced by the real declaration rather than widened -- the family is empty because the capability is absent, and it will stop being empty the moment the capability exists."""
-legal_refs = ["orden-eha-3316-2010:art-1"]
-source_refs = ["aeat-modelo-210-procedure"]
-
 [revisions."2026-y-siguientes".family_dispositions.dependency_classifications]
 reason = """
 A dependency classification declares that this modelo's calculation depends on ANOTHER modelo the taxpayer files in an earlier or enclosing period, so the clean-state gate knows whether that source is present, suppressed or missing. Modelo 210 declares no such source. Its base and cuota are self-contained per renta (TRLIRNR arts. 24 and 25), and the one value arriving from outside -- casilla 29 retenciones e ingresos a cuenta -- is withholding SUFFERED by the non-resident and evidenced by the \

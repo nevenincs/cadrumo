@@ -212,7 +212,7 @@ COMPONENTS = {
 
 
 def crate_closure(crates: tuple[str, ...], *, root: Path = REPO_ROOT) -> list[str]:
-    """Return each crate directory and every path dependency it builds or links, for any target."""
+    """Return each crate and its local path dependencies and patches, for any target."""
     pending = [(root / crate).resolve() for crate in crates]
     seen: dict[Path, None] = {}
     while pending:
@@ -230,6 +230,7 @@ def _crate_dependencies(crate: Path) -> list[Path]:
     tables = [manifest.get(name, {}) for name in _DEPENDENCY_TABLES]
     for platform in manifest.get("target", {}).values():
         tables += [platform.get(name, {}) for name in _DEPENDENCY_TABLES]
+    tables.extend(manifest.get("patch", {}).values())
     for table in tables:
         for dependency in table.values():
             if isinstance(dependency, dict):

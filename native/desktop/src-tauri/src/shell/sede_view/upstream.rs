@@ -6,7 +6,7 @@
 //! Each command queues here and one writer thread per view sends the queue in
 //! order.
 use cadrumo_application::view_stream::documents::{
-    PointerAction, ViewInputEvent, ViewNavigateVerb,
+    PointerAction, ViewClipboardAction, ViewInputEvent, ViewNavigateVerb,
 };
 use std::{
     collections::VecDeque,
@@ -20,6 +20,14 @@ const LIMIT: usize = 1024;
 pub(super) enum Command {
     Input(ViewInputEvent),
     Navigate(ViewNavigateVerb),
+    Clipboard {
+        request_id: u32,
+        action: ViewClipboardAction,
+    },
+    ClipboardCommit {
+        request_id: u32,
+        apply: bool,
+    },
     Resize {
         css_width: u32,
         css_height: u32,

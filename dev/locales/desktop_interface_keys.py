@@ -278,6 +278,8 @@ DESKTOP_INTERFACE_KEYS: Final[frozenset[str]] = DESKTOP_PROFILE_INTERFACE_KEYS |
         "desktop.aeat_sync.results.reason.session_ended",
         "desktop.aeat_sync.results.reason.unavailable",
         "desktop.aeat_sync.results.retry",
+        "desktop.aeat_sync.results.reload",
+        "desktop.aeat_sync.results.refresh_failed",
         "desktop.aeat_sync.results.retry_failed",
         "desktop.aeat_sync.results.retry_named",
         "desktop.aeat_sync.results.retry_unknown",

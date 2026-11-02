@@ -3,9 +3,9 @@ tags:
   - '#adr'
   - '#export-parity'
 date: '2026-11-01'
-modified: '2026-11-01'
+modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:63602a949ce93432db4c8b29642ba937e6d325e619854837d1305f8c1d2de001'
+body_hash: 'sha256:e463e8342643497dc55e8136eafedd9754ba1af9a083cc282e6458336cb9a9b2'
 related:
   - "[[2026-11-01-export-parity-income-imputation-criterion-research]]"
   - "[[2026-09-27-export-parity-renta-withholding-sources-adr]]"
@@ -16,10 +16,12 @@ related:
 
 Accepted 2026-11-01 on the operator's rulings and the primary-source grounding recorded below.
 
+Amended 2026-11-02 (refinement of the same decision): the setup wizard does not preselect `devengo`. An unstated year stays undeclared and the person states the criterion. The implemented rule is that the window may not infer a taxpayer election, and the calculation keeps the year unresolved until the election is stated. The 2026-11-01 wording that proposed `devengo` as a preselected answer is corrected below; the absent-means-undeclared ruling itself is unchanged.
+
 ## Operator rulings 2026-11-01
 
 - The criterion is a typed profile fact (ruled earlier the same day).
-- An absent criterion fact means undeclared, with `devengo` as the proposed wizard answer; the recommendation was accepted.
+- An absent criterion fact means undeclared, never `devengo`. The 2026-11-01 recommendation also proposed `devengo` as a preselected wizard answer; the 2026-11-02 amendment replaces that part, because a preselected answer would infer an election the taxpayer has not stated.
 - The four legal readings formerly left open (casilla 06 timing, year receiving change-of-criterion amounts, partial-payment withholding, three-year count) are regulated questions. The operator ruled that they are to be grounded in the norms and implemented as the norms say, not chosen. `2026-11-01-export-parity-withholding-legal-readings-research` grounds each from BOE text, DGT consultas vinculantes and TEAC doctrine, and the rules below follow it.
 - The remaining recommendations of this record were accepted. Promotion of any capped binding stays a separate operator ruling (item 9).
 
@@ -38,13 +40,13 @@ The accepted withholding-sources ADR keeps 0599 advisory until this temporal rul
 - Modelo 130 follows the same imputation (RIRPF arts. 79 and 110.3.a; DGT V3298-15, binding doctrine) and a withholding is deductible only once its income is paid (RIRPF art. 78.1; TEAC 00/03187/2011). The edge cases are grounded in `2026-11-01-export-parity-withholding-legal-readings-research`, Q1; the part no authority addresses is labelled advisory in item 7.
 - An invoice with no operation date documents an operation on its issue date (RD 1619/2012 art. 6.1.i). An advance-payment date is not an accrual date (research, "Accrual date").
 - The profile schema already treats operator facts as "absent means undeclared" (`src/cadrumo/_data/registry/cadrumo/user_profile/schema.toml:937`). `2026-09-23-calendar-obligations-payer-fact-declaration-state-adr` rejects defaulted answers as silent under-declaration.
-- The operator prefers accrual as the default answer.
+- The operator preferred accrual as the default answer on 2026-11-01; the 2026-11-02 amendment keeps accrual as the legal default in law but not as a preselected or inferred profile answer.
 - `no-silent-under-declaration`, and the rule that absent, unknown, advisory and proven-zero stay distinct (the project's aggregation and completeness invariants).
 
 ## Considered options
 
 - **Absent means devengo.** This matches the legal default and costs no question. Rejected: a fresh or imported profile cannot see a cash-basis election made in an earlier return, so the product would silently apply the wrong criterion for up to three years. It also contradicts the schema convention and the payer-fact ruling.
-- **Absent means undeclared, with devengo as the proposed answer.** The wizard preselects devengo and the operator confirms it in one step. Until then, only the outputs the criterion can change are held back. Recommended, pending the operator's ruling on what an absent fact means (see "Open questions").
+- **Absent means undeclared.** The wizard asks the criterion for the ejercicio with no answer preselected, and the person states it. Until then, only the outputs the criterion can change are held back. Chosen on the operator's 2026-11-01 ruling; the earlier variant that preselected `devengo` as the proposed answer was dropped on 2026-11-02, because preselection infers an election.
 - **A per-activity criterion.** It mirrors the per-activity casilla 0169 element. Rejected: RIRPF art. 7.2.1.º makes the election cover all activities.
 - **Refuse to store a criterion change within three years.** Rejected: the profile records what the taxpayer declares, and art. 7.2.2.º forces a change when the election loses effect. A finding states the conflict without falsifying the record.
 - **Credit accrued withholding in the accrual year before payment.** Rejected by the TEAC unification criterion.
@@ -82,7 +84,7 @@ Dependencies needing an operator ruling. The open questions below gate the Steps
    - Values: `enum_values = ["devengo", "cobros_y_pagos"]`, `effective_dated = true`, one value per ejercicio, sensitivity `financial`.
    - Model selector: `irpf.activity_income_imputation_criterion`.
    - `legal_refs`: `rd-439-2007:art-7`, `ley-35-2006:art-14` and `ley-27-2014:art-11`.
-   - Ruled 2026-11-01: absent means undeclared, never `devengo`. The wizard question preselects `devengo` as the proposed answer and explains when cash basis is open. A non-interactive setup leaves the fact absent; only an interactive answer or an explicit CLI flag writes it.
+   - Ruled 2026-11-01: absent means undeclared, never `devengo`. The wizard question preselects no answer, states the ejercicio it applies to, and explains when cash basis is open; an unstated year stays undeclared and the window never infers an election. A non-interactive setup leaves the fact absent; only an interactive answer or an explicit CLI flag writes it.
    - The legal keys use the catalogue's article form. `ley-27-2014:art-11` exists (`src/cadrumo/_data/registry/aeat/legal/is.toml:42`); `rd-439-2007:art-7` and `ley-35-2006:art-14` are added by plan Step P02.S14 under `2026-11-01-export-parity-binding-capability-grade-adr`, and S21 reuses them.
 2. **Eligibility companion fact (P05.S21).**
    - Key: `codigo_comercio_accounting`, an optional, effective-dated boolean meaning "obliged to keep, or keeps voluntarily, accounting under the Código de Comercio" (RIRPF arts. 7.2.3.º and 68.2).
@@ -139,7 +141,7 @@ Dependencies needing an operator ruling. The open questions below gate the Steps
 
 ## Rationale
 
-Primary text makes accrual the default. But the product cannot know that a given taxpayer is on the default: the election from an earlier return is invisible to a fresh profile, and the three-year minimum binds the taxpayer to it. Treating absence as undeclared is the only reading that cannot silently apply the wrong criterion. It also fits the schema convention and the payer-fact ruling. Preselecting `devengo` meets the operator's preference at the cost of one confirmation per profile. Holding back only straddling rows keeps most calculations usable while the fact is missing.
+Primary text makes accrual the default. But the product cannot know that a given taxpayer is on the default: the election from an earlier return is invisible to a fresh profile, and the three-year minimum binds the taxpayer to it. Treating absence as undeclared is the only reading that cannot silently apply the wrong criterion. It also fits the schema convention and the payer-fact ruling. Asking without a preselected answer costs one stated answer per ejercicio and never infers an election the taxpayer has not made. Holding back only straddling rows keeps most calculations usable while the fact is missing.
 
 The TEAC unification criterion is the knockout on withholding timing. It binds AEAT's gestión and rules out both crediting before payment and crediting in the payment year (research, "TEAC unification doctrine"). The Modelo 130 rule credits only paid withholding, so it never over-credits a pago a cuenta. Where the norms are silent (remittance on an unpaid invoice, the transitional quarter, the IVA and base split of a partial payment), the conservative treatment only defers a credit and is labelled advisory. The accrual-date fallback to `issued_at` comes from the invoicing regulation itself, not an assumption.
 

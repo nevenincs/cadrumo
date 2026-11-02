@@ -337,6 +337,10 @@ export function sedeViewFixture({
           }
         });
       },
+      async clipboard(action) {
+        await live();
+        say(`sedeViewClipboard ${action}`);
+      },
       async resize(size) {
         await live();
         say("sedeViewResize");

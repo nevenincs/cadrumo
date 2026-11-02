@@ -340,7 +340,7 @@ def test_executor_passes_exact_bucket_and_owner_authority_and_stores_closed_proj
         f"Joint filing comes out lower: your result is 900.00{euro} jointly and 1,450.00{euro} individually, "
         f"a difference of 550.00{euro}."
     )
-    assert "two-earner" in projection.individual_branch_caveat
+    assert "two separate returns" in projection.individual_branch_caveat
     assert set(ModeloTaxationComparisonProjection.model_fields) == {
         "result_version",
         "profile_id",
