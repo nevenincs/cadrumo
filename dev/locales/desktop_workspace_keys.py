@@ -147,7 +147,6 @@ WORKSPACE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.modelo.credits.estimate.in_estimate",
         "desktop.modelo.credits.estimate.lead",
         "desktop.modelo.credits.estimate.mark",
-        "desktop.modelo.credits.estimate.needs_region",
         "desktop.modelo.credits.estimate.nothing_left",
         "desktop.modelo.credits.estimate.quarters",
         "desktop.modelo.credits.estimate.refused",

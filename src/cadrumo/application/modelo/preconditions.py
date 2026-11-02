@@ -207,6 +207,25 @@ MODELO_PRECONDITION_PROFILES: tuple[ManifestActionProfile, ...] = (
         for kind in ("binding", "casilla")
     ),
     _profile(
+        "modelo.project",
+        "modelo.project.m130_quarters.present",
+        "modelo.project.m130_quarters.no_work_units",
+        action_id="operator.modelo.work.create",
+    ),
+    _profile(
+        "modelo.project",
+        "modelo.project.m130_quarters.calculated",
+        "modelo.project.m130_quarters.no_calculation",
+        action_id="operator.modelo.work.calculate",
+    ),
+    # No action: the region is a fact of the profile's tax residence, and which
+    # one it is belongs to the filer.
+    _profile(
+        "modelo.project",
+        "modelo.project.region.stated",
+        "modelo.project.region.unstated",
+    ),
+    _profile(
         "modelo.work.calculate",
         "modelo.work.calculate.caller_overrides.binding_declared",
         "modelo.work.calculate.caller_overrides.binding_unknown",

@@ -2619,6 +2619,34 @@ application:
         waived_refund_result_unsupported: Todavía no se admite el resultado cuando
           renuncias a cobrar la devolución, así que esta casilla no tiene valor. Nunca
           se muestra como cero.
+      figure:
+        m100:
+          base_liquidable_general: Base liquidable general
+          cuota_integra_autonomica: Cuota íntegra autonómica
+          cuota_integra_estatal: Cuota íntegra estatal
+          cuota_liquida_autonomica: Cuota líquida autonómica
+          cuota_liquida_estatal: Cuota líquida estatal
+          cuota_resultante: Cuota resultante de la autoliquidación
+          pagos_fraccionados: Pagos fraccionados
+        m130:
+          gastos: Gastos hasta ahora (declaraciones del Modelo 130)
+          ingresos: Ingresos hasta ahora (declaraciones del Modelo 130)
+          pagos_fraccionados: Pagos fraccionados ingresados (declaraciones del Modelo
+            130)
+          rendimiento_neto: Rendimiento neto hasta ahora (declaraciones del Modelo
+            130)
+      no_m130_revisions: Las declaraciones del Modelo 130 del ejercicio %{year} aún
+        no se han calculado, así que no hay base para estimar la declaración anual.
+        Calcula un trimestre y vuelve a pedir la estimación.
+      no_m130_units: No existe ninguna declaración del Modelo 130 en borrador para
+        el ejercicio %{year}, así que no hay base para estimar la declaración anual.
+        Crea la del primer trimestre y vuelve a pedir la estimación.
+      profile_fact_missing: 'La estimación no puede obtener la base liquidable ni
+        las casillas de cuota porque tu perfil no indica: %{profile_facts}. Añádelo
+        al perfil y vuelve a pedir la estimación.'
+      region_unstated: Tu perfil no indica la comunidad autónoma en la que tributas,
+        así que no se puede hacer la estimación. Añade tu comunidad de residencia
+        fiscal al perfil y vuelve a pedir la estimación.
     quickfile:
       stage_incomplete: La etapa %{stage} de `quickfile` terminó con el estado %{status}.
       stage_refused: '`quickfile` se detuvo en la etapa %{stage}: la etapa se rechazó

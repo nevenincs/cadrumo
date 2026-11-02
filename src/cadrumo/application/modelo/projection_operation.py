@@ -42,7 +42,13 @@ from .calculation_action_ports import CalculationActionPorts, CalculationActionP
 from .projection import ModeloProjectServiceResult, project_modelo_100_from_m130
 from .projection_compare import ModeloCompareServiceResult, compare_modelo_years
 from .projection_migration_ports import ProjectionMigrationPlan, ProjectionMigrationPort
-from .projection_words import binding_source_words, unresolved_binding_words, unresolved_casilla_reason_words
+from .projection_words import (
+    binding_source_words,
+    m100_figure_words,
+    m130_figure_words,
+    unresolved_binding_words,
+    unresolved_casilla_reason_words,
+)
 
 MODELO_PROJECT_OPERATION_DEFINITION_ID = "modelo.project"
 MODELO_COMPARE_OPERATION_DEFINITION_ID = "modelo.compare"
@@ -69,7 +75,9 @@ class ModeloProjectOperationRequest(CredentialFreeOperationRequest):
 
     profile_id: UUID
     year: FourDigitYear
-    ccaa: _Token
+    #: The region to project for. Left out, it is the region the exact profile's
+    #: tax residence states; a profile that states none is refused.
+    ccaa: _Token | None = None
     casilla_overrides: tuple[ProjectionOverride, ...] = ()
     binding_overrides: tuple[ProjectionOverride, ...] = ()
 
@@ -97,8 +105,19 @@ class ModeloCompareOperationRequest(CredentialFreeOperationRequest):
         return self
 
 
+class ProjectM130AccumulatedWords(BaseModel):
+    """The name of each cumulative quarterly-declaration figure, in the projection's ``words_language``."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    ingresos: _Words
+    gastos: _Words
+    rendimiento_neto: _Words
+    pagos_fraccionados: _Words
+
+
 class ProjectM130AccumulatedProjection(BaseModel):
-    """All four canonical cumulative M130 summary values."""
+    """All four canonical cumulative M130 summary values, each with its name in words."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -106,10 +125,25 @@ class ProjectM130AccumulatedProjection(BaseModel):
     gastos: _Value
     rendimiento_neto: _Value
     pagos_fraccionados: _Value
+    words: ProjectM130AccumulatedWords
+
+
+class ProjectM100SummaryWords(BaseModel):
+    """The name of each projected annual-return figure, in the projection's ``words_language``."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    base_liquidable_general: _Words
+    pagos_fraccionados: _Words
+    cuota_integra_estatal: _Words
+    cuota_integra_autonomica: _Words
+    cuota_liquida_estatal: _Words
+    cuota_liquida_autonomica: _Words
+    cuota_resultante: _Words
 
 
 class ProjectM100SummaryProjection(BaseModel):
-    """All seven canonical M100 summary values."""
+    """All seven canonical M100 summary values, each with its name in words."""
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
@@ -120,6 +154,7 @@ class ProjectM100SummaryProjection(BaseModel):
     cuota_liquida_estatal: _Value
     cuota_liquida_autonomica: _Value
     cuota_resultante: _Value
+    words: ProjectM100SummaryWords
 
 
 class ProjectCasillaObservationProjection(BaseModel):
@@ -174,13 +209,16 @@ class ModeloProjectOperationProjection(BaseModel):
 
     A box in ``unresolved_casillas`` or bound by a binding in
     ``unresolved_bindings`` has no value, and never appears in
-    ``casilla_observations``. The words of both lists are in ``words_language``,
-    the language the worker's catalogue rendered them in.
+    ``casilla_observations``. The words of both lists, and the name of each
+    figure in ``m130_accumulated`` and ``m100_projection``, are in
+    ``words_language``, the language the worker's catalogue rendered them in.
+    ``ccaa`` is the region the projection was made for, whether the request
+    named it or the profile's tax residence did.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 
-    result_version: Literal[2] = 2
+    result_version: Literal[3] = 3
     authority_generation: ContentDigest
     profile_id: UUID
     year: FourDigitYear
@@ -232,6 +270,12 @@ class ModeloProjectOperationProjection(BaseModel):
                 gastos=_decimal(result.m130_accumulated.gastos),
                 rendimiento_neto=_decimal(result.m130_accumulated.rendimiento_neto),
                 pagos_fraccionados=_decimal(result.m130_accumulated.pagos_fraccionados),
+                words=ProjectM130AccumulatedWords(
+                    ingresos=m130_figure_words("ingresos", language=language),
+                    gastos=m130_figure_words("gastos", language=language),
+                    rendimiento_neto=m130_figure_words("rendimiento_neto", language=language),
+                    pagos_fraccionados=m130_figure_words("pagos_fraccionados", language=language),
+                ),
             ),
             casilla_observations=tuple(
                 ProjectCasillaObservationProjection(
@@ -251,6 +295,15 @@ class ModeloProjectOperationProjection(BaseModel):
                 cuota_liquida_estatal=_decimal(result.m100_projection.cuota_liquida_estatal),
                 cuota_liquida_autonomica=_decimal(result.m100_projection.cuota_liquida_autonomica),
                 cuota_resultante=_decimal(result.m100_projection.cuota_resultante),
+                words=ProjectM100SummaryWords(
+                    base_liquidable_general=m100_figure_words("base_liquidable_general", language=language),
+                    pagos_fraccionados=m100_figure_words("pagos_fraccionados", language=language),
+                    cuota_integra_estatal=m100_figure_words("cuota_integra_estatal", language=language),
+                    cuota_integra_autonomica=m100_figure_words("cuota_integra_autonomica", language=language),
+                    cuota_liquida_estatal=m100_figure_words("cuota_liquida_estatal", language=language),
+                    cuota_liquida_autonomica=m100_figure_words("cuota_liquida_autonomica", language=language),
+                    cuota_resultante=m100_figure_words("cuota_resultante", language=language),
+                ),
             ),
             unresolved_bindings=tuple(
                 ProjectUnresolvedBindingProjection(
@@ -567,6 +620,7 @@ def _definition(
     executor_type: type[ModeloProjectExecutor] | type[ModeloCompareExecutor],
     factory: CalculationActionPortsFactory,
     migration: ProjectionMigrationPort,
+    public_error_detail: bool = False,
 ) -> OperationDefinition:
     return OperationDefinition(
         definition_id=definition_id,
@@ -582,6 +636,7 @@ def _definition(
         interaction_kinds=frozenset(),
         capabilities=RECORDED_NON_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
         reconciliation_policy=OperationReconciliationPolicy.INTERRUPT,
+        public_error_detail=public_error_detail,
     )
 
 
@@ -596,6 +651,8 @@ def build_modelo_project_definition(
         executor_type=ModeloProjectExecutor,
         factory=factory,
         migration=migration,
+        # The desktop shows a refusal's served words, so the stored detail is released to it.
+        public_error_detail=True,
     )
 
 

@@ -223,6 +223,20 @@ def test_a_typed_value_reads_as_entered_and_survives_a_recalculation(tmp_path: P
     assert not edited.filed
 
 
+def test_only_the_registry_declared_target_of_the_projection_offers_it(tmp_path: Path) -> None:
+    """The annual return of the year the projection was authored for offers the estimate; nothing else does.
+
+    The quarterly declaration the estimate is built from, and the annual return of a
+    year whose revision the projection declaration was not authored against, do not.
+    """
+    with seeded_operator_work(tmp_path / "annual", modelo="100", filing_year=2025, period_code="0A") as work:
+        assert _load(work, None).form.projectable is True
+    with seeded_operator_work(tmp_path / "quarter", modelo="130", filing_year=2025, period_code="1T") as work:
+        assert _load(work, None).form.projectable is False
+    with seeded_operator_work(tmp_path / "earlier", modelo="100", filing_year=2024, period_code="0A") as work:
+        assert _load(work, None).form.projectable is False
+
+
 def test_each_box_says_where_its_edit_is_submitted(tmp_path: Path) -> None:
     """Box 05 carries the instalments of earlier declarations; replacing it is an override of that binding.
 

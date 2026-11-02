@@ -4351,8 +4351,6 @@ desktop:
           trimestrales que tienes. No es el cálculo de tu declaración y no cambia
           nada en ella.
         mark: Estimación
-        needs_region: Tu perfil no indica la comunidad autónoma en la que vives y
-          la estimación la necesita. Añádela a tu perfil y vuelve a pedirla.
         nothing_left: En esta estimación no queda ninguna retención ni casilla sin
           cifra.
         quarters: 'Declaraciones trimestrales usadas: {count}.'

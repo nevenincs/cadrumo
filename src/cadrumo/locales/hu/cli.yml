@@ -1352,9 +1352,6 @@ cli:
         no_m130_units: Nincs Modelo 130 piszkozat bevallás a(z) %{year} adóévre. Előbb
           hozd létre az `aeat app modelo work create --modelo 130 --year %{year} --period
           1T` paranccsal.
-        profile_fact_missing: 'A vetítés nem tudja előállítani az adóalap- és adórovatokat,
-          mert az aktív profil nem tartalmazza: %{profile_facts}. Add meg a(z) `%{command}`
-          paranccsal, majd futtasd újra a vetítést.'
         year_help: Adóév a vetítéshez.
       project_help: Nyomtatvány-összesítő vetítések futtatása (pl. éves Modelo 130
         összesítés).

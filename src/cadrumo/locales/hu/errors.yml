@@ -957,6 +957,8 @@ errors:
       létre vagy válassz ki egy profilt, és próbáld újra.
     modelo_project_invalid_decimal_override: Egy előrejelzési felülírás nem érvényes
       decimális összeg.
+    modelo_project_region_unstated: Az előrejelzéshez szükség van arra a régióra,
+      ahol az adózó adózik, a profil pedig egyet sem ad meg.
     modelo_revision_pick: A nyomtatványváltozat kiválasztása érvénytelen.
     modelo_work_capture_not_current: A munkakiválasztás mar nem aktuális. Olvasd be
       újra a munkacélt, és próbáld meg ismét.

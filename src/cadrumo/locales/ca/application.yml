@@ -2622,6 +2622,33 @@ application:
         waived_refund_result_unsupported: Encara no s'admet el resultat quan renuncies
           a cobrar la devolució, així que aquesta casella no té valor. Mai es mostra
           com a zero.
+      figure:
+        m100:
+          base_liquidable_general: Base liquidable general
+          cuota_integra_autonomica: Quota íntegra autonòmica
+          cuota_integra_estatal: Quota íntegra estatal
+          cuota_liquida_autonomica: Quota líquida autonòmica
+          cuota_liquida_estatal: Quota líquida estatal
+          cuota_resultante: Quota resultant de l'autoliquidació
+          pagos_fraccionados: Pagaments fraccionats
+        m130:
+          gastos: Despeses fins ara (declaracions del Modelo 130)
+          ingresos: Ingressos fins ara (declaracions del Modelo 130)
+          pagos_fraccionados: Pagaments fraccionats ingressats (declaracions del Modelo
+            130)
+          rendimiento_neto: Rendiment net fins ara (declaracions del Modelo 130)
+      no_m130_revisions: Les declaracions del Modelo 130 de l'exercici %{year} encara
+        no s'han calculat, de manera que no hi ha base per estimar la declaració anual.
+        Calcula un trimestre i torna a demanar l'estimació.
+      no_m130_units: No hi ha cap declaració del Modelo 130 en esborrany per a l'exercici
+        %{year}, de manera que no hi ha base per estimar la declaració anual. Crea
+        la del primer trimestre i torna a demanar l'estimació.
+      profile_fact_missing: 'L''estimació no pot obtenir la base liquidable ni les
+        caselles de quota perquè el teu perfil no indica: %{profile_facts}. Afegeix-ho
+        al perfil i torna a demanar l''estimació.'
+      region_unstated: El teu perfil no indica la comunitat autònoma on tributes,
+        de manera que no es pot fer l'estimació. Afegeix la teva comunitat de residència
+        fiscal al perfil i torna a demanar l'estimació.
     quickfile:
       stage_incomplete: L'etapa %{stage} de `quickfile` ha acabat amb l'estat %{status}.
       stage_refused: '`quickfile` s''ha aturat a l''etapa %{stage}: l''etapa s''ha

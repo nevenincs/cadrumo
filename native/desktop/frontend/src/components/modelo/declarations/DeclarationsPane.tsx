@@ -33,7 +33,6 @@ export function DeclarationsPane({
   page,
   pane,
   profileCompanions,
-  readRegion,
 }: {
   port: ModeloPort;
   /** Whose declarations, or null while the account withholds them. */
@@ -62,9 +61,6 @@ export function DeclarationsPane({
   /** The profile's reads and write door for the open declaration's profile
    * elements; none are offered without it. */
   profileCompanions?: ProfileCompanionKit;
-  /** Reads the region the profile states, which the open declaration's
-   * estimate is made for. */
-  readRegion?: () => Promise<string | null>;
   pane: {
     title: string;
     controls: PaneControl[];
@@ -113,7 +109,6 @@ export function DeclarationsPane({
           openLink={openLink}
           onLeaveGuard={guardLeave}
           profileCompanions={profileCompanions}
-          readRegion={readRegion}
           // The list is read again on return only after a write.
           onWritten={() => {
             ownedMemory.stale = true;

@@ -5526,11 +5526,14 @@ export type ModeloProfileRefusalCause =
  *
  * A box in `unresolved_casillas` or bound by a binding in
  * `unresolved_bindings` has no value, and never appears in
- * `casilla_observations`. The words of both lists are in `words_language`, the
- * language the worker's catalogue rendered them in.
+ * `casilla_observations`. The words of both lists, and the name of each figure
+ * in `m130_accumulated` and `m100_projection`, are in `words_language`, the
+ * language the worker's catalogue rendered them in. `ccaa` is the region the
+ * projection was made for, whether the request named it or the profile's tax
+ * residence did.
  */
 export type ModeloProjectOperationProjection = {
-  result_version: 2;
+  result_version: 3;
   authority_generation: ContentDigest;
   profile_id: string;
   year: number;
@@ -5552,7 +5555,7 @@ export type ModeloProjectOperationProjection = {
 export type ModeloProjectOperationRequest = {
   profile_id: string;
   year: number;
-  ccaa: string;
+  ccaa?: string | null;
   casilla_overrides?: ProjectionOverride[];
   binding_overrides?: ProjectionOverride[];
 };
@@ -7369,9 +7372,24 @@ export type ProjectCasillaObservationProjection = {
 };
 
 /**
- * All seven canonical M100 summary values.
+ * All seven canonical M100 summary values, each with its name in words.
  */
 export type ProjectM100SummaryProjection = {
+  base_liquidable_general: string;
+  pagos_fraccionados: string;
+  cuota_integra_estatal: string;
+  cuota_integra_autonomica: string;
+  cuota_liquida_estatal: string;
+  cuota_liquida_autonomica: string;
+  cuota_resultante: string;
+  words: ProjectM100SummaryWords;
+};
+
+/**
+ * The name of each projected annual-return figure, in the projection's
+ * `words_language`.
+ */
+export type ProjectM100SummaryWords = {
   base_liquidable_general: string;
   pagos_fraccionados: string;
   cuota_integra_estatal: string;
@@ -7382,9 +7400,22 @@ export type ProjectM100SummaryProjection = {
 };
 
 /**
- * All four canonical cumulative M130 summary values.
+ * All four canonical cumulative M130 summary values, each with its name in
+ * words.
  */
 export type ProjectM130AccumulatedProjection = {
+  ingresos: string;
+  gastos: string;
+  rendimiento_neto: string;
+  pagos_fraccionados: string;
+  words: ProjectM130AccumulatedWords;
+};
+
+/**
+ * The name of each cumulative quarterly-declaration figure, in the
+ * projection's `words_language`.
+ */
+export type ProjectM130AccumulatedWords = {
   ingresos: string;
   gastos: string;
   rendimiento_neto: string;
@@ -7997,6 +8028,7 @@ export type PublicModeloWorkForm = {
   result: PublicModeloFormResult | null;
   deadline: ModeloFormDeadline | null;
   aeat_data: ModeloFormAeatData | null;
+  projectable: boolean;
   filing: ModeloFormFiling | null;
   last_export: ModeloFormExport | null;
   edit_closure: ModeloFormEditClosure | null;

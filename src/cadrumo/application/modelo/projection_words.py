@@ -2,7 +2,9 @@
 
 A projection names an unresolved credit and every total computed from it by
 closed tokens. These sentences say the same thing in the output language, so a
-frontend states it as served and maps no token itself.
+frontend states it as served and maps no token itself. The same goes for the
+name of each figure the projection gives, which :func:`m130_figure_words` and
+:func:`m100_figure_words` serve.
 """
 
 from __future__ import annotations
@@ -40,6 +42,27 @@ _CASILLA_REASON_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
 )
 """The sentence of each reason a computed box can be left without a value."""
 _OTHER_CASILLA_REASON_LOCALE_KEY: Final[str] = "application.modelo.projection_words.casilla_reason.other"
+_M130_FIGURE_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "ingresos": "application.modelo.projection_words.figure.m130.ingresos",
+        "gastos": "application.modelo.projection_words.figure.m130.gastos",
+        "rendimiento_neto": "application.modelo.projection_words.figure.m130.rendimiento_neto",
+        "pagos_fraccionados": "application.modelo.projection_words.figure.m130.pagos_fraccionados",
+    }
+)
+"""The name of each cumulative quarterly-declaration figure a projection gives."""
+_M100_FIGURE_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "base_liquidable_general": "application.modelo.projection_words.figure.m100.base_liquidable_general",
+        "pagos_fraccionados": "application.modelo.projection_words.figure.m100.pagos_fraccionados",
+        "cuota_integra_estatal": "application.modelo.projection_words.figure.m100.cuota_integra_estatal",
+        "cuota_integra_autonomica": "application.modelo.projection_words.figure.m100.cuota_integra_autonomica",
+        "cuota_liquida_estatal": "application.modelo.projection_words.figure.m100.cuota_liquida_estatal",
+        "cuota_liquida_autonomica": "application.modelo.projection_words.figure.m100.cuota_liquida_autonomica",
+        "cuota_resultante": "application.modelo.projection_words.figure.m100.cuota_resultante",
+    }
+)
+"""The name of each projected annual-return figure."""
 
 
 def _require_every_outcome_reason_worded() -> None:
@@ -77,4 +100,20 @@ def unresolved_casilla_reason_words(reason: str, *, language: OutputLanguage) ->
     return tr(_CASILLA_REASON_LOCALE_KEYS.get(reason, _OTHER_CASILLA_REASON_LOCALE_KEY), locale=language.value)
 
 
-__all__ = ["binding_source_words", "unresolved_binding_words", "unresolved_casilla_reason_words"]
+def m130_figure_words(figure: str, *, language: OutputLanguage) -> str:
+    """Name one cumulative quarterly-declaration figure of a projection in ``language``."""
+    return tr(_M130_FIGURE_LOCALE_KEYS[figure], locale=language.value)
+
+
+def m100_figure_words(figure: str, *, language: OutputLanguage) -> str:
+    """Name one projected annual-return figure in ``language``."""
+    return tr(_M100_FIGURE_LOCALE_KEYS[figure], locale=language.value)
+
+
+__all__ = [
+    "binding_source_words",
+    "m100_figure_words",
+    "m130_figure_words",
+    "unresolved_binding_words",
+    "unresolved_casilla_reason_words",
+]

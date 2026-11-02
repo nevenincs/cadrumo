@@ -75,8 +75,6 @@ export function CreditsPanel({
           locale={locale}
           fieldAt={session.fieldAt}
           results={form.result_addresses}
-          onOpenSurface={onOpenSurface}
-          canOpenSurface={canOpenSurface}
         />
       }
     />

@@ -148,8 +148,8 @@ RENTA_ANSWERS: tuple[tuple[str, str], ...] = (
 RENTA_SALARY_BOXES: tuple[str, str] = ("0003", "0013")
 #: A synthetic payer whose withholding certificate the register holds.
 RENTA_PAYER_TAX_ID = "B12345674"
-#: The quarter whose calculated Modelo 130 a projected filer holds, and the region the projection is asked for: the
-#: one the filers' profiles state as their tax residence.
+#: The quarter whose calculated Modelo 130 a projected filer holds, and the region the filers' profiles state as their
+#: tax residence, which the projection takes when it is not named.
 RENTA_QUARTER = "1T"
 RENTA_CCAA = "madrid"
 
@@ -950,7 +950,7 @@ def _renta_seeded(tmp: Path, filer: RentaFiler) -> Generator[Any]:
 
     facts = (
         UserProfileFact(path="taxpayer_type.irpf_income_categories", value=filer.categories),
-        UserProfileFact(path="tax_residence.ccaa", value="madrid"),
+        UserProfileFact(path="tax_residence.ccaa", value=RENTA_CCAA),
         *RENTA_UNMARRIED_TAXPAYER_FACTS,
     )
     with (
@@ -1056,7 +1056,7 @@ def _write_projection(directory: Path, work: Any, name: str) -> None:
     from cadrumo.core.config import override_settings
 
     bucket_id = work.work_unit.bucket_id
-    request = ModeloProjectOperationRequest(profile_id=UUID(bucket_id), year=RENTA_YEAR, ccaa=RENTA_CCAA)
+    request = ModeloProjectOperationRequest(profile_id=UUID(bucket_id), year=RENTA_YEAR)
     for language in LANGUAGES:
         with override_settings(cadrumo_output_language=language):
             projected = _operate(work, "modelo.project", request, subject_ref=_profile_subject(work))
@@ -1073,7 +1073,7 @@ def _write_projection_refusal(directory: Path, work: Any, name: str) -> None:
     from cadrumo.application.operations.error_detail import build_operation_error_detail
     from cadrumo.core.config import override_settings
 
-    request = ModeloProjectOperationRequest(profile_id=UUID(work.work_unit.bucket_id), year=RENTA_YEAR, ccaa=RENTA_CCAA)
+    request = ModeloProjectOperationRequest(profile_id=UUID(work.work_unit.bucket_id), year=RENTA_YEAR)
     for language in LANGUAGES:
         with override_settings(cadrumo_output_language=language):
             try:

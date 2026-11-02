@@ -2577,6 +2577,32 @@ application:
         waived_refund_result_unsupported: A visszatérítésről való lemondás esetén
           kapott eredményt még nem támogatjuk, ezért ennek a rovatnak nincs értéke.
           Soha nem jelenik meg nullaként.
+      figure:
+        m100:
+          base_liquidable_general: Általános likvidálható adóalap
+          cuota_integra_autonomica: Bruttó autonóm közösségi adó
+          cuota_integra_estatal: Bruttó állami adó
+          cuota_liquida_autonomica: Nettó autonóm közösségi adó
+          cuota_liquida_estatal: Nettó állami adó
+          cuota_resultante: Az önbevallásból eredő adó
+          pagos_fraccionados: Befizetett előlegfizetések
+        m130:
+          gastos: Eddigi kiadás (Modelo 130 bevallások)
+          ingresos: Eddigi bevétel (Modelo 130 bevallások)
+          pagos_fraccionados: Befizetett előlegfizetések (Modelo 130 bevallások)
+          rendimiento_neto: Eddigi nettó jövedelem (Modelo 130 bevallások)
+      no_m130_revisions: A(z) %{year} adóév Modelo 130 bevallásait még nem számoltad
+        ki, így nincs miből becslést készíteni az éves bevallásról. Számolj ki egy
+        negyedévet, majd kérd újra a becslést.
+      no_m130_units: A(z) %{year} adóévre nincs Modelo 130 piszkozat bevallásod, így
+        nincs miből becslést készíteni az éves bevallásról. Hozd létre az első negyedév
+        bevallását, majd kérd újra a becslést.
+      profile_fact_missing: 'A becslés nem tudja kiszámítani az adóalap- és adórovatokat,
+        mert a profilod nem tartalmazza: %{profile_facts}. Add meg őket a profilodban,
+        majd kérd újra a becslést.'
+      region_unstated: A profilodban nincs megadva, melyik régióban adózol, így a
+        becslés nem készíthető el. Add meg az adóügyi lakóhelyed régióját a profilodban,
+        majd kérd újra a becslést.
     quickfile:
       stage_incomplete: A `quickfile` %{stage} szakasza %{status} állapottal fejeződött
         be.
