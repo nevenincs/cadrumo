@@ -33,7 +33,7 @@ EMPTY_TUPLE_DEFAULT: Final[tuple[object, ...]] = ("LITERAL", (), None)
 GROUP_INVOCATION_CONTRACT: Final[tuple[object, ...]] = (False, True, False, True, False, False, None, None)
 _LEAF_INVOCATION_CONTRACT: Final[tuple[object, ...]] = (False, False, False, True, False, False, "ctx", None)
 
-NO_RESULT_SCHEMA_CONTRACT: Final[tuple[object, ...]] = ("not-supported", None, None, None)
+NO_RESULT_SCHEMA_CONTRACT: Final[tuple[str, None, None, None]] = ("not-supported", None, None, None)
 
 
 def expected_argument(

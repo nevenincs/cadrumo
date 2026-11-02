@@ -5,13 +5,16 @@ from __future__ import annotations
 import ctypes
 from copy import deepcopy
 from types import SimpleNamespace
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pytest
 
 from cadrumo.application.user_profile.access_contracts import OsLockState
 
 from .. import macos_console
+
+if TYPE_CHECKING:
+    from _ctypes import _CArgObject
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_outbound_adapter]
 
@@ -185,11 +188,11 @@ def test_registry_snapshot_releases_error_document_and_root_on_encode_failure(mo
             self.calls.append(args)
             return self.result(*args) if callable(self.result) else self.result
 
-    def properties(_root: int, document: object, _allocator: object, _options: int) -> int:
+    def properties(_root: int, document: _CArgObject, _allocator: object, _options: int) -> int:
         ctypes.cast(document, ctypes.POINTER(ctypes.c_void_p))[0] = ctypes.c_void_p(11)
         return 0
 
-    def encode(_allocator: object, _document: object, _format: int, _options: int, error: object) -> None:
+    def encode(_allocator: object, _document: object, _format: int, _options: int, error: _CArgObject) -> None:
         ctypes.cast(error, ctypes.POINTER(ctypes.c_void_p))[0] = ctypes.c_void_p(22)
         return None
 
