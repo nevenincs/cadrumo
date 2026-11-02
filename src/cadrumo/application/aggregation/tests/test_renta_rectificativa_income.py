@@ -19,8 +19,10 @@ from pathlib import Path
 
 import pytest
 
+from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 
+from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.invoice_legal_classification import invoice_class_rectificativa
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -147,10 +149,6 @@ def _resolve(
     modelo: str = "100",
     period: str = "0A",
 ) -> CalculationSourceResolution:
-    from cadrumo.domain.calculations.registry.tests.published_authority import published_snapshot
-
-    from ....core.period import Period
-
     transactions = TransactionCatalogue.from_transactions(rows)
     repository = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     repository.save(transactions)

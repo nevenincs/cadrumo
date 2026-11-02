@@ -27,7 +27,12 @@ from cadrumo.adapters.persistence.storage.operator_scope import build_operator_s
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
-from cadrumo.application.aggregation.invoice_filing_fingerprint import invoice_row_fingerprint
+from cadrumo.adapters.persistence.profile.catalogue_reads import build_invoice_catalogue_read_ports
+from cadrumo.application.aggregation.invoice_filing_fingerprint import (
+    capture_invoice_fingerprint,
+    invoice_row_fingerprint,
+)
+from cadrumo.application.aggregation.renta_imputation import ImputationCriteria
 from cadrumo.application.invoices.catalogue_lifecycle import (
     CatalogueInvoicePatch,
     remove_catalogue_invoice,
@@ -326,9 +331,9 @@ def test_recalculating_clears_the_drift(draft: _Draft) -> None:
     draft.invoices.save(build_invoice_catalogue((_corrected_base(),)))
     assert _drift_counts(_verify(draft, revision)) == (0, 1, 1)
 
-    assert revision.casilla_values[_M130_INCOME] == "1000.00"
+    assert revision.casilla_values[_M130_INCOME] == Decimal("1000.00")
     recalculated = _calculate(draft)
-    assert recalculated.casilla_values[_M130_INCOME] == "2000.00"
+    assert recalculated.casilla_values[_M130_INCOME] == Decimal("2000.00")
     assert _drift_counts(_verify(draft, recalculated)) is None
 
 
@@ -391,3 +396,28 @@ def test_recalculating_a_version_one_draft_moves_it_to_the_wider_scope(draft: _D
     assert repinned.invoice_fingerprint.field_set_version == 2
     assert [row.invoice_id for row in repinned.invoice_fingerprint.rows] == [draft.invoice.invoice_id]
     assert not [f for f in _verify(draft, repinned).findings if f.message_locale_key == _NARROWER_KEY]
+
+
+def test_the_annual_scope_holds_the_year_and_not_the_next(draft: _Draft) -> None:
+    """Modelo 100 reads the whole year through the same scope; only a window's reach differs."""
+    late = _unpaid("V-DEC", on=date(_YEAR, 12, 30))
+    next_year = _unpaid("V-NEXT", on=date(_YEAR + 1, 1, 2))
+    draft.invoices.save(build_invoice_catalogue((draft.invoice, late, next_year)))
+    with bundled_indexed_authority().operation() as operation:
+        revision = operation.snapshot("100", filing_year=_YEAR, period="0A").revision
+        snapshot = capture_invoice_fingerprint(
+            work_unit=WorkUnit.model_construct(
+                bucket_id=_BUCKET,
+                modelo="100",
+                filing_year=_YEAR,
+                period=Period.from_year_and_code(_YEAR, "0A"),
+                revision_id=revision.id,
+            ),
+            revision=revision,
+            contributors=frozenset(),
+            ports=build_invoice_catalogue_read_ports(bucket_id=_BUCKET),
+            captured_at=_later(),
+            criteria=ImputationCriteria(facts=_facts("devengo", "directa_normal")),
+        )
+    assert snapshot is not None
+    assert {row.invoice_id for row in snapshot.rows} == {draft.invoice.invoice_id, late.invoice_id}
