@@ -43,6 +43,7 @@ from cadrumo.entrypoints.tests.profile_persistence.test_e2e_imputation_calculate
     _DEVENGO,
     _OFFICIAL_M130_C19,
     _persist_ledger,
+    _register_refund_account,
     _verify_and_export,
 )
 from cadrumo.entrypoints.tests.profile_persistence.test_e2e_ledger_m130_quarters_to_m100_annual import (
@@ -133,6 +134,8 @@ def _seed_filer(*, criterion: str, family: tuple[UserProfileFact, ...] = ()) -> 
 
 
 def _calculate(objects: SecureObjectRepository, *, activity_key: str | None) -> CalculationRevision:
+    # The filer's result is a refund, so the export's account page needs the designated account.
+    _register_refund_account(objects)
     _persist_ledger(objects)
     _seed_prior_year_m100(objects)
     for period, result in _OFFICIAL_M130_C19.items():
