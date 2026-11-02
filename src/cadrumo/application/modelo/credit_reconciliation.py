@@ -15,6 +15,12 @@ compared with the value, or with the named operand of the value's formula:
   figure is not cross-checked, which is never read as agreement, and withholds
   nothing.
 
+A payer certifies a retención in the year it pays it (DGT V4965-16), while an
+accrual taxpayer credits it in the year the income is imputed. When the value
+source states its figure by payment year as well, a payer-record cross-check is
+compared with that figure: a difference that the receipts' own payment dates
+explain is timing, not disagreement, and any remaining difference still blocks.
+
 A credit casilla whose own value is unresolved is not compared: its missing value
 is already reported, and no cross-check can stand in for it. No modelo name or
 casilla number is read here; everything comes from the revision's declarations.
@@ -24,7 +30,7 @@ from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from decimal import Decimal
 from types import MappingProxyType
 from typing import TYPE_CHECKING, Final
@@ -92,11 +98,15 @@ class CreditCrossCheckSources:
     absent, never zero. ``borrador_values`` holds what a selected borrador
     snapshot states for its compare-only bindings, and is empty when no
     snapshot was selected. ``borrador_snapshot_id`` locates those values.
+    ``payment_year_binding_values`` holds a value-source binding's figure with
+    its rows placed on the payer's payment date, stated only for an accrual
+    ejercicio.
     """
 
     retencion_soportada_totals: Mapping[RetencionSoportadaClase, Decimal]
     borrador_values: Mapping[BindingId, Decimal]
     borrador_snapshot_id: str | None = None
+    payment_year_binding_values: Mapping[BindingId, Decimal] = field(default_factory=lambda: MappingProxyType({}))
 
 
 def retencion_soportada_class_totals(
@@ -141,6 +151,7 @@ def load_credit_cross_check_sources(
     *,
     ports: CalculationActionPorts,
     borrador_snapshot_id: str | None,
+    payment_year_binding_values: Mapping[BindingId, Decimal],
 ) -> CreditCrossCheckSources:
     """Read every cross-check source the revision's credit reconciliation names, and nothing else."""
     borrador_values: dict[BindingId, Decimal] = {}
@@ -161,6 +172,7 @@ def load_credit_cross_check_sources(
         retencion_soportada_totals=_payer_record_totals(snapshot, work_unit, ports),
         borrador_values=borrador_values,
         borrador_snapshot_id=borrador_snapshot_id if borrador_values else None,
+        payment_year_binding_values=payment_year_binding_values,
     )
 
 
@@ -203,6 +215,24 @@ def _cross_check_value(
         )
     ledger: LedgerCrossCheck = cross_check
     return binding_values.get(ledger.binding), f"binding:{ledger.binding}", None
+
+
+def _payer_year_value(
+    entry: CreditReconciliationEntry,
+    cross_check: CreditCrossCheck,
+    *,
+    value: Decimal,
+    sources: CreditCrossCheckSources,
+) -> Decimal:
+    """Return the figure a payer record is compared with: the payment-year figure where one is stated."""
+    binding_id = entry.value_source.binding
+    if (
+        not isinstance(cross_check, RetencionSoportadaCrossCheck)
+        or cross_check.operand is not None
+        or binding_id is None
+    ):
+        return value
+    return sources.payment_year_binding_values.get(binding_id, value)
 
 
 def _value_source_family(entry: CreditReconciliationEntry) -> str:
@@ -334,7 +364,7 @@ def credit_reconciliation_issues(
             )
             if compared is None:
                 issues.append(_absent_issue(snapshot, entry, cross_check, compared_ref))
-            elif compared != value:
+            elif compared != _payer_year_value(entry, cross_check, value=value, sources=sources):
                 issues.append(
                     _disagreement_issue(
                         snapshot,

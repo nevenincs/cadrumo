@@ -269,6 +269,7 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
     backend_binding_values: Mapping[BindingId, Decimal] | None = None,
     row_binding_values: Mapping[tuple[BindingId, int], Decimal | str | int | bool] | None = None,
     row_source_identities: Mapping[RowBindingKey, RowSourceIdentity] | None = None,
+    payment_year_binding_values: Mapping[BindingId, Decimal] | None = None,
     closed_record_row_sets: tuple[ClosedRecordRowSet, ...] = (),
     row_casilla_values: Mapping[RowCasillaKey, Decimal] | None = None,
     row_casilla_provenance: Mapping[RowCasillaKey, DirectRowMaterializationProvenance] | None = None,
@@ -359,7 +360,11 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
             casilla_values=casilla_values,
             binding_values=prepared.channels.bindings,
             sources=load_credit_cross_check_sources(
-                snapshot, work_unit, ports=ports, borrador_snapshot_id=prepared.channels.borrador_snapshot_id
+                snapshot,
+                work_unit,
+                ports=ports,
+                borrador_snapshot_id=prepared.channels.borrador_snapshot_id,
+                payment_year_binding_values=payment_year_binding_values or {},
             ),
         ),
     )

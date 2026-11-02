@@ -251,6 +251,26 @@ def test_the_withholding_of_a_boundary_invoice_follows_its_income(operation: Pin
     assert later.binding_values[_CREDIT_0599] == _ZERO
 
 
+def test_under_accrual_the_withholding_is_also_stated_by_the_year_the_payer_paid(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Issued 20 December, paid 10 January: the payer certifies the 150,00 in the later year."""
+    row, invoice = _paid_invoice(*_BOTH_YEARS)
+    facts = _declared((_EARLIER, _DEVENGO), (_LATER, _DEVENGO))
+    earlier = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_EARLIER)
+    later = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
+    assert earlier.payment_year_binding_values == {_CREDIT_0599: _ZERO}
+    assert later.payment_year_binding_values == {_CREDIT_0599: _RETENCION}
+
+
+def test_under_cash_no_payment_year_figure_is_stated(operation: PinnedAuthorityOperation) -> None:
+    row, invoice = _paid_invoice(*_BOTH_YEARS)
+    facts = _declared((_EARLIER, _CASH), (_LATER, _CASH))
+    later = _resolve(operation, facts, rows=(row,), invoices=(invoice,), year=_LATER)
+    assert later.binding_values[_CREDIT_0599] == _RETENCION
+    assert later.payment_year_binding_values == {}
+
+
 def test_an_unset_criterion_picks_no_year_and_keeps_the_box_withheld(operation: PinnedAuthorityOperation) -> None:
     row, invoice = _paid_invoice(*_BOTH_YEARS)
     for year in (_EARLIER, _LATER):

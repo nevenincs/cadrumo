@@ -670,6 +670,16 @@ def _carries_withholding(observation: RentaIncomeObservationProtocol) -> bool:
     return False
 
 
+def declared_withholding_binding_ids(revision: ModeloRevision) -> frozenset[BindingId]:
+    """Return the ``ledger_renta_income_aggregation`` bindings on ``revision`` that sum declared retención."""
+    return frozenset(
+        binding.id
+        for binding in revision.bindings
+        if binding.source == BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+        and provider_member(binding, LedgerRentaIncomeProvider).fact == LedgerIncomeFact.DECLARED_WITHHELD_AMOUNT_SUM
+    )
+
+
 def ledger_renta_withholding_value_outcomes(
     revision: ModeloRevision,
     observations: Iterable[RentaIncomeObservationProtocol],

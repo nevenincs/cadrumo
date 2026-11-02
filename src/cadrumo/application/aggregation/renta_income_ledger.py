@@ -529,6 +529,41 @@ def _m100_income_casilla_aggregation(
     )
 
 
+def payment_dated_renta_m100_income_observations(
+    *,
+    bucket_id: str,
+    period: Period,
+    target_casilla_id: CasillaId,
+    activity_category_matcher: Callable[[Transaction], bool],
+    employment_category_matcher: Callable[[Transaction], bool],
+    ports: InvoiceCatalogueReadPorts,
+) -> tuple[RentaIncomeObservation, ...]:
+    """Return the ejercicio's activity receipts placed on the date the payer paid them.
+
+    A payer certifies the retención in the year it pays (DGT V4965-16), so this
+    is the ledger figure a certificate is compared with when accrual places some
+    receipts in another year. Each receipt keeps its share of a part-paid invoice,
+    as it does under an imputation criterion.
+    """
+    if period.kind is not PeriodKind.ANNUAL:
+        raise AggregationPeriodError(
+            tr("aggregation.renta_ledger.errors.unsupported_period"),
+            context={"period": str(period)},
+        )
+    require_catalogue_reads_bound_to(ports, bucket_id=bucket_id)
+    return _project_income_onto_casilla(
+        ports.transaction_reader.partition_by_date_range(period.start_date, period.end_date).in_window,
+        invoices=_load_income_invoices(ports=ports),
+        bucket_id=bucket_id,
+        window_start=date(period.filing_year, 1, 1),
+        window_end=date(period.filing_year, 12, 31),
+        target_casilla_id=target_casilla_id,
+        activity_category_matcher=activity_category_matcher,
+        employment_category_matcher=employment_category_matcher,
+        allocate_part_payments=True,
+    ).observations
+
+
 def aggregate_renta_m131_agrario_income_ledger_from_repositories(
     *,
     bucket_id: str,
@@ -730,6 +765,7 @@ def _project_income_onto_casilla(
     employment_category_matcher: Callable[[Transaction], bool],
     admits: Callable[[Transaction], bool] | None = None,
     criteria: ImputationCriteria | None = None,
+    allocate_part_payments: bool | None = None,
 ) -> _ProjectedIncome:
     """Classify a catalogue once and re-target every eligible observation.
 
@@ -756,6 +792,8 @@ def _project_income_onto_casilla(
             ``observations``.
         criteria: The dated imputation election that places each row, or
             ``None`` to keep the bank date.
+        allocate_part_payments: Whether a part payment carries its share of
+            the invoice; ``None`` allocates exactly when ``criteria`` is given.
 
     Returns:
         The projected observations, the issues raised along the way, and the
@@ -778,6 +816,7 @@ def _project_income_onto_casilla(
             activity_category_matcher=activity_category_matcher,
             employment_category_matcher=employment_category_matcher,
             criteria=criteria,
+            allocate_part_payments=allocate_part_payments,
         )
         if outcome is None:
             continue
@@ -807,6 +846,7 @@ def _classify_income_transaction(
     activity_category_matcher: Callable[[Transaction], bool],
     employment_category_matcher: Callable[[Transaction], bool],
     criteria: ImputationCriteria | None = None,
+    allocate_part_payments: bool | None = None,
 ) -> RentaIncomeObservation | RentaIncomeLedgerAggregationIssue | None:
     """Filter one ledger transaction against the selected income pipeline.
 
@@ -866,7 +906,7 @@ def _classify_income_transaction(
         gross_amount=gross_amount,
         filing_date=filing_date,
         target_casilla_id=target_casilla_id,
-        allocate_part_payments=criteria is not None,
+        allocate_part_payments=criteria is not None if allocate_part_payments is None else allocate_part_payments,
     )
 
 
@@ -1144,4 +1184,5 @@ __all__ = [
     "aggregate_renta_income_ledger_from_repositories",
     "aggregate_renta_m100_income_ledger",
     "aggregate_renta_m100_income_ledger_from_repositories",
+    "payment_dated_renta_m100_income_observations",
 ]

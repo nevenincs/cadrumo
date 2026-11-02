@@ -60,6 +60,7 @@ from ...domain.calculations.registry.ledger_renta_income_bindings import (
     RentaIncomeObservationProtocol,
     UngroundedRentaIncome,
     WithholdingDerivationPartition,
+    declared_withholding_binding_ids,
     ledger_renta_withholding_derivation_partition,
     ledger_renta_withholding_value_outcomes,
     resolve_ledger_renta_income_aggregation_binding_values,
@@ -103,6 +104,7 @@ from .modelo_bindings_actividad_assets import (
     activity_asset_disposal_excess_m131_findings,
 )
 from .renta_imputation import (
+    ActivityImputationCriterion,
     ImputationCriteria,
     ImputationFilingHistory,
     ImputationUnresolved,
@@ -129,6 +131,7 @@ from .renta_income_ledger import (
     aggregate_renta_income_ledger_from_repositories,
     aggregate_renta_m100_income_ledger_from_repositories,
     aggregate_renta_m131_agrario_income_ledger_from_repositories,
+    payment_dated_renta_m100_income_observations,
 )
 from .renta_income_models import RentaIncomeLedgerAggregationIssue, RentaIncomeLedgerAggregationIssueReason
 from .source_mesh import (
@@ -272,6 +275,7 @@ class LedgerRentaIncomeAggregationSourceResolver:
             context.profile.record if context.profile is not None else None,
             self._imputation_filings(context) if self._imputation_filings is not None else None,
         )
+        payment_year_values: dict[BindingId, Decimal] = {}
         with source_context_operation(context) as operation:
             profile_decode_context = operation.profile_decode_context()
             activity_category_matcher = _activity_category_matcher(operation)
@@ -287,6 +291,14 @@ class LedgerRentaIncomeAggregationSourceResolver:
                         employment_category_matcher=employment_category_matcher,
                         ports=self._ports,
                         criteria=criteria,
+                    )
+                    payment_year_values = self._payment_year_withholding(
+                        context,
+                        aggregation_period,
+                        criteria,
+                        target_casilla_id=target_casilla_id,
+                        activity_category_matcher=activity_category_matcher,
+                        employment_category_matcher=employment_category_matcher,
                     )
                 elif context.modelo == form_for_role("renta.objective_instalment"):
                     agrarian_activity_codes = frozenset(
@@ -337,7 +349,34 @@ class LedgerRentaIncomeAggregationSourceResolver:
                     source_kinds=self.owned_sources,
                     error=exc,
                 )
-        return self._assemble_resolution(context, aggregation, profile_decode_context, disposal_excess, criteria)
+        return self._assemble_resolution(
+            context, aggregation, profile_decode_context, disposal_excess, criteria
+        ).model_copy(update={"payment_year_binding_values": payment_year_values})
+
+    def _payment_year_withholding(
+        self,
+        context: CalculationSourceContext,
+        period: Period,
+        criteria: ImputationCriteria,
+        *,
+        target_casilla_id: CasillaId,
+        activity_category_matcher: Callable[[Transaction], bool],
+        employment_category_matcher: Callable[[Transaction], bool],
+    ) -> dict[BindingId, Decimal]:
+        """State each declared retención binding's figure by payment year, when accrual can move a receipt."""
+        withholding_ids = declared_withholding_binding_ids(context.revision)
+        if not withholding_ids or criteria.usable(context.filing_year) is not ActivityImputationCriterion.DEVENGO:
+            return {}
+        paid = payment_dated_renta_m100_income_observations(
+            bucket_id=context.bucket_id,
+            period=period,
+            target_casilla_id=target_casilla_id,
+            activity_category_matcher=activity_category_matcher,
+            employment_category_matcher=employment_category_matcher,
+            ports=self._ports,
+        )
+        values = resolve_ledger_renta_income_aggregation_binding_values(context.revision, paid)
+        return {binding_id: value for binding_id, value in values.items() if binding_id in withholding_ids}
 
     def _assemble_resolution(
         self,

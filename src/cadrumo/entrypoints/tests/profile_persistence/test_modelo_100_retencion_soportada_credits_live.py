@@ -21,7 +21,9 @@ over records written through the real write port, and proves:
   both figures, and a cross-check with nothing to compare is noted without
   withholding anything;
 * the activity withholding in 0599 is compared with the payer certificates of
-  activity income, and a residual difference withholds filing.
+  activity income, and a residual difference withholds filing;
+* under accrual a certificate is compared by the year the payer paid, so an
+  invoice accrued in December and paid in January is timing, not a difference.
 
 Real encrypted-SQLite stores, real published authority, real source mesh, real
 calculation engine; no mocks. Every identifier and figure is synthetic.
@@ -31,6 +33,7 @@ from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from decimal import Decimal
+from pathlib import Path
 
 import pytest
 
@@ -81,11 +84,18 @@ from ....domain.calculations.registry.bindings import RegistryModeloObservation
 from ....domain.calculations.registry.ids import BindingId
 from ....domain.calculations.registry.tests.authored_editions import newest_authored_edition
 from ....domain.calculations.registry.tests.registry_observations import registry_grounded_observations
+from ....domain.invoices.enums import IvaRate, PaymentStatus
+from ....domain.invoices.models import Invoice, InvoiceLine
+from ....domain.invoices.tests.catalogue_support import build_invoice_catalogue
+from ....domain.iva.schema import InvoiceKind, IvaCategory
 from ....domain.modelos.calculation_revision import CalculationRevision
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.filing_kind_evidence import observed_filing_kind_for_local_revision
 from ....domain.modelos.filing_record import FilingDeclarationKind
 from ....domain.modelos.source_disagreement import DisagreementDecimalValue, SourceDisagreementRole
+from ....domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
@@ -138,7 +148,9 @@ _EXPECTED_TOTAL_PAGOS_A_CUENTA = Decimal("2350.00")
 _BORRADOR_TRABAJO_FIGURE = Decimal("1800.00")
 
 
-def _seed_profile(*, income_categories: str, rental_activity: bool = False) -> None:
+def _seed_profile(
+    *, income_categories: str, rental_activity: bool = False, extra_facts: tuple[UserProfileFact, ...] = ()
+) -> None:
     record = _create_profile_record_for_test(
         setup_state=ProfileSetupState.COMPLETE,
         profile_id=_BUCKET_ID,
@@ -163,6 +175,7 @@ def _seed_profile(*, income_categories: str, rental_activity: bool = False) -> N
             UserProfileFact(path="renta_filing.declaration_type", value="1"),
             UserProfileFact(path="renta_family.minor_children_in_unit", value=False),
             UserProfileFact(path="renta_family.descendants_eu_eea_deduction", value=False),
+            *extra_facts,
         ),
         created_at=_T0,
         updated_at=_T0,
@@ -726,3 +739,154 @@ def test_each_certificate_credit_is_cross_checked_by_the_borrador_to_the_cent(
     disagreements = _credit_issues(revision, "credit_source_disagreement", casilla)
     assert len(disagreements) == (1 if disagrees else 0)
     assert all(issue in blocking_calculation_issues(revision) for issue in disagreements)
+
+
+# Hand-derived oracle for the payer-year comparison. One invoice of 1.000,00 plus
+# 210,00 IVA less 150,00 retained (15 %), issued 20 December of the year before and
+# paid net, 1.060,00, on 10 January. Under accrual its income and its 150,00 belong
+# to the year before, so 0599 holds 0,00 this year, while the payer certifies the
+# 150,00 in the year it paid: the receipt's own payment date explains the gap.
+_BOUNDARY_BASE = Decimal("1000.00")
+_BOUNDARY_IVA = Decimal("210.00")
+_BOUNDARY_RETENCION = Decimal("150.00")
+_BOUNDARY_ISSUED = date(_YEAR - 1, 12, 20)
+_BOUNDARY_PAID = date(_YEAR, 1, 10)
+
+
+def _accrual_facts() -> tuple[UserProfileFact, ...]:
+    return tuple(
+        UserProfileFact.model_validate(
+            {"path": path, "value": value, "valid_from": date(year, 1, 1), "valid_to": date(year, 12, 31)}
+        )
+        for year in (_YEAR - 1, _YEAR)
+        for path, value in (
+            ("irpf.activity_income_imputation_criterion", "devengo"),
+            ("irpf.codigo_comercio_accounting", False),
+        )
+    )
+
+
+def _boundary_receipt(invoice_id: str | None) -> Transaction:
+    return Transaction.model_validate(
+        {
+            "raw": RawTransaction(
+                provider_transaction_id="cobro-boundary",
+                booked_date=_BOUNDARY_PAID,
+                value_date=_BOUNDARY_PAID,
+                amount=_BOUNDARY_BASE + _BOUNDARY_IVA - _BOUNDARY_RETENCION,
+                currency="EUR",
+                counterparty="Cliente SL",
+                description="cobro factura",
+                provenance=RawProvenance(
+                    source_path=Path(__file__),
+                    source_sha256="e" * 64,
+                    source_row_index=1,
+                    source_format=SourceFormat.CSV,
+                    ingested_at=_T0,
+                    provider_name="CSV provider",
+                ),
+                raw_fields={},
+            ),
+            "direction": TransactionDirection.INCOMING,
+            "group_label": None,
+            "source_jurisdiction": "ES",
+            "business_classification": BusinessClassification.BUSINESS,
+            "irpf_category": "actividad_economica",
+            "taxable_base": _BOUNDARY_BASE,
+            "lifecycle_state": TransactionLifecycleState.ACTIVE,
+            "classified_at": _T0,
+            "classified_by": "manual",
+            "invoice_id": invoice_id,
+        },
+    )
+
+
+def _boundary_invoice(receipt_id: str) -> Invoice:
+    return Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": "F-BOUNDARY",
+            "issued_at": _BOUNDARY_ISSUED,
+            "counterparty_name": "Cliente SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "bucket_id": _BUCKET_ID,
+            "base_total": _BOUNDARY_BASE,
+            "iva_total": _BOUNDARY_IVA,
+            "grand_total": _BOUNDARY_BASE + _BOUNDARY_IVA,
+            "currency": "EUR",
+            "lines": (
+                InvoiceLine(
+                    description="Servicios profesionales",
+                    quantity=Decimal("1"),
+                    unit_price=_BOUNDARY_BASE,
+                    subtotal=_BOUNDARY_BASE,
+                    iva_rate=IvaRate.from_registry("RATE_21"),
+                    iva_amount=_BOUNDARY_IVA,
+                ),
+            ),
+            "payment_status": PaymentStatus.PAID,
+            "iva_category": IvaCategory("domestic_general"),
+            "retention_rate": Decimal("0.15"),
+            "retention_amount": _BOUNDARY_RETENCION,
+            "linked_transaction_ids": (receipt_id,),
+        },
+    )
+
+
+def _seed_boundary_invoice(secure_objects: SecureObjectRepository) -> None:
+    invoice = _boundary_invoice(_boundary_receipt(None).transaction_id)
+    TransactionCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(
+        TransactionCatalogue.from_transactions((_boundary_receipt(invoice.invoice_id),))
+    )
+    InvoiceCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects).save(build_invoice_catalogue((invoice,)))
+
+
+def _seed_activity_payer(operation: PinnedAuthorityOperation, retencion: Decimal) -> None:
+    seed_payer_certificate(
+        operation=operation,
+        taxpayer_tax_id=_TAX_ID,
+        ejercicio=_YEAR,
+        payer_tax_id="B12345674",
+        income_class=RetencionSoportadaClase.ACTIVIDAD_ECONOMICA,
+        retencion=retencion,
+        importe_integro_dinerario=_BOUNDARY_BASE,
+    )
+
+
+def _accrual_boundary_revision(
+    secure_objects: SecureObjectRepository, operation: PinnedAuthorityOperation, certified: Decimal
+) -> CalculationRevision:
+    _seed_profile(income_categories="trabajo,actividad_economica", extra_facts=_accrual_facts())
+    _seed_filed_history(secure_objects)
+    _seed_work_payers(operation)
+    _seed_boundary_invoice(secure_objects)
+    _seed_activity_payer(operation, certified)
+    return _calculate(secure_objects, operation=operation).revision
+
+
+def test_a_certificate_of_withholding_accrued_the_year_before_and_paid_this_year_is_timing(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    revision = _accrual_boundary_revision(secure_objects, operation, _BOUNDARY_RETENCION)
+
+    assert Decimal(revision.casilla_values[_ACTIVIDAD_CASILLA]) == Decimal("0")
+    assert not _credit_issues(revision, "credit_source_disagreement", _ACTIVIDAD_CASILLA)
+    assert all(
+        issue.source_ref != "income_class:actividad_economica"
+        for issue in _credit_issues(revision, "credit_cross_check_absent", _ACTIVIDAD_CASILLA)
+    )
+
+
+def test_a_certificate_the_payment_dates_do_not_explain_still_withholds_filing(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """The payer certifies 200,00; the receipt paid this year explains 150,00, leaving 50,00."""
+    revision = _accrual_boundary_revision(secure_objects, operation, Decimal("200.00"))
+
+    (issue,) = _credit_issues(revision, "credit_source_disagreement", _ACTIVIDAD_CASILLA)
+    assert issue in blocking_calculation_issues(revision)
+    assert issue.disagreement is not None
+    stated = {entry.role: entry.value for entry in issue.disagreement.sources}
+    assert stated[SourceDisagreementRole.VALUE_SOURCE] == DisagreementDecimalValue.of(Decimal("0"))
+    assert stated[SourceDisagreementRole.CROSS_CHECK] == DisagreementDecimalValue.of(Decimal("200.00"))

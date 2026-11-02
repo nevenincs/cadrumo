@@ -634,6 +634,14 @@ class CalculationSourceResolution(BaseModel):
     no entry has no stated outcome, which a capped value reads as withholding.
     A proven zero is refused for a binding whose value is not zero.
     """
+    payment_year_binding_values: Mapping[BindingId, Decimal] = Field(default_factory=dict, exclude=True, repr=False)
+    """Each declared-only retención binding's figure with its rows placed on the payer's payment date.
+
+    Stated only for an accrual ejercicio, where a receipt can be imputed to one
+    year and paid in another. A payer certifies the retención in the year it
+    pays, so a payer-side cross-check compares with this figure, not with the
+    value. It is never a binding value and never reaches a casilla.
+    """
 
     @field_validator("owned_sources", mode="before")
     @classmethod
