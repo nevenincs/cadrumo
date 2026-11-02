@@ -39,7 +39,6 @@ from ......application.modelo.work_form_models import (
     address_key,
     section_fields,
 )
-from ......application.modelo.work_form_outline import form_outline
 from ......core.config import override_settings
 from ......core.external_constants import OutputLanguage
 from ......domain.calculations.registry.schema_form_layouts import FormPageCondition
@@ -70,7 +69,7 @@ from ..sources import BoxNumbers
 from ..vocabulary import BLOCKS_MARK
 from .declaration_states import recorded_as_filed
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, status_line_of, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, form_field, status_line_of, synthetic_form, with_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -181,14 +180,12 @@ def _assumed_boxes(*section_sizes: int) -> ModeloWorkForm:
         sections=tuple(sections),
         counts=_counts(sum(section_sizes)),
     )
-    return synthetic_form(needs_input=False).model_copy(
-        update={
-            "pages": (page,),
-            "outline": form_outline((), (page,), OutputLanguage.ES, filed=False),
-            "working_figures": (),
-            "result_addresses": (),
-            "counts": _counts(sum(section_sizes)),
-        }
+    return with_pages(
+        synthetic_form(needs_input=False),
+        (page,),
+        working_figures=(),
+        result_addresses=(),
+        counts=_counts(sum(section_sizes)),
     )
 
 

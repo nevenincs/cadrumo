@@ -340,6 +340,12 @@ def synthetic_form(*, calculated: bool = True, needs_input: bool = True) -> Mode
     )
 
 
+def with_pages(form: ModeloWorkForm, pages: tuple[ModeloFormPage, ...], **update: object) -> ModeloWorkForm:
+    """The form showing ``pages`` instead, its outline grouping their sections page by page."""
+    outline = form_outline((), pages, form.language, filed=False)
+    return form.model_copy(update={**update, "pages": pages, "outline": outline})
+
+
 @dataclass
 class FakeReader:
     """Answers the workbench's reads from a fixed form and counts them."""

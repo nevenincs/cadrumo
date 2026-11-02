@@ -42,7 +42,7 @@ from ..search import search, search_entries
 from ..vocabulary import CONFIRM_MARK, DONE_MARK, HERE_MARK, ORIGIN_MARKS
 from .declaration_states import with_result
 from .form_edits import replace_fields
-from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form
+from .workbench_fixture import FakeActions, FakeReader, form_field, synthetic_form, with_pages
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -166,7 +166,7 @@ def _many_boxes() -> ModeloWorkForm:
     section = page.sections[0].model_copy(
         update={"blocks": tuple(ModeloFormFieldBlock(id=f"m{field.box}", field=field) for field in fields)}
     )
-    return form.model_copy(update={"pages": (page.model_copy(update={"sections": (section,)}), *form.pages[1:])})
+    return with_pages(form, (page.model_copy(update={"sections": (section,)}), *form.pages[1:]))
 
 
 @pytest.mark.asyncio
