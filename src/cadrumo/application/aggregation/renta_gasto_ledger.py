@@ -546,6 +546,11 @@ def _classify_gasto_transaction(
                 reason=RentaGastoLedgerAggregationIssueReason.OUTSIDE_PERIOD,
                 detail=f"payment of {cash} is outside the cumulative gasto window",
             )
+        # RIRPF art. 110.1.a computes the payment on the annual rendimiento neto, and the annual
+        # pipeline judges the category first: the row needs its category whichever year it lands in.
+        refusal = _category_refusal(transaction, rules=rules)
+        if refusal is not None:
+            return refusal
         return RentaGastoLedgerAggregationIssue(
             transaction_id=transaction_id,
             reason=RentaGastoLedgerAggregationIssueReason.IMPUTATION_UNRESOLVED,
@@ -595,6 +600,28 @@ def _classify_gasto_transaction(
         deductible_amount=evaluated,
         filing_date=filing_date,
         category_id=transaction.category_id,
+    )
+
+
+def _category_refusal(
+    transaction: Transaction,
+    *,
+    rules: RentaCategoryDeductionRules,
+) -> RentaGastoLedgerAggregationIssue | None:
+    """Return the issue for a row whose category cannot answer for its expense, or ``None`` when it can."""
+    resolved = resolve_category_rule(
+        transaction.category_id,
+        profiles=rules.profiles,
+        region_overrides=rules.region_overrides,
+        context=rules.context,
+        profile_year=rules.profile_year,
+    )
+    if not isinstance(resolved, CategoryRuleRefusal):
+        return None
+    return RentaGastoLedgerAggregationIssue(
+        transaction_id=transaction.transaction_id,
+        reason=RentaGastoLedgerAggregationIssueReason(resolved.reason),
+        detail=resolved.detail,
     )
 
 

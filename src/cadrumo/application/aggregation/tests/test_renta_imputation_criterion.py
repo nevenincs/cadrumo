@@ -26,6 +26,7 @@ from cadrumo.domain.user_profile.values import create_user_profile_record
 
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
+from ....domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
 from ....domain.calculations.registry.invoice_legal_classification import advance_payment_received_role
 from ....domain.categories.spending_category import SpendingCategory
 from ....domain.invoices.enums import IvaRate, PaymentStatus
@@ -508,3 +509,58 @@ def test_an_unpaid_received_invoice_under_accrual_keeps_the_box_withheld(operati
     profile = _profile(operation, _declared((2025, _DEVENGO)))
     resolution = resolve_m130(ActivityAssetHistory(), "2T", profile=profile, invoices=invoices)
     assert "unresolved_binding" in {item.reason for item in resolution.diagnostics}
+
+
+_CREDIT_M130_06 = "modelo-130-actividad-economica-retenciones-cumulative"
+_FIRST_QUARTER_ACCRUAL = (date(2025, 3, 20), date(2025, 4, 10))
+
+
+@pytest.mark.parametrize(
+    ("criterion", "income", "credit"),
+    [(_DEVENGO, _BASE, _RETENCION), (_CASH, _ZERO, _ZERO)],
+)
+def test_m130_first_quarter_income_and_credit_follow_the_criterion(
+    operation: PinnedAuthorityOperation, criterion: str, income: Decimal, credit: Decimal
+) -> None:
+    """An invoice of 1.000,00 less 150,00 retained, accrued in March and collected in April."""
+    row, invoice = _paid_invoice(*_FIRST_QUARTER_ACCRUAL)
+    resolution = _resolve(
+        operation,
+        _declared((2025, criterion)),
+        rows=(row,),
+        invoices=(invoice,),
+        year=2025,
+        modelo="130",
+        period="1T",
+    )
+    assert resolution.binding_values[_INCOME_M130_01] == income
+    assert resolution.binding_values[_CREDIT_M130_06] == credit
+
+
+@pytest.mark.parametrize(
+    ("modelo", "period", "capped", "follow_the_criterion"),
+    [
+        ("100", "0A", "0599", ("0171",)),
+        ("130", "1T", "06", ("01", "02")),
+    ],
+)
+def test_only_the_retencion_credit_stays_capped_beside_the_boxes_the_criterion_places(
+    operation: PinnedAuthorityOperation, modelo: str, period: str, capped: str, follow_the_criterion: tuple[str, ...]
+) -> None:
+    snapshot = operation.snapshot(modelo, filing_year=2025, period=period)
+    reached = {
+        str(casilla_id)
+        for entry in capped_binding_reach(
+            snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+        ).values()
+        for casilla_id in entry.casilla_ids
+    }
+    assert capped in reached
+    assert not reached.intersection(follow_the_criterion)
+    expense_sources = {
+        "ledger_renta_gastos_estimacion_directa_aggregation",
+        "ledger_renta_gastos_pago_fraccionado_aggregation",
+    }
+    expense_bindings = [binding for binding in snapshot.revision.bindings if str(binding.source) in expense_sources]
+    assert expense_bindings
+    assert all(binding.grade_cap is None for binding in expense_bindings)

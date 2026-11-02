@@ -13,6 +13,8 @@ Every figure below is worked by hand from a 100.00 base and a 21.00 cuota, or a
 
 from __future__ import annotations
 
+from collections.abc import Callable
+from dataclasses import replace
 from datetime import date
 from decimal import Decimal
 
@@ -27,8 +29,10 @@ from ....domain.categories.spending_category_catalogue import require_spending_c
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ....domain.user_profile.values import UserProfileFact
 from ...actividad_asset.history import ActivityAssetHistory
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
+from ...modelo.work_profile import ModeloWorkProfile
 from .._renta_business_eligibility import RentaExpenseAdvisoryReason
 from ..iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
 from ..modelo_bindings_renta_expenses import LedgerRentaGastosPagoFraccionadoAggregationSourceResolver
@@ -46,8 +50,10 @@ from .ledger_source_mesh_support import (
     _EmptyActivityAssetHistoryRepository,
     _ledger_iva_resolver,
     _revision,
+    cash_criterion_profile,
     empty_invoice_repository,
     empty_prorrata_repository,
+    m130_box,
     resolve_m100,
 )
 from .ledger_transaction_support import iva_transaction
@@ -327,7 +333,7 @@ def test_the_iva_refusal_blocks_through_the_source_mesh_without_any_preflight() 
     assert row.transaction_id not in resolution.source_transaction_ids
 
 
-def _gasto_resolution(row: Transaction):
+def _gasto_resolution(row: Transaction, *, profile: ModeloWorkProfile | None = None):
     return LedgerRentaGastosPagoFraccionadoAggregationSourceResolver(
         transaction_repository=_repository(row),
         invoice_reader=empty_invoice_repository(),
@@ -341,6 +347,7 @@ def _gasto_resolution(row: Transaction):
             filing_year=_YEAR,
             period=_QUARTER,
             revision=_revision("130", "2019-y-siguientes"),
+            profile=profile,
         ),
     )
 
@@ -355,7 +362,43 @@ def test_the_gasto_refusal_blocks_through_the_source_mesh_without_any_preflight(
 
 def test_a_kept_share_reaches_the_calculation_as_an_advisory_and_not_a_blocker() -> None:
     row = _row("asesoria_fiscal")
-    resolution = _gasto_resolution(row)
+    resolution = _gasto_resolution(row, profile=cash_criterion_profile(_YEAR))
     assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["source_issue"]
     assert "art. 29.2" in resolution.diagnostics[0].message
     assert row.transaction_id in resolution.source_transaction_ids
+
+
+def test_a_kept_share_in_a_year_with_no_criterion_cannot_be_placed() -> None:
+    """RIRPF art. 7 picks the year, and no default stands in for an undeclared election."""
+    row = _row("asesoria_fiscal")
+    resolution = _gasto_resolution(row)
+    assert {diagnostic.reason for diagnostic in resolution.diagnostics} == {"unresolved_binding"}
+    assert row.transaction_id not in resolution.source_transaction_ids
+
+
+def _accrual_profile() -> ModeloWorkProfile:
+    cash = cash_criterion_profile(_YEAR)
+    facts = tuple(
+        UserProfileFact.model_validate(
+            {"path": fact.path, "value": "devengo", "valid_from": fact.valid_from, "valid_to": fact.valid_to}
+        )
+        if fact.path == "irpf.activity_income_imputation_criterion"
+        else fact
+        for fact in cash.record.facts
+    )
+    return replace(cash, record=cash.record.model_copy(update={"facts": facts}))
+
+
+@pytest.mark.parametrize("classification", [_MIXED, _BUSINESS])
+@pytest.mark.parametrize("profile_of", [lambda: None, lambda: cash_criterion_profile(_YEAR), _accrual_profile])
+def test_a_row_with_no_category_is_held_for_its_category_under_every_criterion(
+    classification: BusinessClassification, profile_of: Callable[[], ModeloWorkProfile | None]
+) -> None:
+    """Undeclared, cash, and accrual with no document all name the category, as the annual declaration does."""
+    row = _row(None, classification=classification)
+    resolution = _gasto_resolution(row, profile=profile_of())
+    held_back = [d for d in resolution.diagnostics if d.reason == "source_domain_not_ready"]
+    assert [d.source_ref for d in held_back] == [f"transaction:{row.transaction_id}"]
+    assert "spending category" in held_back[0].message
+    assert row.transaction_id not in resolution.source_transaction_ids
+    assert m130_box(resolution) == Decimal("0")
