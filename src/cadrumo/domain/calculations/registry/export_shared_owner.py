@@ -54,6 +54,16 @@ def canonical_export_layout(layouts: Iterable[ExportLayoutDefinition]) -> Export
     return ordered[0] if ordered else None
 
 
+def _cells_by_owner(layout: ExportLayoutDefinition) -> defaultdict[CasillaId, list[tuple[str, ExportFieldDefinition]]]:
+    """Group the layout's casilla cells by the casilla that owns them, each with its record."""
+    cells_by_owner: defaultdict[CasillaId, list[tuple[str, ExportFieldDefinition]]] = defaultdict(list)
+    for record in layout.records:
+        for field in record.fields:
+            if field.kind is CasillaFieldKind.CASILLA and field.casilla_id is not None:
+                cells_by_owner[field.casilla_id].append((str(record.id), field))
+    return cells_by_owner
+
+
 def unadjudicated_shared_owners(
     layout: ExportLayoutDefinition,
     casillas: Iterable[CasillaDefinition],
@@ -62,14 +72,9 @@ def unadjudicated_shared_owners(
     declared = {casilla.id: casilla for casilla in casillas}
     if not any(casilla.segmento is not None for casilla in declared.values()):
         return ()
-    cells_by_owner: defaultdict[CasillaId, list[tuple[str, ExportFieldDefinition]]] = defaultdict(list)
-    for record in layout.records:
-        for field in record.fields:
-            if field.kind is CasillaFieldKind.CASILLA and field.casilla_id is not None:
-                cells_by_owner[field.casilla_id].append((str(record.id), field))
     return tuple(
         UnadjudicatedSharedOwner(casilla_id=casilla_id, target_cells=tuple(cell for _record, cell in cells))
-        for casilla_id, cells in cells_by_owner.items()
+        for casilla_id, cells in _cells_by_owner(layout).items()
         if len(cells) > 1 and not _relation_is_declared(declared.get(casilla_id), cells)
     )
 

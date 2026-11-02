@@ -486,18 +486,14 @@ def _mismatched_xml_dictionary_casilla_ids(
         if casilla_id is None:
             continue
         checked.append(casilla_id)
-        entry = entries.get(parsed.field_id)
-        expected = values.get(casilla_id)
-        if entry is None:
-            raise FilingExportValidationError(
-                f"XML dictionary field {parsed.field_id!r} could not resolve its signed entry for verification"
-            )
+        entry = _signed_dictionary_entry(entries, parsed.field_id)
         if any(rows.holds(entry.path) for rows in repeated_rows):
             continue
-        stamped = stamped_individual_return_titular(entry, payload) if expected is None else None
-        expected_wire = stamped or _xml_dictionary_checked_wire_value(
+        expected = values.get(casilla_id)
+        expected_wire = _verification_wire_value(
             entry,
             expected,
+            payload=payload,
             modelo=draft.modelo,
             modelo_100_declarations=modelo_100_declarations,
             value_schema=value_schema,
@@ -505,6 +501,35 @@ def _mismatched_xml_dictionary_casilla_ids(
         if expected_wire != parsed.raw:
             mismatched.append(casilla_id)
     return tuple(dict.fromkeys(mismatched)), tuple(dict.fromkeys(checked))
+
+
+def _signed_dictionary_entry(entries: Mapping[str, XmlDictionaryEntry], field_id: str) -> XmlDictionaryEntry:
+    entry = entries.get(field_id)
+    if entry is None:
+        raise FilingExportValidationError(
+            f"XML dictionary field {field_id!r} could not resolve its signed entry for verification"
+        )
+    return entry
+
+
+def _verification_wire_value(
+    entry: XmlDictionaryEntry,
+    expected: object,
+    *,
+    payload: bytes,
+    modelo: str,
+    modelo_100_declarations: Mapping[str, str] | None,
+    value_schema: XmlValueSchema,
+) -> str:
+    """Return the token the payload should carry: the stamped titular when no value was filed, else the render."""
+    stamped = stamped_individual_return_titular(entry, payload) if expected is None else None
+    return stamped or _xml_dictionary_checked_wire_value(
+        entry,
+        expected,
+        modelo=modelo,
+        modelo_100_declarations=modelo_100_declarations,
+        value_schema=value_schema,
+    )
 
 
 def _xml_dictionary_checked_wire_value(

@@ -667,6 +667,45 @@ def _caller_operator_layer(
     )
 
 
+def _bucket_aggregation_source_diagnostics(
+    *,
+    preparation: _BucketAggregationPreparation,
+    channels: _BucketAggregationChannels,
+    precedence_diagnostics: tuple[CalculationSourceDiagnostic, ...],
+    revision: CalculationRevision,
+    ports: CalculationActionPorts,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Join the mesh, precedence, override, advisory and profile-text diagnostics a calculation reports."""
+    advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
+        preparation.snapshot.revision,
+        revision.casilla_values,
+        modelo=preparation.work_unit.modelo,
+        period_token=preparation.work_unit.period.registry_token,
+        filing_year=preparation.work_unit.filing_year,
+        bucket_id=preparation.work_unit.bucket_id,
+        bienes_inversion_repository=ports.bienes_inversion_repository,
+        observation_repository=ports.observation_repository,
+        prorrata_register_repository=ports.prorrata_register_repository,
+        transaction_repository=transaction_repository,
+        operation=ports.operation,
+        profile=preparation.profile,
+    )
+    profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
+        preparation.snapshot.revision,
+        profile_fact_index(preparation.profile.record, preparation.profile.profile_decode_context.schema),
+        supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
+    )
+    source_diagnostics = (
+        channels.reconciliation.source_diagnostics
+        + precedence_diagnostics
+        + channels.override_diagnostics
+        + advisory_diagnostics
+        + profile_text_diagnostics
+    )
+    return with_element_names(source_diagnostics, ports.activity_asset_history_repository)
+
+
 def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     work_unit_id: str,
     *,
@@ -784,33 +823,14 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
     )
     publication = calculation.publication
     revision = publication.revision
-    advisory_diagnostics = collect_bucket_aggregation_advisory_diagnostics(
-        preparation.snapshot.revision,
-        revision.casilla_values,
-        modelo=preparation.work_unit.modelo,
-        period_token=preparation.work_unit.period.registry_token,
-        filing_year=preparation.work_unit.filing_year,
-        bucket_id=preparation.work_unit.bucket_id,
-        bienes_inversion_repository=ports.bienes_inversion_repository,
-        observation_repository=ports.observation_repository,
-        prorrata_register_repository=ports.prorrata_register_repository,
+    source_diagnostics = _bucket_aggregation_source_diagnostics(
+        preparation=preparation,
+        channels=channels,
+        precedence_diagnostics=calculation.precedence_diagnostics,
+        revision=revision,
+        ports=ports,
         transaction_repository=memoized_transaction_repository,
-        operation=ports.operation,
-        profile=preparation.profile,
     )
-    profile_text_diagnostics = profile_text_casilla_gap_diagnostics(
-        preparation.snapshot.revision,
-        profile_fact_index(preparation.profile.record, preparation.profile.profile_decode_context.schema),
-        supplied_casilla_ids=frozenset(revision.input_values_by_casilla_id),
-    )
-    source_diagnostics = (
-        channels.reconciliation.source_diagnostics
-        + calculation.precedence_diagnostics
-        + channels.override_diagnostics
-        + advisory_diagnostics
-        + profile_text_diagnostics
-    )
-    source_diagnostics = with_element_names(source_diagnostics, ports.activity_asset_history_repository)
     # Held for the editor form until the next calculation of this declaration; those that withhold filing and
     # the activity-asset notes also persist on the revision, so a reopened declaration still shows them.
     CALCULATION_NOTES.record(revision.work_unit_id, revision.calculation_revision_id, source_diagnostics)
@@ -932,38 +952,40 @@ def unrouted_source_issues(
     the published layout: a working figure that could not be worked out is worth
     checking, not a filed figure missing.
     """
-    issues: list[CalculationSourceIssue] = []
-    for diagnostic in source_diagnostics:
-        precedence_issue = precedence_tier_issue(diagnostic)
-        if precedence_issue is not None:
-            issues.append(precedence_issue)
-            continue
-        reason = _durable_source_issue_reason(diagnostic)
-        if reason is None:
-            continue
-        binding_source = durable_binding_source(diagnostic)
-        if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
-            continue
-        casilla_id = None if diagnostic.casilla_id is None else diagnostic.casilla_id
-        if reason in PRINTED_BOX_REASONS and not boxes.prints(casilla_id):
-            continue
-        issues.append(
-            CalculationSourceIssue(
-                reason=reason,
-                binding_source=binding_source,
-                casilla_id=diagnostic.casilla_id,
-                message=(
-                    "selected-scope IVA evidence failure"
-                    if reason == "iva_selected_scope_evidence_failure"
-                    else diagnostic.message[:CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT]
-                ),
-                resolver_id=diagnostic.resolver_id,
-                source_ref=diagnostic.source_ref,
-                fact=diagnostic.fact,
-                value_outcome=diagnostic.value_outcome if reason == "advisory_binding_value" else None,
-            ),
-        )
-    return tuple(issues)
+    issues = (_unrouted_source_issue(diagnostic, boxes) for diagnostic in source_diagnostics)
+    return tuple(issue for issue in issues if issue is not None)
+
+
+def _unrouted_source_issue(
+    diagnostic: CalculationSourceDiagnostic,
+    boxes: PrintedBoxes,
+) -> CalculationSourceIssue | None:
+    """Return the durable issue one source diagnostic persists as, or ``None`` when it persists nothing."""
+    precedence_issue = precedence_tier_issue(diagnostic)
+    if precedence_issue is not None:
+        return precedence_issue
+    reason = _durable_source_issue_reason(diagnostic)
+    if reason is None:
+        return None
+    binding_source = durable_binding_source(diagnostic)
+    if reason in _BINDING_SOURCE_KEYED_REASONS and binding_source is None:
+        return None
+    if reason in PRINTED_BOX_REASONS and not boxes.prints(diagnostic.casilla_id):
+        return None
+    return CalculationSourceIssue(
+        reason=reason,
+        binding_source=binding_source,
+        casilla_id=diagnostic.casilla_id,
+        message=(
+            "selected-scope IVA evidence failure"
+            if reason == "iva_selected_scope_evidence_failure"
+            else diagnostic.message[:CALCULATION_SOURCE_ISSUE_MESSAGE_LIMIT]
+        ),
+        resolver_id=diagnostic.resolver_id,
+        source_ref=diagnostic.source_ref,
+        fact=diagnostic.fact,
+        value_outcome=diagnostic.value_outcome if reason == "advisory_binding_value" else None,
+    )
 
 
 def _merge_detail_row_binding_values(

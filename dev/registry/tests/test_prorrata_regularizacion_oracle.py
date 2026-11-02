@@ -22,7 +22,7 @@ directly - the same shape the other seven manual figures in this module already
 use.
 
 See Also:
-    :func:`~domain.iva.prorrata.compute_regularizacion_prorrata_anual`
+    :func:`~domain.iva.prorrata.compute_regularizacion_prorrata_particionada`
         Domain regularisation whose casilla-44 amount is pinned to the manual oracle.
     :func:`~domain.iva.compute_prorrata_general`
         Domain percentage compute used to reproduce the manual's prior-year
@@ -56,8 +56,9 @@ from cadrumo.domain.iva.prorrata import (
     ProrrataInputs,
     ProrrataKind,
     RegularizacionProrrataDireccion,
+    RegularizacionProrrataParticion,
     compute_prorrata_general,
-    compute_regularizacion_prorrata_anual,
+    compute_regularizacion_prorrata_particionada,
 )
 
 from ..compiler.authority import compiled_bundled_authority
@@ -185,10 +186,10 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     """The real registry/domain chain reproduces the bundled AEAT manual figures.
 
     See Also:
-        :func:`~domain.iva.prorrata.compute_regularizacion_prorrata_anual`
+        :func:`~domain.iva.prorrata.compute_regularizacion_prorrata_particionada`
             Domain regularisation under test for the signed Modelo 303 casilla
             44 value.
-        :class:`~domain.iva.RegularizacionProrrataResult`
+        :class:`~domain.iva.RegularizacionProrrataParticionadaResult`
             Result carrier whose provisional, definitive, importe, and direction
             fields are compared against the manual figures.
     """
@@ -211,11 +212,14 @@ def test_m303_prorrata_regularizacion_reproduces_aeat_manual_oracle() -> None:
     practised_per_quarter = tuple(
         round_to_cents(cuota * provisional.percentage / Decimal("100")) for cuota in _FIRST_THREE_QUARTERS_INPUT_IVA
     )
-    result = compute_regularizacion_prorrata_anual(
-        cuotas_soportadas_deducibles=sum(_FIRST_THREE_QUARTERS_INPUT_IVA, Decimal("0")),
+    result = compute_regularizacion_prorrata_particionada(
+        particiones=(
+            RegularizacionProrrataParticion(
+                cuotas_soportadas_deducibles=sum(_FIRST_THREE_QUARTERS_INPUT_IVA, Decimal("0")),
+                prorrata_definitiva_pct=definitive_percentage,
+            ),
+        ),
         deducciones_provisionales_practicadas=sum(practised_per_quarter, Decimal("0")),
-        prorrata_provisional_pct=provisional.percentage,
-        prorrata_definitiva_pct=definitive_percentage,
     )
     assert result.direccion is RegularizacionProrrataDireccion.INGRESO
     assert result.deduccion_provisional == _MANUAL_FIRST_THREE_QUARTERS_DEDUCTION

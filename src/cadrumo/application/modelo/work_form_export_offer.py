@@ -50,7 +50,11 @@ from ...core.modelo import Modelo
 from ...core.modelo_export_artefact import ModeloExportArtefact
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...core.payment_election import PaymentElection
-from ...core.payment_instalment_election import PaymentInstalmentElection, instalment_amounts
+from ...core.payment_instalment_election import (
+    PaymentInstalmentElection,
+    instalment_amounts,
+    second_instalment_is_payable,
+)
 from ...core.prior_domiciliation_election import PriorDomiciliationElection
 from ...core.refund_election import RefundElection
 from ...core.result_disposition import ResultDisposition, result_disposition_declares
@@ -190,6 +194,8 @@ class ModeloFormElectionReason(StrEnum):
     #: Unavailable: the amount the declaration settles goes another way than its result, such as a
     #: result to pay of which nothing remains to pay, and the official design gives no settlement for it.
     SETTLEMENT_UNSUPPORTED = "settlement_unsupported"
+    #: Unavailable: the second instalment of the amount to pay would be nothing, so it is paid at once.
+    SECOND_INSTALMENT_NOTHING = "second_instalment_nothing"
 
 
 _NOT_APPLICABLE_REASONS: Final = frozenset(
@@ -319,16 +325,26 @@ class ModeloFormElectionQuestion(BaseModel):
         if self.figures and self.state is not ModeloFormElectionState.AVAILABLE:
             raise ValueError("only an available election states figures")
         if self.state is ModeloFormElectionState.AVAILABLE:
-            if self.reason is not None or self.state_words is not None or not self.choices:
-                raise ValueError("an available election carries choices and no reason")
-            if self.default is not None and self.default not in {choice.value for choice in self.choices}:
-                raise ValueError("an election's default must be one of its choices")
-            return self
-        if self.reason is None or self.state_words is None or self.choices or self.default is not None:
-            raise ValueError("an election that cannot be answered carries its reason and words, and no choices")
-        if (self.reason in _NOT_APPLICABLE_REASONS) is not (self.state is ModeloFormElectionState.NOT_APPLICABLE):
-            raise ValueError("an election's reason matches its state")
+            _require_available_shape(self)
+        else:
+            _require_unanswerable_shape(self)
         return self
+
+
+def _require_available_shape(question: ModeloFormElectionQuestion) -> None:
+    """An available election carries choices and no reason, and any default is one of its choices."""
+    if question.reason is not None or question.state_words is not None or not question.choices:
+        raise ValueError("an available election carries choices and no reason")
+    if question.default is not None and question.default not in {choice.value for choice in question.choices}:
+        raise ValueError("an election's default must be one of its choices")
+
+
+def _require_unanswerable_shape(question: ModeloFormElectionQuestion) -> None:
+    """A not-applicable or unavailable election carries its reason and words, matching its state, and no answers."""
+    if question.reason is None or question.state_words is None or question.choices or question.default is not None:
+        raise ValueError("an election that cannot be answered carries its reason and words, and no choices")
+    if (question.reason in _NOT_APPLICABLE_REASONS) is not (question.state is ModeloFormElectionState.NOT_APPLICABLE):
+        raise ValueError("an election's reason matches its state")
 
 
 class ModeloFormReviewPackageOffer(BaseModel):
@@ -630,12 +646,15 @@ def _instalment_figures(
     )
 
 
-def _splittable(form: ModeloWorkForm, settlement: _Settlement, *, amended: bool) -> ModeloFormElectionReason | None:
+def _splittable(
+    modelo: str, form: ModeloWorkForm, settlement: _Settlement, *, amended: bool
+) -> ModeloFormElectionReason | None:
     """Why the result may not be paid in two instalments, or ``None`` when it may.
 
     RD 439/2007 art. 62.2, with the conditions the Manual práctico de Renta
-    2025 states: a result to pay, not a corrective declaration, filed within
-    its period.
+    states: a result to pay, not a corrective declaration, filed within its
+    period. No source states a smallest amount to split, but an amount whose
+    second instalment would be nothing is paid at once.
     """
     payable = _payable(form, settlement)
     if payable is not None:
@@ -647,6 +666,13 @@ def _splittable(form: ModeloWorkForm, settlement: _Settlement, *, amended: bool)
         return ModeloFormElectionReason.FILING_WINDOW_UNKNOWN
     if deadline.days_overdue is not None:
         return ModeloFormElectionReason.PAST_FILING_WINDOW
+    share = _instalment_share(modelo, form.period)
+    if (
+        share is not None
+        and settlement.amount is not None
+        and not second_instalment_is_payable(settlement.amount, first_share=share)
+    ):
+        return ModeloFormElectionReason.SECOND_INSTALMENT_NOTHING
     return None
 
 
@@ -681,7 +707,7 @@ def _settlement_question(
         )
     if election is ModeloFormElection.PRIOR_DOMICILIATION:
         return _question(election, PRIOR_DOMICILIATION_ELECTION_LOCALE_KEYS, PriorDomiciliationElection.KEEP, locale)
-    held = _splittable(form, settlement, amended=amended)
+    held = _splittable(modelo, form, settlement, amended=amended)
     return _question(
         election,
         INSTALMENT_ELECTION_LOCALE_KEYS,
