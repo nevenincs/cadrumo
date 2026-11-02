@@ -789,7 +789,10 @@ export function checkCorrection(
     changed.push(field);
     values[field] = value;
   };
-  const name = textField(draft.counterpartyName, 512);
+  const name = textField(
+    draft.counterpartyName,
+    textLimit("invoice_counterparty_name"),
+  );
   if (name.problem) problems.counterparty_name = name.problem;
   else if (name.value === null)
     problems.counterparty_name = { kind: "missing" };

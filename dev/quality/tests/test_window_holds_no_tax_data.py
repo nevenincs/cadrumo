@@ -57,7 +57,7 @@ contracts, the classifications from their enum. Ten rules:
     or tested inside a ``filter``, ``find``, ``some`` or ``every``: which way
     money goes for what is the ledger's. A direction told apart to draw it passes.
 ``text_limit``
-    A number given as the limit of ``parseLine``: how long an entry may be is its
+    A number given as the limit of ``parseLine`` or ``textField``: how long an entry may be is its
     writer's, and a field states a limit it was served.
 ``moved_rule``
     A name of a rule the backend now answers (``checkSplit``), or a staged split
@@ -1081,14 +1081,15 @@ def direction_rule_hits(tokens: list[Token], facts: Facts) -> list[Hit]:
 
 
 def text_limit_hits(tokens: list[Token]) -> list[Hit]:
-    """A number given as the limit ``parseLine`` holds typed text to."""
+    """A number given as the limit ``parseLine`` or ``textField`` holds typed text to."""
     return [
-        Hit("text_limit", tokens[index].line, f"parseLine limit {tokens[index + 4].text}")
-        for index in range(len(tokens) - 5)
-        if tokens[index].text == "parseLine"
-        and tokens[index + 1].text == "("
-        and tokens[index + 3].text == ","
-        and tokens[index + 4].kind == "num"
+        Hit("text_limit", token.line, f"{token.text} given a number as its limit")
+        for index, token in enumerate(tokens)
+        if token.text in {"parseLine", "textField"}
+        and any(
+            tokens[at].text == "," and tokens[at + 1].kind == "num"
+            for at in range(index + 2, min(index + 8, len(tokens) - 1))
+        )
     ]
 
 
@@ -1518,7 +1519,9 @@ def test_a_direction_told_apart_to_draw_it_passes(facts: Facts) -> None:
 
 def test_a_number_as_a_line_limit_fails_the_text_limit_rule(facts: Facts) -> None:
     assert "text_limit" in _fired("const parsed = parseLine(raw, 64);\n", facts)
+    assert "text_limit" in _fired("const name = textField(draft.counterpartyName, 512);\n", facts)
     assert "text_limit" not in _fired("const parsed = parseLine(raw, LINE_LIMIT);\n", facts)
+    assert "text_limit" not in _fired('const name = textField(raw, textLimit("name"));\n', facts)
     assert "text_limit" not in _fired("const parsed = parseLine(raw, field.maxLength);\n", facts)
 
 
