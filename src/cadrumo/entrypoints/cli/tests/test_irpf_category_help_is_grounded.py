@@ -44,8 +44,8 @@ _UNTRANSLATED_TOKENS = (
 _ROYALTY_SPLIT_TERMS = {
     "en": ("Royalties", "movable capital"),
     "es": ("cánones", "capital mobiliario"),
-    "ca": ("Royalties", "capital mobiliario"),
-    "hu": ("Royalties", "capital mobiliario"),
+    "ca": ("Royalties", "capital mobiliari"),
+    "hu": ("jogdíjak", "ingó tőkéből"),
 }
 
 # The catalogue pointer is presentation prose and may be translated.  Keep
