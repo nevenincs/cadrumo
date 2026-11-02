@@ -483,7 +483,8 @@ def _context_note(block: ModeloFormContextFieldBlock) -> CasillaListNote:
         if block.value_text is not None
         else context_value_text(block.value, OutputLanguage(output_language()))
     )
-    return CasillaListNote(f"{block.label.text}: {value}", indent=1)
+    label = block.label.text if block.box_number is None else f"[{block.box_number}] {block.label.text}"
+    return CasillaListNote(f"{label}: {value}", indent=1)
 
 
 def _block_items(

@@ -746,6 +746,8 @@ class ModeloFormContextFieldBlock(ModeloFormBase):
     kind: Literal["context_field"] = "context_field"
     id: str
     label: ModeloFormText
+    #: The printed box the design gives this context, kept apart from the label so each frontend decides how to show it.
+    box_number: str | None = None
     value: ModeloFormScalar
     #: The value in the form's language, dates and the period in words; ``None`` until the builder words the form.
     value_text: str | None = None

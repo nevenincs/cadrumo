@@ -209,8 +209,6 @@ class LayoutWalker:
         language = self.context.language
         owner = resolve_form_context_field(self.context.snapshot.revision, block)
         label = localized_heading(block.heading_key, block.official_heading, "Dato del formulario", language)
-        if block.box_number is not None:
-            label = label.model_copy(update={"text": f"[{block.box_number}] {label.text}"})
         value = (
             project_binding_field(owner.binding, self.context).value
             if owner.binding is not None
@@ -234,6 +232,7 @@ class LayoutWalker:
         return ModeloFormContextFieldBlock(
             id=block.id,
             label=label,
+            box_number=block.box_number,
             value=value,
             value_text=context_value_text(value, language, period=period if shows_period else None),
         )
