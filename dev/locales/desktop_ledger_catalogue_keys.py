@@ -706,6 +706,7 @@ DESKTOP_LEDGER_CATALOGUE_KEYS: Final[frozenset[str]] = frozenset(
         "desktop.ledger.registers.area.accounts",
         "desktop.ledger.registers.area.capital",
         "desktop.ledger.registers.area.prorrata",
+        "desktop.ledger.registers.area.withholding",
         "desktop.ledger.registers.areas",
         "desktop.ledger.duplicate.archive",
         "desktop.ledger.duplicate.chip",
