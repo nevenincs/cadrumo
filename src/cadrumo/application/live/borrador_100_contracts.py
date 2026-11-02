@@ -217,7 +217,11 @@ class Borrador100QueryProjection(BaseModel):
 
 
 class Borrador100ImportProjection(BaseModel):
-    """Complete human import facts and canonical parser warnings."""
+    """Complete human import facts and canonical parser warnings.
+
+    ``unowned_casillas`` lists printed casillas that no borrador-admitted binding
+    of the pinned revision owns; their values were read but not stored.
+    """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
     profile_id: UUID
@@ -227,6 +231,7 @@ class Borrador100ImportProjection(BaseModel):
     artefact_kind: Borrador100ArtefactKind
     source_pdf_sha256: ContentDigest
     blank_casillas: tuple[CasillaId, ...]
+    unowned_casillas: tuple[CasillaId, ...]
     warnings: tuple[str, ...]
 
     @model_validator(mode="after")
@@ -235,6 +240,10 @@ class Borrador100ImportProjection(BaseModel):
             raise ValueError("borrador capture differs from its source digest")
         if self.blank_casillas != tuple(sorted(set(self.blank_casillas))):
             raise ValueError("blank casillas must be sorted and unique")
+        if self.unowned_casillas != tuple(sorted(set(self.unowned_casillas))):
+            raise ValueError("unowned casillas must be sorted and unique")
+        if set(self.unowned_casillas) & set(self.blank_casillas):
+            raise ValueError("a casilla cannot be both blank and unowned")
         if not Decimal("0") <= Decimal(self.extraction_coverage.decimal) <= Decimal("1"):
             raise ValueError("borrador coverage must be a unit fraction")
         return self
