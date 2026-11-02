@@ -74,13 +74,6 @@ _SUPPLIED_CALENDARS = (
     _national(2027, (1, 1), (1, 6)),
 )
 
-# Authored windows that knowingly differ from the rule, each with its reason.
-# Modelo 390 2026: the registry authors Saturday 30 January 2027 and states that
-# no weekend displacement is asserted; the rule moves the close to Monday 1
-# February. Authored wins; the disagreement is a registry finding.
-_JUSTIFIED_DIVERGENCES = frozenset({("390", 2026, "0A")})
-
-
 # ---------------------------------------------------------------------------
 # Independent oracle, written from the articles' text.
 # ---------------------------------------------------------------------------
@@ -156,16 +149,16 @@ def test_every_authored_303_and_390_window_agrees_with_the_rule(operation: Pinne
         if projected.closes_on != closes_on:
             disagreements.add((modelo, period.filing_year, period.registry_token))
 
-    assert disagreements == _JUSTIFIED_DIVERGENCES
+    assert disagreements == set()
 
 
-def test_the_justified_390_divergence_is_the_weekend_shift(operation: PinnedAuthorityOperation) -> None:
+def test_the_390_2026_authored_close_is_the_weekend_shifted_monday(operation: PinnedAuthorityOperation) -> None:
     period = Period.from_year_and_code(2026, "0A")
     authored = resolve_filing_window("390", 2026, period, authority=operation)
     projected = project_filing_window(operation, modelo="390", period=period, calendars=_SUPPLIED_CALENDARS)
 
     assert isinstance(authored, AuthoredFilingWindow)
-    assert authored.closes_on == date(2027, 1, 30)  # a Saturday
+    assert authored.closes_on == date(2027, 2, 1)  # nominal Saturday 30 January moved by art. 30.5
     assert isinstance(projected, ProjectedFilingWindow)
     assert projected.nominal_closes_on == date(2027, 1, 30)
     assert projected.closes_on == date(2027, 2, 1)
