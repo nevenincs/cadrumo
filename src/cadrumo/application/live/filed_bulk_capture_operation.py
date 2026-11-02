@@ -199,10 +199,17 @@ class FiledBulkCaptureExecutor:
                 on_session_write=session_receipt,
                 operation=context.authority_operation,
             )
-        effect = OperationEffect.UPDATED if report.sync_run_ref is not None else OperationEffect.NONE
         return await publish_live_capture_report(
-            context, report, result_phase=_PHASES[2], effect=session_receipt.combine(effect)
+            context,
+            report,
+            result_phase=_PHASES[2],
+            effect=session_receipt.combine(bulk_capture_effect(report)),
         )
+
+
+def bulk_capture_effect(report: BulkFiledDataCaptureReport) -> OperationEffect:
+    """Report an update only when the sweep recorded a sync run; a preview or empty sweep wrote nothing."""
+    return OperationEffect.UPDATED if report.sync_run_ref is not None else OperationEffect.NONE
 
 
 def build_filed_bulk_capture_definition(
