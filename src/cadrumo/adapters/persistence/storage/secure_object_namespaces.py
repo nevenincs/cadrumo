@@ -476,6 +476,26 @@ WITHHOLDING_OBSERVATIONS_NAMESPACE = SecureObjectNamespaceDefinition(
     scope=StorageNamespaceScope.PROFILE_LOCAL,
     custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
 )
+# Withholding the taxpayer SUFFERED, one row per payer, income class and
+# ejercicio, read by the annual Renta credit casillas. FINANCIAL: each row holds a
+# payer's tax identifier and the figures of its certificate.
+#
+# The payer segment is ``payer_ref``, an HMAC-SHA256 under a labelled sub-key of
+# the profile's own key, never the NIF and never its unkeyed sha256: the NIF
+# space is small enough to recover from an unkeyed digest, and a natural key can
+# surface in a row-identity error. A corrected or replacement certificate
+# overwrites its row under the row's expected revision. The ``absence:`` form
+# holds an operator's attestation that a class had no payer.
+RETENCION_SOPORTADA_RECORDS_NAMESPACE = SecureObjectNamespaceDefinition(
+    key="retencion_soportada_records",
+    namespace="cadrumo.renta.retencion_soportada.records",
+    owner="cadrumo.application.aggregation",
+    sensitivity=SensitivityClass.FINANCIAL,
+    schema_version=SECURE_OBJECT_SCHEMA_VERSION_V1,
+    object_key_grammar="{ejercicio}:{income_class}:{payer_ref}|absence:{ejercicio}:{income_class}",
+    scope=StorageNamespaceScope.PROFILE_LOCAL,
+    custody_disposition=StorageCustodyDisposition.STRUCTURED_CUSTODY,
+)
 WITHHOLDING_WORKFLOW_NAMESPACE = SecureObjectNamespaceDefinition(
     key="withholding_workflow",
     namespace="cadrumo.withholding.workflow",

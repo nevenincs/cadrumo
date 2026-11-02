@@ -191,6 +191,7 @@ def build_invoice_update_definition(
         executor_type=InvoiceUpdateExecutor,
         build=lambda: InvoiceUpdateExecutor(factory, execution_caller_reader=execution_caller_reader),
         capabilities=RECORDED_IDEMPOTENT_SECURE_INPUT_UPDATE_CAPABILITIES,
+        public_error_detail=True,
     )
 
 

@@ -190,6 +190,16 @@ aggregation:
         szükséges (például --year 2024 --period 1T).
       unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
         (pl. 2024-0A).
+  retencion_soportada:
+    errors:
+      ejercicio_unsupported: A rekord ejercicio-ja kívül esik a Cadrumo által támogatott
+        bevallási éveken.
+      family_not_declared: Az ejercicio Modelo 100 változata nem olvas elszenvedett
+        levonást, így a rekord soha nem jutna el egy számításhoz.
+      identity_mismatch: A rekord nem egyezik a hozzá már tárolt kifizetővel, jövedelemtípussal
+        vagy igazolással.
+      own_tax_id: A kifizető adóazonosítója (NIF) a sajátod; az általad végzett levonás
+        nem a javadra szóló előleg.
   retenciones:
     errors:
       filing_year_out_of_range: A(z) %{filing_year} bevallási év a támogatott %{min_year}-%{max_year}

@@ -72,7 +72,8 @@ type Notice =
   /** It committed, and what it answered could not be read. */
   | { kind: "done" }
   | { kind: "receipt"; matches: boolean; narrative: string }
-  | { kind: "refused"; write: Write }
+  /** `words` is why, as the backend served it; null when it served none. */
+  | { kind: "refused"; write: Write; words: string | null }
   | { kind: "not_sent"; write: Write }
   | { kind: "unknown"; write: Write };
 
@@ -273,7 +274,7 @@ export function FilingView({
       if (outcome.kind === "settled") setNotice(settled(outcome.result));
       else if (outcome.kind === "saved_unread") setNotice({ kind: "done" });
       else if (outcome.kind === "refused")
-        setNotice({ kind: "refused", write });
+        setNotice({ kind: "refused", write, words: outcome.words });
       else if (outcome.kind === "not_sent")
         setNotice({ kind: "not_sent", write });
       else {
@@ -828,6 +829,11 @@ function FilingNotice({
         </Alert>
       );
     case "refused":
+      return (
+        <Alert tone="warning" icon={<Icon name="alert" />}>
+          {notice.words ?? t("workspace.modelo.outcome.not_done")}
+        </Alert>
+      );
     case "not_sent":
       return (
         <Alert tone="warning" icon={<Icon name="alert" />}>

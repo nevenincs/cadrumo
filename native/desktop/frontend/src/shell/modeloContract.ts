@@ -100,6 +100,7 @@ export type BindingSourceKind =
   | "ledger_impatriado_income_aggregation"
   | "ledger_irnr_income_aggregation"
   | "retenciones_aggregation"
+  | "retencion_soportada"
   | "iva_compensation_annual_partition"
   | "m303_regimen_simplificado_annual_summary"
   | "bienes_inversion_regularizacion"

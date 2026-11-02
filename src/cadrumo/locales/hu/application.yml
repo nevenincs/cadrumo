@@ -2468,6 +2468,12 @@ application:
           számolj újra.
       inspection_heading: Minden rovat, rovatszám szerint
       unnamed_box: Név nélküli rovat
+  operations:
+    error_detail:
+      record_fault: Egy rekord, amelyet a Cadrumo hozott létre, nem felelt meg a saját
+        ellenőrzésének, ezért ezt nem sikerült elvégezni.
+      unworded: 'Ezt nem sikerült elvégezni. Az okához még nincs mondat; a kódja:
+        {error_code}.'
   overview:
     calendar:
       event:

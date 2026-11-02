@@ -34,6 +34,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
 from cadrumo.adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
 from cadrumo.adapters.persistence.profile.retencion_observations import RetencionObservationRepositoryAdapter
+from cadrumo.adapters.persistence.profile.retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
 from cadrumo.adapters.persistence.profile.tests.relation_prefill_support import empty_profile_read_ports
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -41,6 +42,7 @@ from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import s
 from cadrumo.adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from cadrumo.application.aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from cadrumo.application.aggregation.retencion_observations_repository import RetencionObservationPorts
+from cadrumo.application.aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.invoices.source_resolver_ports import InvoiceSourceResolverPorts
 from cadrumo.application.modelo.action_errors import ModeloProfileReadinessError
@@ -124,6 +126,9 @@ def _source_mesh_ports(
         ),
         retencion_observation_ports=RetencionObservationPorts(
             repository=RetencionObservationRepositoryAdapter(objects=objects),
+        ),
+        retencion_soportada_ports=RetencionSoportadaPorts(
+            repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
         ),
         iva_compensation_history_repository=ports.iva_compensation_history_repository,
         iva_compensation_decision_repository=ports.iva_compensation_decision_repository,
