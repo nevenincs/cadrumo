@@ -33,6 +33,7 @@ from ....domain.modelos.calculation_revision import (
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
 from ....domain.modelos.calculation_screen_stamp import CalculationScreenStamp
 from ....domain.modelos.codes import ModeloCode
+from ....domain.modelos.tests.source_disagreement_support import sample_source_disagreement
 from ....domain.modelos.verification_report import VerificationCompletenessStatus
 from ....domain.modelos.work_unit import WorkUnit, derive_work_unit_id
 from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
@@ -142,6 +143,7 @@ class _Note:
                 "binding_source": self.binding_source,
                 "message": f"the calculation noticed {self.reason}",
                 "casilla_id": self.casilla_id,
+                "disagreement": sample_source_disagreement() if self.reason == "credit_source_disagreement" else None,
             }
         )
 

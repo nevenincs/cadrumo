@@ -744,6 +744,7 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         + channels.override_diagnostics
         + advisory_diagnostics
         + profile_text_diagnostics
+        + credit_reconciliation_diagnostics(revision.source_issues)
     )
     source_diagnostics = with_element_names(source_diagnostics, ports.activity_asset_history_repository)
     # Held for the editor form until the next calculation of this declaration; those that withhold filing and
@@ -754,6 +755,36 @@ def calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         profile=preparation.profile,
         publication=publication,
         source_diagnostics=source_diagnostics,
+    )
+
+
+_CREDIT_RECONCILIATION_REASONS: Final[frozenset[str]] = frozenset(
+    {"credit_source_disagreement", "credit_cross_check_absent"},
+)
+
+
+def credit_reconciliation_diagnostics(
+    issues: tuple[CalculationSourceIssue, ...],
+) -> tuple[CalculationSourceDiagnostic, ...]:
+    """Restate the credit reconciliation's persisted findings as this calculation's notes.
+
+    The comparison runs on the calculated values, inside the calculation, so its
+    findings are persisted before any note is shown; the notes say the same.
+    """
+    return tuple(
+        CalculationSourceDiagnostic(
+            reason="credit_source_disagreement"
+            if issue.reason == "credit_source_disagreement"
+            else "credit_cross_check_absent",
+            source_kind="credit_reconciliation",
+            binding_source=issue.binding_source,
+            casilla_id=issue.casilla_id,
+            message=issue.message,
+            source_ref=issue.source_ref,
+            fact=issue.fact,
+        )
+        for issue in issues
+        if issue.reason in _CREDIT_RECONCILIATION_REASONS
     )
 
 

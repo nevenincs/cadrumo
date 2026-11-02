@@ -201,6 +201,7 @@ def _scenario_2025(
             "renta-profile-marriage-month-end": Decimal("0"),
             # BIN-pendiente fresh-filer baseline (2025 binding).
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),
@@ -340,6 +341,7 @@ def test_base_liquidable_general_applies_reductions() -> None:
             "renta-profile-marriage-month-end": Decimal("0"),
             # Anexo C opening pending balance for the applied €1,000 amount.
             "renta-base-liquidable-negativa-general-anterior": Decimal("1000"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             # Childless profile: Art. 58/61 LIRPF mínimo por descendientes
             # aggregate is zero (Option A engine).
             "renta-profile-minimo-descendientes-estatal": Decimal("0"),

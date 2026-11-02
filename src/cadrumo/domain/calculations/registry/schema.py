@@ -35,7 +35,6 @@ from ....core.tax_domain import TaxDomain
 from ....core.type_guards import is_object_mapping
 from .binding_borrador_participation import BorradorParticipation, BorradorParticipationField
 from .binding_grade_cap import BindingGradeCap
-from .credit_reconciliation import CreditReconciliationEntry
 from .binding_provider import BindingProvider
 from .binding_temporal import (
     AllRevisionContexts,
@@ -45,6 +44,7 @@ from .binding_temporal import (
 )
 from .binding_terminal_origin import TerminalOriginExpectation
 from .binding_value_contract import BindingValueChannel, BindingValueContract
+from .credit_reconciliation import CreditReconciliationEntry
 from .errors import RegistryValidationError
 from .ids import (
     ApplicationLinkId,

@@ -1209,6 +1209,16 @@ application:
         what: Ez a számítás a Cadrumo jelenlegi ellenőrzései előtt készült, ezért
           ebben a formában nem ellenőrizhető, nem exportálható és nem rögzíthető.
         what_to_do: Számold újra a bevallást, majd ellenőrizd.
+      credit_cross_check_absent:
+        what: Egy forrásadó-jóváírás összevetésére szolgáló forrás nem tartalmaz semmit,
+          ezért az összeg megmarad, de nincs összevetve.
+        what_to_do: Ha ennek a forrásnak tartalmaznia kellene ezt a forrásadót, add
+          hozzá, és számold újra; különben nincs teendőd.
+      credit_source_disagreement:
+        what: Két forrás eltérő összeget ad ugyanarra a forrásadó-jóváírásra, ezért
+          a Cadrumo ezzel nem tudja ellenőrizni, exportálni vagy rögzíteni a bevallást.
+        what_to_do: Vesd össze az összeget az egyes kifizetők igazolásával, javítsd
+          a hibás forrást, és számold újra.
       deferred_binding_source:
         what: A Cadrumo a nyilatkozat egy értékét még nem tölti ki automatikusan.
         what_to_do: Nincs teendőd, hacsak az az érték nem vonatkozik rád. Ha igen,
@@ -1514,6 +1524,10 @@ application:
       claim_gap_free_method: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért nem számítható ki, a(z) {box}
         mező pedig csak a rögzítettet tartalmazza.'
+      credit_cross_check_absent: '{box}. mező: {cross_check} alapján nincs mit összevetni,
+        ezért ez az összeg nincs összevetve.'
+      credit_source_disagreement: '{box}. mező: a megadott forrás szerint {amount},
+        {cross_check} szerint viszont {compared_amount}.'
       disposal_claim_gap: '{element}: a kivezetése {date} napon történik, és {year}
         egy részére nincs rögzített értékcsökkenési leírás. A minimuma ettől még csökkenti
         a költséget.'
@@ -1669,6 +1683,10 @@ application:
       verification_complete: Teljes
       verification_incomplete: Hiányos
       verification_none: Nincs rögzített ellenőrzés
+    credit_cross_check_source:
+      borrador: az AEAT-tervezet
+      ledger: a nyilvántartásod
+      retencion_soportada: a kifizetői igazolások
     edit:
       parse:
         above_maximum: 'A legnagyobb megengedett érték: {bound}.'
@@ -2856,6 +2874,8 @@ application:
         config login NÉV parancsot az aktiváláshoz, vagy az aeat config profile delete
         NÉV parancsot a törléshez.
       profile_authentication_refused: A profiljelszó hitelesítése sikertelen.
+      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni;
+        add meg, melyik adóévre vonatkozik ez a válasz.
       profile_password_contains_surrogate: A profiljelszó olyan értéket tartalmaz,
         amely nem kódolható szigorú UTF-8 formában.
       profile_password_too_few_scalars: A profiljelszónak legalább {minimum_scalars}
@@ -2866,7 +2886,6 @@ application:
         {maximum_utf8_bytes} bájt lehet; a kapott méret {utf8_byte_count}.
       profile_proof_cancelled: A profiljelszó ellenőrzése megszakadt, mielőtt befejeződött
         volna.
-      profile_field_needs_ejercicio: A(z) %{field} mezőt adóévenként kell megadni; add meg, melyik adóévre vonatkozik ez a válasz.
       profile_text_too_long: A(z) %{field} mező legfeljebb %{limit} karaktert enged
         meg; rövidítsd le.
       recovery_already_enrolled: Ehhez a profilhoz már tartozik helyreállítási kód.

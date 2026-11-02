@@ -21,9 +21,11 @@ pytestmark = [pytest.mark.usefixtures("authority_operation"), pytest.mark.unit, 
 # is a computed casilla.
 _CERTIFICATE: BindingId = "renta-retencion-soportada-trabajo"
 _CREDIT_BINDINGS: tuple[BindingId, ...] = (
+    "renta-ledger-actividad-retenciones-0599",
     _CERTIFICATE,
     "renta-retencion-soportada-capital-mobiliario",
     "renta-retencion-soportada-ganancia-patrimonial",
+    "renta-retencion-soportada-arrendamiento-actividad",
 )
 _UNMARKED: BindingId = "renta-profile-minimo-descendientes-estatal"
 _BOUND_CASILLA: CasillaId = "0596"

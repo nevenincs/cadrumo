@@ -206,6 +206,7 @@ _BASE_BINDINGS: dict[str, Decimal] = {
     "renta-profile-marriage-month-start": Decimal("0"),
     "renta-profile-marriage-month-end": Decimal("0"),
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
     "renta-profile-declaration-type": Decimal("1"),
     "renta-profile-family-minor-children-in-unit": Decimal("0"),
     "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),

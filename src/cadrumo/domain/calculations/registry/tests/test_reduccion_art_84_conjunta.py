@@ -62,6 +62,7 @@ _PRIOR_EDITION_BINDINGS = {
     # BIN-pendiente fresh-filer baseline: previous_filing binding for
     # casilla 1388 (LIRPF Art. 48) resolves to zero with no prior filing.
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
 }
 
 _REVIEWED_EDITION_BINDINGS = {
@@ -72,6 +73,7 @@ _REVIEWED_EDITION_BINDINGS = {
     "renta-profile-marriage-month-end": Decimal("0"),
     # BIN-pendiente fresh-filer baseline (reviewed-edition binding).
     "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+    "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
 }
 
 

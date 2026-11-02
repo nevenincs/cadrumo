@@ -322,6 +322,39 @@ def resolve_modelo_100_borrador_bindings(
     return _borrador_resolution(snapshot, decimal_values=decimal_values, enum_values=enum_values)
 
 
+def borrador_cross_check_values(
+    command: Modelo100BorradorBindingCommand,
+    *,
+    registry_snapshot: RegistrySnapshot,
+    snapshot_repository: Borrador100SnapshotRepository | None,
+    operation: PinnedAuthorityOperation,
+) -> dict[BindingId, Decimal]:
+    """Return the amounts a selected borrador snapshot holds for its ``cross_check_only`` bindings.
+
+    These are the values the borrador states for credits it may only compare:
+    they never enter a calculation. Empty when no snapshot is selected, which a
+    credit reconciliation reads as a cross-check with nothing to compare.
+    """
+    snapshot_id = command.borrador_snapshot_id
+    if snapshot_id is None:
+        return {}
+    _assert_registry_snapshot_axis(command=command, registry_snapshot=registry_snapshot)
+    snapshot = _load_active_borrador_snapshot(
+        command,
+        snapshot_id=snapshot_id,
+        snapshot_repository=snapshot_repository,
+        operation=operation,
+    )
+    eligible_bindings = borrador_admitted_bindings(registry_snapshot.revision)
+    _assert_borrador_bindings_allowed(snapshot, eligible_bindings)
+    return {
+        binding_id: _decimal_value(binding_id, raw_value)
+        for binding_id, raw_value in snapshot.binding_values.items()
+        if eligible_bindings[binding_id].value.typed_enum is None
+        and not eligible_bindings[binding_id].borrador_supplies_value
+    }
+
+
 _BORRADOR_RESOLVER_ID = "modelo_100_borrador"
 
 
@@ -461,5 +494,6 @@ __all__ = [
     "Modelo100BorradorBindingCommand",
     "Modelo100BorradorBindingError",
     "Modelo100BorradorSourceResolver",
+    "borrador_cross_check_values",
     "resolve_modelo_100_borrador_bindings",
 ]

@@ -171,6 +171,10 @@ class CalculationNoteSentence(StrEnum):
     """A suffered-withholding class that may have income has neither a payer record nor an absence attestation."""
     RETENCION_SOPORTADA_ABSENCE_CONTRADICTED = "retencion_soportada_absence_contradicted"
     """A suffered-withholding class holds payer records and an operator's attestation that it has none."""
+    CREDIT_SOURCE_DISAGREEMENT = "credit_source_disagreement"
+    """A credit casilla's value and one of its declared cross-check sources state different amounts."""
+    CREDIT_CROSS_CHECK_ABSENT = "credit_cross_check_absent"
+    """A declared cross-check source of a credit casilla holds nothing to compare."""
 
 
 GRADE_CAP_NOTE_SENTENCES: Final[Mapping[BindingGradeCapReason, CalculationNoteSentence]] = MappingProxyType(
@@ -244,6 +248,10 @@ class RecordedCalculationNote(BaseModel):
     """The fact in words, in the language of this showing, for a reader that draws it as it stands."""
     detail: str = ""
     """What kind of note this is, in the same language."""
+
+
+DISAGREEMENT_REASONS: Final[frozenset[str]] = frozenset({"credit_source_disagreement"})
+"""The :class:`CalculationSourceIssue` reasons that carry a ``disagreement``, and the only ones that do."""
 
 
 class CalculationSourceIssue(BaseModel):
@@ -357,9 +365,9 @@ class CalculationSourceIssue(BaseModel):
 
     @model_validator(mode="after")
     @pydantic_validation_boundary
-    def _require_disagreement_on_credit_disagreement_only(self) -> Self:
-        if (self.disagreement is not None) != (self.reason == "credit_source_disagreement"):
-            raise ModeloValidationError("a credit source disagreement, and only that reason, carries its sources")
+    def _require_disagreement_on_disagreement_reasons_only(self) -> Self:
+        if (self.disagreement is not None) != (self.reason in DISAGREEMENT_REASONS):
+            raise ModeloValidationError("a disagreement reason, and only such a reason, carries its sources")
         return self
 
 

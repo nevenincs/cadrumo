@@ -41,7 +41,8 @@ from .runtime_graph import expression_binding_refs, expression_casilla_refs
 from .schema_input_kind import InputKind
 
 if TYPE_CHECKING:
-    from .schema import BindingDefinition, CasillaDefinition, FormulaDefinition, ModeloRevision
+    from .schema import BindingDefinition, FormulaDefinition, ModeloRevision
+    from .schema_surfaces import CasillaDefinition
 
 __all__ = [
     "credit_reconciliation_digest",

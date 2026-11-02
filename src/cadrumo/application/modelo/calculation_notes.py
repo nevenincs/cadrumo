@@ -244,9 +244,30 @@ _UNNUMBERED_BOX_LOCALE_KEY: Final[str] = "application.modelo.finding_fact.box_un
 _ELEMENT_PLACEHOLDERS: Final[frozenset[str]] = frozenset({"element", "elements"})
 _DATE_VALUES: Final[frozenset[str]] = frozenset({"date", "start", "end", "row_date", "period_end"})
 _AMOUNT_VALUES: Final[frozenset[str]] = frozenset(
-    {"amount", "cost", "paid", "price", "base", "remainder", "effect", "transmission_value", "net_value", "row_amount"}
+    {
+        "amount",
+        "cost",
+        "paid",
+        "price",
+        "base",
+        "remainder",
+        "effect",
+        "transmission_value",
+        "net_value",
+        "row_amount",
+        "compared_amount",
+    }
 )
 _INCOME_CLASS_VALUE: Final[str] = "income_class"
+_CROSS_CHECK_VALUE: Final[str] = "cross_check"
+_CROSS_CHECK_LABEL_LOCALE_KEYS: Final[Mapping[str, str]] = MappingProxyType(
+    {
+        "retencion_soportada": "application.modelo.credit_cross_check_source.retencion_soportada",
+        "borrador": "application.modelo.credit_cross_check_source.borrador",
+        "ledger": "application.modelo.credit_cross_check_source.ledger",
+    }
+)
+"""How a note names the source a credit was compared with, by its cross-check kind."""
 _logger = get_logger(__name__)
 STALE_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.stale"
 REOPEN_HINT_LOCALE_KEY: Final[str] = "application.modelo.calc_diagnostic.reopen_hint"
@@ -334,6 +355,8 @@ def _fact_value_text(name: str, value: str, language: OutputLanguage) -> str:
         return format_casilla_value(Decimal(value), data_type="money", language=language)
     if name == _INCOME_CLASS_VALUE:
         return tr(RETENCION_SOPORTADA_CLASE_LABEL_KEYS[RetencionSoportadaClase(value)], locale=language.value)
+    if name == _CROSS_CHECK_VALUE:
+        return tr(_CROSS_CHECK_LABEL_LOCALE_KEYS[value], locale=language.value)
     return value
 
 

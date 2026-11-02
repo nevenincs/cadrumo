@@ -45,6 +45,7 @@ def calculate(
             "renta-profile-marriage-month-start": Decimal("0"),
             "renta-profile-marriage-month-end": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         },
         enum_binding_values=enum_bindings,
         relation_values={

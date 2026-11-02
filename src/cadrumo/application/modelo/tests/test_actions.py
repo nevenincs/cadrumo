@@ -1048,6 +1048,7 @@ def test_revision_replay_does_not_resubmit_m100_formula_informational_casilla() 
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-deduccion-maternidad": Decimal("0"),
     }
     relation_values = {

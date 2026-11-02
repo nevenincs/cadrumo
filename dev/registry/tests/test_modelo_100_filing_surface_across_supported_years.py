@@ -85,6 +85,14 @@ _SETTLEMENT_FORMULAS: Mapping[str, str] = {
     "0670": "renta-resultado-declaracion",
 }
 
+# A settlement formula may add a figure the form prints in no casilla of its own.
+# Casilla 0598 credits urban-rental withholding whether or not the rental is an
+# activity, but the label prints only the capital inmobiliario box 0153; the
+# activity component comes from the payer records of the activity-rental class.
+_UNPRINTED_FORMULA_OPERANDS: Mapping[str, frozenset[str]] = {
+    "0598": frozenset({"binding:renta-retencion-soportada-arrendamiento-actividad"}),
+}
+
 # The official label of the resultado casilla signs these maternity-deduction
 # carry-ins for earlier ejercicios as additions, while the AEAT manual treats
 # them as increments of a deduction. An edition whose label names one of them
@@ -206,9 +214,11 @@ def _label_coefficients(label: str) -> dict[str, int]:
 
 
 def _expression_coefficients(expression: FormulaExpression) -> dict[str, int]:
-    """Linear casilla coefficients of a sum/negate/subtract/copy expression."""
+    """Linear coefficients of a sum/negate/subtract/copy expression, a binding keyed ``binding:<id>``."""
     if expression.casilla_id is not None:
         return {str(expression.casilla_id): 1}
+    if expression.binding is not None:
+        return {f"binding:{expression.binding}": 1}
     op = str(expression.op or "")
     children = [_expression_coefficients(arg) for arg in expression.args]
     total: dict[str, int] = {}
@@ -244,7 +254,12 @@ def test_settlement_formulas_reproduce_the_official_label_arithmetic(
             continue
         assert formula is not None, (filing_year, casilla_id)
         assert formula.id == formula_id
-        assert _expression_coefficients(formula.expression) == official, (filing_year, casilla_id)
+        coefficients = _expression_coefficients(formula.expression)
+        unprinted = {key for key in coefficients if key.startswith("binding:")}
+        assert unprinted == _UNPRINTED_FORMULA_OPERANDS.get(casilla_id, frozenset()), (filing_year, casilla_id)
+        assert all(coefficients[key] == 1 for key in unprinted), (filing_year, casilla_id)
+        printed = {key: value for key, value in coefficients.items() if key not in unprinted}
+        assert printed == official, (filing_year, casilla_id)
 
 
 def _binding_inputs(

@@ -23,6 +23,7 @@ from ....domain.modelos.calculation_revision import (
     derive_calculation_revision_id,
 )
 from ....domain.modelos.calculation_revision_sources import CalculationSourceIssue
+from ....domain.modelos.tests.source_disagreement_support import sample_source_disagreement
 from ..calculation_note_gate import (
     ModeloCalculationBlockedError,
     blocking_calculation_issues,
@@ -68,6 +69,8 @@ def _revision(*issues: CalculationSourceIssue) -> CalculationRevision:
 
 
 def _issue(reason: str, **fields: object) -> CalculationSourceIssue:
+    if reason == "credit_source_disagreement":
+        fields = {"disagreement": sample_source_disagreement(), **fields}
     return CalculationSourceIssue.model_validate(
         {"reason": reason, "binding_source": None, "message": f"the calculation noticed {reason}", **fields}
     )

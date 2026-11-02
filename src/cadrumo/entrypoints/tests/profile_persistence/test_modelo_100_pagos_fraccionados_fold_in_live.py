@@ -212,6 +212,8 @@ def _seed_taxpayer_unit_profile(secure_objects: SecureObjectRepository) -> None:
             UserProfileFact(path="identity.name", value="Test"),
             UserProfileFact(path="identity.surnames", value="Operator"),
             UserProfileFact(path="activities.description", value="economic activity"),
+            # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
+            UserProfileFact(path="activities.iae_epigraph", value="844"),
             *GENERAL_REGIME_NATURAL_PERSON_FACTS,
             UserProfileFact(path="censo.activity_start_date", value=date(2020, 1, 1)),
             *renta_single_taxpayer_facts(birth_date=date(1980, 3, 15)),

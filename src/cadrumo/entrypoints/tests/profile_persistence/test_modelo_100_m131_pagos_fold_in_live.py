@@ -120,6 +120,8 @@ def _seed_taxpayer_profile(objects: SecureObjectRepository, *, estimation_regime
                 UserProfileFact(path="identity.name", value="Rosa"),
                 UserProfileFact(path="identity.surnames", value="Modulos"),
                 UserProfileFact(path="activities.description", value="actividad por modulos"),
+                # An IAE epigraph outside group 861, so no urban rental is carried on as an activity.
+                UserProfileFact(path="activities.iae_epigraph", value="844"),
                 UserProfileFact(path="tax_residence.ccaa", value="madrid"),
                 UserProfileFact(path="tax_residence.jurisdiction_scope", value="common_regime"),
                 UserProfileFact(path="iva.regime", value="SIMPLIFICADO"),

@@ -33,6 +33,7 @@ its keyed ``payer_ref``, never by the payer's tax identifier.
 
 from __future__ import annotations
 
+import re
 from collections import defaultdict
 from collections.abc import Sequence
 from decimal import Decimal
@@ -43,10 +44,12 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...core.retencion_soportada import RetencionSoportadaClase
 from ...domain.calculations.registry.binding_targets import sole_bound_casilla
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
+from ...domain.calculations.registry.credit_reconciliation import RetencionSoportadaCrossCheck
 from ...domain.calculations.registry.retencion_soportada_bindings import (
     retencion_soportada_bindings,
     revision_declares_retencion_soportada,
 )
+from ...domain.calculations.registry.runtime_graph import expression_binding_refs
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from ...domain.renta.retencion_soportada_absence import RetencionSoportadaAbsence
@@ -70,6 +73,7 @@ from .source_mesh import (
 from .source_resolution_operations import storage_degradation_resolution
 
 if TYPE_CHECKING:
+    from ...core.casilla_id import CasillaId
     from ...core.period import Period
     from ...domain.calculations.registry.ids import BindingId
     from ...domain.calculations.registry.schema import ModeloRevision
@@ -141,11 +145,42 @@ def _declared_categories(context: CalculationSourceContext) -> frozenset[str] | 
     return frozenset(token.strip() for token in raw.split(",") if token.strip()) or None
 
 
+_ACTIVITY_EPIGRAPH_PATH: Final[re.Pattern[str]] = re.compile(
+    r"activities(?:\.(?P<row>[1-9][0-9]*))?\.(?P<field>[a-z0-9_]+)"
+)
+"""A field of one declared censal activity: the first row has no index, later rows count from 1."""
+_IAE_EPIGRAPH_FIELD: Final[str] = "iae_epigraph"
+
+
+def _declared_activity_epigraphs(context: CalculationSourceContext) -> tuple[str | None, ...] | None:
+    """Return each declared activity's IAE epigraph in force at the period's end, ``None`` for one without.
+
+    ``None`` overall when the profile cannot be read; an empty tuple when it
+    declares no activity.
+    """
+    if context.profile is None:
+        return None
+    from ..user_profile.projections import record_to_path_values
+
+    rows: dict[str, str | None] = {}
+    for path, value in record_to_path_values(context.profile.record, as_of=context.period.end_date).items():
+        match = _ACTIVITY_EPIGRAPH_PATH.fullmatch(path)
+        if match is None:
+            continue
+        row = match.group("row") or "0"
+        if match.group("field") == _IAE_EPIGRAPH_FIELD and value.strip():
+            rows[row] = value
+        else:
+            rows.setdefault(row, None)
+    return tuple(rows.values())
+
+
 def _class_state(
     income_class: RetencionSoportadaClase,
     class_records: Sequence[RetencionSoportadaRecord],
     attestation: RetencionSoportadaAbsence | None,
     declared: frozenset[str] | None,
+    activity_epigraphs: tuple[str | None, ...] | None,
 ) -> RetencionSoportadaClassState:
     if class_records:
         if attestation is not None:
@@ -153,9 +188,37 @@ def _class_state(
         return RetencionSoportadaClassState.RECORDED
     if attestation is not None:
         return RetencionSoportadaClassState.ATTESTED_ABSENT
-    if retencion_soportada_applicability(income_class, declared) is RetencionSoportadaApplicability.DECLARED_ABSENT:
+    applicability = retencion_soportada_applicability(income_class, declared, activity_epigraphs)
+    if applicability is RetencionSoportadaApplicability.DECLARED_ABSENT:
         return RetencionSoportadaClassState.DECLARED_ABSENT
     return RetencionSoportadaClassState.MISSING
+
+
+def _credited_casilla(revision: ModeloRevision, binding_id: BindingId) -> CasillaId | None:
+    """Return the one casilla a family binding credits: the box it is bound to, else the one formula reading it.
+
+    A binding read as a formula operand populates no box of its own, so a note that it is
+    unresolved names the computed credit box it leaves unresolved, and reaches the gate there.
+    """
+    bound = sole_bound_casilla(revision, binding_id)
+    if bound is not None:
+        return bound
+    readers = {
+        formula.target_casilla_id
+        for formula in revision.formulas
+        if binding_id in expression_binding_refs(formula.expression)
+    }
+    return next(iter(readers)) if len(readers) == 1 else None
+
+
+def _cross_checked_classes(revision: ModeloRevision) -> set[RetencionSoportadaClase]:
+    """Return the income classes the revision's credit reconciliation compares a credit with."""
+    return {
+        cross_check.income_class
+        for entry in revision.credit_reconciliation
+        for cross_check in entry.cross_checks
+        if isinstance(cross_check, RetencionSoportadaCrossCheck)
+    }
 
 
 class RetencionSoportadaSourceResolver:
@@ -215,7 +278,9 @@ class RetencionSoportadaSourceResolver:
             by_class[record.income_class].append(record)
         attested = {item.income_class: item for item in attestations}
         declared = _declared_categories(context)
+        activity_epigraphs = _declared_activity_epigraphs(context)
         binding_values: dict[BindingId, Decimal] = {}
+        unresolved: list[BindingId] = []
         diagnostics: list[CalculationSourceDiagnostic] = []
         zero_provenance: dict[RetencionSoportadaClase, CalculationSourceProvenance] = {}
         consumed: set[RetencionSoportadaClase] = set()
@@ -224,7 +289,7 @@ class RetencionSoportadaSourceResolver:
             consumed.add(income_class)
             class_records = by_class.get(income_class, [])
             attestation = attested.get(income_class)
-            state = _class_state(income_class, class_records, attestation, declared)
+            state = _class_state(income_class, class_records, attestation, declared, activity_epigraphs)
             if state is RetencionSoportadaClassState.RECORDED:
                 binding_values[binding.id] = sum(
                     (record.quantity(provider.quantity) for record in class_records),
@@ -234,13 +299,20 @@ class RetencionSoportadaSourceResolver:
                 binding_values[binding.id] = Decimal("0.00")
                 zero_provenance.setdefault(income_class, self._zero_provenance(context, income_class, attestation))
             else:
+                # Named unresolved here as well as in the note, so a formula reading the binding as an
+                # operand leaves its own box unresolved instead of failing on a missing value.
+                unresolved.append(binding.id)
                 diagnostics.append(self._unresolved_diagnostic(context.revision, binding.id, income_class, state))
         contributing = tuple(record for record in records if record.income_class in consumed)
+        # A class a credit casilla is cross-checked against is read by that comparison, so its
+        # records are not unrouted even where no binding credits them.
+        compared = consumed | _cross_checked_classes(context.revision)
         return CalculationSourceResolution(
             resolver_id=self.resolver_id,
             owned_sources=self.owned_sources,
             binding_values=binding_values,
-            diagnostics=(*diagnostics, *self._unrouted_diagnostics(context.revision, records, consumed)),
+            unresolved_binding_ids=tuple(unresolved),
+            diagnostics=(*diagnostics, *self._unrouted_diagnostics(context.revision, records, compared)),
             provenance=(*(self._provenance(record) for record in contributing), *zero_provenance.values()),
         )
 
@@ -271,7 +343,7 @@ class RetencionSoportadaSourceResolver:
             source_kind=_SOURCE_KIND.value,
             resolver_id=self.resolver_id,
             binding_id=binding_id,
-            casilla_id=sole_bound_casilla(revision, binding_id),
+            casilla_id=_credited_casilla(revision, binding_id),
             message=message,
             remedy=remedy,
             fact=CalculationNoteFact.of(sentence, income_class=income_class.value),

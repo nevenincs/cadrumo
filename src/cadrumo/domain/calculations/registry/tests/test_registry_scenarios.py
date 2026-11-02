@@ -165,6 +165,7 @@ def test_modelo_100_simplified_expenses_use_temporary_da56_rate() -> None:
         binding_values={
             "renta-modelo-100-estimacion-directa-es-normal": Decimal("0"),
             "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+            "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
             "renta-profile-declaration-type": Decimal("1"),
         },
         relation_values={

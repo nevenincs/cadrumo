@@ -91,6 +91,7 @@ def prior_base_binding_values(
         "renta-profile-marriage-month-end": Decimal("0"),
         # BIN-pendiente fresh-filer baseline.
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
     }
     if certificado_trabajo is not None:
         values[M100_RETENCIONES_TRABAJO_BINDING] = certificado_trabajo
@@ -111,6 +112,7 @@ def reviewed_base_binding_values(*, certificado_trabajo: Decimal | None = None) 
         "renta-profile-marriage-month-start": Decimal("0"),
         "renta-profile-marriage-month-end": Decimal("0"),
         "renta-base-liquidable-negativa-general-anterior": Decimal("0"),
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
         "renta-profile-minimo-descendientes-estatal": Decimal("0"),
         "renta-profile-minimo-descendientes-autonomico": Decimal("0"),
         # No maritime-worker income in these scenarios.

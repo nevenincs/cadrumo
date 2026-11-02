@@ -112,6 +112,7 @@ from .calculation_publication import CalculationRevisionPublication
 from .calculation_resolution import build_calculation_replay_payloads as _build_calculation_replay_payloads
 from .calculation_resolution import resolve_calculation_inputs as _resolve_calculation_inputs
 from .calculation_screen import calculation_screen_stamp
+from .credit_reconciliation import credit_reconciliation_issues, load_credit_cross_check_sources
 from .m123_count_authority_gate import Modelo123CountAuthorityStage, require_modelo_123_count_authority
 from .m303_filing_evidence import validate_m303_filing_instance_evidence_for_revision
 from .m303_regimen_simplificado_scope import m303_general_regime_claimed
@@ -320,6 +321,18 @@ def calculate_modelo_revision_with_trusted_mesh_sources(
         row_binding_values,
         filing_instance_evidence,
         m303_regimen_simplificado_annual_summary_handoff,
+    )
+    source_issues = (
+        *source_issues,
+        *credit_reconciliation_issues(
+            snapshot,
+            work_unit,
+            casilla_values=casilla_values,
+            binding_values=prepared.channels.bindings,
+            sources=load_credit_cross_check_sources(
+                snapshot, work_unit, ports=ports, borrador_snapshot_id=prepared.channels.borrador_snapshot_id
+            ),
+        ),
     )
 
     return persist_calculation_revision(

@@ -254,6 +254,9 @@ def base_binding_values() -> dict[BindingId, Decimal]:
         # régimen predicate when 0527 > 0 AND 0527 < 0505, so it is inert for
         # every non-anualidades scenario.
         "renta-profile-anualidades-sin-minimo-descendientes": Decimal("1"),
+        # Casilla 0598 adds the withholding suffered on urban rental carried on
+        # as an economic activity to the rental box 0153; no such activity here.
+        "renta-retencion-soportada-arrendamiento-actividad": Decimal("0"),
     }
 
 
