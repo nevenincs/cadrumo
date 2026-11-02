@@ -216,6 +216,7 @@ function Scenarios() {
       setup: initial.setup,
       ledger: initial.ledger,
       modelo: initial.modelo,
+      election: initial.election,
       window: initial.window,
       language: run.language,
       latencyMs: initial.latencyMs,
