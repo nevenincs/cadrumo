@@ -19,6 +19,9 @@ from . import edition_delta_payload as _edition_delta_payload
 from . import edition_delta_source as _edition_delta_source
 from .edition_delta_proof_source import read_staged_edition
 
+_DISPOSITIONS = "family_dispositions"
+_ORIGIN_MARKER = "inherited_from"
+
 
 def member_identities(source: _edition_delta_source._EditionSource) -> Mapping[str, tuple[str, ...]]:
     """Return materialised member identities in order, including every droppable family."""
@@ -90,8 +93,24 @@ def _restore_one_attested_claim(raw_attestation: object, rows: list[dict[str, ob
             row[row_field] = raw_attestation[manifest_field]
 
 
+def _without_disposition_origins(table: dict[str, object]) -> dict[str, object]:
+    """Drop the loader's origin marker from each disposition, which says where it is stated, not what it means."""
+    dispositions = table.get(_DISPOSITIONS)
+    if not isinstance(dispositions, Mapping):
+        return table
+    return {
+        **table,
+        _DISPOSITIONS: {
+            family: {key: item for key, item in entry.items() if key != _ORIGIN_MARKER}
+            if isinstance(entry, Mapping)
+            else entry
+            for family, entry in dispositions.items()
+        },
+    }
+
+
 def _comparable_table(source: _edition_delta_source._EditionSource) -> dict[str, object]:
-    effective = _family_defaults_inlined(source.table)
+    effective = _without_disposition_origins(_family_defaults_inlined(source.table))
     family_sections = {spec.section for spec in CANONICAL_FAMILY_SPECS}
     table = {
         key: comparable(value, revision_id=source.revision_id, path=f"table.{key}")

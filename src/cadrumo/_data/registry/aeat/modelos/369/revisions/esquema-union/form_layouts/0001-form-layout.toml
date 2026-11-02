@@ -7,7 +7,7 @@ revision_id = "esquema-union"
 seed_source = "authored"
 review = { state = "generated", notes = "Authored Union detail and country settlement follow BOE-A-2021-10161 pages74094-74099. Separate services/goods and Spain/other-member-state subtotals. Country vocabulary includes XI only for goods and corrections; EC2020 guidance excludes services. Blank rows require explicit membership. Additional-payment page remains unimplemented. No operator review or runtime publication claimed." }
 generator_version = 1
-source_state_digest = "b725640b7eb0ca0850f02cb8a56d23e66d5ceb2c354e1132e1e809840c40f7c9"
+source_state_digest = "e6085fe0cf7ea7252ce421ade1f15bcfdcac6a057397a4884ddf286eb5205ad5"
 design_sources = [
     { source_ref = "boe-modelo-369-2021-original-form-pdf", sha256 = "5ec990d839f8505bda2862c3b27b22f120df6b0e02edf345e726f006618eec12" },
     { source_ref = "aeat-dr-369-2021", sha256 = "8bfe61dfb79b5cb2eedb6ec3afc23ddfa48fcf196fb679f6ad359aa9319e0754" },

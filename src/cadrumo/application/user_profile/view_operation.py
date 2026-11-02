@@ -63,7 +63,7 @@ class ProfileViewOperationRequest(CredentialFreeOperationRequest):
         description="facts reads saved taxpayer values; questions pairs saved setup answers with canonical prompts, "
         "help and choices (no defaults). questions covers scalar setup fields, not all profile facts or tax duties. "
         "status describes basic setup readiness only. preferences reads only the saved output language. "
-        "family_rows reads the stored descendant rows with their wording; ascendants are not served. "
+        "family_rows reads the stored descendant and ascendant rows with their wording. "
         "Read actual facts before asking the user."
     )
     cursor: NonNegativeInt = 0

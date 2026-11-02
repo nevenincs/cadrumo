@@ -1,6 +1,6 @@
 """Which design rows print the scheme period a registered filing period already carries.
 
-A special-regime period such as an exterior quarter is one typed filing period,
+A special-regime period such as a quarter or a month is one typed filing period,
 while its design spreads it over an exercise, a period-type and a period row. A
 reading identifies those rows and the source bytes together, so it applies only
 to the exact workbook whose page was reviewed.
@@ -9,7 +9,7 @@ to the exact workbook whose page was reviewed.
 from __future__ import annotations
 
 import re
-from typing import Final
+from typing import Final, Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -26,20 +26,24 @@ class DesignSchemePeriodFieldsDeclaration(BaseModel):
 
     source_ref: str = Field(min_length=1)
     source_sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
-    sheet: str = Field(min_length=1)
+    ordinal_part_by_sheet: dict[str, Literal["quarter_ordinal", "month_ordinal"]] = Field(min_length=1)
     filing_year_description: str = Field(min_length=1)
     period_type_description: str = Field(min_length=1)
-    quarter_ordinal_description: str = Field(min_length=1)
+    ordinal_description: str = Field(min_length=1)
 
 
 _DESIGN_SCHEME_PERIOD_FIELDS: Final[dict[str, DesignSchemePeriodFieldsDeclaration]] = {
     "aeat-dr-369-2021": DesignSchemePeriodFieldsDeclaration(
         source_ref="aeat-dr-369-2021",
         source_sha256="b59ade58821e8e0988a1aa4e2a7f52c97b21375fc0a6720d76ca0601a7c8b1a3",
-        sheet="T36901 Ext",
+        ordinal_part_by_sheet={
+            "T36901 Ext": "quarter_ordinal",
+            "T36904 Un": "quarter_ordinal",
+            "T36910 Imp": "month_ordinal",
+        },
         filing_year_description="2. Ejercicio y período. Ejercicio",
         period_type_description="2. Ejercicio y período. Tipo de periodo",
-        quarter_ordinal_description="2. Ejercicio y período. Periodo",
+        ordinal_description="2. Ejercicio y período. Periodo",
     ),
 }
 
@@ -63,13 +67,13 @@ def with_scheme_period_part(
 ) -> ExportFieldDerivation:
     """Carry onto a reviewed period row which part of the scheme period it prints."""
     parser_field = derivation.parser_field
-    if declaration is None or parser_field.sheet != declaration.sheet:
+    if declaration is None or parser_field.sheet not in declaration.ordinal_part_by_sheet:
         return derivation
     description = parser_field.normalized_description
     if description == declaration.filing_year_description:
         update: dict[str, str] = {"scheme_period_part": "filing_year"}
-    elif description == declaration.quarter_ordinal_description:
-        update = {"scheme_period_part": "quarter_ordinal"}
+    elif description == declaration.ordinal_description:
+        update = {"scheme_period_part": declaration.ordinal_part_by_sheet[parser_field.sheet]}
     elif description == declaration.period_type_description:
         update = {"scheme_period_part": "period_type", "scheme_period_type": _printed_constant(parser_field.content)}
     else:

@@ -1,4 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -30,13 +36,29 @@ import type { LeaveGuard } from "../../ledger/editing/LedgerEditing";
 import { Details, type OpenableSurface } from "../details/Details";
 import { TodoRail } from "../details/TodoRail";
 import { FilingView } from "../dialogs/FilingView";
-import { runOperation, type OperationRun } from "../dialogs/operationRun";
+import type { OperationRun } from "../dialogs/operationRun";
+import {
+  createModeloWriteHolds,
+  declarationWriteKey,
+  type ModeloWriteHolds,
+} from "../../../shell/modeloWriteHolds";
+import {
+  ModeloWriteScope,
+  ScopedWriteHoldNotice,
+  useModeloOperation,
+} from "../WriteScope";
 import { ReviewDialog } from "../dialogs/ReviewDialog";
 import { FormView } from "../form/FormView";
 import { useFormSession, type FormSession } from "../form/session";
 import { CheckView } from "./CheckView";
 import type { CorrectionAnswer, CorrectionResult } from "./CorrectionDialog";
+import { creditFields } from "./credits";
+import { CreditsPanel } from "./CreditsPanel";
 import { HistoryView, type HistoryNotice } from "./HistoryView";
+import {
+  ProfileCompanions,
+  type ProfileCompanionKit,
+} from "./ProfileCompanions";
 import { SourcesView } from "./SourcesView";
 import { ModeloWorkspace, type WorkspaceView } from "./Workspace";
 
@@ -63,7 +85,7 @@ function runNotice(t: Translate, run: OperationRun<unknown>): HistoryNotice {
         words: t("workspace.modelo.outcome.failed"),
       };
     case "unknown":
-      return { tone: "danger", words: t("workspace.modelo.outcome.unknown") };
+      return null;
   }
 }
 
@@ -79,7 +101,8 @@ function Ready({
   openLink,
   initialView,
   onLeaveGuard,
-  onWritten,
+  profileCompanions,
+  readRegion,
 }: {
   envelope: ModeloWorkbenchFormProjectionV1;
   port: ModeloPort;
@@ -94,7 +117,8 @@ function Ready({
   openLink(url: string): void;
   initialView: WorkspaceView;
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
-  onWritten?: () => void;
+  profileCompanions?: ProfileCompanionKit;
+  readRegion?: () => Promise<string | null>;
 }) {
   const t = useStrings();
   const session: FormSession = useFormSession({ envelope, port, language });
@@ -102,13 +126,19 @@ function Ready({
   const [detailsOpen, setDetailsOpen] = useState(true);
   const [reviewing, setReviewing] = useState(false);
   const [correcting, setCorrecting] = useState(false);
+  const correctionGeneration = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      ++correctionGeneration.current;
+    },
+    [correcting, envelope, port],
+  );
   const [atRisk, setAtRisk] = useState(false);
   const [prerequisiteHeld, setPrerequisiteHeld] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const operation = useModeloOperation();
+  const held = operation.hold !== undefined;
+  const busy = operation.hold?.phase === "running";
   const [notice, setNotice] = useState<HistoryNotice>(null);
-  // An outcome nobody observed may have written; nothing is sent again
-  // until the form is read again.
-  const [held, setHeld] = useState(false);
   const [unit, setUnit] = useState<ModeloWorkMetadataSnapshot | null>(null);
   const [entries, setEntries] = useState<ModeloWorkHistoryEntryV1[] | null>(
     null,
@@ -145,26 +175,32 @@ function Ready({
 
   // Unmounted, the workspace stops following what it sent.
   const alive = useRef(true);
-  useEffect(
-    () => () => {
+  const generation = useRef(0);
+  useLayoutEffect(() => {
+    alive.current = true;
+    return () => {
       alive.current = false;
-    },
-    [],
-  );
+      generation.current += 1;
+    };
+  }, [operation.holds, port, workUnit]);
   /** Sends one write once; whatever it came to, the form is read again
    * unless nothing was sent. */
   const run = async <Result,>(
     send: () => Promise<LedgerOutcome<Result>>,
   ): Promise<OperationRun<Result> | null> => {
     if (held || busy) return null;
-    setBusy(true);
-    onWritten?.();
+    const mine = generation.current;
+    const current = () => alive.current && mine === generation.current;
     setNotice(null);
-    const outcome = await runOperation(port, send, () => alive.current);
-    setBusy(false);
+    const outcome = await operation.run(send, current);
+    if (!outcome || !current()) return null;
     setNotice(runNotice(t, outcome));
-    if (outcome.kind === "unknown") setHeld(true);
-    else if (outcome.kind !== "not_sent" && !(await reread()))
+    if (
+      outcome.kind !== "unknown" &&
+      outcome.kind !== "not_sent" &&
+      !(await reread()) &&
+      current()
+    )
       setNotice(
         (said) =>
           said ?? {
@@ -172,13 +208,7 @@ function Ready({
             words: t("workspace.modelo.outcome.failed"),
           },
       );
-    return outcome;
-  };
-  // The review and the filing view read the form again after a write of
-  // theirs; the list beyond the workspace learns that something was sent.
-  const rereadAfterWrite = async () => {
-    onWritten?.();
-    return reread();
+    return current() ? outcome : null;
   };
   const settledThenReread = async <Result,>(
     send: () => Promise<LedgerOutcome<Result>>,
@@ -244,9 +274,10 @@ function Ready({
   const correct = async (
     answer: CorrectionAnswer,
   ): Promise<CorrectionResult> => {
-    // An earlier write's outcome was not seen: nothing is sent until the
-    // declaration is read again.
+    // No correction may bypass the declaration's shared write hold.
     if (held) return { kind: "unknown" };
+    const mine = correctionGeneration.current;
+    const version = operation.holds.version(operation.target);
     if (!baseline || !correction)
       return { kind: "not_sent", code: "not_admitted" };
     let parsed;
@@ -278,6 +309,12 @@ function Ready({
     } catch (error) {
       return { kind: "not_sent", code: ledgerFailure(error).code };
     }
+    if (
+      !alive.current ||
+      mine !== correctionGeneration.current ||
+      operation.holds.version(operation.target) !== version
+    )
+      return { kind: "not_sent", code: "not_admitted" };
     const refused: Record<string, string> = {};
     const overrides: { casilla_id: string; value: string }[] = [];
     for (const entry of parsed) {
@@ -385,22 +422,6 @@ function Ready({
     <div className="px-6 pt-3">
       <Alert tone={notice.tone} icon={<Icon name="alert" />}>
         <span>{notice.words}</span>
-        {held && (
-          <Button
-            size="xs"
-            variant="link"
-            onClick={() => {
-              void reread().then((read) => {
-                // Writes stay held until the declaration is read again.
-                if (!read) return;
-                setHeld(false);
-                setNotice(null);
-              });
-            }}
-          >
-            {t("workspace.modelo.read_again")}
-          </Button>
-        )}
       </Alert>
     </div>
   );
@@ -414,8 +435,20 @@ function Ready({
       stagedCount={session.stagedCount}
       detailsOpen={detailsOpen}
       busy={busy}
+      writeHeld={held}
       prerequisiteHeld={prerequisiteHeld}
-      notice={view === "history" ? null : notified}
+      notice={
+        operation.hold && operation.hold.phase !== "running" ? (
+          <>
+            <div className="px-6 pt-3">
+              <ScopedWriteHoldNotice />
+            </div>
+            {view === "history" ? null : notified}
+          </>
+        ) : view === "history" ? null : (
+          notified
+        )
+      }
       onRun={onRun}
       onReview={() => setReviewing(true)}
       onDiscardStaged={session.discardAll}
@@ -432,6 +465,10 @@ function Ready({
             session={session}
             detailsOpen={detailsOpen}
             onDetailsOpenChange={setDetailsOpen}
+            onOpenSurface={(surface) => {
+              if (surface !== "none") onOpenSurface(surface);
+            }}
+            canOpenSurface={canOpenSurface}
           />
         ),
         rail: (
@@ -461,7 +498,7 @@ function Ready({
             session={session}
             openLink={openLink}
             onOpenCheck={() => setView("check")}
-            onReread={rereadAfterWrite}
+            onReread={reread}
           />
         ),
         check: (
@@ -477,12 +514,29 @@ function Ready({
             onOpenSurface={onOpenSurface}
             canOpenSurface={canOpenSurface}
             onRecalculate={
-              envelope.form.form.edit_closure === null
+              envelope.form.form.edit_closure === null && !held
                 ? () => onRun("recalculate")
                 : null
             }
           />
         ),
+        credits:
+          creditFields(session.placed).length > 0 ? (
+            <CreditsPanel
+              envelope={envelope}
+              session={session}
+              port={port}
+              run={run}
+              readRegion={readRegion}
+              locale={locale}
+              onGo={(address) => {
+                setView("form");
+                session.selectAddress(address);
+              }}
+              onOpenSurface={onOpenSurface}
+              canOpenSurface={canOpenSurface}
+            />
+          ) : undefined,
         sources: (
           <SourcesView
             groups={envelope.form.form.source_groups}
@@ -493,6 +547,16 @@ function Ready({
             }}
             onOpenSurface={onOpenSurface}
             canOpenSurface={canOpenSurface}
+            profileCompanions={
+              profileCompanions && (
+                <ProfileCompanions
+                  kit={profileCompanions}
+                  profile={envelope.profile_id}
+                  taxYear={envelope.form.form.filing_year}
+                  language={language}
+                />
+              )
+            }
           />
         ),
         history: (
@@ -502,6 +566,7 @@ function Ready({
             recorded={envelope.form.form.edit_closure !== null}
             locale={locale}
             notice={notice}
+            disabled={held}
             correcting={correcting}
             onCorrectingChange={setCorrecting}
             correction={correction}
@@ -519,7 +584,7 @@ function Ready({
               session={session}
               port={port}
               language={language}
-              onReread={rereadAfterWrite}
+              onReread={reread}
               onPrerequisiteHeld={setPrerequisiteHeld}
             />
             {leaving && (
@@ -626,6 +691,9 @@ export function WorkspaceScreen({
   initialView = "form",
   onLeaveGuard,
   onWritten,
+  holds: suppliedHolds,
+  profileCompanions,
+  readRegion,
 }: {
   port: ModeloPort;
   workUnitId: string;
@@ -644,43 +712,59 @@ export function WorkspaceScreen({
   onLeaveGuard?: (guard: LeaveGuard | null) => void;
   /** Told whenever the workspace sends a write, whatever its outcome. */
   onWritten?: () => void;
+  holds?: ModeloWriteHolds;
+  /** The profile's reads and write door, for the elements a profile source
+   * group holds; none are drawn without it. */
+  profileCompanions?: ProfileCompanionKit;
+  /** Reads the region the profile states, which the estimate from the
+   * quarterly declarations is made for; the estimate is not offered without
+   * it. */
+  readRegion?: () => Promise<string | null>;
 }) {
   const t = useStrings();
+  const [localHolds] = useState(createModeloWriteHolds);
+  const holds = suppliedHolds ?? localHolds;
+  const target = declarationWriteKey(workUnitId);
   const [read, setRead] = useState<Read>({ phase: "reading" });
   const latest = useRef(0);
+  useLayoutEffect(
+    () => () => {
+      latest.current += 1;
+    },
+    [port, workUnitId, language, holds],
+  );
   // A read that fails while a declaration is shown keeps it, with what the
   // filer staged on it, and says so to the caller; with nothing shown yet,
   // the failure is the page.
   const shown = useRef(false);
   const reread = useCallback(async () => {
     const ticket = ++latest.current;
+    const before = holds.get(target);
     try {
       const envelope = await port.form(workUnitId, language);
-      if (ticket === latest.current) {
-        shown.current = true;
-        setRead({ phase: "ready", envelope });
-      }
+      if (ticket !== latest.current) return false;
+      shown.current = true;
+      setRead({ phase: "ready", envelope });
+      if (before) holds.readCompleted(before);
       return true;
     } catch (error) {
       if (ticket === latest.current && !shown.current)
         setRead({ phase: "failed", code: ledgerFailure(error).code });
       return false;
     }
-  }, [port, workUnitId, language]);
+  }, [port, workUnitId, language, holds, target]);
   useEffect(() => {
     shown.current = false;
     setRead({ phase: "reading" });
     void reread();
   }, [reread]);
 
-  if (read.phase === "reading")
-    return (
+  const content =
+    read.phase === "reading" ? (
       <div className="flex h-full items-center justify-center">
         <Spinner />
       </div>
-    );
-  if (read.phase === "failed")
-    return (
+    ) : read.phase === "failed" ? (
       <div className="mx-auto flex max-w-xl flex-col gap-3 p-6">
         <Alert tone="warning" icon={<Icon name="alert" />}>
           {t("workspace.modelo.outcome.failed")}
@@ -693,22 +777,34 @@ export function WorkspaceScreen({
           {t("workspace.modelo.read_again")}
         </Button>
       </div>
+    ) : (
+      <Ready
+        key={read.envelope.work_unit_id}
+        envelope={read.envelope}
+        port={port}
+        language={language}
+        locale={locale}
+        reread={reread}
+        onBack={onBack}
+        onOpenSurface={onOpenSurface}
+        canOpenSurface={canOpenSurface}
+        openLink={openLink}
+        initialView={initialView}
+        onLeaveGuard={onLeaveGuard}
+        profileCompanions={profileCompanions}
+        readRegion={readRegion}
+      />
     );
   return (
-    <Ready
-      key={read.envelope.work_unit_id}
-      envelope={read.envelope}
+    <ModeloWriteScope
+      holds={holds}
+      target={target}
       port={port}
-      language={language}
-      locale={locale}
-      reread={reread}
-      onBack={onBack}
-      onOpenSurface={onOpenSurface}
-      canOpenSurface={canOpenSurface}
-      openLink={openLink}
-      initialView={initialView}
-      onLeaveGuard={onLeaveGuard}
       onWritten={onWritten}
-    />
+      reload={reread}
+    >
+      {read.phase !== "ready" && <ScopedWriteHoldNotice />}
+      {content}
+    </ModeloWriteScope>
   );
 }

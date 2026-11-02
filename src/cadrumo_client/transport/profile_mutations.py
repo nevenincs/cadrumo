@@ -15,6 +15,8 @@ from cadrumo.application.operations.registry import (
     OperationPublicDefinitionRegistrationV1,
 )
 from cadrumo.application.user_profile.profile_operation_contracts import (
+    ProfileAscendantsOperationProjection,
+    ProfileAscendantsOperationRequest,
     ProfileCompleteSetupOperationProjection,
     ProfileCompleteSetupOperationRequest,
     ProfileDescendantsOperationProjection,
@@ -52,6 +54,7 @@ type ProfileMutationRequest = (
     | ProfilePatchOperationRequest
     | ProfilePlantillaMediaOperationRequest
     | ProfileDescendantsOperationRequest
+    | ProfileAscendantsOperationRequest
     | ProfileRepeatableRowMutationOperationRequest
     | ProfileRepeatableRowUpdateOperationRequest
     | ProfileRepeatableRowRemoveOperationRequest
@@ -63,6 +66,7 @@ type ProfileMutationProjection = (
     | ProfilePatchOperationProjection
     | ProfilePlantillaMediaOperationProjection
     | ProfileDescendantsOperationProjection
+    | ProfileAscendantsOperationProjection
     | ProfileRepeatableRowMutationOperationProjection
     | ProfileRepeatableRowChangeOperationProjection
     | ProfileCompleteSetupOperationProjection
@@ -73,6 +77,7 @@ _SUPPORTED_REQUEST_TYPES: tuple[type[BaseModel], ...] = (
     ProfilePatchOperationRequest,
     ProfilePlantillaMediaOperationRequest,
     ProfileDescendantsOperationRequest,
+    ProfileAscendantsOperationRequest,
     ProfileRepeatableRowMutationOperationRequest,
     ProfileRepeatableRowUpdateOperationRequest,
     ProfileRepeatableRowRemoveOperationRequest,
@@ -241,9 +246,14 @@ def _validated_profile_mutation_projection(
     profile_id: UUID,
 ) -> ProfileMutationOperationProjection:
     """Require a typed settled result for the addressed profile and expected revision."""
-    success = OperationResultProjectionSuccessV1[ProfileMutationProjection].model_validate_json(encoded)
+    parsed = OperationResultProjectionSuccessV1[ProfileMutationProjection].model_validate_json(encoded)
     expected_type = next(
         binding.model_type for binding in registration.schema_bindings if binding.identity == contract.result_schema
+    )
+    # Projections with one shape (the descendants and the ascendants count) cannot be told apart by the union,
+    # so the settled schema decides which class the payload is read as.
+    success = parsed.model_copy(
+        update={"projection": expected_type.model_validate(parsed.projection.model_dump(mode="python"))}
     )
     if not _profile_mutation_result_is_current(success, contract, expected_type, profile_id, request.expected_revision):
         raise RefusalError(RefusalCode.INVALID_FRAME)

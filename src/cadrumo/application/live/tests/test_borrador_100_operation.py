@@ -32,7 +32,12 @@ from ...user_profile.access_errors import ProfileAccessRefusedError
 from .. import borrador_100 as service_module
 from .. import borrador_100_contracts as contracts
 from .. import borrador_100_operation as module
-from ..borrador_100 import Borrador100Snapshot, Borrador100SnapshotService, BorradorSnapshotNotFoundError
+from ..borrador_100 import (
+    Borrador100ObservationGrade,
+    Borrador100Snapshot,
+    Borrador100SnapshotService,
+    BorradorSnapshotNotFoundError,
+)
 from ..borrador_100_import import prepare_borrador_100_import
 from ..borrador_100_operation_ports import Borrador100OperationPorts
 from ..errors import LiveApplicationInputError
@@ -248,11 +253,17 @@ async def test_import_reads_once_preserves_blank_zero_warnings_and_noop_dedup(
     assert receipt is not None
     assert result.source_pdf_sha256 == receipt.source_pdf_sha256
     assert result.blank_casillas == (_PROFILE_CASILLAS[0],)
-    assert result.unowned_casillas == _PROFILE_CASILLAS[1:]
+    assert result.observed_casillas == _PROFILE_CASILLAS
+    assert result.unowned_casillas == ()
     assert result.warnings == receipt.warnings and result.extraction_coverage.decimal == "1"
     snapshot = subject.repository.load(result.snapshot.snapshot_id)
     assert dict(snapshot.binding_values) == {}
     assert result.snapshot.binding_count == 0
+    # The computed boxes are kept for comparison only: the blank box stays blank and a printed zero stays zero.
+    printed = {row.casilla_id: row.value for row in snapshot.printed_observations}
+    assert printed == {_PROFILE_CASILLAS[0]: None, **dict.fromkeys(_PROFILE_CASILLAS[1:], Decimal("0.00"))}
+    assert all(row.grade is Borrador100ObservationGrade.AEAT_PRINTED_DRAFT for row in snapshot.printed_observations)
+    assert result.snapshot.printed_observation_count == len(_PROFILE_CASILLAS)
     assert subject.events.effects[-1] is OperationEffect.UPDATED
     assert all("synthetic source" not in phase and str(path) not in phase for phase in subject.events.phases)
     path.write_bytes(b"synthetic source capture")

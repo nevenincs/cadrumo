@@ -1077,6 +1077,9 @@ application:
         binding_value_key_blank: Las claves de los valores del borrador no pueden
           estar vacías.
         bucket_id_blank: El identificador del bucket del borrador no puede estar vacío.
+        printed_observations_unresolved: 'Este borrador guardado conserva valores
+          impresos de casillas que las definiciones del modelo ya no identifican,
+          así que no se puede usar; vuelve a importar el documento: %{casillas}.'
         snapshot_id_blank: El identificador del snapshot del borrador no puede estar
           vacío.
         snapshot_not_found: Ningún snapshot del borrador coincide con el identificador
@@ -1223,8 +1226,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Las claves de los valores aportados no pueden estar
-          en blanco.
         decimal_value_invalid: El valor de borrador para el origen numérico %{binding_id}
           debe ser compatible con decimal.
         forbidden_bindings: 'El borrador contiene valores que las definiciones del
@@ -1351,6 +1352,12 @@ application:
           retienen, así que no puedes exportarla tal como está.
         what_to_do: Vuelve a calcular la declaración, compruébala y regístrala otra
           vez; el nuevo registro sustituye a este.
+      household_rows_incomplete:
+        what: Tu perfil indica más personas en este grupo de las que registra, así
+          que la declaración usa solo las personas registradas y no da el grupo por
+          completo.
+        what_to_do: Añade a tu perfil las personas que faltan o corrige el número,
+          y vuelve a calcular.
       inferred_retencion_excluded_from_credit:
         what: Parte de la retención de tus facturas emitidas se ha calculado a partir
           de lo que pagó el cliente, así que se ha dejado fuera de tu deducción y
@@ -1450,6 +1457,17 @@ application:
           periodo, así que Cadrumo no ha calculado ese impuesto.
         what_to_do: No tienes que hacer nada si no hiciste ese tipo de ventas. Si
           las hiciste, escribe tú los importes.
+      precedence_tier_divergence:
+        what: Dos fuentes tienen valores distintos para una cifra que llega a la casilla
+          {box}, y Cadrumo ha usado la que tiene prioridad.
+        what_to_do: Compara las fuentes y corrige la que esté mal; después vuelve
+          a calcular. La comprobación, la exportación y el registro esperan hasta
+          que coincidan.
+      precedence_tier_divergence_advisory:
+        what: Dos fuentes tienen valores distintos para una cifra de trabajo, y Cadrumo
+          ha usado la que tiene prioridad.
+        what_to_do: Compara las fuentes y corrige la que esté mal. Ninguna casilla
+          exportada depende de esta cifra.
       prior_payment_minoracion_not_captured:
         what: La minoración que viene de pagos anteriores no está anotada en la casilla
           {box}.
@@ -1661,6 +1679,7 @@ application:
       disposal_zero_result: '{element}: su venta el {date}, con {transmission_value}
         de valor de transmisión y {net_value} de valor neto, no da ganancia ni pérdida,
         así que ninguna casilla la recoge.'
+      household_rows_incomplete: '{group}: {stated} indicadas, {recorded} registradas.'
       instalment_free_gap: '{element}: no hay dotación registrada de {start} a {end}.
         Su método deja el importe a tu elección, así que no suma nada a la casilla
         {box}.'
@@ -2325,6 +2344,10 @@ application:
         modelo %{modelo} %{filing_year}, %{period} (%{changed_count} modificadas,
         %{removed_count} eliminadas, %{added_count} añadidas). Vuelve a calcularlo
         antes de verificarlo.
+      invoice_fingerprint_narrower_scope: Este cálculo del modelo %{modelo} %{filing_year},
+        %{period} es anterior al seguimiento de las facturas devengadas sin movimiento
+        bancario, así que Cadrumo no puede saber si han cambiado desde entonces. Vuelve
+        a calcularlo para empezar a seguirlas.
       invoice_fingerprint_unavailable: Cadrumo no ha podido leer tus facturas para
         compararlas con el modelo %{modelo} %{filing_year}, %{period}, así que no
         se puede confirmar que este cálculo esté al día. Inténtalo de nuevo cuando
@@ -2406,6 +2429,8 @@ application:
         de la estimación objetiva (módulos).'
       oss_evidence_missing: Esta declaración incluye operaciones de ventanilla única
         (OSS), pero no hay justificantes guardados de ellas.
+      oss_no_activity_contradicted: Has declarado este periodo sin actividad, pero
+        hay facturas del régimen en él. Quita la declaración o revisa esas facturas.
       oss_source_unrouted: Algunas operaciones de ventanilla única (OSS) no se cuentan
         en ninguna casilla de este modelo.
       printed_total_mismatch: La casilla [%{box}] no coincide con la suma de las líneas
@@ -2422,6 +2447,9 @@ application:
       registry_snapshot_unresolved: No se han podido cargar las reglas del modelo
         %{modelo} de %{filing_year}, periodo %{period}. Inténtalo de nuevo o actualiza
         la aplicación.
+      scheme_period_contradicted: El valor {entered} de {binding_id} contradice el
+        periodo de este trabajo, que es {expected}. Corrígelo o abre el trabajo del
+        periodo correcto.
       selected_option_requires_nonzero: La opción seleccionada exige un valor distinto
         de cero en este campo.
       selected_option_requires_zero: La opción seleccionada exige un cero explícito
@@ -2993,6 +3021,24 @@ application:
             traducir a una fórmula de hoja de cálculo.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: La fecha de nacimiento del ascendiente %{row}
+        no es una fecha válida; escríbela como año-mes-día.
+      ascendant_birth_date_required: El ascendiente %{row} no tiene fecha de nacimiento,
+        y cada ascendiente necesita una.
+      ascendant_convivientes_invalid: El número de descendientes con los que convive
+        el ascendiente %{row} debe ser un número entero de 0 a %{limit}.
+      ascendant_death_before_birth: El ascendiente %{row} tiene una fecha de fallecimiento
+        anterior a su fecha de nacimiento.
+      ascendant_death_date_invalid: La fecha de fallecimiento del ascendiente %{row}
+        no es una fecha válida; escríbela como año-mes-día.
+      ascendant_fact_unsupported: El ascendiente %{row} indica un dato que el perfil
+        no guarda para un ascendiente.
+      ascendant_limit_unknown: El diseño de la declaración no indica un límite de
+        ascendientes, así que la lista no se puede comprobar ni guardar.
+      ascendant_nif_invalid: El NIF o NIE del ascendiente %{row} no es válido; revisa
+        sus letras y cifras.
+      ascendant_rows_over_limit: Una declaración incluye como máximo %{limit} ascendientes
+        y se han indicado %{count}.
       censal_read_identity_absent: La lectura censal no incluye ningún NIF, por lo
         que no puede confirmarse que corresponda a este perfil.
       censal_read_identity_cleared: El NIF de este perfil se ha vaciado, por lo que
@@ -3071,6 +3117,7 @@ application:
           label: Fecha de fallecimiento
         nif:
           label: NIF/NIE del ascendiente (déjalo en blanco si no tiene)
+      incomplete: '{stated} indicadas, {recorded} registradas'
     notices:
       censo_divergences_open: '{count} dato(s) del perfil o del certificado siguen
         difiriendo del Certificado de Situación Censal y quedan sin resolver: {axes}.'

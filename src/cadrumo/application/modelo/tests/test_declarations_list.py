@@ -286,7 +286,7 @@ def test_each_row_names_its_step_and_keeps_the_aeats_facts_beside_its_own() -> N
     }
 
     fix = rows["a" * 64]
-    assert (fix.next_step, fix.blocking_count, fix.opens_local_work) == (DeclarationListNextStep.FIX, 2, False)
+    assert (fix.next_step, fix.blocking_count, fix.opens_local_work) == (DeclarationListNextStep.FIX, 2, True)
     assert fix.work_unit_id == "a" * 64
     assert fix.state_words.startswith("▲ ")
     ready = rows["b" * 64]

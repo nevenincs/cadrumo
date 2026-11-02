@@ -14,6 +14,9 @@ The axis is separate from :class:`~core.payment_election.PaymentElection`,
 which says how the whole amount, or the first instalment, is paid. The two
 answers together fill the official record's ``PAGONOFRACC`` or ``PAGOFRACC``
 block.
+
+Which modelos admit the split, and the first instalment's share, are
+registry data (:mod:`cadrumo.domain.calculations.registry.payment_instalment_split`).
 """
 
 from __future__ import annotations
@@ -21,8 +24,6 @@ from __future__ import annotations
 from decimal import ROUND_HALF_UP, Decimal
 from enum import StrEnum
 from typing import Final
-
-from .modelo import Modelo
 
 
 class PaymentInstalmentElection(StrEnum):
@@ -46,39 +47,27 @@ class PaymentInstalmentElection(StrEnum):
         return self is PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_DEBITED
 
 
-#: The modelos whose positive result the law lets the taxpayer split in two
-#: instalments: Modelo 100, by Ley 35/2006 art. 97.2 and RD 439/2007 art. 62.2.
-_TWO_INSTALMENT_MODELOS: Final[frozenset[Modelo]] = frozenset({Modelo("100")})
-
-#: The first instalment's share of the amount to pay, by RD 439/2007 art. 62.2.
-FIRST_INSTALMENT_SHARE: Final = Decimal("0.60")
-
 _CENT: Final = Decimal("0.01")
 
 
-def two_instalments_declared(modelo: str) -> bool:
-    """Return whether ``modelo``'s positive result may be paid in two instalments."""
-    return modelo in _TWO_INSTALMENT_MODELOS
+def instalment_amounts(amount: Decimal, *, first_share: Decimal) -> tuple[Decimal, Decimal]:
+    """Split a positive amount to pay into its first instalment, ``first_share`` of it, and the second.
 
-
-def instalment_amounts(amount: Decimal) -> tuple[Decimal, Decimal]:
-    """Split a positive amount to pay into its first (60 per cent) and second instalment.
-
-    The first is rounded to the cent and the second is the remainder, so the
-    two always add up to the amount declared.
+    The share is the one the registry declares for the modelo. The first is
+    rounded half up to the cent and the second is the remainder, so the two
+    always add up to the amount declared. No official source states that
+    rounding, so the split is advisory wherever it is shown.
 
     Raises:
         ValueError: When ``amount`` is not positive.
     """
     if amount <= 0:
         raise ValueError("only a positive amount to pay is split into instalments")
-    first = (amount * FIRST_INSTALMENT_SHARE).quantize(_CENT, rounding=ROUND_HALF_UP)
+    first = (amount * first_share).quantize(_CENT, rounding=ROUND_HALF_UP)
     return first, amount - first
 
 
 __all__ = [
-    "FIRST_INSTALMENT_SHARE",
     "PaymentInstalmentElection",
     "instalment_amounts",
-    "two_instalments_declared",
 ]

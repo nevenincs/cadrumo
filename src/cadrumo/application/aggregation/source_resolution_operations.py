@@ -9,15 +9,18 @@ contract while preserving one implementation for every merge collision rule.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Generator, Iterable, Sequence
+from collections.abc import Callable, Generator, Iterable, Mapping, Sequence
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
+from enum import StrEnum
+from types import MappingProxyType
 from typing import Protocol
 
 from ...core.aggregation import BindingSourceKind, BindingValueOutcome
 from ...core.casilla_id import CasillaId
+from ...core.decimal.grammar import try_parse_canonical_decimal
 from ...core.external_constants import OutputLanguage
 from ...core.i18n.translatable import Translatable as tr
 from ...core.logging import get_logger
@@ -33,6 +36,19 @@ from ...domain.calculations.row_source_identity import RowBindingKey, RowSourceI
 from ...domain.modelos.calculation_revision_m303_handoff import M303RegimenSimplificadoAnnualSummaryHandoff
 from ...domain.modelos.calculation_revision_sources import CalculationNoteFact
 from ...domain.modelos.row_models import ModeloDetailRow
+from ...domain.modelos.source_disagreement import (
+    DisagreementBooleanValue,
+    DisagreementDateValue,
+    DisagreementDecimalValue,
+    DisagreementEnumValue,
+    DisagreementRelationValue,
+    DisagreementRowsValue,
+    DisagreementScalarValue,
+    DisagreementTextValue,
+    DisagreementValue,
+    SourceDisagreementEntry,
+    SourceDisagreementRole,
+)
 from .errors import AggregationValidationError
 from .source_diagnostic_reason import CalculationSourceDiagnosticReason
 from .source_mesh import (
@@ -42,7 +58,9 @@ from .source_mesh import (
     CalculationSourceProvenance,
     CalculationSourceResolution,
     CompositeSourceResolverId,
+    RowBindingValue,
 )
+from .source_precedence import PRECEDENCE_OVERLAY_ORDER
 
 _log = get_logger(__name__)
 
@@ -158,6 +176,270 @@ def sorted_source_ids[T](items: Iterable[T], project: Callable[[T], str]) -> tup
     return tuple(sorted(project(item) for item in items))
 
 
+class PrecedenceKeyKind(StrEnum):
+    """What a precedence key names: a binding, a relation fold or a bound casilla input."""
+
+    BINDING = "binding"
+    RELATION = "relation"
+    CASILLA = "casilla"
+
+
+@dataclass(frozen=True, slots=True)
+class TierValueProvenance:
+    """Where one tier's value for one key came from.
+
+    ``source_ref`` names the source object without disclosing it, and
+    ``evidence_ref`` is the fingerprint or snapshot id the value was read from.
+    """
+
+    source_family: str
+    source_ref: str | None = None
+    evidence_ref: str | None = None
+
+
+def _no_tier_provenance() -> Mapping[str, TierValueProvenance]:
+    empty: dict[str, TierValueProvenance] = {}
+    return MappingProxyType(empty)
+
+
+@dataclass(frozen=True, slots=True)
+class PrecedenceTier:
+    """One tier of the precedence overlay: the role it plays, what it resolved, and where its values came from.
+
+    ``source_family`` names the tier's values where ``provenance`` names no
+    more exact family for a key. ``provenance`` is keyed by the binding,
+    relation or casilla the value is for.
+    """
+
+    role: SourceDisagreementRole
+    resolution: CalculationSourceResolution
+    source_family: str
+    provenance: Mapping[str, TierValueProvenance] = field(default_factory=_no_tier_provenance)
+
+
+@dataclass(frozen=True, slots=True)
+class TierDivergence:
+    """A higher tier replaced a different value a lower tier held for the same key.
+
+    ``sources`` lists every tier that held a value for the key, lowest first,
+    each with its typed value; ``selected_role`` is the tier whose value the
+    overlay kept. ``differing_row_indices`` names the rows that differ when the
+    key is a row binding.
+    """
+
+    key: str
+    key_kind: PrecedenceKeyKind
+    value_channel: str
+    sources: tuple[SourceDisagreementEntry, ...]
+    selected_role: SourceDisagreementRole
+    differing_row_indices: tuple[int, ...] = ()
+
+
+@dataclass(frozen=True, slots=True)
+class PrecedenceOverlay:
+    """The overlaid resolution, every divergence the overlay found, and the tier each binding's value came from."""
+
+    resolution: CalculationSourceResolution
+    divergences: tuple[TierDivergence, ...]
+    selected_binding_roles: Mapping[BindingId, SourceDisagreementRole]
+
+
+@dataclass(frozen=True, slots=True)
+class _Holding:
+    """One tier's value for one key, held so the overlay can compare it with the tiers above."""
+
+    role: SourceDisagreementRole
+    entry: SourceDisagreementEntry
+    comparable: object
+
+
+_TEXT_VALUE_LIMIT = 512
+"""The longest text a disagreement states; equality is always decided on the full text."""
+
+
+def _stated_amount(amount: Decimal) -> Decimal:
+    """The amount at a scale its canonical text states unambiguously; its value never changes.
+
+    Canonical decimal text refuses three fraction digits after one to three
+    integer digits (``12.500``), which also reads as a Spanish thousands
+    grouping. A value the overlay holds at that scale is stated with one more
+    fraction digit, so a divergence on a ratio or a quantity is reported rather
+    than refused. Equality is always decided on the value itself.
+    """
+    exponent = amount.as_tuple().exponent
+    if not isinstance(exponent, int) or try_parse_canonical_decimal(format(amount, "f")) is not None:
+        return amount
+    return amount.quantize(Decimal(1).scaleb(exponent - 1))
+
+
+def _scalar_disagreement_value(value: RowBindingValue) -> DisagreementScalarValue:
+    """State one row cell in its own type; a truth value is tested before ``int``, its base class."""
+    if isinstance(value, bool):
+        return DisagreementBooleanValue(value=value)
+    if isinstance(value, Decimal):
+        return DisagreementDecimalValue.of(_stated_amount(value))
+    if isinstance(value, int):
+        return DisagreementDecimalValue.of(_stated_amount(Decimal(value)))
+    return DisagreementTextValue(value=value[:_TEXT_VALUE_LIMIT])
+
+
+def _comparable_cell(value: RowBindingValue) -> tuple[str, object]:
+    """The key two row cells are equal under: numbers numerically, truth values and text exactly."""
+    if isinstance(value, bool):
+        return ("boolean", value)
+    if isinstance(value, Decimal | int):
+        return ("decimal", Decimal(value))
+    return ("text", value)
+
+
+type _RowCells = tuple[tuple[int, RowBindingValue], ...]
+
+
+def _differing_row_indices(selected: _RowCells, lower: _RowCells) -> tuple[int, ...]:
+    """The row indices at which two row sets differ: a row only one set has, or a row whose cells differ."""
+    selected_by_index = {index: _comparable_cell(value) for index, value in selected}
+    lower_by_index = {index: _comparable_cell(value) for index, value in lower}
+    return tuple(
+        index
+        for index in sorted(set(selected_by_index) | set(lower_by_index))
+        if selected_by_index.get(index) != lower_by_index.get(index)
+    )
+
+
+def _entry(tier: PrecedenceTier, key: str, value: DisagreementValue) -> SourceDisagreementEntry:
+    provenance = tier.provenance.get(key)
+    return SourceDisagreementEntry(
+        role=tier.role,
+        source_family=tier.source_family if provenance is None else provenance.source_family,
+        resolver_id=str(tier.resolution.resolver_id),
+        source_ref=None if provenance is None else provenance.source_ref,
+        value=value,
+        evidence_ref=None if provenance is None else provenance.evidence_ref,
+    )
+
+
+@dataclass(slots=True)
+class _PrecedenceScreen:
+    """Every tier's value for every key, compared once all tiers are laid down."""
+
+    holdings: dict[tuple[PrecedenceKeyKind, str, str], list[_Holding]] = field(default_factory=dict)
+    row_holdings: dict[BindingId, list[tuple[_Holding, _RowCells]]] = field(default_factory=dict)
+    roles_seen: list[SourceDisagreementRole] = field(default_factory=list)
+
+    def admit(self, role: SourceDisagreementRole) -> None:
+        """Refuse a tier laid out of the declared overlay order, or a role laid twice."""
+        if role not in PRECEDENCE_OVERLAY_ORDER or (
+            self.roles_seen
+            and PRECEDENCE_OVERLAY_ORDER.index(self.roles_seen[-1]) >= PRECEDENCE_OVERLAY_ORDER.index(role)
+        ):
+            raise AggregationValidationError(
+                tr("aggregation.source_mesh.errors.precedence_tier_out_of_order"),
+                context={"previous_role": self.roles_seen[-1].value if self.roles_seen else None, "role": role.value},
+            )
+        self.roles_seen.append(role)
+
+    def hold(
+        self,
+        tier: PrecedenceTier,
+        *,
+        key: tuple[PrecedenceKeyKind, str, str],
+        value: DisagreementValue,
+        comparable: object,
+    ) -> None:
+        self.holdings.setdefault(key, []).append(
+            _Holding(role=tier.role, entry=_entry(tier, key[1], value), comparable=comparable)
+        )
+
+    def hold_rows(self, tier: PrecedenceTier, rows: Mapping[RowBindingKey, RowBindingValue]) -> None:
+        by_binding: dict[BindingId, list[tuple[int, RowBindingValue]]] = {}
+        for (binding_id, row_index), value in rows.items():
+            by_binding.setdefault(binding_id, []).append((row_index, value))
+        for binding_id, cells in by_binding.items():
+            ordered = tuple(sorted(cells, key=lambda cell: cell[0]))
+            value = DisagreementRowsValue(rows=tuple(_scalar_disagreement_value(cell) for _, cell in ordered))
+            holding = _Holding(role=tier.role, entry=_entry(tier, binding_id, value), comparable=None)
+            self.row_holdings.setdefault(binding_id, []).append((holding, ordered))
+
+    def divergences(self) -> tuple[TierDivergence, ...]:
+        found: list[TierDivergence] = []
+        for (key_kind, key, value_channel), held in self.holdings.items():
+            selected = held[-1]
+            if all(holding.comparable == selected.comparable for holding in held[:-1]):
+                continue
+            found.append(
+                TierDivergence(
+                    key=key,
+                    key_kind=key_kind,
+                    value_channel=value_channel,
+                    sources=tuple(holding.entry for holding in held),
+                    selected_role=selected.role,
+                )
+            )
+        for binding_id, held_rows in self.row_holdings.items():
+            selected_holding, selected_rows = held_rows[-1]
+            differing = sorted(
+                {index for _, rows in held_rows[:-1] for index in _differing_row_indices(selected_rows, rows)}
+            )
+            if not differing:
+                continue
+            found.append(
+                TierDivergence(
+                    key=binding_id,
+                    key_kind=PrecedenceKeyKind.BINDING,
+                    value_channel="rows",
+                    sources=tuple(holding.entry for holding, _ in held_rows),
+                    selected_role=selected_holding.role,
+                    differing_row_indices=tuple(differing),
+                )
+            )
+        return tuple(sorted(found, key=lambda divergence: (divergence.key_kind.value, divergence.key)))
+
+    def selected_binding_roles(self) -> dict[BindingId, SourceDisagreementRole]:
+        roles: dict[BindingId, SourceDisagreementRole] = {
+            key: held[-1].role
+            for (key_kind, key, _value_channel), held in self.holdings.items()
+            if key_kind is PrecedenceKeyKind.BINDING
+        }
+        roles.update({binding_id: held_rows[-1][0].role for binding_id, held_rows in self.row_holdings.items()})
+        return roles
+
+
+def _hold_tier_values(screen: _PrecedenceScreen, tier: PrecedenceTier) -> None:
+    """Record every value ``tier`` states, on its own channel, before the overlay lays it down."""
+    resolution = tier.resolution
+    binding = PrecedenceKeyKind.BINDING
+    for binding_id, amount in resolution.binding_values.items():
+        screen.hold(
+            tier,
+            key=(binding, binding_id, "decimal"),
+            value=DisagreementDecimalValue.of(_stated_amount(amount)),
+            comparable=amount,
+        )
+    for binding_id, token in resolution.enum_binding_values.items():
+        screen.hold(tier, key=(binding, binding_id, "enum"), value=DisagreementEnumValue(token=token), comparable=token)
+    for binding_id, day in resolution.date_binding_values.items():
+        screen.hold(tier, key=(binding, binding_id, "date"), value=DisagreementDateValue(value=day), comparable=day)
+    for binding_id, truth in resolution.boolean_binding_values.items():
+        screen.hold(
+            tier, key=(binding, binding_id, "boolean"), value=DisagreementBooleanValue(value=truth), comparable=truth
+        )
+    for relation_id, amount in resolution.relation_values.items():
+        screen.hold(
+            tier,
+            key=(PrecedenceKeyKind.RELATION, relation_id, "relation"),
+            value=DisagreementRelationValue.of(_stated_amount(amount)),
+            comparable=amount,
+        )
+    for casilla_id, amount in resolution.bound_inputs_by_casilla_id.items():
+        screen.hold(
+            tier,
+            key=(PrecedenceKeyKind.CASILLA, casilla_id, "decimal"),
+            value=DisagreementDecimalValue.of(_stated_amount(amount)),
+            comparable=amount,
+        )
+    screen.hold_rows(tier, resolution.row_binding_values)
+
+
 @dataclass(slots=True)
 class _SourceResolutionMergeState:
     """Mutable accumulator for the exclusive source-resolution merge."""
@@ -199,8 +481,11 @@ class _SourceResolutionMergeState:
         self._absorb_relation_values(resolution)
         self._absorb_bound_inputs(resolution)
 
-    def absorb_by_precedence(self, resolution: CalculationSourceResolution) -> None:
-        """Overlay one tier, retaining the later tier's value for each key."""
+    def absorb_by_precedence(self, tier: PrecedenceTier, screen: _PrecedenceScreen) -> None:
+        """Overlay one tier, retaining the later tier's value for each key and holding every value for the screen."""
+        resolution = tier.resolution
+        screen.admit(tier.role)
+        _hold_tier_values(screen, tier)
         self._absorb_closed_record_rows(resolution)
         self._absorb_metadata(resolution)
         self._absorb_precedence_values(resolution)
@@ -275,17 +560,26 @@ class _SourceResolutionMergeState:
         self.boolean_binding_values.update(resolution.boolean_binding_values)
 
     def _absorb_precedence_row_bindings(self, resolution: CalculationSourceResolution) -> None:
+        """Lay down a row binding's whole row set from the highest tier that supplies any row of it.
+
+        A row that carries a source identity keeps its exclusive claim, so a
+        second tier stating the same row is refused rather than overlaid.
+        """
         for row_binding_key in resolution.row_binding_values:
             if row_binding_key in self.row_binding_values and (
                 row_binding_key in self.row_source_identities or row_binding_key in resolution.row_source_identities
             ):
                 _claim_row_binding(self.row_binding_owners, row_binding_key, resolution.resolver_id)
+        replaced = {binding_id for binding_id, _row_index in resolution.row_binding_values}
+        for row_binding_key in [key for key in self.row_binding_values if key[0] in replaced]:
+            del self.row_binding_values[row_binding_key]
+            self.row_source_identities.pop(row_binding_key, None)
+            self.row_binding_owners.pop(row_binding_key, None)
+        for row_binding_key in resolution.row_binding_values:
             self.row_binding_owners[row_binding_key] = resolution.resolver_id
         self.row_binding_values.update(resolution.row_binding_values)
         self.row_source_identities.update(resolution.row_source_identities)
-        self.unresolved_binding_ids.difference_update(
-            binding_id for binding_id, _row_index in resolution.row_binding_values
-        )
+        self.unresolved_binding_ids.difference_update(replaced)
 
     def _absorb_precedence_row_casillas(self, resolution: CalculationSourceResolution) -> None:
         for row_casilla_key in resolution.row_casilla_values:
@@ -397,15 +691,28 @@ def merge_source_resolutions(
 
 
 def merge_source_resolutions_by_precedence(
-    tiers: Sequence[CalculationSourceResolution],
+    tiers: Sequence[PrecedenceTier],
     *,
     resolver_id: CompositeSourceResolverId = CompositeSourceResolverId.PRECEDENCE_MESH,
-) -> CalculationSourceResolution:
-    """Overlay tiers into one source resolution, with later tiers winning values."""
+) -> PrecedenceOverlay:
+    """Overlay tiers into one source resolution, with later tiers winning values, and report each replacement.
+
+    Tiers arrive in :data:`~.source_precedence.PRECEDENCE_OVERLAY_ORDER`, one
+    per role. Every tier's value for every key is compared exactly on its own
+    channel: a higher tier replacing a different value a lower tier held is a
+    :class:`TierDivergence`. Equal values and a lower tier that holds nothing
+    for the key are not. A row binding's rows are compared as one set, first by
+    cardinality and then row by row in index order.
+    """
     state = _SourceResolutionMergeState()
+    screen = _PrecedenceScreen()
     for tier in tiers:
-        state.absorb_by_precedence(tier)
-    return state.to_resolution(resolver_id)
+        state.absorb_by_precedence(tier, screen)
+    return PrecedenceOverlay(
+        resolution=state.to_resolution(resolver_id),
+        divergences=screen.divergences(),
+        selected_binding_roles=MappingProxyType(screen.selected_binding_roles()),
+    )
 
 
 def collect_unhandled_source_diagnostics(
@@ -563,6 +870,11 @@ def _claim_relation(owners: dict[RelationId, str], relation_id: RelationId, reso
 
 
 __all__ = [
+    "PrecedenceKeyKind",
+    "PrecedenceOverlay",
+    "PrecedenceTier",
+    "TierDivergence",
+    "TierValueProvenance",
     "collect_unhandled_source_diagnostics",
     "flatten_source_provenance_for",
     "merge_source_resolutions",

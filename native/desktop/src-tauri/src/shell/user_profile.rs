@@ -437,7 +437,17 @@ async fn settle(
     let result = tokio::time::timeout(relay::SETTLE_LIMIT, async {
         let p = relay::follow(events, &relayed, |_| false).await?;
         if p["terminal_condition"] != "succeeded" {
-            return Err(Failure::new(wire::mutation_failure(&p)));
+            let mut failed = Failure::new(wire::mutation_failure(&p));
+            if failed.code == "refused" {
+                // A refusal that settled without effect may carry the
+                // sentence the application worded for it; the read is
+                // refused when its definition serves none.
+                failed.refusal_words = relay::result(&relayed)
+                    .await
+                    .ok()
+                    .and_then(|document| wire::refusal_words(&document["projection"]));
+            }
+            return Err(failed);
         }
         let document = relay::result(&relayed).await.map_err(|_| {
             Failure::new(if mutation {
@@ -510,7 +520,13 @@ enum Edit {
     /// and the count with exactly these people, so a person left out is
     /// removed.
     Descendants {
-        rows: Vec<DescendantRow>,
+        rows: Vec<FamilyRow>,
+    },
+    /// The whole stated set of ascendants at once, as for the descendants: the
+    /// product replaces every ascendant and the count with exactly these
+    /// people, within the limit the declaration's design states.
+    Ascendants {
+        rows: Vec<FamilyRow>,
     },
     /// What one ejercicio's imputation election states: each answer is the
     /// token a served choice carries, an empty token clears the ejercicio's
@@ -540,16 +556,16 @@ struct RowValue {
 /// key the product's family vocabulary gives it.
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct DescendantRow {
-    facts: Vec<DescendantFact>,
+struct FamilyRow {
+    facts: Vec<FamilyFact>,
 }
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
-struct DescendantFact {
+struct FamilyFact {
     field_key: String,
     value: String,
 }
-impl DescendantRow {
+impl FamilyRow {
     /// Whether the person is within the product's bounds: some facts, each
     /// under a lower-case key of its token shape and with a bounded value,
     /// no key twice.
@@ -582,6 +598,25 @@ struct Baseline<'a> {
     content_digest: &'a str,
 }
 impl Baseline<'_> {
+    /// A family replacement: `rows` of people under `member`, saved only where
+    /// the settled result counts exactly as many.
+    fn family(
+        &self,
+        definition: &'static str,
+        member: &str,
+        rows: Vec<FamilyRow>,
+    ) -> Result<Prepared> {
+        if rows.len() > FAMILY_ROWS || !rows.iter().all(FamilyRow::bounded) {
+            return Err(Failure::new("refused"));
+        }
+        let mut members = json!({});
+        members[member] = json!(rows);
+        if members.to_string().len() > FAMILY_MEMBERS_LIMIT {
+            return Err(Failure::new("refused"));
+        }
+        let people = rows.len();
+        self.record_as(definition, members, Confirm::Family(people))
+    }
     /// A user-profile operation's request: `members` under the page's
     /// baseline.
     fn record(&self, definition: &'static str, members: Value) -> Result<Prepared> {
@@ -738,19 +773,10 @@ impl Edit {
             ),
             Self::Complete => ("user-profile.complete-setup", json!({})),
             Self::Descendants { rows } => {
-                if rows.len() > FAMILY_ROWS || !rows.iter().all(DescendantRow::bounded) {
-                    return Err(Failure::new("refused"));
-                }
-                let members = json!({"descendants":rows});
-                if members.to_string().len() > FAMILY_MEMBERS_LIMIT {
-                    return Err(Failure::new("refused"));
-                }
-                let people = rows.len();
-                return baseline.record_as(
-                    "user-profile.descendants",
-                    members,
-                    Confirm::Family(people),
-                );
+                return baseline.family("user-profile.descendants", "descendants", rows);
+            }
+            Self::Ascendants { rows } => {
+                return baseline.family("user-profile.ascendants", "ascendants", rows);
             }
             Self::ImputationElection {
                 tax_year,
@@ -1250,6 +1276,75 @@ mod tests {
             json!({"kind":"descendants","rows":[{"facts":[],"extra":1}]}),
             json!({"kind":"descendants","rows":[{"facts":[{"field_key":"nombre","value":"x","masked":false}]}]}),
             json!({"kind":"descendants"}),
+        ] {
+            assert!(serde_json::from_value::<Edit>(edit).is_err());
+        }
+    }
+
+    #[test]
+    fn ascendants_are_replaced_whole_under_their_own_operation_and_saved_only_when_counted() {
+        let digest = "a".repeat(64);
+        let rows = json!([
+            {"facts":[{"field_key":"nif","value":"12345678Z"},
+                {"field_key":"birth_date","value":"1948-03-04"},
+                {"field_key":"convivientes","value":"2"}]},
+            {"facts":[{"field_key":"birth_date","value":"1951-11-30"}]}
+        ]);
+        let request = prepared(json!({"kind":"ascendants","rows":rows})).unwrap();
+        assert_eq!(request.definition, "user-profile.ascendants");
+        assert_eq!(
+            request.payload,
+            json!({"profile_id":PROFILE_ID,"expected_revision":3,
+                "expected_content_digest":digest,"ascendants":rows})
+        );
+        let settled = json!({"profile_id":PROFILE_ID,"record_revision":4,"total":2,"changed":true});
+        assert!(request.confirm.holds(&settled, PROFILE_ID, 3));
+        for unread in [
+            json!({"profile_id":PROFILE_ID,"record_revision":4,"total":1}),
+            json!({"profile_id":PROFILE_ID,"record_revision":4}),
+            json!({"profile_id":PROFILE_ID,"record_revision":2,"total":2}),
+            json!({"profile_id":"another","record_revision":4,"total":2}),
+        ] {
+            assert!(!request.confirm.holds(&unread, PROFILE_ID, 3), "{unread}");
+        }
+        // No ascendants at all is a stated zero, not a refusal.
+        let none = prepared(json!({"kind":"ascendants","rows":[]})).unwrap();
+        assert_eq!(none.definition, "user-profile.ascendants");
+        assert_eq!(none.payload["ascendants"], json!([]));
+        assert!(none.payload.get("descendants").is_none());
+        assert!(none.confirm.holds(
+            &json!({"profile_id":PROFILE_ID,"record_revision":3,"total":0}),
+            PROFILE_ID,
+            3
+        ));
+    }
+
+    #[test]
+    fn ascendants_beyond_the_products_bounds_are_refused_before_they_are_submitted() {
+        assert!(prepared(json!({"kind":"ascendants","rows":people(FAMILY_ROWS)})).is_ok());
+        let fact = |key: &str, value: &str| json!({"field_key":key,"value":value});
+        for rows in [
+            people(FAMILY_ROWS + 1),
+            json!([{"facts":[]}]),
+            json!([{"facts":[fact("birth_date","")]}]),
+            json!([{"facts":[fact("birth_date",&"a".repeat(FAMILY_VALUE_LIMIT + 1))]}]),
+            json!([{"facts":[fact("Birth_date","x")]}]),
+            json!([{"facts":[fact("birth-date","x")]}]),
+            json!([{"facts":[fact("birth_date","x"),fact("birth_date","y")]}]),
+        ] {
+            assert_eq!(
+                refusal(json!({"kind":"ascendants","rows":rows.clone()})),
+                "refused",
+                "{rows:.80}"
+            );
+        }
+        // The two replacements never answer to each other's member.
+        for edit in [
+            json!({"kind":"ascendants","rows":[],"extra":1}),
+            json!({"kind":"ascendants","rows":[{"facts":[],"extra":1}]}),
+            json!({"kind":"ascendants","rows":[{"facts":[{"field_key":"nif","value":"x","masked":false}]}]}),
+            json!({"kind":"ascendants"}),
+            json!({"kind":"ascendants","ascendants":[]}),
         ] {
             assert!(serde_json::from_value::<Edit>(edit).is_err());
         }

@@ -1073,6 +1073,9 @@ application:
         binding_value_key_blank: Les claus dels valors de l'esborrany no poden estar
           buides.
         bucket_id_blank: L'identificador del bucket de l'esborrany no pot estar buit.
+        printed_observations_unresolved: 'Aquest esborrany desat conserva valors impresos
+          de caselles que les definicions del model ja no identifiquen, així que no
+          es pot fer servir; torna a importar el document: %{casillas}.'
         snapshot_id_blank: L'identificador del snapshot de l'esborrany no pot estar
           buit.
         snapshot_not_found: Cap snapshot de l'esborrany coincideix amb l'identificador
@@ -1219,8 +1222,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: Les claus dels valors aportats no poden estar en
-          blanc.
         decimal_value_invalid: El valor d'esborrany per a l'origen numèric %{binding_id}
           ha de ser compatible amb decimal.
         forbidden_bindings: 'L''esborrany conté valors que les definicions del model
@@ -1346,6 +1347,12 @@ application:
           comprovacions retenen, així que no pots exportar-la tal com està.
         what_to_do: Torna a calcular la declaració, comprova-la i registra-la una
           altra vegada; el nou registre substitueix aquest.
+      household_rows_incomplete:
+        what: El teu perfil indica més persones en aquest grup de les que registra,
+          així que la declaració només fa servir les persones registrades i no dona
+          el grup per complet.
+        what_to_do: Afegeix al teu perfil les persones que falten o corregeix el nombre,
+          i torna a calcular.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció
@@ -1446,6 +1453,17 @@ application:
           així que Cadrumo no ha calculat aquest impost.
         what_to_do: No has de fer res si no vas fer aquest tipus de vendes. Si en
           vas fer, escriu tu els imports.
+      precedence_tier_divergence:
+        what: Dues fonts tenen valors diferents per a una xifra que arriba a la casella
+          {box}, i Cadrumo ha fet servir la que té prioritat.
+        what_to_do: Compara les fonts i corregeix la que sigui incorrecta; després
+          torna a calcular. La comprovació, l'exportació i el registre esperen fins
+          que coincideixin.
+      precedence_tier_divergence_advisory:
+        what: Dues fonts tenen valors diferents per a una xifra de treball, i Cadrumo
+          ha fet servir la que té prioritat.
+        what_to_do: Compara les fonts i corregeix la que sigui incorrecta. Cap casella
+          exportada no depèn d'aquesta xifra.
       prior_payment_minoracion_not_captured:
         what: La minoració que ve de pagaments anteriors no està anotada a la casella
           {box}.
@@ -1662,6 +1680,7 @@ application:
       disposal_zero_result: '{element}: la seva venda el {date}, amb {transmission_value}
         de valor de transmissió i {net_value} de valor net, no dona ni guany ni pèrdua,
         així que cap casella no la recull.'
+      household_rows_incomplete: '{group}: {stated} indicades, {recorded} registrades.'
       instalment_free_gap: '{element}: no hi ha dotació registrada de {start} a {end}.
         El seu mètode deixa l''import a la teva elecció, de manera que no suma res
         a la casella {box}.'
@@ -2329,6 +2348,10 @@ application:
         el model %{modelo} %{filing_year}, %{period} (%{changed_count} modificades,
         %{removed_count} eliminades, %{added_count} afegides). Torna a calcular-lo
         abans de verificar-lo.
+      invoice_fingerprint_narrower_scope: Aquest càlcul del model %{modelo} %{filing_year},
+        %{period} és anterior al seguiment de les factures meritades sense moviment
+        bancari, així que Cadrumo no pot saber si han canviat des d'aleshores. Torna
+        a calcular-lo per començar a seguir-les.
       invoice_fingerprint_unavailable: Cadrumo no ha pogut llegir les teves factures
         per comparar-les amb el model %{modelo} %{filing_year}, %{period}, així que
         no es pot confirmar que aquest càlcul estigui al dia. Torna-ho a provar quan
@@ -2412,6 +2435,8 @@ application:
         de l''estimació objectiva (mòduls).'
       oss_evidence_missing: Aquesta declaració inclou operacions de finestreta única
         (OSS), però no hi ha justificants desats d'aquestes operacions.
+      oss_no_activity_contradicted: Has declarat aquest període sense activitat, però
+        hi ha factures del règim. Treu la declaració o revisa aquestes factures.
       oss_source_unrouted: Algunes operacions de finestreta única (OSS) no es compten
         a cap casella d'aquest model.
       printed_total_mismatch: La casella [%{box}] no coincideix amb la suma de les
@@ -2427,6 +2452,9 @@ application:
         per presentar-lo.
       registry_snapshot_unresolved: No s'han pogut carregar les regles del model %{modelo}
         de %{filing_year}, període %{period}. Torna-ho a provar o actualitza l'aplicació.
+      scheme_period_contradicted: El valor {entered} de {binding_id} contradiu el
+        període d'aquest treball, que és {expected}. Corregeix-lo o obre el treball
+        del període correcte.
       selected_option_requires_nonzero: L’opció seleccionada exigeix un valor diferent
         de zero en aquest camp.
       selected_option_requires_zero: L’opció seleccionada exigeix un zero explícit
@@ -2997,6 +3025,24 @@ application:
             a una fórmula de full de càlcul.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: La data de naixement de l'ascendent %{row} no
+        és una data vàlida; escriu-la com any-mes-dia.
+      ascendant_birth_date_required: L'ascendent %{row} no té data de naixement, i
+        cada ascendent en necessita una.
+      ascendant_convivientes_invalid: El nombre de descendents amb qui conviu l'ascendent
+        %{row} ha de ser un nombre enter de 0 a %{limit}.
+      ascendant_death_before_birth: L'ascendent %{row} té una data de defunció anterior
+        a la data de naixement.
+      ascendant_death_date_invalid: La data de defunció de l'ascendent %{row} no és
+        una data vàlida; escriu-la com any-mes-dia.
+      ascendant_fact_unsupported: L'ascendent %{row} indica una dada que el perfil
+        no guarda per a un ascendent.
+      ascendant_limit_unknown: El disseny de la declaració no indica cap límit d'ascendents,
+        així que la llista no es pot comprovar ni desar.
+      ascendant_nif_invalid: El NIF o NIE de l'ascendent %{row} no és vàlid; revisa'n
+        les lletres i xifres.
+      ascendant_rows_over_limit: Una declaració inclou com a màxim %{limit} ascendents
+        i se n'han indicat %{count}.
       censal_read_identity_absent: La lectura censal no inclou cap NIF, de manera
         que no es pot confirmar que correspongui a aquest perfil.
       censal_read_identity_cleared: El NIF d'aquest perfil s'ha buidat, de manera
@@ -3076,6 +3122,7 @@ application:
           label: Data de defunció
         nif:
           label: NIF/NIE de l'ascendent (deixa'l en blanc si no en té)
+      incomplete: '{stated} indicades, {recorded} registrades'
     notices:
       censo_divergences_open: '{count} dada/es del perfil o del certificat encara
         difereixen del Certificat de Situació Censal i resten sense resoldre: {axes}.'

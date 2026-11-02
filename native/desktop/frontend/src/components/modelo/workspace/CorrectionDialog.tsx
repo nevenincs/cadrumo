@@ -31,6 +31,7 @@ import type {
 } from "../../../shell/modeloContract";
 import { useStrings } from "../../../shell/strings";
 import { BoxNumber } from "../form/BoxNumber";
+import { ScopedWriteHoldNotice } from "../WriteScope";
 import { entryField, takesEntry } from "../form/entryField";
 
 /** The person's answer to a correction: the kind, the motive where it
@@ -48,7 +49,7 @@ export type CorrectionAnswer = {
  * application could not read; `said` carries the application's own words for
  * a refusal; `refused` settled without changing anything; `not_sent` never
  * reached the runtime; `unknown` may have committed and is never sent again
- * until the declaration is read again. */
+ * until completion is confirmed and the declaration is read again. */
 export type CorrectionResult =
   | { kind: "done" }
   | { kind: "entries"; entries: Record<string, string> }
@@ -85,6 +86,7 @@ export function CorrectionDialog({
   onOpenChange,
   context,
   onCorrect,
+  disabled = false,
 }: {
   open: boolean;
   onOpenChange(open: boolean): void;
@@ -92,6 +94,7 @@ export function CorrectionDialog({
   context: ModeloAmendmentCorrectionContextV1 | null;
   /** Null while the correction cannot be sent from here. */
   onCorrect: ((answer: CorrectionAnswer) => Promise<CorrectionResult>) | null;
+  disabled?: boolean;
 }) {
   const t = useStrings();
   const [kind, setKind] = useState<CalculationRevisionAmendmentKind | null>(
@@ -123,7 +126,7 @@ export function CorrectionDialog({
     entries.length > 0 &&
     (!asksMotive || motive !== null);
   const submit = async () => {
-    if (!ready || !onCorrect || !chosen) return;
+    if (disabled || busy || !ready || !onCorrect || !chosen) return;
     setBusy(true);
     const result = await onCorrect({
       kind: chosen,
@@ -147,9 +150,7 @@ export function CorrectionDialog({
           ? t("workspace.modelo.outcome.refused")
           : outcome.kind === "not_sent"
             ? t("workspace.modelo.outcome.failed")
-            : outcome.kind === "unknown"
-              ? t("workspace.modelo.outcome.unknown")
-              : null;
+            : null;
   const type = (casillaId: string, text: string) => {
     setValues((held) => ({ ...held, [casillaId]: text }));
     setRefusals((held) => {
@@ -291,11 +292,12 @@ export function CorrectionDialog({
             {said}
           </Alert>
         )}
+        <ScopedWriteHoldNotice />
         <DialogFooter>
           <Button variant="ghost" onClick={() => onOpenChange(false)}>
             {t("workspace.modelo.editor.cancel")}
           </Button>
-          <Button disabled={!ready || busy || held} onClick={submit}>
+          <Button disabled={disabled || !ready || busy} onClick={submit}>
             {t("workspace.modelo.correction.confirm")}
           </Button>
         </DialogFooter>

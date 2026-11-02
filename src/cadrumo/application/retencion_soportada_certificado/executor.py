@@ -59,11 +59,6 @@ _REQUEST_TYPES: Final[dict[str, type[RetencionSoportadaProfileRequest]]] = {
     RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID: RetencionSoportadaRecordRequest,
     RETENCION_SOPORTADA_REMOVE_OPERATION_DEFINITION_ID: RetencionSoportadaRemoveRequest,
 }
-_OPERATION_IDS: Final[dict[str, RetencionSoportadaOperationId]] = {
-    RETENCION_SOPORTADA_LIST_OPERATION_DEFINITION_ID: "list",
-    RETENCION_SOPORTADA_RECORD_OPERATION_DEFINITION_ID: "record",
-    RETENCION_SOPORTADA_REMOVE_OPERATION_DEFINITION_ID: "remove",
-}
 
 
 @dataclass(frozen=True, slots=True)

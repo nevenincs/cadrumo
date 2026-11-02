@@ -26,7 +26,13 @@ import { useStrings, type Translate } from "../../../shell/strings";
 import { AttentionMark, DEADLINE_TONE, GlyphMark } from "./Marks";
 
 /** The views of one declaration, as its tabs name them. */
-export type WorkspaceView = "form" | "check" | "file" | "sources" | "history";
+export type WorkspaceView =
+  | "form"
+  | "check"
+  | "credits"
+  | "file"
+  | "sources"
+  | "history";
 
 /** What the other component lanes put into the workspace. */
 export type WorkspaceSlots = {
@@ -41,6 +47,9 @@ export type WorkspaceSlots = {
   filing: ReactNode;
   /** The Check, Sources and History views. */
   check: ReactNode;
+  /** The credits a register supplies and the estimate; the view is offered
+   * only where the form has credits to show. */
+  credits?: ReactNode;
   sources: ReactNode;
   history: ReactNode;
   /** Dialogs drawn at the workspace's root. */
@@ -181,6 +190,7 @@ export function ModeloWorkspace({
   stagedCount,
   detailsOpen,
   busy = false,
+  writeHeld = false,
   prerequisiteHeld = false,
   notice,
   slots,
@@ -200,6 +210,7 @@ export function ModeloWorkspace({
   detailsOpen: boolean;
   /** An operation the header started has not answered yet. */
   busy?: boolean;
+  writeHeld?: boolean;
   /** An apply was refused on a prerequisite that still stands. */
   prerequisiteHeld?: boolean;
   /** What the last operation answered, shown under the tabs. */
@@ -232,6 +243,8 @@ export function ModeloWorkspace({
         : (next?.action ?? null);
   const findingsLead = prerequisiteHeld || (next?.findings_lead ?? false);
   const target = action ? ACTION_VIEW[action] : undefined;
+  const writesNext =
+    action === "calculate" || action === "recalculate" || action === "verify";
   const levels = new Map(header.attention.map((a) => [a.level, a]));
   const day = (iso: string | null) =>
     iso ? formatInstantDay(locale, iso) : "";
@@ -269,9 +282,13 @@ export function ModeloWorkspace({
         recorded
       )
     ) : action && !(target && target === view && view !== "form") ? (
-      <Button onClick={runNext} disabled={busy} aria-busy={busy}>
+      <Button
+        onClick={runNext}
+        disabled={(busy || writeHeld) && writesNext}
+        aria-busy={busy && writesNext}
+      >
         {t(`workspace.modelo.next_button.${action}`)}
-        <Icon name={busy ? "loader" : "forward"} size="xs" />
+        <Icon name={busy && writesNext ? "loader" : "forward"} size="xs" />
       </Button>
     ) : null;
 
@@ -407,6 +424,8 @@ export function ModeloWorkspace({
               />
             ),
           )}
+          {slots.credits !== undefined &&
+            tab("credits", t("desktop.modelo.view.credits"))}
           {tab("sources", t("workspace.modelo.key.sources"))}
           {tab("history", t("workspace.modelo.history.title"))}
         </TabsList>
@@ -468,6 +487,7 @@ export function ModeloWorkspace({
           className="@container min-h-0 flex-1 overflow-y-auto px-6 py-6"
         >
           {view === "check" && slots.check}
+          {view === "credits" && slots.credits}
           {view === "file" && slots.filing}
           {view === "sources" && slots.sources}
           {view === "history" && slots.history}

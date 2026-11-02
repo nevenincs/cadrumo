@@ -318,7 +318,11 @@ def _stale_reasons(
     if any(item.snapshot.captured_at > snapshot.captured_at for item in reading.refused):
         reasons.append(Borrador100ComparisonStaleReason.NEWER_CAPTURE_REFUSED)
     if calculation_screen_outdated(
-        saved.head, modelo=str(_annual_modelo(operation)), filing_year=period.filing_year, period=period, operation=operation
+        saved.head,
+        modelo=str(_annual_modelo(operation)),
+        filing_year=period.filing_year,
+        period=period,
+        operation=operation,
     ):
         reasons.append(Borrador100ComparisonStaleReason.CALCULATION_OUTDATED)
     return tuple(reasons)

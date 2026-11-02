@@ -176,6 +176,18 @@ def test_facturae_reads_an_irpf_withholding(document: bytes, rate: str, amount: 
     assert _kinds(parsed) == []
 
 
+@pytest.mark.parametrize("issued_on", ["2015-06-30", "2025-06-30", "not a date"])
+def test_the_irpf_code_is_read_whatever_date_the_invoice_states(issued_on: str) -> None:
+    document = _facturae(header=_withheld("04", "15.00", "1000.00", "150.00")).replace(
+        b"<TaxesOutputs>",
+        f"<InvoiceIssueData><IssueDate>{issued_on}</IssueDate></InvoiceIssueData><TaxesOutputs>".encode(),
+        1,
+    )
+    parsed = parse_einvoice_document(document)
+    assert parsed.invoice_date == issued_on
+    assert parsed.retencion_amount == Decimal("150.00")
+
+
 def test_two_rates_keep_the_amount_and_no_single_rate() -> None:
     # 500.00 x 15 % = 75.00 and 500.00 x 7 % = 35.00, so 110.00 withheld at no one rate.
     parsed = parse_einvoice_document(

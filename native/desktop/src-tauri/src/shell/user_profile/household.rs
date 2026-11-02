@@ -18,12 +18,14 @@ const PAGE_KIND: &str = "family_rows";
 const MASK: &str = "••••••••";
 
 /// What the profile says about one group of rows. `unknown` means nothing was
-/// stated and no row is stored, and `none_declared` that the profile states a
-/// count of zero; the two are never the same state.
+/// stated and no row is stored, `none_declared` that the profile states a
+/// count of zero, and `incomplete` that it states more people than it records
+/// (the recorded rows are still held); no two are the same state.
 #[derive(Clone, Copy, Debug, Deserialize, Serialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 enum GroupState {
     Rows,
+    Incomplete,
     NoneDeclared,
     Unknown,
     NotServed,
@@ -68,6 +70,8 @@ enum Item {
         state: GroupState,
         stated_count: Option<String>,
         row_count: usize,
+        incomplete_words: Option<String>,
+        max_rows: Option<usize>,
         leaves: Vec<Leaf>,
     },
     FamilyRow {
@@ -90,6 +94,9 @@ pub struct Group {
     state: GroupState,
     stated_count: Option<String>,
     row_count: usize,
+    incomplete_words: Option<String>,
+    /// The most people the declaration's design lets the group hold.
+    max_rows: Option<usize>,
     leaves: Vec<Leaf>,
     rows: Vec<Row>,
 }
@@ -144,12 +151,19 @@ impl Family {
                     state,
                     stated_count,
                     row_count,
+                    incomplete_words,
+                    max_rows,
                     leaves,
                 } if self.keys.insert(group_key.clone()) => {
                     let leaf_keys: BTreeSet<_> = leaves.iter().map(|leaf| &leaf.leaf).collect();
                     if leaf_keys.len() != leaves.len()
                         || (state == GroupState::NotServed
                             && (!leaves.is_empty() || row_count != 0 || stated_count.is_some()))
+                        || max_rows == Some(0)
+                        || (state == GroupState::Incomplete)
+                            != incomplete_words
+                                .as_deref()
+                                .is_some_and(|words| !words.is_empty())
                     {
                         return Err(protocol());
                     }
@@ -159,6 +173,8 @@ impl Family {
                         state,
                         stated_count,
                         row_count,
+                        incomplete_words,
+                        max_rows,
                         leaves,
                         rows: vec![],
                     });
@@ -197,13 +213,18 @@ impl Family {
         Ok(last)
     }
     /// The household, once every item was taken. A group's stated state must
-    /// agree with the rows it holds: `rows` has them, and no other state does.
+    /// agree with the rows it holds: `rows` has them, `incomplete` may hold any
+    /// number of them, and no other state holds one.
     pub fn finish(self) -> Result<Household> {
         if !self.pin.complete()
             || self.groups.is_empty()
             || self.groups.iter().any(|group| {
                 group.row_count != group.rows.len()
-                    || (group.state == GroupState::Rows) != !group.rows.is_empty()
+                    || match group.state {
+                        GroupState::Rows => group.rows.is_empty(),
+                        GroupState::Incomplete => false,
+                        _ => !group.rows.is_empty(),
+                    }
             })
         {
             return Err(protocol());
@@ -262,7 +283,14 @@ mod tests {
     }
     fn group(state: &str, rows: usize) -> Value {
         json!({"kind":"family_group","group_key":GROUP,"label":"Descendants","state":state,
-            "stated_count":null,"row_count":rows,"leaves":[leaf("nombre"),leaf("fecha_nacimiento")]})
+            "stated_count":null,"row_count":rows,"incomplete_words":null,
+            "leaves":[leaf("nombre"),leaf("fecha_nacimiento")]})
+    }
+    fn incomplete(rows: usize) -> Value {
+        let mut stated = group("incomplete", rows);
+        stated["stated_count"] = "3".into();
+        stated["incomplete_words"] = "3 stated, 1 recorded".into();
+        stated
     }
     fn row(index: &str, leaf: &str) -> Value {
         json!({"kind":"family_row","group_key":GROUP,"row_index":index,
@@ -270,7 +298,7 @@ mod tests {
     }
     fn not_served() -> Value {
         json!({"kind":"family_group","group_key":"renta_family.ascendiente","label":"Ascendants",
-            "state":"not_served","stated_count":null,"row_count":0,"leaves":[]})
+            "state":"not_served","stated_count":null,"row_count":0,"incomplete_words":null,"leaves":[]})
     }
     fn page(items: Vec<Value>, cursor: usize, total: usize) -> Value {
         let next = cursor + items.len();
@@ -324,6 +352,54 @@ mod tests {
             assert_eq!(shown["groups"][0]["state"], state);
             assert_eq!(shown["groups"][0]["row_count"], 0);
         }
+    }
+
+    #[test]
+    fn an_incomplete_group_holds_its_recorded_rows_and_says_the_two_numbers() {
+        let household = read(vec![incomplete(1), row("0", "nombre")]).unwrap();
+        let shown = serde_json::to_value(&household).unwrap();
+        assert_eq!(shown["groups"][0]["state"], "incomplete");
+        assert_eq!(shown["groups"][0]["stated_count"], "3");
+        assert_eq!(shown["groups"][0]["row_count"], 1);
+        assert_eq!(
+            shown["groups"][0]["incomplete_words"],
+            "3 stated, 1 recorded"
+        );
+        assert_eq!(shown["groups"][0]["rows"][0]["row_index"], "0");
+        // Nothing recorded under a stated count is still an incomplete group, not an unknown one.
+        let none = read(vec![incomplete(0)]).unwrap();
+        assert_eq!(
+            serde_json::to_value(&none).unwrap()["groups"][0]["rows"],
+            json!([])
+        );
+    }
+
+    #[test]
+    fn only_an_incomplete_group_carries_words_for_it_and_it_must_carry_them() {
+        let mut worded = group("rows", 1);
+        worded["incomplete_words"] = "3 stated, 1 recorded".into();
+        assert!(read(vec![worded, row("0", "nombre")]).is_err());
+        let mut silent = incomplete(1);
+        silent["incomplete_words"] = Value::Null;
+        assert!(read(vec![silent, row("0", "nombre")]).is_err());
+        let mut blank = incomplete(1);
+        blank["incomplete_words"] = "".into();
+        assert!(read(vec![blank, row("0", "nombre")]).is_err());
+        // The count of rows it holds must still be the number it states.
+        assert!(read(vec![incomplete(2), row("0", "nombre")]).is_err());
+    }
+
+    #[test]
+    fn a_group_keeps_the_most_people_the_design_holds_and_refuses_a_cap_of_none() {
+        let mut capped = group("rows", 1);
+        capped["max_rows"] = 4.into();
+        let shown = serde_json::to_value(read(vec![capped, row("0", "nombre")]).unwrap()).unwrap();
+        assert_eq!(shown["groups"][0]["max_rows"], 4);
+        let shown = serde_json::to_value(read(vec![group("unknown", 0)]).unwrap()).unwrap();
+        assert_eq!(shown["groups"][0]["max_rows"], Value::Null);
+        let mut empty = group("unknown", 0);
+        empty["max_rows"] = 0.into();
+        assert!(read(vec![empty]).is_err());
     }
 
     #[test]

@@ -47,13 +47,16 @@ from ....domain.transactions.own_accounts import (
 )
 from ..calculation_note_gate import gate_refuses
 from ..calculation_notes import CALCULATION_NOTE_ATTENTION, CHECK_REFUSED_REASONS, GATE_REFUSED_REASONS
+from ..settlement_casilla import declaration_settlement_casilla_id
 from ..work_form_declaration_facts import ModeloFormCalculationNote, ModeloFormDeadline, ModeloFormExport
 from ..work_form_export_offer import (
     EXPORT_ARTEFACT_LOCALE_KEYS,
     ModeloFormElection,
+    ModeloFormElectionFigure,
     ModeloFormElectionQuestion,
     ModeloFormElectionReason,
     ModeloFormElectionState,
+    ModeloFormInstalment,
     ModeloFormUnavailable,
     asks_export_elections,
     form_export_offer,
@@ -94,10 +97,16 @@ def _offer(operation: PinnedAuthorityOperation, modelo: str, year: int, code: st
 def test_elections_are_asked_where_a_design_declares_a_carry_or_the_law_a_split(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """Modelo 303 declares carrying a credit or refunding it; Modelo 100's result may be paid in two instalments."""
-    asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo)}
+    """Modelo 303 declares carrying a credit or refunding it; Modelo 100's 2025 result may be paid in two instalments.
+
+    The split is a dated registry fact first stated for the 2025 ejercicio, so a
+    2024 Modelo 100 asks nothing.
+    """
+    renta_2025 = Period.from_year_and_code(2025, "0A")
+    asked = {modelo for modelo in operation.modelo_ids() if asks_export_elections(modelo, renta_2025)}
 
     assert asked == {"100", "303"}
+    assert not asks_export_elections("100", Period.from_year_and_code(2024, "0A"))
 
 
 def test_a_modelo_303_asks_its_three_elections_preset_to_their_neutral_defaults(
@@ -152,11 +161,20 @@ def _calculated(
     result: Decimal,
     *,
     deadline: ModeloFormDeadline | None = None,
+    settled: Decimal | None = None,
 ) -> ModeloWorkForm:
-    """A calculated form whose settlement box holds ``result``, built by the real builder."""
+    """A calculated form whose result box holds ``result``, built by the real builder.
+
+    The box the revision settles, where it names one apart from the result,
+    holds ``settled``, by default the result itself.
+    """
     blank = built_form(operation, modelo, year, code, entered=frozenset())
     assert blank.result is not None
-    form = built_form(operation, modelo, year, code, held={str(blank.result.casilla_id): result}, entered=frozenset())
+    held: dict[str, Decimal | str] = {str(blank.result.casilla_id): result}
+    settling = declaration_settlement_casilla_id(modelo, form_snapshot(operation, modelo, year, code).revision)
+    if settling is not None and settling != blank.result.casilla_id:
+        held[str(settling)] = result if settled is None else settled
+    form = built_form(operation, modelo, year, code, held=held, entered=frozenset())
     return form.model_copy(update={"calculation_revision_id": "c" * 64, "deadline": deadline})
 
 
@@ -223,6 +241,79 @@ def test_a_modelo_100_to_pay_within_its_period_offers_the_split_and_the_debit_ac
     refund = questions[ModeloFormElection.REFUND_ACCOUNT]
     assert refund.state is ModeloFormElectionState.NOT_APPLICABLE
     assert refund.reason is ModeloFormElectionReason.NOTHING_TO_REFUND and refund.choices == ()
+
+
+def test_the_split_states_both_instalments_of_the_amount_left_to_pay_as_advisory(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """60 per cent of the remainder 0695 (1.000,01 of a 1.200,01 result, 200 suspended) is 600,006.
+
+    The registry declares the share; the cent goes to the first instalment by
+    Cadrumo's own rounding, which no official rule states, so both figures are
+    advisory and say why.
+    """
+    form = _calculated(
+        operation, "100", 2025, "0A", Decimal("1200.01"), deadline=_deadline(30), settled=Decimal("1000.01")
+    )
+
+    instalment = _questions(operation, form)[ModeloFormElection.INSTALMENT]
+
+    assert instalment.state is ModeloFormElectionState.AVAILABLE
+    first, second = instalment.figures
+    assert (first.instalment, first.amount) == (ModeloFormInstalment.FIRST, "600.01")
+    assert (second.instalment, second.amount) == (ModeloFormInstalment.SECOND, "400.00")
+    assert all(figure.advisory and figure.advisory_words for figure in instalment.figures)
+    assert "60%" in first.words and "600.01" in first.words
+    assert "40%" in second.words and "400.00" in second.words
+
+
+def test_an_advisory_figure_carries_its_reason_and_only_then() -> None:
+    with pytest.raises(ValueError, match="advisory"):
+        ModeloFormElectionFigure(
+            instalment=ModeloFormInstalment.FIRST, amount="1.00", words="x", advisory=True, advisory_words=None
+        )
+    with pytest.raises(ValueError, match="advisory"):
+        ModeloFormElectionFigure(
+            instalment=ModeloFormInstalment.FIRST, amount="1.00", words="x", advisory=False, advisory_words="y"
+        )
+
+
+@pytest.mark.parametrize("amount", ["-1.00", "1.001", "1,00", ""])
+def test_a_figure_amount_is_the_decimal_text_of_cents(amount: str) -> None:
+    with pytest.raises(ValueError):
+        ModeloFormElectionFigure(
+            instalment=ModeloFormInstalment.FIRST, amount=amount, words="x", advisory=True, advisory_words="y"
+        )
+
+
+def test_a_settled_box_without_a_value_withholds_the_settlement_as_unknown(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """A waived refund leaves 0700 unresolved: the refund is not offered from the result 0670 instead."""
+    blank = built_form(operation, "100", 2025, "0A", entered=frozenset())
+    assert blank.result is not None
+    form = built_form(
+        operation, "100", 2025, "0A", held={str(blank.result.casilla_id): Decimal("-310.40")}, entered=frozenset()
+    ).model_copy(update={"calculation_revision_id": "c" * 64, "deadline": _deadline(30)})
+
+    refund = _questions(operation, form, own_accounts=_register(("Nómina", _SPANISH_IBAN)))[
+        ModeloFormElection.REFUND_ACCOUNT
+    ]
+
+    assert refund.state is ModeloFormElectionState.UNAVAILABLE
+    assert refund.reason is ModeloFormElectionReason.RESULT_UNKNOWN and refund.choices == ()
+
+
+def test_a_result_to_pay_with_nothing_left_to_pay_offers_no_settlement(operation: PinnedAuthorityOperation) -> None:
+    """The whole result suspended against the spouse's refund leaves 0700 at zero, which no design block settles."""
+    form = _calculated(operation, "100", 2025, "0A", Decimal("500.00"), deadline=_deadline(30), settled=Decimal("0"))
+
+    questions = _questions(operation, form, own_accounts=_register(("Nómina", _SPANISH_IBAN)))
+
+    for election in (ModeloFormElection.PAYMENT, ModeloFormElection.INSTALMENT, ModeloFormElection.CHARGE_ACCOUNT):
+        assert questions[election].state is ModeloFormElectionState.UNAVAILABLE, election
+        assert questions[election].reason is ModeloFormElectionReason.SETTLEMENT_UNSUPPORTED, election
+        assert questions[election].state_words is not None and questions[election].figures == ()
 
 
 def test_an_account_is_offered_by_its_label_and_mask_never_its_number(operation: PinnedAuthorityOperation) -> None:

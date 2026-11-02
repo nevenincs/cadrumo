@@ -156,6 +156,13 @@ PASS for S30. Documentation rows are withheld immediately when their query or se
 
 The shared worktree checkpoint f734e601ba included the S27-S30 implementation sources before this session completed its scoped metadata commits; b5554a9db3 and c543d76662 retain the S28/S27 checkpoints. The final 32-case Local AI/palette run passed after the concurrent checkpoint and TUI merge. Unrelated native-modularity plan changes are preserved and excluded from this feature's commits. These source-history boundaries do not substitute for final S17 integration review.
 
+### s19-review | low | Creation uncertainty survives selection and navigation
+
+S19 now keeps creation leases under the existing reader-owned declarations memory, keyed by modelo/year/period, with no request bodies or financial operands. Admission occurs synchronously before submission. Unknown outcomes retain their operation ID when available; Check status observes that operation without resubmitting it. A terminal observation or saved-unread result requires a subsequent successful list read. The list captures only already-complete creation holds and releases only the same unchanged objects after a generation-current success. Running/unknown holds, failed/obsolete reads and cached lists release none. The chooser guards late navigation by live target, port/store generation and mounted lifetime.
+
+PASS for S19. All 16 declarations/list-read browser cases pass, including period changes, navigation/remount, closing during submission, no-ID uncertainty, running status and a failed post-completion refresh. Four pure state tests cover synchronous admission, retired leases, reads begun before completion, changed refresh states and separate reader stores. TypeScript, scoped ESLint, formatting and canonical four-language chrome generation pass. Sol supplied the shared notice/action wording. Terra found no demonstrated blocker and identified a possible late cache refresh of a replacement reader; the callback now marks its captured original memory and rereads only while that reader/memory owner remains current. All five focused lifecycle cases and scoped checks pass after this correction. Concurrent checkpoint 6720e519fc included the initial shared store/notice and locale sources; this Step records the completed creation integration and verification. Work-unit edit/filing/history writers are separately pending S20 and are not claimed fixed by this creation change.
+
 ## Recommendations
+
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

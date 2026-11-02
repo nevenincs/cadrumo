@@ -1057,6 +1057,9 @@ application:
           használható; importáld újra a dokumentumot: %{bindings}.'
         binding_value_key_blank: A borrador értékeinek kulcsai nem lehetnek üresek.
         bucket_id_blank: A borrador bucket azonosítója nem lehet üres.
+        printed_observations_unresolved: 'Ez a tárolt borrador olyan mezők nyomtatott
+          értékeit őrzi, amelyeket a nyomtatványdefiníciók már nem azonosítanak, ezért
+          nem használható; importáld újra a dokumentumot: %{casillas}.'
         snapshot_id_blank: A borrador pillanatkép azonosítója nem lehet üres.
         snapshot_not_found: Egyetlen borrador pillanatkép sem felel meg a kért azonosítónak.
         snapshot_prefix_ambiguous: A borrador pillanatkép előtagja több pillanatképre
@@ -1186,7 +1189,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: A megadott értékek kulcsai nem lehetnek üresek.
         decimal_value_invalid: A(z) %{binding_id} numerikus forrás borrador-értékének
           decimális számként értelmezhetőnek kell lennie.
         forbidden_bindings: 'A borrador olyan értékeket tartalmaz, amelyeket a nyomtatványdefiníciók
@@ -1311,6 +1313,12 @@ application:
           visszatartanak, ezért ebben a formában nem exportálhatod.
         what_to_do: Számold újra a bevallást, ellenőrizd, majd rögzítsd újra; az új
           rögzítés felváltja ezt.
+      household_rows_incomplete:
+        what: A profilod ebben a csoportban több személyt jelez, mint amennyit rögzít,
+          ezért a nyilatkozat csak a rögzített személyeket használja, és a csoportot
+          nem tekinti teljesnek.
+        what_to_do: Vedd fel a hiányzó személyeket a profilodba, vagy javítsd a számot,
+          majd számolj újra.
       inferred_retencion_excluded_from_credit:
         what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
           összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél
@@ -1408,6 +1416,16 @@ application:
           nem számolta ki ezt az adót.
         what_to_do: Nincs teendőd, ha nem volt ilyen értékesítésed. Ha volt, írd be
           te magad az összegeket.
+      precedence_tier_divergence:
+        what: Két forrás eltérő értéket tartalmaz egy olyan számra, amely a(z) {box}
+          rovatba kerül, és a Cadrumo az elsőbbséget élvezőt használta.
+        what_to_do: Hasonlítsd össze a forrásokat, javítsd ki a hibásat, majd számolj
+          újra. Az ellenőrzés, az exportálás és a rögzítés megvárja, amíg egyeznek.
+      precedence_tier_divergence_advisory:
+        what: Két forrás eltérő értéket tartalmaz egy munkaszámra, és a Cadrumo az
+          elsőbbséget élvezőt használta.
+        what_to_do: Hasonlítsd össze a forrásokat, és javítsd ki a hibásat. Egyetlen
+          exportált rovat sem függ ettől a számtól.
       prior_payment_minoracion_not_captured:
         what: A korábbi befizetésekből adódó csökkentés nincs rögzítve a(z) {box}
           rovatban.
@@ -1627,6 +1645,7 @@ application:
       disposal_zero_result: '{element}: a(z) {date} napi eladás {transmission_value}
         átruházási értékkel és {net_value} nettó értékkel sem nyereséget, sem veszteséget
         nem eredményez, ezért egyik mezőbe sem kerül.'
+      household_rows_incomplete: '{group}: {stated} megadva, {recorded} rögzítve.'
       instalment_free_gap: '{element}: {start} és {end} között nincs rögzített értékcsökkenési
         leírás. A módszere rád bízza az összeget, ezért semmit sem ad a(z) {box} mezőhöz.'
       possibly_durable_expense: A(z) {row_date} napi, {row_amount} összegű tétel folyó
@@ -2284,6 +2303,10 @@ application:
       invoice_fingerprint_drift: A számláid megváltoztak a(z) %{modelo} %{filing_year},
         %{period} kiszámítása után (%{changed_count} módosult, %{removed_count} törölve,
         %{added_count} új). Számítsd ki újra az ellenőrzés előtt.
+      invoice_fingerprint_narrower_scope: Ez a(z) %{modelo} %{filing_year}, %{period}
+        számítás a banki mozgás nélkül teljesült számlák követése előtt készült, ezért
+        a Cadrumo nem tudja megmondani, változtak-e azóta ezek a számlák. Számítsd
+        ki újra a követés elindításához.
       invoice_fingerprint_unavailable: A Cadrumo nem tudta beolvasni a számláidat,
         hogy összevesse őket a(z) %{modelo} %{filing_year}, %{period} modellel, ezért
         nem igazolható, hogy a számítás naprakész. Próbáld újra, ha már olvashatók.
@@ -2363,6 +2386,9 @@ application:
         objetiva, módulos) %{threshold} határát.'
       oss_evidence_missing: Ez a bevallás egyablakos (OSS) ügyleteket tartalmaz, de
         nincsenek hozzájuk mentett alátámasztó bizonylatok.
+      oss_no_activity_contradicted: Ezt az időszakot tevékenység nélkülinek jelölted,
+        de a rendszerhez tartozó számlák vannak benne. Vond vissza a jelölést, vagy
+        ellenőrizd a számlákat.
       oss_source_unrouted: Egyes egyablakos (OSS) tételek a nyomtatvány egyik rovatában
         sem szerepelnek.
       printed_total_mismatch: A(z) [%{box}] rovat nem egyezik az őt alkotó nyomtatott
@@ -2378,6 +2404,9 @@ application:
         a benyújtáshoz.
       registry_snapshot_unresolved: A Modelo %{modelo} (%{filing_year}, %{period}
         időszak) szabályai nem tölthetők be. Próbáld újra, vagy frissítsd az alkalmazást.
+      scheme_period_contradicted: A(z) {binding_id} mező {entered} értéke ellentmond
+        e munka időszakának, amely {expected}. Javítsd, vagy nyisd meg a megfelelő
+        időszak munkáját.
       selected_option_requires_nonzero: A kiválasztott lehetőséghez ebben a mezőben
         nullától eltérő érték szükséges.
       selected_option_requires_zero: A kiválasztott lehetőséghez ebben a mezőben kifejezetten
@@ -2947,6 +2976,24 @@ application:
             táblázatképletté.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: A(z) %{row}. felmenő születési dátuma nem érvényes
+        dátum; évszám-hónap-nap alakban add meg.
+      ascendant_birth_date_required: A(z) %{row}. felmenőnek nincs születési dátuma,
+        pedig minden felmenőhöz kell egy.
+      ascendant_convivientes_invalid: Az a leszármazottszám, akivel a(z) %{row}. felmenő
+        együtt él, 0 és %{limit} közötti egész szám legyen.
+      ascendant_death_before_birth: A(z) %{row}. felmenő halálozási dátuma korábbi,
+        mint a születési dátuma.
+      ascendant_death_date_invalid: A(z) %{row}. felmenő halálozási dátuma nem érvényes
+        dátum; évszám-hónap-nap alakban add meg.
+      ascendant_fact_unsupported: A(z) %{row}. felmenő olyan adatot ad meg, amelyet
+        a profil nem tárol felmenőnél.
+      ascendant_limit_unknown: A bevallás kialakítása nem ad meg felső korlátot a
+        felmenőkre, ezért a lista nem ellenőrizhető és nem menthető.
+      ascendant_nif_invalid: A(z) %{row}. felmenő NIF- vagy NIE-száma nem érvényes;
+        ellenőrizd a betűit és számjegyeit.
+      ascendant_rows_over_limit: Egy bevallás legfeljebb %{limit} felmenőt tartalmaz,
+        de %{count} lett megadva.
       censal_read_identity_absent: A nyilvántartási olvasás nem tartalmazott adóazonosítót,
         ezért nem erősíthető meg, hogy ehhez a profilhoz tartozik.
       censal_read_identity_cleared: Ennek a profilnak az adóazonosítója ki lett ürítve,
@@ -3025,6 +3072,7 @@ application:
           label: A halálozás dátuma
         nif:
           label: A felmenő adószáma (NIF/NIE) (hagyd üresen, ha nincs)
+      incomplete: '{stated} megadva, {recorded} rögzítve'
     notices:
       censo_divergences_open: '{count} profil- vagy tanúsítványadat továbbra is eltér
         a Certificado de Situación Censal tanúsítványtól és megoldatlan: {axes}.'

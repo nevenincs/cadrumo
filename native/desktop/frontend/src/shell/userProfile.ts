@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { HouseholdPersonEdit } from "./profileHousehold";
 
 export type ProfileField = {
   path: string;
@@ -64,7 +65,15 @@ export type ProfileEdit =
    * Each fact is under a key of the product's family vocabulary. */
   | {
       kind: "descendants";
-      rows: { facts: { field_key: string; value: string }[] }[];
+      rows: HouseholdPersonEdit[];
+    }
+  /** The whole stated set of ascendants at once, with the same replacement as
+   * the descendants: every ascendant and the count are replaced with exactly
+   * these people. The product refuses more rows than the declaration's design
+   * holds and serves the reason in the person's language. */
+  | {
+      kind: "ascendants";
+      rows: HouseholdPersonEdit[];
     }
   /** What one ejercicio's imputation election states. Each answer is the
    * token a served choice carries: an empty token clears the ejercicio's
@@ -337,3 +346,18 @@ export const profileText = (value: string) =>
 export const fieldValue = (field: ProfileField) =>
   field.choices.find((choice) => choice.value === field.value)?.label ??
   field.value;
+
+/** The profile fact that states the region the filer lives in. */
+const REGION_FACT = "tax_residence.ccaa";
+
+/** Reads the region the profile states, which the estimate from the quarterly
+ * declarations is made for, or null where the profile states none. */
+export const regionReader =
+  (port: UserProfilePort, language: string) =>
+  async (): Promise<string | null> => {
+    const data = await port.read(language);
+    const fact = data.sections
+      .flatMap((section) => section.fields)
+      .find((field) => field.path === REGION_FACT);
+    return fact?.value ?? null;
+  };

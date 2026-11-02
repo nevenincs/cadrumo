@@ -222,6 +222,53 @@ class UnadmittedActivityIncome(BaseModel):
     """
 
 
+class RectificativaCorrection(BaseModel):
+    """What a factura rectificativa takes off the income of the invoice it corrects, in the same year.
+
+    The invoice holds the correction as a magnitude with its direction in the class, so
+    the sign enters here and the folds that sum a row's figures net it like any other.
+    It reduces the year's income whatever became of the refund: under accrual the income
+    moved when the operation was corrected, not when the money went back.
+    """
+
+    model_config = _STRICT_FROZEN
+
+    invoice_id: str
+    invoice_number: str
+    target_casilla_id: CasillaId
+    reduction: Decimal = Field(gt=Decimal("0"))
+
+    @property
+    def transaction_id(self) -> str:
+        """Name the row by its invoice; a correction need have no ledger row."""
+        return f"invoice:{self.invoice_id}"
+
+    @property
+    def gross_amount(self) -> Decimal:
+        """Return the base taken off the income."""
+        return -self.reduction
+
+    @property
+    def taxable_base_amount(self) -> Decimal:
+        """Return the base taken off the income."""
+        return -self.reduction
+
+    @property
+    def withheld_amount(self) -> Decimal:
+        """Return zero: a correction stating a retencion is refused before it gets here."""
+        return Decimal("0")
+
+    @property
+    def withheld_derivation(self) -> LedgerWithholdingDerivation:
+        """Say nothing enters the credit from this row."""
+        return LedgerWithholdingDerivation.NONE_WITHHELD
+
+    @property
+    def grounding(self) -> LedgerIncomeGrounding:
+        """Say the figure rests on a declared base."""
+        return LedgerIncomeGrounding.SUBSTRATE_DECLARED
+
+
 class AccruedUnpaidIncome(BaseModel):
     """The part of an issued invoice accruing in the window that no receipt has settled.
 

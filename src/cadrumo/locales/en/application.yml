@@ -1014,6 +1014,9 @@ application:
           again: %{bindings}.'
         binding_value_key_blank: The keys of borrador values must not be blank.
         bucket_id_blank: Borrador bucket id must not be blank.
+        printed_observations_unresolved: 'This stored borrador keeps printed values
+          for boxes the modelo definitions no longer identify, so it cannot be used;
+          import the document again: %{casillas}.'
         snapshot_id_blank: Borrador snapshot id must not be blank.
         snapshot_not_found: No borrador snapshot matches the requested id.
         snapshot_prefix_ambiguous: The borrador snapshot prefix matches multiple snapshots.
@@ -1141,7 +1144,6 @@ application:
   modelo:
     borrador_binding:
       errors:
-        caller_binding_keys_blank: The keys of the values supplied must not be blank.
         decimal_value_invalid: The borrador value for numeric source %{binding_id}
           must be decimal-compatible.
         forbidden_bindings: 'The borrador contains values that the modelo definitions
@@ -1268,6 +1270,12 @@ application:
           export it as it stands.
         what_to_do: Calculate the declaration again, check it and record it again;
           the new record replaces this one.
+      household_rows_incomplete:
+        what: Your profile states more people in this group than it records, so the
+          declaration uses only the people recorded and does not treat the group as
+          complete.
+        what_to_do: Add the missing people to your profile or correct the count, then
+          calculate again.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
@@ -1367,6 +1375,16 @@ application:
           Cadrumo did not work out that tax.
         what_to_do: No action is needed if you made no such sales. Otherwise enter
           the amounts yourself.
+      precedence_tier_divergence:
+        what: Two sources hold different values for a figure that reaches box {box},
+          and Cadrumo used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong, then calculate
+          again. Checking, exporting and recording wait until they agree.
+      precedence_tier_divergence_advisory:
+        what: Two sources hold different values for a working figure, and Cadrumo
+          used the one that takes precedence.
+        what_to_do: Compare the sources and correct the one that is wrong. No exported
+          box depends on this figure.
       prior_payment_minoracion_not_captured:
         what: The reduction that comes from earlier payments is not recorded in box
           {box}.
@@ -1574,6 +1592,7 @@ application:
       disposal_zero_result: '{element}: its sale on {date}, at {transmission_value}
         of transmission value against {net_value} of net value, neither gains nor
         loses, so no box carries it.'
+      household_rows_incomplete: '{group}: {stated} stated, {recorded} recorded.'
       instalment_free_gap: '{element}: no depreciation charge is recorded from {start}
         to {end}. Its method leaves the amount to you, so it adds nothing to box {box}.'
       possibly_durable_expense: The ledger entry of {row_date} for {row_amount} deducts
@@ -2196,6 +2215,10 @@ application:
       invoice_fingerprint_drift: Your invoices changed after modelo %{modelo} %{filing_year},
         %{period} was calculated (%{changed_count} changed, %{removed_count} removed,
         %{added_count} added). Calculate it again before verifying.
+      invoice_fingerprint_narrower_scope: This modelo %{modelo} %{filing_year}, %{period}
+        calculation predates the tracking of invoices accrued with no bank movement,
+        so Cadrumo cannot say whether those have changed since. Calculate it again
+        to start tracking them.
       invoice_fingerprint_unavailable: Cadrumo could not read your invoices to compare
         them with modelo %{modelo} %{filing_year}, %{period}, so this calculation
         cannot be shown to be current. Try again once they can be read.
@@ -2270,6 +2293,9 @@ application:
         for estimación objetiva (módulos).'
       oss_evidence_missing: This declaration includes one-stop-shop (OSS) activity,
         but no supporting documents for it are saved.
+      oss_no_activity_contradicted: You declared this period without activity, but
+        it holds invoices under the regime. Remove the declaration or review those
+        invoices.
       oss_source_unrouted: Some one-stop-shop (OSS) entries are not counted in any
         box of this form.
       printed_total_mismatch: Box [%{box}] does not match the sum of the printed lines
@@ -2285,6 +2311,9 @@ application:
         enough to file it.
       registry_snapshot_unresolved: The rules for modelo %{modelo} %{filing_year},
         period %{period}, could not be loaded. Try again, or update the application.
+      scheme_period_contradicted: The value {entered} in {binding_id} contradicts
+        this work's period, which is {expected}. Correct it or open the work for the
+        right period.
       selected_option_requires_nonzero: The selected option requires a nonzero value
         in this field.
       selected_option_requires_zero: The selected option requires an explicit zero
@@ -2839,6 +2868,24 @@ application:
             to a spreadsheet formula.
   user_profile:
     errors:
+      ascendant_birth_date_invalid: The date of birth of ascendant %{row} is not a
+        valid date; write it as year-month-day.
+      ascendant_birth_date_required: Ascendant %{row} has no date of birth, and every
+        ascendant needs one.
+      ascendant_convivientes_invalid: The number of descendants that ascendant %{row}
+        lives with must be a whole number from 0 to %{limit}.
+      ascendant_death_before_birth: Ascendant %{row} has a date of death before their
+        date of birth.
+      ascendant_death_date_invalid: The date of death of ascendant %{row} is not a
+        valid date; write it as year-month-day.
+      ascendant_fact_unsupported: Ascendant %{row} states a fact that the profile
+        does not keep for an ascendant.
+      ascendant_limit_unknown: The declaration design states no limit for ascendants,
+        so the list cannot be checked or saved.
+      ascendant_nif_invalid: The NIF or NIE of ascendant %{row} is not valid; check
+        its letters and digits.
+      ascendant_rows_over_limit: A declaration lists at most %{limit} ascendants,
+        and %{count} were given.
       censal_read_identity_absent: The tax registration read contained no tax identity,
         so it cannot be confirmed to belong to this profile.
       censal_read_identity_cleared: This profile's tax ID was cleared, so a tax registration
@@ -2915,6 +2962,7 @@ application:
           label: Date of death
         nif:
           label: Ascendant's NIF/NIE (leave blank if none)
+      incomplete: '{stated} stated, {recorded} recorded'
     notices:
       censo_divergences_open: '{count} profile or certificate field(s) still diverge
         from the Certificado de Situación Censal and remain unresolved: {axes}.'

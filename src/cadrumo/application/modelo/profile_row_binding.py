@@ -13,6 +13,11 @@ trace naming the boxes the binding feeds. That trace is the persisted positive
 fact a reader needs to show an empty group as declared empty. A non-zero count
 with no stored rows is a household the filer has described but not entered, so it
 records no trace and the group stays unknown, like an unanswered one.
+
+A stated count larger than the stored rows (three stated, one recorded) is an
+incomplete group, never a complete one. The stored rows are still served, and the
+resolver raises one ``household_rows_incomplete`` diagnostic per object whose
+fact states the two numbers, so the group is not read as proven complete.
 """
 
 from __future__ import annotations
@@ -28,7 +33,8 @@ from ...core.aggregation import BindingSourceKind, CalculationSourceLineageRole
 from ...domain.calculations.registry.binding_terminal_origin import TerminalOriginClass
 from ...domain.calculations.registry.ids import BindingId
 from ...domain.calculations.registry.profile_bindings import ProfileProvider, ProfileRowsSelector
-from ..aggregation.source_mesh import CalculationSourceProvenance, RowBindingValue
+from ...domain.modelos.calculation_revision_sources import CalculationNoteFact, CalculationNoteSentence
+from ..aggregation.source_mesh import CalculationSourceDiagnostic, CalculationSourceProvenance, RowBindingValue
 
 if TYPE_CHECKING:
     from ...core.casilla_id import CasillaId
@@ -45,6 +51,7 @@ class ProfileRowResolution:
 
     row_binding_values: dict[RowBindingKey, RowBindingValue]
     provenance: tuple[CalculationSourceProvenance, ...]
+    diagnostics: tuple[CalculationSourceDiagnostic, ...] = ()
 
 
 def profile_row_bindings(snapshot: RegistrySnapshot) -> tuple[BindingDefinition, ...]:
@@ -71,14 +78,44 @@ def _row_value(value: UserProfileFactValue) -> RowBindingValue | None:
     return text or None
 
 
-def _count_is_stated_zero(selector: ProfileRowsSelector, fact_index: Mapping[str, UserProfileFactValue]) -> bool:
+def _stated_count(selector: ProfileRowsSelector, fact_index: Mapping[str, UserProfileFactValue]) -> Decimal | None:
+    """The count the object states, or ``None`` when it states none or not a number."""
     value = fact_index.get(selector.count_path)
     if value is None or isinstance(value, bool):
-        return False
+        return None
     try:
-        return Decimal(str(value).strip()) == 0
+        count = Decimal(str(value).strip())
     except InvalidOperation:
-        return False
+        return None
+    return count if count.is_finite() else None
+
+
+def _incomplete_diagnostic(
+    selector: ProfileRowsSelector,
+    stated: Decimal,
+    recorded: int,
+    *,
+    bucket_id: str,
+    resolver_id: str,
+) -> CalculationSourceDiagnostic:
+    stated_text = format(stated.normalize(), "f")
+    return CalculationSourceDiagnostic(
+        reason="household_rows_incomplete",
+        source_kind=BindingSourceKind.PROFILE.value,
+        binding_source=BindingSourceKind.PROFILE,
+        message=(
+            f"profile object {selector.object_path!r} states {stated_text} rows through "
+            f"{selector.count_path!r} but records {recorded}; the recorded rows are used and the group is not complete"
+        ),
+        resolver_id=resolver_id,
+        source_ref=f"profile:{bucket_id}:rows:{selector.object_path}",
+        fact=CalculationNoteFact.of(
+            CalculationNoteSentence.HOUSEHOLD_ROWS_INCOMPLETE,
+            group=selector.object_path,
+            stated=stated_text,
+            recorded=recorded,
+        ),
+    )
 
 
 def _bound_casillas(snapshot: RegistrySnapshot, binding_id: BindingId) -> tuple[CasillaId, ...]:
@@ -101,11 +138,13 @@ def resolve_profile_row_values(
     """Resolve every row-object profile binding the revision declares.
 
     Returns:
-        The row values keyed by binding and row index, and one source trace per
-        binding whose rows are stored or whose object states a count of zero.
+        The row values keyed by binding and row index, one source trace per
+        binding whose rows are stored or whose object states a count of zero, and
+        one diagnostic per object whose stated count exceeds its stored rows.
     """
     values: dict[RowBindingKey, RowBindingValue] = {}
     provenance: list[CalculationSourceProvenance] = []
+    diagnostics: dict[str, CalculationSourceDiagnostic] = {}
     for binding in profile_row_bindings(snapshot):
         provider = binding.provider
         if binding.id in caller_binding_ids or not isinstance(provider, ProfileProvider) or provider.rows is None:
@@ -117,7 +156,12 @@ def resolve_profile_row_values(
             value = None if raw is None else _row_value(raw)
             if value is not None:
                 values[(binding.id, position)] = value
-        if not indexes and not _count_is_stated_zero(selector, fact_index):
+        stated = _stated_count(selector, fact_index)
+        if stated is not None and stated > len(indexes) and selector.object_path not in diagnostics:
+            diagnostics[selector.object_path] = _incomplete_diagnostic(
+                selector, stated, len(indexes), bucket_id=bucket_id, resolver_id=resolver_id
+            )
+        if not indexes and stated != 0:
             continue
         provenance.append(
             CalculationSourceProvenance(
@@ -133,4 +177,8 @@ def resolve_profile_row_values(
                 source_casilla_ids=_bound_casillas(snapshot, binding.id),
             )
         )
-    return ProfileRowResolution(row_binding_values=values, provenance=tuple(provenance))
+    return ProfileRowResolution(
+        row_binding_values=values,
+        provenance=tuple(provenance),
+        diagnostics=tuple(diagnostics.values()),
+    )

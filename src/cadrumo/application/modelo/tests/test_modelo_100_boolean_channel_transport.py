@@ -33,9 +33,11 @@ from ....domain.calculations.registry.tests.published_authority import (
     published_snapshot,
     published_supported_filing_years,
 )
+from ....domain.modelos.source_disagreement import SourceDisagreementRole
 from ....domain.user_profile.registry_contract import profile_binding_selectors
 from ...aggregation.source_mesh import CalculationSourceResolution
 from ...aggregation.source_resolution_operations import (
+    PrecedenceTier,
     merge_source_resolutions,
     merge_source_resolutions_by_precedence,
 )
@@ -151,9 +153,21 @@ def test_precedence_merge_lets_a_later_tier_overlay_a_truth_value() -> None:
         boolean_binding_values={_ANUALIDADES_BINDING: False},
     )
 
-    merged = merge_source_resolutions_by_precedence((lower, higher))
+    overlay = merge_source_resolutions_by_precedence(
+        (
+            PrecedenceTier(role=SourceDisagreementRole.PROFILE, resolution=lower, source_family="profile"),
+            PrecedenceTier(role=SourceDisagreementRole.CALLER, resolution=higher, source_family="operator_input"),
+        )
+    )
 
-    assert merged.boolean_binding_values[_ANUALIDADES_BINDING] is False
+    assert overlay.resolution.boolean_binding_values[_ANUALIDADES_BINDING] is False
+    assert overlay.selected_binding_roles[_ANUALIDADES_BINDING] is SourceDisagreementRole.CALLER
+    (divergence,) = overlay.divergences
+    assert divergence.value_channel == "boolean"
+    assert [source.role for source in divergence.sources] == [
+        SourceDisagreementRole.PROFILE,
+        SourceDisagreementRole.CALLER,
+    ]
 
 
 # ---------------------------------------------------------------------------

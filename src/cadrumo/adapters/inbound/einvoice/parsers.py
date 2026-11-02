@@ -27,12 +27,14 @@ to the nearest slot and mint an invoice whose cuota disagrees with its face.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from datetime import date
 from decimal import Decimal
 from enum import StrEnum
 from typing import Final
 from xml.etree.ElementTree import Element
 
 from ....core.document_shape import DocumentShape
+from ....domain.calculations.registry.facturae_tax_type_codes import facturae_irpf_tax_type_code
 from .element_readers import (
     _category_for,
     _cii_country_code,
@@ -65,9 +67,6 @@ __all__ = [
 # than some other national registration. EN16931 uses schemeID="VA"; Facturae
 # names the person-type/residence explicitly.
 _IVA_SCHEME_TOKENS = frozenset({"va", "vat", "vatid"})
-
-#: Facturae `TaxTypeCodeType` member 04, `IRPF: Impuesto sobre la Renta de las personas fisicas`.
-_FACTURAE_IRPF_TAX_TYPE_CODE: Final = "04"
 
 #: How a tax-scheme element names IRPF. UBL and CII publish no code for it.
 _IRPF_SCHEME_NAME: Final = "IRPF"
@@ -686,15 +685,25 @@ def _facturae_withheld_tax_nodes(invoice: Element) -> list[Element]:
     return rows(invoice) or [tax for line in _find_all(invoice, "InvoiceLine") for tax in rows(line)]
 
 
+def _stated_issue_date(parsed: ParsedEInvoice) -> date | None:
+    """Return the issue date the record states, or ``None`` when it states none a date can be read from."""
+    try:
+        return None if parsed.invoice_date is None else date.fromisoformat(parsed.invoice_date.strip())
+    except ValueError:
+        return None
+
+
 def _apply_facturae_withholding(invoice: Element, parsed: ParsedEInvoice) -> None:
-    """Read the withheld taxes, of which only ``TaxTypeCode`` 04 is IRPF."""
-    for tax in _facturae_withheld_tax_nodes(invoice):
+    """Read the withheld taxes, of which only the ``TaxTypeCode`` the registry names is IRPF."""
+    taxes = _facturae_withheld_tax_nodes(invoice)
+    irpf_code = facturae_irpf_tax_type_code(issued_on=_stated_issue_date(parsed)) if taxes else None
+    for tax in taxes:
         rate, base, amount, _surcharges = _facturae_tax_band(tax)
         stated_type = _direct_child_text(tax, "TaxTypeCode")
         parsed.withheld_taxes.append(
             ParsedWithheldTax(
                 stated_type=stated_type,
-                is_irpf=stated_type == _FACTURAE_IRPF_TAX_TYPE_CODE,
+                is_irpf=stated_type == irpf_code,
                 rate=rate,
                 base=base,
                 amount=amount,

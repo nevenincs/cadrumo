@@ -16,7 +16,7 @@ from __future__ import annotations
 
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, Final, Self
+from typing import Annotated, Self
 
 from pydantic import BaseModel, Field, model_validator
 
@@ -31,14 +31,10 @@ from ...core.time.utc import UtcInstant
 from .errors import RentaValidationError
 
 __all__ = [
-    "RETENCION_SOPORTADA_RECORD_SCHEMA_VERSION",
     "RetencionSoportadaIdentity",
     "RetencionSoportadaOrigen",
     "RetencionSoportadaRecord",
 ]
-
-RETENCION_SOPORTADA_RECORD_SCHEMA_VERSION: Final[int] = 1
-"""The payload schema version a stored record is written and read at."""
 
 type _Importe = Annotated[Decimal, Field(ge=Decimal("0"), decimal_places=2)]
 """A non-negative euro amount with at most two decimals; a third decimal is refused, never rounded."""

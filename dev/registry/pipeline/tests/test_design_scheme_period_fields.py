@@ -56,12 +56,13 @@ def _period_fields(revision: str, period: str) -> dict[str, ExportFieldDefinitio
 
 
 def test_the_declared_rows_are_the_official_page_rows_verbatim() -> None:
-    cells = {str(cell).strip() for row in _sheet_rows(_DECLARATION.sheet) for cell in row if cell is not None}
-    assert {
-        _DECLARATION.filing_year_description,
-        _DECLARATION.period_type_description,
-        _DECLARATION.quarter_ordinal_description,
-    } <= cells
+    for sheet in _DECLARATION.ordinal_part_by_sheet:
+        cells = {str(cell).strip() for row in _sheet_rows(sheet) for cell in row if cell is not None}
+        assert {
+            _DECLARATION.filing_year_description,
+            _DECLARATION.period_type_description,
+            _DECLARATION.ordinal_description,
+        } <= cells
 
 
 def test_a_reading_refuses_a_design_other_than_the_reviewed_bytes() -> None:
@@ -70,9 +71,20 @@ def test_a_reading_refuses_a_design_other_than_the_reviewed_bytes() -> None:
         design_scheme_period_fields_for(source)
 
 
-@pytest.mark.parametrize(("revision", "period"), _REVISIONS[1:])
-def test_a_scheme_declaring_no_period_rows_keeps_its_bound_values(revision: str, period: str) -> None:
-    assert _period_fields(revision, period) == {}
+@pytest.mark.parametrize(
+    ("revision", "period", "ordinal_part", "period_type"),
+    [
+        ("esquema-exterior", "EXT-1T", "quarter_ordinal", "T"),
+        ("esquema-union", "1T", "quarter_ordinal", "T"),
+        ("esquema-importacion", "01", "month_ordinal", "M"),
+    ],
+)
+def test_every_regime_prints_its_period_from_the_filed_period(
+    revision: str, period: str, ordinal_part: str, period_type: str
+) -> None:
+    fields = _period_fields(revision, period)
+    assert set(fields) == {"filing_year", "period_type", ordinal_part}
+    assert fields["period_type"].scheme_period_type == period_type
 
 
 def test_a_period_type_row_must_declare_the_constant_it_prints() -> None:

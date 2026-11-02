@@ -177,7 +177,7 @@ def test_the_import_result_names_what_the_import_did() -> None:
     result = Borrador100ImportResult.model_validate(_import_payload())
 
     assert (result.state, result.outcome) == ("superseded", "resolved_superseded")
-    assert result.unowned_casillas == []
+    assert result.unowned_casillas == [] and result.observed_casillas == []
     with pytest.raises(ValidationError):
         Borrador100ImportResult.model_validate(_import_payload(outcome="reactivated"))
     without_outcome = _import_payload()
