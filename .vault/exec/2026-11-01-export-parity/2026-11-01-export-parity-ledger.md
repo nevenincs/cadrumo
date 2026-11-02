@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:cb3588e58b84147d6f65b1680e75f391235bcced905b6c4706397aa4ea1eb27f'
+body_hash: 'sha256:57b854885b77d3274dda935c65854d08cbe80fcccc58d11679f9129741672b29'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -117,8 +117,59 @@ related:
 - `S05` `verify:` `dev.registry.conformance valid` -> `pass`
 - `S05` `verify:` `just check-bindings` -> `pass`
 - `S05` `by:` `implementer`
+- `S16` `M` `dev/quality/metadata/import_load_targets.cadrumo.json`
+- `S16` `M` `dev/quality/metadata/import_load_targets.dev.json`
+- `S16` `M` `dev/quality/metadata/import_load_targets.json`
+- `S16` `M` `dev/registry/compiler/_validate_revision_sections.py`
+- `S16` `A` `dev/registry/compiler/tests/test_complementaria_only_validation.py`
+- `S16` `A` `dev/registry/compiler/validate_complementaria_only_casillas.py`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/130/revisions/2019-y-siguientes/casillas/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2019-2023/casillas/0001-declarations.toml`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_capture.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/sede/declarations_observations.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/sede/filed_observation_persistence.py`
+- `S16` `M` `src/cadrumo/adapters/outbound/aeat/sede/schema.py`
+- `S16` `A` `src/cadrumo/adapters/outbound/aeat/sede/tests/test_declarations_filing_kind_marker.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/calculation_observations.py`
+- `S16` `M` `src/cadrumo/adapters/persistence/profile/tests/test_approval_basis_integrity.py`
+- `S16` `A` `src/cadrumo/adapters/persistence/profile/tests/test_observation_filing_kind_roundtrip.py`
+- `S16` `M` `src/cadrumo/application/calculations/cross_period_dependency_evaluation.py`
+- `S16` `M` `src/cadrumo/application/calculations/cross_period_models.py`
+- `S16` `M` `src/cadrumo/application/calculations/observations_repository.py`
+- `S16` `M` `src/cadrumo/application/calculations/relation_prefill.py`
+- `S16` `A` `src/cadrumo/application/calculations/source_filing_kind.py`
+- `S16` `M` `src/cadrumo/application/calculations/tests/observation_repository_stubs.py`
+- `S16` `A` `src/cadrumo/application/calculations/tests/test_cross_period_filing_kind_blockers.py`
+- `S16` `M` `src/cadrumo/application/live/filed_observation_persistence.py`
+- `S16` `M` `src/cadrumo/application/live/filed_observation_ports.py`
+- `S16` `M` `src/cadrumo/application/live/tests/filed_observation_test_support.py`
+- `S16` `M` `src/cadrumo/application/live/tests/test_aeat_csv_comparison_form.py`
+- `S16` `M` `src/cadrumo/application/live/tests/test_filed_bulk_capture.py`
+- `S16` `M` `src/cadrumo/application/modelo/amendment_actions.py`
+- `S16` `M` `src/cadrumo/application/modelo/filed_revision_observation.py`
+- `S16` `M` `src/cadrumo/application/modelo/filing_revision_persistence.py`
+- `S16` `A` `src/cadrumo/domain/calculations/registry/filing_kind_marker.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/observation_fold.py`
+- `S16` `M` `src/cadrumo/domain/calculations/registry/schema_surfaces.py`
+- `S16` `A` `src/cadrumo/domain/calculations/registry/tests/test_observation_fold_filing_kind.py`
+- `S16` `M` `src/cadrumo/domain/modelos/calculation_revision_amendment.py`
+- `S16` `A` `src/cadrumo/domain/modelos/filing_kind_evidence.py`
+- `S16` `A` `src/cadrumo/domain/modelos/tests/test_filing_kind_evidence.py`
+- `S16` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_quarters_to_m100_annual.py`
+- `S16` `verify:` `uv run --no-sync pytest S16 filing-kind, fold, sede, live, calculations, roundtrip and complementaria-only validation tests` -> `pass`
+- `S16` `verify:` `just check-style` -> `pass`
+- `S16` `verify:` `just check-format` -> `pass`
+- `S16` `verify:` `just check-types` -> `pass`
+- `S16` `verify:` `uv run --no-sync lint-imports --config .importlinter --no-cache` -> `pass`
+- `S16` `verify:` `uv run --no-sync python -m dev.registry.conformance valid` -> `pass`
+- `S16` `verify:` `just check-bindings` -> `pass`
+- `S16` `verify:` `just check-import-boundaries` -> `fail`
+- `S16` `by:` `implementation-engineer-high`
 
 ## Notes
 
 - `S14` just check-import-boundaries exited 7: subordinate checker wrote no checker.json; 30/30 contracts kept and 5337/5337 modules loaded; lint-imports substitute used
 - `S14` proven-zero `advisory_binding_value` diagnostics are held in-process with the calculation response and are not persisted
+- `S16` Commit 5f0c2fe888 was made by another committer from in-progress S16 work; history was not rewritten.
+- `S16` check-import-boundaries fails only in its subordinate checker, which crashes because dev/quality/types.py shadows the stdlib types module; contracts kept and 5341/5341 modules load.
+- `S16` 31 sede/live tests fail because the worktree has no Chromium build; none touch filing-kind code.
