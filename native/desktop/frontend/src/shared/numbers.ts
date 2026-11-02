@@ -254,8 +254,10 @@ export function formatSize(locale: string, bytes: number): string {
     if (unit < last && total >= scale * SIZE_STEP) continue;
     const places = unit > 0 && total < 10n * scale ? 1 : 0;
     const tenfold = places === 1 ? 10n : 1n;
-    // Half up on the exact quotient: twice the numerator against twice the scale.
-    const shown = (total * tenfold * 2n + scale) / (2n * scale);
+    // Half up on the exact quotient: half a step is added before dividing. The
+    // step is a power of 1024, so its half is whole above the first unit and
+    // nothing needs rounding in bytes.
+    const shown = (total * tenfold + scale / 2n) / scale;
     if (unit < last && shown >= SIZE_STEP * tenfold) continue;
     const text =
       places === 1 ? `${shown / tenfold}.${shown % tenfold}` : shown.toString();
