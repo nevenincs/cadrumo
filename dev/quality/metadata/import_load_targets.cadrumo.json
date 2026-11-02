@@ -543,6 +543,7 @@
         "cadrumo.application.aggregation.percepciones_observations_repository",
         "cadrumo.application.aggregation.prorrata_volume",
         "cadrumo.application.aggregation.renta_gasto_ledger",
+        "cadrumo.application.aggregation.renta_imputation",
         "cadrumo.application.aggregation.renta_income_ledger",
         "cadrumo.application.aggregation.renta_ledger",
         "cadrumo.application.aggregation.renta_ledger_evidence",
