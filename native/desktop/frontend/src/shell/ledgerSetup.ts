@@ -812,6 +812,8 @@ export type LedgerEntryLimits = {
     unit: "points" | "fraction";
   }[];
   rule_pattern_max: number;
+  /** The shape of a payment id once trimmed and lowercased. */
+  payment_id_pattern: string;
   text_limits: { name: TextLimitName; max: number }[];
 };
 /** What a served text limit bounds: the characters one entry takes, or, for
@@ -829,7 +831,11 @@ export type TextLimitName =
   | "own_account_iban"
   | "own_account_swift_bic"
   | "counterparty_tax_id"
-  | "counterparty_note";
+  | "counterparty_note"
+  | "confirm_label"
+  | "confirm_note"
+  | "own_account_label"
+  | "own_account_currency";
 /** A document the person chose, now kept: what a purchase or a closing
  * value names it by. */
 export type InventoryEvidenceAddRequest = { source_path: FileToken };

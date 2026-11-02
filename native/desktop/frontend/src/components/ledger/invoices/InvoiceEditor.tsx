@@ -1992,10 +1992,9 @@ function StoredInvoice({
                 {...wired(control)}
                 {...bind("paymentId", "payment_id")}
                 suggestions={invoice.linked_transaction_ids
-                  .filter(isPaymentId)
+                  .filter((id) => isPaymentId(id) === true)
                   .map((id) => ({ value: id, label: id }))}
                 mono
-                maxLength={64}
               />
             )}
           </FormField>

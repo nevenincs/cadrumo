@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/tooltip";
 import type { LedgerCheckResult } from "../../../shell/ledger";
 import { publicPeriod } from "../../../shell/ledgerGrammar";
+import { useTextLimit } from "../../../shell/ledgerLimits";
 import type {
   LedgerParticipationRebuildResult,
   LedgerResetResult,
@@ -46,7 +47,6 @@ import { EditorField } from "./EditorField";
 import type { SetupProps } from "./setupProps";
 import { setupCall, type SetupCall } from "./setupModel";
 
-const RESET_REASON_LIMIT = 500;
 const NOT_CHECKED: Readiness = { kind: "not_checked" };
 /** A group of counts: each label sits beside its number. */
 const COUNTS = "grid grid-cols-[max-content_max-content] gap-x-4 gap-y-1";
@@ -122,6 +122,8 @@ export function HealthSection({
   const [rebuilt, setRebuilt] =
     useState<LedgerParticipationRebuildResult | null>(null);
   const [reason, setReason] = useState("");
+  // A reset records its reason as a ledger event, so the event's value bound is the limit.
+  const reasonLimit = useTextLimit("event_payload_value");
   // Resetting is rare and cannot be taken back: it stays folded until asked.
   const [resetOpen, setResetOpen] = useState(false);
   const [dryRun, setDryRun] = useState<{
@@ -483,9 +485,13 @@ export function HealthSection({
         <p className="text-sm">{t("desktop.ledger.health.reset_what")}</p>
         <EditorField
           label={t("desktop.ledger.health.reset_reason")}
-          hint={t("desktop.ledger.health.reset_reason_hint", {
-            limit: RESET_REASON_LIMIT,
-          })}
+          hint={
+            reasonLimit === null
+              ? undefined
+              : t("desktop.ledger.health.reset_reason_hint", {
+                  limit: reasonLimit,
+                })
+          }
           className="max-w-xl"
         >
           {(control) => (
@@ -495,7 +501,7 @@ export function HealthSection({
               onChange={setReason}
               invalid={control.invalid}
               describedBy={control.describedBy}
-              maxLength={RESET_REASON_LIMIT}
+              maxLength={reasonLimit ?? undefined}
               required
             />
           )}

@@ -48,10 +48,15 @@ from .invoice_extraction_authority import default_invoice_extraction_period
 InvoiceEvidenceReference = Annotated[str, Field(min_length=1, max_length=64)]
 
 
-InvoiceEvidenceLabel = Annotated[str, Field(max_length=2_048)]
+INVOICE_EVIDENCE_LABEL_MAX = 2_048
+"""The longest label, name or value a one-document confirmation takes."""
+INVOICE_EVIDENCE_NOTE_MAX = 16_384
+"""The longest note, and the longest reason a finding's answer gives, a one-document confirmation takes."""
+
+InvoiceEvidenceLabel = Annotated[str, Field(max_length=INVOICE_EVIDENCE_LABEL_MAX)]
 
 
-InvoiceEvidenceNote = Annotated[str, Field(max_length=16_384)]
+InvoiceEvidenceNote = Annotated[str, Field(max_length=INVOICE_EVIDENCE_NOTE_MAX)]
 
 
 InvoiceEvidenceDecimalText = Annotated[str, Field(min_length=1, max_length=128)]
@@ -173,6 +178,8 @@ def _require_invoice_evidence_terminal_outcome(
 
 
 __all__ = [
+    "INVOICE_EVIDENCE_LABEL_MAX",
+    "INVOICE_EVIDENCE_NOTE_MAX",
     "InvoiceEvidenceDecimalText",
     "InvoiceEvidenceLabel",
     "InvoiceEvidenceNote",
