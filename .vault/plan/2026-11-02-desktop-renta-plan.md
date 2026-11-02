@@ -15,7 +15,7 @@ related:
   - '[[2026-06-02-modelo-multiyear-renta-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:7b58efebd07c7e264cfa2c2eaff9ad7b335606a8c5e83e17f20643d5387bb611'
+body_hash: 'sha256:8e33032092ca8ed52d870ac2f1df3cca7da3593375a00a618519b4111c18af7c'
 ---
 
 # `desktop-renta` plan
@@ -46,13 +46,13 @@ The design prototypes are the Storybook stories under `Prototypes/Renta/` in `na
 
 The application serves every word, grouping and state the Renta workspace draws, so the window computes nothing.
 
-- [ ] `P01.S01` - [Opus medium] serve a Renta outline from the registry: reviewed localized headings for the 75 technical sections, outline groups, page and section applicability, and section attention counts that roll up needs-you and could-not-calculate boxes; `src/cadrumo/application/modelo/work_form.py`.
-- [ ] `P01.S02` - [Opus medium] serve descendant, ascendant and patrimonial row groups from the canonical renta_family profile objects (operator ruling 2026-11-02: renta_family.descendiente and ascendiente are canonical; repoint the bindings to them), with a generic generator rule for official repeating elements bounded by the design's repeat limits, row values filled by the profile resolver, and an unfilled group read as unknown rather than empty; `dev/registry/form_layout`.
-- [ ] `P01.S03` - [Sonnet high] mark the answers the calculation refuses without (1388 earlier negative base, 0168 normal direct estimation) as needing the filer instead of optional; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P01.S01` - [Opus medium] serve a Renta outline from the registry: reviewed localized headings for the 75 technical sections, outline groups, page and section applicability, and section attention counts that roll up needs-you and could-not-calculate boxes; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P01.S02` - [Opus medium] serve descendant, ascendant and patrimonial row groups from the canonical renta_family profile objects (operator ruling 2026-11-02: renta_family.descendiente and ascendiente are canonical; repoint the bindings to them), with a generic generator rule for official repeating elements bounded by the design's repeat limits, row values filled by the profile resolver, and an unfilled group read as unknown rather than empty; `dev/registry/form_layout`.
+- [x] `P01.S03` - [Sonnet high] mark the answers the calculation refuses without (1388 earlier negative base, 0168 normal direct estimation) as needing the filer instead of optional; `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P01.S04` - [Sonnet high] correct box 0700 so it is not served as an editable optional value left at zero without a formula; `src/cadrumo/_data/registry/aeat/modelos/100`.
-- [ ] `P01.S05` - [Sonnet high] serve the correction surface on the withholding boxes 0596, 0597 and 0603 so the window can route them to the withholding register; `src/cadrumo/application/modelo/work_form.py`.
+- [x] `P01.S05` - [Sonnet high] serve the correction surface on the withholding boxes 0596, 0597 and 0603 so the window can route them to the withholding register; `src/cadrumo/application/modelo/work_form.py`.
 - [x] `P01.S06` - [Sonnet high] serve words in every locale for modelo.project version 2 unresolved_bindings and unresolved_casillas and for compare_taxation recommendation reasons; `src/cadrumo/application/modelo/projection_operation.py`.
-- [ ] `P01.S07` - [Opus medium] serve Modelo 100 settlement elections in the export offer: refund account, direct debit and the 60/40 split; `src/cadrumo/application/modelo/export.py`.
+- [x] `P01.S07` - [Opus medium] serve Modelo 100 settlement elections in the export offer: refund account, direct debit and the 60/40 split; `src/cadrumo/application/modelo/export.py`.
 - [x] `P01.S08` - [Opus medium] register a profile operation that reads and writes the dated imputation criterion per tax year with the wizard's served words; `src/cadrumo/application/wizard/imputation_election.py`.
 - [x] `P01.S09` - [Sonnet high] serve declaration_type choices and the descendant and ascendant arrays in user-profile.view; `src/cadrumo/application/user_profile`.
 - [x] `P01.S10` - [Opus medium] add a borrador-versus-calculation comparison read over the captured Borrador 100 and the saved calculation; `src/cadrumo/application/live`.
@@ -67,7 +67,7 @@ Generated contracts and the fixture generator carry Modelo 100 and the new reads
 
 The desktop relay admits exactly the operations the Renta elements call, each through the closed allow-list.
 
-- [ ] `P03.S12` - [Sonnet high] admit user-profile.descendants, live.borrador.100.read and live.borrador.100.query and the new P01 operations in the relay allow-lists; `native/desktop/src-tauri/src/shell`.
+- [x] `P03.S12` - [Sonnet high] admit user-profile.descendants, live.borrador.100.read and live.borrador.100.query and the new P01 operations in the relay allow-lists; `native/desktop/src-tauri/src/shell`.
 
 ### Phase `P04` - Renta workspace elements
 
@@ -78,7 +78,7 @@ The window renders the outline, household, credits, election, comparison, settle
 - [ ] `P04.S15` - [Sonnet high] build the credits element with withholding routing and the projection estimate in served words; `native/desktop/frontend/src/components/modelo/workspace`.
 - [ ] `P04.S16` - [Sonnet high] build the imputation election element over the registered profile operation; `native/desktop/frontend/src/components/modelo/workspace`.
 - [ ] `P04.S17` - [Sonnet high] build the taxation comparison, settlement and borrador comparison elements by payload kind; `native/desktop/frontend/src/components/modelo/workspace`.
-- [ ] `P04.S18` - [Sonnet high] retire the Renta prototypes and their prototype-only locale keys once the elements ship; `native/desktop/frontend/src/dev/prototypes/renta`.
+- [ ] `P04.S18` - [Sonnet high] retire the Renta prototypes and their prototype-only locale keys now (operator ruling 2026-11-02: Storybook shows only real components over generated fixtures; no prototype copies), so every Renta element is built and reviewed in the real components; `native/desktop/frontend/src/dev/prototypes/renta`.
 
 ### Phase `P05` - proof
 
