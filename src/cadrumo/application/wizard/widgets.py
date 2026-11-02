@@ -22,6 +22,7 @@ from pathlib import Path
 from typing import Final
 
 from ...core.errors.error_codes import resolve_error_message
+from ...core.filing_year import YEAR_DIGITS, is_four_digit_year
 from ...core.i18n.render import tr
 from ...core.identity.documents import IdentityError
 from ...core.parsing.utils import parse_bool
@@ -40,8 +41,6 @@ _POSTCODE_QUESTION_IDS: frozenset[str] = frozenset({"address-postcode"})
 
 _YEAR_QUESTION_IDS: frozenset[str] = frozenset({YEAR_QUESTION_ID})
 """Question ids whose answer must be a four-digit ejercicio."""
-
-_EJERCICIO_DIGITS: Final[int] = 4
 
 WIZARD_VALIDATION_REASON_CODES: Final[tuple[str, ...]] = (
     "blank_text",
@@ -136,7 +135,7 @@ def _validate_text_year(value: str, raw: str, question: WizardQuestion) -> None:
     """Require a four-digit ejercicio; the digits stay text so no leading zero is lost."""
     if not value or question.id not in _YEAR_QUESTION_IDS:
         return
-    if len(value) != _EJERCICIO_DIGITS or not (value.isascii() and value.isdigit()) or int(value) < 1:
+    if len(value) != YEAR_DIGITS or not (value.isascii() and value.isdigit()) or not is_four_digit_year(int(value)):
         raise _fail(question, "invalid_year", raw=raw)
 
 
