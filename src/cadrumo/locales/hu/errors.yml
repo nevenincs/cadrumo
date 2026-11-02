@@ -1121,6 +1121,9 @@ errors:
       és évhez.
     refused_inventory_service_input: Egy megadott bemenet sérti a készlet szerződést.
       Javítsd a bemenetet, és próbáld újra.
+    refused_invoice_retention_figures: A megadott visszatartás önmagának vagy a számla
+      adóalapjának ellentmond. Add meg újra a kulcsot és az összeget úgy, hogy az
+      összeg az adóalap és a kulcs szorzata legyen.
     refused_iva_compensation_decimal_parse: 'Elutasítva: az IVA-kompenzáció összege
       nem elemezhető decimálisként.'
     refused_iva_compensation_year_range: 'Elutasítva: az IVA-kompenzáció éve az elfogadott
