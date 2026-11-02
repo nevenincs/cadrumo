@@ -60,7 +60,8 @@ def project_printed_casillas(
     ambiguous: list[CasillaId] = []
     for casilla_id in sorted(printed):
         casilla = casillas.get(casilla_id)
-        owners = () if casilla is None else tuple(b for b in bound_casilla_binding_ids(casilla) if b in admitted)
+        bound = () if casilla is None else bound_casilla_binding_ids(casilla)
+        owners = [binding_id for binding_id in bound if binding_id in admitted]
         if not owners:
             unowned.append(casilla_id)
         elif len(owners) > 1:
