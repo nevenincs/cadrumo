@@ -3679,6 +3679,10 @@ modelo:
             heading: Mínim personal i familiar
           general-deductions:
             heading: Deduccions generals (annex A)
+          household:
+            heading: Descendents i ascendents
+          identification:
+            heading: Declarant i cònjuge
           income-holders:
             heading: Titulars de les rendes
           movable-capital:

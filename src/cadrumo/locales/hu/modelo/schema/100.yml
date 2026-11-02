@@ -3719,6 +3719,10 @@ modelo:
             heading: Személyi és családi minimum
           general-deductions:
             heading: Általános adókedvezmények (A melléklet)
+          household:
+            heading: Leszármazottak és felmenők
+          identification:
+            heading: Bevalló és házastárs
           income-holders:
             heading: A jövedelmek jogosultjai
           movable-capital:

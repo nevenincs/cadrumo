@@ -3757,6 +3757,10 @@ modelo:
             heading: Mínimo personal y familiar
           general-deductions:
             heading: Deducciones generales (anexo A)
+          household:
+            heading: Descendientes y ascendientes
+          identification:
+            heading: Declarante y cónyuge
           income-holders:
             heading: Titulares de las rentas
           movable-capital:

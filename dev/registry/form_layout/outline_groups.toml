@@ -12,12 +12,25 @@
 # subjects of the return: each income source with its summary, the bases, the personal and family minimum, the
 # tax calculation, the annexes of deductions and other information, and the result. Section subjects were read
 # from the 2025 declaration and input dictionaries: each section's XML container paths and its boxes' official
-# descriptions.
+# descriptions. The identification group gathers the declarant, spouse and declaration containers
+# (DatosIdentificativos, @codigoCADeclaracion, @TIPOTRIBUTACION); the household group gathers the Hijos and
+# Ascendientes containers.
 
 [[outlines]]
 modelo = "100"
 revision = "2025"
 groups = [
+    { id = "identification", sections = [
+        "declaracion/general",
+        "datosidentificativos-declarante/general",
+        "datosidentificativos-conyuge/general",
+        "datosidentificativos/general",
+    ] },
+    { id = "household", sections = [
+        "datosidentificativos-hijos/hijo",
+        "datosidentificativos-hijos/general",
+        "datosidentificativos-ascendientes/ascendiente",
+    ] },
     { id = "income-holders", sections = ["datoseconomicos/general"] },
     { id = "employment", sections = [
         "datoseconomicos-resultados/rdtotrabajores",

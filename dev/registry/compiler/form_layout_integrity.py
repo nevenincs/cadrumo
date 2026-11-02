@@ -21,7 +21,7 @@ See Also:
 from __future__ import annotations
 
 from collections import Counter
-from collections.abc import Iterator
+from collections.abc import Collection, Iterator, Mapping
 
 from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.hashing import canonical_json_bytes, sha256_hex
@@ -227,6 +227,31 @@ def _block_casilla_references(block: FormBlockDefinition) -> Iterator[str]:
         )
 
 
+def _row_value_positions(
+    layout: FormLayoutDefinition, own_bindings: Mapping[str, str], shown: Collection[str]
+) -> Iterator[tuple[str, tuple[str, str]]]:
+    """Yield each row-set column that is its box's only position.
+
+    A row-set column beside a total box shows that box's rows, not the box. A box
+    no other block shows, whose column reads the binding the box is bound to,
+    holds one value per row, so that column is where the box is shown.
+    """
+    for page in layout.pages:
+        for section in page.sections:
+            for block in section.blocks:
+                if not isinstance(block, FormRepeatingGroupBlock):
+                    continue
+                for column in block.columns:
+                    casilla_id = column.casilla_id
+                    if (
+                        casilla_id is not None
+                        and column.binding_id is not None
+                        and casilla_id not in shown
+                        and own_bindings.get(casilla_id) == column.binding_id
+                    ):
+                        yield casilla_id, (page.id, section.id)
+
+
 def _grid_casilla_references(block: FormGridBlock) -> Iterator[str]:
     yield from (cell.casilla_id for row in block.rows for cell in row.cells if cell.casilla_id is not None)
 
@@ -296,9 +321,12 @@ def _repeating_block_failure(
 def _placement_failures(layout: FormLayoutDefinition, revision: ModeloRevision) -> Iterator[str]:
     declared = {casilla.id for casilla in revision.casillas}
     placed = {placement.casilla_id: placement for placement in layout.placements}
+    own_bindings = {casilla.id: casilla.binding for casilla in revision.casillas if casilla.binding is not None}
     references = Counter(_referenced_casillas(layout))
+    row_values = tuple(_row_value_positions(layout, own_bindings, set(references)))
+    references.update(casilla_id for casilla_id, _location in row_values)
     yield from _placement_domain_failures(declared, placed, references)
-    yield from _placement_count_failures(layout, placed, references)
+    yield from _placement_count_failures(layout, placed, references, row_values)
 
 
 def _placement_domain_failures(
@@ -316,10 +344,15 @@ def _placement_domain_failures(
 
 
 def _placement_count_failures(
-    layout: FormLayoutDefinition, placed: dict[str, FormPlacementDefinition], references: Counter[str]
+    layout: FormLayoutDefinition,
+    placed: dict[str, FormPlacementDefinition],
+    references: Counter[str],
+    row_values: tuple[tuple[str, tuple[str, str]], ...],
 ) -> Iterator[str]:
     """Report references inconsistent with each placement's on-form status."""
     positions = _placement_positions(layout)
+    for casilla_id, location in row_values:
+        positions.setdefault(casilla_id, []).append(location)
     for casilla_id, placement in sorted(placed.items()):
         count = references.get(casilla_id, 0)
         if (

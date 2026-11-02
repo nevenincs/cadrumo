@@ -3677,6 +3677,10 @@ modelo:
             heading: Personal and family minimum
           general-deductions:
             heading: General deductions (annex A)
+          household:
+            heading: Descendants and ascendants
+          identification:
+            heading: Declarant and spouse
           income-holders:
             heading: Who each income belongs to
           movable-capital:
