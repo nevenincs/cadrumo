@@ -11,6 +11,10 @@ legal_refs = [
   "orden-hac-610-2021:art-2",
   "orden-hac-610-2021:art-3",
   "ley-37-1992:art-163-tervicies",
+  "ley-37-1992:art-163-noniesdecies",
+  "ley-37-1992:art-163-unvicies",
+  "ley-37-1992:art-163-duovicies",
+  "ley-37-1992:art-163-septvicies",
 ]
 source_refs = ["aeat-dr-369-2021"]
 review_status = "agent_reviewed"
@@ -18,11 +22,32 @@ ownership = "authored"
 
 [[fact.variants.source_citations]]
 source_ref = "aeat-dr-369-2021"
-required_text = ["Prestaciones de servicios. Tipo IVA", "S:", "R:", "ISO-3166", "para Grecia"]
+required_text = [
+  "Prestaciones de servicios. Tipo IVA",
+  "S:",
+  "R:",
+  "ISO-3166",
+  "para Grecia",
+  "3. Prestaciones de servicios desde el EMID (España)",
+  "4. Entregas de bienes expedidos o transportados desde EMID España",
+  "5. Prestaciones de servicios desde establecimientos permanentes en otros EM distintos de España",
+  "6. Entregas de bienes expedidos o transportados desde otros EM distintos de España",
+  "3. Importaciones de bienes de menos de 150",
+  "Código de país/EM de consumo.28",
+]
 
 [fact.variants.payload]
 kind = "mapping"
 entries = [
+  { key = "detail_row.capacity", value = "28" },
+  { key = "detail_records.external_scheme", value = "modelo-369-exterior-t36901" },
+  { key = "detail_records.union_scheme", value = "modelo-369-union-t36904,modelo-369-union-t36905,modelo-369-union-t36906,modelo-369-union-t36907" },
+  { key = "detail_records.import_scheme", value = "modelo-369-importacion-t36910" },
+  { key = "section.external_scheme_services.record", value = "modelo-369-exterior-t36901" },
+  { key = "section.external_scheme_services.excluded_consumption_states", value = "xi" },
+  { key = "section.oss_union_services.record", value = "modelo-369-union-t36904" },
+  { key = "section.oss_union_services.excluded_consumption_states", value = "es,xi" },
+  { key = "section.ioss_distance_sale_low_value.record", value = "modelo-369-importacion-t36910" },
   { key = "rate_code.general", value = "S" },
   { key = "rate_code.reduced", value = "R" },
   { key = "country_code.at", value = "AT" },
