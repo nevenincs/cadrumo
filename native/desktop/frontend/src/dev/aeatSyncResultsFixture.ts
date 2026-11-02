@@ -3,6 +3,7 @@ import type {
   AeatSyncResult,
   AeatSyncResults,
   AeatSyncResultsPort,
+  BorradorImportResult,
   FiledRow,
   NotificationRow,
 } from "../shell/aeatSyncResults";
@@ -250,7 +251,7 @@ export function aeatSyncResultsFixture(
   mode: AeatSyncResultsMode,
   say: (line: string) => void,
   picked: "file" | "cancelled" = "file",
-  importResult: "imported" | "nothing_found" | "failed" = "imported",
+  importResult: BorradorImportResult["outcome"] = "captured",
 ): AeatSyncResultsPort {
   return {
     results() {
@@ -277,7 +278,7 @@ export function aeatSyncResultsFixture(
       say(`aeatSyncResults.importBorrador ${year ?? ""}`.trim());
       return importResult === "failed"
         ? Promise.reject({ code: "unavailable" })
-        : Promise.resolve(importResult);
+        : Promise.resolve({ outcome: importResult, unowned: 0 });
     },
   };
 }

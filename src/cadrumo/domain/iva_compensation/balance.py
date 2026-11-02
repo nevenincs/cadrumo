@@ -11,11 +11,10 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 from decimal import Decimal
-from typing import Annotated
 
 from pydantic import BaseModel, Field, NonNegativeInt
 
-from ...core.filing_year import FilingYear
+from ...core.filing_year import FilingYear, FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ..calculations.registry.authority import PinnedAuthorityOperation
 from .carry_forward import (
@@ -25,7 +24,7 @@ from .carry_forward import (
 )
 from .carry_window import resolve_iva_compensation_carry_window_years
 
-CompensationExpiryYear = Annotated[int, Field(ge=1900, le=9999)]
+CompensationExpiryYear = FourDigitYear
 """A coarse year-level carry-window review boundary for a compensation lot.
 
 Deliberately wider than FilingYear. This derived review year may fall beyond

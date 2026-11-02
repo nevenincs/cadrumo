@@ -75,6 +75,8 @@ from .workspace import (
 )
 
 if TYPE_CHECKING:
+    from datetime import timedelta
+
     from ...core.filing_year import FilingYear
     from ...core.identifier_grammar import NamespacedId
     from ...core.period import Period
@@ -873,6 +875,34 @@ def _area_status(
             last_attempt_at=last_attempt_at,
             last_attempt_succeeded=last_attempt_succeeded,
         )
+    return _captured_area_status(
+        area,
+        horizon=horizon,
+        observed_at=observed_at,
+        captured_at=captured_at,
+        last_attempt_at=last_attempt_at,
+        last_attempt_succeeded=last_attempt_succeeded,
+        unread_notification_count=unread_notification_count,
+        filed_rows=filed_rows,
+        refused_snapshots=refused_snapshots,
+        outdated_stored_snapshots=outdated_stored_snapshots,
+    )
+
+
+def _captured_area_status(
+    area: AeatSyncStatusArea,
+    *,
+    horizon: timedelta | None,
+    observed_at: UtcInstant,
+    captured_at: UtcInstant,
+    last_attempt_at: UtcInstant | None,
+    last_attempt_succeeded: bool | None,
+    unread_notification_count: int | None,
+    filed_rows: tuple[AeatSyncFiledRowV1, ...] | None,
+    refused_snapshots: tuple[AeatSyncRefusedSnapshotV1, ...],
+    outdated_stored_snapshots: int,
+) -> AeatSyncAreaStatusV1:
+    """Judge an area that holds a capture: current unless strictly older than its horizon."""
     stale = horizon is not None and observed_at - captured_at > horizon
     return AeatSyncAreaStatusV1(
         area=area,

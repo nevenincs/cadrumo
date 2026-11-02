@@ -19,7 +19,7 @@ from ...application.modelo.work_lifecycle import (
     lifecycle_continuation_for_work_status,
 )
 from ...core.external_constants import OutputLanguage
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...core.i18n.render import tr
 from ...core.json_contract import Notice
 from ...core.period import Period
@@ -49,9 +49,14 @@ from .state_projection_support import authority_operation
 
 
 def _validate_filing_year(year: int) -> None:
-    if not FILING_YEAR_MIN <= year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= year <= FOUR_DIGIT_YEAR_LAST:
         raise typer.BadParameter(
-            tr("cli.app.modelo.work.year_out_of_range", year=year, minimum=FILING_YEAR_MIN, maximum=FILING_YEAR_MAX)
+            tr(
+                "cli.app.modelo.work.year_out_of_range",
+                year=year,
+                minimum=FOUR_DIGIT_YEAR_FIRST,
+                maximum=FOUR_DIGIT_YEAR_LAST,
+            )
         )
 
 

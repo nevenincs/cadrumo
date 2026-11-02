@@ -17,7 +17,7 @@ from cadrumo.application.modelo.registry_discovery import registry_bindings_for_
 from cadrumo.application.reference_catalogue import PinnedReferenceRead, ReferenceQueryError
 from cadrumo.core.errors.error_codes import resolve_error_message
 from cadrumo.core.errors.hierarchy import CoreValidationError
-from cadrumo.core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from cadrumo.core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from cadrumo.core.modelo import Modelo
 from cadrumo.core.tax_domain import TaxDomain
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
@@ -58,7 +58,7 @@ def _validated_query(args: dict[str, Any]) -> tuple[str, date | None]:
     supplied = set(args) - {"query"}
     if supplied - _ALLOWED_COORDINATES[query] or _REQUIRED_COORDINATES.get(query, set()) - supplied:
         raise ValueError("invalid authority query coordinates")
-    if query == "bindings" and not FILING_YEAR_MIN <= args["filing_year"] <= FILING_YEAR_MAX:
+    if query == "bindings" and not FOUR_DIGIT_YEAR_FIRST <= args["filing_year"] <= FOUR_DIGIT_YEAR_LAST:
         raise ValueError("invalid filing year")
     as_of = date.fromisoformat(args["as_of"]) if "as_of" in args else None
     return query, as_of

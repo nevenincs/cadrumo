@@ -7,6 +7,7 @@ from ....application.ledger.structured_invoice_ports import (
     StructuredInvoiceClassificationKind,
     StructuredInvoiceLine,
     StructuredInvoiceRecord,
+    StructuredWithheldTax,
 )
 from .parsers import FacturaeInvoiceClass, ParsedEInvoice
 
@@ -51,7 +52,19 @@ def translate_parsed_einvoice(parsed: ParsedEInvoice) -> StructuredInvoiceRecord
         iva_amount=parsed.iva_amount,
         grand_total=parsed.grand_total,
         recargo_amount=parsed.recargo_amount,
+        retencion_rate=parsed.retencion_rate,
         retencion_amount=parsed.retencion_amount,
+        withheld_taxes=tuple(
+            StructuredWithheldTax(
+                stated_type=row.stated_type,
+                is_irpf=row.is_irpf,
+                rate=row.rate,
+                base=row.base,
+                amount=row.amount,
+            )
+            for row in parsed.withheld_taxes
+        ),
+        withheld_total=parsed.withheld_total,
         suplidos_amount=parsed.suplidos_amount,
         iva_category=parsed.iva_category,
         regime_legend=parsed.regime_legend,

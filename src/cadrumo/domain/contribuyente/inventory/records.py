@@ -17,13 +17,14 @@ from __future__ import annotations
 from datetime import date
 from decimal import Decimal
 from enum import StrEnum
-from typing import Annotated, NamedTuple
+from typing import NamedTuple
 
 from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_validator
 
 from ....core.decimal.constants import HUNDRED, MONEY_ZERO, ONE
 from ....core.errors.hierarchy import CadrumoError as _CadrumoError
 from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.filing_year import FourDigitYear
 from ....core.identity.digest import ContentDigest
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN_CONFIG
 from ....core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -701,7 +702,7 @@ class InventoryLedgerHistoryEntry(BaseModel):
         return self
 
 
-InventoryYear = Annotated[int, Field(ge=1900, le=9999)]
+InventoryYear = FourDigitYear
 """The calendar year an inventory ledger or movement covers.
 
 Deliberately NOT the filing-year window. An inventory record may reach back

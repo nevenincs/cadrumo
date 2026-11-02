@@ -18,7 +18,11 @@ export const AEAT_SYNC_AREAS: readonly AeatSyncAreaId[] = [
 /** How current an area is, as the host judged it: it keeps the staleness
  * horizons, the window only words the answer. */
 export type AeatSyncState =
-  "never_brought" | "current" | "possibly_stale" | "unavailable";
+  | "never_brought"
+  | "current"
+  | "possibly_stale"
+  | "unavailable"
+  | "capture_refused";
 
 /** How the last try at an area ended. */
 export type AeatSyncOutcome =
@@ -30,7 +34,8 @@ export type AeatSyncCountKind =
   | "filed_matched"
   | "filed_aeat_only"
   | "filed_local_only"
-  | "filed_differing";
+  | "filed_differing"
+  | "borrador_refused";
 
 export type AeatSyncArea = {
   area: AeatSyncAreaId;

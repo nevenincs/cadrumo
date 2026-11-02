@@ -602,11 +602,13 @@ export type CalculationSourceDiagnosticSnapshot = {
  * filed record. None of them withholds anything. `advisory_binding_value` is a
  * value a binding produced whose declared grade cap stops it at calculation:
  * it names the box the value reaches and the binding, and withholds filing
- * until a recalculation under an uncapped binding clears it; a capped value
- * its resolver proved to be zero withholds nothing and is not persisted.
- * `fact` states such a note's own row, element, interval and amount.
- * `binding_source` is `None` only where the condition names no binding source
- * kind.
+ * until a recalculation under an uncapped binding clears it. `value_outcome`
+ * is what the resolver stated beside that value: a proven zero persists too,
+ * so a reopened declaration still shows the zero was proven, and withholds
+ * nothing; a capped note without a stated outcome withholds. Only that reason
+ * carries an outcome. `fact` states such a note's own row, element, interval
+ * and amount. `binding_source` is `None` only where the condition names no
+ * binding source kind.
  */
 export type CalculationSourceIssue = {
   reason:
@@ -641,6 +643,7 @@ export type CalculationSourceIssue = {
   source_ref: string | null;
   casilla_id: CasillaId | null;
   fact: CalculationNoteFact | null;
+  value_outcome: BindingValueOutcome | null;
 };
 
 /**
@@ -964,7 +967,13 @@ export type DeclarationListGroup =
  * it.
  */
 export type DeclarationListNextStep =
-  "fix" | "start" | "open_local_draft" | "create_file" | "continue" | "none";
+  | "fix"
+  | "start"
+  | "open_local_draft"
+  | "create_file"
+  | "recalculate"
+  | "continue"
+  | "none";
 
 /**
  * Independent authorities retained by the calendar projection.
@@ -2760,6 +2769,7 @@ export type ModeloDeclarationListRowV1 = {
   blocking_count: number;
   opens_aeat_filing: boolean;
   help_words: string | null;
+  calculation_notes: string[];
   aeat_filing: ModeloDeclarationAeatFilingV1 | null;
   advice: CoverageAdviceReason | null;
   advice_words: string | null;

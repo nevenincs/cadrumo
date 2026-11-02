@@ -40,7 +40,7 @@ from ...core.period import Period
 from ...core.time.utc import UtcInstant
 from ..calculations.registry.ids import RevisionId
 from ..contribuyente.ccaa import CCAA
-from .codes import ModeloCode
+from .codes import ModeloCode, coerce_modelo_code
 from .errors import ModeloValidationError
 from .filing_text import ModeloActorLabel, OperatorReason
 
@@ -234,11 +234,7 @@ class WorkUnit(BaseModel):
         can pass a plain ``str`` from CLI input without losing the
         typed-key invariant downstream.
         """
-        if isinstance(value, ModeloCode):
-            return value
-        if isinstance(value, str):
-            return ModeloCode(value)
-        raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
+        return coerce_modelo_code(value)
 
     @model_validator(mode="after")
     @pydantic_validation_boundary

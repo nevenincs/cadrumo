@@ -23,7 +23,7 @@ from ...core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
 from ...core.pattern_search_worker import PATTERN_COMPILE_FAILURES, PATTERN_FLAGS
 from ...core.time.clock import now
 from ...core.time.utc import UtcInstant
-from .enums import BusinessClassification
+from .enums import RULE_CATEGORY_STATES, RULE_DECIDED_STATES, BusinessClassification
 from .errors import ClassificationRuleError
 
 RuleDescriptionPattern = Annotated[str, StringConstraints(min_length=1)]
@@ -113,9 +113,25 @@ class LedgerClassificationRule(BaseModel):
         )
 
 
+def require_new_rule_decision(classification: BusinessClassification, category_id: str | None) -> None:
+    """Refuse a new rule whose decision no classification write could carry out.
+
+    A Mixed rule names no share, so every row it matches would fail; an exclusion
+    would take rows out of every tax aggregation without a person seeing one of
+    them; the other dispositions decide nothing. Only a Business write keeps a
+    category, so one named with anything else would be dropped from each row. A
+    rule already stored stays readable: this asks only of a rule being added.
+    """
+    if classification not in RULE_DECIDED_STATES:
+        raise ClassificationRuleError(f"a rule cannot decide {classification.value}")
+    if category_id is not None and classification not in RULE_CATEGORY_STATES:
+        raise ClassificationRuleError(f"a rule deciding {classification.value} cannot name a category")
+
+
 __all__ = [
     "RULE_PATTERN_ENTRY_MAX_LENGTH",
     "LedgerClassificationRule",
     "_compute_rule_id",
     "description_pattern_error",
+    "require_new_rule_decision",
 ]

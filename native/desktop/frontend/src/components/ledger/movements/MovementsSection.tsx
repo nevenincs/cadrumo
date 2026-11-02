@@ -49,6 +49,7 @@ import {
 } from "../../../shell/ledgerCommands";
 import {
   isBusinessBearing,
+  isUndecided,
   takesChanges,
   takesClassification,
 } from "../../../shell/ledgerContract";
@@ -960,8 +961,8 @@ export function MovementsSection({
   const classifyTarget = (scope?: ClassifyScope) =>
     scope?.ids ? { ids: scope.ids, hidden: 0, partial } : selectedTarget;
 
-  /** Of `ids`, how many classifying as `kind` would change from another
-   * classification, stored or staged. */
+  /** Of `ids`, how many classifying as `kind` would overwrite what a person
+   * or a rule decided, stored or staged; advice before the change. */
   const overwrittenBy = (kind: ClassifyKind, ids: readonly string[]) => {
     const target = CLASSIFICATION_OF[kind];
     return ids.filter((id) => {
@@ -971,7 +972,7 @@ export function MovementsSection({
         row,
         stage.content.rows[id],
       ).business_classification;
-      return !!now && now !== "NOT_YET_PROCESSED" && now !== target;
+      return !!now && !isUndecided(now) && now !== target;
     }).length;
   };
 

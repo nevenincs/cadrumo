@@ -797,6 +797,7 @@ desktop:
     bring_all: Actualitza des de l'AEAT
     close: Tanca les dades de l'AEAT
     count:
+      borrador_refused: '{count} no es poden usar'
       filed_aeat_only: '{count} només a l''AEAT'
       filed_differing: '{count} difereixen'
       unread_notifications: '{count} sense llegir'
@@ -839,11 +840,20 @@ desktop:
       warn_unknown: Potser ja està actualitzat. Vols comprovar-ho igualment?
     results:
       borrador:
+        already_active: '{name} ja estava importat. No ha canviat res.'
+        captured: Importat {name}.
+        captured_superseded: S'ha desat {name}, però ja s'usa un Borrador més recent.
         failed: No s'ha pogut importar {name}.
         import: Importa un PDF
-        imported: Importat {name}.
         nothing_found: No hi ha Borrador a {name}.
+        resolved_discarded: '{name} es va importar abans i es va descartar. No ha
+          canviat res.'
+        resolved_superseded: '{name} es va importar abans i des d''aleshores l''ha
+          substituït un de més recent. No ha canviat res.'
         unknown: No se sap si s'ha importat {name}. Comprova-ho abans.
+        unowned:
+          one: S'ha llegit {count} casella, però no s'ha conservat.
+          other: S'han llegit {count} caselles, però no s'han conservat.
         year: Any
       census_review: Revisa
       changed:
@@ -926,6 +936,7 @@ desktop:
     start_failed: No s'ha pogut iniciar. Torna-ho a provar.
     start_unknown: No se sap si s'ha iniciat. Mira abans aquesta pàgina.
     state:
+      capture_refused: El Borrador desat no es pot usar. Torna a importar-lo.
       current: Actualitzat el {date}
       current_undated: Al dia
       never_brought: Sense actualitzar
@@ -2459,15 +2470,21 @@ desktop:
       without_staged: Exporta sense ells
     failed: No s'ha pogut llegir el llibre.
     field:
+      art_104_tres_exclusion: Exclusió de l'art. 104.Tres
+      attachment_ids: Adjunts
       booked_date: Data comptable
       business_pct: Part professional
       counterparty_country: País de la contrapart
       counterparty_identification_state: Identificació a efectes d'IVA
       currency: Moneda
       deduction_fact_kind: Fet deduïble
+      input_classification: Ús de l'adquisició
       investment_asset_id: Bé d'inversió
       m210_income_classification: Renda del model 210
       own_account_id: Compte
+      prorrata_reference: Referència de prorrata
+      prorrata_sector_id: Sector de prorrata
+      purchase_invoice_evidence_id: Document de compra
       recargo_amount: Recàrrec
       usage_ratio_id: Ràtio d'ús
       value_date: Data valor
@@ -3037,7 +3054,6 @@ desktop:
         sealed: bloquejats
         sealed_unread: sense saber si estan bloquejats
         transfer: transferències
-        unclassified: sense classificar
       source_jurisdiction: Jurisdicció d'origen
       split:
         add_part: Afegeix una part
@@ -7970,6 +7986,8 @@ tui:
         cross_bucket_invoice: La factura pertany a un altre perfil, així que no es
           pot vincular.
         missing_invoice: La factura ja no és al catàleg, així que no es pot vincular.
+        transaction_takes_no_invoice: 'Aquest moviment no admet factura: només en
+          pot tenir un moviment actiu d''entrada o sortida de diners.'
     overview:
       affected_declarations: Declaracions afectades
       areas: Àrees de Registres

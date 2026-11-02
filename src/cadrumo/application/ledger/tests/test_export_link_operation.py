@@ -20,6 +20,8 @@ from ....core.operations import OperationEffect, OperationTerminalCondition, pro
 from ....core.time.clock import now
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.invoices.catalogue import InvoiceCatalogue
+from ....domain.transactions.enums import TransactionDirection, TransactionLifecycleState
+from ....domain.transactions.models import TransactionCatalogue
 from ...modelo.tests.m036_operation_support import PROFILE_ID as POLICY_PROFILE_ID
 from ...modelo.tests.m036_operation_support import policy_decision
 from ...operations.access_resolution import OperationAccessContext, resolve_operation_access
@@ -236,6 +238,41 @@ def test_operator_invoice_refusal_retains_only_closed_no_write_facts(subject: Su
         registration.result_projector(
             retained, _receipt(definition, refusal=True).model_copy(update={"effect": OperationEffect.UNKNOWN})
         )
+
+
+@pytest.mark.parametrize(
+    "facts",
+    [
+        {"direction": TransactionDirection.INTERNAL_TRANSFER},
+        {"lifecycle_state": TransactionLifecycleState.ARCHIVED},
+        {"lifecycle_state": TransactionLifecycleState.STASHED},
+        {"lifecycle_state": TransactionLifecycleState.SPLIT},
+    ],
+)
+def test_a_transfer_or_a_row_that_takes_no_change_refuses_the_link_without_writing(
+    subject: Subject, facts: dict[str, object]
+) -> None:
+    row = subject.transaction.model_copy(update=facts)
+    subject.repository._catalogue = TransactionCatalogue.from_transactions((row,))
+    definition = _definition(subject, "link")
+    request = _request(
+        definition,
+        LedgerLinkRequest(
+            profile_id=PROFILE_ID,
+            transaction_id=row.transaction_id,
+            invoice_id=subject.invoice.invoice_id,
+        ),
+    )
+    evidence = asyncio.run(
+        definition.executor_factory.create().execute(request, subject.context(definition.definition_id))
+    )
+    assert isinstance(evidence, OperationRefusalEvidence)
+    retained = subject.operands.values[0]
+    assert isinstance(retained, LedgerLinkExecutionResult)
+    assert retained.result.reason == "transaction_takes_no_invoice" and retained.result.projection is None
+    assert subject.repository.commits == 0 and not subject.events.load().events
+    invoice = subject.invoices.load().get(subject.invoice.invoice_id)
+    assert invoice is not None and invoice.linked_transaction_ids == ()
 
 
 def test_guarded_invoice_owner_recheck_refuses_changed_snapshot_before_atomic_writer(

@@ -25,6 +25,7 @@ from ....core.i18n.render import tr
 from ....domain.transactions.enums import BusinessClassification
 from ..components.widgets import ContentDataTable
 from .categorisation_common import (
+    OPERATOR_CLASSIFICATIONS,
     CategorisationScreen,
     StagedChangeV1,
     action,
@@ -44,14 +45,6 @@ _DEFAULT_RULE_PRIORITY = 100
 
 RULES_PAGE_SIZE: Final = 200
 """The most rules or previewed matches the screen renders at once."""
-
-RULE_CLASSIFICATIONS: Final[tuple[BusinessClassification, ...]] = (
-    BusinessClassification.BUSINESS,
-    BusinessClassification.PERSONAL,
-    BusinessClassification.MIXED,
-    BusinessClassification.REVIEWED_EXCLUDED,
-)
-"""The decisions a rule can make for the entries it matches."""
 
 _SCOPE_UNCLASSIFIED: Final = "unclassified"
 _SCOPE_REAFFIRM: Final = "reaffirm"
@@ -97,7 +90,7 @@ class LedgerRulesScreen(CategorisationScreen):
         yield heading("tui.ledger.categorisation.rules.add_heading")
         yield field("tui.ledger.categorisation.rules.pattern", id="categorisation-rule-pattern")
         yield Select[str](
-            tuple((classification_label(item.value), item.value) for item in RULE_CLASSIFICATIONS),
+            tuple((classification_label(item.value), item.value) for item in OPERATOR_CLASSIFICATIONS),
             value=BusinessClassification.BUSINESS.value,
             allow_blank=False,
             id="categorisation-rule-classification",
@@ -302,4 +295,4 @@ class LedgerRulesScreen(CategorisationScreen):
         self.paint_tables()
 
 
-__all__ = ["RULES_PAGE_SIZE", "RULE_CLASSIFICATIONS", "LedgerRulesScreen"]
+__all__ = ["RULES_PAGE_SIZE", "LedgerRulesScreen"]

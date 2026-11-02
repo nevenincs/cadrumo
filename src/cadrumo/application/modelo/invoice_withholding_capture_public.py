@@ -12,6 +12,7 @@ from typing import Self
 from pydantic import BaseModel, Field, field_validator
 
 from ...core.errors.hierarchy import CoreValidationError, pydantic_validation_boundary
+from ...core.filing_year import FourDigitYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.spanish_postcode import SpanishProvinceCode
@@ -51,7 +52,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     ingreso_a_cuenta: PublicDecimal = PublicDecimal(decimal="0")
     province_code: str | None = Field(default=None, max_length=16, pattern="^\\d*$")
     territorial_deduction_clave: int | None = None
-    perceptor_birth_year: int | None = Field(default=None, ge=1900, le=9999)
+    perceptor_birth_year: FourDigitYear | None = None
     perceptor_situacion_familiar: int | None = None
     representative_tax_id: str | None = Field(default=None, min_length=1, max_length=32)
     spouse_or_unit_titular_tax_id: str | None = Field(default=None, min_length=1, max_length=32)
@@ -60,7 +61,7 @@ class PublicAnnualRecipientDetail(BaseModel):
     unit_convivencia_titular_clave: int | None = None
     geographic_mobility_clave: int | None = None
     ingreso_a_cuenta_repercutido: PublicDecimal = PublicDecimal(decimal="0")
-    accrual_year: int | None = Field(default=None, ge=1900, le=9999)
+    accrual_year: FourDigitYear | None = None
     reducciones_aplicables: PublicDecimal = PublicDecimal(decimal="0")
     gastos_deducibles: PublicDecimal = PublicDecimal(decimal="0")
     pension_compensatoria: PublicDecimal = PublicDecimal(decimal="0")
@@ -196,7 +197,7 @@ class PublicModelo180Property(BaseModel):
     address: PublicModelo180Address
     recipient_province_code: SpanishProvinceCode
     modality: str = Field(min_length=1)
-    accrual_year: int = Field(ge=1900, le=9999)
+    accrual_year: FourDigitYear
     withholding_percentage: PublicDecimal
     representative_nif: str | None = Field(default=None, min_length=1, max_length=16)
 

@@ -17,6 +17,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 from ....core.aggregation import BindingAggregationOp, BindingSourceKind, RetencionClave
 from ....core.country_code import CountryCodeAlpha2
 from ....core.errors.hierarchy import pydantic_validation_boundary
+from ....core.filing_year import FourDigitYear
 from ....core.identity.tax_id import TaxIdIdentityToken
 from ....core.models import STRICT_FROZEN_CONFIG
 from ....core.percentage import PERCENTAGE_MIN, Percentage
@@ -278,7 +279,7 @@ class WithholdingObservation(BaseModel):
     deduction for Ceuta/Melilla rentas, 2 for the Isla de La Palma exceptional
     deduction, 0 otherwise. A retention-rate determination fact the payer's own
     data carries; never derived from the province code."""
-    perceptor_birth_year: int | None = Field(default=None, ge=1900, le=9999)
+    perceptor_birth_year: FourDigitYear | None = None
     """Perceptor birth year, only declared by the design for claves A, B (subclaves
     01, 03, 04, 99) and C."""
     perceptor_situacion_familiar: int | None = None
@@ -306,7 +307,7 @@ class WithholdingObservation(BaseModel):
     ingreso_a_cuenta_repercutido: Decimal = Decimal("0")
     """Ingresos a cuenta efectuados on non-incapacidad especie payments that the
     payer repercutido to the perceptor (design positions 135-147)."""
-    accrual_year: int | None = Field(default=None, ge=1900, le=9999)
+    accrual_year: FourDigitYear | None = None
     """Ejercicio de devengo (design positions 148-151), declared only for atrasos
     devengados in earlier exercises or reintegros of earlier-exercise amounts;
     every other row writes the design's own zeros."""

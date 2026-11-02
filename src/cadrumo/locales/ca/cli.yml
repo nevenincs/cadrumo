@@ -3513,6 +3513,8 @@ cli:
         cross_bucket_invoice: La factura pertany a un bucket diferent del perfil actiu.
         invoice_not_found: No s'ha trobat l'id de factura al catàleg de factures del
           perfil actiu.
+        transaction_takes_no_invoice: Només es pot vincular una factura a un moviment
+          actiu d'entrada o sortida de diners.
       help: Vincula un moviment dels teus registres amb una factura del catàleg de
         conciliació en una sola operació atòmica. Rebutja enllaços entre buckets.
         Només local; mai contacta amb l'AEAT.

@@ -82,8 +82,21 @@ export type AeatSyncResults = {
  * the file's name; the path never reaches the window. */
 export type BorradorFile = { token: string; name: string };
 
-/** What importing a Borrador file came to. */
-export type BorradorImportResult = "imported" | "nothing_found" | "failed";
+/** The outcomes the backend serves for a Borrador that was read: whether it
+ * was stored as the active one, or resolved to one already stored. */
+export type BorradorServedOutcome =
+  | "captured"
+  | "captured_superseded"
+  | "already_active"
+  | "resolved_superseded"
+  | "resolved_discarded";
+
+/** What importing a Borrador file came to, with how many boxes were read but
+ * not kept. An import the host could not settle is a rejection instead. */
+export type BorradorImportResult = {
+  outcome: BorradorServedOutcome | "nothing_found" | "failed";
+  unowned: number;
+};
 
 export type AeatSyncResultsPort = {
   /** Reads the profile's own records of what was read from AEAT; it reaches

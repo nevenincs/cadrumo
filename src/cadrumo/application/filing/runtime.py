@@ -37,7 +37,6 @@ See Also:
 
 from __future__ import annotations
 
-from collections import Counter
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field
 from types import MappingProxyType
@@ -54,7 +53,10 @@ from ...domain.calculations.registry.authority import (
     bundled_indexed_authority,
 )
 from ...domain.calculations.registry.authority_artifact import AuthorityEvidenceProjection
-from ...domain.calculations.registry.casilla_membership import row_field_template_records_by_casilla
+from ...domain.calculations.registry.casilla_membership import (
+    duplicate_casilla_ids,
+    row_field_template_records_by_casilla,
+)
 from ...domain.calculations.registry.errors import (
     RegistryFailureCondition,
     RegistrySnapshotError,
@@ -165,7 +167,7 @@ class RegistryCasillaCollection:
     def __post_init__(self) -> None:
         """Reject ambiguous or dangling casilla schema references at construction."""
         ids = tuple(casilla.casilla_id for casilla in self.casillas)
-        duplicates = _duplicate_casilla_ids(ids)
+        duplicates = duplicate_casilla_ids(ids)
         if duplicates:
             raise ModeloBuilderError(
                 translated_message="application.filing.runtime.errors.ambiguous_casilla_schema",
@@ -207,10 +209,6 @@ class RegistryCasillaCollection:
         Each element is a :class:`CasillaSchema`.
         """
         return self.casillas
-
-
-def _duplicate_casilla_ids(ids: Sequence[CasillaId]) -> tuple[CasillaId, ...]:
-    return tuple(sorted(casilla_id for casilla_id, count in Counter(ids).items() if count > 1))
 
 
 def _dangling_formula_input_casilla_ids(

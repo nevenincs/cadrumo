@@ -17,7 +17,7 @@ import re
 import sys
 from typing import BinaryIO, Final, cast
 
-PATTERN_FLAGS: Final = re.IGNORECASE
+PATTERN_FLAGS: Final = re.RegexFlag(re.IGNORECASE)
 """How a person-supplied pattern reads a text: anywhere in it, ignoring case."""
 
 PATTERN_COMPILE_FAILURES: Final = (re.error, ValueError, OverflowError, RecursionError, MemoryError)

@@ -802,6 +802,7 @@ desktop:
     bring_all: Actualizar desde la AEAT
     close: Cerrar datos de la AEAT
     count:
+      borrador_refused: '{count} no se pueden usar'
       filed_aeat_only: '{count} solo en la AEAT'
       filed_differing: '{count} difieren'
       unread_notifications: '{count} sin leer'
@@ -845,11 +846,20 @@ desktop:
       warn_unknown: Puede que ya esté actualizado. ¿Comprobar igualmente?
     results:
       borrador:
+        already_active: '{name} ya estaba importado. No ha cambiado nada.'
+        captured: Importado {name}.
+        captured_superseded: Se guardó {name}, pero ya se usa un Borrador más reciente.
         failed: No se pudo importar {name}.
         import: Importar PDF
-        imported: Importado {name}.
         nothing_found: No hay Borrador en {name}.
+        resolved_discarded: '{name} se importó antes y se descartó. No ha cambiado
+          nada.'
+        resolved_superseded: '{name} se importó antes y desde entonces lo ha sustituido
+          uno más reciente. No ha cambiado nada.'
         unknown: No se sabe si se importó {name}. Compruébalo antes.
+        unowned:
+          one: Se leyó {count} casilla, pero no se conservó.
+          other: Se leyeron {count} casillas, pero no se conservaron.
         year: Año
       census_review: Revisar
       changed:
@@ -932,6 +942,7 @@ desktop:
     start_failed: No se pudo iniciar. Inténtalo de nuevo.
     start_unknown: No se sabe si se inició. Mira antes esta página.
     state:
+      capture_refused: El Borrador guardado no se puede usar. Impórtalo de nuevo.
       current: Actualizado el {date}
       current_undated: Al día
       never_brought: Sin actualizar
@@ -2457,15 +2468,21 @@ desktop:
       without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
     field:
+      art_104_tres_exclusion: Exclusión del art. 104.Tres
+      attachment_ids: Adjuntos
       booked_date: Fecha contable
       business_pct: Parte profesional
       counterparty_country: País de la contraparte
       counterparty_identification_state: Identificación a efectos de IVA
       currency: Moneda
       deduction_fact_kind: Hecho deducible
+      input_classification: Uso de la adquisición
       investment_asset_id: Bien de inversión
       m210_income_classification: Renta del modelo 210
       own_account_id: Cuenta
+      prorrata_reference: Referencia de prorrata
+      prorrata_sector_id: Sector de prorrata
+      purchase_invoice_evidence_id: Documento de compra
       recargo_amount: Recargo
       usage_ratio_id: Ratio de uso
       value_date: Fecha valor
@@ -3036,7 +3053,6 @@ desktop:
         sealed: bloqueados
         sealed_unread: sin saber si están bloqueados
         transfer: transferencias
-        unclassified: sin clasificar
       source_jurisdiction: Jurisdicción de origen
       split:
         add_part: Añadir una parte
@@ -7984,6 +8000,8 @@ tui:
           vincular.
         missing_invoice: La factura ya no está en el catálogo, así que no se puede
           vincular.
+        transaction_takes_no_invoice: 'Este movimiento no admite factura: solo puede
+          tenerla un movimiento activo de entrada o salida de dinero.'
     overview:
       affected_declarations: Declaraciones afectadas
       areas: Áreas de Registros

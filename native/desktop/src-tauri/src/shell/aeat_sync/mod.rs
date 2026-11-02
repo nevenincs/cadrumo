@@ -28,11 +28,8 @@ use tauri::{State, ipc::Channel};
 const SELECTION_LIMIT: usize = 64;
 /// A modelo number: short, ASCII and alphanumeric.
 const FORM_LENGTH: std::ops::RangeInclusive<usize> = 1..=5;
-/// A calendar year as four digits; the years on offer are the backend's.
-const YEARS: std::ops::RangeInclusive<u16> = 1000..=9999;
-/// How many filing years the Borrador import offers where the backend serves
-/// none, ending with the last calendar year.
-const BORRADOR_FALLBACK_YEARS: u16 = 6;
+/// A calendar year written with four digits; the years on offer are the backend's.
+const YEARS: std::ops::RangeInclusive<u16> = 10u16.pow(3)..=10u16.pow(4) - 1;
 /// The most served years one reply carries.
 const YEAR_LIMIT: usize = 64;
 /// How long the preflight waits for the setup engine's first quick read.
@@ -363,35 +360,10 @@ fn served_years(status: &Value, key: &str) -> Option<Vec<u16>> {
         .collect()
 }
 
-/// The calendar year, in UTC, of the instant `seconds` after the Unix epoch.
-fn calendar_year(seconds: u64) -> u16 {
-    // The civil-from-days conversion of the proleptic Gregorian calendar,
-    // counted in 400-year eras from 0000-03-01.
-    let days = i64::try_from(seconds / 86_400).unwrap_or(i64::MAX / 2) + 719_468;
-    let era = days.div_euclid(146_097);
-    let day_of_era = days.rem_euclid(146_097);
-    let year_of_era =
-        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
-    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
-    let month_index = (5 * day_of_year + 2) / 153;
-    let year = year_of_era + era * 400 + i64::from(month_index >= 10);
-    u16::try_from(year).unwrap_or(u16::MAX)
-}
-
-/// The filing years the Borrador import offers, latest first: the years the
-/// backend serves, or, where it serves none, the last few calendar years up
-/// to the last one, since a year's Borrador is downloaded the year after.
-fn borrador_years(status: &Value, now: std::time::SystemTime) -> Vec<u16> {
+/// The filing years the Borrador import offers, latest first: exactly the years
+/// the backend serves, and none where it serves none.
+fn borrador_years(status: &Value) -> Vec<u16> {
     let mut years = served_years(status, "filed_declaration_years").unwrap_or_default();
-    if years.is_empty() {
-        let seconds = now
-            .duration_since(std::time::UNIX_EPOCH)
-            .map_or(0, |since| since.as_secs());
-        let latest = calendar_year(seconds).saturating_sub(1);
-        years = (0..BORRADOR_FALLBACK_YEARS)
-            .map(|back| latest.saturating_sub(back))
-            .collect();
-    }
     years.sort_unstable_by(|a, b| b.cmp(a));
     years.dedup();
     years
@@ -525,7 +497,7 @@ fn instant(value: &Value) -> Result<Option<String>> {
 
 /// The status read's result as the overview's areas: served states, instants
 /// and counts only; its refusal names stay here.
-fn status_reply(profile: &str, result: &Value, now: std::time::SystemTime) -> Result<Status> {
+fn status_reply(profile: &str, result: &Value) -> Result<Status> {
     let areas = result["status"]["areas"].as_array().ok_or_else(protocol)?;
     let areas = areas
         .iter()
@@ -536,6 +508,9 @@ fn status_reply(profile: &str, result: &Value, now: std::time::SystemTime) -> Re
                 Some("never_brought") => "never_brought",
                 Some("current") => "current",
                 Some("possibly_stale") => "possibly_stale",
+                Some("unavailable") if entry["refusal"] == "aeat_sync.status.capture_refused" => {
+                    "capture_refused"
+                }
                 Some("unavailable") => "unavailable",
                 _ => return Err(protocol()),
             };
@@ -555,6 +530,13 @@ fn status_reply(profile: &str, result: &Value, now: std::time::SystemTime) -> Re
                 counts.push(CountValue {
                     kind: "unread_notifications",
                     value: unread,
+                });
+            }
+            let refused = entry["refused_snapshots"].as_array().map_or(0, Vec::len);
+            if refused > 0 && matches!(state, "current" | "possibly_stale") {
+                counts.push(CountValue {
+                    kind: "borrador_refused",
+                    value: refused as u64,
                 });
             }
             let periods = &entry["filed_periods"];
@@ -586,7 +568,7 @@ fn status_reply(profile: &str, result: &Value, now: std::time::SystemTime) -> Re
     Ok(Status {
         profile_id: profile.to_owned(),
         areas,
-        borrador_years: borrador_years(result, now),
+        borrador_years: borrador_years(result),
     })
 }
 
@@ -603,7 +585,7 @@ pub async fn aeat_sync_status(
     let person = host.person(None).await?;
     let profile = relay::profile_of(&person).await?;
     let result = read_status(&host, &person, &profile).await?;
-    status_reply(&profile, &result, std::time::SystemTime::now())
+    status_reply(&profile, &result)
 }
 
 /// The secure browser as the setup engine's row reads it.
@@ -1095,7 +1077,7 @@ pub async fn aeat_sync_results(
     }
     let (person, _, run) = session(&host, &profile).await?;
     let result = read_status(&host, &person, &profile).await?;
-    let status = status_reply(&profile, &result, std::time::SystemTime::now())?;
+    let status = status_reply(&profile, &result)?;
     let filed = filed_rows(&result)?;
     Ok(match run {
         Some(run) => results_reply(Some(&run::lock(&run)), status, filed),
@@ -1190,6 +1172,45 @@ pub async fn aeat_sync_borrador_pick<R: tauri::Runtime>(
     }))
 }
 
+/// What importing a Borrador came to: the backend's outcome token passed
+/// through, and how many boxes were read but not kept.
+#[derive(Debug, PartialEq, Serialize)]
+pub struct BorradorImported {
+    outcome: &'static str,
+    unowned: u64,
+}
+
+/// The outcome token the backend served, if it is one of the five it defines.
+fn borrador_outcome(result: &Value) -> Option<&'static str> {
+    Some(match result["outcome"].as_str()? {
+        "captured" => "captured",
+        "captured_superseded" => "captured_superseded",
+        "already_active" => "already_active",
+        "resolved_superseded" => "resolved_superseded",
+        "resolved_discarded" => "resolved_discarded",
+        _ => return None,
+    })
+}
+
+/// The import's result as the window's outcome and unkept-box count.
+fn borrador_import_reply(result: &Value) -> Result<BorradorImported> {
+    if result["snapshot"]["binding_count"].as_u64() == Some(0) {
+        return Ok(BorradorImported {
+            outcome: "nothing_found",
+            unowned: 0,
+        });
+    }
+    match (result["snapshot"].is_object(), borrador_outcome(result)) {
+        (true, Some(outcome)) => Ok(BorradorImported {
+            outcome,
+            unowned: result["unowned_casillas"]
+                .as_array()
+                .map_or(0, |unowned| unowned.len() as u64),
+        }),
+        _ => Err(bare("unknown")),
+    }
+}
+
 /// Imports a Borrador 100 document the person picked, named by its file
 /// token, for the filing year the person chose.
 #[tauri::command]
@@ -1198,7 +1219,7 @@ pub async fn aeat_sync_borrador_import(
     profile: String,
     file: String,
     year: Option<u16>,
-) -> Result<&'static str> {
+) -> Result<BorradorImported> {
     let year = year
         .filter(|year| YEARS.contains(year))
         .ok_or_else(invalid)?;
@@ -1215,15 +1236,16 @@ pub async fn aeat_sync_borrador_import(
         host.run(&person, "live.borrador.100.import", payload, true)
             .await
     };
-    Ok(match imported {
-        Ok(result) if result["snapshot"]["binding_count"].as_u64() == Some(0) => "nothing_found",
-        Ok(result) if result["snapshot"].is_object() => "imported",
-        Ok(_) => return Err(bare("unknown")),
+    match imported {
+        Ok(result) => borrador_import_reply(&result),
         Err(failure) if failure.code == "unknown" || failure.code == "saved_unread" => {
-            return Err(bare("unknown"));
+            Err(bare("unknown"))
         }
-        Err(_) => "failed",
-    })
+        Err(_) => Ok(BorradorImported {
+            outcome: "failed",
+            unowned: 0,
+        }),
+    }
 }
 
 pub fn commands<R: tauri::Runtime>() -> crate::app::Commands<R> {

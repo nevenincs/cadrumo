@@ -34,19 +34,23 @@ export function BorradorImport({
   const [busy, setBusy] = useState(false);
   const [name, setName] = useState<string | null>(null);
   const [outcome, setOutcome] = useState<
-    BorradorImportResult | "unknown" | null
+    BorradorImportResult["outcome"] | "unknown" | null
   >(null);
+  const [unowned, setUnowned] = useState(0);
   const choose = async () => {
     setBusy(true);
     setOutcome(null);
+    setUnowned(0);
     try {
       if (year === undefined) return;
       const file = await port.pickBorrador();
       if (!file) return;
       setName(file.name);
       const result = await port.importBorrador(profile, file.token, year);
-      setOutcome(result);
-      if (result === "imported") onImported();
+      setOutcome(result.outcome);
+      setUnowned(result.unowned);
+      if (result.outcome !== "nothing_found" && result.outcome !== "failed")
+        onImported();
     } catch (error) {
       setOutcome(aeatSyncFailure(error) === "unknown" ? "unknown" : "failed");
     } finally {
@@ -83,29 +87,41 @@ export function BorradorImport({
       </div>
       {outcome && (
         <Alert
-          role={outcome === "imported" ? "status" : "alert"}
+          role={
+            outcome === "failed" || outcome === "unknown" ? "alert" : "status"
+          }
           tone={
-            outcome === "imported"
+            outcome === "captured"
               ? "success"
-              : outcome === "nothing_found"
-                ? "neutral"
-                : "danger"
+              : outcome === "failed" || outcome === "unknown"
+                ? "danger"
+                : "neutral"
           }
           icon={
             <Icon
               name={
-                outcome === "imported"
+                outcome === "captured"
                   ? "check"
-                  : outcome === "nothing_found"
-                    ? "info"
-                    : "alert"
+                  : outcome === "failed" || outcome === "unknown"
+                    ? "alert"
+                    : "info"
               }
             />
           }
         >
-          {t(`desktop.aeat_sync.results.borrador.${outcome}`, {
-            name: name ?? "",
-          })}
+          <p>
+            {t(`desktop.aeat_sync.results.borrador.${outcome}`, {
+              name: name ?? "",
+            })}
+          </p>
+          {unowned > 0 && (
+            <p>
+              {t(
+                `desktop.aeat_sync.results.borrador.unowned.${unowned === 1 ? "one" : "other"}`,
+                { count: unowned },
+              )}
+            </p>
+          )}
         </Alert>
       )}
     </div>
