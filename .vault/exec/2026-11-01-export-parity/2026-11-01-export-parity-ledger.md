@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:30096b8891ecab4480d34ed58db9b871728b741153fa789bbef404ebe5aa7084'
+body_hash: 'sha256:dafc3466f5d824ef89437c1e397f7919a0278fc30a5d304140a1c9acca9e253f'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -534,6 +534,9 @@ related:
 - `S06` `M` `dev/acceptance/income_tax/cli_journey.py`
 - `S06` `M` `dev/acceptance/income_tax/financial_contracts.py`
 - `S06` `M` `dev/acceptance/export_parity/seed_contracts.py`
+- `S06` `M` `src/cadrumo/domain/calculations/registry/query_builders.py`
+- `S06` `verify:` `pytest test_modelo_100_bindings_list_across_supported_years.py test_modelo_registry_bindings_surface.py test_modelo_bindings_grounding_parity.py test_binding_borrador_participation.py test_retencion_soportada_bindings.py test_borrador_binding.py` -> `pass`
+- `S06` `by:` `implementation-engineer-high`
 
 ## Notes
 
