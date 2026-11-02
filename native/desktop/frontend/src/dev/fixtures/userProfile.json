@@ -20,9 +20,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Tax identifier (NIF/CIF/DNI/NIE) for the active profile"
-            ],
+            "help": ["Tax identifier (NIF/CIF/DNI/NIE) for the active profile"],
             "about": "NIF/NIE/CIF used as filing identity.",
             "ejercicio_answer": null,
             "row_index": null
@@ -36,9 +34,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Display name shown in local reviews"
-            ],
+            "help": ["Display name shown in local reviews"],
             "about": "Declarant given name or display name.",
             "ejercicio_answer": null,
             "row_index": null
@@ -52,9 +48,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Surnames or company name for export headers"
-            ],
+            "help": ["Surnames or company name for export headers"],
             "about": "Declarant surnames for person filings.",
             "ejercicio_answer": null,
             "row_index": null
@@ -124,9 +118,7 @@
                 "label": "Hungarian"
               }
             ],
-            "help": [
-              "CLI output language for this profile"
-            ],
+            "help": ["CLI output language for this profile"],
             "about": "Output language used by CLI rendering and notification copy.",
             "ejercicio_answer": null,
             "row_index": null
@@ -182,9 +174,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Enable Google Sheets export?"
-            ],
+            "help": ["Enable Google Sheets export?"],
             "about": "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only.",
             "ejercicio_answer": null,
             "row_index": null
@@ -343,9 +333,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Tax address postcode"
-            ],
+            "help": ["Tax address postcode"],
             "about": "Fiscal-address postcode.",
             "ejercicio_answer": null,
             "row_index": null
@@ -470,9 +458,7 @@
                 "label": "Murcia"
               }
             ],
-            "help": [
-              "Tax-residence autonomous community"
-            ],
+            "help": ["Tax-residence autonomous community"],
             "about": "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100.",
             "ejercicio_answer": null,
             "row_index": null
@@ -495,9 +481,7 @@
                 "label": "Foral territory (Basque Country or Navarre) - not supported yet"
               }
             ],
-            "help": [
-              "Which territorial regime applies to your tax residence?"
-            ],
+            "help": ["Which territorial regime applies to your tax residence?"],
             "about": "Régimen territorial aplicable declarado explícitamente: territorio común o territorio foral aún no soportado.",
             "ejercicio_answer": null,
             "row_index": null
@@ -555,9 +539,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Large-company enrollment"
-            ],
+            "help": ["Large-company enrollment"],
             "about": "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly.",
             "ejercicio_answer": null,
             "row_index": null
@@ -580,9 +562,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Public administration budget over 6,000,000"
-            ],
+            "help": ["Public administration budget over 6,000,000"],
             "about": "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly.",
             "ejercicio_answer": null,
             "row_index": null
@@ -880,9 +860,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Name of fiscal representative in Spain"
-            ],
+            "help": ["Name of fiscal representative in Spain"],
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
             "ejercicio_answer": null,
             "row_index": null
@@ -1711,9 +1689,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Art. 109 70% activity-income coverage exception applies"
-            ],
+            "help": ["Art. 109 70% activity-income coverage exception applies"],
             "about": "Whether the Art. 109 RIRPF 70 percent income-coverage exception is met for covered professional, agricultural, livestock, or forestry activity income. For activity-start cases this is the current payment-period coverage fact, not a prior-year fact.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2075,9 +2051,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Do you pay professionals subject to withholding?"
-            ],
+            "help": ["Do you pay professionals subject to withholding?"],
             "about": "Whether the taxpayer pays professionals with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2100,9 +2074,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Do you pay urban property rent subject to withholding?"
-            ],
+            "help": ["Do you pay urban property rent subject to withholding?"],
             "about": "Whether the taxpayer pays rent with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2125,9 +2097,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Do you pay capital income subject to withholding?"
-            ],
+            "help": ["Do you pay capital income subject to withholding?"],
             "about": "Whether the taxpayer pays capital income with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2234,9 +2204,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Conducts intra-EU operations"
-            ],
+            "help": ["Conducts intra-EU operations"],
             "about": "Whether the taxpayer conducts intracommunity operations.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2259,9 +2227,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Intra-community operations exceed 50,000 EUR"
-            ],
+            "help": ["Intra-community operations exceed 50,000 EUR"],
             "about": "Modelo 349 cadence threshold.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2284,9 +2250,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Enrolled in ROI"
-            ],
+            "help": ["Enrolled in ROI"],
             "about": "Indica si el contribuyente figura en el Registro de Operadores Intracomunitarios (ROI/VIES), mediante la casilla 582 de los Modelos 036/037. Es distinto de realizar operaciones intracomunitarias y determina el acceso a comprobaciones reservadas a operadores inscritos.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2309,9 +2273,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Enrolled in OSS"
-            ],
+            "help": ["Enrolled in OSS"],
             "about": "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2334,9 +2296,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Enrolled as an IVA group member entity"
-            ],
+            "help": ["Enrolled as an IVA group member entity"],
             "about": "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2359,9 +2319,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Enrolled as an IVA group dominant entity"
-            ],
+            "help": ["Enrolled as an IVA group dominant entity"],
             "about": "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2384,9 +2342,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Enrolled in the SII (immediate information supply)"
-            ],
+            "help": ["Enrolled in the SII (immediate information supply)"],
             "about": "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2409,9 +2365,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Registered in REDEME (monthly IVA refund register)"
-            ],
+            "help": ["Registered in REDEME (monthly IVA refund register)"],
             "about": "Whether the taxpayer is registered in REDEME (Registro de Devolucion Mensual del IVA). REDEME registration switches the IVA self-assessment period to monthly and is one of the mandatory-SII triggers.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2438,9 +2392,7 @@
                 "label": "General and simplified together"
               }
             ],
-            "help": [
-              "Which Modelo 303 regime composition applies?"
-            ],
+            "help": ["Which Modelo 303 regime composition applies?"],
             "about": "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2488,9 +2440,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Are you voluntarily enrolled in SII?"
-            ],
+            "help": ["Are you voluntarily enrolled in SII?"],
             "about": "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2585,9 +2535,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Foreign-held assets above legal threshold"
-            ],
+            "help": ["Foreign-held assets above legal threshold"],
             "about": "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2750,9 +2698,7 @@
                 "label": "Woman"
               }
             ],
-            "help": [
-              "First taxpayer sex code"
-            ],
+            "help": ["First taxpayer sex code"],
             "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "ejercicio_answer": null,
             "row_index": null
@@ -2787,9 +2733,7 @@
                 "label": "5"
               }
             ],
-            "help": [
-              "First taxpayer marital status"
-            ],
+            "help": ["First taxpayer marital status"],
             "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2803,9 +2747,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "First taxpayer birth date"
-            ],
+            "help": ["First taxpayer birth date"],
             "about": "Taxpayer birth date.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2839,9 +2781,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "First taxpayer death date"
-            ],
+            "help": ["First taxpayer death date"],
             "about": "Taxpayer death date when Modelo 100 requires it.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2855,9 +2795,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Marriage start date (YYYY-MM-DD)"
-            ],
+            "help": ["Marriage start date (YYYY-MM-DD)"],
             "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2930,9 +2868,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Spouse NIF/NIE"
-            ],
+            "help": ["Spouse NIF/NIE"],
             "about": "Spouse NIF/NIE for joint filing.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2946,9 +2882,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Spouse given name"
-            ],
+            "help": ["Spouse given name"],
             "about": "Spouse given name.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2962,9 +2896,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Spouse surnames"
-            ],
+            "help": ["Spouse surnames"],
             "about": "Spouse surnames.",
             "ejercicio_answer": null,
             "row_index": null
@@ -2978,9 +2910,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Spouse birth date"
-            ],
+            "help": ["Spouse birth date"],
             "about": "Spouse birth date.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3003,9 +2933,7 @@
                 "label": "Woman"
               }
             ],
-            "help": [
-              "Spouse sex code"
-            ],
+            "help": ["Spouse sex code"],
             "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "ejercicio_answer": null,
             "row_index": null
@@ -3048,9 +2976,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Spouse is non-resident IRPF"
-            ],
+            "help": ["Spouse is non-resident IRPF"],
             "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3073,9 +2999,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Spouse is EU/EEA resident"
-            ],
+            "help": ["Spouse is EU/EEA resident"],
             "about": "Whether the non-resident spouse is resident in the EU or EEA.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3089,9 +3013,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Spouse EU/EEA country"
-            ],
+            "help": ["Spouse EU/EEA country"],
             "about": "EU or EEA country of residence for the spouse.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3122,9 +3044,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Minor children in family unit"
-            ],
+            "help": ["Minor children in family unit"],
             "about": "Minor children in the family unit.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3147,9 +3067,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "EU/EEA descendants in family-unit deduction"
-            ],
+            "help": ["EU/EEA descendants in family-unit deduction"],
             "about": "EU/EEA descendant deduction flag for Modelo 100.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3629,9 +3547,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Nombre visible mostrado en revisiones locales"
-            ],
+            "help": ["Nombre visible mostrado en revisiones locales"],
             "about": "Declarant given name or display name.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3645,9 +3561,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Apellidos o razón social para cabeceras de exportación"
-            ],
+            "help": ["Apellidos o razón social para cabeceras de exportación"],
             "about": "Declarant surnames for person filings.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3717,9 +3631,7 @@
                 "label": "Húngaro"
               }
             ],
-            "help": [
-              "Idioma de salida de la CLI para este perfil"
-            ],
+            "help": ["Idioma de salida de la CLI para este perfil"],
             "about": "Output language used by CLI rendering and notification copy.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3775,9 +3687,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "¿Activar la exportación a Google Sheets?"
-            ],
+            "help": ["¿Activar la exportación a Google Sheets?"],
             "about": "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only.",
             "ejercicio_answer": null,
             "row_index": null
@@ -3936,9 +3846,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Código postal del domicilio fiscal"
-            ],
+            "help": ["Código postal del domicilio fiscal"],
             "about": "Fiscal-address postcode.",
             "ejercicio_answer": null,
             "row_index": null
@@ -4063,9 +3971,7 @@
                 "label": "Región de Murcia"
               }
             ],
-            "help": [
-              "Comunidad autónoma de residencia fiscal"
-            ],
+            "help": ["Comunidad autónoma de residencia fiscal"],
             "about": "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100.",
             "ejercicio_answer": null,
             "row_index": null
@@ -4148,9 +4054,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Empresa de gran volumen"
-            ],
+            "help": ["Empresa de gran volumen"],
             "about": "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly.",
             "ejercicio_answer": null,
             "row_index": null
@@ -4173,9 +4077,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Presupuesto administración pública superior a 6.000.000"
-            ],
+            "help": ["Presupuesto administración pública superior a 6.000.000"],
             "about": "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly.",
             "ejercicio_answer": null,
             "row_index": null
@@ -4473,9 +4375,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Nombre del representante fiscal en España"
-            ],
+            "help": ["Nombre del representante fiscal en España"],
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5620,9 +5520,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Tiene empleados y paga salarios con retención"
-            ],
+            "help": ["Tiene empleados y paga salarios con retención"],
             "about": "Whether the taxpayer pays employees with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5668,9 +5566,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Paga a profesionales con retención"
-            ],
+            "help": ["Paga a profesionales con retención"],
             "about": "Whether the taxpayer pays professionals with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5693,9 +5589,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Paga alquiler de local con retención"
-            ],
+            "help": ["Paga alquiler de local con retención"],
             "about": "Whether the taxpayer pays rent with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5718,9 +5612,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Paga rentas de capital con retención"
-            ],
+            "help": ["Paga rentas de capital con retención"],
             "about": "Whether the taxpayer pays capital income with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5827,9 +5719,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Realiza operaciones intracomunitarias"
-            ],
+            "help": ["Realiza operaciones intracomunitarias"],
             "about": "Whether the taxpayer conducts intracommunity operations.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5852,9 +5742,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Operaciones intracomunitarias superan 50.000 EUR"
-            ],
+            "help": ["Operaciones intracomunitarias superan 50.000 EUR"],
             "about": "Modelo 349 cadence threshold.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5877,9 +5765,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Alta en ROI"
-            ],
+            "help": ["Alta en ROI"],
             "about": "Indica si el contribuyente figura en el Registro de Operadores Intracomunitarios (ROI/VIES), mediante la casilla 582 de los Modelos 036/037. Es distinto de realizar operaciones intracomunitarias y determina el acceso a comprobaciones reservadas a operadores inscritos.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5902,9 +5788,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Alta en OSS"
-            ],
+            "help": ["Alta en OSS"],
             "about": "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5927,9 +5811,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Alta como entidad miembro de un grupo de IVA"
-            ],
+            "help": ["Alta como entidad miembro de un grupo de IVA"],
             "about": "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment.",
             "ejercicio_answer": null,
             "row_index": null
@@ -5952,9 +5834,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Alta como entidad dominante de un grupo de IVA"
-            ],
+            "help": ["Alta como entidad dominante de un grupo de IVA"],
             "about": "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6031,9 +5911,7 @@
                 "label": "Régimen general y simplificado"
               }
             ],
-            "help": [
-              "¿Qué composición de regímenes se aplica al Modelo 303?"
-            ],
+            "help": ["¿Qué composición de regímenes se aplica al Modelo 303?"],
             "about": "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6081,9 +5959,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "¿Estás inscrito voluntariamente en el SII?"
-            ],
+            "help": ["¿Estás inscrito voluntariamente en el SII?"],
             "about": "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6178,9 +6054,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Bienes en el extranjero superan el umbral legal"
-            ],
+            "help": ["Bienes en el extranjero superan el umbral legal"],
             "about": "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6343,9 +6217,7 @@
                 "label": "Mujer"
               }
             ],
-            "help": [
-              "Sexo del primer declarante"
-            ],
+            "help": ["Sexo del primer declarante"],
             "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "ejercicio_answer": null,
             "row_index": null
@@ -6380,9 +6252,7 @@
                 "label": "5"
               }
             ],
-            "help": [
-              "Estado civil del primer declarante"
-            ],
+            "help": ["Estado civil del primer declarante"],
             "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6396,9 +6266,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Fecha de nacimiento del primer declarante"
-            ],
+            "help": ["Fecha de nacimiento del primer declarante"],
             "about": "Taxpayer birth date.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6432,9 +6300,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Fecha de fallecimiento del primer declarante"
-            ],
+            "help": ["Fecha de fallecimiento del primer declarante"],
             "about": "Taxpayer death date when Modelo 100 requires it.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6448,9 +6314,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Fecha de inicio del matrimonio (AAAA-MM-DD)"
-            ],
+            "help": ["Fecha de inicio del matrimonio (AAAA-MM-DD)"],
             "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6523,9 +6387,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "NIF/NIE del cónyuge"
-            ],
+            "help": ["NIF/NIE del cónyuge"],
             "about": "Spouse NIF/NIE for joint filing.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6539,9 +6401,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Nombre del cónyuge"
-            ],
+            "help": ["Nombre del cónyuge"],
             "about": "Spouse given name.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6555,9 +6415,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Apellidos del cónyuge"
-            ],
+            "help": ["Apellidos del cónyuge"],
             "about": "Spouse surnames.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6571,9 +6429,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Fecha de nacimiento del cónyuge"
-            ],
+            "help": ["Fecha de nacimiento del cónyuge"],
             "about": "Spouse birth date.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6596,9 +6452,7 @@
                 "label": "Mujer"
               }
             ],
-            "help": [
-              "Sexo del cónyuge"
-            ],
+            "help": ["Sexo del cónyuge"],
             "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "ejercicio_answer": null,
             "row_index": null
@@ -6641,9 +6495,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Cónyuge no residente IRPF"
-            ],
+            "help": ["Cónyuge no residente IRPF"],
             "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6666,9 +6518,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Cónyuge residente UE/EEE"
-            ],
+            "help": ["Cónyuge residente UE/EEE"],
             "about": "Whether the non-resident spouse is resident in the EU or EEA.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6682,9 +6532,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "País UE/EEE del cónyuge"
-            ],
+            "help": ["País UE/EEE del cónyuge"],
             "about": "EU or EEA country of residence for the spouse.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6715,9 +6563,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Hijos menores en unidad familiar"
-            ],
+            "help": ["Hijos menores en unidad familiar"],
             "about": "Minor children in the family unit.",
             "ejercicio_answer": null,
             "row_index": null
@@ -6740,9 +6586,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Descendientes UE/EEE en deducción de unidad familiar"
-            ],
+            "help": ["Descendientes UE/EEE en deducción de unidad familiar"],
             "about": "EU/EEA descendant deduction flag for Modelo 100.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7206,9 +7050,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Identificador fiscal (NIF/NIE) per a declaracions"
-            ],
+            "help": ["Identificador fiscal (NIF/NIE) per a declaracions"],
             "about": "NIF/NIE/CIF used as filing identity.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7222,9 +7064,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Nom visible mostrat en revisions locals"
-            ],
+            "help": ["Nom visible mostrat en revisions locals"],
             "about": "Declarant given name or display name.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7238,9 +7078,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Cognoms o raó social per a capçaleres d'exportació"
-            ],
+            "help": ["Cognoms o raó social per a capçaleres d'exportació"],
             "about": "Declarant surnames for person filings.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7310,9 +7148,7 @@
                 "label": "Hongarès"
               }
             ],
-            "help": [
-              "Idioma de sortida de la CLI per a aquest perfil"
-            ],
+            "help": ["Idioma de sortida de la CLI per a aquest perfil"],
             "about": "Output language used by CLI rendering and notification copy.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7368,9 +7204,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Vols activar l'exportació a Google Sheets?"
-            ],
+            "help": ["Vols activar l'exportació a Google Sheets?"],
             "about": "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7529,9 +7363,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Codi postal del domicili fiscal"
-            ],
+            "help": ["Codi postal del domicili fiscal"],
             "about": "Fiscal-address postcode.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7656,9 +7488,7 @@
                 "label": "Regió de Múrcia"
               }
             ],
-            "help": [
-              "Comunitat autònoma de residència fiscal"
-            ],
+            "help": ["Comunitat autònoma de residència fiscal"],
             "about": "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7741,9 +7571,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Empresa de gran volum"
-            ],
+            "help": ["Empresa de gran volum"],
             "about": "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly.",
             "ejercicio_answer": null,
             "row_index": null
@@ -7766,9 +7594,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Pressupost administració pública superior a 6.000.000"
-            ],
+            "help": ["Pressupost administració pública superior a 6.000.000"],
             "about": "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly.",
             "ejercicio_answer": null,
             "row_index": null
@@ -8066,9 +7892,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Nom del representant fiscal a Espanya"
-            ],
+            "help": ["Nom del representant fiscal a Espanya"],
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9213,9 +9037,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Té empleats i paga salaris amb retenció"
-            ],
+            "help": ["Té empleats i paga salaris amb retenció"],
             "about": "Whether the taxpayer pays employees with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9261,9 +9083,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Paga a professionals amb retenció"
-            ],
+            "help": ["Paga a professionals amb retenció"],
             "about": "Whether the taxpayer pays professionals with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9286,9 +9106,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Paga lloguer de local amb retenció"
-            ],
+            "help": ["Paga lloguer de local amb retenció"],
             "about": "Whether the taxpayer pays rent with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9311,9 +9129,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Paga rendes de capital amb retenció"
-            ],
+            "help": ["Paga rendes de capital amb retenció"],
             "about": "Whether the taxpayer pays capital income with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9420,9 +9236,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Realitza operacions intracomunitàries"
-            ],
+            "help": ["Realitza operacions intracomunitàries"],
             "about": "Whether the taxpayer conducts intracommunity operations.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9445,9 +9259,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Operacions intracomunitàries superen 50.000 EUR"
-            ],
+            "help": ["Operacions intracomunitàries superen 50.000 EUR"],
             "about": "Modelo 349 cadence threshold.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9470,9 +9282,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Alta en ROI"
-            ],
+            "help": ["Alta en ROI"],
             "about": "Indica si el contribuyente figura en el Registro de Operadores Intracomunitarios (ROI/VIES), mediante la casilla 582 de los Modelos 036/037. Es distinto de realizar operaciones intracomunitarias y determina el acceso a comprobaciones reservadas a operadores inscritos.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9495,9 +9305,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Alta en OSS"
-            ],
+            "help": ["Alta en OSS"],
             "about": "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9520,9 +9328,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Alta com a entitat membre d'un grup d'IVA"
-            ],
+            "help": ["Alta com a entitat membre d'un grup d'IVA"],
             "about": "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9545,9 +9351,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Alta com a entitat dominant d'un grup d'IVA"
-            ],
+            "help": ["Alta com a entitat dominant d'un grup d'IVA"],
             "about": "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9570,9 +9374,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Inscrit al SII (Subministrament Immediat d'Informació)"
-            ],
+            "help": ["Inscrit al SII (Subministrament Immediat d'Informació)"],
             "about": "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9624,9 +9426,7 @@
                 "label": "Règim general i simplificat"
               }
             ],
-            "help": [
-              "Quina composició de règims s'aplica al Model 303?"
-            ],
+            "help": ["Quina composició de règims s'aplica al Model 303?"],
             "about": "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9649,9 +9449,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Estàs inscrit al règim especial del criteri de caixa?"
-            ],
+            "help": ["Estàs inscrit al règim especial del criteri de caixa?"],
             "about": "Explicit enrolment in the special cash-accounting IVA regime. Required when the IVA profile block is present.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9674,9 +9472,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Estàs inscrit voluntàriament al SII?"
-            ],
+            "help": ["Estàs inscrit voluntàriament al SII?"],
             "about": "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9771,9 +9567,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Béns a l'estranger superen el llindar legal"
-            ],
+            "help": ["Béns a l'estranger superen el llindar legal"],
             "about": "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9936,9 +9730,7 @@
                 "label": "Dona"
               }
             ],
-            "help": [
-              "Sexe del primer declarant"
-            ],
+            "help": ["Sexe del primer declarant"],
             "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "ejercicio_answer": null,
             "row_index": null
@@ -9973,9 +9765,7 @@
                 "label": "5"
               }
             ],
-            "help": [
-              "Estat civil del primer declarant"
-            ],
+            "help": ["Estat civil del primer declarant"],
             "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
             "ejercicio_answer": null,
             "row_index": null
@@ -9989,9 +9779,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Data de naixement del primer declarant"
-            ],
+            "help": ["Data de naixement del primer declarant"],
             "about": "Taxpayer birth date.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10025,9 +9813,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Data de defunció del primer declarant"
-            ],
+            "help": ["Data de defunció del primer declarant"],
             "about": "Taxpayer death date when Modelo 100 requires it.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10041,9 +9827,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Data d'inici del matrimoni (AAAA-MM-DD)"
-            ],
+            "help": ["Data d'inici del matrimoni (AAAA-MM-DD)"],
             "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10116,9 +9900,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "NIF/NIE del cònjuge"
-            ],
+            "help": ["NIF/NIE del cònjuge"],
             "about": "Spouse NIF/NIE for joint filing.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10132,9 +9914,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Nom del cònjuge"
-            ],
+            "help": ["Nom del cònjuge"],
             "about": "Spouse given name.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10148,9 +9928,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Cognoms del cònjuge"
-            ],
+            "help": ["Cognoms del cònjuge"],
             "about": "Spouse surnames.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10164,9 +9942,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Data de naixement del cònjuge"
-            ],
+            "help": ["Data de naixement del cònjuge"],
             "about": "Spouse birth date.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10189,9 +9965,7 @@
                 "label": "Dona"
               }
             ],
-            "help": [
-              "Sexe del cònjuge"
-            ],
+            "help": ["Sexe del cònjuge"],
             "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "ejercicio_answer": null,
             "row_index": null
@@ -10234,9 +10008,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Cònjuge no resident IRPF"
-            ],
+            "help": ["Cònjuge no resident IRPF"],
             "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10259,9 +10031,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Cònjuge resident UE/EEE"
-            ],
+            "help": ["Cònjuge resident UE/EEE"],
             "about": "Whether the non-resident spouse is resident in the EU or EEA.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10275,9 +10045,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "País UE/EEE del cònjuge"
-            ],
+            "help": ["País UE/EEE del cònjuge"],
             "about": "EU or EEA country of residence for the spouse.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10308,9 +10076,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Fills menors en unitat familiar"
-            ],
+            "help": ["Fills menors en unitat familiar"],
             "about": "Minor children in the family unit.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10333,9 +10099,7 @@
                 "label": "No"
               }
             ],
-            "help": [
-              "Descendents UE/EEE en deducció d'unitat familiar"
-            ],
+            "help": ["Descendents UE/EEE en deducció d'unitat familiar"],
             "about": "EU/EEA descendant deduction flag for Modelo 100.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10799,9 +10563,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Adóazonosító (NIF/CIF/DNI/NIE) a bevallásokhoz"
-            ],
+            "help": ["Adóazonosító (NIF/CIF/DNI/NIE) a bevallásokhoz"],
             "about": "NIF/NIE/CIF used as filing identity.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10815,9 +10577,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "A helyi áttekintésekben megjelenő megjelenítési név"
-            ],
+            "help": ["A helyi áttekintésekben megjelenő megjelenítési név"],
             "about": "Declarant given name or display name.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10831,9 +10591,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Vezetéknevei vagy cégneve az exportfejlécekhez"
-            ],
+            "help": ["Vezetéknevei vagy cégneve az exportfejlécekhez"],
             "about": "Declarant surnames for person filings.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10903,9 +10661,7 @@
                 "label": "Magyar"
               }
             ],
-            "help": [
-              "CLI kimeneti nyelv ehhez a profilhoz"
-            ],
+            "help": ["CLI kimeneti nyelv ehhez a profilhoz"],
             "about": "Output language used by CLI rendering and notification copy.",
             "ejercicio_answer": null,
             "row_index": null
@@ -10961,9 +10717,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Engedélyezi a Google Sheets exportálást?"
-            ],
+            "help": ["Engedélyezi a Google Sheets exportálást?"],
             "about": "Whether this profile may export modelo workbooks to Google Sheets or Drive. Default on; opting out keeps exports offline-only.",
             "ejercicio_answer": null,
             "row_index": null
@@ -11122,9 +10876,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Adóügyi lakcím irányítószáma"
-            ],
+            "help": ["Adóügyi lakcím irányítószáma"],
             "about": "Fiscal-address postcode.",
             "ejercicio_answer": null,
             "row_index": null
@@ -11249,9 +11001,7 @@
                 "label": "Murcia"
               }
             ],
-            "help": [
-              "Adóügyi illetékességi autonóm közösség"
-            ],
+            "help": ["Adóügyi illetékességi autonóm közösség"],
             "about": "Comunidad autónoma de residencia fiscal en territorio común para el Modelo 100.",
             "ejercicio_answer": null,
             "row_index": null
@@ -11334,9 +11084,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Nagyvállalati bejegyzés"
-            ],
+            "help": ["Nagyvállalati bejegyzés"],
             "about": "Large-company condition used by filing cadence. Applies when operation volume, calculated under LIVA Art. 121, exceeded 6.010.121,04 EUR during the immediately prior calendar year; RIVA Art. 71 then switches IVA liquidation to monthly.",
             "ejercicio_answer": null,
             "row_index": null
@@ -11359,9 +11107,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Közigazgatási költségvetés meghaladja a 6 000 000-t"
-            ],
+            "help": ["Közigazgatási költségvetés meghaladja a 6 000 000-t"],
             "about": "Public-administration budget threshold used by Modelo 111 filing cadence. Applies when the last approved annual public-administration budget before the start of the tax year exceeds 6 million EUR; the Modelo 111 official instructions then route the withholding self-assessment to monthly.",
             "ejercicio_answer": null,
             "row_index": null
@@ -11659,9 +11405,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "A spanyolországi adóügyi képviselő neve"
-            ],
+            "help": ["A spanyolországi adóügyi képviselő neve"],
             "about": "Full name of the representante fiscal designated in Spain when fiscal_residency is non_resident_irnr. Required together with representante_fiscal_nif by TRLIRNR Art. 10 for non-EU/EEE residents.",
             "ejercicio_answer": null,
             "row_index": null
@@ -12854,9 +12598,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Forrásadóval terhelt díjazást fizet szakembereknek"
-            ],
+            "help": ["Forrásadóval terhelt díjazást fizet szakembereknek"],
             "about": "Whether the taxpayer pays professionals with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -12879,9 +12621,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Forrásadóval terhelt helyi bérleti díjat fizet"
-            ],
+            "help": ["Forrásadóval terhelt helyi bérleti díjat fizet"],
             "about": "Whether the taxpayer pays rent with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -12904,9 +12644,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Forrásadóval terhelt tőkejövedelmet fizet"
-            ],
+            "help": ["Forrásadóval terhelt tőkejövedelmet fizet"],
             "about": "Whether the taxpayer pays capital income with withholding.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13013,9 +12751,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Végez intraközösségi ügyleteket"
-            ],
+            "help": ["Végez intraközösségi ügyleteket"],
             "about": "Whether the taxpayer conducts intracommunity operations.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13038,9 +12774,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Intraközösségi ügyletek meghaladják az 50 000 EUR-t"
-            ],
+            "help": ["Intraközösségi ügyletek meghaladják az 50 000 EUR-t"],
             "about": "Modelo 349 cadence threshold.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13063,9 +12797,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "ROI-ba bejelentkezett"
-            ],
+            "help": ["ROI-ba bejelentkezett"],
             "about": "Indica si el contribuyente figura en el Registro de Operadores Intracomunitarios (ROI/VIES), mediante la casilla 582 de los Modelos 036/037. Es distinto de realizar operaciones intracomunitarias y determina el acceso a comprobaciones reservadas a operadores inscritos.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13088,9 +12820,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "OSS-be bejelentkezett"
-            ],
+            "help": ["OSS-be bejelentkezett"],
             "about": "Whether the taxpayer is enrolled in the OSS / IOSS one-stop-shop regime for declaring intra-EU B2C sales (Modelo 369). Live cross-references that consult OSS-only AEAT surfaces (e.g. modelo-369-exterior-filed-declarations-read) gate applicability on this field.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13113,9 +12843,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "IVA-csoport tag szervezeteként bejelentkezett"
-            ],
+            "help": ["IVA-csoport tag szervezeteként bejelentkezett"],
             "about": "Whether the taxpayer is a member entity in the IVA group-of-entities special regime and files Modelo 322 as the individual monthly self-assessment.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13138,9 +12866,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "IVA-csoport domináns szervezeteként bejelentkezett"
-            ],
+            "help": ["IVA-csoport domináns szervezeteként bejelentkezett"],
             "about": "Whether the taxpayer is the dominant entity of an IVA group-of-entities regime and files Modelo 353 as the aggregate monthly self-assessment.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13163,9 +12889,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "SII-be bejelentkezett (azonnali információszolgáltatás)"
-            ],
+            "help": ["SII-be bejelentkezett (azonnali információszolgáltatás)"],
             "about": "Whether the taxpayer is enrolled in the SII (Suministro Inmediato de Informacion), the near-real-time IVA Libros registro submission system. Mandatory for the monthly IVA collective (grandes empresas, REDEME, grupos de IVA); voluntary opt-in via Modelo 036 for everyone else.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13217,9 +12941,7 @@
                 "label": "Általános és egyszerűsített rendszer együtt"
               }
             ],
-            "help": [
-              "Melyik Modelo 303 rendszerösszetétel alkalmazandó?"
-            ],
+            "help": ["Melyik Modelo 303 rendszerösszetétel alkalmazandó?"],
             "about": "Explicit Modelo 303 regime composition. Required when any IVA profile fact claims the IVA block; mixed is distinct from either single-regime arm.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13267,9 +12989,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Önkéntesen csatlakoztál az SII-hez?"
-            ],
+            "help": ["Önkéntesen csatlakoztál az SII-hez?"],
             "about": "Explicit voluntary SII membership, distinct from generic SII membership and mandatory-SII triggers. Required when the IVA profile block is present.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13292,9 +13012,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Jogosult a szénhidrogén-adóraktári előlegek levonására?"
-            ],
+            "help": ["Jogosult a szénhidrogén-adóraktári előlegek levonására?"],
             "about": "Explicit entitlement to deduct advance payments made under the hydrocarbon tax-deposit regime. Required when the IVA profile block is present.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13364,9 +13082,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Külföldi vagyon meghaladja a jogszabályi küszöbértéket"
-            ],
+            "help": ["Külföldi vagyon meghaladja a jogszabályi küszöbértéket"],
             "about": "Modelo 720 eligibility: foreign assets/rights declared above the legal threshold.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13529,9 +13245,7 @@
                 "label": "Nő"
               }
             ],
-            "help": [
-              "Az első adózó neme"
-            ],
+            "help": ["Az első adózó neme"],
             "about": "Sexo del contribuyente para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "ejercicio_answer": null,
             "row_index": null
@@ -13566,9 +13280,7 @@
                 "label": "5"
               }
             ],
-            "help": [
-              "Az első adózó családi állapota"
-            ],
+            "help": ["Az első adózó családi állapota"],
             "about": "Taxpayer marital or registered-partnership status used by Renta profile decisions.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13582,9 +13294,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Az első adózó születési dátuma"
-            ],
+            "help": ["Az első adózó születési dátuma"],
             "about": "Taxpayer birth date.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13618,9 +13328,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Az első adózó elhalálozásának dátuma"
-            ],
+            "help": ["Az első adózó elhalálozásának dátuma"],
             "about": "Taxpayer death date when Modelo 100 requires it.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13634,9 +13342,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Házasságkötés dátuma (ÉÉÉÉ-HH-NN)"
-            ],
+            "help": ["Házasságkötés dátuma (ÉÉÉÉ-HH-NN)"],
             "about": "Fecha de inicio del matrimonio actual. Permite determinar si estuvo vigente todo el ejercicio y los meses inicial y final para las casillas 0245, 0246 y 0247.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13709,9 +13415,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Házastárs NIF/NIE száma"
-            ],
+            "help": ["Házastárs NIF/NIE száma"],
             "about": "Spouse NIF/NIE for joint filing.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13725,9 +13429,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Házastárs keresztneve"
-            ],
+            "help": ["Házastárs keresztneve"],
             "about": "Spouse given name.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13741,9 +13443,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Házastárs vezetéknevei"
-            ],
+            "help": ["Házastárs vezetéknevei"],
             "about": "Spouse surnames.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13757,9 +13457,7 @@
             "field_type": "date",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Házastárs születési dátuma"
-            ],
+            "help": ["Házastárs születési dátuma"],
             "about": "Spouse birth date.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13782,9 +13480,7 @@
                 "label": "Nő"
               }
             ],
-            "help": [
-              "Házastárs neme"
-            ],
+            "help": ["Házastárs neme"],
             "about": "Sexo del conyuge para el Modelo 100. Toma los valores del tipo tipo_Sexo del diseno de registro: H (hombre) y M (mujer).",
             "ejercicio_answer": null,
             "row_index": null
@@ -13827,9 +13523,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Házastárs nem rezidens IRPF szerint"
-            ],
+            "help": ["Házastárs nem rezidens IRPF szerint"],
             "about": "Whether the spouse is non-resident and not an IRPF taxpayer.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13852,9 +13546,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Házastárs EU/EGT-ben él"
-            ],
+            "help": ["Házastárs EU/EGT-ben él"],
             "about": "Whether the non-resident spouse is resident in the EU or EEA.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13868,9 +13560,7 @@
             "field_type": "string",
             "country_options": [],
             "choices": [],
-            "help": [
-              "Házastárs EU/EGT országa"
-            ],
+            "help": ["Házastárs EU/EGT országa"],
             "about": "EU or EEA country of residence for the spouse.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13901,9 +13591,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "Kiskorú gyermekek a családi egységben"
-            ],
+            "help": ["Kiskorú gyermekek a családi egységben"],
             "about": "Minor children in the family unit.",
             "ejercicio_answer": null,
             "row_index": null
@@ -13926,9 +13614,7 @@
                 "label": "Nem"
               }
             ],
-            "help": [
-              "EU/EEE leszármazottak a családi egység levonásban"
-            ],
+            "help": ["EU/EEE leszármazottak a családi egység levonásban"],
             "about": "EU/EEA descendant deduction flag for Modelo 100.",
             "ejercicio_answer": null,
             "row_index": null

@@ -180,18 +180,31 @@ test("a creation whose settlement was not seen is unknown and holds", async ({
   );
   // A fresh list alone cannot establish settlement.
   await expect(submit).toBeDisabled();
-  await dialog(target).getByRole("radio", { name: /3rd quarter 2026/ }).click();
+  await dialog(target)
+    .getByRole("radio", { name: /3rd quarter 2026/ })
+    .click();
   await expect(submit).toBeEnabled();
-  await dialog(target).getByRole("radio", { name: /2nd quarter 2026/ }).click();
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
   await expect(submit).toBeDisabled();
-  await dialog(target).getByRole("button", { name: label("workspace.modelo.editor.cancel"), exact: true }).click();
+  await dialog(target)
+    .getByRole("button", {
+      name: label("workspace.modelo.editor.cancel"),
+      exact: true,
+    })
+    .click();
   await target.locator("[data-rail=ledger]").click();
   await target.locator("[data-rail=declarations]").click();
   await chooseModelo(target, "130", 2026);
-  await dialog(target).getByRole("radio", { name: /2nd quarter 2026/ }).click();
+  await dialog(target)
+    .getByRole("radio", { name: /2nd quarter 2026/ })
+    .click();
   await expect(submit).toBeDisabled();
   const calls = await target.evaluate(() => window.__scenarioHostCalls ?? []);
-  expect(calls.filter((call) => call === "modelo submit modelo.work.create")).toHaveLength(1);
+  expect(
+    calls.filter((call) => call === "modelo submit modelo.work.create"),
+  ).toHaveLength(1);
 });
 
 test("returning from a declaration keeps the list as it was, unread", async ({
