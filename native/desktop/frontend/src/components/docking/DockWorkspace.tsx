@@ -206,6 +206,7 @@ export function DockWorkspace({
   return (
     <div
       ref={surface}
+      role="main"
       className="dock-workspace relative min-h-0 min-w-0 flex-1 overflow-hidden"
       data-dock-workspace=""
       onDragEnter={(event) => {

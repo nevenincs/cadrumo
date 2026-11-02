@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:ee523a312e3984f756090f02f1f112b1dfa7be083046a44401d7a97b145c0783'
+body_hash: 'sha256:c621c94f90974750d17d013321340db875d73c52c6f7d69d6a13e36fb255c9c1'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -54,6 +54,10 @@ related:
 - `S01` `verify:` `S01 four-file ESLint and Prettier` -> `pass`
 - `S01` `verify:` `Playwright ledger documents/read/setup functional cases (54)` -> `pass`
 - `S01` `verify:` `Playwright setup light/dark accessibility after S22 (2)` -> `pass`
+- `S22` `M` `native/desktop/frontend/src/components/docking/DockWorkspace.tsx`
+- `S22` `M` `native/desktop/frontend/tests/scenarios/docking.spec.ts`
+- `S22` `verify:` `targeted DockWorkspace and docking spec ESLint` -> `pass`
+- `S22` `verify:` `Playwright docking tabs/splits/floating plus setup light/dark accessibility (3 cases)` -> `pass`
 
 ## Notes
 

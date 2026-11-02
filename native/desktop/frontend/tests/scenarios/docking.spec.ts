@@ -34,6 +34,8 @@ test.beforeEach(async ({ page }) => {
     "/scenarios.html?scenario=signed-in&latency=0&bar=off&window=port",
   );
   await expect(header(page, "console")).toBeVisible();
+  await expect(page.getByRole("main")).toHaveCount(1);
+  await expect(page.getByRole("main")).toBeVisible();
 });
 
 test("tabs, splits and floating keep one mounted terminal", async ({
@@ -58,6 +60,9 @@ test("tabs, splits and floating keep one mounted terminal", async ({
     if (direction === "bottom") expect(source!.y).toBeGreaterThan(target!.y);
   }
   await arrange(page, "console", "desktop.dock.float");
+  await expect(
+    page.getByRole("main").locator('[data-dock-header="console"]'),
+  ).toBeVisible();
   const move = header(page, "console").getByRole("button", {
     name: label("desktop.dock.move"),
   });

@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:00664fa25ea8eeb0148d38571cea11f5e7e863d10565c8bb21d33567b4da67e6'
+body_hash: 'sha256:39acbb21fd8314a7e886b57239d544c28833b3b2b81939e4d4d07b2c7cf487c9'
 ---
 
 # `frontend-polish` plan
@@ -40,7 +40,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 ## Steps
 
 - [x] `S01` - Harden document and register reads against changed payloads, hidden views and late replies; `native/desktop/frontend/src/components/ledger/documents/useLedgerRead.ts, native/desktop/frontend/src/components/ledger/setup/SetupParts.tsx`.
-- [ ] `S22` - Restore a single main landmark around the dock workspace and verify full-window accessibility; `native/desktop/frontend/src/components/docking/DockWorkspace.tsx, native/desktop/frontend/tests/scenarios/docking.spec.ts, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`.
+- [x] `S22` - Restore a single main landmark around the dock workspace and verify full-window accessibility; `native/desktop/frontend/src/components/docking/DockWorkspace.tsx, native/desktop/frontend/tests/scenarios/docking.spec.ts, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts`.
 - [ ] `S02` - Prevent obsolete declarations-list reads from overwriting shared workspace cache invalidation; `native/desktop/frontend/src/components/modelo/declarations/`.
 - [ ] `S03` - Retire stale provider mutation results and prevent old reads from replacing newly accepted settings; `native/desktop/frontend/src/shell/providerSettings.ts, native/desktop/frontend/src/shell/agentViews.ts`.
 - [ ] `S04` - Bind reading-model selections and agent observations to the current reader lifecycle; `native/desktop/frontend/src/shell/readingModel.ts, native/desktop/frontend/src/shell/agentLive.ts, native/desktop/frontend/src/components/AgentColumn.tsx`.
