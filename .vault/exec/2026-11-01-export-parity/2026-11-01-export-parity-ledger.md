@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:7d92950df75a8fae3e70e09ee8cbba260e8d94735b317a881f276ecee52e7060'
+body_hash: 'sha256:c86404b1e856c6b79ff3ffa3fe69a82e55692879b76395d4f453f6f28cee8428'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -299,6 +299,8 @@ related:
 - `S14` `verify:` `just check-format` -> `pass`
 - `S14` `verify:` `python -m dev.registry.conformance valid` -> `pass`
 - `S14` `verify:` `just check-bindings` -> `pass`
+- `S14` `verify:` `pytest cap gate, review loader, clean-state enforcement; check-style, check-format, check-types, lint-imports` -> `pass`
+- `S14` `by:` `standard-executor`
 
 ## Notes
 
@@ -321,3 +323,4 @@ related:
 - `S14` re-review fix
 - `S15` operator-approved schema bump 2026-11-02
 - `S14` operator ruling 2026-11-02
+- `S14` regression fix

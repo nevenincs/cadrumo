@@ -1500,6 +1500,60 @@ def _form_fields(envelope: Mapping[str, Any]) -> list[dict[str, Any]]:
     return found
 
 
+def _refusals() -> tuple[tuple[str, BaseException], ...]:
+    """The refusals the scenarios settle, each as its executor raises it."""
+    from cadrumo.application.modelo.action_errors import ModeloDomiciliationPastCutoffError
+    from cadrumo.application.modelo.calculation_note_gate import ModeloCalculationBlockedError
+    from cadrumo.application.modelo.calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON
+    from cadrumo.application.modelo.calculation_screen import calculation_screen_outdated_message_key
+
+    return (
+        (
+            "report-outdated",
+            ModeloCalculationBlockedError(
+                translated_message=calculation_screen_outdated_message_key(),
+                context={
+                    "action": "report",
+                    "calculation_revision_id": "c" * 64,
+                    "reason": CALCULATION_SCREEN_OUTDATED_REASON,
+                    "reasons": CALCULATION_SCREEN_OUTDATED_REASON,
+                },
+            ),
+        ),
+        (
+            "domiciliation-past-cutoff",
+            ModeloDomiciliationPastCutoffError(
+                translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff",
+                context={
+                    "calculation_revision_id": "c" * 64,
+                    "modelo": "130",
+                    "filing_year": "2026",
+                    "period": "1T",
+                    "payment_cutoff_on": "2026-04-15",
+                    "payment_cutoff_source": "filing_window",
+                    "payment_cutoff_legal_refs": "Orden HAC/3625/2003, art. 3",
+                    "export_on": "2026-04-16",
+                },
+            ),
+        ),
+    )
+
+
+def write_refusals(directory: Path) -> None:
+    """Record each scenario refusal's detail as a stopped executor's detail is recorded, in every language."""
+    from cadrumo.application.operations.error_detail import build_operation_error_detail
+    from cadrumo.core.config import override_settings
+
+    directory.mkdir(parents=True, exist_ok=True)
+    for language in LANGUAGES:
+        with override_settings(cadrumo_output_language=language):
+            for name, error in _refusals():
+                detail = build_operation_error_detail(error)
+                if detail is None:
+                    raise SystemExit(f"{name} records no error detail")
+                _write(directory, f"refusal-{name}-{language}.json", detail)
+
+
 def write_envelopes(directory: Path) -> None:
     """Read every envelope the scenario host answers through the application's read path."""
     from cadrumo.adapters.persistence.profile.tests.cross_period_seeding import SEEDED_SOURCE_TAX_ID
@@ -1507,6 +1561,7 @@ def write_envelopes(directory: Path) -> None:
     from cadrumo.domain.user_profile.values import UserProfileFact
 
     directory.mkdir(parents=True, exist_ok=True)
+    write_refusals(directory)
     income = (_income_categories_fact(),)
     with (
         tempfile.TemporaryDirectory(dir=prepare_temp_root()) as tmp,
@@ -1581,8 +1636,10 @@ def _fixture_models() -> list[tuple[str, type[BaseModel]]]:
         ModeloEditRenewalProjectionV1,
     )
     from cadrumo.application.modelo.workbench_projection import ModeloWorkbenchFormProjectionV1
+    from cadrumo.application.operations.error_detail import OperationErrorDetailV1
 
     return [
+        ("refusal-*.json", OperationErrorDetailV1),
         ("modelo-*.json", ModeloWorkbenchFormProjectionV1),
         ("help-*.json", ModeloCasillaHelpProjectionV1),
         ("declarations-*.json", ModeloDeclarationsListProjectionV1),

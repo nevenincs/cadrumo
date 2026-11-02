@@ -16,6 +16,12 @@ from uuid import UUID, uuid4
 import pytest
 from pydantic import BaseModel, JsonValue, TypeAdapter
 
+from cadrumo.application.modelo.action_errors import ModeloDomiciliationPastCutoffError
+from cadrumo.application.operations.error_detail import (
+    OperationErrorDetailV1,
+    build_operation_error_detail,
+    operation_error_detail_schema,
+)
 from cadrumo.application.operations.frontend_projection import (
     OperationNoPendingInteractionV1,
     OperationPublicProjectionV1,
@@ -170,6 +176,8 @@ class _Operation:
         self.interaction_id = "1" * 64
         self.result: BaseModel | None = None
         self.refusal_ref: str | None = None
+        #: The registered error detail a stopped executor recorded, released under its own schema.
+        self.error_detail: OperationErrorDetailV1 | None = None
         self.cancellable = self.contract.cancellation is not OperationCancellation.UNSUPPORTED
 
     def await_review(self, review: GoogleConsentReviewProjection) -> None:
@@ -386,7 +394,18 @@ class _Runtime:
         self, result: OperationResultProjectionRequestV1, *, timeout: float = 60, deadline: float | None = None
     ) -> dict[str, JsonValue]:
         operation = self.operations[result.operation_id]
-        assert operation.result is not None and result.terminal_revision == operation.revision
+        assert result.terminal_revision == operation.revision
+        if result.result_schema == operation_error_detail_schema():
+            if operation.error_detail is None:
+                return {"outcome": "refused", "code": "result_projection_unavailable", "requested_version": 1}
+            return {
+                "outcome": "success",
+                "result_projection_version": 1,
+                "result_schema": result.result_schema.model_dump(mode="json"),
+                "definition_contract_digest": operation.contract.definition_contract_digest,
+                "projection": operation.error_detail.model_dump(mode="json"),
+            }
+        assert operation.result is not None
         return {
             "outcome": "success",
             "result_projection_version": 1,
@@ -661,6 +680,32 @@ def test_a_refusal_its_definition_details_is_read_like_a_result_and_any_other_re
     with pytest.raises(RelayRefusedError) as undocumented:
         relay.handle("operation_result", {"operation_id": other})
     assert undocumented.value.code == "no_result"
+
+
+def test_a_refusal_with_no_declared_detail_relays_its_recorded_error_detail_and_served_words_unchanged() -> None:
+    runtime = _Runtime()
+    relay = _relay(runtime)
+    operation_id = _submit(relay, GOOGLE_STATUS_OPERATION_DEFINITION_ID, _PROFILE_PAYLOAD)
+    operation = runtime.operations[operation_id]
+    operation.refuse(AccessDenialCode.OPERATION_DENIED.value, _declined_google_sign_in())
+    error_detail = build_operation_error_detail(
+        ModeloDomiciliationPastCutoffError(
+            translated_message="errors.refused.refused_modelo_domiciliation_past_cutoff",
+            context={
+                "payment_cutoff_on": "2026-04-15",
+                "payment_cutoff_legal_refs": "Orden HAC/3625/2003, art. 3",
+                "export_on": "2026-04-16",
+            },
+        )
+    )
+    assert error_detail is not None and error_detail.refusal_words is not None
+    operation.error_detail = error_detail
+
+    read = relay.handle("operation_result", {"operation_id": operation_id})
+
+    document = cast(dict[str, object], read["document"])
+    assert document["result_schema"] == operation_error_detail_schema().model_dump(mode="json")
+    assert document["projection"] == error_detail.model_dump(mode="json")
 
 
 def test_relay_uses_one_runtime_budget_across_slow_submit_and_start(monkeypatch: pytest.MonkeyPatch) -> None:
