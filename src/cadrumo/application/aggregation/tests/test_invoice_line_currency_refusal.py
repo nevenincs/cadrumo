@@ -31,11 +31,13 @@ import pytest
 
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.governed_fact_scope import governed_facts_in_scope
+from ....domain.currency.models import EurRateLookup, EurRateLookupStatus
 from ....domain.invoices.enums import IvaRate, PaymentStatus
 from ....domain.invoices.models import Invoice, InvoiceLine
 from ....domain.iva.classification import TransactionKind
 from ....domain.iva.oss import OssIossRegime
 from ....domain.iva.schema import InvoiceKind, IvaRateKind
+from ...exchange_rate_provider import bind_exchange_rate_provider_factory
 from .._modelo_bindings_invoice_iva import _screened_invoice_line_observations
 from ..errors import AggregationValidationError
 from ..oss_ioss import _candidate_for_invoice_line
@@ -51,6 +53,30 @@ def _pinned_operation() -> PinnedAuthorityOperation:
 
 
 _DEVENGO = date(2025, 2, 10)
+_PERIOD_LAST_DAY = date(2025, 3, 31)
+
+
+class _PeriodCloseQuote:
+    """A rate authority that publishes at most the period's last day; its parsing has its own tests."""
+
+    rate_source_id = "ecb_reference"
+
+    def __init__(self, rate: Decimal | None) -> None:
+        self._rate = rate
+
+    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
+        del currency
+        if self._rate is None or rate_date != _PERIOD_LAST_DAY:
+            return EurRateLookup(
+                status=EurRateLookupStatus.MISSING_RATE, rate_date=rate_date, source=self.rate_source_id
+            )
+        return EurRateLookup(
+            status=EurRateLookupStatus.FOUND,
+            rate_date=rate_date,
+            source=self.rate_source_id,
+            rate=self._rate,
+            observation_date=rate_date,
+        )
 
 
 def _unconverted_gbp_invoice(*, line_count: int = 1) -> Invoice:
@@ -175,8 +201,13 @@ def test_oss_ioss_refuses_on_an_unconverted_line() -> None:
     invoice is the ORDINARY case -- the highest-probability trigger of the whole class.
     """
     invoice, line = _unconverted_pln_oss_line()
-    with pytest.raises(AggregationValidationError) as exc_info:
-        _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_DEVENGO)
+    with (
+        bind_exchange_rate_provider_factory(lambda: _PeriodCloseQuote(None)),
+        pytest.raises(AggregationValidationError) as exc_info,
+    ):
+        _candidate_for_invoice_line(
+            invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
+        )
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_currency_unconverted"
     context = exc_info.value.context
     assert context is not None, "the refusal must carry its context, not just a message"
@@ -185,7 +216,7 @@ def test_oss_ioss_refuses_on_an_unconverted_line() -> None:
 
 
 def test_oss_ioss_does_not_refuse_a_converted_invoice() -> None:
-    """Anti-tautology: an OSS invoice with a resolved rate never trips the currency guard.
+    """Anti-tautology: an OSS invoice whose period-close rate is published never trips the currency guard.
 
     Built from a fresh payload rather than ``invoice.model_dump()`` merged
     with overrides: the model distinguishes an ABSENT optional field from one
@@ -212,14 +243,12 @@ def test_oss_ioss_does_not_refuse_a_converted_invoice() -> None:
             "payment_status": PaymentStatus.PAID,
             "oss_ioss_regime": OssIossRegime("union_scheme"),
             "oss_transaction_kind": TransactionKind("oss_union_services"),
-            "fx_rate": Decimal("0.23"),
-            "fx_rate_date": _DEVENGO,
-            "fx_rate_source": "ecb_reference",
         },
     )
-    candidate = _candidate_for_invoice_line(
-        resolved, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_DEVENGO
-    )
+    with bind_exchange_rate_provider_factory(lambda: _PeriodCloseQuote(Decimal("0.23"))):
+        candidate = _candidate_for_invoice_line(
+            resolved, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
+        )
     assert candidate is not None
     assert candidate.base_amount == Decimal("1000.00") * Decimal("0.23")
 
@@ -263,7 +292,9 @@ def test_oss_ioss_refuses_on_an_unclassifiable_rate_kind() -> None:
         },
     )
     with pytest.raises(AggregationValidationError) as exc_info:
-        _candidate_for_invoice_line(invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_DEVENGO)
+        _candidate_for_invoice_line(
+            invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
+        )
     assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.invoice_line_rate_kind_unclassifiable"
     context = exc_info.value.context
     assert context is not None
@@ -303,6 +334,6 @@ def test_oss_ioss_does_not_refuse_an_invoice_never_tagged_as_oss() -> None:
         },
     )
     candidate = _candidate_for_invoice_line(
-        invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_DEVENGO
+        invoice, line, line_index=1, devengo_date=_DEVENGO, period_last_day=_PERIOD_LAST_DAY
     )
     assert candidate is None
