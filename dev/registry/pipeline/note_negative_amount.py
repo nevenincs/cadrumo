@@ -65,7 +65,9 @@ def with_note_negative_amount(
     declaration: NoteNegativeAmountDeclaration | None,
 ) -> ExportFieldDerivation:
     """Give the amounts the notes name the design's signed shape, at the money scale they already print."""
-    if declaration is None or declaration.amount_label not in (derivation.parser_field.description or ""):
+    if declaration is None or (
+        declaration.amount_label.casefold() not in derivation.parser_field.normalized_description.casefold()
+    ):
         return derivation
     field = derivation.field
     if field.data_type != "decimal" or field.decimals != 2:
@@ -78,6 +80,8 @@ def with_note_negative_amount(
                     "decimals": None,
                     "signed": True,
                     "sign_position": declaration.sign_position,
+                    # The vocabulary reading of "Num" as unsigned is what these notes overrule.
+                    "design_type": None,
                 }
             )
         }
