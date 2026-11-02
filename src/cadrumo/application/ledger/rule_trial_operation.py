@@ -67,18 +67,26 @@ class LedgerRuleTrialExecutionResult(BaseModel):
     result: LedgerRuleTrialResult
 
 
+def _pattern_refusal(description_pattern: str) -> RuleTrialOutcome | None:
+    """Name why the rule writer would refuse the pattern, in the order it checks."""
+    if not description_pattern.strip():
+        return "empty_pattern"
+    if len(description_pattern) > RULE_PATTERN_ENTRY_MAX_LENGTH:
+        return "too_long"
+    if description_pattern_error(description_pattern) is not None:
+        return "invalid_pattern"
+    return None
+
+
 def try_rule_pattern(
     profile_id: UUID,
     description_pattern: str,
     transactions: Mapping[str, Transaction],
 ) -> LedgerRuleTrialResult:
     """Answer as saving and applying the pattern would: refused the same way, matched by the same engine."""
-    if not description_pattern.strip():
-        return LedgerRuleTrialResult(profile_id=profile_id, outcome="empty_pattern")
-    if len(description_pattern) > RULE_PATTERN_ENTRY_MAX_LENGTH:
-        return LedgerRuleTrialResult(profile_id=profile_id, outcome="too_long")
-    if description_pattern_error(description_pattern) is not None:
-        return LedgerRuleTrialResult(profile_id=profile_id, outcome="invalid_pattern")
+    refusal = _pattern_refusal(description_pattern)
+    if refusal is not None:
+        return LedgerRuleTrialResult(profile_id=profile_id, outcome=refusal)
     active = {
         transaction_id: transaction
         for transaction_id, transaction in transactions.items()
@@ -92,6 +100,12 @@ def try_rule_pattern(
         return LedgerRuleTrialResult(profile_id=profile_id, outcome="overrun")
     except PatternSearchUnreadableError:
         return LedgerRuleTrialResult(profile_id=profile_id, outcome="invalid_pattern")
+    return _matched_result(profile_id, active, winners)
+
+
+def _matched_result(
+    profile_id: UUID, active: Mapping[str, Transaction], winners: tuple[int | None, ...]
+) -> LedgerRuleTrialResult:
     found = {
         transaction_id: transaction
         for (transaction_id, transaction), winner in zip(active.items(), winners, strict=True)

@@ -39,6 +39,24 @@ def _m210_fields_match(actual: LedgerM210IncomeProjection, m210: LedgerClassifyM
     )
 
 
+def _plain_fields_match(
+    *,
+    patch: LedgerClassifyPatch,
+    fields: tuple[str, ...],
+    result: LedgerClassifyOperationResult,
+    cleared: frozenset[str],
+) -> bool:
+    """Return whether each selected field, other than the M210 income, holds what the writer stores."""
+    transaction = result.transaction
+    for field_name in fields:
+        if field_name == "m210_income_classification":
+            continue
+        owner = result if field_name in _RESULT_ONLY_FIELDS else transaction
+        if getattr(owner, field_name) != _expected_value(field_name, patch, cleared):
+            return False
+    return True
+
+
 def classification_selected_fields_match(
     *,
     patch: LedgerClassifyPatch,
@@ -55,12 +73,8 @@ def classification_selected_fields_match(
     expected_share = patch.business_pct if takes_business_share(classification) else None
     if transaction.business_pct != expected_share:
         return False
-    for field_name in fields:
-        if field_name == "m210_income_classification":
-            continue
-        owner = result if field_name in _RESULT_ONLY_FIELDS else transaction
-        if getattr(owner, field_name) != _expected_value(field_name, patch, cleared):
-            return False
+    if not _plain_fields_match(patch=patch, fields=fields, result=result, cleared=cleared):
+        return False
     if "m210_income_classification" not in fields:
         return True
     actual_m210 = transaction.m210_income_classification
