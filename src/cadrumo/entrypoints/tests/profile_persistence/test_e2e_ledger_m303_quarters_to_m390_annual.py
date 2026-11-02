@@ -541,7 +541,11 @@ def test_persisted_m303_ledger_revision_verifies_and_exports(
 
 
 def _calculate_m390_annual(
-    secure_objects: SecureObjectRepository, *, filing_year: int = _YEAR, operation: PinnedAuthorityOperation
+    secure_objects: SecureObjectRepository,
+    *,
+    filing_year: int = _YEAR,
+    operation: PinnedAuthorityOperation,
+    binding_values: dict[str, Decimal] | None = None,
 ) -> CalculationRevision:
     """Run the live M390/annual calc, leaving the 303-reconciliation relations to fold."""
     wu_repo = WorkUnitCatalogueRepository(bucket_id=_BUCKET_ID, objects=secure_objects)
@@ -565,7 +569,7 @@ def _calculate_m390_annual(
         return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             ports=build_calculation_action_ports(bucket_id=_BUCKET_ID, operation=operation),
-            binding_values={},
+            binding_values=binding_values or {},
             clock=_FILE_AT,
         ).revision
 
@@ -844,6 +848,39 @@ def test_m390_refuses_zero_reconciliation_when_m303_calculated_but_observations_
         _M390_DEVENGADA,
         _M390_DEDUCIBLE,
         _M390_RESULTADO,
+    )
+
+
+def test_m390_refuses_annual_zeros_no_source_or_operator_ever_stated(
+    secure_objects: SecureObjectRepository, *, operation: PinnedAuthorityOperation
+) -> None:
+    """An empty ledger and no M303 quarters leave every annual box unknown, not a proven zero.
+
+    The operator states only the annual prorrata regularisation, so the deduction
+    totals no longer wait on a filed fourth quarter. Every other box the annual
+    totals sum was never supplied, and the engine reads such a box as zero; that
+    zero proves nothing, so no reconciliation slot may be saved as zero.
+    """
+    _store_profile(secure_objects)
+
+    cr_repo = CalculationRevisionCatalogueRepository(objects=secure_objects)
+    before_revision_ids = frozenset(cr_repo.load().revisions)
+    with pytest.raises(ModeloCrossPeriodCleanStateError) as exc_info:
+        _calculate_m390_annual(
+            secure_objects,
+            operation=operation,
+            binding_values={"modelo-390-prorrata-regularizacion-anual": Decimal("0.00")},
+        )
+
+    assert frozenset(cr_repo.load().revisions) == before_revision_ids
+    context = exc_info.value.context or {}
+    assert context["reason"] == "missing_clean_cross_period_303_filings_or_observations"
+    assert context["missing_303_periods"] == _QUARTER_ORDER
+    assert context["zero_reconciliation_casillas_at_risk"] == (_M390_DEVENGADA, _M390_DEDUCIBLE, _M390_RESULTADO)
+    assert context["annual_casillas_not_proven_zero"] == (
+        validated_casilla_id("iva.anual.cuota-devengada-total"),
+        validated_casilla_id("iva.anual.cuota-deducible-total"),
+        validated_casilla_id("iva.anual.resultado-regimen-general"),
     )
 
 
