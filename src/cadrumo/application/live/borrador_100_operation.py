@@ -276,14 +276,7 @@ class Borrador100ImportExecutor:
                     task_name=BORRADOR_100_IMPORT_OPERATION_DEFINITION_ID,
                 )
             except BaseException:
-                effect = (
-                    OperationEffect.UNKNOWN
-                    if tracker.has_uncertain_write
-                    else OperationEffect.PARTIAL
-                    if tracker.confirmed_write
-                    else OperationEffect.NONE
-                )
-                await context.events.effect(effect)
+                await context.events.effect(tracker.effect(incomplete=True))
                 raise
             if captured.snapshot.bucket_id != str(payload.profile_id):
                 raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)

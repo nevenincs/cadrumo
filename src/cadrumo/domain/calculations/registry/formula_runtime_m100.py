@@ -19,10 +19,10 @@ from .errors import RegistryValidationError
 from .formula_runtime_ops import (
     numeric_casilla_value as _numeric_casilla_value,
 )
+from .formula_runtime_ops import require_casilla_leaf, require_parameter_leaf, text_tolerant_casilla_value
 from .formula_runtime_ops import (
     resolve_scalar_parameter as _resolve_scalar_parameter,
 )
-from .formula_runtime_ops import text_tolerant_casilla_value
 from .ids import ParameterId
 from .schema_formula import FormulaExpression
 
@@ -238,30 +238,16 @@ def _m100_resolve_imputed_rent_args(expression: FormulaExpression) -> _M100Resol
         old_rate_arg,
     ) = expression.args
     return _M100ResolveImputedRentArgs(
-        catastral_value_casilla_id=_m100_require_casilla_arg(catastral_value_arg, op=op, position=0),
-        revised_flag_casilla_id=_m100_require_casilla_arg(revised_flag_arg, op=op, position=1),
-        disposal_days_casilla_id=_m100_require_casilla_arg(disposal_days_arg, op=op, position=2),
-        mixed_use_flag_casilla_id=_m100_require_casilla_arg(mixed_use_flag_arg, op=op, position=3),
-        disposal_percentage_casilla_id=_m100_require_casilla_arg(disposal_percentage_arg, op=op, position=4),
-        mixed_use_days_casilla_id=_m100_require_casilla_arg(mixed_use_days_arg, op=op, position=5),
-        year_days_parameter=_m100_require_parameter_arg(year_days_arg, op=op, position=6),
-        recent_rate_parameter=_m100_require_parameter_arg(recent_rate_arg, op=op, position=7),
-        old_rate_parameter=_m100_require_parameter_arg(old_rate_arg, op=op, position=8),
+        catastral_value_casilla_id=require_casilla_leaf(catastral_value_arg, op=op, position=0),
+        revised_flag_casilla_id=require_casilla_leaf(revised_flag_arg, op=op, position=1),
+        disposal_days_casilla_id=require_casilla_leaf(disposal_days_arg, op=op, position=2),
+        mixed_use_flag_casilla_id=require_casilla_leaf(mixed_use_flag_arg, op=op, position=3),
+        disposal_percentage_casilla_id=require_casilla_leaf(disposal_percentage_arg, op=op, position=4),
+        mixed_use_days_casilla_id=require_casilla_leaf(mixed_use_days_arg, op=op, position=5),
+        year_days_parameter=require_parameter_leaf(year_days_arg, op=op, position=6),
+        recent_rate_parameter=require_parameter_leaf(recent_rate_arg, op=op, position=7),
+        old_rate_parameter=require_parameter_leaf(old_rate_arg, op=op, position=8),
     )
-
-
-def _m100_require_casilla_arg(arg: FormulaExpression, *, op: str, position: int) -> CasillaId:
-    casilla_id = arg.casilla_id
-    if casilla_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[{position}] to be a casilla leaf")
-    return casilla_id
-
-
-def _m100_require_parameter_arg(arg: FormulaExpression, *, op: str, position: int) -> ParameterId:
-    parameter_id = arg.parameter
-    if parameter_id is None:
-        raise RegistryValidationError(f"formula op {op!r} requires args[{position}] to be a parameter leaf")
-    return parameter_id
 
 
 def _m100_revised_cadastral_value_flag(casilla_id: CasillaId, ctx: _EvalContext) -> bool:
@@ -337,13 +323,7 @@ def _m100_resolve_eo_agraria_indices_correctores_args(
         )
     indice_casilla_ids: list[CasillaId] = []
     for position, indice_arg in enumerate(expression.args[1:], start=1):
-        if indice_arg.casilla_id is None:
-            raise RegistryValidationError(
-                f"formula op {op!r} requires args[{position}] to be a casilla leaf",
-                translated_message="errors.calc.lookup_dispatch_arg_kind",
-                context={"op": op, "position": f"args[{position}]", "expected_kind": "casilla"},
-            )
-        indice_casilla_ids.append(indice_arg.casilla_id)
+        indice_casilla_ids.append(require_casilla_leaf(indice_arg, op=op, position=position))
     return _M100ResolveEoAgrariaIndicesCorrectoresArgs(
         minorado_casilla_id=minorado_arg.casilla_id,
         indice_casilla_ids=tuple(indice_casilla_ids),

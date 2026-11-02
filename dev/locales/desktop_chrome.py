@@ -752,6 +752,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "revoke_especial",
             "seed_sector",
             "settle_sector",
+            "declare_gross",
         ),
         "desktop.ledger.prorrata.form.": (
             "seed",
@@ -761,6 +762,7 @@ DESKTOP_CHROME_FAMILIES: Final[Mapping[str, tuple[str, ...]]] = MappingProxyType
             "revoke_especial",
             "seed_sector",
             "settle_sector",
+            "declare_gross",
         ),
         "desktop.ledger.prorrata.refusal.": (
             "validation",

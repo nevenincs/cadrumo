@@ -61,7 +61,7 @@ from ..storage.sync_runs.records import SyncRunRecordReference, SyncRunRecordRep
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .errors import LiveApplicationInputError
 from .filed_data_ports import FiledDataCapturePort, FiledEffectGuard
-from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome
+from .filed_history_discovery import FiledHistoryOnboardingRun, FiledHistoryPairOutcome, resolve_discovery_profile
 from .filed_history_events import (
     FILED_HISTORY_PHASE_DECLARATION_CAPTURE,
     FILED_HISTORY_PHASE_DISCOVERY,
@@ -276,19 +276,6 @@ def _unconfigured_provider_preflight(profile_id: UUID, operation: PinnedAuthorit
     raise ProfileAccessRefusedError(AccessDenialCode.PROVIDER_REQUIRED)
 
 
-def _resolve_active_filed_history_profile(operation: PinnedAuthorityOperation) -> TaxpayerProfile | None:
-    """Load the selected profile through its canonical internal projection."""
-    from ..wizard.status import WizardStatusError, load_active_taxpayer_profile
-    from ..workflow.persistence import workflow_state_repository
-
-    try:
-        return load_active_taxpayer_profile(workflow_state_repository().load(), schema=operation.profile_schema())
-    except WizardStatusError:
-        # Filed history still has a truthful AEAT register-options path when the
-        # active profile has not declared sufficient taxpayer facts yet.
-        return None
-
-
 async def _pull_recorded_filed_history(
     payload: FiledHistoryOperationRequest,
     profile: TaxpayerProfile | None,
@@ -493,7 +480,7 @@ class FiledHistoryOperationExecutor:
         composition_factory: FiledHistoryCompositionFactory,
         browser_resources_factory: FiledHistoryBrowserResourcesFactory,
         pull: FiledHistoryPull = _pull_recorded_filed_history,
-        profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
+        profile_resolver: FiledHistoryProfileResolver = resolve_discovery_profile,
         provider_preflight: FiledHistoryProviderPreflight = _unconfigured_provider_preflight,
     ) -> None:
         """Initialize this public contract."""
@@ -560,7 +547,7 @@ def build_filed_history_operation_definition(
     composition_factory: FiledHistoryCompositionFactory,
     browser_resources_factory: FiledHistoryBrowserResourcesFactory,
     pull: FiledHistoryPull = _pull_recorded_filed_history,
-    profile_resolver: FiledHistoryProfileResolver = _resolve_active_filed_history_profile,
+    profile_resolver: FiledHistoryProfileResolver = resolve_discovery_profile,
     provider_preflight: FiledHistoryProviderPreflight = _unconfigured_provider_preflight,
 ) -> OperationDefinition:
     """Bind entrypoint-owned persistence to the canonical operation contract."""

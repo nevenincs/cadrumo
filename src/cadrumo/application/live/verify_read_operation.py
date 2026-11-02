@@ -11,7 +11,6 @@ from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.projection_pages import PROJECTION_DOCUMENT_MAX_BYTES
 
 from ...core.bucket_pointer import require_active_bucket_id
-from ...core.hashing import canonical_json_bytes
 from ...core.operations import OperationEffect
 from ..ledger.read_access import resolve_ledger_read_access
 from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
@@ -21,6 +20,7 @@ from ..operations.operation_definition import OperationDefinition
 from ..operations.owner import OperationExecutorContext
 from ..operations.profile_guard import require_profile_operation_identity
 from ..operations.registry import OperationPublicDefinitionRegistrationV1
+from ..operations.result_size import refuse_oversized_result
 from ..user_profile.access_errors import ProfileAccessRefusedError
 from .live_operation_execution import publish_live_read_report, require_exact_profile_worker
 from .live_operation_registration import build_live_operation_definition, require_live_read_receipt
@@ -69,8 +69,7 @@ def _summary(observation: VerifyObservation) -> VerifyObservationSummaryPublicV1
 
 
 def _require_bounded_result(result: BaseModel) -> None:
-    if len(canonical_json_bytes(result.model_dump(mode="json"))) > _RESULT_DOCUMENT_MAX_BYTES:
-        raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_DENIED)
+    refuse_oversized_result(result, _RESULT_DOCUMENT_MAX_BYTES)
 
 
 class VerifyListExecutor:

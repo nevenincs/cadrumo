@@ -898,10 +898,8 @@ def _renta_business_proportion_or_issue(
             RentaLedgerAggregationIssueReason.ACTIVITY_MARKED_PENDING_ANNUAL_REVIEW,
             "actividad-marked expense needs business-classification review before the annual declaration",
         )
-    reason = (
-        RentaLedgerAggregationIssueReason.PERSONAL_TRANSACTION
-        if transaction.business_classification is BusinessClassification.PERSONAL
-        else RentaLedgerAggregationIssueReason.UNCLASSIFIED_BUSINESS_STATE
+    reason = RentaLedgerAggregationIssueReason(
+        _shared_issue_reasons.business_state_issue_reason(transaction.business_classification)
     )
     return _renta_transaction_issue(
         transaction,

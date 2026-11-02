@@ -21,6 +21,7 @@ from cadrumo_client.commands.secure_input import (
     ProfileSecretChannel,
     ProfileSecretSelection,
 )
+from cadrumo_client.commands.sign_in_refusal_projection import session_refusal_translation_key
 from cadrumo_client.commands.windows_secret_channels import descriptor_from_inherited_handle
 from cadrumo_client.contracts.command_ports import ProfileAuthenticationPosture
 
@@ -29,7 +30,6 @@ from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import lookup_translation, tr
 from ....core.profile_session import ProfileSessionRefusalReason
 from .._profile_authentication_gate import _preflight_sources, _uses_profile_connection
-from .._profile_session_gate import session_refusal_translation_key
 from ..command_specs import COMMAND_GRAPH
 from ..errors import render_error_payload
 

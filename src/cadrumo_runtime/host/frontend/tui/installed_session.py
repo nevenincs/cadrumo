@@ -57,7 +57,7 @@ from cadrumo_client.transport.profile_language import read_profile_language
 from .launcher import run_precomposed_runtime_root_session
 from .runtime_admission import runtime_login_session
 from .secret.automation_requester import RuntimeAutomationRequesterScreen
-from .secret.runtime_login_contracts import RuntimeLoginMethod
+from .secret.runtime_login_contracts import AUTOMATION_LOGIN_METHODS
 
 if TYPE_CHECKING:
     from textual.app import AutopilotCallbackType
@@ -212,7 +212,7 @@ async def _run_runtime_session(
             # The sign-in screen closed itself because its profile list may be
             # out of date: the choice is made again from a fresh reading.
             return AccountRecomposeRequiredV1(reason=AccountRecomposeReasonV1.CHANGE_USER) if watch.changed else None
-        if handoff.method in {RuntimeLoginMethod.API_KEY, RuntimeLoginMethod.API_REFERENCE}:
+        if handoff.method in AUTOMATION_LOGIN_METHODS:
             from .runtime_session import RuntimeRestrictedSessionApp
 
             def requester_for_api(client: FrontendClient) -> RuntimeAutomationRequesterScreen:

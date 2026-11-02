@@ -83,7 +83,7 @@ class StandardPeriodCode(StrEnum):
 
 
 _STANDARD_PERIOD_SET: frozenset[str] = frozenset(member.value for member in StandardPeriodCode)
-_INSTALMENT_PERIOD_SET: frozenset[str] = frozenset(
+INSTALMENT_PERIOD_CODES: frozenset[StandardPeriodCode] = frozenset(
     (StandardPeriodCode.P1, StandardPeriodCode.P2, StandardPeriodCode.P3, StandardPeriodCode.P4),
 )
 #: The registry token of a period qualified by its special-regime scheme.
@@ -315,7 +315,7 @@ def _period_kind_for_code(code: str) -> PeriodKind:
         return PeriodKind.ANNUAL
     if len(code) == 2 and code.isdigit():
         return PeriodKind.MONTHLY
-    if code in _INSTALMENT_PERIOD_SET:
+    if code in INSTALMENT_PERIOD_CODES:
         return PeriodKind.INSTALMENT
     return PeriodKind.EXTENDED
 

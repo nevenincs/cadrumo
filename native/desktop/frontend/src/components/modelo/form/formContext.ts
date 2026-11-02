@@ -5,6 +5,7 @@ import type {
   PublicModeloFormField,
   SourceSurface,
 } from "../../../shell/modeloContract";
+import type { BoxNotes } from "./boxNotes";
 import type { FormSession } from "./session";
 import type { EditRequest } from "./ValueCell";
 
@@ -19,6 +20,9 @@ export type FormContextValue = {
   /** A box's editor closed; the form moves on to match. */
   onDone: (field: PublicModeloFormField, how: CommitKey | "cancel") => void;
   onOpenSurface?: (surface: SourceSurface) => void;
+  /** What the latest calculation noted beside each box, as the read model
+   * lists it. */
+  notes: BoxNotes;
   /** Whether the reader sees the form in another language than its own, so
    * a label still in Spanish says so. */
   translated: boolean;

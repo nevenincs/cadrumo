@@ -76,11 +76,12 @@ from .figures import (
     invoice_total_findings,
     line_amount_finding,
     line_iva_finding,
-    line_rate_refusal_finding,
     line_subtotal_finding,
     nonnumeric_invoice_findings,
     quantity_finding,
     raise_first_figure_finding,
+    rate_refusal_finding,
+    rate_refusal_is_coverage_gap,
     recargo_ceiling_finding,
     recargo_sign_finding,
     retention_findings,
@@ -777,7 +778,14 @@ class Invoice(BaseModel):
             try:
                 rate = answer_once(iva_rate_percentage, line.iva_rate, devengo_date)
             except IvaRateNotFoundError as exc:
-                raise figure_refusal(line_rate_refusal_finding(line.iva_rate, devengo_date, exc)) from exc
+                raise figure_refusal(
+                    rate_refusal_finding(
+                        line.iva_rate,
+                        devengo_date,
+                        coverage_gap=rate_refusal_is_coverage_gap(exc),
+                        cause=exc,
+                    )
+                ) from exc
             if line.oss_rate_kind is not None:
                 continue
             raise_first_figure_finding((line_iva_finding(line.subtotal, line.iva_amount, rate),))

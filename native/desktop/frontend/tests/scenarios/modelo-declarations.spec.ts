@@ -72,6 +72,23 @@ test("lists the read model's rows in its groups, with its notices", async ({
     );
 });
 
+test("a row says what its calculation noted, as the read model words it", async ({
+  page: target,
+}) => {
+  await openDeclarations(target, "&modelo=list-notes");
+  const noted = page(target).locator(".declarations-row-notes");
+  await expect(noted).toHaveCount(1);
+  await expect(
+    noted.getByRole("img", { name: label("desktop.declarations.notes.label") }),
+  ).toBeVisible();
+  // The first note is on the row, with how many there are; every note is in
+  // its tooltip.
+  await expect(noted).toContainText("Laptop:");
+  await expect(noted).toContainText("3");
+  await noted.hover();
+  await expect(target.getByRole("tooltip")).toContainText("Printer:");
+});
+
 test("an incomplete list never claims there is nothing to do", async ({
   page: target,
 }) => {
