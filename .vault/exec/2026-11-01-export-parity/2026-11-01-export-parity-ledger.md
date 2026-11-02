@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:038a9d9400bd299871742d93fad2982cc868c1abb911e759c3d5e6d362186152'
+body_hash: 'sha256:30096b8891ecab4480d34ed58db9b871728b741153fa789bbef404ebe5aa7084'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -518,6 +518,22 @@ related:
 - `S06` `by:` `vaultspec-high-executor`
 - `S18` `M` `src/cadrumo/application/retencion_soportada_certificado/executor.py`
 - `S18` `verify:` `pytest retencion_soportada cli+mesh+conformance` -> `pass`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_100_profile_identity_export_position.py`
+- `S06` `verify:` `pytest test_modelo_100_profile_identity_export_position.py -m ''` -> `pass`
+- `S06` `by:` `implementer`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_100_text_export_limits.py`
+- `S06` `verify:` `pytest test_modelo_100_text_export_limits.py -m ''` -> `pass`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_modelo_100_salary_certificate_retenciones_cli.py`
+- `S06` `verify:` `pytest test_modelo_100_salary_certificate_retenciones_cli.py -m ''` -> `pass`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_profile_text_gap_advisory_notice.py`
+- `S06` `verify:` `pytest test_profile_text_gap_advisory_notice.py -m ''` -> `pass`
+- `S06` `M` `src/cadrumo_runtime/host/tests/frontend/cli/test_register_owned_acquisition_cli.py`
+- `S06` `verify:` `pytest test_register_owned_acquisition_cli.py -m ''` -> `pass`
+- `S06` `M` `dev/acceptance/assets/export_journey.py`
+- `S06` `verify:` `pytest dev/acceptance tests` -> `pass`
+- `S06` `M` `dev/acceptance/income_tax/cli_journey.py`
+- `S06` `M` `dev/acceptance/income_tax/financial_contracts.py`
+- `S06` `M` `dev/acceptance/export_parity/seed_contracts.py`
 
 ## Notes
 
