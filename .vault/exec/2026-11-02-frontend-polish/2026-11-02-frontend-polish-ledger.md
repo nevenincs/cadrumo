@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-03'
 body_schema: 'body-v2'
-body_hash: 'sha256:8050315fcc1ea391404bc7eb4a17dc2abb56ae9ffab27bd22f2f3285b4e75d38'
+body_hash: 'sha256:f713ab32eada072a36c122b63c68ea831d12690db637c29ea92c005b128ff769'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -233,6 +233,10 @@ related:
 - `S32` `verify:` `159 focused Python cases combined final evidence` -> `pass`
 - `S32` `verify:` `165 Modelo logs browser scenarios` -> `pass`
 - `S32` `verify:` `TypeScript and scoped Ruff ESLint Prettier` -> `pass`
+- `S31` `M` `native/desktop/frontend/src/components/modelo/form/RecordsBlock.tsx`
+- `S31` `M` `native/desktop/frontend/src/dev/fixtures/modelo/`
+- `S31` `verify:` `canonical 218-envelope generation and validation` -> `pass`
+- `S31` `verify:` `117 Modelo scenarios including four-language context boxes` -> `pass`
 
 ## Notes
 
