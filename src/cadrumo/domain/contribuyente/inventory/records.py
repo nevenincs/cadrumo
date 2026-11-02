@@ -706,7 +706,6 @@ class InventoryLedgerHistoryEntry(BaseModel):
         return self
 
 
-
 class InventoryLedger(BaseModel):
     """Per-activity inventory ledger for one tax year.
 
