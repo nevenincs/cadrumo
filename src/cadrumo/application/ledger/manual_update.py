@@ -797,6 +797,7 @@ def command_from_patch(
         bucket_id=bucket_id,
         booked_date=booked_date,
         value_date=patch.value_date if "value_date" in patch_fields else raw.value_date,
+        operation_date=patch.operation_date if "operation_date" in patch_fields else current.operation_date,
         amount=amount,
         currency=currency,
         direction=direction,

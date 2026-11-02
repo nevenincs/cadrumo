@@ -2473,6 +2473,7 @@ desktop:
       input_classification: Beszerzés felhasználása
       investment_asset_id: Beruházási javak
       m210_income_classification: 210-es modell jövedelme
+      operation_date: Ügylet dátuma
       own_account_id: Számla
       prorrata_reference: Arányosítási hivatkozás
       prorrata_sector_id: Arányosítási ágazat
@@ -7148,6 +7149,7 @@ tui:
           iva_category: IVA-kategória
           iva_rate: IVA-kulcs (például 0.21)
           notes: Megjegyzések
+          operation_date: Ügylet dátuma (ÉÉÉÉ-HH-NN)
           own_account_id: Saját számla (acc-01)
           prorrata_reference: Prorrata hivatkozás
           prorrata_sector: Prorrata ágazat
@@ -8146,6 +8148,7 @@ tui:
         iva_amount: IVA összege (nem kötelező)
         iva_rate: IVA-kulcs (nem kötelező)
         notes: Megjegyzések
+        operation_date: Ügylet dátuma (ÉÉÉÉ-HH-NN, nem kötelező)
         taxable_base: Adóalap (nem kötelező)
         value_date: Értéknap (ÉÉÉÉ-HH-NN, nem kötelező)
       update_refused: 'A módosítást elutasította: {detail}'

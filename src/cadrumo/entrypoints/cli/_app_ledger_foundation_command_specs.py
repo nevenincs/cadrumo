@@ -87,6 +87,7 @@ LEDGER_FOUNDATION_COMMAND_SPECS: tuple[CommandSpec, ...] = (
             ),
             _required_text_option("description", ("--description",), "cli.ledger.add.description_help"),
             _optional_text_option("value_date", ("--value-date",), "cli.ledger.add.value_date_help"),
+            _optional_text_option("operation_date", ("--operation-date",), "cli.ledger.add.operation_date_help"),
             OptionSpec(
                 name="currency",
                 declarations=("--currency",),

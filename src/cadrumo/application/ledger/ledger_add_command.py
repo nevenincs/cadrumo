@@ -82,6 +82,7 @@ def prepare_ledger_add_command(
         bucket_id=str(payload.profile_id),
         booked_date=booked_date,
         value_date=value_date,
+        operation_date=(require_iso8601_date(payload.operation_date) if payload.operation_date is not None else None),
         amount=amount,
         currency=payload.currency,
         direction=direction,

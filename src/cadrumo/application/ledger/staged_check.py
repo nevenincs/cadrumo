@@ -69,6 +69,7 @@ TRANSFER_TAX_FIELDS: Final[tuple[StageFieldName, ...]] = (
     "irpf_category",
     "deduction_fact_kind",
     "investment_asset_id",
+    "operation_date",
 )
 """What ``ManualLedgerTransactionCommand`` refuses on a transfer, of what a cell can stage."""
 
@@ -90,7 +91,7 @@ TRANSFER_LOCKED_FIELDS: Final[tuple[StageFieldName, ...]] = TRANSFER_TAX_FIELDS
 """What cannot be edited on a transfer: the writer refuses every one of them there."""
 
 _CLASSIFYING_FIELDS: Final[frozenset[str]] = frozenset(
-    {*TRANSFER_TAX_FIELDS, "business_classification", "counterparty_country"}
+    {*TRANSFER_TAX_FIELDS, "business_classification", "counterparty_country"} - {"operation_date"}
 )
 
 DRAFT_REQUIRED_FIELDS: Final = ("booked_date", "amount", "currency", "direction", "description")
@@ -148,6 +149,7 @@ def _stored_facts(transaction: Transaction) -> dict[str, str | None]:
     return {
         "booked_date": raw.booked_date.isoformat(),
         "value_date": None if raw.value_date is None else raw.value_date.isoformat(),
+        "operation_date": None if transaction.operation_date is None else transaction.operation_date.isoformat(),
         "amount": display_decimal(raw.amount),
         "direction": transaction.direction.value,
         "currency": raw.currency,

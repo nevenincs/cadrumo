@@ -3148,6 +3148,9 @@ cli:
       iva_amount_help: Importe de IVA de la transacción
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
       notes_help: Tus notas, guardadas con el movimiento
+      operation_date_help: Fecha del devengo del IVA según el art. 75 LIVA, que elige
+        el periodo del IVA (AAAA-MM-DD). En un anticipo, la fecha del cobro. Si la
+        omites se usa la fecha bancaria y se te avisa.
       prorrata_reference_help: Referencia de prorrata de IVA
       prorrata_sector_help: Identificador del sector diferenciado (arts. 9.1.c y 101
         LIVA) al que corresponde este IVA soportado; debe coincidir con un sector
@@ -3504,6 +3507,7 @@ cli:
       'no': 'No'
       notes: Notas
       notice: Aviso
+      operation_date: Fecha de la operación
       output: Salida
       parent_id: id_padre
       pending: Pendientes de revisión
@@ -3683,6 +3687,8 @@ cli:
       iva_amount_help: Nuevo importe de IVA
       iva_rate_help: Nuevo tipo de IVA como decimal
       notes_help: Tus notas nuevas
+      operation_date_help: Nueva fecha del devengo del IVA según el art. 75 LIVA (AAAA-MM-DD).
+        En un anticipo, la fecha del cobro.
       taxable_base_help: Nuevo importe de base imponible
       value_date_help: Nueva fecha valor (AAAA-MM-DD)
     view:

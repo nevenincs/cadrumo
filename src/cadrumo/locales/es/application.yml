@@ -888,6 +888,12 @@ application:
           siga vinculada a transacciones: %{linked_transaction_ids}. No existe un
           comando de desvinculación: elimina esas transacciones con `aeat app ledger
           remove`, lo que libera el vínculo, y elimina después la factura.'
+        sealed_invoice_refused: La factura %{invoice_id} la leyó el Modelo %{modelo}
+          de %{filing_year} %{period} (%{revision_state}, revisión %{calculation_revision_id}),
+          así que se rechaza este cambio para que esas cifras sigan siendo ciertas.
+          Si no se ha presentado, descarta ese trabajo con `aeat app modelo work discard`
+          y vuelve a calcular. Si se ha presentado, emite una factura rectificativa
+          y presenta una complementaria o sustitutiva.
     linking:
       errors:
         linked_invoice_not_found: No se encontró la factura %{invoice_id} después
@@ -1323,6 +1329,17 @@ application:
           justificante.
         what_to_do: Revisa los registros de IVA de todo el año, añade el justificante
           que falte y vuelve a calcular.
+      iva_operation_date_after_movement:
+        what: Algunas filas del libro tienen una fecha de la operación posterior a
+          la bancaria. Si ese dinero era un anticipo, su IVA se devengó al cobrarlo.
+        what_to_do: En un anticipo, pon como fecha de la operación la del cobro, registra
+          el resto en su propia fila y vuelve a calcular.
+      iva_row_placed_on_movement_date:
+        what: Algunas filas del libro no tienen la fecha de la operación, así que
+          su fecha bancaria ha elegido el periodo del IVA. El IVA se devenga cuando
+          se realiza la operación, no cuando se mueve el dinero.
+        what_to_do: Añade la fecha de la operación a las filas de final de periodo
+          y vuelve a calcular.
       iva_selected_scope_evidence_failure:
         what: Los registros que sustentan el IVA de esta declaración no tienen justificante
           o no cuadran.

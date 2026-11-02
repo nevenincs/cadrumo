@@ -327,6 +327,7 @@ class TransactionPayload(OutputSchema):
     date: IsoDateText
     booked_date: IsoDateText
     value_date: str | None = None
+    operation_date: str | None = None
     amount: NonEmptyStr
     currency: IsoCurrencyCode
     direction: NonEmptyStr
@@ -667,6 +668,7 @@ class LedgerListRowPayload(OutputSchema):
     date: str
     booked_date: str
     value_date: str | None = None
+    operation_date: str | None = None
     amount: str
     currency: IsoCurrencyCode
     direction: str

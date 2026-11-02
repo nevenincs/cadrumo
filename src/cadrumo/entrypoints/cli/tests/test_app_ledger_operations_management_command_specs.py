@@ -942,6 +942,7 @@ _EXPECTED_LIFECYCLE_COMMANDS: Final[tuple[_ExpectedCommand, ...]] = (
             _expected_argument("transaction_id", "cli.ledger.update.id_help"),
             _expected_option("booked_date", "--date", "cli.ledger.update.date_help"),
             _expected_option("value_date", "--value-date", "cli.ledger.update.value_date_help"),
+            _expected_option("operation_date", "--operation-date", "cli.ledger.update.operation_date_help"),
             _expected_option("amount", "--amount", "cli.ledger.update.amount_help"),
             _expected_option(
                 "direction",

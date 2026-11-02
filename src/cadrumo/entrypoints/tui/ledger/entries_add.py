@@ -43,6 +43,7 @@ _REQUIRED_FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
 #: Every optional text fact the request takes, in the order the form asks for them.
 _OPTIONAL_FIELD_LOCALE_KEYS: Final[dict[str, str]] = {
     "value_date": "tui.ledger.entry_tools.add.field.value_date",
+    "operation_date": "tui.ledger.entry_tools.add.field.operation_date",
     "currency": "tui.ledger.entry_tools.add.field.currency",
     "counterparty": "tui.ledger.entry_tools.add.field.counterparty",
     "business_pct": "tui.ledger.entry_tools.add.field.business_pct",

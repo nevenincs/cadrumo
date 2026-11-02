@@ -32,6 +32,7 @@ from ...ledger.actions_common import mutation_signature
 from ...ledger.actions_manual import transaction_from_command
 from ..ledger_filing_snapshot import (
     _FINGERPRINT_FIELDS_V2,
+    _FINGERPRINT_FIELDS_V3,
     CURRENT_FINGERPRINT_FIELD_SET_VERSION,
     _fingerprint_fields,
 )
@@ -48,13 +49,7 @@ _IVA_AGGREGATION_MODULES: tuple[Path, ...] = (
 
 #: Writable, IVA-read fields deliberately left out of the fingerprint, each with
 #: the reason. Adding an entry here is a reviewed decision, not a way to pass.
-INTENTIONALLY_EXCLUDED: Mapping[str, str] = {
-    "deduction_provenance": (
-        "derived from the linked purchase-invoice evidence, not typed by the operator; attaching evidence "
-        "after calculation is the recovery path the drift gate must allow, and the frozen ledger-evidence "
-        "gate checks the evidence itself at export and local filing"
-    ),
-}
+INTENTIONALLY_EXCLUDED: dict[str, str] = {}
 
 _RAW_PREFIX = "raw."
 
@@ -158,20 +153,36 @@ def test_the_derivation_sees_the_fields_this_guard_exists_for() -> None:
         assert field in writable
         assert field in iva_read
     assert "raw.booked_date" in writable
-    assert "deduction_provenance" in writable & iva_read
+    assert {"deduction_provenance", "operation_date"} <= writable & iva_read
     assert all(reason.strip() for reason in INTENTIONALLY_EXCLUDED.values())
     assert set(INTENTIONALLY_EXCLUDED) <= writable & iva_read
 
 
 def test_the_guard_would_have_caught_the_v2_gap() -> None:
-    """Against the previous field set, the check names exactly the two V3 facts."""
+    """Against the V2 field set, the check names the V3 facts and the later V4 ones."""
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
         field_set=_FINGERPRINT_FIELDS_V2,
         excluded=INTENTIONALLY_EXCLUDED,
     )
-    assert missing == ("counterparty_identification_state", "investment_asset_id")
+    assert missing == (
+        "counterparty_identification_state",
+        "deduction_provenance",
+        "investment_asset_id",
+        "operation_date",
+    )
+
+
+def test_the_guard_would_have_caught_the_v3_gap() -> None:
+    """Detached evidence and the operation date were the facts V3 could not see."""
+    missing = unwatched_writable_iva_fields(
+        writable=writable_transaction_fields(),
+        iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
+        field_set=_FINGERPRINT_FIELDS_V3,
+        excluded=INTENTIONALLY_EXCLUDED,
+    )
+    assert missing == ("deduction_provenance", "operation_date")
 
 
 #: An isolated write path shaped like the real signature, with one extra writable field.

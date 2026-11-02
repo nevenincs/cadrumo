@@ -386,10 +386,6 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
       provider identity, effective value date, amount, and narrative only, so an
       evidence-only edit re-derives the SAME id. A finalized revision's
       ``source_transaction_ids`` citation therefore keeps resolving.
-    * The ledger filing snapshot's fingerprint field set (the canonical
-      "tax facts" of a row) reads neither evidence field, so ``row_fingerprint``
-      and the revision's ``snapshot_fingerprint`` are unchanged and the revision's
-      :class:`LedgerFilingSnapshot` still reconciles against the live catalogue.
     * A finalized revision's casilla values and bundled ledger evidence are frozen
       persisted snapshots; this write touches the transaction catalogue alone.
 
@@ -404,10 +400,11 @@ def is_evidence_only_command(command: ManualLedgerTransactionCommand, current: T
     takes the row's base and cuota from the invoice and counts an incoming row
     as a refund, which is why the link is one of
     :data:`~cadrumo.domain.transactions.classification_origin.CLASSIFICATION_DECISION_FIELDS`.
-    The fingerprint does not read it, so a sealed revision does not turn stale
-    by itself. The attach is admitted anyway, and the caller reports the cited
-    revisions as stale so the operator recalculates, rather than silently
-    accepting the write. A supplementary attachment feeds no calculation.
+    From fingerprint field-set version 4 the link is hashed, so a revision sealed
+    under that version reads as stale after the attach, which is true. The attach
+    is admitted anyway, and the caller reports the cited revisions as stale so the
+    operator recalculates, rather than silently accepting the write. A
+    supplementary attachment feeds no calculation and stays unhashed.
     """
     differing = set(ledger_values_differing_from_stored(command, current))
     return bool(differing) and differing <= _EVIDENCE_MUTATION_FIELDS
@@ -745,6 +742,7 @@ def mutation_signature(transaction: Transaction) -> tuple[object, ...]:
     return (
         raw.booked_date,
         raw.value_date,
+        transaction.operation_date,
         raw.amount,
         raw.currency,
         raw.counterparty,
@@ -846,6 +844,7 @@ def _command_idempotency_fields(command: ManualLedgerTransactionCommand) -> dict
     return {
         "booked_date": command.booked_date,
         "value_date": command.value_date,
+        "operation_date": command.operation_date,
         "amount": command.amount,
         "currency": command.currency,
         "counterparty": command.counterparty,
@@ -899,6 +898,7 @@ def _transaction_idempotency_fields(current: Transaction) -> dict[str, object]:
     return {
         "booked_date": raw.booked_date,
         "value_date": raw.value_date,
+        "operation_date": current.operation_date,
         "amount": raw.amount,
         "currency": raw.currency,
         "counterparty": raw.counterparty,

@@ -2491,6 +2491,7 @@ desktop:
       input_classification: Ús de l'adquisició
       investment_asset_id: Bé d'inversió
       m210_income_classification: Renda del model 210
+      operation_date: Data de l'operació
       own_account_id: Compte
       prorrata_reference: Referència de prorrata
       prorrata_sector_id: Sector de prorrata
@@ -7175,6 +7176,7 @@ tui:
           iva_category: Categoria d'IVA
           iva_rate: Tipus d'IVA (per exemple 0.21)
           notes: Notes
+          operation_date: Data de l'operació (AAAA-MM-DD)
           own_account_id: Compte propi (acc-01)
           prorrata_reference: Referència de prorrata
           prorrata_sector: Sector de prorrata
@@ -8177,6 +8179,7 @@ tui:
         iva_amount: Quota d'IVA (opcional)
         iva_rate: Tipus d'IVA (opcional)
         notes: Notes
+        operation_date: Data de l'operació (AAAA-MM-DD, opcional)
         taxable_base: Base imposable (opcional)
         value_date: Data valor (AAAA-MM-DD, opcional)
       update_refused: 'El canvi s''ha rebutjat: {detail}'

@@ -724,6 +724,7 @@ def _build_split_child_transaction(
         {
             "raw": raw_child,
             "direction": parent.direction,
+            "operation_date": parent.operation_date,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": parent.source_jurisdiction,
             "group_label": parent.group_label,
@@ -954,6 +955,7 @@ def _build_merged_transaction(
         {
             "raw": merged_raw,
             "direction": parent.direction,
+            "operation_date": parent.operation_date,
             "business_classification": BusinessClassification.NOT_YET_PROCESSED,
             "source_jurisdiction": parent.source_jurisdiction,
             "group_label": parent.group_label,

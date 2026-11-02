@@ -73,6 +73,7 @@ from ...domain.iva.prorrata import (
 )
 from ...domain.iva.schema import (
     InvoiceKind,
+    is_iva_cash_accounting_none,
 )
 from ...domain.prorrata_register.protocols import ProrrataRegisterRepositoryProtocol
 from ...domain.prorrata_register.register import ProrrataRegister
@@ -464,6 +465,12 @@ class IvaLedgerAggregation(BaseModel):
     # not count operations the law removes from both terms of the ratio. The
     # operations' own IVA cuota observations are unaffected and still aggregate.
     art_104_tres_excluded_ledger_ids: tuple[str, ...] = ()
+    # Contributing rows no operation date was recorded on, so their bank movement
+    # date placed them.
+    movement_dated_ledger_ids: tuple[str, ...] = ()
+    # Contributing rows whose recorded operation date is later than the money:
+    # the shape of a pago anticipado, which art. 75.Dos dates at the collection.
+    operation_after_movement_ledger_ids: tuple[str, ...] = ()
 
     @field_validator("observations")
     @classmethod
@@ -802,6 +809,8 @@ def aggregate_iva_ledger_observations(
     issues: list[IvaLedgerAggregationIssue] = []
     art_104_tres_excluded_ledger_ids: list[str] = []
     unclassified_output_ledger_ids: list[str] = []
+    movement_dated_ledger_ids: list[str] = []
+    operation_after_movement_ledger_ids: list[str] = []
     from ._iva_transaction import classify_iva_transaction
 
     for transaction in transactions.values():
@@ -823,6 +832,13 @@ def aggregate_iva_ledger_observations(
         if outcome.prorrata_reference is not None:
             prorrata_references.append(outcome.prorrata_reference)
         observations.extend(outcome.observations)
+        if outcome.observations:
+            if transaction.operation_date is None:
+                movement_dated_ledger_ids.append(transaction.transaction_id)
+            elif transaction.operation_date > transaction_filing_date(transaction) and is_iva_cash_accounting_none(
+                transaction.cash_accounting_treatment, authority=operation
+            ):
+                operation_after_movement_ledger_ids.append(transaction.transaction_id)
         # LIVA art. 104.Tres: an operator-declared judgment exclusion removes the
         # operation from BOTH terms of the prorrata ratio. The IVA cuota
         # observations above still aggregate (the operation is a real taxable
@@ -838,6 +854,8 @@ def aggregate_iva_ledger_observations(
         issues=tuple(issues),
         art_104_tres_excluded_ledger_ids=tuple(art_104_tres_excluded_ledger_ids),
         unclassified_output_ledger_ids=tuple(unclassified_output_ledger_ids),
+        movement_dated_ledger_ids=tuple(movement_dated_ledger_ids),
+        operation_after_movement_ledger_ids=tuple(operation_after_movement_ledger_ids),
     )
     _validate_investment_asset_authority(
         result.observations,

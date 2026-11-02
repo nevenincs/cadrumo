@@ -98,7 +98,7 @@ _MANUAL_PROVIDER_NAME = "manual-ledger"
 #: re-addressing ordinary movements whose content had not changed. Each field
 #: listed here must default to ``None``, so omitting it when absent loses nothing
 #: a present value would say.
-_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "own_account_id"})
+_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "operation_date", "own_account_id"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -478,6 +478,7 @@ def transaction_from_command(
     payload: dict[str, object] = {
         "raw": raw,
         "direction": command.direction,
+        "operation_date": command.operation_date,
         "business_classification": command.business_classification,
         "business_pct": command.business_pct,
         "category_id": command.category_id,

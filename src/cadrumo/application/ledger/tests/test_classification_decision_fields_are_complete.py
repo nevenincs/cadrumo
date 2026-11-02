@@ -10,9 +10,8 @@ two. A field added to any of them reddens this until it is placed.
 
 The exclusions are checked against an independent reading: the filing
 snapshot's fingerprint of a row's tax facts does not move when one changes.
-The set is wider than that fingerprint by the link to purchase-invoice
-evidence, which the fingerprint leaves out and a calculation reads: the linked
-invoice supplies the row's figures.
+The fingerprint reads the link to purchase-invoice evidence from its fourth
+field set, since detaching it changes what a recalculation admits.
 """
 
 from __future__ import annotations
@@ -91,7 +90,7 @@ def test_what_classification_sets_beyond_a_note_is_a_decision_field() -> None:
     assert bulk_classified <= CLASSIFICATION_DECISION_FIELDS
 
 
-def test_the_link_to_purchase_invoice_evidence_is_a_decision_field_the_fingerprint_leaves_out() -> None:
+def test_the_link_to_purchase_invoice_evidence_is_a_decision_field_the_fingerprint_watches() -> None:
     """A link changes the facts the origin is read from; the sealed fingerprint does not read it, and an attachment is no fact."""
     row = _row()
     linked = row.model_copy(update={"purchase_invoice_evidence_id": "c" * 64})
@@ -99,7 +98,8 @@ def test_the_link_to_purchase_invoice_evidence_is_a_decision_field_the_fingerpri
     assert "purchase_invoice_evidence_id" in CLASSIFICATION_DECISION_FIELDS
     assert "attachment_ids" not in CLASSIFICATION_DECISION_FIELDS
     assert classification_facts(linked) != classification_facts(row)
-    assert row_fingerprint(linked) == row_fingerprint(row)
+    assert row_fingerprint(linked) != row_fingerprint(row)
+    assert row_fingerprint(linked, field_set_version=3) == row_fingerprint(row, field_set_version=3)
 
 
 def _row() -> Transaction:

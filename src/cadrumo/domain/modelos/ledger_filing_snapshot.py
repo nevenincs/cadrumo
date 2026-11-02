@@ -194,7 +194,8 @@ class LedgerEvidenceRow(BaseModel):
     ``fingerprint_field_set_version`` on the owning bundle says so. The same
     holds for ``investment_asset_id`` and ``counterparty_identification_state``,
     which version 3 adds and which rows bundled under versions 1 and 2 carry as
-    ``None``.
+    ``None``. ``operation_date`` and ``deduction_evidence_digest`` arrive with
+    version 4 on the same terms.
 
     Enum-valued facts are stored as their canonical string ``value`` (and dates as
     ISO-8601 strings) so the record roundtrips cleanly through the strict
@@ -254,6 +255,8 @@ class LedgerEvidenceRow(BaseModel):
     # text). Optional so a row bundled before version 3 loads unchanged.
     investment_asset_id: str | None = None
     counterparty_identification_state: str | None = None
+    operation_date: str | None = None
+    deduction_evidence_digest: str | None = None
     fx_rate: Decimal | None = None
     value_in_eur: Decimal | None = None
     lifecycle_state: str = Field(min_length=1)
