@@ -9,7 +9,7 @@
       "period": { "filing_year": 2026, "code": "1T" },
       "registry_revision_id": "2019-y-siguientes",
       "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-      "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+      "calculation_revision_id": "dd39887c5d51a2a297412e6f6cd62bb5d6f3708a5d6895d14aa3d0de3e2b5dde",
       "language": "hu",
       "layout_provenance": "generated",
       "inspection_reason": null,
@@ -1646,7 +1646,7 @@
         "days_overdue": 196
       },
       "aeat_data": null,
-      "filing": { "recorded_at": "2026-11-02T16:31:29.925392Z" },
+      "filing": { "recorded_at": "2026-11-02T19:11:08.626850Z" },
       "last_export": null,
       "edit_closure": "recorded_as_filed",
       "modelo_title": "Modelo 130 · IRPF részletfizetés, közvetlen megállapítás",
@@ -1662,7 +1662,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "062ffe76476fc0e3807a093b469b89fd34d1e1e860d11c2d34a9aeb0abf1feba",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1697,9 +1697,9 @@
     "period_filing_year": 2026,
     "period_code": "1T",
     "work_unit_id": "66354cafad021ef81e8c4bce2a0d361a2fa3ba568efc325ee607266291fd8fb3",
-    "work_unit_record_digest": "4e87e4a478c9d9929c66357a673da57983d1b131229b5b371b271ff5cc86179e",
-    "calculation_head_digest": "261c8f3e6aa0845b39e49794e7308846095203701efb1d1b684b36f42c15a613",
-    "current_calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
+    "work_unit_record_digest": "d106518e626b38fb665cda1ee0b0cb25264e0be0f0326281af3bdd96a97cff55",
+    "calculation_head_digest": "31e7cfc86fffdc682373b34335009b6b91edae5aed5180c176066b75bc9ddc57",
+    "current_calculation_revision_id": "dd39887c5d51a2a297412e6f6cd62bb5d6f3708a5d6895d14aa3d0de3e2b5dde",
     "law_selected_revision_id": "2019-y-siguientes",
     "schema_identity": {
       "schema_id": "modelo-130-2019-y-siguientes",
@@ -2002,9 +2002,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:31:46.662729Z",
-    "expires_at": "2026-11-02T16:36:46.662729Z",
-    "baseline_id": "b58ec6d3bc4e29394a218121c23507f95b470bb249e610f4f3c95f35aa43fd79"
+    "issued_at": "2026-11-02T19:11:17.658593Z",
+    "expires_at": "2026-11-02T19:16:17.658593Z",
+    "baseline_id": "1d69d830a3965b3fa9e9e1927377ad905534e4aa64977ff0e9068aa7c07c4e09"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
@@ -2013,7 +2013,7 @@
     "action": "recorded",
     "count": 0,
     "findings_lead": false,
-    "recorded_at": "2026-11-02T16:31:29.925392Z",
+    "recorded_at": "2026-11-02T19:11:08.626850Z",
     "file_created_at": null,
     "receipt_to_add": true
   },
@@ -2058,8 +2058,8 @@
     "words": "Az ellenőrzés sikeres.",
     "unapplied_words": "A mentett számítás ellenőrzése sikeres; a módosításaidat nem alkalmaztuk."
   },
-  "calculation_revision_id": "e43dcc76314d11ef9a7b6f72c5b166f4010a3ac17415bf6c0720f2acf442f3b5",
-  "verification_report_id": "ba530f77fd23b7fc8772753431ae62ad2cd34aba5e7bc9cc35c567f16d7e5d57",
+  "calculation_revision_id": "dd39887c5d51a2a297412e6f6cd62bb5d6f3708a5d6895d14aa3d0de3e2b5dde",
+  "verification_report_id": "f3624a6f3bfaafed5e086e6afafae40d14ef828d11f48178e1ecb9570def5223",
   "asks_m303_evidence": false,
   "asks_modelo_390": false,
   "registry_revision_id": "2019-y-siguientes",
@@ -2121,7 +2121,7 @@
     "file_format_words": "AEAT-fájl a rögzített szélességű BOE-formátumban"
   },
   "receipt": {
-    "recorded_at": "2026-11-02T16:31:29.925392Z",
+    "recorded_at": "2026-11-02T19:11:08.626850Z",
     "verified": false,
     "verified_at": null,
     "words": "Ehhez a benyújtáshoz még nincs ellenőrzött AEAT-igazolás."

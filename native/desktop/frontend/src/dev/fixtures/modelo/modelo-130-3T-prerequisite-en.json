@@ -1656,7 +1656,7 @@
       "workspace_contract_version": 1,
       "edit_contract_version": 1,
       "operation_manifest_version": 4,
-      "contract_set_digest": "10f174b7573fee55d710cac9091138a71dad8ca1f6e7b272cbd2cfd548fd63e6",
+      "contract_set_digest": "062ffe76476fc0e3807a093b469b89fd34d1e1e860d11c2d34a9aeb0abf1feba",
       "operation_definition_id": "modelo.edit.apply",
       "definition_contract_digest": "76f4c93119bade95230921ecd72ce89c63029617636f78e0fbc4db4dd22f5048",
       "request_schema": {
@@ -1996,9 +1996,9 @@
     ],
     "permitted_surface_digest": "2705e6476442c123bb8c6979cb9d82e81dc02301b0f923b4b78f24941d4686dd",
     "mutation_family": "calculate",
-    "issued_at": "2026-11-02T16:23:51.732096Z",
-    "expires_at": "2026-11-02T16:28:51.732096Z",
-    "baseline_id": "164fea2e0407b46eccaafacd435be9e0d3d5757a7e30da996c3cb8f910ecaa72"
+    "issued_at": "2026-11-02T19:10:22.276533Z",
+    "expires_at": "2026-11-02T19:15:22.276533Z",
+    "baseline_id": "c789a34c1bf14515188785cfa6ec86a6b0b463d28011477abede49e657af1667"
   },
   "admission_refusal": null,
   "admission_refusal_words": null,
