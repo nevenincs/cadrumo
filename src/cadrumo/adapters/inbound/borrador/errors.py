@@ -11,8 +11,23 @@ boundary; callers should inspect the structured attributes on
 from __future__ import annotations
 
 from decimal import Decimal
+from enum import StrEnum
 
 from ....domain.justificante.errors import PdfModeloImportError
+
+
+class BorradorRefusalReason(StrEnum):
+    """Typed reason a borrador was refused for what it prints, not for how it parses.
+
+    Attributes:
+        JOINT_DECLARATION: The document names a second declarant or a joint
+            filing, so its figures are not one taxpayer's.
+        CONFLICTING_DUPLICATE_ROW: One casilla is printed more than once with
+            different values, so no single value can be taken as printed.
+    """
+
+    JOINT_DECLARATION = "joint_declaration"
+    CONFLICTING_DUPLICATE_ROW = "conflicting_duplicate_row"
 
 
 class BorradorParseError(PdfModeloImportError):
@@ -37,6 +52,8 @@ class BorradorParseError(PdfModeloImportError):
         coverage: Fraction of target casillas successfully extracted
             (``Decimal``).  ``None`` when the error is not an
             extraction-coverage failure.
+        reason: :class:`BorradorRefusalReason` when the document was refused
+            for what it prints; ``None`` otherwise.
     """
 
     def __init__(
@@ -47,6 +64,7 @@ class BorradorParseError(PdfModeloImportError):
         malformed: tuple[str, ...] = (),
         ambiguous: tuple[str, ...] = (),
         coverage: Decimal | None = None,
+        reason: BorradorRefusalReason | None = None,
     ) -> None:
         """Initialise with an optional message and structured coverage fields.
 
@@ -56,12 +74,15 @@ class BorradorParseError(PdfModeloImportError):
             malformed: Casilla IDs whose captured value could not be parsed.
             ambiguous: Casilla IDs that matched more than one region.
             coverage: Fraction of target casillas successfully extracted.
+            reason: Typed refusal reason when the document is refused for its
+                printed content.
         """
         super().__init__(message)
         self.missing: tuple[str, ...] = missing
         self.malformed: tuple[str, ...] = malformed
         self.ambiguous: tuple[str, ...] = ambiguous
         self.coverage: Decimal | None = coverage
+        self.reason: BorradorRefusalReason | None = reason
 
 
 class ArtefactNotRecognisedError(BorradorParseError):

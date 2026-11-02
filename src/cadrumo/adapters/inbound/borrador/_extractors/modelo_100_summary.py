@@ -30,7 +30,7 @@ from .....core.time.clock import now
 from ...pdf.extracted_casilla import ExtractedCasilla
 from ...pdf.label_regex import SPANISH_AMOUNT_GROUP, parse_spanish_decimal
 from ...pdf.source_provenance import source_pdf_reference_path
-from ..errors import BorradorParseError
+from ..errors import BorradorParseError, BorradorRefusalReason
 from ..schema import ArtefactKind, BorradorExtractionProfile, InboundBorradorObservation
 
 _CASILLA_VALUE_RE = re.compile(
@@ -39,6 +39,18 @@ _CASILLA_VALUE_RE = re.compile(
 )
 
 _NIF_RE = re.compile(r"NIF\s*[:\-]?\s*([0-9A-Z]{8,12})", re.IGNORECASE)
+# A second declarant is only recognised where the page labels one. No specimen of
+# a joint borrador is available, so wording beyond these labels is not guessed at;
+# a joint document that prints none of them is not detected here.
+_SECOND_DECLARANT_RE = re.compile(
+    r"(?:NIF\s+(?:del\s+)?(?:c[óo]nyuge|declarante\s*2)"
+    r"|(?:c[óo]nyuge|segundo\s+declarante|declarante\s*2)\b[^\n]{0,40}?\bNIF)",
+    re.IGNORECASE,
+)
+_JOINT_FILING_RE = re.compile(
+    r"(?:tributaci[óo]n|declaraci[óo]n)\s+conjunta(?!\s*[:\-]?\s*no\b)",
+    re.IGNORECASE,
+)
 _EJERCICIO_RE = re.compile(r"Ejercicio\s*[:\-]?\s*([0-9]{4})", re.IGNORECASE)
 # The capture is the canonical CSV shape, closed by a word boundary so a longer
 # run is refused rather than truncated to a different identifier.
@@ -99,6 +111,7 @@ def _extract_header_values(
     artefact_kind: ArtefactKind,
 ) -> tuple[str, str, str | None]:
     tax_id = _require_match(_NIF_RE, text, "tax_id (NIF)")
+    _refuse_joint_declaration(text)
     ejercicio = _require_match(_EJERCICIO_RE, text, "ejercicio")
     csv_match = _CSV_RE.search(text)
     csv_value = normalise_aeat_csv(csv_match.group(1)) if csv_match else None
@@ -107,6 +120,19 @@ def _extract_header_values(
     if artefact_kind is not ArtefactKind.DECLARACION:
         csv_value = None
     return tax_id, ejercicio, csv_value
+
+
+def _refuse_joint_declaration(text: str) -> None:
+    """Refuse a document naming a second declarant or a joint filing.
+
+    Every figure on such a page may belong to either declarant, and the header
+    NIF names only the first, so ownership of a value cannot be settled here.
+    """
+    if _SECOND_DECLARANT_RE.search(text) or _JOINT_FILING_RE.search(text):
+        raise BorradorParseError(
+            "the document names a second declarant or a joint filing; its casillas are not one taxpayer's",
+            reason=BorradorRefusalReason.JOINT_DECLARATION,
+        )
 
 
 def _profile_target_casilla_ids(
@@ -169,10 +195,11 @@ def _profile_coverage(
 def _observed_values(text: str) -> tuple[dict[CasillaId, Decimal], list[str]]:
     """Extract first-seen four-digit casilla amount rows from ``text``.
 
-    Duplicate casilla IDs and unparseable values are advisory warnings, not
-    immediate parse failures. Coverage-sensitive callers get hard failures later
-    when the filtered observed set is compared with the supplied extraction
-    profile.
+    A casilla printed again with the same value is an advisory warning. One
+    printed again with a different value is refused, because keeping the first
+    would silently choose between two printed figures. Unparseable values are
+    advisory too; coverage-sensitive callers get hard failures later when the
+    filtered observed set is compared with the supplied extraction profile.
     """
     observed: dict[CasillaId, Decimal] = {}
     warnings: list[str] = []
@@ -181,11 +208,17 @@ def _observed_values(text: str) -> tuple[dict[CasillaId, Decimal], list[str]]:
             match.group("casilla_id"),
             surface="Modelo 100 borrador observed casilla id",
         )
-        if casilla_id in observed:
-            warnings.append(f"casilla {casilla_id}: duplicate printed value ignored")
-            continue
         raw_value = match.group(2)
         value = parse_spanish_decimal(raw_value)
+        if casilla_id in observed:
+            if value is not None and value != observed[casilla_id]:
+                raise BorradorParseError(
+                    f"casilla {casilla_id} is printed more than once with different values",
+                    ambiguous=(casilla_id,),
+                    reason=BorradorRefusalReason.CONFLICTING_DUPLICATE_ROW,
+                )
+            warnings.append(f"casilla {casilla_id}: duplicate printed value ignored")
+            continue
         if value is None:
             warnings.append(f"casilla {casilla_id}: value {raw_value!r} is not a number")
             continue
