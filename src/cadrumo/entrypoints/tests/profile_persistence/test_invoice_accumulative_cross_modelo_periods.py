@@ -62,6 +62,7 @@ from cadrumo.adapters.persistence.profile.invoices import InvoiceCatalogueReposi
 from cadrumo.adapters.persistence.profile.iva_compensation_history import IvaCompensationHistoryRepository
 from cadrumo.adapters.persistence.profile.modelos_calculation import CalculationRevisionCatalogueRepository
 from cadrumo.adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
+from cadrumo.adapters.persistence.profile.tests.retencion_soportada_seed import seed_absence_attestation
 from cadrumo.adapters.persistence.profile.tests.secure_objects_fixture import secure_objects
 from cadrumo.adapters.persistence.profile.transactions import TransactionCatalogueRepository
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
@@ -73,12 +74,15 @@ from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
 )
+from cadrumo.application.modelo.calculation_note_gate import blocking_calculation_issues
 from cadrumo.application.modelo.m303_regimen_simplificado_scope import active_taxpayer_profile
 from cadrumo.application.modelo.result_disposition_resolution import resolve_modelo_result_disposition
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
 from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
+from cadrumo.core.aggregation import BindingSourceKind
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.period import Period
+from cadrumo.core.retencion_soportada import RetencionSoportadaClase
 from cadrumo.domain.calculations.registry.authority import bundled_indexed_authority
 from cadrumo.domain.calculations.registry.bindings import RegistryModeloObservation
 from cadrumo.domain.calculations.registry.ids import BindingId
@@ -113,6 +117,7 @@ def bucket_id() -> str:
 
 
 _TAX_ID = "12345678Z"
+_M100_SUFFERED_WITHHOLDING_CREDIT_CASILLAS = ("0596", "0597", "0603")
 _YEAR = 2024
 _PRIOR_YEAR = _YEAR - 1
 _T0 = datetime(_YEAR, 1, 10, 10, 0, tzinfo=UTC)
@@ -542,6 +547,7 @@ def _m100_non_relation_zero_bindings(secure_objects: SecureObjectRepository) -> 
             "ledger_oss_aggregation",
             "collectible_invoice",
             "payable_invoice",
+            "retencion_soportada",
         )
     }
     values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
@@ -586,6 +592,13 @@ def test_one_invoice_life_lands_in_one_period_on_both_modelo_pairs(
     _seed_taxpayer_profile()
     _persist_invoice_life(secure_objects)
     _seed_prior_year_m100(secure_objects)
+    # The declared activity records no IAE epigraph, so an urban rental carried on as an activity is not
+    # excluded; its credit, casilla 0598, is read through the operator's attestation that no payer withheld.
+    seed_absence_attestation(
+        operation=published_authority_operation(),
+        ejercicio=_YEAR,
+        income_class=RetencionSoportadaClase.ARRENDAMIENTO_INMUEBLE_URBANO_ACTIVIDAD,
+    )
 
     computed_m303: dict[str, Decimal] = {}
     computed_m130: dict[str, Decimal] = {}
@@ -619,6 +632,16 @@ def test_one_invoice_life_lands_in_one_period_on_both_modelo_pairs(
 
     annual_390 = _calculate_m390_annual(secure_objects)
     annual_100 = _calculate_m100_annual(secure_objects)
+    # The suffered-withholding credits belong to the payer-record source. The profile declares only
+    # activity income, so no work, capital or gain credit can exist and the source proves each of
+    # them zero; nothing here supplies them, and none may stay unresolved.
+    assert not [
+        issue
+        for issue in blocking_calculation_issues(annual_100)
+        if issue.binding_source is BindingSourceKind.RETENCION_SOPORTADA
+    ]
+    for credit_casilla in _M100_SUFFERED_WITHHOLDING_CREDIT_CASILLAS:
+        assert Decimal(annual_100.casilla_values[credit_casilla]) == Decimal("0"), credit_casilla
 
     # Transport invariant: M390's annual reconciliation folds the SUM of the
     # four engine-computed M303 quarters.
