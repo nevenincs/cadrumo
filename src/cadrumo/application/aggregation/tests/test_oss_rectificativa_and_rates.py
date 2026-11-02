@@ -267,3 +267,12 @@ def test_a_figure_differing_from_a_projected_rate_is_a_coverage_gap_not_a_mismat
         )
     assert refused.value.context is not None
     assert refused.value.context["rate_registry_covers_date"] is False
+
+
+def test_a_correction_two_invoices_could_answer_refuses(operation: PinnedAuthorityOperation) -> None:
+    """Two F-1 in different series could each be the one named, and the record cannot say which."""
+    other = _invoice(_UNION, "F-1", country="FR", tier="general", base="500.00", cuota="100.00")
+    other = Invoice.model_validate({**other.model_dump(exclude={"invoice_id"}), "series": "B"})
+    assert _refusal(operation, _first(), other, _correction()) == (
+        "aggregation.oss_ioss.errors.rectificativa_target_ambiguous"
+    )

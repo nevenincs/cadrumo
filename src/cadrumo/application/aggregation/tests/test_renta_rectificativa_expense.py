@@ -199,3 +199,36 @@ def test_an_unpaid_correction_moves_nothing_under_cash(operation: PinnedAuthorit
     resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), profile=profile, invoices=invoices)
     assert _m100_total(resolution) == Decimal("100.00")
     assert not _blocked(resolution)
+
+
+def _same_number_in_series_b() -> Invoice:
+    """Return a second received R-1, in series B, for a base of 5.000,00."""
+    base, iva = Decimal("5000.00"), Decimal("1050.00")
+    first = _received(_F_ON, linked=())
+    line = first.lines[0].model_copy(update={"unit_price": base, "subtotal": base, "iva_amount": iva})
+    return Invoice.model_validate(
+        {
+            **first.model_dump(exclude={"invoice_id"}),
+            "series": "B",
+            "base_total": base,
+            "iva_total": iva,
+            "grand_total": base + iva,
+            "lines": (line,),
+        }
+    )
+
+
+@pytest.mark.parametrize("second_first", [False, True], ids=["unseried_first", "series_b_first"])
+def test_a_correction_two_invoices_could_answer_refuses(operation: PinnedAuthorityOperation, second_first: bool) -> None:
+    """A correction records only the number it names, so two R-1 leave the 20,00 with nowhere to go, in any order."""
+    unlinked = _expense_row(_F_ON, evidence_id=None)
+    invoice = _received(_F_ON, linked=(unlinked.transaction_id,))
+    other = _same_number_in_series_b()
+    repository = _InMemoryInvoiceCatalogueRepository()
+    ordered = (other, invoice) if second_first else (invoice, other)
+    repository.save(build_invoice_catalogue((*ordered, _correction(_R_ON))))
+    row = _expense_row(_F_ON, evidence_id=invoice.invoice_id)
+    profile = _profile(operation, _declared((_YEAR, _DEVENGO)))
+    resolution = resolve_m100(ActivityAssetHistory(), rows=(row,), profile=profile, invoices=repository)
+    assert _m100_total(resolution) == Decimal("100.00")
+    assert _refused(resolution, "rectificativa_target_ambiguous")
