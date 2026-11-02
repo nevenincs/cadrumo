@@ -401,6 +401,28 @@ def test_detaching_evidence_drifts_where_the_field_set_before_it_stayed_quiet(tm
         assert row_fingerprint(detached, field_set_version=3) == row_fingerprint(purchase, field_set_version=3)
 
 
+def _anchor_under_field_set(
+    objects: SecureObjectRepository, revision: CalculationRevision, sale: Transaction, version: int
+) -> None:
+    """Re-seal the stored revision's ledger snapshot as an older fingerprint field-set version would have."""
+    repository = CalculationRevisionCatalogueRepository(objects=objects)
+    current = repository.load().get(revision.calculation_revision_id)
+    assert current is not None
+    assert current.ledger_filing_snapshot is not None
+    older = current.ledger_filing_snapshot.model_copy(
+        update={
+            "fingerprint_field_set_version": version,
+            "rows": tuple(
+                row.model_copy(update={"fingerprint": row_fingerprint(sale, field_set_version=version)})
+                for row in current.ledger_filing_snapshot.rows
+            ),
+        }
+    )
+    repository.save(
+        upsert_calculation_revision(repository.load(), current.model_copy(update={"ledger_filing_snapshot": older}))
+    )
+
+
 @pytest.mark.parametrize("version", [1, 2, 3])
 def test_a_revision_anchored_under_an_older_field_set_does_not_drift_spuriously(tmp_path: Path, version: int) -> None:
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=BUCKET_ID) as profile:
@@ -408,22 +430,7 @@ def test_a_revision_anchored_under_an_older_field_set_does_not_drift_spuriously(
         sale = _sale(booked=date(2026, 2, 15))
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
-        repository = CalculationRevisionCatalogueRepository(objects=objects)
-        current = repository.load().get(revision.calculation_revision_id)
-        assert current is not None
-        assert current.ledger_filing_snapshot is not None
-        older = current.ledger_filing_snapshot.model_copy(
-            update={
-                "fingerprint_field_set_version": version,
-                "rows": tuple(
-                    row.model_copy(update={"fingerprint": row_fingerprint(sale, field_set_version=version)})
-                    for row in current.ledger_filing_snapshot.rows
-                ),
-            }
-        )
-        repository.save(
-            upsert_calculation_revision(repository.load(), current.model_copy(update={"ledger_filing_snapshot": older}))
-        )
+        _anchor_under_field_set(objects, revision, sale, version)
 
         report = _verify(objects, revision.calculation_revision_id)
 
@@ -437,22 +444,7 @@ def test_an_operation_date_written_after_an_older_anchor_is_still_seen(tmp_path:
         sale = _sale(booked=date(2026, 2, 15))
         with bundled_indexed_authority().operation() as operation:
             revision, *_ = calculate_irene_revision(objects, operation=operation, rows=(sale,))
-        repository = CalculationRevisionCatalogueRepository(objects=objects)
-        current = repository.load().get(revision.calculation_revision_id)
-        assert current is not None
-        assert current.ledger_filing_snapshot is not None
-        older = current.ledger_filing_snapshot.model_copy(
-            update={
-                "fingerprint_field_set_version": 3,
-                "rows": tuple(
-                    row.model_copy(update={"fingerprint": row_fingerprint(sale, field_set_version=3)})
-                    for row in current.ledger_filing_snapshot.rows
-                ),
-            }
-        )
-        repository.save(
-            upsert_calculation_revision(repository.load(), current.model_copy(update={"ledger_filing_snapshot": older}))
-        )
+        _anchor_under_field_set(objects, revision, sale, 3)
         _set_operation_date(objects, sale, date(2026, 4, 2))
 
         report = _verify(objects, revision.calculation_revision_id)
