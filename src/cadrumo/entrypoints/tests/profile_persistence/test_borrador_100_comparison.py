@@ -8,6 +8,10 @@ certificate the payer records hold makes the two sides differ; the
 tax-residence answer is taken from the draft, so it agrees without confirming
 anything independently. A missing, refused or newer draft and a missing
 calculation each keep their own state.
+
+A synthetic draft PDF read through the real parser keeps its printed results,
+the boxes no binding owns, as comparison-only observations: they are compared
+with the calculation and never reach it.
 """
 
 from __future__ import annotations
@@ -33,6 +37,8 @@ from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
 from ....adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ....application.live.borrador_100 import (
+    Borrador100ObservationGrade,
+    Borrador100PrintedObservation,
     Borrador100Snapshot,
     Borrador100SnapshotRepository,
     Borrador100SnapshotService,
@@ -48,6 +54,7 @@ from ....application.live.borrador_100_comparison import (
     Borrador100ComparisonStatus,
     compare_borrador_100_with_calculation,
 )
+from ....application.live.borrador_100_import import prepare_borrador_100_import
 from ....application.live.snapshot_base import SnapshotLifecycleState
 from ....application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -56,6 +63,7 @@ from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....application.operations.public_scalar import PublicDecimal
+from ....core.casilla_id import CasillaId
 from ....core.external_constants import OutputLanguage
 from ....core.i18n.render import tr
 from ....core.period import Period
@@ -71,7 +79,9 @@ from ....domain.user_profile.tests.general_regime_facts import (
 )
 from ....domain.user_profile.values import ProfileSetupState, UserProfileFact
 from ....domain.user_profile.values import create_user_profile_record as _create_profile_record_for_test
+from ....tests.fixtures.borrador.generate import render_borrador_pdf
 from ...adapter_composition_ports import build_borrador_100_snapshot_repository
+from ...live_borrador_operation_composition import build_borrador_100_operation_ports
 from .file_flow_test_support import calculation_ports_for_test
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
@@ -87,6 +97,7 @@ _SOURCE_URL = "file-import:sha256:" + "b" * 64
 _FIRST_IMPORT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 _SECOND_IMPORT = datetime(2026, 4, 5, 10, 0, tzinfo=UTC)
 _WORDS = "application.live.borrador.comparison"
+_PRINTED_RESULTS: tuple[CasillaId, ...] = ("0505", "0545", "0546", "0585", "0586")
 
 
 @dataclass(frozen=True, slots=True)
@@ -132,6 +143,43 @@ class _Profile:
             .snapshot_id
         )
 
+    def import_pdf(
+        self,
+        tmp_path: Path,
+        printed: dict[CasillaId, Decimal],
+        also_printed: tuple[Borrador100PrintedObservation, ...] = (),
+    ) -> str:
+        """Read a synthetic draft PDF through the real parser and keep it in encrypted custody.
+
+        ``also_printed`` adds printed boxes the draft import does not read, as a
+        draft could print them, so a box the calculation does settle is compared.
+        """
+        source = tmp_path / "borrador.pdf"
+        source.write_bytes(render_borrador_pdf(_YEAR, printed))
+        ports = build_borrador_100_operation_ports(profile_id=_PROFILE_ID, operation=self.operation)
+        prepared = prepare_borrador_100_import(
+            source,
+            filing_year=_YEAR,
+            period=_PERIOD,
+            operation=self.operation,
+            parser=ports.parser,
+            profile_tax_id=ports.profile_tax_id,
+        )
+        assert dict(prepared.binding_values) == {}
+        return (
+            Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=self.drafts)
+            .capture(
+                filing_year=_YEAR,
+                period=_PERIOD,
+                captured_at=_FIRST_IMPORT,
+                source_url=prepared.source_url,
+                binding_values=prepared.binding_values,
+                printed_observations=(*prepared.printed_observations, *also_printed),
+                operation=self.operation,
+            )
+            .snapshot_id
+        )
+
     def create_work(self) -> str:
         return create_work_unit(
             bucket_id=_BUCKET_ID,
@@ -144,7 +192,11 @@ class _Profile:
         ).work_unit_id
 
     def calculate(
-        self, work_unit_id: str, snapshot_id: str | None, residence: str | None = None
+        self,
+        work_unit_id: str,
+        snapshot_id: str | None,
+        residence: str | None = None,
+        casilla_inputs: dict[CasillaId, Decimal] | None = None,
     ) -> CalculationRevision:
         with calculation_ports_for_test(
             bucket_id=_BUCKET_ID,
@@ -156,7 +208,7 @@ class _Profile:
             return calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
                 work_unit_id,
                 actor="operator-A",
-                casilla_inputs={},
+                casilla_inputs={} if casilla_inputs is None else casilla_inputs,
                 binding_values=_filler_binding_values(self.operation),
                 enum_binding_values={} if residence is None else {_RESIDENCE: residence},
                 borrador_snapshot_id=snapshot_id,
@@ -338,12 +390,18 @@ def test_each_box_is_compared_under_its_registry_identity_and_keeps_both_grades(
     assert residence.reason.token == Borrador100ComparisonReason.TAKEN_FROM_BORRADOR
     assert residence.difference is None
 
-    # 2025 declares no draft reading, so a box the draft holds nothing for says nothing either way.
+    # This draft was captured without its printed results, so a box the draft import reads is
+    # one it kept nothing for, and a box it does not read says nothing either way.
     for row in result.rows:
         if row.casilla_id not in {credit.casilla_id, residence.casilla_id}:
             assert row.borrador_value is None
             assert row.classification.token == Borrador100ComparisonClassification.NOT_COMPARABLE
-            assert row.reason.token == Borrador100ComparisonReason.BORRADOR_DOES_NOT_READ_BOX
+            expected = (
+                Borrador100ComparisonReason.BORRADOR_VALUE_NOT_KEPT
+                if row.casilla_id in _PRINTED_RESULTS
+                else Borrador100ComparisonReason.BORRADOR_DOES_NOT_READ_BOX
+            )
+            assert row.reason.token == expected
     counts = result.counts
     assert counts.agree == 1 and counts.differ == 1
     assert counts.only_in_borrador == 0 and counts.only_in_calculation == 0
@@ -380,3 +438,96 @@ def test_a_draft_imported_after_the_calculation_replayed_another_is_stale(profil
     residence = _row(result, _box_of(profile.operation, _RESIDENCE))
     assert residence.classification.token == Borrador100ComparisonClassification.DIFFER
     assert residence.reason.token == Borrador100ComparisonReason.VALUES_DIFFER
+
+
+_EARNINGS_BOX: CasillaId = "0003"
+_EARNINGS_TOTAL_BOX: CasillaId = "0012"
+_EARNINGS = Decimal("32000.00")
+
+
+def _printed(casilla_id: CasillaId, value: Decimal) -> Borrador100PrintedObservation:
+    """A printed box the draft import does not read, kept for comparison as the import keeps one."""
+    return Borrador100PrintedObservation(casilla_id=casilla_id, continuidad_id=None, value=value)
+
+
+def _reason_for(calculated: object, printed: Decimal) -> Borrador100ComparisonReason:
+    if calculated is None:
+        return Borrador100ComparisonReason.CALCULATION_HAS_NO_VALUE
+    assert isinstance(calculated, PublicDecimal)
+    if Decimal(calculated.decimal) == printed:
+        return Borrador100ComparisonReason.SAME_VALUE
+    return Borrador100ComparisonReason.VALUES_DIFFER
+
+
+def test_printed_results_read_through_the_parser_are_kept_and_compared_box_by_box(
+    profile: _Profile, tmp_path: Path
+) -> None:
+    """The draft's printed results are kept under their registry identity and compared, never dropped."""
+    work_unit_id = profile.create_work()
+    printed = {casilla_id: Decimal("1000.00") + index for index, casilla_id in enumerate(_PRINTED_RESULTS)}
+
+    snapshot_id = profile.import_pdf(
+        tmp_path,
+        printed,
+        also_printed=(_printed(_EARNINGS_BOX, Decimal("31000.00")), _printed(_EARNINGS_TOTAL_BOX, _EARNINGS)),
+    )
+    profile.calculate(work_unit_id, None, casilla_inputs={_EARNINGS_BOX: _EARNINGS})
+
+    (stored,) = profile.drafts.list_snapshots()
+    assert stored.snapshot_id == snapshot_id and dict(stored.binding_values) == {}
+    revision = profile.operation.snapshot("100", filing_year=_YEAR, period="0A").revision
+    continuity = {casilla.id: casilla.continuidad_id for casilla in revision.casillas}
+    assert {
+        row.casilla_id: (row.value, row.continuidad_id)
+        for row in stored.printed_observations
+        if row.casilla_id in _PRINTED_RESULTS
+    } == {casilla_id: (printed[casilla_id], continuity[casilla_id]) for casilla_id in _PRINTED_RESULTS}
+    assert all(row.grade is Borrador100ObservationGrade.AEAT_PRINTED_DRAFT for row in stored.printed_observations)
+
+    result = profile.compare()
+
+    assert result.status.token == Borrador100ComparisonStatus.COMPARED
+    for casilla_id in _PRINTED_RESULTS:
+        row = _row(result, casilla_id)
+        assert row.borrador_value == PublicDecimal(decimal=str(printed[casilla_id]))
+        assert row.reason.token == _reason_for(row.calculation_value, printed[casilla_id])
+    total = _row(result, _EARNINGS_TOTAL_BOX)
+    assert total.calculation_value == PublicDecimal(decimal=str(_EARNINGS))
+    assert total.classification.token == Borrador100ComparisonClassification.AGREE
+    assert total.reason.token == Borrador100ComparisonReason.SAME_VALUE
+    earnings = _row(result, _EARNINGS_BOX)
+    assert earnings.borrador_value == PublicDecimal(decimal="31000.00")
+    assert earnings.classification.token == Borrador100ComparisonClassification.DIFFER
+    assert earnings.difference is not None and Decimal(earnings.difference.decimal) == Decimal("1000.00")
+    assert all(row.reason.token != Borrador100ComparisonReason.BORRADOR_VALUE_NOT_KEPT for row in result.rows)
+
+
+def test_a_printed_result_never_reaches_the_calculation_that_replays_its_draft(
+    profile: _Profile, tmp_path: Path
+) -> None:
+    """Replaying a draft whose printed results are wrong leaves every calculated box as the calculation made it."""
+    work_unit_id = profile.create_work()
+    wrong = Decimal("987654.32")
+    independent = profile.calculate(work_unit_id, None, casilla_inputs={_EARNINGS_BOX: _EARNINGS})
+    snapshot_id = profile.import_pdf(
+        tmp_path, dict.fromkeys(_PRINTED_RESULTS, wrong), also_printed=(_printed(_EARNINGS_TOTAL_BOX, wrong),)
+    )
+
+    head = profile.calculate(work_unit_id, snapshot_id, casilla_inputs={_EARNINGS_BOX: _EARNINGS})
+
+    assert head.borrador_snapshot_id == snapshot_id
+    assert tuple(head.bindings_sourced_from_borrador) == ()
+    assert str(wrong) not in head.binding_overrides.values()
+    assert wrong not in head.casilla_values.values()
+    assert dict(head.casilla_values) == dict(independent.casilla_values)
+    result = profile.compare()
+    assert result.calculation is not None and result.calculation.replayed_snapshot_id == snapshot_id
+    total = _row(result, _EARNINGS_TOTAL_BOX)
+    assert total.calculation_value == PublicDecimal(decimal=str(_EARNINGS))
+    assert total.borrador_value == PublicDecimal(decimal=str(wrong))
+    assert total.reason.token == Borrador100ComparisonReason.VALUES_DIFFER
+    for casilla_id in (*_PRINTED_RESULTS, _EARNINGS_TOTAL_BOX):
+        row = _row(result, casilla_id)
+        assert row.borrador_value == PublicDecimal(decimal=str(wrong))
+        assert row.calculation_value != PublicDecimal(decimal=str(wrong))
+        assert row.reason.token != Borrador100ComparisonReason.TAKEN_FROM_BORRADOR

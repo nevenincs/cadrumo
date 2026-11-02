@@ -203,16 +203,19 @@ def _prepare_import(context: ConformanceFamilyContext) -> ConformancePreparation
         assert result.artefact_kind == "BORRADOR"
         assert result.source_pdf_sha256 == digest
         assert result.blank_casillas == ()
-        assert result.unowned_casillas == _PRINTED_CASILLAS
+        assert result.observed_casillas == _PRINTED_CASILLAS
+        assert result.unowned_casillas == ()
         summary = result.snapshot
         assert summary.filing_year == year
         assert summary.period == PublicPeriod(filing_year=year, code=_ANNUAL)
         assert summary.binding_count == 0
+        assert summary.printed_observation_count == len(_PRINTED_CASILLAS)
         assert summary.state is SnapshotLifecycleState.ACTIVE
         assert summary.source_url == "file-import:sha256:" + digest
         (persisted,) = _service(context).list_snapshots(operation=context.operation)
         assert persisted.snapshot_id == summary.snapshot_id
         assert dict(persisted.binding_values) == {}
+        assert tuple(row.casilla_id for row in persisted.printed_observations) == _PRINTED_CASILLAS
 
     return ConformancePreparation(
         subject_ref=profile_operation_subject(str(profile_id)),
@@ -315,7 +318,8 @@ def _retained_borrador_prepare(context: ConformanceFamilyContext) -> Conformance
             )
             assert (
                 result.blank_casillas == ()
-                and result.unowned_casillas == _PRINTED_CASILLAS
+                and result.observed_casillas == _PRINTED_CASILLAS
+                and result.unowned_casillas == ()
                 and result.snapshot.source_url == f"file-import:sha256:{sha256_hex(payload)}"
             )
             stored = service.list_snapshots(operation=context.operation)
