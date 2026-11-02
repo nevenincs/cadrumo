@@ -106,7 +106,10 @@ def test_the_published_settlement_chain_reads_the_casillas_this_module_names(
     revision = _m303_settlement_snapshot(operation).revision
     bindings = revision_bindings_by_id(revision)
     casillas = {casilla.id: casilla for casilla in revision.casillas}
-    for casilla_id, binding_id in ((_CASILLA_44, _PRORRATA_44_BINDING), (_SOPORTADO_INTERIORES, _SOPORTADO_INTERIORES_BINDING)):
+    for casilla_id, binding_id in (
+        (_CASILLA_44, _PRORRATA_44_BINDING),
+        (_SOPORTADO_INTERIORES, _SOPORTADO_INTERIORES_BINDING),
+    ):
         assert casillas[casilla_id].input_kind is InputKind.BOUND
         assert bound_casilla_binding_ids(casillas[casilla_id]) == (binding_id,)
         assert bindings[binding_id].source in _INPUT_CHANNEL_SOURCES

@@ -155,6 +155,51 @@ def _activity_row(*, activity_id: str, slot: int) -> ProrrataActivityRow:
     )
 
 
+def _assert_carried_settled_entry(loaded: ProrrataRegister) -> None:
+    carried = loaded.entries[0]
+    assert carried.regime == ProrrataRegisterRegime.from_registry("general")
+    assert carried.provisional_percentage == Decimal("80")
+    assert carried.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
+    assert carried.source_observation_ref == "303:2023:4T"
+    assert carried.source_registry_snapshot_refs == (_m303_snapshot_ref(2023),)
+    assert carried.definitive_percentage == Decimal("77")
+    assert carried.definitive_volume_con_derecho == Decimal("154000.00")
+    assert carried.definitive_volume_sin_derecho == Decimal("46000.00")
+
+
+def _assert_authorised_sector_entry(loaded: ProrrataRegister) -> None:
+    authorised = loaded.entries[1]
+    assert authorised.regime == ProrrataRegisterRegime.from_registry("especial")
+    assert authorised.sector_id == "arrendamiento"
+    assert authorised.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
+    assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
+    assert authorised.especial_transition is not None
+    assert authorised.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
+    assert authorised.especial_transition.evidence_reference == "modelo-303-2024-prorrata-opcion"
+    assert loaded.is_sectorized is True
+    sector_definition = loaded.sector_definition_for("arrendamiento")
+    assert sector_definition is not None
+    assert sector_definition.letra == SectorDiferenciadoLetra.from_registry("a")
+    assert sector_definition.member_activity_codes == ("6820",)
+
+
+def _assert_interrupted_and_gross_declarations(loaded: ProrrataRegister) -> None:
+    # The art. 105.Cinco interrupted (sin operaciones) marker crosses the
+    # encrypted boundary: an inactive ejercicio carries no percentage/volume.
+    interrupted = loaded.entry_for(2023)
+    assert interrupted is not None
+    assert interrupted.interrupted is True
+    assert interrupted.provisional_percentage is None
+    assert interrupted.definitive_percentage is None
+    sector_gross = loaded.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id="arrendamiento")
+    assert sector_gross is not None
+    assert sector_gross.gross_cuota == Decimal("420.15")
+    assert sector_gross.evidence_reference == "operator-evidence:303-2024-2T-arrendamiento"
+    assert sector_gross.provenance == "operator_declared"
+    assert sector_gross.declared_at == datetime(2024, 11, 4, 9, 45, tzinfo=UTC)
+    assert loaded.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id=None) is None
+
+
 def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
     """ProrrataRegister roundtrips through encrypted SQL, field-for-field."""
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id="49a879c9-dab5-473a-a049-15d04aa31404"):
@@ -164,42 +209,9 @@ def test_register_survives_encrypted_storage_roundtrip(tmp_path: Path) -> None:
         loaded = repo.load()
 
         assert loaded == original
-        carried = loaded.entries[0]
-        assert carried.regime == ProrrataRegisterRegime.from_registry("general")
-        assert carried.provisional_percentage == Decimal("80")
-        assert carried.provisional_provenance == ProrrataProvisionalProvenance.from_registry("carried_prior_definitiva")
-        assert carried.source_observation_ref == "303:2023:4T"
-        assert carried.source_registry_snapshot_refs == (_m303_snapshot_ref(2023),)
-        assert carried.definitive_percentage == Decimal("77")
-        assert carried.definitive_volume_con_derecho == Decimal("154000.00")
-        assert carried.definitive_volume_sin_derecho == Decimal("46000.00")
-        authorised = loaded.entries[1]
-        assert authorised.regime == ProrrataRegisterRegime.from_registry("especial")
-        assert authorised.sector_id == "arrendamiento"
-        assert authorised.provisional_provenance == ProrrataProvisionalProvenance.from_registry("aeat_autorizada")
-        assert authorised.authorisation_reference == "AEAT-AUTH-2024-0007"
-        assert authorised.especial_transition is not None
-        assert authorised.especial_transition.kind == ProrrataEspecialTransitionKind.from_registry("opcion")
-        assert authorised.especial_transition.evidence_reference == "modelo-303-2024-prorrata-opcion"
-        assert loaded.is_sectorized is True
-        sector_definition = loaded.sector_definition_for("arrendamiento")
-        assert sector_definition is not None
-        assert sector_definition.letra == SectorDiferenciadoLetra.from_registry("a")
-        assert sector_definition.member_activity_codes == ("6820",)
-        # The art. 105.Cinco interrupted (sin operaciones) marker crosses the
-        # encrypted boundary: an inactive ejercicio carries no percentage/volume.
-        interrupted = loaded.entry_for(2023)
-        assert interrupted is not None
-        assert interrupted.interrupted is True
-        assert interrupted.provisional_percentage is None
-        assert interrupted.definitive_percentage is None
-        sector_gross = loaded.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id="arrendamiento")
-        assert sector_gross is not None
-        assert sector_gross.gross_cuota == Decimal("420.15")
-        assert sector_gross.evidence_reference == "operator-evidence:303-2024-2T-arrendamiento"
-        assert sector_gross.provenance == "operator_declared"
-        assert sector_gross.declared_at == datetime(2024, 11, 4, 9, 45, tzinfo=UTC)
-        assert loaded.gross_declaration_for(Period.from_year_and_code(2024, "2T"), sector_id=None) is None
+        _assert_carried_settled_entry(loaded)
+        _assert_authorised_sector_entry(loaded)
+        _assert_interrupted_and_gross_declarations(loaded)
 
 
 def test_register_outer_v2_row_carries_the_v3_document(tmp_path: Path) -> None:
