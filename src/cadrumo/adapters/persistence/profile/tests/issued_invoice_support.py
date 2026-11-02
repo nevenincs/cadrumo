@@ -40,3 +40,35 @@ def issued_consulting_invoice(invoice_number: str, *, iva_rate: IvaRate, bucket_
             **({} if bucket_id is None else {"bucket_id": bucket_id}),
         },
     )
+
+
+def paid_servicios_invoice(invoice_number: str, *, issued_at: date, notes: str | None = None) -> Invoice:
+    """Build one issued, paid 100.00 EUR "Servicios" invoice at the registry's 21 percent rate."""
+    return Invoice.model_validate(
+        {
+            "kind": InvoiceKind.ISSUED,
+            "invoice_number": invoice_number,
+            "issued_at": issued_at,
+            "counterparty_name": "Cliente SL",
+            "counterparty_tax_id": "B12345674",
+            "counterparty_country": "ES",
+            "base_total": Decimal("100.00"),
+            "iva_total": Decimal("21.00"),
+            "grand_total": Decimal("121.00"),
+            "currency": "EUR",
+            "payment_status": PaymentStatus.PAID,
+            **({} if notes is None else {"notes": notes}),
+            "lines": (
+                InvoiceLine.model_validate(
+                    {
+                        "description": "Servicios",
+                        "quantity": Decimal("1"),
+                        "unit_price": Decimal("100.00"),
+                        "subtotal": Decimal("100.00"),
+                        "iva_rate": IvaRate.from_registry("RATE_21"),
+                        "iva_amount": Decimal("21.00"),
+                    },
+                ),
+            ),
+        },
+    )
