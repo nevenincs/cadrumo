@@ -213,7 +213,7 @@ def _seed_work_unit(
     operation: PinnedAuthorityOperation,
 ) -> WorkUnit:
     """Modelo 130 1T 2026 — registry-resolvable so the formula engine
-    in ``calculate_modelo_revision`` has a snapshot to operate on."""
+    in ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` has a snapshot to operate on."""
 
     return create_work_unit(
         ports=build_work_lifecycle_ports(bucket_id=_PROFILE_ID),

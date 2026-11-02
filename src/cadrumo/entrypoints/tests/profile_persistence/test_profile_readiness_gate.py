@@ -514,7 +514,7 @@ def test_calculate_service_refusal_carries_grounded_legal_refs_for_missing_tax_i
     """The blocking gate's refusal carries real legal grounding.
 
     ``require_profile_ready_for_modelo_work`` (invoked here via
-    ``calculate_modelo_revision`` re-checking an existing work unit) threads
+    ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` re-checking an existing work unit) threads
     the live registry authority through both
     ``_require_profile_filing_ready`` and the full preflight report, so a
     profile missing ``identity.tax_id`` for a Modelo 100 work unit refuses
@@ -1040,7 +1040,7 @@ def test_calculate_service_names_missing_fields_for_a_setup_incomplete_profile(t
     before the status-aware gate below ever runs - so the two gates would
     always agree on "missing", never reach the SETUP_INCOMPLETE branch with a
     gap to report. This exercises the readiness re-check on an EXISTING work
-    unit instead (``calculate_modelo_revision``), whose only gate is
+    unit instead (``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics``), whose only gate is
     ``require_profile_ready_for_work_unit`` -> the status-aware
     ``require_profile_ready_for_modelo_work`` directly.
     """

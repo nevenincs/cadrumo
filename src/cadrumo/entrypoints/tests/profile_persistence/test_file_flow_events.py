@@ -103,7 +103,7 @@ def test_file_refuses_persisted_registry_revision_divergence(repos: Repos) -> No
 
 
 def test_calculate_emits_modelo_calculation_created_event(repos: Repos) -> None:
-    """calculate_modelo_revision appends a ``modelo.calculation.created``
+    """The bucket-aggregation calculation appends a ``modelo.calculation.created``
     event with the new revision id as object_id and the work unit's
     (modelo, year, period) carried in the payload."""
 

@@ -24,6 +24,7 @@ from ....adapters.persistence.profile.modelos_calculation import CalculationRevi
 from ....adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
 from ....adapters.persistence.profile.snapshots import SecureSnapshotRepository
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....adapters.persistence.storage.secure_object_namespaces import LIVE_BORRADOR_100_SNAPSHOT_NAMESPACE
 from ....adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from ....adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
@@ -36,10 +37,14 @@ from ....application.live.borrador_100 import (
 )
 from ....application.live.errors import LiveApplicationInputError
 from ....application.live.snapshot_base import SnapshotLifecycleState
-from ....application.modelo.calculation_actions import calculate_modelo_revision
+from ....application.modelo.calculation_bucket_actions import (
+    calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
+)
+from ....application.modelo.calculation_source_policy import BUCKET_AGGREGATION_LOCK_SOURCES
 from ....application.modelo.work_lifecycle import create_work_unit
 from ....application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from ....core.period import Period
+from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.buckets.event import BucketEventType
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_targets import casillas_by_binding
@@ -139,7 +144,10 @@ def _non_borrador_decimal_binding_values() -> dict[BindingId, Decimal]:
     return {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.id not in exclusions and binding.source != "profile"
+        if binding.id not in exclusions
+        and binding.source != "profile"
+        and binding.source not in BUCKET_AGGREGATION_LOCK_SOURCES
+        and binding.provider.kind != "retencion_soportada"
     }
 
 
@@ -228,7 +236,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=snapshot_repository,
     ) as _calculation_ports_221:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
             casilla_inputs={},
@@ -237,11 +245,12 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
             borrador_snapshot_id=snapshot_id,
             relation_values=relation_values,
             ports=_calculation_ports_221,
-        )
+        ).revision
 
     # The borrador's 125,50 is held for comparison only: it never becomes the credit.
-    assert _DECIMAL_BINDING not in revision.binding_overrides
-    assert Decimal(revision.casilla_values["0596"]) != Decimal("125.50")
+    # The credit's owner, the payer records, holds none for this profile, so it is zero.
+    assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("0")
+    assert Decimal(revision.casilla_values["0596"]) == Decimal("0")
     assert revision.binding_overrides[_ENUM_BINDING] == "madrid"
     # A relation shares its binding's identity, so each id is persisted on one
     # channel only; the relation channel keeps the ids no binding supplied.
@@ -256,7 +265,7 @@ def test_calculate_modelo_revision_consumes_borrador_snapshot_through_applicatio
     assert stored_revision is not None
     assert stored_revision.borrador_snapshot_id == snapshot_id
     assert stored_revision.bindings_sourced_from_borrador == (_ENUM_BINDING,)
-    assert _DECIMAL_BINDING not in stored_revision.binding_overrides
+    assert stored_revision.binding_overrides[_DECIMAL_BINDING] == revision.binding_overrides[_DECIMAL_BINDING]
     assert stored_revision.relation_overrides == revision.relation_overrides
     calculation_events = [
         event
@@ -300,6 +309,15 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_th
         ),
         operation=operation,
     )
+    # The payer's certificate is the backend source of the work-income credit.
+    seed_payer_certificate(
+        operation=operation,
+        taxpayer_tax_id="12345678Z",
+        ejercicio=_YEAR,
+        payer_tax_id="B12345674",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=Decimal("1.00"),
+    )
     snapshot_id = _save_snapshot(
         snapshot_repository,
         {
@@ -314,17 +332,16 @@ def test_calculate_modelo_revision_precedence_keeps_caller_above_borrador_and_th
         bucket_event_repository=bucket_event_repository,
         borrador_snapshot_repository=snapshot_repository,
     ) as _calculation_ports_303:
-        revision = calculate_modelo_revision(
+        revision = calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
             actor="operator-A",
             casilla_inputs={},
             binding_values=_non_borrador_decimal_binding_values(),
             enum_binding_values={_ENUM_BINDING: "cataluna"},
-            backend_binding_values={_DECIMAL_BINDING: Decimal("1.00")},
             borrador_snapshot_id=snapshot_id,
             relation_values=_zero_relation_values(),
             ports=_calculation_ports_303,
-        )
+        ).revision
 
     # The backend's credit stands; the borrador's differing 125,50 does not replace it.
     assert Decimal(revision.binding_overrides[_DECIMAL_BINDING]) == Decimal("1.00")

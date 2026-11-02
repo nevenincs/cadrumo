@@ -9,7 +9,7 @@ ordinary verification finding.
 See Also:
     :func:`cadrumo.domain.modelos.row_models.validate_m210_agrupacion_renta_rows`:
         Domain-owned Article 2 compatibility validation for the row set.
-    :func:`cadrumo.application.modelo.calculation_actions.calculate_modelo_revision`:
+    :func:`cadrumo.application.modelo.calculation_bucket_actions.calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`:
         Calculation boundary that refuses an invalid row set before formula
         execution and revision persistence.
 """

@@ -5,14 +5,15 @@ Resolves deferral DFR-M210-INMOBILIARIA-E2E (feature ``modelo-verify-nonzero-gua
 ``modelo-210-2025-inmobiliaria-implica-base-imponible`` ADVISORY predicate against
 hand-constructed ``casilla_values`` / ``text_values`` dicts fed directly to
 ``evaluate_verification_predicates``. This module proves the same advisory fires
-through the REAL operator pipeline instead: :func:`calculate_modelo_revision` (real
+through the REAL operator pipeline instead:
+:func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics` (real
 registry formula engine, real persistence) followed by :func:`verify_modelo_revision_with_preconditions`
 (real Layer-2 predicate evaluation reading the PERSISTED
 ``CalculationRevision.input_values_by_casilla_id`` as ``text_values`` — see
 ``_verification_actions.py`` around the ``target.input_values_by_casilla_id`` comment).
 
 Text-casilla input flow under test: ``text_casilla_inputs={"tipo_renta":
-"inmobiliaria"}`` passed to :func:`calculate_modelo_revision` merges into
+"inmobiliaria"}`` passed to :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics` merges into
 ``CalculationRevision.input_values_by_casilla_id`` (see
 ``_calculation_actions.py``, ``{**replay_payloads.input_values_by_casilla_id,
 **resolved_text_inputs}``), which the verify path's Layer-2 predicate gate then reads
@@ -201,7 +202,7 @@ def _calculate_and_verify_m210_inmobiliaria(
 ) -> tuple[CalculationRevision, VerificationReport]:
     """Run the REAL M210 calculate-then-verify pipeline with ``tipo_renta="inmobiliaria"``.
 
-    Drives :func:`calculate_modelo_revision` directly (mirroring
+    Drives :func:`calculate_modelo_revision_from_bucket_aggregation_with_diagnostics` directly (mirroring
     ``test_declaration_period_binding.py``) with a ``text_casilla_inputs`` entry
     for ``tipo_renta``, exercising the real registry formula engine rather than
     hand-constructed ``casilla_values``, then :func:`verify_modelo_revision_with_preconditions` over

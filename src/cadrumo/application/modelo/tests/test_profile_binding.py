@@ -2,7 +2,7 @@
 
 A registry binding with ``source = "profile"`` carries a fact the
 operator already entered onto their user profile. These tests prove
-``calculate_modelo_revision`` resolves those facts into the engine's
+``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` resolves those facts into the engine's
 binding channels automatically, routing each through the channel the
 registry formula consumes (Decimal vs string enum), so the operator
 does not have to re-type profile data and the estimacion-directa

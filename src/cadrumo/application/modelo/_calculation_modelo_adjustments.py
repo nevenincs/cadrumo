@@ -8,7 +8,7 @@ They operate on the already resolved registry snapshot and preserve the typed
 observation contract that the calculation action persists.
 
 See Also:
-    :func:`~application.modelo.calculation_actions.calculate_modelo_revision`
+    :func:`~application.modelo.calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`
         Application calculation action that calls these adjustment helpers.
     :func:`~domain.calculations.registry.formula_runtime.calculate_registry_snapshot`
         Registry engine whose output is adjusted before persistence.
@@ -100,9 +100,8 @@ def require_detail_rows_declared_for_their_owning_modelo(
     refuses through one convention rather than five ad hoc call sites.
 
     This runs at the calculate boundary's single funnel
-    (:func:`~._calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`),
-    so both the direct and bucket-aggregation calculate entry points are
-    covered.
+    (:func:`~.calculation_actions.calculate_modelo_revision_with_trusted_mesh_sources`),
+    which the bucket-aggregation calculate entry point feeds.
     """
     if not detail_rows:
         return

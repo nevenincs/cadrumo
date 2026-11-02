@@ -281,11 +281,11 @@ def test_calculate_refuses_a_work_unit_outside_the_repository_bucket(tmp_path: P
     owner, with a real ready profile) so the calculate path's own
     profile-readiness gate is not what refuses this -- ``wu_repo`` is
     constructed claiming bucket A while the loaded unit's own
-    ``bucket_id`` is B, isolating exactly the missing check:
-    ``calculate_modelo_revision`` never compares
+    ``bucket_id`` is B, isolating exactly one check:
+    ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` compares
     ``work_unit_repository.bucket_id`` against the loaded unit's own
-    ``bucket_id``, unlike ``import_external_filing_evidence`` and the
-    calculation-revision addressing helpers in this same package.
+    ``bucket_id``, as ``import_external_filing_evidence`` and the
+    calculation-revision addressing helpers in this same package do.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_GUARD_BUCKET_B) as profile:
         seed_ready_profile(bucket_id=_GUARD_BUCKET_B)

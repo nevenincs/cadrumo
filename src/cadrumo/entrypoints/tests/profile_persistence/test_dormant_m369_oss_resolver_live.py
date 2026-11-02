@@ -38,7 +38,6 @@ from cadrumo.application.aggregation.source_mesh import (
 )
 from cadrumo.application.invoices.catalogue_reads_ports import InvoiceCatalogueReadPorts
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
-from cadrumo.application.modelo.calculation_actions import calculate_modelo_revision
 from cadrumo.application.modelo.calculation_bucket_actions import (
     BucketAggregationCalculationResult,
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -933,9 +932,8 @@ def test_m369_unrouted_observation_refuses_verification_and_export(
             invoice_repository=invoice_repo,
         ) as _calculation_ports_772,
     ):
-        calculate_modelo_revision(
+        calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
             work_unit.work_unit_id,
-            casilla_inputs={},
             ports=_calculation_ports_772,
             **retired_keyword,
         )

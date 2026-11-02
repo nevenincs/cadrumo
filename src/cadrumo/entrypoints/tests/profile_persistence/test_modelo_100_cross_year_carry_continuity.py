@@ -1,7 +1,7 @@
 """Cross-year carry continuity for Modelo 100 (IRPF anual).
 
 This module drives the real M100 calculation engine
-(``calculate_modelo_revision``) across two distinct renta years.
+(``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics``) across two distinct renta years.
 
 The cross-renta hook is the Anexo C base-liquidable-general-negativa
 carry-forward. A year's *generated* negative general base left pending —
@@ -20,7 +20,7 @@ carried saldo. The carry is origin-year-matched in both revisions (each
 revision's 1388 is the immediately-prior origin year).
 
 Calc-mode (honest evidence): each renta year is driven through the REAL
-``calculate_modelo_revision`` — the same full-engine path M130/M200/M202/M151
+``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` — the same full-engine path M130/M200/M202/M151
 use — so the ``evidence_class = calculation`` manifest label is backed by an
 actual calculation, not resolver output. A taxpayer-unit ``UserProfileRecord``
 is seeded so the ``source = "profile"`` bindings (tax-residence CCAA, taxpayer
@@ -141,7 +141,7 @@ def _seed_taxpayer_unit_profile() -> None:
     chain consumes across the 2024 and 2025 revisions (tax-residence CCAA,
     taxpayer birth date for ``age_at_year_end``, declaration type, marital
     status and the derived marriage facts, minor-children count). The profile
-    is the substrate of record, so ``calculate_modelo_revision`` auto-resolves
+    is the substrate of record, so ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` auto-resolves
     these via ``_resolve_profile_bindings_for_calculation`` — no profile fact
     is hand-fed through the caller binding channel.
     """
@@ -229,7 +229,7 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
 
     The cross-renta continuity contract: once the prior M100 is recorded, the
     ``filing_year_delta = -1`` carry populates casilla 1388 from that prior
-    1391 generated saldo, and a real ``calculate_modelo_revision`` emits it —
+    1391 generated saldo, and a real ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` emits it —
     the operator does not re-key the carried negative general base.
     """
     with isolated_runtime_profile(tmp_path=tmp_path, bucket_id=_BUCKET_ID):
@@ -243,7 +243,7 @@ def test_modelo_100_opening_pending_resolves_from_prior_year_saldo(tmp_path: Pat
 def test_modelo_100_base_liquidable_negativa_enrolls_two_renta_years(tmp_path: Path) -> None:
     """End-to-end enrollment: M100 general-base saldo carry across two renta years.
 
-    Drives the REAL M100 ``calculate_modelo_revision`` for two distinct renta
+    Drives the REAL M100 ``calculate_modelo_revision_from_bucket_aggregation_with_diagnostics`` for two distinct renta
     years (2024, 2025), each sourcing the prior year's 1391 generated saldo
     (2023, 2024), records each through the ``cross-year observation`` (CALC;
     evidence = the _produced-value count from the real engine run), and
