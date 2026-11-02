@@ -52,8 +52,9 @@ import { FormView } from "../form/FormView";
 import { useFormSession, type FormSession } from "../form/session";
 import { CheckView } from "./CheckView";
 import type { CorrectionAnswer, CorrectionResult } from "./CorrectionDialog";
-import { creditFields } from "./credits";
+import { creditFields } from "./creditBoxes";
 import { CreditsPanel } from "./CreditsPanel";
+import { useEstimate } from "./estimateRead";
 import { HistoryView, type HistoryNotice } from "./HistoryView";
 import {
   ProfileCompanions,
@@ -210,6 +211,12 @@ function Ready({
       );
     return current() ? outcome : null;
   };
+  const estimate = useEstimate({
+    port,
+    year: envelope.form.form.filing_year,
+    region: readRegion,
+    run,
+  });
   const settledThenReread = async <Result,>(
     send: () => Promise<LedgerOutcome<Result>>,
   ) => (await run(send))?.kind === "settled";
@@ -525,9 +532,7 @@ function Ready({
             <CreditsPanel
               envelope={envelope}
               session={session}
-              port={port}
-              run={run}
-              readRegion={readRegion}
+              estimate={estimate}
               locale={locale}
               onGo={(address) => {
                 setView("form");

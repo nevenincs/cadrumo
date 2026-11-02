@@ -260,3 +260,37 @@ def test_a_split_the_modelo_does_not_declare_is_refused() -> None:
         )
 
     assert refused.value.context == {"cause": "instalment_split_undeclared", "result_disposition": "I"}
+
+
+def test_an_amount_whose_second_instalment_would_be_nothing_is_paid_at_once_never_split() -> None:
+    """60 per cent of 0,01 is 0,006: the first instalment takes the cent and the second would be 0,00."""
+    with pytest.raises(ModeloExportError) as refused:
+        settlement_dictionary_values(
+            disposition=ResultDisposition.INGRESO,
+            settlement=_settled("0.01"),
+            instalment=PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_PAID,
+            first_instalment_share=_SIXTY,
+            charge_account=None,
+            refund_account=None,
+        )
+    at_once = settlement_dictionary_values(
+        disposition=ResultDisposition.INGRESO,
+        settlement=_settled("0.01"),
+        instalment=PaymentInstalmentElection.SINGLE,
+        first_instalment_share=_SIXTY,
+        charge_account=None,
+        refund_account=None,
+    )
+    least = settlement_dictionary_values(
+        disposition=ResultDisposition.INGRESO,
+        settlement=_settled("0.02"),
+        instalment=PaymentInstalmentElection.TWO_INSTALMENTS_SECOND_PAID,
+        first_instalment_share=_SIXTY,
+        charge_account=None,
+        refund_account=None,
+    )
+
+    assert refused.value.context == {"cause": "second_instalment_zero", "result_disposition": "I"}
+    assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": Decimal("0.01")}
+    assert least["ING_IMPORTE_PF1"] == Decimal("0.01") and least["ING_IMPORTE_PF2"] == Decimal("0.01")
+

@@ -401,7 +401,6 @@ def compose_runtime_ports() -> Iterator[None]:
     from cadrumo.adapters.persistence.profile.usage_ratios import (
         load_usage_ratios,
         load_usage_ratios_with_censo_guard,
-        save_usage_ratios,
         save_usage_ratios_with_secure_object_writes,
     )
     from cadrumo.adapters.persistence.storage.profile_persistence_composition import (
@@ -441,7 +440,6 @@ def compose_runtime_ports() -> Iterator[None]:
         bind_transaction_catalogue_repository_factory(TransactionCatalogueRepository),
         bind_usage_ratio_profile_persistence(
             loader=load_usage_ratios,
-            saver=save_usage_ratios,
             co_saver=save_usage_ratios_with_secure_object_writes,
         ),
         bind_usage_ratio_censo_guard_loader(load_usage_ratios_with_censo_guard),

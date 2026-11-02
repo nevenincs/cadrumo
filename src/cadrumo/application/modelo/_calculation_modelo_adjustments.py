@@ -25,7 +25,7 @@ See Also:
 
 from __future__ import annotations
 
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from datetime import date
 from decimal import Decimal
@@ -488,35 +488,17 @@ def _reconciliation_slot_grounded(
     return general_regime_not_applicable
 
 
-def _raise_if_m390_303_reconciliation_would_save_silent_zero(
-    *,
-    work_unit: WorkUnit,
+def _grounded_annual_casillas(
     snapshot: RegistrySnapshot,
+    targets: Sequence[tuple[RelationId, BindingId, tuple[CasillaId, ...], CasillaId, CasillaId]],
+    *,
     casilla_values: Mapping[CasillaId, Decimal],
     resolved_binding_values: Mapping[BindingId, Decimal],
-    general_regime_claimed: bool,
     observations: tuple[CasillaObservation, ...],
     supplied_casilla_ids: frozenset[CasillaId],
     answered_binding_ids: frozenset[BindingId],
-) -> None:
-    """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence.
-
-    A calculated zero proves a slot has nothing to reconcile only when every
-    value it was folded from was supplied: an operator entry, a resolved
-    source, or a binding its source settled as inapplicable or row-fed
-    (``answered_binding_ids``). A zero folded from inputs nobody supplied, and
-    an absent annual box, are unknown, so they refuse. The exception is a filer
-    claiming no general regime with no figure on any general-regime box: those
-    boxes do not apply to them. One non-zero figure contradicts that, and every
-    unknown box is unknown again.
-    """
-    targets = reconciliation_relation_targets(snapshot)
-    if not targets:
-        return
-    general_regime_not_applicable = not general_regime_claimed and not _general_regime_figure_present(
-        targets, casilla_values=casilla_values, resolved_binding_values=resolved_binding_values
-    )
-
+) -> tuple[set[CasillaId], frozenset[CasillaId]]:
+    """Return the annual boxes a resolved source grounds and those whose calculated zero rests on supplied values."""
     # Several bindings may feed one casilla as alternative sources (M100 0596
     # from Modelo 111, Modelo 190, or a salary certificate); any resolved source
     # already grounds it.
@@ -542,31 +524,21 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
             answered_binding_ids=answered_binding_ids,
         )
     )
-    missing_relations: list[RelationId] = []
-    missing_bindings: list[BindingId] = []
-    missing_targets: list[CasillaId] = []
-    missing_annuals: list[CasillaId] = []
-    for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
-        if _reconciliation_slot_grounded(
-            binding_id,
-            annual_casilla,
-            casilla_values=casilla_values,
-            resolved_binding_values=resolved_binding_values,
-            resolved_annual_casillas=resolved_annual_casillas,
-            proven_zero_annual_casillas=proven_zero_annual_casillas,
-            general_regime_not_applicable=general_regime_not_applicable,
-        ):
-            continue
-        missing_relations.append(relation_id)
-        missing_bindings.append(binding_id)
-        missing_targets.extend(target_casillas)
-        missing_annuals.append(annual_casilla)
+    return resolved_annual_casillas, proven_zero_annual_casillas
 
-    if not missing_bindings:
-        return
 
+def _incomplete_reconciliation_error(
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    *,
+    missing_relations: Sequence[RelationId],
+    missing_bindings: Sequence[BindingId],
+    missing_targets: Sequence[CasillaId],
+    missing_annuals: Sequence[CasillaId],
+) -> ModeloCrossPeriodCleanStateError:
+    """Name the 303 periods, bindings and boxes whose missing evidence blocks the M390 reconciliation."""
     missing_periods = _required_relation_periods(snapshot, frozenset(missing_relations))
-    raise ModeloCrossPeriodCleanStateError(
+    return ModeloCrossPeriodCleanStateError(
         translated_message="application.modelo.errors.cross_period_clean_state_incomplete",
         context={
             "modelo": str(work_unit.modelo),
@@ -596,6 +568,77 @@ def _raise_if_m390_303_reconciliation_would_save_silent_zero(
             },
             provenance=ActionEvidenceProvenance.DOMAIN_EVALUATION,
         ),
+    )
+
+
+def _raise_if_m390_303_reconciliation_would_save_silent_zero(
+    *,
+    work_unit: WorkUnit,
+    snapshot: RegistrySnapshot,
+    casilla_values: Mapping[CasillaId, Decimal],
+    resolved_binding_values: Mapping[BindingId, Decimal],
+    general_regime_claimed: bool,
+    observations: tuple[CasillaObservation, ...],
+    supplied_casilla_ids: frozenset[CasillaId],
+    answered_binding_ids: frozenset[BindingId],
+) -> None:
+    """Refuse an M390 draft that would save zero 303 reconciliation slots from missing fold-in evidence.
+
+    A calculated zero proves a slot has nothing to reconcile only when every
+    value it was folded from was supplied: an operator entry, a resolved
+    source, or a binding its source settled as inapplicable or row-fed
+    (``answered_binding_ids``). A zero folded from inputs nobody supplied, and
+    an absent annual box, are unknown, so they refuse. The exception is a filer
+    claiming no general regime with no figure on any general-regime box: those
+    boxes do not apply to them. One non-zero figure contradicts that, and every
+    unknown box is unknown again.
+    """
+    targets = reconciliation_relation_targets(snapshot)
+    if not targets:
+        return
+    general_regime_not_applicable = not general_regime_claimed and not _general_regime_figure_present(
+        targets, casilla_values=casilla_values, resolved_binding_values=resolved_binding_values
+    )
+
+    resolved_annual_casillas, proven_zero_annual_casillas = _grounded_annual_casillas(
+        snapshot,
+        targets,
+        casilla_values=casilla_values,
+        resolved_binding_values=resolved_binding_values,
+        observations=observations,
+        supplied_casilla_ids=supplied_casilla_ids,
+        answered_binding_ids=answered_binding_ids,
+    )
+    missing_relations: list[RelationId] = []
+    missing_bindings: list[BindingId] = []
+    missing_targets: list[CasillaId] = []
+    missing_annuals: list[CasillaId] = []
+    for relation_id, binding_id, target_casillas, _source_casilla, annual_casilla in targets:
+        if _reconciliation_slot_grounded(
+            binding_id,
+            annual_casilla,
+            casilla_values=casilla_values,
+            resolved_binding_values=resolved_binding_values,
+            resolved_annual_casillas=resolved_annual_casillas,
+            proven_zero_annual_casillas=proven_zero_annual_casillas,
+            general_regime_not_applicable=general_regime_not_applicable,
+        ):
+            continue
+        missing_relations.append(relation_id)
+        missing_bindings.append(binding_id)
+        missing_targets.extend(target_casillas)
+        missing_annuals.append(annual_casilla)
+
+    if not missing_bindings:
+        return
+
+    raise _incomplete_reconciliation_error(
+        work_unit,
+        snapshot,
+        missing_relations=missing_relations,
+        missing_bindings=missing_bindings,
+        missing_targets=missing_targets,
+        missing_annuals=missing_annuals,
     )
 
 

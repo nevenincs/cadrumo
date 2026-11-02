@@ -15,7 +15,7 @@ from pathlib import Path
 import pytest
 
 from cadrumo.application.filing.draft_construction import build_draft
-from cadrumo.application.filing.export import _render_export_layout, export_draft
+from cadrumo.application.filing.export import export_draft, render_export_layout
 from cadrumo.application.filing.export_verification import FilingExportValidatedPayload
 from cadrumo.application.filing.runtime import ModeloOperatorProfile, build_runtime_schema_provider
 from cadrumo.core.authority_grade import RegistryAuthorityGrade
@@ -222,7 +222,7 @@ def test_a_dictionary_layout_holding_a_shared_box_is_refused_like_a_fixed_width_
             schema_provider=provider,
         )
         with pytest.raises(FilingExportValidationError) as caught:
-            _render_export_layout(
+            render_export_layout(
                 planted.model_copy(update={"format": ExportLayoutFormat.XML_DICTIONARY}),
                 draft=draft,
                 headers={},

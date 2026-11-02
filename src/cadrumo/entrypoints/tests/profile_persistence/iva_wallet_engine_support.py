@@ -105,7 +105,7 @@ def _secure_backend(tmp_path: Path) -> Generator[None]:
 
 
 @cache
-def _wallet_observation(
+def wallet_observation(
     *,
     pending: Decimal,
     taxpayer_nif: str = _TAXPAYER_NIF,

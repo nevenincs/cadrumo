@@ -86,6 +86,17 @@ def calculation_required_inputs(
     return CalculationRequiredInputs(casilla_ids=frozenset(casilla_ids), binding_ids=frozenset(binding_ids))
 
 
+def _earlier_year_carry(binding: BindingDefinition | None) -> BindingDefinition | None:
+    """The binding when it takes its value from the previous filing of an earlier year, else ``None``."""
+    if (
+        binding is not None
+        and binding.source is BindingSourceKind.PREVIOUS_FILING
+        and isinstance(provider_member(binding, PreviousFilingProvider).temporal, FilingYearOffset)
+    ):
+        return binding
+    return None
+
+
 def _earlier_year_carries(
     revision: ModeloRevision, bindings: Mapping[BindingId, BindingDefinition], registry_period: str
 ) -> set[CasillaId]:
@@ -93,18 +104,13 @@ def _earlier_year_carries(
     for casilla in revision.casillas:
         if casilla.input_kind != InputKind.BOUND:
             continue
-        carries = [
-            binding
-            for binding_id in bound_casilla_binding_ids(casilla)
-            if (binding := bindings.get(binding_id)) is not None
-            and binding.source is BindingSourceKind.PREVIOUS_FILING
-            and isinstance(provider_member(binding, PreviousFilingProvider).temporal, FilingYearOffset)
-        ]
+        bound_ids = bound_casilla_binding_ids(casilla)
+        carries = [carry for binding_id in bound_ids if (carry := _earlier_year_carry(bindings.get(binding_id)))]
         # The engine starts from the first value any of the casilla's equivalent bindings resolves, so the
         # box is refused only when every one of them is an unresolvable earlier-year carry.
         if (
             carries
-            and len(carries) == len(bound_casilla_binding_ids(casilla))
+            and len(carries) == len(bound_ids)
             and not any(binding_is_absent_by_design(binding, target_period=registry_period) for binding in carries)
         ):
             named.add(casilla.id)
