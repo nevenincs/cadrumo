@@ -9837,6 +9837,31 @@ workspace:
       receipt_differs: Az igazolás nem egyezik ezzel a bevallással.
       receipt_matches: Az igazolás egyezik ezzel a bevallással.
       receipt_missing: Még nem erősíti meg igazolás.
+      reconciliation:
+        category:
+          casilla: Mező
+          header_field: Fejlécmező
+          total: Összesen
+        code: Kód
+        context: Környezet
+        details: Részletek
+        differences: Eltérések
+        differs: Néhány összehasonlított érték eltér a dokumentumtól.
+        evidence_value: A dokumentumban
+        field:
+          ejercicio: Adóév
+          modelo: Modelo
+          period: Időszak
+          tax_id: Adóazonosító
+          total_devolver: Visszatérítendő összeg
+          total_ingresar: Befizetendő összeg
+        kind: Típus
+        legal_refs: Jogi hivatkozások
+        matches: Az összehasonlított értékek egyeznek a dokumentummal.
+        not_present: Nincs megadva
+        notices: Figyelmeztetések
+        source_refs: Források
+        work_value: A te bevallásodban
       record_as_filed: Rögzítés benyújtottként…
       record_lead: Rögzítsd itt, hogy benyújtottad, hogy a naptárad és a későbbi bevallásaid
         is tudjanak róla. Utána a megerősítéshez add hozzá az AEAT igazolását.
