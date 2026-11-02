@@ -6,22 +6,17 @@ preview's own path. Expected figures are worked by hand in the comments.
 
 from __future__ import annotations
 
-import asyncio
 import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from datetime import date, timedelta
 from decimal import Decimal
-from types import SimpleNamespace
-from typing import cast
-from uuid import UUID
 
 import pytest
 from pydantic import ValidationError
 
 from ....core.aggregation import IntracomOperationType
 from ....core.errors.hierarchy import CoreValidationError
-from ....core.operations import profile_operation_subject
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.errors import RegistryValidationError
 from ....domain.calculations.registry.tests.authority_lease_support import private_authority_lease
@@ -32,8 +27,6 @@ from ....domain.invoices.figures import FigureFindingCode, StatedFigureVerdict
 from ....domain.invoices.models import InvoiceLine
 from ....domain.invoices.rule_findings import InvoiceRuleFindingCode
 from ....domain.iva.schema import InvoiceKind
-from ...operations.models import OperationIdentity, OperationRequest
-from ...operations.owner import OperationExecutorContext
 from ...operations.public_scalar import PublicDecimal, restore_facts
 from .. import figures_preview_operation as preview_operation
 from ..catalogue_add_contracts import InvoiceAddRequest
@@ -43,31 +36,18 @@ from ..catalogue_creation_ports import CatalogueInvoiceRateError, CatalogueInvoi
 from ..catalogue_lifecycle import CatalogueInvoicePatch
 from ..figures_preview_contracts import (
     INVOICE_CORRECTION_JUDGED_FIELDS,
-    INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
-    InvoiceFiguresPreviewExecutionResult,
     InvoiceFiguresPreviewLine,
     InvoiceFiguresPreviewRequest,
     InvoiceFiguresPreviewResult,
     InvoiceFiguresPreviewStored,
 )
 from ..figures_preview_operation import (
-    InvoiceFiguresPreviewExecutor,
-    build_invoice_figures_preview_definition,
     preview_invoice_figures,
 )
 from ..tests._catalogue_creation_fakes import in_memory_catalogue_creation_ports
+from .figures_preview_support import APRIL, PROFILE, NoRate, Unreachable, preview_draft, preview_line, public_decimal
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
-
-_PROFILE = UUID("5aa00000-0000-4000-8000-0000000000bb")
-_APRIL = date(2026, 4, 15)
-
-
-class _NoRate:
-    rate_source_id = "synthetic"
-
-    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
-        return EurRateLookup(status=EurRateLookupStatus.MISSING_RATE, rate_date=rate_date, source="synthetic")
 
 
 class _Answering:
@@ -92,69 +72,19 @@ class _Answering:
         return EurRateLookup(status=self._status, rate_date=rate_date, source="synthetic")
 
 
-class _Unreachable:
-    """A rate source whose lookup fails the way the host adapter reports an unreachable provider."""
-
-    rate_source_id = "synthetic"
-
-    def lookup_eur_rate(self, currency: str, rate_date: date) -> EurRateLookup:
-        raise CatalogueInvoiceRateError("exchange_rate_lookup")
-
-
 def _preview(
     request: InvoiceFiguresPreviewRequest,
     *,
     operation: PinnedAuthorityOperation,
     rate_provider: CatalogueInvoiceRateProviderPort | None = None,
 ) -> InvoiceFiguresPreviewResult:
-    return preview_invoice_figures(request, operation=operation, rate_provider=rate_provider or _NoRate())
+    return preview_invoice_figures(request, operation=operation, rate_provider=rate_provider or NoRate())
 
 
 @pytest.fixture
 def operation() -> Iterator[PinnedAuthorityOperation]:
     with private_authority_lease() as leased:
         yield leased
-
-
-def _decimal(value: str | None) -> PublicDecimal | None:
-    return None if value is None else PublicDecimal(decimal=value)
-
-
-def _line(
-    key: str = "a",
-    *,
-    description: str | None = "Synthetic service",
-    quantity: str | None = "1",
-    unit_price: str | None = "100.00",
-    iva_rate: str | None = "RATE_21",
-    subtotal: str | None = None,
-    iva_amount: str | None = None,
-) -> InvoiceFiguresPreviewLine:
-    return InvoiceFiguresPreviewLine(
-        key=key,
-        description=description,
-        quantity=_decimal(quantity),
-        unit_price=_decimal(unit_price),
-        iva_rate=iva_rate,
-        subtotal=_decimal(subtotal),
-        iva_amount=_decimal(iva_amount),
-    )
-
-
-def _draft(*lines: InvoiceFiguresPreviewLine, **overrides: object) -> InvoiceFiguresPreviewRequest:
-    values: dict[str, object] = {
-        "profile_id": _PROFILE,
-        "kind": InvoiceKind.RECEIVED,
-        "invoice_number": "SYN-2026-001",
-        "issued_at": _APRIL,
-        "counterparty_name": "Synthetic supplier",
-        "counterparty_tax_id": "A58818501",
-        "counterparty_country": "ES",
-        "currency": "EUR",
-        "lines": lines or (_line(),),
-    }
-    values.update(overrides)
-    return InvoiceFiguresPreviewRequest.model_validate(values)
 
 
 def _accepted_by_the_builder(
@@ -179,13 +109,13 @@ def _accepted_by_the_builder(
             for line, result in zip(draft.lines, answer.lines, strict=True)
         )
     invoice = build_catalogue_invoice(
-        bucket_id=str(_PROFILE),
+        bucket_id=str(PROFILE),
         kind=draft.kind or InvoiceKind.RECEIVED,
         counterparty_name=str(draft.counterparty_name),
         counterparty_tax_id=draft.counterparty_tax_id,
         counterparty_country=str(draft.counterparty_country),
         invoice_number=str(draft.invoice_number),
-        issued_at=draft.issued_at or _APRIL,
+        issued_at=draft.issued_at or APRIL,
         operation_date=draft.operation_date,
         currency=str(draft.currency),
         retention_rate=_optional(draft.retention_rate),
@@ -228,11 +158,11 @@ def _lines(*lines: InvoiceFiguresPreviewLine) -> dict[str, object]:
 _TABLE = (
     # 100.00 + 21.00
     _Case("computed", {}, "would_accept", total="121.00"),
-    _Case("stated-exact", _lines(_line(subtotal="100.00", iva_amount="21.00")), "would_accept", total="121.00"),
+    _Case("stated-exact", _lines(preview_line(subtotal="100.00", iva_amount="21.00")), "would_accept", total="121.00"),
     # A printed cuota inside its cent is stored as printed: 100.00 + 21.01.
-    _Case("stated-iva-cent", _lines(_line(iva_amount="21.01")), "would_accept", total="121.01"),
+    _Case("stated-iva-cent", _lines(preview_line(iva_amount="21.01")), "would_accept", total="121.01"),
     # 100.01 x 0.21 = 21.0021, which a computed 21.00 satisfies: 100.01 + 21.00.
-    _Case("stated-subtotal-cent", _lines(_line(subtotal="100.01")), "would_accept", total="121.01"),
+    _Case("stated-subtotal-cent", _lines(preview_line(subtotal="100.01")), "would_accept", total="121.01"),
     # A foreign currency resolves its rate through the source add uses, whatever that source answers.
     _Case("foreign-rate-found", {"currency": "USD"}, "would_accept", total="121.00", rates=EurRateLookupStatus.FOUND),
     _Case("foreign-rate-missing", {"currency": "USD"}, "would_accept", total="121.00"),
@@ -245,103 +175,112 @@ _TABLE = (
     ),
     _Case(
         "foreign-refused-by-figures",
-        {**_lines(_line(iva_amount="21.02")), "currency": "USD"},
+        {**_lines(preview_line(iva_amount="21.02")), "currency": "USD"},
         "would_refuse",
         FigureFindingCode.LINE_IVA_MISMATCH,
         rates=EurRateLookupStatus.FOUND,
     ),
-    _Case("stated-iva-beyond", _lines(_line(iva_amount="21.02")), "would_refuse", FigureFindingCode.LINE_IVA_MISMATCH),
+    _Case(
+        "stated-iva-beyond",
+        _lines(preview_line(iva_amount="21.02")),
+        "would_refuse",
+        FigureFindingCode.LINE_IVA_MISMATCH,
+    ),
     _Case(
         "stated-subtotal-beyond",
-        _lines(_line(subtotal="100.02")),
+        _lines(preview_line(subtotal="100.02")),
         "would_refuse",
         FigureFindingCode.LINE_SUBTOTAL_MISMATCH,
     ),
     _Case(
         "quantity-zero",
-        _lines(_line(quantity="0")),
+        _lines(preview_line(quantity="0")),
         "would_refuse",
         FigureFindingCode.LINE_QUANTITY_NOT_POSITIVE,
     ),
-    _Case("price-negative", _lines(_line(unit_price="-1")), "would_refuse", FigureFindingCode.LINE_AMOUNT_NEGATIVE),
+    _Case(
+        "price-negative", _lines(preview_line(unit_price="-1")), "would_refuse", FigureFindingCode.LINE_AMOUNT_NEGATIVE
+    ),
     _Case(
         "rate-withdrawn",
-        _lines(_line(iva_rate="RATE_5")),
+        _lines(preview_line(iva_rate="RATE_5")),
         "would_refuse",
         FigureFindingCode.LINE_RATE_NOT_IN_FORCE,
     ),
     _Case(
         "rate-undeclared",
-        _lines(_line(iva_rate="RATE_99")),
+        _lines(preview_line(iva_rate="RATE_99")),
         "would_refuse",
         FigureFindingCode.LINE_RATE_UNDECLARED,
     ),
     # RDL 4/2024: 7.5 % stood in the last quarter of 2024. 100.00 + 7.50.
     _Case(
         "rate-in-force-on-its-date",
-        {"issued_at": date(2024, 11, 1), **_lines(_line(iva_rate="RATE_7.5"))},
+        {"issued_at": date(2024, 11, 1), **_lines(preview_line(iva_rate="RATE_7.5"))},
         "would_accept",
         total="107.50",
     ),
     # The operation date decides over the issue date.
     _Case(
         "operation-date-decides",
-        {"operation_date": date(2024, 11, 1), **_lines(_line(iva_rate="RATE_7.5"))},
+        {"operation_date": date(2024, 11, 1), **_lines(preview_line(iva_rate="RATE_7.5"))},
         "would_accept",
         total="107.50",
     ),
     _Case(
         "exempt-cuota-not-zero",
-        _lines(_line(iva_rate="EXEMPT", iva_amount="0.01")),
+        _lines(preview_line(iva_rate="EXEMPT", iva_amount="0.01")),
         "would_refuse",
         FigureFindingCode.LINE_IVA_NOT_ZERO_FOR_NONNUMERIC,
     ),
-    _Case("exempt", _lines(_line(iva_rate="EXEMPT")), "would_accept", total="100.00"),
+    _Case("exempt", _lines(preview_line(iva_rate="EXEMPT")), "would_accept", total="100.00"),
     # Two tiers: (100.00 + 21.00) + (50.00 + 5.00).
     _Case(
         "two-rates",
-        _lines(_line("a"), _line("b", quantity="2", unit_price="25.00", iva_rate="RATE_10")),
+        _lines(preview_line("a"), preview_line("b", quantity="2", unit_price="25.00", iva_rate="RATE_10")),
         "would_accept",
         total="176.00",
     ),
     # A sub-cent stated subtotal cannot equal a base rounded to the cent.
     _Case(
         "sub-cent-subtotal",
-        _lines(_line(subtotal="100.005")),
+        _lines(preview_line(subtotal="100.005")),
         "would_refuse",
         FigureFindingCode.BASE_TOTAL_NOT_LINE_SUM,
     ),
     # 100.00 + 21.00 + 5.20 recargo inside the total.
-    _Case("recargo", {"recargo_amount": _decimal("5.20")}, "would_accept", total="126.20"),
+    _Case("recargo", {"recargo_amount": public_decimal("5.20")}, "would_accept", total="126.20"),
     _Case(
         "recargo-above-cuota",
-        {"recargo_amount": _decimal("21.01")},
+        {"recargo_amount": public_decimal("21.01")},
         "would_refuse",
         FigureFindingCode.RECARGO_ABOVE_IVA_TOTAL,
     ),
-    _Case("recargo-negative", {"recargo_amount": _decimal("-1")}, "would_refuse", FigureFindingCode.RECARGO_NEGATIVE),
+    _Case(
+        "recargo-negative", {"recargo_amount": public_decimal("-1")}, "would_refuse", FigureFindingCode.RECARGO_NEGATIVE
+    ),
     _Case(
         "recargo-on-exempt",
-        {"recargo_amount": _decimal("1"), **_lines(_line(iva_rate="EXEMPT"))},
+        {"recargo_amount": public_decimal("1"), **_lines(preview_line(iva_rate="EXEMPT"))},
         "would_refuse",
         FigureFindingCode.NONNUMERIC_RECARGO_NOT_ZERO,
     ),
     # 100.00 x 0.15 = 15.00, outside the total.
     _Case(
         "retention",
-        {"retention_rate": _decimal("0.15"), "retention_amount": _decimal("15.00")},
+        {"retention_rate": public_decimal("0.15"), "retention_amount": public_decimal("15.00")},
         "would_accept",
         total="121.00",
     ),
     _Case(
         "retention-cent",
-        {"retention_rate": _decimal("0.15"), "retention_amount": _decimal("15.01")},
+        {"retention_rate": public_decimal("0.15"), "retention_amount": public_decimal("15.01")},
         "would_accept",
         total="121.00",
     ),
     _Case(
         "retention-beyond",
-        {"retention_rate": _decimal("0.15"), "retention_amount": _decimal("15.02")},
+        {"retention_rate": public_decimal("0.15"), "retention_amount": public_decimal("15.02")},
         "would_refuse",
         FigureFindingCode.RETENTION_AMOUNT_MISMATCH,
     ),
@@ -349,38 +288,38 @@ _TABLE = (
     _Case(
         "retention-unrounded-inside",
         {
-            "retention_rate": _decimal("0.155"),
-            "retention_amount": _decimal("15.58"),
-            **_lines(_line(unit_price="100.50")),
+            "retention_rate": public_decimal("0.155"),
+            "retention_amount": public_decimal("15.58"),
+            **_lines(preview_line(unit_price="100.50")),
         },
         "would_accept",
     ),
     _Case(
         "retention-unrounded-outside",
         {
-            "retention_rate": _decimal("0.155"),
-            "retention_amount": _decimal("15.59"),
-            **_lines(_line(unit_price="100.50")),
+            "retention_rate": public_decimal("0.155"),
+            "retention_amount": public_decimal("15.59"),
+            **_lines(preview_line(unit_price="100.50")),
         },
         "would_refuse",
         FigureFindingCode.RETENTION_AMOUNT_MISMATCH,
     ),
-    _Case("retention-alone", {"retention_amount": _decimal("99")}, "would_accept", total="121.00"),
+    _Case("retention-alone", {"retention_amount": public_decimal("99")}, "would_accept", total="121.00"),
     _Case(
         "retention-above-base",
-        {"retention_amount": _decimal("100.01")},
+        {"retention_amount": public_decimal("100.01")},
         "would_refuse",
         FigureFindingCode.RETENTION_AMOUNT_ABOVE_BASE,
     ),
     _Case(
         "retention-rate-alone",
-        {"retention_rate": _decimal("0.15")},
+        {"retention_rate": public_decimal("0.15")},
         "would_refuse",
         FigureFindingCode.RETENTION_RATE_WITHOUT_AMOUNT,
     ),
     _Case(
         "retention-percent-as-fraction",
-        {"retention_rate": _decimal("15"), "retention_amount": _decimal("15.00")},
+        {"retention_rate": public_decimal("15"), "retention_amount": public_decimal("15.00")},
         "would_refuse",
         FigureFindingCode.RETENTION_RATE_OUT_OF_RANGE,
     ),
@@ -401,7 +340,7 @@ _TABLE = (
     ),
     _Case(
         "description-blank",
-        _lines(_line(description="  ")),
+        _lines(preview_line(description="  ")),
         "would_refuse",
         "invalid_invoice",
         rule=InvoiceRuleFindingCode.LINE_DESCRIPTION_BLANK,
@@ -590,7 +529,7 @@ _RULE_TABLE = (
     ),
     _Case(
         "description-beyond-the-line",
-        _lines(_line(description="x" * 4097)),
+        _lines(preview_line(description="x" * 4097)),
         "would_refuse",
         "invalid_invoice",
         rule=InvoiceRuleFindingCode.LINE_DESCRIPTION_TOO_LONG,
@@ -621,9 +560,9 @@ def _added_by_add_itself(
     invoice, _advisory = build_invoice_from_add_request(
         payload=payload,
         business_premises_lease=invoice_add_lease(payload, authority_operation=operation),
-        profile=str(_PROFILE),
+        profile=str(PROFILE),
         authority_operation=operation,
-        rate_provider=_NoRate(),
+        rate_provider=NoRate(),
     )
     return invoice.invoice_id
 
@@ -634,7 +573,7 @@ def _rule_codes(answer: InvoiceFiguresPreviewResult) -> set[InvoiceRuleFindingCo
 
 @pytest.mark.parametrize("case", _TABLE, ids=lambda case: case.name)
 def test_every_verdict_is_the_builders_own(case: _Case, operation: PinnedAuthorityOperation) -> None:
-    draft = _draft(**case.draft)
+    draft = preview_draft(**case.draft)
     answer = _preview(draft, operation=operation, rate_provider=_Answering(case.rates))
 
     assert answer.verdict == case.verdict
@@ -656,7 +595,7 @@ def test_every_verdict_is_the_builders_own(case: _Case, operation: PinnedAuthori
 
 @pytest.mark.parametrize("case", _RULE_TABLE, ids=lambda case: case.name)
 def test_every_rule_names_itself_and_its_verdict_is_adds_own(case: _Case, operation: PinnedAuthorityOperation) -> None:
-    draft = _draft(**case.draft)
+    draft = preview_draft(**case.draft)
     answer = _preview(draft, operation=operation)
 
     assert answer.verdict == case.verdict
@@ -677,21 +616,21 @@ def test_every_rule_names_itself_and_its_verdict_is_adds_own(case: _Case, operat
 
 @pytest.mark.parametrize("case", (*_TABLE, *_RULE_TABLE), ids=lambda case: case.name)
 def test_a_refused_draft_always_says_why(case: _Case, operation: PinnedAuthorityOperation) -> None:
-    answer = _preview(_draft(**case.draft), operation=operation)
+    answer = _preview(preview_draft(**case.draft), operation=operation)
 
     said = answer.rule_findings or tuple(item for item in answer.findings if item.severity.value == "refusal")
     assert bool(said) == (answer.verdict == "would_refuse")
 
 
 def test_the_rule_findings_locate_a_field_and_serve_the_limit(operation: PinnedAuthorityOperation) -> None:
-    too_long = _preview(_draft(**_leased(_ON_SPANISH_PREMISES, "A" * 26)), operation=operation)
+    too_long = _preview(preview_draft(**_leased(_ON_SPANISH_PREMISES, "A" * 26)), operation=operation)
     finding = next(
         item for item in too_long.rule_findings if item.code is InvoiceRuleFindingCode.LEASE_REFERENCE_TOO_LONG
     )
     assert finding.fields == ("referencia_catastral",)
     assert restore_facts(finding.values) == {"limit": "25"}
 
-    described = _preview(_draft(_line("long", description="x" * 4097)), operation=operation)
+    described = _preview(preview_draft(preview_line("long", description="x" * 4097)), operation=operation)
     line_finding = described.rule_findings[0]
     assert (line_finding.line_key, line_finding.fields) == ("long", ("description",))
     assert restore_facts(line_finding.values) == {"limit": "4096"}
@@ -700,7 +639,7 @@ def test_the_rule_findings_locate_a_field_and_serve_the_limit(operation: PinnedA
 def test_an_incomplete_draft_hears_every_rule_it_can_be_asked(operation: PinnedAuthorityOperation) -> None:
     answer = _preview(
         InvoiceFiguresPreviewRequest(
-            profile_id=_PROFILE,
+            profile_id=PROFILE,
             kind=InvoiceKind.RECEIVED,
             invoice_class="RECTIFICATIVA",
             counterparty_country="ES",
@@ -718,20 +657,20 @@ def test_an_incomplete_draft_hears_every_rule_it_can_be_asked(operation: PinnedA
 
 
 def test_without_a_kind_the_tax_id_rule_stays_unasked(operation: PinnedAuthorityOperation) -> None:
-    answer = _preview(InvoiceFiguresPreviewRequest(profile_id=_PROFILE), operation=operation)
+    answer = _preview(InvoiceFiguresPreviewRequest(profile_id=PROFILE), operation=operation)
 
     assert answer.rule_findings == ()
 
 
 def _correction(**overrides: object) -> InvoiceFiguresPreviewRequest:
     values: dict[str, object] = {
-        "profile_id": _PROFILE,
+        "profile_id": PROFILE,
         "kind": InvoiceKind.ISSUED,
         "invoice_class": "ORDINARIA",
         "counterparty_tax_id": "A58818501",
         "counterparty_country": "ES",
-        "issued_at": _APRIL,
-        "base_total": _decimal("1000.00"),
+        "issued_at": APRIL,
+        "base_total": public_decimal("1000.00"),
         "stored": InvoiceFiguresPreviewStored(invoice_id="f" * 64, grand_total=PublicDecimal(decimal="1210.00")),
     }
     values.update(overrides)
@@ -741,7 +680,7 @@ def _correction(**overrides: object) -> InvoiceFiguresPreviewRequest:
 def test_a_correction_serves_what_is_left_to_pay_on_the_stored_total(operation: PinnedAuthorityOperation) -> None:
     # 1000.00 x 0.07 = 70.00 of retención; 1210.00 stored - 70.00 = 1140.00 to pay.
     answer = _preview(
-        _correction(retention_rate=_decimal("0.07"), retention_amount=_decimal("70.00")),
+        _correction(retention_rate=public_decimal("0.07"), retention_amount=public_decimal("70.00")),
         operation=operation,
     )
 
@@ -765,7 +704,7 @@ def test_a_correction_refuses_a_retention_that_disagrees_with_the_stored_base(
 ) -> None:
     # 1000.00 x 0.07 = 70.00; 70.02 is beyond the cent.
     answer = _preview(
-        _correction(retention_rate=_decimal("0.07"), retention_amount=_decimal("70.02")),
+        _correction(retention_rate=public_decimal("0.07"), retention_amount=public_decimal("70.02")),
         operation=operation,
     )
 
@@ -833,17 +772,17 @@ def test_an_accepted_draft_runs_the_add_path_to_the_same_id_and_persists_nothing
     """The add operation's own preparation agrees, and the preview left its catalogue empty."""
     from ..catalogue_add_contracts import InvoiceAddLine, InvoiceAddRequest
 
-    draft = _draft(**case.draft)
+    draft = preview_draft(**case.draft)
     answer = _preview(draft, operation=operation)
     ports = in_memory_catalogue_creation_ports()
     payload = InvoiceAddRequest(
-        profile_id=_PROFILE,
+        profile_id=PROFILE,
         kind=InvoiceKind.RECEIVED,
         counterparty_name="Synthetic supplier",
         counterparty_tax_id="A58818501",
         counterparty_country="ES",
         invoice_number="SYN-2026-001",
-        issued_at=draft.issued_at or _APRIL,
+        issued_at=draft.issued_at or APRIL,
         operation_date=draft.operation_date,
         currency=str(draft.currency),
         recargo_amount=draft.recargo_amount,
@@ -865,7 +804,7 @@ def test_an_accepted_draft_runs_the_add_path_to_the_same_id_and_persists_nothing
     _ports, invoice, _advisory = _prepare_invoice_add(
         factory=lambda *, bucket_id: ports,
         payload=payload,
-        profile=str(_PROFILE),
+        profile=str(PROFILE),
         authority_operation=operation,
     )
 
@@ -876,7 +815,7 @@ def test_an_accepted_draft_runs_the_add_path_to_the_same_id_and_persists_nothing
 def test_a_class_the_registry_does_not_declare_is_refused_as_the_add_path_refuses(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    answer = _preview(_draft(invoice_class="UNDECLARED"), operation=operation)
+    answer = _preview(preview_draft(invoice_class="UNDECLARED"), operation=operation)
 
     assert answer.verdict == "would_refuse"
     assert answer.refusal_code == "invalid_invoice"
@@ -885,20 +824,20 @@ def test_a_class_the_registry_does_not_declare_is_refused_as_the_add_path_refuse
 def test_the_stated_figure_comes_back_beside_the_backends_with_its_verdict(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    within = _preview(_draft(_line(iva_amount="21.01")), operation=operation).lines[0].iva_amount
+    within = _preview(preview_draft(preview_line(iva_amount="21.01")), operation=operation).lines[0].iva_amount
     assert within.computed == PublicDecimal(decimal="21.00")
     assert within.stated == PublicDecimal(decimal="21.01")
     assert within.verdict is StatedFigureVerdict.WITHIN_TOLERANCE
     assert within.submitted == PublicDecimal(decimal="21.01")
 
-    refused = _preview(_draft(_line(iva_amount="21.02")), operation=operation).lines[0].iva_amount
+    refused = _preview(preview_draft(preview_line(iva_amount="21.02")), operation=operation).lines[0].iva_amount
     assert refused.computed == PublicDecimal(decimal="21.00")
     assert refused.verdict is StatedFigureVerdict.REFUSED
     assert refused.submitted is None
 
 
 def test_a_differing_printed_total_warns_and_never_blocks(operation: PinnedAuthorityOperation) -> None:
-    answer = _preview(_draft(printed_total=_decimal("121.01")), operation=operation)
+    answer = _preview(preview_draft(printed_total=public_decimal("121.01")), operation=operation)
 
     assert answer.verdict == "would_accept"
     assert [finding.code for finding in answer.findings] == [FigureFindingCode.PRINTED_TOTAL_DIFFERS]
@@ -908,7 +847,7 @@ def test_a_differing_printed_total_warns_and_never_blocks(operation: PinnedAutho
 def test_an_empty_draft_is_incomplete_with_null_figures_never_zero(operation: PinnedAuthorityOperation) -> None:
     answer = _preview(
         InvoiceFiguresPreviewRequest(
-            profile_id=_PROFILE,
+            profile_id=PROFILE,
             lines=(InvoiceFiguresPreviewLine(key="a"),),
         ),
         operation=operation,
@@ -933,11 +872,11 @@ def test_an_empty_draft_is_incomplete_with_null_figures_never_zero(operation: Pi
 def test_a_bare_base_stays_incomplete_and_still_answers_the_retention(operation: PinnedAuthorityOperation) -> None:
     answer = _preview(
         InvoiceFiguresPreviewRequest(
-            profile_id=_PROFILE,
-            issued_at=_APRIL,
-            base_total=_decimal("100.50"),
-            retention_rate=_decimal("0.155"),
-            retention_amount=_decimal("15.59"),
+            profile_id=PROFILE,
+            issued_at=APRIL,
+            base_total=public_decimal("100.50"),
+            retention_rate=public_decimal("0.155"),
+            retention_amount=public_decimal("15.59"),
         ),
         operation=operation,
     )
@@ -951,7 +890,7 @@ def test_a_bare_base_stays_incomplete_and_still_answers_the_retention(operation:
 
 
 def test_rate_slots_follow_the_draft_date_through_the_real_authority(operation: PinnedAuthorityOperation) -> None:
-    answer = _preview(_draft(), operation=operation)
+    answer = _preview(preview_draft(), operation=operation)
     slots = {slot.slot: slot for slot in answer.rate_slots}
 
     assert slots["RATE_21"].fraction == PublicDecimal(decimal="0.21")
@@ -969,7 +908,7 @@ def test_a_date_before_the_registry_floor_reads_the_nearest_rates_marked_as_a_pr
     floor = operation.supported_filing_years().date_envelope().floor
     before = floor - timedelta(days=1)
 
-    answer = _preview(_draft(issued_at=before), operation=operation)
+    answer = _preview(preview_draft(issued_at=before), operation=operation)
 
     assert answer.verdict == "would_accept"
     assert answer.refusal_code is None
@@ -988,7 +927,7 @@ def test_a_date_inside_the_registry_support_carries_no_projection_finding(
     operation: PinnedAuthorityOperation,
 ) -> None:
     floor = operation.supported_filing_years().date_envelope().floor
-    answer = _preview(_draft(issued_at=floor), operation=operation)
+    answer = _preview(preview_draft(issued_at=floor), operation=operation)
     assert FigureFindingCode.RATE_DATE_PROJECTED not in [item.code for item in answer.findings]
 
 
@@ -1001,7 +940,7 @@ def test_a_date_whose_vocabulary_the_registry_dates_later_states_no_rate(
 
     That also keeps 2012-08-31 from answering 21 %: 18 % applied until RDL 20/2012 art. 23 took effect.
     """
-    answer = _preview(_draft(_line(iva_amount="18.00"), issued_at=on_date), operation=operation)
+    answer = _preview(preview_draft(preview_line(iva_amount="18.00"), issued_at=on_date), operation=operation)
 
     assert answer.verdict == "would_refuse"
     assert answer.refusal_code is FigureFindingCode.RATE_DATE_UNRESOLVED
@@ -1012,7 +951,7 @@ def test_a_date_whose_vocabulary_the_registry_dates_later_states_no_rate(
 
 
 def test_the_earliest_projected_date_answers_the_grounded_rate(operation: PinnedAuthorityOperation) -> None:
-    answer = _preview(_draft(issued_at=date(2021, 1, 1)), operation=operation)
+    answer = _preview(preview_draft(issued_at=date(2021, 1, 1)), operation=operation)
 
     assert {slot.slot: slot for slot in answer.rate_slots}["RATE_21"].fraction == PublicDecimal(decimal="0.21")
     assert FigureFindingCode.RATE_DATE_PROJECTED in [item.code for item in answer.findings]
@@ -1028,7 +967,7 @@ def test_a_registry_failure_inside_its_support_stays_a_failure(
     monkeypatch.setattr(preview_operation, "dated_rate_slots", corrupt)
 
     with pytest.raises(RegistryValidationError):
-        _preview(_draft(), operation=operation)
+        _preview(preview_draft(), operation=operation)
 
 
 def test_a_registry_failure_during_acceptance_inside_its_support_stays_a_failure(
@@ -1041,11 +980,11 @@ def test_a_registry_failure_during_acceptance_inside_its_support_stays_a_failure
     monkeypatch.setattr(preview_operation, "build_invoice_from_add_request", corrupt)
 
     with pytest.raises(RegistryValidationError):
-        _preview(_draft(), operation=operation)
+        _preview(preview_draft(), operation=operation)
 
 
 def test_a_magnitude_beyond_decimal_arithmetic_is_a_typed_refusal(operation: PinnedAuthorityOperation) -> None:
-    answer = _preview(_draft(_line(quantity="1E+30")), operation=operation)
+    answer = _preview(preview_draft(preview_line(quantity="1E+30")), operation=operation)
 
     assert answer.verdict == "would_refuse"
     assert answer.refusal_code is FigureFindingCode.FIGURE_OUT_OF_RANGE
@@ -1053,17 +992,17 @@ def test_a_magnitude_beyond_decimal_arithmetic_is_a_typed_refusal(operation: Pin
 
 def test_a_foreign_draft_asks_the_rate_source_add_asks_and_keeps_its_id(operation: PinnedAuthorityOperation) -> None:
     found = _Answering(EurRateLookupStatus.FOUND)
-    stamped = _preview(_draft(currency="USD"), operation=operation, rate_provider=found)
-    unstamped = _preview(_draft(currency="USD"), operation=operation)
+    stamped = _preview(preview_draft(currency="USD"), operation=operation, rate_provider=found)
+    unstamped = _preview(preview_draft(currency="USD"), operation=operation)
 
-    assert found.asked == [("USD", _APRIL)]
+    assert found.asked == [("USD", APRIL)]
     assert stamped.verdict == unstamped.verdict == "would_accept"
     assert stamped.invoice_id is not None
     assert stamped.invoice_id == unstamped.invoice_id
 
 
 def test_a_euro_draft_asks_no_rate_source(operation: PinnedAuthorityOperation) -> None:
-    answer = _preview(_draft(), operation=operation, rate_provider=_Unreachable())
+    answer = _preview(preview_draft(), operation=operation, rate_provider=Unreachable())
 
     assert answer.verdict == "would_accept"
 
@@ -1072,20 +1011,20 @@ def test_an_unreachable_rate_source_is_neither_an_acceptance_nor_a_refusal_and_a
     operation: PinnedAuthorityOperation,
 ) -> None:
     """Add cannot construct the invoice without its rate source, so the preview cannot say it would."""
-    draft = _draft(currency="USD")
+    draft = preview_draft(currency="USD")
     answer = _preview(draft, operation=operation)
     assert answer.verdict == "would_accept"
 
     with pytest.raises(CatalogueInvoiceRateError):
-        _accepted_by_the_builder(draft, answer, operation, _Unreachable())
+        _accepted_by_the_builder(draft, answer, operation, Unreachable())
     with pytest.raises(CatalogueInvoiceRateError):
-        _preview(draft, operation=operation, rate_provider=_Unreachable())
+        _preview(draft, operation=operation, rate_provider=Unreachable())
 
 
 def test_the_digest_binds_the_answer_to_the_draft(operation: PinnedAuthorityOperation) -> None:
-    first = _preview(_draft(), operation=operation)
-    again = _preview(_draft(), operation=operation)
-    other = _preview(_draft(_line(unit_price="100.01")), operation=operation)
+    first = _preview(preview_draft(), operation=operation)
+    again = _preview(preview_draft(), operation=operation)
+    other = _preview(preview_draft(preview_line(unit_price="100.01")), operation=operation)
 
     assert first.input_digest == again.input_digest
     assert first.input_digest != other.input_digest
@@ -1094,119 +1033,21 @@ def test_the_digest_binds_the_answer_to_the_draft(operation: PinnedAuthorityOper
 @pytest.mark.parametrize(
     "values",
     (
-        {"lines": (_line(),), "base_total": _decimal("1")},
-        {"lines": (_line("same"), _line("same"))},
+        {"lines": (preview_line(),), "base_total": public_decimal("1")},
+        {"lines": (preview_line("same"), preview_line("same"))},
         {"stored": {"invoice_id": "f" * 64, "grand_total": {"decimal": "1"}}},
     ),
     ids=("lines-and-base", "duplicate-keys", "stored-without-its-base"),
 )
 def test_the_request_refuses_an_incoherent_shape(values: dict[str, object]) -> None:
     with pytest.raises(ValidationError):
-        InvoiceFiguresPreviewRequest.model_validate({"profile_id": _PROFILE, **values})
+        InvoiceFiguresPreviewRequest.model_validate({"profile_id": PROFILE, **values})
 
 
 def test_the_request_round_trips_through_json() -> None:
-    draft = _draft(printed_total=_decimal("121.00"))
+    draft = preview_draft(printed_total=public_decimal("121.00"))
 
     assert InvoiceFiguresPreviewRequest.model_validate_json(draft.model_dump_json()) == draft
-
-
-class _Operands:
-    def __init__(self) -> None:
-        self.value: InvoiceFiguresPreviewExecutionResult | None = None
-
-    async def put(self, operand: object, *, written_at: object) -> str:
-        assert isinstance(operand, InvoiceFiguresPreviewExecutionResult)
-        self.value = operand
-        return "d" * 64
-
-
-class _Events:
-    def __init__(self) -> None:
-        self.phases: list[str] = []
-
-    async def phase(self, phase_code: str) -> None:
-        self.phases.append(phase_code)
-
-
-def _executor_context(authority: PinnedAuthorityOperation, subject: str) -> tuple[OperationExecutorContext, _Operands]:
-    operands = _Operands()
-    context = SimpleNamespace(
-        identity=OperationIdentity(
-            operation_id="a" * 64,
-            definition_id=INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
-            subject_ref=subject,
-        ),
-        authority_operation=authority,
-        events=_Events(),
-        operands=operands,
-    )
-    return cast(OperationExecutorContext, context), operands
-
-
-def test_the_executor_answers_inside_the_exact_profile(
-    operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(preview_operation, "require_active_bucket_id", lambda: str(_PROFILE))
-    subject = profile_operation_subject(str(_PROFILE))
-    context, operands = _executor_context(operation, subject)
-    request = OperationRequest[InvoiceFiguresPreviewRequest](
-        definition_id=INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
-        subject_ref=subject,
-        payload=_draft(),
-    )
-
-    reference = asyncio.run(InvoiceFiguresPreviewExecutor(_NoRate).execute(request, context))
-
-    assert reference == "d" * 64
-    assert operands.value is not None
-    assert operands.value.result.verdict == "would_accept"
-
-
-def test_the_executor_fails_on_an_unreachable_rate_source_and_records_no_answer(
-    operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    monkeypatch.setattr(preview_operation, "require_active_bucket_id", lambda: str(_PROFILE))
-    subject = profile_operation_subject(str(_PROFILE))
-    context, operands = _executor_context(operation, subject)
-    request = OperationRequest[InvoiceFiguresPreviewRequest](
-        definition_id=INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
-        subject_ref=subject,
-        payload=_draft(currency="USD"),
-    )
-
-    with pytest.raises(CatalogueInvoiceRateError):
-        asyncio.run(InvoiceFiguresPreviewExecutor(_Unreachable).execute(request, context))
-    assert operands.value is None
-
-
-def test_the_executor_refuses_a_foreign_active_profile(
-    operation: PinnedAuthorityOperation,
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from ...user_profile.access_errors import ProfileAccessRefusedError
-
-    monkeypatch.setattr(preview_operation, "require_active_bucket_id", lambda: "another-profile")
-    subject = profile_operation_subject(str(_PROFILE))
-    context, operands = _executor_context(operation, subject)
-    request = OperationRequest[InvoiceFiguresPreviewRequest](
-        definition_id=INVOICE_FIGURES_PREVIEW_OPERATION_DEFINITION_ID,
-        subject_ref=subject,
-        payload=_draft(),
-    )
-
-    with pytest.raises(ProfileAccessRefusedError):
-        asyncio.run(InvoiceFiguresPreviewExecutor(_NoRate).execute(request, context))
-    assert operands.value is None
-
-
-def test_the_definition_is_a_read_holding_its_input_in_secure_custody() -> None:
-    definition = build_invoice_figures_preview_definition(_NoRate)
-
-    assert definition.capabilities.request_storage.value == "secure_reference"
-    assert definition.capabilities.sensitive_input.value == "secure_reference"
 
 
 @pytest.mark.parametrize(
@@ -1218,8 +1059,8 @@ def test_the_definition_is_a_read_holding_its_input_in_secure_custody() -> None:
         ("series", {"invoice_class": "RECTIFICATIVA", "series": "R"}),
         ("invoice_class", {"invoice_class": "RECTIFICATIVA"}),
         ("rectifies_invoice_number", {"rectifies_invoice_number": "F-1"}),
-        ("retention_rate", {"retention_rate": _decimal("0.07")}),
-        ("retention_amount", {"retention_rate": _decimal("0.07"), "retention_amount": _decimal("70.02")}),
+        ("retention_rate", {"retention_rate": public_decimal("0.07")}),
+        ("retention_amount", {"retention_rate": public_decimal("0.07"), "retention_amount": public_decimal("70.02")}),
     ),
 )
 def test_a_judged_correction_field_moves_the_verdict_the_update_waits_on(

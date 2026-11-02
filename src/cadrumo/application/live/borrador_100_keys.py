@@ -133,6 +133,16 @@ def _observed_boxes(
     return tuple(observed), tuple(undeclared)
 
 
+def _require_single_owners(owned_by: Mapping[BindingId, list[CasillaId]], ambiguous: list[CasillaId]) -> None:
+    """Refuse a printed casilla several bindings own and a binding that owns several printed casillas."""
+    ambiguous.extend(casilla_id for owned in owned_by.values() if len(owned) > 1 for casilla_id in owned)
+    if ambiguous:
+        raise LiveApplicationInputError(
+            translated_message="cli.app.live.borrador.import_casilla_owner_ambiguous",
+            context={"casillas": ", ".join(sorted(ambiguous))},
+        )
+
+
 def project_printed_casillas(
     revision: ModeloRevision,
     printed: Mapping[CasillaId, Decimal | str],
@@ -151,12 +161,7 @@ def project_printed_casillas(
     """
     admitted = borrador_admitted_bindings(revision)
     owned_by, unowned, ambiguous = _sort_printed_by_owner(revision, admitted, printed)
-    ambiguous.extend(casilla_id for owned in owned_by.values() if len(owned) > 1 for casilla_id in owned)
-    if ambiguous:
-        raise LiveApplicationInputError(
-            translated_message="cli.app.live.borrador.import_casilla_owner_ambiguous",
-            context={"casillas": ", ".join(sorted(ambiguous))},
-        )
+    _require_single_owners(owned_by, ambiguous)
     blank_boxes = frozenset(casilla_id for casilla_id in blank if casilla_id not in printed)
     candidates: dict[CasillaId, Decimal | str | None] = {casilla_id: printed[casilla_id] for casilla_id in unowned}
     candidates.update(dict.fromkeys(blank_boxes))

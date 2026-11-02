@@ -10,6 +10,7 @@ import type {
 import { useStrings } from "../../../shell/strings";
 import type { OpenableSurface } from "../details/Details";
 import { BoxNumber } from "../form/BoxNumber";
+import { addressKey } from "../form/session";
 import { BoxLabel } from "./BoxLabel";
 import { ORIGIN_LOOK, TONE_TEXT } from "../form/originLook";
 import { Heading } from "./CheckView";
@@ -159,7 +160,7 @@ export function Credits({
         <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card">
           {credits.map((field) => (
             <CreditRow
-              key={field.state_digest}
+              key={addressKey(field.address)}
               field={field}
               lines={linesOf(field)}
               extra={extraOf?.(field)}
@@ -187,13 +188,15 @@ export function Credits({
           <h3 className="text-sm font-medium text-muted-foreground">
             {t("desktop.modelo.credits.dependents")}
           </h3>
-          <p className="text-sm text-muted-foreground">
-            {t("desktop.modelo.credits.dependents_lead")}
-          </p>
+          {[...credits, ...dependents].some((field) => !field.value_text) && (
+            <p className="text-sm text-muted-foreground">
+              {t("desktop.modelo.credits.dependents_lead")}
+            </p>
+          )}
           <ul className="flex flex-col divide-y divide-border rounded-lg border border-border bg-card">
             {dependents.map((field) => (
               <CreditRow
-                key={field.state_digest}
+                key={addressKey(field.address)}
                 field={field}
                 lines={linesOf(field)}
                 extra={extraOf?.(field)}
