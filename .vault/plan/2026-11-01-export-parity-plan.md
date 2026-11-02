@@ -13,7 +13,7 @@ related:
   - '[[2026-06-01-calculation-test-oracle-discipline-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:3e25dbbf3a948baea5e9ab496461fc5eee1652f7eb1170b4428c876a57e38163'
+body_hash: 'sha256:7a934f86dfa6bf49cb986d97ef0513a7059ce3a1f031f54344db837ab50d940d'
 ---
 
 # `export-parity` plan
@@ -67,7 +67,7 @@ Give the Modelo 100 credit casillas a typed, encrypted per-payer evidence source
 
 Compare every credit casilla against its declared cross-check sources at cent precision and block filing on any open disagreement.
 
-- [ ] `P04.S19` - Declare per-casilla value and cross-check sources and emit blocking reconciliation findings through verify, the CLI handoff and the report, excluding the 0599 against Modelo 130 cross-check; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
+- [x] `P04.S19` - Declare per-casilla value and cross-check sources and emit blocking reconciliation findings through verify, the CLI handoff and the report, excluding the 0599 against Modelo 130 cross-check; `src/cadrumo/_data/registry/aeat/modelos/100/ and src/cadrumo/application/modelo/`.
 - [ ] `P04.S20` - Add the operator resolution record keyed to the disputed amounts; `src/cadrumo/application/modelo/ and src/cadrumo/adapters/persistence/`.
 - [ ] `P04.S07` - Make the precedence overlay report tier divergence and block under the taxonomy amendment; `src/cadrumo/application/aggregation/source_resolution_operations.py`.
 
