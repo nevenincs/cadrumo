@@ -74,16 +74,21 @@ class EnrollmentProposal(BaseModel):
 
     @model_validator(mode="after")
     def _targets(self) -> EnrollmentProposal:
-        if self.label is not None and self.kind is not EnrollmentKind.ENROLL:
-            raise ValueError("a key is named only when it is issued")
-        if (self.kind is EnrollmentKind.ENROLL) != (self.target_grant_id is None):
-            raise ValueError("grant target does not match enrollment kind")
-        if (self.kind is EnrollmentKind.ROTATE) != (self.target_key_id is not None):
-            raise ValueError("key target does not match enrollment kind")
-        if self.kind.issues_a_key != (self.key_expires_at is not None):
-            raise ValueError("key validity must match the reviewed key change")
-        if (self.key_expires_at is not None and self.key_expires_at > self.expires_at) or (
-            self.allow_os_lock and not self.unattended
-        ):
-            raise ValueError("invalid enrollment bounds")
+        _require_consistent(self)
         return self
+
+
+def _require_consistent(proposal: EnrollmentProposal) -> None:
+    """Refuse a proposal whose targets, key change or bounds contradict its kind."""
+    if proposal.label is not None and proposal.kind is not EnrollmentKind.ENROLL:
+        raise ValueError("a key is named only when it is issued")
+    if (proposal.kind is EnrollmentKind.ENROLL) != (proposal.target_grant_id is None):
+        raise ValueError("grant target does not match enrollment kind")
+    if (proposal.kind is EnrollmentKind.ROTATE) != (proposal.target_key_id is not None):
+        raise ValueError("key target does not match enrollment kind")
+    if proposal.kind.issues_a_key != (proposal.key_expires_at is not None):
+        raise ValueError("key validity must match the reviewed key change")
+    if (proposal.key_expires_at is not None and proposal.key_expires_at > proposal.expires_at) or (
+        proposal.allow_os_lock and not proposal.unattended
+    ):
+        raise ValueError("invalid enrollment bounds")

@@ -61,8 +61,8 @@ from ..secure_object_namespaces import (
     TRANSACTION_PARTICIPATION_INDEX_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
     SecureObjectNamespaceDefinition,
-    StorageHierarchyRegistry,
 )
+from ..storage_hierarchy_registry import StorageHierarchyRegistry
 from ..storage_path_definitions import (
     BLOB_MANIFEST_SCHEMA_VERSION,
     BUCKET_DB_DIRNAME,

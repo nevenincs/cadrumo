@@ -460,6 +460,7 @@
         "cadrumo.adapters.persistence.storage.sql.secure_object_records",
         "cadrumo.adapters.persistence.storage.sql.secure_objects",
         "cadrumo.adapters.persistence.storage.sql.session",
+        "cadrumo.adapters.persistence.storage.storage_hierarchy_registry",
         "cadrumo.adapters.persistence.storage.storage_path_definitions",
         "cadrumo.adapters.persistence.workflow",
         "cadrumo.application",
@@ -4089,7 +4090,8 @@
         "cadrumo_runtime.host.worker_service",
         "cadrumo_runtime.host.worker_stall_watchdog",
         "cadrumo_runtime.host.worker_submission_staging",
-        "cadrumo_runtime.host.worker_view_stream"
+        "cadrumo_runtime.host.worker_view_stream",
+        "cadrumo_runtime.host.worker_view_uploads"
       ]
     },
     "dev": {
@@ -5313,6 +5315,7 @@
         "dev.registry.form_layout.generation_constants",
         "dev.registry.form_layout.generation_models",
         "dev.registry.form_layout.generator",
+        "dev.registry.form_layout.heading_keys",
         "dev.registry.form_layout.heading_quotes",
         "dev.registry.form_layout.official_form_pages",
         "dev.registry.form_layout.official_headings",
@@ -5327,6 +5330,7 @@
         "dev.registry.form_layout.predecessor_layout",
         "dev.registry.form_layout.reconciliation",
         "dev.registry.form_layout.record_design_anchoring",
+        "dev.registry.form_layout.repeating_blocks",
         "dev.registry.form_layout.row_binding_reconciliation",
         "dev.registry.form_layout.scalar_source_reconciliation",
         "dev.registry.form_layout.serialization",

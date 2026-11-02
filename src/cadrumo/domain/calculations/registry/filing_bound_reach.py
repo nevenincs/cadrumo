@@ -170,6 +170,22 @@ def filing_bound_reach(revision: ModeloRevision, *, exported: Set[CasillaId]) ->
     order = {casilla.id: index for index, casilla in enumerate(revision.casillas)}
     casilla_readers, binding_readers = _formula_edges(revision)
     casilla_reach = _casilla_reach(revision, casilla_readers, exported)
+    binding_reach = _binding_reach(revision, binding_readers, casilla_reach)
+
+    def ordered(casilla_ids: frozenset[CasillaId] | set[CasillaId]) -> tuple[CasillaId, ...]:
+        return tuple(sorted(casilla_ids, key=lambda casilla_id: (order.get(casilla_id, len(order)), casilla_id)))
+
+    bindings = {binding_id: ordered(reached) for binding_id, reached in binding_reach.items() if reached}
+    casillas = {casilla_id: ordered(reached) for casilla_id, reached in casilla_reach.items() if reached}
+    return FilingBoundReach(bindings=MappingProxyType(bindings), casillas=MappingProxyType(casillas))
+
+
+def _binding_reach(
+    revision: ModeloRevision,
+    binding_readers: Mapping[BindingId, set[CasillaId]],
+    casilla_reach: Mapping[CasillaId, frozenset[CasillaId]],
+) -> dict[BindingId, set[CasillaId]]:
+    """Give each binding the exported casillas reached through the casillas it fills and the formulas that read it."""
     binding_reach: dict[BindingId, set[CasillaId]] = {}
     for casilla in revision.casillas:
         for binding_id in bound_casilla_binding_ids(casilla):
@@ -178,13 +194,7 @@ def filing_bound_reach(revision: ModeloRevision, *, exported: Set[CasillaId]) ->
         reached = binding_reach.setdefault(binding_id, set())
         for reader in readers:
             reached.update(casilla_reach.get(reader, frozenset()))
-
-    def ordered(casilla_ids: frozenset[CasillaId] | set[CasillaId]) -> tuple[CasillaId, ...]:
-        return tuple(sorted(casilla_ids, key=lambda casilla_id: (order.get(casilla_id, len(order)), casilla_id)))
-
-    bindings = {binding_id: ordered(reached) for binding_id, reached in binding_reach.items() if reached}
-    casillas = {casilla_id: ordered(reached) for casilla_id, reached in casilla_reach.items() if reached}
-    return FilingBoundReach(bindings=MappingProxyType(bindings), casillas=MappingProxyType(casillas))
+    return binding_reach
 
 
 def snapshot_filing_bound_reach(snapshot: RegistrySnapshot, *, operation: PinnedAuthorityOperation) -> FilingBoundReach:

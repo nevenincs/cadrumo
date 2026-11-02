@@ -460,6 +460,7 @@
         "cadrumo.adapters.persistence.storage.sql.secure_object_records",
         "cadrumo.adapters.persistence.storage.sql.secure_objects",
         "cadrumo.adapters.persistence.storage.sql.session",
+        "cadrumo.adapters.persistence.storage.storage_hierarchy_registry",
         "cadrumo.adapters.persistence.storage.storage_path_definitions",
         "cadrumo.adapters.persistence.workflow",
         "cadrumo.application",
