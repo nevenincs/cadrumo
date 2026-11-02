@@ -36,15 +36,7 @@ if TYPE_CHECKING:
 type _InvoiceDriftObserver = Callable[[ModeloVerificationFinding, InvoiceFingerprintVerdict | None], None]
 
 
-def _finding(
-    work_unit: WorkUnit,
-    *,
-    kind: ModeloVerificationFindingKind,
-    severity: ModeloVerificationFindingSeverity,
-    key: str,
-    source_refs: tuple[str, ...],
-    verdict: InvoiceFingerprintVerdict | None = None,
-) -> ModeloVerificationFinding:
+def _message_facts(work_unit: WorkUnit, verdict: InvoiceFingerprintVerdict | None = None) -> dict[str, str | int]:
     facts: dict[str, str | int] = {
         "modelo": str(work_unit.modelo),
         "filing_year": work_unit.filing_year,
@@ -56,14 +48,7 @@ def _finding(
             "removed_count": len(verdict.removed),
             "added_count": len(verdict.added),
         }
-    return ModeloVerificationFinding(
-        kind=kind,
-        severity=severity,
-        message_locale_key=key,
-        message_facts=facts,
-        legal_refs=LEDGER_DRIFT_LEGAL_REFS,
-        source_refs=source_refs,
-    )
+    return facts
 
 
 def invoice_drift_findings(
@@ -88,11 +73,12 @@ def invoice_drift_findings(
     snapshot = target.invoice_fingerprint
     if snapshot is None:
         return [
-            _finding(
-                work_unit,
+            ModeloVerificationFinding(
                 kind=ModeloVerificationFindingKind.ADVISORY,
                 severity=ModeloVerificationFindingSeverity.WARNING,
-                key="application.modelo.findings.invoice_fingerprint_absent",
+                message_locale_key="application.modelo.findings.invoice_fingerprint_absent",
+                message_facts=_message_facts(work_unit),
+                legal_refs=LEDGER_DRIFT_LEGAL_REFS,
                 source_refs=source_refs,
             )
         ]
@@ -105,11 +91,12 @@ def invoice_drift_findings(
             ports=ports,
         )
     except InvoiceCatalogueReadPersistenceError:
-        finding = _finding(
-            work_unit,
+        finding = ModeloVerificationFinding(
             kind=ModeloVerificationFindingKind.STALE_CALCULATION,
             severity=ModeloVerificationFindingSeverity.BLOCKING,
-            key="application.modelo.findings.invoice_fingerprint_unavailable",
+            message_locale_key="application.modelo.findings.invoice_fingerprint_unavailable",
+            message_facts=_message_facts(work_unit),
+            legal_refs=LEDGER_DRIFT_LEGAL_REFS,
             source_refs=source_refs,
         )
         if blocking_finding_observer is not None:
@@ -117,13 +104,13 @@ def invoice_drift_findings(
         return [finding]
     if not verdict.is_stale:
         return []
-    finding = _finding(
-        work_unit,
+    finding = ModeloVerificationFinding(
         kind=ModeloVerificationFindingKind.STALE_CALCULATION,
         severity=ModeloVerificationFindingSeverity.BLOCKING,
-        key="application.modelo.findings.invoice_fingerprint_drift",
+        message_locale_key="application.modelo.findings.invoice_fingerprint_drift",
+        message_facts=_message_facts(work_unit, verdict),
+        legal_refs=LEDGER_DRIFT_LEGAL_REFS,
         source_refs=source_refs,
-        verdict=verdict,
     )
     if blocking_finding_observer is not None:
         blocking_finding_observer(finding, verdict)
