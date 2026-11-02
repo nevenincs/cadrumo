@@ -20,7 +20,8 @@ The four behaviours under test:
   cross-period clean-state gate for FILING a dependent period — it still blocks with
   ``LOCAL_FILING_MISSING_EXTERNAL_EVIDENCE``.
 * D2 (override precedence): a caller ``--binding`` beats the auto-carried value and is
-  NOT rejected as a source-owned collision.
+  NOT rejected as a source-owned collision; a caller value that differs from the carried
+  one is persisted as a tier divergence and blocks verify.
 * D3 (303 exclusion): the carry resolver never emits the M303 IVA-compensation
   binding (the iva-wallet decision owns it).
 * D4 (grupo fan-in non-goal): documented as out of scope in

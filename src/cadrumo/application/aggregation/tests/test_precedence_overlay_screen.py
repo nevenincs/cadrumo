@@ -39,6 +39,8 @@ _BACKEND = SourceDisagreementRole.BACKEND
 _BORRADOR = SourceDisagreementRole.BORRADOR
 _CALLER = SourceDisagreementRole.CALLER
 _BINDING = "test-binding"
+_RELATION = "test-fold-slot"
+_CASILLA = "01"
 
 
 def _tier(
@@ -261,21 +263,26 @@ def test_a_long_text_cell_is_stated_truncated_but_compared_whole() -> None:
     assert divergence.differing_row_indices == (1,)
 
 
-def test_an_amount_whose_text_reads_as_a_thousands_grouping_is_stated_without_changing_its_value() -> None:
-    """``12.500`` is refused as canonical text; the divergence still states it, one digit finer."""
+def test_an_amount_at_three_fraction_digits_is_stated_at_its_own_scale() -> None:
+    """``12.500`` reaches a finding stated exactly as resolved, on every scalar and relation channel."""
     overlay = _overlay(
-        _tier(_BACKEND, binding_values={_BINDING: Decimal("12.500")}),
-        _tier(_CALLER, binding_values={_BINDING: Decimal("12.600")}),
+        _tier(
+            _BACKEND,
+            binding_values={_BINDING: Decimal("12.500")},
+            relation_values={_RELATION: Decimal("5.000")},
+            bound_inputs_by_casilla_id={_CASILLA: Decimal("10.001")},
+        ),
+        _tier(
+            _CALLER,
+            binding_values={_BINDING: Decimal("12.600")},
+            relation_values={_RELATION: Decimal("5.001")},
+            bound_inputs_by_casilla_id={_CASILLA: Decimal("10.002")},
+        ),
     )
 
-    (divergence,) = overlay.divergences
-    assert [
-        source.value.decimal for source in divergence.sources if isinstance(source.value, DisagreementDecimalValue)
-    ] == [
-        Decimal("12.500"),
-        Decimal("12.600"),
-    ]
-    assert [source.value for source in divergence.sources] == [
-        DisagreementDecimalValue(amount="12.5000"),
-        DisagreementDecimalValue(amount="12.6000"),
-    ]
+    stated = {divergence.key: [source.value for source in divergence.sources] for divergence in overlay.divergences}
+    assert stated == {
+        _BINDING: [DisagreementDecimalValue(amount="12.500"), DisagreementDecimalValue(amount="12.600")],
+        _RELATION: [DisagreementRelationValue(amount="5.000"), DisagreementRelationValue(amount="5.001")],
+        _CASILLA: [DisagreementDecimalValue(amount="10.001"), DisagreementDecimalValue(amount="10.002")],
+    }
