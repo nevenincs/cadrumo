@@ -633,11 +633,17 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     return values
 
 
+# The activity key an exported direct-estimation block requires and the operator states.
+M100_ACTIVITY_KEY_CASILLA: CasillaId = validated_casilla_id("0166")
+M100_ACTIVITY_KEY = "A05"
+
+
 def _calculate_m100_annual(
     secure_objects: SecureObjectRepository,
     *,
     casilla_inputs: dict[CasillaId, Decimal] | None = None,
     binding_values: dict[BindingId, Decimal] | None = None,
+    text_casilla_inputs: dict[CasillaId, str] | None = None,
 ) -> CalculationRevision:
     """Run the live M100/2024/0A annual calc, leaving the pagos relations to fold."""
     _seed_taxpayer_profile()
@@ -663,6 +669,7 @@ def _calculate_m100_annual(
     return _calculate_modelo_revision_from_bucket_aggregation_with_diagnostics(
         work_unit.work_unit_id,
         casilla_inputs=casilla_inputs,
+        text_casilla_inputs=text_casilla_inputs,
         binding_values={**_m100_non_relation_zero_bindings(), **(binding_values or {})},
         work_unit_repository=wu_repo,
         calculation_repository=cr_repo,
@@ -806,6 +813,7 @@ def test_autonoma_m100_salary_certificate_retenciones_export_replays_verified_to
     annual = _calculate_m100_annual(
         secure_objects,
         casilla_inputs={validated_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
+        text_casilla_inputs={M100_ACTIVITY_KEY_CASILLA: M100_ACTIVITY_KEY},
     )
 
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")
