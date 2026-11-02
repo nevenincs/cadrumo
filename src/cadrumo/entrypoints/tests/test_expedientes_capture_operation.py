@@ -9,13 +9,13 @@ from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.persistence.storage.tests.secure_sql import isolated_runtime_profile
 from ...application.live import expedientes as expedientes_module
@@ -53,7 +53,12 @@ from ...core.operations import (
 from ...core.period import Period
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from .capture_stand_in_support import RecordingExecutionAuthority, RecordingResources
-from .supervised_operation_rig import assert_foreign_profile_refused, build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import (
+    assert_foreign_profile_refused,
+    build_supervised_operation,
+    operation_access_context,
+    run_to_terminal,
+)
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -98,13 +103,8 @@ def _declaration(modelo: str = "303") -> ExpedientesDeclaration:
 
 
 def _access_context(profile_id: UUID, contract: Any) -> OperationAccessContext:
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.SUBMIT,
-        frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-        contract=contract,
-        published_authority=Availability.AVAILABLE,
+    return operation_access_context(
+        contract, profile_id=profile_id, frontend=OperationFrontendProjection.EXTERNAL_CLIENT
     )
 
 

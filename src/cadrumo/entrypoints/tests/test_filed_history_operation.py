@@ -27,7 +27,7 @@ from cadrumo.domain.calculations.registry.authority import PinnedAuthorityOperat
 from cadrumo.domain.deadlines.models import IVARegime
 from cadrumo.entrypoints.live_state_composition import compose_notifications_ports
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import AccessAction, AccessScope, DisclosureCategory
 
 from ...adapters.outbound.aeat.sede.schema import FiledDeclarationAvailability, FiledDeclarationAvailabilityReport
 from ...adapters.outbound.aeat.sede.tests.declarations_register_test_support import (
@@ -95,7 +95,6 @@ from ...application.operations.owner import OperationEventEmitter
 from ...application.operations.persistence.journal import OperationPersistedSnapshot, OperationSecureReferenceStore
 from ...application.operations.projection_services import OperationResultProjectionService
 from ...application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -117,7 +116,7 @@ from ...core.operations import (
 from ...core.period import Period
 from ...core.register_scoping_signal import RegisterScopingSignal
 from ...domain.deadlines.models import TaxpayerProfile
-from .supervised_operation_rig import build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
 _OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
@@ -984,14 +983,8 @@ def test_filed_history_access_requires_whole_profile_commit_and_result_disclosur
     )
 
     def context(action: AccessAction, admitted_request=None) -> OperationAccessContext:
-        return OperationAccessContext(
-            profile_id=profile_id,
-            destination_id=uuid4(),
-            action=action,
-            frontend=OperationFrontendProjection.CLI,
-            contract=registration.contract,
-            published_authority=Availability.AVAILABLE,
-            admitted_request=admitted_request,
+        return operation_access_context(
+            registration.contract, profile_id=profile_id, action=action, admitted_request=admitted_request
         )
 
     submitted = resolve_operation_access(registry=registry, request=request, context=context(AccessAction.SUBMIT))

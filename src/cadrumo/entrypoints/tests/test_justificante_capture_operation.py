@@ -10,11 +10,11 @@ from datetime import UTC, datetime
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, cast
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability
+from cadrumo_client.contracts.access_vocabulary import AccessAction
 
 from ...adapters.persistence.operations.journal import OperationJournalRepository
 from ...adapters.persistence.operations.secure_references import (
@@ -47,7 +47,7 @@ from ...application.modelo.filing_chain_reconciliation import (
     FilingReconciliationOutcome,
     FilingReconciliationResult,
 )
-from ...application.operations.access_resolution import OperationAccessContext, resolve_operation_access
+from ...application.operations.access_resolution import resolve_operation_access
 from ...application.operations.capabilities import OperationOwnedResource
 from ...application.operations.frontend_requests import (
     OperationResultProjectionRequestV1,
@@ -70,7 +70,7 @@ from ...tests.aeat_literal_fixtures import (
     CSV_CONSULTATION_URL_FIXTURE,
 )
 from .capture_stand_in_support import FencedExecutionAuthority, ObservableBrowserResources
-from .supervised_operation_rig import build_supervised_operation, run_to_terminal
+from .supervised_operation_rig import build_supervised_operation, operation_access_context, run_to_terminal
 
 pytestmark = [pytest.mark.integration, pytest.mark.hex_entrypoint]
 
@@ -484,13 +484,10 @@ def test_registered_capture_supervises_guarded_writes_and_projects_only_safe_rec
         admitted = resolve_operation_access(
             registry=registry,
             request=request,
-            context=OperationAccessContext(
+            context=operation_access_context(
+                registration.contract,
                 profile_id=profile_id,
-                destination_id=uuid4(),
-                action=AccessAction.SUBMIT,
                 frontend=OperationFrontendProjection.EXTERNAL_CLIENT,
-                contract=registration.contract,
-                published_authority=Availability.AVAILABLE,
                 authority_operation=authority,
             ),
         )
