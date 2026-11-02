@@ -351,11 +351,11 @@ def test_under_cash_an_unpaid_invoice_is_out_of_scope(cash_draft: _Draft) -> Non
 
 
 def _as_stored_by_the_previous_build(
-    draft: _Draft, revision: CalculationRevision, *rows: Invoice
+    draft: _Draft, revision: CalculationRevision, *rows: Invoice, version: int = 1
 ) -> CalculationRevision:
-    """Store the draft as version 1 left it: version-1 digests of linked invoices only, here none linked."""
+    """Store the draft as an older version left it, with that version's digests of the rows given."""
     fingerprints = tuple(
-        InvoiceRowFingerprint(invoice_id=row.invoice_id, fingerprint=invoice_row_fingerprint(row, field_set_version=1))
+        InvoiceRowFingerprint(invoice_id=row.invoice_id, fingerprint=invoice_row_fingerprint(row, field_set_version=version))
         for row in rows
     )
     old = revision.model_copy(
@@ -364,7 +364,7 @@ def _as_stored_by_the_previous_build(
                 rows=fingerprints,
                 snapshot_fingerprint=invoice_snapshot_fingerprint(fingerprints),
                 captured_at=revision.created_at,
-                field_set_version=1,
+                field_set_version=version,
             )
         }
     )
@@ -482,27 +482,7 @@ def test_under_cash_an_unpaid_received_invoice_is_out_of_scope(cash_draft: _Draf
 
 def test_a_draft_captured_before_the_expense_scope_warns_what_it_leaves_out(draft: _Draft) -> None:
     """A version 2 draft keeps its scope, so it reads no drift, and says it cannot see the received invoice."""
-    revision = _calculate(draft)
-    fingerprints = tuple(
-        InvoiceRowFingerprint(
-            invoice_id=draft.invoice.invoice_id,
-            fingerprint=invoice_row_fingerprint(draft.invoice, field_set_version=2),
-        )
-        for _ in (draft.invoice,)
-    )
-    old = revision.model_copy(
-        update={
-            "invoice_fingerprint": InvoiceFingerprintSnapshot(
-                rows=fingerprints,
-                snapshot_fingerprint=invoice_snapshot_fingerprint(fingerprints),
-                captured_at=revision.created_at,
-                field_set_version=2,
-            )
-        }
-    )
-    draft.calculations.save(upsert_calculation_revision(draft.calculations.load(), old))
-    stored = draft.calculations.load().get(old.calculation_revision_id)
-    assert stored is not None
+    stored = _as_stored_by_the_previous_build(draft, _calculate(draft), draft.invoice, version=2)
 
     draft.invoices.save(build_invoice_catalogue((draft.invoice, _received_unpaid())))
     report = _verify(draft, stored)
