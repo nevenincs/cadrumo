@@ -122,11 +122,16 @@ declare global {
         documents: typeof import("../components/ledger/documents/useLedgerRead");
         setup: typeof import("../components/ledger/setup/SetupParts");
       }>;
+      declarationsList(): Promise<
+        typeof import("../components/modelo/declarations/useDeclarationsList")
+      >;
     };
   }
 }
 
 window.__scenarioModules = {
+  declarationsList: () =>
+    import("../components/modelo/declarations/useDeclarationsList"),
   tauriHost: () => import("../shell/tauriHost"),
   profileViews: async () => ({
     react: await import("react"),
