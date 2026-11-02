@@ -163,7 +163,7 @@ def _purchase_invoice_payload_for_totals(
             reason=RentaLedgerAggregationIssueReason.AMOUNT_MISMATCH,
             detail="linked invoice or transaction has no EUR value to compare or fold in",
         )
-    if not comparison.settled:
+    if not comparison.settled and not comparison.reversed:
         return RentaLedgerAggregationIssue(
             transaction_id=transaction.transaction_id,
             purchase_invoice_evidence_id=purchase_invoice_evidence_id,

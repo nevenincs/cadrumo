@@ -100,6 +100,11 @@ class SettlementComparison(NamedTuple):
         """Return whether the cash settles the invoice within the link tolerance."""
         return abs(self.cash - self.owed) <= INVOICE_MATCH_TOLERANCE
 
+    @property
+    def reversed(self) -> bool:
+        """Return whether the cash hands the whole invoice back within the link tolerance."""
+        return abs(self.cash + self.owed) <= INVOICE_MATCH_TOLERANCE
+
 
 def row_settles_invoice(invoice: Invoice, row: Transaction) -> bool:
     """Return whether the row moved money the way paying ``invoice`` does, rather than returning it."""
