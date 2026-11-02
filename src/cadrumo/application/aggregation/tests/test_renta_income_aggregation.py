@@ -22,8 +22,8 @@ from .renta_income_aggregation_support import (
     _Q1_2024,
     _Q2_2024,
     M130_INGRESOS_CASILLA,
-    _catalogue_read_ports,
     _income_transaction,
+    catalogue_read_ports,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
     raw_transaction,
@@ -309,7 +309,7 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
         ),
@@ -335,7 +335,7 @@ def test_partitioned_aggregation_emits_casilla_01_sum() -> None:
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
         ),
@@ -376,7 +376,7 @@ def test_partitioned_aggregation_summarizes_previously_silent_out_of_window_rows
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
         ),
@@ -414,7 +414,7 @@ def test_partitioned_aggregation_matches_full_scan() -> None:
         target_casilla_id=M130_INGRESOS_CASILLA,
         activity_category_matcher=_is_activity_income,
         employment_category_matcher=_is_employment_income,
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=catalogue,
         ),

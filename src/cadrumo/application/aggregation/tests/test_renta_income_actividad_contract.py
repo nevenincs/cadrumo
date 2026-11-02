@@ -35,9 +35,9 @@ from .renta_income_aggregation_support import (
     _Q1_2024,
     M130_INGRESOS_CASILLA,
     M130_MODELO,
-    _actividad_transaction,
-    _catalogue_read_ports,
     _period,
+    actividad_transaction,
+    catalogue_read_ports,
     m130_activity_category_matcher,
     m130_employment_category_matcher,
 )
@@ -134,7 +134,7 @@ def _income_resolver(transactions: TransactionCatalogue) -> LedgerRentaIncomeAgg
     return LedgerRentaIncomeAggregationSourceResolver(
         activity_asset_history_repository=MemoryRepository(),
         transaction_repository=repository,
-        ports=_catalogue_read_ports(
+        ports=catalogue_read_ports(
             invoices=InvoiceCatalogue(),
             transactions=transactions,
         ),
@@ -161,7 +161,7 @@ def test_irpf_actividad_economica_flows_despite_unclassified_business() -> None:
     # Amount matches the AEAT professional-services income example: a single
     # quarterly invoice of 3000 EUR from estimación directa simplified.
     amount = Decimal("3000.00")
-    tx = _actividad_transaction(
+    tx = actividad_transaction(
         "ae-001",
         value_date=date(2024, 2, 1),
         amount=amount,
@@ -193,14 +193,14 @@ def test_trabajo_income_excluded_from_m130() -> None:
     art. 110.1). The pipeline must reject trabajo entries with TRABAJO_INCOME
     reason so they do not inflate casilla 01.
     """
-    nomina = _actividad_transaction(
+    nomina = actividad_transaction(
         "nomina-001",
         value_date=date(2024, 1, 31),
         amount=Decimal("2500.00"),
         irpf_category="trabajo",
         business_classification=BusinessClassification.BUSINESS,
     )
-    actividad = _actividad_transaction(
+    actividad = actividad_transaction(
         "ae-002",
         value_date=date(2024, 1, 15),
         amount=Decimal("1800.00"),
@@ -237,7 +237,7 @@ def test_taxable_base_amount_populated_when_set() -> None:
     # The IRPF base (taxable_base) is the IVA-exclusive 1000 EUR.
     gross = Decimal("1210.00")
     taxable = Decimal("1000.00")
-    tx = _actividad_transaction(
+    tx = actividad_transaction(
         "ae-inv-001",
         value_date=date(2024, 3, 15),
         amount=gross,
@@ -270,7 +270,7 @@ def test_net_paid_professional_invoice_derives_withheld_amount_for_m130() -> Non
     the invoice arithmetic and the AEAT casilla roles, not from the resolver
     implementation.
     """
-    tx = _actividad_transaction(
+    tx = actividad_transaction(
         "ae-net-paid",
         value_date=date(2024, 3, 15),
         amount=Decimal("2120.00"),
@@ -339,7 +339,7 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
         business_classification: BusinessClassification,
         business_pct: Decimal | None = None,
     ) -> tuple[Decimal, Decimal]:
-        tx = _actividad_transaction(
+        tx = actividad_transaction(
             provider_id,
             value_date=date(2024, 3, 15),
             amount=banked,
@@ -392,7 +392,7 @@ def test_a_mixed_classified_activity_receipt_is_undivided_at_the_binding() -> No
 
 
 def test_income_source_resolver_projects_withheld_amount_to_m130_casilla_06() -> None:
-    tx = _actividad_transaction(
+    tx = actividad_transaction(
         "ae-net-paid-resolver",
         value_date=date(2026, 3, 15),
         amount=Decimal("2120.00"),
@@ -438,7 +438,7 @@ def test_a_revision_without_the_retenciones_binding_surfaces_the_lost_credit() -
     silent; without the quantity screen the whole credit would vanish from the
     form with a clean calculation on both sides.
     """
-    tx = _actividad_transaction(
+    tx = actividad_transaction(
         "ae-net-paid-unrouted-retencion",
         value_date=date(2026, 3, 15),
         amount=Decimal("2120.00"),
@@ -504,13 +504,13 @@ def test_casilla_projection_uses_base_for_tagged_and_gross_for_untagged() -> Non
     receipt). Mirrors the registry's ``ingresos_integros_sum`` fact so the
     projection and the binding resolver cannot drift.
     """
-    tagged = _actividad_transaction(
+    tagged = actividad_transaction(
         "ae-tagged",
         value_date=date(2024, 2, 10),
         amount=Decimal("1210.00"),
         taxable_base=Decimal("1000.00"),
     )
-    untagged = _actividad_transaction(
+    untagged = actividad_transaction(
         "ae-untagged",
         value_date=date(2024, 3, 5),
         amount=Decimal("500.00"),
@@ -548,13 +548,13 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     amount = Decimal("5000.00")
 
     # Scenario A: one actividad + one trabajo — only actividad should flow
-    actividad = _actividad_transaction(
+    actividad = actividad_transaction(
         "ae-a",
         value_date=date(2024, 2, 15),
         amount=amount,
         irpf_category="actividad_economica",
     )
-    trabajo = _actividad_transaction(
+    trabajo = actividad_transaction(
         "trab-a",
         value_date=date(2024, 2, 15),
         amount=amount,
@@ -573,13 +573,13 @@ def test_anti_tautology_irpf_category_controls_flow() -> None:
     )
 
     # Scenario B: both transactions as actividad — both should flow
-    actividad_b1 = _actividad_transaction(
+    actividad_b1 = actividad_transaction(
         "ae-b1",
         value_date=date(2024, 2, 15),
         amount=amount,
         irpf_category="actividad_economica",
     )
-    actividad_b2 = _actividad_transaction(
+    actividad_b2 = actividad_transaction(
         "ae-b2",
         value_date=date(2024, 2, 15),
         amount=amount,
@@ -635,7 +635,7 @@ def test_cash_fallback_income_raises_the_ungrounded_substrate_advisory() -> None
     the wording is operator-facing copy and may be rephrased or localised, but
     the reason code is the contract.
     """
-    tx = _actividad_transaction(
+    tx = actividad_transaction(
         "ae-cash-fallback-advisory",
         value_date=date(2026, 3, 15),
         amount=Decimal("1700.00"),
@@ -670,7 +670,7 @@ def test_substrate_declared_income_raises_no_ungrounded_advisory() -> None:
     would train operators to ignore it -- the failure mode the aggregate-not-
     per-row projection was designed to avoid in the first place.
     """
-    tx = _actividad_transaction(
+    tx = actividad_transaction(
         "ae-substrate-declared-control",
         value_date=date(2026, 3, 15),
         amount=Decimal("2120.00"),
@@ -704,7 +704,7 @@ def test_many_ungrounded_rows_raise_one_advisory_not_one_each() -> None:
     per-row emitter while every other assertion in this file keeps passing.
     """
     transactions = tuple(
-        _actividad_transaction(
+        actividad_transaction(
             f"ae-ungrounded-{index}",
             value_date=date(2026, 3, 10 + index),
             amount=Decimal("500.00"),

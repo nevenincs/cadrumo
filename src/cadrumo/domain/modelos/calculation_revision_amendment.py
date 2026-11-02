@@ -79,8 +79,7 @@ def declaration_kind_for_amendment_kind(kind: CalculationRevisionAmendmentKind) 
             return FilingDeclarationKind.SUSTITUTIVA
         case CalculationRevisionAmendmentKind.RECTIFICATIVA:
             return FilingDeclarationKind.RECTIFICATIVA
-        case unreachable:
-            assert_never(unreachable)
+    assert_never(kind)
 
 
 def filing_declaration_kind_for_amendment(

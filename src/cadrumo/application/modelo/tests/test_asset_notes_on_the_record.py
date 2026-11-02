@@ -30,7 +30,7 @@ from ....domain.modelos.calculation_revision_sources import (
 from ...actividad_asset.history import ActivityAssetHistory
 from ...aggregation.source_mesh import CalculationSourceDiagnostic
 from ...aggregation.tests.ledger_source_mesh_support import register_asset, resolve_m100
-from ..calculation_bucket_actions import _unrouted_source_issues
+from ..calculation_bucket_actions import unrouted_source_issues
 from ..calculation_notes import (
     GATE_REFUSED_REASONS,
     CalculationNoteStore,
@@ -70,7 +70,7 @@ def _two_elements_without_claims() -> tuple[CalculationSourceDiagnostic, ...]:
 
 def _persisted(operation: PinnedAuthorityOperation) -> tuple[CalculationRevision, tuple[CalculationSourceIssue, ...]]:
     snapshot = operation.snapshot("100", filing_year=2025, period="0A")
-    issues = _unrouted_source_issues(_two_elements_without_claims(), snapshot_printed_boxes(operation, snapshot))
+    issues = unrouted_source_issues(_two_elements_without_claims(), snapshot_printed_boxes(operation, snapshot))
     revision = _revision(operation, _work_unit(operation), *issues)
     return CalculationRevision.model_validate_json(revision.model_dump_json()), issues
 
@@ -137,7 +137,7 @@ def test_a_long_technical_account_does_not_fail_the_calculation(operation: Pinne
         fact=CalculationNoteFact.of(CalculationNoteSentence.REGISTER_ROW_MISSING, elements="x", rows="y"),
     )
 
-    (issue,) = _unrouted_source_issues((diagnostic,), snapshot_printed_boxes(operation, snapshot))
+    (issue,) = unrouted_source_issues((diagnostic,), snapshot_printed_boxes(operation, snapshot))
 
     assert len(issue.message) == 512
     assert issue.fact is diagnostic.fact

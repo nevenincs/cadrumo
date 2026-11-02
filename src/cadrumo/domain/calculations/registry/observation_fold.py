@@ -98,7 +98,8 @@ def gather_observed_requirement_values(
     an unknown kind. An admitted original carrying a nonzero complementaria-only
     value is refused as contradictory.
     """
-    kinds: SourceFilingKindIndex = source_filing_kinds if source_filing_kinds is not None else {}
+    no_kinds: dict[tuple[str, int, str], SourceFilingKindEvidence] = {}
+    kinds: SourceFilingKindIndex = no_kinds if source_filing_kinds is None else source_filing_kinds
     per_period: list[tuple[Decimal, ...]] = []
     proven_zero: list[tuple[str, CasillaId]] = []
     for source_period in _filed_cadence_periods(requirement, observations):

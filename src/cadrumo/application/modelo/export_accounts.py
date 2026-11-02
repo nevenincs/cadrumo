@@ -51,7 +51,11 @@ from ...core.time.clock import MADRID_TZ
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.calculations.registry.form_codes import form_for_role
 from ...domain.calculations.registry.m303_casilla_roles import m303_importe_rectificacion_casilla
-from ...domain.deadlines.domiciliation_cutoff import DerivedPaymentCutoff, resolve_payment_cutoff
+from ...domain.deadlines.domiciliation_cutoff import (
+    DerivedPaymentCutoff,
+    UnavailablePaymentCutoff,
+    resolve_payment_cutoff,
+)
 from ...domain.deadlines.models import ChargeAccount, ModeloIVAProfile, RefundAccount, TaxpayerProfile
 from ...domain.deadlines.plazo import resolve_filing_window
 from ...domain.modelos.calculation_revision import (
@@ -321,9 +325,9 @@ def require_domiciliation_before_cutoff(
     if window is None:
         return True
     resolution = resolve_payment_cutoff(str(work_unit.modelo), window, operation=operation)
-    cutoff = resolution.cutoff_on
-    if cutoff is None:
+    if isinstance(resolution, UnavailablePaymentCutoff):
         return True
+    cutoff = resolution.cutoff_on
     export_on = exported_at.astimezone(MADRID_TZ).date()
     if export_on <= cutoff:
         return False

@@ -58,7 +58,7 @@ from .ledger_source_mesh_support import (
     resolve_m130,
 )
 from .ledger_transaction_support import renta_acquisition_row
-from .renta_income_aggregation_support import _catalogue_read_ports
+from .renta_income_aggregation_support import catalogue_read_ports
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application, pytest.mark.usefixtures("operation")]
 
@@ -110,7 +110,7 @@ def _income(
     repository = InMemoryTransactionCatalogueRepository(bucket_id=BUCKET_ID)
     repository.save(TransactionCatalogue.from_transactions(rows))
     return LedgerRentaIncomeAggregationSourceResolver(
-        ports=_catalogue_read_ports(invoices=InvoiceCatalogue(), transactions=TransactionCatalogue()),
+        ports=catalogue_read_ports(invoices=InvoiceCatalogue(), transactions=TransactionCatalogue()),
         activity_asset_history_repository=StaticActivityAssetHistoryRepository(history),
         transaction_repository=repository,
     ).resolve(
