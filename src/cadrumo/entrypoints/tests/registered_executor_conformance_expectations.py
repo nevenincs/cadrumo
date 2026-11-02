@@ -215,6 +215,12 @@ _EXPECTATIONS: Mapping[str, RegisteredExecutorConformanceCase] = _expectations_o
             "user-profile.view", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
         ),
         RegisteredExecutorConformanceCase(
+            "user-profile.imputation-election.read", OperationTerminalCondition.SUCCEEDED, OperationEffect.NONE
+        ),
+        RegisteredExecutorConformanceCase(
+            "user-profile.imputation-election.set", OperationTerminalCondition.SUCCEEDED, OperationEffect.UPDATED
+        ),
+        RegisteredExecutorConformanceCase(
             "workbench.generation",
             OperationTerminalCondition.REFUSED,
             OperationEffect.NONE,

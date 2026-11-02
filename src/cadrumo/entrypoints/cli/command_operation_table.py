@@ -450,6 +450,8 @@ OPERATIONS_WITHOUT_COMMAND: Final[tuple[str, ...]] = (
     "user-profile.automation-scope",
     "user-profile.bundle-export",
     "user-profile.censo-certificate-import",
+    "user-profile.imputation-election.read",
+    "user-profile.imputation-election.set",
     "user-profile.recovery.revoke",
     "user-profile.recovery.status",
     "workbench.generation",
