@@ -1,4 +1,4 @@
-use super::framing::{document, text};
+use super::framing::text;
 use serde_json::{Map, Value};
 
 /// What the runtime pushed to this connection: a reason to read again,

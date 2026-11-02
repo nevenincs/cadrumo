@@ -1,6 +1,5 @@
 use super::framing::{base64_decode, document, is_uuid, text};
 use super::refusal::Refusal;
-use super::session::admitted;
 #[cfg(windows)]
 use cadrumo_platform::runtime_pipe;
 use serde_json::Value;

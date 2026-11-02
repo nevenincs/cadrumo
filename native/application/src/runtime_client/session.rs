@@ -1,6 +1,6 @@
 use super::connection::{Connection, SessionExchange};
-use super::events::{Event, event};
-use super::framing::{document, is_uuid, request_id, text};
+use super::events::Event;
+use super::framing::{is_uuid, request_id, text};
 use super::refusal::{CUSTODY_RECOVERING, Refusal};
 use super::stored_proof::{ResumeRefusal, present_stored_proof};
 use serde_json::{Map, Value, json};

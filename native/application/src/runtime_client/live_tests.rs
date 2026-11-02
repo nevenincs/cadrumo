@@ -202,7 +202,7 @@ fn a_window_signs_in_reads_its_session_and_signs_out_natively() {
     // `modelo-303-1T-en.json` envelope, extracted whole, here naming this
     // profile and the work unit the harness created for it.
     let mut baseline: Value = serde_json::from_str(include_str!(
-        "../tests/data/modelo-303-admitted-baseline.json"
+        "../../tests/data/modelo-303-admitted-baseline.json"
     ))
     .unwrap();
     baseline["bucket_id"] = json!(live.profile_id);

@@ -66,3 +66,99 @@ impl From<ConnectRefusal> for Refusal {
         }
     }
 }
+
+impl Refusal {
+    /// The runtime's refusal `code`, with no sign-in reason or holder.
+    pub fn denied(code: impl Into<String>) -> Self {
+        Self::Denied {
+            code: code.into(),
+            sign_in: None,
+            holder_operation_id: None,
+            recovery_remaining_seconds: None,
+        }
+    }
+
+    /// Whether the session waits for a fresh proof after the profile's worker was lost.
+    pub fn is_custody_recovering(&self) -> bool {
+        matches!(self, Self::Denied { code, .. } if code == CUSTODY_RECOVERING)
+            || matches!(self, Self::Unsettled { .. })
+    }
+
+    /// Whether a change the request carried may have taken effect although it was refused.
+    pub fn is_unsettled(&self) -> bool {
+        matches!(self, Self::Unsettled { .. })
+    }
+
+    /// The operation whose change has an unknown effect, when the refused request named one.
+    pub fn unsettled_operation_id(&self) -> Option<&str> {
+        match self {
+            Self::Unsettled { operation_id, .. } => operation_id.as_deref(),
+            _ => None,
+        }
+    }
+
+    /// The whole seconds left in a suspended session's recovery window, when the runtime said.
+    pub fn recovery_remaining_seconds(&self) -> Option<u64> {
+        match self {
+            Self::Denied {
+                recovery_remaining_seconds,
+                ..
+            }
+            | Self::Unsettled {
+                recovery_remaining_seconds,
+                ..
+            } => *recovery_remaining_seconds,
+            _ => None,
+        }
+    }
+
+    /// The operation that holds a refused request's subject, when the runtime named one.
+    pub fn holder_operation_id(&self) -> Option<&str> {
+        match self {
+            Self::Denied {
+                holder_operation_id,
+                ..
+            } => holder_operation_id.as_deref(),
+            _ => None,
+        }
+    }
+
+    /// The reason a sign-in was refused, when the runtime gave one: a receipt
+    /// refusal reason, `throttled` or `credential_rejected`.
+    pub fn sign_in_reason(&self) -> Option<&str> {
+        match self {
+            Self::Denied {
+                sign_in: Some(sign_in),
+                ..
+            } => sign_in.get("reason").and_then(Value::as_str),
+            _ => None,
+        }
+    }
+
+    /// How long a throttled sign-in must wait, when the runtime said.
+    pub fn remaining_seconds(&self) -> Option<u64> {
+        match self {
+            Self::Denied {
+                sign_in: Some(sign_in),
+                ..
+            } => sign_in.get("remaining_seconds").and_then(Value::as_u64),
+            _ => None,
+        }
+    }
+
+    pub fn code(&self) -> &str {
+        match self {
+            Self::Unavailable | Self::Io(_) => "runtime_unavailable",
+            Self::EndpointNotReady => "runtime_endpoint_not_ready",
+            Self::EndpointUntrusted => "runtime_endpoint_untrusted",
+            Self::PeerUntrusted => "runtime_peer_untrusted",
+            Self::VersionMismatch => "runtime_version_mismatch",
+            Self::RootMismatch => "runtime_root_mismatch",
+            Self::InvalidFrame => "runtime_invalid_frame",
+            Self::ConnectionClosed => "runtime_connection_closed",
+            Self::Timeout => "runtime_timeout",
+            Self::Denied { code, .. } => code,
+            Self::Unsettled { .. } => CUSTODY_RECOVERING,
+        }
+    }
+}
