@@ -1838,6 +1838,9 @@ application:
       amendment_kind_not_permitted: 'A kért módosítási típus ({requested_kind}) jogilag
         nem elérhető a Modelo {modelo} bevalláshoz, {filing_year} adóévhez, {period}
         időszakhoz. Az ehhez az időszakhoz elfogadott típusok: {accepted_kinds}.'
+      amendment_later_period_only: A(z) {modelo} modell {filing_year}. évi {period}
+        időszakában a már benyújtott bevallás nem javítható. A kiigazítást egy későbbi
+        időszak bevallásában végezd el.
       amendment_registry_root_missing: A(z) %{missing_path} közzétett hatósági generáció
         hiányzik; a módosítási felülírások nem érvényesíthetők.
       amendment_registry_snapshot_unresolved: A Modelo %{modelo} nyomtatvány, %{filing_year}

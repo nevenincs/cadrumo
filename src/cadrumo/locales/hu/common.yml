@@ -159,6 +159,9 @@ aggregation:
         számított összesítésekhez.
   oss_ioss:
     errors:
+      consignment_exceeds_ceiling: 'Egy küldemény meghaladja e rendszer korlátját:
+        belső értéke nem lépheti túl a törvényi felső határt. Ellenőrizd a számlát,
+        vagy vallsd be az importrendszeren kívül.'
       detail_consumption_state_excluded: Az uniós séma szolgáltatásai nem vallhatók
         be az azonosítás szerinti tagállamra, mert a séma csak olyan tagállamban nyújtott
         szolgáltatásokra vonatkozik, ahol nem vagy letelepedve.
@@ -173,8 +176,8 @@ aggregation:
         Modelo 369 oldalra fér, a kiegészítő oldalakat pedig itt még nem lehet elkészíteni.
         Semmi sem került exportálásra, így egyetlen sor sem marad ki.
       invoice_line_currency_unconverted: Egy OSS/IOSS számlasor külföldi pénznemben
-        van megadva, és nincs feloldott euróárfolyama, ezért nem szerepeltethető ezen
-        a nyomtatványon.
+        van, és az EKB nem tett közzé árfolyamot sem az időszak utolsó napjára, sem
+        az azt követő napra, ezért nem szerepeltethető ezen a nyomtatványon.
       invoice_line_rate_kind_unclassifiable: Egy OSS/IOSS számlasor olyan áfakulcsot
         tartalmaz, amely nem sorolható be egyetlen kulcssávba sem, ezért az adóösszege
         nem szerepeltethető ezen a nyomtatványon.

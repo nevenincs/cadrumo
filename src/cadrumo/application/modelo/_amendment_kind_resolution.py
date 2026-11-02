@@ -80,6 +80,16 @@ def assert_amendment_kind_permitted(
     regime = resolve_amendment_kind_regime_for_period(modelo, period)
     if amendment_kind.value in regime.permitted_kinds:
         return
+    if not regime.permitted_kinds:
+        raise AmendmentKindNotPermittedError(
+            translated_message="application.modelo.errors.amendment_later_period_only",
+            context={
+                "modelo": modelo,
+                "filing_year": str(period.filing_year),
+                "period": period.registry_token,
+                "requested_kind": amendment_kind.value,
+            },
+        )
     accepted = ", ".join(sorted(regime.permitted_kinds))
     raise AmendmentKindNotPermittedError(
         translated_message="application.modelo.errors.amendment_kind_not_permitted",

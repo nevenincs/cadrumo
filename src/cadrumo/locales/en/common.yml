@@ -153,6 +153,9 @@ aggregation:
       unsupported_period: Unsupported modelo period for totals from your records.
   oss_ioss:
     errors:
+      consignment_exceeds_ceiling: 'A consignment exceeds this regime''s limit: its
+        intrinsic value may not pass the ceiling set by law. Check the invoice or
+        declare it outside the import scheme.'
       detail_consumption_state_excluded: Union-scheme services cannot be declared
         for the member state of identification, because the scheme only covers services
         supplied in a member state where you are not established.
@@ -166,9 +169,9 @@ aggregation:
       detail_rows_exceed_page: This period needs more rows than one Modelo 369 page
         holds, and continuation pages cannot be prepared here yet. Nothing has been
         exported, so no row is left out.
-      invoice_line_currency_unconverted: An OSS/IOSS invoice line is denominated in
-        a foreign currency with no resolved euro rate, so it cannot be declared on
-        this modelo.
+      invoice_line_currency_unconverted: An OSS/IOSS invoice line is in a foreign
+        currency and the ECB published no rate for the period's last day or the day
+        after, so it cannot be declared on this modelo.
       invoice_line_rate_kind_unclassifiable: An OSS/IOSS invoice line carries an IVA
         rate that cannot be classified into a rate tier, so its cuota cannot be declared
         on this modelo.

@@ -1782,6 +1782,9 @@ application:
       amendment_kind_not_permitted: 'The requested amendment kind {requested_kind}
         is not legally available for modelo {modelo} filing year {filing_year} period
         {period}. Accepted kinds for this period: {accepted_kinds}.'
+      amendment_later_period_only: Modelo {modelo} for year {filing_year} period {period}
+        cannot correct a return already filed. Make the adjustment in the return of
+        a later period.
       amendment_registry_root_missing: The published authority generation %{missing_path}
         is missing; amendment overrides cannot be validated.
       amendment_registry_snapshot_unresolved: The modelo definitions for modelo %{modelo},

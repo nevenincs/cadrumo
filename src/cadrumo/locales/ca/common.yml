@@ -162,6 +162,9 @@ aggregation:
       unsupported_period: Període de model no admès per als totals dels teus registres.
   oss_ioss:
     errors:
+      consignment_exceeds_ceiling: 'Un enviament supera el valor màxim d''aquest règim:
+        el seu valor intrínsec no pot excedir el límit de la llei. Revisa la factura
+        o declara''l fora del règim d''importació.'
       detail_consumption_state_excluded: Els serveis del règim de la Unió no es poden
         declarar per a l'Estat membre d'identificació, perquè el règim només cobreix
         els serveis prestats en un Estat membre on no estiguis establert.
@@ -176,9 +179,10 @@ aggregation:
       detail_rows_exceed_page: Aquest període necessita més files de les que caben
         en una pàgina del model 369, i les pàgines complementàries encara no es poden
         preparar aquí. No s'ha exportat res, de manera que cap fila no queda fora.
-      invoice_line_currency_unconverted: Una línia de factura OSS/IOSS està denominada
-        en moneda estrangera sense tipus de canvi a euros resolt, per la qual cosa
-        no es pot declarar en aquest model.
+      invoice_line_currency_unconverted: Una línia de factura OSS/IOSS està en moneda
+        estrangera i no hi ha tipus de canvi del BCE publicat per a l'últim dia del
+        període ni per al dia següent, de manera que no es pot declarar en aquest
+        model.
       invoice_line_rate_kind_unclassifiable: Una línia de factura OSS/IOSS té un tipus
         d'IVA que no es pot classificar en cap tram, per la qual cosa la seva quota
         no es pot declarar en aquest model.

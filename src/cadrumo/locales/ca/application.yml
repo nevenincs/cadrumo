@@ -1878,6 +1878,9 @@ application:
       amendment_kind_not_permitted: 'El tipus de rectificació sol·licitat {requested_kind}
         no està legalment disponible per al model {modelo}, exercici {filing_year},
         període {period}. Tipus acceptats per a aquest període: {accepted_kinds}.'
+      amendment_later_period_only: El model {modelo} de l'exercici {filing_year} i
+        període {period} no admet corregir una autoliquidació ja presentada. Practica
+        l'ajust en l'autoliquidació d'un període posterior.
       amendment_registry_root_missing: La generació publicada de l'autoritat %{missing_path}
         no existeix; no es poden validar les sobreescriptures de la rectificació.
       amendment_registry_snapshot_unresolved: No s'han pogut resoldre les definicions

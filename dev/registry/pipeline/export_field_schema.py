@@ -98,8 +98,9 @@ def _schema_field(
 
 
 def _presence_marker(joined_field: JoinedRecordDesignField) -> str | None:
-    """Read the constant of a producer-fed slot whose printed contents are a blank or that constant."""
-    if joined_field.semantic_entry.kind.value != "header" or joined_field.parser_field.content is None:
+    """Read the constant of a producer- or marker-fed slot whose printed contents are a blank or that constant."""
+    fed_by_fact = joined_field.semantic_entry.kind.value in {"header", "computed"}
+    if not fed_by_fact or joined_field.parser_field.content is None:
         return None
     match = _BLANK_OR_CONSTANT_CONTENT.fullmatch(joined_field.parser_field.content.strip())
     if match is None:

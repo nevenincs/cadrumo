@@ -1874,6 +1874,9 @@ application:
       amendment_kind_not_permitted: 'El tipo de rectificación solicitado {requested_kind}
         no está legalmente disponible para el modelo {modelo}, ejercicio {filing_year},
         período {period}. Tipos aceptados para este período: {accepted_kinds}.'
+      amendment_later_period_only: El modelo {modelo} del ejercicio {filing_year}
+        y periodo {period} no admite corregir una autoliquidación ya presentada. Practica
+        el ajuste en la autoliquidación de un periodo posterior.
       amendment_registry_root_missing: Falta la generación publicada de la autoridad
         %{missing_path}; no se pueden validar las sobrescrituras de rectificación.
       amendment_registry_snapshot_unresolved: No se pudieron resolver las definiciones
