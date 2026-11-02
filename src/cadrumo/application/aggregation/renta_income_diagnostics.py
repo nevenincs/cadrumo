@@ -294,7 +294,6 @@ def rectificativa_reading(
     usable = criteria.usable(window_end.year)
     if usable is ActivityImputationCriterion.COBROS_Y_PAGOS:
         return RectificativaReading(
-            fractions={},
             refused=_cash_refund_refusals(
                 invoices,
                 transactions,
