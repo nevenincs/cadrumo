@@ -32,6 +32,7 @@ from ....core.iva_deduction_fact import IvaDeductionEvidenceAuthority, IvaDeduct
 from ....domain.iva.deduction_facts import IvaDeductionClassificationProvenance
 from ....domain.iva.prorrata import InputClassification
 from ....domain.iva.schema import EUMemberState
+from ....domain.iva.vehicle_use import IvaVehicleUse
 from ....domain.modelos.errors import ModeloValidationError
 from ....domain.modelos.ledger_filing_snapshot import LedgerFilingEvidence, LedgerFilingSnapshot
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
@@ -41,6 +42,7 @@ from ..ledger_filing_snapshot import (
     _FINGERPRINT_FIELDS_V1,
     _FINGERPRINT_FIELDS_V2,
     _FINGERPRINT_FIELDS_V3,
+    _FINGERPRINT_FIELDS_V4,
     CURRENT_FINGERPRINT_FIELD_SET_VERSION,
     compute_ledger_filing_evidence,
     compute_ledger_filing_snapshot,
@@ -136,13 +138,25 @@ def test_v2_appends_to_v1_and_never_reorders_it() -> None:
     assert len(_FINGERPRINT_FIELDS_V2) == len(_FINGERPRINT_FIELDS_V1) + 7
 
 
-def test_v3_appends_exactly_the_two_admission_facts_to_v2_and_is_current() -> None:
+def test_v3_appends_exactly_the_two_admission_facts_to_v2() -> None:
     assert _FINGERPRINT_FIELDS_V3[: len(_FINGERPRINT_FIELDS_V2)] == _FINGERPRINT_FIELDS_V2
     assert _FINGERPRINT_FIELDS_V3[len(_FINGERPRINT_FIELDS_V2) :] == (
         ("investment_asset_id", "investment_asset_id"),
         ("counterparty_identification_state", "counterparty_identification_state"),
     )
-    assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 3
+
+
+def test_v4_appends_exactly_the_stated_vehicle_use_to_v3_and_is_current() -> None:
+    assert _FINGERPRINT_FIELDS_V4[: len(_FINGERPRINT_FIELDS_V3)] == _FINGERPRINT_FIELDS_V3
+    assert _FINGERPRINT_FIELDS_V4[len(_FINGERPRINT_FIELDS_V3) :] == (("iva_vehicle_use", "iva_vehicle_use"),)
+    assert CURRENT_FINGERPRINT_FIELD_SET_VERSION == 4
+
+
+def test_a_stated_vehicle_use_is_drift_under_v4_and_quiet_under_v3() -> None:
+    purchase = _purchase()
+    stated = purchase.model_copy(update={"iva_vehicle_use": IvaVehicleUse.SURVEILLANCE})
+    assert row_fingerprint(stated, field_set_version=4) != row_fingerprint(purchase, field_set_version=4)
+    assert row_fingerprint(stated, field_set_version=3) == row_fingerprint(purchase, field_set_version=3)
 
 
 def _with_admission_facts(transaction: Transaction) -> Transaction:
@@ -242,13 +256,13 @@ def test_a_version_this_build_does_not_know_is_refused_not_approximated() -> Non
     with pytest.raises(ModeloValidationError, match="unknown to this build"):
         row_fingerprint(_purchase(), field_set_version=99)
     with pytest.raises(ModeloValidationError, match="unknown to this build"):
-        row_fingerprint(_purchase(), field_set_version=4)
+        row_fingerprint(_purchase(), field_set_version=5)
 
 
 def test_a_stored_snapshot_stamped_with_an_unknown_version_is_refused_at_comparison() -> None:
     purchase = _purchase()
-    unknown = _snapshot_of(purchase).model_copy(update={"fingerprint_field_set_version": 4})
-    with pytest.raises(ModeloValidationError, match=r"known versions are \[1, 2, 3\]"):
+    unknown = _snapshot_of(purchase).model_copy(update={"fingerprint_field_set_version": 5})
+    with pytest.raises(ModeloValidationError, match=r"known versions are \[1, 2, 3, 4\]"):
         evaluate_ledger_filing_staleness(unknown, _catalogue(purchase))
 
 
@@ -352,7 +366,7 @@ def test_the_v3_admission_facts_reach_the_exported_evidence_row() -> None:
     (row,) = evidence.rows
     assert row.investment_asset_id == "bien-inversion-0001"
     assert row.counterparty_identification_state == "FR"
-    assert row.fingerprint == row_fingerprint(declared, field_set_version=3)
+    assert row.fingerprint == row_fingerprint(declared, field_set_version=4)
 
 
 @pytest.mark.parametrize("version", [1, 2])

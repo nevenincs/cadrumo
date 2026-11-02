@@ -560,7 +560,7 @@ def resolve_category_rule(
         row, the taxonomy, the year's profiles or the residence comunidad cannot
         supply one.
     """
-    if not category_id:
+    if category_id is None or not category_id.strip():
         return CategoryRuleRefusal(
             _shared_issue_reasons.MISSING_CATEGORY,
             "business expense has no spending category; assign it so its deduction rule can run",

@@ -25,7 +25,9 @@ import pytest
 
 from ....core.hashing import content_hash_hex
 from ....domain.iva.schema import IvaCategory
+from ....domain.iva.vehicle_use import IvaVehicleUse
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
+from ....domain.transactions.models import Transaction
 from ..actions_common import command_matches_current
 from ..actions_manual import _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT, _source_sha256, transaction_from_command
 from ..models import ManualLedgerTransactionCommand
@@ -165,3 +167,12 @@ def test_every_omitted_field_is_an_optional_command_field_defaulting_to_none() -
     for name in _SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT:
         assert not fields[name].is_required(), name
         assert fields[name].default is None, name
+
+
+def test_a_stated_vehicle_use_reaches_the_row_and_its_identity() -> None:
+    stated = transaction_from_command(
+        _keyless_command(iva_vehicle_use=IvaVehicleUse.SURVEILLANCE), occurred_at=_OCCURRED_AT
+    )
+    assert stated.iva_vehicle_use is IvaVehicleUse.SURVEILLANCE
+    assert stated.raw.provenance.source_sha256 != _PINNED_KEYLESS_SOURCE_SHA256
+    assert Transaction.model_validate_json(stated.model_dump_json()).iva_vehicle_use is IvaVehicleUse.SURVEILLANCE

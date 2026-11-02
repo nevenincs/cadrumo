@@ -2337,6 +2337,10 @@ application:
         ni justificant adjunt. Adjunta'l a l'apunt dels teus registres.
       transaction_evidence_missing_output: Una factura emesa amb IVA repercutit no
         té justificant. Adjunta'l a l'apunt dels teus registres.
+      undetermined_mixed_use_contributor: El càlcul desat del model %{modelo} de %{filing_year},
+        període %{period}, va comptar %{rows} despesa(es) d'ús mixt sense categoria
+        de despesa per la part indicada. Si calcules ara, quedaran retingudes fins
+        que els assignis la categoria. Els valors desats no han canviat.
       withholding_detail_absent_against_ledger_evidence: 'El model %{modelo} de %{filing_year}
         no declara cap percepció per a cap perceptor, però els teus registres recullen
         rendes sotmeses a retenció pagades aquell any: %{contradicting_invoice_count}

@@ -98,7 +98,7 @@ _MANUAL_PROVIDER_NAME = "manual-ledger"
 #: re-addressing ordinary movements whose content had not changed. Each field
 #: listed here must default to ``None``, so omitting it when absent loses nothing
 #: a present value would say.
-_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "own_account_id"})
+_SOURCE_HASH_FIELDS_OMITTED_WHEN_ABSENT = frozenset({"investment_asset_id", "iva_vehicle_use", "own_account_id"})
 
 
 @dataclass(frozen=True, slots=True)
@@ -523,6 +523,7 @@ def transaction_from_command(
         "deduction_fact_kind": command.deduction_fact_kind,
         "deduction_provenance": _invoice_evidence_provenance(command, evidence_records=evidence_records),
         "investment_asset_id": command.investment_asset_id,
+        "iva_vehicle_use": command.iva_vehicle_use,
         "counterparty_country": command.counterparty_country,
         "counterparty_identification_state": command.counterparty_identification_state,
         "source_jurisdiction": command.source_jurisdiction,

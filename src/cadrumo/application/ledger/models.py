@@ -45,6 +45,7 @@ from ...domain.calculations.registry.prorrata_exclusions import require_art104_t
 from ...domain.calculations.registry.prorrata_vocabulary import require_input_classification
 from ...domain.iva.prorrata import InputClassification
 from ...domain.iva.schema import EUMemberState, IvaCategory
+from ...domain.iva.vehicle_use import IvaVehicleUse
 from ...domain.transactions.enums import TRANSFER_ALLOWED_STATES, BusinessClassification, TransactionDirection
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.lineage_models import (
@@ -224,6 +225,9 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
     #: because the register record is declared separately, after the ledger row
     #: exists, and nothing in the movement itself identifies the asset.
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
+    #: What the row's vehicle is, where LIVA art. 95.Tres.2.ª treats it apart from the
+    #: general presumption. Read only for a category under that presumption.
+    iva_vehicle_use: IvaVehicleUse | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     art_104_tres_exclusion: Art104TresExclusion | None = None
@@ -290,6 +294,7 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
             "iva_category": self.iva_category,
             "deduction_fact_kind": self.deduction_fact_kind,
             "investment_asset_id": self.investment_asset_id,
+            "iva_vehicle_use": self.iva_vehicle_use,
             "taxable_base": self.taxable_base,
             "iva_rate": self.iva_rate,
             "iva_amount": self.iva_amount,
@@ -340,6 +345,9 @@ class ManualLedgerTransactionPatch(_ManualLedgerTransactionInput):
     iva_category: IvaCategory | None = None
     deduction_fact_kind: IvaDeductionFactKind | None = None
     investment_asset_id: str | None = Field(default=None, min_length=1, max_length=128)
+    #: What the row's vehicle is, where LIVA art. 95.Tres.2.ª treats it apart from the
+    #: general presumption. Read only for a category under that presumption.
+    iva_vehicle_use: IvaVehicleUse | None = None
     counterparty_country: str | None = None
     counterparty_identification_state: EUMemberState | None = None
     source_jurisdiction: str | None = None

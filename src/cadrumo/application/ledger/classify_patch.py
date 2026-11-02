@@ -17,6 +17,7 @@ from ...domain.calculations.registry.governed_fact_scope import validating_gover
 from ...domain.calculations.registry.iva_category_catalogue import require_iva_category
 from ...domain.calculations.registry.iva_deduction_catalogue import require_iva_deduction_fact_kind
 from ...domain.categories.spending_category_catalogue import require_spending_category
+from ...domain.iva.vehicle_use import require_iva_vehicle_use
 from ...domain.transactions.enums import BusinessClassification
 from ...domain.transactions.errors import TransactionValidationError
 from ...domain.transactions.irpf_categories import require_ledger_irpf_category
@@ -87,6 +88,8 @@ def _resolve_manual_field_value(
         return require_iva_category(value, effective_date=current.raw.booked_date, authority=operation)
     if field_name == "deduction_fact_kind":
         return require_iva_deduction_fact_kind(value, authority=operation)
+    if field_name == "iva_vehicle_use":
+        return require_iva_vehicle_use(value)
     if field_name == "counterparty_identification_state":
         return require_eu_member_state(value, authority=operation)
     return value

@@ -70,6 +70,7 @@ class LedgerAddRequest(BaseModel):
     iva_category: _AddIvaCategory = None
     deduction_fact_kind: Annotated[str, Field(max_length=128)] | None = None
     investment_asset_id: _AddOptionalId = None
+    iva_vehicle_use: Annotated[str, Field(max_length=128)] | None = None
     counterparty_country: CountryCodeAlpha2 | None = None
     counterparty_identification_state: _AddEUMemberState = None
     recargo_amount: _AddOptionalDecimalText = None

@@ -164,14 +164,14 @@ def test_the_derivation_sees_the_fields_this_guard_exists_for() -> None:
 
 
 def test_the_guard_would_have_caught_the_v2_gap() -> None:
-    """Against the previous field set, the check names exactly the two V3 facts."""
+    """Against the V2 field set, the check names the V3 facts and the later V4 one."""
     missing = unwatched_writable_iva_fields(
         writable=writable_transaction_fields(),
         iva_read=iva_read_fields(_IVA_AGGREGATION_MODULES),
         field_set=_FINGERPRINT_FIELDS_V2,
         excluded=INTENTIONALLY_EXCLUDED,
     )
-    assert missing == ("counterparty_identification_state", "investment_asset_id")
+    assert missing == ("counterparty_identification_state", "investment_asset_id", "iva_vehicle_use")
 
 
 #: An isolated write path shaped like the real signature, with one extra writable field.

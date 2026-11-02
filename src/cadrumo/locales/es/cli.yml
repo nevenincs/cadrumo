@@ -3292,6 +3292,11 @@ cli:
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
         domestic_not_subject)
       iva_rate_help: Tipo de IVA como decimal, por ejemplo 0.21
+      iva_vehicle_use_help: 'Para qué se usa el vehículo de la fila, cuando el art.
+        95.Tres.2.ª LIVA lo aparta de la presunción del 50 por 100: uno de los seis
+        usos presumidos al 100 por 100 (mixed_vehicle_goods_transport, paid_passenger_transport,
+        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
+        surveillance) u outside_presumed_classes si esa regla no nombra el vehículo.'
       llm_classified_by_label: clasificado-por
       llm_confidence_label: confianza
       llm_exclusive: --llm no puede combinarse con --classification ni --file; la
