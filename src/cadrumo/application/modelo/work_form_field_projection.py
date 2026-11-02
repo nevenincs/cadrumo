@@ -62,7 +62,7 @@ def project_casilla_field(
     label = localized_text(casilla.localization_keys, context.language) or unnamed_casilla_label(context.language)
     required = casilla_id in context.required
     editability, reason = casilla_editability(row, context)
-    origin = casilla_origin(row, context, required=required)
+    origin = casilla_origin(row, context, required=required or casilla_id in context.calculation_required.casilla_ids)
     value = row.value
     if casilla_id in context.unworked and origin not in {ModeloFormOrigin.ENTERED, ModeloFormOrigin.OVERRIDES_SOURCE}:
         # The calculation said this box could not be worked out: whatever it holds is not a figure.
@@ -194,11 +194,15 @@ def _binding_value_state(
     if overridden:
         origin = ModeloFormOrigin.ENTERED
     elif raw is None:
-        origin = ModeloFormOrigin.OPTIONAL_EMPTY
+        origin = (
+            ModeloFormOrigin.NEEDS_INPUT
+            if binding_id in context.calculation_required.binding_ids
+            else ModeloFormOrigin.OPTIONAL_EMPTY
+        )
     elif binding.source is not BindingSourceKind.MANUAL_INPUT:
         origin = ModeloFormOrigin.IMPORTED
     else:
-        origin = held_value_origin(value, required=False)
+        origin = held_value_origin(value, required=binding_id in context.calculation_required.binding_ids)
     return value, origin, typed_unattributed
 
 

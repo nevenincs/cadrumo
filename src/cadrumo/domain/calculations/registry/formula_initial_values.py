@@ -291,7 +291,7 @@ def _can_default_absent_binding(
     equivalent_group = equivalent_groups_by_binding.get(binding.id, (binding.id,))
     if any(equivalent_id in resolved for equivalent_id in equivalent_group if equivalent_id != binding.id):
         return False
-    return _binding_is_absent_by_design(binding, target_period=target_period)
+    return binding_is_absent_by_design(binding, target_period=target_period)
 
 
 def _reject_unknown_inputs(
@@ -542,7 +542,7 @@ def _initial_value_for_casilla(
     value, _present_binding_ids = resolve_bound_casilla_binding_value(casilla, binding_values)
     if value is not None:
         return value, False
-    if any(_binding_is_absent_by_design(binding, target_period=target_period) for binding in bindings):
+    if any(binding_is_absent_by_design(binding, target_period=target_period) for binding in bindings):
         return ZERO, True
     binding_ids = bound_casilla_binding_ids(casilla)
     raise RegistryValidationError(
@@ -552,7 +552,7 @@ def _initial_value_for_casilla(
     )
 
 
-def _binding_is_absent_by_design(binding: BindingDefinition, *, target_period: str) -> bool:
+def binding_is_absent_by_design(binding: BindingDefinition, *, target_period: str) -> bool:
     """Decide whether a missing bound slot is structural for ``target_period``."""
     # A relation_prefill slot legitimately blanks when no prior filing exists to
     # fold in (the relation resolver returns no value and the operator fills it

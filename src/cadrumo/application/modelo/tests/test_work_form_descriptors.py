@@ -264,8 +264,13 @@ def test_an_informative_return_has_no_settlement_box(operation: PinnedAuthorityO
 # -- what the filer owes -----------------------------------------------------
 
 
-def test_modelo_100_asks_for_no_box_the_registry_does_not_require(operation: PinnedAuthorityOperation) -> None:
-    """Hundreds of empty boxes sit in the Renta's calculation closure; verification requires none of them."""
+def test_modelo_100_asks_for_no_box_the_registry_or_the_calculation_does_not_require(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Hundreds of empty boxes sit in the Renta's calculation closure; verification requires none of them.
+
+    The one box asked for is the earlier year's negative base, which the calculation refuses to start without.
+    """
     form = _form(operation, "100", 2025, "0A")
     snapshot = _snapshot(operation, "100", 2025, "0A")
     manifest = snapshot.revision.completeness_manifest
@@ -279,7 +284,10 @@ def test_modelo_100_asks_for_no_box_the_registry_does_not_require(operation: Pin
     ]
 
     assert len(empty_typed_in_closure) > 150
-    assert form.counts.needs_input == 0
+    assert form.counts.needs_input == 1
+    assert [
+        address_key(field.address)[1] for field in form.fields() if field.origin is ModeloFormOrigin.NEEDS_INPUT
+    ] == ["1388"]
 
 
 def test_modelo_210_asks_for_the_boxes_the_registry_requires(operation: PinnedAuthorityOperation) -> None:
