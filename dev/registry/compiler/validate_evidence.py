@@ -19,6 +19,8 @@ from cadrumo.core.atomic_write import atomic_write_best_effort_text
 from cadrumo.core.hashing import sha256_hex
 from cadrumo.core.storage_environment import configured_storage_root, resolve_storage_path
 from cadrumo.core.text_fold import normalise_corpus_text
+from cadrumo.domain.calculations.registry.errors import RegistryValidationError
+from cadrumo.domain.calculations.registry.export_xml_dictionary import decode_dictionary_text
 from cadrumo.domain.calculations.registry.schema_base import RegistrySourceKind, SourceCitation
 from cadrumo.domain.calculations.registry.schema_references import LegalReference, SourceReference
 from dev.cache_root import dev_cache_dir
@@ -177,6 +179,11 @@ def _read_source_text(source: SourceReference, source_path: Path, *, source_root
         # A record-design PDF is compressed; its citations are against the text
         # it renders, never against the raw bytes.
         return normalise_corpus_text(_extract_pdf_text_impl(str(source_path)))
+    if source.kind is RegistrySourceKind.DICTIONARY and source_path.suffix.casefold() == ".properties":
+        try:
+            return normalise_corpus_text(decode_dictionary_text(source_path.read_bytes()))
+        except RegistryValidationError as exc:
+            raise OSError(f"could not decode dictionary source {source_path}: {exc}") from exc
     return normalise_corpus_text(source_path.read_text(encoding="utf-8", errors="replace"))
 
 
@@ -312,7 +319,9 @@ def _source_text_cache_key(
 ) -> _SourceTextCacheKey:
     suffix = source_path.suffix.casefold()
     extraction_contract = (
-        f"{source.kind}:xlsx-text-v1"
+        f"{source.kind}:properties-text-v1"
+        if suffix == ".properties" and source.kind is RegistrySourceKind.DICTIONARY
+        else f"{source.kind}:xlsx-text-v1"
         if suffix == ".xlsx"
         else f"{source.kind}:pdf-text-v1"
         if suffix == ".pdf" and source.kind is not RegistrySourceKind.MANUAL_PDF

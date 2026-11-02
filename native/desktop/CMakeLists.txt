@@ -396,14 +396,14 @@ add_custom_target(desktop-headless-test
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" VERBATIM)
 
 # The packaged end-to-end test drives the window over the WebView2 DevTools protocol, so
-# it needs an interactive desktop session. Its host carries the webview2-remote-debugging
-# feature and is built apart, into the desktop testing directory: it is never the image
-# desktop-host-build declares, and nothing stages or packages it.
+# it needs an interactive desktop session. Its isolated host carries the
+# webview2-remote-debugging and native-automation features, is never the image
+# desktop-host-build declares, and is never distributed.
 cadrumo_build_step(step_comment desktop-packaged-host GROUP verification
-  SUMMARY "compile the remote-debugging desktop host for packaged end-to-end tests (never shipped)"
+  SUMMARY "compile the automation desktop host for packaged tests (never shipped)"
   OUTPUTS "${CADRUMO_PATH_DESKTOP_TESTING}")
 # The test host has its own build record (desktop-test-host): the desktop's inputs and identity
-# with one more feature. It is opened before the host builds and settled from the host.json
+# with test-only features. It is opened before the host builds and settled from the host.json
 # the build writes, with the image's digest.
 cadrumo_identity_command(desktop_test_host_identity desktop-test-host)
 set(desktop_test_host_record "${CADRUMO_PATH_DESKTOP_TESTING}/packaged/host.json")
@@ -441,6 +441,23 @@ add_custom_target(desktop-packaged-test
     "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/packaged.test.mjs"
   DEPENDS desktop-packaged-host
   WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+# A persistent exploratory session, not a prescribed tax scenario. The launcher
+# verifies the existing stage and mirrors it with the isolated automation host.
+cadrumo_build_step(step_comment desktop-native-automation GROUP verification
+  SUMMARY "open an isolated native WebDriver session for exploratory GUI actions")
+add_custom_target(desktop-native-automation
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment} "${desktop_configuration}"
+    "${CADRUMO_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/tests/automation/cli.mjs" start
+  DEPENDS desktop-packaged-host
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" USES_TERMINAL VERBATIM)
+cadrumo_build_step(step_comment desktop-native-automation-harness-test GROUP verification
+  SUMMARY "verify native automation isolation and session path admission")
+add_custom_target(desktop-native-automation-harness-test
+  COMMAND "${CMAKE_COMMAND}" -E env ${desktop_environment}
+    "${CADRUMO_NODE}" --test "${CMAKE_CURRENT_SOURCE_DIR}/tests/automation/session.test.mjs"
+  DEPENDS desktop-frontend-install
+  WORKING_DIRECTORY "${CMAKE_BINARY_DIR}" COMMENT "${step_comment}" VERBATIM)
+
 # The setup acceptance downloads the browser into one throwaway root under the testing
 # directory, interrupts and resumes it, and removes the root when it ends.
 cadrumo_build_step(step_comment desktop-packaged-setup-test GROUP verification

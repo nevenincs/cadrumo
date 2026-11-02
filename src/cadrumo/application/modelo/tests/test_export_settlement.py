@@ -291,6 +291,5 @@ def test_an_amount_whose_second_instalment_would_be_nothing_is_paid_at_once_neve
     )
 
     assert refused.value.context == {"cause": "second_instalment_zero", "result_disposition": "I"}
-    assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": Decimal("0.01")}
+    assert at_once == {"TIPODECLARACION": "I", "ING_IMPORTE": Decimal("0.01"), "ING_CUENTACORRIENTE": None}
     assert least["ING_IMPORTE_PF1"] == Decimal("0.01") and least["ING_IMPORTE_PF2"] == Decimal("0.01")
-

@@ -4587,7 +4587,8 @@ export type ModeloFormElectionReason =
   | "filing_window_unknown"
   | "no_open_account"
   | "no_spanish_account"
-  | "settlement_unsupported";
+  | "settlement_unsupported"
+  | "second_instalment_nothing";
 
 /**
  * Whether the filer can answer an election now.

@@ -15,16 +15,11 @@ from pydantic import BaseModel, Field, field_validator, model_validator
 from ....core.classification.policies import SensitivityClass
 from ....core.errors.hierarchy import pydantic_validation_boundary
 from ....core.models import STRICT_FROZEN_CONFIG as _STRICT_FROZEN
-from ....core.storage_taxonomy import StorageCustodyProfile
 from .errors import NamespaceRegistryError
 from .namespace_taxonomy import (
-    CUSTODY_PROFILE_DISPOSITIONS,
     StorageCustodyDisposition,
     StorageNamespaceScope,
     StorageRemoteMirrorPolicy,
-)
-from .storage_path_definitions import (
-    StoragePathDefinition,
 )
 
 SECURE_OBJECT_SCHEMA_VERSION_V1 = 1
@@ -38,7 +33,7 @@ SECURE_OBJECT_WORKFLOW_STATE_KEY = "state"
 FORMER_PRODUCT_NAMESPACE_PREFIXES = ("aeat.", "aeat-test.", "aeat-tests.")
 
 
-def _pydantic_namespace_validator[ValidationResultT](
+def pydantic_namespace_validator[ValidationResultT](
     function: Callable[..., ValidationResultT],
 ) -> Callable[..., ValidationResultT]:
     """Translate the registered namespace refusal at Pydantic's callback edge."""
@@ -94,7 +89,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("key")
     @classmethod
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _key_is_registry_safe(cls, value: str) -> str:
         if value != value.strip():
@@ -105,7 +100,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("namespace")
     @classmethod
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _namespace_is_sql_safe(cls, value: str) -> str:
         if value != value.strip():
@@ -116,7 +111,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
 
     @field_validator("default_object_key")
     @classmethod
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _default_key_is_repository_safe(cls, value: str | None) -> str | None:
         if value is None:
@@ -186,7 +181,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
             )
 
     @model_validator(mode="after")
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _singleton_default_key_matches_grammar(self) -> SecureObjectNamespaceDefinition:
         """Keep a singleton namespace's default key equal to its declared grammar.
@@ -205,7 +200,7 @@ class SecureObjectNamespaceDefinition(BaseModel):
         return self
 
     @model_validator(mode="after")
-    @_pydantic_namespace_validator
+    @pydantic_namespace_validator
     @pydantic_validation_boundary
     def _remote_mirror_policy_is_consistent(self) -> SecureObjectNamespaceDefinition:
         if self.remote_mirror_policy is StorageRemoteMirrorPolicy.CIPHERTEXT_WITH_METADATA:
@@ -222,52 +217,6 @@ class SecureObjectNamespaceDefinition(BaseModel):
         if self.default_object_key is None:
             raise NamespaceRegistryError(f"namespace {self.namespace!r} does not define a singleton object key")
         return self.default_object_key
-
-
-class StorageHierarchyRegistry(BaseModel):
-    """Registry carrying the known secure-storage hierarchy contracts."""
-
-    model_config = _STRICT_FROZEN
-
-    namespaces: tuple[SecureObjectNamespaceDefinition, ...]
-    paths: tuple[StoragePathDefinition, ...]
-
-    @model_validator(mode="after")
-    @_pydantic_namespace_validator
-    @pydantic_validation_boundary
-    def _reject_duplicate_keys_and_namespaces(self) -> StorageHierarchyRegistry:
-        namespace_keys = [item.key for item in self.namespaces]
-        namespace_values = [item.namespace for item in self.namespaces]
-        path_keys = [item.key for item in self.paths]
-        if len(namespace_keys) != len(set(namespace_keys)):
-            raise NamespaceRegistryError("duplicate secure-object namespace registry key")
-        if len(namespace_values) != len(set(namespace_values)):
-            raise NamespaceRegistryError("duplicate secure-object namespace value")
-        if len(path_keys) != len(set(path_keys)):
-            raise NamespaceRegistryError("duplicate storage path registry key")
-        return self
-
-    def namespace_by_value(self, value: str) -> SecureObjectNamespaceDefinition:
-        """Return a :class:`SecureObjectNamespaceDefinition` by persisted namespace value."""
-        for namespace in self.namespaces:
-            if namespace.namespace == value:
-                return namespace
-        raise KeyError(value)
-
-    def path_by_key(self, key: str) -> StoragePathDefinition:
-        """Return a :class:`StoragePathDefinition` by registry key."""
-        for path in self.paths:
-            if path.key == key:
-                return path
-        raise KeyError(key)
-
-    def namespaces_for_custody_profile(
-        self,
-        profile: StorageCustodyProfile,
-    ) -> tuple[SecureObjectNamespaceDefinition, ...]:
-        """Return carried :class:`SecureObjectNamespaceDefinition` rows for a custody profile."""
-        dispositions = CUSTODY_PROFILE_DISPOSITIONS[profile]
-        return tuple(namespace for namespace in self.namespaces if namespace.custody_disposition in dispositions)
 
 
 WORKFLOW_STATE_NAMESPACE = SecureObjectNamespaceDefinition(

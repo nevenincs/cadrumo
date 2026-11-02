@@ -61,6 +61,7 @@
         "cadrumo_agent_service.providers.persistence.store",
         "cadrumo_agent_service.service",
         "cadrumo_agent_service.service_administration",
+        "cadrumo_agent_service.service_attachment_admin",
         "cadrumo_agent_service.service_scheduling",
         "cadrumo_agent_service.service_startup",
         "cadrumo_agent_service.service_support"

@@ -86,23 +86,9 @@ class _ConditionalGuardCompiler:
         if node.op in ("record_row_unused", "text_equal"):
             return f"ISERROR({translate_formula(node, layout=self._layout)})", True
         if node.op == "require_condition":
-            predicate, value = node.args
-            missing, _ = self._visit(predicate, visited)
-            value_missing, _ = self._visit(value, visited)
-            translated = translate_formula(predicate, layout=self._layout)
-            condition = (
-                f"IF(ISERROR({translated}),TRUE,"
-                f"IF(OR(ISNUMBER({translated}),ISLOGICAL({translated})),"
-                f"IF(({translated})<>0,{value_missing},TRUE),TRUE))"
-            )
-            return (condition if missing == "FALSE" else f"IF({missing},TRUE,{condition})"), True
+            return self._require_condition_missing(node, visited)
         if node.op == "if_then_else":
-            predicate, yes, no = node.args
-            missing, _ = self._visit(predicate, visited)
-            yes_missing, _ = self._visit(yes, visited)
-            no_missing, _ = self._visit(no, visited)
-            condition = f"IF(({translate_formula(predicate, layout=self._layout)})<>0,{yes_missing},{no_missing})"
-            return (condition if missing == "FALSE" else f"IF({missing},TRUE,{condition})"), True
+            return self._if_then_else_missing(node, visited)
         if node.op in (
             "lookup_bracket",
             "lookup_bracket_by_ccaa",
@@ -116,3 +102,23 @@ class _ConditionalGuardCompiler:
         if node.date_binding is not None:
             return self._references(self._layout.address_for_date_binding(node.date_binding).qualified(), visited)
         return self._references(translate_formula(node, layout=self._layout), visited)
+
+    def _require_condition_missing(self, node: FormulaExpression, visited: frozenset[str]) -> tuple[str, bool]:
+        predicate, value = node.args
+        missing, _ = self._visit(predicate, visited)
+        value_missing, _ = self._visit(value, visited)
+        translated = translate_formula(predicate, layout=self._layout)
+        condition = (
+            f"IF(ISERROR({translated}),TRUE,"
+            f"IF(OR(ISNUMBER({translated}),ISLOGICAL({translated})),"
+            f"IF(({translated})<>0,{value_missing},TRUE),TRUE))"
+        )
+        return (condition if missing == "FALSE" else f"IF({missing},TRUE,{condition})"), True
+
+    def _if_then_else_missing(self, node: FormulaExpression, visited: frozenset[str]) -> tuple[str, bool]:
+        predicate, yes, no = node.args
+        missing, _ = self._visit(predicate, visited)
+        yes_missing, _ = self._visit(yes, visited)
+        no_missing, _ = self._visit(no, visited)
+        condition = f"IF(({translate_formula(predicate, layout=self._layout)})<>0,{yes_missing},{no_missing})"
+        return (condition if missing == "FALSE" else f"IF({missing},TRUE,{condition})"), True

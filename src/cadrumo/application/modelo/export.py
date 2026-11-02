@@ -320,7 +320,7 @@ def _stage_publish_and_record_export(
     approved: ModeloDraft,
     producer_snapshot: FilingProducerSnapshot,
     dictionary_values: dict[str, object] | None,
-    prior_domiciliation_election: PriorDomiciliationElection | None,
+    prior_domiciliation_election: PriorDomiciliationElection,
     product_software_identity: AeatProductSoftwareIdentity | None,
     schema_provider: RegistrySchemaAccessor,
     mutation_writer: Callable[[Callable[[], None]], None] | None,

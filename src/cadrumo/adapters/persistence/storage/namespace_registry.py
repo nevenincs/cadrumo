@@ -79,8 +79,8 @@ from .secure_object_namespaces import (
     WITHHOLDING_WORKFLOW_NAMESPACE,
     WORKFLOW_RUN_NAMESPACE,
     WORKFLOW_STATE_NAMESPACE,
-    StorageHierarchyRegistry,
 )
+from .storage_hierarchy_registry import StorageHierarchyRegistry
 from .storage_path_definitions import STORAGE_PATH_DEFINITIONS
 
 _SECURE_OBJECTS_TABLE_PATH_KEY = "secure_objects_table"

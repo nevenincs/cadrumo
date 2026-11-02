@@ -239,7 +239,7 @@ def _seed_usage_ratio_for_home_rent(bucket_id: str) -> None:
     The category is a home-office share, so readiness checks the ratio against
     the declared home-office area: 60 of 100 m² matches the saved 0.60.
     """
-    from ....adapters.persistence.profile.usage_ratios import save_usage_ratios
+    from ....adapters.persistence.profile.usage_ratios import save_usage_ratios_with_secure_object_writes
     from ....adapters.persistence.storage.tests.profile_capsule_runtime import set_active_test_profile_facts
     from ....domain.categories.spending_category import SpendingCategory
     from ....domain.usage_ratios.model import UsageRatioProfile
@@ -251,8 +251,9 @@ def _seed_usage_ratio_for_home_rent(bucket_id: str) -> None:
             UserProfileFact(path="vivienda_office.office_m2", value=Decimal("60")),
         )
     )
-    save_usage_ratios(
+    save_usage_ratios_with_secure_object_writes(
         UsageRatioProfile(ratios={SpendingCategory.from_registry("arrendamiento_vivienda_afecto"): Decimal("0.60")}),
+        (),
         bucket_id=bucket_id,
     )
 

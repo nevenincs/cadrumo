@@ -17,6 +17,7 @@ from cadrumo.domain.calculations.registry.schema_form_layouts import (
 
 from .generation_constants import _INPUTS_PAGE, _NUMBERED_PAGE
 from .generation_models import _Build, _RowDraft, _SectionDraft
+from .heading_keys import _unique, form_heading_key
 from .official_text import node_slug
 from .page_fallbacks import _inputs_page, _numbered_casillas, _numbered_page
 from .page_placement import _block_bindings, _block_casillas
@@ -26,11 +27,9 @@ from .page_sections import (
     _section_blocks,
     _section_slug,
     _signature,
-    _unique,
-    _with_row_column_groups,
-    form_heading_key,
 )
 from .predecessor_layout import ContinuedLayout
+from .repeating_blocks import _with_row_column_groups
 
 
 @dataclass(slots=True)

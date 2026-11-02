@@ -4645,6 +4645,7 @@ desktop:
       missing_fields: Falta información obligatoria
       open_profile: Abrir perfil
       show_details: Mostrar detalles
+    open_from_form: Abre tu perfil, donde se guardan
     password:
       again: Repite la nueva contraseña
       changed: Contraseña cambiada
