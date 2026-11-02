@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Annotated, Literal, Self
 from uuid import UUID
 
-from pydantic import BaseModel, Field, TypeAdapter, model_validator
+from pydantic import BaseModel, Field, NonNegativeInt, TypeAdapter, model_validator
 
 from ...core.casilla_id import CasillaId
 from ...core.filing_year import FilingYear
@@ -236,6 +236,8 @@ class Borrador100ReadProjection(BaseModel):
 
     ``refused_snapshots`` lists each selected stored snapshot the pinned
     authority refuses, so a refused snapshot never reads as an absent one.
+    ``outdated_stored_snapshots`` counts stored rows written under an older
+    storage schema, which cannot be read or named.
     """
 
     model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
@@ -245,6 +247,7 @@ class Borrador100ReadProjection(BaseModel):
     snapshot: Borrador100SnapshotDetail | None = None
     filing_year: FilingYear | None = None
     refused_snapshots: tuple[Borrador100RefusedSnapshotSummary, ...] = ()
+    outdated_stored_snapshots: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def _shape(self) -> Self:
@@ -262,6 +265,7 @@ class Borrador100QueryProjection(BaseModel):
     snapshot: Borrador100QueryDetail | None = None
     filing_year: FilingYear | None = None
     refused_snapshots: tuple[Borrador100RefusedSnapshotSummary, ...] = ()
+    outdated_stored_snapshots: NonNegativeInt = 0
 
     @model_validator(mode="after")
     def _shape(self) -> Self:

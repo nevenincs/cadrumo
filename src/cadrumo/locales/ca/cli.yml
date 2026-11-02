@@ -680,6 +680,8 @@ cli:
         list_help: Llistar snapshots persistits de l'esborrany del model 100
         modelo_100_help: Ordres de snapshots de l'esborrany del model 100
         snapshot_id_help: Id del snapshot (o prefix no ambigu)
+        snapshot_schema_outdated: Hi ha %{count} captura(es) d'esborrany desada(es)
+          amb una versió anterior que no es poden llegir. Torna a importar el document.
         state_help: 'Filtre d''estat del snapshot: `active`, `superseded`, `discarded`
           o `all`'
         view_help: Mostrar un snapshot de l'esborrany del model 100

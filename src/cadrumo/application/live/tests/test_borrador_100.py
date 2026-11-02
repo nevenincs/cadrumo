@@ -45,6 +45,7 @@ class _InMemoryBorradorRepository:
     def __init__(self, *, bucket_id: str) -> None:
         self.bucket_id = bucket_id
         self._snapshots: dict[str, Borrador100Snapshot] = {}
+        self.outdated = 0
 
     def exists(self, snapshot_id: str) -> bool:
         return snapshot_id in self._snapshots
@@ -65,6 +66,9 @@ class _InMemoryBorradorRepository:
                 key=lambda snapshot: (snapshot.captured_at, snapshot.snapshot_id),
             )
         )
+
+    def outdated_stored_snapshot_count(self) -> int:
+        return self.outdated
 
     def resolve(self, snapshot_id: str) -> Borrador100Snapshot:
         trimmed = snapshot_id.strip()

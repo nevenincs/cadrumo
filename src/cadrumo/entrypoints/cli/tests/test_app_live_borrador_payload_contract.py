@@ -93,6 +93,7 @@ def test_borrador_latest_preserves_empty_and_active_snapshot_branches() -> None:
         "binding_count": None,
         "state": None,
         "refused": [],
+        "outdated_stored_snapshots": 0,
     }
     assert populated.state == "active"
     for malformed in (
@@ -102,6 +103,28 @@ def test_borrador_latest_preserves_empty_and_active_snapshot_branches() -> None:
     ):
         with pytest.raises(ValidationError):
             Borrador100LatestResult.model_validate(malformed)
+
+
+def test_borrador_list_and_latest_carry_an_identity_less_outdated_count() -> None:
+    """Stored rows of an older schema are counted, default to none, and never go negative."""
+    listing = Borrador100ListResult.model_validate(
+        {"bucket_id": _BUCKET_ID, "count": 0, "rows": [], "outdated_stored_snapshots": 2},
+    )
+    latest = Borrador100LatestResult.model_validate(
+        {"bucket_id": _BUCKET_ID, "filing_year": 2024, "snapshot_id": None, "outdated_stored_snapshots": 1},
+    )
+
+    assert (listing.outdated_stored_snapshots, latest.outdated_stored_snapshots) == (2, 1)
+    assert (
+        Borrador100ListResult.model_validate(
+            {"bucket_id": _BUCKET_ID, "count": 0, "rows": []},
+        ).outdated_stored_snapshots
+        == 0
+    )
+    with pytest.raises(ValidationError):
+        Borrador100ListResult.model_validate(
+            {"bucket_id": _BUCKET_ID, "count": 0, "rows": [], "outdated_stored_snapshots": -1},
+        )
 
 
 def _refused_payload(**overrides: object) -> dict[str, object]:

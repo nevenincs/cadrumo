@@ -228,6 +228,7 @@ def load_aeat_sync_status(
                 key=lambda item: item.snapshot_id,
             )
         ),
+        borrador_outdated=0 if borrador_reading is None else borrador_reading.outdated_stored_snapshots,
         identity_checked_at=_latest_identity_check(identity),
         unreadable=unreadable,
     )
