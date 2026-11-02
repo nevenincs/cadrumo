@@ -570,3 +570,9 @@ cache/
 # Private VaultSpec environment (never commit)
 /.vaultspec/.env
 /.vaultspec/.env.*
+
+# macOS Finder metadata
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
