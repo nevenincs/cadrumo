@@ -162,19 +162,20 @@ aggregation:
       unsupported_period: Període de model no admès per als totals dels teus registres.
   oss_ioss:
     errors:
-      exterior_country_code_undeclared: L'Estat membre de consum no té cap codi de
-        país declarat per al model 369, de manera que els seus serveis no es poden
+      detail_consumption_state_excluded: Els serveis del règim de la Unió no es poden
+        declarar per a l'Estat membre d'identificació, perquè el règim només cobreix
+        els serveis prestats en un Estat membre on no estiguis establert.
+      detail_country_code_undeclared: L'Estat membre de consum no té cap codi de país
+        declarat per al model 369, de manera que les seves operacions no es poden
         declarar en aquest model.
-      exterior_detail_not_representable: El disseny del règim exterior no pot representar
-        totes les files o tots els seus camps. Revisa el detall abans de continuar.
-      exterior_rate_change_devengo_undeclared: Una factura OSS/IOSS no té data d'operació
-        i el tipus de l'Estat membre de consum va canviar durant aquest trimestre,
-        de manera que la seva data d'emissió no permet saber quin tipus s'aplica.
-        Registra la data d'operació a la factura.
-      exterior_rate_kind_unsupported: El règim exterior de la finestreta única només
-        admet serveis al tipus general o reduït de l'Estat membre de consum. L'observació
-        aportada declara un altre tipus de gravamen, que no es pot agregar en aquest
-        règim.
+      detail_not_representable: El disseny del model 369 no pot representar totes
+        les files o tots els seus camps. Revisa el detall abans de continuar.
+      detail_rate_kind_unsupported: Una fila del model 369 només admet el tipus general
+        o reduït de l'Estat membre de consum. L'observació aportada declara un altre
+        tipus de gravamen, que no es pot escriure en una fila.
+      detail_rows_exceed_page: Aquest període necessita més files de les que caben
+        en una pàgina del model 369, i les pàgines complementàries encara no es poden
+        preparar aquí. No s'ha exportat res, de manera que cap fila no queda fora.
       invoice_line_currency_unconverted: Una línia de factura OSS/IOSS està denominada
         en moneda estrangera sense tipus de canvi a euros resolt, per la qual cosa
         no es pot declarar en aquest model.
@@ -184,6 +185,10 @@ aggregation:
       iva_amount_mismatches_destination_rate: L'import d'IVA persistit no concorda
         amb el tipus de l'Estat membre de destinació més enllà de la tolerància d'un
         cèntim.
+      rate_change_devengo_undeclared: Una factura OSS/IOSS no té data d'operació i
+        el tipus de l'Estat membre de consum va canviar durant aquest període, de
+        manera que la data d'emissió no permet saber quin tipus s'aplica. Registra
+        la data d'operació a la factura.
   per_modelo:
     errors:
       unsupported_modelo: Model no admès per a l'agregació per model

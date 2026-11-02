@@ -153,18 +153,19 @@ aggregation:
       unsupported_period: Unsupported modelo period for totals from your records.
   oss_ioss:
     errors:
-      exterior_country_code_undeclared: The member state of consumption has no declared
-        Modelo 369 country code, so its services cannot be declared on this modelo.
-      exterior_detail_not_representable: The external-scheme layout cannot represent
-        every row or all its fields. Review the detail before continuing.
-      exterior_rate_change_devengo_undeclared: An OSS/IOSS invoice has no operation
-        date, and the rate of the member state of consumption changed during this
-        quarter, so its issue date cannot show which rate applies. Record the operation
-        date on the invoice.
-      exterior_rate_kind_unsupported: The one-stop-shop external scheme only accepts
-        services at the standard or reduced rate of the member state of consumption.
-        The supplied observation declares another rate kind, which cannot be aggregated
-        under this scheme.
+      detail_consumption_state_excluded: Union-scheme services cannot be declared
+        for the member state of identification, because the scheme only covers services
+        supplied in a member state where you are not established.
+      detail_country_code_undeclared: The member state of consumption has no declared
+        Modelo 369 country code, so its operations cannot be declared on this modelo.
+      detail_not_representable: The Modelo 369 layout cannot represent every row or
+        all its fields. Review the detail before continuing.
+      detail_rate_kind_unsupported: A Modelo 369 row only accepts the standard or
+        reduced rate of the member state of consumption. The supplied observation
+        declares another rate kind, which cannot be written on a row.
+      detail_rows_exceed_page: This period needs more rows than one Modelo 369 page
+        holds, and continuation pages cannot be prepared here yet. Nothing has been
+        exported, so no row is left out.
       invoice_line_currency_unconverted: An OSS/IOSS invoice line is denominated in
         a foreign currency with no resolved euro rate, so it cannot be declared on
         this modelo.
@@ -173,6 +174,10 @@ aggregation:
         on this modelo.
       iva_amount_mismatches_destination_rate: The persisted IVA amount disagrees with
         the destination member state rate beyond the one-cent tolerance.
+      rate_change_devengo_undeclared: An OSS/IOSS invoice has no operation date, and
+        the rate of the member state of consumption changed during this period, so
+        its issue date cannot show which rate applies. Record the operation date on
+        the invoice.
   per_modelo:
     errors:
       unsupported_modelo: Unsupported modelo for per-modelo aggregation

@@ -199,7 +199,6 @@ _M369_CUOTA_TOTAL_CASILLA: CasillaId = validated_casilla_id("iva.union.cuota-tot
 # Casilla bound to the DE-services OSS binding (used by the carve-out test).
 _M369_DE_SERVICES_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.services-cuota")
 _M369_FR_SERVICES_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.fr.services-cuota")
-_M369_DE_GOODS_BINDING_CASILLA: CasillaId = validated_casilla_id("iva.union.de.goods-distance-cuota")
 
 
 def workflow_profile() -> TaxpayerProfile:
@@ -256,9 +255,9 @@ def test_m369_oss_resolver_folds_real_candidates_at_mesh_boundary() -> None:
     assert resolution.binding_values[_M369_DE_SERVICES_BINDING] == Decimal("19.00")
     assert resolution.binding_values[_M369_FR_SERVICES_BINDING] == Decimal("40.00")
     assert resolution.binding_values[_M369_DE_GOODS_BINDING] == Decimal("57.00")
-    assert aggregated == dict(resolution.binding_values)
-    # The source is claimed; the resolver raises nothing and emits no diagnostics.
-    assert resolution.diagnostics == ()
+    assert aggregated == {binding_id: resolution.binding_values[binding_id] for binding_id in aggregated}
+    # Services take rows; goods have no table until their state of dispatch is known.
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["unrouted_observation"]
     assert BindingSourceKind.LEDGER_OSS_AGGREGATION in resolution.owned_sources
 
 
@@ -527,13 +526,13 @@ def test_m369_exterior_period_calculate_review_export_e2e(
     _assert_exterior_correction_pages(layout, parsed, wire)
 
 
-def test_m369_exterior_quarter_with_a_rate_change_keeps_both_rates_and_stops_at_routing(
+def test_m369_exterior_quarter_with_a_rate_change_files_one_row_per_rate(
     m369_objects: SecureObjectRepository,
     tmp_path: Path,
     *,
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """The calculation persists one row per rate; the routing check withholds it from export."""
+    """Two rows of one country and code differ only by percentage, from calculation to bytes."""
     change = rate_change_inside_a_quarter(operation)
     amounts = (
         (change.last_day_before, change.pct_before, Decimal("100.00")),
@@ -606,7 +605,7 @@ def test_m369_exterior_quarter_with_a_rate_change_keeps_both_rates_and_stops_at_
         for row in (1, 2)
     }
     assert persisted == {pct: (base, base * pct / Decimal("100")) for _, pct, base in amounts}
-    assert {issue.reason for issue in result.revision.source_issues} == {"unrouted_observation"}
+    assert result.revision.source_issues == ()
 
     with bundled_indexed_authority().operation() as verification_operation:
         report = verify_modelo_revision_with_preconditions(
@@ -619,16 +618,16 @@ def test_m369_exterior_quarter_with_a_rate_change_keeps_both_rates_and_stops_at_
             operator_scope_ports=_OPERATOR_SCOPE_PORTS,
             operation=verification_operation,
         ).report
-    assert report.granted_verificado_completo is False
+    assert report.granted_verificado_completo is True, [
+        (finding.message_locale_key, finding.message_facts) for finding in report.findings
+    ]
 
-    with (
-        pytest.raises(CalculationRevisionStateError),
-        bundled_indexed_authority().operation() as export_operation,
-    ):
+    output_path = tmp_path / "modelo-369-rate-change.txt"
+    with bundled_indexed_authority().operation() as export_operation:
         export_modelo_revision(
             ModeloExportCommand(
                 calculation_revision_id=result.revision.calculation_revision_id,
-                output_path=tmp_path / "modelo-369-rate-change.txt",
+                output_path=output_path,
                 actor="m369-exterior-exporter",
             ),
             workflow_profile=workflow_profile(),
@@ -640,7 +639,25 @@ def test_m369_exterior_quarter_with_a_rate_change_keeps_both_rates_and_stops_at_
             ),
             operation=export_operation,
         )
-    assert not (tmp_path / "modelo-369-rate-change.txt").exists()
+    layout = (
+        published_authority_operation()
+        .snapshot(
+            "369",
+            filing_year=change.period.filing_year,
+            period=change.period.registry_token,
+            revision_id="esquema-exterior",
+        )
+        .revision.export_layouts[0]
+    )
+    parsed = {field.binding_id: field.value for field in parse_export_payload(layout, output_path.read_bytes()).fields}
+    assert {
+        (
+            parsed[f"{prefix}codigo-de-pais-em-de-consumo-{row}"],
+            parsed[f"{prefix}tipo-iva-{row}"],
+            parsed[f"{prefix}tipo-de-iva-{row}"],
+        )
+        for row in (1, 2)
+    } == {(change.member_state.upper(), "S", pct) for _, pct, _ in amounts}
 
 
 @pytest.mark.parametrize("unsupported_rate_kind", (IvaRateKind("super_reduced"), IvaRateKind("zero")))
@@ -662,13 +679,13 @@ def test_m369_exterior_refuses_rate_kinds_outside_official_standard_reduced_voca
                 "iva_amount": Decimal("0"),
             }
         )
-        oss_ioss_module._exterior_detail_binding_values(
+        oss_ioss_module._detail_binding_values(
             _revision("369", "esquema-exterior"),
             (observation,),
             operation=operation,
         )
 
-    assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.exterior_rate_kind_unsupported"
+    assert exc_info.value.translated_message == "aggregation.oss_ioss.errors.detail_rate_kind_unsupported"
     assert exc_info.value.context is not None
     assert exc_info.value.context["rate_kind"] == unsupported_rate_kind.value
 
@@ -690,7 +707,7 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
         cr_repo = CalculationRevisionCatalogueRepository(objects=runtime.repository)
         tx_repo = TransactionCatalogueRepository(bucket_id=_M369_BUCKET, objects=runtime.repository)
         ambient_invoice_repo = InvoiceCatalogueRepository(objects=runtime.repository)
-        invoice_repo = InvoiceCatalogueRepository(objects=injected_objects)
+        invoice_repo = InvoiceCatalogueRepository(bucket_id=_M369_BUCKET, objects=injected_objects)
         invoice_repo.save(
             build_invoice_catalogue(
                 (
@@ -713,16 +730,6 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
                         transaction_kind=TransactionKind("oss_union_services"),
                         base_amount=Decimal("200.00"),
                         iva_amount=Decimal("40.00"),
-                    ),
-                    _m369_invoice(
-                        invoice_number="OSS-DE-GOODS-001",
-                        issued_at=date(2026, 2, 17),
-                        counterparty_name="DE Consumer Goods",
-                        counterparty_tax_id="DE987654321",
-                        counterparty_country="DE",
-                        transaction_kind=TransactionKind("oss_union_goods_distance_sale"),
-                        base_amount=Decimal("300.00"),
-                        iva_amount=Decimal("57.00"),
                     ),
                 ),
             ),
@@ -761,9 +768,8 @@ def test_m369_live_path_folds_oss_invoices_not_no_live_source_advisory(
         component_cuotas = (
             Decimal(casilla_values[_M369_DE_SERVICES_BINDING_CASILLA]),
             Decimal(casilla_values[_M369_FR_SERVICES_BINDING_CASILLA]),
-            Decimal(casilla_values[_M369_DE_GOODS_BINDING_CASILLA]),
         )
-        assert component_cuotas == (Decimal("19.00"), Decimal("40.00"), Decimal("57.00"))
+        assert component_cuotas == (Decimal("19.00"), Decimal("40.00"))
         assert Decimal(casilla_values[_M369_CUOTA_TOTAL_CASILLA]) == sum(component_cuotas, Decimal("0"))
         assert not any(
             diag.source_kind == "ledger_oss_aggregation" and diag.reason == "oss_no_live_source"

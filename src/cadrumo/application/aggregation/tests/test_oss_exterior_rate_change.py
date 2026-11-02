@@ -15,7 +15,6 @@ import pytest
 from ....core.money.rounding import round_to_cents
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
-from ....domain.calculations.registry.ledger_oss_bindings import LedgerOssProvider
 from ....domain.calculations.registry.schema import ModeloRevision
 from ....domain.calculations.registry.tests.published_authority import published_revision
 from ....domain.invoices.catalogue import InvoiceCatalogue
@@ -47,7 +46,7 @@ _TAX_IDS = {"de": "DE345678901", "ro": "RO12345678"}
 
 
 def _stable_member_state(operation: PinnedAuthorityOperation, change: RateChange) -> tuple[str, Decimal]:
-    """Return the routed Member State, which keeps one general rate across the change's quarter."""
+    """Return a Member State that keeps one general rate across the change's quarter."""
     quarter = Period.from_year_and_code(change.period.filing_year, change.period.registry_token.removeprefix("EXT-"))
     (covering,) = (
         variant
@@ -132,31 +131,6 @@ class _Transactions:
         return LedgerDatePartition(in_window=TransactionCatalogue(), index_complete=True)
 
 
-def _revision_routing_every_destination(operation: PinnedAuthorityOperation) -> ModeloRevision:
-    """Copy the published cuota binding per destination, so row closure can be observed.
-
-    The published revision routes one destination, so a row for any other stays
-    unrouted and closes nothing. The rate behaviour under test is the same either
-    way, as the test on the published revision below shows.
-    """
-    revision = published_revision("369", "esquema-exterior")
-    (template,) = (binding for binding in revision.bindings if isinstance(binding.provider, LedgerOssProvider))
-    assert isinstance(template.provider, LedgerOssProvider)
-    routed = tuple(
-        template.model_copy(
-            update={
-                "id": f"synthetic-{member_state}-general-cuota",
-                "provider": template.provider.model_copy(
-                    update={"destination_member_state": EUMemberState.from_registry(member_state)}
-                ),
-            }
-        )
-        for member_state in ordinary_general_variants(operation)
-        if member_state != template.provider.destination_member_state.value
-    )
-    return revision.model_copy(update={"bindings": (*revision.bindings, *routed)})
-
-
 def _resolve(
     operation: PinnedAuthorityOperation,
     period: Period,
@@ -169,7 +143,7 @@ def _resolve(
         modelo="369",
         filing_year=period.filing_year,
         period=period,
-        revision=revision or _revision_routing_every_destination(operation),
+        revision=revision or published_revision("369", "esquema-exterior"),
         operation=operation,
     )
     resolver = OssIossLedgerSourceResolver(
@@ -315,7 +289,7 @@ def test_undeclared_devengo_in_the_changing_quarter_is_refused(operation: Pinned
     with pytest.raises(AggregationValidationError) as refused:
         _resolve(operation, change.period, (undated,))
 
-    assert refused.value.translated_message == "aggregation.oss_ioss.errors.exterior_rate_change_devengo_undeclared"
+    assert refused.value.translated_message == "aggregation.oss_ioss.errors.rate_change_devengo_undeclared"
     assert refused.value.context is not None
     assert refused.value.context["invoice_number"] == "SYNTHETIC-UNDATED"
     assert refused.value.context["destination_member_state"] == change.member_state
@@ -389,10 +363,10 @@ def test_date_outside_the_published_table_is_refused_not_priced_at_zero(operatio
     assert refused.value.context["member_state"] == EUMemberState.from_registry(change.member_state).value
 
 
-def test_published_revision_splits_rows_but_leaves_an_unrouted_destination_open(
+def test_rows_of_one_country_and_code_are_told_apart_only_by_their_percentage(
     operation: PinnedAuthorityOperation,
 ) -> None:
-    """The verification gate reads this diagnostic, so these rows cannot be exported as they stand."""
+    """The verification gate reads the diagnostics, so none may stand between these rows and export."""
     change = rate_change_inside_a_quarter(operation)
     before, after = (
         _invoice(
@@ -409,13 +383,10 @@ def test_published_revision_splits_rows_but_leaves_an_unrouted_destination_open(
         )
     )
 
-    resolution = _resolve(
-        operation,
-        change.period,
-        (before, after),
-        published_revision("369", "esquema-exterior"),
-    )
+    resolution = _resolve(operation, change.period, (before, after))
 
-    assert {_row(resolution, row)[2] for row in (1, 2)} == {change.pct_before, change.pct_after}
-    assert resolution.closed_record_row_sets == ()
-    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == ["unrouted_observation"] * 2
+    rows = [_row(resolution, row) for row in (1, 2)]
+    assert {row[:2] for row in rows} == {(change.member_state.upper(), "S")}
+    assert {row[2] for row in rows} == {change.pct_before, change.pct_after}
+    assert _occupied_rows(resolution) == [1, 2]
+    assert [diagnostic.reason for diagnostic in resolution.diagnostics] == []

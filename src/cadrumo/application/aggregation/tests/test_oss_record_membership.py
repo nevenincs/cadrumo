@@ -52,7 +52,13 @@ class _Transactions:
 
 
 def _invoice(
-    number: str = "SYNTHETIC-1", *, base: str = "100", country: str = "DE", supply_date: date = _DATE
+    number: str = "SYNTHETIC-1",
+    *,
+    base: str = "100",
+    country: str = "DE",
+    supply_date: date = _DATE,
+    regime: str = "external_scheme",
+    transaction_kind: str = "external_scheme_services",
 ) -> Invoice:
     amount = Decimal(base)
     quota = amount * (Decimal("0.19") if country == "DE" else Decimal("0.20"))
@@ -82,8 +88,8 @@ def _invoice(
                 ),
             ),
             "payment_status": PaymentStatus.PAID,
-            "oss_ioss_regime": OssIossRegime("external_scheme"),
-            "oss_transaction_kind": TransactionKind("external_scheme_services"),
+            "oss_ioss_regime": OssIossRegime(regime),
+            "oss_transaction_kind": TransactionKind(transaction_kind),
         }
     )
 
@@ -149,8 +155,14 @@ def test_fingerprint_covers_membership_and_amounts_but_not_catalogue_order(opera
     "scenario", ["empty", "unbound", "degraded", "unrouted", "no-work-unit", "explicit-candidates"]
 )
 def test_incomplete_or_unadmitted_sources_cannot_close_rows(operation: PinnedAuthorityOperation, scenario: str) -> None:
+    # A Union goods line has no table on this revision, and on its own none either.
+    invoice = (
+        _invoice(regime="union_scheme", transaction_kind="oss_union_goods_distance_sale")
+        if scenario == "unrouted"
+        else _invoice()
+    )
     reader = _InvoiceReader(
-        () if scenario == "empty" else (_invoice(country="FR" if scenario == "unrouted" else "DE"),),
+        () if scenario == "empty" else (invoice,),
         bucket_id=None if scenario == "unbound" else _BUCKET,
         degraded=scenario == "degraded",
     )
