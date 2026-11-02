@@ -535,6 +535,9 @@ def _fact_windows(
             DateSupportEnvelope(floor=date.min, horizon=support.horizon, hard_ceiling=support.hard_ceiling),
         ),
     )
+    if standing:
+        # The nearest edition answers below the first one, marked as projected.
+        return windows
     earliest: dict[object, date] = {}
     for variant in fact.variants:
         key = fact.track_key(variant)
