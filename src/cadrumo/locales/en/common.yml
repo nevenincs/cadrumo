@@ -157,6 +157,10 @@ aggregation:
         Modelo 369 country code, so its services cannot be declared on this modelo.
       exterior_detail_not_representable: The external-scheme layout cannot represent
         every row or all its fields. Review the detail before continuing.
+      exterior_rate_change_devengo_undeclared: An OSS/IOSS invoice has no operation
+        date, and the rate of the member state of consumption changed during this
+        quarter, so its issue date cannot show which rate applies. Record the operation
+        date on the invoice.
       exterior_rate_kind_unsupported: The one-stop-shop external scheme only accepts
         services at the standard or reduced rate of the member state of consumption.
         The supplied observation declares another rate kind, which cannot be aggregated
