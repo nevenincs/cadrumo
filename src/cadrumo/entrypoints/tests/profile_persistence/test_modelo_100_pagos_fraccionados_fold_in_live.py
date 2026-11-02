@@ -75,6 +75,7 @@ from ....domain.user_profile.values import create_user_profile_record as _create
 from .file_flow_test_support import calculation_ports_for_test
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
+from .proven_zero_withholding_support import assert_only_proven_zero_withholding_diagnostic
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
@@ -343,11 +344,8 @@ def test_m100_0604_folds_in_four_m130_quarters_on_live_calculate(
         diag.reason == "unhandled_binding_source" and diag.source_kind == _RELATION_PREFILL_SOURCE
         for diag in result.source_diagnostics
     )
-    # The whole live resolution is clean — no source diagnostics at all for this
-    # pure-pagos-fold persona (no unrouted declarable observation).
-    assert result.source_diagnostics == (), (
-        f"source_diagnostics must be clean for the pagos-fold persona; got {result.source_diagnostics}"
-    )
+    # The only diagnostic is the proven zero of the withholding box: the gate lets it through.
+    assert_only_proven_zero_withholding_diagnostic(result.source_diagnostics)
 
 
 def test_m100_explicit_m130_binding_resolves_relation_formula_without_m131_filing(

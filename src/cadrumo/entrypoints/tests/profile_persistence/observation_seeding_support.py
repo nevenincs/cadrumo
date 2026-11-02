@@ -15,6 +15,7 @@ from cadrumo.domain.calculations.registry.tests.registry_observations import (
     registry_grounded_observations,
     revision_id_for_observation,
 )
+from cadrumo.domain.modelos.filing_kind_evidence import ObservedFilingKind
 
 
 def save_stamped_observation(
@@ -24,6 +25,7 @@ def save_stamped_observation(
     source_kind: str,
     captured_at: datetime | None = None,
     result_disposition: ResultDispositionProjection | None = None,
+    filing_kind: ObservedFilingKind | None = None,
 ) -> None:
     """Save ``observation`` stamped with the canonical revision of its own coordinates."""
     repository.save(
@@ -32,6 +34,7 @@ def save_stamped_observation(
             source_kind=source_kind,
             captured_at=captured_at,
             result_disposition=result_disposition,
+            filing_kind=filing_kind,
             stamped_revision_id=revision_id_for_observation(observation),
         )
     )
