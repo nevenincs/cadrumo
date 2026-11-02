@@ -31,7 +31,6 @@ from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
     Availability,
     DisclosureCategory,
-    DisclosurePermission,
     OperationAccessPolicy,
     OperationAccessRequest,
 )
@@ -48,13 +47,17 @@ from ...core.time.clock import now
 from ...domain.calculations.registry.governed_fact_scope import validating_governed_facts
 from ...domain.calculations.registry.tax_id_format import runtime_tax_id_format
 from ..operations.access_port import OperationAccessResolver
-from ..operations.access_resolution import OperationAccessContext, ResolvedOperationAccess
+from ..operations.access_resolution import (
+    OBSERVATION_DISCLOSING_ACTIONS,
+    OperationAccessContext,
+    ResolvedOperationAccess,
+    operation_disclosures,
+)
 from ..operations.capabilities import (
     RECORDED_IDEMPOTENT_JOURNALED_READ_CAPABILITIES,
     OperationBaselinePolicy,
     OperationReplayPolicy,
 )
-from ..operations.frontend_requests import OPERATION_OBSERVATION_PROJECTION_ID
 from ..operations.models import CredentialFreeOperationRequest, OperationRequest
 from ..operations.operation_definition import OperationDefinition, build_single_phase_definition
 from ..operations.owner import OperationExecutorContext
@@ -827,27 +830,12 @@ def compose_modelo_workbench_access(ports_factory: ActiveWorkLifecyclePortsFacto
         if unit.bucket_id != str(context.profile_id):
             raise ProfileAccessRefusedError(AccessDenialCode.PROFILE_MISMATCH)
         periods = frozenset({unit.period})
-        disclosures = frozenset[DisclosurePermission]()
-        if context.action in {AccessAction.OBSERVE, AccessAction.CANCEL, AccessAction.DETACH}:
-            disclosures = frozenset(
-                (
-                    DisclosurePermission(
-                        destination_id=context.destination_id,
-                        projection_id=OPERATION_OBSERVATION_PROJECTION_ID,
-                        category=DisclosureCategory.OPERATION_METADATA,
-                    ),
-                )
-            )
-        elif context.action is AccessAction.RESULT:
-            schema = context.contract.result_schema
-            if schema is None:
-                raise ProfileAccessRefusedError(AccessDenialCode.OPERATION_UNAVAILABLE)
-            disclosures = frozenset(
-                DisclosurePermission(
-                    destination_id=context.destination_id, projection_id=schema.schema_id, category=category
-                )
-                for category in (DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES)
-            )
+        disclosures = operation_disclosures(
+            context,
+            observed_by=OBSERVATION_DISCLOSING_ACTIONS,
+            result_categories=frozenset({DisclosureCategory.PROFILE_VALUES, DisclosureCategory.TAX_VALUES}),
+            result_schema_id=None,
+        )
         return ResolvedOperationAccess(
             request=OperationAccessRequest(
                 profile_id=context.profile_id,
