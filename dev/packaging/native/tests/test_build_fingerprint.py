@@ -151,6 +151,14 @@ def test_embedded_components_resolve_first() -> None:
     assert set(COMPONENTS) == {"interpreter", "installer", "manager", "desktop", "desktop-test-host"}
 
 
+def test_test_host_identity_includes_only_the_isolated_automation_features() -> None:
+    assert COMPONENTS["desktop"].features == ()
+    assert set(COMPONENTS["desktop-test-host"].features) == {
+        "webview2-remote-debugging",
+        "native-automation",
+    }
+
+
 def test_an_unchanged_checkout_keeps_every_identity_and_identity_file(build: Path, checkout: Path) -> None:
     first = _ids(build, checkout)
     files = {name: identity_path(build, name) for name in first}

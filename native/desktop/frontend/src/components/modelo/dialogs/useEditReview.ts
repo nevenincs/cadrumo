@@ -196,9 +196,10 @@ export function useEditReview({
   const moved = useRef(false);
   useLayoutEffect(() => {
     alive.current = true;
+    const checkTickets = checks;
     return () => {
       alive.current = false;
-      ++checks.current;
+      ++checkTickets.current;
     };
   }, [holds, target, port]);
   useLayoutEffect(() => {
@@ -246,7 +247,7 @@ export function useEditReview({
         )
           return Promise.resolve(null);
         moved.current = true;
-        const current = () =>
+        const isCurrent = () =>
           alive.current &&
           ticket === checks.current &&
           !holds.get(target) &&
@@ -256,9 +257,9 @@ export function useEditReview({
           stale,
           language,
           (next) => {
-            if (current()) setRenewed(next);
+            if (isCurrent()) setRenewed(next);
           },
-          () => (current() ? onReread() : Promise.resolve(false)),
+          () => (isCurrent() ? onReread() : Promise.resolve(false)),
         );
         renewing.current = running;
         void running.finally(() => {

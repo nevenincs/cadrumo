@@ -196,8 +196,8 @@ COMPONENTS: Mapping[str, Component] = {
 _DESKTOP = COMPONENTS["desktop"]
 COMPONENTS = {
     **COMPONENTS,
-    # The remote-debugging desktop the packaged end-to-end tests drive: the desktop's sources
-    # and identity built with one more feature into its own testing directory, never shipped.
+    # The automation desktop for packaged tests: the desktop's sources and identity built
+    # with test-only features into its own testing directory, never shipped.
     "desktop-test-host": Component(
         crates=_DESKTOP.crates,
         files=(*_DESKTOP.files, "native/desktop/tests/packaged/host.mjs"),
@@ -206,7 +206,7 @@ COMPONENTS = {
         records=tuple(f"desktop/testing/*/cargo/{profile}/cadrumo.d" for profile in _RUST_PROFILES),
         desktop_tools=True,
         snapshots=("desktop/testing/*/host",),
-        features=("webview2-remote-debugging",),
+        features=("webview2-remote-debugging", "native-automation"),
     ),
 }
 
