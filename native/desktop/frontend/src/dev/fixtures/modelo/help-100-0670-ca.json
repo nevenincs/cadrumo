@@ -1,0 +1,37 @@
+{
+  "result_version": 1,
+  "profile_id": "13000000-0000-4000-8000-000000000730",
+  "work_unit_id": "b1c431589384a105701ba15942606b5f5667cb677d6fa62e743cd0293f9baee4",
+  "card": {
+    "casilla_id": "0670",
+    "formula": {
+      "text": "[0670] = [0610] + −[0611] + [0612] + −[0613] + −[0623] + [0624] + −[0636] + [0637] + −[0248] + [0249] + −[0660] + [0661] + −[0662] + [0663] + [0664] + [0666] + [0669]",
+      "complete": true,
+      "values_text": null
+    },
+    "quotes": [
+      {
+        "fragments": ["resultado de la declaracion", "cuota diferencial"],
+        "source": "Manual pràctic de l'AEAT",
+        "source_url": "https://sede.agenciatributaria.gob.es/static_files/Sede/Biblioteca/Manual/Practicos/IRPF/IRPF-2025/ManualRenta2025Parte1_es_es.pdf",
+        "retrieved_at": "2026-07-22"
+      }
+    ],
+    "legal_basis": [
+      {
+        "text": "Ley 35/2006, art. 103",
+        "permalink": "https://www.boe.es/buscar/act.php?id=BOE-A-2006-20764#a103"
+      },
+      {
+        "text": "Orden HAC/277/2026, art. 3",
+        "permalink": "https://www.boe.es/buscar/doc.php?id=BOE-A-2026-7041"
+      }
+    ],
+    "constraints": [],
+    "origins": [],
+    "feeds": ["[0695]", "[0700]"],
+    "reach": null,
+    "is_result": true,
+    "outside_figures": []
+  }
+}
