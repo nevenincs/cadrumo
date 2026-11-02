@@ -375,7 +375,12 @@ class LedgerRentaGastosEstimacionDirectaAggregationSourceResolver:
                 issues,
                 source_kind="ledger_renta_gastos_estimacion_directa_aggregation",
                 resolver_id=self.resolver_id,
-                held_back_reasons=frozenset({RentaLedgerAggregationIssueReason.MISSING_CATEGORY}),
+                held_back_reasons=frozenset(
+                    {
+                        RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
+                        RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
+                    }
+                ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",
             )
             + source_issue_diagnostics(
@@ -692,6 +697,7 @@ class LedgerRentaGastosPagoFraccionadoAggregationSourceResolver:
                         RentaGastoLedgerAggregationIssueReason.MISSING_TAXABLE_BASE,
                         RentaGastoLedgerAggregationIssueReason.UNSUPPORTED_CURRENCY,
                         RentaGastoLedgerAggregationIssueReason.MISSING_CATEGORY,
+                        RentaGastoLedgerAggregationIssueReason.UNKNOWN_CATEGORY,
                     }
                 ),
                 source_ref=lambda issue: f"transaction:{issue.transaction_id}",

@@ -35,6 +35,7 @@ from ...core.i18n.translatable import Translatable as tr
 from ...core.modelo import Modelo
 from ...core.period import Period, PeriodKind
 from ...domain.calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
+from ...domain.calculations.registry.errors import RegistryValidationError
 from ...domain.calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ...domain.calculations.registry.iva_regime_vocabulary import (
     iva_regime_exento_token,
@@ -527,8 +528,6 @@ def accepted_row_advisory(
     rules: RentaCategoryDeductionRules,
 ) -> RentaExpenseAdvisory | None:
     """Return the advisory a row that produced an expense observation carries, or ``None``."""
-    if transaction.category_id is None:
-        return renta_expense_advisory(transaction, None)
     resolved = resolve_category_rule(
         transaction.category_id,
         profiles=rules.profiles,
@@ -542,7 +541,7 @@ def accepted_row_advisory(
 
 
 def resolve_category_rule(
-    category_id: str,
+    category_id: str | None,
     *,
     profiles: Mapping[SpendingCategory, CategoryProfile],
     region_overrides: Mapping[CCAA, Mapping[SpendingCategory, CategoryProfile]],
@@ -551,13 +550,24 @@ def resolve_category_rule(
 ) -> tuple[SpendingCategory, CategoryProfile] | CategoryRuleRefusal:
     """Resolve a ledger category and the profile selected for the taxpayer's residence.
 
+    The one owner of whether a row's category can answer for its expense, for the
+    annual declaration and the pago fraccionado alike. RIRPF art. 110.1.a) computes
+    the payment on the rendimiento neto, with no deduction rule of its own, so a
+    row the annual declaration cannot evaluate is not evaluable for the payment.
+
     Returns:
         The category with its selected profile, or the refusal naming why the
-        taxonomy, the year's profiles or the residence comunidad cannot supply one.
+        row, the taxonomy, the year's profiles or the residence comunidad cannot
+        supply one.
     """
+    if category_id is None or not category_id.strip():
+        return CategoryRuleRefusal(
+            _shared_issue_reasons.MISSING_CATEGORY,
+            "business expense has no spending category; assign it so its deduction rule can run",
+        )
     try:
         category = normalize_spending_category(category_id)
-    except ValueError:
+    except RegistryValidationError:
         return CategoryRuleRefusal(
             _shared_issue_reasons.UNKNOWN_CATEGORY,
             f"ledger category {category_id!r} is not in the spending taxonomy",
@@ -944,15 +954,8 @@ def _renta_category_profile_or_issue(
     profile_year: int,
 ) -> tuple[SpendingCategory, CategoryProfile] | RentaLedgerAggregationIssue:
     """Resolve the first-slice category and the profile selected for residence."""
-    category_id = transaction.category_id
-    if category_id is None:
-        return _renta_transaction_issue(
-            transaction,
-            RentaLedgerAggregationIssueReason.MISSING_CATEGORY,
-            "classified expense transaction has no ledger category",
-        )
     resolved = resolve_category_rule(
-        category_id,
+        transaction.category_id,
         profiles=profiles,
         region_overrides=region_overrides,
         context=context,

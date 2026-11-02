@@ -36,10 +36,9 @@ against rules built by :func:`~.renta_ledger.resolve_category_deduction_rules`.
 A usage-ratio category (home-office suministros) is therefore
 apportioned once, by the operator's ratio and the rule's statutory multiplier,
 whatever the row's classification; a MIXED row's stored ``business_pct`` scales
-every other category. A row wholly business by classification or marker that
-declares no category has no rule to run and contributes its base. A MIXED row
-declaring no category is refused: its share cannot be judged without knowing
-what it is a share of (RIRPF art. 22.2.1.º and 22.3).
+every other category. A row declaring no category is refused, as the annual
+pipeline refuses it: the payment is computed on the same rendimiento neto
+(RIRPF art. 110.1.a), and no deduction rule can run without knowing the expense.
 
 This module does NOT reuse the annual pipeline's invoice-evidence
 reconciliation or its annual window, which are constraint-shape-divergent from
@@ -139,10 +138,8 @@ class RentaGastoLedgerAggregationIssueReason(StrEnum):
     # row is surfaced (no silent over-declaration of gastos) rather than
     # gross-folded; the operator tags it with a taxable_base via classify.
     MISSING_TAXABLE_BASE = "missing_taxable_base"
-    # A MIXED expense with no spending category. Simultaneous private use leaves
-    # an element unaffected unless a separately usable part serves the activity
-    # (RIRPF art. 22.2.1.º and 22.3), and nothing says what the stated share is a
-    # share of. The gasto is not zero either, so the row is held back.
+    # An expense with no spending category: no deduction rule can run on it, and
+    # the gasto is not zero either, so the row is held back.
     MISSING_CATEGORY = _shared_issue_reasons.MISSING_CATEGORY
     # The row's category rule could not be evaluated or refused the row. Each
     # is a declarable gasto the rule dropped, so it is surfaced, never summed
@@ -520,70 +517,27 @@ def _classify_gasto_transaction(
         raise ValueError(msg)
     eur_iva_amount = effective_eur_iva_amount(transaction)
 
-    category_id = transaction.category_id or None
-    if category_id is None:
-        if transaction.business_classification is BusinessClassification.MIXED:
-            return RentaGastoLedgerAggregationIssue(
-                transaction_id=transaction_id,
-                reason=RentaGastoLedgerAggregationIssueReason.MISSING_CATEGORY,
-                detail="mixed-use expense has no spending category; assign it so its stated share can be judged",
-            )
-        # A row wholly business by classification or marker declares no category,
-        # so there is no category rule to run; it contributes its whole base.
-        deductible_amount = _classification_deductible_amount(
-            eur_base=eur_base,
-            eur_iva_amount=eur_iva_amount,
-            iva_deduction_ratio=rules.context.iva_deduction_ratio,
-            proportion=proportion,
-        )
-    else:
-        evaluated = _category_rule_deductible_amount(
-            transaction,
-            category_id=category_id,
-            eur_base=eur_base,
-            eur_iva_amount=eur_iva_amount,
-            proportion=proportion,
-            rules=rules,
-        )
-        if isinstance(evaluated, RentaGastoLedgerAggregationIssue):
-            return evaluated
-        deductible_amount = evaluated
+    evaluated = _category_rule_deductible_amount(
+        transaction,
+        eur_base=eur_base,
+        eur_iva_amount=eur_iva_amount,
+        proportion=proportion,
+        rules=rules,
+    )
+    if isinstance(evaluated, RentaGastoLedgerAggregationIssue):
+        return evaluated
     return RentaGastoObservation(
         transaction_id=transaction_id,
         target_casilla_id=target_casilla_id,
-        deductible_amount=deductible_amount,
+        deductible_amount=evaluated,
         filing_date=filing_date,
-        category_id=category_id,
+        category_id=transaction.category_id,
     )
-
-
-def _classification_deductible_amount(
-    *,
-    eur_base: Decimal,
-    eur_iva_amount: Decimal | None,
-    iva_deduction_ratio: Decimal | None,
-    proportion: Decimal,
-) -> Decimal:
-    """Return the EUR base, plus any non-recoverable IVA, scaled by the business fraction.
-
-    Recovered indirect tax is not a Renta gasto, so the IVA-exclusive base
-    imponible is the deductible gasto by default. When the activity's
-    IVA-deduction ratio is known and less than full, the non-recoverable share of
-    iva_amount joins the base (PGC NRV 12.ª) -- the same rule
-    ``domain.renta.ledger_expenses._deductible_basis_amount`` applies on the
-    category-rule side: only when BOTH iva_amount and the ratio are known, else
-    the historic base-only figure stands.
-    """
-    deductible_base = eur_base
-    if eur_iva_amount is not None and iva_deduction_ratio is not None:
-        deductible_base += eur_iva_amount * (Decimal("1") - iva_deduction_ratio)
-    return deductible_base * proportion
 
 
 def _category_rule_deductible_amount(
     transaction: Transaction,
     *,
-    category_id: str,
     eur_base: Decimal,
     eur_iva_amount: Decimal | None,
     proportion: Decimal,
@@ -599,7 +553,7 @@ def _category_rule_deductible_amount(
     """
     transaction_id = transaction.transaction_id
     resolved = resolve_category_rule(
-        category_id,
+        transaction.category_id,
         profiles=rules.profiles,
         region_overrides=rules.region_overrides,
         context=rules.context,

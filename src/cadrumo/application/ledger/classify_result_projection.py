@@ -78,6 +78,9 @@ def classification_result_from_action(
             else None
         ),
         investment_asset_id=result.transaction.investment_asset_id,
+        iva_vehicle_use=(
+            result.transaction.iva_vehicle_use.value if result.transaction.iva_vehicle_use is not None else None
+        ),
         review_status=canonical.review_status,
         bucket_event_ids=result.bucket_event_ids,
     )

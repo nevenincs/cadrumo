@@ -3306,6 +3306,12 @@ cli:
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
         domestic_not_subject).
       iva_rate_help: IVA-kulcs tizedes törtként, pl. 0,21.
+      iva_vehicle_use_help: 'Mire használják a sor járművét, ha a LIVA 95.Tres.2.ª
+        cikke kiveszi az 50 százalékos vélelem alól: a hat, 100 százalékosnak vélelmezett
+        használat egyike (mixed_vehicle_goods_transport, paid_passenger_transport,
+        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
+        surveillance), vagy outside_presumed_classes, ha a szabály nem nevezi meg
+        a járművet.'
       llm_classified_by_label: osztályozta
       llm_confidence_label: bizonyosság
       llm_exclusive: --llm nem kombinálható a --classification vagy --file kapcsolóval;

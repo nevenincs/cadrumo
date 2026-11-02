@@ -3113,6 +3113,12 @@ cli:
         intra_community_supply, export_third_country_zero_rated, export_assimilated_zero_rated,
         domestic_not_subject)
       iva_rate_help: IVA rate as a decimal, for example 0.21
+      iva_vehicle_use_help: 'What the row''s vehicle is used for, where LIVA art.
+        95.Tres.2.ª treats it apart from the 50 per cent presumption: one of the six
+        uses presumed 100 per cent (mixed_vehicle_goods_transport, paid_passenger_transport,
+        paid_driver_or_pilot_training, manufacturer_testing_or_promotion, commercial_agent_travel,
+        surveillance) or outside_presumed_classes for a vehicle that rule does not
+        name.'
       llm_classified_by_label: classified-by
       llm_confidence_label: confidence
       llm_exclusive: --llm cannot be combined with --classification or --file; the

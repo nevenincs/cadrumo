@@ -27,6 +27,7 @@ from ....domain.categories.spending_category_catalogue import require_spending_c
 from ....domain.invoices.catalogue import InvoiceCatalogue
 from ....domain.transactions.enums import BusinessClassification, TransactionDirection
 from ....domain.transactions.models import Transaction, TransactionCatalogue
+from ...actividad_asset.history import ActivityAssetHistory
 from ...ledger.preflight import OPERATOR_ACTION_BY_IVA_LEDGER_AGGREGATION_ISSUE
 from .._renta_business_eligibility import RentaExpenseAdvisoryReason
 from ..iva_ledger import IvaLedgerAggregationIssueReason, aggregate_iva_ledger_observations
@@ -47,6 +48,7 @@ from .ledger_source_mesh_support import (
     _revision,
     empty_invoice_repository,
     empty_prorrata_repository,
+    resolve_m100,
 )
 from .ledger_transaction_support import iva_transaction
 from .usage_ratio_support import no_stored_usage_ratios
@@ -241,10 +243,43 @@ def test_an_uncategorized_mixed_gasto_is_held_rather_than_counted_at_its_share(
     assert gasto.advisories == ()
 
 
-def test_an_uncategorized_whole_business_gasto_is_counted_and_reported(*, operation: PinnedAuthorityOperation) -> None:
-    gasto = _gasto(_row(None, classification=_BUSINESS), operation)
-    assert [o.deductible_amount for o in gasto.observations] == [Decimal("100.00")]
-    assert [a.reason for a in gasto.advisories] == [RentaExpenseAdvisoryReason.UNCATEGORIZED_WHOLE_BUSINESS_ROW]
+def test_an_uncategorized_whole_business_gasto_is_held_as_the_annual_expense_is(
+    *, operation: PinnedAuthorityOperation
+) -> None:
+    row = _row(None, classification=_BUSINESS)
+    gasto = _gasto(row, operation)
+    assert gasto.observations == ()
+    assert gasto.advisories == ()
+    assert [issue.reason.value for issue in gasto.issues] == [
+        issue.reason.value for issue in _annual(row, operation).issues
+    ]
+    assert [issue.reason for issue in gasto.issues] == [RentaGastoLedgerAggregationIssueReason.MISSING_CATEGORY]
+    resolution = _gasto_resolution(row)
+    assert [diagnostic.source_ref for diagnostic in resolution.diagnostics] == [f"transaction:{row.transaction_id}"]
+    assert resolution.diagnostics[0].reason == "source_domain_not_ready"
+    assert row.transaction_id not in resolution.source_transaction_ids
+
+
+@pytest.mark.parametrize("classification", [_MIXED, _BUSINESS])
+def test_an_unknown_category_is_a_typed_finding_in_both_renta_pipelines(
+    classification: BusinessClassification, *, operation: PinnedAuthorityOperation
+) -> None:
+    row = _row("gastos_sin_catalogo", classification=classification)
+    gasto = _gasto(row, operation)
+    annual = _annual(row, operation)
+    assert gasto.observations == ()
+    assert annual.observations == ()
+    assert [issue.reason for issue in gasto.issues] == [RentaGastoLedgerAggregationIssueReason.UNKNOWN_CATEGORY]
+    assert [issue.reason for issue in annual.issues] == [RentaLedgerAggregationIssueReason.UNKNOWN_CATEGORY]
+    assert "gastos_sin_catalogo" in gasto.issues[0].detail
+
+
+def test_an_unknown_category_blocks_the_payment_and_the_annual_declaration_through_the_source_mesh() -> None:
+    row = _row("gastos_sin_catalogo", classification=_BUSINESS)
+    for resolution in (_gasto_resolution(row), resolve_m100(ActivityAssetHistory(), rows=(row,))):
+        held_back = [d for d in resolution.diagnostics if d.reason == "source_domain_not_ready"]
+        assert [d.source_ref for d in held_back] == [f"transaction:{row.transaction_id}"]
+        assert "gastos_sin_catalogo" in held_back[0].message
 
 
 @pytest.mark.parametrize("classification", [_MIXED, _BUSINESS])

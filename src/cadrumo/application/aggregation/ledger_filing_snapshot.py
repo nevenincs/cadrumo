@@ -152,8 +152,8 @@ _FINGERPRINT_FIELDS_V3: tuple[tuple[str, str], ...] = (
     ("counterparty_identification_state", "counterparty_identification_state"),
 )
 
-# Version 4 is the vehicle-use field set, which must precede this one once both are
-# present; V5 extends it. V5 adds what a calculation reads and V3 could not see: the operation date, which
+# Version 4 is unassigned: V5 follows V3 directly.
+# V5 adds what a calculation reads and V3 could not see: the operation date, which
 # picks the row's period and rate, and the evidence behind the deduction. Without
 # the provenance a row yields no input-IVA observation, so a draft holding a 21.00
 # cuota read as current after the evidence went while recalculating it refused.
@@ -169,15 +169,23 @@ _FINGERPRINT_FIELDS_V5: tuple[tuple[str, str], ...] = (
     ("deduction_evidence_digest", "deduction_provenance.evidence_digest"),
 )
 
+# V6 adds ``iva_vehicle_use``: the statement moves a vehicle row's deducted cuota
+# (LIVA art. 95.Tres.2.ª) without moving any amount V5 watches.
+_FINGERPRINT_FIELDS_V6: tuple[tuple[str, str], ...] = (
+    *_FINGERPRINT_FIELDS_V5,
+    ("iva_vehicle_use", "iva_vehicle_use"),
+)
+
 _FINGERPRINT_FIELD_SETS: Final[Mapping[int, tuple[tuple[str, str], ...]]] = {
     1: _FINGERPRINT_FIELDS_V1,
     2: _FINGERPRINT_FIELDS_V2,
     3: _FINGERPRINT_FIELDS_V3,
     5: _FINGERPRINT_FIELDS_V5,
+    6: _FINGERPRINT_FIELDS_V6,
 }
 
 #: The version every NEW snapshot is sealed under.
-CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 5
+CURRENT_FINGERPRINT_FIELD_SET_VERSION: Final = 6
 
 #: The first version whose hash sees a row's operation date.
 OPERATION_DATE_FIELD_SET_VERSION: Final = 5
@@ -366,6 +374,7 @@ def _evidence_row(
         m210_asset_or_right_id=(m210_classification.asset_or_right_id if m210_classification is not None else None),
         counterparty_country=transaction.counterparty_country,
         investment_asset_id=transaction.investment_asset_id,
+        iva_vehicle_use=_enum_value(transaction.iva_vehicle_use),
         counterparty_identification_state=_enum_value(transaction.counterparty_identification_state),
         fx_rate=transaction.fx_rate,
         value_in_eur=transaction.value_in_eur,

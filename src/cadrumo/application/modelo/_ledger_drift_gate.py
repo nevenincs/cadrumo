@@ -32,6 +32,7 @@ from collections.abc import Callable
 from typing import TYPE_CHECKING
 
 from ...core.aggregation import LEDGER_BINDING_SOURCE_KINDS
+from ...domain.calculations.registry.authority import PinnedAuthorityOperation
 from ...domain.iva.schema import is_iva_cash_accounting_none
 from ...domain.modelos.calculation_revision import CalculationRevisionState
 from ...domain.modelos.calculation_revision_sources import ActivityAssetConsumption
@@ -40,7 +41,9 @@ from ...domain.modelos.verification_report import (
     ModeloVerificationFindingKind,
     ModeloVerificationFindingSeverity,
 )
+from ...domain.transactions.enums import TransactionDirection, TransactionLifecycleState
 from ...domain.transactions.protocols import TransactionCatalogueRepositoryProtocol
+from ..aggregation.iva_ledger_classification import iva_mixed_use_treatment_is_undetermined
 from ..aggregation.ledger_filing_snapshot import OPERATION_DATE_FIELD_SET_VERSION, evaluate_ledger_filing_staleness
 from ..aggregation.ledger_membership import (
     LedgerSourceMembership,
@@ -80,6 +83,15 @@ ASSET_REGISTER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
 INVENTORY_REGISTER_DRIFT_LEGAL_REFS: tuple[str, ...] = (
     "ley-35-2006:art-28",
     "ley-27-2014:art-17",
+)
+
+#: Grounding for the warning on a stored draft that counted an uncategorized mixed
+#: row: simultaneous use deducts nothing unless the good is a bien de inversión or
+#: follows one (LIVA art. 95), and a share affects only a separately usable part
+#: (RIRPF art. 22), so what the row is decides whether its share counts at all.
+UNDETERMINED_MIXED_USE_LEGAL_REFS: tuple[str, ...] = (
+    "ley-37-1992:art-95",
+    "rd-439-2007:art-22",
 )
 
 type _BlockingFindingObserver = Callable[
@@ -247,7 +259,7 @@ def _operation_dated_since_older_anchor(
     anchor: LedgerFilingSnapshot,
     catalogue: TransactionCatalogue,
 ) -> tuple[str, ...]:
-    """Name anchored general-regime rows carrying an operation date a pre-version-4 anchor cannot see."""
+    """Name anchored general-regime rows carrying an operation date a pre-version-5 anchor cannot see."""
     if anchor.fingerprint_field_set_version >= OPERATION_DATE_FIELD_SET_VERSION:
         return ()
     anchored = {row.transaction_id for row in anchor.rows}
@@ -259,6 +271,50 @@ def _operation_dated_since_older_anchor(
             and transaction.operation_date is not None
             and is_iva_cash_accounting_none(transaction.cash_accounting_treatment)
         )
+    )
+
+
+def undetermined_mixed_use_contributor_finding(
+    *,
+    target: CalculationRevision,
+    work_unit: WorkUnit,
+    transaction_repository: TransactionCatalogueRepositoryProtocol,
+    operation: PinnedAuthorityOperation,
+    source_refs: tuple[str, ...] = (),
+) -> ModeloVerificationFinding | None:
+    """Warn of a stored draft that counted a mixed expense calculation now holds back.
+
+    Calculation holds such a row back, so it is a contributor of the stored draft
+    only when an earlier calculation counted it at its share. That contributor
+    set is the marker, and no fingerprint can stand in for it: the row itself did
+    not move. The stored values stay as they are and the verdict does not change;
+    this only says that calculating again would give a different result.
+    """
+    if target.state is not CalculationRevisionState.BORRADOR or not target.source_transaction_ids:
+        return None
+    contributors = set(target.source_transaction_ids)
+    rows = sum(
+        1
+        for transaction in transaction_repository.load().values()
+        if transaction.transaction_id in contributors
+        and transaction.direction is TransactionDirection.OUTGOING
+        and transaction.lifecycle_state is TransactionLifecycleState.ACTIVE
+        and iva_mixed_use_treatment_is_undetermined(transaction, year=work_unit.filing_year, operation=operation)
+    )
+    if not rows:
+        return None
+    return ModeloVerificationFinding(
+        kind=ModeloVerificationFindingKind.ADVISORY,
+        severity=ModeloVerificationFindingSeverity.WARNING,
+        message_locale_key="application.modelo.findings.undetermined_mixed_use_contributor",
+        message_facts={
+            "modelo": str(work_unit.modelo),
+            "filing_year": work_unit.filing_year,
+            "period": work_unit.period.registry_token,
+            "rows": rows,
+        },
+        legal_refs=UNDETERMINED_MIXED_USE_LEGAL_REFS,
+        source_refs=source_refs,
     )
 
 
@@ -411,5 +467,7 @@ __all__ = [
     "ASSET_REGISTER_DRIFT_LEGAL_REFS",
     "INVENTORY_REGISTER_DRIFT_LEGAL_REFS",
     "LEDGER_DRIFT_LEGAL_REFS",
+    "UNDETERMINED_MIXED_USE_LEGAL_REFS",
     "ledger_drift_findings",
+    "undetermined_mixed_use_contributor_finding",
 ]
