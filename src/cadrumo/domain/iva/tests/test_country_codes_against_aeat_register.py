@@ -50,7 +50,7 @@ from typing import cast
 import pytest
 
 from ....core.resources.bundled_data import bundled_path
-from ....core.toml import parse_toml
+from .country_names_vocabulary_support import country_vocabulary
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
@@ -70,21 +70,6 @@ def _aeat_country_codes() -> frozenset[str]:
     return frozenset(cast(str, code) for code in re.findall(r'value="([A-Z]{2})"', block.group(1)))
 
 
-def _vocabulary() -> list[dict[str, object]]:
-    payload = parse_toml(Path(bundled_path("registry", "aeat", "iva", "country_names.toml")).read_text("utf-8"))
-    raw_country = payload.get("country")
-    assert isinstance(raw_country, list)
-    rows: list[dict[str, object]] = []
-    for raw_row in raw_country:
-        assert isinstance(raw_row, dict)
-        row: dict[str, object] = {}
-        for key, value in raw_row.items():
-            assert isinstance(key, str)
-            row[key] = value
-        rows.append(row)
-    return rows
-
-
 def test_the_aeat_register_is_actually_populated() -> None:
     """Fixture anchor. An empty enumeration would satisfy every subset check below.
 
@@ -102,7 +87,7 @@ def test_the_aeat_register_is_actually_populated() -> None:
 def test_every_vocabulary_code_is_one_aeat_recognises() -> None:
     """The substantive check: no invented, mistyped or territory code in the table."""
     recognised = _aeat_country_codes()
-    unknown = sorted(str(record["code"]) for record in _vocabulary() if str(record["code"]) not in recognised)
+    unknown = sorted(str(record["code"]) for record in country_vocabulary() if str(record["code"]) not in recognised)
 
     assert unknown == [], f"country codes AEAT's own register does not carry: {unknown}"
 
@@ -127,7 +112,7 @@ def test_the_alpha3_column_is_structurally_sound() -> None:
     compared the column against a list an author wrote in the same session would
     be the tautology the column's own header warns about.
     """
-    records = _vocabulary()
+    records = country_vocabulary()
     codes = [str(record["alpha3"]) for record in records]
 
     assert all(len(code) == _ALPHA3_LENGTH and code.isalpha() and code.isupper() for code in codes)
