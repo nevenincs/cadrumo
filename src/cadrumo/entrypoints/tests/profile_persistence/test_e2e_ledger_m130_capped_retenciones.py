@@ -142,6 +142,7 @@ _QUARTER: Final = "1T"
 _M130_REVISION: Final = "2019-y-siguientes"
 _RETENCIONES_BOX: CasillaId = validated_casilla_id("06")
 _INCOME_BOX: CasillaId = validated_casilla_id("01")
+_EXPENSE_BOX: CasillaId = validated_casilla_id("02")
 _REASON: Final = "advisory_binding_value"
 
 # Hand-derived invoice arithmetic at the general 15 % professional rate (RIRPF art. 95.1)
@@ -421,8 +422,13 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
         assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == _STATED_RETENCION
         assert {issue.casilla_id for issue in revision.source_issues if issue.reason == _REASON} == {
             _INCOME_BOX,
+            _EXPENSE_BOX,
             _RETENCIONES_BOX,
         }
+        (expense,) = [
+            issue for issue in revision.source_issues if issue.reason == _REASON and issue.casilla_id == _EXPENSE_BOX
+        ]
+        assert expense.value_outcome is BindingValueOutcome.PROVEN_ZERO
         (note,) = [
             issue
             for issue in revision.source_issues
@@ -588,8 +594,13 @@ def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(
             "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt."
         )
 
+        # The expense casilla 02 is capped too and over the same receipts proves its zero as well.
+        (expense,) = [
+            issue for issue in revision.source_issues if issue.reason == _REASON and issue.casilla_id == _EXPENSE_BOX
+        ]
+        assert expense.value_outcome is BindingValueOutcome.PROVEN_ZERO
         summary, listed = _listed_row(work_unit, revision, operation)
-        assert summary.proven_zero_notes == (proven.fact,)
+        assert set(summary.proven_zero_notes) == {proven.fact, expense.fact}
         assert (
             "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt."
             in listed.calculation_notes
@@ -687,6 +698,7 @@ def test_a_revision_filed_before_the_cap_is_refused_its_export_until_it_is_calcu
         assert recalculated.screen_stamp is not None
         assert {issue.casilla_id for issue in recalculated.source_issues if issue.reason == _REASON} == {
             _INCOME_BOX,
+            _EXPENSE_BOX,
             _RETENCIONES_BOX,
         }
 

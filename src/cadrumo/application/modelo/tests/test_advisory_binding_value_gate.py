@@ -82,6 +82,10 @@ _QUARTER = "1T"
 _CAPPED_BINDING = "modelo-130-actividad-economica-retenciones-cumulative"
 _CAPPED_BOX = "06"
 _INCOME_BOX = "01"
+# The 2025 Modelo 130 boxes a capped binding reaches: the bank-dated income and
+# expense casillas 01 and 02, and the stated retenciones casilla 06.
+_CAPPED_BOXES = frozenset({_INCOME_BOX, "02", _CAPPED_BOX})
+_PROVEN_ZEROS = dict.fromkeys(_CAPPED_BOXES, Decimal("0"))
 _REASON = "advisory_binding_value"
 # Hand-derived: 150,00 at 15 % of 1.000,00 plus 140,00 at 7 % of 2.000,00.
 _DECLARED_CREDIT = Decimal("290.00")
@@ -360,11 +364,9 @@ def test_a_filed_revision_is_not_screened_again(operation: PinnedAuthorityOperat
     current = _stamp(snapshot, operation)
     other = CalculationScreenStamp(contract_version=current.contract_version, digest="0" * 64)
 
-    proven_zero = {_CAPPED_BOX: Decimal("0")}
-
     for state in (CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO):
         for stamp in (None, other):
-            revision = _revision(unit, (), stamp=stamp, state=state, casilla_values=proven_zero)
+            revision = _revision(unit, (), stamp=stamp, state=state, casilla_values=_PROVEN_ZEROS)
             assert _refused_reasons(operation, revision) is None, (state, stamp)
 
 
@@ -388,17 +390,21 @@ def test_a_revision_filed_before_the_cap_with_a_capped_figure_is_refused_at_expo
     unit = _work_unit(snapshot)
 
     for state in (CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO):
-        for values in ({_CAPPED_BOX: _FILED_CAPPED_FIGURE}, {}):
+        # The figure is named where it stands; with no value at all, some capped box is unresolved.
+        for values, boxes in (
+            ({**_PROVEN_ZEROS, _CAPPED_BOX: _FILED_CAPPED_FIGURE}, {_CAPPED_BOX}),
+            ({}, _CAPPED_BOXES),
+        ):
             revision = _revision(unit, (), stamp=None, state=state, casilla_values=values)
             refused = _export_refusal(operation, revision, unit)
             context = refused.context or {}
             assert context["reason"] == FILED_BEFORE_GRADE_CAP_REASON, (state, values)
-            assert context["box"] == _CAPPED_BOX, (state, values)
+            assert context["box"] in boxes, (state, values)
             assert refused.translated_message == what_locale_key(FILED_BEFORE_GRADE_CAP_REASON)
             found = calculation_filed_before_grade_cap(
                 revision, modelo="130", filing_year=_YEAR, period=unit.period, operation=operation
             )
-            assert found == _CAPPED_BOX
+            assert found == context["box"]
     assert gate_refuses(FILED_BEFORE_GRADE_CAP_REASON, None)
     assert FILED_BEFORE_GRADE_CAP_REASON not in GATE_REFUSED_REASONS, "the reason is derived, never persisted"
 
@@ -408,10 +414,10 @@ def test_a_revision_filed_before_the_cap_with_a_zero_or_a_stamp_exports(operatio
     unit = _work_unit(snapshot)
     current = _stamp(snapshot, operation)
     other = CalculationScreenStamp(contract_version=current.contract_version, digest="0" * 64)
-    capped = {_CAPPED_BOX: _FILED_CAPPED_FIGURE}
+    capped = {**_PROVEN_ZEROS, _CAPPED_BOX: _FILED_CAPPED_FIGURE}
     filed = CalculationRevisionState.PRESENTADO
 
-    unstamped_zero = _revision(unit, (), stamp=None, state=filed, casilla_values={_CAPPED_BOX: Decimal("0")})
+    unstamped_zero = _revision(unit, (), stamp=None, state=filed, casilla_values=_PROVEN_ZEROS)
     assert _refused_reasons(operation, unstamped_zero) is None
     for stamp in (current, other):
         stamped = _revision(unit, (), stamp=stamp, state=filed, casilla_values=capped)

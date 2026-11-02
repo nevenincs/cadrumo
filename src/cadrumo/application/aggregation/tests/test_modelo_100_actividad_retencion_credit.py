@@ -427,7 +427,10 @@ def test_a_proven_zero_over_rows_without_withholding_passes(operation: PinnedAut
     emitted, persisted = _calculated(operation, resolution)
     (note,) = _advisory_notes(emitted, "0599")
     assert note.value_outcome is BindingValueOutcome.PROVEN_ZERO
-    assert [issue for issue in persisted if issue.casilla_id == "0599"] == []
+    # The proven zero persists, so a reopened declaration still says it stands, and it withholds nothing.
+    (proven,) = [issue for issue in persisted if issue.casilla_id == "0599"]
+    assert proven.value_outcome is BindingValueOutcome.PROVEN_ZERO
+    assert _refused_reasons(operation, (proven,)) is None
     (income_note,) = _advisory_notes(emitted, "0171")
     assert income_note.value_outcome is not BindingValueOutcome.PROVEN_ZERO
     income_only = tuple(issue for issue in persisted if issue.casilla_id == "0171")
