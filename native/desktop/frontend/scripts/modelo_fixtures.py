@@ -11,7 +11,8 @@ for a synthetic taxpayer in a throwaway profile over the published authority.
 ``scripts/modelo-fixtures.mjs`` drives this module and formats what it writes;
 run that, not this. ``contract`` writes the unformatted module to standard
 output; ``bounds`` writes the unformatted relay bounds module; ``envelopes``
-writes the envelopes; ``validate`` fails when the host's admitted list differs
+writes the envelopes, stored compactly and the Modelo 100 forms as patches;
+``pack`` stores the envelopes already on disk that way; ``validate`` fails when the host's admitted list differs
 from the registered family or a stored envelope no longer validates against
 its model. The envelopes carry the day they were
 read, so they are validated rather than compared byte for byte.
@@ -1642,7 +1643,7 @@ def _paths_in(path: Path) -> list[str]:
         elif isinstance(node, str) and _ABSOLUTE_PATH.search(node):
             found.append(node[:80])
 
-    walk(json.loads(path.read_text("utf-8")))
+    walk(stored_envelope(path.parent, path.stem))
     return found
 
 
@@ -1794,6 +1795,104 @@ def write_envelopes(directory: Path) -> None:
         _write_form(directory, stale, "modelo-130-1T-stale")
         _write_rebase(directory, stale)
     _write_renta(directory)
+    pack_envelopes(directory)
+
+
+# -- stored envelopes -----------------------------------------------------------
+#
+# The 2025 Modelo 100 forms are over three megabytes each, and the filers and languages read of it differ in
+# a few hundred words. They are stored as a patch of the form they differ from: the filer's form in the
+# language's words, or the first filer's form in another language. A patch is the envelope's name and the
+# values that differ, the way ``src/dev/modeloEnvelopePatch.ts`` reads it. Every other envelope is stored whole.
+
+#: The forms stored as patches, by modelo.
+PACKED_MODELOS: tuple[str, ...] = ("100",)
+#: A stored envelope that is a patch of another names it under this key.
+PATCH_OF = "patch_of"
+PATCH_CHANGES = "changes"
+_PACKED_NAME = re.compile(
+    r"^(?P<form>modelo-(?P<modelo>[0-9]+)-[0-9A-Z]+)(?P<filer>(?:-[a-z]+)?)-(?P<language>[a-z]{2})$"
+)
+
+
+def _compact(value: Any) -> str:
+    """An envelope as it is stored: no indentation, in the order the application served it."""
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def _differences(base: Any, target: Any) -> Any | None:
+    """What turns ``base`` into ``target``, or nothing where they are the same.
+
+    An object is the differences by key or by position, and a one-element array is the value that replaces
+    what stood there: whole where the two differ in kind, in keys or in length.
+    """
+    if isinstance(base, dict) and isinstance(target, dict) and list(base) == list(target):
+        pairs = {key: _differences(base[key], target[key]) for key in base}
+        changes = {key: found for key, found in pairs.items() if found is not None}
+        return changes or None
+    if isinstance(base, list) and isinstance(target, list) and len(base) == len(target):
+        pairs = {str(position): _differences(each, target[position]) for position, each in enumerate(base)}
+        changes = {key: found for key, found in pairs.items() if found is not None}
+        return changes or None
+    return None if type(base) is type(target) and base == target else [target]
+
+
+def _patched(base: Any, changes: Any) -> Any:
+    """``base`` with ``changes`` applied, as ``_differences`` states them; ``base`` itself is left as it is."""
+    if isinstance(changes, list):
+        return changes[0]
+    if isinstance(base, list):
+        copied = list(base)
+        for key, found in changes.items():
+            copied[int(key)] = _patched(copied[int(key)], found)
+        return copied
+    copied_object = dict(base)
+    for key, found in changes.items():
+        copied_object[key] = _patched(copied_object[key], found)
+    return copied_object
+
+
+def _is_patch(value: Any) -> bool:
+    return isinstance(value, dict) and set(value) == {PATCH_OF, PATCH_CHANGES}
+
+
+def stored_envelope(directory: Path, name: str) -> Any:
+    """The envelope stored as ``name``, whole, whether it is stored whole or as a patch."""
+    stored = json.loads((directory / f"{name}.json").read_text("utf-8"))
+    if not _is_patch(stored):
+        return stored
+    return _patched(stored_envelope(directory, stored[PATCH_OF]), stored[PATCH_CHANGES])
+
+
+def _patch_base(name: str) -> str | None:
+    """The form a Modelo 100 form is stored as a patch of, or none for the one that is stored whole."""
+    found = _PACKED_NAME.match(name)
+    if found is None or found["modelo"] not in PACKED_MODELOS:
+        return None
+    form, filer, language = found["form"], found["filer"], found["language"]
+    if filer:
+        return f"{form}-{language}"
+    return None if language == LANGUAGES[0] else f"{form}-{LANGUAGES[0]}"
+
+
+def pack_envelopes(directory: Path) -> None:
+    """Store every envelope in ``directory`` as the next regeneration stores it: compact, forms as patches.
+
+    It reads each envelope whole, so a directory already stored this way is left as it is.
+    """
+    names = sorted(path.stem for path in directory.glob("*.json"))
+    whole = {name: stored_envelope(directory, name) for name in names}
+    for name, value in whole.items():
+        base = _patch_base(name)
+        if base is None:
+            text = _compact(value)
+        else:
+            changes = _differences(whole[base], value) or {}
+            if _compact(_patched(whole[base], changes)) != _compact(value):
+                raise SystemExit(f"{name} is not what its patch of {base} makes")
+            text = _compact({PATCH_OF: base, PATCH_CHANGES: changes})
+        (directory / f"{name}.json").write_text(text, "utf-8", newline="
+")
 
 
 # -- check --------------------------------------------------------------------
@@ -1858,7 +1957,7 @@ def validate() -> int:
             failures.append(f"no fixture matches {pattern}")
         for path in paths:
             try:
-                model.model_validate_json(path.read_bytes())
+                model.model_validate_json(_compact(stored_envelope(path.parent, path.stem)))
             except ValueError as invalid:
                 failures.append(f"{path.name} no longer validates as {model.__name__}: {str(invalid)[:200]}")
             # The window is never handed a file's place; neither is an envelope.
@@ -1870,8 +1969,10 @@ def validate() -> int:
 def main() -> int:
     """Run one step for scripts/modelo-fixtures.mjs."""
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("step", choices=("contract", "bounds", "envelopes", "validate"))
-    parser.add_argument("directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes.")
+    parser.add_argument("step", choices=("contract", "bounds", "envelopes", "pack", "validate"))
+    parser.add_argument(
+        "directory", nargs="?", type=Path, default=FIXTURES, help="Where `envelopes` writes and `pack` stores."
+    )
     args = parser.parse_args()
     if args.step == "contract":
         sys.stdout.write(render_contract())
@@ -1881,6 +1982,9 @@ def main() -> int:
         return 0
     if args.step == "envelopes":
         write_envelopes(args.directory)
+        return 0
+    if args.step == "pack":
+        pack_envelopes(args.directory)
         return 0
     return validate()
 
