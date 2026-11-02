@@ -76,7 +76,7 @@ def gate_refuses(
 
 
 def _refused_here(issue: CalculationSourceIssue) -> bool:
-    return gate_refuses(issue.reason, issue.binding_source)
+    return gate_refuses(issue.reason, issue.binding_source, issue.value_outcome)
 
 
 def blocking_calculation_issues(revision: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
@@ -87,6 +87,20 @@ def blocking_calculation_issues(revision: CalculationRevision) -> tuple[Calculat
             The stored calculation head carrying values, provenance and lifecycle facts.
     """
     return tuple(issue for issue in revision.source_issues if _refused_here(issue))
+
+
+def proven_zero_calculation_issues(revision: CalculationRevision) -> tuple[CalculationSourceIssue, ...]:
+    """The persisted notes of ``revision`` saying its resolver proved a capped value to be zero.
+
+    They withhold nothing; a reopened declaration shows them so the filer can see the zero was proven.
+
+    See Also:
+        :class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`
+            The stored calculation head carrying values, provenance and lifecycle facts.
+    """
+    return tuple(
+        issue for issue in revision.source_issues if capped_value_proven_zero(issue.reason, issue.value_outcome)
+    )
 
 
 def require_no_blocking_calculation_notes(
@@ -242,6 +256,7 @@ __all__ = [
     "blocking_calculation_issues",
     "calculation_screen_outdated",
     "gate_refuses",
+    "proven_zero_calculation_issues",
     "require_no_blocking_calculation_notes",
     "require_work_unit_calculation_screen_current",
     "require_work_unit_calculation_unblocked",

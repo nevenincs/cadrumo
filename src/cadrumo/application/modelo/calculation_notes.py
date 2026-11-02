@@ -331,12 +331,18 @@ def read_element_names(repository: ActivityAssetHistoryRepository | None) -> dic
 def read_recorded_notes(
     issues: Iterable[CalculationSourceIssue], repository: ActivityAssetHistoryRepository | None
 ) -> tuple[RecordedCalculationNote, ...]:
-    """The notes a calculation kept, in words and under the names their elements go by now."""
+    """The notes a calculation kept, in words and under the names their elements go by now.
+
+    A proven zero's fact says all there is to say: its reason's sentence speaks
+    of a figure that is held back, which a proven zero is not, so it has no detail.
+    """
     return tuple(
         note.model_copy(
             update={
                 "message": note_fact_text(note.fact, element_names=note.element_names),
-                "detail": tr(what_locale_key(note.reason), box=tr(_UNNUMBERED_BOX_LOCALE_KEY)),
+                "detail": ""
+                if note.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
+                else tr(what_locale_key(note.reason), box=tr(_UNNUMBERED_BOX_LOCALE_KEY)),
             }
         )
         for note in recorded_calculation_notes(issues, names=read_element_names(repository))

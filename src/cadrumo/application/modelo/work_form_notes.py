@@ -117,10 +117,10 @@ def collect_note_sources(
         )
     if revision is None:
         return ()
-    # A persisted note is never a proven zero: those are held, not stored. Its stored message is a
-    # technical account in no language of the filer's, so the note is worded by its reason alone.
+    # A persisted note keeps the outcome its resolver stated, so a proven zero still reads as one. Its stored
+    # message is a technical account in no language of the filer's, so the note is worded by its reason alone.
     return stale + tuple(
-        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, None, None)
+        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, issue.value_outcome, None)
         for issue in revision.source_issues
     )
 

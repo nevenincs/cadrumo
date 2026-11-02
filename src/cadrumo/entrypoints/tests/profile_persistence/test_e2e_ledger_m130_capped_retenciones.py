@@ -21,7 +21,8 @@ the real work-form service, which the TUI and MCP read:
 * the review workbook, a preview, shows the capped figure with the note's
   sentence beside it rather than refusing it;
 * a quarter whose receipts carry no retención proves casilla 06 zero, carries
-  no blocking note and passes the gate.
+  no blocking note and passes the gate; the proven zero persists, so the form
+  reopened in a new process and the declarations list both say the zero stands.
 
 Every figure is invoice arithmetic worked out here, with synthetic data.
 """
@@ -47,6 +48,7 @@ from cadrumo.adapters.persistence.profile.transactions import TransactionCatalog
 from cadrumo.adapters.persistence.storage.operator_scope import build_operator_scope_ports
 from cadrumo.adapters.persistence.storage.sql.secure_objects import SecureObjectRepository
 from cadrumo.adapters.persistence.storage.tests.profile_capsule_runtime import seed_test_profile_record
+from cadrumo.application.modelo import work_form_service
 from cadrumo.application.modelo.action_errors import CalculationRevisionStateError
 from cadrumo.application.modelo.calculation_bucket_actions import (
     calculate_modelo_revision_from_bucket_aggregation_with_diagnostics,
@@ -55,11 +57,17 @@ from cadrumo.application.modelo.calculation_note_gate import (
     ModeloCalculationBlockedError,
     require_work_unit_calculation_unblocked,
 )
+from cadrumo.application.modelo.calculation_notes import CalculationNoteStore, note_fact_text
 from cadrumo.application.modelo.calculation_screen import calculation_screen_is_current, calculation_screen_stamp
+from cadrumo.application.modelo.declaration_summary import declaration_summary
+from cadrumo.application.modelo.declarations_list import DeclarationListGroup, DeclarationListRow
+from cadrumo.application.modelo.declarations_list_projection import worded_list_row
+from cadrumo.application.modelo.declarations_workspace_contracts import DeclarationsWorkspaceDeclarationRefV1
 from cadrumo.application.modelo.export import export_modelo_revision
 from cadrumo.application.modelo.export_contracts import ModeloExportCommand
 from cadrumo.application.modelo.filing_actions import file_modelo_revision
 from cadrumo.application.modelo.verification_actions import verify_modelo_revision_with_preconditions
+from cadrumo.application.modelo.work_form_findings import ModeloFormAttention
 from cadrumo.application.modelo.work_form_next_step import ModeloFormNextAction, form_next_step
 from cadrumo.application.modelo.work_form_service import load_modelo_work_form
 from cadrumo.application.modelo.work_lifecycle import create_work_unit
@@ -67,6 +75,7 @@ from cadrumo.application.modelo.work_lifecycle_ports import WorkLifecyclePorts
 from cadrumo.application.storage.calc_sheets.review_labels import ReviewWorkbookLabels
 from cadrumo.application.storage.calc_sheets.review_workbook import build_review_workbook
 from cadrumo.application.storage.calc_sheets.workbook_cells import plan_value_blocks
+from cadrumo.core.aggregation import BindingValueOutcome
 from cadrumo.core.casilla_id import CasillaId, validated_casilla_id
 from cadrumo.core.external_constants import OutputLanguage
 from cadrumo.core.i18n.render import lookup_translation
@@ -80,6 +89,7 @@ from cadrumo.domain.invoices.models import Invoice, InvoiceLine
 from cadrumo.domain.invoices.tests.catalogue_support import build_invoice_catalogue
 from cadrumo.domain.iva.schema import InvoiceKind, IvaCategory
 from cadrumo.domain.modelos.calculation_revision import CalculationRevision
+from cadrumo.domain.modelos.calculation_revision_sources import CalculationNoteSentence
 from cadrumo.domain.modelos.codes import ModeloCode
 from cadrumo.domain.modelos.work_unit import WorkUnit
 from cadrumo.domain.transactions.enums import BusinessClassification, TransactionDirection, TransactionLifecycleState
@@ -447,20 +457,70 @@ def test_stated_retenciones_are_calculated_as_a_capped_casilla_06_that_nothing_f
             )
 
 
+def _listed_row(work_unit: WorkUnit, head: CalculationRevision, operation: PinnedAuthorityOperation):
+    """The declarations-list row the portfolio shows for ``head``, through the real summary and projection."""
+    declaration = DeclarationsWorkspaceDeclarationRefV1(
+        work_unit_id=work_unit.work_unit_id,
+        modelo=work_unit.modelo,
+        filing_year=work_unit.filing_year,
+        period=work_unit.period,
+        state=work_unit.state,
+        has_current_calculation=True,
+        has_current_filing=False,
+    )
+    summary = declaration_summary(
+        declaration, revisions={head.calculation_revision_id: head}, verification=None, operation=operation
+    )
+    row = DeclarationListRow(
+        declaration.work_unit_id,
+        str(declaration.modelo),
+        declaration.period,
+        summary.state.value,
+        DeclarationListGroup.IN_PROGRESS,
+        declaration=declaration.model_copy(update={"summary": summary}),
+    )
+    return summary, worded_list_row(row, OutputLanguage.EN)
+
+
 def test_receipts_without_a_retencion_prove_casilla_06_zero_and_pass_the_cap(
-    secure_objects: SecureObjectRepository,
+    secure_objects: SecureObjectRepository, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     _seed_taxpayer_profile()
     _persist_ledger(secure_objects)
 
     with bundled_indexed_authority().operation() as operation:
         work_unit = _work_unit(secure_objects, _ZERO_YEAR, operation)
-        revision = _calculate(work_unit, operation)
+        calculated = _calculate(work_unit, operation)
 
+        # Read back from the encrypted store, as a declaration opened afresh reads it.
+        revision = (
+            CalculationRevisionCatalogueRepository(objects=secure_objects)
+            .load(operation=operation)
+            .get(calculated.calculation_revision_id)
+        )
+        assert revision is not None
         assert Decimal(revision.casilla_values[_RETENCIONES_BOX]) == Decimal("0")
-        assert [issue for issue in revision.source_issues if issue.reason == _REASON] == []
+        (proven,) = [issue for issue in revision.source_issues if issue.reason == _REASON]
+        assert proven.casilla_id == _RETENCIONES_BOX
+        assert proven.value_outcome is BindingValueOutcome.PROVEN_ZERO
+        assert proven.fact is not None and proven.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
         assert _gate_reasons(work_unit, revision, operation) == {}
+
+        # A new process holds none of the calculation's notes, so the form reads only what persisted.
+        monkeypatch.setattr(work_form_service, "CALCULATION_NOTES", CalculationNoteStore())
         load = _form(secure_objects, _ZERO_YEAR, operation)
         assert not [item for item in load.form.calculation_notes if item.withholds_filing]
+        (shown,) = [item for item in load.form.calculation_notes if item.reason == _REASON]
+        assert shown.attention is ModeloFormAttention.INFO and shown.box == "06"
+        assert shown.fact == proven.fact
+        assert note_fact_text(shown.fact, locale="en") == (
+            "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt."
+        )
+
+        summary, listed = _listed_row(work_unit, revision, operation)
+        assert summary.blocking_count is None and summary.proven_zero_notes == (proven.fact,)
+        assert listed.calculation_notes == (
+            "Box 06: the zero stands, because nothing in the period carries a figure whose period could be in doubt.",
+        )
         notes = _review_notes_by_box(revision, OutputLanguage.ES, operation)
         assert "06" in notes and not any(notes.values())

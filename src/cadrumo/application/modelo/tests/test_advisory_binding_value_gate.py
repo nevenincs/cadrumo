@@ -233,7 +233,11 @@ def test_a_zero_over_rows_that_carry_no_retencion_is_proven_and_withholds_nothin
     assert note.casilla_id == _CAPPED_BOX
     assert note.value_outcome is BindingValueOutcome.PROVEN_ZERO
     assert note.fact is not None and note.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
-    assert [issue for issue in persisted if issue.reason == _REASON] == []
+    # The proven zero persists with its stated outcome and sentence, so a reopened declaration still shows it.
+    (issue,) = [issue for issue in persisted if issue.reason == _REASON]
+    assert issue.casilla_id == _CAPPED_BOX
+    assert issue.value_outcome is BindingValueOutcome.PROVEN_ZERO
+    assert issue.fact is not None and issue.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
     revision = _revision(_work_unit(snapshot), persisted, stamp=_stamp(snapshot, operation))
     assert _refused_reasons(operation, revision) is None
 
@@ -251,6 +255,7 @@ def test_a_zero_over_rows_whose_retencion_was_left_out_withholds(operation: Pinn
     (issue,) = [issue for issue in persisted if issue.reason == _REASON]
     assert issue.casilla_id == _CAPPED_BOX
     assert issue.binding_source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    assert issue.value_outcome is BindingValueOutcome.FROM_BEARING_ROWS
     reasons = _refused_reasons(operation, _revision(_work_unit(snapshot), persisted, stamp=_stamp(snapshot, operation)))
     assert reasons is not None and _REASON in reasons
 
