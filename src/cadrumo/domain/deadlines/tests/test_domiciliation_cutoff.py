@@ -33,7 +33,6 @@ from ....core.period import Period
 from ....core.resources.bundled_data import resolve_corpus_binary
 from ...calculations.registry.authority import PinnedAuthorityOperation, bundled_indexed_authority
 from ...calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-from ...calculations.registry.errors import RegistryValidationError
 from ...calculations.registry.schema_deadlines import DeadlineWindowDefinition
 from ...calculations.registry.schema_references import TemporalProjectionDirection
 from ...calculations.registry.tests.published_authority import published_source_reference
@@ -591,7 +590,7 @@ def test_a_modelo_without_a_declared_clause_has_no_cutoff(operation: PinnedAutho
     assert resolved.clause is None
 
 
-def test_a_coordinate_below_the_support_floor_is_refused(operation: PinnedAuthorityOperation) -> None:
+def test_a_coordinate_below_the_support_floor_has_no_cutoff_rule(operation: PinnedAuthorityOperation) -> None:
     floor = operation.supported_filing_years().floor
     period = Period.from_year_and_code(floor - 1, "1T")
     window = DeadlineWindowDefinition.model_validate(
@@ -607,5 +606,6 @@ def test_a_coordinate_below_the_support_floor_is_refused(operation: PinnedAuthor
         },
     )
 
-    with pytest.raises(RegistryValidationError, match="outside the supported filing years"):
-        derive_payment_cutoff("303", window, operation=operation)
+    answer = derive_payment_cutoff("303", window, operation=operation)
+    assert isinstance(answer, UnavailablePaymentCutoff)
+    assert answer.reason is PaymentCutoffUnavailableReason.NO_CLAUSE
