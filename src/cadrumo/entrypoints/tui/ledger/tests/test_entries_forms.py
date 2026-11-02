@@ -358,14 +358,16 @@ def test_period_choices_are_the_canonical_codes_without_instalments() -> None:
     assert not {"1P", "2P", "3P", "4P"} & set(codes)
 
 
-@pytest.mark.parametrize(("year", "code"), [("2000", "1T"), ("2099", "0A"), (" 2026 ", "03")])
-def test_read_period_accepts_years_inside_the_filing_window(year: str, code: str) -> None:
+@pytest.mark.parametrize(
+    ("year", "code"), [("1000", "1T"), ("2000", "1T"), ("2099", "0A"), (" 2026 ", "03"), ("9999", "4T")]
+)
+def test_read_period_accepts_any_year_written_with_four_digits(year: str, code: str) -> None:
     period = read_period(year, code)
 
     assert period == PublicPeriod(filing_year=int(year), code=code)
 
 
-@pytest.mark.parametrize("year", ["1999", "2100", "1900", "9999", "20x6"])
-def test_read_period_refuses_years_outside_the_filing_window(year: str) -> None:
+@pytest.mark.parametrize("year", ["999", "0999", "10000", "20x6", "-2026"])
+def test_read_period_refuses_a_year_not_written_with_four_digits(year: str) -> None:
     with pytest.raises(ValueError, match=tr("tui.ledger.entry_tools.period.invalid")):
         read_period(year, "1T")

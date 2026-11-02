@@ -22,6 +22,7 @@ from datetime import UTC, date, datetime
 
 import pytest
 
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ....core.period import Period
 from ....domain.deadlines.engine import classify_obligation_status
 from ....domain.deadlines.models import ObligationStatus
@@ -116,10 +117,9 @@ def test_overview_keeps_its_local_period_fallback_when_no_window_exists() -> Non
     and the shared resolver must not start borrowing a neighbouring year's
     window to avoid returning ``None``.
     """
-    far_future_year = 2200
-    far_future = Period.from_year_and_code(far_future_year, "1T")
+    unmatched = Period.from_year_and_code(FOUR_DIGIT_YEAR_FIRST, "1T")
 
-    assert resolve_filing_window(_MODELO, far_future_year, far_future) is None
+    assert resolve_filing_window(_MODELO, FOUR_DIGIT_YEAR_FIRST, unmatched) is None
 
 
 # ---------------------------------------------------------------------------

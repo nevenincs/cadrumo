@@ -10,13 +10,13 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.config import override_settings
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST
 from ....core.i18n.render import I18N_STRICT_MISSING_KEYS
 from ....core.period import Period
 from ....domain.calculations.registry.applicability import derive_modelo_applicability
 from ....domain.calculations.registry.applicability_models import ApplicabilityVerdict
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-from ....domain.calculations.registry.errors import FilingYearOutsideSupportEnvelopeError
 from ....domain.calculations.registry.tests.published_authority import (
     PublishedGovernedFactSource,
     published_supported_filing_years,
@@ -24,6 +24,7 @@ from ....domain.calculations.registry.tests.published_authority import (
 from ....domain.contribuyente.entity_type import EntityType, LegalEntityForm
 from ....domain.deadlines.engine import DeadlineEngine
 from ....domain.deadlines.festivos import DeadlineHolidayCoverage
+from ....domain.deadlines.filing_window_projection import AuthoredFilingWindow
 from ....domain.deadlines.models import (
     IrpfSpecialRegime,
     IVARegime,
@@ -152,14 +153,16 @@ def test_calendar_does_not_project_historic_annual_work_into_future_registry_win
     assert work_unit.work_unit_id not in placed
 
 
-def test_calendar_refuses_a_window_for_annual_work_below_the_supported_floor() -> None:
-    """A work unit below the supported floor is refused rather than given a later campaign."""
+def test_calendar_gives_annual_work_below_the_supported_floor_its_own_year_only() -> None:
+    """A work unit below the floor gets the window authored for its year or none, never a later campaign."""
     supported_years = published_supported_filing_years()
     assert supported_years is not None
-    work_unit = _annual_work_unit(modelo="100", filing_year=supported_years.floor - 1)
 
-    with pytest.raises(FilingYearOutsideSupportEnvelopeError):
-        _registry_window_for_work_unit(work_unit)
+    for filing_year in (supported_years.floor - 1, FOUR_DIGIT_YEAR_FIRST):
+        answer = _registry_window_for_work_unit(_annual_work_unit(modelo="100", filing_year=filing_year))
+
+        assert answer is None or isinstance(answer, AuthoredFilingWindow)
+        assert answer is None or answer.window.filing_year == filing_year
 
 
 def test_calendar_censo_warning_requires_every_modelo_enrolment_key(
