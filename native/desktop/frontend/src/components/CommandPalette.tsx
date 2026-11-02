@@ -124,7 +124,7 @@ export function CommandPalette({
   const searchInput = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [docs, setDocs] = useState<{
-    state: "idle" | "searching" | "done" | "unavailable";
+    state: "searching" | "done" | "unavailable";
     results: DocsSearchResult[];
     query: string;
     source: DocsSearch;

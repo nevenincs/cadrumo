@@ -16,7 +16,7 @@ related:
   - '[[2026-10-29-desktop-aeat-sync-adr]]'
 modified: '2026-11-02'
 body_schema: body-v2
-body_hash: 'sha256:1c51685e3a4c61fd174a88ec69e8d5f58f8e03fdbe3b26e7da0d25a73ed71311'
+body_hash: 'sha256:045e9f44f8eb29a15d2b27c6751d670195c8d5b49f59d73eb365101976762251'
 ---
 
 # `frontend-polish` plan
@@ -68,7 +68,7 @@ WINDOWMANAGER completed docking, tabbed/floating/fullscreen layout, pane-header/
 - [x] `S27` - Preserve import and export file tokens across pending picker and export outcomes; `native/desktop/frontend/src/components/ledger/transfer/, native/desktop/frontend/tests/scenarios/ledger-transfer.spec.ts, native/desktop/frontend/tests/scenarios/ledger-pause.spec.ts`.
 - [x] `S28` - Bind counterparty decisions to exact lookup identity and expose real confirmation, conflict and unresolved outcomes; `native/desktop/frontend/src/components/ledger/setup/CounterpartiesPane.tsx, native/desktop/frontend/src/shell/ledgerSetup.ts, native/desktop/frontend/src/dev/, native/desktop/frontend/tests/scenarios/ledger-setup.spec.ts, src/cadrumo/application/ledger/entry_limits.py, src/cadrumo/application/ledger/counterparty_operation.py, src/cadrumo/application/ledger/tests/test_entry_limits.py, dev/locales/, src/cadrumo/locales/`.
 - [x] `S29` - Distinguish pending and failed Local AI discovery from no lanes and offer model-list read recovery; `native/desktop/frontend/src/shell/localAiLanes.ts, native/desktop/frontend/src/shell/localModels.ts, native/desktop/frontend/src/components/AgentColumn.tsx, native/desktop/frontend/src/components/setup/LocalAi.tsx, native/desktop/frontend/src/components/setup/ProvisioningPanel.tsx, native/desktop/frontend/src/components/settings/LocalModels.tsx, native/desktop/frontend/src/dev/agentFixtureHost.ts, native/desktop/frontend/tests/scenarios/local-models.spec.ts`.
-- [ ] `S30` - Render palette search results only for their query and distinguish unavailable search; `native/desktop/frontend/src/components/CommandPalette.tsx, native/desktop/frontend/tests/scenarios/palette.spec.ts, dev/locales/`.
+- [x] `S30` - Render palette search results only for their query and distinguish unavailable search; `native/desktop/frontend/src/components/CommandPalette.tsx, native/desktop/frontend/tests/scenarios/palette.spec.ts, dev/locales/`.
 
 ## Parallelization
 
