@@ -2150,6 +2150,7 @@
         "cadrumo.core.resources.bundled_data",
         "cadrumo.core.result_disposition",
         "cadrumo.core.retencion_soportada",
+        "cadrumo.core.retencion_soportada_label",
         "cadrumo.core.revision_review",
         "cadrumo.core.schema_family_disposition",
         "cadrumo.core.secure_object_write",

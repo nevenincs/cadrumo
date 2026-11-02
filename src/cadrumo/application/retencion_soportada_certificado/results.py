@@ -15,6 +15,7 @@ from ...core.filing_year import FilingYear
 from ...core.hex import Hex64Str
 from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
 from ...core.retencion_soportada import RetencionSoportadaClase
+from ...core.retencion_soportada_label import retencion_soportada_clase_label
 from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
 from ..operations.public_scalar import PublicDecimal
 from .contracts import (
@@ -30,6 +31,7 @@ class RetencionSoportadaRowProjection(BaseModel):
 
     ejercicio: FilingYear
     income_class: RetencionSoportadaClase
+    income_class_label: str
     payer_ref: Hex64Str
     payer_legal_name: str | None
     importe_integro_dinerario: PublicDecimal
@@ -48,6 +50,7 @@ class RetencionSoportadaRowProjection(BaseModel):
         return cls(
             ejercicio=record.ejercicio,
             income_class=record.income_class,
+            income_class_label=retencion_soportada_clase_label(record.income_class),
             payer_ref=record.payer_ref,
             payer_legal_name=record.payer_legal_name,
             importe_integro_dinerario=PublicDecimal(decimal=str(record.importe_integro_dinerario)),

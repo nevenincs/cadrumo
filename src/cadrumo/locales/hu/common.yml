@@ -191,6 +191,20 @@ aggregation:
       unsupported_period: A Modelo 100 bevétel-összesítéshez éves időszak szükséges
         (pl. 2024-0A).
   retencion_soportada:
+    clase:
+      actividad_economica: Gazdasági tevékenységből származó jövedelem
+      arrendamiento_inmueble_urbano: 'Ingatlanvagyon-jövedelem: városi ingatlan bérbeadása'
+      arrendamiento_inmueble_urbano_actividad: 'Gazdasági tevékenységből származó
+        jövedelem: városi ingatlan bérbeadása'
+      atribucion_actividad_economica: 'Jövedelem-hozzárendelés: gazdasági tevékenység'
+      atribucion_capital_inmobiliario: 'Jövedelem-hozzárendelés: ingatlanvagyon-jövedelem'
+      atribucion_capital_mobiliario: 'Jövedelem-hozzárendelés: ingóvagyon-jövedelem'
+      atribucion_ganancia_patrimonial: 'Jövedelem-hozzárendelés: tőkenyereség'
+      capital_mobiliario: Ingóvagyon-jövedelem (tőkejövedelem)
+      ganancia_patrimonial: Tőkenyereség
+      imputacion_aie_ute: Az AIE-től és az UTE-től betudott jövedelem
+      imputacion_derechos_imagen: Képmásjogok átruházásából betudott jövedelem
+      trabajo: Munkából származó jövedelem
     errors:
       certificate_needs_fingerprint: A kifizetői igazoláshoz meg kell adnod az igazolás
         fájljának SHA-256 ujjlenyomatát (--evidence-sha256). Ha nincs igazolásod,

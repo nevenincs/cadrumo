@@ -15,12 +15,17 @@ from ..operations.models import (
 )
 from .contracts import (
     RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
+    RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
     RETENCION_SOPORTADA_ABSENCE_REFUSAL_CODES,
     RETENCION_SOPORTADA_ABSENCE_WITHDRAW_OPERATION_DEFINITION_ID,
 )
-from .results import RetencionSoportadaAbsenceExecutionResult, RetencionSoportadaAbsenceMutationProjection
+from .results import (
+    RetencionSoportadaAbsenceExecutionResult,
+    RetencionSoportadaAbsenceListProjection,
+    RetencionSoportadaAbsenceMutationProjection,
+)
 
-__all__ = ["project_retencion_soportada_absence_result"]
+__all__ = ["project_retencion_soportada_absence_list_result", "project_retencion_soportada_absence_result"]
 
 _DEFINITIONS: Final = {
     "attest": RETENCION_SOPORTADA_ABSENCE_ATTEST_OPERATION_DEFINITION_ID,
@@ -49,6 +54,37 @@ def _refusal_receipt_matches(receipt: OperationTerminalReceipt, code: str) -> bo
         and refused_receipt_references_hold(receipt)
         and receipt.diagnostic_ref is None
         and code in RETENCION_SOPORTADA_ABSENCE_REFUSAL_CODES
+    )
+
+
+def project_retencion_soportada_absence_list_result(
+    result: BaseModel,
+    receipt: OperationTerminalReceipt,
+    /,
+) -> RetencionSoportadaAbsenceListProjection:
+    """Release the stored attestations of one ejercicio only against a read-only receipt."""
+    if type(result) is not RetencionSoportadaAbsenceExecutionResult:
+        raise ValueError(_MESSAGE)
+    private = RetencionSoportadaAbsenceExecutionResult.model_validate(result.model_dump(mode="python"), strict=True)
+    profile_id = _profile_from_receipt(receipt)
+    if (
+        receipt.identity.definition_id != RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID
+        or private.operation_id != "list"
+        or private.outcome != "success"
+        or private.profile_id != profile_id
+        or private.attestations is None
+        or any(row.ejercicio != private.ejercicio for row in private.attestations)
+    ):
+        raise ValueError(_MESSAGE)
+    require_succeeded_terminal_receipt(
+        receipt,
+        definition_id=RETENCION_SOPORTADA_ABSENCE_LIST_OPERATION_DEFINITION_ID,
+        subject_ref=profile_operation_subject(str(profile_id)),
+        effect=OperationEffect.NONE,
+        message=_MESSAGE,
+    )
+    return RetencionSoportadaAbsenceListProjection(
+        profile_id=profile_id, ejercicio=private.ejercicio, attestations=private.attestations
     )
 
 

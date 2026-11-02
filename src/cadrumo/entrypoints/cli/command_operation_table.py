@@ -145,6 +145,7 @@ COMMAND_OPERATION_ROWS: Final[tuple[tuple[tuple[str, ...], str | None], ...]] = 
     (("app", "ledger", "restore"), "ledger.restore"),
     (("app", "ledger", "retencion-soportada", "attest-absence"), "ledger.retencion_soportada.attest_absence"),
     (("app", "ledger", "retencion-soportada", "list"), "ledger.retencion_soportada.list"),
+    (("app", "ledger", "retencion-soportada", "list-absences"), "ledger.retencion_soportada.list_absences"),
     (("app", "ledger", "retencion-soportada", "record"), "ledger.retencion_soportada.record"),
     (("app", "ledger", "retencion-soportada", "remove"), "ledger.retencion_soportada.remove"),
     (("app", "ledger", "retencion-soportada", "withdraw-absence"), "ledger.retencion_soportada.withdraw_absence"),

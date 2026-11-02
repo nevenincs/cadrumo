@@ -198,6 +198,24 @@ aggregation:
       unsupported_period: Es requereix un període anual per a l'agregació d'ingressos
         del Model 100 (p.ex. 2024-0A).
   retencion_soportada:
+    clase:
+      actividad_economica: Rendiments d'activitats econòmiques
+      arrendamiento_inmueble_urbano: 'Rendiments del capital immobiliari: arrendament
+        d''immobles urbans'
+      arrendamiento_inmueble_urbano_actividad: 'Rendiments d''activitats econòmiques:
+        arrendament d''immobles urbans'
+      atribucion_actividad_economica: 'Atribució de rendes: rendiments d''activitats
+        econòmiques'
+      atribucion_capital_inmobiliario: 'Atribució de rendes: rendiments del capital
+        immobiliari'
+      atribucion_capital_mobiliario: 'Atribució de rendes: rendiments del capital
+        mobiliari'
+      atribucion_ganancia_patrimonial: 'Atribució de rendes: guanys patrimonials'
+      capital_mobiliario: Rendiments del capital mobiliari
+      ganancia_patrimonial: Guanys patrimonials
+      imputacion_aie_ute: Imputació de rendes d'AIE i UTE
+      imputacion_derechos_imagen: Imputació de rendes per la cessió de drets d'imatge
+      trabajo: Rendiments del treball
     errors:
       certificate_needs_fingerprint: Un certificat del pagador necessita el SHA-256
         del fitxer del certificat (--evidence-sha256). Si no tens certificat, fes

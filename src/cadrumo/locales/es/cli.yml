@@ -644,6 +644,8 @@ cli:
           te repercutió. No puede superar el ingreso a cuenta.
         invalid_input: 'Un valor no es válido: revisa la referencia del pagador, la
           revisión y la huella del certificado.'
+        list_absences_help: Lista tus declaraciones de ausencia de retención de un
+          ejercicio, vigentes y retiradas, con la revisión en que consta cada una.
         list_help: Lista los registros de pagadores de un ejercicio sin ningún NIF.
         origin_help: 'Quién declara las cifras: payer_certificate u operator_declaration.'
         payer_name_help: Razón social del pagador.

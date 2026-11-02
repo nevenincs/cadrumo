@@ -603,6 +603,8 @@ cli:
           passed on to you. It cannot exceed the ingreso a cuenta.
         invalid_input: 'A value is not valid: check the payer reference, the revision
           and the certificate fingerprint.'
+        list_absences_help: List your absence attestations for one ejercicio, active
+          and withdrawn, with the revision each is stored at.
         list_help: List the stored payer records of an ejercicio without any tax ID.
         origin_help: 'Who states the figures: payer_certificate or operator_declaration.'
         payer_name_help: Legal name of the payer.

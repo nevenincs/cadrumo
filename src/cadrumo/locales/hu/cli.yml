@@ -639,6 +639,9 @@ cli:
           Nem haladhatja meg az ingreso a cuentát.
         invalid_input: 'Egy érték érvénytelen: ellenőrizd a kifizetői hivatkozást,
           a revíziót és az igazolás ujjlenyomatát.'
+        list_absences_help: Listázd a kiválasztott adóév retenciómentességi nyilatkozataidat,
+          az érvényeseket és a visszavontakat is, azzal a változattal, amelyen mindegyik
+          tárolva van.
         list_help: Listázd egy ejercicio kifizetői rekordjait adóazonosító nélkül.
         origin_help: 'Ki állítja az adatokat: payer_certificate vagy operator_declaration.'
         payer_name_help: A kifizető cégneve.

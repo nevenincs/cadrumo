@@ -642,6 +642,8 @@ cli:
           et va repercutir. No pot superar l'ingrés a compte.
         invalid_input: 'Un valor no és vàlid: revisa la referència del pagador, la
           revisió i l''empremta del certificat.'
+        list_absences_help: Llista les teves declaracions d'absència de retenció d'un
+          exercici, vigents i retirades, amb la revisió en què consta cadascuna.
         list_help: Llista els registres de pagadors d'un exercici sense cap NIF.
         origin_help: 'Qui declara les xifres: payer_certificate o operator_declaration.'
         payer_name_help: Raó social del pagador.

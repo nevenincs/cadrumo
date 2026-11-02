@@ -78,6 +78,7 @@ def _prepare(context: ConformanceFamilyContext) -> ConformancePreparation:
             (row,) = result.rows
             assert row.payer_ref == seeded.payer_ref
             assert row.revision_id == revision_id
+            assert row.income_class_label.strip()
             assert row.pago_a_cuenta.decimal == "1500.00"
             assert repository.list_revisioned(_EJERCICIO) == ((seeded, revision_id),)
 
