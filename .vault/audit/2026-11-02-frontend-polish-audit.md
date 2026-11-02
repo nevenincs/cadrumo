@@ -202,6 +202,14 @@ All 30 existing and added Sede-browser cases now have passing evidence: the full
 
 External checkpoints af80a603c4 and 2690c28ca1 captured in-progress frontend changes. The following TUI merge left the generated Modelo contract and calculation-note gate test unmerged in the index; frontend verification is held until its owner finishes. S34 help retry and S35 delayed clarification acknowledgement/rejection already have passing focused cases. S35 delayed approval and S36 responsive layout await their corrected test assertions and a stable integrated source tree. No source was reverted to make the shared merge or checks pass.
 
+### s34-s35-review | low | Help recovery and delayed agent replies preserve their current owner
+
+PASS for S34 and S35. Casilla help has an in-place read retry under the existing generic retry label. The hook keys held data by port, work/revision/box/language and retry generation, so obsolete results stay hidden and late reads cannot replace the current card. The successful retry scenario preserves the selected box, confirms served legal text and issues no operation submission.
+
+Agent clarification and approval requests now have synchronous admission and an exact session/reader/conversation owner. Navigation, New conversation, a replacement session and unmount retire the old ticket. A late acknowledgement cannot append text or resolve a prompt in the new conversation; a late rejection cannot restore old text into its composer or clear a newer request's sending state. State updates additionally verify the current interaction ID. Terra reviewed the session-replacement correction and found no remaining concrete owner defect.
+
+All 35 agent-prompt scenarios pass in 20261102T211516Z-51332, including delayed clarification acknowledgement, delayed rejection and an old approval completing while another conversation's decision remains pending. The same batch passed the help-retry case and all nine existing Modelo workspace cases; its only failure was S36's test selector matching both workspace and outline tabpanels. Scoped TypeScript, ESLint and formatting passed before the final tiny selector corrections. A source comparison from 09eab4b79d through the completed corrective merge found no changes in these implementation/test areas, so those results remain applicable. Broader source integration and all-surface validation remain S17 work.
+
 ## Recommendations
 
 Finish the named repair Steps and append their actual verification and review verdicts here. Extend workflow inventories for S09-S15 and measured performance S16 before final S17 review. Unreviewed workflows remain open.

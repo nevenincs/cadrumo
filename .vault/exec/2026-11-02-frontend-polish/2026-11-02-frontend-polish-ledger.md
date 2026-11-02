@@ -5,7 +5,7 @@ tags:
 date: '2026-11-02'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:43e260127ffb0f83245852ef7b996d9bb3ae2a9c6eca81f10b18465899ba4d0f'
+body_hash: 'sha256:9034063b57566658b15b8f38fe5654922eecd0b4f0c229b941145ebfeb7adbc8'
 related:
   - "[[2026-11-02-frontend-polish-plan]]"
 ---
@@ -187,6 +187,15 @@ related:
 - `S24` `M` `native/desktop/frontend/tests/scenarios/sede-browser.spec.ts`
 - `S24` `verify:` `Thirty Sede browser scenarios full run plus corrected refused-answer case` -> `pass`
 - `S24` `verify:` `TypeScript scoped lint formatting canonical chrome` -> `pass`
+- `S34` `M` `native/desktop/frontend/src/components/modelo/details/useHelpCard.ts`
+- `S34` `M` `native/desktop/frontend/src/components/modelo/details/Details.tsx`
+- `S34` `M` `native/desktop/frontend/tests/scenarios/modelo.spec.ts`
+- `S34` `verify:` `Failed help read retries into served legal text without submitting an operation` -> `pass`
+- `S34` `verify:` `Scoped TypeScript ESLint formatting` -> `pass`
+- `S35` `M` `native/desktop/frontend/src/components/AgentColumn.tsx`
+- `S35` `M` `native/desktop/frontend/tests/scenarios/agent-prompts.spec.ts`
+- `S35` `verify:` `All35 agent-prompt scenarios including delayed acknowledgements rejection and newer pending decision` -> `pass`
+- `S35` `verify:` `TypeScript scoped ESLint and formatting` -> `pass`
 
 ## Notes
 
