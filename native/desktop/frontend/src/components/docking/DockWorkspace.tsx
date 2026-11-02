@@ -122,6 +122,7 @@ export function DockWorkspace({
     );
 
   const move = (pane: DockPane, target: DockPane, side: DockSide | "tab") => {
+    if (expanded) onExpand(expanded);
     onChange((current) =>
       activateDockPane(moveDockPane(current, pane, target, side), pane),
     );
@@ -157,20 +158,24 @@ export function DockWorkspace({
         </DropdownMenuItem>
         <DropdownMenuItem
           icon="external"
-          onSelect={() =>
+          onSelect={() => {
+            if (expanded) onExpand(expanded);
             onChange((current) =>
               isFloating
                 ? returnDockPane(current, pane)
                 : floatDockPane(current, pane),
-            )
-          }
+            );
+          }}
         >
           {t(isFloating ? "desktop.dock.dock" : "desktop.dock.float")}
         </DropdownMenuItem>
         <DropdownMenuItem
           icon="swap"
           disabled={isFloating}
-          onSelect={() => onChange((current) => swapDockPane(current, pane))}
+          onSelect={() => {
+            if (expanded) onExpand(expanded);
+            onChange((current) => swapDockPane(current, pane));
+          }}
         >
           {t("desktop.split.swap")}
         </DropdownMenuItem>
@@ -372,6 +377,7 @@ export function DockWorkspace({
                 if (isDockPane(value)) {
                   onChange((current) => activateDockPane(current, value));
                   onActivate(value);
+                  if (expanded && value !== expanded) onExpand(value);
                 }
               }}
               className="min-w-0 flex-1 overflow-x-auto"

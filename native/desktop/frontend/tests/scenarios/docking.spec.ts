@@ -123,7 +123,7 @@ test("native fullscreen restores the saved split and expansion is separate", asy
     "",
   );
   await header(page, "docs")
-    .getByRole("button", { name: label("desktop.pane.restore"), exact: true })
+    .getByRole("button", { name: label("desktop.dock.restore"), exact: true })
     .click();
   expect(await content(page, "docs").boundingBox()).toEqual(before);
   await arrange(page, "docs", "desktop.dock.fullscreen");
@@ -136,6 +136,77 @@ test("native fullscreen restores the saved split and expansion is separate", asy
   );
   await page.keyboard.press("Escape");
   expect(await content(page, "docs").boundingBox()).toEqual(before);
+});
+
+test("the tab strip owns pane titles and layout controls without duplicate rows", async ({
+  page,
+}, testInfo) => {
+  for (const pane of ["docs", "tui"]) {
+    await expect(
+      content(page, pane).locator('[data-slot="pane-header"]'),
+    ).toHaveCount(0);
+    await expect(header(page, pane).getByRole("tab")).toHaveCount(1);
+    await expect(
+      header(page, pane).getByRole("button", {
+        name: label("desktop.dock.expand"),
+        exact: true,
+      }),
+    ).toHaveCount(1);
+    await expect(
+      header(page, pane).getByRole("button", {
+        name: label("desktop.dock.close"),
+        exact: true,
+      }),
+    ).toHaveCount(1);
+  }
+  await page.screenshot({
+    path: testInfo.outputPath("single-pane-chrome.png"),
+  });
+});
+
+test("restoring a pane's size leaves native fullscreen on until explicitly exited", async ({
+  page,
+}) => {
+  await arrange(page, "docs", "desktop.dock.fullscreen");
+  await header(page, "docs")
+    .getByRole("button", { name: label("desktop.dock.restore"), exact: true })
+    .click();
+  await expect(content(page, "tui")).toBeVisible();
+  await expect(page.locator(".titlebar")).toHaveAttribute(
+    "data-fullscreen",
+    "",
+  );
+  await arrange(page, "docs", "desktop.dock.exit_fullscreen");
+  await expect(page.locator(".titlebar")).not.toHaveAttribute(
+    "data-fullscreen",
+    "",
+  );
+});
+
+test("expanded tab groups follow the selected pane and restore the workspace for layout moves", async ({
+  page,
+}) => {
+  await arrange(page, "console", "desktop.dock.tab");
+  await arrange(page, "console", "desktop.dock.expand");
+  await expect(content(page, "tui")).toBeHidden();
+  await page.locator("#tab-docs").click();
+  await expect(content(page, "docs")).toBeVisible();
+  await expect(content(page, "console")).toBeHidden();
+  await expect(content(page, "tui")).toBeHidden();
+  await page.locator("#tab-console").click();
+  await expect(content(page, "console")).toBeVisible();
+  await expect(content(page, "docs")).toBeHidden();
+  await arrange(page, "console", "desktop.dock.right");
+  await expect(content(page, "docs")).toBeVisible();
+  await expect(content(page, "tui")).toBeVisible();
+  await arrange(page, "console", "desktop.dock.expand");
+  await arrange(page, "console", "desktop.dock.float");
+  await expect(
+    header(page, "console").getByRole("button", {
+      name: label("desktop.dock.move"),
+    }),
+  ).toBeVisible();
+  await expect(content(page, "docs")).toBeVisible();
 });
 
 test("floating bounds survive reload and each dimension resizes independently", async ({
