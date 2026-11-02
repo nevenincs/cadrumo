@@ -52,9 +52,10 @@ function runNotice(t: Translate, run: OperationRun<unknown>): HistoryNotice {
     case "saved_unread":
       return null;
     case "refused":
+      // The backend words why; the window shows it as served.
       return {
         tone: "warning",
-        words: t("workspace.modelo.outcome.refused"),
+        words: run.words ?? t("workspace.modelo.outcome.refused"),
       };
     case "not_sent":
       return {
@@ -315,7 +316,9 @@ function Ready({
       case "saved_unread":
         return { kind: "done" };
       case "refused":
-        return { kind: "refused", code: outcome.reason ?? "refused" };
+        return outcome.words
+          ? { kind: "said", words: outcome.words }
+          : { kind: "refused", code: outcome.reason ?? "refused" };
       case "not_sent":
         return { kind: "not_sent", code: outcome.code };
       case "unknown":

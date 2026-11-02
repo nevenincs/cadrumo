@@ -201,6 +201,16 @@ aggregation:
         de ingresos del Modelo 130 (por ejemplo --year 2024 --period 1T).
       unsupported_period: Se requiere un periodo anual para la agregación de ingresos
         del Modelo 100 (p.ej. 2024-0A).
+  retencion_soportada:
+    errors:
+      ejercicio_unsupported: El ejercicio de este registro está fuera de los años
+        de presentación que admite Cadrumo.
+      family_not_declared: La revisión del Modelo 100 de este ejercicio no lee retenciones
+        soportadas, así que el registro nunca llegaría a un cálculo.
+      identity_mismatch: El registro no coincide con el pagador, la clase de renta
+        o el certificado ya guardados para él.
+      own_tax_id: El NIF del pagador es el tuyo; una retención que practicas tú no
+        es un pago a cuenta a tu favor.
   retenciones:
     errors:
       filing_year_out_of_range: El ejercicio %{filing_year} esta fuera del rango admitido
@@ -2468,15 +2478,21 @@ desktop:
       without_staged: Exportar sin ellos
     failed: No se ha podido leer el libro.
     field:
+      art_104_tres_exclusion: Exclusión del art. 104.Tres
+      attachment_ids: Adjuntos
       booked_date: Fecha contable
       business_pct: Parte profesional
       counterparty_country: País de la contraparte
       counterparty_identification_state: Identificación a efectos de IVA
       currency: Moneda
       deduction_fact_kind: Hecho deducible
+      input_classification: Uso de la adquisición
       investment_asset_id: Bien de inversión
       m210_income_classification: Renta del modelo 210
       own_account_id: Cuenta
+      prorrata_reference: Referencia de prorrata
+      prorrata_sector_id: Sector de prorrata
+      purchase_invoice_evidence_id: Documento de compra
       recargo_amount: Recargo
       usage_ratio_id: Ratio de uso
       value_date: Fecha valor
@@ -3047,7 +3063,6 @@ desktop:
         sealed: bloqueados
         sealed_unread: sin saber si están bloqueados
         transfer: transferencias
-        unclassified: sin clasificar
       source_jurisdiction: Jurisdicción de origen
       split:
         add_part: Añadir una parte
@@ -7995,6 +8010,8 @@ tui:
           vincular.
         missing_invoice: La factura ya no está en el catálogo, así que no se puede
           vincular.
+        transaction_takes_no_invoice: 'Este movimiento no admite factura: solo puede
+          tenerla un movimiento activo de entrada o salida de dinero.'
     overview:
       affected_declarations: Declaraciones afectadas
       areas: Áreas de Registros

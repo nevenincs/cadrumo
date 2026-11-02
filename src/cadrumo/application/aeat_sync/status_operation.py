@@ -245,6 +245,7 @@ def load_aeat_sync_status(
         iva_wallet_captured_at=guarded((AeatSyncStatusArea.IVA_WALLET,), ports.iva_wallet_captured_at, None),
         borrador_imported_at=max((snapshot.captured_at for snapshot in borrador), default=None),
         borrador_refused=_refused_snapshot_rows(borrador_refused),
+        borrador_outdated=0 if borrador_reading is None else borrador_reading.outdated_stored_snapshots,
         identity_checked_at=_latest_identity_check(identity),
         unreadable=unreadable,
     )

@@ -13,7 +13,7 @@ from pydantic import BeforeValidator, Field, ValidationInfo
 from ....core.country_code import COUNTRY_CODE_ALPHA2_PATTERN
 from ....core.decimal.coercion import coerce_decimal
 from ....core.errors.hierarchy import pydantic_validation_boundary
-from ....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ....core.iban import BIC_SHAPE_RE, IBAN_SHAPE_RE, iban_mod_97, normalise_iban
 from ....core.identity.documents import TAX_ID_FORMAT_CONTEXT, IdentityError, SpanishTaxIdFormat
 from ....core.identity.nif_iva import normalise_nif_iva
@@ -130,7 +130,9 @@ def _coerce_modelo_year(value: object) -> object:
     return value
 
 
-ModeloYear = Annotated[int, BeforeValidator(_coerce_modelo_year), Field(ge=FILING_YEAR_MIN, le=FILING_YEAR_MAX)]
+ModeloYear = Annotated[
+    int, BeforeValidator(_coerce_modelo_year), Field(ge=FOUR_DIGIT_YEAR_FIRST, le=FOUR_DIGIT_YEAR_LAST)
+]
 """Canonical fiscal-year integer for the registry boundary.
 
 Mirrors the ``RegistrySnapshotRef.modelo_year`` bound so a casilla

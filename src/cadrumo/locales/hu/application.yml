@@ -784,6 +784,10 @@ application:
           az egyenértékűségi pótdíj nulla kell legyen.
         printed_total_differs: A számlán nyomtatott végösszeg (%{printed}) eltér a
           kiszámított végösszegtől (%{computed}).
+        rate_date_projected: 'A(z) %{on_date} napi áfakulcsok a legközelebbi, %{nearest}
+          napjától érvényes bejegyzésekből származnak: ez a dátum régebbi a Cadrumo
+          által lefedett adóéveknél, ezért vetítésről van szó, amely nem szolgál benyújtás
+          alapjául.'
         rate_date_unresolved: A nyilvántartás nem ad meg áfakulcsot %{on_date} napjára,
           ezért az áfa nem számolható ki.
         recargo_above_iva_total: Az egyenértékűségi pótdíj (%{stated}) nem haladhatja
@@ -1233,6 +1237,12 @@ application:
         what: A Cadrumo hibát talált a nyilatkozat felépítésében, nem az adataidban.
         what_to_do: A nyilvántartásaidban nincs mit változtatnod. Jelezd a hibát,
           mielőtt a számokra támaszkodnál.
+      filed_before_grade_cap:
+        what: Ezt a bevallást a számadatok jelenlegi ellenőrzései előtt rögzítetted,
+          és az egyik mezője olyan összeget tartalmaz, amelyet ezek az ellenőrzések
+          visszatartanak, ezért ebben a formában nem exportálhatod.
+        what_to_do: Számold újra a bevallást, ellenőrizd, majd rögzítsd újra; az új
+          rögzítés felváltja ezt.
       inferred_retencion_excluded_from_credit:
         what: A kiállított számláin szereplő levonás egy részét az ügyfél által kifizetett
           összegből számoltuk ki, ezért kimaradt a jóváírásból, és a szükségesnél
@@ -2458,6 +2468,12 @@ application:
           számolj újra.
       inspection_heading: Minden rovat, rovatszám szerint
       unnamed_box: Név nélküli rovat
+  operations:
+    error_detail:
+      record_fault: Egy rekord, amelyet a Cadrumo hozott létre, nem felelt meg a saját
+        ellenőrzésének, ezért ezt nem sikerült elvégezni.
+      unworded: 'Ezt nem sikerült elvégezni. Az okához még nincs mondat; a kódja:
+        {error_code}.'
   overview:
     calendar:
       event:

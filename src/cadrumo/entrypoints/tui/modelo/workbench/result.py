@@ -23,6 +23,7 @@ from textual.screen import ModalScreen
 from textual.widgets import Button, DataTable, Static
 
 from .....application.modelo.work_form_models import (
+    FED_BY_A_SOURCE,
     ModeloFormField,
     ModeloFormOrigin,
     ModeloFormScalar,
@@ -52,9 +53,6 @@ class ResultGroup(StrEnum):
 _CALCULATED_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
     {ModeloFormOrigin.CALCULATED, ModeloFormOrigin.CALCULATION_FAILED, ModeloFormOrigin.NOT_CALCULATED_YET}
 )
-_SOURCED_ORIGINS: Final[frozenset[ModeloFormOrigin]] = frozenset(
-    {ModeloFormOrigin.IMPORTED, ModeloFormOrigin.NOT_IMPORTED_YET}
-)
 _COLUMN_LOCALE_KEYS: Final[Mapping[str, str]] = {
     "why": "workspace.modelo.result_diff.column.why",
     "box": "workspace.modelo.review.column.box",
@@ -81,7 +79,7 @@ def _group(change: ModeloFormValueChangeV1, yours: frozenset[AddressKey]) -> Res
         return ResultGroup.YOURS
     if change.after_origin in _CALCULATED_ORIGINS:
         return ResultGroup.CALCULATED
-    if change.after_origin in _SOURCED_ORIGINS:
+    if change.after_origin in FED_BY_A_SOURCE:
         return ResultGroup.SOURCED
     return ResultGroup.OTHER
 

@@ -8,12 +8,11 @@ from typing import TYPE_CHECKING
 from rich.cells import cell_len
 from textual.widgets import Static
 
-from .....application.modelo.work_form_findings import ModeloFormAttention
 from .....application.modelo.work_form_models import ModeloWorkForm
 from .....core.i18n.render import tr
 from ...components.dialogs import ConfirmScreen
 from .casilla_list import CasillaList
-from .header import StatusLine, attention_chips, status_line
+from .header import URGENT_CHIPS, StatusLine, attention_chips, status_line
 from .keys import describe_bindings
 from .progress import WorkbenchProgress
 from .screen_constants import (
@@ -196,8 +195,7 @@ class WorkbenchFooterMixin:
         if fieldless:
             pinned.extend(("up", "escape"))
         pinned.append("f8")
-        urgent = {ModeloFormAttention.BLOCKS, ModeloFormAttention.MISSING}
-        if any(chip.level in urgent for chip in attention_chips(form, recorded=False)):
+        if any(chip.level in URGENT_CHIPS for chip in attention_chips(form, recorded=False)):
             pinned.append(_FINDINGS_KEY)
         kept: list[str] = []
         for key in pinned:

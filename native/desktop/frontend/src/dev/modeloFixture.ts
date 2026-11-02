@@ -15,6 +15,7 @@ import type {
   FilePicks,
   FileToken,
   JsonObject,
+  LedgerErrorDetail,
   LedgerFailure,
   LedgerFailureCode,
   LedgerOutcome,
@@ -71,7 +72,11 @@ import { hex64 } from "./fixtures/ledger";
  * `moving` moves it once more after that read, and again after the next,
  * so each check on a form read again is stale;
  * the `receipt` declaration is corrected, and `correction-refused` and
- * `correction-unknown` refuse the correction or lose its settlement.
+ * `correction-unknown` refuse the correction or lose its settlement;
+ * `export-past-cutoff` and `report-outdated` settle the export of the file
+ * for the AEAT or of the report as a refusal, with the error detail the
+ * backend recorded for it and the sentence it served, in the report's
+ * language.
  * `read-only-boxes` reads every box that takes a typed value as one whose kind
  * of value has no way in yet, as a date or a year box is: the application's
  * reads of these synthetic declarations hold no such box. */
@@ -93,6 +98,8 @@ export const MODELO_SHAPES = [
   "export-unknown",
   "correction-refused",
   "correction-unknown",
+  "export-past-cutoff",
+  "report-outdated",
   "rebase",
   "moving",
   "read-only-boxes",
@@ -311,6 +318,8 @@ export function modeloFixture(options: Options): ModeloPort {
       case "export-cutoff-unverified":
       case "export-notes":
       case "export-unknown":
+      case "export-past-cutoff":
+      case "report-outdated":
         return recorded ? "130-1T-filed" : "130-1T-exported";
       case "edit":
         return applied ? "130-1T-applied" : "130-1T-exported";
@@ -354,6 +363,27 @@ export function modeloFixture(options: Options): ModeloPort {
   /** The envelope `name` of a write the scenario answers, or unserved. */
   const written = async (name: string): Promise<unknown> =>
     (await envelope<unknown>(name)) ?? unserved();
+  /** A write the backend refused once it ran: it settles without writing,
+   * carrying the error detail recorded for `refusal` in `language`. */
+  const refusedWith = async (
+    refusal: string,
+    language: unknown,
+  ): Promise<LedgerOutcome> => {
+    const detail = await envelope<JsonObject>(
+      `refusal-${refusal}-${String(language)}`,
+    );
+    if (!detail) return unserved();
+    const operation = nextOperation();
+    const outcome: LedgerOutcome = {
+      kind: "refused",
+      operation_id: operation,
+      revision: 3,
+      reason: typeof detail.error_code === "string" ? detail.error_code : null,
+      detail: detail as unknown as LedgerErrorDetail,
+    };
+    outcomes.set(operation, outcome);
+    return outcome;
+  };
   /** A file the host issued for `picked` (a pick) or not (a save). */
   const issued = (token: unknown, picked: boolean) => {
     const file = files.get(token as FileToken);
@@ -504,6 +534,20 @@ export function modeloFixture(options: Options): ModeloPort {
       if (needsWorkUnit(definition) !== (workUnit.length === 1))
         reject("invalid");
       const language = request.output_language as OutputLanguage;
+      if (definition === "modelo.export" && shape === "export-past-cutoff") {
+        issued(request.output_path, false);
+        return (await refusedWith(
+          "domiciliation-past-cutoff",
+          request.report_language,
+        )) as LedgerOutcome<ModeloResult<typeof definition>>;
+      }
+      if (definition === "modelo.export" && shape === "report-outdated") {
+        issued(request.output_path, false);
+        return (await refusedWith(
+          "report-outdated",
+          request.report_language,
+        )) as LedgerOutcome<ModeloResult<typeof definition>>;
+      }
       const result = await (async (): Promise<unknown> => {
         switch (definition) {
           case "modelo.declarations.list":

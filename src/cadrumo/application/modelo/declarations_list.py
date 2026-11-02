@@ -32,6 +32,7 @@ from ..overview.calendar import holiday_coverage_statement
 from ..overview.calendar_models import OverviewAeatSubmissionState, OverviewLocalFilingState
 from ..overview.coverage import CoverageAdviceReason
 from ..overview.home import HomeAvailability
+from .calculation_notes import note_fact_text
 from .declaration_summary import DeclarationSummaryState
 from .declaration_targets import DeclarationTarget
 from .declarations_calendar import (
@@ -277,9 +278,12 @@ def _local_step(row: DeclarationListRow) -> DeclarationListNextStep:
 def next_step(row: DeclarationListRow) -> DeclarationListNextStep | None:
     """The step the row offers: fixing what blocks it, starting a due return, or opening its local work.
 
-    A calculation the note gate refuses as stale is calculated again first, as the form's next step is.
+    A calculation the note gate refuses as stale is calculated again first, as the form's next step is,
+    and so is a declaration recorded before screens existed whose export the gate refuses for a capped figure.
     """
     summary = None if row.declaration is None else row.declaration.summary
+    if summary is not None and summary.filed_before_grade_cap and row.state == "recorded":
+        return DeclarationListNextStep.RECALCULATE
     if summary is not None and summary.calculation_outdated and row.state not in _CLOSED_STATES:
         return DeclarationListNextStep.RECALCULATE
     if row.state == "blocked":
@@ -300,6 +304,18 @@ def blocking_count(row: DeclarationListRow) -> int:
     """How many things block filing the row's declaration; zero when its summary does not say."""
     summary = None if row.declaration is None else row.declaration.summary
     return 0 if summary is None else summary.blocking_count or 0
+
+
+def calculation_note_words(row: DeclarationListRow, language: OutputLanguage) -> tuple[str, ...]:
+    """What the row's current calculation noted that withholds nothing, in the filer's language, in order.
+
+    A capped box whose zero its calculation proved is one: the list says the
+    zero stands, as the declaration's form does once reopened.
+    """
+    summary = None if row.declaration is None else row.declaration.summary
+    if summary is None:
+        return ()
+    return tuple(note_fact_text(fact, locale=language.value) for fact in dict.fromkeys(summary.proven_zero_notes))
 
 
 def next_step_words(row: DeclarationListRow, step: DeclarationListNextStep, language: OutputLanguage) -> str:
@@ -620,6 +636,7 @@ __all__ = [
     "aeat_filing_notes",
     "applicable_modelos",
     "blocking_count",
+    "calculation_note_words",
     "calendar_sources",
     "creation_targets",
     "deadline_note_words",

@@ -17,7 +17,7 @@ from ..enums import BusinessClassification as Class
 from ..enums import TransactionDirection as Direction
 from ..enums import TransactionLifecycleState as Lifecycle
 
-pytestmark = [pytest.mark.unit]
+pytestmark = [pytest.mark.unit, pytest.mark.hex_domain]
 
 
 def test_only_an_active_row_takes_a_change() -> None:
@@ -84,7 +84,7 @@ def test_who_is_told_a_purchase_document_is_missing(
         (Lifecycle.ACTIVE, Class.PERSONAL, ("archive", "stash", "exclude")),
         (Lifecycle.ACTIVE, Class.REVIEWED_EXCLUDED, ("archive", "stash")),
         (Lifecycle.ARCHIVED, Class.PERSONAL, ("restore",)),
-        (Lifecycle.STASHED, Class.BUSINESS, ("restore",)),
+        (Lifecycle.STASHED, Class.BUSINESS, ("restore", "archive")),
         (Lifecycle.SPLIT, Class.PERSONAL, ()),
     ],
 )

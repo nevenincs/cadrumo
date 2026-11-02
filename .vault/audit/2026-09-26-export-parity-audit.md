@@ -5,7 +5,7 @@ tags:
 date: '2026-09-26'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:8aacf592da0867ed65e520d5d03323a6d9fdb645d46e664f07beab754c6e6c9c'
+body_hash: 'sha256:8fa80eb41d37b6d189ef7fbd8edcab7f51cfccf5b5ad7b6bae6e1e1562a69de6'
 related:
   - "[[2026-09-23-tuimodelo-export-paths-reference]]"
   - "[[2026-09-07-tuimodelo-export-destinations-adr]]"
@@ -109,3 +109,21 @@ Resolved: borrador per-snapshot refusal and capture-time key check, PRESENTADO e
 
 ### build-time routing check date | low | checked at year end while calculation reads at period end
 `src/cadrumo/domain/renta/retenciones_routing_integrity.py:103`. No effect with one routing variant.
+
+## Final P02 re-review 2026-11-02 (`7a0846f6ed..90c716ec26`)
+
+Resolved: borrador support-envelope refusal, signed report screen check for non-filed sealed revisions, workbook notes without a casilla, summary per-row guard. Checked and sound: proven-zero persistence and identity, filed-before-cap refusal and recalculation path, filing kind without the DPA reading, the 31 December reach date for undated instalment periods (`src/cadrumo/application/modelo/amendment_regime_policy.py:137`), and every local-file export passing the gate (`src/cadrumo/application/modelo/export.py:706`). 279 focused tests passed on an archive of `90c716ec26`.
+
+### saved-review staleness | medium | the review screens the old rendering snapshot through current facts
+`src/cadrumo/application/modelo/calculation_note_gate.py:186-207` can disagree with the export gate's current law-selected snapshot. Recommendation: use the gate's snapshot; treat an unresolvable snapshot as stale.
+
+### outdated borrador count | medium | a corrupt older-schema row is counted as outdated, not raised
+`src/cadrumo/adapters/persistence/profile/snapshots.py:224-229` ignores the unreadable reason. Recommendation: count only lineage refusals.
+
+### outdated borrador remedy | low | the count never clears and is read in a second scan
+The advice implies re-import clears it; the count covers the whole store and comes from a separate read.
+
+### signed report on rows filed before the cap | low | an unstamped filed revision is signed with its capped figure and no note
+Orchestrator decision under the 2026-11-02 ruling: the report and the review workbook apply the `filed_before_grade_cap` predicate as export does.
+
+Out of scope, queued: Modelo 131 2024-onward complementaria export refuses the boolean `declaracion-complementaria` value at position 692 (`text value must be text or absent`).

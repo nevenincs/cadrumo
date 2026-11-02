@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 
-from .....core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from .....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from .....core.hashing import content_hash_hex
 from ..authority_artifact import AuthorityComponentQuery, AuthorityGenerationPin, SnapshotGlobalsComponentQuery
 from ..snapshot_globals import SnapshotGlobalCatalogues, SupportedFilingYearsCatalogue
 
 FIXTURE_SNAPSHOT_GLOBALS = SnapshotGlobalCatalogues(
-    supported_filing_years=SupportedFilingYearsCatalogue(floor=FILING_YEAR_MIN, horizon=FILING_YEAR_MAX),
+    supported_filing_years=SupportedFilingYearsCatalogue(floor=FOUR_DIGIT_YEAR_FIRST, horizon=FOUR_DIGIT_YEAR_LAST),
 )
 """Registry globals admitting every representable filing year.
 

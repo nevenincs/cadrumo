@@ -745,6 +745,9 @@ application:
           recargo de equivalencia must be zero.
         printed_total_differs: The printed total, %{printed}, differs from the calculated
           total, %{computed}.
+        rate_date_projected: 'The IVA rates for %{on_date} are read from the nearest
+          declarations, from %{nearest}: this date is older than the filing years
+          Cadrumo covers, so they are a projection, not grounded for filing.'
         rate_date_unresolved: The registry declares no IVA rates for %{on_date}, so
           no IVA can be worked out.
         recargo_above_iva_total: The recargo de equivalencia, %{stated}, cannot exceed
@@ -1194,6 +1197,12 @@ application:
           data.
         what_to_do: Nothing to change in your records. Report it before you rely on
           the figures.
+      filed_before_grade_cap:
+        what: This declaration was recorded before the current checks on its figures,
+          and one of its boxes holds a figure those checks hold back, so you cannot
+          export it as it stands.
+        what_to_do: Calculate the declaration again, check it and record it again;
+          the new record replaces this one.
       inferred_retencion_excluded_from_credit:
         what: Some withholding on your issued invoices was worked out from what the
           client paid, so it was left out of your credit and you may pay more than
@@ -2361,6 +2370,12 @@ application:
           then calculate again.
       inspection_heading: All boxes, in box-number order
       unnamed_box: Unnamed box
+  operations:
+    error_detail:
+      record_fault: A record Cadrumo built did not pass its own check, so this could
+        not be done.
+      unworded: This could not be done. Its reason has no sentence yet; its code is
+        {error_code}.
   overview:
     calendar:
       event:

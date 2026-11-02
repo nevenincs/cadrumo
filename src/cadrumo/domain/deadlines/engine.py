@@ -205,23 +205,47 @@ def indexed_deadline_window_year(
     return projected
 
 
+def _window_owner(
+    directory: ModeloRevisionDirectory,
+    window: DeadlineWindowDefinition,
+) -> RevisionSelectionMetadata | None:
+    """Return the revision that owns an authored window's coordinate, or ``None`` when none does.
+
+    The window a past year's revision authors is a dated fact of law whether or
+    not the product files that year, so a year the envelope gates is answered by
+    the design the law applied to it. It still selects only an exact coordinate.
+    """
+    from ..calculations.registry.errors import NoRevisionForPeriodError
+    from ..calculations.registry.temporal import select_authored_revision_metadata, select_revision_metadata
+
+    support = directory.supported_filing_years
+    if support is None or support.admits_filing_year(window.filing_year):
+        return select_revision_metadata(
+            directory,
+            filing_year=window.filing_year,
+            period=window.period.registry_token,
+        )
+    try:
+        return select_authored_revision_metadata(
+            directory,
+            filing_year=window.filing_year,
+            period=window.period.registry_token,
+        )
+    except NoRevisionForPeriodError:
+        return None
+
+
 def _owned_directory_windows(
     directory: ModeloRevisionDirectory,
     year: int,
 ) -> Iterator[tuple[RevisionSelectionMetadata, DeadlineWindowDefinition]]:
     """Yield, lazily, each ``year`` window whose declaring revision the selector owns."""
-    from ..calculations.registry.temporal import select_revision_metadata
-
     for metadata in directory.revisions:
         for metadata_window in metadata.deadline_windows:
             if metadata_window.filing_year != year:
                 continue
-            selected = select_revision_metadata(
-                directory,
-                filing_year=metadata_window.filing_year,
-                period=metadata_window.period.registry_token,
-            )
-            if selected.id == metadata.id:
+            selected = _window_owner(directory, metadata_window)
+            if selected is not None and selected.id == metadata.id:
                 yield metadata, metadata_window
 
 

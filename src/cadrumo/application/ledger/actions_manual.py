@@ -35,6 +35,7 @@ from ...domain.calculations.registry.iva_deduction_catalogue import invoice_evid
 from ...domain.currency.service import CurrencyNormalizationService
 from ...domain.invoices.errors import InvoiceLinkError
 from ...domain.iva.deduction_facts import IvaDeductionClassificationProvenance, required_deduction_evidence_authority
+from ...domain.transactions.classification_effects import takes_changes, takes_invoice
 from ...domain.transactions.classification_origin import (
     ClassificationOrigin,
     with_classification_origin,
@@ -240,8 +241,10 @@ def link_manual_transaction_invoice(
 ) -> InvoiceTransactionLinkResult:
     """Establish an atomic invoice-only relationship for one ledger transaction.
 
-    This is the sole invoice-linkage writer. It resolves the transaction,
-    enforces the invoice's missing and cross-bucket policy up front, then
+    This is the sole invoice-linkage writer. It resolves the transaction, refuses
+    a transfer or a row that takes no change, since a second link turns a live
+    row's invoice into partial evidence, enforces the invoice's missing and
+    cross-bucket policy up front, then
     delegates the bidirectional catalogue mutation and persistence to
     :func:`~cadrumo.application.invoices.transaction_linking.link_invoice_transaction_repositories`.
     It never touches purchase evidence or attachments: evidence mutation is
@@ -263,6 +266,16 @@ def link_manual_transaction_invoice(
     trimmed_source_command = require_source_command(source_command, operation="ledger invoice linkage")
     repository = resolve_transaction_repository(bucket_id=bucket_id, repository=ports.transaction_repository)
     current = require_transaction(repository.load(), transaction_id)
+    if not takes_changes(current.lifecycle_state) or not takes_invoice(current.direction):
+        raise InvoiceLinkError(
+            "only an active movement of money in or out can have an invoice linked",
+            context={
+                "invoice_id": invoice_id,
+                "transaction_bucket_id": bucket_id,
+                "lifecycle_state": current.lifecycle_state.value,
+                "direction": current.direction.value,
+            },
+        )
     invoices_repo = resolve_invoice_repository(bucket_id=bucket_id, repository=ports.invoice_repository)
     invoice_record = invoices_repo.load().get(invoice_id)
     if invoice_record is None:

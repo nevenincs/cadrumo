@@ -41,5 +41,14 @@ class ModeloCode(str):
         return core_schema.no_info_after_validator_function(pydantic_validation_boundary(cls), core_schema.str_schema())
 
 
+def coerce_modelo_code(value: object) -> ModeloCode:
+    """Accept a ``ModeloCode`` or its raw string, refusing every other type."""
+    if isinstance(value, ModeloCode):
+        return value
+    if isinstance(value, str):
+        return ModeloCode(value)
+    raise ModeloValidationError(f"expected ModeloCode or str, got {type(value).__name__}")
+
+
 ModeloCodeText = Annotated[str, Field(pattern=r"^[0-9]{3}$")]
 """An ASCII three-digit modelo identifier declared directly in a public wire schema."""

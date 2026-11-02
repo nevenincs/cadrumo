@@ -637,6 +637,8 @@ cli:
         list_help: List persisted Modelo 100 borrador snapshots
         modelo_100_help: Modelo 100 borrador snapshot commands
         snapshot_id_help: Snapshot id (or unambiguous prefix)
+        snapshot_schema_outdated: '%{count} stored borrador snapshot(s) were saved
+          by an older version and cannot be read. Import the document again.'
         state_help: 'Snapshot state filter: `active`, `superseded`, `discarded`, or
           `all`'
         view_help: Show one Modelo 100 borrador snapshot
@@ -878,6 +880,7 @@ cli:
           regularizacion_bienes_inversion: capital-goods adjustment
           regularizacion_prorrata: prorrata adjustment
           retencion: withholding
+          retencion_soportada: withholding suffered from a payer
           withholding296_perceptor: withholding-declaration recipient
         relation_input_channel: "%{binding_id}\tfed by relation %{relation_id}\tuse\
           \ --relation %{relation_id}=VALUE"
@@ -3279,6 +3282,8 @@ cli:
         cross_bucket_invoice: Invoice belongs to a different bucket than the active
           profile.
         invoice_not_found: Invoice id not found in the active profile invoice catalogue.
+        transaction_takes_no_invoice: Only an active movement of money in or out can
+          have an invoice linked.
       help: Link a transaction in your records to a reconciliation-catalogue invoice
         in one atomic call. Refuses cross-bucket links. Local-only; never contacts
         AEAT.

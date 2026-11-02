@@ -796,6 +796,10 @@ application:
           el recàrrec ha de ser zero.
         printed_total_differs: El total imprès, %{printed}, difereix del total calculat,
           %{computed}.
+        rate_date_projected: 'Els tipus d''IVA del %{on_date} es llegeixen de les
+          declaracions més properes, des del %{nearest}: aquesta data és anterior
+          als exercicis que cobreix Cadrumo, així que són una projecció i no serveixen
+          de base per presentar.'
         rate_date_unresolved: El registre no declara tipus d'IVA per al %{on_date},
           així que no es pot calcular l'IVA.
         recargo_above_iva_total: El recàrrec, %{stated}, no pot superar l'IVA total,
@@ -1270,6 +1274,12 @@ application:
           no en les teves dades.
         what_to_do: No has de canviar res als teus registres. Avisa'ns abans de refiar-te
           de les xifres.
+      filed_before_grade_cap:
+        what: Vas registrar aquesta declaració abans de les comprovacions actuals
+          de les seves xifres, i una de les seves caselles té una xifra que aquestes
+          comprovacions retenen, així que no pots exportar-la tal com està.
+        what_to_do: Torna a calcular la declaració, comprova-la i registra-la una
+          altra vegada; el nou registre substitueix aquest.
       inferred_retencion_excluded_from_credit:
         what: Part de la retenció de les teves factures emeses s'ha calculat a partir
           del que va pagar el client, així que s'ha deixat fora de la teva deducció
@@ -2499,6 +2509,12 @@ application:
           i torna a calcular.
       inspection_heading: Totes les caselles, per número de casella
       unnamed_box: Casella sense nom
+  operations:
+    error_detail:
+      record_fault: Un registre que ha creat Cadrumo no ha superat la seva pròpia
+        comprovació, així que no s'ha pogut fer.
+      unworded: No s'ha pogut fer. El seu motiu encara no té cap frase; el seu codi
+        és {error_code}.
   overview:
     calendar:
       event:

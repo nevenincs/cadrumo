@@ -31,6 +31,7 @@ from ..actividad_asset.ports import ActivityAssetHistoryRepository
 from ..aggregation.inventory import InventoryLedgerRepositoryProtocol
 from ..aggregation.percepciones_observations_repository import PercepcionObservationPorts
 from ..aggregation.retencion_observations_repository import RetencionObservationPorts
+from ..aggregation.retencion_soportada_repository import RetencionSoportadaPorts
 from ..bienes_inversion.ports import BienesInversionIvaRegisterRepositoryProtocol
 from ..calculations.iva_compensation_history_ports import IvaCompensationHistoryRepositoryProtocol
 from ..foreign_assets.ports import ForeignAssetRegisterRepositoryProtocol
@@ -102,6 +103,7 @@ class CalculationActionPorts:
     iva_compensation_decision_repository: CalculationIvaWalletDecisionRepositoryProtocol
     borrador_snapshot_repository: Borrador100SnapshotRepository
     retencion_observation_ports: RetencionObservationPorts
+    retencion_soportada_ports: RetencionSoportadaPorts
     relation_override_migration: CalculationRevisionOverrideMigrationProtocol
 
 

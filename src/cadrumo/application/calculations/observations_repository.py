@@ -46,7 +46,7 @@ from pydantic import BaseModel, Field, ValidationInfo, field_validator, model_va
 from ...core.casilla_id import CasillaId
 from ...core.errors.hierarchy import pydantic_validation_boundary
 from ...core.external_constants import UTF_8_ENCODING
-from ...core.filing_year import FILING_YEAR_MAX, FILING_YEAR_MIN
+from ...core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...core.hashing import sha256_hex
 from ...core.identity.hex_ids import FilingRecordId
 from ...core.identity.tax_id import tax_id_identity_token
@@ -496,10 +496,10 @@ def observation_key_for_token(modelo: str, filing_year: int, period_token: str) 
     """
     _validate_repository_component(modelo, context="modelo")
     _validate_repository_component(period_token, context="period")
-    if not FILING_YEAR_MIN <= filing_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= filing_year <= FOUR_DIGIT_YEAR_LAST:
         raise ObservationKeyError(
             translated_message="application.calculations.observations.errors.filing_year_out_of_range",
-            context={"filing_year": filing_year, "minimum": FILING_YEAR_MIN, "maximum": FILING_YEAR_MAX},
+            context={"filing_year": filing_year, "minimum": FOUR_DIGIT_YEAR_FIRST, "maximum": FOUR_DIGIT_YEAR_LAST},
         )
     return f"{modelo}:{filing_year}:{period_token}"
 
@@ -582,10 +582,10 @@ def iva_wallet_decision_key(taxpayer_nif: str, target_period: Period) -> str:
             context={"field": "taxpayer_nif"},
         )
     _validate_repository_component(target_period_token, context="target_period")
-    if not FILING_YEAR_MIN <= target_year <= FILING_YEAR_MAX:
+    if not FOUR_DIGIT_YEAR_FIRST <= target_year <= FOUR_DIGIT_YEAR_LAST:
         raise ObservationKeyError(
             translated_message="application.calculations.observations.errors.iva_wallet_target_year_out_of_range",
-            context={"target_year": target_year, "minimum": FILING_YEAR_MIN, "maximum": FILING_YEAR_MAX},
+            context={"target_year": target_year, "minimum": FOUR_DIGIT_YEAR_FIRST, "maximum": FOUR_DIGIT_YEAR_LAST},
         )
     digest = sha256_hex(
         "\x1f".join((taxpayer_token, str(target_year), target_period_token)).encode(UTF_8_ENCODING),

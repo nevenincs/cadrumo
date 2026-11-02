@@ -13,6 +13,7 @@ from enum import StrEnum
 from pydantic import BaseModel, Field
 
 from ...core.errors.hierarchy import CadrumoError
+from ...core.filing_year import FourDigitYear
 from ...core.models import STRICT_FROZEN_CONFIG
 from ...domain.calculations.registry.form_codes import resolve_form_codes
 
@@ -82,7 +83,7 @@ class WithholdingRecognitionEvidence(BaseModel):
 
     model_config = STRICT_FROZEN_CONFIG
 
-    applicable_year: int = Field(ge=1900, le=9999)
+    applicable_year: FourDigitYear
     recipient_tax_status: WithholdingRecipientTaxStatus
     recipient_tax_regime: WithholdingRecipientTaxRegime
     income_kind: WithholdingIncomeKind

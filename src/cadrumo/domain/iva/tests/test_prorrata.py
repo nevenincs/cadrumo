@@ -27,6 +27,7 @@ import pytest
 from pydantic import ValidationError
 
 from ....core.directory_scan import scan_directory
+from ....core.filing_year import FOUR_DIGIT_YEAR_FIRST, FOUR_DIGIT_YEAR_LAST
 from ...calculations.registry.authority import bundled_indexed_authority
 from ...calculations.registry.schema_base import ThresholdComparison
 from ...calculations.registry.tests.published_authority import PublishedGovernedFactSource
@@ -365,10 +366,12 @@ def test_is_especial_mandatory_rejects_negative_amounts() -> None:
 
 def test_is_especial_mandatory_rejects_out_of_range_year() -> None:
     """The year selects the applicable redaction, so an unsupported year refuses rather than guessing one."""
-    with pytest.raises(ProrrataInputError, match=r"year out of supported range"):
-        is_especial_mandatory(Decimal("200"), Decimal("100"), year=1999, parameters=_ESPECIAL_PARAMS)
-    with pytest.raises(ProrrataInputError, match=r"year out of supported range"):
-        especial_mandatory_rule(2101, parameters=_ESPECIAL_PARAMS)
+    with pytest.raises(ProrrataInputError, match=r"four digits"):
+        is_especial_mandatory(
+            Decimal("200"), Decimal("100"), year=FOUR_DIGIT_YEAR_FIRST - 1, parameters=_ESPECIAL_PARAMS
+        )
+    with pytest.raises(ProrrataInputError, match=r"four digits"):
+        especial_mandatory_rule(FOUR_DIGIT_YEAR_LAST + 1, parameters=_ESPECIAL_PARAMS)
 
 
 # ---------------------------------------------------------------------------
@@ -479,10 +482,10 @@ def test_compute_general_rejects_year_out_of_range() -> None:
         operaciones_con_derecho_deduccion=Decimal("100"),
         operaciones_sin_derecho_deduccion=Decimal("0"),
     )
-    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000\.\.2099"):
-        compute_prorrata_general(inputs, year=1999, kind=ProrrataKind.from_registry("definitiva"))
-    with pytest.raises(ProrrataInputError, match=r"year out of supported range 2000\.\.2099"):
-        compute_prorrata_general(inputs, year=2101, kind=ProrrataKind.from_registry("definitiva"))
+    with pytest.raises(ProrrataInputError, match=r"four digits"):
+        compute_prorrata_general(inputs, year=FOUR_DIGIT_YEAR_FIRST - 1, kind=ProrrataKind.from_registry("definitiva"))
+    with pytest.raises(ProrrataInputError, match=r"four digits"):
+        compute_prorrata_general(inputs, year=FOUR_DIGIT_YEAR_LAST + 1, kind=ProrrataKind.from_registry("definitiva"))
 
 
 def test_compute_general_rejects_invalid_period_with_prorrata_error() -> None:

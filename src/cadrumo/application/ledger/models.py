@@ -287,6 +287,9 @@ class ManualLedgerTransactionCommand(_ManualLedgerTransactionInput):
             )
         forbidden = {
             "category_id": self.category_id,
+            "iva_category": self.iva_category,
+            "deduction_fact_kind": self.deduction_fact_kind,
+            "investment_asset_id": self.investment_asset_id,
             "taxable_base": self.taxable_base,
             "iva_rate": self.iva_rate,
             "iva_amount": self.iva_amount,

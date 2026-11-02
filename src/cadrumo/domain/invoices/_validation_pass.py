@@ -24,6 +24,11 @@ question instead of recomputing it. The memo is bounded by these invariants:
   each time, so every invoice reports its own failure exactly as before.
 - Answers are shared between invoices, so only immutable values are memoised.
 - With no pass or no authority in scope the projection runs unchanged.
+
+A pass also reads an invoice as the dated record it is: one older than the
+filing years still validates, against facts marked as a backward projection,
+because a catalogue holding one must stay readable. No filing reads through a
+pass, so this reach never reaches a filing-grade answer.
 """
 
 from __future__ import annotations
@@ -35,6 +40,7 @@ from dataclasses import dataclass, field
 from typing import cast
 
 from ...core.time.clock import today_madrid
+from ..calculations.registry.facts.resolution import reading_dated_facts_below_support
 from ..calculations.registry.governed_fact_scope import GovernedFactSource, governed_facts_in_scope
 
 
@@ -57,7 +63,8 @@ def invoice_validation_pass() -> Generator[None]:
         return
     token = _ACTIVE_PASS.set(_ValidationPass())
     try:
-        yield
+        with reading_dated_facts_below_support():
+            yield
     finally:
         _ACTIVE_PASS.reset(token)
 

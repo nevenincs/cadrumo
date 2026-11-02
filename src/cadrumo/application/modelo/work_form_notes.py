@@ -21,6 +21,7 @@ from .calculation_note_gate import gate_refuses
 from .calculation_notes import (
     CALCULATION_SCREEN_OUTDATED_REASON,
     CHECK_REFUSED_REASONS,
+    FILED_BEFORE_GRADE_CAP_REASON,
     durable_binding_source,
     note_attention,
 )
@@ -88,17 +89,24 @@ def collect_note_sources(
     diagnostics: tuple[CalculationSourceDiagnostic, ...] | None,
     *,
     screen_outdated: bool = False,
+    filed_before_grade_cap: CasillaId | None = None,
 ) -> tuple[NoteSource, ...]:
     """Each latest-calculation reason with the box it names: every diagnostic when held, else the durable ones.
 
     ``screen_outdated`` says the gate refuses ``revision`` as stale before it
-    reads any note, so the derived reason leads them.
+    reads any note, so the derived reason leads them. ``filed_before_grade_cap``
+    is the capped box whose figure keeps a revision filed before screens existed
+    from being exported, which leads them the same way.
 
     Parameter types: ``revision`` (:class:`~cadrumo.domain.modelos.calculation_revision.CalculationRevision`).
     """
     stale: tuple[NoteSource, ...] = (
         ((CALCULATION_SCREEN_OUTDATED_REASON, None, None, None, None, None),)
         if screen_outdated and revision is not None
+        else ()
+    ) + (
+        ((FILED_BEFORE_GRADE_CAP_REASON, filed_before_grade_cap, None, None, None, None),)
+        if filed_before_grade_cap is not None and revision is not None
         else ()
     )
     if diagnostics is not None:
@@ -117,10 +125,10 @@ def collect_note_sources(
         )
     if revision is None:
         return ()
-    # A persisted note is never a proven zero: those are held, not stored. Its stored message is a
-    # technical account in no language of the filer's, so the note is worded by its reason alone.
+    # A persisted note keeps the outcome its resolver stated, so a proven zero still reads as one. Its stored
+    # message is a technical account in no language of the filer's, so the note is worded by its reason alone.
     return stale + tuple(
-        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, None, None)
+        (issue.reason, issue.casilla_id, issue.binding_source, issue.fact, issue.value_outcome, None)
         for issue in revision.source_issues
     )
 

@@ -11,6 +11,7 @@ from ...domain.invoices.figures import (
     LineFigures,
     StatedFigure,
 )
+from ...domain.invoices.rule_findings import rule_finding_words_key
 from ..operations.public_scalar import PublicDecimal, project_facts
 from .figures_preview_contracts import (
     INVOICE_FIGURES_PREVIEW_LABEL_PREFIX,
@@ -73,7 +74,7 @@ def project_rule_finding(located: LocatedRuleFinding) -> InvoiceFiguresPreviewRu
         fields=finding.fields,
         line_key=located.line_key,
         values=project_facts(finding.values),
-        label_key=f"{INVOICE_FIGURES_PREVIEW_LABEL_PREFIX}rule_finding.{finding.code.value}",
+        label_key=rule_finding_words_key(finding.code),
     )
 
 

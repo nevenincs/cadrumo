@@ -27,7 +27,6 @@ from ...core.operations import OperationEffect, OperationInteractionKind
 from ...core.operations import profile_operation_subject as _profile_subject
 from ...core.period import Period
 from ...core.time.clock import now
-from ...domain.calculations.registry.authority import bundled_indexed_authority
 from ...domain.calculations.registry.ids import (
     ModeloId,
     RevisionId,
@@ -47,6 +46,7 @@ from ..operations.subject_reference import OperationSubjectReferenceV1
 from ..storage.calc_sheets.engine import build_export_plan
 from ..storage.calc_sheets.records import OperatorInputs, RelationValues, SheetExportPlan, SheetReviewMetadata
 from ..storage.calc_sheets.review_workbook import ReviewLabelResolver, build_review_workbook
+from ..storage.calc_sheets.workbook_export import resolve_published_snapshot
 from ..user_profile.capabilities import resolve_active_capability
 from .managed_artifact_ports import ManagedArtifactKind
 from .publication_receipt import (
@@ -240,16 +240,6 @@ def _require_active_profile_subject(
         raise GoogleSheetsExportSubjectMismatchError("Google Sheets export subject does not match its exact profile")
 
 
-def _resolve_snapshot(modelo: ModeloId, period: Period) -> RegistrySnapshot:
-    """Use the one registry authority for temporal snapshot selection."""
-    with bundled_indexed_authority().operation() as operation:
-        return operation.snapshot(
-            modelo,
-            filing_year=period.filing_year,
-            period=period.registry_token,
-        )
-
-
 def _unconfigured_google_sheets_export_prepare_port(_profile_id: str) -> GoogleSheetsExportPreparedPort:
     """Refuse accidental execution before the production composition binds a port."""
     raise InternalInvariantError("Google Sheets export transport has not been composed")
@@ -376,7 +366,7 @@ class GoogleSheetsExportService:
         self,
         *,
         prepare_port: GoogleSheetsExportPreparePort = _unconfigured_google_sheets_export_prepare_port,
-        snapshot_resolver: GoogleSnapshotResolver = _resolve_snapshot,
+        snapshot_resolver: GoogleSnapshotResolver = resolve_published_snapshot,
         plan_builder: GoogleExportPlanBuilder = build_export_plan,
     ) -> None:
         """Bind the ports and policies this export service resolves through."""
@@ -524,7 +514,7 @@ def _result(
 def build_google_sheets_export_operation_definition(
     *,
     prepare_port: GoogleSheetsExportPreparePort = _unconfigured_google_sheets_export_prepare_port,
-    snapshot_resolver: GoogleSnapshotResolver = _resolve_snapshot,
+    snapshot_resolver: GoogleSnapshotResolver = resolve_published_snapshot,
     plan_builder: GoogleExportPlanBuilder = build_export_plan,
 ) -> OperationDefinition:
     """Bind an injected remote-export port without importing concrete adapters."""
@@ -558,7 +548,7 @@ def build_google_sheets_export_operation_definition(
 def build_google_sheets_export_service(
     *,
     prepare_port: GoogleSheetsExportPreparePort = _unconfigured_google_sheets_export_prepare_port,
-    snapshot_resolver: GoogleSnapshotResolver = _resolve_snapshot,
+    snapshot_resolver: GoogleSnapshotResolver = resolve_published_snapshot,
     plan_builder: GoogleExportPlanBuilder = build_export_plan,
 ) -> GoogleSheetsExportService:
     """Build the reusable application service from injected boundary ports."""

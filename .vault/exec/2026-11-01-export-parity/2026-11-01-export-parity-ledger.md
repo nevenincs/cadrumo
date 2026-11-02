@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:7afb7fac1b3dc7aa5da1a9f83dedc17cd06231e76d852fda05c2774b1aa79bcb'
+body_hash: 'sha256:c86404b1e856c6b79ff3ffa3fe69a82e55692879b76395d4f453f6f28cee8428'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -270,6 +270,37 @@ related:
 - `S16` `M` `src/cadrumo/domain/modelos/filing_kind_evidence.py`
 - `S16` `M` `src/cadrumo/domain/modelos/tests/test_filing_kind_evidence.py`
 - `S16` `verify:` `pytest filing_kind tests` -> `pass`
+- `S15` `M` `src/cadrumo/entrypoints/tests/test_borrador_100_snapshot_lifecycle.py`
+- `S15` `verify:` `pytest borrador lifecycle+status composition` -> `pass`
+- `S15` `by:` `standard-implementer`
+- `S14` `M` `src/cadrumo/application/modelo/calculation_report_export.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_calculation_report_export.py`
+- `S14` `M` `src/cadrumo/entrypoints/calculation_review_snapshot_composition.py`
+- `S14` `M` `src/cadrumo/application/export/tests/test_review_snapshot_loader.py`
+- `S14` `M` `src/cadrumo/application/modelo/tests/test_declaration_summary_grade.py`
+- `S14` `verify:` `pytest report export, review loader, declaration summary` -> `pass`
+- `S14` `by:` `standard-implementer`
+- `S15` `M` `src/cadrumo/adapters/persistence/profile/snapshots.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/secure_object_namespaces.py`
+- `S15` `verify:` `uv run --no-sync pytest borrador+live+aeat_sync+namespace registry` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `lint-imports` -> `pass`
+- `S15` `by:` `implementer`
+- `S14` `M` `src/cadrumo/application/modelo/declarations_list_projection.py`
+- `S14` `M` `src/cadrumo/domain/modelos/tests/test_calculation_source_issue_identity.py`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_e2e_ledger_m130_capped_retenciones.py`
+- `S14` `verify:` `pytest proven-zero persistence, gate, form, summary, list, revision identity and stored-shape replay` -> `pass`
+- `S14` `verify:` `just check-types` -> `pass`
+- `S14` `verify:` `lint-imports` -> `pass`
+- `S14` `by:` `high-implementer`
+- `S14` `M` `src/cadrumo/application/modelo/work_form_next_step.py`
+- `S14` `verify:` `pytest filed-before-cap export refusal, form and list recalculation, gate, summary, e2e` -> `pass`
+- `S14` `verify:` `just check-style` -> `pass`
+- `S14` `verify:` `just check-format` -> `pass`
+- `S14` `verify:` `python -m dev.registry.conformance valid` -> `pass`
+- `S14` `verify:` `just check-bindings` -> `pass`
+- `S14` `verify:` `pytest cap gate, review loader, clean-state enforcement; check-style, check-format, check-types, lint-imports` -> `pass`
+- `S14` `by:` `standard-executor`
 
 ## Notes
 
@@ -288,3 +319,8 @@ related:
 - `S05` phase-review fix
 - `S14` phase-review-fix
 - `S16` record amendment 2026-11-02
+- `S15` re-review fix
+- `S14` re-review fix
+- `S15` operator-approved schema bump 2026-11-02
+- `S14` operator ruling 2026-11-02
+- `S14` regression fix

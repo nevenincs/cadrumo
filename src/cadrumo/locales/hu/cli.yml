@@ -672,6 +672,8 @@ cli:
         list_help: Mentett Modelo 100 borrador pillanatképek listázása.
         modelo_100_help: Modelo 100 borrador pillanatkép-parancsok.
         snapshot_id_help: Pillanatkép-azonosító (vagy egyértelmű előtag).
+        snapshot_schema_outdated: '%{count} korábbi verzióval mentett borrador-pillanatkép
+          nem olvasható. Importáld újra a dokumentumot.'
         state_help: 'Pillanatkép-állapot szűrő: `active`, `superseded`, `discarded`
           vagy `all`.'
         view_help: Egyetlen Modelo 100 borrador pillanatkép megjelenítése.
@@ -925,6 +927,7 @@ cli:
           regularizacion_bienes_inversion: tárgyi eszközök korrekciója
           regularizacion_prorrata: prorrata-korrekció
           retencion: levonás
+          retencion_soportada: kifizetőtől elszenvedett levonás
           withholding296_perceptor: visszatartás-bevallás kedvezményezettje
         relation_input_channel: "%{binding_id}\ta(z) %{relation_id} reláció tölti\
           \ fel\thasználd: --relation %{relation_id}=VALUE"
@@ -3471,6 +3474,8 @@ cli:
         cross_bucket_invoice: A számla egy másik buckethez tartozik, mint az aktív
           profil.
         invoice_not_found: A számlaazonosító nem található az aktív profil számlakatalógusában.
+        transaction_takes_no_invoice: Számla csak aktív, pénzbevételi vagy pénzkiadási
+          tételhez kapcsolható.
       help: Egyetlen atomi művelettel összekapcsol egy tranzakciót a nyilvántartásból
         egy egyeztetési katalógusbeli számlával. Elutasítja a bucketek közötti hivatkozásokat.
         Csak helyi; soha nem lép kapcsolatba az AEAT-tal.

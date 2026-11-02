@@ -22,10 +22,12 @@ from decimal import Decimal
 import pytest
 
 from ....core.aggregation import BindingSourceKind, BindingValueOutcome
+from ....core.casilla_id import CasillaId
 from ....core.period import Period
 from ....domain.calculations.registry.authority import PinnedAuthorityOperation
 from ....domain.calculations.registry.binding_grade_cap_reach import capped_binding_reach, snapshot_reach_date
 from ....domain.calculations.registry.binding_targets import revision_bindings_by_id
+from ....domain.calculations.registry.bindings import CasillaObservation
 from ....domain.calculations.registry.schema import RegistrySnapshot
 from ....domain.calculations.registry.schema_input_kind import InputKind
 from ....domain.calculations.registry.schema_references import RegistrySnapshotRef
@@ -51,8 +53,18 @@ from ...aggregation.tests.test_actividad_retencion_declared_credit import (
 )
 from ..advisory_binding_value import add_advisory_binding_value_diagnostics
 from ..calculation_bucket_actions import unrouted_source_issues
-from ..calculation_note_gate import ModeloCalculationBlockedError, require_work_unit_calculation_unblocked
-from ..calculation_notes import CALCULATION_SCREEN_OUTDATED_REASON, GATE_REFUSED_REASONS
+from ..calculation_note_gate import (
+    ModeloCalculationBlockedError,
+    calculation_filed_before_grade_cap,
+    gate_refuses,
+    require_work_unit_calculation_unblocked,
+)
+from ..calculation_notes import (
+    CALCULATION_SCREEN_OUTDATED_REASON,
+    FILED_BEFORE_GRADE_CAP_REASON,
+    GATE_REFUSED_REASONS,
+    what_locale_key,
+)
 from ..calculation_screen import calculation_screen_stamp
 from ..printed_boxes import snapshot_printed_boxes
 from .work_form_fixture import built_form
@@ -153,14 +165,17 @@ def _revision(
     *,
     stamp: CalculationScreenStamp | None,
     state: CalculationRevisionState = CalculationRevisionState.BORRADOR,
+    casilla_values: dict[CasillaId, Decimal] | None = None,
 ) -> CalculationRevision:
     filed = state in {CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO}
+    values = {} if casilla_values is None else casilla_values
+    verified = filed or state is CalculationRevisionState.VERIFICADO_COMPLETO
     return CalculationRevision(
         calculation_revision_id=derive_calculation_revision_id(
             work_unit_id=unit.work_unit_id,
             input_values_by_casilla_id={},
             binding_overrides={},
-            casilla_values={},
+            casilla_values=values,
             source_issues=issues,
             filing_instance_evidence=None,
             source_provenance=(),
@@ -168,19 +183,24 @@ def _revision(
         ),
         work_unit_id=unit.work_unit_id,
         registry_snapshot_ref=RegistrySnapshotRef(
-            modelo="130", revision_id=unit.revision_id, modelo_year=_YEAR, period=_QUARTER
+            modelo=str(unit.modelo), revision_id=unit.revision_id, modelo_year=_YEAR, period=_QUARTER
         ),
         state=state,
-        casilla_values={},
-        observations=(),
+        casilla_values=values,
+        observations=tuple(
+            CasillaObservation(
+                casilla_id=casilla_id, value=value, legal_refs=("rd-439-2007:art-110",), source_refs=("gate-test",)
+            )
+            for casilla_id, value in values.items()
+        ),
         created_at=_CLOCK,
         updated_at=_CLOCK,
         filing_instance_evidence=None,
         source_provenance=(),
         source_issues=issues,
         screen_stamp=stamp,
-        verified_at=_CLOCK if filed else None,
-        verified_by="operator" if filed else None,
+        verified_at=_CLOCK if verified else None,
+        verified_by="operator" if verified else None,
         filed_at=_CLOCK if filed else None,
         filed_by="operator" if filed else None,
         superseded_at=_CLOCK if state is CalculationRevisionState.PRESENTADO_SUPERSEDIDO else None,
@@ -197,9 +217,11 @@ def _calculated(
     return emitted, persisted
 
 
-def _refused_reasons(operation: PinnedAuthorityOperation, revision: CalculationRevision) -> set[str] | None:
+def _refused_reasons(
+    operation: PinnedAuthorityOperation, revision: CalculationRevision, unit: WorkUnit | None = None
+) -> set[str] | None:
     """The reasons every gated action refuses with, or ``None`` when each admits the revision."""
-    unit = _work_unit(_snapshot(operation))
+    unit = _work_unit(_snapshot(operation)) if unit is None else unit
     refusals: list[set[str]] = []
     for action in ("verify", "export", "file"):
         try:
@@ -233,7 +255,11 @@ def test_a_zero_over_rows_that_carry_no_retencion_is_proven_and_withholds_nothin
     assert note.casilla_id == _CAPPED_BOX
     assert note.value_outcome is BindingValueOutcome.PROVEN_ZERO
     assert note.fact is not None and note.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
-    assert [issue for issue in persisted if issue.reason == _REASON] == []
+    # The proven zero persists with its stated outcome and sentence, so a reopened declaration still shows it.
+    (issue,) = [issue for issue in persisted if issue.reason == _REASON]
+    assert issue.casilla_id == _CAPPED_BOX
+    assert issue.value_outcome is BindingValueOutcome.PROVEN_ZERO
+    assert issue.fact is not None and issue.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
     revision = _revision(_work_unit(snapshot), persisted, stamp=_stamp(snapshot, operation))
     assert _refused_reasons(operation, revision) is None
 
@@ -251,6 +277,7 @@ def test_a_zero_over_rows_whose_retencion_was_left_out_withholds(operation: Pinn
     (issue,) = [issue for issue in persisted if issue.reason == _REASON]
     assert issue.casilla_id == _CAPPED_BOX
     assert issue.binding_source is BindingSourceKind.LEDGER_RENTA_INCOME_AGGREGATION
+    assert issue.value_outcome is BindingValueOutcome.FROM_BEARING_ROWS
     reasons = _refused_reasons(operation, _revision(_work_unit(snapshot), persisted, stamp=_stamp(snapshot, operation)))
     assert reasons is not None and _REASON in reasons
 
@@ -313,9 +340,92 @@ def test_a_filed_revision_is_not_screened_again(operation: PinnedAuthorityOperat
     current = _stamp(snapshot, operation)
     other = CalculationScreenStamp(contract_version=current.contract_version, digest="0" * 64)
 
+    proven_zero = {_CAPPED_BOX: Decimal("0")}
+
     for state in (CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO):
         for stamp in (None, other):
-            assert _refused_reasons(operation, _revision(unit, (), stamp=stamp, state=state)) is None, (state, stamp)
+            revision = _revision(unit, (), stamp=stamp, state=state, casilla_values=proven_zero)
+            assert _refused_reasons(operation, revision) is None, (state, stamp)
+
+
+# Hand-derived: the 150,00 and 360,00 retenciones of two invoiced receipts, as a Modelo 130 casilla 06
+# filed before the cap existed holds them.
+_FILED_CAPPED_FIGURE = Decimal("510.00")
+
+
+def _export_refusal(
+    operation: PinnedAuthorityOperation, revision: CalculationRevision, unit: WorkUnit
+) -> ModeloCalculationBlockedError:
+    with pytest.raises(ModeloCalculationBlockedError) as refused:
+        require_work_unit_calculation_unblocked(work_unit=unit, revision=revision, action="export", operation=operation)
+    return refused.value
+
+
+def test_a_revision_filed_before_the_cap_with_a_capped_figure_is_refused_at_export(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    snapshot = _snapshot(operation)
+    unit = _work_unit(snapshot)
+
+    for state in (CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO):
+        for values in ({_CAPPED_BOX: _FILED_CAPPED_FIGURE}, {}):
+            revision = _revision(unit, (), stamp=None, state=state, casilla_values=values)
+            refused = _export_refusal(operation, revision, unit)
+            context = refused.context or {}
+            assert context["reason"] == FILED_BEFORE_GRADE_CAP_REASON, (state, values)
+            assert context["box"] == _CAPPED_BOX, (state, values)
+            assert refused.translated_message == what_locale_key(FILED_BEFORE_GRADE_CAP_REASON)
+            found = calculation_filed_before_grade_cap(
+                revision, modelo="130", filing_year=_YEAR, period=unit.period, operation=operation
+            )
+            assert found == _CAPPED_BOX
+    assert gate_refuses(FILED_BEFORE_GRADE_CAP_REASON, None)
+    assert FILED_BEFORE_GRADE_CAP_REASON not in GATE_REFUSED_REASONS, "the reason is derived, never persisted"
+
+
+def test_a_revision_filed_before_the_cap_with_a_zero_or_a_stamp_exports(operation: PinnedAuthorityOperation) -> None:
+    snapshot = _snapshot(operation)
+    unit = _work_unit(snapshot)
+    current = _stamp(snapshot, operation)
+    other = CalculationScreenStamp(contract_version=current.contract_version, digest="0" * 64)
+    capped = {_CAPPED_BOX: _FILED_CAPPED_FIGURE}
+    filed = CalculationRevisionState.PRESENTADO
+
+    unstamped_zero = _revision(unit, (), stamp=None, state=filed, casilla_values={_CAPPED_BOX: Decimal("0")})
+    assert _refused_reasons(operation, unstamped_zero) is None
+    for stamp in (current, other):
+        stamped = _revision(unit, (), stamp=stamp, state=filed, casilla_values=capped)
+        assert _refused_reasons(operation, stamped) is None, stamp
+        found = calculation_filed_before_grade_cap(
+            stamped, modelo="130", filing_year=_YEAR, period=unit.period, operation=operation
+        )
+        assert found is None
+    # A revision not yet filed is the screen's to judge, never this reason's.
+    unfiled = _revision(unit, (), stamp=None, state=CalculationRevisionState.VERIFICADO_COMPLETO, casilla_values=capped)
+    assert _refused_reasons(operation, unfiled) == {CALCULATION_SCREEN_OUTDATED_REASON}
+
+
+def test_a_revision_filed_before_the_cap_under_a_modelo_without_caps_exports(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Modelo 303 caps no binding, so an unstamped filed 303 keeps exporting whatever its boxes hold."""
+    snapshot = operation.snapshot("303", filing_year=_YEAR, period=_QUARTER)
+    reach = capped_binding_reach(snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot))
+    assert not reach
+    period = Period.from_year_and_code(_YEAR, _QUARTER)
+    revision_id = str(snapshot.revision.id)
+    unit = _work_unit(_snapshot(operation)).model_copy(
+        update={
+            "modelo": ModeloCode("303"),
+            "revision_id": revision_id,
+            "work_unit_id": derive_work_unit_id(
+                bucket_id=BUCKET, modelo="303", filing_year=_YEAR, period=period, revision_id=revision_id
+            ),
+        }
+    )
+    revision = _revision(unit, (), stamp=None, state=CalculationRevisionState.PRESENTADO, casilla_values={})
+
+    assert _refused_reasons(operation, revision, unit) is None
 
 
 def test_a_filed_revision_carrying_a_blocking_note_is_still_refused_at_export(
@@ -327,8 +437,9 @@ def test_a_filed_revision_carrying_a_blocking_note_is_still_refused_at_export(
     assert [issue.reason for issue in persisted if issue.reason == _REASON] == [_REASON]
     unit = _work_unit(snapshot)
 
+    # Only a calculation that ran the screen can carry the note, so the revision is stamped.
     for state in (CalculationRevisionState.PRESENTADO, CalculationRevisionState.PRESENTADO_SUPERSEDIDO):
-        revision = _revision(unit, persisted, stamp=None, state=state)
+        revision = _revision(unit, persisted, stamp=_stamp(snapshot, operation), state=state)
         with pytest.raises(ModeloCalculationBlockedError) as refused:
             require_work_unit_calculation_unblocked(
                 work_unit=unit, revision=revision, action="export", operation=operation
@@ -356,6 +467,43 @@ def test_the_stamp_reads_only_the_screen_declarations(operation: PinnedAuthority
 
     assert _stamp(snapshot.model_copy(update={"revision": unrelated}), operation) == current
     assert _stamp(snapshot.model_copy(update={"revision": recapped}), operation) != current
+
+
+def test_an_instalment_period_without_a_date_span_is_read_at_the_close_of_its_ejercicio(
+    operation: PinnedAuthorityOperation,
+) -> None:
+    """Modelo 202 2P spans no calendar dates and caps no binding, so its screen and export gate need no span."""
+    snapshot = operation.snapshot("202", filing_year=_YEAR, period="2P")
+    period = Period.from_year_and_code(_YEAR, "2P")
+    assert not period.has_date_span()
+    assert snapshot_reach_date(snapshot) == date(_YEAR, 12, 31)
+    assert not capped_binding_reach(
+        snapshot.revision, authority=operation, effective_date=snapshot_reach_date(snapshot)
+    )
+    revision_id = str(snapshot.revision.id)
+    unit = _work_unit(_snapshot(operation)).model_copy(
+        update={
+            "modelo": ModeloCode("202"),
+            "period": period,
+            "revision_id": revision_id,
+            "work_unit_id": derive_work_unit_id(
+                bucket_id=BUCKET, modelo="202", filing_year=_YEAR, period=period, revision_id=revision_id
+            ),
+        }
+    )
+    revision = _revision(unit, (), stamp=None, state=CalculationRevisionState.PRESENTADO, casilla_values={})
+    assert _refused_reasons(operation, revision, unit) is None
+    stamped = _revision(
+        unit,
+        (),
+        stamp=calculation_screen_stamp(snapshot, operation=operation),
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+    )
+    assert _refused_reasons(operation, stamped, unit) is None
+
+
+def test_a_capped_modelo_keeps_the_reach_date_at_the_close_of_its_period(operation: PinnedAuthorityOperation) -> None:
+    assert snapshot_reach_date(_snapshot(operation)) == date(_YEAR, 3, 31)
 
 
 def test_the_income_box_fed_by_the_same_provider_kind_stays_filing_grade(operation: PinnedAuthorityOperation) -> None:
