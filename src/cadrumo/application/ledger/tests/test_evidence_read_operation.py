@@ -4,13 +4,13 @@ from __future__ import annotations
 
 from datetime import UTC, datetime
 from decimal import Decimal
-from uuid import UUID, uuid4
+from uuid import UUID
 
 import pytest
 from pydantic import BaseModel, ValidationError
 
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
-from cadrumo_client.contracts.access_vocabulary import AccessAction, Availability, DisclosureCategory
+from cadrumo_client.contracts.access_vocabulary import AccessAction, DisclosureCategory
 
 from ....application.ledger.evidence import MediaKind, PurchaseInvoiceEvidence
 from ....application.ledger.evidence_errors import PurchaseInvoiceEvidenceNotFoundError
@@ -38,7 +38,6 @@ from ....application.ledger.evidence_read_operation import (
 from ....application.operations.access_resolution import OperationAccessContext, resolve_operation_access
 from ....application.operations.models import OperationIdentity, OperationRequest, OperationTerminalReceipt
 from ....application.operations.registry import (
-    OperationFrontendProjection,
     OperationPublicDefinitionRegistrationV1,
     OperationRegistry,
 )
@@ -46,6 +45,7 @@ from ....application.user_profile.access_errors import ProfileAccessRefusedError
 from ....core.errors.error_codes import ErrorCategory, get_registered_error_code
 from ....core.operations import OperationEffect, OperationTerminalCondition, profile_operation_subject
 from ....core.time.clock import now
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -120,15 +120,7 @@ def _access_context(
     *,
     profile_id: UUID = _PROFILE,
 ) -> OperationAccessContext:
-    contract = registration.contract
-    return OperationAccessContext(
-        profile_id=profile_id,
-        destination_id=uuid4(),
-        action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=contract,
-        published_authority=Availability.AVAILABLE,
-    )
+    return registration_access_context(registration, profile_id=profile_id, action=AccessAction.RESULT)
 
 
 def _receipt(*, definition_id: str, profile_id: UUID = _PROFILE) -> OperationTerminalReceipt:

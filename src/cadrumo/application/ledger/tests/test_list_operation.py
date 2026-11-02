@@ -10,7 +10,6 @@ from pydantic import BaseModel, ValidationError
 from cadrumo_client.contracts.access_refusals import AccessDenialCode
 from cadrumo_client.contracts.access_vocabulary import (
     AccessAction,
-    Availability,
     DisclosureCategory,
     OperationAccessRequest,
 )
@@ -34,6 +33,7 @@ from ..list_operation import (
     build_ledger_list_definition,
     build_ledger_list_registration,
 )
+from .registration_access_context_support import registration_access_context
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
@@ -77,13 +77,11 @@ def _access_context(
     admitted_request: OperationAccessRequest | None = None,
 ) -> OperationAccessContext:
     """Build a result-disclosure context for the exact registered contract."""
-    return OperationAccessContext(
+    return registration_access_context(
+        registration,
         profile_id=profile_id,
-        destination_id=destination_id or uuid4(),
         action=AccessAction.RESULT,
-        frontend=OperationFrontendProjection.CLI,
-        contract=registration.contract,
-        published_authority=Availability.AVAILABLE,
+        destination_id=destination_id,
         admitted_request=admitted_request,
     )
 
