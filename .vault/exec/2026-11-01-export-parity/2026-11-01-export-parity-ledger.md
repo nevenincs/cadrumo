@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:c86404b1e856c6b79ff3ffa3fe69a82e55692879b76395d4f453f6f28cee8428'
+body_hash: 'sha256:bd8615370fe5342d70c1498060683773abf1630c8f2cff61beb52aab0bf144d6'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -301,6 +301,17 @@ related:
 - `S14` `verify:` `just check-bindings` -> `pass`
 - `S14` `verify:` `pytest cap gate, review loader, clean-state enforcement; check-style, check-format, check-types, lint-imports` -> `pass`
 - `S14` `by:` `standard-executor`
+- `S14` `M` `src/cadrumo/entrypoints/tests/profile_persistence/test_saved_calculation_review_export.py`
+- `S14` `verify:` `pytest focused (report export, review loader, gate, borrador)` -> `pass`
+- `S14` `verify:` `just check-style` -> `pass`
+- `S14` `verify:` `just check-format` -> `pass`
+- `S14` `by:` `implementer`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/sql/_secure_object_row_codec.py`
+- `S15` `M` `src/cadrumo/adapters/persistence/storage/sql/secure_object_records.py`
+- `S15` `M` `src/cadrumo/entrypoints/adapter_composition_ports.py`
+- `S15` `verify:` `pytest focused (report export, review loader, gate, borrador)` -> `pass`
+- `S15` `verify:` `just check-style` -> `pass`
+- `S15` `verify:` `just check-format` -> `pass`
 
 ## Notes
 
@@ -324,3 +335,5 @@ related:
 - `S15` operator-approved schema bump 2026-11-02
 - `S14` operator ruling 2026-11-02
 - `S14` regression fix
+- `S14` final review fix
+- `S15` final review fix
