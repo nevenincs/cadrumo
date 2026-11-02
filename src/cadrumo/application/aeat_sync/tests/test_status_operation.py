@@ -132,7 +132,7 @@ def _borrador(operation: PinnedAuthorityOperation, *captured: datetime) -> Borra
             period=period,
             captured_at=captured_at,
             source_url=f"file-import:sha256:{index:064x}",
-            binding_values={"renta-certificado-trabajo-retenciones": Decimal(index)},
+            binding_values={"renta-retencion-soportada-trabajo": Decimal(index)},
             operation=operation,
         )
     return service.read_snapshots(operation=operation)

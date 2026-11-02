@@ -1,4 +1,4 @@
-"""Assertion helper for the withholding box a calculation reports as a proven zero."""
+"""Assertion helper for the capped boxes a calculation reports as proven zeros."""
 
 from __future__ import annotations
 
@@ -11,15 +11,20 @@ _WITHHOLDING_BOX = "0599"
 _WITHHOLDING_BINDING = "renta-ledger-actividad-retenciones-0599"
 
 
-def assert_only_proven_zero_withholding_diagnostic(diagnostics: tuple[CalculationSourceDiagnostic, ...]) -> None:
-    """Require the sole diagnostic to be the box 0599 proven zero, which the gate lets through."""
-    assert len(diagnostics) == 1, diagnostics
-    (diagnostic,) = diagnostics
-    assert diagnostic.reason == "advisory_binding_value"
-    assert diagnostic.casilla_id == _WITHHOLDING_BOX
-    assert diagnostic.binding_id == _WITHHOLDING_BINDING
-    assert diagnostic.value_outcome is BindingValueOutcome.PROVEN_ZERO
-    assert diagnostic.fact is not None
-    assert diagnostic.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
-    assert dict(diagnostic.fact.values)["amount"] == "0"
-    assert not gate_refuses(diagnostic.reason, diagnostic.binding_source, diagnostic.value_outcome)
+def assert_only_proven_zero_capped_diagnostics(diagnostics: tuple[CalculationSourceDiagnostic, ...]) -> None:
+    """Require every diagnostic to be a capped box's proven zero the gate lets through, box 0599 among them.
+
+    An empty ledger proves each capped activity box zero: the withholding box
+    0599 and the bank-dated income and expense boxes beside it.
+    """
+    assert diagnostics, diagnostics
+    for diagnostic in diagnostics:
+        assert diagnostic.reason == "advisory_binding_value", diagnostic
+        assert diagnostic.value_outcome is BindingValueOutcome.PROVEN_ZERO, diagnostic
+        assert diagnostic.fact is not None
+        assert diagnostic.fact.sentence is CalculationNoteSentence.ADVISORY_VALUE_PROVEN_ZERO
+        assert dict(diagnostic.fact.values)["amount"] == "0"
+        assert not gate_refuses(diagnostic.reason, diagnostic.binding_source, diagnostic.value_outcome)
+    assert (_WITHHOLDING_BOX, _WITHHOLDING_BINDING) in {
+        (diagnostic.casilla_id, diagnostic.binding_id) for diagnostic in diagnostics
+    }

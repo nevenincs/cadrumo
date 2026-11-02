@@ -51,7 +51,7 @@ _ANNUAL = "0A"
 _SOURCE_URL = "file-import:sha256:" + "a" * 64
 _FIRST_CAPTURED_AT = datetime(2026, 4, 1, 9, tzinfo=UTC)
 _SECOND_CAPTURED_AT = datetime(2026, 4, 2, 9, tzinfo=UTC)
-_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+_CERTIFICATE = "renta-retencion-soportada-trabajo"
 _FIRST_VALUES = {_CERTIFICATE: Decimal("100.00")}
 _SECOND_VALUES = {_CERTIFICATE: Decimal("1234.56")}
 # Every casilla the borrador profile prints is computed in the fixture revision,

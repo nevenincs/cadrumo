@@ -36,6 +36,9 @@ each one names a declaration that cannot resolve to the value it promises:
   deduction kind and still both claim a kind. The corrientes and bienes de
   inversión boxes of Modelo 303 and 390 read the same category, rate and flow,
   so an overlap declares the same deduction in both boxes;
+* a binding that is ``aeat_prefilled`` with borrador precedence and reaches a
+  casilla of the derived credit set: the informative borrador may cross-check a
+  credit but never supply it;
 * a binding no typed consumer names -- no casilla, formula, export or relation --
   that does not declare the explicit ``non_calculation`` disposition. An
   orphaned declaration cannot be told from an export-only one unless the author
@@ -63,7 +66,10 @@ from cadrumo.domain.calculations.registry.binding_targets import binding_consume
 from cadrumo.domain.calculations.registry.binding_temporal import BindingApplicabilityKind
 from cadrumo.domain.calculations.registry.ledger_iva_screen_bindings import deducible_deduction_kind_overlaps
 from cadrumo.domain.calculations.registry.prorrata_regularizacion_bindings import ProrrataRegularizacionProvider
-from cadrumo.domain.calculations.registry.retencion_soportada_bindings import retencion_soportada_revision_failures
+from cadrumo.domain.calculations.registry.retencion_soportada_bindings import (
+    credit_borrador_participation_failures,
+    retencion_soportada_revision_failures,
+)
 from cadrumo.domain.calculations.registry.schema_input_kind import InputKind
 
 if TYPE_CHECKING:
@@ -156,6 +162,7 @@ def validate_binding_registration_section(*, prefix: str, revision: ModeloRevisi
     failures.extend(_duplicate_row_field_failures(prefix=prefix, revision=revision))
     failures.extend(_deduction_kind_overlap_failures(prefix=prefix, revision=revision))
     failures.extend(f"{prefix}: {failure}" for failure in retencion_soportada_revision_failures(revision))
+    failures.extend(f"{prefix}: {failure}" for failure in credit_borrador_participation_failures(revision))
     failures.extend(unreferenced_binding_failures(prefix=prefix, revision=revision))
     return failures
 

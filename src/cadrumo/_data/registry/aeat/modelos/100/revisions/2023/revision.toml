@@ -8380,11 +8380,6 @@ sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-
 sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
 [[revisions."2023".family_overrides]]
 family = "bindings"
-selector = {revision = "2022", id = "renta-certificado-trabajo-retenciones"}
-sequence_additions = {source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2023"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-input-dictionary", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
-[[revisions."2023".family_overrides]]
-family = "bindings"
 selector = {revision = "2022", id = "renta-family-ascendant-birth-date"}
 sequence_additions = {legal_refs = ["orden-hac-265-2024:art-3"], source_citations = [{source_ref = "aeat-renta-2023-manual-parte1", required_text = ["Modelo 100", "ejercicio 2023"]}], source_refs = ["aeat-dr-100-2023-dictionary", "aeat-dr-100-2023-xsd", "aeat-renta-2023-manual-parte1", "boe-modelo-100-2023-form"]}
 sequence_removals = {legal_refs = [1], source_citations = [0], source_refs = [0, 1, 2, 3]}

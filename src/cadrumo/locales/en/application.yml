@@ -1518,6 +1518,13 @@ application:
         that no longer exist.'
       residence_period_unknown: No tax residence is recorded for {date}, so your assets
         count as if Modelos 100 and 130 apply.
+      retencion_soportada_absence_contradicted: 'Income class {income_class}: there
+        are payer records and also your attestation that no payer withheld. Remove
+        the records or withdraw the attestation.'
+      retencion_soportada_evidence_required: 'Income class {income_class}: there is
+        no payer record and no absence attestation, and your profile does not declare
+        this income absent. Record each payer''s certificate, or attest that no payer
+        withheld.'
       row_unregistered: The ledger entry of {row_date} for {row_amount} records an
         asset your register does not hold.
       row_unregistered_undated: A ledger entry records an asset your register does

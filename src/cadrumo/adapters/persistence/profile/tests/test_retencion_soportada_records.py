@@ -53,12 +53,12 @@ _TRABAJO_BINDING = "renta-retencion-soportada-trabajo"
 _CAPITAL_BINDING = "renta-retencion-soportada-capital-mobiliario"
 
 
-class _FamilyDeclaredAuthority:
-    """The write authority of a generation whose Modelo 100 declares the family.
+class _UndeclaredFamilyAuthority:
+    """A generation whose Modelo 100 declares no member of the family for any ejercicio.
 
-    The bundled registry binds no casilla to the family yet, so the refusals
-    that need a declared family are reached through this answer; the refusals
-    the real authority gives are tested against it separately below.
+    Every supported ejercicio of the bundled registry declares the family, so
+    the write port's own refusal for an undeclared one is reached through this
+    answer to the authority port.
     """
 
     def __init__(self, operation: PinnedAuthorityOperation) -> None:
@@ -69,7 +69,7 @@ class _FamilyDeclaredAuthority:
 
     def declares_family(self, ejercicio: int) -> bool:
         del ejercicio
-        return True
+        return False
 
 
 def _repository() -> RetencionSoportadaRecordRepositoryAdapter:
@@ -116,7 +116,7 @@ def _write(
     record_retencion_soportada(
         record,
         repository=repository,
-        authority=_FamilyDeclaredAuthority(operation),
+        authority=PinnedRetencionSoportadaWriteAuthority(operation),
         taxpayer_tax_id=_TAXPAYER,
         expected_revision_id=expected_revision_id,
     )
@@ -209,25 +209,42 @@ def test_a_payer_carrying_the_taxpayers_own_tax_id_is_refused(
         assert repository.load_records(_EJERCICIO) == ()
 
 
-def test_the_real_authority_refuses_an_unsupported_ejercicio_and_an_undeclared_family(
+def test_the_real_authority_refuses_an_unsupported_ejercicio_and_declares_the_family_for_a_supported_one(
     tmp_path: Path, operation: PinnedAuthorityOperation
 ) -> None:
     authority = PinnedRetencionSoportadaWriteAuthority(operation)
     unsupported = 2000
     assert not authority.admits_ejercicio(unsupported)
     assert authority.admits_ejercicio(_EJERCICIO)
+    assert authority.declares_family(_EJERCICIO)
     with isolated_runtime_profile(tmp_path=tmp_path):
         repository = _repository()
-        for ejercicio, reason in ((unsupported, "ejercicio_unsupported"), (_EJERCICIO, "family_not_declared")):
-            with pytest.raises(RetencionSoportadaWriteRefusedError) as refused:
-                record_retencion_soportada(
-                    _record(repository, ejercicio=ejercicio),
-                    repository=repository,
-                    authority=authority,
-                    taxpayer_tax_id=_TAXPAYER,
-                    expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
-                )
-            assert refused.value.reason == reason
+        with pytest.raises(RetencionSoportadaWriteRefusedError) as refused:
+            record_retencion_soportada(
+                _record(repository, ejercicio=unsupported),
+                repository=repository,
+                authority=authority,
+                taxpayer_tax_id=_TAXPAYER,
+                expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+            )
+        assert refused.value.reason == "ejercicio_unsupported"
+        assert repository.load_records(unsupported) == ()
+
+
+def test_an_ejercicio_whose_revision_declares_no_family_member_is_refused(
+    tmp_path: Path, operation: PinnedAuthorityOperation
+) -> None:
+    with isolated_runtime_profile(tmp_path=tmp_path):
+        repository = _repository()
+        with pytest.raises(RetencionSoportadaWriteRefusedError) as refused:
+            record_retencion_soportada(
+                _record(repository),
+                repository=repository,
+                authority=_UndeclaredFamilyAuthority(operation),
+                taxpayer_tax_id=_TAXPAYER,
+                expected_revision_id=ABSENT_SECURE_OBJECT_REVISION_ID,
+            )
+        assert refused.value.reason == "family_not_declared"
         assert repository.load_records(_EJERCICIO) == ()
 
 

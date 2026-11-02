@@ -132,7 +132,7 @@ def test_borrador_snapshot_requires_canonical_registry_coordinate() -> None:
 def test_borrador_100_snapshot_service_captures_content_addressed_snapshot() -> None:
     repository = _InMemoryBorradorRepository(bucket_id=_BUCKET_ID)
     service = Borrador100SnapshotService(bucket_id=_BUCKET_ID, repository=repository)
-    values = {"renta-certificado-trabajo-retenciones": Decimal("15.25")}
+    values = {"renta-retencion-soportada-trabajo": Decimal("15.25")}
 
     snapshot = service.capture(
         filing_year=2025,
@@ -162,7 +162,7 @@ def test_borrador_100_snapshot_identity_ignores_the_capture_instant_and_follows_
             period=_PERIOD,
             captured_at=_CAPTURED_AT + timedelta(hours=hours),
             source_url=_SOURCE,
-            binding_values={"renta-certificado-trabajo-retenciones": Decimal(amount)},
+            binding_values={"renta-retencion-soportada-trabajo": Decimal(amount)},
         )
 
     first = capture(hours=0, amount="15.25")
@@ -249,7 +249,7 @@ def test_borrador_capture_refuses_a_key_the_pinned_revision_does_not_admit_befor
             period=_PERIOD,
             captured_at=_CAPTURED_AT,
             source_url=_SOURCE,
-            binding_values={"renta-certificado-trabajo-retenciones": Decimal("1.00"), key: Decimal("15.25")},
+            binding_values={"renta-retencion-soportada-trabajo": Decimal("1.00"), key: Decimal("15.25")},
         )
 
     assert refused.value.translated_message == "application.live.borrador.errors.binding_keys_not_admitted"
@@ -266,7 +266,7 @@ def test_borrador_show_refuses_persisted_registry_revision_divergence() -> None:
         period=_PERIOD,
         captured_at=_CAPTURED_AT,
         source_url=_SOURCE,
-        binding_values={"renta-certificado-trabajo-retenciones": Decimal("15.25")},
+        binding_values={"renta-retencion-soportada-trabajo": Decimal("15.25")},
     )
     repository.save(
         snapshot.model_copy(
@@ -313,7 +313,7 @@ def test_borrador_100_snapshot_service_deduplicates_identical_captures() -> None
             period=_PERIOD,
             captured_at=_CAPTURED_AT,
             source_url=_SOURCE,
-            binding_values={"renta-certificado-trabajo-retenciones": Decimal("15.25")},
+            binding_values={"renta-retencion-soportada-trabajo": Decimal("15.25")},
         )
 
     first = capture()
@@ -331,14 +331,14 @@ def test_borrador_100_snapshot_service_supersedes_prior_current_snapshot() -> No
         period=_PERIOD,
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
-        binding_values={"renta-certificado-trabajo-retenciones": Decimal("15.25")},
+        binding_values={"renta-retencion-soportada-trabajo": Decimal("15.25")},
     )
     newer = service.capture(
         filing_year=2025,
         period=_PERIOD,
         captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
-        binding_values={"renta-certificado-trabajo-retenciones": Decimal("16.25")},
+        binding_values={"renta-retencion-soportada-trabajo": Decimal("16.25")},
     )
 
     assert repository.load(older.snapshot_id).state is SnapshotLifecycleState.SUPERSEDED
@@ -360,14 +360,14 @@ def test_borrador_100_snapshot_service_preserves_newer_current_for_out_of_order_
         period=_PERIOD,
         captured_at=datetime(2026, 4, 4, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
-        binding_values={"renta-certificado-trabajo-retenciones": Decimal("16.25")},
+        binding_values={"renta-retencion-soportada-trabajo": Decimal("16.25")},
     )
     older = service.capture(
         filing_year=2025,
         period=_PERIOD,
         captured_at=datetime(2026, 4, 3, 10, 0, tzinfo=UTC),
         source_url=_SOURCE,
-        binding_values={"renta-certificado-trabajo-retenciones": Decimal("15.25")},
+        binding_values={"renta-retencion-soportada-trabajo": Decimal("15.25")},
     )
 
     assert repository.load(newer.snapshot_id).state is SnapshotLifecycleState.ACTIVE

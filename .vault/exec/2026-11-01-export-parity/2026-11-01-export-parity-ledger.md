@@ -5,7 +5,7 @@ tags:
 date: '2026-11-01'
 modified: '2026-11-02'
 body_schema: 'body-v2'
-body_hash: 'sha256:f8b86fd8fcd3acb93fc2b8a0a7849f8221d47a7b27455a981d0e0c8169dd00ef'
+body_hash: 'sha256:ba8b0074a1f861d960cba870d2da989b87918a0a686ad5dc0c57f5bd57f1e484'
 related:
   - "[[2026-11-01-export-parity-plan]]"
 ---
@@ -374,6 +374,20 @@ related:
 - `S17` `verify:` `just check-persistence-write-paths` -> `pass`
 - `S17` `verify:` `operation_contract_manifest --check` -> `pass`
 - `S17` `by:` `high-implementation`
+- `S16` `M` `dev/registry/mappings/modelo_131/2024/0002-fields.toml`
+- `S16` `M` `src/cadrumo/_data/registry/aeat/modelos/131/revisions/2024/export/0001-record-modelo-131-2024-page-01.toml`
+- `S16` `A` `src/cadrumo/application/filing/tests/test_modelo_131_complementaria_export.py`
+- `S16` `verify:` `pytest 131 export, marker and filing-kind tests` -> `pass`
+- `S16` `verify:` `dev.registry.conformance valid` -> `pass`
+- `S16` `verify:` `dev.registry.bindings --strict` -> `pass`
+- `S16` `verify:` `ruff check, format and lint-imports` -> `pass`
+- `S18` `A` `src/cadrumo/application/retencion_soportada_certificado/executor.py`
+- `S18` `A` `src/cadrumo/entrypoints/cli/retencion_soportada_commands.py`
+- `S18` `A` `src/cadrumo/adapters/persistence/profile/retencion_soportada_certificado.py`
+- `S18` `A` `src/cadrumo/entrypoints/cli/tests/test_retencion_soportada_cli.py`
+- `S18` `A` `src/cadrumo/entrypoints/tests/test_retencion_soportada_certificado_mesh.py`
+- `S18` `verify:` `pytest test_retencion_soportada_cli+mesh+conformance` -> `pass`
+- `S18` `by:` `implementer`
 
 ## Notes
 
@@ -400,3 +414,4 @@ related:
 - `S14` final review fix
 - `S15` final review fix
 - `S17` Both failures pre-exist S17 and touch no S17 path: `test_exception_base_hygiene` names unrelated builtin-rooted classes, and check-types reports 2 basedpyright diagnostics in `invoice_filing_fingerprint.py.` check-locales is unavailable on an absent desktop.ledger.inspector key outside S17. The bundled registry declares no `retencion_soportada` binding yet, so production writes refuse `family_not_declared` until S06.
+- `S16` Modelo 131 complementaria export render

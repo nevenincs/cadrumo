@@ -1381,6 +1381,8 @@ errors:
       számítási revízióval. Futtasd a aeat app modelo work calculate parancsot egy
       friss revízió létrehozásához.
     refused_workflow_resume: A korábbi munkafolyamat-futás nem folytatható.
+    retencion_soportada_absence_refused: A jövedelemosztály hiánynyilatkozata nem
+      lett mentve.
     retencion_soportada_revision_conflict: A levonási rekord megváltozott, amióta
       elolvastad; olvasd be újra mentés előtt.
     retencion_soportada_write_refused: Ennek a kifizetőnek a levonási rekordja nem

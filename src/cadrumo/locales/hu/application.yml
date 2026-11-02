@@ -1481,10 +1481,10 @@ application:
         másik eszközöd mezőgazdasági, ezért nem mezőgazdaságiként számít.'
       advisory_imputation_period_ungrounded: 'A(z) {box} mező: {amount} összeg függőben
         van, mert nincs megerősítve, melyik időszakhoz tartozik. A tevékenység bevételei
-        és kiadásai a teljesítéskor számítanak, a levonás pedig a jövedelmével együtt (RIRPF 79.
-        cikk), a nyilvántartásod viszont minden tételt a bankba érkezés napjával
-        datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad (RIRPF
-        7.2. cikk; LIRPF 14.1.b cikk).'
+        és kiadásai a teljesítéskor számítanak, a levonás pedig a jövedelmével együtt
+        (RIRPF 79. cikk), a nyilvántartásod viszont minden tételt a bankba érkezés
+        napjával datál, ami csak akkor helyes, ha a pénzforgalmi elszámolást választottad
+        (RIRPF 7.2. cikk; LIRPF 14.1.b cikk).'
       advisory_value_proven_zero: 'A(z) {box} mező: a nulla érvényes, mert az időszakban
         nincs olyan tétel, amelynek az időszaka kétséges lehetne.'
       agrarian_excluded: '{element}: mezőgazdasági tevékenységhez tartozik, ezért
@@ -1568,6 +1568,13 @@ application:
         meg, amely már nem létezik.'
       residence_period_unknown: '{date} napra nincs rögzített adóügyi illetőség, ezért
         az eszközeid úgy számítanak, mintha a 100-as és 130-as modell lenne érvényes.'
+      retencion_soportada_absence_contradicted: '{income_class} jövedelemosztály:
+        vannak kifizetői rekordok, és a nyilatkozatod is, hogy egyetlen kifizető sem
+        vont le. Töröld a rekordokat, vagy vond vissza a nyilatkozatot.'
+      retencion_soportada_evidence_required: '{income_class} jövedelemosztály: nincs
+        kifizetői rekord és hiánynyilatkozat sem, a profilod pedig nem jelöli hiányzónak
+        ezt a jövedelmet. Rögzítsd minden kifizető igazolását, vagy jelentsd ki, hogy
+        egyetlen kifizető sem vont le.'
       row_unregistered: A(z) {row_date} napi, {row_amount} összegű tétel olyan eszközt
         rögzít, amely nincs a nyilvántartásodban.
       row_unregistered_undated: Egy könyvelt tétel a nyilvántartásban nem szereplő

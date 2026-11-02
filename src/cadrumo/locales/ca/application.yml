@@ -1515,11 +1515,11 @@ application:
         i un altre dels teus elements és agrari, de manera que es compta com a no
         agrària.'
       advisory_imputation_period_ungrounded: 'Casella {box}: {amount} queda en espera
-        perquè no està confirmat el període al qual correspon. Els ingressos i les despeses
-        de l''activitat s''imputen a la meritació i una retenció va amb la seva renda
-        (art. 79 RIRPF), i els teus registres daten cada moviment per la seva arribada
-        al banc, cosa que només és correcta si vas optar pel criteri de cobraments
-        i pagaments (art. 7.2 RIRPF; art. 14.1.b LIRPF).'
+        perquè no està confirmat el període al qual correspon. Els ingressos i les
+        despeses de l''activitat s''imputen a la meritació i una retenció va amb la
+        seva renda (art. 79 RIRPF), i els teus registres daten cada moviment per la
+        seva arribada al banc, cosa que només és correcta si vas optar pel criteri
+        de cobraments i pagaments (art. 7.2 RIRPF; art. 14.1.b LIRPF).'
       advisory_value_proven_zero: 'Casella {box}: el zero es manté, perquè en el període
         no hi ha cap xifra el període de la qual pugui ser dubtós.'
       agrarian_excluded: '{element}: pertany a una activitat agrària, de manera que
@@ -1606,6 +1606,13 @@ application:
       residence_period_unknown: No hi ha residència fiscal registrada per al {date},
         de manera que els teus elements es compten com si s'apliquessin els Models
         100 i 130.
+      retencion_soportada_absence_contradicted: 'Classe de renda {income_class}: hi
+        ha registres de pagadors i també la teva declaració que cap pagador no va
+        practicar retenció. Elimina els registres o retira la declaració.'
+      retencion_soportada_evidence_required: 'Classe de renda {income_class}: no hi
+        ha cap registre de pagador ni declaració d''absència, i el teu perfil no declara
+        absent aquesta renda. Registra el certificat de cada pagador o declara que
+        cap pagador no va practicar retenció.'
       row_unregistered: El moviment del {row_date} per {row_amount} registra un element
         que no és al teu registre.
       row_unregistered_undated: Un moviment registra un element que no consta al teu

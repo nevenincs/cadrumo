@@ -1,0 +1,155 @@
+"""Closed result schemas for the suffered-withholding certificate operations.
+
+No schema here carries a payer tax identifier: a record is named by its keyed
+``payer_ref`` and the payer's legal name.
+"""
+
+from __future__ import annotations
+
+from typing import Literal
+from uuid import UUID
+
+from pydantic import BaseModel, model_validator
+
+from ...core.filing_year import FilingYear
+from ...core.hex import Hex64Str
+from ...core.models import STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+from ...core.retencion_soportada import RetencionSoportadaClase
+from ...domain.renta.retencion_soportada import RetencionSoportadaOrigen, RetencionSoportadaRecord
+from ..operations.public_scalar import PublicDecimal
+from .contracts import (
+    RetencionSoportadaCertificadoRefusalReason,
+    RetencionSoportadaOperationId,
+)
+
+
+class RetencionSoportadaRowProjection(BaseModel):
+    """One stored payer record as the operator sees it, without the payer's tax identifier."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    ejercicio: FilingYear
+    income_class: RetencionSoportadaClase
+    payer_ref: Hex64Str
+    payer_legal_name: str | None
+    importe_integro_dinerario: PublicDecimal
+    valoracion_especie: PublicDecimal
+    retencion: PublicDecimal
+    ingreso_a_cuenta: PublicDecimal
+    ingreso_a_cuenta_repercutido: PublicDecimal
+    pago_a_cuenta: PublicDecimal
+    origin: RetencionSoportadaOrigen
+    evidence_fingerprint: Hex64Str | None
+    revision_id: str
+
+    @classmethod
+    def from_record(cls, record: RetencionSoportadaRecord, *, revision_id: str) -> RetencionSoportadaRowProjection:
+        """Project every operator-visible field of ``record``."""
+        return cls(
+            ejercicio=record.ejercicio,
+            income_class=record.income_class,
+            payer_ref=record.payer_ref,
+            payer_legal_name=record.payer_legal_name,
+            importe_integro_dinerario=PublicDecimal(decimal=str(record.importe_integro_dinerario)),
+            valoracion_especie=PublicDecimal(decimal=str(record.valoracion_especie)),
+            retencion=PublicDecimal(decimal=str(record.retencion)),
+            ingreso_a_cuenta=PublicDecimal(decimal=str(record.ingreso_a_cuenta)),
+            ingreso_a_cuenta_repercutido=PublicDecimal(decimal=str(record.ingreso_a_cuenta_repercutido)),
+            pago_a_cuenta=PublicDecimal(decimal=str(record.pago_a_cuenta)),
+            origin=record.origin,
+            evidence_fingerprint=record.evidence_fingerprint,
+            revision_id=revision_id,
+        )
+
+
+class RetencionSoportadaRefusalProjection(BaseModel):
+    """Safe, closed context of a refusal made before anything was stored."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    code: Literal["REFUSED_RETENCION_SOPORTADA_WRITE", "REFUSED_RETENCION_SOPORTADA_REVISION_CONFLICT"]
+    reason: RetencionSoportadaCertificadoRefusalReason
+    ejercicio: FilingYear
+
+
+class RetencionSoportadaListProjection(BaseModel):
+    """Every stored payer record of one ejercicio."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    profile_id: UUID
+    ejercicio: FilingYear
+    rows: tuple[RetencionSoportadaRowProjection, ...]
+
+
+class RetencionSoportadaMutationProjection(BaseModel):
+    """A recorded or removed payer record, or the typed refusal that stored nothing."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    outcome: Literal["recorded", "removed", "refused"]
+    profile_id: UUID
+    ejercicio: FilingYear
+    row: RetencionSoportadaRowProjection | None = None
+    count: int | None = None
+    refusal: RetencionSoportadaRefusalProjection | None = None
+
+    @model_validator(mode="after")
+    def _arm_is_closed(self) -> RetencionSoportadaMutationProjection:
+        if self.outcome == "refused":
+            closed = self.row is None and self.count is None and self.refusal is not None
+        else:
+            closed = (
+                self.refusal is None
+                and self.count is not None
+                and (self.outcome == "recorded") == (self.row is not None)
+            )
+        if not closed:
+            raise ValueError("suffered-withholding mutation projection has an incompatible payload")
+        return self
+
+
+class RetencionSoportadaOperationExecutionResult(BaseModel):
+    """Private result held in operation operand custody until projection."""
+
+    model_config = STRICT_FROZEN_HIDDEN_INPUT_CONFIG
+
+    operation_id: RetencionSoportadaOperationId
+    outcome: Literal["success", "refused"]
+    profile_id: UUID
+    ejercicio: FilingYear
+    rows: tuple[RetencionSoportadaRowProjection, ...] | None = None
+    row: RetencionSoportadaRowProjection | None = None
+    count: int | None = None
+    refusal: RetencionSoportadaRefusalProjection | None = None
+
+    @model_validator(mode="after")
+    def _arm_is_closed(self) -> RetencionSoportadaOperationExecutionResult:
+        if self.outcome == "refused":
+            closed = (
+                self.operation_id != "list"
+                and self.rows is None
+                and self.row is None
+                and self.count is None
+                and self.refusal is not None
+            )
+        elif self.refusal is not None:
+            closed = False
+        elif self.operation_id == "list":
+            closed = self.rows is not None and self.row is None and self.count is None
+        elif self.operation_id == "record":
+            closed = self.rows is None and self.row is not None and self.count is not None
+        else:
+            closed = self.rows is None and self.row is None and self.count is not None
+        if not closed:
+            raise ValueError("suffered-withholding execution result has an incompatible payload")
+        return self
+
+
+__all__ = [
+    "RetencionSoportadaListProjection",
+    "RetencionSoportadaMutationProjection",
+    "RetencionSoportadaOperationExecutionResult",
+    "RetencionSoportadaRefusalProjection",
+    "RetencionSoportadaRowProjection",
+]

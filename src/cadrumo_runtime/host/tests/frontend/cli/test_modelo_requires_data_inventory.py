@@ -49,6 +49,9 @@ _M202_PERIOD = "1P"
 _M390_MODELO = "390"
 _M390_YEAR = 2025
 _M390_PERIOD = "0A"
+# The Modelo 100 inventory closing increase, whose source family no checklist bucket owns.
+_M100_UNBUCKETED_BINDING = "renta-inventory-activity-closing-increase-0177"
+_M100_UNBUCKETED_SOURCE = "inventory"
 
 
 @pytest.fixture
@@ -138,7 +141,7 @@ def test_requires_lists_relation_prefill_rows_with_their_bindings(
 def test_requires_advises_on_unbucketed_sources(
     invoke_requires: Callable[[list[str]], Result],
 ) -> None:
-    """A manual-input binding has no checklist bucket, so it is named in an advisory rather than dropped."""
+    """A binding whose source has no checklist bucket is named in an advisory rather than dropped."""
     invocation = invoke_requires(
         [
             "--format",
@@ -156,14 +159,43 @@ def test_requires_advises_on_unbucketed_sources(
     assert invocation.exit_code == 0, invocation.output
     result = unwrap_schema_envelope(invocation.output)
     unbucketed_pairs = {(row["binding_id"], row["binding_source"]) for row in result["unbucketed_sources"]}
-    assert ("renta-certificado-trabajo-retenciones", "manual_input") in unbucketed_pairs
+    assert (_M100_UNBUCKETED_BINDING, _M100_UNBUCKETED_SOURCE) in unbucketed_pairs
 
     notices = unwrap_envelope_notices(invocation.output)
     advisory = next(notice for notice in notices if notice["code"] == "modelo.requires.unbucketed_binding_source")
     assert advisory["severity"] == "warning"
     assert advisory["action"] is None
-    assert "manual_input" in advisory["context"]["source_kinds"]
-    assert "renta-certificado-trabajo-retenciones" in advisory["context"]["binding_ids"]
+    assert _M100_UNBUCKETED_SOURCE in advisory["context"]["source_kinds"]
+    assert _M100_UNBUCKETED_BINDING in advisory["context"]["binding_ids"]
+
+
+def test_requires_lists_the_withholding_credits_as_payer_record_observations(
+    invoke_requires: Callable[[list[str]], Result],
+) -> None:
+    """The Modelo 100 withholding credits read the taxpayer's payer records, so they are local observations."""
+    invocation = invoke_requires(
+        [
+            "--format",
+            "json",
+            "app",
+            "modelo",
+            "requires",
+            _M100_MODELO,
+            "--year",
+            str(_M100_YEAR),
+            "--period",
+            _M100_PERIOD,
+        ],
+    )
+    assert invocation.exit_code == 0, invocation.output
+    result = unwrap_schema_envelope(invocation.output)
+    live_rows = {(row["number"], row["binding_id"], row["binding_source"]) for row in result["live_observation"]}
+    assert {
+        ("0596", "renta-retencion-soportada-trabajo", "retencion_soportada"),
+        ("0597", "renta-retencion-soportada-capital-mobiliario", "retencion_soportada"),
+        ("0603", "renta-retencion-soportada-ganancia-patrimonial", "retencion_soportada"),
+    } <= live_rows
+    assert not {row["number"] for row in result["unbucketed_sources"]} & {"0596", "0597", "0603"}
 
 
 def test_requires_buckets_local_register_resolvers_as_live_observations(

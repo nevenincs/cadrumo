@@ -585,6 +585,44 @@ cli:
         validate_help: Validate ratios against eligible categories and bounds
         year_help: Filing year whose category profiles supply the statutory ratios.
           Defaults to the current year.
+      retencion_soportada:
+        absence_invalid_input: 'A value is not valid: check the ejercicio, the note
+          (at most 500 characters) and the revision.'
+        absence_note_help: Why no payer withheld on this income class. Required.
+        attest_absence_expected_revision_help: Revision of a withdrawn attestation
+          you are replacing. Leave it out for a first attestation.
+        attest_absence_help: Attest that no payer withheld on an income class in an
+          ejercicio. This is your own statement, not a payer certificate.
+        ejercicio_help: Ejercicio (year) the income is imputed to.
+        evidence_sha256_help: SHA-256 of the certificate file; required for payer_certificate.
+        group_help: Record the withholding your payers' certificates report.
+        importe_integro_help: Money income the payer paid, before withholding.
+        income_class_help: Income class the payer withheld on, for example trabajo.
+        ingreso_a_cuenta_help: Ingreso a cuenta the payer made on income in kind.
+          It counts in full as a credit.
+        ingreso_a_cuenta_repercutido_help: Part of the ingreso a cuenta the payer
+          passed on to you. It cannot exceed the ingreso a cuenta.
+        invalid_input: 'A value is not valid: check the payer reference, the revision
+          and the certificate fingerprint.'
+        list_help: List the stored payer records of an ejercicio without any tax ID.
+        origin_help: 'Who states the figures: payer_certificate or operator_declaration.'
+        payer_name_help: Legal name of the payer.
+        payer_ref_help: Payer reference (payer_ref) shown by the list.
+        payer_tax_id_help: Tax ID (NIF) of the payer that withheld.
+        record_expected_revision_help: Revision the list showed, to replace a stored
+          record. Leave it out for a first record.
+        record_help: Record or replace the figures one payer's certificate states
+          for an ejercicio and income class.
+        remove_expected_revision_help: Revision the list showed for the record to
+          remove.
+        remove_help: Remove one stored payer record, guarded by the revision a list
+          showed.
+        retencion_help: Retención the payer practised, in euros with at most two decimals.
+        valoracion_especie_help: Valuation of the payment in kind.
+        withdraw_absence_expected_revision_help: Revision the attestation was stored
+          at.
+        withdraw_absence_help: Withdraw an absence attestation, guarded by the revision
+          it was stored at.
       rule:
         actor_help: Your identifier, recorded as the origin of the rule.
         add_help: Add a classification rule that auto-classifies matching transactions.

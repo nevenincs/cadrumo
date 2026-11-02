@@ -32,7 +32,7 @@ from ..adapter_composition_ports import build_borrador_100_snapshot_repository
 
 pytestmark = [pytest.mark.unit, pytest.mark.hex_entrypoint]
 
-_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+_CERTIFICATE = "renta-retencion-soportada-trabajo"
 _CAPTURED_AT = datetime(2026, 4, 3, 10, 0, tzinfo=UTC)
 
 

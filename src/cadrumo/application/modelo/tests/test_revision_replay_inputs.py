@@ -75,7 +75,7 @@ _M100_RETENCIONES_TRABAJO_CASILLA: CasillaId = validated_casilla_id(
     "0596",
     surface="_M100_RETENCIONES_TRABAJO_CASILLA",
 )
-_M100_SALARY_CERT_RETENCIONES_BINDING = "renta-certificado-trabajo-retenciones"
+_M100_RETENCION_SOPORTADA_TRABAJO_BINDING = "renta-retencion-soportada-trabajo"
 _M100_M111_RETENCIONES_BINDING = "renta-modelo-111-retenciones-periodicas"
 
 
@@ -274,25 +274,37 @@ def test_revision_replay_inputs_keep_applicable_m100_pagos_relation_unresolved()
 
 
 @pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
-def test_revision_replay_inputs_recover_salary_certificate_binding_for_m100_0596(filing_year: int) -> None:
+def test_revision_replay_inputs_replay_the_payer_record_credit_a_calculation_stored(filing_year: int) -> None:
+    """The family value the calculation resolved for 0596 replays from the stored binding."""
     work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
     revision = _revision(
         work_unit,
-        input_values_by_casilla_id={_M100_RETENCIONES_TRABAJO_CASILLA: "4500"},
-        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500")},
+        state=CalculationRevisionState.VERIFICADO_COMPLETO,
+        binding_overrides={_M100_RETENCION_SOPORTADA_TRABAJO_BINDING: "4500.00"},
+        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500.00")},
     )
 
     replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
 
-    assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
+    assert replay_inputs[_M100_RETENCION_SOPORTADA_TRABAJO_BINDING] == "4500.00"
     assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
     assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
 
 
 @pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)
-def test_revision_replay_inputs_recover_m100_0596_from_verified_revision_values(filing_year: int) -> None:
+def test_revision_replay_inputs_never_turn_a_0596_figure_into_a_payer_record_credit(filing_year: int) -> None:
+    """A 0596 figure with no stored binding is not recovered onto the payer-record family.
+
+    The family is resolved from the taxpayer's payer records and refuses a
+    caller value, so no figure, keyed or calculated, may be replayed as one.
+    """
     work_unit = _work_unit(modelo="100", filing_year=filing_year, period_code="0A")
-    revision = _revision(
+    keyed = _revision(
+        work_unit,
+        input_values_by_casilla_id={_M100_RETENCIONES_TRABAJO_CASILLA: "4500"},
+        casilla_values={_M100_RETENCIONES_TRABAJO_CASILLA: Decimal("4500")},
+    )
+    verified = _revision(
         work_unit,
         state=CalculationRevisionState.VERIFICADO_COMPLETO,
         relation_overrides={
@@ -306,12 +318,13 @@ def test_revision_replay_inputs_recover_m100_0596_from_verified_revision_values(
         },
     )
 
-    replay_inputs = revision_filing_replay_inputs(revision=revision, work_unit=work_unit)
+    keyed_inputs = revision_filing_replay_inputs(revision=keyed, work_unit=work_unit)
+    verified_inputs = revision_filing_replay_inputs(revision=verified, work_unit=work_unit)
 
-    assert replay_inputs[_M100_SALARY_CERT_RETENCIONES_BINDING] == "4500"
-    assert replay_inputs["renta-modelo-130-pagos-fraccionados"] == "1520.00"
-    assert _M100_RETENCIONES_TRABAJO_CASILLA not in replay_inputs
-    assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
+    for replay_inputs in (keyed_inputs, verified_inputs):
+        assert _M100_RETENCION_SOPORTADA_TRABAJO_BINDING not in replay_inputs
+        assert _M100_M111_RETENCIONES_BINDING not in replay_inputs
+    assert verified_inputs["renta-modelo-130-pagos-fraccionados"] == "1520.00"
 
 
 @pytest.mark.parametrize("filing_year", _SALARY_CERTIFICATE_EDITIONS)

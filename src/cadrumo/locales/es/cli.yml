@@ -622,6 +622,49 @@ cli:
         validate_help: Valida las proporciones contra categorías admitidas y límites
         year_help: Ejercicio cuyos perfiles de categoría aportan los ratios legales.
           Por defecto, el año en curso.
+      retencion_soportada:
+        absence_invalid_input: 'Hay un valor no válido: revisa el ejercicio, la nota
+          (500 caracteres como máximo) y la revisión.'
+        absence_note_help: Por qué ningún pagador practicó retención sobre esta clase
+          de renta. Obligatorio.
+        attest_absence_expected_revision_help: Revisión de la declaración retirada
+          que sustituyes. Omítela en una primera declaración.
+        attest_absence_help: Declara que ningún pagador practicó retención sobre una
+          clase de renta en un ejercicio. Es tu propia declaración, no un certificado
+          del pagador.
+        ejercicio_help: Ejercicio (año) al que se imputa la renta.
+        evidence_sha256_help: SHA-256 del archivo del certificado; obligatorio con
+          payer_certificate.
+        group_help: Registra las retenciones que te certifican tus pagadores.
+        importe_integro_help: Renta dineraria que pagó el pagador, antes de la retención.
+        income_class_help: Clase de renta sobre la que el pagador retuvo, por ejemplo
+          trabajo.
+        ingreso_a_cuenta_help: Ingreso a cuenta que hizo el pagador por renta en especie.
+          Cuenta íntegro como crédito.
+        ingreso_a_cuenta_repercutido_help: Parte del ingreso a cuenta que el pagador
+          te repercutió. No puede superar el ingreso a cuenta.
+        invalid_input: 'Un valor no es válido: revisa la referencia del pagador, la
+          revisión y la huella del certificado.'
+        list_help: Lista los registros de pagadores de un ejercicio sin ningún NIF.
+        origin_help: 'Quién declara las cifras: payer_certificate u operator_declaration.'
+        payer_name_help: Razón social del pagador.
+        payer_ref_help: Referencia del pagador (payer_ref) que muestra el listado.
+        payer_tax_id_help: NIF del pagador que practicó la retención.
+        record_expected_revision_help: Revisión que mostró el listado, para sustituir
+          un registro guardado. Omítela en el primer registro.
+        record_help: Registra o sustituye las cifras que declara el certificado de
+          un pagador para un ejercicio y una clase de renta.
+        remove_expected_revision_help: Revisión que mostró el listado para el registro
+          que quieres eliminar.
+        remove_help: Elimina un registro de pagador, protegido por la revisión que
+          mostró el listado.
+        retencion_help: Retención que practicó el pagador, en euros con como máximo
+          dos decimales.
+        valoracion_especie_help: Valoración del pago en especie.
+        withdraw_absence_expected_revision_help: Revisión con la que se guardó la
+          declaración.
+        withdraw_absence_help: Retira una declaración de ausencia, protegida por la
+          revisión con la que se guardó.
       rule:
         actor_help: Tu identificador, que se registra como origen de la regla.
         add_help: Añade una regla de clasificación que clasifica automáticamente las

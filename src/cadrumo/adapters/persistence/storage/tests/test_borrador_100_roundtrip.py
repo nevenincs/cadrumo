@@ -50,7 +50,7 @@ _REGISTRY_SNAPSHOT_REF = RegistrySnapshotRef(
     period="0A",
 )
 _BUCKET_ID = "50505050-5050-4050-8050-505050505050"
-_CERTIFICATE = "renta-certificado-trabajo-retenciones"
+_CERTIFICATE = "renta-retencion-soportada-trabajo"
 _RESIDENCE = "renta-profile-tax-residence-ccaa"
 _OTHER_BUCKET_ID = "51515151-5151-4151-8151-515151515151"
 

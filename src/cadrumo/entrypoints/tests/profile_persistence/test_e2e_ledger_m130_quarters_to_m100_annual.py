@@ -106,7 +106,9 @@ from cadrumo.entrypoints.tests.profile_persistence.verification_repository_suppo
 from cadrumo.tests.env_scope import ready_clave_settings
 
 from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from ....adapters.persistence.profile.tests.retencion_soportada_seed import seed_payer_certificate
 from ....application.modelo.tests.filed_observation_fixture import persist_filed_revision_observation
+from ....core.retencion_soportada import RetencionSoportadaClase
 from ....domain.user_profile.tests.general_regime_facts import GENERAL_REGIME_NATURAL_PERSON_FACTS
 from .general_iva_profile_facts_support import renta_single_taxpayer_facts
 from .observation_seeding_support import save_stamped_observation
@@ -195,10 +197,11 @@ _MESH_RESOLVED_OR_LOCKED_SOURCES = frozenset(
         _RELATION_PREFILL_SOURCE,
         # The register-resolved sale rows hold dates and marks a zero cannot stand for.
         BindingSourceKind.ACTIVITY_ASSET_DISPOSAL.value,
+        # The withholding credits come from the taxpayer's payer records.
+        BindingSourceKind.RETENCION_SOPORTADA.value,
     },
 ) | {kind.value for kind in precedence_ladder_sources(CallerOverrideDisposition.LOCK)}
 _M100_ESTIMACION_DIRECTA_NORMAL_BINDING: BindingId = "renta-modelo-100-estimacion-directa-es-normal"
-_M100_SALARY_CERT_RETENCIONES_BINDING: BindingId = "renta-certificado-trabajo-retenciones"
 
 
 _M130_INGRESOS_CASILLA: CasillaId = validated_casilla_id("01")
@@ -615,7 +618,6 @@ def _m100_non_relation_zero_bindings() -> dict[BindingId, Decimal]:
     values = {
         binding.id: Decimal("0")
         for binding in snapshot.revision.bindings
-        if binding.id != _M100_SALARY_CERT_RETENCIONES_BINDING
         if binding.source not in _MESH_RESOLVED_OR_LOCKED_SOURCES
     }
     values[_M100_ESTIMACION_DIRECTA_NORMAL_BINDING] = Decimal("1")
@@ -772,10 +774,19 @@ def test_verify_refuses_autonoma_m100_whose_ledger_income_is_capped_despite_offi
 def test_autonoma_m100_salary_certificate_retenciones_reach_total_pagos_but_verify_is_capped(
     secure_objects: SecureObjectRepository,
 ) -> None:
-    """Verified salary withholding reaches the total of pagos; verify is refused by the income cap."""
+    """The salary withholding of the payer's certificate reaches the total of pagos; verify is refused by the income cap."""
     _seed_taxpayer_profile()
     _persist_autonoma_style_ledger(secure_objects)
     _seed_prior_year_m100(secure_objects)
+    seed_payer_certificate(
+        operation=published_authority_operation(),
+        taxpayer_tax_id=_TAX_ID,
+        ejercicio=_YEAR,
+        payer_tax_id="B00000000",
+        income_class=RetencionSoportadaClase.TRABAJO,
+        retencion=_AUTONOMA_SALARY_WITHHOLDING,
+        importe_integro_dinerario=_AUTONOMA_SALARY_GROSS,
+    )
 
     for period, c19_value in _AUTONOMA_M130_C19_BY_PERIOD.items():
         _import_official_m130_result_observation(secure_objects, period=period, c19_value=c19_value)
@@ -783,7 +794,6 @@ def test_autonoma_m100_salary_certificate_retenciones_reach_total_pagos_but_veri
     annual = _calculate_m100_annual(
         secure_objects,
         casilla_inputs={validated_casilla_id("0003"): _AUTONOMA_SALARY_GROSS},
-        binding_values={_M100_SALARY_CERT_RETENCIONES_BINDING: _AUTONOMA_SALARY_WITHHOLDING},
     )
 
     assert Decimal(annual.casilla_values[_M100_ACTIVITY_INCOME_CASILLA]) == Decimal("12000.00")

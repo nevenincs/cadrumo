@@ -37,7 +37,9 @@ _EVERY_EDITION = frozenset(
         "renta-profile-spouse-tax-id",
         "renta-family-descendant-tax-id",
         "renta-family-ascendant-tax-id",
-        "renta-certificado-trabajo-retenciones",
+        "renta-retencion-soportada-trabajo",
+        "renta-retencion-soportada-capital-mobiliario",
+        "renta-retencion-soportada-ganancia-patrimonial",
         "renta-base-liquidable-negativa-general-anterior",
     }
 )

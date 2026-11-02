@@ -148,7 +148,10 @@ def build_calculation_action_ports(
     from ..adapters.persistence.profile.modelos_work_units import WorkUnitCatalogueRepository
     from ..adapters.persistence.profile.percepciones_observations import PercepcionObservationRepositoryAdapter
     from ..adapters.persistence.profile.prorrata_register import ProrrataRegisterRepository
-    from ..adapters.persistence.profile.retencion_soportada_records import RetencionSoportadaRecordRepositoryAdapter
+    from ..adapters.persistence.profile.retencion_soportada_records import (
+        RetencionSoportadaAbsenceRepositoryAdapter,
+        RetencionSoportadaRecordRepositoryAdapter,
+    )
     from ..adapters.persistence.profile.transactions import TransactionCatalogueRepository
     from ..adapters.persistence.profile.usage_ratios import load_usage_ratios
     from ..adapters.persistence.storage.runtime_repository import secure_object_repository_for_bucket
@@ -247,6 +250,7 @@ def build_calculation_action_ports(
         retencion_observation_ports=build_retencion_observation_ports(bucket_id=normalized_bucket_id, objects=objects),
         retencion_soportada_ports=RetencionSoportadaPorts(
             repository=RetencionSoportadaRecordRepositoryAdapter(objects=objects),
+            absences=RetencionSoportadaAbsenceRepositoryAdapter(objects=objects),
         ),
         relation_override_migration=RelationOverrideMigration(),
     )

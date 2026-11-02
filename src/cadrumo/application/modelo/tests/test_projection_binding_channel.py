@@ -36,7 +36,7 @@ pytestmark = [pytest.mark.unit, pytest.mark.hex_application]
 
 _FILING_YEAR = 2024
 _ENUM_BINDING = "renta-profile-tax-residence-ccaa"
-_DECIMAL_BINDING = "renta-certificado-trabajo-retenciones"
+_DECIMAL_BINDING = "renta-base-liquidable-negativa-general-anterior"
 _DATE_BINDING = "renta-profile-taxpayer-birth-date"
 
 

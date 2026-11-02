@@ -2389,8 +2389,7 @@ fields = { continuidad_origin = "grounded", continuidad_evidence = "aeat-dr-100-
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0598" }
-fields = { section = ["retenciones_ingresos_cuenta_pagos_fraccionados"], semantic_role = "irpf_retencion_arrendamientos_inmuebles_urbanos", legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "rd-439-2007:art-100", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"] }
-removed_fields = ["data_type"]
+fields = { section = ["retenciones_ingresos_cuenta_pagos_fraccionados"], legal_refs = ["ley-35-2006:art-22", "ley-35-2006:art-23", "ley-35-2006:art-24", "ley-35-2006:art-101", "rd-439-2007:art-100", "ley-35-2006:art-99", "orden-hac-277-2026:art-3"], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"] }
 
 [[revisions."2025".casilla_overrides]]
 selector = { revision = "2024", id = "0599" }
@@ -10044,12 +10043,6 @@ family = "bindings"
 selector = {revision = "2024", id = "renta-base-liquidable-negativa-general-anterior"}
 sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["Base liquidable general negativa", "Pendiente de aplicación"]}], source_refs = ["aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form", "aeat-dr-100-2025-dictionary"]}
 sequence_removals = {source_citations = [0], source_refs = [0, 1, 2]}
-
-[[revisions."2025".family_overrides]]
-family = "bindings"
-selector = {revision = "2024", id = "renta-certificado-trabajo-retenciones"}
-sequence_additions = {legal_refs = ["orden-hac-277-2026:art-3"], source_citations = [{source_ref = "aeat-renta-2025-manual-parte1", required_text = ["retenciones e ingresos a cuenta", "pagos fraccionados", "ejercicio 2025"]}], source_refs = ["aeat-dr-100-2025-dictionary", "aeat-renta-2025-manual-parte1", "boe-modelo-100-2025-form"]}
-sequence_removals = {source_citations = [0], source_refs = [0, 1, 2, 3]}
 
 [[revisions."2025".family_overrides]]
 family = "bindings"

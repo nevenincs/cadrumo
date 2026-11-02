@@ -618,10 +618,18 @@ _REGISTRATIONS: Final[tuple[BindingProviderRegistration, ...]] = (
         validate_retencion_soportada_binding,
         # Withholding the taxpayer suffered, one record per payer: a payer
         # certificate, or the operator's declaration where no certificate is
-        # held. Never PERCEPTOR_OBSERVATION, which is the withholding-agent side.
+        # held. A proven zero rests on the operator's absence attestation or on
+        # the profile's declaration that the class's income is absent. Never
+        # PERCEPTOR_OBSERVATION, which is the withholding-agent side.
         channels=_MONEY_CHANNELS,
         ops=frozenset({BindingAggregationOp.SUM}),
-        origins=frozenset({TerminalOriginClass.PAYER_CERTIFICATE, TerminalOriginClass.OPERATOR_INPUT}),
+        origins=frozenset(
+            {
+                TerminalOriginClass.PAYER_CERTIFICATE,
+                TerminalOriginClass.OPERATOR_INPUT,
+                TerminalOriginClass.PROFILE_FIELD,
+            },
+        ),
         output="scalar",
         resolver_id="retencion_soportada",
         stage="mesh",
@@ -1075,10 +1083,14 @@ def _append_aeat_prefill_diagnostic(
     registration: BindingProviderRegistration,
     diagnostics: list[str],
 ) -> None:
-    if binding.aeat_prefilled and not registration.admits_aeat_prefill:
+    # Snapshot admission alone replaces nothing: a cross_check_only binding is
+    # compared with the borrador, so only a value the borrador may supply needs
+    # a kind whose value is operator- or profile-entered.
+    if binding.borrador_supplies_value and not registration.admits_aeat_prefill:
         diagnostics.append(
             f"binding {binding.id!r}: provider {registration.kind.value!r} computes a governed value and "
-            f"cannot be marked aeat_prefilled; an AEAT borrador value must not replace it",
+            f"cannot be marked aeat_prefilled with borrador precedence; an AEAT borrador value must not "
+            f"replace it, so declare borrador_participation = 'cross_check_only'",
         )
 
 
