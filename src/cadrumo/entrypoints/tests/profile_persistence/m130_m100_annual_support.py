@@ -48,13 +48,13 @@ from cadrumo.domain.transactions.enums import BusinessClassification, Transactio
 from cadrumo.domain.transactions.models import Transaction
 from cadrumo.domain.transactions.raw_transaction import RawProvenance, RawTransaction, SourceFormat
 from cadrumo.entrypoints.adapter_composition_work_ports import build_calculation_action_ports
+
+from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
+from .observation_seeding_support import save_stamped_observation
 from .verification_repository_support import (
     build_test_certificate_secret_backend_factory,
     build_test_verification_repository_bundle,
 )
-
-from ....adapters.persistence.profile.tests.published_authority_support import published_authority_operation
-from .observation_seeding_support import save_stamped_observation
 
 OPERATOR_SCOPE_PORTS = build_operator_scope_ports()
 
