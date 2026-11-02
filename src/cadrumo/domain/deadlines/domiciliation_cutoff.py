@@ -40,14 +40,14 @@ from pydantic import BaseModel, Field
 
 from ...core.models import STRICT_FROZEN_CONFIG
 from ..calculations.registry.calendar_ccaa_catalogue import resolve_calendar_ccaa_catalogue
-from ..calculations.registry.errors import GovernedFactNotApplicableError, RegistryValidationError
+from ..calculations.registry.errors import RegistryValidationError
 from ..calculations.registry.facts.resolution import MappingFactQuery, ResolvedMappingFact
 from ..calculations.registry.facts.variants import FactSelector
 from ..calculations.registry.schema_base import DateAxis
 from ..calculations.registry.schema_references import TemporalProjectionDirection
 from .errors import DeadlineValidationError
 from .festivos import CalendarCCAA, HolidayCalendar, is_business_day, load_holiday_calendar
-from .filing_window_projection import FilingWindowClause, resolve_filing_window_clause
+from .filing_window_projection import FilingWindowClause, resolve_filing_window_clause, resolve_mapping_fact
 
 if TYPE_CHECKING:
     from ..calculations.registry.authority import PinnedAuthorityOperation
@@ -530,16 +530,6 @@ def _calendar_not_consulted(candidate: date) -> bool:
     raise DeadlineValidationError(f"a procedure without a margin consulted the calendar for {candidate.isoformat()}")
 
 
-def _resolve_mapping_fact(operation: PinnedAuthorityOperation, query: MappingFactQuery) -> ResolvedMappingFact | None:
-    try:
-        resolved = operation.resolve_governed_fact(query)
-    except GovernedFactNotApplicableError:
-        return None
-    if not isinstance(resolved, ResolvedMappingFact):
-        raise RegistryValidationError(f"governed fact {query.fact_id!r} must resolve to a mapping fact")
-    return resolved
-
-
 def derive_payment_cutoff(
     modelo: str,
     window: DeadlineWindowDefinition,
@@ -563,7 +553,7 @@ def derive_payment_cutoff(
     window_clause = resolve_filing_window_clause(operation, modelo=modelo, period=period)
     if window_clause is None:
         return UnavailablePaymentCutoff(window_id=window.id, reason=PaymentCutoffUnavailableReason.NO_CLAUSE)
-    clause_fact = _resolve_mapping_fact(
+    clause_fact = resolve_mapping_fact(
         operation,
         MappingFactQuery(
             fact_id=DOMICILIATION_CUTOFF_CLAUSE_FACT_ID,
@@ -579,7 +569,7 @@ def derive_payment_cutoff(
     clause = domiciliation_clause_from_fact(clause_fact, window_clause=window_clause[0])
     clause_evidence = DomiciliationRuleEvidence.from_fact(clause_fact)
     anexo_on = clause.anexo_day(period_end)
-    procedure_fact = _resolve_mapping_fact(
+    procedure_fact = resolve_mapping_fact(
         operation,
         MappingFactQuery(
             fact_id=DOMICILIATION_PROCEDURE_FACT_ID,

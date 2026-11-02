@@ -246,7 +246,7 @@ class FilingWindowRuleEvidence(BaseModel):
         )
 
 
-def _resolve_mapping_fact(operation: PinnedAuthorityOperation, query: MappingFactQuery) -> ResolvedMappingFact | None:
+def resolve_mapping_fact(operation: PinnedAuthorityOperation, query: MappingFactQuery) -> ResolvedMappingFact | None:
     try:
         resolved = operation.resolve_governed_fact(query)
     except GovernedFactNotApplicableError:
@@ -270,7 +270,7 @@ def resolve_filing_window_clause(
     """
     if not period.has_date_span() or not FILING_YEAR_MIN <= period.filing_year <= FILING_YEAR_MAX:
         return None
-    resolved = _resolve_mapping_fact(
+    resolved = resolve_mapping_fact(
         operation,
         MappingFactQuery(
             fact_id=FILING_WINDOW_CLAUSE_FACT_ID,
@@ -472,7 +472,7 @@ def _project_scheduled_window(
     period_end = period.end_date
     opens_on = clause.opens_on(period_end)
     nominal = clause.nominal_close(period_end)
-    shift_fact = _resolve_mapping_fact(
+    shift_fact = resolve_mapping_fact(
         operation,
         MappingFactQuery(
             fact_id=FILING_CLOSE_SHIFT_FACT_ID, date_axis=DateAxis.SUBMISSION_DATE, effective_date=nominal
