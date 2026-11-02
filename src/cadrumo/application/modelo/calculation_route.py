@@ -26,10 +26,10 @@ from ..aggregation.modelo_bindings_renta_expenses import (
 )
 from ..aggregation.modelo_bindings_retenciones import RetencionesAggregationSourceResolver
 from ..aggregation.oss_ioss import OssIossLedgerSourceResolver
+from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_mesh import (
     ModeloSourceResolver,
 )
-from ..aggregation.retencion_soportada_source import RetencionSoportadaSourceResolver
 from ..aggregation.source_profile import ProfileSourceResolver
 from ..aggregation.withholding_source import WithholdingSourceResolver
 from ..calculations.bienes_inversion_regularizacion import BienesInversionRegularizacionSourceResolver

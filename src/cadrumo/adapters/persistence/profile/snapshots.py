@@ -54,7 +54,7 @@ from ..storage.envelope.contract import Envelope
 from ..storage.errors import ClassificationError, EnvelopeVersionError, SecureObjectUnreadableError
 from ..storage.runtime_repository import secure_object_repository_for_bucket
 from ..storage.schema_lineage import inner_envelope_classification_is_expected, inner_envelope_version_is_current
-from ..storage.sql.secure_object_records import SecureObjectRecord
+from ..storage.sql.secure_object_records import SecureObjectRecord, SecureObjectUnreadableKind
 from ..storage.sql.secure_objects import SecureObjectRepository
 
 if TYPE_CHECKING:
@@ -207,9 +207,12 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         """Return the current-schema snapshots and how many older-schema rows were skipped.
 
         A row stored under an older schema version has no reader, so it cannot
-        be named; it is counted. Every other unreadable row, including one
-        stored under a newer schema, still raises exactly as ``list_snapshots``
-        does.
+        be named; it is counted, from the same single pass that reads the others.
+        The count covers the whole snapshot namespace: an unreadable row's year
+        and period live only in its encrypted payload, so no narrower scope is
+        knowable. Every other unreadable row, including one stored under a newer
+        schema or refused for its classification, still raises exactly as
+        ``list_snapshots`` does.
 
         Raises:
             SecureObjectUnreadableError: A row is unreadable for any reason
@@ -225,15 +228,11 @@ class SecureSnapshotRepository[TPayload: BaseModel]:
         ):
             if isinstance(item, SecureObjectRecord):
                 records.append(item)
-            elif item.schema_version < current_version:
+            elif item.kind is SecureObjectUnreadableKind.OUTDATED_SCHEMA:
                 outdated += 1
             else:
                 raise SecureObjectUnreadableError(self._namespace_definition.namespace, item.row_id)
         return self._checked_snapshots(records), outdated
-
-    def outdated_stored_snapshot_count(self) -> int:
-        """Return how many stored rows were written under an older storage schema."""
-        return self.list_snapshots_with_outdated_count()[1]
 
     def _checked_snapshots(self, records: Iterable[SecureObjectRecord]) -> tuple[TPayload, ...]:
         snapshots: list[TPayload] = []
